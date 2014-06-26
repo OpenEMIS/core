@@ -17,27 +17,38 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteProgramme extends AppModel {
+    public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
+    
 	public $belongsTo = array(
-		'InstitutionSite'=>array('foreignKey' => 'institution_site_id'),
-		'EducationProgramme'=>array('foreignKey' => 'education_programme_id'),
-		'Institution' =>
-            array(
-                'className'              => 'Institution',
-                'joinTable'              => 'institutions',
-				'foreignKey' => false,
-				'dependent'    => false,
-                'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
-            )
+		'SchoolYear',
+		'InstitutionSite',
+		'EducationProgramme'
 	);
 	
-	/* can't work if recursive is set to 0
 	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
+		'name' => "SELECT `education_programmes`.`name` from `education_programmes` WHERE `education_programmes`.`id` = InstitutionSiteProgramme.education_programme_id"
 	);
-	*/
 	
-	public $virtualFields = array(
-		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'SchoolYear' => array(
+                    'name' => 'School Year'
+                ),
+                'EducationProgramme' => array(
+                    'name' => 'Programme'
+                ),
+                'InstitutionSiteProgramme' => array(
+                    'system_cycle' => 'System - Cycle'
+                )
+            ),
+            'fileName' => 'Report_Programme_List'
+		)
 	);
 	
 	public function getProgrammeOptions($institutionSiteId, $yearId=null) {
@@ -120,12 +131,35 @@ class InstitutionSiteProgramme extends AppModel {
 		return $data;
 	}
 	
-	public function getSiteProgrammeForSelection($institutionSiteId, $yearId) {
-		$data = array();
-		$list = $this->getSiteProgrammes($institutionSiteId, $yearId);
-		foreach($list as &$obj) {
-			$data[$obj['id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
-		}
+	public function getProgrammesForEdit($institutionSiteId, $yearId) {
+		$this->EducationProgramme->unbindModel(array('belongsTo' => array('EducationCertification', 'EducationFieldOfStudy')));
+		$data = $this->EducationProgramme->find('all', array(
+			'recursive' => 0,
+			'fields' => array('*'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
+						'InstitutionSiteProgramme.school_year_id = ' . $yearId,
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+					)
+				)/*,
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id'
+					)
+				)*/
+			),
+			'order' => array('InstitutionSiteProgramme.id DESC', 'EducationCycle.order', 'EducationProgramme.order')
+			//'conditions' => array('')
+		));
+		$this->EducationProgramme->bindModel(array('belongsTo' => array('EducationCertification', 'EducationFieldOfStudy')));
+		//pr($data);
 		return $data;
 	}
 	
@@ -239,10 +273,7 @@ class InstitutionSiteProgramme extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id',
-						'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
 				)
 			),
 			'conditions' => array(
@@ -354,29 +385,167 @@ class InstitutionSiteProgramme extends AppModel {
 		return $values;
 	}
         
-        public function getYearsHaveProgrammes($institutionSiteId){
-            $data = $this->find('all', array(
-                    'recursive' => -1,
-                    'fields' => array(
-                        'SchoolYear.id',
-                        'SchoolYear.name'
-                    ),
-                    'joins' => array(
-                            array(
-                                'table' => 'school_years',
-                                'alias' => 'SchoolYear',
-                                'conditions' => array(
-                                    'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
-                                )
-                            )
-                    ),
-                    'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
-                    'group' => array('InstitutionSiteProgramme.school_year_id'),
-                    'order' => array('SchoolYear.name DESC')
-                )
-            );
-            
-            return $data;
-        }
+	public function getYearsHaveProgrammes($institutionSiteId){
+		$data = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => array(
+					'SchoolYear.id',
+					'SchoolYear.name'
+				),
+				'joins' => array(
+						array(
+							'table' => 'school_years',
+							'alias' => 'SchoolYear',
+							'conditions' => array(
+								'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
+							)
+						)
+				),
+				'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
+				'group' => array('InstitutionSiteProgramme.school_year_id'),
+				'order' => array('SchoolYear.name DESC')
+			)
+		);
+		
+		return $data;
+	}
+	
+	public function programmesGradeList($controller, $params) {
+        $controller->layout = 'ajax';
+		$this->render = false;
+        $programmeId = $controller->params->query['programmeId'];
+        $exclude = $controller->params->query['exclude'];
+        $gradeOptions = $controller->EducationGrade->getGradeOptions($programmeId, $exclude);
+        
+        $controller->set(compact('gradeOptions'));
+        $controller->render('/Elements/programmes/grade_options');
+    }
 
+    public function programmes($controller, $params) {
+        $controller->Navigation->addCrumb('Programmes');
+		
+        $yearOptions = $this->SchoolYear->getAvailableYears();
+		$selectedYear = isset($params['pass'][0]) ? $params['pass'][0] : key($yearOptions);
+        $data = $this->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+        $controller->set(compact('yearOptions', 'selectedYear', 'data'));
+    }
+
+    public function programmesEdit($controller, $params) {
+        if ($controller->request->is('get')) {
+            $controller->Navigation->addCrumb('Edit Programmes');
+			
+			$yearOptions = $this->SchoolYear->getAvailableYears();
+            $selectedYear = isset($params['pass'][0]) ? $params['pass'][0] : key($yearOptions);
+			$data = $this->getProgrammesForEdit($controller->institutionSiteId, $selectedYear);
+            $controller->set(compact('yearOptions', 'selectedYear', 'data'));
+        } else {
+			$selectedYear = $params['pass'][0];
+			$data = $controller->request->data[$this->alias];
+			foreach($data as $obj) {
+				if(empty($obj['id'])) {
+					if($obj['status'] == 1) {
+						$obj['school_year_id'] = $selectedYear;
+						$obj['institution_site_id'] = $controller->institutionSiteId;
+						$this->create();
+						$this->save($obj);
+					}
+				} else {
+					$this->save($obj);
+				}
+			}
+			$controller->Message->alert('general.edit.success');
+			return $controller->redirect(array('action' => 'programmes', $selectedYear));
+        }
+    }
+	
+	public function getSiteProgrammeForSelection($institutionSiteId, $yearId) {
+		$data = array();
+		$list = $this->getSiteProgrammes($institutionSiteId, $yearId);
+		foreach($list as &$obj) {
+			$data[$obj['id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+		}
+		return $data;
+	}
+	
+	public function programmesOptions($controller, $params) {
+        $controller->layout = 'ajax';
+		$this->render = false;
+
+        $yearId = $controller->params->query['yearId'];
+        $programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($controller->institutionSiteId, $yearId, false);
+        
+        $controller->set(compact('programmeOptions'));
+        $controller->render('/Elements/programmes/programmes_options');
+    }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('SchoolYear.name', 'EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order');
+			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+                    array(
+                        'table' => 'school_years',
+                        'alias' => 'SchoolYear',
+                        'conditions' => array(
+                            'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_programmes',
+                        'alias' => 'EducationProgramme',
+                        'conditions' => array(
+                            'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_cycles',
+                        'alias' => 'EducationCycle',
+                        'conditions' => array(
+                            'EducationProgramme.education_cycle_id = EducationCycle.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_levels',
+                        'alias' => 'EducationLevel',
+                        'conditions' => array(
+                            'EducationCycle.education_level_id = EducationLevel.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_systems',
+                        'alias' => 'EducationSystem',
+                        'conditions' => array(
+                            'EducationLevel.education_system_id = EducationSystem.id'
+                        )
+                    )
+                );
+			
+			$this->virtualFields = array(
+                    'system_cycle' => 'CONCAT(EducationSystem.name, " - ", EducationCycle.name)'
+            );
+
+			$data = $this->find('all', $options);
+			
+			return $data;
+		}
+	}
+	
+	public function reportsGetFileName($args){
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
+	}
 }

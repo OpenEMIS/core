@@ -26,11 +26,7 @@ $(document).ajaxComplete(function() {
 
 $(document).ready(function() {	
 	jsForm.init();
-	jsTable.init();
 	jsList.init();
-    /*if($('html').attr('dir')=="rtl"){
-        jsForm.fixedBracket(); // This fix arabic translation brackets problem
-    }*/
 });
 
 var dataStorage = {};
@@ -183,8 +179,14 @@ var jsForm = {
 		window.location.href = getRootURL() + $(obj).attr('url');
 	},
 	
-	change: function(obj) {
-		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
+	change: function(obj, trailingSlash) {
+		var url = getRootURL() + $(obj).attr('url');
+		if(trailingSlash!=undefined && trailingSlash == false) {
+			url += $(obj).val();
+		} else {
+			url += '/' + $(obj).val();
+		}
+		window.location.href = url;
 	},
 	
 	initDatepicker: function(p) {
@@ -241,12 +243,15 @@ var jsForm = {
 	
 	areapickerUpdate: function() {
 		var areaItemSelected=$(this);
-
-		var hiddenValue= $(this).parents().find('.areapicker_areaid').first();
+		var mainContainerId = $(this).parents().parents().parents().attr('id');
+		
+		var hiddenValue= $(this).closest('#'+mainContainerId).find('.areapicker_areaid').first();//$(this).parents().find('.areapicker_areaid').first();//alert('out = '+hiddenValue.attr('id') );
 		var myAreaArr = ["area_level","area_education_level"];
         for (var i = 0; i < myAreaArr.length; i++) {
             var areaItems = $(this).parent().parent().parent().find('select[name*="['+myAreaArr[i]+'_"]');
+			
             areaItems.reverse().each(function(index) {
+				//alert($(this).attr('id'));
                 if (areaItemSelected.is($(this))){
                     var tmpVal=$(this).val();
                     if (tmpVal != 0 && !!tmpVal) {
@@ -487,181 +492,94 @@ var jsForm = {
     fixedBracket: function(){
         var replaced = $("body").html().replace(/\)/g,')&#x200E;');
         $("body").html(replaced);
-    }
-};
+    },
+			
+	insertNewInputFile: function(obj) {
 
-var jsTable = {
-	init: function() {
-		this.fixTable();
-		this.attachHoverOnClickEvent();
-	},
-	
-	attachHoverOnClickEvent: function() {
-		$('.table.allow_hover').each(function() {
-			var table = $(this);
-			if(table.attr('action')!=undefined) {
-				table.find('.table_row').each(function() {
-					var rowId = $(this).attr('row-id')!=undefined ? $(this).attr('row-id') : '';
-					$(this).click(function() {
-						window.location.href = getRootURL() + table.attr('action') + rowId;
-					});
-				});
-			}
-		});
-	},
-	
-	fixTable: function(table) {
-		var id = table==undefined ? '.table' : table;
-		
-		$(id).each(function() {
-			var obj = $(this);
-			if(obj.find('.table_head').length==1
-			&& obj.find('.table_body').length==1
-			&& obj.find('.table_foot').length==1
-			&& obj.find('.table_body').html().isEmpty()) {
-				obj.find('.table_body').remove();
-			}
-			if(!obj.hasClass('no_strips')) {
-				obj.find('.table_body').each(function() {
-					$(this).find('.table_row.even').removeClass('even');
-					$(this).find('.table_row:visible:odd').addClass('even');
-				});
-			}
-		});
-	},
-	
-	fixHeight: function(row, col) {
-		var height, update;
-		$(row).each(function() {
-			height = $(this).find(col+':first').height();
-			update = false;
-			$(this).find(col).each(function() {
-				if($(this).height() != height) {
-					update = true;
-					if($(this).height() > height) {
-						height = $(this).height();
-					}
+		var size = $('.fileupload').length;
+		var fileMaxLimit = 5;
+
+		if (size < fileMaxLimit) {
+			var maskId;
+			var url = getRootURL() + $(obj).attr('multipleURL');
+			$.ajax({
+				type: 'POST',
+				dataType: 'text',
+				url: url,
+				data: {size: size + 1},
+				beforeSend: function(jqXHR) {
+					maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
+				},
+				success: function(data, textStatus) {
+					var callback = function() {
+						$('#file-upload-wrapper-' + size).after(data);
+					};
+					$.unmask({id: maskId, callback: callback});
 				}
 			});
-			
-			if(update) {
-				$(this).find(col).height(height);
-			}
-		});
-	},
-	
-	toggleTableScrollable: function(parent) {
-		var hide = 'hidden';
-		var active = 'scroll_active';
-		selector = parent!=undefined ? parent : '.table_scrollable';
-		$(selector).each(function() {
-			var rows = $(this).find('.table_body .table_row:visible').length;
-			var list = $(this).find('.list_wrapper');
-			var scrollable = list.closest('.table_scrollable');
-			
-			if(rows > list.attr('limit')) {
-				if(!scrollable.hasClass(active)) {							
-					scrollable.addClass(active);
-				}
-			} else {
-				if(scrollable.hasClass(active)) {							
-					scrollable.removeClass(active);
-				}
-			}
-			if(list.hasClass(hide)) {
-				list.removeClass(hide);
-			}
-		});
-	},
-	
-	tableScrollableAdd: function(parent, data) {
-		var hide = 'hidden';
-		var active = 'scroll_active';
-		var scrollable = parent + ' .table_scrollable';
-		var list = scrollable + ' .list_wrapper';
-		var selector = list + ' .table_body';
-		
-		if($(data).hasClass('alert')) {
-			var alertOpt = {
-				id: 'scrollable_alert',
-				parent: parent,
-				position: 'center'
-			}
-			alertOpt['type'] = $(data).attr('type');
-			alertOpt['text'] = $(data).html();
-			$(scrollable).removeClass(active);
-			if(!$(list).hasClass(hide)) {
-				$(list).addClass(hide);
-			}
-			$.alert(alertOpt);
-		} else {
-			$(selector).append(data);
-			jsTable.toggleTableScrollable(parent);
-			jsTable.fixTable($(selector).parent());
 		}
 	},
-	
-	doRemove: function(obj) {
-		$(obj).closest('.table_row').remove();
-		jsTable.fixTable();
+	deleteFile: function(id) {
+		//	alert(getRootURL() + $('form').attr('deleteurl'));
+		var dlgId = 'deleteDlg';
+		var btn = {
+			value: i18n.General.textDelete,
+			callback: function() {
+				var maskId;
+				//var controller = $('#controller').text();
+				var url = getRootURL() + $('form').attr('deleteurl');
+				$.ajax({
+					type: 'POST',
+					dataType: 'json',
+					url: url,
+					data: {id: id},
+					beforeSend: function(jqXHR) {
+						maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
+					},
+					success: function(data, textStatus) {
+						var callback = function() {
+							var closeEvent = function() {
+								var successHandler = function() {
+									$('[file-id=' + id + ']').parent().fadeOut(600, function() {
+										$(this).remove();
+										if (typeof attachments !== 'undefined') {
+											attachments.renderTable();
+										}
+										
+									});
+								};
+								jsAjax.result({data: data, callback: successHandler});
+							};
+							$.closeDialog({id: dlgId, onClose: closeEvent});
+						};
+						$.unmask({id: maskId, callback: callback});
+					}
+				});
+			}
+		};
+
+		var dlgOpt = {
+			id: dlgId,
+			title: i18n.Attachments.titleDeleteAttachment,
+			content: i18n.Attachments.contentDeleteAttachment,
+			buttons: [btn]
+		};
+
+		$.dialog(dlgOpt);
 	},
 	
-	computeSubtotal: function(obj) {
-		var table = $(obj).closest('.table_body');
-		var row = $(obj).closest('.table_row');
-		var type = $(obj).attr('computeType');
-		var subtotal = 0;
-		
-		row.find('[computeType="' + type + '"]').each(function() {
-			if($(this).val().isEmpty()) {
-				if($(this).attr('allowNull')==undefined) {
-					$(this).val(0);
-					subtotal += $(this).val().toInt();
-				}
-			} else {
-				subtotal += $(this).val().toInt();
-			}
-		});
-		row.find('.cell_subtotal').html(subtotal);
-		
-		var total = 0;
-		table.find('.cell_subtotal').each(function() {
-			total += $(this).html().toInt();
-		});
-		table.siblings('.table_foot').find('.' + type).html(total);
-	},
-	
-	computeTotal: function(obj) {
-		var table = $(obj).closest('.table_body');
-		var type = $(obj).attr('computeType');
-		var total = 0;
-		table.find('input[computeType="' + type + '"]').each(function() {
-			if($(this).val().isEmpty()) {
-				if($(this).attr('allowNull')==undefined) {
-					$(this).val(0);
-					total += $(this).val().toInt();
-				}
-			} else {
-				total += $(this).val().toInt();
-			}
-		});
-		$(table).siblings('.table_foot').find('.' + type).html(total);
-	},
-	
-	computeAllTotal: function(p) {
-		var total = {};
-		var type;
-		$(p + ' input[computeType]').each(function() {			
-			type = $(this).attr('computeType');
-			total[type] = (total[type] != undefined ? total[type] : 0) + ($(this).val().length>0 ? $(this).val().toInt() : 0);
-		});
-		if($(p + ' .table_body').length>0) {
-			for(var i in total) {
-				$(p + ' .table_foot .' + i).html(total[i]);
-			}
-		} else {
-			$(p + ' .table_foot .cell_value').html(0);
+	filterAbsenceByMonth: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldMonth = $("select#monthId");
+		if(fieldSchoolYear.length !== 1 || fieldMonth.length !== 1){
+			return false;
 		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldMonth.val();
+		
+		window.location.href = url;
 	}
 };
 
@@ -765,7 +683,8 @@ var jsList = {
 		list.find('li').each(function(i) {
 			$(this).find('#order').val(i+1);
 		});
-	}
+	},
+	
 };
 
 var utils = {

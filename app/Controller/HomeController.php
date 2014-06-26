@@ -15,61 +15,54 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('AppController', 'Controller');
-// App::uses('String', 'Utility');
 
 class HomeController extends AppController {
-    private $debug = false;
+	private $debug = false;
 	public $helpers = array('Number');
 	private $tableCounts = array(
 		'Added' => array(
 			// Model => db table
-			'Institution' => 'institutions',
 			'InstitutionSite' => 'institution_sites',
 			'Student' => 'students',
-			'Teacher' => 'teachers',
 			'Staff' => 'staff'
 		),
 		'Edited' => array(
-			'InstitutionHistory' => 'institution_history',
 			'InstitutionSiteHistory' => 'institution_site_history',
 			'StudentHistory' => 'student_history',
-			'TeacherHistory' => 'teacher_history',
 			'StaffHistory' => 'staff_history'
 		)
 	);
 	public $uses = array(
 		'ConfigItem',
 		'ConfigAttachment',
-		'Institution',
 		'InstitutionSite',
 		'Students.Student',
-		'Teachers.Teacher',
 		'Staff.Staff',
-		'InstitutionHistory',
 		'InstitutionSiteHistory',
 		'Students.StudentHistory',
-		'Teachers.TeacherHistory',
 		'Staff.StaffHistory',
 		'SecurityUser',
 		'SecurityRoleFunction',
 		'SecurityGroupUser'
 	);
+	
 	private function logtimer($str=''){
-			if($this->debug == true)
-			echo $str." ==> ".date("H:i:s")."<br>\n";
+		if($this->debug == true)
+		echo $str." ==> ".date("H:i:s")."<br>\n";
 	}
+	
 	public function index() {
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
 		$image = $this->ConfigAttachment->find('first', array('fields' => array('id','file_name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'dashboard')));
 
-		if(sizeof($image['ConfigAttachment']) > 0){
+		if($image && sizeof($image['ConfigAttachment']) > 0){
 			$image = array_merge($image['ConfigAttachment']);
 			$image['width'] = $this->ConfigItem->getValue('dashboard_img_width');
 			$image['height'] = $this->ConfigItem->getValue('dashboard_img_height');
 			$image = array_merge($image, $this->ConfigAttachment->getCoordinates($image['file_name']));
-			$this->set('image', $image/*$this->ConfigItem->getDashboardMastHead()*/);
+			$this->set('image', $image);
 			
 		}
 		$this->logtimer('End Attachment');
@@ -86,24 +79,19 @@ class HomeController extends AppController {
 		$this->bodyTitle = 'Account';
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('My Details');
+		$header = __('My Details');
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->id = $userId;
 		$obj = $this->SecurityUser->read();
 
 		$obj['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-		/*
-		$roleIds = $this->SecurityUserRole->find('list', array(
-			'fields' => array('SecurityUserRole.security_role_id'),
-			'conditions' => array('SecurityUserRole.security_user_id' => $userId)
-		));
-		$obj['SecurityUser']['roles'] = $this->SecurityRoleFunction->getModules($roleIds);
-		*/
-		$this->set('obj', $obj);
+		$this->set(compact('obj','header'));
 	}
 	public function detailsEdit() {
 		$this->bodyTitle = 'Account';
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Edit My Details');
+		$header = __('Edit My Details');
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->formatResult = true;
 		$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
@@ -120,7 +108,7 @@ class HomeController extends AppController {
 				$data = array_merge($data, $postData);
 			}
 		}
-		$this->set('data', $data);
+		$this->set(compact('data', 'header'));
 		$this->set('statusOptions', $this->SecurityUser->status);
 	}
 	
@@ -128,7 +116,7 @@ class HomeController extends AppController {
 		$this->bodyTitle = 'Account';
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Change Password');
-		
+		$header = __('Change Password');
 		$allowChangePassword = (bool) $this->ConfigItem->getValue('change_password');
 		
 		if(!$allowChangePassword) {
@@ -164,6 +152,8 @@ class HomeController extends AppController {
 			//$this->Utility->alert($status['status'], $status['msg']);
 			$this->Utility->alert($status['msg'],array('type'=>$status['status']));
 		}
+		
+		$this->set(compact('header'));
 	}
 
 	private function validateChangePassword($currentPassword, $newPassword, $retypePassword) {
@@ -204,16 +194,16 @@ class HomeController extends AppController {
 	
 	public function systemInfo() {
 		$this->bodyTitle = 'Support';
-		$title = 'System Information';
+		$subTitle = 'System Information';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
-		$this->Navigation->addCrumb($title);
+		$this->Navigation->addCrumb($subTitle);
 		
 		$dbo = ConnectionManager::getDataSource('default');
-		$db_store = end(explode('/', $dbo->config['datasource']));
-		$db_version = $dbo->getVersion();
-		$this->set('db_store', $db_store);
-		$this->set('db_version', $db_version);
-		$this->set('subTitle', $title);
+		$temp = explode('/', $dbo->config['datasource']);
+		$dbStore = end($temp);
+		
+		$dbVersion = $dbo->getVersion();
+		$this->set(compact('dbStore', 'dbVersion', 'subTitle'));
 		$this->render('Help/system_info');
 	}
 	
@@ -261,68 +251,68 @@ class HomeController extends AppController {
 		}
 		return $rawData[0]['Institution']['name'];
 	}
-        
-        public function getLatestStatistics(){
-                $this->autoLayout = false;
-                foreach($this->tableCounts['Added'] as $key => $val){
-                    $rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
-                    $total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
-                }
-                $this->set('tableCounts', $total);
-                $this->set('SeparateThousandsFormat', array(
+		
+	public function getLatestStatistics(){
+		$this->autoLayout = false;
+		foreach($this->tableCounts['Added'] as $key => $val){
+			$rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
+			$total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
+		}
+		$this->set('tableCounts', $total);
+		$this->set('SeparateThousandsFormat', array(
 			'before' => '',
 			'places' => 0,
-		    'thousands' => ',',
+			'thousands' => ',',
 		));
-        }
+	}
 	public function getLatestActivities(){
-                $this->autoLayout = false;
+		$this->autoLayout = false;
 		$query = '';
-               
+			   
 		$dbo = ConnectionManager::getDataSource('default');//$this->Institution->getDataSource();
 		// $dbo = $this->getDataSource();
 		
 		$limit = 7;
-                $data = array();
-                foreach ($this->tableCounts as $key => $element) {
-                    foreach($element as $Model => $tablename){
-                        $this->logtimer('Start '.$Model);
-                        $sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
-                        if($this->debug) echo "<br><br>".$sql;
-                        $recs = $this->{$Model}->query($sql);
-                        $data[$Model] = $recs;
-                        $this->logtimer('End '.$Model);
-                    }
-                    
-                }
-                $activities = array();
-                
-                foreach($data as $tableName => &$arrVal){
-                    $action =  (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
-                    
-                    foreach($arrVal as $krec => &$vrec ){
-                        if($action == 'Edited'){
-                            $parentTable = str_replace('History','',$tableName);
-                            $foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
-                            $rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
-                            if(!$rec) $action = 'Deleted';
-                        }
-                        $vrec['t']['user_first_name'] = $vrec['su']['first_name'];
-                        $vrec['t']['user_last_name'] = $vrec['su']['last_name'];
-                        $vrec['t']['action'] = $action;
-                        $tableName = str_ireplace('history','', $tableName);
-                        $vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
-                        $vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
-                        $vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
-                        $activities[strtotime($vrec['t']['created'])] = $vrec['t'];
-                    }
-                }
-                krsort($activities);
-                $activities = array_slice($activities, 0, $limit);
-                $this->logtimer('END');
-                $this->logtimer('Start lastest Activities');
+				$data = array();
+				foreach ($this->tableCounts as $key => $element) {
+					foreach($element as $Model => $tablename){
+						$this->logtimer('Start '.$Model);
+						$sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
+						if($this->debug) echo "<br><br>".$sql;
+						$recs = $this->{$Model}->query($sql);
+						$data[$Model] = $recs;
+						$this->logtimer('End '.$Model);
+					}
+					
+				}
+				$activities = array();
+				
+				foreach($data as $tableName => &$arrVal){
+					$action =  (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
+					
+					foreach($arrVal as $krec => &$vrec ){
+						if($action == 'Edited'){
+							$parentTable = str_replace('History','',$tableName);
+							$foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
+							$rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
+							if(!$rec) $action = 'Deleted';
+						}
+						$vrec['t']['user_first_name'] = $vrec['su']['first_name'];
+						$vrec['t']['user_last_name'] = $vrec['su']['last_name'];
+						$vrec['t']['action'] = $action;
+						$tableName = str_ireplace('history','', $tableName);
+						$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
+						$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
+						$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+						$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
+					}
+				}
+				krsort($activities);
+				$activities = array_slice($activities, 0, $limit);
+				$this->logtimer('END');
+				$this->logtimer('Start lastest Activities');
 		$this->set('latestActivities', $activities);
-                $this->logtimer('End lastest Activities');
+				$this->logtimer('End lastest Activities');
 	}
 
 	private function checkActivityDeleteStatus($obj) {
@@ -330,14 +320,12 @@ class HomeController extends AppController {
 		if($obj['parent_table_id']){
 			$parentTable = str_ireplace('history', '', $table);
 			$numOfRecords = $this->{$parentTable}->find('count', array(
-		        'conditions' => array("{$parentTable}.id" => $obj['parent_table_id'])
-		    ));
-		    if($numOfRecords < 1){
-		    	return true;
-		    }
+				'conditions' => array("{$parentTable}.id" => $obj['parent_table_id'])
+			));
+			if($numOfRecords < 1){
+				return true;
+			}
 		}
 		return false;
 	}
-
 }
-

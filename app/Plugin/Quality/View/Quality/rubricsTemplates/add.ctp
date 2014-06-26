@@ -1,56 +1,76 @@
-<?php 
+<?php
 //echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 //2echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('config', false);
+echo $this->Html->script('/Quality/js/rubrics', false);
 
-?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
+$this->start('contentActions');
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->end();
+$this->start('contentBody');
 
-<div id="rubrics_template" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        <?php
-		/*if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'rubrics_add'), array('class' => 'divider'));
-		}*/
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <?php
-    $formOptions = array('controller' => 'Quality', 'action' => $this->action, 'plugin' => 'Quality');
-	echo $this->Form->create($modelName, array(
-		'url' => $formOptions,
-		'type' => 'file',
-		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-	));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action), 'file');
+echo $this->Form->create($modelName, $formOptions);
+
+if (!empty($this->data[$modelName]['id'])) {
+	echo $this->Form->input('id', array('type' => 'hidden'));
+}
+$disabled = 'false';
+if ($type != 'add') {
+	$disabled = 'disabled';
+}
+
+echo $this->Form->input('name', array('disabled' => $disabled));
+echo $this->Form->input('description');
+echo $this->Form->input('weighting', array('label' => array('text' => __('Weightage'), 'class' => 'col-md-3 control-label'), 'disabled' => $disabled, 'options' => $weightingOptions));
+echo $this->Form->input('pass_mark', array('disabled' => $disabled));
+
+if ($type == 'add' || empty($this->data[$modelName]['security_role_id'])) :
+	echo $this->Form->input('security_role_id', array('options' => $roleOptions));
+else :
 	?>
-    <?php echo $this->Form->input('institution_id', array('type'=> 'hidden'));  ?>
-    <?php
-    if (!empty($this->data[$modelName]['id'])) {
-        echo $this->Form->input('id', array('type' => 'hidden'));
-    }
-    ?>
-    <div class="row">
-        <div class="label"><?php echo __('Name'); ?></div>
-        <div class="value"><?php echo $this->Form->input('name'); ?> </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Description'); ?></div>
-        <div class="value"><?php echo $this->Form->input('description'); ?> </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Weighting'); ?></div>
-        <div class="value"><?php echo $this->Form->input('weighting', array('options' => $weightingOptions)); ?> </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Pass Mark'); ?></div>
-        <div class="value"><?php echo $this->Form->input('pass_mark'); ?> </div>
-    </div>
-    <div class="controls view_controls">
-		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'rubricsTemplatesView',$id), array('class' => 'btn_cancel btn_left')); ?>
+	<div class="form-group">
+		<label class="col-md-3 control-label"><?php echo __('Security Role'); ?></label>
+		<div class="col-md-4">
+			<?php echo $roleOptions[$this->data[$modelName]['security_role_id']]; ?>
+		</div>
 	</div>
-	
-    <?php echo $this->Form->end(); ?>
+<?php endif;?> 
+<div class="form-group">
+	<label class="col-md-3 control-label"><?php echo __('Target Grades'); ?></label>
+	<div class="col-md-4">
+		<?php
+		$tableData = array();
+		foreach($rubricGradesOptions as $obj) {
+			$row = array();
+			$row[] = array($obj, array('colspan'=>2));
+			//$row[] = $this->Html->link('', '', array('class' => 'void icon_delete', 'onclick'=>'rubricsTemplate.removeRubricTemplateGrade(this)'));//'<span class="icon_delete" onclick="rubricsTemplate.removeRubricTemplateGrade(this)" title="Delete"></span>';
+
+			$tableData[] = $row;
+		}
+		?>
+		<div id='gradeWraper' class="table-responsive">
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr class="even" ></tr>
+					<tr>
+						<th colspan="2"><?php echo __('Selected Grade(s)');?></th>
+					</tr>
+				</thead>
+				<tbody><?php echo $this->Html->tableCells($tableData); ?></tbody>
+			</table>
+		</div>
+	</div>
 </div>
+<div class="form-group">
+	<div class="col-md-3 control-label">&nbsp;</div>
+	<div class="col-md-4"><a class="void icon_plus" onclick="rubricsTemplate.addRubricTemplateGrade(this)" url="Quality/rubricsTemplatesAjaxAddGrade"  href="javascript: void(0)"><?php echo __('Add Grade'); ?></a></div>
+</div>
+<?php echo $this->FormUtility->getFormButtons(array('cancelURL' =>array('action' => 'rubricsTemplatesView', $id))); ?>
+
+<?php echo $this->Form->end(); ?>
+
+<?php $this->end(); ?>

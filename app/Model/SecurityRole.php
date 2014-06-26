@@ -117,4 +117,14 @@ class SecurityRole extends AppModel {
 		}
 		return $data;
 	}
+        
+        public function getRubricRoleOptions(){
+            $this->formatResult = true;
+            $options['fields'] = array('SecurityRole.id', 'SecurityRole.name');
+            $options['conditions'] = array('SecurityRole.name' => array('QA Assessors','ECE Assessors'), 'SecurityRole.visible' => 1);
+            
+            $data = $this->find('list', $options);
+            
+            return $data;
+        }
 }

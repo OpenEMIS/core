@@ -18,7 +18,7 @@
 class RubricsTemplateHeader extends QualityAppModel {
 
     //public $useTable = 'rubrics';
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array('ControllerAction', 'Reorder');
     public $belongsTo = array(
         //'Student',
         'RubricsTemplate' => array(
@@ -51,29 +51,49 @@ class RubricsTemplateHeader extends QualityAppModel {
               )
               ) */
     );
+	
+	public $_action = 'rubricsTemplatesHeader';
 
     public function beforeAction($controller, $action) {
-        $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
+        if ($action != 'rubricsTemplatesHeaderDelete') {
+            $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
 
-        if (empty($id)) {
-            return $controller->redirect(array('action' => 'rubricsTemplates'));
+            if (empty($id)) {
+                return $controller->redirect(array('action' => 'rubricsTemplates'));
+            }
+
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $rubricTemplateData = $RubricsTemplate->getRubric($id);
+            $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+
+            $controller->set('modelName', $this->name);
+            $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
+
+            if ($action != 'rubricsTemplatesHeader') {
+                $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $id, 'plugin' => 'Quality'));
+            } else {
+                $controller->Navigation->addCrumb($rubricName);
+                $controller->set('subheader', $rubricName);
+            }
         }
-
-        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-        $rubricTemplateData = $RubricsTemplate->getRubric($id);
-        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
-
-        $controller->set('modelName', $this->name);
-        $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
-
-        if ($action != 'rubricsTemplatesHeader') {
-            $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $id, 'plugin' => 'Quality'));
-        } else {
-            $controller->Navigation->addCrumb($rubricName);
-            $controller->set('subheader', $rubricName);
-        }
+		
+		$controller->set('_action', $this->_action);
     }
-
+	
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'title', 'labelKey' => 'Quality.section_header'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+	
     public function rubricsTemplatesHeader($controller, $params) {
         $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
 
@@ -85,30 +105,7 @@ class RubricsTemplateHeader extends QualityAppModel {
         }
 
         $controller->Session->write('RubricsHeader.order', count($data));
-        $controller->set('id', $id);
-        $controller->set('data', $data);
-    }
-
-    public function rubricsTemplatesHeaderOrder($controller, $params) {
-        //$controller->Navigation->addCrumb('Edit Headers Order');
-        $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
-
-        if ($controller->request->is('post')) {
-            //  pr($controller->request->data);
-            if ($this->saveAll($controller->request->data[$this->name], array('validate' => false))) {
-                //    pr('save');
-                $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
-                $controller->redirect(array('action' => 'rubricsTemplatesHeader', $id));
-            } else {
-                //   pr('fail');
-            }
-        }
-
-        $controller->Navigation->addCrumb('Reorder Section Headers');
-        $data = $this->getRubricHeaders($id, 'all');
-        $controller->set('subheader', 'Reorder Section Headers');
-        $controller->set('id', $id);
-        $controller->set('data', $data);
+		$controller->set(compact('id', 'data'));
     }
 
     public function rubricsTemplatesHeaderAdd($controller, $params) {
@@ -146,17 +143,16 @@ class RubricsTemplateHeader extends QualityAppModel {
 
         $disableDelete = false;
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
-        if($QualityStatus->getCreatedRubricCount($rubric_template_id) > 0){
+        if ($QualityStatus->getCreatedRubricCount($rubric_template_id) > 0) {
             $disableDelete = true;
         }
-        
-        $controller->set('disableDelete', $disableDelete);
-        $controller->set('rubric_template_id', $rubric_template_id);
+
         $controller->Session->write('RubricsTemplateHeader.id', $id);
         $controller->Session->write('RubricsTemplateHeader.rubric_template_id', $rubric_template_id);
         $data = $this->findById($id);
         //pr($data);
-        $controller->set('data', $data);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('disableDelete', 'data', 'rubric_template_id', 'fields'));
     }
 
     private function _setupForm($controller, $params, $type) {
@@ -165,18 +161,21 @@ class RubricsTemplateHeader extends QualityAppModel {
 
         $id = empty($params['pass'][1]) ? '' : $params['pass'][1];
         $controller->set('id', $id);
-
-        if ($controller->request->is('get')) {
+		
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			
+			if ($this->save($controller->request->data)) {
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'rubricsTemplatesHeader', $rubric_template_id));
+            }
+        } else {
+            $this->recursive = -1;
             $data = $this->findById($id);
-
-            if ($type == 'add') {
+			if ($type == 'add') {
                 $data[$this->name]['order'] = $controller->Session->read('RubricsHeader.order') + 1;
             }
-            $controller->request->data = $data;
-        } else {
-            if ($this->saveAll($controller->request->data)) {
-
-                return $controller->redirect(array('action' => 'rubricsTemplatesHeader', $rubric_template_id));
+            if (!empty($data)) {
+                $controller->request->data = $data;
             }
         }
     }
@@ -185,14 +184,31 @@ class RubricsTemplateHeader extends QualityAppModel {
         if ($controller->Session->check('RubricsTemplateHeader.id')) {
             $id = $controller->Session->read('RubricsTemplateHeader.id');
             $rubric_template_id = $controller->Session->read('RubricsTemplateHeader.rubric_template_id');
-            $data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
-
-            $name = '"' . $data[$this->name]['title'] . '"';
-
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+           if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
             $controller->Session->delete('RubricsTemplate.id');
             $controller->redirect(array('action' => 'rubricsTemplatesHeader', $rubric_template_id));
+        }
+    }
+
+    public function rubricsTemplatesHeaderDeleteAll($id) {
+        $this->unbindModel(array('belongsTo' => array('RubricsTemplate')));
+        $data = $this->find('list', array('conditions' => array('rubric_template_id' => $id), 'fields' => array('id', 'id')));
+        //
+        // $listOfHeaderId = implode(',', $data);
+        // pr($listOfHeaderId);
+        //Delete Sub Header
+        if (!empty($data)) {
+            $RubricsTemplateSubheader = ClassRegistry::init('Quality.RubricsTemplateSubheader');
+            $RubricsTemplateSubheader->rubricsTemplatesSubheaderDeleteAll($data);
+
+            foreach ($data as $obj) {
+                // pr($obj);
+               $this->delete($obj);
+            }
         }
     }
 
@@ -234,7 +250,6 @@ class RubricsTemplateHeader extends QualityAppModel {
                 ),
             )
         ));
-        
 
         $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
         $currentCompletedData = $QualityInstitutionRubricsAnswer->getTotalCount($institutionSiteId, $rubricId, $qualityInstitutionRubricsid);
@@ -259,4 +274,26 @@ class RubricsTemplateHeader extends QualityAppModel {
         return $statusData;
     }
 
+	public function rubricsTemplatesHeaderReorder($controller, $params) {
+		$id = isset($controller->params->pass[0]) ? $controller->params->pass[0] : null;
+		
+		$conditions = array($id);
+		$model = $this->alias;
+		$header = 'Reorder Section Headers';
+        $data = $this->getRubricHeaders($id, 'all');
+		$controller->Navigation->addCrumb('Reorder Section Headers');
+		$controller->set(compact('data', 'model', 'header', 'conditions'));
+	}
+	
+	public function rubricsTemplatesHeaderMove($controller, $params) {
+		$rubricTemplateId = isset($controller->params->pass[0]) ? $controller->params->pass[0] : null;
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$data = $controller->request->data;
+			
+			$conditions = array('rubric_template_id' => $rubricTemplateId);
+			$this->moveOrder($data, $conditions);
+			$redirect = array('plugin' => 'Quality', 'action' => $this->_action.'Reorder', $rubricTemplateId);
+			return $controller->redirect($redirect);
+		}
+	}
 }

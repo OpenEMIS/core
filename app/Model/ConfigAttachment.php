@@ -19,6 +19,21 @@ App::uses('AppModel', 'Model');
 class ConfigAttachment extends AppModel {
 	public $useTable = 'config_attachments';
        // public $belongsTo = array('Institution');
+
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
        
     public $virtualFields = array(
 		'blobsize' => "OCTET_LENGTH(file_content)"
@@ -168,7 +183,7 @@ class ConfigAttachment extends AppModel {
 	}
 	
 	public function getBase64Encoding($id) {
-		$obj = $this->find('first', array('conditions' => array('id' => $id)));
+		$obj = $this->find('first', array('conditions' => array('ConfigAttachment.id' => $id)));
 		$data = array();
 		if($obj) {
 			$ext = strtolower($this->findExtension($obj['ConfigAttachment']['name']));

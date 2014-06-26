@@ -17,8 +17,39 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomFieldOption extends AppModel {
+	public $actsAs = array('FieldOption');
 	public $belongsTo = array(
-		'InstitutionSiteCustomField' 
+		'InstitutionSiteCustomField',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
 	
+	public function getSubOptions() {
+		$conditions = array('InstitutionSiteCustomField.type' => array(3, 4));
+		$data = $this->InstitutionSiteCustomField->findList(array('conditions' => $conditions));
+		return $data;
+	}
+	
+	public function getOptionFields() {
+		$options = $this->getSubOptions();
+		$value = array('field' => 'value', 'type' => 'text');
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$this->removeOptionFields(array('name', 'international_code', 'national_code'));
+		$this->addOptionField($field, 'after', 'id');
+		$this->addOptionField($value, 'after', $this->getConditionId());
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'institution_site_custom_field_id';
+	}
 }

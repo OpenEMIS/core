@@ -1,3 +1,23 @@
+/* bootstrap */
+.form-horizontal { color: #666666; }
+.row { margin-bottom: 1em; color: #666666; }
+.page-controls > div {
+	padding-left: 0;
+}
+.form-control {
+	font-size: 11px;
+    height: 25px;
+    padding: 5px 6px;
+}
+.form-horizontal .control-label { padding-top: 5px; font-size: 11px; }
+
+.table-checkable .checkbox-column { width: 36px; }
+.input-group-addon { font-size: 12px; padding: 5px 8px; }
+.fileupload .btn { font-size: 12px; padding: 4px 12px; }
+.form-buttons { margin-top: 15px; }
+.form-buttons input:first-child { margin-left: 15px; }
+/* end bootstrap */
+
 textarea { resize: none; }
 
 .left { float: left; }
@@ -6,17 +26,12 @@ textarea { resize: none; }
 .middle { vertical-align: middle !important; }
 .hidden { visibility: hidden; }
 .no_input { color: #333333; }
-.even { background-color: #F7F7F7; }
 .none { display: none !important; }
 
 .orange { color: orange !important; }
 .green { color: green !important; }
 .red { color: red !important; }
 .grey { color: #CCCCCC !important; }
-
-input[disabled], 
-textarea[disabled],
-select[disabled] { background-color: #FFFFFF; }
 
 .divider {
 	border-left: 1px solid #AAAAAA;
@@ -35,15 +50,14 @@ a.link_back span { font-size: 16px; }
 	float: left;
 	font-size: 11px;
 	color: #FF0000;
-	line-height: 20px;
-	padding: 1px 10px 0;
-	margin-left: 10px;
+	line-height: 19px;
+	padding: 2px 10px;
 	border: 1px solid #FF7171;
 	background-color: #FCE1E2;
 	border-radius: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
-	max-width: 220px;
+	max-width: 230px;
 }
 /* end error messages */
 
@@ -51,34 +65,6 @@ input.empty { color: #CCCCCC; }
 
 .wrapper { overflow: hidden; padding: 1px 0 1px 10px; margin-bottom: 1px; }
 .filter_wrapper { margin-bottom: 20px; }
-
-.input_wrapper:hover,
-.input_wrapper:focus,
-select:hover,
-select:focus,
-textarea:hover,
-textarea:focus {
-	border: 1px solid #BCE2FF;
-}
-
-input.default,
-.body_content_right select,
-.body_content_right textarea {
-	border: 1px solid #CCCCCC;
-	font-size: 11px;
-	padding: 3px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
-}
-input.default:hover,
-.body_content_right select:hover,
-.body_content_right textarea:hover,
-input.default:focus,
-.body_content_right select:focus,
-.body_content_right textarea:focus{
-	border:1px solid #BCE2FF;
-}
 
 select.default { width: 250px; }
 .chrome input.default, .safari input.default{
@@ -91,10 +77,7 @@ select.default { width: 250px; }
 	height:24px;
 }
 select.full_width { width: 100%; }
-.body_content_right textarea,
 input.default { width: 240px; }
-
-.body_content_right textarea { height: 80px; }
 
 .input_wrapper {
 	border: 1px solid #CCCCCC;
@@ -163,8 +146,8 @@ input.default { width: 240px; }
 /* styles for Additional Info */
 .custom_field {
 	overflow: hidden;
-	margin: 0 15px 15px 10px;
 	border: 1px solid #CCCCCC;
+	margin-bottom: 10px;
 }
 
 .custom_section_break {
@@ -224,7 +207,6 @@ input.default { width: 240px; }
 	color:#ffffff;
 }
 
-.row { position: relative; overflow: hidden; line-height: 18px; margin-bottom: 5px; }
 .label { float: left; width: 130px; margin-right: 10px; }
 .row.input .label,
 .edit .label, .edit .value { line-height: 25px; }
@@ -238,7 +220,7 @@ input.default { width: 240px; }
 	margin-top: 10px !important;
 }
 
-.btn, .btn_save {
+input.btn, .btn_save {
 	background-color: #5B8BAF;
     border: 2px outset #3e729a;
     border-radius: 4px 4px 4px 4px;
@@ -266,7 +248,7 @@ input.default { width: 240px; }
     text-shadow: -1px -1px rgba(255, 255, 255, 0.5);
 }
 
-.btn:hover, .btn_save:hover {
+input.btn:hover, .btn_save:hover {
 	color: #ffffff;
 	background-color: #294a63;
 	border: 2px outset #294a63;
@@ -289,7 +271,7 @@ input.default { width: 240px; }
 	text-shadow: -1px -1px rgba(0, 0, 0, 0.5); !important;
 }
 
-a.btn, a.btn_cancel, .btn_cancel_button { padding: 4px 14px 5px; }
+a.btn_cancel, .btn_cancel_button { padding: 4px 14px 5px; }
 a.btn:hover { text-decoration: none; }
 
 .chrome .btn_save, .safari .btn_save { padding: 4px 12px; }
@@ -344,7 +326,7 @@ a.btn:hover { text-decoration: none; }
 }
 
 .options > span { margin: 5px 3px 0 0; }
-
+/*
 .datepicker { float: left; }
 .datepicker_date { display: none; }
 .datepicker_day { width: 55px; padding-left: 2px !important; }
@@ -356,8 +338,98 @@ a.btn:hover { text-decoration: none; }
 }
 .add .datepicker_month { width: 101px; }
 .add .datepicker_year { width: 64px; }
-
+*/
 .address { width: 400px; }
 .history .row { border-bottom: 1px dotted #DEDEDE; padding-bottom: 10px; margin-bottom: 10px; }
 .history .row.last { border: 0; padding-bottom: 0; margin-bottom: 0; }
 .history .cell_value { width: 360px; }
+.readonly{
+    color: #898989;
+}
+
+fieldset.area .row.input .label, 
+fieldset.area .edit .label, 
+fieldset.area .edit .value{
+	line-height:inherit;
+}
+fieldset.area .label{
+	font-size: inherit;
+	margin-right: 0;
+	width: 25%;
+	color: inherit;
+	padding-right: 15px;
+}
+
+.legendWrapper{
+    color: #666666;
+    font-size: 10px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+.dataDisplay .form-group .col-md-4{
+	padding-top: 7px;
+}
+.dataDisplay .row .label{
+	color: #333333;
+	line-height: 25px;
+	font-size: 12px;
+	font-weight: normal;
+	text-align: left;
+	padding: 0;
+	white-space: normal;
+	width: 25%;
+}
+.dataDisplay .row .value{
+	line-height: 25px;
+}
+.customFieldsWrapper .row .label,
+.customFieldsWrapper .row .col-md-3{
+	color: #333333;
+	font-size: 12px;
+	font-weight: normal;
+	text-align: left;
+	padding: 0;
+	white-space: normal;
+	line-height: 1.4;
+	width: 25%;
+}
+.customFieldsWrapper .row .col-md-4{
+	width: auto;
+}
+.customFieldsWrapper .row{
+	padding-left: 15px;
+}
+.customFieldsWrapper h3{
+	font-size: 15px;
+	color: #666;
+}
+.topDropDownWrapper{
+	margin-bottom: 12px;
+}
+.topDropDownWrapper select.form-control{
+	display: inline-block;
+}
+.topDropDownWrapper select#schoolYearId{
+	width: 15%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#weekId{
+	width: 45%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#classId{
+	width: 30%;
+}
+.topDropDownWrapper select#monthId{
+	width: 15%;
+}
+td.present{
+	color: green;
+}
+h3.reportHtmlTitle{
+	margin-bottom: 5px;
+}
+.reportHtmlDate{
+	font-size: 11px;
+	margin-bottom: 15px;
+}

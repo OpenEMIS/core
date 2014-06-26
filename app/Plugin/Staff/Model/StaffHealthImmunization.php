@@ -1,25 +1,27 @@
 <?php
+
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-OpenEMIS
-Open Education Management Information System
+  OpenEMIS
+  Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
-it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
-that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
-<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
-*/
+  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by the Free Software Foundation
+  , either version 3 of the License, or any later version.  This program is distributed in the hope
+  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+  have received a copy of the GNU General Public License along with this program.  If not, see
+  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+ */
 
 class StaffHealthImmunization extends StaffAppModel {
+
 	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction');
-	
+	public $actsAs = array('ControllerAction', 'DatePicker' => 'date');
 	public $belongsTo = array(
 		//'Staff',
+		'HealthImmunization',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -29,7 +31,6 @@ class StaffHealthImmunization extends StaffAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'dosage' => array(
 			'ruleRequired' => array(
@@ -46,104 +47,100 @@ class StaffHealthImmunization extends StaffAppModel {
 			)
 		)
 	);
-	public $booleanOptions = array('No', 'Yes');
-	
-	public function healthImmunization($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('Health - Immunizations');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		$HealthImmunization = ClassRegistry::init('HealthImmunization');
-		$healthImmunizationsOptions = $HealthImmunization->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', 'Health - Immunizations');
-		$controller->set('data', $data);
-		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
-		
+
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'date', 'type' => 'datepicker'),
+				array('field' => 'name', 'model' => 'HealthImmunization'),
+				array('field' => 'dosage'),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
 	}
 
-	public function healthImmunizationView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View Immunization');
-		$controller->set('subheader', 'Health - View Immunization');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthImmunization'));
-		}
-		
-		$controller->Session->write('StaffHealthImmunizationId', $id);
-		$HealthImmunization = ClassRegistry::init('HealthImmunization');
-		$healthImmunizationsOptions = $HealthImmunization->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
+	public function beforeAction($controller, $action) {
+		$controller->set('model', $this->alias);
 	}
-	
+
+	public function healthImmunization($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Immunizations');
+		$header = __('Health - Immunizations');
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStaffId($controller->staffId);
+
+		$controller->set(compact('header', 'data'));
+	}
+
+	public function healthImmunizationView($controller, $params) {
+		$controller->Navigation->addCrumb('Health - View Immunization');
+		$header = __('Health - View Immunization');
+
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		$data = $this->findById($id); //('first',array('conditions' => array($this->name.'.id' => $id)));
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			$controller->redirect(array('action' => 'healthImmunization'));
+		}
+
+		$controller->Session->write('StaffHealthImmunizationId', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
+
 	public function healthImmunizationDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthImmunizationId')) {
-            $id = $controller->Session->read('StaffHealthImmunizationId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$HealthImmunization = ClassRegistry::init('HealthImmunization');
-			$healthImmunizationsOptions = $HealthImmunization->find('first', array('conditions'=> array('id' => $data[$this->name]['health_immunization_id'])));
-		
-            $name = !empty($healthImmunizationsOptions['HealthImmunization']['name'])?$healthImmunizationsOptions['HealthImmunization']['name']:'';
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+		if ($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthImmunizationId')) {
+			$id = $controller->Session->read('StaffHealthImmunizationId');
+			if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
 			$controller->Session->delete('StaffHealthImmunizationId');
-            $controller->redirect(array('action' => 'healthImmunization'));
-        }
-    }
-	
+			$controller->redirect(array('action' => 'healthImmunization'));
+		}
+	}
+
 	public function healthImmunizationAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Immunization');
-		$controller->set('subheader', 'Health - Add Immunization');
+		$controller->set('header', 'Health - Add Immunization');
 		$this->setup_add_edit_form($controller, $params);
 	}
-	
+
 	public function healthImmunizationEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Immunization');
-		$controller->set('subheader', 'Health - Edit Immunization');
+		$controller->set('header', 'Health - Edit Immunization');
 		$this->setup_add_edit_form($controller, $params);
-		
-		
 		$this->render = 'add';
 	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$HealthImmunization = ClassRegistry::init('HealthImmunization');
-		$healthImmunizationsOptions = $HealthImmunization->find('list', array('fields'=> array('id', 'name')));
-		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+
+	function setup_add_edit_form($controller, $params) {
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'healthImmunization'));
+			}
+		} else {
+
 			$this->recursive = -1;
 			$data = $this->findById($id);
-			if(!empty($data)){
+			if (!empty($data)) {
 				$controller->request->data = $data;
 			}
 		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthImmunization'));
-			}
-		}
+
+		$healthImmunizationsOptions = $this->HealthImmunization->find('list', array('fields' => array('id', 'name')));
+
+		$controller->set(compact('healthImmunizationsOptions'));
 	}
+
 }

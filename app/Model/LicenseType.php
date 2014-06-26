@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class LicenseType extends AppModel {
+	public $actsAs = array('FieldOption');
 	public $hasMany = array( 'TeacherLicense', 'StaffLicense');
 	
 	public function getLookupVariables() {

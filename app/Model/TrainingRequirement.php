@@ -15,12 +15,31 @@ have received a copy of the GNU General Public License along with this program. 
 */
 App::uses('AppModel', 'Model');
 class TrainingRequirement extends AppModel {
-	public $hasMany = array('TrainingCourse');
-	
-	public function getLookupVariables() {
-		$lookup = array('Conditions' => array('model' => 'TrainingRequirement'));
-		return $lookup;
-	}
+	public $actsAs = array('FieldOption');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
+	public $hasMany = array(
+		'TrainingCourse' => array(
+            'dependent' => true
+        ),
+        'StaffTrainingNeed' => array(
+    	 	'foreignKey' => 'ref_course_id',
+            'conditions' => array('ref_course_table' => 'TrainingCourse'),
+            'dependent' => true
+        )
+	);
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingRequirement.order')));

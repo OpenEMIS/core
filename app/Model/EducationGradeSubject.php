@@ -18,7 +18,109 @@ App::uses('AppModel', 'Model');
 
 class EducationGradeSubject extends AppModel {
 	public $useTable = 'education_grades_subjects';
+	public $actsAs = array('ControllerAction', 'Reorder');
 	public $belongsTo = array('EducationGrade', 'EducationSubject');
+	
+	public $_action = 'gradeSubjects';
+	public $_header = 'Education Grades - Subjects';
+	public $_condition = 'education_grade_id';
+	
+	public function beforeAction($controller, $action) {
+		parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb($this->_header);
+		$controller->set('header', __($this->_header));
+		$controller->set('_action', $this->_action);
+		$controller->set('selectedAction', $this->_action);
+		$controller->set('_condition', $this->_condition);
+	}
+	
+	public function gradeSubjects($controller, $params) {
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		if($this->EducationGrade->exists($conditionId)) {
+			$data = $this->findAllByEducationGradeIdAndVisible($conditionId, 1, array(), array('EducationSubject.order' => 'ASC'));
+			$gradeObj = $this->EducationGrade->findById($conditionId);
+			$cycleObj = ClassRegistry::init('EducationCycle')->findById($gradeObj['EducationProgramme']['education_cycle_id']);
+			$systemObj = ClassRegistry::init('EducationSystem')->findById($cycleObj['EducationLevel']['education_system_id']);
+			$paths = array();
+			$paths[] = array(
+				'name' => $systemObj['EducationSystem']['name'],
+				'url' => array('action' => 'systems')
+			);
+			$paths[] = array(
+				'name' => $cycleObj['EducationLevel']['name'],
+				'url' => array('action' => 'levels', 'education_system_id' => $systemObj['EducationSystem']['id'])
+			);
+			$paths[] = array(
+				'name' => $cycleObj['EducationCycle']['name'],
+				'url' => array('action' => 'cycles', 'education_level_id' => $cycleObj['EducationLevel']['id'])
+			);
+			$paths[] = array(
+				'name' => $gradeObj['EducationProgramme']['name'],
+				'url' => array('action' => 'programmes', 'education_cycle_id' => $cycleObj['EducationCycle']['id'])
+			);
+			$paths[] = array(
+				'name' => $gradeObj['EducationGrade']['name'],
+				'url' => array('action' => 'grades', 'education_programme_id' => $gradeObj['EducationProgramme']['id'])
+			);
+			$paths[] = array(
+				'name' => '(' . __('Education Subjects') . ')'
+			);
+			$controller->set(compact('data', 'paths', 'conditionId'));
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'systems'));
+		}
+	}
+	
+	public function gradeSubjectsEdit($controller, $params) {
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		if($this->EducationGrade->exists($conditionId)) {
+			if($controller->request->is('get')) {
+				$data = $this->EducationSubject->find('all', array(
+					'recursive' => 0,
+					'fields' => array(
+						'EducationSubject.id', 'EducationSubject.name', 'EducationSubject.code', 'EducationSubject.visible', 'EducationSubject.order',
+						'EducationGradeSubject.id', 'EducationGradeSubject.visible', 'EducationGradeSubject.hours_required'
+					),
+					'joins' => array(
+						array(
+							'table' => 'education_grades_subjects',
+							'alias' => 'EducationGradeSubject',
+							'type' => 'LEFT',
+							'conditions' => array(
+								'EducationGradeSubject.education_subject_id = EducationSubject.id',
+								'EducationGradeSubject.education_grade_id = ' . $conditionId
+							)
+						)
+					),
+					'order' => array('EducationGradeSubject.visible DESC', 'EducationSubject.order')
+				));
+				$controller->set(compact('data', 'conditionId'));
+			} else {
+				$data = $controller->request->data;
+				
+				if(isset($data[$this->alias])) {
+					foreach($data[$this->alias] as $i => $obj) {
+						if(empty($obj['id']) && $obj['visible'] == 0) {
+							unset($data[$this->alias][$i]);
+						} else {
+							if(empty($obj['hours_required'])) {
+								$data[$this->alias][$i]['hours_required'] = 0;
+							}
+						}
+					}
+					if(!empty($data[$this->alias])) {
+						$this->saveAll($data[$this->alias]);
+					}
+				}
+				$controller->Message->alert('general.edit.success');
+				return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'systems'));
+		}
+	}
 	
 	public function findSubjectsByGrades($gradeIds) {
 		$list = $this->find('all', array(

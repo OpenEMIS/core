@@ -52,7 +52,7 @@ class ReportsController extends ReportsAppController {
         'Custom'
     );
     
-    public $helpers = array('Paginator');
+    public $helpers = array('Paginator', 'Label');
     public $components = array('Paginator','DateTime','Utility');
     private $pathFile = '';
     
@@ -74,6 +74,18 @@ class ReportsController extends ReportsAppController {
                 $this->download($file);
             } else {
                 $this->redirect(array('action' => str_replace('Download', '', $this->action)));
+            }
+        }else if(strrpos($this->action, 'ViewHtml')!==false) {
+            if(isset($this->params['pass'][0])) {
+                $file = $this->params['pass'][0];
+				if($file == '' ){
+					$this->redirect(array('action' => str_replace('ViewHtml', '', $this->action)));
+				}else{
+					$this->viewHtml($file);
+				}
+                
+            } else {
+                $this->redirect(array('action' => str_replace('ViewHtml', '', $this->action)));
             }
         }
     }
@@ -102,11 +114,13 @@ class ReportsController extends ReportsAppController {
     public function DataQualityDownload(){}
     
     public function renderReport($reportType = 'Institution') {
+		$reportTitle  = Inflector::underscore($reportType);
+		$reportTitle  = Inflector::humanize($reportTitle);
         if(isset($this->params['pass'][0])){
-            $this->Navigation->addCrumb($reportType.' Reports', array('controller' => 'Reports', 'action' => $this->action));
+            $this->Navigation->addCrumb($reportTitle.' Reports', array('controller' => 'Reports', 'action' => $this->action));
             $this->Navigation->addCrumb(' Generated Files');
         }else{
-            $this->Navigation->addCrumb($reportType.' Reports');
+            $this->Navigation->addCrumb($reportTitle.' Reports');
         }
 
         if(array_key_exists($reportType, $this->standardReports)){
@@ -592,6 +606,61 @@ class ReportsController extends ReportsAppController {
         }
 
     }
+	
+	public function viewHtml($filename, $olap = false) {
+		$info['basename'] = $filename;
+		/* Return array
+		 * Array
+		  (
+		  [basename] => 1_980_Institution_Report.csv
+		  [reportId] => 1
+		  [batchProcessId] => 980
+		  [name] => Institution_Report.csv
+		  )
+		 * 
+		 */
+
+
+		$this->parseFilename($info);
+
+
+		$resChck = $this->BatchProcess->find('all', array('conditions' => array('id' => $info['batchProcessId'], 'status' => array(1, 2)))); // filename that's currently being proessed
+		if ($resChck) {
+			$referrer = str_replace('?processing', '', Controller::referer());
+			$this->redirect($referrer . '?processing');
+		}
+		$res = $this->Report->find('first', array('conditions' => array('id' => $info['reportId']))); // get the path
+
+		$module = $res['Report']['module'];
+		$category = $res['Report']['category'];
+		$name = $res['Report']['name'];
+		$res['Report']['file_type'] = ($res['Report']['file_type'] == 'ind' ? 'csv' : $res['Report']['file_type']);
+		$res['Report']['file_type'] = ($res['Report']['file_type'] == 'csv_custom' ? 'csv' : $res['Report']['file_type']);
+		$xt = $res['Report']['file_type'];
+
+		if ($olap) {
+			$category = 'Olap_Reports';
+		}
+		//$path =  WWW_ROOT.DS.$module.DS;
+		//$path = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS;
+		//$this->viewClass = 'Media';
+		// Download app/outside_webroot_dir/example.zip
+		$params = array(
+			'id' => $filename,
+			'name' => $name,
+			'download' => true,
+			'extension' => $res['Report']['file_type'],
+			//'path'      => APP . 'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS
+			'path' => APP . WEBROOT_DIR . DS . 'reports' . DS . str_replace(' ', '_', $category) . DS . str_replace(' ', '_', $module) . DS,
+		);
+
+		$pageTitleReport = $name;
+		//$this->set($params);
+		$this->set(compact('params', 'pageTitleReport'));
+
+		$this->layout = 'report_html';
+		$this->render('view_html');
+	}
 
     public function generateRawQuery($settings) {
         $this->autoRender = false;
@@ -1027,7 +1096,10 @@ class ReportsController extends ReportsAppController {
         //pr(array_shift($arrFilename));
         $info['reportId'] = array_shift($arrFilename);
         $info['batchProcessId'] = array_shift($arrFilename);
-        $info['name']  = implode("_",$arrFilename);
+        //$info['name']  = implode("_",$arrFilename);
+		$tempReportName = implode(" ",$arrFilename);
+		$arrReportName = explode(".", $tempReportName);
+		$info['name'] = array_shift($arrReportName);
     }
     
     private function getReportFilesPath($data){

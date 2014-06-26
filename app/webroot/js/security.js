@@ -20,12 +20,12 @@ $(document).ready(function() {
 var Security = {
 	operations: ['_view', '_edit', '_add', '_delete', '_execute'],
 	init: function() {
-		$('#permissions.edit input[type="hidden"]:disabled').removeAttr('disabled');
-		$('#permissions.edit .module_checkbox').change(Security.toggleModule);
+		$('#permissions input[type="hidden"]:disabled').removeAttr('disabled');
+		$('#permissions .module_checkbox').change(Security.toggleModule);
 		
 		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled), #_execute:not(:disabled)').change(Security.toggleOperation);
 		$('fieldset[type] .icon_plus').click(function() { Security.addRoleArea(this); });
-                Security.autoCheckInstitutionSiteView();
+		//Security.autoCheckInstitutionSiteView();
 	},
 	
 	navigate: function(obj) {
@@ -82,8 +82,10 @@ var Security = {
 								jsTable.tableScrollableAdd(parent, data);
 							} else {
 								alertOpt['parent'] = '#search';
-								alertOpt['type'] = $(data).attr('type');
+								//alertOpt['type'] = $(data).attr('type');
 								alertOpt['text'] = $(data).html();
+
+								console.log(alertOpt);
 								$.alert(alertOpt);
 							}
 						}
@@ -139,7 +141,7 @@ var Security = {
 	},
 	
 	addGroupAdmin: function(obj) {
-		var index = $('#group_admin .table_row').length;
+		var index = $('#group_admin tr').length;
 		
 		$.ajax({
 			type: 'GET',
@@ -151,7 +153,7 @@ var Security = {
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
-					$('#group_admin .table_body').append(data);
+					$('#group_admin tbody').append(data);
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
@@ -167,7 +169,7 @@ var Security = {
 	},
 	
 	removeGroupUser: function(obj) {
-		var row = $(obj).closest('.table_row');
+		var row = $(obj).closest('tr');
 		
 		var maskId;
 		var ajaxParams = {};
@@ -194,7 +196,7 @@ var Security = {
 	
 	addGroupAccessOptions: function(obj) {
 		var parent = $(obj).closest('.section_break');
-		var index = parent.find('.table_row').length;
+		var index = parent.find('tr').length;
 		var exclude = [];
 		parent.find('.value_id').each(function() {
 			exclude.push($(this).val());
@@ -210,7 +212,7 @@ var Security = {
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
-					parent.find('.table_body').append(data);
+					parent.find('tbody').append(data);
 					jsTable.init(parent);
 				};
 				$.unmask({id: maskId, callback: callback});
@@ -236,7 +238,7 @@ var Security = {
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
-					$(obj).closest('.table_row').find('.value_id').html(data);
+					$(obj).closest('tr').find('.value_id').html(data);
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
@@ -308,13 +310,10 @@ var Security = {
 	toggleModule: function() {
 		var checked = $(this).is(':checked');
 		var parent = $(this).closest('.section_group');
-		parent.find('.table_row input[type="checkbox"]').each(function() {
+		
+		parent.find('tr input[type="checkbox"]').each(function() {
 			if(!$(this).is(':disabled')) {
-				if(checked) {
-					$(this).attr('checked', 'checked');
-				} else {
-					$(this).removeAttr('checked');
-				}
+				$(this).prop('checked', checked);
 			}
 			Security.checkModuleToggled($(this));
 		});
@@ -323,24 +322,21 @@ var Security = {
 	checkModuleToggled: function(obj) {
 		var checked = false;
 		var section = obj.closest('.section_group');
-		section.find('.table_row input[type="checkbox"]').each(function() {
-			if(!$(this).closest('.table_row').hasClass('none')) {
+		section.find('tr input[type="checkbox"]').each(function() {
+			if(!$(this).closest('tr').hasClass('none')) {
 				if($(this).is(':checked')) checked = true;
 			}
 		});
-		if(checked) {
-			section.find('.module_checkbox').attr('checked', 'checked');
-		} else {
-			section.find('.module_checkbox').removeAttr('checked');
-		}
+		section.find('.module_checkbox').prop('checked', checked);
 		// enable parent function to show top navigation
-		$('.table_row.none').each(function() {
+		
+		$('tr.none').each(function() {
 			var parentId = $(this).attr('parent-id');
 			var functionId = $(this).attr('function-id');
 			var isChecked = false;
 			var selector = parentId!=-1 
-						 ? ('.table_row[function-id="' + parentId + '"]')
-						 : ('.table_row[parent-id="' + functionId + '"]');
+						 ? ('tr[function-id="' + parentId + '"]')
+						 : ('tr[parent-id="' + functionId + '"]');
 			
 			$(selector).each(function() {
 				if($(this).find('#_view').is(':checked') && !isChecked) {
@@ -349,11 +345,7 @@ var Security = {
 				}
 			});
 			$(this).find('input[type="checkbox"]:not(:disabled)').each(function() {
-				if(isChecked) {
-					$(this).attr('checked', 'checked');
-				} else {
-					$(this).removeAttr('checked');
-				}
+				$(this).prop('checked', isChecked);
 			});
 		});
 	},
@@ -361,7 +353,7 @@ var Security = {
 	toggleOperation: function() {
 		var obj = $(this);
 		var checked = obj.is(':checked');
-		var parent = obj.closest('.table_row');
+		var parent = obj.closest('tr');
 		var id = obj.attr('id');
 		var operations = Security.operations.slice();
 		var op, opObj, selector;
@@ -371,11 +363,7 @@ var Security = {
 			op = operations[i];
 			if(id !== op) {
 				selector = '#'+op+':not(:disabled)';
-				if(checked) {
-					parent.find(selector).attr('checked', 'checked');
-				} else {
-					parent.find(selector).removeAttr('checked');
-				}
+				parent.find(selector).prop('checked', checked);
 			} else {
 				break;
 			}
@@ -396,9 +384,9 @@ var Security = {
             
             for(var i in arrFinal){
                 var currentFunctionId = arrFinal[i];
-                $(".table_row[function-id='"+currentFunctionId+"'] .table_cell").find(":checkbox:not(:disabled)").click(function(){
-                    var checkboxInstitutionView = $(".table_row[function-id='1'] .table_cell").find("#_view:checkbox");
-                    var checkboxInstitutionSiteView = $(".table_row[function-id='8'] .table_cell").find("#_view:checkbox");
+                $("tr[function-id='"+currentFunctionId+"'] td").find(":checkbox:not(:disabled)").click(function(){
+                    var checkboxInstitutionView = $("tr[function-id='1'] td").find("#_view:checkbox");
+                    var checkboxInstitutionSiteView = $("tr[function-id='8'] td").find("#_view:checkbox");
                     checkboxInstitutionView.attr('checked', 'checked');// check Institution View
                     checkboxInstitutionView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
                     checkboxInstitutionSiteView.attr('checked', 'checked');// check Institution Site View

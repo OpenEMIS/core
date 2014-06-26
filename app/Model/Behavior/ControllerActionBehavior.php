@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class ControllerActionBehavior extends ModelBehavior {
 	public function beforeAction(Model $model, $controller, $action) {
-		
+		$controller->set('model', $model->alias);
 	}
 	
 	public function afterAction(Model $model, $controller, $action) {
@@ -52,5 +52,19 @@ class ControllerActionBehavior extends ModelBehavior {
 		}
 		
 		return $result;
+	}
+	
+	public function remove(Model $model, $controller, $redirect) {
+		if ($controller->Session->check($model->alias . '.id')) {
+			$id = $controller->Session->read($model->alias . '.id');
+			if($model->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			
+			$controller->Session->delete($model->alias . '.id');
+			return $controller->redirect(array('action' => $redirect));
+		}
 	}
 }

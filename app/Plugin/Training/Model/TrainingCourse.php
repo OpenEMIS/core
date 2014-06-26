@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TrainingCourse extends TrainingAppModel {
-	//public $useTable = 'student_health_histories';
 	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
@@ -37,41 +36,45 @@ class TrainingCourse extends TrainingAppModel {
 
 	public $hasMany = array(
 		'TrainingCourseAttachment' => array(
-			'className' => 'TrainingCourseAttachment',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCoursePrerequisite' => array(
-			'className' => 'TrainingCoursePrerequisite',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCourseTargetPopulation' => array(
-			'className' => 'TrainingCourseTargetPopulation',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
+		),
+		'TrainingCourseResultType' => array(
+			'dependent' => true,
+			'exclusive' => true
+		),
+		'TrainingCourseSpecialisation' => array(
+			'dependent' => true,
+			'exclusive' => true
+		),
+		'TrainingCourseExperience' => array(
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCourseProvider' => array(
-			'className' => 'TrainingCourseProvider',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
-		),
-		'TeacherTrainingNeed' => array(
-			'className' => 'TeacherTrainingNeed',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'StaffTrainingNeed' => array(
-			'className' => 'StaffTrainingNeed',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
-		),
+    	 	'foreignKey' => 'ref_course_id',
+            'conditions' => array('ref_course_table' => 'TrainingCourse'),
+           'dependent' => true,
+			'exclusive' => true
+        ),
 		'TrainingSession' => array(
-			'className' => 'TrainingSession',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		)
 	);
+	
 	
 	public $validate = array(
 		'code' => array(
@@ -136,17 +139,19 @@ class TrainingCourse extends TrainingAppModel {
 				'required' => true,
 				'message' => 'Please select a valid Training Level.'
 			)
-		),
-		'pass_result' => array(
-			'ruleRequired' => array(
-				'rule' => 'numeric',
-				'required' => true,
-				'message' => 'Please enter a valid Pass Result.'
-			)
 		)
 	);
 		
 	public $headerDefault = 'Courses';
+
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+		$controller->FileUploader->fileVar = 'files';
+		$controller->FileUploader->fileModel = 'TrainingCourseAttachment';
+		$controller->FileUploader->allowEmptyUpload = true;
+		$controller->FileUploader->additionalFileType();
+    }
+	
 
 	public function autocomplete($search,$index) {
 		$search = sprintf('%%%s%%', $search);
@@ -181,30 +186,31 @@ class TrainingCourse extends TrainingAppModel {
 	}
 
 
-
 	public function autocompletePosition($search, $index) {
 		$search = sprintf('%%%s%%', $search);
 
-		$list = $this->query(
-			"SELECT * FROM(
-			SELECT *, 'staff_position_titles' as position_table FROM staff_position_titles as StaffPositionTitle UNION Select *, 'teacher_position_titles' as position_table from teacher_position_titles as TeacherPositionTitle 
-			)as TrainingPosition
-			WHERE name LIKE '" . $search . "' and visible = 1
-			order by 'order';");
-		
+		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 
+		$list = $staffPositionTitle->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT StaffPositionTitle.name', 'StaffPositionTitle.id'),
+			'conditions' => array(
+				'StaffPositionTitle.name LIKE' => $search,
+				'StaffPositionTitle.visible' => 1
+			),
+			'order' => array('StaffPositionTitle.name')
+		));
 		
 		$data = array();
 		
 		foreach($list as $obj) {
-			$positionTitleId = $obj['TrainingPosition']['id'];
-			$positionTitleName = $obj['TrainingPosition']['name'];
-			$positionTitleTable= $obj['TrainingPosition']['position_table'];
+			$positionTitleId = $obj['StaffPositionTitle']['id'];
+			$positionTitleName = $obj['StaffPositionTitle']['name'];
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s', $positionTitleName)),
-				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable,
-				'position-title-validate-'.$index => $positionTitleTable . '_' . $positionTitleId)
+				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName,
+				'position-title-validate-'.$index => $positionTitleId)
 			);
 		}
 
@@ -222,10 +228,34 @@ class TrainingCourse extends TrainingAppModel {
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
 		if(!empty($selectedStatus)){
-			$data = $this->find('all', array('order'=> array('code', 'title'), 'conditions' => array('TrainingCourse.training_status_id' => $selectedStatus)));
-		}else{
 			$data = $this->find('all', array('order'=> array('code', 'title')));
+		}else{
+			$data = $this->find('all', array('order'=> array('code', 'title'), 'conditions' => array('NOT' => array('TrainingCourse.training_status_id' => '4'))));
 		}
+
+		$conditions = array();
+		if(!empty($selectedStatus)){
+			$conditions['TrainingCourse.training_status_id'] = $selectedStatus;
+		}else{
+			$conditions['NOT']['TrainingCourse.training_status_id'] = 4;
+		}
+		
+		$data = $this->find('all', 
+			array(
+				'recursive' => -1, 
+				'fields' => array('TrainingCourse.*', 'TrainingStatus.*'),
+				'joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'training_statuses',
+						'alias' => 'TrainingStatus',
+						'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
+					)
+				),
+				'order'=> array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingCourse.training_status_id'), 
+				'conditions' => $conditions
+			)
+		);
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
@@ -233,37 +263,6 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('selectedStatus', $selectedStatus);
 		
 	}
-
-
-  
-    public function coursePrequisiteDelete() {
-        $this->autoRender = false;
-        if($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-            
-            if($FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-            
-            return json_encode($result);
-        }
-    }
-        
-    public function attachmentsLeaveDownload($id) {
-        $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $FileAttachment->download($id);
-    }
-       
 
 
 	public function courseView($controller, $params){
@@ -279,17 +278,12 @@ class TrainingCourse extends TrainingAppModel {
 		}
 		
 		$controller->Session->write('TrainingCourseId', $id);
-		$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
-		$trainingCourseTargetPopulations = $trainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
+		$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
-		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
-		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
-		
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
-		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
+		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name'), 'conditions'=>array('StaffPositionTitle.visible'=>1)));
 
-		$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');
-		$trainingCoursePrerequisites = $trainingCoursePrerequisite->find('all',  
+		$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
 						'fields' => array('TrainingPrerequisiteCourse.*', 'TrainingCoursePrerequisite.*'),
 						'joins' => array(
@@ -304,11 +298,35 @@ class TrainingCourse extends TrainingAppModel {
 					)
 				);
 
-		$trainingCourseProvider = ClassRegistry::init('TrainingCourseProvider');
-		$trainingCourseProviders = $trainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
+		$trainingCourseProviders = $this->TrainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviders = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
+
+		$this->TrainingCourseResultType->bindModel(
+	        array('belongsTo' => array(
+	                'TrainingResultType' => array(
+						'className' => 'FieldOptionValue',
+						'foreignKey' => 'training_result_type_id'
+					)
+	            )
+	        )
+	    );
+
+		$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)));
+
+		$this->TrainingCourseSpecialisation->bindModel(
+	        array('belongsTo' => array(
+	                'QualificationSpecialisation' => array(
+						'className' => 'QualificationSpecialisation',
+						'foreignKey' => 'qualification_specialisation_id'
+					)
+	            )
+	        )
+	    );
+		$trainingCourseSpecialisations = $this->TrainingCourseSpecialisation->find('all', array('conditions'=>array('TrainingCourseSpecialisation.training_course_id'=>$id)));
+		$trainingCourseExperiences = $this->TrainingCourseExperience->find('all', array('conditions'=>array('TrainingCourseExperience.training_course_id'=>$id)));
+				
 
 		$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
         $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
@@ -317,13 +335,22 @@ class TrainingCourse extends TrainingAppModel {
 
 		$controller->set('data', $data);
 		$controller->set('trainingCourseTargetPopulations', $trainingCourseTargetPopulations);
-		$controller->set('teacherPositionTitles', $teacherPositionTitles);
 		$controller->set('staffPositionTitles', $staffPositionTitles);
 		$controller->set('trainingCoursePrerequisites', $trainingCoursePrerequisites);
 		$controller->set('trainingCourseProviders', $trainingCourseProviders);
 		$controller->set('trainingProviders', $trainingProviders);
+		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);
+		$controller->set('trainingCourseSpecialisations', $trainingCourseSpecialisations);
+		$controller->set('trainingCourseExperiences', $trainingCourseExperiences);
 		$controller->set('attachments', $attachments);
 		$controller->set('_model','TrainingCourseAttachment');
+
+		//APROVAL
+		$pending = $data['TrainingCourse']['training_status_id']=='2' ? true : false;
+		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
+		$controller->set('approvalMethod', 'course');
+		$controller->set('controller', 'Training');
+		$controller->set('plugin', 'Training');
 	}
 	
 	public function courseDelete($controller, $params) {
@@ -393,35 +420,48 @@ class TrainingCourse extends TrainingAppModel {
 		
 		$this->render = 'add';
 	}
-	
+
+	public function courseApproval($controller, $params){
+		if(!$controller->request->is('get')){
+			$saveData = $controller->request->data;
+			if (isset($saveData['approve'])) {
+			   	$saveData['WorkflowLog']['approve'] = 1; 
+			} else if (isset($saveData['reject'])) {
+		      	$saveData['WorkflowLog']['approve'] = 0; 
+			}
+		
+			if($controller->Workflow->updateApproval($saveData)){
+				if($saveData['WorkflowLog']['approve']==1){
+					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						$this->id =  $saveData['WorkflowLog']['record_id'];
+						$this->saveField('training_status_id', 3);
+					}
+				}else{
+					$this->id =  $saveData['WorkflowLog']['record_id'];
+					$this->saveField('training_status_id', 1);
+				}
+				return $controller->redirect(array('action'=>'courseView', $saveData['WorkflowLog']['record_id']));
+			}
+		}
+	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingFieldStudy = ClassRegistry::init('TrainingFieldStudy');
-		$trainingFieldStudyOptions = $trainingFieldStudy->find('list', array('fields'=> array('id', 'name')));
+		$trainingFieldStudyOptions = $this->TrainingFieldStudy->find('list', array('fields'=> array('id', 'name')));
 		
-		$trainingModeDelivery = ClassRegistry::init('TrainingModeDelivery');
-		$trainingModeDeliveryOptions = $trainingModeDelivery->find('list', array('fields'=> array('id', 'name')));
+		$trainingModeDeliveryOptions = $this->TrainingModeDelivery->find('list', array('fields'=> array('id', 'name')));
 		
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=> array('id', 'name')));
 		
-		$trainingRequirement = ClassRegistry::init('TrainingRequirement');
-		$trainingRequirementOptions = $trainingRequirement->find('list', array('fields'=> array('id', 'name')));
+		$trainingRequirementOptions = $this->TrainingRequirement->find('list', array('fields'=> array('id', 'name')));
 
-		$trainingLevel = ClassRegistry::init('TrainingLevel');
-		$trainingLevelOptions = $trainingLevel->find('list', array('fields'=> array('id', 'name')));
-
-
-		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
-		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
+		$trainingLevelOptions = $this->TrainingLevel->find('list', array('fields'=> array('id', 'name')));
 
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
 
-		$trainingCourseType = ClassRegistry::init('TrainingCourseType');
-		$trainingCourseTypeOptions = $trainingCourseType->find('list', array('fields'=> array('id', 'name')));
+		$trainingCourseTypeOptions = $this->TrainingCourseType->find('list', array('fields'=> array('id', 'name')));
 	
-
 		$configItem = ClassRegistry::init('ConfigItem');
 	 	$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
 
@@ -430,32 +470,53 @@ class TrainingCourse extends TrainingAppModel {
  			$trainingCreditHourOptions[$i] = $i;
 	 	}
 
-		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
-		$controller->set('trainingFieldStudyOptions', $trainingFieldStudyOptions);
-		$controller->set('trainingModeDeliveryOptions', $trainingModeDeliveryOptions);
-		$controller->set('trainingProviderOptions', $trainingProviderOptions);
-		$controller->set('trainingRequirementOptions', $trainingRequirementOptions);
-		$controller->set('trainingLevelOptions', $trainingLevelOptions);
-		$controller->set('teacherPositionTitles', $teacherPositionTitles);
-		$controller->set('staffPositionTitles', $staffPositionTitles);
-		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
+	 	$this->TrainingCourseResultType->bindModel(
+	        array('belongsTo' => array(
+	                'TrainingResultType' => array(
+						'className' => 'FieldOptionValue',
+						'foreignKey' => 'training_result_type_id'
+					)
+	            )
+	        )
+	    );
+ 		$trainingResultTypeOptions = $this->TrainingCourseResultType->TrainingResultType->getList();
+
+ 		$qualificationSpecialisation = ClassRegistry::init('QualificationSpecialisation');
+		$qualificationSpecialisationOptions = $qualificationSpecialisation->find('list', array('fields'=>array('id', 'name')));
+
+		$controller->set(compact('trainingFieldStudyOptions', 'trainingModeDeliveryOptions', 'trainingProviderOptions', 
+		'trainingRequirementOptions', 'trainingLevelOptions', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions', 'trainingResultTypeOptions', 'qualificationSpecialisationOptions'));
+	
 
 		$controller->set('modelName', $this->name);
+		$attachments = array();
 		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+
+			//==================================================
+
 			$this->recursive = -1;
 			$data = $this->findById($id);
+
+			$attachments = $controller->FileUploader->getList(array('conditions' => array('TrainingCourseAttachment.training_course_id'=>$id)));
+		
+	
 			if(!empty($data)){
 				if($data['TrainingCourse']['training_status_id']!=1){
 					return $controller->redirect(array('action' => 'courseView', $id));
 				}
 				$controller->request->data = $data;
-				//$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
-				$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
-				$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');
-				$trainingCoursePrerequisites = $trainingCoursePrerequisite->find('all',  
+				$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
+				$trainingCourseTargetPopulationsVal = null;
+				if(!empty($trainingCourseTargetPopulations)){
+					foreach($trainingCourseTargetPopulations as $val){
+						$trainingCourseTargetPopulationsVal[] = $val['TrainingCourseTargetPopulation'];
+					}
+				}
+
+				$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
 						'fields' => array('TrainingPrerequisiteCourse.*', 'TrainingCoursePrerequisite.*'),
 						'joins' => array(
@@ -469,13 +530,6 @@ class TrainingCourse extends TrainingAppModel {
 						'conditions'=>array('TrainingCoursePrerequisite.training_course_id'=>$id)
 					)
 				);
-				$trainingCourseTargetPopulationsVal = null;
-				if(!empty($trainingCourseTargetPopulations)){
-					foreach($trainingCourseTargetPopulations as $val){
-						$trainingCourseTargetPopulationsVal[] = $val['TrainingCourseTargetPopulation'];
-					}
-				}
-
 				$trainingCoursePrerequisitesVal = null;
 				if(!empty($trainingCoursePrerequisites)){
 					$temp = array();
@@ -495,22 +549,54 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
-			  	$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
-	            $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
+				$this->TrainingCourseResultType->bindModel(
+			        array('belongsTo' => array(
+			                'TrainingResultType' => array(
+								'className' => 'FieldOptionValue',
+								'foreignKey' => 'training_result_type_id'
+							)
+			            )
+			        )
+			    );
+			   	$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all',  
+					array(
+						'conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)
+					)
+				);
+				$trainingCourseResultTypesVal = null;
+				if(!empty($trainingCourseResultTypes)){
+					foreach($trainingCourseResultTypes as $val){
+						$trainingCourseResultTypesVal[] = array_merge(array('result_type'=>$val['TrainingResultType']['name']), $val['TrainingCourseResultType']);
+					}
+				}
 
-	            $attachments = $FileAttachment->getList($id);
-	            $controller->set('attachments',$attachments);
-	            $controller->set('_model','TrainingCourseAttachment');
+				$trainingCourseSpecialisations = $this->TrainingCourseSpecialisation->find('all', array('conditions'=>array('TrainingCourseSpecialisation.training_course_id'=>$id)));
+				$trainingCourseSpecialisationsVal = null;
+				if(!empty($trainingCourseSpecialisations)){
+					foreach($trainingCourseSpecialisations as $val){
+						$trainingCourseSpecialisationsVal[] = $val['TrainingCourseSpecialisation'];
+					}
+				}
 
+				$trainingCourseExperiences = $this->TrainingCourseExperience->find('all', array('conditions'=>array('TrainingCourseExperience.training_course_id'=>$id)));
+				$trainingCourseExperiencesVal = null;
+				if(!empty($trainingCourseExperiences)){
+					foreach($trainingCourseExperiences as $val){
+						$trainingCourseExperiencesVal[] = $val['TrainingCourseExperience'];
+					}
+				}
 
 				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal)
-					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal));
+					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal), array('TrainingCourseResultType'=>$trainingCourseResultTypesVal), array('TrainingCourseSpecialisation'=>$trainingCourseSpecialisationsVal)
+					, array('TrainingCourseExperience'=>$trainingCourseExperiencesVal));
 				$controller->request->data = array_merge($data, $merge);
 			}
 		}
 		else{
 			$saveData = $controller->request->data;
-			unset($saveData['TrainingCourseAttachment']);
+			$postFileData = $saveData['TrainingCourse']['files'];
+			unset($saveData['TrainingCourse']['files']);
+
 
 			if ($this->saveAll($saveData, array('validate' => 'only'))){
 				if (isset($saveData['save'])) {
@@ -518,7 +604,6 @@ class TrainingCourse extends TrainingAppModel {
 				} else if (isset($saveData['submitForApproval'])) {
 			      	$saveData['TrainingCourse']['training_status_id'] = 2; 
 				}
-
 				if($this->saveAll($saveData)){
 					$id = null;
 					if(isset($saveData['TrainingCourse']['id'])){
@@ -527,15 +612,10 @@ class TrainingCourse extends TrainingAppModel {
 					if(empty($id)){
 						$id = $this->getInsertID();
 					}
-					
-	                $arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
-	                $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
-	          
-	               	$fileData = $params['form'];
-	                if(!empty($fileData)){
-	                    $errors = $FileAttachment->saveAll($controller->request->data, $fileData, $id);
-	                }
 
+					$controller->FileUploader->additionData = array('training_course_id' => $id);
+					$controller->FileUploader->uploadFile(NULL, $postFileData);
+					
 					if(isset($controller->request->data['DeleteTargetPopulation'])){
 						$deletedId = array();
 						foreach($controller->request->data['DeleteTargetPopulation'] as $key=>$value){
@@ -543,9 +623,9 @@ class TrainingCourse extends TrainingAppModel {
 						}
 						$this->TrainingCourseTargetPopulation->deleteAll(array('TrainingCourseTargetPopulation.id' => $deletedId), false);
 					}
-					if(isset($controller->request->data['DeletePrerequisite'])){
+					if(isset($controller->request->data['DeleteCoursePrerequisite'])){
 						$deletedId = array();
-						foreach($controller->request->data['DeletePrerequisite'] as $key=>$value){
+						foreach($controller->request->data['DeleteCoursePrerequisite'] as $key=>$value){
 							$deletedId[] = $value['id'];
 						}
 						$this->TrainingCoursePrerequisite->deleteAll(array('TrainingCoursePrerequisite.id' => $deletedId), false);
@@ -557,6 +637,27 @@ class TrainingCourse extends TrainingAppModel {
 						}
 						$this->TrainingCourseProvider->deleteAll(array('TrainingCourseProvider.id' => $deletedId), false);
 					}
+					if(isset($controller->request->data['DeleteResultType'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteResultType'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseResultType->deleteAll(array('TrainingCourseResultType.id' => $deletedId), false);
+					}
+					if(isset($controller->request->data['DeleteSpecialisation'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteSpecialisation'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseSpecialisation->deleteAll(array('TrainingCourseSpecialisation.id' => $deletedId), false);
+					}
+					if(isset($controller->request->data['DeleteExperience'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteExperience'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseExperience->deleteAll(array('TrainingCourseExperience.id' => $deletedId), false);
+					}
 					if(empty($controller->request->data[$this->name]['id'])){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
 					}
@@ -567,5 +668,6 @@ class TrainingCourse extends TrainingAppModel {
 				}
 			}
 		}
+		$controller->set('attachments', $attachments);
 	}
 }

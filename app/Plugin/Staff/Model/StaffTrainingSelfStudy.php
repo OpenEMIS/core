@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffTrainingSelfStudy extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('start_date', 'end_date'));
 
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -26,8 +26,19 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingProvider',
+		'TrainingAchievementType' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'training_achievement_type_id',
+		),
 		'TrainingStatus',
+	);
+
+	public $hasOne = array(
+		'StaffTrainingSelfStudyResult' => array(
+			'className' => 'StaffTrainingSelfStudyResult',
+			'foreignKey' => 'staff_training_self_study_id',
+			'dependent' => true
+		)
 	);
 
 	public $hasMany = array(
@@ -74,22 +85,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				'required' => true,
 				'message' => 'Please enter a valid Credits.'
 			)
-		),
-		'pass' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid Result.'
-			)
-		),
-		'result' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Result.'
-			)
 		)
 	);
+
+
 
 	function field_comparison($check1, $operator, $field2) {
         foreach($check1 as $key=>$value1) {
@@ -100,76 +99,149 @@ class StaffTrainingSelfStudy extends StaffAppModel {
         return true;
     }
 
-	public $headerDefault = 'Training Achievements';
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+		$controller->FileUploader->fileVar = 'files';
+		$controller->FileUploader->fileModel = 'StaffTrainingSelfStudyAttachment';
+		$controller->FileUploader->allowEmptyUpload = true;
+		$controller->FileUploader->additionalFileType();
+    }
+	
+	public function getDisplayFields($controller, $training_status_id=null) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(), 'labelKey' => 'general.type'),
+                array('field' => 'title',  'labelKey' => 'StaffTraining.course_title'),
+				array('field' => 'start_date'),
+				array('field' => 'end_date'),
+				array('field' => 'description',  'labelKey' => 'StaffTraining.description'),
+				array('field' => 'objective',  'labelKey' => 'StaffTraining.objective'),
+				array('field' => 'location'),
+				array('field' => 'training_provider'),
+				array('field' => 'hours'),
+				array('field' => 'credit_hours', 'labelKey' => 'StaffTraining.credit_hours', 'labelKey' => 'StaffTraining.credit_hours')
+                )
+			);
+
+		if($training_status_id=='3'){
+			$passOptions = $controller->Option->get('passfail');
+			$passOptions[''] = '';
+
+			$fields['fields'][] =  array('field' => 'result', 'model'=>'StaffTrainingSelfStudyResult');
+            $fields['fields'][] =  array('field' => 'pass', 'model'=>'StaffTrainingSelfStudyResult', 'type' => 'select', 'options' => $passOptions,'labelKey' => 'StaffTraining.completed');		
+		}
+	 	
+		 return $fields;
+    }
+	
+	public function getDisplayFields2($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+				array('field' => 'file_name', 'model' => 'StaffTrainingSelfStudyAttachment', 'labelKey' => 'general.attachments', 'multi_records' => true, 'type' => 'files', 'url' => array('action' => 'trainingSelfStudyAttachmentsDownload')),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false, 'labelKey' => 'general.modified_by'),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false, 'labelKey' => 'general.created_by'),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+	
+	public $headerDefault = 'Achievements';
+
+	public function autocompleteTrainingProvider($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this->query(
+			"SELECT * FROM(
+			SELECT training_provider as 'name' FROM staff_training_self_studies as StaffTrainingSelfStudy UNION Select name as 'name' from training_providers as TrainingProvider where visible = 1 
+			)as TrainingProvider
+			WHERE name LIKE '" . $search . "'
+			order by 'name';");
 		
 
+		
+		$data = array();
+		
+		foreach($list as $obj) {
+			$trainingProvider = $obj['TrainingProvider']['name'];
+			
+			$data[] = array(
+				'label' => trim(sprintf('%s', $trainingProvider)),
+				'value' => array('training-provider' => $trainingProvider)
+			);
+		}
+
+		return $data;
+	}
+
+
 	public function trainingSelfStudy($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array(
-				'conditions'=> array(
-					'StaffTrainingSelfStudy.staff_id'=> $controller->staffId,
-				)
-			)
-		);
-		
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('data', $data);
-		
+		$header = __($this->headerDefault);
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStaffId($controller->staffId);
+		$controller->set(compact('header', 'data'));
 	}
 
 
 	public function trainingSelfStudyView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('modelName', $this->name);
-		
+		$header = __($this->headerDefault . ' Details');
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 	
-		$data = $this->find('first',
-			array(
-				'conditions'=> array(
-					'StaffTrainingSelfStudy.id'=> $id,
-				)
-			)
-		);
-		
-		
+		$data = $this->findById($id);
+
 		if(empty($data)){
+			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingSelfStudy'));
 		}
-
-		$arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
-        $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
-
-        $attachments = $FileAttachment->getList($id);
-		
+		$resultEditable = false;
+		if(isset($data['StaffTrainingSelfStudyResult']) && $data['StaffTrainingSelfStudyResult']['training_status_id']==1){
+			$resultEditable = true;
+		}
 		$controller->Session->write('StaffTrainingSelfStudyId', $id);
-		$controller->set('data', $data);
-		$controller->set('attachments', $attachments);
-		$controller->set('_model','StaffTrainingSelfStudyAttachment');
+	
+		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id'=>$id)));
+	   	$data['multi_records'] = $attachments;
+	   
+		$fields = $this->getDisplayFields($controller, $data['StaffTrainingSelfStudy']['training_status_id']);
+		$fields2 = $this->getDisplayFields2($controller);
+        $controller->set(compact('header', 'data', 'fields', 'fields2','id', 'resultEditable'));
+		//APROVAL
+		$pending = $data['StaffTrainingSelfStudy']['training_status_id']=='2' ? true : false;
+		if(isset($data['StaffTrainingSelfStudyResult']['id'])){
+			$pending = false;
+			if($data['StaffTrainingSelfStudyResult']['training_status_id']=='2'){
+				$pending = true;
+			}
+		}
+
+		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
+		$controller->set('approvalMethod', 'trainingSelfStudy');
+		$controller->set('controller', 'Staff');
+		$controller->set('plugin', '');
 	}
 	
 
 
 	public function trainingSelfStudyDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffTrainingSelfStudyId')) {
+        if($controller->Session->check('Staff.id') && $controller->Session->check('StaffTrainingSelfStudyId')) {
             $id = $controller->Session->read('StaffTrainingSelfStudyId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-            $name = $data['StaffTrainingSelfStudy']['title'];
-				
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+            if ($this->delete($id)) {
+				$StaffTrainingSelfStudyAttachment = ClassRegistry::init('StaffTrainingSelfStudyAttachment');
+				$StaffTrainingSelfStudyAttachment->deleteAll(array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id' => $id)); 
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
 			$controller->Session->delete('StaffTrainingSelfStudyId');
             $controller->redirect(array('action' => 'trainingSelfStudy'));
         }
     }
-
-
 
     public function trainingSelfStudyActivate($controller, $params) {
         if($controller->Session->check('StaffTrainingSelfStudyId')) {
@@ -193,44 +265,63 @@ class StaffTrainingSelfStudy extends StaffAppModel {
         }
     }
 
-    public function trainingSelfStudyInactivate($controller, $params) {
-        if($controller->Session->check('StaffTrainingSelfStudyId')) {
-            $id = $controller->Session->read('StaffTrainingSelfStudyId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-
-			$name = $data['StaffTrainingSelfStudy']['title'];
-          	$this->updateAll(
-    			array('StaffTrainingSelfStudy.training_status_id' => 4),
-    			array('StaffTrainingSelfStudy.id '=> $id)
-			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
-            $controller->redirect(array('action' => 'trainingSelfStudy'));
-        }
-    }
-	
-
 	public function trainingSelfStudyAdd($controller, $params) {
-
-		$controller->set('subheader', $this->headerDefault);
+		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
+		$controller->set('header', __('Add '.$this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
 
 	public function trainingSelfStudyEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
+		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault );
+		$controller->set('header', __('Edit '.$this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
 	}
+
+	public function trainingSelfStudyApproval($controller, $params){
+		if(!$controller->request->is('get')){
+			$saveData = $controller->request->data;
+			if (isset($saveData['approve'])) {
+			   	$saveData['WorkflowLog']['approve'] = 1; 
+			} else if (isset($saveData['reject'])) {
+		      	$saveData['WorkflowLog']['approve'] = 0; 
+			}
+		
+			if($controller->Workflow->updateApproval($saveData)){
+				if($saveData['WorkflowLog']['approve']==1){
+					if($controller->Workflow->getEndOfWorkflow($saveData['WorkflowLog']['model_name'], $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						
+						if($this->name==$saveData['WorkflowLog']['model_name']){
+							$this->id =  $saveData['WorkflowLog']['record_id'];
+							$this->saveField('training_status_id', 3);
+
+							$data['staff_training_self_study_id'] = $saveData['WorkflowLog']['record_id'];
+							$data['training_status_id'] = '1';
+
+							$this->StaffTrainingSelfStudyResult->save($data);
+						}else{
+							 $this->{$saveData['WorkflowLog']['model_name']}->updateAll(
+				    			array($saveData['WorkflowLog']['model_name'].'.training_status_id' => 3),
+				    			array($saveData['WorkflowLog']['model_name'].'.staff_training_self_study_id'=>  $saveData['WorkflowLog']['record_id'])
+							);
+						}
+					}
+				}else{
+					$this->id =  $saveData['WorkflowLog']['record_id'];
+					$this->saveField('training_status_id', 1);
+				}
+				return $controller->redirect(array('action'=>'trainingSelfStudyView', $saveData['WorkflowLog']['record_id']));
+			}
+		}
+	}
 	
 	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-
+		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		$trainingCreditHourOptions = array();
-		if($controller->Session->check('StaffId')){
-		 	$staffId = $controller->Session->read('StaffId');
+		if($controller->Session->check('Staff.id')){
+		 	$staffId = $controller->Session->read('Staff.id');
 		}
 		$i = 0;
 		$configItem = ClassRegistry::init('ConfigItem');
@@ -241,44 +332,66 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
-		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
-		$controller->set('trainingProviderOptions', $trainingProviderOptions);
 
+		$trainingAchievementTypeOptions = array_map('__', $this->TrainingAchievementType->getList());
+		$controller->set('trainingAchievementTypeOptions', $trainingAchievementTypeOptions);
+
+		$passfailOptions = $controller->Option->get('passfail');
+		
+		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id'=>$id)));
+		
+		$parentApproved = false;
+
+		$controller->set(compact('trainingCreditHourOptions', 'trainingProviderOptions', 'passfailOptions', 'attachments', 'parentApproved'));
+		
 		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
+			$resultEditable = '1';
 			$data = $this->findById($id);
 			if(!empty($data)){
 				$controller->request->data = $data;
 				if($data['StaffTrainingSelfStudy']['training_status_id']!=1){
+					$resultEditable =  '0';
+				}
+				if(isset($data['StaffTrainingSelfStudyResult']) && $data['StaffTrainingSelfStudyResult']['training_status_id']==1){
+					$resultEditable = '2';
+				}
+				if(!$resultEditable){
 					return $controller->redirect(array('action' => 'trainingSelfStudyView', $id));
 				}
+
 			}else{
 				$data = array();
 			}
-
 			$controller->request->data = array_merge($data);
-
-		 	$arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
-            $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
-
-            $attachments = $FileAttachment->getList($id);
-            $controller->set('attachments',$attachments);
-            $controller->set('_model','StaffTrainingSelfStudyAttachment');
-		}
-		else{
+			$controller->request->data['StaffTrainingSelfStudy']['resultEditable'] = $resultEditable;
+		}else{
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			$saveData = $controller->request->data;
-			unset($saveData['StaffTrainingSelfStudyAttachment']);
 
-			if ($this->save($saveData, array('validate' => 'only'))){
+			
+			
+			if($saveData['StaffTrainingSelfStudy']['resultEditable']=='2'){
+				if (isset($saveData['save'])) {
+				   	$saveData['StaffTrainingSelfStudyResult']['training_status_id'] = 1; 
+				} else if (isset($saveData['submitForApproval'])) {
+			      	$saveData['StaffTrainingSelfStudyResult']['training_status_id'] = 2; 
+				}
+				$this->StaffTrainingSelfStudyResult->recursive = -1;
+				if($this->StaffTrainingSelfStudyResult->save($saveData)){
+					$controller->Message->alert('general.add.success');
+					return $controller->redirect(array('action' => 'trainingSelfStudy'));
+				}
+			}else{
+				$postFileData = $saveData['StaffTrainingSelfStudy']['files'];
+				unset($saveData['StaffTrainingSelfStudy']['files']);
+				$controller->request->data['StaffTrainingSelfStudy']['training_status_id'] = 1; 
+
 				if (isset($saveData['save'])) {
 				   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
 				} else if (isset($saveData['submitForApproval'])) {
 			      	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 2; 
 				}
-
-				if($this->save($saveData)){
+				if($this->save($saveData['StaffTrainingSelfStudy'])){
 					$id = null;
 					if(isset($saveData['StaffTrainingSelfStudy']['id'])){
 						$id = $saveData['StaffTrainingSelfStudy']['id'];
@@ -286,27 +399,55 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 					if(empty($id)){
 						$id = $this->getInsertID();
 					}
-					
-	                $arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
-	                $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
-	          
-	               	$fileData = $params['form'];
-	                if(!empty($fileData)){
-	                    $errors = $FileAttachment->saveAll($controller->request->data, $fileData, $id);
-	                }
-					
-					if(empty($controller->request->data[$this->name]['id'])){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+					$controller->FileUploader->additionData = array('staff_training_self_study_id' => $id);
+					$controller->FileUploader->uploadFile(NULL, $postFileData);
+				
+					if ($controller->FileUploader->success) {
+						$controller->Message->alert('general.add.success');
+						return $controller->redirect(array('action' => 'trainingSelfStudy'));
 					}
-					else{
-						$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-					}
-					return $controller->redirect(array('action' => 'trainingSelfStudy'));
 				}
 			}
 		}
+		$controller->set(compact('resultEditable'));
+
 	}
+	
+	 public function trainingSelfStudyAttachmentsDelete($controller, $params) {
+        $this->render = false;
+        if ($controller->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $controller->Utility->setAjaxResult('alert', $result);
+            $id = $params->data['id'];
 
+			$StaffTrainingSelfStudyAttachment = ClassRegistry::init('StaffTrainingSelfStudyAttachment');
+            if ($StaffTrainingSelfStudyAttachment->delete($id)) {
+				$msgData  = $controller->Message->get('FileUplaod.success.delete');
+                $result['alertOpt']['text'] = $msgData['msg'];// __('File is deleted successfully.');
+            } else {
+				$msgData  = $controller->Message->get('FileUplaod.error.delete');
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = $msgData;//__('Error occurred while deleting file.');
+            }
+			
+            return json_encode($result);
+        }
+    }
 
+	
+	public function trainingSelfStudyAttachmentsDownload($controller, $params) {
+		$id = $params['pass'][0];
+		$this->render = false;
+		$controller->FileUploader->downloadFile($id);
+    }
+
+	public function trainingSelfStudyAjaxAddField($controller, $params) {
+		$this->render =false;
+		
+		$fileId = $controller->request->data['size'];
+		$multiple = true;
+		$controller->set(compact('fileId', 'multiple'));
+		$controller->render('/Elements/templates/file_upload_field');
+	}
 }
 ?>

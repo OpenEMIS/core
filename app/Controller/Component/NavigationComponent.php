@@ -34,17 +34,14 @@ class NavigationComponent extends Component {
 	}
 	
 	//called after Controller::beforeFilter()
-	public function startup(Controller $controller) {
-	}
+	public function startup(Controller $controller) {}
 	
 	//called after Controller::beforeRender()
 	public function beforeRender(Controller $controller) {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
-
-		$this->checkWizardModeLink();
-
+		//$this->checkWizardModeLink();
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
@@ -57,7 +54,7 @@ class NavigationComponent extends Component {
 	//called before Controller::redirect()
 	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) {}
 	
-	public function addCrumb($title, $options=array()) {		
+	public function addCrumb($title, $options=array()) {
 		$item = array(
 			'title' => __($title),
 			'link' => array('url' => $options),
@@ -138,7 +135,7 @@ class NavigationComponent extends Component {
 	public function getLinks() {
 		$nav = array();
 		$nav['Home'] = array('controller' => 'Home', 'links' => $this->getHomeLinks());
-		$nav['Institutions'] = array('controller' => 'Institutions', 'links' => $this->getInstitutionsLinks());
+		$nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
 		
 		// Initialise navigations from plugins
 		$modules = $this->settings['modules'];
@@ -158,14 +155,12 @@ class NavigationComponent extends Component {
 	public function getHomeLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Home', true);
-
 		return $links;
 	}
-	
-	public function getInstitutionsLinks() {
+        
+        public function getInstitutionsLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Institution', true);
-		
 		return $links;
 	}
 	
@@ -186,7 +181,8 @@ class NavigationComponent extends Component {
 					if(isset($obj['controller'])) {
 						$controller = $obj['controller'];
 						$action = $obj['action'];
-						$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+						$plugin = is_null($obj['plugin']) ? false : $obj['plugin'];
+						$this->ignoredLinks[$module][] = array('plugin' => $plugin, 'controller' => $controller, 'action' => $action);
 						$this->AccessControl->ignore($controller, $action);
 					}
 				}
@@ -194,6 +190,7 @@ class NavigationComponent extends Component {
 		}
 	}
 
+	/*
 	public function checkWizardModeLink(){
 		$wizardMode = false;
 		if(!empty($this->leftNavigations)){
@@ -281,21 +278,34 @@ class NavigationComponent extends Component {
         }
     }
 
+    public function getMandatoryWizard($action){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
+
+		$configItemName = str_replace('Add', '', $action);
+        $configItemName = str_replace('Edit', '', $configItemName);
+
+
+        $ConfigItem = ClassRegistry::init('ConfigItem');
+       
+        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+        
+        return $mandatory;
+
+    }
+
     public function getWizard($action){
 		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
 
         $newAction = '';
-        $configItemName = str_replace('Add', '', $this->controller->action);
-        $configItemName = str_replace('Edit', '', $configItemName);
 
         $actionConcat = str_replace("Add", "", $action);
         $actionConcat = str_replace("Edit", "", $actionConcat);
 
-        $ConfigItem = ClassRegistry::init('ConfigItem');
-       
-        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+        $mandatory = $this->getMandatoryWizard($this->controller->action);
         $this->controller->set('mandatory', $mandatory);
         $linkCurrent = $this->getLastWizardStep(false);
         $wizardLink = $this->Session->read('WizardLink');
@@ -381,15 +391,15 @@ class NavigationComponent extends Component {
     	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        /*$linkIndex = $this->getWizardLink($action);
-        $wizardLink = $this->Session->read('WizardLink');
-        $wizardLink[$linkIndex]['completed'] = '1';
-        $currentLinkIndex = $this->getLastWizardStep(true);
-        if($linkIndex+1 < count($wizardLink)){
-            if(($linkIndex+1)>=$currentLinkIndex){
-                $wizardLink[$linkIndex+1]['completed'] = '-1';
-            }
-        }*/
+        //$linkIndex = $this->getWizardLink($action);
+        //$wizardLink = $this->Session->read('WizardLink');
+        //$wizardLink[$linkIndex]['completed'] = '1';
+        //$currentLinkIndex = $this->getLastWizardStep(true);
+        //if($linkIndex+1 < count($wizardLink)){
+        //    if(($linkIndex+1)>=$currentLinkIndex){
+        //        $wizardLink[$linkIndex+1]['completed'] = '-1';
+        //    }
+        //}
 		$linkIndex = $this->getWizardLink($action);
 		$wizardLink = $this->Session->read('WizardLink');
 
@@ -527,6 +537,6 @@ class NavigationComponent extends Component {
     		$this->updateWizard($action, null, false);
     	}
     }
-
+	*/
 }
 ?>

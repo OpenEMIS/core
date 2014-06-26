@@ -3,54 +3,55 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('setup_variables', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
+$this->start('contentActions');
+if($_add) {
+    echo $this->Html->link(__('Add'), array('action' => 'sessionAdd'), array('class' => 'divider', 'id'=>'add'));
+}
+$this->end();
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="training_session" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
+<?php echo $this->element('alert'); ?>
+<div class="row select_row form-group">
+    <div class="col-md-4">
         <?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'sessionAdd'), array('class' => 'divider'));
-		}
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <div class="row select_row">
-        <div class="label">
-            <?php
-                echo $this->Form->input('training_status_id', array(
-                    'options' => $statusOptions,
-                    'default' => $selectedStatus,
-                    'empty' => __('All'),
-                    'label' => false,
-                    'url' => 'Training/session',
-                    'onchange' => 'jsForm.change(this)'
-                ));
-            ?>
-        </div>
+            echo $this->Form->input('training_status_id', array(
+                'options' => array_map('__',$statusOptions),
+                'default' => $selectedStatus,
+                'empty' => __('Current'),
+                'class'=>'form-control',
+                'label' => false,
+                'url' => 'Training/session',
+                'onchange' => 'jsForm.change(this)'
+            ));
+        ?>
     </div>
+</div>
     <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/sessionView/">
-        <div class="table_head">
-       		<div class="table_cell"><?php echo __('Date'); ?></div>
-            <div class="table_cell"><?php echo __('Location'); ?></div>
-            <div class="table_cell"><?php echo __('Course'); ?></div>
-            <div class="table_cell"><?php echo __('Status'); ?></div>
-        </div>
-       
-        <div class="table_body">
+    <div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead url="<?php echo $this->params['controller'];?>/sessionView">
+            <tr>
+           		<td class="table_cell"><?php echo __('Date'); ?></td>
+                <td class="table_cell"><?php echo __('Location'); ?></td>
+                <td class="table_cell"><?php echo __('Course'); ?></td>
+                <td class="table_cell"><?php echo __('Status'); ?></td>
+            </tr>
+       </thead>
+        <tbody>
         	<?php foreach($data as $id=>$val) { ?>
-            <div class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<div class="table_cell"><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></div>
-                <div class="table_cell"><?php echo $val[$modelName]['location']; ?></div>
-                <div class="table_cell"><?php echo  $val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title']; ?></div>
-                <div class="table_cell"><?php echo $val['TrainingStatus']['name'] ?>
-                </div>
-            </div>
+            <tr row-id="<?php echo $val[$modelName]['id']; ?>">
+            	<td class="table_cell"><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></td>
+                <td class="table_cell"><?php echo $val[$modelName]['location']; ?></td>
+                <td class="table_cell"><?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'sessionView', $val[$modelName]['id']), array('escape' => false)); ?></td>
+                <td class="table_cell"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$val[$modelName]['id'],$val['TrainingStatus']['name'],$val['TrainingStatus']['id'])); ?></td>
+            </tr>
            <?php } ?>
-        </div>
+        </tbody>
+    </table>
     </div>
     <?php } ?>
-</div>
+<?php $this->end(); ?>  

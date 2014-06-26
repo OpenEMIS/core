@@ -8,8 +8,8 @@ foreach($data as $infraname => $arrval){
 	$ctrModel = 1;
 	$modelName = Inflector::singularize($infraname);
 	foreach($arrval['types']  as $typeid => $typeVal){
-		echo '<div class="table_row '.($ctr%2==0?'even':'').'">
-				<div class="table_cell">'.$typeVal.'</div>';
+		echo '<tr class="table_row '.($ctr%2==0?'even':'').'">
+				<td class="table_cell">'.$typeVal.'</td>';
 		 
 		$statusTotal = 0;
 		foreach($arrval['status'] as $statids => $statVal){
@@ -115,12 +115,12 @@ foreach($data as $infraname => $arrval){
 				}
 			}
 		
-			 echo '<div class="table_cell cell_number ' . $record_tag.'">'. $cell_html . '</div>';
+			 echo '<td class="table_cell cell_number ' . $record_tag.'">'. $cell_html . '</td>';
 			 $statusTotal += $infraVal;
 			 $ctrModel++;
 		}
-		echo '<div class="table_cell cell_total cell_number">' . ($statusTotal>0 ? $statusTotal : '') . '</div>';
-		echo '</div>';
+		echo '<td class="table_cell cell_total cell_number">' . ($statusTotal>0 ? $statusTotal : '') . '</td>';
+		echo '</tr>';
 		$ctr++;
 	}
 }

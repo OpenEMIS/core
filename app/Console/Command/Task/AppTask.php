@@ -41,7 +41,6 @@ class AppTask extends Shell {
         'StudentCustomField',
         'StudentCustomFieldOption',
         'StudentCustomValue',
-        'Teachers.Teacher',
         'TeacherCustomField',
         'TeacherCustomFieldOption',
         'TeacherCustomValue',

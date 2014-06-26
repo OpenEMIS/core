@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
 	InstitutionSiteStudents.init();
+	
 });
 
 var InstitutionSiteStudents = {
@@ -24,6 +25,11 @@ var InstitutionSiteStudents = {
 	init: function() {
 		$('.btn_save').click(InstitutionSiteStudents.saveStudentList);
 		this.attachSortOrder();
+		
+		if($("#studentNameAutoComplete").length === 1){
+			var autoCompleteUrl = getRootURL() + $('#AddStudentForm').attr('autocompleteURL');
+			InstitutionSiteStudents.attachAutoComplete("#studentNameAutoComplete", autoCompleteUrl , InstitutionSiteStudents.selectAutocomplateField);
+		}
 	},
 	
 	navigate: function() {
@@ -44,23 +50,44 @@ var InstitutionSiteStudents = {
 	},
 	
 	getProgrammeOptions: function(obj) {
+		
 		var $this = $(obj);
 		var maskId;
+		var yearURL = getRootURL() + $this.attr('yearUrl');
 		var ajaxParams = {yearId: $this.val()};
 		var ajaxSuccess = function(data, textStatus) {
+			$('#InstitutionSiteProgrammeId').html(data);
+			$.ajax({
+					type: 'GET',
+					dataType: 'json',
+					url: yearURL,
+					data: ajaxParams,
+					success: ajaxYearSuccess
+				});
+		//	$.unmask({id: maskId, callback: callback});
+		};
+		
+		var ajaxYearSuccess = function(data, textStatus) {
 			var callback = function() {
-				$('#InstitutionSiteProgrammeId').html(data);
+				if(data['dateData'] != ''){
+					$('#startDate').datepicker("remove");
+					$('#startDate').datepicker({startDate:data['dateData']['startDate'],endDate:data['dateData']['endDate']}).data('datepicker');
+					$('#startDate').datepicker('update', data['dateData']['startDate']);
+				}
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
+		
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
 			url: getRootURL() + $this.attr('url'),
 			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info'}); },
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#AddStudentForm'}); },
 			success: ajaxSuccess
 		});
+		
+		
 	},
 	
 	search: function(obj, evt) {
@@ -93,13 +120,13 @@ var InstitutionSiteStudents = {
 				var ajaxParams = {searchString: searchString};
 				var ajaxSuccess = function(data, textStatus) {
 					var callback = function() {
-						if(!$(data).hasClass('alert')) {
+						if(!$($.parseHTML(data)).hasClass('alert')) {
 							var parent = '#search';
 							$(parent).find('.table_body').empty();
 							jsTable.tableScrollableAdd(parent, data);
 						} else {
-							alertOpt['type'] = $(data).attr('type');
-							alertOpt['text'] = $(data).html();
+							alertOpt['type'] = alertType.error;
+							alertOpt['text'] = 'No record matched.';
 							$.alert(alertOpt);
 						}
 					};
@@ -111,7 +138,7 @@ var InstitutionSiteStudents = {
 					dataType: 'text',
 					url: getRootURL() + url,
 					data: {searchString: searchString},
-					beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
+					beforeSend: function (jqXHR) { maskId = $.mask({parent: '#search', text: i18n.Search.textSearching}); },
 					success: ajaxSuccess
 				});
 			}
@@ -140,4 +167,21 @@ var InstitutionSiteStudents = {
 	validateStudentAdd: function() {
 		return $('#StudentId').val()!=0 && $('#InstitutionSiteProgrammeId').val()>0;
 	},
+	
+	attachAutoComplete: function(element, url, callback) {
+		$(element).autocomplete({
+			source: url,
+			minLength: 3,
+			select: callback,
+			focus: function() {
+// prevent value inserted on focus
+				return false;
+			}
+		});
+	},
+	selectAutocomplateField: function(event, ui) {
+		$('#studentNameAutoComplete').val(ui.item.label);
+		$('#StudentId').val(ui.item.value);
+		return false;
+	}
 }

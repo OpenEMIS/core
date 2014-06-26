@@ -1,29 +1,31 @@
 <?php 
 echo $this->Html->script('custom_field', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Academic'));
 
-<div id="additional" class="content_wrapper edit">
-	<h1>
-		<span><?php echo __('Academic'); ?></span>
-		<?php
-		if($_edit) {
+$this->start('contentActions');
+if($_edit) {
 			echo $this->Html->link(__('View'), array('action' => rtrim($this->action,'Edit').'View',$id),	array('class' => 'divider','onClick'=>'return custom.view.redirect(this)')); 
 		}
-		?>
-	</h1>
-	<?php echo $this->element('alert'); 
+$this->end();
+
+$this->start('contentBody');
+?>
+
+<div id="additional" class="content_wrapper edit">
+	<?php 
 	
 	if(count(@$dataFields)) {
 	?>
 	<div class="row year"  style="margin-left:5px;">
-		<div class="label" style="width: 90px;"><?php echo __('Year'); ?></div>
-		<div class="value">
+		<div class="col-md-2"><?php echo __('Year'); ?></div>
+		<div class="col-md-3">
 			<?php
 				echo $this->Form->input('school_year_id', array(
 					'label' => false,
 					'div' => false,
+					'class' => 'form-control',
 					'options' => $years,
 					'default' => $selectedYear,
 					'onchange' => 'custom.view.changeCategory(this)',
@@ -47,7 +49,7 @@ echo $this->Html->script('custom_field', false);
 		foreach($dataFields as $arrVals){
 			if($arrVals[$arrMap['CustomField']]['type'] == 1){//Label
 				
-				 echo '<fieldset class="custom_section_break">
+				 echo '<fieldset class="section_break">
 							<legend>'.__($arrVals[$arrMap['CustomField']]['name']).'</legend>
 					   </fieldset>';
 			   
@@ -58,7 +60,7 @@ echo $this->Html->script('custom_field', false);
 								$val = (isset($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']))?
 									$dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']:"";
 								
-								echo '<input type="text" class="default" name="data['.$arrMap['CustomValue'].'][textbox]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" value="'.$val.'" >';
+								echo '<input type="text" class="default form-control" name="data['.$arrMap['CustomValue'].'][textbox]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" value="'.$val.'" >';
 						  echo '</div>
 						</div>';
 			}elseif($arrVals[$arrMap['CustomField']]['type'] == 3) {//DropDown
@@ -67,7 +69,7 @@ echo $this->Html->script('custom_field', false);
 								<div class="field_value">';
 								   
 									if(count($arrVals[$arrMap['CustomFieldOption']])> 0){
-										echo '<select name="data['.$arrMap['CustomValue'].'][dropdown]['.$arrVals[$arrMap['CustomField']]["id"].'][value]">';
+										echo '<select name="data['.$arrMap['CustomValue'].'][dropdown]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" class="form-control">';
 										foreach($arrVals[$arrMap['CustomFieldOption']] as $arrDropDownVal){
 											if(isset($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value'])){
 												$defaults =  $dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value'];
@@ -113,7 +115,7 @@ echo $this->Html->script('custom_field', false);
 								if(isset($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value'])){
 									$val = ($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']?$dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']:""); 
 								}
-								echo '<textarea name="data['.$arrMap['CustomValue'].'][textarea]['.$arrVals[$arrMap['CustomField']]["id"].'][value]">'.@$val.'</textarea>';
+								echo '<textarea name="data['.$arrMap['CustomValue'].'][textarea]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" class="form-control">'.@$val.'</textarea>';
 						  echo '</div>
 						</div>';
 			}
@@ -131,3 +133,4 @@ echo $this->Html->script('custom_field', false);
 	<?php echo $this->Form->end(); 
 	} ?>
 </div>
+<?php 	$this->end();?>
