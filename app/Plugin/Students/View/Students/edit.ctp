@@ -1,162 +1,107 @@
 <?php
-echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
+echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
+echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
+echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
+echo $this->Html->script('holder', false);
 echo $this->Html->script('app.date', false);
-echo $this->Html->script('/Students/js/students', false);
+echo $this->Html->script('app.area', false);
 echo $this->Html->script('config', false);
-$obj = @$data['Student'];
+
+$this->extend('/Elements/layout/container');
+
+$this->assign('contentId', 'student');
+$this->assign('contentHeader', __('Overview'));
+$this->start('contentActions');
+if (!$WizardMode) {
+	echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
+	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'edit'));
+$labelOptions = $formOptions['inputDefaults']['label'];
+$formOptions['id'] = $model;
+$formOptions['type'] = 'file';
+echo $this->Form->create($model, $formOptions);
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="student" class="content_wrapper edit add">
-	<h1>
-		<span><?php echo __('Overview'); ?></span>
-		<?php
-		if(!$WizardMode){
-			echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-			echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+<fieldset class="section_break">
+	<legend><?php echo __('Information'); ?></legend>
+	<?php 
+		$openEmisIdLabel = $labelOptions;
+		$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
+		
+		if ($autoid=='') {
+			echo $this->Form->input('identification_no', array(
+				'label' => $openEmisIdLabel,
+				'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');"));
+			$tempIdNo = isset($this->data[$model]['identification_no'])?$this->data[$model]['identification_no'] : '';
+			echo $this->Form->hidden(null, array('id'=>'validate_student_identification', 'name' => 'validate_student_identification', 'value'=>$tempIdNo));
+		} else {
+			if ($this->Session->check('Student.id')) {
+				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
+			}
+			else{
+				echo $autoid;
+				echo $this->Form->hidden('identification_no');
+			}
 		}
-		?>
-	</h1>
-	
-	<?php
-	echo $this->Form->create('Student', array(
-		'url' => array('controller' => 'Students', 'action' => 'edit'),
-		'type' => 'file',
-		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-	));
+		
+		echo $this->Form->input('first_name');
+		echo $this->Form->input('middle_name');
+		echo $this->Form->input('last_name');
+		echo $this->Form->input('preferred_name');
+		echo $this->Form->input('gender', array('options' => $genderOptions));
+		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
+		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
+		
+		$imgOptions = array();
+		$imgOptions['field'] = 'photo_content';
+		$imgOptions['width'] = '90';
+		$imgOptions['height'] = '115';
+		$imgOptions['label'] = __('Profile Image');
+		if (isset($this->data[$model]['photo_name']) && isset($this->data[$model]['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data[$model]['photo_name'], $this->data[$model]['photo_content']);
+		}
+		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
-
-	<fieldset class="section_break">
-		<legend><?php echo __('Information'); ?></legend>
-		<?php if($this->Session->check('StudentId')){ ?>
-        <div class="row">
-			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
-			<?php if($autoid==''){ ?>
-            <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'],
-														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');")); ?>
-           		<input type="hidden" name="validate_student_identification" id="validate_student_identification" value="<?php echo $obj['identification_no']; ?>"/>
-            </div>
-            <?php }else{ ?>
-            <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'])); ?>
-            </div>
-            <?php } ?>
+	<div class="form-group">
+		<div class="col-md-3"></div>
+		<div class="col-md-6">
+			<?php echo __("Format Supported:") . " .jpg, .jpeg, .png, .gif"; ?>
 		</div>
-		<?php }else{ ?>
-         <div class="row">
-			<div class="label"><?php echo __('OpenEMIS ID'); ?>
-            <?php if($autoid!=''){ ?>
-            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
-            <?php } ?>
-            </div>
-            <div class="value">
-            <?php if($autoid!=''){ ?>
-            	 <?php echo $autoid; ?>
-            <?php }else{ ?>
-                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');")) ?>
-            	<input type="hidden" name="validate_student_identification" id="validate_student_identification"/>
-            <?php } ?>
-            </div>
-		</div>
-		<?php } ?>
-		<div class="row">
-			<div class="label"><?php echo  __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name', array('value' => $obj['first_name'])); ?></div>
-		</div>
-                <div class="row">
-			<div class="label"><?php echo  __('Middle Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('middle_name', array('value' => $obj['middle_name'])); ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo  __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name', array('value' => $obj['last_name'])); ?></div>
-		</div>
-                <div class="row">
-			<div class="label"><?php echo  __('Preferred Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('preferred_name', array('value' => $obj['preferred_name'])); ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo  __('Gender'); ?></div>
-			<div class="value">
-			<?php echo $this->Form->input('gender', array(
-				'options' => $gender,
-				'default' => $obj['gender']));
-			?>
-			</div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo  __('Date of Birth'); ?></div>
-			<div class="value">
-				<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth', array('desc' => true,'value' => $obj['date_of_birth'], 'emptySelect' => true)); ?>
-			</div>
-		</div>
-                <div class="row">
-			<div class="label"><?php echo  __('Date of Death'); ?></div>
-			<div class="value">
-				<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_death', array('desc' => true,'value' => $obj['date_of_death'], 'emptySelect' => true)); ?>
-			</div>
-		</div>
-		<div class="row">
-		    <div class="label"><?php echo __('Profile Image'); ?> </div>
-		    <div class="value">
-		        <?php echo $this->Form->input('photo_content', array('type' => 'file', 'class' => 'form-error'));?>
-		        <?php echo $this->Form->hidden('reset_image', array('value'=>'0')); ?>
-		        <span id="resetDefault" class="icon_delete"></span>
-		        <?php echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : ''; ?>
-		        <br/>
-		        <div id="image_upload_info">
-		            <em>
-		                <?php echo sprintf(__("Max Resolution: %s pixels"), '400 x 514'); ?>
-		                <br/>
-		                <?php echo __("Max File Size:"). ' 200 KB'; ?>
-		                <br/>
-		                <?php echo __("Format Supported:"). " .jpg, .jpeg, .png, .gif"; ?>
-		            </em>
-				</div>
-		    </div>
-		</div>
-	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend><?php echo __('Address'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo  __('Address'); ?></div>
-			<div class="value"><?php echo $this->Form->input('address', array('value' => $obj['address'], 'onkeyup' => 'utility.charLimit(this)')); ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo  __('Postal Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('postal_code', array('value' => $obj['postal_code'],
-														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_postal_code');")); ?>
-           		<input type="hidden" name="validate_student_postal_code" id="validate_student_postal_code" value="<?php echo $obj['postal_code']; ?>"/>
-            </div>
-		</div>
-	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend id="area"><?php echo __('Address Area'); ?></legend>
-			<?php echo @$this->Utility->getAreaPicker($this->Form, 'address_area_id',$obj['address_area_id'], array()); ?>
-	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend id="area"><?php echo __('Birth Place Area'); ?></legend>
-			<?php echo @$this->Utility->getAreaPicker($this->Form, 'birthplace_area_id',$obj['birthplace_area_id'], array()); ?>
-	</fieldset>
-	
-	 <div class="controls">
-		<?php if(!$WizardMode){ ?>
-		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-        <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
-		<?php }else{?>
-			<?php if(!$this->Session->check('StudentId')){ 
-			   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
-			 }
-		 	if(!$wizardEnd){
-                echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
-           	}else{
-                echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
-            }
-		}?>
 	</div>
-	
-	<?php echo $this->Form->end(); ?>
-</div>
+</fieldset>
+
+<fieldset class="section_break">
+	<legend><?php echo __('Address'); ?></legend>
+	<?php 
+		echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)'));
+		echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_postal_code');"));
+		$tempPostCode = isset($this->data[$model]['postal_code'])?$this->data[$model]['postal_code'] : '';
+		echo $this->Form->hidden(null, array('id'=>'validate_student_postal_code', 'name' => 'validate_student_postal_code', 'value' => $tempPostCode));
+	?>
+</fieldset>
+
+<fieldset class="section_break">
+	<legend><?php echo __('Address Area'); ?></legend>
+	<?php echo $this->FormUtility->areapicker('address_area_id', array('model' => 'Area', 'value' => $addressAreaId)); ?>
+</fieldset>
+
+<fieldset class="section_break">
+	<legend><?php echo __('Birth Place Area'); ?></legend>
+	<?php echo $this->FormUtility->areapicker('birthplace_area_id', array('model' => 'Area', 'value' => $birthplaceAreaId)); ?>
+</fieldset>
+
+<?php 
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
+echo $this->Form->end();
+$this->end();
+?>

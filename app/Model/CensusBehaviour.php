@@ -17,17 +17,22 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusBehaviour extends AppModel {
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	public $belongsTo = array(
 		'SchoolYear',
-		'StudentBehaviourCategory',
+		'Students.StudentBehaviourCategory',
 		'InstitutionSite'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
-		$StudentBehaviourCategory = ClassRegistry::init('Students.StudentBehaviourCategory');
-		$StudentBehaviourCategory->formatResult = true;
+		$this->StudentBehaviourCategory->formatResult = true;
 		
-		$data = $StudentBehaviourCategory->find('all', array(
+		$data = $this->StudentBehaviourCategory->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				'CensusBehaviour.id', 'CensusBehaviour.male', 'CensusBehaviour.female', 
@@ -64,29 +69,122 @@ class CensusBehaviour extends AppModel {
 			$save = $this->save(array('CensusBehaviour' => $obj));
 		}
 	}
-        
-        public function getYearsHaveData($institutionSiteId){
-            $data = $this->find('all', array(
-                    'recursive' => -1,
-                    'fields' => array(
-                        'SchoolYear.id',
-                        'SchoolYear.name'
-                    ),
-                    'joins' => array(
-                            array(
-                                'table' => 'school_years',
-                                'alias' => 'SchoolYear',
-                                'conditions' => array(
-                                    'CensusBehaviour.school_year_id = SchoolYear.id'
-                                )
-                            )
-                    ),
-                    'conditions' => array('CensusBehaviour.institution_site_id' => $institutionSiteId),
-                    'group' => array('CensusBehaviour.school_year_id'),
-                    'order' => array('SchoolYear.name DESC')
-                )
-            ); 
-            
-            return $data;
-        }
+		
+		public function getYearsHaveData($institutionSiteId){
+			$data = $this->find('all', array(
+					'recursive' => -1,
+					'fields' => array(
+						'SchoolYear.id',
+						'SchoolYear.name'
+					),
+					'joins' => array(
+							array(
+								'table' => 'school_years',
+								'alias' => 'SchoolYear',
+								'conditions' => array(
+									'CensusBehaviour.school_year_id = SchoolYear.id'
+								)
+							)
+					),
+					'conditions' => array('CensusBehaviour.institution_site_id' => $institutionSiteId),
+					'group' => array('CensusBehaviour.school_year_id'),
+					'order' => array('SchoolYear.name DESC')
+				)
+			); 
+			
+			return $data;
+		}
+		
+	public function behaviour($controller, $params) {
+		$controller->Navigation->addCrumb('Behaviour');
+
+		$yearList = $this->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+
+		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+	}
+
+	public function behaviourEdit($controller, $params) {
+		if ($controller->request->is('get')) {
+			$controller->Navigation->addCrumb('Edit Behaviour');
+
+			$yearList = $this->SchoolYear->getAvailableYears();
+			$selectedYear = $controller->getAvailableYearId($yearList);
+			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			if (!$editable) {
+				$controller->redirect(array('action' => 'behaviour', $selectedYear));
+			} else {
+				
+				$controller->set(compact('selectedYear', 'yearList', 'data'));
+			}
+		} else {
+			$data = $controller->data['CensusBehaviour'];
+			$yearId = $data['school_year_id'];
+			$this->saveCensusData($data, $controller->Session->read('InstitutionSite.id'));
+			$controller->Message->alert('general.edit.success');
+			$controller->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
+		}
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+
+			$header = array(__('Year'), __('Category'), __('Male'), __('Female'), __('Total'));
+
+			$dataYears = $this->getYearsHaveData($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$dataBehaviour = $this->getCensusData($institutionSiteId, $yearId);
+
+				if (count($dataBehaviour) > 0) {
+					$data[] = $header;
+					$total = 0;
+					foreach ($dataBehaviour AS $row) {
+						$male = empty($row['male']) ? 0 : $row['male'];
+						$female = empty($row['female']) ? 0 : $row['female'];
+
+						$data[] = array(
+							$yearName,
+							$row['name'],
+							$male,
+							$female,
+							$male + $female
+						);
+
+						$total += $male;
+						$total += $female;
+					}
+
+					$data[] = array('', '', '', __('Total'), $total);
+					$data[] = array();
+				}
+			}
+
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Behaviour';
+	}
 }

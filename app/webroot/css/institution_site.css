@@ -12,7 +12,7 @@
 #student_list { margin-top: 20px; }
 #studentBehaviourAdd .label {width:120px; margin-top:2px;}
 #studentBehaviourEdit .label {width:120px; margin-top:2px;}
-#studentBehaviourView .label {width:120px; margin-top:2px;}
+#studentBehaviourView .label {width:120px; }
 #classesAttendance .myyear .label { width: 30px; line-height: 25px;}
 #classesAttendanceEdit .myyear .label { width: 30px; line-height: 25px;}
 #classes .label { /*width: 60px;*/ }
@@ -73,4 +73,23 @@
 .ie8 #student_group .list_wrapper { height: 243px; }
 #students_search .cell_name{
     width: auto;
+}
+input.inlineShortField, select.inlineShortField{
+    width: 140px;
+}
+td .table_cell_row{
+	float: left;
+	width: 80%;
+	margin-bottom: 5px;
+}
+td .table_cell_row .label{
+	color: #666;
+	font-size: 11px;
+	font-weight: normal;
+}
+.edit td .table_cell_row .label{
+	line-height: normal;
+}
+.form-group .text.col-md-4{
+	padding-top: 7px;
 }

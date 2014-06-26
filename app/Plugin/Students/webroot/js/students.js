@@ -15,20 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
     objStudent.init();
-
-    $('#resetDefault').click(function(e){
-        e.preventDefault();
-//        console.info('click');
-        var $photoContent = $('#StudentPhotoContent');
-        var $resetImage= $('#StudentResetImage')
-        if ($photoContent.attr('disabled')){
-            $photoContent.removeAttr('disabled');
-            $resetImage.attr('value', '0');
-        }else {
-            $photoContent.attr('disabled', 'disabled');
-            $resetImage.attr('value', '1');
-        }
-    });
 });
 
 var objStudent = {

@@ -1,46 +1,37 @@
-<?php 
+<?php
 
 //2echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 echo $this->Html->script('config', false);
 
-?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
+$this->start('contentActions');
+if ($_edit) {
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'rubricsTemplatesHeader'), array('class' => 'divider', 'id' => 'back'));
+}
+$this->end();
+$this->start('contentBody');
+$formOptions = array_merge(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Quality'), $this->params['pass']);
+$formOptions = $this->FormUtility->getFormOptions($formOptions);
+echo $this->Form->create($modelName, $formOptions);
 
-<?php echo $this->element('breadcrumb'); ?>
+echo $this->Form->hidden('rubric_template_id', array('value' => $rubric_template_id));
+if (!empty($this->data[$modelName]['id'])) {
+	echo $this->Form->hidden('id');
+}
 
-<div id="rubrics_template" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <?php
-	echo $this->Form->create($modelName, array(
-		'type' => 'file',
-		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-	));
-	?>
-    <?php echo $this->Form->hidden('rubric_template_id', array('value'=> $rubric_template_id)); ?>
-    <?php //echo $this->Form->hidden('order'); ?>
-    <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->hidden('id');} ?>
-    
-    <?php if(!empty($this->data[$modelName]['order'])){ echo $this->Form->hidden('order');} ?>
-    <div class="row">
-        <div class="label"><?php echo __('Section Header'); ?></div>
-        <div class="value"><?php echo $this->Form->input('title'); ?> </div>
-    </div>
-    <div class="controls view_controls">
-		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-        <?php 
-		if(!empty($this->data[$modelName]['id'])){ 
-			$redirectURL = array('action' => 'rubricsTemplatesHeaderView',$rubric_template_id,$this->data[$modelName]['id'] );
-		}
-		else{
-			$redirectURL = array('action' => 'rubricsTemplatesHeader',$rubric_template_id);
-		}
-		?>
-        
-		<?php echo $this->Html->link(__('Cancel'), $redirectURL, array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	
-    <?php echo $this->Form->end(); ?>
-</div>
+if (!empty($this->data[$modelName]['order'])) {
+	echo $this->Form->hidden('order');
+}
+echo $this->Form->input('title');
+
+
+if (!empty($this->data[$modelName]['id'])) {
+	$redirectAction = array('action' => 'rubricsTemplatesHeaderView', $rubric_template_id, $this->data[$modelName]['id']);
+} else {
+	$redirectAction = array('action' => 'rubricsTemplatesHeader', $rubric_template_id);
+}
+echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
+echo $this->Form->end();
+$this->end();
+?>  

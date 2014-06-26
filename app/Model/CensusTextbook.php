@@ -17,6 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusTextbook extends AppModel {
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	
 	public $belongsTo = array(
 		'SchoolYear',
@@ -128,5 +134,117 @@ class CensusTextbook extends AppModel {
 				$this->save(array('CensusTextbook' => $obj));
 			}
 		}
+	}
+		
+	public function textbooks($controller, $params) {
+		$controller->Navigation->addCrumb('Textbooks');
+
+		$yearList = $this->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+		$data = array();
+		if (empty($programmes)) {
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
+		} else {
+			$data = $this->getCensusData($institutionSiteId, $selectedYear);
+			if (empty($data)) {
+				$controller->Message->alert('Census.noSubjects');
+			}
+		}
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+	}
+
+	public function textbooksEdit($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		if ($controller->request->is('get')) {
+			$controller->Navigation->addCrumb('Edit Textbooks');
+
+			$yearList = $this->SchoolYear->getAvailableYears();
+			$selectedYear = $controller->getAvailableYearId($yearList);
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+			if (!$editable) {
+				$controller->redirect(array('action' => 'textbooks', $selectedYear));
+			} else {
+				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+				$data = array();
+				if (empty($programmes)) {
+					$controller->Message->alert('InstitutionSiteProgramme.noData');
+				} else {
+					$data = $this->getCensusData($institutionSiteId, $selectedYear);
+					if (empty($data)) {
+						$controller->Message->alert('Census.noSubjects');
+					}
+				}
+				
+				$controller->set(compact('selectedYear', 'yearList', 'data'));
+			}
+		} else {
+			$data = $controller->data['CensusTextbook'];
+			$yearId = $data['school_year_id'];
+			$this->saveCensusData($data);
+			$controller->Message->alert('general.edit.success');
+			$controller->redirect(array('action' => 'textbooks', $yearId));
+		}
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			$header = array(__('Year'), __('Programme'), __('Grade'), __('Subject'), __('Total'));
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$dataCensus = $this->getCensusData($institutionSiteId, $yearId);
+
+				if (count($dataCensus) > 0) {
+					foreach ($dataCensus AS $programmeName => $dataByProgramme) {
+						$data[] = $header;
+						$totalByProgramme = 0;
+						foreach ($dataByProgramme AS $rowCensus) {
+							$gradeName = $rowCensus['education_grade_name'];
+							$subjectName = $rowCensus['education_subject_name'];
+							$total = $rowCensus['total'];
+
+							$data[] = array(
+								$yearName,
+								$programmeName,
+								$gradeName,
+								$subjectName,
+								$total
+							);
+
+							$totalByProgramme += $total;
+						}
+						$data[] = array('', '', '', __('Total'), $totalByProgramme);
+						$data[] = array();
+					}
+				}
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Textbooks';
 	}
 }

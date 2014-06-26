@@ -18,8 +18,12 @@
         <div style="overflow:hidden;width:<?php echo $image['width']; ?>px;height:<?php echo $image['height']; ?>px;" >
         <?php 
              // echo $this->Html->image($image['imagePath'], array(
+            $leftPos = "left:-{$image['x']}px;";
+            if($lang_dir=='rtl'){
+                $leftPos ="margin-left:-{$image['x']}px;";
+            }
              echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]), array(
-                'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;left:-{$image['x']}px;"
+                'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;$leftPos"
             ));
         ?>
         </div>

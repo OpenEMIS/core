@@ -17,7 +17,7 @@ var rubricsTemplate = {
                     text: data['message'],
                     type: alertType.info, // alertType.info or alertType.warn or alertType.ok
                     //position: 'absolute',
-                     css: {top:'220px', left:'43%'}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
+                    css: {top: '220px', left: '43%'}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
                     autoFadeOut: true,
                 }
 
@@ -41,13 +41,13 @@ var rubricsTemplate = {
                     title: data['message'],
                     text: data['message'],
                     type: alertType.info, // alertType.info or alertType.warn or alertType.ok
-                   // position: 'center',
-                    css: {top:'220px', left:'43%'}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
+                    // position: 'center',
+                    css: {top: '220px', left: '43%'}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
                     autoFadeOut: true,
                 }
 
                 $.alert(alertOpt);
-                
+
                 $('form .table_view').append(data['html']);
                 $('#last_id').val(parseInt($('#last_id').val()) + 1);
             }
@@ -79,5 +79,38 @@ var rubricsTemplate = {
                 $('#last_id').val(parseInt($('#last_id').val()) + 1);
             }
         });
+    },
+    addRubricTemplateGrade: function(obj) {
+        var parent = $('.content_wrapper ');//.parent();
+        var index = $('#gradeWraper tbody tr:last-child').attr('row-id');//find('.table_row').length;// + $('.delete-trainee input').length;
+
+        if (typeof index === "undefined") {
+            index = 0;
+        }
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                $('#gradeWraper tbody' ).append(data);
+				
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function(jqXHR) {
+                maskId = $.mask({parent: parent});
+            },
+            success: success
+        });
+    },
+    removeRubricTemplateGrade: function(obj) {
+        var row = $(obj).closest('tr');
+      //  var id = row.attr('row-id');
+        row.remove();
     }
 };

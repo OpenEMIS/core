@@ -1,25 +1,32 @@
 <?php
 /**
+ *
+ *
  * Tests cross database HABTM. Requires $test and $test2 to both be set in DATABASE_CONFIG
  * NOTE: When testing on MySQL, you must set 'persistent' => false on *both* database connections,
  * or one connection will step on the other.
  *
- * PHP 5
- *
  * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc.
+ * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Model
  * @since         CakePHP(tm) v 2.1
- * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
+
 require_once dirname(__FILE__) . DS . 'ModelTestBase.php';
 
+/**
+ * Class ModelCrossSchemaHabtmTest
+ *
+ * @package       Cake.Test.Case.Model
+ */
 class ModelCrossSchemaHabtmTest extends BaseModelTest {
 
 /**
@@ -110,7 +117,7 @@ class ModelCrossSchemaHabtmTest extends BaseModelTest {
 			),
 		));
 		$this->assertEquals(4, count($players));
-		$wizards = Set::extract('/Guild[name=Wizards]', $players);
+		$wizards = Hash::extract($players, '{n}.Guild.{n}[name=Wizards]');
 		$this->assertEquals(1, count($wizards));
 
 		$players = $Player->find('all', array(
@@ -120,7 +127,7 @@ class ModelCrossSchemaHabtmTest extends BaseModelTest {
 			),
 		));
 		$this->assertEquals(1, count($players));
-		$wizards = Set::extract('/Guild', $players);
+		$wizards = Hash::extract($players, '{n}.Guild.{n}');
 		$this->assertEquals(2, count($wizards));
 	}
 
@@ -140,7 +147,7 @@ class ModelCrossSchemaHabtmTest extends BaseModelTest {
 		));
 
 		$results = $Player->saveAll($player, array('validate' => 'first'));
-		$this->assertNotEqual(false, $results);
+		$this->assertNotSame(false, $results);
 		$count = $Player->find('count');
 		$this->assertEquals(5, $count);
 
@@ -163,8 +170,7 @@ class ModelCrossSchemaHabtmTest extends BaseModelTest {
 				),
 			),
 		));
-
-		$rangers = Set::extract('/Guild[name=Rangers]', $players);
+		$rangers = Hash::extract($players, '{n}.Guild.{n}[name=Rangers]');
 		$this->assertEquals(2, count($rangers));
 	}
 
@@ -214,7 +220,6 @@ class ModelCrossSchemaHabtmTest extends BaseModelTest {
 			'Armor' => array(
 				'Armor' => array(
 					1, 2, 3, 4,
-					1, 2, 3, 4,
 				),
 			),
 		);
@@ -227,7 +232,7 @@ class ModelCrossSchemaHabtmTest extends BaseModelTest {
 				'Player.id' => 10,
 			)
 		));
-		$spongeBobsArmors = Set::extract('/Armor', $spongebob);
+		$spongeBobsArmors = Hash::extract($spongebob, '{n}.Armor.{n}');
 		$this->assertEquals(4, count($spongeBobsArmors));
 	}
 }

@@ -55,19 +55,34 @@ span .icon_delete { margin-top: 4px; margin-left: 3px; }
 #bank_accounts .icon_delete { margin-top: 5px; }
 #attachments.edit .table_cell { vertical-align: top !important; }
 
-fieldset.section_break#general > .row{
+/*fieldset.section_break#general > .row{
     width:80%;
     margin-left:15px;
     float:left;
+}*/
+
+fieldset.section_break#general > .profile_image img {
+	width: 90px;
+    height: 115px;
+    border: 1px solid #CCCCCC;
+}
+
+fieldset.section_break#general > .profile_text {
+	position: relative;
 }
 
 fieldset.section_break#general > .profile_image {
-    float: right;
-    width: 90px;
-    height: 115px;
-    border: 1px solid #CCCCCC;
-    margin-left: 20px;
+	position: absolute;
+	top: 10px;
+	right: 0px;
+	z-index: 300px;
 }
+fieldset.section_break#general{
+	position: relative;
+	height: auto;
+	margin-left: 20px;
+}
+
 
 #image_upload_info {
     font-size:9px;

@@ -1,42 +1,27 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
+$this->start('contentActions');
 
-<?php echo $this->element('breadcrumb'); ?>
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'divider'));
+if ($_add && !$disableDelete) {
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'rubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+}
+if ($_edit && !empty($data)) {
 
-<div id="rubrics_template" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        <?php
-        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'divider'));
-        if ($_add && !$disableDelete) {
-            echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
-        }
-        if ($_edit && !empty($data)) {
+    echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'rubricsTemplatesCriteriaReorder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
 
-            echo $this->Html->link(__('Reorder'), array('action' => 'rubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+}
+$this->end();
 
-        }
-        ?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <table class="table allow_hover full_width" action="<?php echo $this->params['controller']; ?>/rubricsTemplatesCriteriaView/<?php echo $id ?>/<?php echo $rubricTemplateHeaderId ?>/">
-        <thead class="table_head">
-            <tr>
-                <td><?php echo __('Option') ?></td>
-            </tr>
-        </thead>
-        <tbody class="table_body">
-            <?php
-            foreach ($data as $item) {
-                //pr($item);
-                ?>
-                <tr class="table_row"  row-id="<?php echo $item[$modelName]['id']; ?>">
-                    <td class="table_cell"><?php echo $item[$modelName]['name']; ?></td>
-                </tr>
-
-
-            <?php } ?>
-        </tbody>
-    </table>
-</div>
+$this->start('contentBody');
+$tableHeaders = array(__('Option'));
+$tableData = array();
+foreach ($data as $obj) {
+	$row = array();
+	$row[] = $this->Html->link($obj[$model]['name'], array('action' => 'rubricsTemplatesCriteriaView', $id, $rubricTemplateHeaderId, $obj[$model]['id']), array('escape' => false));
+	$tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+$this->end(); ?>  

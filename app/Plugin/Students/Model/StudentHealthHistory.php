@@ -15,11 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthHistory extends StudentsAppModel {
-	//public $useTable = 'student_health_histories';
 	public $actsAs = array('ControllerAction');
-	
 	public $belongsTo = array(
-		//'Student',
+		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -29,7 +27,6 @@ class StudentHealthHistory extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'health_condition_id' => array(
 			'ruleRequired' => array(
@@ -38,103 +35,103 @@ class StudentHealthHistory extends StudentsAppModel {
 				'message' => 'Please select a valid Condition.'
 			)
 		)
-	);	public $booleanOptions = array('No', 'Yes');
-	
-	public function healthHistory($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('History');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
-		
-		$HealthCondition = ClassRegistry::init('HealthCondition');
-		$healthConditionsOptions = $HealthCondition->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthConditionsOptions', $healthConditionsOptions);
-		
+	);
+
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'name', 'model' => 'HealthCondition'),
+				array('field' => 'current', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
 	}
-	
-	public function healthHistoryView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View History');
-		$controller->set('subheader', 'Health - View History');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthHistory'));
+
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Student.id')) {
+			return $controller->redirect(array('action' => 'index'));
 		}
-		
-		$controller->Session->write('StudentHealthHistoryId', $id);
-		$HealthCondition = ClassRegistry::init('HealthCondition');
-		$healthConditionsOptions = $HealthCondition->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthConditionsOptions', $healthConditionsOptions);
 	}
-	
+
+	public function healthHistory($controller, $params) {
+		$controller->Navigation->addCrumb('History');
+		$header = __('History');
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
+		$controller->set(compact('header', 'data'));
+	}
+
+	public function healthHistoryView($controller, $params) {
+		$controller->Navigation->addCrumb('Health - View History');
+		$header = __('Health - View History');
+
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		$data = $this->findById($id);
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'healthHistory'));
+		}
+
+		$controller->Session->write('StudentHealthHistory.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
+
 	public function healthHistoryDelete($controller, $params) {
-        if($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthHistoryId')) {
-            $id = $controller->Session->read('StudentHealthHistoryId');
-            $studentId = $controller->Session->read('StudentId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			 
-			$HealthCondition = ClassRegistry::init('HealthCondition');
-			$healthConditionsOptions = $HealthCondition->find('first', array('conditions'=> array('id' => $data[$this->name]['health_condition_id'])));
-	
-            $name = $healthConditionsOptions['HealthCondition']['name'];
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StudentHealthHistoryId');
-            $controller->redirect(array('action' => 'healthHistory'));
-        }
-    }
-	
+		if ($controller->Session->check('StudentHealthHistory.id')) {
+			$id = $controller->Session->read('StudentHealthHistory.id');
+			if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			$controller->Session->delete('StudentHealthHistory.id');
+			return $controller->redirect(array('action' => 'healthHistory'));
+		}
+	}
+
 	public function healthHistoryAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add History');
-		$controller->set('subheader', 'Health - Add History');
+		$controller->set('header', __('Health - Add History'));
 		$this->setup_add_edit_form($controller, $params);
 	}
-	
+
 	public function healthHistoryEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit History');
-		$controller->set('subheader', 'Health - Edit History');
+		$controller->set('header', __('Health - Edit History'));
 		$this->setup_add_edit_form($controller, $params);
-		
-		
 		$this->render = 'add';
 	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$HealthCondition = ClassRegistry::init('HealthCondition');
-		$healthConditionsOptions = $HealthCondition->find('list', array('fields'=> array('id', 'name')));
-		$controller->set('healthConditionsOptions', $healthConditionsOptions);
-		$controller->set('booleanOptions', $this->booleanOptions);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+
+	function setup_add_edit_form($controller, $params) {
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'healthHistory'));
+			}
+		} else {
 			$this->recursive = -1;
 			$data = $this->findById($id);
-			if(!empty($data)){
+			if (!empty($data)) {
 				$controller->request->data = $data;
 			}
 		}
-		else{
-			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthHistory'));
-			}
-		}
+
+		$healthConditionsOptions = $this->HealthCondition->find('list', array('fields' => array('id', 'name')));
+		$yesnoOptions = $controller->Option->get('yesno');
+
+		$controller->set(compact('healthConditionsOptions', 'yesnoOptions'));
 	}
+
 }

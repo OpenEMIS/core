@@ -3,19 +3,18 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Survey.survey', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Survey/js/survey', false);
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Survey'));
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link(__('Add'), array('action' => 'add'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="users" class="content_wrapper">
-	<h1>
-		<span><?php echo __('New Surveys'); ?></span>
-		<?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'add'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
 	
 	<?php echo $this->Form->create('Survey',array('url'=>array('plugin'=>'Survey','controller'=>'Survey','action'=>'index')));?>
     <div class="row">
@@ -56,27 +55,30 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 		</div>
 	</div>-->
 	
-    <?php echo $this->end(); ?> 
+    <?php echo $this->Form->end(); ?> 
 	
 	<?php echo $this->element('alert');	?>
     
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell"><?php echo __('Name'); ?></div>
-			<div class="table_cell"><?php echo __('Date'); ?></div>
-			<div class="table_cell" style="width:60px;"><?php echo __('Filesize'); ?></div>
-			<div class="table_cell" style="width:60px;"><?php echo __('Action'); ?></div>
-		</div>
+	<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead class="table_head">
+			<tr>
+				<td class="table_cell"><?php echo __('Name'); ?></td>
+				<td class="table_cell"><?php echo __('Date'); ?></td>
+				<td class="table_cell" style="width:60px;"><?php echo __('Filesize'); ?></td>
+				<td class="table_cell" style="width:60px;"><?php echo __('Action'); ?></td>
+			</tr>
+		</thead>
 		<?php
 			if(@$data){ 
 		?>
-		<div class="table_body" id="results" cat="">
+		<tbody class="table_body" id="results" cat="">
 			<?php foreach($data as $obj) { ?>
-			<div class="table_row <?php //echo $obj['status']==0 ? 'inactive' : ''; ?>" >
-				<div class="table_cell mycell"><?php echo str_replace('.json', '',  $obj['basename']); ?></div>
-				<div class="table_cell center mycell"><?php echo $obj['time'] ; ?></div>
-				<div class="table_cell center mycell"><?php echo $obj['size'] ; ?></div>
-                <div class="table_cell center">
+			<tr class="table_row <?php //echo $obj['status']==0 ? 'inactive' : ''; ?>" >
+				<td class="table_cell mycell"><?php echo str_replace('.json', '',  $obj['basename']); ?></td>
+				<td class="table_cell center mycell"><?php echo $obj['time'] ; ?></td>
+				<td class="table_cell center mycell"><?php echo $obj['size'] ; ?></td>
+                <td class="table_cell center">
                 <?php /*echo $this->Html->link('Edit', array(
 					'controller' => 'Survey',
 					'action' => 'edit',
@@ -118,12 +120,13 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 								'?' => array('file' => $obj['basename']))
 					));
 				?>	
-                </div>
-			</div>
+                </td>
 			<?php } ?>
-		</div> 
+		</tr> 
         <?php } ?>
-	</div>
+	</tbody>
+</table>
+</div>
 	    <?php if(sizeof($data)==0) { ?>
             <div class="row center" style="color: red;"><?php echo __('No Survey found.'); ?></div>
         <?php } ?>
@@ -144,4 +147,4 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 			</div>
 		</div>
     	<?php } ?>
-</div>
+  <?php echo $this->end(); ?> 

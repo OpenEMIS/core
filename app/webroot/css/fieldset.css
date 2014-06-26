@@ -47,6 +47,16 @@ fieldset.section_break {
 	border: none;
 	border-top: 1px solid #CCCCCC;
 	margin: 5px 10px 0px 0px;
+	padding-top: 15px;
+	position: relative;
+}
+
+fieldset.section_break > .profile-image {
+	position: absolute;
+    width: 90px;
+    height: 115px;
+    border: 1px solid #CCCCCC;
+	right: 0;
 }
 
 fieldset.section_break > legend {
@@ -55,11 +65,17 @@ fieldset.section_break > legend {
 	font-size: 11px;
 	font-weight: bold;
 	color: #999999;
+	
+	/* bootstrap override */
+	width: auto;
+	margin-bottom: 0;
+	border: 0;
 }
 
 fieldset.section_break > legend a {	font-size: 11px; }
 
 fieldset.section_break > .row { margin-left: 15px; }
+fieldset.section_break.area > .row { margin-left: -15px; }
 fieldset.section_break > .row.icon_add_row { margin-left: 5px; }
 /* End fieldset section_break */
 
@@ -85,6 +101,11 @@ fieldset.section_group > legend {
 	font-size: 12px;
 	font-weight: bold;
 	color: #666666;
+	
+	/* bootstrap override */
+	width: auto;
+	margin-bottom: 0;
+	border: 0;
 }
 
 fieldset.section_group > legend a {
@@ -98,3 +119,10 @@ fieldset.section_group .section_group_body {
 }
 
 /* end section group */
+
+/* bootstrap override */
+fieldset.section_group .form-control {
+	font-size: 11px;
+	padding: 4px 6px;
+	height: 25px;
+}

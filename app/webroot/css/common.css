@@ -22,9 +22,7 @@ a img{
 	border:none;
 	text-decoration:none;
 }
-input, textarea, select{
-	font-family:Arial, Helvetica, sans-serif;
-}
+
 input:focus, textarea:focus, select:focus{
 	outline:none;
 }
@@ -86,6 +84,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:72px;
 }
 .header_side_nav{
+	width: 100%;
 	float: right;
 	text-align:right;
 	padding:0;
@@ -99,12 +98,12 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 }
 
 #user_name{
-	float:left;
+	float:right;
 	margin:0 6px 0 0;
 	font-style:italic;
 }
 #header_side_nav_container{
-	float:left;
+	float:right;
 	margin:0;
 	padding:2px 4px;
 	border-radius:0 0 4px 4px;
@@ -113,7 +112,6 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .header_side_nav_function_divi{
 	float:left;
 	background-color:#6993b2;
-	border-left:1px solid #3F6482;
 	width:1px;
 	height:20px;
 	margin:0 2px;
@@ -153,7 +151,6 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:1px;
 	height:16px;
 	background-color:#cccccc;
-	border-right:1px solid #999999;
 	margin:5px 0 0 0;
 }
 .header_nav_function{
@@ -195,7 +192,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 /*body cotent*/
 .container{
-	width:960px;
+	width:980px;
 	margin:0 auto;
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
@@ -208,6 +205,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	margin:-2px 6px 0 0;
 }
 
+.row { margin-left: 0 }
 
 
 /*footer*/
@@ -233,12 +231,29 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 
 /*bootstrap*/
-
-.accordion-heading {
-  border-bottom: 0;
+.panel-group .panel {
+	border: none;
+	border-radius: 0px;
+	box-shadow: none;
 }
 
-.accordion-heading .accordion-toggle {
+.panel-group .panel + .panel { margin-top: 0px; }
+
+.panel-heading {
+	padding: 0;
+	border: none;
+}
+
+.panel-default > .panel-heading + .panel-collapse .panel-body { 
+	border: none;
+	padding: 0px;
+}
+
+.panel-title {
+	border-bottom: 0;
+}
+
+.panel-title .accordion-toggle {
 	display: block;
 	padding: 6px 15px 8px 15px;
 	color: #007CBE;
@@ -248,7 +263,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	background-position: right 14px;
 	background-repeat: no-repeat;
 }
-.accordion-heading .accordion-toggle:hover{
+.panel-title .accordion-toggle:hover{
 	background-color:#5B8BAF;
 	color:#ffffff;
 	background-position: right -76px;
@@ -270,3 +285,4 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .collapse.in {
   height: auto;
 }
+

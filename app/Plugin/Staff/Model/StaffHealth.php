@@ -15,11 +15,8 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffHealth extends StaffAppModel {
-	//public $useTable = 'staff_healths';
 	public $actsAs = array('ControllerAction');
-	
 	public $belongsTo = array(
-		//'Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -30,67 +27,67 @@ class StaffHealth extends StaffAppModel {
 		)
 	);
 	
-	/*public $validate = array(
-		'doctor_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Name.'
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'blood_type'),
+				array('field' => 'doctor_name'),
+				array('field' => 'doctor_contact'),
+				array('field' => 'medical_facility'),
+				array('field' => 'health_insurance', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
 			)
-		),
-		'doctor_contact' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Contact Number.'
-			)
-		)
-	);*/
+		);
+		return $fields;
+	}
 	
-	public $bloodTypeOptions = array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-');
-	public $booleanOptions = array('No', 'Yes');
-	
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Staff.id')) {
+			return $controller->redirect(array('action' => 'index'));
+		}
+	}
+
 	public function health($controller, $params) {
 		$this->render = false;
-		return $controller->redirect(array('action' =>'health_view'));
+		return $controller->redirect(array('action' => 'healthView'));
 	}
-	
+
 	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
-        $data = $this->findByStaffId($controller->staffId);
-	
-		$controller->set('data', $data);
-		$controller->set('modelName', $this->name);
+		$header = __('Health - Overview');
+		$data = $this->findByStaffId($controller->Session->read('Staff.id'));
+
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'fields', 'data'));
 	}
-	
-	public function healthEdit($controller, $params){
+
+	public function healthEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Overview');
-		$controller->set('bloodTypeOptions', $this->bloodTypeOptions);
-		$controller->set('booleanOptions', $this->booleanOptions);
-		$controller->set('modelName', $this->name);
-		//pr($controller->request);
-		if($controller->request->is('get')){
+		$header = __('Health - Edit Overview');
+
+		$staffId = $controller->Session->read('Staff.id');
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->name]['staff_id'] = $staffId;
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'healthView'));
+			}
+		} else {
 			$this->recursive = -1;
-			$data = $this->findByStaffId($controller->staffId);
-			if(!empty($data)){
+			$data = $this->findByStaffId($staffId);
+			if (!empty($data)) {
 				$controller->request->data = $data;
 			}
 		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if(empty($controller->staffId)){
-				return $controller->redirect(array('action' => 'view'));
-			}
-			
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthView'));
-			}
-		}
+
+		$yesnoOptions = $controller->Option->get('yesno');
+		$bloodTypeOptions = $controller->Option->get('bloodtype');
+		$controller->set(compact('header', 'yesnoOptions', 'bloodTypeOptions'));
 	}
 }

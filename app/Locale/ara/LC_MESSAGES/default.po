@@ -1,18 +1,15 @@
-# LANGUAGE translation of CakePHP Application
-# Copyright YEAR NAME <EMAIL@ADDRESS>
-#
 msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-03-14 16:26+0800\n"
+"PO-Revision-Date: 2014-06-24 15:26+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: ara\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.4\n"
+"Language: ara\n"
+"X-Generator: Poedit 1.6.3\n"
 
 msgid "Home"
 msgstr "الصفحة الرئيسية"
@@ -451,6 +448,9 @@ msgstr "يجب تحديد دور للمستخدم"
 
 msgid "No Institution Sites"
 msgstr "لا يوجد مواقع للمؤسسة"
+
+msgid "Institution Site Name"
+msgstr "اسم المؤسسة الموقع"
 
 msgid "No Areas"
 msgstr "لا يوجد مناطق"
@@ -2495,165 +2495,6 @@ msgstr "تقارير البيانات التناقض"
 msgid "age"
 msgstr "عمر"
 
-msgid "Rubrics"
-msgstr "أدوات التدقيق"
-
-msgid "Quality - Rubrics"
-msgstr "عناوين"
-
-msgid "Weighthings"
-msgstr "وزن"
-
-msgid "Pass Mark"
-msgstr "علامة النجاح"
-
-msgid "Back"
-msgstr "ظهر"
-
-msgid "Modified by"
-msgstr "تم تعديلها من قبل"
-
-msgid "Modified on"
-msgstr "تعديل ل"
-
-msgid "Created by"
-msgstr "التي أنشأتها"
-
-msgid "Created on"
-msgstr "تم إنشاؤها على"
-
-msgid "View Rubric"
-msgstr "عرض الموضوع"
-
-msgid "Descriptions"
-msgstr "الوصف"
-
-msgid "Quality"
-msgstr "جودة"
-
-msgid "Rubric Details"
-msgstr "تفاصيل الموضوع"
-
-msgid "Quality - Rubric Details"
-msgstr "جودة - تفاصيل الموضوع"
-
-msgid "Quality - Edit Rubric Details"
-msgstr "جودة - تحرير تفاصيل الموضوع"
-
-msgid "Add Heading"
-msgstr "انواع الزيارات"
-
-msgid "Add Criteria Row"
-msgstr "إضافة صف معايير"
-
-msgid "Add Level Column"
-msgstr "إضافة عمود المستوى"
-
-msgid "Edit Rubric Details"
-msgstr "تحرير تفاصيل الموضوع"
-
-msgid "QUALITY"
-msgstr "جودة"
-
-msgid "Visits"
-msgstr "زيارات"
-
-msgid "Quality - Rubric"
-msgstr "جودة - الموضوع"
-
-msgid "Supervisor"
-msgstr "مشرف"
-
-msgid "Quality - Rubric Detail"
-msgstr "جودة - الموضوع التفاصيل"
-
-msgid "Color"
-msgstr "لون"
-
-msgid "REPORTS"
-msgstr "تقارير"
-
-msgid "Quality - Visit"
-msgstr "جودة - زيارة"
-
-msgid "Date"
-msgstr "تاريخ"
-
-msgid "Comment"
-msgstr "تعليق"
-
-msgid "Visit Types"
-msgstr "زيارة أنواع"
-
-msgid "National Code"
-msgstr "كود الوطنية"
-
-msgid "International Code"
-msgstr "الرمز الدولي"
-
-msgid "Quality - Add Rubric"
-msgstr "جودة - إضافة الموضوع"
-
-msgid "Add Rubric"
-msgstr "إضافة الموضوع"
-
-msgid "Quality - Rubric Infomations"
-msgstr "جودة - الموضوع إينفوميشنز"
-
-msgid "Rubric Infomations"
-msgstr "معلومات نماذج تقييم الجودة"
-
-msgid "Quality - Edit Rubric"
-msgstr "جودة - تحرير الموضوع"
-
-msgid "Edit Rubric"
-msgstr "تحرير الموضوع"
-
-msgid "Quality - Setup Rubric Criteria"
-msgstr "معايير إعداد الموضوع - جودة"
-
-msgid "Setup Rubric Criteria"
-msgstr "معايير الإعداد الموضوع"
-
-msgid "Quality - Add Rubric Criteria"
-msgstr "جودة - إضافة معايير الموضوع"
-
-msgid "Add Rubric Criteria"
-msgstr "إضافة معايير الموضوع"
-
-msgid "Quality - Edit Rubric Criteria"
-msgstr "معايير تحرير الموضوع - جودة"
-
-msgid "Edit Rubric Criteria"
-msgstr "معايير تحرير الموضوع"
-
-msgid "Quality - Rubric Criteria"
-msgstr "معايير الموضوع - جودة"
-
-msgid "Rubric Criteria"
-msgstr "معايير الموضوع"
-
-msgid "Quality - Status"
-msgstr "جودة - الحالة"
-
-msgid "Quality - Add Status"
-msgstr "جودة - حالة الإعلان"
-
-msgid "Quality - Edit Status"
-msgstr "جودة - الحالة تحرير"
-
-msgid "Quality - Add Rubrics"
-msgstr "جودة - إضافة نماذج التقييم"
-
-msgid "Quality - Edit Rubrics"
-msgstr "جودة - تحرير نماذج التقييم"
-
-msgid "Quality - Add Visit"
-msgstr "جودة - إضافة زيارة"
-
-msgid "Quality - Edit Visit"
-msgstr "جودة - تحرير زيارة"
-
 msgid "Identities"
 msgstr "الهويات"
 
@@ -2720,8 +2561,14 @@ msgstr "الفئة المستهدفة"
 msgid "Add Target Population"
 msgstr "إضافة الفئة المستهدفة"
 
+msgid "Add Provider"
+msgstr "إضافة موف"
+
 msgid "Credit Hours"
 msgstr "الساعات المعتمدة"
+
+msgid "Hours"
+msgstr "ساعات"
 
 msgid "Mode of Delivery"
 msgstr "استراتيجية التدريب"
@@ -2735,11 +2582,11 @@ msgstr "متطلبات سابقة"
 msgid "Training Level"
 msgstr "مستوى التدريب"
 
-msgid "Prerequisite"
-msgstr "شرط أساسي"
+msgid "Course Prerequisite"
+msgstr "بالطبع المتطلب"
 
-msgid "Add Prerequisite"
-msgstr "إضافة المتطلب"
+msgid "Add Course Prerequisite"
+msgstr "إضافة دورة المتطلب"
 
 msgid "Pass Result"
 msgstr "علامة النجاح"
@@ -3156,8 +3003,8 @@ msgstr "تقرير عن كل دورة المتاحة حسب الحالة"
 msgid "Training Course Report"
 msgstr "تقرير الدورة التدريبية"
 
-msgid "Report on all completed courses by teacher, date, location and results"
-msgstr "تقرير عن جميع الدورات الانتهاء من المعلم والتاريخ و المكان والنتائج "
+msgid "Report on all completed courses by staff, date, location and results"
+msgstr "تقرير عن جميع الدورات الانتهاء من الموظفين، وتاريخ ومكان والنتائج"
 
 msgid "Training Course Completed Report"
 msgstr "دورة تدريبية منتهية تقرير"
@@ -3174,8 +3021,8 @@ msgstr "تقرير عن تدريب المعلمين يحتاج بطبيعة ال
 msgid "Teacher Training Need Report"
 msgstr "تدريب المعلمين بحاجة الى تقرير"
 
-msgid "Report on what who has not completed a course by location"
-msgstr "تقرير عن ما الذي لم يستكمل دورة حسب الموقع"
+msgid "Report on who has not completed a course by location"
+msgstr "تقرير عن الذين لم يستكمل دورة حسب الموقع"
 
 msgid "Training Course Uncompleted Report"
 msgstr "تقرير غير مكتمل الدورة التدريبية"
@@ -3187,11 +3034,11 @@ msgid "Training Trainer Report"
 msgstr "تقرير تدريب مدرب"
 
 msgid ""
-"Report of Exceptions to see if a teacher is enrolled in two courses at the "
+"Report of Exceptions to see if a staff is enrolled in two courses at the "
 "same time or has already completed the course"
 msgstr ""
-"تقرير استثناءات لمعرفة ما إذا التحق مدرسا في دورة اثنين في نفس الوقت أو قد "
-"أنجزت بالفعل على المسار"
+"تقرير استثناءات لمعرفة ما إذا كان من الموظفين المسجلين في دورتين في نفس "
+"الوقت أو قد أنجزت بالفعل مسار"
 
 msgid "Training Exception Report"
 msgstr "تقرير استثناء تدريب"
@@ -3320,33 +3167,6 @@ msgstr "قائمة الموظفين مع الحقول المخصصة"
 msgid "Staff Custom Field Report"
 msgstr "الموظفين تقرير حقل مخصص"
 
-msgid ""
-"Report generated at the school, FD and national level for each aspect "
-"(category) and domain (technical or administrative)"
-msgstr ""
-"تقرير ولدت في المدرسة ، و FD المستوى الوطني لكل جانب (الفئة) والمجال ( تقني "
-"أو إداري "
-
-msgid "QA Schools Report"
-msgstr "تقرير المدارس QA"
-
-msgid ""
-"Report generated by type, category, result (pass or fail) and a table with "
-"the average, minimum and maximum values and also compare results from one "
-"year to the next"
-msgstr ""
-"تقرير إنشاؤها حسب النوع، و الفئة ، نتيجة ( نجاح أو رسوب ) وطاولة مع متوسط ​​، "
-"والقيم الدنيا والقصوى و أيضا مقارنة النتائج من سنة واحدة إلى أخرى"
-
-msgid "QA Results Report"
-msgstr "QA نتائج تقري"
-
-msgid "Report generation for those who hasn’t competed the rubric"
-msgstr "الجيل تقرير لأولئك الذين لم تنافس عنوان"
-
-msgid "QA Rubric Not Completed Report"
-msgstr "QA الموضوع لم يكتمل تقرير"
-
 msgid "Standard"
 msgstr "ستاندارد"
 
@@ -3373,12 +3193,6 @@ msgid ""
 "each program"
 msgstr ""
 "تقرير عن عدد من المعلمين في الواقع الآيات تدريب الفئات المستهدفة لكل برنامج"
-
-msgid "Quality Assurance Reports"
-msgstr "تقارير ضمان الجودة"
-
-msgid "Quality Assurance"
-msgstr "ضمان الجودة"
 
 msgid "New Staff"
 msgstr "طاقم جدي"
@@ -3581,11 +3395,571 @@ msgstr "الصحة - الاختبارات"
 msgid "Health - Consultations"
 msgstr "الصحة - استشارات"
 
-msgid "Report - Quality"
-msgstr "تقرير - الجودة"
-
 msgid "File size"
 msgstr "حجم الملف"
 
 msgid "Please enter a valid OpenEMIS ID"
 msgstr "يرجى إدخال رقم صالح OpenEMIS"
+
+# ###########################################################################
+# Dashboard
+# ###########################################################################
+msgid "Dashboards"
+msgstr "لوحات القياس"
+
+msgid "Dashboard Reports"
+msgstr "لوحات القياس  تقارير"
+
+msgid "ECE QA Dashboard"
+msgstr "لوحة قياس الطفولة المبكرة"
+
+msgid "Early Childhood Education Quality Assurance Data"
+msgstr "بيانات ضمان جودة مرحلة تعليم الطفولة المبكرة"
+
+msgid "Early Childhood Education Quality Assurance"
+msgstr "ضمان جودة تعليم الطفولة البكرة"
+
+msgid "Geographical Level"
+msgstr "التوزيع الجغرافي "
+
+msgid "Administrative and Technical Aspects"
+msgstr "المجالات الإدارية والفنية"
+
+msgid "Trends"
+msgstr "اتجاه"
+
+msgid "Administrative Domains"
+msgstr "المجالات الإدارية"
+
+msgid "Technical Domains"
+msgstr "المجالات الفنية"
+
+msgid "Distribution of Both Aspects"
+msgstr "توزيع مجالات التقييم"
+
+msgid "Scatterplot of Administrative and Technical and Aspects"
+msgstr "تشتت المجالات الإدارية والفنية"
+
+msgid "Appointment"
+msgstr "توظيف"
+
+msgid "Report - Dashboard"
+msgstr "تقرير لوحة القياس"
+
+msgid "Owned"
+msgstr "ملك"
+
+msgid "Rented"
+msgstr "مستأجر"
+
+msgid "Both"
+msgstr "كلاهما"
+
+msgid "Permanent"
+msgstr "دائم"
+
+msgid "Contract"
+msgstr "عقد"
+
+msgid "Urban"
+msgstr "مدينة"
+
+msgid "Rural"
+msgstr "قرية"
+
+msgid "Administrative"
+msgstr "إداري"
+
+msgid "Technical"
+msgstr "فني"
+
+msgid "Download CSV"
+msgstr "تحميل CSV"
+
+# ###########################################################################
+# Quality Assurance
+# ###########################################################################
+msgid "Rubrics"
+msgstr "أدوات التدقيق"
+
+msgid "Weightings"
+msgstr "الأوزان"
+
+msgid "Weighting"
+msgstr "الترجيح"
+
+msgid "Pass Mark"
+msgstr "علامة النجاح"
+
+msgid "Back"
+msgstr "ظهر"
+
+msgid "Modified by"
+msgstr "تم تعديلها من قبل"
+
+msgid "Modified on"
+msgstr "تعديل ل"
+
+msgid "Created by"
+msgstr "التي أنشأتها"
+
+msgid "Created on"
+msgstr "تم إنشاؤها على"
+
+msgid "View Rubric"
+msgstr "عرض الموضوع"
+
+msgid "Quality"
+msgstr "جودة"
+
+msgid "Rubric Details"
+msgstr "تفاصيل الموضوع"
+
+msgid "Add Header"
+msgstr "إضافة رأس"
+
+msgid "Add Level Column"
+msgstr "إضافة عمود المستوى"
+
+msgid "Edit Rubric Details"
+msgstr "تحرير تفاصيل الموضوع"
+
+msgid "QUALITY"
+msgstr "جودة"
+
+msgid "Visits"
+msgstr "زيارات"
+
+msgid "Evaluator"
+msgstr "مقيم"
+
+msgid "Color"
+msgstr "لون"
+
+msgid "REPORTS"
+msgstr "تقارير"
+
+msgid "Date"
+msgstr "تاريخ"
+
+msgid "Comment"
+msgstr "تعليق"
+
+msgid "Visit Types"
+msgstr "زيارة أنواع"
+
+msgid "National Code"
+msgstr "كود الوطنية"
+
+msgid "International Code"
+msgstr "الرمز الدولي"
+
+msgid "Add Rubric"
+msgstr "إضافة الموضوع"
+
+msgid "Rubric Infomations"
+msgstr "معلومات نماذج تقييم الجودة"
+
+msgid "Edit Rubric"
+msgstr "تحرير الموضوع"
+
+msgid "Setup Rubric Criteria"
+msgstr "معايير الإعداد الموضوع"
+
+msgid "Add Criteria"
+msgstr "إضافة معايير الموضوع"
+
+msgid "Edit Criteria"
+msgstr "تحرير معايير"
+
+msgid "Criteria Details"
+msgstr "معايير تفاصيل"
+
+msgid "Quality Assurance Reports"
+msgstr "تقارير ضمان الجودة"
+
+msgid "Quality Assurance"
+msgstr "ضمان الجودة"
+
+msgid ""
+"Report generated at the school, FD and national level for each aspect "
+"(category) and domain (technical or administrative) "
+msgstr ""
+"تقرير ولدت في المدرسة، وFD المستوى الوطني لكل جانب (الفئة) والمجال (التقنية "
+"أو الإدارية)"
+
+msgid "QA Schools Report"
+msgstr "تقرير المدارس QA"
+
+msgid ""
+"Report generated by type, category, result (pass or fail) and a table with "
+"the average, minimum and maximum values and also compare results from one "
+"year to the next "
+msgstr ""
+"تقرير إنشاؤها حسب النوع، والفئة، نتيجة (نجاح أو رسوب) وطاولة مع متوسط​​، والحد "
+"الأدنى والحد الأقصى للقيم وأيضا مقارنة النتائج من سنة واحدة إلى أخرى"
+
+msgid "QA Results Report"
+msgstr "QA نتائج تقري"
+
+msgid "Report generation for those who hasn't completed the rubric"
+msgstr "تقرير جيل لأولئك الذين لم يستكمل عنوان"
+
+msgid "QA Rubric Not Completed Report"
+msgstr "QA الموضوع لم يكتمل تقرير"
+
+msgid "Maximum 150 words per comment"
+msgstr "أقصى 150 كلمة في تعليق"
+
+msgid "Date Enabled"
+msgstr "أقتاريخ ممكن"
+
+msgid "Date Disabled"
+msgstr "تاريخ معطل"
+
+msgid "Target Grades"
+msgstr "الصفوف المستهدفة"
+
+msgid "Security Role"
+msgstr "دور الأمن"
+
+msgid "Setup Criteria Column"
+msgstr "معايير الإعداد العمود"
+
+msgid "Header"
+msgstr "رأس"
+
+msgid "Criteria"
+msgstr "المعايير"
+
+msgid "Descriptors"
+msgstr "واصفات"
+
+msgid "New row has been added at the bottom of the rubric table."
+msgstr "تمت إضافة صف جديد في أسفل الجدول الموضوع."
+
+msgid "Header / Sub-Header / Title"
+msgstr "رأس / رأس الفرعية / العنوان"
+
+msgid "Section Header"
+msgstr "المقطع رأس"
+
+msgid "Add Section Header"
+msgstr "إضافة مقطع الرأس"
+
+msgid "Reorder"
+msgstr "إعادة ترتيب"
+
+msgid "Add Grade"
+msgstr "إضافة الصف"
+
+msgid "Add Visit"
+msgstr "إضافة زيارة"
+
+msgid "Visit"
+msgstr "زيارة"
+
+msgid "Edit Rubric Headers"
+msgstr "تحرير رؤوس الموضوع"
+
+msgid "Edit Headers"
+msgstr "تحرير رؤوس"
+
+msgid "There are no records."
+msgstr "هناك أية سجلات."
+
+msgid "Create Rubric Table"
+msgstr "إنشاء الجدول الموضوع"
+
+msgid "Reorder Criteria"
+msgstr "إعادة ترتيب معايير"
+
+msgid "Options"
+msgstr "خيارات"
+
+msgid "Edit Status"
+msgstr "تحرير الحالة"
+
+msgid "Add Status"
+msgstr "حالة الإعلان"
+
+msgid "Criteria Level Description"
+msgstr "معايير مستوى الوصف"
+
+msgid "View Details"
+msgstr "عرض تفاصيل"
+
+msgid "Weightage"
+msgstr "الترجيح"
+
+msgid "Selected Grade(s)"
+msgstr "الصف المحدد (ق)"
+
+msgid "Status Details"
+msgstr "تفاصيل الوضع"
+
+msgid "Rubric Name"
+msgstr "اسم الموضوع"
+
+msgid "Total Weighting(%)"
+msgstr "مجموع الترجيح(٪)"
+
+msgid "Pass/Fail"
+msgstr "نجاح / فشل"
+
+msgid "Grand Total Weighting(%)"
+msgstr "المجموع الكلي الترجيح (٪)"
+
+msgid "QA Report"
+msgstr "QA تقرير"
+
+msgid "Visit Report"
+msgstr "زيارة تقرير"
+
+msgid "Reports - Quality"
+msgstr "تقارير - جودة"
+
+msgid "Report Generated"
+msgstr "تقرير منشأ"
+
+msgid "Staff Type"
+msgstr "نوع الموظفين"
+
+msgid "Fail"
+msgstr "فشل"
+
+msgid "Quality Type"
+msgstr "نوع الجودة"
+
+msgid "Visit Date"
+msgstr "زيارة التسجيل"
+
+msgid "Evaluator Name"
+msgstr "اسم المقيم"
+
+msgid "Total Classes"
+msgstr "مجموع الفصول الدراسية"
+
+msgid "Maximum"
+msgstr "أقصى"
+
+msgid "Minimum"
+msgstr "الحد الأدنى"
+
+msgid "Average"
+msgstr "متوسط"
+
+msgid "Pass/ Fail"
+msgstr "نجاح / فشل"
+
+msgid "Total Questions"
+msgstr "مجموع الأسئلة"
+
+msgid "Total Answered"
+msgstr "مجموع يجيب"
+
+msgid "There are no available files found for this report."
+msgstr "لا توجد ملفات متاحة للعرض لهذا التقرير."
+
+msgid "Goal Objective"
+msgstr "الهدف الهدف"
+
+msgid "Requirement"
+msgstr "مطلب"
+
+msgid "Trainer Type"
+msgstr "نوع المدرب"
+
+msgid "Position"
+msgstr "موقف"
+
+msgid "Target Group"
+msgstr "المجموعة المستهدفة"
+
+msgid "Total Target Group"
+msgstr "مجموع المجموعة المستهدفة"
+
+msgid "Total Trained"
+msgstr "مجموع المدربين"
+
+msgid "Target Group Percentage"
+msgstr "نسبة المجموعة المستهدفة"
+
+msgid "Mode Of Delivery"
+msgstr "وطريقة التسليم"
+
+msgid "Last Updated By"
+msgstr "اخر تحديث قام به"
+
+msgid "Behaviour - Staff"
+msgstr "السلوك - الموظفين"
+
+msgid "Behaviour - Students"
+msgstr "السلوك - طلاب"
+
+# ###########################################################################
+msgid "*File size should not be larger than 2MB."
+msgstr "* لا ينبغي أن يكون حجم الملف أكبر من 2MB."
+
+msgid ""
+"*Maximum 5 files are permitted on single upload. Each file size should not "
+"be larger than 2MB."
+msgstr ""
+"ويسمح * الحد الأقصى 5 ملفات على تحميل واحد. لا ينبغي أن يكون حجم كل ملف أكبر "
+"من 2MB."
+
+msgid "Select file"
+msgstr "حدد ملف"
+
+msgid "Result Type"
+msgstr "نتيجة نوع"
+
+msgid "User"
+msgstr "المستخدم"
+
+msgid "Add Result Type"
+msgstr "إضافة نوع النتيجة"
+
+msgid "Goal / objective"
+msgstr "الهدف / الهدف"
+
+msgid "Internal"
+msgstr "داخلي"
+
+msgid "External"
+msgstr "خارجي"
+
+msgid "Add Trainer"
+msgstr "إضافة المدرب"
+
+msgid "Overall Result"
+msgstr "نتائج الشامل"
+
+msgid "Trainers"
+msgstr "المدربين"
+
+msgid "Edit Results Details"
+msgstr "تحرير تفاصيل النتائج"
+
+msgid "Download Template"
+msgstr "قالب تحميل"
+
+msgid "Upload Results"
+msgstr "تحميل النتائج"
+
+msgid "Passed"
+msgstr "مرت"
+
+msgid "Failed"
+msgstr "فشل"
+
+msgid "Upload File"
+msgstr "تحميل الملف"
+
+msgid "Upload"
+msgstr "تحميل"
+
+msgid "Invalid File Format"
+msgstr "تنسيق الملف غير صالح"
+
+msgid "Columns/Data do not match."
+msgstr "لا تطابق الأعمدة / البيانات."
+
+msgid "Error encountered, record(s) could not be updated"
+msgstr "الخطأ التي تواجهها، لا يمكن أن يتم تحديث الإجابات"
+
+msgid "%s Record(s) have been updated"
+msgstr "تم تحديث سجل%s (ق)"
+
+msgid "Column %s only accepts 0 or 1 as input."
+msgstr "العمود%s لا يقبل إلا 0 أو 1 كإدخال."
+
+msgid "Row %s: %s"
+msgstr "الصف%s:%s"
+
+msgid "TrainingResult"
+msgstr "نتائجلتدريب"
+
+msgid "OpenEmis ID"
+msgstr "OpenEmis ID"
+
+msgid "(1=Pass/0=Fail)"
+msgstr "(1 = نجاح / 0 = فشل)"
+
+msgid "Need Type"
+msgstr "تحتاج نوع"
+
+msgid "Training Priority"
+msgstr "التدريب الأولوية"
+
+msgid "Achievement Type"
+msgstr "نوع الإنجاز"
+
+msgid "Course Goal / Objectives"
+msgstr "بالطبع الهدف / الأهداف"
+
+msgid "Add Training Needs"
+msgstr "إضافة الاحتياجات التدريبية"
+
+msgid "Course Catalogue"
+msgstr "بالطبع كتالوج"
+
+msgid "Need Category"
+msgstr "تحتاج الفئة"
+
+msgid "Add Achievements"
+msgstr "إضافة الانجازات"
+
+msgid "Achievements Details"
+msgstr "إنجازات تفاصيل"
+
+msgid "Edit Achievements"
+msgstr "تعديل الانجازات"
+
+msgid "TrainingSessionTrainee"
+msgstr "الدورةلتدريبيةمتدرب"
+
+msgid "Approval"
+msgstr "موافقة"
+
+msgid "Reject"
+msgstr "رفض"
+
+msgid "Experience"
+msgstr "تجربة"
+
+msgid "Specialisation"
+msgstr "التخصص"
+
+msgid "Years"
+msgstr "سنوات"
+
+msgid "Months"
+msgstr "أشهر"
+
+msgid "Add Experience"
+msgstr "إضافة التجربة"
+
+msgid "Add Specialisation"
+msgstr "إضافة التخصص"
+
+msgid "Upload Trainee"
+msgstr "تحميل متدرب"
+
+msgid "Staff with OpenEmis ID %s does not exist."
+msgstr "لا وجود الموظفين مع OpenEmis ID %s ق."
+
+msgid "Staff with OpenEmis ID %s does not meet the Course requirement."
+msgstr "لا الموظفين مع OpenEmis ID %s لا تلبية متطلبات الدورة."
+
+msgid "Edit Sessions Details"
+msgstr "تحرير تفاصيل جلسات"
+
+msgid "Evaluation Tools"
+msgstr "أدوات التقييم"
+
+msgid "Download Trainees"
+msgstr "تحميل المتدربين"
+
+msgid "Download Trainee Results"
+msgstr "تحميل متدرب نتائج"

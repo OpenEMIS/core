@@ -17,21 +17,97 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationSubject extends AppModel {
+	public $actsAs = array('ControllerAction', 'Reorder');
+	public $hasMany = array('EducationGradeSubject');
+	
 	public $validate = array(
+		'code' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a code'
+			)
+		),
 		'name' => array(
 			'notEmpty' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a name for the Subject.'
-			),
-			'isUnique' => array(
-				'rule' => 'isUnique',
-				'message' => 'This subject already exists in the system.'
+				'message' => 'Please enter a name'
 			)
 		)
 	);
 	
-	public $hasMany = array('EducationGradeSubject');
+	public $_action = 'subjects';
+	public $_header = 'Education Subjects';
+	
+	public function beforeAction($controller, $action) {
+		parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb($this->_header);
+		$controller->set('header', __($this->_header));
+		$controller->set('_action', $this->_action);
+		$controller->set('selectedAction', $this->_action);
+	}
+	
+	public function getDisplayFields($controller) {
+		$yesnoOptions = $controller->Option->get('yesno');
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'code'),
+				array('field' => 'name'),
+				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
+	
+	public function subjects($controller, $params) {
+		$data = $this->find('all', array('order' => $this->alias.'.order'));
+		$controller->set(compact('data'));
+	}
+	
+	public function subjectsAdd($controller, $params) {
+		if($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => $this->_action));
+			}
+		}
+	}
+	
+	public function subjectsView($controller, $params) {
+		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$data = $this->findById($id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('data', 'fields'));
+	}
+	
+	public function subjectsEdit($controller, $params) {
+		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$data = $this->findById($id);
+		
+		if(!empty($data)) {
+			$fields = $this->getDisplayFields($controller);
+			$controller->set(compact('fields'));
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				if ($this->save($controller->request->data)) {
+					$controller->Message->alert('general.edit.success');
+					return $controller->redirect(array('action' => $this->_action.'View', $id));
+				}
+			} else {
+				$controller->request->data = $data;
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => $this->_action));
+		}
+	}
 	
 	// Used by InstitutionSiteController.classesAddTeacherRow
 	public function getSubjectByClassId($classId) {

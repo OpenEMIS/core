@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StaffHealthMedication extends StaffAppModel {
 	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('start_date', 'end_date'));
 	
 	public $belongsTo = array(
 		//'Staff',
@@ -59,88 +59,95 @@ class StaffHealthMedication extends StaffAppModel {
 		return $endDate >= $startDate;
 	}
 	
-	public function healthMedication($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('Health - Medications');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		
-		$controller->set('subheader', 'Health - Medications');
-		$controller->set('data', $data);
-		
-	}
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'name'),
+                array('field' => 'dosage'),
+                array('field' => 'start_date', 'type' => 'datepicker', 'labelKey' => 'HealthMedication.start_date'),
+                array('field' => 'end_date', 'type' => 'datepicker', 'labelKey' => 'HealthMedication.end_date'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
 
-	public function healthMedicationView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View Medication');
-		$controller->set('subheader', 'Health - View Medication');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthMedication'));
-		}
-		
-		$controller->Session->write('StaffHealthMedicationId', $id);
-		
-		$controller->set('data', $data);
-	}
-	
-	public function healthMedicationDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthMedicationId')) {
+    public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+
+    public function healthMedication($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Medications');
+        $header = __('Health - Medications');
+        $this->recursive = -1;
+        $data = $this->findAllByStaffId($controller->staffId); //('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+
+        $controller->set(compact('header', 'data'));
+    }
+
+    public function healthMedicationView($controller, $params) {
+        $controller->Navigation->addCrumb('Health - View Medication');
+
+        $header = __('Health - View Medication');
+
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        $data = $this->findById($id); //('first',array('conditions' => array($this->name.'.id' => $id)));
+
+        if (empty($data)) {
+            $controller->Message->alert('general.noData');
+            $controller->redirect(array('action' => 'healthMedication'));
+        }
+
+        $controller->Session->write('StaffHealthMedicationId', $id);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('header', 'data', 'fields', 'id'));
+    }
+
+    public function healthMedicationDelete($controller, $params) {
+        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthMedicationId')) {
             $id = $controller->Session->read('StaffHealthMedicationId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-            $name = $data[$this->name]['name'];
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StaffHealthMedicationId');
+            if ($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+            $controller->Session->delete('StaffHealthMedicationId');
             $controller->redirect(array('action' => 'healthMedication'));
         }
     }
-	
-	public function healthMedicationAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Add Medication');
-		$controller->set('subheader', 'Health - Add Medication');
-		$this->setup_add_edit_form($controller, $params);
-	}
-	
-	public function healthMedicationEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Edit Medication');
-		$controller->set('subheader', 'Health - Edit Medication');
-		$this->setup_add_edit_form($controller, $params);
-		
-		
-		$this->render = 'add';
-	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthMedication'));
-			}
-		}
-	}
+
+    public function healthMedicationAdd($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Add Medication');
+        $controller->set('header', __('Health - Add Medication'));
+        $this->setup_add_edit_form($controller, $params);
+    }
+
+    public function healthMedicationEdit($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Edit Medication');
+        $controller->set('header', __('Health - Edit Medication'));
+        $this->setup_add_edit_form($controller, $params);
+        $this->render = 'add';
+    }
+
+    function setup_add_edit_form($controller, $params) {
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+            if ($this->save($controller->request->data)) {
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'healthMedication'));
+            }
+        } else {
+            $this->recursive = -1;
+            $data = $this->findById($id);
+            if (!empty($data)) {
+                $controller->request->data = $data;
+            }
+        }
+    }
 }

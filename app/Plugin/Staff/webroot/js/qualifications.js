@@ -22,7 +22,7 @@ var objStaffQualifications = {
     init: function() {
         var element = '#search';
         var table = $('#qualification');
-        var url = getRootURL() + table.attr('url');
+        var url = getRootURL() + table.attr('searchQualificationUrl');
         objStaffQualifications.attachAutoComplete(element, url, objStaffQualifications.selectInstitution);
     },
 

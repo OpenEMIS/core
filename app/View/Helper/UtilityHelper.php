@@ -95,6 +95,7 @@ class UtilityHelper extends AppHelper {
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
 		$ctr = 0;
+		
 		foreach($this->fieldLevels as $levelid => $levelName){
 			$areaVal = array('id'=>'0','name'=>'a');
 			foreach($this->fieldAreaLevels as $arealevelid => $arrval){
@@ -105,8 +106,8 @@ class UtilityHelper extends AppHelper {
 			}
             if($areaVal['name']!='a'){
                 echo '<div class="row">
-                            <div class="label">'.$levelName.'</div>
-                            <div class="value" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
+                            <div class="col-md-2">'.$levelName.'</div>
+                            <div class="col-md-6" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
                         </div>';
             }
 			$ctr++;
@@ -144,8 +145,8 @@ class UtilityHelper extends AppHelper {
         }
 
         echo '<div class="row">
-					<div class="label">&nbsp;&nbsp;</div>
-					<div class="value" style="width:510px; float: right;"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
+					<div class="col-md-2">&nbsp;&nbsp;</div>
+					<div class="col-md-6" style="width:510px; float: right;"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
         echo '<div class="table" style="width:510px; float: right;">
 							<div class="table_body">';
 		$myCompVal = str_replace(',',' &rarr; ',rtrim($val,','));
@@ -231,28 +232,33 @@ class UtilityHelper extends AppHelper {
         $this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
 
 		$ctr = 0;
-
+		echo '<div id="'.substr($id,0,-3) .'">';
 		foreach($this->fieldLevels as $levelid => $levelName){
+			//pr($this->fieldAreaLevels[$ctr]['id'] . '|');
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
+			
 
             $display = '';
             if($mylevel===''){
                 $display = 'display:none;';
             }
-            echo '<div class="row" style="'.$display.'">
-                    <div class="label">'.$mylevel.'</div>
-                    <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
-                                                        array('class'=>'areapicker default',
+            echo '<div class="form-group" style="'.$display.'">
+                    <label class="col-md-3 control-label">'.$mylevel.'</label>
+                    '. $form->input($arealevelfk.'_'.$ctr,
+                                                        array('class'=>'areapicker form-control',
                                                         'style'=>'float:left;',
+														'div' => false,
+														'label' => false,
                                                         'default'=>@$this->fieldAreaLevels[$ctr]['id'],
                                                         'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
             if ($ctr==0){
-                echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
+                echo $form->input($id,array('class'=>'areapicker_areaid','div' => false, 'label' => false,'type'=>'text','style'=>'display:none','value' => $value));
             }
-            echo		'</div>
+            echo		'
                 </div>';
 			$ctr++;
 		}
+		echo '</div>';
     }
 
 	public function getDatePicker($form, $id, $settings=array()) {
@@ -329,6 +335,120 @@ class UtilityHelper extends AppHelper {
 			$dateOptions['class'] = $dateOptions['class'] . ' ' . $_settings['class'];
 		}
 		$dateHidden = $form->input($id, $dateOptions);
+		
+		$selectOpts = array(
+			'name' => '',
+			'type' => 'select',
+			'autocomplete' => 'off',
+			'div' => false,
+			'label' => false,
+			'onchange' => $onChange
+		);
+		
+		$daySelect = $form->input($id.'_day', array_merge($selectOpts, 
+			array('class' => 'datepicker_day', 'options' => $day, 'default' => $defaultDay)
+		));
+			
+		$monthSelect =  $form->input($id.'_month', array_merge($selectOpts, 
+			array('class' => 'datepicker_month', 'options' => $month, 'default' => $defaultMonth)
+		));
+			
+		$yearSelect =  $form->input($id.'_year', array_merge($selectOpts, 
+			array('class' => 'datepicker_year', 'options' => $year, 'default' => $defaultYear)
+		));
+		
+		$order = $_settings['order'];
+		$dateSelect = array();
+		for($i=0; $i<strlen($order); $i++) {
+			if(strcmp($order[$i], 'd')==0) {
+				$dateSelect[] = $daySelect;
+			} else if(strcmp($order[$i], 'm')==0) {
+				$dateSelect[] = $monthSelect;
+			} else {
+				$dateSelect[] = $yearSelect;
+			}
+		}
+		
+		$select = sprintf($wrapper, $id, implode($_settings['glue'], $dateSelect), $dateHidden);
+		return $select;
+	}
+	
+	public function getDatePickerNew($form, $id, $settings=array()) {
+		$_settings = array(
+			'order' => 'dmy',
+			'desc' => true,
+			'glue' => "\n<span>-</span>\n",
+			'yearRange' => array(),
+			'yearAdjust' => 0,
+			'emptySelect' => false,
+			'endDateValidation' => ''
+		);
+		$_settings = array_merge($_settings, $settings);
+		
+		$wrapper = '<div class="datepicker" id="%s">%s</div>%s';
+		
+		$onChange = 'jsDate.updateDay(this);';
+		if(strlen($_settings['endDateValidation']) > 0) {
+			$wrapper = sprintf('<div class="datepicker" id="%%s" start="#%s" end="#%s">%%s</div>%%s', $id, $_settings['endDateValidation']);
+			$onChange = 'jsDate.validateEndDate(this);' . $onChange;
+		}
+		
+		$utility = new UtilityComponent(new ComponentCollection);
+		
+		$day = DateTimeComponent::generateDay();
+		$month = DateTimeComponent::generateMonth();
+		$year = DateTimeComponent::generateYear($_settings['yearRange']);
+		
+		if($_settings['yearAdjust']>0) {
+			$yearLast = end($year);
+			for($i=0; $i<$_settings['yearAdjust']; $i++) {
+				$year[++$yearLast] = $yearLast;
+			}
+		} else if($_settings['yearAdjust']<0) {
+			for($i=0; $i>$_settings['yearAdjust']; $i--) {
+				array_pop($year);
+			}
+		}
+		
+		if(isset($_settings['desc'])) {
+			krsort($year);
+		}
+		
+		$defaultDay = 0;
+		$defaultMonth = 0;
+		$defaultYear = 0;
+		
+		if($_settings['emptySelect']) {
+			$utility->unshiftArray($day, array('0' => __('Day')));
+			$utility->unshiftArray($month, array('0' => __('Month')));
+			$utility->unshiftArray($year, array('0' => __('Year')));
+		}
+		
+		$dateOptions = array('class' => 'datepicker_date', 'type' => 'text', 'div' => false, 'label' => false);
+		if(isset($_settings['name'])) {
+			$dateOptions['name'] = $_settings['name'];
+		}
+		$dateValue = '';
+		if(isset($_settings['value']) && !empty($_settings['value'])) {
+			$dateValue = $_settings['value'];
+		} else {
+			if(!$_settings['emptySelect']) {
+				$dateValue = date('Y-m-d');
+			} else {
+				$dateValue = '0000-00-00';
+			}
+		}
+		$dateOptions['value'] = $dateValue;
+		$dateOptions['default'] = $dateValue;
+		$date = explode(' ', $dateOptions['value']);
+		$dateParams = explode('-', $date[0]);
+		list($defaultYear, $defaultMonth, $defaultDay) = $dateParams;
+		if(isset($_settings['class'])) {
+			$dateOptions['class'] = $dateOptions['class'] . ' ' . $_settings['class'];
+		}
+		$hiddenOptions = $dateOptions;
+		$hiddenOptions['type'] = 'hidden';
+		$dateHidden = $form->input($id, $hiddenOptions);
 		
 		$selectOpts = array(
 			'name' => '',
@@ -534,31 +654,59 @@ class UtilityHelper extends AppHelper {
 		return $status ? '<span class="green">'.__('Active').'</span>' : __('Inactive');
 	}
 	
-	// for permissions	
-	public function getPermissionInput($form, $fieldName, $type, $value) {
-		$options = array(
-			'id' => $type,
-			'name' => sprintf($fieldName, $type),
-			'type' => 'checkbox',
-			'value' => 1,
-			'autocomplete' => 'off',
-			'before' => '<div class="table_cell center">',
-			'after' => '</div>'
-		);
+	public function getVisibleOptions() {
+		return array(1 => __('Yes'), 0 => __('No'));
+	}
+	
+	public function getVisible($flag) {
+		$option = $this->getVisibleOptions();
+		return $option[$flag];
+	}
+	
+	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){
+		$stampFirstDateAbsent = strtotime($firstDateAbsent);
+		$stampLastDateAbsent = strtotime($lastDateAbsent);
 		
-		if(is_null($value)) {
-			$options['disabled'] = 'disabled';
-		} else {
-			if($value == 1) {
-				$options['checked'] = 'checked';
-			} else if($value == 2) {
-				$options['checked'] = 'checked';
-				$options['disabled'] = 'disabled';
+		$totalWeekdays = 0;
+		while($stampFirstDateAbsent <= $stampLastDateAbsent){
+			$weekday = strtolower(date('l', $stampFirstDateAbsent));
+			if(in_array($weekday, $settingWeekdays)){
+				$totalWeekdays++;
+			}
+			
+			$stampFirstDateAbsent = strtotime('+1 day', $stampFirstDateAbsent);
+		}
+		
+		return $totalWeekdays;
+	}
+	
+	public function generatePaginationLinks($totalRows, $currentPage, $rowsPerPage, $fileName){
+		$paginationStr = '';
+		$paginationStr .= '<div class="row">';
+		$paginationStr .= '<ul id="pagination">';
+		
+		$totalPages = ceil($totalRows/$rowsPerPage);
+		
+		//$numOfLinkFront = 10;
+		
+		if($currentPage > 1){
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . ($currentPage-1) . '">Previous</a></li>';
+		}
+		
+		if($currentPage < 5){
+			for($i=1; $i<5; $i++){
+				$paginationStr .= '<li class=""><a href="' . $fileName . '/' . $i . '">' . $i . '</a></li>';
 			}
 		}
 		
-		$input = $form->input($type, $options);
-		return $input;
+		if($currentPage < $totalPages){
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . $totalPages . '">' . $totalPages . '</a></li>';
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . ($currentPage+1) . '">Next</a></li>';
+		}
+		
+		$paginationStr .= '</ul>';
+		$paginationStr .= '</div>';
+		
+		return $paginationStr;
 	}
-	// end permissions
 }
