@@ -259,7 +259,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 	    			array('StaffTrainingSelfStudy.training_status_id' => 3),
 	    			array('StaffTrainingSelfStudy.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activate successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'trainingSelfStudy'));
         }
