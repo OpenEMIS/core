@@ -170,7 +170,7 @@ class StaffTrainingNeed extends StaffAppModel {
 	    			array('StaffTrainingNeed.training_status_id' => 3),
 	    			array('StaffTrainingNeed.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activate successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'trainingNeed'));
         }
@@ -189,7 +189,7 @@ class StaffTrainingNeed extends StaffAppModel {
     			array('StaffTrainingNeed.training_status_id' => 4),
     			array('StaffTrainingNeed.id '=> $id)
 			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
+            $controller->Message->alert('Training.inactivate.success');
             $controller->redirect(array('action' => 'trainingNeed'));
         }
     }

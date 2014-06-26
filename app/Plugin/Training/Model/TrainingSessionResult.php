@@ -213,7 +213,7 @@ class TrainingSessionResult extends TrainingAppModel {
 	    			array('TrainingSessionResult.training_status_id' => 3),
 	    			array('TrainingSessionResult.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activated successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'result'));
         }
@@ -639,8 +639,8 @@ class TrainingSessionResult extends TrainingAppModel {
 					if(isset($controller->request->data['TrainingSessionTrainee'])){
 						$data = $controller->request->data;
 					
-						if($trainingSessionTrainee->saveAll($data['TrainingSessionTrainee'], array('deep' => true))){
-							$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+						if($trainingSessionTrainee->saveAll($data['TrainingSessionTrainee'], array('deep' => true))){	
+							$controller->Message->alert('general.update.success');
 							return $controller->redirect(array('action' => 'result'));
 						}
 					}
