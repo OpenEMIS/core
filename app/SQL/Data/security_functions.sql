@@ -21,11 +21,6 @@ CREATE TABLE IF NOT EXISTS `security_functions` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 --
--- Truncate table before insert `security_functions`
---
-
-TRUNCATE TABLE `security_functions`;
---
 -- Dumping data for table `security_functions`
 --
 
@@ -67,7 +62,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (46, 'Setup', 'Education', 'Administration', 'Education', 45, 'setup', '_view:setupEdit', '_edit:|setupProgrammeAddDialog', NULL, NULL, 119, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (47, 'Assessment', 'Assessment', 'Administration', 'Assessment', -1, 'index|assessmentsView', '_view:indexEdit|assessmentsEdit', '_view:assessmentsAdd', NULL, NULL, 120, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (48, 'Setup', 'FieldOption', 'Administration', 'Field Options', 49, 'index|view', '_view:indexEdit|reorder|edit', '_view:add', NULL, NULL, 121, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(49, 'Setup', 'FieldOption', 'Administration', 'Field Options', -1, 'index|view', '_view:indexEdit|reorder|edit', '_view:add', NULL, NULL, 122, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(49, 'Translations', 'Translations', 'Administration', 'Translations', -1, 'index|view', '_view:edit', '_view:add', '_view:delete', NULL, 122, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (50, 'Configurations', 'Config', 'Administration', 'System Configurations', -1, 'index|fetchYearbookImage', '_view:edit|save', NULL, NULL, NULL, 123, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (51, 'Dashboard Image', 'Config', 'Administration', 'System Configurations', 50, 'dashboard', '_view:dashboardEdit|dashboardImage', '_edit:', '_edit:', NULL, 124, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (52, 'List of Users', 'Security', 'Administration', 'Accounts &amp; Security', 53, 'users', NULL, NULL, NULL, NULL, 125, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
