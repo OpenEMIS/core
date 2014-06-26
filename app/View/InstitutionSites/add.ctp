@@ -86,13 +86,13 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 
 </fieldset>
 
-<div class="form-group form-buttons">
-	<div class="col-md-offset-3">
+<div class="form-group">
+	<div class="col-md-offset-4">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if (Config.checkValidate()) {
 					return true;
 				} else {
 					return false;
-				}return false;" />
+				}" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 </div>
