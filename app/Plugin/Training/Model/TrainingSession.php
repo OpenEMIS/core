@@ -149,7 +149,6 @@ class TrainingSession extends TrainingAppModel {
 
 	
 	public function session($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 
@@ -157,10 +156,18 @@ class TrainingSession extends TrainingAppModel {
 		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
-		if(!empty($selectedStatus)){
-			$data = $this->find('all', array('order'=> array('start_date'), 'conditions' => array('TrainingSession.training_status_id' => $selectedStatus)));
-		}else{
-			$data = $this->find('all', array('order'=> array('start_date'), 'conditions' => array('NOT' => array('TrainingSession.training_status_id' => '4'))));
+
+		if ($controller->request->is('post')) {
+			if (isset($controller->request->data['sortdir']) && isset($controller->request->data['order'])) {
+				if ($controller->request->data['sortdir'] != $controller->Session->read('Search.sortdirTrainingSession')) {
+					$controller->Session->delete('Search.sortdirTrainingSession');
+					$controller->Session->write('Search.sortdirTrainingSession', $controller->request->data['sortdir']);
+				}
+				if ($controller->request->data['order'] != $controller->Session->read('Search.orderTrainingSession')) {
+					$controller->Session->delete('Search.orderTrainingSession');
+					$controller->Session->write('Search.orderTrainingSession', $controller->request->data['order']);
+				}
+			}
 		}
 
 		$conditions = array();
@@ -170,34 +177,53 @@ class TrainingSession extends TrainingAppModel {
 			$conditions['NOT']['TrainingSession.training_status_id'] = 4;
 		}
 
-		$data = $this->find('all', 
-			array(
-				'recursive' => -1, 
-				'fields' => array('TrainingCourse.*', 'TrainingSession.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'training_courses',
-						'alias' => 'TrainingCourse',
-						'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
-					)
-				),
-				'order'=> array('TrainingSession.start_date', 'TrainingSession.location', 'TrainingCourse.code', 'TrainingCourse.title',  'TrainingSession.training_status_id'), 
-				'conditions' => $conditions
-			)
-		);
 
+		$fieldordername = ($controller->Session->read('Search.orderTrainingSession')) ? $controller->Session->read('Search.orderTrainingSession') : array('TrainingSession.start_date', 'TrainingSession.location', 'TrainingCourse.code',  'TrainingSession.training_status_id');
+		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingSession')) ? $controller->Session->read('Search.sortdirTrainingSession') : 'asc';
+		$order = $fieldordername;
+		if($controller->Session->check('Search.orderTrainingSession')){
+			$order = array($fieldordername => $fieldorderdir);
+		}
+
+		$controller->Paginator->settings = array(
+	        'conditions' => $conditions,
+	        'fields' => array('TrainingSession.*', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingStatus.id', 'TrainingStatus.name'),
+	        'joins' => array(
+		        array(
+					'type' => 'INNER',
+					'table' => 'training_courses',
+					'alias' => 'TrainingCourse',
+					'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+				),
+				array(
+					'type' => 'INNER',
+					'table' => 'training_statuses',
+					'alias' => 'TrainingStatus',
+					'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
+				)
+		    ),
+	        'limit' => 25,
+	        'recursive'=> -1,
+	        'order' => $order
+	    );
+		
+		$data = $controller->paginate('TrainingSession');
+		$data = $controller->Workflow->populateWorkflowStatus($this->name, 'TrainingStatus', $data);	
+
+		if (empty($data) && !$controller->request->is('ajax')) {
+			$controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+
+		$controller->set('sortedcol', $fieldordername);
+		$controller->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
 		$controller->set('statusOptions', $statusOptions);
 		$controller->set('selectedStatus', $selectedStatus);
+		if ($controller->request->is('post')) {
+			$controller->set('ajax', true);
+		}
 	}
 
 	public function sessionView($controller, $params){
