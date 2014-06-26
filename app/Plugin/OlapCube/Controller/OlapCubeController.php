@@ -9,7 +9,7 @@ class OlapCubeController extends OlapCubeAppController {
      );
     
     public $modules = array(
-        'olap_report' => 'OlapCube.OlapCubeDimension'
+        'olapReport' => 'OlapCube.OlapCubeDimension'
     ); 
 
     public function beforeFilter() {
