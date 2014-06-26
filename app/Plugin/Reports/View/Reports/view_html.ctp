@@ -17,7 +17,9 @@
  */
 //pr($params);
 //phpinfo();die;
-
+?>
+<h3 class="reportHtmlTitle"><?php echo $pageTitleReport; ?></h3>
+<?php 
 if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 	//$test = file_get_contents($params['path'] . $params['id']);
 	//$test_array = explode("\n", $test);
@@ -31,11 +33,20 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 	$result = trim(exec($cmd . $filePath));
 	$resultArray = explode(' ', $result);
 	$totalRows = $resultArray[0] - 2;
+	
+	$file = new SplFileObject($params['path'] . $params['id']);
+	
+	$lastRow = $resultArray[0];
+	$file->seek($lastRow);
+	$dateRowArr = explode(',', $file->current());
+	if(preg_match('/^(Report Generated).+/', $dateRowArr[0]) === 1){
+		echo '<div class="reportHtmlDate">' . $dateRowArr[0] . '</div>';
+	}
+	
 	//pr($totalRows);
-	if ($totalRows <= 1) {
+	if ($totalRows < 1) {
 		echo $this->Label->get('ReportInHtml.no_data');
 	} else {
-		$file = new SplFileObject($params['path'] . $params['id']);
 
 		$firstRow = 0;
 		$file->seek($firstRow);
@@ -93,9 +104,10 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 				$paginationStr .= '<li class="">' . $this->Html->link($currentPage + 2, array($fileName, ($currentPage + 2)), array('class' => '')) . '</li>';
 			}
 
-			$paginationStr .= '<li><span class="ellipsis">...</span></li>';
-
-			$paginationStr .= '<li class="">' . $this->Html->link($totalPages, array($fileName, $totalPages), array('class' => '')) . '</li>';
+			if($totalPages > ($currentPage + 2)){
+				$paginationStr .= '<li><span class="ellipsis">...</span></li>';
+				$paginationStr .= '<li class="">' . $this->Html->link($totalPages, array($fileName, $totalPages), array('class' => '')) . '</li>';
+			}
 		} else {
 			for ($i = 1; $i < 3; $i++) {
 				if ($currentPage == $i) {

@@ -918,3 +918,83 @@ WHERE `module` LIKE 'Institution Site Quality';
 UPDATE `security_functions` 
 SET `module` = 'Institution Attendance' 
 WHERE `module` LIKE 'Institution Site Attendance';
+
+--
+-- Institution Totals - Teacher Report
+--
+
+DELETE FROM `reports` WHERE `id` =23;
+
+DELETE FROM `batch_reports` WHERE `id` =23;
+
+--
+-- Staff Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$this->Staff->formatResult = true;
+		$data = $this->Staff->find(''all'', array(
+			''fields'' => array(
+				''Staff.identification_no AS IdentificationNo'',
+				''Staff.first_name AS FirstName'',
+				''Staff.last_name AS LastName'',
+				''Staff.gender AS Gender'',
+				''Staff.date_of_birth AS DateOfBirth'',
+				''Staff.address AS Address'',
+				''Staff.postal_code AS PostalCode'',
+				''AddressArea.name AS AddressArea'',
+				''BirthplaceArea.name AS BirthplaceArea''
+			),
+			''joins'' => array(
+				array(
+					''table'' => ''areas'',
+					''alias'' => ''AddressArea'',
+					''type'' => ''LEFT'',
+					''conditions'' => array(''AddressArea.id = Staff.address_area_id'')
+				),
+				array(
+					''table'' => ''areas'',
+					''alias'' => ''BirthplaceArea'',
+					''type'' => ''LEFT'',
+					''conditions'' => array(''BirthplaceArea.id = Staff.birthplace_area_id'')
+				)
+			), {cond}
+		));', 
+`template` = 'IdentificationNo,FirstName,LastName,Gender,DateOfBirth,Address,AddressArea,BirthplaceArea,PostalCode' 
+WHERE `batch_reports`.`id` = 101;
+
+--
+-- Student Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$this->Student->formatResult = true;
+		$data = $this->Student->find(''all'', array(
+			''fields'' => array(
+				''Student.identification_no AS IdentificationNo'',
+				''Student.first_name AS FirstName'',
+				''Student.last_name AS LastName'',
+				''Student.gender AS Gender'',
+				''Student.date_of_birth AS DateOfBirth'',
+				''Student.address AS Address'',
+				''Student.postal_code AS PostalCode'',
+				''AddressArea.name AS AddressArea'',
+				''BirthplaceArea.name AS BirthplaceArea''
+			),
+			''joins'' => array(
+				array(
+					''table'' => ''areas'',
+					''alias'' => ''AddressArea'',
+					''type'' => ''LEFT'',
+					''conditions'' => array(''AddressArea.id = Student.address_area_id'')
+				),
+				array(
+					''table'' => ''areas'',
+					''alias'' => ''BirthplaceArea'',
+					''type'' => ''LEFT'',
+					''conditions'' => array(''BirthplaceArea.id = Student.birthplace_area_id'')
+				)
+			), {cond}
+		));', 
+`template` = 'IdentificationNo,FirstName,LastName,Gender,DateOfBirth,Address,AddressArea,BirthplaceArea,PostalCode' 
+WHERE `batch_reports`.`id` = 81;
