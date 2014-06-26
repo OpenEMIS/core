@@ -390,4 +390,15 @@ class WorkflowComponent extends Component {
         return false;
     }
 
+    public function populateWorkflowStatus($model, $statusModel, &$data){
+        if(!empty($data)){
+            foreach($data as $key=>$val){
+                if($val[$statusModel]['id']!='1' && $val[$statusModel]['id']!='4'){
+                    $data[$key][$statusModel]['name'] =  $this->getWorkflowStatus($model, $val[$model]['id'], $val[$statusModel]['id']);
+                }
+            }
+        }
+        return $data;
+    }
+
 }
