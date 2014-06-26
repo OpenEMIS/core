@@ -15,11 +15,11 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffHealthConsultation extends StaffAppModel {
-	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('date'));
 	
 	public $belongsTo = array(
 		//'Staff',
+		'HealthConsultationType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -39,104 +39,86 @@ class StaffHealthConsultation extends StaffAppModel {
 			)
 		)
 	);
-	public $booleanOptions = array('No', 'Yes');
-	
-	public function healthConsultation($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('Health - Consultations');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		$HealthConsultationType = ClassRegistry::init('HealthConsultationType');
-		$healthConsultationsOptions = $HealthConsultationType->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', 'Health - Consultations');
-		$controller->set('data', $data);
-		$controller->set('healthConsultationsOptions', $healthConsultationsOptions);
-		
-	}
-
-	public function healthConsultationView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View Consultation');
-		$controller->set('subheader', 'Health - View Consultation');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthConsultation'));
-		}
-		
-		$controller->Session->write('StaffHealthConsultationId', $id);
-		$HealthConsultationType = ClassRegistry::init('HealthConsultationType');
-		$healthConsultationsOptions = $HealthConsultationType->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthConsultationsOptions', $healthConsultationsOptions);
-	}
-	
-	public function healthConsultationDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthConsultationId')) {
-            $id = $controller->Session->read('StaffHealthConsultationId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$HealthConsultationType = ClassRegistry::init('HealthConsultationType');
-			$healthConsultationsOptions = $HealthConsultationType->find('first', array('conditions'=> array('id' => $data[$this->name]['health_consultation_type_id'])));
-		
-            $name = !empty($healthConsultationsOptions['HealthConsultationType']['name'])?$healthConsultationsOptions['HealthConsultationType']['name']:'';
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StaffHealthConsultationId');
-            $controller->redirect(array('action' => 'healthConsultation'));
-        }
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                //   array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'date', 'type' => 'datepicker'),
+                array('field' => 'name', 'model' => 'HealthConsultationType', 'labelKey' => 'general.type'),
+                array('field' => 'description'),
+                array('field' => 'treatment'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
     }
-	
-	public function healthConsultationAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Add Consultation');
-		$controller->set('subheader', 'Health - Add Consultation');
-		$this->setup_add_edit_form($controller, $params);
-	}
-	
-	public function healthConsultationEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Edit Consultation');
-		$controller->set('subheader', 'Health - Edit Consultation');
-		$this->setup_add_edit_form($controller, $params);
-		
-		
-		$this->render = 'add';
-	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$HealthConsultationType = ClassRegistry::init('HealthConsultationType');
-		$healthConsultationsOptions = $HealthConsultationType->find('list', array('fields'=> array('id', 'name')));
-		$controller->set('healthConsultationsOptions', $healthConsultationsOptions);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthConsultation'));
-			}
-		}
-	}
+
+    public function healthConsultation($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Consultations');
+        $header = __('Health - Consultations');
+        $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+        $data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
+        $controller->set(compact('header', 'data'));
+    }
+
+    public function healthConsultationView($controller, $params) {
+        $controller->Navigation->addCrumb('Health - View Consultation');
+        $header = __('Health - View Consultation');
+
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        $data = $this->findById($id);
+
+        if (empty($data)) {
+            $controller->Message->alert('general.noData');
+            return $controller->redirect(array('action' => 'healthConsultation'));
+        }
+
+        $controller->Session->write('StaffHealthConsultation.id', $id);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('header', 'data', 'fields', 'id'));
+    }
+
+    public function healthConsultationDelete($controller, $params) {
+        return $this->remove($controller, 'healthConsultation');
+    }
+
+    public function healthConsultationAdd($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Add Consultation');
+        $controller->set('header', __('Health - Add Consultation'));
+        $this->setup_add_edit_form($controller, $params, 'add');
+    }
+
+    public function healthConsultationEdit($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Edit Consultation');
+        $controller->set('header', __('Health - Edit Consultation'));
+        $this->setup_add_edit_form($controller, $params, 'edit');
+        $this->render = 'add';
+    }
+
+    function setup_add_edit_form($controller, $params) {
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $controller->request->data[$this->alias]['staff_id'] = $controller->Session->read('Staff.id');
+            
+            if ($this->save($controller->request->data)) {
+                $controller->Message->alert('general.' . $type . '.success');
+                return $controller->redirect(array('action' => 'healthConsultation'));
+            }
+        }
+        else{
+            $this->recursive = -1;
+            $data = $this->findById($id);
+            if (!empty($data)) {
+                $controller->request->data = $data;
+            }
+        }
+        
+        $healthConsultationsOptions = $this->HealthConsultationType->find('list', array('fields' => array('id', 'name')));
+        $controller->set(compact('healthConsultationsOptions'));
+    }
 }

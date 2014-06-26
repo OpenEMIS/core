@@ -17,7 +17,166 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomField extends AppModel {
+	public $actsAs = array('FieldOption', 'ControllerAction');
 	public $hasMany = array(
-		'InstitutionSiteCustomFieldOption' => array('order'=>'order')
+		'InstitutionSiteCustomFieldOption' => array('order'=>'order'),
+		'InstitutionSiteCustomValue'
 	);
+	public $belongsTo = array(
+		'InstitutionSiteType',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	
+	public function getSubOptions() {
+		$options = $this->InstitutionSiteType->findList();
+		array_unshift($options, __('All'));
+		return $options;
+	}
+	
+	public function getOptionFields() {
+		$siteTypeOptions = $this->getSubOptions();
+		$fieldTypeOptions = $this->getCustomFieldTypes();
+		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions, 'display' => true);
+		$siteType = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $siteTypeOptions);
+		$this->removeOptionFields(array('international_code', 'national_code'));
+		$this->addOptionField($fieldType, 'after', 'name');
+		$this->addOptionField($siteType, 'after', 'type');
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'institution_site_type_id';
+	}
+	
+	public function findList($options=array()) {
+		$_options = array(
+			'conditions' => array()
+		);
+		if(!empty($options)) {
+			$_options = array_merge($_options, $options);
+		}
+		$class = $this->alias;
+		$data = $this->find('all', array(
+			'recursive' => 0,
+			'conditions' => $_options['conditions'],
+			'order' => array('InstitutionSiteType.order', $class . '.order')
+		));
+		$list = array();
+		foreach($data as $obj) {
+			$field = $obj[$class];
+			$siteType = $obj['InstitutionSiteType'];
+			$typeName = __('All');
+			if($field['institution_site_type_id'] > 0) {
+				$typeName = $siteType['name'];
+			}
+			if(!array_key_exists($typeName, $list)) {
+				$list[$typeName] = array();
+			}
+			$list[$typeName][$field['id']] = $field['name'];
+		}
+		return $list;
+	}
+	
+	public function additional($controller, $params) {
+        $controller->Navigation->addCrumb('More');
+		
+		$this->unbindModel(array('hasMany' => array('InstitutionSiteCustomValue')));
+        $data = $this->find('all', array(
+			'conditions' => array(
+				'InstitutionSiteCustomField.visible' => 1, 
+				'InstitutionSiteCustomField.institution_site_type_id' => (array($controller->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))
+			),
+			'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')
+		));
+        $this->InstitutionSiteCustomValue->unbindModel(array('belongsTo' => array('InstitutionSite')));
+        $dataValues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $controller->institutionSiteId)));
+        $tmp = array();
+        foreach ($dataValues as $obj) {
+            $tmp[$obj['InstitutionSiteCustomField']['id']][] = $obj['InstitutionSiteCustomValue'];
+        }
+        $dataValues = $tmp;
+        $controller->set('data', $data);
+        $controller->set('dataValues', $tmp);
+    }
+	
+	public function additionalEdit($controller, $params) {
+        $controller->Navigation->addCrumb('Edit More');
+
+        if ($controller->request->is('post')) {
+            //pr($this->data);
+            //die();
+            $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
+            /**
+             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
+             */
+			
+            foreach ($arrFields as $fieldVal) {
+                if (!isset($controller->request->data['InstitutionSiteCustomValue'][$fieldVal]))
+                    continue;
+                foreach ($controller->request->data['InstitutionSiteCustomValue'][$fieldVal] as $key => $val) {
+                    if ($fieldVal == "checkbox") {
+                        $arrCustomValues = $this->InstitutionSiteCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $controller->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
+
+                        $tmp = array();
+                        if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
+                            foreach ($arrCustomValues as $pk => $intVal) {
+                                //pr($val['value']); echo "$intVal";
+                                if (!in_array($intVal, $val['value'])) {
+                                    //echo "not in db so remove \n";
+                                    $this->InstitutionSiteCustomValue->delete($pk);
+                                }
+                            }
+                        $ctr = 0;
+                        if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
+                            foreach ($val['value'] as $intVal) {
+                                //pr($val['value']); echo "$intVal";
+                                if (!in_array($intVal, $arrCustomValues)) {
+                                    $this->InstitutionSiteCustomValue->create();
+                                    $arrV['institution_site_custom_field_id'] = $key;
+                                    $arrV['value'] = $val['value'][$ctr];
+                                    $arrV['institution_site_id'] = $controller->institutionSiteId;
+                                    $this->InstitutionSiteCustomValue->save($arrV);
+                                    unset($arrCustomValues[$ctr]);
+                                }
+                                $ctr++;
+                            }
+                    } else { // if editing reuse the Primary KEY; so just update the record
+                        $x = $this->InstitutionSiteCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $controller->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
+                        $this->InstitutionSiteCustomValue->create();
+                        if ($x)
+                            $this->InstitutionSiteCustomValue->id = $x['InstitutionSiteCustomValue']['id'];
+                        $arrV['institution_site_custom_field_id'] = $key;
+                        $arrV['value'] = $val['value'];
+                        $arrV['institution_site_id'] = $controller->institutionSiteId;
+						
+                        $this->InstitutionSiteCustomValue->save($arrV);
+                    }
+                }
+            }
+            $controller->redirect(array('action' => 'additional'));
+        }
+		
+		$this->unbindModel(array('hasMany' => array('InstitutionSiteCustomValue')));
+        $data = $this->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($controller->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
+
+        $this->InstitutionSiteCustomValue->unbindModel(array('belongsTo' => array('InstitutionSite')));
+        $dataValues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $controller->institutionSiteId)));
+        $tmp = array();
+        foreach ($dataValues as $obj) {
+            $tmp[$obj['InstitutionSiteCustomField']['id']][] = $obj['InstitutionSiteCustomValue'];
+        }
+        $dataValues = $tmp;
+        $controller->set('data', $data);
+        $controller->set('dataValues', $tmp);
+    }
 }

@@ -271,10 +271,11 @@ class EstTask extends AppTask {
 				DELETE FROM census_students WHERE source = 3 AND school_year_id = {curr_year};
 				INSERT INTO census_students
 				(
-					SELECT null, A1.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), 1,  A1.education_grade_id,  A1.institution_site_id, {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00'  
+					SELECT null, A1.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), A1.student_category_id,  A1.education_grade_id,  A1.institution_site_id, {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00'  
 					FROM (
 							SELECT count(a.student_id) as Male, 
 									a.institution_site_class_grade_id, 
+									a.student_category_id, 
 									b.education_grade_id,
 									c.institution_site_id, 
 									c.school_year_id, 
@@ -285,12 +286,13 @@ class EstTask extends AppTask {
 							JOIN institution_site_classes c ON c.id = b.institution_site_class_id AND c.school_year_id ={curr_year}
 							JOIN students d ON d.id = a.student_id
 							WHERE d.gender = 'M'
-							GROUP BY institution_site_class_grade_id, age, gender
+							GROUP BY institution_site_class_grade_id, age, gender, student_category_id
 						) A1
 					LEFT JOIN 
 						( 
 							SELECT count(a.student_id) as Female, 
 									a.institution_site_class_grade_id, 
+									a.student_category_id, 
 									b.education_grade_id, 
 									c.institution_site_id, 
 									c.school_year_id, 
@@ -302,17 +304,18 @@ class EstTask extends AppTask {
 							AND c.school_year_id ={curr_year}
 							JOIN students d ON d.id = a.student_id
 							WHERE d.gender = 'F'
-							GROUP BY institution_site_class_grade_id, age, gender
+							GROUP BY institution_site_class_grade_id, age, gender, student_category_id
 						) A2
 					ON 
-						A1.age = A2.age AND A1.institution_site_class_grade_id = A2.institution_site_class_grade_id
+						A1.age = A2.age AND A1.institution_site_class_grade_id = A2.institution_site_class_grade_id AND A1.student_category_id = A2.student_category_id 
 				)
 				UNION
 				(
-					SELECT null,A2.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female),1,  A2.education_grade_id,  A2.institution_site_id,  {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
+					SELECT null,A2.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), A2.student_category_id,  A2.education_grade_id,  A2.institution_site_id,  {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
 					FROM (
 							SELECT count(a.student_id) as Male, 
 									a.institution_site_class_grade_id, 
+									a.student_category_id, 
 									b.education_grade_id, 
 									c.institution_site_id, 
 									c.school_year_id, 
@@ -323,12 +326,13 @@ class EstTask extends AppTask {
 							JOIN institution_site_classes c ON c.id = b.institution_site_class_id AND c.school_year_id ={curr_year}
 							JOIN students d ON d.id = a.student_id
 							WHERE d.gender = 'M'
-							GROUP BY institution_site_class_grade_id, age, gender
+							GROUP BY institution_site_class_grade_id, age, gender, student_category_id
 						) A1
 					RIGHT JOIN
 						(
 							SELECT count(a.student_id) as Female, 
 									a.institution_site_class_grade_id, 
+									a.student_category_id, 
 									b.education_grade_id, 
 									c.institution_site_id, 
 									c.school_year_id, 
@@ -340,11 +344,11 @@ class EstTask extends AppTask {
 							AND c.school_year_id ={curr_year}
 							JOIN students d ON d.id = a.student_id
 							WHERE d.gender = 'F'
-							GROUP BY institution_site_class_grade_id, age, gender
+							GROUP BY institution_site_class_grade_id, age, gender, student_category_id
 						) A2
 
 					ON 
-						A1.age = A2.age AND A1.institution_site_class_grade_id = A2.institution_site_class_grade_id
+						A1.age = A2.age AND A1.institution_site_class_grade_id = A2.institution_site_class_grade_id AND A1.student_category_id = A2.student_category_id 
 				)
 
 EOD;

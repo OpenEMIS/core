@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 class Navigation extends AppModel {
 	public function getByModule($module, $format = false) {
 		$data = $this->find('all', array(
-			'conditions' => array('module' => $module),
+			'conditions' => array('module' => $module, 'visible' => 1),
 			'order' => array('order')
 		));
 		if($format) {
@@ -51,6 +51,7 @@ class Navigation extends AppModel {
 			$attr['display'] = false;
 			$attr['selected'] = false;
 			$attr['controller'] = $obj['controller'];
+			$attr['plugin'] = $obj['plugin'];
 			$attr['action'] = $obj['action'];
 			$attr['pattern'] = $obj['pattern'];
 			$attr['wizard'] = $obj['is_wizard'];

@@ -88,13 +88,10 @@ class UtilityComponent extends Component {
 		// Census Messages
 		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site for the selected year.";
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
-		$msgList['CENSUS_GRADUATE_NOT_REQUIRED'] = "Graduates not required.";
 		$msgList['CENSUS_NO_SUBJECTS'] = "There are no subjects configured in the system";
 		$msgList['CENSUS_VERIFY'] = "The data will not be editable once it has been verified." . "<br><br>" . "Are you sure you want to do this?";
 		$msgList['CENSUS_UNVERIFY'] = "The data will be editable when it is unverified." . "<br><br>" . " Are you sure you want to do this?";
 		$msgList['CENSUS_MULTI_DUPLICATE'] = "Duplicate data has been detected and is not saved.";
-		$msgList['CENSUS_NO_CLASS'] = "There are no classes associated with this institution site for the selected year.";
-		$msgList['CENSUS_SHIFT_CLASS_MISMATCH'] = 'The total number of shift does not match the total number of classes.';
 		
 		// Education Messages
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
@@ -119,6 +116,7 @@ class UtilityComponent extends Component {
 		
 		// Institution Sites
 		$msgList['NO_SITES'] = "No Institution Sites";
+                $msgList['SHIFT_WITHOUT_LOCATION'] = "Please select a location.";
 		
 		// Institution Site Classes
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
@@ -160,10 +158,10 @@ class UtilityComponent extends Component {
 		$msgList['ADD_UPDATE_ERROR'] = 'Record is not added/updated due to errors encountered.';
                 
                 //Rubric
-               $msgList['RUBRIC_FIRST_POS'] = 'Please ensure the header is at the 1st position.'; 
-                $msgList['RUBRIC_ROW_ADDED'] = 'New row has been added at the bottom of the rubric table.';
-                $msgList['DATA_EXIST'] = 'Please ensure no data duplication.';
-                
+		$msgList['RUBRIC_FIRST_POS'] = 'Please ensure the header is at the 1st position.';
+		$msgList['RUBRIC_ROW_ADDED'] = 'New row has been added at the bottom of the rubric table.';
+		$msgList['DATA_EXIST'] = 'Please ensure no data duplication.';
+
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 
 

@@ -1,90 +1,8 @@
 .section_group .table { width: 100%; }
 
-.table {
-	display: table;
-	color: #666666;
-	table-layout: fixed;
-	border-collapse: collapse;
-	margin-bottom: 12px;
-}
+.table { color: #666666; }
 
 .table.full_width { width: 99%; margin-left: 3px; }
-
-.table_head {
-	display: table-header-group;
-	background-color: #EFEFEF;
-}
-
-.table_body { display: table-row-group; }
-.table_row { display: table-row; }
-
-.table_cell {
-	display: table-cell;
-	font-size: 11px;
-	color: #666666;
-	vertical-align: top;
-	border: 1px solid #CCCCCC;
-	padding: 5px 8px;
-}
-
-.table_cell_row {
-	overflow: hidden;
-	margin: 5px 0;
-}
-
-.view .table_cell_row { margin: 0; }
-
-.table_row.inactive .table_cell { color: #CCCCCC; }
-
-.table_cell a { color: #007CBE; }
-
-.table_foot { display: table-footer-group; }
-
-.table_head .table_cell {
-	min-width: 60px;
-	/* white-space: nowrap; */
-	text-align: center;
-	font-weight: bold;
-	line-height: 18px;
-	vertical-align: middle;
-}
-
-.table_foot .table_cell { border: 0; }
-.table_foot .cell_label { text-align: right; font-weight: bold; padding-top: 6px; }
-.table_foot .cell_value { border: 1px solid #CCCCCC; background-color: #EFEFEF; }
-.table .cell_number { text-align: right; }
-
-.table.allow_hover .table_row { cursor: pointer; }
-
-.table .table_row.highlight,
-.table.allow_hover .table_row:hover {
-	background-color:#5b8baf;
-}
-
-.table .table_row.highlight .table_cell,
-.table.allow_hover .table_row:hover .table_cell { color: #FFFFFF; }
-.table.allow_hover .table_row.not_highlight:hover { background-color: #FFFFFF; cursor: auto; }
-.table.allow_hover .table_row.not_highlight.even:hover { background-color: #F7F7F7; }
-.table.allow_hover .table_row.not_highlight:hover .table_cell { color: #666666; }
-
-.table .cell_delete,
-.table .cell_icon_action { min-width: 0 !important; width: 16px; }
-.table .icon_delete { float: left; }
-
-.table .cell_radio,
-.table .cell_checkbox { min-width: 0 !important; width: 13px; }
-
-.table input[type="radio"],
-.table input[type="checkbox"] { margin: 0; }
-
-.table .table_head .cell_checkbox input[type="checkbox"] { margin-top: 2px; }
-
-.edit .table_cell { vertical-align: middle; }
-.multi .table_cell { vertical-align: top; }
-
-.cell_datetime { width: 104px; }
-.cell_datepicker { width: 212px; }
-.cell_number_input { width: 80px; }
 
 /* Scrollable table body */
 .table_scrollable .table_header { margin-bottom: -1px; }
@@ -98,15 +16,21 @@
 .list_wrapper > .table { margin-bottom: 0; }
 .scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
 
-.table { width: 100%; border-spacing: 0; }
+/* <table> styles starts here */
 .table thead tr { background-color: #EFEFEF; }
-.table thead td {  font-weight: bold;  text-align: center; }
-.table.table-hover tbody tr:hover { background-color:#5b8baf; color: #FFFFFF; cursor: pointer; }
-.table td { font-size: 11px; padding: 5px 8px; border: 1px solid #CCCCCC; }
+.table thead th { font-weight: bold; text-align: center; font-size: 11px; }
+.table td { font-size: 11px; }
+.table a { color: #007CBE; }
 .action { margin-left: 5px; }
+.cell-number { text-align: right; }
+.cell-visible { width: 70px; }
+.cell-order { width: 83px; }
+.cell-action { width: 100px; }
+.cell-hours-required { width: 200px; }
+.cell-report-name { width: 200px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
 
-.edit .table {
-    margin-bottom: 0;
+.report .table td {
+	vertical-align: middle;
 }

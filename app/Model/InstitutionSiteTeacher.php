@@ -154,8 +154,8 @@ class InstitutionSiteTeacher extends AppModel {
 	// Used by institution site classes
 	public function getTeacherSelectList($year, $institutionSiteId, $classId) {
         // Filtering section
-        $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
-        $teachersExclude = $InstitutionSiteClassTeacher->getTeachers($classId);
+        $InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
+        $teachersExclude = $InstitutionSiteClassStaff->getTeachers($classId);
         $ids = '';
         foreach($teachersExclude as $obj){
             $ids .= $obj['Teacher']['id'].',';

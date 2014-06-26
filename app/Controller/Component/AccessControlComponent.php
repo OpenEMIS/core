@@ -31,7 +31,7 @@ class AccessControlComponent extends Component {
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
 		'STUDENTS' => array('viewStudent'),
-		'TEACHERS' => array('viewTeacher'),
+		//'TEACHERS' => array('viewTeacher'),
 		'STAFF' => array('viewStaff')
 	);
 	public $operations = array('_view', '_edit', '_add', '_delete', '_execute');
@@ -45,7 +45,7 @@ class AccessControlComponent extends Component {
 		'GroupUser' => 'SecurityGroupUser',
 		'GroupArea' => 'SecurityGroupArea',
 		'GroupInstitutionSite' => 'SecurityGroupInstitutionSite',
-        'Area' => 'Area'
+		'Area' => 'Area'
 	);
 	
 	public $components = array('Auth', 'Session', 'AreaHandler', 'Navigation', 'Utility');
@@ -95,9 +95,9 @@ class AccessControlComponent extends Component {
 		
 		if($this->Auth->user('super_admin')==0) {
 			$list = $this->GroupUser->getRolesByUserId($userId);
-                        
-                        $roleFunctions = $this->Function->getUserPermissions($userId);
-                        //pr($roleFunctions);
+						
+			$roleFunctions = $this->Function->getUserPermissions($userId);
+			//pr($roleFunctions);
 			foreach($roleFunctions as $obj) {
 				if($obj[$modelMap['Role']]['visible'] != 1) continue; // if role is disabled then skip this permission
 				
@@ -119,11 +119,11 @@ class AccessControlComponent extends Component {
 							if(strlen($action[0]) > 0) {
 								$actionList = explode($divider, $action[0]);
 								foreach($actionList as $a) {
-                                                                        if(array_key_exists($a, $check[$controller])){
-                                                                            $check[$controller][$a]['role_id'][] = $obj[$modelMap['Role']]['id'];
-                                                                        }else{
-                                                                            $check[$controller][$a] = $functionAttr;
-                                                                        }
+									if(array_key_exists($a, $check[$controller])){
+										$check[$controller][$a]['role_id'][] = $obj[$modelMap['Role']]['id'];
+									}else{
+										$check[$controller][$a] = $functionAttr;
+									}
 								}
 							}
 						} else { // the action is dependent on another action
@@ -139,19 +139,19 @@ class AccessControlComponent extends Component {
 									$apply[$controller][$a] = array();
 								}
 								//$apply[$controller][$a][$op] = true;
-                                                                if(!isset($apply[$controller][$a][$op])){
-                                                                    $apply[$controller][$a][$op] = array(true, 'role_id' => array());
-                                                                }
-                                                                $apply[$controller][$a][$op]['role_id'][] = $obj[$modelMap['Role']]['id'];
+								if(!isset($apply[$controller][$a][$op])){
+									$apply[$controller][$a][$op] = array(true, 'role_id' => array());
+								}
+								$apply[$controller][$a][$op]['role_id'][] = $obj[$modelMap['Role']]['id'];
 							}
 							if(strlen($action[1]) > 0) {
 								$actionList = explode($divider, $action[1]);
 								foreach($actionList as $a) {
-                                                                        if(array_key_exists($a, $check[$controller])){
-                                                                            $check[$controller][$a]['role_id'][] = $obj[$modelMap['Role']]['id'];
-                                                                        }else{
-                                                                            $check[$controller][$a] = $functionAttr;
-                                                                        }
+									if(array_key_exists($a, $check[$controller])){
+										$check[$controller][$a]['role_id'][] = $obj[$modelMap['Role']]['id'];
+									}else{
+										$check[$controller][$a] = $functionAttr;
+									}
 								}
 							}
 						}
@@ -177,36 +177,36 @@ class AccessControlComponent extends Component {
 			}
 		} else {
 			if(isset($apply[$controller][$action])) {
-                                if(($controller == 'INSTITUTIONSITES' || $controller == 'CENSUS') && $this->Session->check('InstitutionSiteId')){
-                                    $userId = $this->Auth->user('id');
-                                    $institutionSiteId = $this->Session->read('InstitutionSiteId');
-                                    $arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
-                                    
-                                    foreach($this->operations as $op) {
-                                            if(isset($apply[$controller][$action][$op])){
-                                                $value = false;
-                                                foreach($arrayRoleIds AS $roleId){
-                                                    $value = in_array($roleId, $apply[$controller][$action][$op]['role_id']);
-                                                    if($value){
-                                                        break;
-                                                    }
-                                                }
-                                                
-                                                if($value){
-                                                    $this->controller->set($op, true);
-                                                }else{
-                                                    $this->controller->set($op, false);
-                                                }
-                                            }else{
-                                                $this->controller->set($op, false);
-                                            }
-                                    }
-                                }else{
-                                    foreach($this->operations as $op) {
-                                            $value = isset($apply[$controller][$action][$op]);
-                                            $this->controller->set($op, $value);
-                                    }
-                                }
+				if(($controller == 'INSTITUTIONSITES' || $controller == 'CENSUS') && $this->Session->check('InstitutionSite.id')) {
+					$userId = $this->Auth->user('id');
+					$institutionSiteId = $this->Session->read('InstitutionSite.id');
+					$arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
+					
+					foreach($this->operations as $op) {
+						if(isset($apply[$controller][$action][$op])){
+							$value = false;
+							foreach($arrayRoleIds AS $roleId){
+								$value = in_array($roleId, $apply[$controller][$action][$op]['role_id']);
+								if($value){
+									break;
+								}
+							}
+							
+							if($value){
+								$this->controller->set($op, true);
+							}else{
+								$this->controller->set($op, false);
+							}
+						}else{
+							$this->controller->set($op, false);
+						}
+					}
+				} else {
+					foreach($this->operations as $op) {
+						$value = isset($apply[$controller][$action][$op]);
+						$this->controller->set($op, $value);
+					}
+				}
 			} else {
 				foreach($this->operations as $op) {
 					$this->controller->set($op, false);
@@ -233,68 +233,68 @@ class AccessControlComponent extends Component {
 		}
 		return $access;
 	}
-        
-        public function newCheck($controller, $action, $passedInSiteId=0) {
+		
+	public function newCheck($controller, $action, $passedInSiteId=0) {
 		$access = false;
 		$controller = strtoupper($controller);
-                $currentController = $this->controller->params['controller'];
+		$currentController = $this->controller->params['controller'];
 		$currentAction = $this->controller->action;
 		
 		if($this->Session->check('permissions')) {
 			$permissions = $this->Session->read('permissions');
 			$check = $permissions['check'];
 			if($this->Auth->user('super_admin')==0) {
-                                if($controller == "INSTITUTIONSITES" || $controller == "CENSUS"){
-                                    if($currentController == 'Institutions' && $currentAction == 'listSites'){
-                                        if($passedInSiteId != 0){
-                                            $institutionSiteId = $passedInSiteId;
-                                            $userId = $this->Auth->user('id');
-                                            $arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
+				if($controller == "INSTITUTIONSITES" || $controller == "CENSUS"){
+					if($currentController == 'Institutions' && $currentAction == 'listSites'){
+						if($passedInSiteId != 0){
+							$institutionSiteId = $passedInSiteId;
+							$userId = $this->Auth->user('id');
+							$arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
 
-                                            $checkAllRoleIds = false;
-                                            foreach($arrayRoleIds AS $roleId){
-                                                if(isset($check[$controller][$action]['role_id'])){
-                                                    $checkWithRoldId = in_array($roleId, $check[$controller][$action]['role_id']);
-                                                    if($checkWithRoldId){
-                                                        $checkAllRoleIds = true;
-                                                        break;
-                                                    }
-                                                }
-                                            }
+							$checkAllRoleIds = false;
+							foreach($arrayRoleIds AS $roleId){
+								if(isset($check[$controller][$action]['role_id'])){
+									$checkWithRoldId = in_array($roleId, $check[$controller][$action]['role_id']);
+									if($checkWithRoldId){
+										$checkAllRoleIds = true;
+										break;
+									}
+								}
+							}
 
-                                            $access = $checkAllRoleIds;
-                                        }else{
-                                            $access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
-                                        }
-                                        
-                                    }else{
-                                        if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add')){
-                                            $access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
-                                            
-                                        }else{
-                                            if($this->Session->check('InstitutionSiteId')){
-                                                $institutionSiteId = $this->Session->read('InstitutionSiteId');
-                                                $userId = $this->Auth->user('id');
-                                                $arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
+							$access = $checkAllRoleIds;
+						}else{
+							$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
+						}
+						
+					}else{
+						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add')){
+							$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
+							
+						}else{
+							if($this->Session->check('InstitutionSiteId')){
+								$institutionSiteId = $this->Session->read('InstitutionSiteId');
+								$userId = $this->Auth->user('id');
+								$arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
 
-                                                $checkAllRoleIds = false;
-                                                foreach($arrayRoleIds AS $roleId){
-                                                    if(isset($check[$controller][$action]['role_id'])){
-                                                        $checkWithRoldId = in_array($roleId, $check[$controller][$action]['role_id']);
-                                                        if($checkWithRoldId){
-                                                            $checkAllRoleIds = true;
-                                                            break;
-                                                        }
-                                                    }
-                                                }
+								$checkAllRoleIds = false;
+								foreach($arrayRoleIds AS $roleId){
+									if(isset($check[$controller][$action]['role_id'])){
+										$checkWithRoldId = in_array($roleId, $check[$controller][$action]['role_id']);
+										if($checkWithRoldId){
+											$checkAllRoleIds = true;
+											break;
+										}
+									}
+								}
 
-                                                $access = $checkAllRoleIds;
-                                            }
-                                        }
-                                    }
-                                }else{
-                                    $access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
-                                }
+								$access = $checkAllRoleIds;
+							}
+						}
+					}
+				} else {
+					$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
+				}
 				
 			} else {
 				// need to verify logic
@@ -331,12 +331,12 @@ class AccessControlComponent extends Component {
 	public function checkAccess() {
 		$controller = $this->controller->params['controller'];
 		$action = $this->controller->action;
-                
-                if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
-                    return;
-                }
+				
+		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
+			return;
+		}
 		
-		// if action is not in ignore list then check for access	
+		// if action is not in ignore list then check for access
 		if(!$this->isIgnored($controller, $action)) {
 			if(!$this->newCheck($controller, $action)) {
 				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));
@@ -371,7 +371,7 @@ class AccessControlComponent extends Component {
 					}
 				}
 				if(!empty($url)) {
-					$this->controller->redirect(array('controller' => $url['controller'], 'action' => $url['action']));
+					$this->controller->redirect(array('plugin' => $url['plugin'], 'controller' => $url['controller'], 'action' => $url['action']));
 				}
 				if($found) {
 					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));

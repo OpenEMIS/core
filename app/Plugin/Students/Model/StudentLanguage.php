@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentLanguage extends StudentsAppModel {
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('evaluation_date'));
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'Language',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -27,7 +28,6 @@ class StudentLanguage extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'language_id' => array(
 			'ruleRequired' => array(
@@ -38,32 +38,130 @@ class StudentLanguage extends StudentsAppModel {
 		),
 		'listening' => array(
 			'ruleRequired' => array(
-				'rule'    => array('range', -1, 6),
+				'rule' => array('range', -1, 6),
 				'allowEmpty' => true,
 				'message' => 'Please enter a number between 0 and 5'
 			)
 		),
 		'speaking' => array(
 			'ruleRequired' => array(
-				'rule'    => array('range', -1, 6),
+				'rule' => array('range', -1, 6),
 				'allowEmpty' => true,
 				'message' => 'Please enter a number between 0 and 5'
 			)
 		),
 		'reading' => array(
 			'ruleRequired' => array(
-				'rule'    => array('range', -1, 6),
+				'rule' => array('range', -1, 6),
 				'allowEmpty' => true,
 				'message' => 'Please enter a number between 0 and 5'
 			)
 		),
 		'writing' => array(
 			'ruleRequired' => array(
-				'rule'    => array('range', -1, 6),
+				'rule' => array('range', -1, 6),
 				'allowEmpty' => true,
 				'message' => 'Please enter a number between 0 and 5'
 			)
 		),
 	);
+	
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'evaluation_date'),
+				array('field' => 'name', 'model' => 'Language', 'labelKey' => 'general.type'),
+				array('field' => 'listening'),
+				array('field' => 'speaking'),
+				array('field' => 'reading'),
+				array('field' => 'writing'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 
+	public function languages($controller, $params) {
+		$controller->Navigation->addCrumb('Languages');
+		$header = __('Languages');
+		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
+		$controller->set(compact('data', 'header'));
+	}
+
+	public function languagesAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Add Languages');
+		$header = __('Add Languages');
+		if ($controller->request->is(array('post', 'put'))) {
+			$data = $controller->request->data[$this->alias];
+			$data['student_id'] = $controller->Session->read('Student.id');
+			$this->create();
+			
+			if ($this->save($data)) {
+				$id = $this->getLastInsertId();
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'languages'));
+			}
+		}
+		$gradeOptions = array();
+		for ($i = 0; $i < 6; $i++) {
+			$gradeOptions[$i] = $i;
+		}
+		$languageOptions = $this->Language->getOptions();
+		$controller->set(compact('header', 'gradeOptions','languageOptions'));
+	}
+
+	public function languagesView($controller, $params) {
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Language Details');
+		$header = __('Language Details');
+		$data = $this->findById($id);
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'languages'));
+		}
+		$controller->Session->write('StudentLanguage.id', $id);
+
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
+
+	public function languagesEdit($controller, $params) {
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Edit Language');
+		$header = __('Edit Language');
+
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$languageData = $controller->request->data[$this->alias];
+			$languageData['student_id'] = $controller->Session->read('Student.id');
+
+			if ($this->save($languageData)) {
+				$controller->Message->alert('general.edit.success');
+				return $controller->redirect(array('action' => 'languagesView', $id));
+			}
+		} else {
+			$data = $this->findById($id);
+			if (empty($data)) {
+				return $controller->redirect(array('action' => 'languages'));
+			}
+			$controller->request->data = $data;
+		}
+
+		$gradeOptions = array();
+		for ($i = 0; $i < 6; $i++) {
+			$gradeOptions[$i] = $i;
+		}
+		$languageOptions = $this->Language->getOptions();
+		$controller->set(compact('id', 'header', 'gradeOptions', 'languageOptions'));
+	}
+
+	public function languagesDelete($controller, $params) {
+		return $this->remove($controller, 'languages');
+	}
 }

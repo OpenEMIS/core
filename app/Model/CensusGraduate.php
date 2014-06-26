@@ -17,8 +17,15 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusGraduate extends AppModel {
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
+	
 	public $belongsTo = array(
-		'SchoolYear' => array('foreignKey' => 'school_year_id')
+		'SchoolYear'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -107,5 +114,115 @@ class CensusGraduate extends AppModel {
 				$this->save(array('CensusGraduate' => $obj));
 			}
 		}
+	}
+		
+	public function graduates($controller, $params) {
+		$controller->Navigation->addCrumb('Graduates');
+		$yearList = $this->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
+		$data = array();
+		if (empty($programmes)) {
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
+		} else {
+			$data = $this->getCensusData($institutionSiteId, $selectedYear);
+			if (empty($data)) {
+				$controller->Message->alert('CensusGraduate.notRequired');
+			}
+		}
+		
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+	}
+
+	public function graduatesEdit($controller, $params) {
+		if ($controller->request->is('post')) {
+			$data = $controller->data['CensusGraduate'];
+			$yearId = $data['school_year_id'];
+			$this->saveCensusData($data);
+			$controller->Message->alert('general.edit.success');
+			$controller->redirect(array('action' => 'graduates', $yearId));
+		}
+		$controller->Navigation->addCrumb('Edit Graduates');
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$yearList = $this->SchoolYear->getAvailableYears();
+		$selectedYear = $controller->getAvailableYearId($yearList);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
+		$data = array();
+		$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		if (!$editable) {
+			$controller->redirect(array('action' => 'graduates', $selectedYear));
+		} else {
+			if (empty($programmes)) {
+				$controller->Message->alert('InstitutionSiteProgramme.noData');
+			} else {
+				$data = $this->getCensusData($institutionSiteId, $selectedYear);
+				if (empty($data)) {
+					$controller->Message->alert('CensusGraduate.notRequired');
+				}
+			}
+		}
+		
+		$controller->set(compact('selectedYear', 'yearList', 'data'));
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			$header = array(__('Year'), __('Education Level'), __('Education Programme'), __('Certification'), __('Male'), __('Female'), __('Total'));
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$dataCensus = $this->getCensusData($institutionSiteId, $yearId);
+
+				if (count($dataCensus) > 0) {
+					foreach ($dataCensus AS $levelName => $dataByLevel) {
+						$data[] = $header;
+						foreach ($dataByLevel AS $rowCensus) {
+							$programme = $rowCensus['education_programme_name'];
+							$certificationName = $rowCensus['education_certification_name'];
+							$male = empty($rowCensus['male']) ? 0 : $rowCensus['male'];
+							$female = empty($rowCensus['female']) ? 0 : $rowCensus['female'];
+							$total = $male + $female;
+
+							$data[] = array(
+								$yearName,
+								$levelName,
+								$programme,
+								$certificationName,
+								$male,
+								$female,
+								$total
+							);
+						}
+						$data[] = array();
+					}
+				}
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Graduates';
 	}
 }

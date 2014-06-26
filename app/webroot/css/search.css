@@ -118,4 +118,13 @@ html ul.tabs li.active, html ul.tabs li.active a:hover  {
 #CustomFieldDiv .row {     
     padding-left: 15px;
 }
+.searchTableWrapper table .cell_id_no{
+	width: 180px;
+}
+.searchTableWrapper table .first_name{
+	width: 160px;
+}
+.searchTableWrapper table .middle_name{
+	width: 160px;
+}
 

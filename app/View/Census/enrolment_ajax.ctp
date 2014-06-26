@@ -1,7 +1,7 @@
 <?php
-$gradesCount = count($grades);
+$gradesCount = count($gradeList);
 ?>
-<table class="table">
+<table class="table  table-bordered">
     <tbody>
         <tr class="th_bg">
             <td rowspan="2"><?php echo __('Age'); ?></td>
@@ -10,7 +10,7 @@ $gradesCount = count($grades);
             <td colspan="2"><?php echo __('Totals'); ?></td>
         </tr>
         <tr class="th_bg">
-            <?php foreach ($grades AS $gradeName) { ?>
+            <?php foreach ($gradeList AS $gradeName) { ?>
                 <td><?php echo $gradeName; ?></td>
             <?php } ?>
             <td></td>
@@ -25,8 +25,15 @@ $gradesCount = count($grades);
                 <?php } ?>
                 <?php foreach ($row['data'] AS $dataKey => $dataValue) { ?>
                     <?php if ($dataKey == 'grades') { ?>
-                        <?php foreach ($dataValue AS $gradeId => $censusValue) { ?>
-                            <td><?php echo $censusValue['value']; ?></td>
+                        <?php foreach ($dataValue AS $gradeId => $censusValue) {
+							$record_tag="";
+							foreach ($source_type as $k => $v) {
+								if (isset($censusValue['source']) && $censusValue['source'] == $v) {
+										$record_tag = "row_" . $k;
+								}
+							}
+						?>
+                            <td class="<?php echo $record_tag; ?>"><?php echo $censusValue['value']; ?></td>
                         <?php } ?>
                     <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
                         <td rowspan="2"><?php echo $dataValue; ?></td>

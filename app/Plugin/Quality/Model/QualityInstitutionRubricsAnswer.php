@@ -67,6 +67,13 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
     public function qualityRubricAnswerView($controller, $params) {
         $controller->set('modelName', $this->name);
         
+        $controller->set('editable', false);
+        $this->_SetupRubricsTemplateDetail($controller, $params);
+    }
+    
+    public function qualityRubricAnswerExec($controller, $params) {
+        $controller->set('modelName', $this->name);
+        
         $controller->set('editable', $controller->Session->read('QualityRubric.editable'));
         $this->_SetupRubricsTemplateDetail($controller, $params);
     }
@@ -80,9 +87,9 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         $rubricTemplateData = $RubricsTemplateHeader->getRubricTemplate($rubricTemplateHeaderId);
         $headerCounter = $rubricTemplateData['RubricsTemplateHeader']['order'];
-     
+        
         $controller->Navigation->addCrumb($rubricTemplateData['RubricsTemplateHeader']['title']);
-        $controller->set('subheader', $rubricTemplateData['RubricsTemplateHeader']['title']);
+        $controller->set('subheader', $headerCounter.". ".$rubricTemplateData['RubricsTemplateHeader']['title']);
         $controller->Session->write('RubricsTemplate.id', $rubricTemplateId);
         $controller->Session->write('RubricsTemplateHeader.id', $rubricTemplateHeaderId);
 

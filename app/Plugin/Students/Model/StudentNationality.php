@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentNationality extends StudentsAppModel {
+	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'Country',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -27,7 +28,6 @@ class StudentNationality extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'country_id' => array(
 			'ruleRequired' => array(
@@ -37,4 +37,99 @@ class StudentNationality extends StudentsAppModel {
 			)
 		)
 	);
+
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'Country'),
+				array('field' => 'comments'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
+	
+	public function nationalities($controller, $params) {
+		$controller->Navigation->addCrumb('Nationalities');
+		$header = __('Nationalities');
+		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
+		$controller->set(compact('header', 'data'));
+	}
+	
+	public function nationalitiesAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Add Nationalities');
+		$header = __('Add Nationalities');
+		
+		if ($controller->request->is('post')) {
+			$data = $controller->request->data[$this->alias];
+
+			$this->create();
+			$data['student_id'] = $controller->Session->read('Student.id');
+
+			if ($this->save($data)) {
+				$id = $this->getLastInsertId();
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'nationalities'));
+			}
+		}
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+		$defaultCountryId = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
+		
+		$countryOptions = $this->Country->getOptions();
+		$controller->set(compact('header', 'countryOptions','defaultCountryId'));
+	}
+
+	public function nationalitiesView($controller, $params) {
+		$id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Nationality Details');
+		$header = __('Nationality Details');
+		$data = $this->findById($id);
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'nationalities'));
+		}
+		$controller->Session->write('StudentNationality.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
+
+	public function nationalitiesEdit($controller, $params)  {
+		$id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Edit Nationality');
+		$header = __('Edit Nationality');
+		
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$nationalityData = $controller->request->data[$this->alias];
+			$nationalityData['student_id'] = $controller->Session->read('Student.id');
+
+			if ($this->save($nationalityData)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'nationalitiesView', $id));
+			}
+		}
+		else{
+			$this->recursive = -1;
+			$data = $this->findById($id);
+
+			if (empty($data)) {
+				return $controller->redirect(array('action' => 'nationalities'));
+			}
+			$controller->request->data = $data;
+		}
+		$countryOptions = $this->Country->getOptions();
+		
+		$controller->set(compact('id', 'header', 'countryOptions'));
+	}
+
+	public function nationalitiesDelete($controller, $params) {
+		return $this->remove($controller, 'nationalities');
+	}
+
 }

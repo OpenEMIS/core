@@ -17,6 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusShift extends AppModel {
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
+	
 	public $belongsTo = array(
 		'CensusClass'
 	);
@@ -113,5 +120,258 @@ class CensusShift extends AppModel {
 		));
 		
 		return $data;
+	}
+		
+	public function shifts($controller, $params) {
+		$controller->Navigation->addCrumb('Shifts');
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$displayContent = true;
+
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+		$singleGradeClasses = $this->getData($institutionSiteId, $selectedYear);
+		$singleGradeData = $this->CensusClass->getSingleGradeData($institutionSiteId, $selectedYear);
+		$multiGradeData = $this->CensusClass->getMultiGradeData($institutionSiteId, $selectedYear);
+
+
+		if (empty($singleGradeData) && empty($multiGradeData)) {
+			$controller->Message->alert('InstitutionSiteClass.noData');
+			$displayContent = false;
+		} else {
+			$this->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+
+			$this->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+			
+			$controller->set(compact('singleGradeData', 'multiGradeData'));
+		}
+
+		$noOfShifts = $controller->ConfigItem->getValue('no_of_shifts');
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		
+		$controller->set(compact('noOfShifts', 'displayContent', 'selectedYear', 'yearList', 'isEditable'));
+	}
+
+	public function shiftsEdit($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		if ($controller->request->is('post')) {
+			if (!empty($controller->request->data)) {
+				$data = $controller->data[$this->alias];
+				$yearId = $controller->data[$this->alias]['school_year_id'];
+				unset($controller->request->data[$this->alias]['school_year_id']);
+
+				$saveData = array();
+				$errorMsg = array();
+				$errorFlag = false;
+
+				foreach ($data as $key => $value) {
+					if (is_array($value)) {
+						$shiftTotal = 0;
+						$classTotal = 0;
+						foreach ($value as $key2 => $value2) {
+							if ($key2 != 'shift_class_total' && $key2 != 'shift_total') {
+								$shiftTotal += $value2;
+							}
+							$classTotal = $value['shift_class_total'];
+						}
+
+						if ($shiftTotal != $classTotal) {
+							$errorFlag = true;
+							break;
+						}
+					}
+				}
+
+				if (!$errorFlag) {
+					foreach ($data as $key => $value) {
+						if (is_array($value)) {
+							foreach ($value as $key2 => $value2) {
+								if ($key2 != 'shift_class_total' && $key2 != 'shift_total') {
+									if (isset($value['shift_pk_' . str_replace("shift_value_", "", $key2)])) {
+										$saveData[] = array('CensusShift' => array('id' => $value['shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source' => '0'));
+									} else {
+										$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source' => '0'));
+									}
+								}
+							}
+						}
+					}
+					$this->saveAll($saveData);
+
+					$controller->Message->alert('general.edit.success');
+					$controller->redirect(array('action' => 'shifts', $yearId));
+				} else {
+					$controller->Message->alert('CensusShift.mismatch');
+					$controller->redirect(array('action' => 'shiftsEdit', $yearId));
+				}
+			}
+		}
+
+		$controller->Navigation->addCrumb('Edit Shifts');
+
+		$yearList = ClassRegistry::init('SchoolYear')->getAvailableYears();
+		$selectedYear = $controller->getAvailableYearId($yearList);
+		$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		if (!$editable) {
+			$controller->redirect(array('action' => 'shifts', $selectedYear));
+		} else {
+			$displayContent = true;
+			$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+			$singleGradeClasses = $this->getData($institutionSiteId, $selectedYear);
+			$singleGradeData = $this->CensusClass->getSingleGradeData($institutionSiteId, $selectedYear);
+			$multiGradeData = $this->CensusClass->getMultiGradeData($institutionSiteId, $selectedYear);
+
+			if (empty($singleGradeData) && empty($multiGradeData)) {
+				$controller->Message->alert('InstitutionSiteClass.noData');
+				$displayContent = false;
+			} else {
+				$this->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+
+				$this->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+				
+				$controller->set(compact('singleGradeData', 'multiGradeData', '', '', '', '', '', '', ''));
+			}
+
+			$noOfShifts = $controller->ConfigItem->getValue('no_of_shifts');
+			
+			$controller->set(compact('noOfShifts', 'displayContent', 'selectedYear', 'yearList'));
+		}
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			$header = array(__('Year'), __('Class Type'), __('Programme'), __('Grade'), __('Classes'));
+			
+			$ConfigItemModel = ClassRegistry::init('ConfigItem');
+			$no_of_shifts = $ConfigItemModel->getValue('no_of_shifts');
+			
+			for ($i = 1; $i <= intval($no_of_shifts); $i++) {
+				$header[] = __('Shift') . $i;
+			}
+
+			$header[] = __('Total');
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$singleGradeClasses = $this->getData($institutionSiteId, $yearId);
+				
+				$CensusClassModel = ClassRegistry::init('CensusClass');
+				$singleGradeData = $CensusClassModel->getSingleGradeData($institutionSiteId, $yearId);
+				$multiGradeData = $CensusClassModel->getMultiGradeData($institutionSiteId, $yearId);
+
+				$this->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+				$this->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+
+				// single grade classes data start
+				if (count($singleGradeData) > 0) {
+					$data[] = $header;
+					$totalClasses = 0;
+					foreach ($singleGradeData AS $rowSingleGrade) {
+						$preDataRow = array(
+							$yearName,
+							__('Single Grade Classes Only'),
+							$rowSingleGrade['education_programme_name'],
+							$rowSingleGrade['education_grade_name'],
+							$rowSingleGrade['classes']
+						);
+
+						$totalShifts = 0;
+						for ($i = 1; $i <= intval($no_of_shifts); $i++) {
+							$shift = 0;
+							if (isset($rowSingleGrade['shift_' . $i])) {
+								$shift = $rowSingleGrade['shift_' . $i];
+								$totalShifts += $shift;
+							}
+							$preDataRow[] = $shift;
+						}
+						$preDataRow[] = $totalShifts;
+
+						$data[] = $preDataRow;
+						$totalClasses += $rowSingleGrade['classes'];
+					}
+					$data[] = array('', '', '', 'Total', $totalClasses);
+					$data[] = array();
+				}
+				// single grade classes data end
+				// multi grades classes data start
+				if (count($multiGradeData) > 0) {
+					$data[] = $header;
+					$totalClasses = 0;
+					foreach ($multiGradeData AS $rowMultiGrade) {
+						$multiProgrammes = '';
+						$multiProgrammeCount = 0;
+						foreach ($rowMultiGrade['programmes'] AS $multiProgramme) {
+							if ($multiProgrammeCount > 0) {
+								$multiProgrammes .= "\n\r";
+								$multiProgrammes .= $multiProgramme;
+							} else {
+								$multiProgrammes .= $multiProgramme;
+							}
+							$multiProgrammeCount++;
+						}
+
+						$multiGrades = '';
+						$multiGradeCount = 0;
+						foreach ($rowMultiGrade['grades'] AS $multiGrade) {
+							if ($multiGradeCount > 0) {
+								$multiGrades .= "\n\r";
+								$multiGrades .= $multiGrade;
+							} else {
+								$multiGrades .= $multiGrade;
+							}
+							$multiGradeCount++;
+						}
+
+						$preDataRow = array(
+							$yearName,
+							__('Multi Grade Classes'),
+							$multiProgrammes,
+							$multiGrades,
+							$rowMultiGrade['classes']
+						);
+
+						$totalShifts = 0;
+						for ($i = 1; $i <= intval($no_of_shifts); $i++) {
+							$shift = 0;
+							if (isset($rowMultiGrade['shift_' . $i])) {
+								$shift = $rowMultiGrade['shift_' . $i];
+								$totalShifts += $shift;
+							}
+							$preDataRow[] = $shift;
+						}
+						$preDataRow[] = $totalShifts;
+
+						$data[] = $preDataRow;
+						$totalClasses += $rowMultiGrade['classes'];
+					}
+					$data[] = array('', '', '', __('Total'), $totalClasses);
+					$data[] = array();
+				}
+				// multi grades classes data end
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Shifts';
 	}
 }

@@ -15,11 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthImmunization extends StudentsAppModel {
-	//public $useTable = 'student_health_histories';
-	public $actsAs = array('ControllerAction');
-	
+	public $actsAs = array('ControllerAction', 'DatePicker' => 'date');
 	public $belongsTo = array(
-		//'Student',
+		'HealthImmunization',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -29,7 +27,6 @@ class StudentHealthImmunization extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'dosage' => array(
 			'ruleRequired' => array(
@@ -46,104 +43,103 @@ class StudentHealthImmunization extends StudentsAppModel {
 			)
 		)
 	);
-	public $booleanOptions = array('No', 'Yes');
-	
-	public function healthImmunization($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('Health - Immunizations');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
-		
-		$HealthImmunization = ClassRegistry::init('HealthImmunization');
-		$healthImmunizationsOptions = $HealthImmunization->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', 'Health - Immunizations');
-		$controller->set('data', $data);
-		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
-		
+
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'date', 'type' => 'datepicker'),
+				array('field' => 'name', 'model' => 'HealthImmunization'),
+				array('field' => 'dosage'),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
 	}
 
-	public function healthImmunizationView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View Immunization');
-		$controller->set('subheader', 'Health - View Immunization');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthImmunization'));
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Student.id')) {
+			return $controller->redirect(array('action' => 'index'));
 		}
-		
-		$controller->Session->write('StudentHealthImmunizationId', $id);
-		$HealthImmunization = ClassRegistry::init('HealthImmunization');
-		$healthImmunizationsOptions = $HealthImmunization->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
 	}
-	
+
+	public function healthImmunization($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Immunizations');
+		$header = __('Health - Immunizations');
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
+
+		$controller->set(compact('header', 'data'));
+	}
+
+	public function healthImmunizationView($controller, $params) {
+		$controller->Navigation->addCrumb('Health - View Immunization');
+		$header = __('Health - View Immunization');
+
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		$data = $this->findById($id);
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			$controller->redirect(array('action' => 'healthImmunization'));
+		}
+
+		$controller->Session->write('StudentHealthImmunization.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
+
 	public function healthImmunizationDelete($controller, $params) {
-        if($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthImmunizationId')) {
-            $id = $controller->Session->read('StudentHealthImmunizationId');
-            $studentId = $controller->Session->read('StudentId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$HealthImmunization = ClassRegistry::init('HealthImmunization');
-			$healthImmunizationsOptions = $HealthImmunization->find('first', array('conditions'=> array('id' => $data[$this->name]['health_immunization_id'])));
-		
-            $name = !empty($healthImmunizationsOptions['HealthImmunization']['name'])?$healthImmunizationsOptions['HealthImmunization']['name']:'';
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StudentHealthImmunizationId');
-            $controller->redirect(array('action' => 'healthImmunization'));
-        }
-    }
-	
+		if ($controller->Session->check('StudentHealthImmunization.id')) {
+			$id = $controller->Session->read('StudentHealthImmunization.id');
+			if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			$controller->Session->delete('StudentHealthImmunization.id');
+			return $controller->redirect(array('action' => 'healthImmunization'));
+		}
+	}
+
 	public function healthImmunizationAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Immunization');
-		$controller->set('subheader', 'Health - Add Immunization');
+		$controller->set('header', __('Health - Add Immunization'));
 		$this->setup_add_edit_form($controller, $params);
 	}
-	
+
 	public function healthImmunizationEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Immunization');
-		$controller->set('subheader', 'Health - Edit Immunization');
+		$controller->set('header', __('Health - Edit Immunization'));
 		$this->setup_add_edit_form($controller, $params);
-		
-		
 		$this->render = 'add';
 	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$HealthImmunization = ClassRegistry::init('HealthImmunization');
-		$healthImmunizationsOptions = $HealthImmunization->find('list', array('fields'=> array('id', 'name')));
-		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+
+	function setup_add_edit_form($controller, $params) {
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'healthImmunization'));
+			}
+		} else {
+			
 			$this->recursive = -1;
 			$data = $this->findById($id);
-			if(!empty($data)){
+			if (!empty($data)) {
 				$controller->request->data = $data;
 			}
 		}
-		else{
-			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthImmunization'));
-			}
-		}
+		
+		$healthImmunizationsOptions = $this->HealthImmunization->find('list', array('fields' => array('id', 'name')));
+
+		$controller->set(compact('healthImmunizationsOptions'));
 	}
+
 }

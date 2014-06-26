@@ -17,11 +17,19 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StudentBehaviourCategory extends AppModel {
-	// Used by SetupController
-	public function getLookupVariables() {
-		$lookup = array('Behaviour Category' => array('model' => 'Students.StudentBehaviourCategory'));
-		return $lookup;
-	}
+	public $actsAs = array('FieldOption');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	
 	public function getCategory(){
 		$list = $this->find('list',array(

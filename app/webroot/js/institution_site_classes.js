@@ -19,11 +19,12 @@ $(document).ready(function() {
 
 var InstitutionSiteClasses = {
 	yearId: '#SchoolYearId',
+	noDataMsg: 'No data available.',
 	
 	init: function() {
 		$('#classes.add .icon_plus').click(InstitutionSiteClasses.addGrade);
 		$('#classes.edit .icon_plus.students').click(InstitutionSiteClasses.addStudentRow);
-		$('#classes.edit .icon_plus.teachers').click(InstitutionSiteClasses.addTeacherRow);
+		$('#classes.edit .icon_plus.staffs').click(InstitutionSiteClasses.addStaffRow);
         $('#classes.edit .icon_plus.subjects').click(InstitutionSiteClasses.addSubjectRow);
 	},
 	
@@ -41,7 +42,7 @@ var InstitutionSiteClasses = {
 		var year = $(InstitutionSiteClasses.yearId).val();
 		
 		var maskId;
-		var ajaxParams = {name: name, year: year, count: $('#grade_list .table_row').length};
+		var ajaxParams = {name: name, year: year, count: $('#grade_list tr').length};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
 				if(data === 'true') {
@@ -49,7 +50,7 @@ var InstitutionSiteClasses = {
 				} else {
 					var alertOpt = {
 						id: 'class_alert',
-						parent: '.content_wrapper',
+						parent: '#grade_list',
 						type: alertType.error,
 						text: data,
 						css: {left: '350px', top: '65px'}
@@ -65,7 +66,7 @@ var InstitutionSiteClasses = {
 			dataType: 'text',
 			url: getRootURL() + 'InstitutionSites/classesCheckName',
 			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#grade_list'}); },
 			success: ajaxSuccess
 		});
 		return false;
@@ -82,15 +83,17 @@ var InstitutionSiteClasses = {
 		var ajaxParams = {exclude: exclude, index: index, yearId: yearId};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				if(!$(data).hasClass('alert')) {
-					$('#grade_list .table_body').append(data);
+				if(!$($.parseHTML(data)).hasClass('alert')) {
+					$('#grade_list tbody').append(data);
 					jsTable.fixTable('#grade_list');
 				} else {
 					var alertOpt = {
 						id: 'grade_alert',
-						parent: '.content_wrapper',
-						type: $(data).attr('type'),
-						text: $(data).html(),
+						parent: '#grade_list',
+						//type: $(data).attr('type'),
+						type: alertType.error,
+						//text: $(data).html(),
+						text: InstitutionSiteClasses.noDataMsg,
 						position: 'center'
 					}
 					$.alert(alertOpt);
@@ -103,17 +106,17 @@ var InstitutionSiteClasses = {
 			dataType: 'text',
 			url: getRootURL() + $(this).attr('url'),
 			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#grade_list'}); },
 			success: ajaxSuccess
 		});
 	},
 	
 	addStudentRow: function() {
-		var table = $(this).parent().siblings('.table').find('.table_body');
+		var table = $(this).parent().siblings('table').find('tbody');
 		
 		var alertOpt = {
 			id: 'student_alert',
-			parent: '.content_wrapper',
+			parent: 'fieldset.students',
 			type: alertType.error,
 			position: 'center'
 		}
@@ -123,16 +126,18 @@ var InstitutionSiteClasses = {
 			$.alert(alertOpt);
 		} else {
 			var maskId;
-			var ajaxParams = {index: $('fieldset .table_row').length};
+			var ajaxParams = {index: $('fieldset tr').length};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					if(!$(data).hasClass('alert')) {
+					if(!$($.parseHTML(data)).hasClass('alert')) {
 						table.append(data);
 						jsTable.fixTable(table.parent());
 					} else {
 						alertOpt['parent'] = table.closest('fieldset');
-						alertOpt['type'] = $(data).attr('type');
-						alertOpt['text'] = $(data).html();
+						//alertOpt['type'] = $(data).attr('type'),
+						alertOpt['type'] = alertType.error;
+						// alertOpt['text'] = $(data).html(),
+						alertOpt['text'] = InstitutionSiteClasses.noDataMsg;
 						$.alert(alertOpt);
 					}
 				};
@@ -143,14 +148,14 @@ var InstitutionSiteClasses = {
 				dataType: 'text',
 				url: getRootURL() + $(this).attr('url'),
 				data: ajaxParams,
-				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: 'fieldset.students'}); },
 				success: ajaxSuccess
 			});
 		}
 	},
 	
 	selectStudent: function(obj) {
-		var row = $(obj).closest('.table_row');
+		var row = $(obj).closest('tr');
 		var studentOption = $(row).find('[attr="name"] option:selected');
 		var categoryOption = $(row).find('[attr="category"] option:selected');
 		var studentId = $(studentOption).val();
@@ -170,7 +175,7 @@ var InstitutionSiteClasses = {
 					} else {
 						var alertOpt = {
 							id: 'student_alert',
-							parent: '.content_wrapper',
+							parent: $(obj).closest('fieldset'),
 							type: alertType.error,
 							text: data.msg,
 							position: 'center'
@@ -183,7 +188,7 @@ var InstitutionSiteClasses = {
 			$.ajax({
 				type: 'GET',
 				dataType: 'json',
-				url: getRootURL() + $(obj).closest('.table_body').attr('url'),
+				url: getRootURL() + $(obj).closest('tbody').attr('url'),
 				data: ajaxParams,
 				beforeSend: function (jqXHR) { maskId = $.mask({parent: $(obj).closest('fieldset')}); },
 				success: ajaxSuccess
@@ -192,7 +197,7 @@ var InstitutionSiteClasses = {
 	},
         
         changeStudentCategory:function(obj){
-                var row = $(obj).closest('.table_row');
+                var row = $(obj).closest('tr');
 		var categoryOption = $(row).find('[attr="category"] option:selected');
 		var studentId = row.attr('student-id');
 		var categoryId = $(categoryOption).val();
@@ -212,7 +217,7 @@ var InstitutionSiteClasses = {
 					} else {
 						var alertOpt = {
 							id: 'student_alert',
-							parent: '.content_wrapper',
+							parent: $(obj).closest('fieldset'),
 							type: alertType.error,
 							text: data.msg,
 							position: 'center'
@@ -225,7 +230,7 @@ var InstitutionSiteClasses = {
 			$.ajax({
 				type: 'GET',
 				dataType: 'json',
-				url: getRootURL() + $(obj).closest('.table_body').attr('url'),
+				url: getRootURL() + $(obj).closest('tbody').attr('url'),
 				data: ajaxParams,
 				beforeSend: function (jqXHR) { maskId = $.mask({parent: $(obj).closest('fieldset')}); },
 				success: ajaxSuccess
@@ -234,7 +239,7 @@ var InstitutionSiteClasses = {
         },
 	
 	deleteStudent: function(obj) {
-		var row = $(obj).closest('.table_row');
+		var row = $(obj).closest('tr');
 		var studentId = row.attr('student-id');
 		
 		if(studentId!=0) {
@@ -245,7 +250,7 @@ var InstitutionSiteClasses = {
 					if(data.type != ajaxType.success) {
 						var alertOpt = {
 							id: 'student_alert',
-							parent: '.content_wrapper',
+							parent: $(obj).closest('fieldset'),
 							type: alertType.error,
 							text: data.msg,
 							position: 'center'
@@ -260,7 +265,7 @@ var InstitutionSiteClasses = {
 			$.ajax({
 				type: 'GET',
 				dataType: 'json',
-				url: getRootURL() + $(row).closest('.table_body').attr('url'),
+				url: getRootURL() + $(row).closest('tbody').attr('url'),
 				data: ajaxParams,
 				beforeSend: function (jqXHR) { maskId = $.mask({parent: $(obj).closest('fieldset'), text: i18n.General.textRemoving}); },
 				success: ajaxSuccess
@@ -270,17 +275,16 @@ var InstitutionSiteClasses = {
 		}
 	},
 	
-	addTeacherRow: function() {
-		var table = $(this).parent().siblings('.table').find('.table_body');
+	addStaffRow: function() {
+		var table = $(this).parent().siblings('table').find('tbody');
 		var parent = table.closest('fieldset');
 		var alertOpt = {
-			id: 'teacher_alert',
+			id: 'staff_alert',
 			parent: parent,
 			type: alertType.error,
 			position: 'center'
 		}
-		
-		if($('.teacher_select').length>0) {
+		if($('.staff_select').length>0) {
 			alertOpt['text'] = i18n.InstitutionSites.textClassSelectTeacher;
 			$.alert(alertOpt);
 		} else {
@@ -288,11 +292,11 @@ var InstitutionSiteClasses = {
 			var ajaxParams = {index: $('fieldset .table_row').length};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					if(!$(data).hasClass('alert')) {
+					if(!$($.parseHTML(data)).hasClass('alert')) {
 						table.append(data);
 						jsTable.fixTable(table.parent());
 					} else {
-						alertOpt['type'] = $(data).attr('type');
+						//alertOpt['type'] = $(data).attr('type');
 						alertOpt['text'] = $(data).html();
 						$.alert(alertOpt);
 					}
@@ -310,26 +314,26 @@ var InstitutionSiteClasses = {
 		}
 	},
 	
-	selectTeacher: function(obj) {
-		var row = $(obj).closest('.table_row');
+	selectStaff: function(obj) {
+		var row = $(obj).closest('tr');
 		var parent = row.closest('fieldset');
 		
-		var teacherSelect = row.find('.teacher_select');
-		if(teacherSelect.val().isEmpty()==false) {
-			var teacherId = teacherSelect.val();
-			var teacherOption = teacherSelect.find('> option:selected');
+		var staffSelect = row.find('.staff_select');
+		if(staffSelect.val().isEmpty()==false) {
+			var staffId = staffSelect.val();
+			var staffOption = staffSelect.find('> option:selected');
 			
 			var maskId;
-			var ajaxParams = {teacherId: teacherId, action: 'add'};
+			var ajaxParams = {staffId: staffId, action: 'add'};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
 					if(data.type == ajaxType.success) {
-						row.attr('teacher-id', teacherId);
-						row.find('[attr="id"]').html(teacherOption.attr('id'));
-						row.find('[attr="name"]').html(teacherOption.attr('name'));
+						row.attr('staff-id', staffId);
+						row.find('[attr="id"]').html(staffOption.attr('id'));
+						row.find('[attr="name"]').html(staffOption.attr('name'));
 					} else {
 						var alertOpt = {
-							id: 'teacher_alert',
+							id: 'staff_alert',
 							parent: parent,
 							type: alertType.error,
 							text: data.msg,
@@ -343,7 +347,7 @@ var InstitutionSiteClasses = {
 			$.ajax({
 				type: 'GET',
 				dataType: 'json',
-				url: getRootURL() + $(obj).closest('.table_body').attr('url'),
+				url: getRootURL() + $(obj).closest('tbody').attr('url'),
 				data: ajaxParams,
 				beforeSend: function (jqXHR) { maskId = $.mask({parent: parent}); },
 				success: ajaxSuccess
@@ -351,18 +355,18 @@ var InstitutionSiteClasses = {
 		}
 	},
 	
-	deleteTeacher: function(obj) {
-		var row = $(obj).closest('.table_row');
+	deleteStaff: function(obj) {
+		var row = $(obj).closest('tr');
 		var parent = row.closest('fieldset');
-		var teacherId = row.attr('teacher-id');
-		if(teacherId!=0) {
+		var staffId = row.attr('staff-id');
+		if(staffId!=0) {
 			var maskId;
-			var ajaxParams = {teacherId: teacherId, action: 'delete'};
+			var ajaxParams = {staffId: staffId, action: 'delete'};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
 					if(data.type != ajaxType.success) {
 						var alertOpt = {
-							id: 'teacher_alert',
+							id: 'staff_alert',
 							parent: parent,
 							type: alertType.error,
 							text: data.msg,
@@ -378,7 +382,7 @@ var InstitutionSiteClasses = {
 			$.ajax({
 				type: 'GET',
 				dataType: 'json',
-				url: getRootURL() + $(row).closest('.table_body').attr('url'),
+				url: getRootURL() + $(row).closest('tbody').attr('url'),
 				data: ajaxParams,
 				beforeSend: function (jqXHR) { maskId = $.mask({parent: parent, text: i18n.General.textRemoving}); },
 				success: ajaxSuccess
@@ -389,7 +393,7 @@ var InstitutionSiteClasses = {
 	},
 
     addSubjectRow: function() {
-        var table = $(this).parent().siblings('.table').find('.table_body');
+        var table = $(this).parent().siblings('table').find('tbody');
         var parent = table.closest('fieldset');
         var alertOpt = {
             id: 'subject_alert',
@@ -399,19 +403,20 @@ var InstitutionSiteClasses = {
         }
 
         if($('.subject_select').length>0) {
-            alertOpt['text'] = i18n.InstitutionSites.textClassSelectTeacher;
+            alertOpt['text'] = i18n.InstitutionSites.textClassSelectStaff;
             $.alert(alertOpt);
         } else {
             var maskId;
             var ajaxParams = {index: $('fieldset .table_row').length};
             var ajaxSuccess = function(data, textStatus) {
                 var callback = function() {
-                    if(!$(data).hasClass('alert')) {
+                    if(!$($.parseHTML(data)).hasClass('alert')) {
                         table.append(data);
                         jsTable.fixTable(table.parent());
                     } else {
-                        alertOpt['type'] = $(data).attr('type');
-                        alertOpt['text'] = $(data).html();
+                        //alertOpt['type'] = $(data).attr('type');
+                        //alertOpt['text'] = $(data).html();
+						alertOpt['text'] = InstitutionSiteClasses.noDataMsg;
                         $.alert(alertOpt);
                     }
                 };
@@ -429,7 +434,7 @@ var InstitutionSiteClasses = {
     },
 
     selectSubject: function(obj) {
-        var row = $(obj).closest('.table_row');
+        var row = $(obj).closest('tr');
         var parent = row.closest('fieldset');
 
         var subjectSelect = row.find('.subject_select');
@@ -463,7 +468,7 @@ var InstitutionSiteClasses = {
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
-                url: getRootURL() + $(obj).closest('.table_body').attr('url'),
+                url: getRootURL() + $(obj).closest('tbody').attr('url'),
                 data: ajaxParams,
                 beforeSend: function (jqXHR) { maskId = $.mask({parent: parent}); },
                 success: ajaxSuccess
@@ -472,7 +477,7 @@ var InstitutionSiteClasses = {
     },
 
     deleteSubject: function(obj) {
-        var row = $(obj).closest('.table_row');
+        var row = $(obj).closest('tr');
         var parent = row.closest('fieldset');
         var subjectId = row.attr('subject-id');
         if(subjectId!=0) {
@@ -498,7 +503,7 @@ var InstitutionSiteClasses = {
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
-                url: getRootURL() + $(row).closest('.table_body').attr('url'),
+                url: getRootURL() + $(row).closest('tbody').attr('url'),
                 data: ajaxParams,
                 beforeSend: function (jqXHR) { maskId = $.mask({parent: parent, text: i18n.General.textRemoving}); },
                 success: ajaxSuccess

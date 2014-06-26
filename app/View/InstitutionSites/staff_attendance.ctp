@@ -1,22 +1,21 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Attendance'));
 
-<div id="staffAttendance" class="content_wrapper">
-    <h1>
-        <span><?php echo __('Attendance'); ?></span>
-		<?php
-		echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'staffView', $id), array('class' => 'divider'));
+$this->start('contentActions');
+echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'staffView', $id), array('class' => 'divider'));
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'staffAttendanceEdit', $selectedYear), array('class' => 'divider'));
 		}
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-	
+$this->end();
+
+$this->start('contentBody');
+?>
+
+<div id="staffAttendance" class="content_wrapper dataDisplay">
 	<div class="row myyear">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
@@ -24,6 +23,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 			echo $this->Form->input('school_year_id', array(
 				'label' => false,
 				'div' => false,
+				'class' => 'form-control',
 				'options' => $years,
 				'default' => $selectedYear,
 				'onchange' => 'jsForm.change(this)',
@@ -35,33 +35,33 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	
     <div class="row school_days">
 		<div class="label"><?php echo __('School Days'); ?></div>
-		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
+		<div class="value"><input type="text" class="default form-control" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
-    
-	<div class="table full_width" style="margin-top: 10px;">
-		<div class="table_head">
-			<div class="table_cell"><?php echo __('Total days attended'); ?></div>
-			<div class="table_cell"><?php echo __('Total days absent'); ?></div>
-            <div class="table_cell"><?php echo __('Total'); ?></div>
+    <div class="legendWrapper"><?php echo $legend; ?></div>
+	<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+		<thead class="table_head">
+			<tr>
+                    <?php foreach($attendanceTypes AS $attendanceType): ?>
+                        <th class="table_cell"><?php echo __($attendanceType['StaffAttendanceType']['national_code']); ?></th>
+                    <?php endforeach; ?>
+            <th class="table_cell"><?php echo __('Total'); ?></th>
             <?php
 				$total = 0;
-				if(!empty($data[0]['StaffAttendance']['total_no_attend'])){
-					$total += $data[0]['StaffAttendance']['total_no_attend'];
-				}
-				if(!empty($data[0]['StaffAttendance']['total_no_absence'])){
-					$total += $data[0]['StaffAttendance']['total_no_absence'];
-				}
 			?>
-		</div>
+			</tr>
+		</thead>
 		
-		<div class="table_body">
-			<div class="table_row">
-				<div class="table_cell cell_totals"><?php echo empty($data[0]['StaffAttendance']['total_no_attend']) ? 0 : $data[0]['StaffAttendance']['total_no_attend'] ?>
-                </div>
-				<div class="table_cell cell_totals"><?php echo empty($data[0]['StaffAttendance']['total_no_absence']) ? 0 : $data[0]['StaffAttendance']['total_no_absence'] ?>
-                </div>
-                <div class="table_cell cell_total cell_number"><?php echo $total; ?></div>
-			</div>
-		</div>
-	</div>
+		<tbody class="table_body">
+			<tr class="table_row">
+                        <?php foreach($attendanceTypes AS $attendanceType): ?>
+                            <?php $attendanceTypeId = $attendanceType['StaffAttendanceType']['id']; ?>
+                            <?php $attendanceValue = $data[$attendanceTypeId]['value']; ?>
+                            <?php $total += $attendanceValue; ?>
+                            <td class="table_cell cell_totals"><?php echo empty($attendanceValue) ? 0 : $attendanceValue ?></td>
+                        <?php endforeach; ?>
+                <td class="table_cell cell_total cell_number"><?php echo $total; ?></td>
+			</tr>
+		</tbody>
+	</table>
 </div>
+<?php $this->end(); ?>

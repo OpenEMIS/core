@@ -1,76 +1,34 @@
 <?php
-//echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-//2echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
-echo $this->Html->script('config', false);
-?>
+echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+$this->start('contentActions');
+if ($_edit) {
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'status'), array('class' => 'divider', 'id' => 'back'));
+}
+$this->end();
+$this->start('contentBody');
 
-<div id="rubrics_template" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <?php
-    echo $this->Form->create($modelName, array(
-        'url' => array('controller' => 'Quality', 'action' => $this->action, 'plugin' => 'Quality'),
-        'type' => 'file',
-        'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-    ));
-    ?>
-    <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
-    <?php //echo $this->Form->input('institution_id', array('type'=> 'hidden'));  ?>
-    
-    <?php 
-        if($displayType == 'add'){
-            $nameField = $this->Form->input('rubric_template_id', array('options' => $rubricOptions));
-            $yearField = $this->Form->input('year', array('options' => $yearOptions));
-           /* $yearField  = $this->Utility->getYearList($this->Form, 'data[year]', array(
-                        'name' => "data[".$modelName."][year]",
-                        'id' => "year_id",
-                        'maxlength' => 30,
-                        'desc' => true,
-                        'label' => false,
-                        'default' => $selectedYear,
-                        'div' => false), true);*/
-        }
-        else{
-            $nameField = $rubricOptions[$this->data['QualityStatus']['rubric_template_id']];
-            $yearField = $this->data['QualityStatus']['year'];
-        }
-    ?>
-    <div class="row">
-        <div class="label"><?php echo __('Name'); ?></div>
-        <div class="value"><?php echo $nameField;//$this->Form->input('rubric_template_id', array('options' => $rubricOptions)); ?> </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Year'); ?></div>
-        <div class="value"><?php echo $yearField; ?> </div>
-    </div>
-    <!-- <div class="row">
-        <div class="label"><?php echo __('Status'); ?></div>
-        <div class="value"><?php echo $this->Form->input('status', array('options' => $statusOptions)); ?> </div>
-    </div> -->
-    <div class="row">
-        <div class="label"><?php echo __('Date Enabled'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('date_enabled', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)); 
-		?>
-        </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Date Disabled'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('date_disabled', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)); 
-		?>
-        </div>
-    </div>
-    <div class="controls view_controls">
-        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-        <?php echo $this->Html->link(__('Cancel'), array('action' => 'status'), array('class' => 'btn_cancel btn_left')); ?>
-    </div>
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action), 'file');
+echo $this->Form->create($model, $formOptions);
+if (!empty($this->data[$model]['id'])) {
+	echo $this->Form->input('id', array('type' => 'hidden'));
+}
+$disabled = false;
+$dateEnabled = isset($this->data[$model]['date_enabled'])? $this->data[$model]['date_enabled']:date('d-m-Y');
+$dateDisabled = isset($this->data[$model]['date_disabled'])? $this->data[$model]['date_disabled']:date('d-m-Y', time() + 86400);
 
-    <?php echo $this->Form->end(); ?>
-</div>
+if ($displayType != 'add') {
+	$disabled = 'disabled';
+}
+
+echo $this->Form->input('rubric_template_id', array('disabled' => $disabled, 'options' => $rubricOptions));
+echo $this->Form->input('year', array('disabled' => $disabled, 'options' => $yearOptions));
+echo $this->FormUtility->datepicker('date_enabled', array('id' => 'DateEnabled', 'data-date' => $dateEnabled));
+echo $this->FormUtility->datepicker('date_disabled', array('id' => 'DateDisabled', 'data-date' => $dateDisabled));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'status')));
+echo $this->Form->end();
+$this->end();
+?>  

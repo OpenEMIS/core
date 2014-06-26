@@ -39,7 +39,8 @@ class DataProcessingController extends DataProcessingAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
+		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->name, 'action' => 'build'));
 	}
 	
 	public function index() {
@@ -209,7 +210,6 @@ class DataProcessingController extends DataProcessingAppController {
                 $status = array('msg' => __('Only XML file are allow.'), 'type' => 0);
             }
             $this->set('status', $status);
-
             if(isset($status['type']) && $status['type'] > 0){
                 $this->redirect(array('controller' => $this->name, 'action' => 'Build'));
             }  
@@ -233,28 +233,31 @@ class DataProcessingController extends DataProcessingAppController {
 
                 try{
                     // add to reports table
-                    $sql = sprintf("INSERT INTO `reports` (`name`, `description`, `file_type`, `module`, `category`, `created_user_id`, `created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%s');",
+                    $sql = sprintf("INSERT INTO `reports` (`name`, `description`, `file_type`, `module`, `category`, `order`, `enabled`, `created_user_id`, `created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');",
                         Sanitize::escape($name),
                         Sanitize::escape($description),
                         Sanitize::escape('cus'),
                         Sanitize::escape('Custom'),
                         Sanitize::escape('Custom Reports'),
+                        Sanitize::escape('0'),
+                        Sanitize::escape('1'),
                         $this->Auth->user('id'),
                         $this->DateTime->dateAsSql(time()));
-                    //                    echo $sql;
+                    //echo $sql;
                     $datasource->query($sql);
 
                     // add to batch_indicators table
-                    $sql = sprintf("INSERT INTO `batch_indicators` (`name`, `short_name`, `metadata`, `filename`, `type`, `report_id`, `created_user_id`, `created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s');",
+                    $sql = sprintf("INSERT INTO `batch_indicators` (`name`, `short_name`, `metadata`, `filename`, `type`, `unit`, `report_id`, `created_user_id`, `created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s');",
                         Sanitize::escape($name),
                         Sanitize::escape($name),
                         Sanitize::escape($description),
                         Sanitize::escape("{$newFile->name()}.{$newFile->ext()}"),
                         Sanitize::escape($type),
+                        Sanitize::escape(''),
                         $datasource->lastInsertId(),
                         $this->Auth->user('id'),
                         $this->DateTime->dateAsSql(time()));
-                    //                    echo $sql;
+                    //echo $sql;
                     $datasource->query($sql);
 
                 }catch (Exception $e){
@@ -475,7 +478,7 @@ class DataProcessingController extends DataProcessingAppController {
             }*/
             $this->processGenerate($this->data['Reports']);
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus'))), 'order' => array('Report.order')));
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus','html'))), 'order' => array('Report.order')));
 		$QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){

@@ -55,6 +55,11 @@ class CsvTask extends AppTask {
         $path = $this->Common->getResultPath().str_replace(' ','_',$category).DS.$module.DS;
 		
         //$type = ($batch == 0)?'w':'a';//if first run truncate the file to 0
+		
+		if (!file_exists($path)) {
+			mkdir($path, 0777, true);
+		}
+		
 		$type = 'w+';
         $this->fileFP = fopen($path.$filename, $type);
 		fputs ($this->fileFP, implode(',',$arrTpl)."\n");
@@ -109,7 +114,7 @@ class CsvTask extends AppTask {
 
     public function closeCSV(){
         $line = "\n";
-        $line .= "Report Generated: " . date("Y-m-d H:i:s");
+        $line .= __("Report Generated").": "  . date("Y-m-d H:i:s");
         fputs ($this->fileFP, $line);
 		 fclose ($this->fileFP);
 	}

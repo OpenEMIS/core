@@ -1,40 +1,25 @@
-<?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'membershipAdd'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+$tableHeaders = array(__('Issue Date'), __('Name'), __('Expiry Date'), __('Comment'));
+$tableData = array();
+
+foreach($data as $obj) {
+    $id = $obj[$model]['id'];
+	$row = array();
+	$row[] = $obj[$model]['issue_date'];
+	$row[] = $this->Html->link($obj[$model]['membership'], array('action' => 'membershipView', $id), array('escape' => false));
+	$row[] = $obj[$model]['expiry_date'];
+	$row[] = $obj[$model]['comment'] ;
+	$tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+$this->end(); 
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="membership" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        <?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'membershipAdd'), array('class' => 'divider'));
-		}
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/membershipView/">
-        <div class="table_head">
-       		<div class="table_cell"><?php echo __('Issue Date'); ?></div>
-            <div class="table_cell"><?php echo __('Name'); ?></div>
-            <div class="table_cell"><?php echo __('Expiry Date'); ?></div>
-            <div class="table_cell"><?php echo __('Comment'); ?></div>
-        </div>
-       
-        <div class="table_body">
-        	<?php foreach($data as $id=>$val) { ?>
-            <div class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<div class="table_cell"><?php echo $val[$modelName]['issue_date'] ?></div>
-                <div class="table_cell"><?php echo  $val[$modelName]['membership']; ?></div>
-                <div class="table_cell"><?php echo  $val[$modelName]['expiry_date']; ?></div>
-                <div class="table_cell"><?php echo $val[$modelName]['comment'] ?>
-                </div>
-            </div>
-           <?php } ?>
-        </div>
-    </div>
-    <?php } ?>
-</div>

@@ -21,6 +21,7 @@ class SecurityFunction extends AppModel {
 	public $operations = array('_view', '_edit', '_add', '_delete', '_execute');
 	public $rootAccessModules = array('List of Users', 'Users', 'List of Groups', 'Groups', 'Group Users', 'Roles');
 	
+	/*
 	public function getFunctions() {
 		$functions = $this->find('all', array('conditions' => array('visible' => 1)));
 		
@@ -37,6 +38,29 @@ class SecurityFunction extends AppModel {
 		
 		return $list;
 	}
+	*/
+	
+	public function getFunctions() {
+		$functions = $this->find('all', array('order' => array($this->alias . '.order')));
+		
+		$list = array();
+		foreach ($functions as $func) {
+			$obj = $func['SecurityFunction'];
+			$module = $obj['module'];
+			$category = $obj['category'];
+			
+			if (!isset($list[$module])) {
+				$list[$module] = array();
+			}
+			
+			if (!isset($list[$module][$category])) {
+				$list[$module][$category] = array();
+			}
+			$list[$module][$category][] = $obj;
+		}
+		
+		return $list;
+	}
 	
 	public function arrange($list, $isSuperUser=false) {
 		$operations = $this->operations;
@@ -45,7 +69,7 @@ class SecurityFunction extends AppModel {
 			$function = $obj['SecurityFunction'];
 			$roleFunction = $obj['SecurityRoleFunction'];
 			$operationObj = array_key_exists('_view', $roleFunction) ? $roleFunction : $obj[0];
-			$module = $function['module'];
+			$module = $function['category'];
 			
 			// if super user then show all permissions, if not super user then only show restricted permissions
 			if($isSuperUser || ($isSuperUser == false && !in_array($function['name'], $this->rootAccessModules))) {
@@ -74,33 +98,13 @@ class SecurityFunction extends AppModel {
 		return $data;
 	}
 	
-	public function getPermissions($roleId, $isSuperUser=false) {
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('SecurityFunction.*', 'SecurityRoleFunction.*'),
-			'joins' => array(
-				array(
-					'table' => 'security_role_functions',
-					'alias' => 'SecurityRoleFunction',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'SecurityRoleFunction.security_function_id = SecurityFunction.id',
-						'SecurityRoleFunction.security_role_id = ' . $roleId
-					)
-				)
-			),
-			'order' => array('SecurityFunction.order')
-		));
-		return $this->arrange($list, $isSuperUser);
-	}
-        
-        public function getUserPermissions($userId, $arrange = false) {
+	public function getUserPermissions($userId, $arrange = false) {
 		$list = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				'SecurityFunction.*',
 				'SecurityRole.visible',
-                                'SecurityRole.id',
+				'SecurityRole.id',
 				'SecurityRoleFunction.id',
 				'SecurityRoleFunction._view AS _view',
 				'SecurityRoleFunction._edit AS _edit',
@@ -134,6 +138,27 @@ class SecurityFunction extends AppModel {
 		return $arrange ? $this->arrange($list) : $list;
 	}
 	
+	public function getPermissions($roleId, $module, $isSuperUser=false) {
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('SecurityFunction.*', 'SecurityRoleFunction.*'),
+			'joins' => array(
+				array(
+					'table' => 'security_role_functions',
+					'alias' => 'SecurityRoleFunction',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'SecurityRoleFunction.security_function_id = SecurityFunction.id',
+						'SecurityRoleFunction.security_role_id = ' . $roleId
+					)
+				)
+			),
+			'conditions' => array('SecurityFunction.module' => $module),
+			'order' => array('SecurityFunction.order')
+		));
+		return $this->arrange($list, $isSuperUser);
+	}
+	/* disabled for now
 	public function getAllowedPermissions($roleId, $userId, $isSuperUser) {
 		$operations = $this->operations;
 		$permissions = $this->getPermissions($roleId, $isSuperUser);//pr($permissions);
@@ -154,9 +179,7 @@ class SecurityFunction extends AppModel {
 								} else {
 									$data[$op] = null;
 								}
-							}/* else if($userData[$op] == 1) {
-								
-							}*/
+							}
 						}
 					}
 				} else {
@@ -167,4 +190,5 @@ class SecurityFunction extends AppModel {
 		}
 		return $permissions;
 	}
+	*/
 }

@@ -15,9 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffSpecialNeed extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('special_need_date'));
 	
 	public $belongsTo = array(
+		'SpecialNeedType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -37,85 +38,67 @@ class StaffSpecialNeed extends StaffAppModel {
 			)
 		)
 	);
-	public $booleanOptions = array('No', 'Yes');
-
 	public $headerDefault = 'Special Needs';
 	
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'special_need_date','labelKey' => 'general.date'),
+				array('field' => 'name', 'model' => 'SpecialNeedType','labelKey' => 'general.type' ),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 	public function specialNeed($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		$specialNeedType = ClassRegistry::init('SpecialNeedType');
-		$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('data', $data);
-		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
-		
+		$header = $this->headerDefault;
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
+		$controller->set(compact('header', 'data'));
 	}
 
 	public function specialNeedView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('modelName', $this->name);
+		$header = __($this->headerDefault . ' Details');
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);
 		
 		if(empty($data)){
+			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'specialNeed'));
 		}
 		
-		$controller->Session->write('StaffSpecialNeedId', $id);
-		$specialNeedType = ClassRegistry::init('SpecialNeedType');
-		$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
+		$controller->Session->write('StaffSpecialNeed.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
 	}
 	
 	public function specialNeedDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffSpecialNeedId')) {
-            $id = $controller->Session->read('StaffSpecialNeedId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$specialNeedType = ClassRegistry::init('SpecialNeedType');
-			$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
-
-            $name = $specialNeedTypeOptions[$data['StaffSpecialNeed']['special_need_type_id']];
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StaffSpecialNeedId');
-            $controller->redirect(array('action' => 'specialNeed'));
-        }
-    }
+		return $this->remove($controller, 'specialNeed');
+	}
 	
 	public function specialNeedAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('subheader', $this->headerDefault);
-		$this->setup_add_edit_form($controller, $params);
+		$controller->set('header', __('Add ' . $this->headerDefault));
+		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	
 	public function specialNeedEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
-		$this->setup_add_edit_form($controller, $params);
-		
+		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
+		$controller->set('header', __('Edit ' . $this->headerDefault));
+		$this->setup_add_edit_form($controller, $params, 'edit');
 		$this->render = 'add';
 	}
 	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$specialNeedType = ClassRegistry::init('SpecialNeedType');
-		$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
-		
+	function setup_add_edit_form($controller, $params, $type){
+		$specialNeedTypeOptions = $this->SpecialNeedType->find('list', array('fields'=> array('id', 'name')));
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -126,30 +109,9 @@ class StaffSpecialNeed extends StaffAppModel {
 			}
 		}
 		else{
-			$addMore = false;
-			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($controller->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($controller->action);
-            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $controller->Navigation->validateModel($controller->action,$this->name);
-            }
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
 			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$id = $this->getLastInsertId();
-                	if($addMore){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-					}
-					$controller->Navigation->updateWizard($controller->action,$id,$addMore);
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-				}
-				else{
-					$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
+				$controller->Message->alert('general.' . $type . '.success');
 				return $controller->redirect(array('action' => 'specialNeed'));
 			}
 		}

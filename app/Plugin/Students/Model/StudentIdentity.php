@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentIdentity extends StudentsAppModel {
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -27,7 +28,6 @@ class StudentIdentity extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'identity_type_id' => array(
 			'ruleRequired' => array(
@@ -51,22 +51,122 @@ class StudentIdentity extends StudentsAppModel {
 			)
 		),
 		'expiry_date' => array(
-            'comparison' => array(
-            	'rule'=>array('field_comparison', '>', 'issue_date'), 
-            	'allowEmpty'=>true,
-            	'message' => 'Expiry Date must be greater than Issue Date'
-            )
-        )
+			'comparison' => array(
+				//'rule' => array('field_comparison', '>', 'issue_date'),
+				'rule' => array('compareDate', 'issue_date'),
+				'allowEmpty' => true,
+				'message' => 'Expiry Date must be greater than Issue Date'
+			)
+		)
 	);
 
+	public function compareDate($field = array(), $compareField = null) {
+		$startDate = new DateTime(current($field));
+		$endDate = new DateTime($this->data[$this->name][$compareField]);
+		return $endDate < $startDate;
+	}
+	
+	function field_comparison($check1, $operator, $field2) {
+		foreach ($check1 as $key => $value1) {
+			$value2 = $this->data[$this->alias][$field2];
+			if (!Validation::comparison($value1, $operator, $value2))
+				return false;
+		}
+		return true;
+	}
 
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'IdentityType', 'labelKey' => 'general.type'),
+				array('field' => 'number'),
+				array('field' => 'issue_date'),
+				array('field' => 'expiry_date'),
+				array('field' => 'issue_location', 'labelKey' =>'Identities.issue_location'),
+				array('field' => 'comments'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 
-  	function field_comparison($check1, $operator, $field2) {
-        foreach($check1 as $key=>$value1) {
-            $value2 = $this->data[$this->alias][$field2];
-            if (!Validation::comparison($value1, $operator, $value2))
-                return false;
-        }
-        return true;
-    }
+	public function identities($controller, $params) {
+		$controller->Navigation->addCrumb(__('Identities'));
+		$header = __('Identities');
+		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
+		$studentId = $controller->Session->read('Student.id');
+		$data = $this->find('all', array('conditions' => array('StudentIdentity.student_id' => $studentId)));
+		$controller->set(compact('header', 'data'));
+	}
+
+	public function identitiesAdd($controller, $params) {
+		$controller->Navigation->addCrumb(__('Add Identity'));
+		$header = __('Add Identity');
+		if ($controller->request->is(array('post', 'put'))) {
+			$data = $controller->request->data[$this->alias];
+
+			$this->create();
+			$data['student_id'] = $controller->Session->read('Student.id');
+
+			if ($this->save($data)) {
+				$id = $this->getLastInsertId();
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'identities'));
+			}
+		}
+		$identityTypeOptions = $this->IdentityType->getOptions();
+		$controller->set('identityTypeOptions', $identityTypeOptions);
+
+		$controller->set(compact('header', 'identityTypeOptions'));
+	}
+
+	public function identitiesView($controller, $params) {
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0; //Identity Id
+		
+		$controller->Navigation->addCrumb(__('Identity Details'));
+		$header = __('Identity Details');
+		$data = $this->findById($id);
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'identities'));
+		}
+
+		$controller->Session->write('StudentIdentity.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('data', 'header', 'fields', 'id'));
+	}
+
+	public function identitiesEdit($controller, $params) {
+		$controller->Navigation->addCrumb(__('Edit Identity'));
+		$header = 'Edit Identity';
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0; // <<--- Identity Id
+		$data = $this->findById($id);
+
+		if ($controller->request->is(array('post', 'put'))) {
+			$identityData = $controller->request->data[$this->alias];
+			$identityData['student_id'] = $controller->Session->read('Student.id');
+
+			if ($this->save($identityData)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'identitiesView', $id));
+			}
+		} else {
+			if (empty($data)) {
+				return $controller->redirect(array('action' => 'identities'));
+			}
+			$controller->request->data = $data;
+		}
+		$identityTypeOptions = $this->IdentityType->getOptions();
+		$controller->set(compact('id', 'header', 'identityTypeOptions'));
+	}
+
+	public function identitiesDelete($controller, $params) {
+		return $this->remove($controller, 'identities');
+	}
 }

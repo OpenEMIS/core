@@ -23,6 +23,16 @@ class Student extends StudentsAppModel {
 				'Students.StudentAttachment',
 				'Students.StudentCustomValue'
 			)
+		),
+		'CustomReport',
+		'DatePicker' => array('date_of_birth'),
+		'FileUpload' => array(
+			array(
+				'name' => 'photo_name',
+				'content' => 'photo_content',
+				'size' => '1MB',
+				'allowEmpty' => true
+			)
 		)
 	);
 	
