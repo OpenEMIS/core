@@ -1,6 +1,8 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('/OlapCube/css/olap', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/OlapCube/js/olap', false);
+
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader',__($subheader));
@@ -58,6 +60,7 @@ echo $this->Form->create($model, $formOptions);
     		echo $this->Form->input('field', array(
 			    'type' => 'select',
 			    'multiple' => 'checkbox',
+			    'class' => 'filter-option',
 			    'options' => $filterFields,
 			    'selected' => array_keys($filterFields)
 			));

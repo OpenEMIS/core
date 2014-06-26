@@ -12,6 +12,8 @@ class OlapCubeController extends OlapCubeAppController {
         'olapReport' => 'OlapCube.OlapCubeDimension'
     ); 
 
+    public $helpers = array('Js' => array('Jquery'));
+
     public function beforeFilter() {
         parent::beforeFilter();
         $this->bodyTitle = 'Report';
