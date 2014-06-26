@@ -36,7 +36,7 @@ $this->start('contentBody');
 <?php if(isset($data)) { ?>
 <div class="table-responsive">
 <table class="table table-striped table-hover table-bordered">
-   <thead url="<?php echo $this->params['controller'];?>/course">
+   <thead url="<?php echo $this->params['controller'];?>/course/<?php echo $selectedStatus;?>">
         <tr>
             <th>
                 <span class="left"><?php echo __('Code'); ?></span>
