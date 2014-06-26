@@ -958,6 +958,7 @@ class CensusStudent extends AppModel {
 	
 	public function enrolmentAjax($controller, $params) {
 		$EducationProgramme = ClassRegistry::init('EducationProgramme');
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 			
 		$this->render = false;
 		
