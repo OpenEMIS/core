@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 26, 2014 at 02:27 PM
+-- Generation Time: Jun 27, 2014 at 10:26 AM
 -- Server version: 5.6.11
 -- PHP Version: 5.4.24
 
@@ -97,16 +97,19 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (54, 'StudentCategory', 'Categories', 'Student', '{"model":"Students.StudentCategory"}', 55, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (55, 'StudentBehaviourCategory', 'Behaviour Categories', 'Student', '{"model":"Students.StudentBehaviourCategory"}', 56, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (56, 'StudentAttendanceType', 'Attendance Types', 'Student', '{"model":"Students.StudentAttendanceType"}', 57, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(57, 'StudentCustomField', 'Custom Fields', 'Student', '{"model":"Students.StudentCustomField"}', 58, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(58, 'StudentCustomFieldOption', 'Custom Fields Options', 'Student', '{"model":"Students.StudentCustomFieldOption"}', 59, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(59, 'PositionTitle', 'Titles', 'Position', '{"model":"Staff.StaffPositionTitle"}', 60, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(60, 'PositionGrade', 'Grades', 'Position', '{"model":"Staff.StaffPositionGrade"}', 61, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(61, 'PositionStep', 'Steps', 'Position', '{"model":"Staff.StaffPositionStep"}', 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 63, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(63, 'StudentAbsenceReason', 'Absence Reasons', 'Student', NULL, 64, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(64, 'StaffAbsenceReason', 'Absence Reasons', 'Staff', NULL, 65, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(65, 'StaffType', 'Staff Type', 'Staff', NULL, 66, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(57, 'StudentCustomField', 'Custom Fields', 'Student', '{"model":"Students.StudentCustomField"}', 59, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(58, 'StudentCustomFieldOption', 'Custom Fields Options', 'Student', '{"model":"Students.StudentCustomFieldOption"}', 60, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(59, 'PositionTitle', 'Titles', 'Position', '{"model":"Staff.StaffPositionTitle"}', 61, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(60, 'PositionGrade', 'Grades', 'Position', '{"model":"Staff.StaffPositionGrade"}', 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(61, 'PositionStep', 'Steps', 'Position', '{"model":"Staff.StaffPositionStep"}', 63, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 65, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(63, 'StudentAbsenceReason', 'Absence Reasons', 'Student', NULL, 58, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(64, 'StaffAbsenceReason', 'Absence Reasons', 'Staff', NULL, 67, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(65, 'StaffType', 'Staff Type', 'Staff', NULL, 64, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (66, 'InstitutionSiteGender', 'Gender', 'Institution', NULL, 6, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(67, 'TrainingNeedCategory', 'Need Categories', 'Training', NULL, 67, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(68, 'TrainingResultType', 'Result Types', 'Training', NULL, 68, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(69, 'TrainingAchievementType', 'Achievement Types', 'Training', NULL, 69, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(67, 'TrainingNeedCategory', 'Need Categories', 'Training', NULL, 70, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(68, 'TrainingResultType', 'Result Types', 'Training', NULL, 71, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(69, 'TrainingAchievementType', 'Achievement Types', 'Training', NULL, 72, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(70, 'StaffAttendanceType', 'Attendance Types', 'Staff', '{"model":"Staff.StaffAttendanceType"}', 66, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(71, 'StaffCustomField', 'Custom Fields', 'Staff', '{"model":"Staff.StaffCustomField"}', 68, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(72, 'StaffCustomFieldOption', 'Custom Fields Options', 'Staff', '{"model":"Staff.StaffCustomFieldOption"}', 69, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
