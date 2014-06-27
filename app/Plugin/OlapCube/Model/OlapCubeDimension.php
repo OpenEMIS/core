@@ -19,6 +19,7 @@ class OlapCubeDimension extends OlapCubeAppModel {
 	public $headerDefault = 'OLAP Reports';
 
 	public function olapReport($controller, $params){
+		$controller->Session->delete('Olap');
 		$olapCube = ClassRegistry::init('OlapCube');
 	  	$controller->Navigation->addCrumb('OLAP Reports');
 
@@ -148,8 +149,12 @@ class OlapCubeDimension extends OlapCubeAppModel {
 			$rowField = $rowDimensions['OlapCubeDimension']['table_field'];
 			$columnField = $columnDimensions['OlapCubeDimension']['table_field'];
 			$computeField = $columnDimensions['OlapCubeDimension']['table_compute'];
+			$tableAggregate =  $columnDimensions['OlapCubeDimension']['table_aggregate'];
+			$computeFieldName = $columnDimensions['OlapCubeDimension']['dimension'];
 			if($rowDimensions['OlapCubeDimension']['table_aggregate']=='1'){
+				$tableAggregate = $rowDimensions['OlapCubeDimension']['table_aggregate'];
 				$computeField = $rowDimensions['OlapCubeDimension']['table_compute'];
+				$computeFieldName = $rowDimensions['OlapCubeDimension']['dimension'];
 			}
 			$computeRowField = $rowDimensions['OlapCubeDimension']['table_compute'];
 			$computeColumnField = $columnDimensions['OlapCubeDimension']['table_compute'];
@@ -157,8 +162,6 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 			$cubeRowTable = $rowDimensions['OlapCubeDimension']['table_name'];
 			$cubeColumnTable = $columnDimensions['OlapCubeDimension']['table_name'];
-
-
 
 			$rowFieldCount = 1;
 			$columnFieldCount = 1;
@@ -219,12 +222,22 @@ class OlapCubeDimension extends OlapCubeAppModel {
 				$a = 0;
 				foreach($arrComputeField as $r){
 					$fields[] = "{$r} as Number" . ($a+1);
-					$oCFields[] = "SUM(Number".($a+1).") as Number".($a+1);
+					if($tableAggregate){
+						$oCFields[] = "SUM(Number".($a+1).") as Number".($a+1);
+					}else{
+						$oCFields[] = "COUNT(Number".($a+1).") as Number".($a+1);
+					}
 					$a++;
 				}
 			}else{
+				//$fields[] = "CASE WHEN {$computeField} REGEXP '^-?[0-9]+$' THEN {$computeField} WHEN {$computeField} IS NULL THEN 0 ELSE 1 END as Number1";
 				$fields[] = "{$computeField} as Number1";
-				$oCFields[] = "COUNT(Number1) as Number1";
+				if($tableAggregate){
+					$oCFields[] = "SUM(Number1) as Number1";
+				}else{
+					$oCFields[] = "COUNT(Number1) as Number1";
+				}
+				
 			}
 
 			$dbo = $modelTable->getDataSource();
@@ -252,11 +265,9 @@ class OlapCubeDimension extends OlapCubeAppModel {
 				)
 				,$modelTable
 			);
-  			//pr($outerQuery);
+  			//pr($outerQuery);exit;
 			
 			$modelData = $modelTable->query($outerQuery);
-			pr($outerQuery);
-			exit;
 			/*
  			$modelData = $modelTable->find('all',
 				array(
@@ -279,9 +290,8 @@ class OlapCubeDimension extends OlapCubeAppModel {
 			$layout = array();
 			$rowName = array();
 			$columnName = array();
-			$layout = array();
+			$layout[$computeFieldName] = array();
 
-		
 			if(!empty($modelData)){
 				foreach($modelData as $result){
 					$cResult = (isset($result[$modelTableName]['CubeColumn1'])? $result[$modelTableName]['CubeColumn1'] :(isset($result[0]['CubeColumn1']) && $columnFieldCount==1 ? $result[0]['CubeColumn1'] : null));
@@ -351,7 +361,6 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 				}
 			}
-
 			$controller->Session->write('Olap.olap_cube', $cubeId);
 			$controller->Session->write('Olap.olap_row', $rowId);
 			$controller->Session->write('Olap.olap_column', $columnId);
