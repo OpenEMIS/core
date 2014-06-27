@@ -18,8 +18,17 @@ class Converter {
 	//put your code here
 	
 	public static function convertToMo($source, $destination) {
+		Converter::admin_clear_cache() ;
 		$shellCmd = 'msgfmt -cv -o ' . $destination . ' ' . $source. ' 2>&1';
 		$result = shell_exec($shellCmd);
 		CakeLog::write('debug','Translation : '.$result .'Path : '.$destination);
     }
+	
+	public static function admin_clear_cache() {
+		$cachePaths = array('persistent');
+		foreach ($cachePaths as $config) {
+			clearCache(null, $config);
+		}
+	}
+
 }

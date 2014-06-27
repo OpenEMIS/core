@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('Sanitize', 'Utility');
-App::uses('Converter', 'Lib');
+App::uses('Converter', 'Translations.Lib');
 class TranslationsController extends AppController {
 
 	public $uses = Array('Translation');
