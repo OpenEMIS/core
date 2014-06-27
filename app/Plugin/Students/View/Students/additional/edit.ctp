@@ -1,9 +1,9 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('More'));
+$this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-if(!$WizardMode) {
+if (!$WizardMode) {
 	echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider'));
 }
 $this->end();
@@ -21,7 +21,7 @@ echo $this->Form->create($modelValue, $formOptions);
 echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'action'));
 
 if (!$WizardMode) {
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'additional')));
+	echo $this->FormUtility->getFormButtons(array('center' => true, 'cancelURL' => array('action' => 'additional')));
 } else {
 	echo $this->FormUtility->getWizardButtons($WizardButtons);
 }
