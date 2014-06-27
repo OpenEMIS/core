@@ -297,6 +297,9 @@ class LabelHelper extends AppHelper {
 		),
 		'StudentCustomFieldOption' => array(
 			'student_custom_field_id' => 'Custom Field'
+		),
+		'StaffCustomFieldOption' => array(
+			'staff_custom_field_id' => 'Custom Field'
 		)
 	);
 	
