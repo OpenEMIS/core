@@ -172,8 +172,8 @@ class QualityInstitutionRubric extends QualityAppModel {
 	}
 
 	public function qualityRubric($controller, $params) {
-		$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
-		$QualityBatchReport->generateRubricNotCompleted();
+		//$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+		//$QualityBatchReport->generateRubricNotCompleted();
 		
 		
 		$institutionSiteId = $controller->Session->read('InstitutionSiteId');
