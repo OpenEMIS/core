@@ -16,12 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StaffCustomValue extends StaffAppModel {
 	public $belongsTo = array(
-		'StaffCustomField', 'Staff.Staff'
+		'Staff.StaffCustomField',
+		'Staff.Staff'
 	);
-	
-	/* can't work if recursive is set to 0
-	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
-	);
-	*/
 }
