@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 2.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-27 11:47+0800\n"
+"PO-Revision-Date: 2014-06-27 14:48+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -260,7 +260,7 @@ msgstr "اسم العائلة "
 msgid "Gender"
 msgstr "الجنس"
 
-msgid "Date of Birth"
+msgid "Date Of Birth"
 msgstr "تاريخ الميلاد"
 
 msgid "File"
@@ -4240,3 +4240,15 @@ msgstr "سبب"
 
 msgid "Time"
 msgstr "وقت"
+
+msgid "Mode of Delivery"
+msgstr "طريقة التسليم"
+
+msgid "Select Image"
+msgstr "حدد صورة"
+
+msgid "Remove"
+msgstr "نزع"
+
+msgid "Change"
+msgstr "تغيير"
