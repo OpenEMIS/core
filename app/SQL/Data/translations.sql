@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 27, 2014 at 02:51 PM
+-- Generation Time: Jun 27, 2014 at 04:31 PM
 -- Server version: 5.6.11
 -- PHP Version: 5.4.24
 
@@ -1167,7 +1167,7 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (1139, NULL, 'Reading', 'القراءة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1140, NULL, 'Speaking', 'حديثه', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1141, NULL, 'Listening', 'الاستماع', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
-(1142, NULL, 'Issuer', 'المصد', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
+(1142, NULL, 'Issuer', 'المصدر', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1143, NULL, 'Staff Label', 'تسمية الموظفين', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1144, NULL, 'Check Box', 'خانة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1145, NULL, 'Employment Status', 'نظام العمل', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
@@ -1390,4 +1390,14 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (1363, NULL, 'Mode of Delivery', 'طريقة التسليم', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:22:59'),
 (1364, NULL, 'Select Image', 'حدد صورة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:47:49'),
 (1365, NULL, 'Remove', 'نزع', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:48:26'),
-(1366, NULL, 'Change', 'تغيير', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:48:40');
+(1366, NULL, 'Change', 'تغيير', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:48:40'),
+(1367, NULL, 'Add Identity', 'إضافة الهوية', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:22:33'),
+(1368, NULL, 'Identity Type', 'نوع الهوية', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:23:07'),
+(1369, NULL, 'Evaluation Date', 'تقييم التاريخ', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:26:25'),
+(1370, NULL, 'Rubric Template', 'قالب الموضوع', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:28:42'),
+(1371, NULL, 'TOTALS', 'الإجمالي', '总数', 'TOTALES', NULL, 'ОБЩЕЕ число', 1, '2014-06-25 15:52:54', 1, '2014-06-25 15:31:46'),
+(1372, NULL, 'BEHAVIOURS', 'السلوكيات', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:41:28'),
+(1373, NULL, 'Details', 'التفاصيل', '详细资料', 'Detalles', 'Détails', 'Подробности', 1, '2014-06-25 15:52:54', 1, '2014-06-25 15:31:46'),
+(1374, NULL, 'Quality', 'جودة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:42:40'),
+(1375, NULL, 'Attendance - Students', 'الحضور - طلاب', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:50:55'),
+(1376, NULL, 'Attendance - Staff', 'الحضور - أعضاء هيئة التدريس', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:51:09');
