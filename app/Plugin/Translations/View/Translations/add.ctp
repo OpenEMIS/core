@@ -8,7 +8,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Translations', 'action' => $this->action));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Translations', 'action' => $this->action, 'plugin' => 'Translations'));
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('Translation', $formOptions);
 echo $this->Form->hidden('id');
