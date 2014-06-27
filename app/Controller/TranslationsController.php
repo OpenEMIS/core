@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('Sanitize', 'Utility');
-
+App::uses('Converter', 'Lib');
 class TranslationsController extends AppController {
 
 	public $uses = Array('Translation');
@@ -163,7 +163,7 @@ class TranslationsController extends AppController {
 			$lang = $this->request->data['lang'];
 
 			$this->generatePO($lang);
-			//$this->generateMO($lang);
+			$this->generateMO($lang);
 			$this->Message->alert('general.translation.success');
 		}
 	}
@@ -223,6 +223,8 @@ class TranslationsController extends AppController {
 			fclose($opFile);
 		}
 		
+		chmod($localeImportFile, 0666);
+		
 		if (is_writable($localeImportFile)) {
 			$opFile = fopen($localeImportFile, 'w');
 			fwrite($opFile, "msgid \"\"\n");
@@ -265,10 +267,10 @@ class TranslationsController extends AppController {
 
 		$localDir = App::path('locales');
 		$localDir = $localDir[0];
-		$localeImportFile = $localDir . $lang . DS . 'LC_MESSAGES' . DS . 'default.po';
+		$source = $localDir . $lang . DS . 'LC_MESSAGES' . DS . 'default.po';
+		$destination = $localDir . $lang . DS . 'LC_MESSAGES' . DS . 'default.mo';
 
-		App::import('Vendor', 'php-mo');
-		phpmo_convert($localeImportFile);
+		Converter::convertToMo($source, $destination);
 	}
 
 }
