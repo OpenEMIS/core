@@ -397,9 +397,6 @@ class TrainingSessionResult extends TrainingAppModel {
 							$header = $rowData;
 						}else{
 							try{
-								if(count($result)>($i+1)){
-									break;
-								}
 								$resultSplit = $result[$i];
 				 	 			array_splice($resultSplit,3);
 
@@ -407,6 +404,7 @@ class TrainingSessionResult extends TrainingAppModel {
 				 	 			array_splice($rowSplitCompare,3);
 				 	 			$compare = array_diff($resultSplit, $rowSplitCompare);
 				 	 			$resultPass = preg_grep('~pass~i', array_keys($result[$i]));
+
  
 				 	 			if(empty($compare)){
 				 	 				foreach($resultPass as $passCol=>$val){
