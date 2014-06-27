@@ -474,6 +474,7 @@ class TrainingSession extends TrainingAppModel {
 				$controller->redirect(array('action' => 'sessionEdit', $this->getLastInsertId()));
 			}else{
 				$controller->Message->alert('general.duplicate.failed');
+				$controller->redirect(array('action' => 'session'));
 			}
 			
 		}else{
