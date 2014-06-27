@@ -53,7 +53,7 @@ class TrainingSessionResult extends TrainingAppModel {
 			$conditions['NOT']['TrainingSessionResult.training_status_id'] = 4;
 		}
 
-		$fieldordername = ($controller->Session->read('Search.orderTrainingResult')) ? $controller->Session->read('Search.orderTrainingResult') : array('TrainingCourse.code', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id');
+		$fieldordername = ($controller->Session->read('Search.orderTrainingResult')) ? $controller->Session->read('Search.orderTrainingResult') : array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id');
 		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingResult')) ? $controller->Session->read('Search.sortdirTrainingResult') : 'asc';
 		$order = $fieldordername;
 		if($controller->Session->check('Search.orderTrainingResult')){
@@ -62,7 +62,7 @@ class TrainingSessionResult extends TrainingAppModel {
 
 		$controller->Paginator->settings = array(
 	        'conditions' => $conditions,
-	        'fields' => array('TrainingSessionResult.id', 'TrainingSession.start_date', 'TrainingSession.end_date', 'TrainingSession.location', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingStatus.id', 'TrainingStatus.name'),
+	        'fields' => array('TrainingSessionResult.id', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingStatus.id', 'TrainingStatus.name'),
 	        'joins' => array(
 	        	array(
 					'type' => 'INNER',
