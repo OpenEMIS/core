@@ -15,15 +15,19 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffCustomField extends StaffAppModel {
+	public $actsAs = array(
+		'ControllerAction',
+		'CustomField' => array('module' => 'Staff')
+	);
+	
 	public $hasMany = array(
-		'StaffCustomFieldOption' => array('order'=>'order')
+		'Staff.StaffCustomFieldOption',
+		'Staff.StaffCustomValue'
 	);
 	
-	/* can't work if recursive is set to 0
-	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
-	);
-	*/
-	
-
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		$controller->Navigation->addCrumb('More');
+		$controller->set('header', __('More'));
+	}
 }

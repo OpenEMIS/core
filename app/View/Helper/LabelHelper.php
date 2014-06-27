@@ -290,11 +290,13 @@ class LabelHelper extends AppHelper {
 			'header' => 'Header',
 			'section_header' => 'Section Header',
 			'view_rubric' => 'View Rubric'
-		)
-		,
+		),
 		'ReportInHtml' => array(
 			'no_data' => 'There is no data to be displayed.',
 			'failed_open_file' => 'Error. Failed to open file.'
+		),
+		'StudentCustomFieldOption' => array(
+			'student_custom_field_id' => 'Custom Field'
 		)
 	);
 	
