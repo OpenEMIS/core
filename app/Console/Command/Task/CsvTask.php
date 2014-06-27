@@ -59,12 +59,13 @@ class CsvTask extends AppTask {
 		if (!file_exists($path)) {
 			mkdir($path, 0777, true);
 		}
-		
+	//	pr($arrTpl);die;
 		$type = 'w+';
         $this->fileFP = fopen($path.$filename, $type);
-		fputs ($this->fileFP, implode(',',$arrTpl)."\n");
-       
-		
+		$header = implode(',',$arrTpl);
+		if(!empty($header)){
+			fputs ($this->fileFP, implode(',',$arrTpl)."\n");
+		}
 	}
 	
         public function getPreCleanContentFunc(){
