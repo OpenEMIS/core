@@ -18,7 +18,7 @@
 //pr($params);
 //phpinfo();die;
 ?>
-<h3 class="reportHtmlTitle"><?php echo $pageTitleReport; ?></h3>
+<h3 class="reportHtmlTitle"><?php echo __($pageTitleReport); ?></h3>
 <?php 
 if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 	//$test = file_get_contents($params['path'] . $params['id']);
