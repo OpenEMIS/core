@@ -614,7 +614,7 @@ class TrainingSessionResult extends TrainingAppModel {
 						$data = $controller->request->data;
 					
 						if($trainingSessionTrainee->saveAll($data['TrainingSessionTrainee'], array('deep' => true))){	
-							$controller->Message->alert('general.update.success');
+							$controller->Message->alert('general.edit.success');
 							return $controller->redirect(array('action' => 'result'));
 						}
 					}
