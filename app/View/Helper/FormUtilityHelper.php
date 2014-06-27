@@ -65,7 +65,7 @@ class FormUtilityHelper extends AppHelper {
 	
 	public function getWizardButtons($buttons) {
 		$html = '<div class="form-group form-buttons">';
-		$html .= '<div class="col-md-offset-3">';
+		$html .= '<div class="col-md-offset-4">';
 		foreach($buttons as $btn) {
 			$html .= $this->Form->submit($btn['name'], $btn['options']);
 		}

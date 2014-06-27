@@ -43,20 +43,21 @@ class CensusCustomFieldOption extends AppModel {
 	);
 	
 	public function getSubOptions() {
-		$conditions = array(
-			'OR' => array(
-				'CensusCustomField.type' => 3,
-				'CensusCustomField.type' => 4
-			)
-		);
+		$conditions = array('CensusCustomField.type' => array(3, 4));
 		$data = $this->CensusCustomField->findList(array('conditions' => $conditions));
 		return $data;
 	}
 	
 	public function getOptionFields() {
 		$options = $this->getSubOptions();
+		$suboptions = array();
+		foreach($options as $key => $opt) {
+			foreach($opt as $id => $name) {
+				$suboptions[$id] = $name;
+			}
+		}
 		$value = array('field' => 'value', 'type' => 'text');
-		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $suboptions);
 		$this->removeOptionFields(array('name', 'international_code', 'national_code'));
 		$this->addOptionField($field, 'after', 'id');
 		$this->addOptionField($value, 'after', $this->getConditionId());

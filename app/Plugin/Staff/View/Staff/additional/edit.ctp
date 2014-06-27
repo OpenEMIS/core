@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-if(!$WizardMode) {
+if (!$WizardMode) {
 	echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider'));
 }
 $this->end();
@@ -19,12 +19,13 @@ unset($formOptions['div']);
 unset($formOptions['label']);
 echo $this->Form->create($modelValue, $formOptions);
 echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'action'));
-echo $this->FormUtility->getFormWizardButtons(array(
-    'cancelURL' => array('action' => 'additional'),
-    'WizardMode' => $WizardMode,
-    'WizardEnd' => isset($wizardEnd) ? $wizardEnd : NULL,
-    'WizardMandatory' => isset($mandatory) ? $mandatory : NULL
-));
+
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('center' => true, 'cancelURL' => array('action' => 'additional')));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
+
 echo $this->Form->end();
 $this->end();
 ?>
