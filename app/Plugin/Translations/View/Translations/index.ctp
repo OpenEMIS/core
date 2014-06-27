@@ -4,7 +4,7 @@ echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false); 
 
-echo $this->Html->script('app.translation',false);
+echo $this->Html->script('Translations.app.translation',false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentClass', 'search');
 $this->assign('contentHeader', $header);
