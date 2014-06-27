@@ -68,9 +68,9 @@ class StudentsController extends StudentsAppController {
 		'nationalities' => 'Students.StudentNationality',
 		'attachments' =>'Students.StudentAttachment',
 		'guardians' => 'Students.StudentGuardian',
-		'behaviour'=>'Students.StudentBehaviour'
+		'behaviour' => 'Students.StudentBehaviour',
+		'additional' => 'Students.StudentCustomField'
 	);
-	//public $className = 'Student';
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -184,7 +184,7 @@ class StudentsController extends StudentsAppController {
 			'CustomField'=>$customfields.'CustomField',
 			'CustomFieldOption'=>$customfields.'CustomFieldOption',
 			'CustomValue'=>$customfields.'CustomValue',
-			'Year'=>''
+			'Year' => ''
 		);
 		if ($this->{$customfields}->hasField('institution_site_type_id')) {
 			$arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
@@ -294,7 +294,7 @@ class StudentsController extends StudentsAppController {
 	public function classes() {
 		$this->Navigation->addCrumb(ucfirst($this->action));
 		$header = __(ucfirst($this->action));
-		$studentId = $this->Session->read('StudentId');
+		$studentId = $this->Session->read('Student.id');
 		$data = array();
 		$classes = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
 
@@ -309,135 +309,24 @@ class StudentsController extends StudentsAppController {
 	}
 
 	public function delete() {
-		$id = $this->Session->read('StudentId');
+		$id = $this->Session->read('Student.id');
 		$this->Student->delete($id);
 		$this->Message->alert('general.delete.success');
 		$this->redirect(array('action' => 'index'));
-	}
-
-	public function additional() {
-		$this->Navigation->addCrumb('More');
-		$header = __('More');
-		// get all student custom field in order
-		$data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
-
-		$this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
-		$cusValuesData = $this->StudentCustomValue->find('all', array(
-			'conditions' => array('StudentCustomValue.student_id' => $this->studentId))
-		);
-		$dataValues = array();
-		foreach ($cusValuesData as $arrV) {
-			$dataValues[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
-			// pr($arrV);
-		}
-		// pr($tmp);die;
-		//$this->UserSession->readStatusSession($this->request->action);
-		$this->set(compact('header','data', 'dataValues'));
-	}
-	
-	public function additionalAdd() {
-		return $this->redirect(array('action' => 'additionalEdit'));
-	}
-
-	public function additionalEdit() {
-		$this->Navigation->addCrumb('Edit More');
-		$studentId = $this->Session->read('Student.id');
-		if ($this->request->is('post')) {
-			//pr($this->request->data);
-			//die();
-			$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-			/**
-			* Note to Preserve the Primary Key to avoid exhausting the max PK limit
-			*/
-			foreach ($arrFields as $fieldVal) {
-				// pr($fieldVal);
-				// pr($this->request->data['StudentCustomValue']);
-				if (!isset($this->request->data['StudentCustomValue'][$fieldVal]))
-					continue;
-				foreach ($this->request->data['StudentCustomValue'][$fieldVal] as $key => $val) {
-
-					if ($fieldVal == "checkbox") {
-						if ($mandatory && count($val['value'])==0) {
-							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-							$error = true;
-							break;
-						}
-
-						$arrCustomValues = $this->StudentCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StudentCustomValue.student_id' => $studentId, 'StudentCustomValue.student_custom_field_id' => $key)));
-
-						$tmp = array();
-						if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-							foreach ($arrCustomValues as $pk => $intVal) {
-								//pr($val['value']); echo "$intVal";
-								if (!in_array($intVal, $val['value'])) {
-									//echo "not in db so remove \n";
-									$this->StudentCustomValue->delete($pk);
-								}
-							}
-						$ctr = 0;
-						if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-							foreach ($val['value'] as $intVal) {
-								//pr($val['value']); echo "$intVal";
-								if (!in_array($intVal, $arrCustomValues)) {
-									$this->StudentCustomValue->create();
-									$arrV['student_custom_field_id'] = $key;
-									$arrV['value'] = $val['value'][$ctr];
-									$arrV['student_id'] = $studentId;
-									$this->StudentCustomValue->save($arrV);
-									unset($arrCustomValues[$ctr]);
-								}
-								$ctr++;
-							}
-					} else { // if editing reuse the Primary KEY; so just update the record
-						if (empty($val['value'])) {
-							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-							break;
-						}
-						$datafields = $this->StudentCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StudentCustomValue.student_id' => $studentId, 'StudentCustomValue.student_custom_field_id' => $key)));
-						$this->StudentCustomValue->create();
-						if ($datafields)
-							$this->StudentCustomValue->id = $datafields['StudentCustomValue']['id'];
-						$arrV['student_custom_field_id'] = $key;
-						$arrV['value'] = $val['value'];
-						$arrV['student_id'] = $studentId;
-						$this->StudentCustomValue->save($arrV);
-					}
-				}
-			}
-		}
-		$this->StudentCustomField->unbindModel(array('hasMany' => array('StudentCustomFieldOption')));
-
-		$this->StudentCustomField->bindModel(array(
-			'hasMany' => array(
-				'StudentCustomFieldOption' => array(
-					'conditions' => array('StudentCustomFieldOption.visible' => 1),
-					'order' => array('StudentCustomFieldOption.order' => "ASC")
-				)
-			)
-		));
-		$data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
-		$this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
-		$dataValues = $this->StudentCustomValue->find('all', array('conditions' => array('StudentCustomValue.student_id' => $studentId)));
-		$tmp = array();
-		foreach ($dataValues as $arrV) {
-			$tmp[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
-		}
-		$dataValues = $tmp;
-		$this->set('data', $data);
-		$this->set('dataValues', $tmp);
 	}
 
 	public function history() {
 		$this->Navigation->addCrumb('History');
 
 		$arrTables = array('StudentHistory');
+		$studentId = $this->Session->read('Student.id');
 		$historyData = $this->StudentHistory->find('all', array(
-			'conditions' => array('StudentHistory.student_id' => $this->studentId),
+			'conditions' => array('StudentHistory.student_id' => $studentId),
 			'order' => array('StudentHistory.created' => 'desc')
 		));
 
 		// pr($historyData);
-		$data = $this->Student->findById($this->studentId);
+		$data = $this->Student->findById($studentId);
 		$data2 = array();
 		foreach ($historyData as $key => $arrVal) {
 			foreach ($arrTables as $table) {
@@ -501,7 +390,7 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb('Annual Info');
 		$action = $this->action;
 		$siteid = @$this->request->params['pass'][2];
-		$id = $this->studentId;
+		$id = $this->Session->read('Student.id');
 		$schoolYear = ClassRegistry::init('SchoolYear');
 		$years = $schoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
@@ -536,7 +425,6 @@ class StudentsController extends StudentsAppController {
 		if ($id && $selectedYear && $siteid)
 			$data = $customfield->getCustomFieldView($condParam);
 
-		//if (empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
 		$institution_sites = $customfield->getCustomValuebyCond('list', array('fields' => array('institution_site_id', 'school_year_id'), 'conditions' => array('school_year_id' => $selectedYear, 'student_id' => $id)));
 		$institution_sites = $this->custFieldSites(array_keys($institution_sites));
 		if (count($institution_sites) < 2)

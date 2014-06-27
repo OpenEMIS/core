@@ -1,5 +1,4 @@
 <?php
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
