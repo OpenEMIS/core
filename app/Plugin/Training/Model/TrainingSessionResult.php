@@ -423,9 +423,6 @@ class TrainingSessionResult extends TrainingAppModel {
 							$header = $rowData;
 						}else{
 							try{
-								if(count($result)>($i+1)){
-									break;
-								}
 								$resultSplit = $result[$i];
 				 	 			array_splice($resultSplit,3);
 
