@@ -172,7 +172,8 @@ class InstitutionSiteClass extends AppModel {
 	
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('List of Classes');
-		$yearOptions = $this->SchoolYear->getYearList();
+		//$yearOptions = $this->SchoolYear->getYearList();
+		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 		$data = $this->getListOfClasses($selectedYear, $controller->institutionSiteId);
 		
@@ -183,7 +184,8 @@ class InstitutionSiteClass extends AppModel {
 		$controller->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $controller->Session->read('InstitutionSiteId');
-		$yearOptions = $this->SchoolYear->getAvailableYears();
+		//$yearOptions = $this->SchoolYear->getAvailableYears();
+		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
