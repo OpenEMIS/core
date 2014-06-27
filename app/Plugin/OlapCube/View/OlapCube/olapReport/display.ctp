@@ -13,8 +13,8 @@ $this->end();
 $this->start('contentBody'); ?>
 <?php 
   if(isset($data)) { ?>
-  <div class="table" style="overflow:auto;width:670px;display:block;">
-	<table style="width:99%;border:none;" cellpadding="0" cellspacing="0" border="0">
+  <div class="table-responsive" style="overflow:auto;width:670px;display:block;">
+  <table class="table table-striped table-hover table-bordered"  style="width:99%;">
       <thead>
     	  <tr>
           <td class="table_cell"><?php echo key($data); ?></td>
@@ -24,7 +24,7 @@ $this->start('contentBody'); ?>
           <?php } ?>
         </tr>
       </thead>
-      <tbody>
+    <tbody>
 		<?php 
     $i = 0;
     foreach($data as $key=>$value){ 
@@ -52,4 +52,4 @@ $this->start('contentBody'); ?>
   </div>
   <?php } ?>
 
-  <?php $this->end(); ?>
+<?php $this->end(); ?>
