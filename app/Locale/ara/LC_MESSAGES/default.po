@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 2.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-27 09:31+0800\n"
+"PO-Revision-Date: 2014-06-27 11:47+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -260,7 +260,7 @@ msgstr "اسم العائلة "
 msgid "Gender"
 msgstr "الجنس"
 
-msgid "Date Of Birth"
+msgid "Date of Birth"
 msgstr "تاريخ الميلاد"
 
 msgid "File"
@@ -970,11 +970,11 @@ msgstr "تعديل الجدول المخصص"
 msgid "System Configurations"
 msgstr "إعدادات النظام"
 
-msgid "Accounts &amp; Security"
+msgid "Accounts & Security"
 msgstr "الحسابات والأمن"
 
-msgid "ACCOUNTS & SECURITY"
-msgstr "حسابات والأمن"
+msgid "ACCOUNTS &amp; SECURITY"
+msgstr "حسابات & الأمن"
 
 msgid "Population"
 msgstr "السكان"
@@ -1399,16 +1399,16 @@ msgstr "قائمة مواقع المؤسسات مع البرامج"
 msgid "List of Institution Sites with additional info"
 msgstr "قائمة مواقع المؤسسات ذات معلومات إضافية"
 
-msgid "Institution Site Programme Report"
+msgid "Institution Programme Report"
 msgstr "تقرير برامج مواقع المؤسسات"
 
-msgid "List of Institution Sites with programmes"
+msgid "List of Institutions with programmes"
 msgstr "قائمة مواقع مؤسسة مع برامج"
 
-msgid "Institution Site Bank Account Report"
+msgid "Institution Bank Account Report"
 msgstr "تقرير حساب مصرف مواقع المؤسسات"
 
-msgid "List of Institution Sites with bank accounts"
+msgid "List of Institutions with bank accounts"
 msgstr "قائمة مواقع مؤسسة مع الحسابات المصرفية"
 
 msgid "Enrolment Report"
@@ -1553,8 +1553,7 @@ msgid "Wheres My School Report"
 msgstr "تقرير أين تقع مدرستي"
 
 msgid ""
-"A Google Earth (KML) file containing all the location of all Institution "
-"Sites"
+"A Google Earth (KML) file containing all the location of all Institutions"
 msgstr "ملف Google Earth (KML) يحتوي على أماكن كل مواقع المؤسسات"
 
 msgid "Year Book Report"
@@ -1587,16 +1586,15 @@ msgstr "موجز بيانات تعداد المدرسة"
 msgid "Non-Responsive Schools Report"
 msgstr "تقرير المدارس غير المتعاونة"
 
-msgid ""
-"List of Institution Sites that do not contain census data for a given year"
+msgid "List of Institutions that do not contain census data for a given year"
 msgstr "قائمة مواقع المؤسسات التي لا تحتوي على بيانات التعداد لسنة معينة"
 
 msgid "Data Discrepancy Report"
 msgstr "تقرير تناقض البيانات "
 
 msgid ""
-"List of Institution Sites with questionable census data compared to the "
-"previous year"
+"List of Institutions with questionable census data compared to the previous "
+"year"
 msgstr ""
 "قائمة مواقع المؤسسات ذات بيانات تعداد مشكوكة مقارنة ببيانات العام السابق"
 
@@ -2229,8 +2227,7 @@ msgstr "يرجى إضافة برنامج إلى هذا موقع المؤسسة �
 msgid "Missing Coordinates Report"
 msgstr "تقرير الإحداثيات المفقودة"
 
-msgid ""
-"List of Institution Sites with latitude and/or longitude values of 0 or null"
+msgid "List of Institutions with latitude and/or longitude values of 0 or null"
 msgstr "قائمة مواقع المؤسسات ذات قيم خط العرض و / أو الطول من 0 "
 
 msgid "OLAP Report"
@@ -3367,7 +3364,7 @@ msgstr "قائمة مواقع مؤسسة مع حقل مخصص"
 msgid "Institution Site Custom Field Report"
 msgstr "مؤسسة الموقع تقرير حقل مخصص"
 
-msgid "Institution Site Totals"
+msgid "Institution Totals"
 msgstr "الإجماليات مؤسسة الموقع"
 
 msgid "Summary of verifications from census"
@@ -4192,3 +4189,54 @@ msgstr "تحميل متدرب نتائج"
 
 msgid "Duplicate Session"
 msgstr "تكرار الدورة"
+
+msgid "Reports"
+msgstr "تقارير"
+
+msgid "Support"
+msgstr "دعم"
+
+msgid "General"
+msgstr "عام"
+
+msgid "Add New Institution"
+msgstr "إضافة مؤسسة جديدة"
+
+msgid "ATTENDANCE"
+msgstr "الحضور"
+
+msgid "DATA PROCESSING"
+msgstr "معالجة البيانات"
+
+msgid "DATABASE"
+msgstr "قاعدة بيانات"
+
+msgid "Shared Reports"
+msgstr "تقارير مشتركة"
+
+msgid "My Reports"
+msgstr "تقاريري"
+
+msgid "FINANCE"
+msgstr "الشؤون المالية"
+
+msgid "Training"
+msgstr "التدريب"
+
+msgid "Graduate Year"
+msgstr "تخرج سنة"
+
+msgid "Absence"
+msgstr "غياب"
+
+msgid "From"
+msgstr "من"
+
+msgid "To"
+msgstr "إلى"
+
+msgid "Reason"
+msgstr "سبب"
+
+msgid "Time"
+msgstr "وقت"
