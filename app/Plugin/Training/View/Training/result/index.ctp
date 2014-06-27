@@ -35,16 +35,16 @@ $this->start('contentBody');
     <thead url="<?php echo $this->params['controller'];?>/result/<?php echo $selectedStatus;?>">
         <tr>
             <th>
-                <span class="left"><?php echo __('Date'); ?></span>
-                <span class="icon_sort_<?php echo ($sortedcol == 'TrainingSession.start_date') ? $sorteddir : 'up'; ?>"  order="TrainingSession.start_date"></span>
+                <span class="left"><?php echo __('Code'); ?></span>
+                <span class="icon_sort_<?php echo ($sortedcol == 'TrainingCourse.code') ? $sorteddir : 'up'; ?>"  order="TrainingCourse.code"></span>
             </th>
             <th>
-                <span class="left"><?php echo __('Location'); ?></span>
-                <span class="icon_sort_<?php echo ($sortedcol == 'TrainingSession.location') ? $sorteddir : 'up'; ?>" order="TrainingSession.location"></span>
+                <span class="left"><?php echo __('Title'); ?></span>
+                <span class="icon_sort_<?php echo ($sortedcol == 'TrainingCourse.title') ? $sorteddir : 'up'; ?>"  order="TrainingCourse.title"></span>
             </th>
             <th>
-                <span class="left"><?php echo __('Course'); ?></span>
-                <span class="icon_sort_<?php echo ($sortedcol == 'TrainingCourse.code') ? $sorteddir : 'up'; ?>" order="TrainingCourse.code"></span>
+                <span class="left"><?php echo __('Credits'); ?></span>
+                <span class="icon_sort_<?php echo ($sortedcol == 'TrainingCourse.credit_hours') ? $sorteddir : 'up'; ?>" order="TrainingCourse.credit_hours"></span>
             </th>
             <th>
                 <span class="left"><?php echo __('Status'); ?></span>
@@ -56,11 +56,10 @@ $this->start('contentBody');
     <tbody>
     	<?php foreach($data as $id=>$val) { ?>
         <tr row-id="<?php echo $val[$modelName]['id']; ?>">
-        	<td class="table_cell"><?php echo $val['TrainingSession']['start_date'] ?> - <?php echo $val['TrainingSession']['end_date'] ?></td>
-            <td class="table_cell"><?php echo $val['TrainingSession']['location']; ?></td>
-            <td class="table_cell">
-            <?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'resultView', $val[$modelName]['id']), array('escape' => false)); ?>
+        	<td class="table_cell"><?php echo $val['TrainingCourse']['code'] ?></td>
+            <td class="table_cell"><?php echo $this->Html->link($val['TrainingCourse']['title'], array('action' => 'resultView', $val[$modelName]['id']), array('escape' => false)); ?>
             </td>
+            <td class="table_cell"><?php echo $val['TrainingCourse']['credit_hours'] ?></td>
             <td class="table_cell"><?php echo $val['TrainingStatus']['name']; ?></td>
         </tr>
        <?php } ?>
