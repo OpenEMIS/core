@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteCustomField extends AppModel {
 	public $actsAs = array('FieldOption', 'ControllerAction');
 	public $hasMany = array(
-		'InstitutionSiteCustomFieldOption' => array('order'=>'order'),
+		'InstitutionSiteCustomFieldOption' => array('order' => 'order'),
 		'InstitutionSiteCustomValue'
 	);
 	public $belongsTo = array(
@@ -116,9 +116,9 @@ class InstitutionSiteCustomField extends AppModel {
             //pr($this->data);
             //die();
             $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-            /**
-             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-             */
+           
+            // Note to Preserve the Primary Key to avoid exhausting the max PK limit
+             
 			
             foreach ($arrFields as $fieldVal) {
                 if (!isset($controller->request->data['InstitutionSiteCustomValue'][$fieldVal]))

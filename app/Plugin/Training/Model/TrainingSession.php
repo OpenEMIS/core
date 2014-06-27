@@ -615,7 +615,7 @@ class TrainingSession extends TrainingAppModel {
 						
 					 	$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id'=>$deletedId));
 					}
-					$controller->Message->alert('general.update.success');
+					$controller->Message->alert('general.edit.success');
 					return $controller->redirect(array('action' => 'session'));
 					
 				}else{
@@ -638,7 +638,7 @@ class TrainingSession extends TrainingAppModel {
 						  	$controller->Message->alert('general.add.success');
 						}
 						else{	
-						  	$controller->Message->alert('general.update.success');
+						  	$controller->Message->alert('general.edit.success');
 						}
 						return $controller->redirect(array('action' => 'session'));
 					}

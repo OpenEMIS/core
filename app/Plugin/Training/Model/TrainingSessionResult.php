@@ -53,7 +53,7 @@ class TrainingSessionResult extends TrainingAppModel {
 			$conditions['NOT']['TrainingSessionResult.training_status_id'] = 4;
 		}
 
-		$fieldordername = ($controller->Session->read('Search.orderTrainingResult')) ? $controller->Session->read('Search.orderTrainingResult') : array('TrainingCourse.code', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id');
+		$fieldordername = ($controller->Session->read('Search.orderTrainingResult')) ? $controller->Session->read('Search.orderTrainingResult') : array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id');
 		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingResult')) ? $controller->Session->read('Search.sortdirTrainingResult') : 'asc';
 		$order = $fieldordername;
 		if($controller->Session->check('Search.orderTrainingResult')){
@@ -62,7 +62,7 @@ class TrainingSessionResult extends TrainingAppModel {
 
 		$controller->Paginator->settings = array(
 	        'conditions' => $conditions,
-	        'fields' => array('TrainingSessionResult.id', 'TrainingSession.start_date', 'TrainingSession.end_date', 'TrainingSession.location', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingStatus.id', 'TrainingStatus.name'),
+	        'fields' => array('TrainingSessionResult.id', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingStatus.id', 'TrainingStatus.name'),
 	        'joins' => array(
 	        	array(
 					'type' => 'INNER',
@@ -423,9 +423,6 @@ class TrainingSessionResult extends TrainingAppModel {
 							$header = $rowData;
 						}else{
 							try{
-								if(count($result)>($i+1)){
-									break;
-								}
 								$resultSplit = $result[$i];
 				 	 			array_splice($resultSplit,3);
 
@@ -640,7 +637,7 @@ class TrainingSessionResult extends TrainingAppModel {
 						$data = $controller->request->data;
 					
 						if($trainingSessionTrainee->saveAll($data['TrainingSessionTrainee'], array('deep' => true))){	
-							$controller->Message->alert('general.update.success');
+							$controller->Message->alert('general.edit.success');
 							return $controller->redirect(array('action' => 'result'));
 						}
 					}
