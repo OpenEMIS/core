@@ -279,6 +279,7 @@ fieldset#general.section_break > .row{
 	float:right;
 }
 .error-message{
+	float: right;
 	margin-left:0;
 	margin-right:10px;
 }
