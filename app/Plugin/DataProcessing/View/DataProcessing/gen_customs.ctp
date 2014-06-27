@@ -23,26 +23,39 @@ $this->start('contentBody');
 		var  c = $('input[type="checkbox"]');
 		if(what == 'on'){
 			c.each(function(){
-					if( $(this).attr('disabled') == undefined){
-						$(this).attr('checked','checked');
-					}
-			 })
+				  this.checked = true;         
+			 });
 		}else{
-			c.removeAttr('checked','checked');
+			c.each(function(){
+				 this.checked = false;
+			});
 		}
+		toggleGenerate();
 
 	}
 	function toggleSelect(obj) {
 		var table = $(obj).closest('.table');
-		table.find('.table_body input[type="checkbox"]').each(function() {
-				if(obj.checked) {
-					if( $(this).attr('disabled') == undefined){
-						$(this).attr('checked','checked');
-					}
-				} else {
-					$(this).removeAttr('checked');
-				}
-		});
+
+        if(obj.checked) { 
+         	table.find('tbody input[type="checkbox"]').each(function() {
+                this.checked = true;             
+            });
+        }else{
+           	table.find('tbody input[type="checkbox"]').each(function() {
+                this.checked = false;           
+            });         
+        }
+        toggleGenerate();
+	}
+
+	function toggleGenerate(){
+		if(!$('#btnGenerate').hasClass('backup_running')){
+			if($(":checkbox:checked").length>0){
+				$('#btnGenerate').removeClass('btn_disabled');
+			}else{
+				$('#btnGenerate').addClass('btn_disabled');
+			}
+		}
 	}
 </script>
 
@@ -82,7 +95,7 @@ foreach($data as $Nav => $arrModules){
 						}
 					}
 					$beingProc = ($isBackupRunning) ? 1: $beingProc;
-					$arrExtra = array('hiddenField' => false,'type'=>'checkbox','class' => 'icheck-input', 'name'=>'data[Reports][]','value'=>$chkval);
+					$arrExtra = array('hiddenField' => false,'type'=>'checkbox','class' => 'icheck-input', 'name'=>'data[Reports][]','value'=>$chkval,'onchange'=>'toggleGenerate();');
 					$arrExtra = ($beingProc == 1)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
 				?>
 				
@@ -104,9 +117,9 @@ foreach($data as $Nav => $arrModules){
 
 <?php if($_execute) { ?>
 <div class="controls">
-	<input type="submit" value="<?php echo __('Generate'); ?>" class="btn_save <?php echo ($isBackupRunning)?"btn_disabled":"";?>" />
+	<input type="submit" id="btnGenerate" value="<?php echo __('Generate'); ?>" class="btn_save <?php echo ($isBackupRunning)?"backup_running":"";?> btn_disabled" />
 </div>
 <?php } ?>
 
 <?php echo $this->Form->end(); ?>
-<?php $this->end(); ?> 
+<?php $this->end(); ?>

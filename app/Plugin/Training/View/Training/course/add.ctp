@@ -95,7 +95,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 
 <?php 
 	echo $this->Form->input('credit_hours', array('label'=>array('text'=>__('Credits'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingCreditHourOptions)); 
-	echo $this->Form->input('duration', array('label'=>array('text'=>__('Hours'), 'class'=>'col-md-3 control-label'))); 
+	echo $this->Form->input('duration', array('label'=>array('text'=>__('Hours'), 'class'=>'col-md-3 control-label'),'min'=>'0', 'step'=>'1', 'pattern'=>'\d+')); 
 	echo $this->Form->input('training_mode_delivery_id', array('label'=>array('text'=>__('Mode of Delivery'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingModeDeliveryOptions)); 
 ?>
 <div class="row form-group row_provider" style="min-height:45px;">

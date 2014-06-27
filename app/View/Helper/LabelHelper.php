@@ -67,7 +67,16 @@ class LabelHelper extends AppHelper {
 			'level' => 'Level',
 			'class' => 'Class',
 			'comment' => 'Comment',
-			'view_details' => 'View Details'
+			'view_details' => 'View Details',
+			'language' => array(
+				'eng' => 'English',
+				'chi' => 'Chinese',
+				'rus' => 'Russian',
+				'spa' => 'Spanish',
+				'fre' => 'French',
+				'ara' => 'Arabic',
+			),
+			'compile' => 'Compile'
 		),
 		'gender' => array(
 			'm' => 'Male',
@@ -243,7 +252,7 @@ class LabelHelper extends AppHelper {
 			'code' => 'Course Code',
 			'objective' => 'Course Goal / Objectives',
 			'provider' => 'Provider',
-			'credit_hours' => 'Credit',
+			'credit_hours' => 'Credits',
 			'completed' => 'Completed',
 			'requirement' => 'Training Requirement',
 			'inactivate' => 'Inactivate',
