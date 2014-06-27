@@ -1,9 +1,9 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('More'));
+$this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-if($_edit) {
+if ($_edit) {
 	echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'),	array('class' => 'divider')); 
 }
 echo $this->Html->link(__('Academic'), array('action' => 'custFieldYrView'), array('class' => 'divider'));
