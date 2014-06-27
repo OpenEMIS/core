@@ -32,7 +32,10 @@ App::uses('Model', 'Model');
  */
 class AppModel extends Model {
 	public $formatResult = false;
-	public $render = true; // ControllerActionBehaviour variable
+	// ControllerActionBehaviour Properties
+	public $render = true;
+	public $plugin = true;
+	// End ControllerActionBehaviour
 	
 	public function findList($options=array()) {
 		$class = $this->alias;
