@@ -10,7 +10,7 @@ $this->assign('contentId', 'staff');
 $this->assign('contentHeader', __('List of Staff'));
 $this->start('contentActions');
 if ($_add_staff) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'staffAdd'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'StaffAdd'), array('class' => 'divider'));
 }
 $this->end();
 
@@ -75,9 +75,9 @@ echo $this->Form->end();
 					$fullName = trim($obj['Staff']['first_name'].' '.$obj['Staff']['middle_name']). ' '.$obj['Staff']['last_name'];
 			?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['Staff']['identification_no'], array('action' => 'staffView', $obj['Staff']['id'])); ?></td>
-					<td><?php echo $fullName; ?></td>
-					<td class="table_cell"><?php echo $obj['StaffPositionTitle']['name']; ?></td>
+					<td><?php echo $obj['Staff']['identification_no']; ?></td>
+					<td><?php echo $this->Html->link($fullName, array('action' => 'StaffView', $obj['Staff']['id'])); ?></td>
+					<td><?php echo $obj['StaffPositionTitle']['name']; ?></td>
 				</tr>
 			<?php } ?>
 		</tbody>
