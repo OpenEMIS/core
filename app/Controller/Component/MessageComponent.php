@@ -42,6 +42,9 @@ class MessageComponent extends Component {
 				'failed' => array('type' => 'error', 'msg' => 'The record is not deleted due to errors encountered.'),
 			),
 			'invalidDate'  => array('type' => 'error', 'msg' => 'You have entered an invalid date.'),
+			'translation' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The translation file has been compiled successfully.'),
+			)
 		),
 		'security' => array(
 			'login' => array(
