@@ -116,7 +116,8 @@ class StudentBehaviour extends StudentsAppModel {
 	}
 	
 	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
+        parent::beforeAction($controller, $action);
+		$this->plugin = false;
     }
 
     public function getBehaviourData($studentId, $institutionSiteId = null) {
