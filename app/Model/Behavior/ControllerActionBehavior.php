@@ -39,7 +39,7 @@ class ControllerActionBehavior extends ModelBehavior {
 		if(empty($ctp)) {
 			$ctp = 'index';
 		}
-		if(!is_null($plugin)) {
+		if(!is_null($plugin) && $model->plugin == true) {
 			$name = $plugin . '/' . $name;
 		}
 
