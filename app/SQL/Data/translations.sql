@@ -2,16 +2,16 @@
 -- version 4.0.4.1
 -- http://www.phpmyadmin.net
 --
--- Host: 127.0.0.1
--- Generation Time: Jun 27, 2014 at 04:31 PM
--- Server version: 5.6.11
--- PHP Version: 5.4.24
+-- Host: localhost
+-- Generation Time: Jun 27, 2014 at 05:31 PM
+-- Server version: 5.1.73
+-- PHP Version: 5.4.29
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 --
--- Database: `dev_openemis_demo`
+-- Database: `tst_openemis_demo_v2`
 --
 
 -- --------------------------------------------------------
@@ -895,7 +895,7 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (866, NULL, 'Your data has been saved successfully.', 'تم حفظ البيانات بنجاح.', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
 (867, NULL, 'Please select a Type', 'يرجى تحديد نوع', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
 (868, NULL, 'Please enter a valid Message', 'يرجى إدخال رسالة صالحة', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
-(869, NULL, 'Please enter a valid Number', 'يرجى إدخال رقم صالح', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
+(869, NULL, 'Please enter a valid Number.', 'يرجى إدخال رقم صالح', NULL, NULL, NULL, NULL, 1, '2014-06-27 16:41:23', 1, '2014-06-25 15:31:46'),
 (870, NULL, 'Please enter a valid Issue Location', 'يرجى إدخال صالحة العدد الموقع', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
 (871, NULL, 'Expiry Date must be greater than Issue Date', 'يجب أن يكون تاريخ انتهاء الصلاحية أكبر من تاريخ الاصدار', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
 (872, NULL, 'Nationalities', 'الجنسيات', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
@@ -1400,4 +1400,10 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (1373, NULL, 'Details', 'التفاصيل', '详细资料', 'Detalles', 'Détails', 'Подробности', 1, '2014-06-25 15:52:54', 1, '2014-06-25 15:31:46'),
 (1374, NULL, 'Quality', 'جودة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:42:40'),
 (1375, NULL, 'Attendance - Students', 'الحضور - طلاب', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:50:55'),
-(1376, NULL, 'Attendance - Staff', 'الحضور - أعضاء هيئة التدريس', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:51:09');
+(1376, NULL, 'Attendance - Staff', 'الحضور - أعضاء هيئة التدريس', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 15:51:09'),
+(1377, NULL, 'Teaching', 'تدريس', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 16:33:39'),
+(1378, NULL, 'Add Student', 'إضافة طالب', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 16:34:28'),
+(1379, NULL, 'Please enter a OpenEMIS ID or name.', 'يرجى إدخال رقم أو اسم OpenEMIS', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 16:36:31'),
+(1380, NULL, 'Add Position', 'إضافة الوظيفة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 16:38:59'),
+(1381, NULL, 'Please enter a valid Number', 'يرجى إدخال رقم صالح', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 16:43:04'),
+(1382, NULL, 'SMS', 'الرسائل القصيرة', NULL, NULL, NULL, NULL, NULL, NULL, 7, '2014-06-27 16:49:05');
