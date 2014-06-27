@@ -15,46 +15,4 @@ have received a copy of the GNU General Public License along with this program. 
 */
 App::uses('AppModel', 'Model');
 class OlapCubeAppModel extends AppModel {
-
-    public function subquery($type, $options = null, $alias = null){ 
-        $fields = array(); 
-        if(is_string($type)){ 
-            $isString = true; 
-        }else{ 
-            $alias = $options; 
-            $options = $type; 
-        } 
-         
-        if($alias === null){ 
-            $alias = $this->alias . '2'; 
-        } 
-         
-        if(isset($isString)){ 
-            switch ($type){ 
-                case 'count': 
-                    $fields = array('COUNT(*)'); 
-                    break; 
-            } 
-        } 
-         
-        $dbo = $this->getDataSource(); 
-                 
-        $default = array( 
-            'fields' => $fields, 
-            'table' => $dbo->fullTableName($this), 
-            'alias' => $alias, 
-            'limit' => null, 
-            'offset' => null, 
-            'joins' => array(), 
-            'conditions' => array(), 
-            'order' => null, 
-            'group' => null 
-        ); 
-         
-        $params = array_merge($default, $options); 
-        $subQuery = $dbo->buildStatement($params, $this); 
-         
-        return $subQuery; 
-    }
-
 }
