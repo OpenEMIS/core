@@ -78,10 +78,9 @@ class StaffController extends StaffAppController {
 		'salaries' => 'Staff.StaffSalary',
 		'behaviour' =>'Staff.StaffBehaviour',
 		'training' => 'Staff.StaffTraining',
-		'report' => 'Staff.StaffReport'
+		'report' => 'Staff.StaffReport',
+		'additional' => 'Staff.StaffCustomField'
 	);
-
-	public $className = 'Staff';
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -102,40 +101,6 @@ class StaffController extends StaffAppController {
 			}
 			$this->bodyTitle = $name;
 		}
-		/*
-
-		$this->Navigation->addCrumb('Staff', array('controller' => 'Staff', 'action' => 'index'));
-		$actions = array('index', 'advanced', 'add', 'viewStaff');
-		$this->set('WizardMode', false);
-		if (in_array($this->action, $actions)) {
-			$this->bodyTitle = 'Staff';
-			if($this->action=='add'){
-				$this->Session->delete('StaffId');
-				$this->Session->write('WizardMode', true);
-				$wizardLink = $this->Navigation->getWizardLinks('Staff');
-				$this->Session->write('WizardLink', $wizardLink);
-				$this->redirect(array('action'=>'edit'));
-			}
-		} else {
-			if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
-				$this->set('WizardMode', true);
-				$this->Navigation->getWizard($this->action);
-			}
-			if ($this->Session->check('StaffId') && $this->action !== 'Home') {
-				$this->staffId = $this->Session->read('StaffId');
-				$this->staffObj = $this->Session->read('StaffObj');
-				$staffFirstName = $this->Staff->field('first_name', array('Staff.id' => $this->staffId));
-				$staffMiddleName = $this->Staff->field('middle_name', array('Staff.id' => $this->staffId));
-				$staffLastName = $this->Staff->field('last_name', array('Staff.id' => $this->staffId));
-				$name = $staffFirstName . " " . $staffMiddleName . " " . $staffLastName;
-				$this->bodyTitle = $name;
-				$this->Navigation->addCrumb($name, array('action' => 'view'));
-			}else if (!$this->Session->check('StaffId') && $this->action !== 'Home') {
-				$name = __('New Staff');
-				$this->bodyTitle = $name;
-			}
-		}
-		*/
 	}
 
 	public function index() {
@@ -365,180 +330,28 @@ class StaffController extends StaffAppController {
 		$this->set('data', $data);
 	}
 
-	public function fetchImage($id) {
-		$this->autoRender = false;
-
-		$url = Router::url('/Staff/img/default_staff_profile.jpg', true);
-		$mime_types = ImageMeta::mimeTypes();
-
-		$imageRawData = $this->Staff->findById($id);
-		$imageFilename = $imageRawData['Staff']['photo_name'];
-		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
-
-
-		if (empty($imageRawData['Staff']['photo_content']) || empty($imageRawData['Staff']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)) {
-			if ($this->Session->check('Staff.defaultImg')) {
-				$imageContent = $this->Session->read('Staff.defaultImg');
-			} else {
-				$imageContent = file_get_contents($url);
-				$this->Session->write('Staff.defaultImg', $imageContent);
-			}
-			echo $imageContent;
-		} else {
-			$imageContent = $imageRawData['Staff']['photo_content'];
-			header("Content-type: " . $mime_types[$fileExt]);
-			echo $imageContent;
-		}
-	}
-
 	public function delete() {
-		$id = $this->Session->read('StaffId');
+		$id = $this->Session->read('Staff.id');
 		$name = $this->Staff->field('first_name', array('Staff.id' => $id));
 		if ($name !== false) {
 			$this->Staff->delete($id);
-			$this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+			$this->Message->alert('general.delete.success');
 		} else {
 			$this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
 		}
-
 		$this->redirect(array('action' => 'index'));
-	}
-
-	public function additional() {
-		$this->Navigation->addCrumb('More');
-		$header = __('More');
-		// get all staff custom field in order
-		$data = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
-
-		$this->StaffCustomValue->unbindModel(
-				array('belongsTo' => array('Staff'))
-		);
-		$cusValuesData = $this->StaffCustomValue->find('all', array(
-			'conditions' => array('StaffCustomValue.staff_id' => $this->staffId))
-		);
-
-		$dataValues = array();
-		foreach ($cusValuesData as $arrV) {
-			$dataValues[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
-			// pr($arrV);
-		}
-		$this->set(compact('header', 'data', 'dataValues'));
-	}
-
-	public function additionalEdit() {
-		$this->Navigation->addCrumb('Edit More');
-		$header = __('Edit More');
-		if ($this->request->is('post')) {
-			if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
-				$this->Navigation->previousWizardLink($this->action);
-			}
-			$mandatory = $this->Navigation->getMandatoryWizard($this->action);
-			$error = false;
-			//pr($this->data);
-			//die();
-			$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-			/**
-			 * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-			 */
-			foreach ($arrFields as $fieldVal) {
-				// pr($fieldVal);
-				// pr($this->request->data['StaffCustomValue']);
-				if (!isset($this->request->data['StaffCustomValue'][$fieldVal]))
-					continue;
-				foreach ($this->request->data['StaffCustomValue'][$fieldVal] as $key => $val) {
-
-					if ($fieldVal == "checkbox") {
-						if ($mandatory && count($val['value']) == 0) {
-							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-							$error = true;
-							break;
-						}
-						$arrCustomValues = $this->StaffCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
-
-						$tmp = array();
-						if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-							foreach ($arrCustomValues as $pk => $intVal) {
-								//pr($val['value']); echo "$intVal";
-								if (!in_array($intVal, $val['value'])) {
-									//echo "not in db so remove \n";
-									$this->StaffCustomValue->delete($pk);
-								}
-							}
-						$ctr = 0;
-						if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-							foreach ($val['value'] as $intVal) {
-								//pr($val['value']); echo "$intVal";
-								if (!in_array($intVal, $arrCustomValues)) {
-									$this->StaffCustomValue->create();
-									$arrV['staff_custom_field_id'] = $key;
-									$arrV['value'] = $val['value'][$ctr];
-									$arrV['staff_id'] = $this->staffId;
-									$this->StaffCustomValue->save($arrV);
-									unset($arrCustomValues[$ctr]);
-								}
-								$ctr++;
-							}
-					} else { // if editing reuse the Primary KEY; so just update the record
-						if ($mandatory && empty($val['value'])) {
-							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-							$error = true;
-							break;
-						}
-						$data = $this->StaffCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
-						$this->StaffCustomValue->create();
-						if ($data)
-							$this->StaffCustomValue->id = $data['StaffCustomValue']['id'];
-						$arrV['staff_custom_field_id'] = $key;
-						$arrV['value'] = $val['value'];
-						$arrV['staff_id'] = $this->staffId;
-						$this->StaffCustomValue->save($arrV);
-					}
-				}
-			}
-			if (!$error) {
-				$this->Navigation->updateWizard($this->action, null);
-				$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
-				$this->redirect(array('action' => 'additional'));
-			}
-		}
-		$this->StaffCustomField->unbindModel(array('hasMany' => array('StaffCustomFieldOption')));
-
-		$this->StaffCustomField->bindModel(array(
-			'hasMany' => array(
-				'StaffCustomFieldOption' => array(
-					'conditions' => array(
-						'StaffCustomFieldOption.visible' => 1),
-					'order' => array('StaffCustomFieldOption.order' => "ASC")
-				)
-			)
-		));
-
-		$data = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
-		$this->StaffCustomValue->unbindModel(array('belongsTo' => array('Staff')));
-		$cusValueData = $this->StaffCustomValue->find('all', array('conditions' => array('StaffCustomValue.staff_id' => $this->staffId)));
-		$tmp = array();
-		foreach ($cusValueData as $arrV) {
-			$tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
-		}
-		$dataValues = $tmp;
-
-		// pr($data);
-		// pr($datavalues);
-		//pr($tmp);die;
-		$this->set(compact('header', 'data', 'dataValues'));
-		/* $this->set('data', $data);
-		  $this->set('datavalues', $tmp); */
 	}
 
 	public function history() {
 		$this->Navigation->addCrumb('History');
-
+		$staffId = $this->Session->read('Staff.id');
+		
 		$arrTables = array('StaffHistory');
 		$historyData = $this->StaffHistory->find('all', array(
-			'conditions' => array('StaffHistory.staff_id' => $this->staffId),
+			'conditions' => array('StaffHistory.staff_id' => $staffId),
 			'order' => array('StaffHistory.created' => 'desc')
 		));
-		$data = $this->Staff->findById($this->staffId);
+		$data = $this->Staff->findById($staffId);
 		$data2 = array();
 		foreach ($historyData as $key => $arrVal) {
 			foreach ($arrTables as $table) {
@@ -560,7 +373,7 @@ class StaffController extends StaffAppController {
 		$this->Navigation->addCrumb('Annual Info');
 		$action = $this->action;
 		$siteid = @$this->request->params['pass'][2];
-		$id = $this->staffId;
+		$id = $this->Session->read('Staff.id');
 		$schoolYear = ClassRegistry::init('SchoolYear');
 		$years = $schoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
@@ -608,7 +421,7 @@ class StaffController extends StaffAppController {
 
 	// Staff ATTENDANCE PART
 	public function absence() {
-		$staffId = !empty($this->staffId) ? $this->staffId : $this->Session->read('StaffId');
+		$staffId = $this->Session->read('Staff.id');
 		if(empty($staffId)){
 			return $this->redirect(array('controller' => 'Staff', 'action' => 'index'));
 		}

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 26, 2014 at 10:42 AM
+-- Generation Time: Jun 27, 2014 at 12:57 PM
 -- Server version: 5.6.11
 -- PHP Version: 5.4.24
 
@@ -177,7 +177,7 @@ INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `ti
 (128, 'Report', 'Reports', 'Reports', 'REPORTS', 'Quality Assurance Reports', 'QualityAssurance', 'QualityAssurance', NULL, 123, 0, 134, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (129, 'Report', 'Reports', 'Reports', 'REPORTS', 'Consolidated Reports', 'Consolidated', 'Consolidated', NULL, 123, 0, 135, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (130, 'Report', 'Reports', 'Reports', 'REPORTS', 'Data Quality Reports', 'DataQuality', 'DataQuality', NULL, 123, 0, 136, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(131, 'Report', 'Reports', 'Reports', 'REPORTS', 'Indicator Reports', 'Indicator', 'Indicator', NULL, 123, 0, 137, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(131, 'Report', 'Reports', 'Reports', 'REPORTS', 'Indicator Reports', 'Indicator', 'Indicator', NULL, 123, 0, 137, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (132, 'Report', NULL, 'Report', 'REPORTS', 'Custom Reports', 'index', 'index|^reports', NULL, 123, 0, 138, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (133, 'Home', NULL, 'Home', NULL, 'My Details', 'details', 'details', NULL, -1, 0, 140, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (134, 'Home', NULL, 'Home', NULL, 'Change Password', 'password', 'password', NULL, 133, 0, 141, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),

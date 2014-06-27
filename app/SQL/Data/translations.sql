@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 26, 2014 at 01:57 PM
+-- Generation Time: Jun 27, 2014 at 02:51 PM
 -- Server version: 5.6.11
 -- PHP Version: 5.4.24
 
@@ -361,8 +361,8 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (321, NULL, 'Custom Table', 'جدول مخصص', '定义表格', 'Tabla personalizada', 'Tableau Personnalisé', 'Пользовательские таблицы', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (322, NULL, 'Edit Custom Table', 'تعديل الجدول المخصص', '编辑自定义表', 'Editar tabla personalizada', 'Modifier le Tableau Personnalisé', 'Редактировать пользовательские таблицы', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (323, NULL, 'System Configurations', 'إعدادات النظام', '系统配置', 'Configuraciones del sistema', 'Configurations du Système', 'Конфигурация системы', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(324, NULL, 'Accounts &amp; Security', 'الحسابات والأمن', '帐户号码和安全系统', 'Cuentas y seguridad', 'Comptes et sécurité', 'Логины и безопасность', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(325, NULL, 'ACCOUNTS & SECURITY', 'حسابات والأمن', '帐目及安全性', 'Cuentas y seguridad', 'COMPTES ET DE SÉCURITÉ', 'СЧЕТА и БЕЗОПАСНОСТЬ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(324, NULL, 'Accounts & Security', 'الحسابات والأمن', '帐户号码和安全系统', 'Cuentas y seguridad', 'Comptes et sécurité', 'Логины и безопасность', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(325, NULL, 'ACCOUNTS &amp; SECURITY', 'حسابات & الأمن', '帐目及安全性', 'Cuentas y seguridad', 'COMPTES ET DE SÉCURITÉ', 'СЧЕТА и БЕЗОПАСНОСТЬ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (327, NULL, 'Population', 'السكان', '人口', 'Población', 'Population', 'Население', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (328, NULL, 'Data Processing', 'معالجة البيانات', '数据处理', 'Procesamiento de datos', 'Traitement des Données', 'Переработка данных', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (329, NULL, 'Generate Reports', 'إعداد تقارير', '生成报告', 'Generar Reportes', 'Générer des Rapports', 'Создание отчетов', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
@@ -503,12 +503,12 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (472, NULL, 'Institution Site Report', 'تقرير مواقع المؤسسات', '学院报告', 'Informes de la sede de la Institución ', 'Rapports de l’Etablissement', 'Отчет Сайта Учреждение ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (473, NULL, 'List of Institution Sites', 'قائمة مواقع المؤسسات', '学院分校名单', 'Lista de sedes de las Instituciones', 'Liste des locations des établissements', 'Список сайтов учреждений', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (474, NULL, 'Institution Site Additional Info Report', 'قائمة مواقع المؤسسات مع البرامج', '学院分校其它信息列表', 'Lista de Información adicional de la ubicación de Instituciones ', 'Rapport d’informations supplémentaires sur les locations d’établissements', 'Отчет Дополнительной Информации о Сайте Учреждения ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(475, NULL, 'List of Institution Sites with additional info', 'قائمة مواقع المؤسسات ذات معلومات إضافية', '学院分校额外信息报告', 'Lista de información adicional de las sedes de la Institución', 'Liste d''informations supplémentaires sur les locations d’établissements', 'Список сайтов учреждений с дополнительной информацией  ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46');
+(475, NULL, 'List of Institution Sites with additional info', 'قائمة مواقع المؤسسات ذات معلومات إضافية', '学院分校额外信息报告', 'Lista de información adicional de las sedes de la Institución', 'Liste d''informations supplémentaires sur les locations d’établissements', 'Список сайтов учреждений с дополнительной информацией  ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(476, NULL, 'Institution Programme Report', 'تقرير برامج مواقع المؤسسات', '学院分校教育计划', 'Reporte de los programas de la sede de la Institución', NULL, 'Программный Отчет о Сайте Учреждения', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46');
 INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `rus`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(476, NULL, 'Institution Site Programme Report', 'تقرير برامج مواقع المؤسسات', '学院分校教育计划', 'Reporte de los programas de la sede de la Institución', NULL, 'Программный Отчет о Сайте Учреждения', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(477, NULL, 'List of Institution Sites with programmes', 'قائمة مواقع مؤسسة مع برامج', '学院分校计划列表', 'Lista de instituciones con los programas ofrecidos', 'Liste des Etablissements avec Programmes', 'Список сайтов учреждений, предлогающих программы', 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
-(478, NULL, 'Institution Site Bank Account Report', 'تقرير حساب مصرف مواقع المؤسسات', '学院分校银行帐户', 'Cuentas bancarios de la sede de la Institución', 'Comptes bancaires de l’établissement', 'Отчет Сайта Учреждения по Банковским счетам ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(479, NULL, 'List of Institution Sites with bank accounts', 'قائمة مواقع مؤسسة مع الحسابات المصرفية', '学院分校的银行帐户名单', 'Lista de las sedes de las Instituciones con sus cuentas bancarias', 'Liste des Etablissements avec leurs Comptes Bancaires', 'Список сайтов учреждений с их банковскими реквезитами', 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
+(477, NULL, 'List of Institutions with programmes', 'قائمة مواقع مؤسسة مع برامج', '学院分校计划列表', 'Lista de instituciones con los programas ofrecidos', 'Liste des Etablissements avec Programmes', 'Список сайтов учреждений, предлогающих программы', 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
+(478, NULL, 'Institution Bank Account Report', 'تقرير حساب مصرف مواقع المؤسسات', '学院分校银行帐户', 'Cuentas bancarios de la sede de la Institución', 'Comptes bancaires de l’établissement', 'Отчет Сайта Учреждения по Банковским счетам ', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(479, NULL, 'List of Institutions with bank accounts', 'قائمة مواقع مؤسسة مع الحسابات المصرفية', '学院分校的银行帐户名单', 'Lista de las sedes de las Instituciones con sus cuentas bancarias', 'Liste des Etablissements avec leurs Comptes Bancaires', 'Список сайтов учреждений с их банковскими реквезитами', 1, '2014-06-25 15:52:56', 1, '2014-06-25 15:31:46'),
 (480, NULL, 'Enrolment Report', 'تقرير الالتحاق', '报名摘要', 'Informe de Matriculación', 'Rapport d''Inscription', 'Отчет по Зачислению', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (481, NULL, 'Summary of enrolment from census', 'ملخص الالتحاق من التعداد', '报名总结报告', 'Resumen de matriculación según el censo', 'Résumé de l''inscription selon le recensement', 'Основная информация о зачислении из переписи', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (482, NULL, 'Class Report', 'تقرير الصفّ', '班级报告', 'Informe de clases', 'Rapport de Classe', 'Отчет по Классам', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
@@ -556,7 +556,7 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (524, NULL, 'Staff Additional Info Report', 'تقرير معلومات إضافية للموظفين ', '工作人员的附加信息报告', 'Staff Report Información adicional', 'Rapport d’Informations Supplémentaires sur le Personnel', 'Отчет по персоналу с дополнительной информацией', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (525, NULL, 'List of Staff with additional info', 'قائمة الموظفين مع معلومات إضافية', '员工的附加信息列表', 'Lista de Personal con información adicional', NULL, 'Список сотрудников с дополнительной информацией', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (526, NULL, 'Wheres My School Report', 'تقرير أين تقع مدرستي', '我的学校在哪里报告', 'Dónde está Mi Escuela?', 'Où est mon rapport d’école', 'Отчет “Где моя школа', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(527, NULL, 'A Google Earth (KML) file containing all the location of all Institution Sites', 'ملف Google Earth (KML) يحتوي على أماكن كل مواقع المؤسسات', '一个Google Earth (KML)语法规则文件包含所有学校的地点', 'Archivo de Google Earth (KML) que contiene la ubicación de todas las sedes de las Instituciones', 'Un fichier Google Earth (KML) contenant tous les emplacements de tous les ', 'Google Earth (KML) файл, содержащий расположение всех Учреждение', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(527, NULL, 'A Google Earth (KML) file containing all the location of all Institutions', 'ملف Google Earth (KML) يحتوي على أماكن كل مواقع المؤسسات', '一个Google Earth (KML)语法规则文件包含所有学校的地点', 'Archivo de Google Earth (KML) que contiene la ubicación de todas las sedes de las Instituciones', 'Un fichier Google Earth (KML) contenant tous les emplacements de tous les ', 'Google Earth (KML) файл, содержащий расположение всех Учреждение', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (528, NULL, 'Year Book Report', 'تقريرالكتاب السنوى ', '年鉴报告', 'Reporte del Anuario', 'Rapport Annuaire', 'Отчет Ежегодной Книги', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (529, NULL, 'Formatted summary of census data for a given year', 'ملخصمنسّق لبيانات التعداد لسنة معيَّنة', '某年人口普查数据的格式化摘要', 'Resumen forrajeado de los datos cendales para un año determinado', 'Résumé formatté des données du recensement pour une année donnée', 'Форматированный резюме данных переписи за текущий год', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (530, NULL, 'Return Rate', 'معدل العودة', '归还率', 'Tasa de Retorno', NULL, 'Дата по возращению', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
@@ -567,9 +567,9 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (535, NULL, 'Data Quality', 'جودة البيانات', '数据质量', 'Calidad de los datos', 'Qualité des Données', 'Качество данных', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (536, NULL, 'Summary of School''s Census Data', 'موجز بيانات تعداد المدرسة', '学校人口普查数据摘要', 'Resumen de los datos censales de la escuela', 'Résumé des Données du Recensement sur l’Ecole', 'Резюме данных школы переписи населения', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (537, NULL, 'Non-Responsive Schools Report', 'تقرير المدارس غير المتعاونة', '无回复的学校报告', 'Informe de escuelas sin responder ', 'Rapport sur les Ecoles Non-Réactives', 'Отчет по школам, неучавствующих в проекте', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(538, NULL, 'List of Institution Sites that do not contain census data for a given year', 'قائمة مواقع المؤسسات التي لا تحتوي على بيانات التعداد لسنة معينة', '本列表包含在今年没有提交统计数据的学院机构', 'Lista de sedes que no contienen los datos cendales para un año determinado', 'Liste des établissements qui ne contiennent pas de données du recensement pour une année donnée', 'Список учреждений, которые не содержат данные переписи за текущий год', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(538, NULL, 'List of Institutions that do not contain census data for a given year', 'قائمة مواقع المؤسسات التي لا تحتوي على بيانات التعداد لسنة معينة', '本列表包含在今年没有提交统计数据的学院机构', 'Lista de sedes que no contienen los datos cendales para un año determinado', 'Liste des établissements qui ne contiennent pas de données du recensement pour une année donnée', 'Список учреждений, которые не содержат данные переписи за текущий год', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (539, NULL, 'Data Discrepancy Report', 'تقرير تناقض البيانات ', '数据差异报告', 'Informe de la discrepancia de datos', 'Rapport d’Anomalies de Données', 'Отчета по данным несоответствия', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(540, NULL, 'List of Institution Sites with questionable census data compared to the previous year', 'قائمة مواقع المؤسسات ذات بيانات تعداد مشكوكة مقارنة ببيانات العام السابق', '本列表包含与上一年对比有疑问的统计数据', 'Lista de sedes institucionales con los datos del censo cuestionables con respecto al año anterior', 'Liste des établissements avec des données de recensement douteuses par rapport à l''année précédente', 'Список учреждении с сомнительными данными переписи по сравнению с предыдущим годом', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(540, NULL, 'List of Institutions with questionable census data compared to the previous year', 'قائمة مواقع المؤسسات ذات بيانات تعداد مشكوكة مقارنة ببيانات العام السابق', '本列表包含与上一年对比有疑问的统计数据', 'Lista de sedes institucionales con los datos del censo cuestionables con respecto al año anterior', 'Liste des établissements avec des données de recensement douteuses par rapport à l''année précédente', 'Список учреждении с сомнительными данными переписи по сравнению с предыдущим годом', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (541, NULL, 'Number of students (enrollment) by sex, age, locality and grade', 'عدد الطلاب(المقيدين) حسب النوع والسنّ والموقع والصفّ', '学生人数（入学）按性别，年岁，地区和年级', 'Número de alumnos (matrícula) por sexo, edad, localidad y grado', 'Nombre d''étudiants (inscription), selon le sexe, l''âge, la localité et le ', 'Количество студентов (зачисленных) по полу, возрасту, местности и уровню образованию', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (542, NULL, 'Number of teachers by sex, locality and grade', 'عدد المعلمين حسب الموقع والنوع والصف', '教师人数按性别，地区和年级', 'Número de profesores por sexo, localidad y grado', 'Nombre d''enseignants par sexe, localité et niveau scolaire', 'Количество учителей по полу, местности и степени', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (543, NULL, 'Number of staff by sex and locality', 'عدد الموظفين حسب النوع والمكان', '员工人数按性别和地区', 'Número de empleados por sexo y localidad', 'Nombre d''employés par sexe et par localité', 'Численность персонала по полу и местности', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
@@ -728,7 +728,7 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (696, NULL, 'Please select a valid End Date', 'برجاء اختيار تاريخ انتهاء صحيح', '请选择有效结束日期', 'Por favor, seleccione una fecha de finalización válida', 'Veuillez sélectionner une date de fin valide', 'Пожалуйста, выберите действительную дату окончания', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (697, NULL, 'Please add a programme to this institution site.', 'يرجى إضافة برنامج إلى هذا موقع المؤسسة هذا.', '请为此学院分校添加教育计划。', 'Por favor agregar un programa a esta sede de institución.', NULL, 'Пожалуйста, добавьте программу для сайта этой организации.', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (698, NULL, 'Missing Coordinates Report', 'تقرير الإحداثيات المفقودة', '缺少坐标报告', 'Informe de coordenadas ausentes', 'Rapport de Coordonnées Manquantes', 'Отчет по Отсутствующим Координатам', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
-(699, NULL, 'List of Institution Sites with latitude and/or longitude values of 0 or null', 'قائمة مواقع المؤسسات ذات قيم خط العرض و / أو الطول من 0 ', '机构网站和纬度/经度值是0或空列表', 'Lista de sedes de institución con los valores de latitud y / o longitud de 0 o nulo', 'Liste des établissements avec des valeurs de latitude et / ou longitude de 0 ou null', 'Список учреждении с широтой и / или долготы:  0 или NULL', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(699, NULL, 'List of Institutions with latitude and/or longitude values of 0 or null', 'قائمة مواقع المؤسسات ذات قيم خط العرض و / أو الطول من 0 ', '机构网站和纬度/经度值是0或空列表', 'Lista de sedes de institución con los valores de latitud y / o longitud de 0 o nulo', 'Liste des établissements avec des valeurs de latitude et / ou longitude de 0 ou null', 'Список учреждении с широтой и / или долготы:  0 или NULL', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (700, NULL, 'OLAP Report', 'OLAP تقرير', 'OLAP 报告', 'Informes OLAP', 'Rapports OLAP', 'Отчет по OLAP', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (701, NULL, 'OLAP Reports', 'OLAP تقرير', NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
 (702, NULL, 'Generated', 'تمّ إعداد...', '生成', 'Generado', 'Généré', 'Сгенерировано', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
@@ -1100,7 +1100,7 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (1072, NULL, 'Training Teacher Statistic Report', 'تقرير تدريب المعلمين الإحصائي', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1073, NULL, 'List of Institution Sites with custom fields', 'قائمة مواقع مؤسسة مع حقل مخصص', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1074, NULL, 'Institution Site Custom Field Report', 'مؤسسة الموقع تقرير حقل مخصص', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
-(1075, NULL, 'Institution Site Totals', 'الإجماليات مؤسسة الموقع', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
+(1075, NULL, 'Institution Totals', 'الإجماليات مؤسسة الموقع', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1076, NULL, 'Summary of verifications from census', 'ملخص التحقق من التعداد', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1077, NULL, 'Verification Report', 'تقرير التحقق', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
 (1078, NULL, 'Summary of student enrolment from census', 'ملخص التحاق الطلاب من التعداد', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 15:52:56'),
@@ -1369,5 +1369,25 @@ INSERT INTO `translations` (`id`, `code`, `eng`, `ara`, `chi`, `spa`, `fre`, `ru
 (1341, NULL, 'Please ensure the english translation is keyed in.', 'يرجى التأكد من مرتبطا الترجمة الانجليزية فيها.', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-25 17:53:21'),
 (1342, NULL, 'Download Trainees', 'تحميل المتدربين', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-26 12:12:08'),
 (1343, NULL, 'Download Trainee Results', 'تحميل متدرب نتائج', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-26 12:12:22'),
-(1344, NULL, 'Duplicate Session', 'تكرار الدورة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-26 12:12:37');
-
+(1344, NULL, 'Duplicate Session', 'تكرار الدورة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-26 12:12:37'),
+(1345, NULL, 'Reports', 'تقارير', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 10:51:18'),
+(1346, NULL, 'Support', 'دعم', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 10:52:46'),
+(1347, NULL, 'General', 'عام', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 10:53:31'),
+(1348, NULL, 'Add New Institution', 'إضافة مؤسسة جديدة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:01:56'),
+(1349, NULL, 'ATTENDANCE', 'الحضور', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:02:33'),
+(1351, NULL, 'DATA PROCESSING', 'معالجة البيانات', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:22:33'),
+(1352, NULL, 'DATABASE', 'قاعدة بيانات', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:23:11'),
+(1353, NULL, 'Shared Reports', 'تقارير مشتركة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:31:13'),
+(1354, NULL, 'My Reports', 'تقاريري', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:31:34'),
+(1355, NULL, 'FINANCE', 'الشؤون المالية', '财政', 'Finanzas', 'Finances', 'Финансы', 1, '2014-06-25 15:52:55', 1, '2014-06-25 15:31:46'),
+(1356, NULL, 'Training', 'التدريب', '培训', 'Entrenamiento', 'Formation', 'профессиональная подготовка', NULL, NULL, 1, '2014-06-25 15:31:46'),
+(1357, NULL, 'Graduate Year', 'تخرج سنة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:38:20'),
+(1358, NULL, 'Absence', 'غياب', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:38:55'),
+(1359, NULL, 'From', 'من', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:41:25'),
+(1360, NULL, 'To', 'إلى', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:41:36'),
+(1361, NULL, 'Reason', 'سبب', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:46:22'),
+(1362, NULL, 'Time', 'وقت', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 11:47:37'),
+(1363, NULL, 'Mode of Delivery', 'طريقة التسليم', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:22:59'),
+(1364, NULL, 'Select Image', 'حدد صورة', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:47:49'),
+(1365, NULL, 'Remove', 'نزع', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:48:26'),
+(1366, NULL, 'Change', 'تغيير', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2014-06-27 14:48:40');
