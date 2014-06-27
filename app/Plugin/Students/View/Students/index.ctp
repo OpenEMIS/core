@@ -75,7 +75,7 @@ $this->start('contentBody');
 						<span class="icon_sort_<?php echo ($sortedcol =='Student.gender')?$sorteddir:'up'; ?>" order="Student.gender"></span>
 					</th>
 					<th>
-						<span class="left"><?php echo __('Date of Birth'); ?></span>
+						<span class="left"><?php echo __('Date Of Birth'); ?></span>
 						<span class="icon_sort_<?php echo ($sortedcol =='Student.date_of_birth')?$sorteddir:'up'; ?>" order="Student.date_of_birth"></span>
 					</th>
 				</tr>
