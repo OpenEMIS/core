@@ -125,8 +125,11 @@ class ReportController extends AppController {
             'group' => array('TrainingCourse.id', 'TrainingCourseTargetPopulation.staff_position_title_id'),
             'order' => array('TrainingCourse.title')
             ));  
-        pr($data);
-        $fields = array('TrainingCourse.code as CourseCode', 'TrainingCourse.title as CourseTitle', 'TrainingCourseTargetPopulation.staff_position_title_id as StaffPositionTitleID', 'TrainingSessionTrainee.staff_id as TotalTrained');
+
+        //pr($TrainingCourse->getDataSource()->getLog(false, false));
+pr($data);
+        $fields = array('TrainingCourse.code as CourseCode', 'TrainingCourse.title as CourseTitle', 'StaffPositionTitle.name as TargetGroup', 'TrainingCourseTargetPopulation.staff_position_title_id as StaffPositionTitleID', 'COUNT(DISTINCT TrainingSessionTrainee.staff_id) as Trained',
+            '(Select CASE WHEN count(InstitutionSiteStaff.staff_id) > 0 THEN count(InstitutionSiteStaff.staff_id) ELSE (select count(*) from staff as Staff) END from institution_site_staff as InstitutionSiteStaff INNER JOIN institution_site_positions as InstitutionSitePosition on InstitutionSitePosition.id =  InstitutionSiteStaff.institution_site_position_id WHERE StaffPositionTitle.id = InstitutionSitePosition.staff_position_title_id) as TotalTargetGroup');
         $joins = array(
                 array('table' => 'training_sessions','alias' => 'TrainingSession','type' => 'INNER',
                     'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id', 'TrainingSession.training_status_id'=>3)
@@ -137,6 +140,9 @@ class ReportController extends AppController {
                 array('table' => 'training_course_target_populations','alias' => 'TrainingCourseTargetPopulation','type' => 'LEFT',
                      'conditions' => array('TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id')
                 ),  
+                array('table' => 'staff_position_titles','alias' => 'StaffPositionTitle','type' => 'LEFT', 
+                    'conditions' => array('StaffPositionTitle.id = TrainingCourseTargetPopulation.staff_position_title_id')
+                ),
                 array('table' => 'training_session_results','alias' => 'TrainingSessionResult','type' => 'LEFT',
                     'conditions' => array('TrainingSession.id = TrainingSessionResult.training_session_id', 'TrainingSessionResult.training_status_id'=>3)
                 ), 
@@ -148,6 +154,7 @@ class ReportController extends AppController {
         $dbo = $TrainingCourse->getDataSource();
         $subQuery = $dbo->buildStatement(
                 array(
+                    'recursive'=>-1,
                     'fields' => $fields,
                     'joins'=> $joins,
                     'table' => $dbo->fullTableName($TrainingCourse),
@@ -163,27 +170,13 @@ class ReportController extends AppController {
 
         pr($subQuery);
 
-        $outerJoins = array(
-            array('table' => 'institution_site_positions','alias' => 'InstitutionSitePosition','type' => 'LEFT',
-                'conditions' => array('TrainingCourse.StaffPositionTitleID = InstitutionSitePosition.id')
-            ),    
-            array('table' => 'institution_site_staff','alias' => 'InstitutionSiteStaff','type' => 'LEFT',
-                'conditions' => array('TrainingSessionTrainee.staff_id = InstitutionSiteStaff.staff_id')
-            ), 
-            array('table' => 'staff_position_titles','alias' => 'StaffPositionTitle','type' => 'LEFT', 
-                'conditions' => array('StaffPositionTitle.id = InstitutionSitePosition.staff_position_title_id')
-            ),           
-            array('table' => 'staff','alias' => 'Staff','type' => 'LEFT',
-                'conditions' => array('Staff.id IS NOT NULL')
-            )
-        );
-         
         $outerQuery = $dbo->buildStatement(
             array(
-                'fields' => array('CourseCode','CourseTitle','TargetGroup','COUNT(CTargetGroup) as TotalTargetGroup', 'TotalTrained',
-                'round(((COUNT(TotalTrained)/IFNULL(COUNT(CTargetGroup),0)) * 100),2)  as TargetGroupPercentage'),
+                'formatResult'=>true,
+                'recursive'=>-1,
+                'fields' => array('CourseCode','CourseTitle','TargetGroup','TotalTargetGroup', 'Count(Trained) as TotalTrained',
+                'round(((COUNT(Trained)/IFNULL(TotalTargetGroup,0)) * 100),2)  as TargetGroupPercentage'),
                 'table' => '('.$subQuery.')',
-                'joins' => $outerJoins,
                 'alias' => 'TrainingCourse',
                 'group' => array('CourseCode', 'CourseTitle', 'TargetGroup')
             )
@@ -191,6 +184,9 @@ class ReportController extends AppController {
         );
 
         pr($outerQuery);
+        $TrainingCourse->formatResult = true;
+        $data = $TrainingCourse->query($outerQuery);
+        pr($data);
     }
     
     public function __construct( $request = NULL, $response = NULL ) {
