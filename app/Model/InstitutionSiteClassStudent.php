@@ -531,4 +531,20 @@ class InstitutionSiteClassStudent extends AppModel {
 		$index = $args[1];
 		return $this->reportMapping[$index]['fileName'];
 	}
+	
+	public function assessments($controller, $params) {
+		$controller->Navigation->addCrumb('Assessments');
+
+		$yearOptions = $controller->SchoolYear->institutionClassYearList($controller->institutionSiteId);
+		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+
+		$data = $controller->AssessmentItemType->getAssessmentsBySchoolYear($selectedYear);
+
+		if (empty($data)) {
+			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
+		}
+		$controller->set(compact('data', 'selectedYear'));
+	}
+	
+	
 }

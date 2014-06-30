@@ -39,7 +39,10 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 	$lastRow = $resultArray[0];
 	$file->seek($lastRow);
 	$dateRowArr = explode(',', $file->current());
-	if(preg_match('/^(Report Generated).+/', $dateRowArr[0]) === 1){
+//	if(preg_match('/^(Report Generated).+/', $dateRowArr[0]) === 1){
+//		echo '<div class="reportHtmlDate">' . str_replace('Report Generated', __('Report Generated'), $dateRowArr[0]) . '</div>';
+//	}
+	if(preg_match('/:/', $dateRowArr[0]) === 1){
 		echo '<div class="reportHtmlDate">' . $dateRowArr[0] . '</div>';
 	}
 	
@@ -177,7 +180,17 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 				$file->seek($dataRowStart);
 
 				for ($i = 0; $i < $rowsPerPage; $i++) {
-					$arrCurrentRow = explode(',', $file->current());
+					$currentRowStr = $file->current();
+					$finalStr = preg_replace_callback(
+							'/".*,+.*"/', 
+							function($matches){
+								$escapedComma = str_replace(',', '&#44;', $matches[0]);
+								return str_replace('"', '', $escapedComma);
+							}, 
+							$currentRowStr
+					);
+					
+					$arrCurrentRow = explode(',', $finalStr);
 					if ((count($arrCurrentRow) !== 0) && (!empty($arrCurrentRow[0]))) {
 						$tempColumns = count($arrCurrentRow);
 						while ($tempColumns < $totalColumns) {
