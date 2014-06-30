@@ -430,6 +430,7 @@ class TrainingSessionResult extends TrainingAppModel {
 				 	 			array_splice($rowSplitCompare,3);
 				 	 			$compare = array_diff($resultSplit, $rowSplitCompare);
 				 	 			$resultPass = preg_grep('~pass~i', array_keys($result[$i]));
+
  
 				 	 			if(empty($compare)){
 				 	 				foreach($resultPass as $passCol=>$val){
