@@ -153,7 +153,8 @@ class InstitutionSitesController extends AppController {
 		'behaviourStaff' => 'Staff.StaffBehaviour',
 		'staff' => 'InstitutionSiteStaff',
 		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
-		'attendanceStaff' => 'InstitutionSiteStaffAbsence'
+		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
+		'assessments' => 'InstitutionSiteClassStudent'
     );
     
 	public function beforeFilter() {
