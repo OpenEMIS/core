@@ -76,6 +76,27 @@ class SchoolYear extends AppModel {
 		return $result;
 	}
 	
+	public function institutionClassYearList($institutionSiteId) {
+		$result = $this->find('list', array(
+			'fields' => array('SchoolYear.id', 'SchoolYear.name'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.school_year_id = SchoolYear.id',
+						'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+					)
+				)
+			),
+			'conditions' => array(
+				'SchoolYear.available' => 1
+			),
+			'order' => array('SchoolYear.name DESC')
+		));
+		return $result;
+	}
+	
 	public function getYearListValues($type='name', $order='DESC') {
 		$value = 'SchoolYear.' . $type;
 		$result = $this->find('list', array(
