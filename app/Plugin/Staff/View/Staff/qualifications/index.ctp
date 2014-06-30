@@ -8,7 +8,7 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Graduate Year'), __('Level'), __('Qualification Title'), __('Document No.'), __('Insituition'));
+$tableHeaders = array(__('Graduate Year'), __('Level'), __('Qualification Title'), __('Document No.'), __('Institution'));
 $tableData = array();
 
 foreach($data as $obj) {

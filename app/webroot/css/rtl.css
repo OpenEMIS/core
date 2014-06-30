@@ -31,7 +31,7 @@
 }
 .header_nav{
 	float:right;
-	margin:29px 82px 0 0;
+	margin:29px 98px 0 0;
 }
 .header_logo{
 	margin-right:16px;
@@ -279,6 +279,7 @@ fieldset#general.section_break > .row{
 	float:right;
 }
 .error-message{
+	float: right;
 	margin-left:0;
 	margin-right:10px;
 }
@@ -305,5 +306,7 @@ fieldset.section_break > .profile-image {
 }
 
 .panel-title .accordion-toggle { background-position: 12px 14px; }
+.panel-title .accordion-toggle:hover { background-position: 12px 14px; }
 .language { float: left; }
 .version { text-align: left; }
+.col-md-offset-4 { margin-right:33.33333333333333%; }

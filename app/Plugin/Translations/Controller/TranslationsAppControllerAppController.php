@@ -14,13 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
-
-class InstitutionAttachment extends AppModel {
-       public $belongsTo = array('Institution');
-       
-       public $virtualFields = array(
-		'blobsize' => "OCTET_LENGTH(file_content)"
-	);
+class TranslationsAppController extends AppController {
+	
 }
-?>

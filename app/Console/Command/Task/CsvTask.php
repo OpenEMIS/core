@@ -59,12 +59,13 @@ class CsvTask extends AppTask {
 		if (!file_exists($path)) {
 			mkdir($path, 0777, true);
 		}
-		
+	//	pr($arrTpl);die;
 		$type = 'w+';
         $this->fileFP = fopen($path.$filename, $type);
-		fputs ($this->fileFP, implode(',',$arrTpl)."\n");
-       
-		
+		$header = implode(',',$arrTpl);
+		if(!empty($header)){
+			fputs ($this->fileFP, implode(',',$arrTpl)."\n");
+		}
 	}
 	
         public function getPreCleanContentFunc(){
@@ -113,10 +114,21 @@ class CsvTask extends AppTask {
     }
 
     public function closeCSV(){
+//		$configItem = ClassRegistry::init('ConfigItem');
+//		$dateFormat = $configItem->getValue('date_format');
+//		$timeFormat = $configItem->getValue('time_format');
+//		
+//		$dateNow = new DateTime(date("Y-m-d"));
+//		$timeNow = new DateTime(date("H:i:s"));
+//		$dateFormatted = $dateNow->format($dateFormat);
+//		$timeFormatted = $timeNow->format($timeFormat);
+//		
+//		$dateTimeFormatted = $dateFormatted . ' ' . $timeFormatted;
+		
         $line = "\n";
         $line .= __("Report Generated").": "  . date("Y-m-d H:i:s");
         fputs ($this->fileFP, $line);
-		 fclose ($this->fileFP);
+		fclose ($this->fileFP);
 	}
 	
 	
