@@ -11,7 +11,7 @@ Update batch_reports set query="$this->autoRender = false;
         if(!empty($identityTypes)){
             $c = 0;
             foreach($identityTypes as $key=>$val){
-                $fields[] = '(Select StaffIdentity.number from staff_identities as StaffIdentity where TrainingSessionTrainee.staff_id = StaffIdentity.staff_id and StaffIdentity.identity_type_id='.$key.') as '.$val;
+                $fields[] = '(Select StaffIdentity.number from staff_identities as StaffIdentity where TrainingSessionTrainee.staff_id = StaffIdentity.staff_id and StaffIdentity.identity_type_id='.$key.') as `'.$val.'`';
                 $templateVF .= ','. $val;
             }
         }
