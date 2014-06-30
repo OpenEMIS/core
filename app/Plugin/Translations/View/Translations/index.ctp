@@ -4,7 +4,7 @@ echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false); 
 
-echo $this->Html->script('app.translation',false);
+echo $this->Html->script('Translations.app.translation',false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentClass', 'search');
 $this->assign('contentHeader', $header);
@@ -41,7 +41,7 @@ echo $this->Form->input('language', array(
 ));
 ?>
 <div class="row">
-	<?php echo $this->Form->create('Translation', array('action'=>'index')); ?>
+	<?php echo $this->Form->create('Translation', array('url' => array('action'=>'index',$selectedLang))); ?>
 	<div class="search_wrapper">
 		<?php echo $this->Form->input('SearchField', array(
 			'id' => 'SearchField',

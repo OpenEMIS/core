@@ -26,6 +26,7 @@ class TrainingController extends TrainingAppController {
 
      public $components = array(
         'FileUploader',
+        'Paginator',
     );
 
     public function beforeFilter() {

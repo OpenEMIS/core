@@ -30,14 +30,4 @@ class StudentCategory extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	/*
-	public function findOptions($options=array()) {
-		$conditions = array('StudentCategory.order >' => 0); // Not fetching system default categories for editing
-		if(isset($options['conditions'])) {
-			$options['conditions'] = array_merge($options['conditions'], $conditions);
-		}
-		$list = parent::findOptions($options);
-		return $list;
-	}
-	*/
 }

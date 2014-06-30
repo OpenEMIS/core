@@ -31,7 +31,21 @@ class TrainingSessionResult extends TrainingAppModel {
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
 		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
-	
+		
+
+		if ($controller->request->is('post')) {
+			if (isset($controller->request->data['sortdir']) && isset($controller->request->data['order'])) {
+				if ($controller->request->data['sortdir'] != $controller->Session->read('Search.sortdirTrainingResult')) {
+					$controller->Session->delete('Search.sortdirTrainingResult');
+					$controller->Session->write('Search.sortdirTrainingResult', $controller->request->data['sortdir']);
+				}
+				if ($controller->request->data['order'] != $controller->Session->read('Search.orderTrainingResult')) {
+					$controller->Session->delete('Search.orderTrainingResult');
+					$controller->Session->write('Search.orderTrainingResult', $controller->request->data['order']);
+				}
+			}
+		}
+
 		$conditions = array();
 		if(!empty($selectedStatus)){
 			$conditions['TrainingSessionResult.training_status_id'] = $selectedStatus;
@@ -39,46 +53,58 @@ class TrainingSessionResult extends TrainingAppModel {
 			$conditions['NOT']['TrainingSessionResult.training_status_id'] = 4;
 		}
 
-		$data = $this->find('all', 
-			array(
-				'recursive' => -1, 
-				'fields' => array('TrainingSessionResult.*', 'TrainingCourse.*', 'TrainingSession.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'training_sessions',
-						'alias' => 'TrainingSession',
-						'conditions' => array('TrainingSession.id = TrainingSessionResult.training_session_id')
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_courses',
-						'alias' => 'TrainingCourse',
-						'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array('TrainingStatus.id = TrainingSessionResult.training_status_id')
-					)
+		$fieldordername = ($controller->Session->read('Search.orderTrainingResult')) ? $controller->Session->read('Search.orderTrainingResult') : array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id');
+		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingResult')) ? $controller->Session->read('Search.sortdirTrainingResult') : 'asc';
+		$order = $fieldordername;
+		if($controller->Session->check('Search.orderTrainingResult')){
+			$order = array($fieldordername => $fieldorderdir);
+		}
+
+		$controller->Paginator->settings = array(
+	        'conditions' => $conditions,
+	        'fields' => array('TrainingSessionResult.id', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingStatus.id', 'TrainingStatus.name'),
+	        'joins' => array(
+	        	array(
+					'type' => 'INNER',
+					'table' => 'training_sessions',
+					'alias' => 'TrainingSession',
+					'conditions' => array('TrainingSession.id = TrainingSessionResult.training_session_id')
 				),
-				'order'=> array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id'), 
-				'conditions' => $conditions
-			)
-		);
-		$courseId = array();
-		foreach($data as $val){
-			$courseId[] = $val['TrainingSession']['training_course_id'];
-		} 
-		$trainingCourse = ClassRegistry::init('TrainingCourse');
-		$trainingCourses = $trainingCourse->find('all', array('conditions'=>array('TrainingCourse.id' => $courseId)));
+		        array(
+					'type' => 'INNER',
+					'table' => 'training_courses',
+					'alias' => 'TrainingCourse',
+					'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+				),
+				array(
+					'type' => 'INNER',
+					'table' => 'training_statuses',
+					'alias' => 'TrainingStatus',
+					'conditions' => array('TrainingStatus.id = TrainingSessionResult.training_status_id')
+				)
+		    ),
+	        'limit' => 25,
+	        'recursive'=> -1,
+	        'order' => $order
+	    );
+		
+		$data = $controller->paginate('TrainingSessionResult');
+		$data = $controller->Workflow->populateWorkflowStatus($this->name, 'TrainingStatus', $data);	
+
+		if (empty($data) && !$controller->request->is('ajax')) {
+			$controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+
+		$controller->set('sortedcol', $fieldordername);
+		$controller->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
-		$controller->set('trainingCourses', $trainingCourses);
 		$controller->set('statusOptions', $statusOptions);
 		$controller->set('selectedStatus', $selectedStatus);
+		if ($controller->request->is('post')) {
+			$controller->set('ajax', true);
+		}
 	}
 	
 	public function resultView($controller, $params){
@@ -187,7 +213,7 @@ class TrainingSessionResult extends TrainingAppModel {
 	    			array('TrainingSessionResult.training_status_id' => 3),
 	    			array('TrainingSessionResult.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activated successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'result'));
         }
@@ -611,8 +637,8 @@ class TrainingSessionResult extends TrainingAppModel {
 					if(isset($controller->request->data['TrainingSessionTrainee'])){
 						$data = $controller->request->data;
 					
-						if($trainingSessionTrainee->saveAll($data['TrainingSessionTrainee'], array('deep' => true))){
-							$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+						if($trainingSessionTrainee->saveAll($data['TrainingSessionTrainee'], array('deep' => true))){	
+							$controller->Message->alert('general.edit.success');
 							return $controller->redirect(array('action' => 'result'));
 						}
 					}
