@@ -184,7 +184,8 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 					$finalStr = preg_replace_callback(
 							'/".*,+.*"/', 
 							function($matches){
-								return str_replace(',', '&#44;', $matches[0]);
+								$escapedComma = str_replace(',', '&#44;', $matches[0]);
+								return str_replace('"', '', $escapedComma);
 							}, 
 							$currentRowStr
 					);
