@@ -1,3 +1,25 @@
+-- phpMyAdmin SQL Dump
+-- version 4.0.4.1
+-- http://www.phpmyadmin.net
+--
+-- Host: 127.0.0.1
+-- Generation Time: Jun 27, 2014 at 01:07 PM
+-- Server version: 5.6.11
+-- PHP Version: 5.4.24
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+--
+-- Database: `dev_openemis_demo`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `security_functions`
+--
+
 DROP TABLE IF EXISTS `security_functions`;
 CREATE TABLE IF NOT EXISTS `security_functions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -20,11 +42,6 @@ CREATE TABLE IF NOT EXISTS `security_functions` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
---
--- Truncate table before insert `security_functions`
---
-
-TRUNCATE TABLE `security_functions`;
 --
 -- Dumping data for table `security_functions`
 --
@@ -67,7 +84,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (46, 'Setup', 'Education', 'Administration', 'Education', 45, 'setup', '_view:setupEdit', '_edit:|setupProgrammeAddDialog', NULL, NULL, 119, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (47, 'Assessment', 'Assessment', 'Administration', 'Assessment', -1, 'index|assessmentsView', '_view:indexEdit|assessmentsEdit', '_view:assessmentsAdd', NULL, NULL, 120, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (48, 'Setup', 'FieldOption', 'Administration', 'Field Options', 49, 'index|view', '_view:indexEdit|reorder|edit', '_view:add', NULL, NULL, 121, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(49, 'Setup', 'FieldOption', 'Administration', 'Field Options', -1, 'index|view', '_view:indexEdit|reorder|edit', '_view:add', NULL, NULL, 122, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(49, 'Translations', 'Translations', 'Administration', 'Translations', -1, 'index|view', '_view:edit', '_view:add', '_view:delete', NULL, 122, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (50, 'Configurations', 'Config', 'Administration', 'System Configurations', -1, 'index|fetchYearbookImage', '_view:edit|save', NULL, NULL, NULL, 123, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (51, 'Dashboard Image', 'Config', 'Administration', 'System Configurations', 50, 'dashboard', '_view:dashboardEdit|dashboardImage', '_edit:', '_edit:', NULL, 124, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (52, 'List of Users', 'Security', 'Administration', 'Accounts &amp; Security', 53, 'users', NULL, NULL, NULL, NULL, 125, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
@@ -163,7 +180,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (176, 'Quality', 'InstitutionReports', 'Institutions', 'Reports', 8, 'quality', NULL, NULL, NULL, 'generate', 39, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (178, 'Quality Assurance Reports', 'Reports', 'Reports', 'Report', 91, 'QualityAssurance', NULL, NULL, NULL, '_view:QualityAssuranceDownload|QualityAssuranceViewHtml', 109, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (179, 'Training Courses', 'Training', 'Administration', 'Training', -1, 'course|courseView|attachmentsCourseDownload', '_view:courseEdit', '_view:courseAdd', '_view:_courseDelete', '_view:courseView|courseActivate|courseInactivate|courseApproval', 141, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(180, 'Training Sessions', 'Training', 'Administration', 'Training', -1, 'session|sessionView', '_view:sessionEdit|sessionDownloadTemplate', '_view:sessionAdd', '_view:_sessionDelete', '_view:sessionView|sessionActivate|sessionInactivate|sessionApproval', 142, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(180, 'Training Sessions', 'Training', 'Administration', 'Training', -1, 'session|sessionView|sessionTraineeListDownload', '_view:sessionEdit|sessionDownloadTemplate|sessionDuplicate', '_view:sessionAdd', '_view:_sessionDelete', '_view:sessionView|sessionActivate|sessionInactivate|sessionApproval', 142, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (181, 'Training Results', 'Training', 'Administration', 'Training', -1, 'result|resultView', '_view:resultEdit|resultEdit|resultDownloadTemplate|resultUpload', NULL, NULL, '_view:resultView|resultActivate|resultInactivate|resultApproval', 143, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (182, 'Training Reports', 'Reports', 'Reports', 'Report', 91, 'Training', NULL, NULL, NULL, '_view:TrainingDownload|TrainingViewHtml', 108, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (183, 'Reports', 'Sms', 'Administration', 'SMS', 129, 'reports', NULL, NULL, NULL, '_view:reports|genReport', 147, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),

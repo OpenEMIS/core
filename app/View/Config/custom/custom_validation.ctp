@@ -1,5 +1,4 @@
-<?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+<?php
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('app.date', false);
@@ -14,7 +13,7 @@ $this->end();
 
 $this->start('contentBody'); ?>
 
-<div class="row select_row page-controls">
+<div class="row page-controls">
     <div class="col-md-4">
         <?php
             echo $this->Form->input('type', array(
@@ -79,57 +78,54 @@ $this->start('contentBody'); ?>
 
 <?php $this->end(); ?>  
 <?php } ?>
-<?php if($action == 'view') { ?>
-	<?php $this->start('contentActions');
+
+<?php 
+if($action == 'view') {
+	$this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index', $type), array('class' => 'divider'));
 	if($_edit && $editable) {
 		echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $id), array('class' => 'divider'));
 	}
 	$this->end();
 
-	$this->start('contentBody'); ?>
-	<?php echo $this->element('layout/view', array('fields' => $fields, 'data' => $data)); ?>
-	<?php $this->end(); ?> 
-<?php } ?>
-<?php if($action == 'edit') { ?>
+	$this->start('contentBody');
+	echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+	$this->end();
+} 
+?>
+
+<?php 
+if($action == 'edit') {
+	$this->start('contentActions');
+	echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view'));
+	$this->end();
+
+	$this->start('contentBody'); 
+?>
+
+	<div class="row">
+		<div class="left"><b>N</b> </div>
+		<div class="left">(<?php echo __('Numbers') ?>)&nbsp;|&nbsp;</div>
+		<div class="left"><b>A</b> </div><div class="left">(<?php echo __('Alphabets') ?>)&nbsp;|&nbsp;</div><div class="left">(Special Chars)</div>
+	</div>
+
 <?php
-$this->start('contentActions');
-echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view'));
-$this->end();
-
-$this->start('contentBody'); ?>
-
-<?php echo $this->element('alert'); ?>
-
-<div class="row">
-	<div class="left"><b>N</b> </div>
-	<div class="left">(Numbers)&nbsp;|&nbsp;</div>
-	<div class="left"><b>A</b> </div><div class="left">(Alpha Character)&nbsp;|&nbsp;</div><div class="left">(Special Chars)</div>
-</div>
-<div class="customvalidation">
-
-<?php
+	echo '<div class="customvalidation">';
 	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, $id));
 	echo $this->Form->create('ConfigItem', $formOptions);
-
+	
 	echo $this->Form->input('id', array('type' => 'hidden'));
 	echo $this->Form->input('name', array('type' => 'hidden'));
 	echo $this->Form->input('field_type', array('type' => 'hidden'));
 	echo $this->Form->input('option_type', array('type' => 'hidden'));
-
-	echo $this->Form->input('type', array('value'=> $type, 'readonly' => 'readonly'));
-	echo $this->Form->input('label', array('value'=> $type, 'readonly' => 'readonly'));
-	echo $this->Form->input('value', array('class'=>'form-control custom_validation'));
-	echo $this->Form->input('default_value', array('readonly' => 'readonly'));
-
-	echo $this->Form->input('type', array('disabled' => 'disabled'));
 	
-	?>
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view', $id), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	<?php echo $this->Form->end(); ?>
-</div>
-<?php $this->end(); ?> 
- <?php } ?>
+	echo $this->Form->input('type', array('value'=> $type, 'readonly' => 'readonly'));
+	echo $this->Form->input('label', array('readonly' => 'readonly', 'disabled'));
+	echo $this->Form->input('value', array('class'=>'form-control custom_validation'));
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view', $id)));
+	echo $this->Form->end();
+	echo '</div>';
+	
+	$this->end();
+};
+?>

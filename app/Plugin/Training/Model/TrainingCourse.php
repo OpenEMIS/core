@@ -218,19 +218,24 @@ class TrainingCourse extends TrainingAppModel {
 	}
 	
 	public function course($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
-
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
 		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
-	
-		if(!empty($selectedStatus)){
-			$data = $this->find('all', array('order'=> array('code', 'title')));
-		}else{
-			$data = $this->find('all', array('order'=> array('code', 'title'), 'conditions' => array('NOT' => array('TrainingCourse.training_status_id' => '4'))));
+		
+		if ($controller->request->is('post')) {
+			if (isset($controller->request->data['sortdir']) && isset($controller->request->data['order'])) {
+				if ($controller->request->data['sortdir'] != $controller->Session->read('Search.sortdirTrainingCourse')) {
+					$controller->Session->delete('Search.sortdirTrainingCourse');
+					$controller->Session->write('Search.sortdirTrainingCourse', $controller->request->data['sortdir']);
+				}
+				if ($controller->request->data['order'] != $controller->Session->read('Search.orderTrainingCourse')) {
+					$controller->Session->delete('Search.orderTrainingCourse');
+					$controller->Session->write('Search.orderTrainingCourse', $controller->request->data['order']);
+				}
+			}
 		}
 
 		$conditions = array();
@@ -239,29 +244,48 @@ class TrainingCourse extends TrainingAppModel {
 		}else{
 			$conditions['NOT']['TrainingCourse.training_status_id'] = 4;
 		}
-		
-		$data = $this->find('all', 
-			array(
-				'recursive' => -1, 
-				'fields' => array('TrainingCourse.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
-					)
-				),
-				'order'=> array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingCourse.training_status_id'), 
-				'conditions' => $conditions
-			)
-		);
+
+		$fieldordername = ($controller->Session->read('Search.orderTrainingCourse')) ? $controller->Session->read('Search.orderTrainingCourse') : array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingCourse.training_status_id');
+		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingCourse')) ? $controller->Session->read('Search.sortdirTrainingCourse') : 'asc';
+		$order = $fieldordername;
+		if($controller->Session->check('Search.orderTrainingCourse')){
+			$order = array($fieldordername => $fieldorderdir);
+		}
+
+		$controller->Paginator->settings = array(
+	        'conditions' => $conditions,
+	        'fields' => array('TrainingCourse.*', 'TrainingStatus.id', 'TrainingStatus.name'),
+	        'joins' => array(
+		        array(
+		            'alias' => 'TrainingStatus',
+		            'table' => 'training_statuses',
+		            'type' => 'INNER',
+		            'conditions' => 'TrainingStatus.id = TrainingCourse.training_status_id'
+		        )
+		    ),
+	        'limit' => 25,
+	        'recursive'=> -1,
+	        'order' => $order
+	    );
+
+		$data = $controller->paginate('TrainingCourse');
+		$data = $controller->Workflow->populateWorkflowStatus($this->name, 'TrainingStatus', $data);	
+
+		if (empty($data) && !$controller->request->is('ajax')) {
+			$controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+	
+		$controller->set('sortedcol', $fieldordername);
+		$controller->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
 		$controller->set('statusOptions', $statusOptions);
 		$controller->set('selectedStatus', $selectedStatus);
-		
+		if ($controller->request->is('post')) {
+			//$controller->render('/Training/course/index');
+			$controller->set('ajax', true);
+		}
 	}
 
 
@@ -362,7 +386,7 @@ class TrainingCourse extends TrainingAppModel {
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	            $this->delete($id);
-	            $controller->Utility->alert($name . ' have been deleted successfully.');
+	            $controller->Message->alert('general.delete.success');
 				$controller->Session->delete('TrainingCourseId');
 			}
             $controller->redirect(array('action' => 'course'));
@@ -382,7 +406,7 @@ class TrainingCourse extends TrainingAppModel {
 	    			array('TrainingCourse.training_status_id' => 3),
 	    			array('TrainingCourse.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activated successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'course'));
         }
@@ -394,15 +418,13 @@ class TrainingCourse extends TrainingAppModel {
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 
-
-
             $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 			
               $this->updateAll(
     			array('TrainingCourse.training_status_id' => 4),
     			array('TrainingCourse.id '=> $id)
 			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
+            $controller->Message->alert('Training.inactivate.success');
             $controller->redirect(array('action' => 'course'));
         }
     }
@@ -658,11 +680,11 @@ class TrainingCourse extends TrainingAppModel {
 						}
 						$this->TrainingCourseExperience->deleteAll(array('TrainingCourseExperience.id' => $deletedId), false);
 					}
-					if(empty($controller->request->data[$this->name]['id'])){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+					if(empty($controller->request->data[$this->name]['id'])){	
+						$controller->Message->alert('general.add.success');
 					}
-					else{
-						$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+					else{	
+						$controller->Message->alert('general.update.success');
 					}
 					return $controller->redirect(array('action' => 'course'));
 				}
@@ -670,4 +692,5 @@ class TrainingCourse extends TrainingAppModel {
 		}
 		$controller->set('attachments', $attachments);
 	}
+
 }

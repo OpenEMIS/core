@@ -57,7 +57,7 @@ $obj = @$data['Staff'];
 			<div class="value"><?php echo $this->Form->input('gender', array('options'=>$gender));  ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Date of Birth'); ?></div>
+			<div class="label"><?php echo __('Date Of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth',array('desc' => true, 'emptySelect' => true)); ?></div>
 		</div>
                 <?php /*<div class="row">

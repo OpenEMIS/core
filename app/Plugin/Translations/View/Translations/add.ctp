@@ -1,6 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
@@ -10,7 +8,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Translations', 'action' => $this->action));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Translations', 'action' => $this->action, 'plugin' => 'Translations'));
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('Translation', $formOptions);
 echo $this->Form->hidden('id');
