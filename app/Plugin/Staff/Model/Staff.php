@@ -40,6 +40,11 @@ class Staff extends StaffAppModel {
 	);
 
 	public $hasMany = array(
+		'TrainingSessionTrainee' => array(
+			'className' => 'TrainingSessionTrainee',
+			'foreignKey' => 'staff_id',
+			'dependent' => true
+		),
 		'TrainingSessionTrainer' => array(
 			'className' => 'TrainingSessionTrainer',
 			'foreignKey' => 'ref_trainer_id',
