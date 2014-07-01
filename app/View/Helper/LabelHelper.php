@@ -300,6 +300,14 @@ class LabelHelper extends AppHelper {
 		),
 		'StaffCustomFieldOption' => array(
 			'staff_custom_field_id' => 'Custom Field'
+		),
+		'SecurityRole' => array(
+			'systemDefined' => 'System Defined Roles',
+			'userDefined' => 'User Defined Roles',
+			'notEditable' => 'Not Editable',
+			'permissions' => 'Permissions',
+			'name' => 'Role',
+			'security_group_id' => 'Group'
 		)
 	);
 	

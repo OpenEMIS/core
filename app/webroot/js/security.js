@@ -284,29 +284,6 @@ var Security = {
 		return false;
 	},
 	
-	addRole: function(obj) {
-		var parent = $(obj).closest('.section_group');
-		var size = $('.table_view li').length;
-		var order = parent.find('.table_view li').length;
-		var groupId = parent.find('#SecurityGroupId').val();
-		var maskId;
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: getRootURL() + 'Security/rolesAdd',
-			data: {size: size, order: order, groupId: groupId},
-			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
-			},
-			success: function (data, textStatus) {
-				var callback = function() {
-					parent.find('.table_view').append(data);
-				};
-				$.unmask({id: maskId, callback: callback});
-			}
-		});
-	},
-	
 	toggleModule: function() {
 		var checked = $(this).is(':checked');
 		var parent = $(this).closest('.section_group');
@@ -370,28 +347,28 @@ var Security = {
 		}
 		Security.checkModuleToggled(obj);
 	},
-                
-        autoCheckInstitutionSiteView: function(){
-            var arrFinal = new Array();
-            var arrFunctionIdSiteDetails = [13, 15, 16, 17, 19, 20, 21, 23, 24, 25, 102, 27, 28, 29, 103];
-            var arrFunctionIdSiteTotals = [30, 31, 32, 33, 34, 99, 35, 36, 37, 38, 39, 40, 41, 42];
-            var arrFunctionIdSiteQuality = [174, 175, 183];
-            var arrFunctionIdSiteReports = [127, 128, 176];
-            arrFinal = arrFinal.concat(arrFunctionIdSiteDetails);
-            arrFinal = arrFinal.concat(arrFunctionIdSiteTotals);
-            arrFinal = arrFinal.concat(arrFunctionIdSiteQuality);
-            arrFinal = arrFinal.concat(arrFunctionIdSiteReports);
-            
-            for(var i in arrFinal){
-                var currentFunctionId = arrFinal[i];
-                $("tr[function-id='"+currentFunctionId+"'] td").find(":checkbox:not(:disabled)").click(function(){
-                    var checkboxInstitutionView = $("tr[function-id='1'] td").find("#_view:checkbox");
-                    var checkboxInstitutionSiteView = $("tr[function-id='8'] td").find("#_view:checkbox");
-                    checkboxInstitutionView.attr('checked', 'checked');// check Institution View
-                    checkboxInstitutionView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
-                    checkboxInstitutionSiteView.attr('checked', 'checked');// check Institution Site View
-                    checkboxInstitutionSiteView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
-                });
-            }
-        }
+	
+	autoCheckInstitutionSiteView: function(){
+		var arrFinal = new Array();
+		var arrFunctionIdSiteDetails = [13, 15, 16, 17, 19, 20, 21, 23, 24, 25, 102, 27, 28, 29, 103];
+		var arrFunctionIdSiteTotals = [30, 31, 32, 33, 34, 99, 35, 36, 37, 38, 39, 40, 41, 42];
+		var arrFunctionIdSiteQuality = [174, 175, 183];
+		var arrFunctionIdSiteReports = [127, 128, 176];
+		arrFinal = arrFinal.concat(arrFunctionIdSiteDetails);
+		arrFinal = arrFinal.concat(arrFunctionIdSiteTotals);
+		arrFinal = arrFinal.concat(arrFunctionIdSiteQuality);
+		arrFinal = arrFinal.concat(arrFunctionIdSiteReports);
+		
+		for(var i in arrFinal){
+			var currentFunctionId = arrFinal[i];
+			$("tr[function-id='"+currentFunctionId+"'] td").find(":checkbox:not(:disabled)").click(function(){
+				var checkboxInstitutionView = $("tr[function-id='1'] td").find("#_view:checkbox");
+				var checkboxInstitutionSiteView = $("tr[function-id='8'] td").find("#_view:checkbox");
+				checkboxInstitutionView.attr('checked', 'checked');// check Institution View
+				checkboxInstitutionView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
+				checkboxInstitutionSiteView.attr('checked', 'checked');// check Institution Site View
+				checkboxInstitutionSiteView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
+			});
+		}
+	}
 };
