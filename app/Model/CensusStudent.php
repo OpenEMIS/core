@@ -960,7 +960,7 @@ class CensusStudent extends AppModel {
 		$EducationProgramme = ClassRegistry::init('EducationProgramme');
 			
 		$this->render = false;
-		
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		if($controller->request->is('get')) {
 			$yearId = $controller->params['pass'][0];
 			//$gradeId = $controller->params->query['gradeId'];

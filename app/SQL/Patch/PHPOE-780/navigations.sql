@@ -1,2 +1,0 @@
-INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(146, 'Report', 'OlapCube', 'OlapCube', 'REPORTS', 'Olap Reports', 'olapReport', '^olapReport', NULL, 123, 0, 146, 1, NULL, NULL, 1, '0000-00-00 00:00:00');

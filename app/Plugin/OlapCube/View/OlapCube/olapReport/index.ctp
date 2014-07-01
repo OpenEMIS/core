@@ -10,7 +10,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody'); ?>
-
+<div id="olap_report">
 <?php
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->params['action']), 'file');
 echo $this->Form->create($model, $formOptions);
@@ -57,6 +57,7 @@ echo $this->Form->create($model, $formOptions);
        
   	<?php 
 		if(isset($filterFields) && !empty($filterFields)){
+			echo '<div style="height: 200px; overflow-x: hidden;overflow-y: scroll;">';
     		echo $this->Form->input('field', array(
 			    'type' => 'select',
 			    'multiple' => 'checkbox',
@@ -64,6 +65,7 @@ echo $this->Form->create($model, $formOptions);
 			    'options' => $filterFields,
 			    'selected' => array_keys($filterFields)
 			));
+			echo '</div>';
     	}
 	?>
   
@@ -72,5 +74,5 @@ echo $this->Form->create($model, $formOptions);
         <?php echo $this->Html->link(__('Clear'), array('action' => 'olapReport'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 <?php echo $this->Form->end(); ?>
-
+</div>
 <?php $this->end(); ?>
