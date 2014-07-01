@@ -85,7 +85,7 @@ if(@$enabled === true){
 	if(count($data) > 0){
 		//pr($data);
 		?>
-			<?php foreach($data as $module => $arrVals) {?> 
+			<?php foreach($data as $module => $arrVals) { ?>
                 <div id="alertError" title="Click to dismiss" class="alert alert-error" style="position:relative; margin-bottom: 10px;display: <?php echo ($msg !='')?'block':'none'; ?>; opacity: 0.891195;"><div class="alert-icon"></div><div class="alert-content"><?php echo __('The selected report is currently being processed.'); ?></div></div>
                        
 				<?php foreach($arrVals as $type => $arrTypVals) { ?>
@@ -93,21 +93,21 @@ if(@$enabled === true){
 					<legend><?php echo __($type); ?></legend>
 					<div class="table-responsive">
 					<table class="table table-striped table-hover table-bordered">
-						<thead class="table_head">
+						<thead>
 							<tr>
-								<td class="table_cell col_name"><?php echo __('Name'); ?></td>
-								<td class="table_cell col_desc"><?php echo __('Description'); ?></td>
+								<td class="col_name"><?php echo __('Name'); ?></td>
+								<td class="col_desc"><?php echo __('Description'); ?></td>
 							</tr> 
 						</thead> 
 
-						<tbody class="table_body">
+						<tbody>
 								<?php 
 									$ctr = 1;
 									foreach ($arrTypVals as $key => $value) { 
 								?>
-								<tr class="table_row" row-id="<?php echo $value['id']; ?>">
-									<td class="table_cell col_name"><?php echo $this->Html->link(__($value['name']), array('action' => $this->action, $value['id']), array('escape' => false)); ?></td>
-									<td class="table_cell col_desc"><?php echo __($value['description']);?></td>
+								<tr row-id="<?php echo $value['id']; ?>">
+									<td class="col_name"><?php echo $this->Html->link(__($value['name']), array('action' => $this->action, $value['id']), array('escape' => false)); ?></td>
+									<td class="col_desc"><?php echo __($value['description']);?></td>
 								</tr>
 								<?php  $ctr++;  } ?>
 						</tbody>
@@ -121,10 +121,10 @@ if(@$enabled === true){
 					<legend><?php echo __('Custom'); ?></legend>
 					<div class="table-responsive">
 					<table class="table table-striped table-hover table-bordered">
-						<thead class="table_head">
+						<thead>
 							<tr>
-								<td class="table_cell col_name"><?php echo __('Name'); ?></td>
-								<td class="table_cell col_desc"><?php echo __('Description'); ?></td>
+								<td class="col_name"><?php echo __('Name'); ?></td>
+								<td class="col_desc"><?php echo __('Description'); ?></td>
 							</tr>
 						</thead>
 

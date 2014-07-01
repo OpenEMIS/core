@@ -3,9 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-if ($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $this->data[$model]['id']), array('class' => 'divider'));
-}
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'bankAccountsView', $this->data[$model]['id']), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
