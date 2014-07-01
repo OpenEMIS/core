@@ -21,12 +21,12 @@ class AreasController extends AppController {
 	
 	public $modules = array(
 		'areasEducation' => 'AreaEducation',
-        'areas' => 'Area',
+		'areas' => 'Area',
 		'levelsEducation' => 'AreaEducationLevel',
 		'levels' => 'AreaLevel'
-    );
+	);
 	
-    public function beforeFilter() {
+	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
@@ -43,17 +43,18 @@ class AreasController extends AppController {
 			$this->set('selectedAction', $this->action);
 		}
 		$this->set('areaOptions', $areaOptions);
-    }
+	}
 	
 	public function recover($i) {
 		$this->autoRender = false;
-		$model = 'Area';
-		if($i == 2) {
-			$model = 'AreaEducation';
-		}
-		$modelObj = ClassRegistry::init($model);
-		$modelObj->recover('parent', -1);
-		return $this->redirect(array('action' => 'index'));
+		$params = array('Area', 'run', $i);
+		$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
+		$nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
+		$shellCmd = sprintf($nohup, $cmd, APP);
+		$this->log($shellCmd, 'debug');
+		pr($shellCmd);
+		$pid = exec($shellCmd);
+		pr($pid);
 	}
 	
 	public function index() {
