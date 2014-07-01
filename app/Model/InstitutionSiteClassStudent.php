@@ -535,15 +535,52 @@ class InstitutionSiteClassStudent extends AppModel {
 	public function assessments($controller, $params) {
 		$controller->Navigation->addCrumb('Assessments');
 
-		$yearOptions = $controller->SchoolYear->institutionClassYearList($controller->institutionSiteId);
+		$yearOptions = $controller->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 
-		$data = $controller->AssessmentItemType->getAssessmentsBySchoolYear($selectedYear);
+		$data = $controller->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
 
 		if (empty($data)) {
 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 		}
-		$controller->set(compact('data', 'selectedYear'));
+		$controller->set(compact('data', 'yearOptions', 'selectedYear'));
+	}
+	
+	public function assessmentsResults($controller, $params) {
+		$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
+		$controller->Navigation->addCrumb('Results');
+
+		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
+            $selectedYear = intval($controller->params['pass'][0]);
+            $assessmentId = intval($controller->params['pass'][1]);
+			
+            $selectedItem = 0;
+            if ($selectedYear == 0 || $assessmentId == 0) {
+				$classOptions = $controller->InstitutionSiteClass->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+                $itemOptions = $controller->AssessmentItem->getItemList($assessmentId);
+				
+                if (empty($itemOptions)) {
+                    $controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
+                } else {
+                    $selectedItem = isset($controller->params['pass'][3]) ? $controller->params['pass'][3] : key($itemOptions);
+                    $data = $controller->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
+                    if (empty($data)) {
+                        $controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
+                    }
+                    $controller->set('itemOptions', $items);
+                    $controller->set('data', $data);
+                }
+                $controller->set('classId', $classId);
+                $controller->set('assessmentId', $assessmentId);
+                $controller->set('selectedItem', $selectedItem);
+				
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedYear'));
+            } else {
+                $controller->redirect(array('action' => 'assessments'));
+            }
+        } else {
+            $controller->redirect(array('action' => 'assessments'));
+        }
 	}
 	
 	
