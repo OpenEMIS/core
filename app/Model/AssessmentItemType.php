@@ -181,15 +181,29 @@ class AssessmentItemType extends AppModel {
 		return $data;
 	}
 	
-	public function getAssessmentsBySchoolYear($schoolYearId) {
+	public function getInstitutionAssessmentsBySchoolYear($institutionSiteId, $schoolYearId) {
 		$list = $this->find('all', array(
 			'fields' => array(
-				'AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name',
+				'DISTINCT AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name', 'AssessmentItemType.description',
 				'EducationCycle.name', 'EducationProgramme.id', 'EducationProgramme.name', 
-				'EducationGrade.name'
+				'EducationGrade.name', 'EducationGrade.id'
 			),
 			'recursive' => -1,
 			'joins' => array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteClass.school_year_id = ' . $schoolYearId
+					)
+				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
@@ -207,27 +221,63 @@ class AssessmentItemType extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'AssessmentItemType.school_year_id' => $schoolYearId
+				'OR' => array(
+					'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId),
+					'AssessmentItemType.school_year_id' => array(0, $schoolYearId)
+				)
 			),
 			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		
 		$data = array();
 		foreach($list as $obj) {
-			$programmeId = $obj['EducationProgramme']['id'];
-			$programmeName = $obj['EducationCycle']['name'] . ' - ' . $obj['EducationProgramme']['name'];
+			$gradeName = $obj['EducationCycle']['name'] . ' - ' . $obj['EducationProgramme']['name'] . ' - ' . $obj['EducationGrade']['name'];
 			$assessment = $obj['AssessmentItemType'];
-			if(!array_key_exists($programmeId, $data)) {
-				$data[$programmeId] = array('name' => $programmeName, 'items' => array());
+			$gradeId = $obj['EducationGrade']['id'];
+			if(!array_key_exists($gradeId, $data)) {
+				$data[$gradeId] = array('name' => $gradeName, 'items' => array());
 			}
-			$data[$programmeId]['items'][] = array(
+			$data[$gradeId]['items'][] = array(
 				'id' => $assessment['id'],
 				'code' => $assessment['code'],
 				'name' => $assessment['name'],
-				'grade' => $obj['EducationGrade']['name']
+				'description' => $assessment['description']
 			);
 		}
 		//pr($data);die;
+		return $data;
+	}
+	
+	public function getYearListForAssessments($institutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('SchoolYear.id', 'SchoolYear.name'),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				)
+			),
+			'conditions' => array(
+				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId)
+			),
+			'order' => array('SchoolYear.name')
+		));
+
 		return $data;
 	}
 	

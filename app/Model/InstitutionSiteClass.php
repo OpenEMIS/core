@@ -343,6 +343,34 @@ class InstitutionSiteClass extends AppModel {
 		
 		return $data;
 	}
+	
+	public function getClassListWithYear($institutionSiteId, $schoolYearId, $assessmentId){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'SchoolYear.name'),
+			'joins' => array(
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteClass.school_year_id' => $schoolYearId
+			),
+			'order' => array('SchoolYear.name, InstitutionSiteClass.name')
+		));
+		
+		$result = array();
+		foreach($data AS $row){
+			$class = $row['InstitutionSiteClass'];
+			$schoolYear = $row['SchoolYear'];
+			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
+		}
+		
+		return $result;
+	}
 		
 	public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
 		if(empty($yearId)){
