@@ -70,7 +70,7 @@ echo $this->Form->create($model, $formOptions);
 	?>
   
     <div class="controls view_controls">
-       <input type="submit" value="<?php echo __("Generate"); ?>" class="btn_save btn_right"/>
+       <input type="submit" value="<?php echo __("Generate"); ?>" class="btn_save btn_right" onclick="js:if(objOlapCube.checkValidate()){ return true; }else{ return false; }"/>
         <?php echo $this->Html->link(__('Clear'), array('action' => 'olapReport'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 <?php echo $this->Form->end(); ?>

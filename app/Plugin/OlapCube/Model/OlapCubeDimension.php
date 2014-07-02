@@ -274,11 +274,13 @@ class OlapCubeDimension extends OlapCubeAppModel {
 					if($tableAggregate){
 						//$fields[] = "SUM(Number".($a+1).") as Number".($a+1);
 						$fields[] = "SUM({$r}) as Number" . ($a+1);
+						$oCFields[] = "IFNULL(Number".($a+1).",0) as Number".($a+1);
 					}else{
 						//$fields[] = "COUNT(Number".($a+1).") as Number".($a+1);
-						$fields[] = "COUNT(DISTINCT {$r}) as Number".($a+1);
+						$fields[0] = 'DISTINCT ' . $fields[0];
+						$fields[] = "{$r} as Number".($a+1);
+						$oCFields[] = "IFNULL(COUNT(Number".($a+1)."),0) as Number".($a+1);
 					}
-					$oFields[] = "IFNULL(Number".($a+1).",0) as Number".($a+1);
 					$a++;
 				}
 			}else{
@@ -287,11 +289,14 @@ class OlapCubeDimension extends OlapCubeAppModel {
 				if($tableAggregate){
 					//$fields[] = "SUM(Number1) as Number1";
 					$fields[] = "SUM({$computeField}) as Number1";
+					$oCFields[] = "IFNULL(Number1,0) as Number1";
 				}else{
 					//$fields[] = "COUNT(Number1) as Number1";
-					$fields[] = "COUNT(DISTINCT {$computeField}) as Number1";
+					$fields[0] = 'DISTINCT ' . $fields[0];
+					$fields[] = "{$computeField} as Number1";
+					$oCFields[] = "IFNULL(COUNT(Number1),0) as Number1";
 				}
-				$oFields[] = "IFNULL(Number1,0) as Number1";
+			
 				
 			}
 
@@ -314,13 +319,14 @@ class OlapCubeDimension extends OlapCubeAppModel {
 			
 			$outerQuery = $dbo->buildStatement(
 				array(
-					'fields' => $oFields,
+					'fields' => array_merge($oFields, $oCFields),
 					'table' => '('.$subQuery.')',
+					'group' =>  $oFields,
 					'alias' => $modelTableName
 				)
 				,$modelTable
 			);
-  			pr($outerQuery);exit;
+  			//pr($outerQuery);exit;
 			
 			$modelData = $modelTable->query($outerQuery);
 
@@ -329,7 +335,7 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 			exit;*/
 
-			pr($modelData);
+			//pr($modelData);
 		
 			$layout = array();
 			$rowName = array();
