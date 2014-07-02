@@ -353,6 +353,21 @@ class InstitutionSiteClass extends AppModel {
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
 					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id'
+					)
+				),
+				array(
+					'table' => 'assessment_item_types',
+					'alias' => 'AssessmentItemType',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id',
+						'AssessmentItemType.id' => $assessmentId
+					)
 				)
 			),
 			'conditions' => array(
