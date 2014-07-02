@@ -1,0 +1,1 @@
+Delete from `config_items` where id = 108;
