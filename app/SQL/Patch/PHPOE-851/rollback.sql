@@ -10,3 +10,8 @@ UPDATE `security_functions` SET `_view` = 'staffBehaviour|staffBehaviourView',
 
 DELETE FROM `navigations` WHERE `navigations`.`id` = 143 LIMIT 1;
 DELETE FROM `navigations` WHERE `navigations`.`id` = 144 LIMIT 1;
+
+--
+-- for Assessments 
+--
+DELETE FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'ASSESSMENTS';
