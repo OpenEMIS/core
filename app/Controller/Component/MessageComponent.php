@@ -133,7 +133,13 @@ class MessageComponent extends Component {
 				'success' => array('type' => 'ok', 'msg' => 'The record has been inactivated successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'The record is not inactivated due to errors encountered.')
 			)
-		)
+		),
+		'Assessment' => array(
+			'result' => array(
+				'noAssessmentItem' => array('type' => 'warn', 'msg' => 'There are no assessment items.'),
+				'noClass' => array('type' => 'warn', 'msg' => 'There are no class.')
+			)
+		),
 	);
 	
 	public function get($code) {

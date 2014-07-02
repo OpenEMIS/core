@@ -154,7 +154,7 @@ class InstitutionSitesController extends AppController {
 		'staff' => 'InstitutionSiteStaff',
 		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
 		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
-		'assessments' => 'InstitutionSiteClassStudent'
+		'assessments' => 'InstitutionSiteStudent'
     );
     
 	public function beforeFilter() {

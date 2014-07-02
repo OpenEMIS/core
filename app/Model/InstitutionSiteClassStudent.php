@@ -85,8 +85,10 @@ class InstitutionSiteClassStudent extends AppModel {
 			$controller->set('selectedAction', $this->_action);
 			$controller->set('actionOptions', $this->InstitutionSiteClass->getClassActions($controller));
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => $this->InstitutionSiteClass->_action));
+			if($action != 'getStudentAssessmentResults'){
+				$controller->Message->alert('general.notExists');
+				return $controller->redirect(array('action' => $this->InstitutionSiteClass->_action));
+			}
 		}
 	}
 	
@@ -532,56 +534,77 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $this->reportMapping[$index]['fileName'];
 	}
 	
-	public function assessments($controller, $params) {
-		$controller->Navigation->addCrumb('Assessments');
+	public function getStudentAssessmentResults($classId, $itemId, $assessmentId = null) {
+		$options['recursive'] = -1;
+		
+		$options['fields'] = array(
+			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
+			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
+			'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
+			'AssessmentItem.min', 'AssessmentItem.max'
+		);
 
-		$yearOptions = $controller->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+		$options_joins = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'conditions' => array('Student.id = InstitutionSiteClassStudent.student_id')
+			),
+			array(
+				'table' => 'institution_site_classes',
+				'alias' => 'InstitutionSiteClass',
+				'conditions' => array(
+					'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
+					'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+				)
+			),
+			array(
+				'table' => 'assessment_item_results',
+				'alias' => 'AssessmentItemResult',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'AssessmentItemResult.student_id = Student.id',
+					'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
+					'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
+					'AssessmentItemResult.assessment_item_id = ' . $itemId
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'type' => 'LEFT',
+				'conditions' => array('AssessmentItem.id = AssessmentItemResult.assessment_item_id')
+			),
+			array(
+				'table' => 'assessment_result_types',
+				'alias' => 'AssessmentResultType',
+				'type' => 'LEFT',
+				'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
+			)
+		);
 
-		$data = $controller->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
+		if (!empty($assessmentId)) {
+			$join_to_assessment_item_types = array(
+				array(
+					'table' => 'assessment_item_types',
+					'alias' => 'AssessmentItemType',
+					'conditions' => array(
+						'AssessmentItemType.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
+						'AssessmentItemType.id = ' . $assessmentId
+					)
+				)
+			);
 
-		if (empty($data)) {
-			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
+			$options['joins'] = array_merge($options_joins, $join_to_assessment_item_types);
+		} else {
+			$options['joins'] = $options_joins;
 		}
-		$controller->set(compact('data', 'yearOptions', 'selectedYear'));
-	}
-	
-	public function assessmentsResults($controller, $params) {
-		$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
-		$controller->Navigation->addCrumb('Results');
 
-		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
-            $selectedYear = intval($controller->params['pass'][0]);
-            $assessmentId = intval($controller->params['pass'][1]);
-			
-            $selectedItem = 0;
-            if ($selectedYear == 0 || $assessmentId == 0) {
-				$classOptions = $controller->InstitutionSiteClass->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
-                $itemOptions = $controller->AssessmentItem->getItemList($assessmentId);
-				
-                if (empty($itemOptions)) {
-                    $controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
-                } else {
-                    $selectedItem = isset($controller->params['pass'][3]) ? $controller->params['pass'][3] : key($itemOptions);
-                    $data = $controller->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
-                    if (empty($data)) {
-                        $controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
-                    }
-                    $controller->set('itemOptions', $items);
-                    $controller->set('data', $data);
-                }
-                $controller->set('classId', $classId);
-                $controller->set('assessmentId', $assessmentId);
-                $controller->set('selectedItem', $selectedItem);
-				
-				$controller->set(compact('classOptions', 'itemOptions', 'selectedYear'));
-            } else {
-                $controller->redirect(array('action' => 'assessments'));
-            }
-        } else {
-            $controller->redirect(array('action' => 'assessments'));
-        }
+		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name');
+
+		$data = $this->find('all', $options);
+
+		return $data;
 	}
-	
 	
 }

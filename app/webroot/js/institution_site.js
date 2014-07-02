@@ -93,5 +93,20 @@ var objInstitutionSite = {
 		url += '/' + fieldWeek.val();
 		
 		window.location.href = url;
+	},
+			
+	reloadAssessmentsPage: function(obj){
+		var fieldClass = $("select#classId");
+		var fieldAssessmentItem = $("select#assessmentItemId");
+
+		if(fieldClass.length !== 1 || fieldAssessmentItem.length !== 1 ){
+			return false;
+		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldClass.val();
+		url += '/' + fieldAssessmentItem.val();
+		
+		window.location.href = url;
 	}
 }
