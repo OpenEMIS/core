@@ -6,6 +6,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
+if(!empty($data)):
 echo $this->element('templates/year_options', array('url' => 'assessments'));
 ?>
 <?php foreach ($data as $obj) : ?>
@@ -31,5 +32,7 @@ echo $this->element('templates/year_options', array('url' => 'assessments'));
 			</tbody>
 		</table>
 	</fieldset>
-<?php endforeach ?>
+<?php endforeach;
+ endif;
+?>
 <?php $this->end(); ?>

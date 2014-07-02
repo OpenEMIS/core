@@ -132,15 +132,19 @@ class AssessmentItemResult extends AppModel {
 
 		$yearOptions = $controller->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-
-		$data = $controller->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
-
-		if (empty($data)) {
+		$data = array();
+		if (empty($yearOptions)) {
 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
+		} else {
+			$data = $controller->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
+
+			if (empty($data)) {
+				$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
+			}
 		}
 		$controller->set(compact('data', 'yearOptions', 'selectedYear'));
 	}
-	
+
 	public function assessmentsResults($controller, $params) {
 		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
             $selectedYear = intval($controller->params['pass'][0]);
