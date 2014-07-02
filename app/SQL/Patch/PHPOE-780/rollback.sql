@@ -23,7 +23,29 @@ INSERT INTO `olap_cubes` (`id`, `cube`, `operation`, `visible`, `order`, `modifi
 (8, 'Finances', 'Count', 1, 8, NULL, NULL, 1, '2014-03-28 00:00:00');
 
 
-TRUNCATE TABLE `olap_cube_dimensions`;
+DROP TABLE IF EXISTS `olap_cube_dimensions`;
+CREATE TABLE IF NOT EXISTS `olap_cube_dimensions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `dimension` varchar(100) NOT NULL,
+  `table_name` varchar(255) NOT NULL,
+  `table_parent` varchar(255) NOT NULL,
+  `table_join` text,
+  `table_field` text,
+  `table_group` text,
+  `olap_cube_id` int(11) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `olap_cube_id` (`olap_cube_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `olap_cube_dimensions`
+--
 
 INSERT INTO `olap_cube_dimensions` (`id`, `dimension`, `table_name`, `table_parent`, `table_join`, `table_field`, `table_group`, `olap_cube_id`, `visible`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (1, 'Education System', 'EducationSystem', 'CensusStudent', 'array(\n	''type'' => ''LEFT'',\n	''table'' => ''institution_sites'',\n	''alias'' => ''InstitutionSite'',\n	''conditions'' => array(''CensusStudent.institution_site_id = InstitutionSite.id'')\n),\narray(\n	''type'' => ''LEFT'',\n	''table'' => ''institution_site_programmes'',\n	''alias'' => ''InstitutionSiteProgramme'',\n	''conditions'' => array(''InstitutionSite.id = InstitutionSiteProgramme.institution_site_id'')\n),\narray(\n	''type'' => ''LEFT'',\n	''table'' => ''education_programmes'',\n	''alias'' => ''EducationProgramme'',\n	''conditions'' => array(''EducationProgramme.id = InstitutionSiteProgramme.education_programme_id'')\n),\narray(\n	''type'' => ''LEFT'',\n	''table'' => ''education_cycles'',\n	''alias'' => ''EducationCycle'',\n	''conditions'' => array(''EducationCycle.id = EducationProgramme.education_cycle_id'', ''EducationCycle.visible = 1'')\n),\narray(\n	''type'' => ''LEFT'',\n	''table'' => ''education_levels'',\n	''alias'' => ''EducationLevel'',\n	''conditions'' => array(''EducationLevel.id = EducationCycle.education_level_id'', ''EducationLevel.visible = 1'')\n),\narray(\n	''type'' => ''LEFT'',\n	''table'' => ''education_systems'',\n	''alias'' => ''EducationSystem'',\n	''conditions'' => array(''EducationSystem.id = EducationLevel.education_system_id'')\n)', 'EducationSystem.name', 'EducationSystem.id', 1, 1, 1, NULL, NULL, 1, '2014-03-28 00:00:00'),
@@ -71,7 +93,6 @@ INSERT INTO `olap_cube_dimensions` (`id`, `dimension`, `table_name`, `table_pare
 (43, 'Institution Site Type', 'InstitutionSiteType', 'CensusBuilding', 'array(\n	''type'' => ''LEFT'',\n	''table'' => ''institution_sites'',\n	''alias'' => ''InstitutionSite'',\n	''conditions'' => array(''CensusClass.institution_site_id = InstitutionSite.id'')\n),\narray(\n	''type'' => ''LEFT'',\n	''table'' => ''institution_site_types'',\n	''alias'' => ''InstitutionSiteType'',\n	''conditions'' => array(''InstitutionSite.institution_site_type_id = InstitutionSiteType.id'')\n)', 'InstitutionSiteType.name', 'InstitutionSiteType.id', 6, 1, 5, NULL, NULL, 1, '2014-04-03 00:00:00'),
 (44, 'Year', 'Year', 'CensusBuilding', 'array(\n	''type'' => ''LEFT'',\n	''table'' => ''school_years'',\n	''alias'' => ''SchoolYear'',\n	''conditions'' => array(''SchoolYear.id = CensusBuilding.school_year_id'')\n)', 'SchoolYear.name', 'SchoolYear.id', 6, 1, 6, NULL, NULL, 1, '2014-04-03 00:00:00'),
 (45, 'Category', 'Category', 'CensusBuilding', 'array(\n	''type'' => ''LEFT'',\n	''table'' => ''infrastructure_buildings'',\n	''alias'' => ''InfrastructureBuilding'',\n	''conditions'' => array(''InfrastructureBuilding.id = CensusBuilding.infrastructure_building_id'')\n)', 'InfrastructureBuilding.name', 'InfrastructureBuilding.id', 6, 1, 7, NULL, NULL, 1, '2014-04-03 00:00:00');
-
 
 
 
