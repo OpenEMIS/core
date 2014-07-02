@@ -707,7 +707,7 @@ class InstitutionSiteStudent extends AppModel {
 					$postData[$i]['start_year'] = date('Y', strtotime($obj['start_date']));
 					$postData[$i]['end_year'] = date('Y', strtotime($obj['end_date']));
 				}
-				$this->saveMany($postData);
+				$this->saveMany($postData, array('validate'=>false));
 				$controller->Message->alert('general.edit.success');
 				return $controller->redirect(array('action' => 'studentsView', $studentId));
 			}
