@@ -8,7 +8,7 @@ $this->assign('contentHeader', $assessmentName);
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'assessments'), array('class' => 'divider'));
 if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsEdit', $selectedClass, $assessmentId, $selectedItem), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsResultsEdit', $selectedYear, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
 }
 $this->end();
 
