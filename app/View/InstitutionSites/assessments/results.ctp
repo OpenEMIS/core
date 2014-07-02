@@ -1,9 +1,6 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->script('institution_site', false);
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $assessmentName);
+$this->assign('contentHeader', $educationGradeName . ' - ' . $assessmentName);
 
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'assessments'), array('class' => 'divider'));
@@ -13,37 +10,55 @@ if ($_edit) {
 $this->end();
 
 $this->start('contentBody');
-
-echo $this->Form->create('InstitutionSiteClassStudent', array(
-	'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-	'url' => array('controller' => $this->params['controller'], 'action' => 'assessmentsResults')
-));
 ?>
 
-<div id="results" class="content_wrapper assessments">
-	<div class="topDropDownWrapper page-controls" url="InstitutionSites/assessmentsResults/<?php echo $selectedYear; ?>/<?php echo $assessmentId; ?>">
+<div class="row page-controls">
+	<div class="col-md-4">
 		<?php
-		echo $this->Form->input('class_id', array('options' => $classOptions, 'value' => $selectedClass, 'id' => 'classId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.reloadAssessmentsPage(this)'));
-		echo $this->Form->input('assessment_item_id', array('options' => $itemOptions, 'value' => $selectedItem, 'id' => 'assessmentItemId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.reloadAssessmentsPage(this)'));
+		echo $this->Form->input('class_id', array(
+			'options' => $classOptions,
+			'label' => false,
+			'div' => false,
+			'value' => $selectedClass,
+			'class' => 'form-control',
+			'onchange' => 'jsForm.change(this)',
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId
+		));
 		?>
 	</div>
-	<table class="table table-striped table-hover table-bordered" style="margin-top: 15px;">
+	<div class="col-md-4">
+		<?php
+		echo $this->Form->input('assessment_item_id', array(
+			'options' => $itemOptions,
+			'label' => false,
+			'div' => false,
+			'value' => $selectedItem,
+			'class' => 'form-control',
+			'onchange' => 'jsForm.change(this)',
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId . '/' . $selectedClass
+		));
+		?>
+	</div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
-				<th class="table_cell"><?php echo __('Student Name'); ?></th>
-				<th class="table_cell cell_marks"><?php echo __('Marks'); ?></th>
-				<th class="table_cell cell_grading"><?php echo __('Grading'); ?></th>
+				<th class="cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
+				<th><?php echo __('Student Name'); ?></th>
+				<th class="cell_marks"><?php echo __('Marks'); ?></th>
+				<th class="cell_grading"><?php echo __('Grading'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php foreach ($data as $obj) { ?>
 				<tr>
-					<td class="table_cell"><?php echo $obj['Student']['identification_no']; ?></td>
-					<td class="table_cell"><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></td>
-					<td class="table_cell center">
+					<td><?php echo $obj['Student']['identification_no']; ?></td>
+					<td><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></td>
+					<td class="center">
 						<?php
-						$marks = $obj['AssessmentItemResult']['marks'];
+						$marks = $obj[$model]['marks'];
 						if (is_null($marks) || strlen(trim($marks)) == 0) {
 							echo __('Not Recorded');
 						} else {
@@ -55,7 +70,7 @@ echo $this->Form->create('InstitutionSiteClassStudent', array(
 						}
 						?>
 					</td>
-					<td class="table_cell center"><?php echo $obj['AssessmentResultType']['name']; ?></td>
+					<td class="center"><?php echo $obj['AssessmentResultType']['name']; ?></td>
 				</tr>
 			<?php } ?>
 		</tbody>
