@@ -234,6 +234,11 @@ class InstitutionSitesController extends AppController {
 
         $data = $this->paginate('InstitutionSite', $conditions);
 
+        $configItem = ClassRegistry::init('ConfigItem');
+        $areaLevelID = $configItem->getValue('institution_site_area_level_id');
+
+        $data = $this->InstitutionSite->displayByAreaLevel($data, 'Area', $areaLevelID);
+
         if (empty($data) && !$this->request->is('ajax')) {
             $this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
         }
