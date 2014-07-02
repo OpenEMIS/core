@@ -158,7 +158,7 @@ class StudentBehaviour extends StudentsAppModel {
 	public function behaviourStudentList($controller, $params) {
 		$controller->Navigation->addCrumb('Behaviour - Students');
 		$InstitutionId = $controller->Session->read('InstitutionSite.id'); 
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearList();
+		$yearOptions = ClassRegistry::init('SchoolYear')->findList(array('orderBy' => 'name DESC', 'conditions' => array('SchoolYear.visible' => 1)));
 		$selectedYear = empty($params['pass'][0])? key($yearOptions):$params['pass'][0];
 		$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListByInstitutionSchoolYear($InstitutionId,$selectedYear);
 		$selectedClass = empty($params['pass'][1])? key($classOptions):$params['pass'][1];
