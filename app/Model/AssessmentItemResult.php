@@ -146,6 +146,10 @@ class AssessmentItemResult extends AppModel {
             $selectedYear = intval($controller->params['pass'][0]);
             $assessmentId = intval($controller->params['pass'][1]);
 			
+			$selectedClass = 0;
+			$selectedItem = 0;
+			$data = array();
+			
 			$AssessmentItemType = ClassRegistry::init('AssessmentItemType');
 			$assessmentObj = $AssessmentItemType->findById($assessmentId);
 			$assessmentName = $assessmentObj['AssessmentItemType']['name'];
@@ -166,16 +170,13 @@ class AssessmentItemResult extends AppModel {
 				}else {
 					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($classOptions);
                     $selectedItem = isset($controller->params['pass'][3]) ? $controller->params['pass'][3] : key($itemOptions);
-                }
-				
-				$selectedClass = !empty($selectedClass) ? $selectedClass : 0;
-				$selectedItem = !empty($selectedItem) ? $selectedItem : 0;
-				
-				$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
-                $data = $InstitutionSiteClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
 					
-                if (empty($data)) {
-					$controller->Message->alert('Assessment.result.noStudent');
+					$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
+					$data = $InstitutionSiteClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
+
+					if (empty($data)) {
+						$controller->Message->alert('Assessment.result.noStudent');
+					}
                 }
 				
 				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'data', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName'));

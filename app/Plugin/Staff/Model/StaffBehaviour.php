@@ -204,7 +204,7 @@ class StaffBehaviour extends StaffAppModel {
 	public function behaviourStaffList($controller, $params) {
 		$controller->Navigation->addCrumb('Behaviour - Staff');
 		$InstitutionId = $controller->Session->read('InstitutionSite.id'); 
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$yearOptions = ClassRegistry::init('SchoolYear')->findList(array('orderBy' => 'name DESC', 'conditions' => array('SchoolYear.visible' => 1), 'fields' => array( 'SchoolYear.name', 'SchoolYear.name')));
 		$selectedYear = empty($params['pass'][0])? key($yearOptions):$params['pass'][0];
 	
 	
