@@ -137,7 +137,8 @@ class MessageComponent extends Component {
 		'Assessment' => array(
 			'result' => array(
 				'noAssessmentItem' => array('type' => 'warn', 'msg' => 'There are no assessment items.'),
-				'noClass' => array('type' => 'warn', 'msg' => 'There are no class.')
+				'noClass' => array('type' => 'warn', 'msg' => 'There are no classes.'),
+				'noStudent' => array('type' => 'warn', 'msg' => 'There are no students.')
 			)
 		),
 	);
