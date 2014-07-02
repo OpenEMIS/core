@@ -423,12 +423,6 @@ fieldset.area .label{
 .topDropDownWrapper select#monthId{
 	width: 15%;
 }
-.topDropDownWrapper select#assessmentItemId{
-	width: 30%;
-}
-.assessments .topDropDownWrapper select#classId{
-	margin-right: 10px;
-}
 td.present{
 	color: green;
 }
@@ -438,4 +432,7 @@ h3.reportHtmlTitle{
 .reportHtmlDate{
 	font-size: 11px;
 	margin-bottom: 15px;
+}
+td.input .col-md-4{
+	width: 100%;
 }

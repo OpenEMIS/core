@@ -380,4 +380,23 @@ class AssessmentItemType extends AppModel {
 		));
 		return $data ? $data : array();
 	}
+	
+	public function getGradeNameByAssessment($assessmentItemTypeId){
+		$data = $this->find('all', array(
+			'fields' => array(
+				'EducationGrade.id', 'EducationGrade.name'
+			),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('AssessmentItemType.education_grade_id = EducationGrade.id')
+				)
+			),
+			'conditions' => array('AssessmentItemType.id' => $assessmentItemTypeId)
+		));
+		
+		return $data;
+	}
 }
