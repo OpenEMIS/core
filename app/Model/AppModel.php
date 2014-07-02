@@ -45,10 +45,11 @@ class AppModel extends Model {
 			$options['conditions'] = array($class.'.visible' => 1);
 		}
 		$conditions = !isset($options['conditions']) ? array() : $options['conditions'];
+		$fields = !isset($options['fields']) ? array($class . '.id', $class . '.name') : $options['fields'];
 		$orderBy = !isset($options['orderBy']) ? 'order' : $options['orderBy'];
 		$order = !isset($options['order']) ? 'ASC' : $options['order'];
 		$list = $this->find('list', array(
-				'fields' => array($class . '.id', $class . '.name'),
+				'fields' => $fields,
 				'conditions' => $conditions,
 				'order' => array($class . '.' . $orderBy)
 			)
