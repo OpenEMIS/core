@@ -136,7 +136,8 @@ var i18n = {
 	},
 	Olap: {
 		textLoadingCube : '<?php echo T("Loading Cube...", true); ?>',
-		textGeneratingCube : '<?php echo T("Generating Cube...", true); ?>'
+		textGeneratingCube : '<?php echo T("Generating Cube...", true); ?>',
+		textValidateCube : '<?php echo T("Row and Column Dimension cannot be the same", true); ?>'
 	},
 	Translation: {
 		textCompiling : '<?php echo T("Compiling...", true); ?>',
