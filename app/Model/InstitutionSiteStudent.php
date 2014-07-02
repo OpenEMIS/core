@@ -1195,7 +1195,7 @@ class InstitutionSiteStudent extends AppModel {
 				} else if(empty($classOptions)){
 					$controller->Message->alert('Assessment.result.noClass');
 				}else {
-					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][3] : key($classOptions);
+					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($classOptions);
                     $selectedItem = isset($controller->params['pass'][3]) ? $controller->params['pass'][3] : key($itemOptions);
 					
 					$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
@@ -1213,5 +1213,74 @@ class InstitutionSiteStudent extends AppModel {
         } else {
             $controller->redirect(array('action' => 'assessments'));
         }
+	}
+	
+	public function assessmentsResultsEdit($controller, $params) {
+		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
+			$selectedYear = intval($controller->params['pass'][0]);
+            $assessmentId = intval($controller->params['pass'][1]);
+			
+			$AssessmentItemType = ClassRegistry::init('AssessmentItemType');
+			$assessmentObj = $AssessmentItemType->findById($assessmentId);
+			$assessmentName = $assessmentObj['AssessmentItemType']['name'];
+			
+			$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
+			$controller->Navigation->addCrumb('Results');
+			
+			if ($selectedYear != 0 && $assessmentId != 0) {
+				$classOptions = $controller->InstitutionSiteClass->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+                $itemOptions = $controller->AssessmentItem->getItemList($assessmentId);
+				
+				if (empty($itemOptions)) {
+                    $controller->Message->alert('Assessment.result.noAssessmentItem');
+				} else if(empty($classOptions)){
+					$controller->Message->alert('Assessment.result.noClass');
+				} else {
+					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($classOptions);
+                    $selectedItem = isset($controller->params['pass'][3]) ? $controller->params['pass'][3] : key($itemOptions);
+					
+					$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
+                    $data = $InstitutionSiteClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
+					
+					if ($controller->request->is('get')) {
+						if (empty($data)) {
+							$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
+						}
+						$gradingOptions = $controller->AssessmentResultType->findList(true);
+						
+						$controller->set(compact('data', 'gradingOptions'));
+					} else {
+						if (isset($controller->data['AssessmentItemResult'])) {
+							
+							unset($controller->request->data['AssessmentItemResult']['class_id']);
+							unset($controller->request->data['AssessmentItemResult']['assessment_item_id']);
+							
+							$result = $controller->data['AssessmentItemResult'];
+							foreach ($result as $key => &$obj) {
+								$obj['assessment_item_id'] = $selectedItem;
+								$obj['institution_site_id'] = $controller->institutionSiteId;
+							}
+							
+							foreach($result AS $key => $record){
+								if(empty($record['marks']) || empty($record['assessment_result_type_id'])){
+									unset($result[$key]);
+								}
+							}
+							
+							if (!empty($result)) {
+								$controller->AssessmentItemResult->saveMany($result);
+								$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+							}
+						}
+						$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
+					}
+				}
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedYear', 'assessmentName'));
+			} else {
+				$controller->redirect(array('action' => 'assessments'));
+			}
+		} else {
+			$controller->redirect(array('action' => 'assessments'));
+		}
 	}
 }
