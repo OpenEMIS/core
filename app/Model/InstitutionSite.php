@@ -774,7 +774,8 @@ AND
 			'InstitutionSite.code',
 			'InstitutionSite.name',
 			'InstitutionSiteType.name',
-			'Area.name'
+			'Area.name',
+			'Area.id'
 		);
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = 'InstitutionSiteHistory.code';
@@ -1019,4 +1020,26 @@ AND
 		$index = $args[1];
 		return $this->reportMapping[$index]['fileName'];
 	}
+
+
+
+	public function displayByAreaLevel($data, $model='Area', $areaLevelID){
+		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
+		
+		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		foreach($data as $key=>$value){
+			$areaID = $value['Area']['id'];
+			$path = $AreaHandler->{$model}->getPath($areaID);
+			foreach($path as $i => $obj) {
+				if($obj[$model]['area_level_id']!=$areaLevelID){
+					continue;
+				}
+				$data[$key][$model]['name'] = $obj[$model]['name'];
+				break;
+			}
+		}
+		return $data;
+	}
+	
 }
