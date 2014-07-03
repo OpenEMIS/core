@@ -9,7 +9,7 @@ $this->assign('contentHeader', __('Absence') . ' - ' . __('Students'));
 
 $this->start('contentActions');
 echo $this->Html->link(__('Attendance'), array('action' => 'attendanceStudent'), array('class' => 'divider'));
-if($_add) {
+if ($_add) {
 	echo $this->Html->link(__('Add'), array('action' => 'attendanceStudentAbsenceAdd', $classId), array('class' => 'divider'));
 }
 $this->end();
@@ -17,18 +17,52 @@ $this->end();
 $this->start('contentBody');
 
 echo $this->Form->create('InstitutionSiteStudentAbsence', array(
-    'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-    'url' => array('controller' => $this->params['controller'], 'action' => 'attendanceStudentAbsence')
+	'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
+	'url' => array('controller' => $this->params['controller'], 'action' => 'attendanceStudentAbsence')
 ));
 ?>
 
 <div id="classes" class=" institutionAttendance">
-	<div class="topDropDownWrapper page-controls"  url="InstitutionSites/attendanceStudentAbsence">
-		<?php 
-			echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-			echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-			echo $this->Form->input('class_id', array('options' => $classOptions, 'value' => $classId, 'id' => 'classId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-		?>
+	<div class="row page-controls">
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('school_year_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $yearList,
+				'value' => $yearId,
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action
+			));
+			?>
+		</div>
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('week_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $weekList,
+				'value' => $weekId,
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId . '/' . $classId
+			));
+			?>
+		</div>
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('class_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $classOptions,
+				'value' => $classId,
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId
+			));
+			?>
+		</div>
 	</div>
 	<div id="mainlist">
 		<div class="table-responsive">
@@ -46,9 +80,9 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 					foreach ($data as $arrItems):
 						$id = $arrItems['InstitutionSiteStudentAbsence']['id'];
 						$student = $arrItems['Student'];
-						
+
 						$studentName = sprintf('%s %s %s %s', $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']);
-						
+
 						$firstDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['first_date_absent'];
 						$lastDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['last_date_absent'];
 						$firstDateAbsent = $this->Utility->formatDate($firstDateAbsentOriginal, null, false);
@@ -56,14 +90,14 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 						$fullDayAbsent = $arrItems['InstitutionSiteStudentAbsence']['full_day_absent'];
 						$startTimeAbsent = $arrItems['InstitutionSiteStudentAbsence']['start_time_absent'];
 						$endTimeAbsent = $arrItems['InstitutionSiteStudentAbsence']['end_time_absent'];
-						
-						if($fullDayAbsent == 'Yes'){
-							if(!empty($lastDateAbsentOriginal) && strtotime($lastDateAbsentOriginal) > strtotime($firstDateAbsentOriginal)){
+
+						if ($fullDayAbsent == 'Yes') {
+							if (!empty($lastDateAbsentOriginal) && strtotime($lastDateAbsentOriginal) > strtotime($firstDateAbsentOriginal)) {
 								$dateStr = sprintf('%s - %s (%s)', $firstDateAbsent, $lastDateAbsent, __('full day'));
-							}else{
+							} else {
 								$dateStr = sprintf('%s (%s)', $firstDateAbsent, __('full day'));
 							}
-						}else{
+						} else {
 							$dateStr = sprintf('%s (%s - %s)', $firstDateAbsent, $startTimeAbsent, $endTimeAbsent);
 						}
 						?>
@@ -80,7 +114,7 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 		</div>
 	</div> 
 </div>
-<?php 
+<?php
 echo $this->Form->end();
 $this->end();
 ?>
