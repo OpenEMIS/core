@@ -138,18 +138,19 @@ class InstitutionSiteBankAccount extends AppModel {
 		$bankId = 0;
 		$yesnoOptions = $controller->Option->get('yesno');
 		$header = __('Add Bank Account');
-		if (!empty($bankList)) {
-			$bankId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($bankList);
-			$branchList = $Branch->find('list', array('conditions' => array('BankBranch.visible' => 1, 'bank_id' => $bankId), 'order' => array('BankBranch.order')));
-		}
+
+		
+		
 		$institutionSiteId = $controller->institutionSiteId;
-		if ($controller->request->is('post')) {
+		if ($controller->request->is('post') || $controller->request->is('put')) {
 			$this->create();
 			if ($this->save($controller->request->data)) {
 				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'bankAccounts'));
 			}
 		}
+		$bankId = (isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : (isset($controller->request->data['InstitutionSiteBankAccount']['bank_id']) ? $controller->request->data['InstitutionSiteBankAccount']['bank_id'] : key($bankList)));
+		$branchList = $Branch->find('list', array('conditions' => array('BankBranch.visible' => 1, 'bank_id' => $bankId), 'order' => array('BankBranch.order')));
 		$controller->set(compact('bankList', 'branchList', 'bankId', 'institutionSiteId', 'yesnoOptions', 'header'));
 	}
 
