@@ -18,6 +18,15 @@ var objOlapCube = {
 
     },
 
+    checkValidate: function(obj){
+        $("#cube_message").remove();
+        if($('.rowCube').val()==$('.columnCube').val()){
+            $('#OlapCubeDimensionOlapReportForm').prepend('<div id="cube_message" class="form-group"><div class="error-message custom-file-msg col-md-12" style="max-width:90%;margin:5px;">'+i18n.Olap.textValidateCube+'</div></div>');
+
+            return false;
+        }
+        return true;
+    },
 
    getDetailsAfterChange: function(obj){
         var val = $(obj).val();
@@ -52,13 +61,12 @@ var objOlapCube = {
                             $(o).html(v.OlapCubeDimension.dimension);
                             fieldVal.append(o);
                         });
-
-                        //$('.training_provider option[value="' + defaultVal + '"]').prop('selected', true);
                     }
                 }
               
             }
         });
-    }
+    },
+
 
 }
