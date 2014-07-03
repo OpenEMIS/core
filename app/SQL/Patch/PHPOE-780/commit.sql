@@ -1,20 +1,15 @@
-CREATE INDEX male
-ON census_students (male);
+CREATE INDEX male ON census_students (male);
 
-CREATE INDEX female
-ON census_students (female);
+CREATE INDEX female ON census_students (female);
 
-CREATE INDEX age
-ON census_students (age);
+-- CREATE INDEX age ON census_students (age);
 
-CREATE INDEX male
-ON census_staff (male);
+CREATE INDEX male ON census_staff (male);
 
-CREATE INDEX female
-ON census_staff (female);
+CREATE INDEX female ON census_staff (female);
 
-INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(146, 'Report', 'OlapCube', 'OlapCube', 'REPORTS', 'Olap Reports', 'olapReport', '^olapReport', NULL, 123, 0, 146, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+-- INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+-- (146, 'Report', 'OlapCube', 'OlapCube', 'REPORTS', 'Olap Reports', 'olapReport', '^olapReport', NULL, 123, 0, 146, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 TRUNCATE table `olap_cubes`;
 
