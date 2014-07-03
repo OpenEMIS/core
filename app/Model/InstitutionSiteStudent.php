@@ -720,11 +720,11 @@ class InstitutionSiteStudent extends AppModel {
 			$details = $this->getDetails($studentId, $controller->institutionSiteId);
 			$classes = ClassRegistry::init('InstitutionSiteClassStudent')->getListOfClassByStudent($studentId, $controller->institutionSiteId);
 			$itemResultObj = ClassRegistry::init('AssessmentItemResult');
-			$results = $itemResultObj->getResultsByStudent($studentId, $controller->institutionSiteId);
-			$results = $itemResultObj->groupItemResults($results);
+			//$results = $itemResultObj->getResultsByStudent($studentId, $controller->institutionSiteId);
+			//$results = $itemResultObj->groupItemResults($results);
 			$_view_details = $controller->AccessControl->check('Students', 'view');
 			
-			$controller->set(compact('_view_details', 'data', 'classes', 'results', 'details', 'statusOptions'));
+			$controller->set(compact('_view_details', 'data', 'classes', 'details', 'statusOptions'));
 		} else {
 			$controller->redirect(array('action' => 'students'));
 		}

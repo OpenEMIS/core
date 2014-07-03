@@ -375,12 +375,13 @@ class CensusTeacher extends AppModel {
 	public function teachers($controller, $params) {
 		$controller->Navigation->addCrumb('Teachers');
 
-		$yearList = $this->SchoolYear->getYearList();
+		$yearList = $this->SchoolYear->getAvailableYears();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
-		$programmes = $InstitutionSiteProgramme->findAllByInstitutionSiteIdAndSchoolYearIdAndStatus($institutionSiteId, $selectedYear, true);
+		$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+
 		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
 		if (empty($programmes)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');

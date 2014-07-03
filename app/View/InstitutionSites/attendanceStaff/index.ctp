@@ -20,11 +20,33 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 ?>
 
 <div id="institutionStaffAttendance" class=" institutionAttendance">
-	<div class="topDropDownWrapper page-controls" url="InstitutionSites/attendanceStaff">
-		<?php
-		echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStaffAttendance(this)'));
-		echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStaffAttendance(this)'));
-		?>
+	<div class="row page-controls">
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('school_year_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $yearList,
+				'value' => $yearId,
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action
+			));
+			?>
+		</div>
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('week_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $weekList,
+				'value' => $weekId,
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId
+			));
+			?>
+		</div>
 	</div>
 	<div id="mainlist">
 		<div class="table-responsive">

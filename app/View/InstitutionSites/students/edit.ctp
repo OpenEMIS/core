@@ -154,41 +154,6 @@ $fieldName = 'data[InstitutionSiteStudent][%s][%s]';
 	</table>
 </fieldset>
 
-<fieldset class="section_break">
-	<legend><?php echo __('Assessments'); ?></legend>
-	<?php foreach ($results as $gradeId => $result) : ?>
-		<fieldset class="section_group" style="margin-top: 15px;">
-			<legend><?php echo $result['name']; ?></legend>
-			<?php foreach ($result['assessments'] as $id => $assessment) : ?>
-				<fieldset class="section_break">
-					<legend><?php echo $assessment['name']; ?></legend>
-					<table class="table table-striped table-hover table-bordered">
-						<thead>
-							<tr>
-								<th><?php echo __('Code'); ?></th>
-								<th><?php echo __('Subject'); ?></th>
-								<th><?php echo __('Marks'); ?></th>
-								<th><?php echo __('Grading'); ?></th>
-							</tr>
-						</thead>
-
-						<tbody>
-							<?php foreach ($assessment['subjects'] as $subject) : ?>
-								<tr>
-									<td><?php echo $subject['code']; ?></td>
-									<td><?php echo $subject['name']; ?></td>
-									<td><?php echo $subject['marks']; ?></td>
-									<td><?php echo $subject['grading']; ?></td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-				</fieldset>
-			<?php endforeach; ?>
-		</fieldset>
-	<?php endforeach; ?>
-</fieldset>
-
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'studentsView', $obj['id']), array('class' => 'btn_cancel btn_left')); ?>
