@@ -18,7 +18,7 @@ App::uses('AppHelper', 'View/Helper');
 
 class IconHelper extends AppHelper {
 	public $icons = array(
-		'details' => '<i class="fa fa-file-o fa-2x">'
+		'details' => '<i class="fa fa-ellipsis-v fa-2x">'
     );
 	
 	public function get($code) {
