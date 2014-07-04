@@ -53,11 +53,11 @@ echo $this->Form->create('AssessmentItemType', array_merge($formOptions, array('
     <table class="table table-striped table-hover table-bordered">
 		<thead class="table_head">
 			<tr>
-				<td class="table_cell cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></td>
-				<td class="table_cell cell_subject_code"><?php echo __('Subject Code'); ?></td>
-				<td class="table_cell"><?php echo __('Subject Name'); ?></td>
-				<td class="table_cell cell_number_input"><?php echo __('Minimum'); ?></td>
-				<td class="table_cell cell_number_input"><?php echo __('Maximum'); ?></td>
+				<td class="cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></td>
+				<td class="cell_subject_code"><?php echo __('Subject Code'); ?></td>
+				<td class=""><?php echo __('Subject Name'); ?></td>
+				<td class="cell_number_input"><?php echo __('Minimum'); ?></td>
+				<td class="cell_number_input"><?php echo __('Maximum'); ?></td>
 			</tr>
 		</thead>
 		<tbody class="table_body">
@@ -75,34 +75,34 @@ echo $this->Form->create('AssessmentItemType', array_merge($formOptions, array('
 				echo $this->Form->hidden('code', array('name' => sprintf($fieldName, $i, 'code'), 'value' => $item['code']));
 				echo $this->Form->hidden('name', array('name' => sprintf($fieldName, $i, 'name'), 'value' => $item['name']));
 				?>
-				<td class="table_cell">
+				<td class="">
 					<input type="checkbox" name="<?php echo sprintf($fieldName, $i, 'visible'); ?>" value="1" autocomplete="off" onChange="jsList.activate(this, '.table_row')" <?php echo $visible ? 'checked="checked"' : ''; ?>/>
 				</td>
-				<td class="table_cell"><?php echo $item['code']; ?></td>
-				<td class="table_cell"><?php echo $item['name']; ?></td>
-				<td class="table_cell">
-					<div class="input_wrapper">
+				<td class=""><?php echo $item['code']; ?></td>
+				<td class=""><?php echo $item['name']; ?></td>
+				<td class="input">
 					<?php 
 						echo $this->Form->input('min', array(
+							'label' => false,
+							'div' => false,
 							'name' => sprintf($fieldName, $i, 'min'),
 							'value' => $item['min'],
 							'maxlength' => 4,
 							'onkeypress' => 'return utility.integerCheck(event)'
 						));
 					?>
-					</div>
 				</td>
-				<td class="table_cell">
-					<div class="input_wrapper">
+				<td class="input">
 					<?php 
 						echo $this->Form->input('max', array(
+							'label' => false,
+							'div' => false,
 							'name' => sprintf($fieldName, $i, 'max'),
 							'value' => $item['max'],
 							'maxlength' => 4,
 							'onkeypress' => 'return utility.integerCheck(event)'
 						));
 					?>
-					</div>
 				</td>
 			</tr>
 			<?php } ?>
