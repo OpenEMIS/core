@@ -263,6 +263,8 @@ class SecurityController extends AppController {
 		if (!$this->Session->check('configItem.language')) {
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 		}
+
+		$this->Session->write('login.token', $this->SecurityUser->createToken());
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
 		$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 	}

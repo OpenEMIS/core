@@ -36,7 +36,7 @@ App::uses('L10n', 'I18n');
 class AppController extends Controller {
 	public $bodyTitle = '';
 	public $modules = array();
-	public $uses = array('ConfigItem');
+	public $uses = array('ConfigItem', 'SecurityUser');
 	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility');
 	public $components = array(
 		'RequestHandler',
@@ -70,6 +70,17 @@ class AppController extends Controller {
 		Configure::write('Config.language', $lang);
 		if(!$this->request->is('ajax')) {
 			$this->AccessControl->checkAccess();
+		}
+	
+		if($this->Auth->loggedIn()){
+			$token = null;
+			if($this->Session->check('login.token')){
+				$token = $this->Session->read('login.token');
+			}
+			if(!isset($token) || !$this->SecurityUser->validateToken($token)){
+				$this->Auth->logout();
+				return $this->redirect(array('controller'=>'Security', 'action'=>'logout'));
+			}
 		}
 	}
 	 
