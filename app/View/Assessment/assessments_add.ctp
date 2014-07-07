@@ -13,8 +13,6 @@ $this->assign('contentId', 'assessmentAdd');
 $this->assign('contentClass', 'edit');
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
-
 <?php
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Assessment','action' => 'assessmentsAdd'));
 echo $this->Form->create('AssessmentItemType', array_merge($formOptions, array('id'=> 'submitForm')));
@@ -53,11 +51,11 @@ echo $this->Form->create('AssessmentItemType', array_merge($formOptions, array('
     <table class="table table-striped table-hover table-bordered">
 		<thead class="table_head">
 			<tr>
-				<td class="cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></td>
-				<td class="cell_subject_code"><?php echo __('Subject Code'); ?></td>
-				<td class=""><?php echo __('Subject Name'); ?></td>
-				<td class="cell_number_input"><?php echo __('Minimum'); ?></td>
-				<td class="cell_number_input"><?php echo __('Maximum'); ?></td>
+				<th class="cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></th>
+				<th class="cell_subject_code"><?php echo __('Subject Code'); ?></th>
+				<th class=""><?php echo __('Subject Name'); ?></th>
+				<th class="cell_number_input"><?php echo __('Minimum'); ?></th>
+				<th class="cell_number_input"><?php echo __('Maximum'); ?></th>
 			</tr>
 		</thead>
 		<tbody class="table_body">
