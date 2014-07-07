@@ -3,12 +3,20 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('assessment', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('assessment', false);
-echo $this->Html->script('jquery.quicksand', false);
-echo $this->Html->script('jquery.sort', false);
+//echo $this->Html->script('jquery.quicksand', false);
+//echo $this->Html->script('jquery.sort', false);
+echo $this->Html->script('field.option', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Assessments'));
+$this->start('contentActions');
+if ($_edit && !empty($data)) {
+	echo $this->Html->link(__('List'), array('action' => 'index', $selectedProgramme), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="assessment" class="content_wrapper">
 	<?php
 	echo $this->Form->create('Assessment', array(
@@ -16,24 +24,14 @@ echo $this->Html->script('jquery.sort', false);
 		'url' => array('controller' => 'Assessment', 'action' => 'indexEdit', $selectedProgramme)
 	));
 	?>
-	<h1>
-		<span><?php echo __('Assessments'); ?></span>
-		<?php
-		if($_edit && !empty($data)) {
-			echo $this->Html->link(__('List'), array('action' => 'index', $selectedProgramme), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	<?php echo $this->element('alert'); ?>
-	
 	<div class="filter_wrapper">
 		<div class="row edit">
-			<div class="label"><?php echo __('Education Programme'); ?></div>
-			<div class="value">
+			<label class="control-label col-md-3"><?php echo __('Education Programme'); ?></label>
+			<div class="col-md-4">
 				<?php
 				echo $this->Form->input('education_programme_id', array(
 					'id' => 'EducationProgrammeId',
-					'class' => 'default',
+					'class' => 'form-control',
 					'options' => $programmeOptions,
 					'default' => $selectedProgramme,
 					'url' => 'Assessment/indexEdit/',
@@ -43,46 +41,76 @@ echo $this->Html->script('jquery.sort', false);
 			</div>
 		</div>
 	</div>
-	
-	<?php 
+
+	<?php
 	$i = 0;
-	foreach($data as $key => $obj) {
-	?>
+	foreach ($data as $key => $obj) {
+		?>
 		<fieldset class="section_group">
 			<legend><?php echo $obj['name']; ?></legend>
-			<div class="table full_width" style="margin-bottom: 0">
-				<div class="table_head">
-					<div class="table_cell cell_visible"><?php echo __('Status'); ?></div>
-					<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
-					<div class="table_cell"><?php echo __('Name'); ?></div>
-					<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
-				</div>
-			</div>
-		<?php
-			echo $this->Utility->getListStart();
-			foreach($obj['assessment'][$type] as $item) {
-				$isVisible = $item['visible']==1;
-				$fieldName = sprintf('data[AssessmentItemType][%s][%%s]', $i);
-				
-				echo $this->Utility->getListRowStart($i, $isVisible);
-				echo $this->Utility->getIdInput($this->Form, $fieldName, $item['id']);
-				echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
-				echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
-				echo '<div class="cell cell_code"><span>' . $item['code'] . '</span></div>';
-				echo $this->Utility->getNameInput($this->Form, $fieldName, $item['name'], false);
-				echo $this->Utility->getOrderControls();
-				echo $this->Utility->getListRowEnd();
-				$i++;
-			}
-			echo $this->Utility->getListEnd();
-		?>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+				<th class="cell_visible"><?php echo __('Status'); ?></th>
+				<th class="cell_code"><?php echo __('Code'); ?></th>
+				<th class=""><?php echo __('Name'); ?></th>
+				<th class="cell_order"><?php echo __('Order'); ?></th>
+				</thead>
+				<tbody>
+					<?php
+					$items = $obj['assessment'][$type];
+					if (!empty($items)) :
+						$index = 1;
+						$fieldindex = 0;
+						foreach ($items as $item) :
+							$isVisible = $item['visible'] == 1;
+							?>
+							<tr row-id="<?php echo $item['id']; ?>">
+								<td>
+									<?php 
+									echo $this->Form->hidden('id', array(
+										'name' => 'data[AssessmentItemType][' . $fieldindex . '][id]',
+										'value' => $item['id']
+									));
+									$options = array(
+										'name' => 'data[AssessmentItemType][' . $fieldindex . '][visible]',
+										'type' => 'checkbox',
+										'value' => 1,
+										'autocomplete' => 'off',
+										'div' => false,
+										'label' => false
+									);
+									if ($isVisible) {
+										$options['checked'] = 'checked';
+									}
+									echo $this->Form->input('visible', $options);
+									?></td>
+								<td><?php echo $item['code']; ?></td>
+								<td><?php echo $item['name']; ?></td>
+								<td class="action">
+									<?php
+									$size = count($items);
+									echo $this->element('layout/reorder', compact('index', 'size'));
+									$index++;
+									?>
+								</td>
+							</tr>
+							<?php
+							$fieldindex++;
+						endforeach;
+					endif;
+					?>
+				</tbody>
+			</table>
 		</fieldset>
-	<?php } ?>
 	
+
+	<?php } ?>
+
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index', $selectedProgramme), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
-	
+
 	<?php echo $this->Form->end(); ?>
 </div>
+<?php $this->end(); ?>
