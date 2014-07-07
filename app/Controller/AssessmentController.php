@@ -231,4 +231,25 @@ class AssessmentController extends AppController {
 			$this->redirect(array('action' => 'index'));
 		}
 	}
+	
+	public function move() {
+		if ($this->request->is('post') || $this->request->is('put')) {
+			$data = $this->request->data;
+			if(isset($this->params['pass'][0])){
+				$programmeId = $this->params['pass'][0];
+			}else{
+				return $this->redirect(array('action' => 'index'));
+			}
+			
+			$conditions = array(
+				'education_grade_id' => $data['AssessmentItemType']['gradeId'],
+				'type' => 1
+			);
+			
+			$modelObj = ClassRegistry::init('AssessmentItemType');
+			$modelObj->moveOrder($data, $conditions);
+
+			$this->redirect(array('action' => 'indexEdit', $programmeId));
+		}
+	}
 }

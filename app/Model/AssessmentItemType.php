@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AssessmentItemType extends AppModel {
+	public $actsAs = array('Reorder');
+	
 	public $type = array(
 		'NON_OFFICIAL' => 0,
 		'OFFICIAL' => 1
@@ -103,7 +105,8 @@ class AssessmentItemType extends AppModel {
 				sprintf($model, 'order'),
 				sprintf($model, 'visible'),
 				sprintf($model, 'education_grade_id'),
-				'EducationGrade.name as education_grade_name'
+				'EducationGrade.name as education_grade_name',
+				'EducationGrade.id as education_grade_id'
 			),
 			'joins' => array(
 				array(
