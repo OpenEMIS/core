@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('National Assessments'));
 $this->start('contentActions');
 if($_edit && !empty($data)) {
-	echo $this->Html->link(__('Edit'), array('action' => 'indexEdit', $selectedProgramme), array('class' => 'divider'));
+	echo $this->Html->link(__('Reorder'), array('action' => 'indexEdit', $selectedProgramme), array('class' => 'divider'));
 }
 if($_add) {
 	echo $this->Html->link(__('Add'), array('action' => 'assessmentsAdd'), array('class' => 'divider'));
@@ -48,6 +48,7 @@ $this->start('contentBody');
 	 <table class="table table-striped table-hover table-bordered">
 	 	<thead class="table_head">
 		 	<tr>
+				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th class="table_cell cell_code"><?php echo __('Code'); ?></th>
 				<th class="table_cell cell_name"><?php echo __('Name'); ?></th>
 				<th class="table_cell"><?php echo __('Description'); ?></th>
@@ -56,6 +57,7 @@ $this->start('contentBody');
 		<tbody class="table_body">
 			<?php foreach($obj['assessment'][$type] as $item) { ?>
 			<tr class="table_row <?php echo $item['visible'] == 0 ? 'inactive' : ''; ?>" row-id="<?php echo $item['id']; ?>">
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($item['visible']==1); ?></td>
 				<td class="table_cell"><?php echo $item['code']; ?></td>
 				<td class="table_cell"><?php echo $this->Html->link($item['name'], array('action' => 'assessmentsView', $item['id']), array('escape' => false)); ?></td>
 				<td class="table_cell"><?php echo $item['description']; ?></td>

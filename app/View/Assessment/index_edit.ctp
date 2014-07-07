@@ -16,13 +16,20 @@ if ($_edit && !empty($data)) {
 $this->end();
 
 $this->start('contentBody');
+
+$formParams = array('controller' => $this->params['controller'], 'action' => 'move', $selectedProgramme);
+echo $this->Form->create('AssessmentItemType', array('id' => 'OptionMoveForm', 'url' => $formParams));
+echo $this->Form->hidden('id', array('class' => 'option-id'));
+echo $this->Form->hidden('move', array('class' => 'option-move'));
+echo $this->Form->hidden('gradeId', array('class' => 'option-grade-id'));
+echo $this->Form->end();
 ?>
 <div id="assessment" class="content_wrapper">
 	<?php
-	echo $this->Form->create('Assessment', array(
-		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'Assessment', 'action' => 'indexEdit', $selectedProgramme)
-	));
+//	echo $this->Form->create('Assessment', array(
+//		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
+//		'url' => array('controller' => 'Assessment', 'action' => 'indexEdit', $selectedProgramme)
+//	));
 	?>
 	<div class="filter_wrapper">
 		<div class="row edit">
@@ -50,7 +57,7 @@ $this->start('contentBody');
 			<legend><?php echo $obj['name']; ?></legend>
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
-				<th class="cell_visible"><?php echo __('Status'); ?></th>
+				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th class="cell_code"><?php echo __('Code'); ?></th>
 				<th class=""><?php echo __('Name'); ?></th>
 				<th class="cell_order"><?php echo __('Order'); ?></th>
@@ -64,26 +71,8 @@ $this->start('contentBody');
 						foreach ($items as $item) :
 							$isVisible = $item['visible'] == 1;
 							?>
-							<tr row-id="<?php echo $item['id']; ?>">
-								<td>
-									<?php 
-									echo $this->Form->hidden('id', array(
-										'name' => 'data[AssessmentItemType][' . $fieldindex . '][id]',
-										'value' => $item['id']
-									));
-									$options = array(
-										'name' => 'data[AssessmentItemType][' . $fieldindex . '][visible]',
-										'type' => 'checkbox',
-										'value' => 1,
-										'autocomplete' => 'off',
-										'div' => false,
-										'label' => false
-									);
-									if ($isVisible) {
-										$options['checked'] = 'checked';
-									}
-									echo $this->Form->input('visible', $options);
-									?></td>
+							<tr row-id="<?php echo $item['id']; ?>" grade-id="<?php echo $item['education_grade_id']; ?>">
+								<td class="center"><?php echo $this->Utility->checkOrCrossMarker($item['visible']==1); ?></td>
 								<td><?php echo $item['code']; ?></td>
 								<td><?php echo $item['name']; ?></td>
 								<td class="action">
@@ -106,11 +95,6 @@ $this->start('contentBody');
 
 	<?php } ?>
 
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index', $selectedProgramme), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-
-	<?php echo $this->Form->end(); ?>
+	<?php //echo $this->Form->end(); ?>
 </div>
 <?php $this->end(); ?>
