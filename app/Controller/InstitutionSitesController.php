@@ -340,9 +340,9 @@ class InstitutionSitesController extends AppController {
             } else {
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
             }
-        } else if ($this->Session->check('InstitutionSiteId')){
-            $institutionSiteId = $this->Session->read('InstitutionSiteId');
-            $obj = $this->Session->read('InstitutionSiteObj');
+        } else if ($this->Session->check('InstitutionSite.id')){
+            $institutionSiteId = $this->Session->read('InstitutionSite.id');
+            $obj = $this->Session->read('InstitutionSite.data');
         } else {
             $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
         }
@@ -378,11 +378,11 @@ class InstitutionSitesController extends AppController {
 
 	public function edit() {
 		$this->Navigation->addCrumb('Edit');
-        $id = $this->Session->read('InstitutionSiteId');
+        $id = $this->Session->read('InstitutionSite.id');
 		$this->InstitutionSite->id = $id;
 		$data = $this->InstitutionSite->findById($id);
 		
-        if ($this->request->is('post')) {
+        if ($this->request->is(array('post', 'put'))) {
 			$dateOpened = $this->request->data['InstitutionSite']['date_opened'];
 			$dateClosed = $this->request->data['InstitutionSite']['date_closed'];
 			if(!empty($dateOpened)) {
@@ -401,7 +401,9 @@ class InstitutionSitesController extends AppController {
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view'));
             }
 			$data = $this->request->data;
-        }
+        } else {
+			$this->request->data = $data;
+		}
 		$visible = true;
         $typeOptions = $this->InstitutionSiteType->findList($visible);
         $ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
