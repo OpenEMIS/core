@@ -1,10 +1,13 @@
-<?php echo $this->Html->script('jquery.tools', false); ?>
+<?php //echo $this->Html->script('jquery.tools', false); ?>
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		echo $this->Form->input('school_year_id', array(
+		echo $this->Form->input('year', array(
 			'label' => false,
 			'div' => false,
+			'between' => false,
+			'after' => false,
+			'id' => 'populationYear',
 			'options' => $yearList,
 			'class' => 'form-control',
 			'default' => $selectedYear,
@@ -22,6 +25,6 @@
 </div>
 <script>
 $(document).ready(function() {
- $('li[title]').tooltip({position: 'top center', effect: 'slide'});
+ //$('li[title]').tooltip({position: 'top center', effect: 'slide'});
 });
 </script>

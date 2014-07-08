@@ -79,7 +79,9 @@ class PopulationController extends AppController {
 		$yearList = $this->DateTime->generateYear();
 		krsort($yearList);
 		
-		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList'));
+		$areaId = false;
+		
+		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId'));
 
 		//$this->set('levels', $levels);
         //$this->set('highestLevel',$areas);	
