@@ -24,6 +24,10 @@ class PopulationController extends AppController {
         'AreaLevel',
         'Population'
 	);
+	
+	public $components = array(
+        'DateTime'
+    );
 
 	public function beforeFilter() {
         parent::beforeFilter();
@@ -34,11 +38,11 @@ class PopulationController extends AppController {
 	
 	public function index() {
 		$this->Navigation->addCrumb('Population');
-        $areas = array();
+        $highestLevel = array();
         $levels = $this->AreaLevel->find('list');
         $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1', 'Area.visible' => 1)));
         $this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
-        $areas[] = $topArea;
+        $highestLevel[] = $topArea;
 /*
         // add new population
         if($this->request->is('post')){
@@ -58,7 +62,7 @@ class PopulationController extends AppController {
                 $area = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $this->request->data['Population']['area_level_'.$i], 'Area.visible' => 1)));
                 
                 $this->Utility->unshiftArray($area, array('0'=>'--'.__('Select').'--'));
-                $areas[] = $area;
+                $highestLevel[] = $area;
                 //echo '<br/>';
             }
 
@@ -68,10 +72,17 @@ class PopulationController extends AppController {
             }
             $this->set('initAreaSelection', (isset($this->request->data['Population']) && count($this->request->data['Population']) > 0)?$this->request->data['Population']: null);
         }
+		
+		$currentYear = intval(date('Y'));
+		$selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
+		
+		$yearList = $this->DateTime->generateYear();
+		krsort($yearList);
+		
+		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList'));
 
-
-		$this->set('levels', $levels);
-        $this->set('highestLevel',$areas);	
+		//$this->set('levels', $levels);
+        //$this->set('highestLevel',$areas);	
 
 	}
 
