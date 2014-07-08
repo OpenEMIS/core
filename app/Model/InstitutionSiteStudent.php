@@ -601,7 +601,7 @@ class InstitutionSiteStudent extends AppModel {
 					if (!empty($date)) {
 						$startDate = new DateTime($date); //new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
 
-						//$data['start_date'] = $startDate->format('Y-m-d');
+						$data['start_date'] = $startDate->format('Y-m-d');
 						$data['start_year'] = $startDate->format('Y');
 						$student = $controller->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
 						$name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
@@ -621,6 +621,10 @@ class InstitutionSiteStudent extends AppModel {
 							$endYear = $endDate->format('Y');
 							$data['end_date'] = $endDate->format('Y-m-d');
 							$data['end_year'] = $endYear;
+							
+							// status set to 1(Current Student) by default on student add page, refer to PHPOE-870 
+							$data['student_status_id'] = 1;
+							
 							if ($this->save($data)) {
 								$controller->Message->alert('general.add.success');
 								return $controller->redirect(array('action' => 'students'));
