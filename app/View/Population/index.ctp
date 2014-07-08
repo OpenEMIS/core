@@ -14,12 +14,7 @@ $this->end();
 $this->assign('contentId', 'population');
 $this->start('contentBody');
 
-$currentYear = intval(date('Y'));
-$selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
-?>
-<?php echo $this->element('alert'); ?>
 
-<?php
 echo $this->Form->create('Population', array(
 		'url' => array(
 			'controller' => 'Population',
@@ -29,24 +24,25 @@ echo $this->Form->create('Population', array(
         'inputDefaults' => array('label' => false, 'div' =>false)
 	)
 );
-?>
 
+echo $this->element('../Population/controls');
+?>
+<!--
 <div class="row year">
 	<div class="label"><?php echo __('Year'); ?></div>
 	<?php 
-		echo $this->Utility->getYearList($this->Form,'data[year]',array(
-			'name' => "data[year]",
-			'id' => "year_id",
-			'class'=>'form-control',
-			'div' => 'col-md-4',
-			'maxlength' => 30,
-			'desc' => true,
-			'label' => false,
-			'default' => $selectedYear,
-			'div' => false), true);
+//		echo $this->Utility->getYearList($this->Form,'data[year]',array(
+//			'name' => "data[year]",
+//			'id' => "year_id",
+//			'class'=>'form-control',
+//			'div' => 'col-md-4',
+//			'maxlength' => 30,
+//			'desc' => true,
+//			'label' => false,
+//			'default' => $selectedYear,
+//			'div' => false), true);
 	?>
-            <?php echo $this->element('census_legend_population'); ?>
-</div>
+</div>-->
 
 <fieldset id="area_section_group" class="section_group">
     <legend id="area"><?php echo __('Area'); ?></legend>
