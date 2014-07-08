@@ -25,9 +25,12 @@ $this->start('contentBody');
 <fieldset class="section_break" id="general">
 	<legend><?php echo __('General'); ?></legend>
 	<?php
-	$path = (isset($obj['photo_content']) && !empty($obj['photo_content']) && !stristr($obj['photo_content'], 'null')) ? "/Staff/fetchImage/{$obj['id']}" : "/Staff/img/default_staff_profile.jpg";
-	echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
+		$src = $this->Image->getBase64($obj['photo_name'], $obj['photo_content']);
+		if(is_null($src)) {
+			$src = $this->webroot . 'Staff/img/default_staff_profile.jpg';
+		}
 	?>
+	<img src="<?php echo $src ?>" class="profile-image" alt="90x115" />
 	<div class="row">
 		<div class="col-md-3"><?php echo __('OpenEMIS ID'); ?></div>
 		<div class="col-md-6">
@@ -62,7 +65,7 @@ $this->start('contentBody');
 	</div>
 
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Date of Birth'); ?></div>
+		<div class="col-md-3"><?php echo __('Date Of Birth'); ?></div>
 		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
 	</div>
 </fieldset>
