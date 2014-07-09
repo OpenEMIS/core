@@ -267,11 +267,11 @@ class CensusClass extends AppModel {
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('Classes');
 
-		$yearList = $this->SchoolYear->getYearList();
+		$yearList = $this->SchoolYear->getAvailableYears();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->findAllByInstitutionSiteIdAndSchoolYearIdAndStatus($institutionSiteId, $selectedYear, true);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
 		$programmeGrades = array();
 		if (empty($programmes)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
