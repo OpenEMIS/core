@@ -93,8 +93,8 @@ $pageNumberOptions = array('modulus' => 5, 'first' => 2, 'last' => 2, 'tag' => '
     </ul>
 </div>
 
-<table class="table table-striped table-hover table-bordered"  action="Student/viewStudent/" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
-    <thead url="Student/index">
+<table class="table table-striped table-hover table-bordered"  action="Students/viewStudent/" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
+    <thead url="Students/index">
 		<tr>
 			<td class="table_cell cell_code">
                 <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
