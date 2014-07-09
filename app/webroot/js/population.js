@@ -34,8 +34,14 @@ $(document).ready(function() {
     });
 	
 	$('#areapicker.areapicker').on('change', 'select', function(){
-		var year = $('select#populationYear').val();
-		alert(year);
+		population.fetchDataByArea($(this).val());
+		if($(this).val() != '' && $(this).val() > 0){
+			currentAreaId = $(this).val();
+		}
+	});
+	
+	$('select#populationYear').on('change', function(){
+		location.href = population.base + 'index/' + $(this).val() + '/' + currentAreaId;
 	});
 
 });
@@ -194,6 +200,47 @@ var population = {
             }*/
         });
     },
+	
+	fetchDataByArea: function(areaId) {
+		var year = $('select#populationYear').val();
+
+		var maskId;
+		var url = population.base + 'loadData/' + year + '/' + areaId;
+
+		$.ajax({
+			type: 'GET',
+			dataType: 'html',
+			url: url,
+			success: function(data, textStatus) {
+				var tableBody = $('#mainlist table').find('tbody');
+
+				if (data.length > 0) {
+//                                if(population.isEditable === true){
+//                                    tpl += population.renderRecordToHtmlTableRowForEdit(data);//'<option value="'+i+'">'+data[i]+'</option>';
+//									
+//                                    if(data.length > 0){
+//                                        $('.btn_save').removeClass('btn_disabled');
+//                                    }else{
+//                                        $('.btn_save').addClass('btn_disabled');
+//                                    }
+//                                }else{
+//                                    tpl += population.renderRecordToHtmlTableRow(data);
+//                                }
+					tableBody.html(data);
+					population.computeTotal(tableBody.parent());
+					if (tableBody.is(':visible') === false) {
+						tableBody.show();
+					}
+
+				} else {
+					tableBody.html('');
+					population.computeTotal(tableBody.parent());
+					tableBody.hide();
+
+				}
+			}
+		});
+	},
     fetchData: function(currentObject){
         //isEditable = typeof isEditable !== 'undefined' ? isEditable : false;
         // init values
@@ -322,7 +369,7 @@ var population = {
         table.find('.cell_total').each(function() {
             total += $(this).html().toInt();
         });
-        table.find('.table_foot .cell_value').html(total);
+        table.find('tfoot .cell_value').html(total);
     },
     
     addRow: function(id) {

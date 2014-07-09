@@ -1,7 +1,7 @@
 <?php //echo $this->Html->script('jquery.tools', false); ?>
 <div class="row page-controls">
 	<div class="col-md-3">
-		<?php
+		<?php 
 		echo $this->Form->input('year', array(
 			'label' => false,
 			'div' => false,
