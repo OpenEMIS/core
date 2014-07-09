@@ -32,6 +32,11 @@ $(document).ready(function() {
     $('.btn_cancel').click(function(event){
         $('#viewLink').trigger('click');
     });
+	
+	$('#areapicker.areapicker').on('change', 'select', function(){
+		var year = $('select#populationYear').val();
+		alert(year);
+	});
 
 });
 
