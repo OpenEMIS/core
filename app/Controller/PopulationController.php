@@ -74,14 +74,16 @@ class PopulationController extends AppController {
         }
 		
 		$currentYear = intval(date('Y'));
-		$selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
+		$selectedYear = isset($this->params->pass[0])? intval($this->params->pass[0]) : $currentYear;
 		
 		$yearList = $this->DateTime->generateYear();
 		krsort($yearList);
 		
-		$areaId = false;
+		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
 		
-		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId'));
+        $data = $this->Utility->formatResult($this->Population->getPopulationData($selectedYear, $areaId));
+		
+		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId', 'data'));
 
 		//$this->set('levels', $levels);
         //$this->set('highestLevel',$areas);	
@@ -158,6 +160,17 @@ class PopulationController extends AppController {
         //var_dump($data);die();
         echo json_encode($data);
         
+    }
+	
+	public function loadData() {
+		$this->layout = false;
+		
+		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
+		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
+		
+		
+        $data = $this->Utility->formatResult($this->Population->getPopulationData($year, $areaId));
+        $this->set(compact('data'));
     }
 
     public function populationAjax() {

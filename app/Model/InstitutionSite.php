@@ -1031,12 +1031,14 @@ AND
 		foreach($data as $key=>$value){
 			$areaID = $value['Area']['id'];
 			$path = $AreaHandler->{$model}->getPath($areaID);
-			foreach($path as $i => $obj) {
-				if($obj[$model]['area_level_id']!=$areaLevelID){
-					continue;
+			if(is_array($path)){
+				foreach($path as $i => $obj) {
+					if($obj[$model]['area_level_id']!=$areaLevelID){
+						continue;
+					}
+					$data[$key][$model]['name'] = $obj[$model]['name'];
+					break;
 				}
-				$data[$key][$model]['name'] = $obj[$model]['name'];
-				break;
 			}
 		}
 		return $data;
