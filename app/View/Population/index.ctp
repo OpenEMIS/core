@@ -1,5 +1,5 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+// echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('population', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.area', false);
 echo $this->Html->script('population', false);
@@ -60,13 +60,34 @@ echo $this->element('../Population/controls');
 				</tr>
 
 			</thead>
+			<?php 
+			$allTotal = 0;
+			if (!empty($data)): ?>
+				<tbody>
+					<?php
+					
+					foreach ($data AS $row):
+						$allTotal += $row['male'];
+						$allTotal += $row['female'];
+						?>
+						<tr class="<?php echo $row['data_source'] == 0 ? '' : 'row_estimate'; ?>">
+							<td><?php echo $row['source']; ?></td>
+							<td><?php echo $row['age']; ?></td>
+							<td><?php echo $row['male']; ?></td>
+							<td><?php echo $row['female']; ?></td>
+							<td class="cell_total"><?php echo $row['male'] + $row['female']; ?></td>
+						</tr>
+						<?php
+					endforeach;
+					?>
+				</tbody>
+			<?php endif; ?>
 
-			<tbody class="table_body" style="display:none;">&nbsp;</tbody>
 
 			<tfoot>
 				<tr>
 					<td class="cell-number" colspan="4"><?php echo __('Total'); ?></td>
-					<td class="cell_value cell_number">0</td>
+					<td class="cell_value cell_number"><?php echo $allTotal; ?></td>
 				</tr>
 			</tfoot>
 		</table>
@@ -74,6 +95,8 @@ echo $this->element('../Population/controls');
 </fieldset>
 
 <script type="text/javascript">
+	var currentAreaId = <?php echo intval($areaId); ?>;
+
 
 //	$(document).ready(function() {
 //		var selectedYear = <?php echo $selectedYear ?>;
@@ -98,19 +121,19 @@ echo $this->element('../Population/controls');
 //		});
 //
 //<?php if (isset($initAreaSelection) && count($initAreaSelection) > 0) { ?>
-	//			population.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
-	//			var currentSelect;
-	//
-	//			for (var key in population.initAreaSelection) {
-	//				currentSelect = $('select[name*="[' + key + ']"]');
-	//				population.parentAreaIds.push(parseInt(population.initAreaSelection[key]));
-	//				currentSelect.find($('option[value="' + population.initAreaSelection[key] + '"]')).attr('selected', 'selected');
-	//				// $('select[name*="['+key+']"]').find($('option[value="'+population.initAreaSelection[key]+'"]')).attr('selected','selected').trigger('change');
-	//
-	//			}
-	//			currentSelect.find($('option[value="' + population.initAreaSelection[key] + '"]')).trigger('change');
-	//
-	//<?php } ?>
+		//			population.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
+		//			var currentSelect;
+		//
+		//			for (var key in population.initAreaSelection) {
+		//				currentSelect = $('select[name*="[' + key + ']"]');
+		//				population.parentAreaIds.push(parseInt(population.initAreaSelection[key]));
+		//				currentSelect.find($('option[value="' + population.initAreaSelection[key] + '"]')).attr('selected', 'selected');
+		//				// $('select[name*="['+key+']"]').find($('option[value="'+population.initAreaSelection[key]+'"]')).attr('selected','selected').trigger('change');
+		//
+		//			}
+		//			currentSelect.find($('option[value="' + population.initAreaSelection[key] + '"]')).trigger('change');
+		//
+		//<?php } ?>
 //	});
 
 
