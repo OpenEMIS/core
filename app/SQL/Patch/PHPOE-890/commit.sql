@@ -1,7 +1,7 @@
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (148, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Fees', 'fee', '^fee', NULL, 3, 0, 141, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(149, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Students', 'feeStudent', '^feeStudent', NULL, 3, 0, 142, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(149, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Students', 'studentFee', '^studentFee', NULL, 3, 0, 142, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 
 DROP TABLE IF EXISTS `institution_site_fees`;
@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS `institution_site_fee_types` (
   KEY `fee_type_id` (`fee_type_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `institution_site_fee_students`;
-CREATE TABLE IF NOT EXISTS `institution_site_fee_students` (
+DROP TABLE IF EXISTS `institution_site_student_fees`;
+CREATE TABLE IF NOT EXISTS `institution_site_student_fees` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `institution_site_fee_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
@@ -50,6 +50,21 @@ CREATE TABLE IF NOT EXISTS `institution_site_fee_students` (
   PRIMARY KEY (`id`),
   KEY `institution_site_fee_id` (`institution_site_fee_id`),
   KEY `student_id` (`student_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `institution_site_student_fee_transactions`;
+CREATE TABLE IF NOT EXISTS `institution_site_student_fee_transactions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `institution_site_student_fee_id` int(11) NOT NULL,
+  `paid_date` date DEFAULT NULL,
+  `paid` decimal(11,2) DEFAULT NULL,
+  `comments` text DEFAULT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `institution_site_student_fee_id` (`institution_site_student_fee_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 

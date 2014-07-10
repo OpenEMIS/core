@@ -4,9 +4,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
-if($_add) {
-    echo $this->Html->link(__('Add'), array('action' => 'feeStudentAdd'), array('class' => 'divider', 'id'=>'add'));
-}
 $this->end();
 
 $this->start('contentBody');
@@ -43,14 +40,20 @@ echo $this->element('templates/year_options', array('url' => $_action));
                 <tbody>
                 	<?php 
                     if(!empty($data)){ 
-                    foreach($data[$programme['education_programme_id'].'_'.$key] as $id=>$val) {  ?>
+                    if(isset($data[$programme['id'].'_'.$key])){ 
+                    foreach($data[$programme['id'].'_'.$key] as $id=>$val) {  ?>
                     <tr row-id="<?php echo $val['id']; ?>">
                         <td class="table_cell"><?php echo $val['identification_no']; ?></td>
-                    	<td class="table_cell"><?php echo $this->Html->link($val['name'], array('action' => 'feeView', $val['id']), array('escape' => false)); ?></td>
-                        <td class="table_cell"><?php echo $val['total_paid']; ?></td>
-                        <td class="table_cell"><?php echo $val['total_outstanding']; ?></td>
+                    	<td class="table_cell">
+                            <?php 
+                            echo $this->Html->link($val['name'], array('action' => 'studentFeeView', $val['student_id'], $val['id']), array('escape' => false));
+                            ?>
+                        </td>
+                        <td class="table_cell"><?php echo number_format($val['total_paid'],2); ?></td>
+                        <td class="table_cell"><?php echo number_format($val['total_outstanding'],2); ?></td>
                     </tr>
                    <?php } 
+                        }
                     }
                    ?>
                 </tbody>
