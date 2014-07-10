@@ -308,7 +308,11 @@ class LabelHelper extends AppHelper {
 			'permissions' => 'Permissions',
 			'name' => 'Role',
 			'security_group_id' => 'Group'
-		)
+		),
+		'FinanceFee' => array(
+			'fee' => 'Fee',
+			'amount' => 'Amount'
+		),
 	);
 	
 	public function get($code) {
