@@ -25,23 +25,37 @@ $(document).ready(function() {
         }
     });
 
-    $('input[type="submit"]').click(function(event){
-        event.preventDefault();
-    });
+//    $('input[type="submit"]').click(function(event){
+//        event.preventDefault();
+//    });
 
     $('.btn_cancel').click(function(event){
         $('#viewLink').trigger('click');
     });
 	
 	$('#areapicker.areapicker').on('change', 'select', function(){
-		population.fetchDataByArea($(this).val());
+		if($('#population').hasClass('edit')){
+			population.fetchDataByArea($(this).val(), 'edit');
+		}else{
+			population.fetchDataByArea($(this).val(), '');
+		}
+
 		if($(this).val() != '' && $(this).val() > 0){
 			currentAreaId = $(this).val();
 		}
+		
+		$('a.withLatestAreaId').each(function(){
+			alert($(this).attr('href').match(/(\/\d{4}\/)\d*/g));
+			$(this).attr('href').replace(/(\/\d{4}\/)\d*/g, 'dddddd');
+		});
 	});
 	
 	$('select#populationYear').on('change', function(){
-		location.href = population.base + 'index/' + $(this).val() + '/' + currentAreaId;
+		if($('#population').hasClass('edit')){
+			location.href = population.base + 'index/' + $(this).val() + '/' + currentAreaId;
+		}else{
+			location.href = population.base + 'edit/' + $(this).val() + '/' + currentAreaId;
+		}
 	});
 
 });
@@ -201,11 +215,15 @@ var population = {
         });
     },
 	
-	fetchDataByArea: function(areaId) {
+	fetchDataByArea: function(areaId, mode) {
 		var year = $('select#populationYear').val();
-
-		var maskId;
-		var url = population.base + 'loadData/' + year + '/' + areaId;
+		
+		var url;
+		if(mode === 'edit'){
+			url = population.base + 'loadForm/' + year + '/' + areaId;
+		}else{
+			url = population.base + 'loadData/' + year + '/' + areaId;
+		}
 
 		$.ajax({
 			type: 'GET',
@@ -217,14 +235,14 @@ var population = {
 
 				if (data.length > 0) {
 					if(tableBody.length > 0){
-						tableBody.remove;
+						tableBody.remove();
 					}
 					tableHead.after(data);
 					population.computeTotal(tableHead.parent());
 
 				} else {
 					if(tableBody.length > 0){
-						tableBody.remove;
+						tableBody.remove();
 					}
 					population.computeTotal(tableHead.parent());
 
