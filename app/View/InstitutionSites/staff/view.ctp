@@ -1,7 +1,6 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Staff.staff', 'stylesheet', array('inline' => false));
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
@@ -22,7 +21,7 @@ $this->end();
 
 $this->start('contentBody');
 ?>
-<fieldset class="section_break" id="general">
+<fieldset class="section_break">
 	<legend><?php echo __('General'); ?></legend>
 	<?php
 		$src = $this->Image->getBase64($obj['photo_name'], $obj['photo_content']);
@@ -36,7 +35,7 @@ $this->start('contentBody');
 		<div class="col-md-6">
 			<?php
 			if ($_accessControl->check('Staff', 'view')) {
-				echo $this->Html->link($obj['identification_no'], array('controller' => 'Staff', 'action' => 'viewStaff', $obj['id']), array('class' => 'link_back'));
+				echo $this->Html->link($obj['identification_no'], array('controller' => 'Staff', 'action' => 'view', $obj['id']), array('class' => 'link_back'));
 			} else {
 				echo $obj['identification_no'];
 			}
@@ -76,22 +75,21 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<th class="table_cell" style="width: 150px;"><?php echo __('Position'); ?></th>
-					<th class="table_cell" style="width: 220px;"><?php echo __('Details'); ?></th>
-					<th class="table_cell"><?php echo __('FTE'); ?></th>
-					<th class="table_cell"><?php echo __('Status'); ?></th>
+					<th style="width: 150px;"><?php echo __('Position'); ?></th>
+					<th style="width: 220px;"><?php echo __('Details'); ?></th>
+					<th><?php echo __('FTE'); ?></th>
+					<th><?php echo __('Status'); ?></th>
 				</tr>
 			</thead>
 
 			<tbody>
 				<?php foreach ($positions as $obj) { ?>
-				<tr class="table_row">
+				<tr>
 					<td class="table_cell">
 						<div class="table_cell_row">Number: <?php echo $obj['InstitutionSitePosition']['position_no']; ?></div>
 						<div class="table_cell_row">Type: <?php echo $obj['StaffType']['name']; ?></div>
 						<div class="table_cell_row">Title: <?php echo $this->Html->link($obj['StaffPositionTitle']['name'], array('action' => 'positionsHistory', $obj['InstitutionSitePosition']['id']), array('escape' => false)); ?></div>
 						<div class="table_cell_row">Grade: <?php echo $obj['StaffPositionGrade']['name']; ?></div>
-						<?php /*<div class="table_cell_row">Step: <?php echo $obj['StaffPositionStep']['name']; ?></div> */?>
 					</td>
 					<td class="table_cell view">
 						<div class="table_cell_row">
