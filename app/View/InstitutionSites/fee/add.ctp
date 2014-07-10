@@ -70,7 +70,7 @@ echo $this->Form->input('InstitutionSiteFeeType.'.$key.'.fee', array(
 </div>
 </div>
 <?php 
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'bankAccounts')));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'fee')));
 echo $this->Form->end();
 
 $this->end();

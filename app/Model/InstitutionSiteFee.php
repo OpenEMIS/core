@@ -43,8 +43,12 @@ class InstitutionSiteFee extends AppModel {
 	public $hasMany = array(
 		'InstitutionSiteFeeType' => array(
 			'dependent' => true
-		),
-		'InstitutionSiteFeeStudent' => array(
+		)
+	);
+
+
+	public $hasOne = array(
+		'InstitutionSiteStudentFee' => array(
 			'dependent' => true
 		)
 	);
@@ -61,7 +65,7 @@ class InstitutionSiteFee extends AppModel {
 
 	public $headerDefault = 'Fees';
 
-	public $_action = 'fees';
+	public $_action = 'fee';
 	
 	public function beforeAction($controller, $action) {
 		parent::beforeAction($controller, $action);
@@ -73,7 +77,7 @@ class InstitutionSiteFee extends AppModel {
 		$controller->Navigation->addCrumb($this->headerDefault);
 
 		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
-		$selectedYear = (isset($params->pass[0]) ? $params->pass[0] : ($controller->Session->check('InstitutionSiteFee.selected_year') ? $controller->Session->read('InstitutionSiteFee.selected_year') : key($yearOptions)));
+		$selectedYear = (isset($params->pass[0]) ? $params->pass[0] : key($yearOptions));
 		$data = $this->getListOfFees($selectedYear, $controller->institutionSiteId);
 
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
@@ -200,7 +204,6 @@ class InstitutionSiteFee extends AppModel {
 		
 		}
 		else{
-			pr($controller->request->data);
 			$controller->request->data['InstitutionSiteFee']['institution_site_id'] = $controller->institutionSiteId;
 			if ($this->saveAll($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
@@ -222,12 +225,37 @@ class InstitutionSiteFee extends AppModel {
 
 		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $yearId);
 		foreach($programmeGrades as $programGrade){
-			$fees = $this->find('all', array(
+			$fees = $this->EducationGrade->find('all', array(
+				'recursive'=>-1,
 				'fields' => array('EducationGrade.id', 'InstitutionSiteFee.id', 'EducationGrade.name', 'InstitutionSiteFee.total_fee'),
+				'joins' => array(
+					array(
+						'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
+						'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+					),
+					array(
+						'table' => 'institution_site_programmes',
+						'alias' => 'InstitutionSiteProgramme',
+						'conditions' => array(
+							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
+						)
+					),
+					array(
+						'type' => 'LEFT',
+						'table' => 'institution_site_fees',
+						'alias' => 'InstitutionSiteFee',
+						'conditions' => array(
+							'InstitutionSiteFee.school_year_id = InstitutionSiteProgramme.school_year_id', 
+							'InstitutionSiteFee.education_grade_id = EducationGrade.id', 
+							'InstitutionSiteFee.institution_site_id = InstitutionSiteProgramme.institution_site_id'
+						)
+					)
+				),
 				'conditions' => array(
-					'InstitutionSiteFee.school_year_id' => $yearId,
-					'InstitutionSiteFee.institution_site_id' => $institutionSiteId,
-					'InstitutionSiteFee.education_grade_id' => array_keys($programGrade['education_grades'])
+					'InstitutionSiteProgramme.school_year_id' => $yearId,
+					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+					'EducationGrade.id' => array_keys($programGrade['education_grades'])
 				),
 				'order' => array('EducationGrade.id')
 			));
