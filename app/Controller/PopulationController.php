@@ -101,24 +101,7 @@ class PopulationController extends AppController {
         $areas[] = $topArea;
 
         if($this->request->is('post')) {
-        	//echo '<pre>';
-        	//var_dump($this->request->data);
-            for ($i = 0; $i < count($this->request->data['Population'])-1; $i++) {
-                //echo 'area_level_'. $i . ': '. $this->request->data['Population']['area_level_'.$i] .'<br/>';
-                $area = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $this->request->data['Population']['area_level_'.$i], 'Area.visible' => 1)));
-                
-                $this->Utility->unshiftArray($area, array('0'=>'--'.__('Select').'--'));
-                $areas[] = $area;
-                //echo '<br/>';
-            }
-        	//echo '</pre>';
-
-
-            $this->set('selectedYear', (isset($this->request->data['year']))? $this->request->data['year']:intval(date('Y')));
-            if(end($this->request->data['Population']) == 0 ){
-                array_pop($this->request->data['Population']);
-            }
-            $this->set('initAreaSelection', (isset($this->request->data['Population']))?$this->request->data['Population']: null);
+			pr($this->request->data['Population']);
         }
 		
 		$currentYear = intval(date('Y'));
@@ -129,7 +112,9 @@ class PopulationController extends AppController {
 		
 		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
 		
-		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId'));
+		$data = $this->Utility->formatResult($this->Population->getPopulationData($selectedYear, $areaId));
+		
+		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId', 'data'));
 	}
 
 	public function viewAreaChildren($id) {
@@ -169,6 +154,17 @@ class PopulationController extends AppController {
     }
 	
 	public function loadData() {
+		$this->layout = false;
+		
+		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
+		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
+		
+		
+        $data = $this->Utility->formatResult($this->Population->getPopulationData($year, $areaId));
+        $this->set(compact('data'));
+    }
+	
+	public function loadForm() {
 		$this->layout = false;
 		
 		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
