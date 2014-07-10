@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Population'));
 $this->start('contentActions');
 if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'edit', $selectedYear, $areaId), array('id' => 'edit', 'class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'edit', $selectedYear, $areaId), array('id' => 'edit', 'class' => 'divider withLatestAreaId'));
 }
 $this->end();
 $this->assign('contentId', 'population');
@@ -35,10 +35,10 @@ echo $this->element('../Population/controls');
 				<!--div class="table_cell">Area Level</div-->
 				<tr>
 					<th class="cell_source"><?php echo __('Source'); ?></span></th>
-					<th class=""><?php echo __('Age'); ?></th>
-					<th class=""><?php echo __('Male'); ?></th>
-					<th class=""><?php echo __('Female'); ?></th>
-					<th class=""><?php echo __('Total'); ?></th>
+					<th><?php echo __('Age'); ?></th>
+					<th><?php echo __('Male'); ?></th>
+					<th><?php echo __('Female'); ?></th>
+					<th><?php echo __('Total'); ?></th>
 				</tr>
 
 			</thead>
@@ -54,17 +54,16 @@ echo $this->element('../Population/controls');
 						?>
 						<tr class="<?php echo $row['data_source'] == 0 ? '' : 'row_estimate'; ?>">
 							<td><?php echo $row['source']; ?></td>
-							<td><?php echo $row['age']; ?></td>
-							<td><?php echo $row['male']; ?></td>
-							<td><?php echo $row['female']; ?></td>
-							<td class="cell_total"><?php echo $row['male'] + $row['female']; ?></td>
+							<td class="cell-number"><?php echo $row['age']; ?></td>
+							<td class="cell-number"><?php echo $row['male']; ?></td>
+							<td class="cell-number"><?php echo $row['female']; ?></td>
+							<td class="cell-number cell_total"><?php echo $row['male'] + $row['female']; ?></td>
 						</tr>
 						<?php
 					endforeach;
 					?>
 				</tbody>
 			<?php endif; ?>
-
 
 			<tfoot>
 				<tr>
