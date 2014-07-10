@@ -1,5 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
