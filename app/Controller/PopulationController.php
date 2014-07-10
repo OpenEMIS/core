@@ -120,10 +120,16 @@ class PopulationController extends AppController {
             }
             $this->set('initAreaSelection', (isset($this->request->data['Population']))?$this->request->data['Population']: null);
         }
-
-        $this->set('levels', $levels);
-        $this->set('highestLevel',$areas);    
-
+		
+		$currentYear = intval(date('Y'));
+		$selectedYear = isset($this->params->pass[0])? intval($this->params->pass[0]) : $currentYear;
+		
+		$yearList = $this->DateTime->generateYear();
+		krsort($yearList);
+		
+		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
+		
+		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId'));
 	}
 
 	public function viewAreaChildren($id) {

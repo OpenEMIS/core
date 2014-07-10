@@ -212,30 +212,21 @@ var population = {
 			dataType: 'html',
 			url: url,
 			success: function(data, textStatus) {
-				var tableBody = $('#mainlist table').find('tbody');
+				var tableBody = $('#data_section_group table').find('tbody');
+				var tableHead = $('#data_section_group table').find('thead');
 
 				if (data.length > 0) {
-//                                if(population.isEditable === true){
-//                                    tpl += population.renderRecordToHtmlTableRowForEdit(data);//'<option value="'+i+'">'+data[i]+'</option>';
-//									
-//                                    if(data.length > 0){
-//                                        $('.btn_save').removeClass('btn_disabled');
-//                                    }else{
-//                                        $('.btn_save').addClass('btn_disabled');
-//                                    }
-//                                }else{
-//                                    tpl += population.renderRecordToHtmlTableRow(data);
-//                                }
-					tableBody.html(data);
-					population.computeTotal(tableBody.parent());
-					if (tableBody.is(':visible') === false) {
-						tableBody.show();
+					if(tableBody.length > 0){
+						tableBody.remove;
 					}
+					tableHead.after(data);
+					population.computeTotal(tableHead.parent());
 
 				} else {
-					tableBody.html('');
-					population.computeTotal(tableBody.parent());
-					tableBody.hide();
+					if(tableBody.length > 0){
+						tableBody.remove;
+					}
+					population.computeTotal(tableHead.parent());
 
 				}
 			}
