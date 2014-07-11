@@ -78,6 +78,10 @@ class InstitutionSiteFee extends AppModel {
 
 		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
 		$selectedYear = (isset($params->pass[0]) ? $params->pass[0] : key($yearOptions));
+
+		$programmeOptions = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammeOptions($controller->institutionSiteId, $selectedYear);
+		$selectedProgramme =  (isset($params->pass[1]) ? $params->pass[1] : 0);
+
 		$data = $this->getListOfFees($selectedYear, $controller->institutionSiteId);
 
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
@@ -86,16 +90,28 @@ class InstitutionSiteFee extends AppModel {
 		if(!empty($selectedYear)){
 			$controller->Session->write('InstitutionSiteFee.selected_year', $selectedYear);
 		}
-		$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+		$controller->Session->write('InstitutionSiteFee.selected_programme', $selectedProgramme);
+
+		$programmes = array();
+		if(empty($selectedProgramme)){
+			$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+		}else{
+			$programmes = $this->EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('EducationProgramme.*'), 'conditions'=>array('EducationProgramme.id'=>$selectedProgramme)));
+		}
+
+		if(empty($programmes)){
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
+		}
+		
 		$modelName = $this->name;
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'selectedYear', 'programmes', 'yearOptions', 'modelName'));
+		$controller->set(compact('data', 'selectedYear', 'selectedProgramme', 'programmes', 'programmeOptions', 'yearOptions', 'modelName'));
 	}
 
 	public function feeView($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$feeId = $controller->params['pass'][0];
-		$data = $this->findById($feeId);
+		$data = $this->find('first', array('recursive'=>2,'conditions'=>array('InstitutionSiteFee.id'=>$feeId)));
 
 		if (!empty($data)) {
 			$controller->Session->write('InstitutionSiteFee.id', $feeId);
@@ -104,17 +120,10 @@ class InstitutionSiteFee extends AppModel {
 			return $controller->redirect(array('action' => 'fee'));
 		}
 		
-		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
-		
-		$grades = $this->EducationGrade->find('first', array('conditions'=>array('EducationGrade.id'=>$data['InstitutionSiteFee']['education_grade_id'])));
-		
-		$data['InstitutionSiteFee']['grade'] = $grades['EducationGrade']['name'];
-		$data['InstitutionSiteFee']['programme'] = $grades['EducationProgramme']['name'];
-		
-		$institutionSiteFeeTypes = $this->InstitutionSiteFeeType->find('all', array('conditions'=>array('InstitutionSiteFeeType.institution_site_fee_id'=>$feeId)));
+		$institutionSiteFeeTypes = $data['InstitutionSiteFeeType'];
 
 		$controller->set('subheader', $this->headerDefault . ' Details');
-		$controller->set(compact('data', 'yearOptions', 'institutionSiteFeeTypes'));
+		$controller->set(compact('data', 'feeTypeOptions', 'institutionSiteFeeTypes'));
 	}
 
 	public function feeAdd($controller, $params) {
@@ -150,27 +159,42 @@ class InstitutionSiteFee extends AppModel {
 		if(!$controller->Session->check('InstitutionSiteFee.selected_year')){
 			return $controller->redirect(array('action'=>'fee'));
 		}
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-
 
 		$institutionSiteId = $controller->institutionSiteId;
 		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
 		
 		$selected_year = $controller->Session->read('InstitutionSiteFee.selected_year');
+
 		$programmeOptions = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammeOptions($institutionSiteId, $selected_year);
 		$programmeId = null;
-		
+
 		$financeFeeTypeOptions = array_map('__', $this->InstitutionSiteFeeType->FeeType->getList());
 		$controller->set('modelName', $this->name);
 		
-
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+			
 			if(empty($id)){
-				$programmeId = (isset($params->pass[0]) ? $params->pass[0] : key($programmeOptions));
+				$controller->Message->alert('general.notExists');
+				return $controller->redirect(array('action' => 'fee', $selected_year));
+			}
+
+			if(strpos($controller->action, 'Add')!==false){
+				$selected_year = $controller->Session->read('InstitutionSiteFee.selected_year');
+				$educationGrades = $this->EducationGrade->find('first', array('conditions'=>array('EducationGrade.id'=>$id)));
+				if(empty($educationGrades)){
+					$controller->Message->alert('general.notExists');
+					return $controller->redirect(array('action' => 'fee', $selected_year));
+				}
+
+				$programmeId = $educationGrades['EducationProgramme']['id'];
+
 				$i = 0;
 				$data = array();
+				$data['InstitutionSiteFee']['school_year_id'] = $selected_year;
 				$data['InstitutionSiteFee']['total_fee'] = 0;
+				$data['InstitutionSiteFee']['education_grade_id'] = $educationGrades['EducationGrade']['id'];
+				$data['InstitutionSiteFee']['programme_id'] = $programmeId;
 				foreach($financeFeeTypeOptions as $key=>$val){
 					$data['InstitutionSiteFeeType'][$i]['id'] = null;
 					$data['InstitutionSiteFeeType'][$i]['fee'] = 0;
@@ -178,7 +202,6 @@ class InstitutionSiteFee extends AppModel {
 					$data['InstitutionSiteFeeType'][$i]['fee_type_name'] = $val;
 					$i++;
 				}
-
 				$controller->request->data = $data;
 			}else{
 				$this->recursive = -1;
@@ -202,8 +225,7 @@ class InstitutionSiteFee extends AppModel {
 				$controller->request->data = array_merge($data, array('InstitutionSiteFeeType'=>$institutionSiteFeeTypesVal));
 			}
 		
-		}
-		else{
+		}else{
 			$controller->request->data['InstitutionSiteFee']['institution_site_id'] = $controller->institutionSiteId;
 			if ($this->saveAll($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
@@ -211,10 +233,10 @@ class InstitutionSiteFee extends AppModel {
 				}else{
 					$controller->Message->alert('general.edit.success');
 				}
-				return $controller->redirect(array('action' => 'fee'));
+				return $controller->redirect(array('action' => 'fee', $selected_year));
 			}
 		}
-	 	$gradeOptions = $controller->EducationGrade->getGradeOptions($programmeId, null);
+		$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null);
        
 		$controller->set(compact('programmeOptions','gradeOptions', 'yearOptions', 'selected_year'));
 	}
@@ -263,6 +285,7 @@ class InstitutionSiteFee extends AppModel {
 			foreach($fees as $fee) {
 				$data[$programGrade['education_programme_id']][] = array(
 					'id' => $fee['InstitutionSiteFee']['id'],
+					'education_grade_id' => $fee['EducationGrade']['id'],
 					'grade' => $fee['EducationGrade']['name'],
 					'total_fee'=> $fee['InstitutionSiteFee']['total_fee']
 				);

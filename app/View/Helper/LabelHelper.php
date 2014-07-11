@@ -311,7 +311,14 @@ class LabelHelper extends AppHelper {
 		),
 		'FinanceFee' => array(
 			'fee' => 'Fee',
-			'amount' => 'Amount'
+			'fees' => 'Fees',
+			'amount' => 'Amount',
+			'paid' => 'Paid',
+			'outstanding' => 'Outstanding',
+			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
+			'no_payment' => 'No Payment Records.',
+			'no_fees' => 'No Fee Records.',
+			'created' => 'Created'
 		),
 	);
 	

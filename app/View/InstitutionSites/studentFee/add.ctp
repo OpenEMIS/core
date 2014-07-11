@@ -5,31 +5,35 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'fee'), array('class' => 'divider', 'id'=>'back'));
+if($_add) {
+    echo $this->Html->link(__('Add'), array('action' => 'studentFeeAddTransaction'), array('class' => 'divider', 'id'=>'add'));
+}
+echo $this->Html->link(__('Back'), array('action' => 'feeStudent'), array('class' => 'divider', 'id'=>'back'));
 $this->end();
 
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->params['action']));
 echo $this->Form->create($model, $formOptions);
-echo isset($this->request->data['InstitutionSiteFee']['id']) ? $this->Form->hidden('id') : '';
-echo $this->Form->hidden('school_year_id');
-echo $this->Form->hidden('programme_id');
-echo $this->Form->hidden('education_grade_id');
-
-echo $this->Form->input('school_year_id', array('options' => $yearOptions, 'default'=>$selected_year, 'disabled'=>'disabled'));
-echo $this->Form->input('programme_id', array('options' => $programmeOptions, 'disabled'=>'disabled'));
-echo $this->Form->input('education_grade_id', array('options' => $gradeOptions, 'disabled'=>'disabled'));
-
+echo isset($this->request->data['InstitutionSiteFeeStudent']['id']) ? $this->Form->hidden('id') : '';
+echo $this->Form->input('school_year_id', array('options' => $yearOptions, 'default'=>$selected_year, 'readonly'=>'readonly'));
+echo $this->Form->input('programme', array('readonly' => 'readonly'));
+echo $this->Form->input('education_grade', array('readonly' => 'readonly'));
+echo $this->Form->input('identification_no', array('readonly' => 'readonly'));
+echo $this->Form->input('name', array('readonly' => 'readonly'));
 ?>
 <div class="form-group">
-<label class="col-md-3 control-label"><?php echo __('Type');?></label>
-<div class="table-responsive col-md-4">
+<label class="col-md-3 control-label"><?php echo __('Transaction');?></label>
+<div class="table-responsive col-md-9">
 <table class="table table-striped table-hover table-bordered">
 <thead >
     <tr>
+	 	<th><span class="left"><?php echo __('Date'); ?></span></th>
+	  	<th><span class="left"><?php echo __('Created'); ?></span></th>
+  		<th><span class="left"><?php echo __('Comments'); ?></span></th>
         <th><span class="left"><?php echo __('Type'); ?></span></th>
-        <th><span class="left"><?php echo __('Fee'); ?></span></th>
+        <th><span class="left"><?php echo __('Paid'); ?></span></th>
+        <th><span class="left"><?php echo __('Outstanding'); ?></span></th>
     </tr>
 </thead>
 <?php if(isset($this->request->data['InstitutionSiteFeeType'])){ ?>
@@ -74,7 +78,7 @@ echo $this->Form->input('InstitutionSiteFeeType.'.$key.'.fee', array(
 </div>
 </div>
 <?php 
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'fee')));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'studentFee')));
 echo $this->Form->end();
 
 $this->end();

@@ -14,21 +14,21 @@ $this->end();
 
 $this->start('contentBody'); ?>
 <div class="row">
-	<div class="col-md-3"><?php echo __('School Year');?></div>
-	<div class="col-md-6"><?php echo $yearOptions[$data['InstitutionSiteFee']['school_year_id']];?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('general.school_year'); ?></div>
+	<div class="col-md-6"><?php echo $data['SchoolYear']['name'];?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Programme');?></div>
-	<div class="col-md-6"><?php echo $data['InstitutionSiteFee']['programme'];?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('EducationProgramme.name'); ?></div>
+	<div class="col-md-6"><?php echo $data['EducationGrade']['EducationProgramme']['name'];?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Education Grade');?></div>
-	<div class="col-md-6"><?php echo $data['InstitutionSiteFee']['grade'];?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('EducationGrade.name'); ?></div>
+	<div class="col-md-6"><?php echo $data['EducationGrade']['name'];?></div>
 </div>
 
 <div class="form-group">
 
-<duv class="col-md-3"><?php echo __('Type');?></div>
+<duv class="col-md-3"><?php echo $this->Label->get('general.type'); ?></div>
 <div class="table-responsive col-md-5">
 <table class="table table-striped table-hover table-bordered">
 <thead >
@@ -46,7 +46,7 @@ foreach($institutionSiteFeeTypes as $key=>$val){ ?>
 <td><?php echo $val['FeeType']['name']; ?></td>
 <td>
 <?php
-echo $val['InstitutionSiteFeeType']['fee'];?>
+echo $val['fee'];?>
 </td>
 </tr>
 <?php 
@@ -55,7 +55,7 @@ echo $val['InstitutionSiteFeeType']['fee'];?>
  <tfoot>
  	 <tr>
         <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-        <td class="table_cell cell_value cell_number total_fee"><?php echo $totalFee; ?></td>
+        <td class="table_cell cell_value cell_number total_fee" width="15%"><?php echo $totalFee; ?></td>
     </tr>
 </tfoot>
 <?php } ?>
