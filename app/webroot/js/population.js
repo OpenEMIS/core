@@ -45,8 +45,18 @@ $(document).ready(function() {
 		}
 		
 		$('a.withLatestAreaId').each(function(){
-			alert($(this).attr('href').match(/(\/\d{4}\/)\d*/g));
-			$(this).attr('href').replace(/(\/\d{4}\/)\d*/g, 'dddddd');
+			var newHref = $(this).attr('href').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('href', newHref);
+		});
+		
+		$('a.btn_cancel').each(function(){
+			var newCancelHref = $(this).attr('href').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('href', newCancelHref);
+		});
+		
+		$('form#PopulationEditForm').each(function(){
+			var newAction = $(this).attr('action').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('action', newAction);
 		});
 	});
 	

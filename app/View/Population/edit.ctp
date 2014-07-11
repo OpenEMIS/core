@@ -142,11 +142,7 @@ echo $this->Form->create('Population', $formOptions);
 </fieldset>
 
 <script type="text/javascript">
-
-					$(document).ready(function() {
-						var currentAreaId = <?php echo intval($areaId); ?>;
-					});
-
+	var currentAreaId = <?php echo intval($areaId); ?>;
 </script>
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>

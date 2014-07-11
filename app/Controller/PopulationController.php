@@ -99,18 +99,38 @@ class PopulationController extends AppController {
         $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1', 'Area.visible' => 1)));
         $this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
         $areas[] = $topArea;
-
-        if($this->request->is('post')) {
-			pr($this->request->data['Population']);
-        }
 		
 		$currentYear = intval(date('Y'));
 		$selectedYear = isset($this->params->pass[0])? intval($this->params->pass[0]) : $currentYear;
 		
+		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
+		
+        if($this->request->is('post')) {
+			if(!empty($this->request->data['Population'])){
+				$populationData = $this->request->data['Population'];
+				
+				foreach($populationData AS $row){
+					$id = intval($row['id']);
+					$source = intval($row['source']);
+					$age = intval($row['age']);
+					$male = intval($row['male']);
+					$female = intval($row['female']);
+					
+					if($age > 0){
+						if($id == 0){
+							$this->Population->create();
+						}
+						
+						$save = $this->Population->save(array('Population' => $row));
+					}
+				}
+			}
+			
+			return $this->redirect(array('action' => 'index', $selectedYear, $areaId));
+        }
+		
 		$yearList = $this->DateTime->generateYear();
 		krsort($yearList);
-		
-		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
 		
 		$data = $this->Utility->formatResult($this->Population->getPopulationData($selectedYear, $areaId));
 		
