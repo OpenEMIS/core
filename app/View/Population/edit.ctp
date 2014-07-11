@@ -54,6 +54,8 @@ echo $this->Form->create('Population', $formOptions);
 			<tbody><?php 
 				$recordIndex = 0;
 				foreach ($data AS $row):
+					$allTotal += $row['male'];
+					$allTotal += $row['female'];
 					?>
 					<tr class="<?php echo $row['data_source'] == 0 ? '' : 'row_estimate'; ?>" record-id="<?php echo $row['id']; ?>">
 						<td>
@@ -118,7 +120,7 @@ echo $this->Form->create('Population', $formOptions);
 							));
 							?>
 						</td>
-						<td class="cell_total"><?php echo $row['male'] + $row['female']; ?></td>
+						<td class="cell-total"><?php echo $row['male'] + $row['female']; ?></td>
 						<td><span class="icon_delete" title="'+i18n.General.textDelete+'" onclick="population.removeRow(this)"></span></td>
 					</tr>
 					<?php 
@@ -132,7 +134,7 @@ echo $this->Form->create('Population', $formOptions);
 		<tfoot>
 			<tr>
 				<td colspan="4" class="cell-number"><?php echo __('Total'); ?></td>
-				<td class="cell_value cell_number"><?php echo $allTotal; ?></td>
+				<td class="cell-value cell-number"><?php echo $allTotal; ?></td>
 				<td></td>
 			</tr>
 		</tfoot>

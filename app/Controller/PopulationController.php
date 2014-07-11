@@ -108,20 +108,22 @@ class PopulationController extends AppController {
         if($this->request->is('post')) {
 			if(!empty($this->request->data['Population'])){
 				$populationData = $this->request->data['Population'];
+				//pr($populationData);die;
 				
 				foreach($populationData AS $row){
 					$id = intval($row['id']);
-					$source = intval($row['source']);
 					$age = intval($row['age']);
-					$male = intval($row['male']);
-					$female = intval($row['female']);
 					
 					if($age > 0){
 						if($id == 0){
 							$this->Population->create();
+							
+							$row['data_source'] = 0;
+							$row['year'] = $selectedYear;
+							$row['area_id'] = $areaId;
 						}
 						
-						$save = $this->Population->save(array('Population' => $row));
+						$this->Population->save(array('Population' => $row));
 					}
 				}
 			}
@@ -193,6 +195,14 @@ class PopulationController extends AppController {
 		
         $data = $this->Utility->formatResult($this->Population->getPopulationData($year, $areaId));
         $this->set(compact('data'));
+    }
+	
+	public function addFormRow() {
+		$this->layout = false;
+		
+		$newRowIndex = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : 0;
+		
+        $this->set(compact('newRowIndex'));
     }
 
     public function populationAjax() {
