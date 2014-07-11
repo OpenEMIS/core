@@ -14,6 +14,7 @@ if (!empty($data)):
 							'after' => false,
 							'between' => false,
 							'class' => 'form-control',
+							'id' => 'PopulationId',
 							'name' => 'data[Population][' . $recordIndex . '][id]',
 							'value' => $row['id']
 						));
@@ -23,6 +24,7 @@ if (!empty($data)):
 							'after' => false,
 							'between' => false,
 							'class' => 'form-control',
+							'id' => 'PopulationSource',
 							'name' => 'data[Population][' . $recordIndex . '][source]',
 							'value' => $row['source']
 						));
@@ -36,6 +38,7 @@ if (!empty($data)):
 							'after' => false,
 							'between' => false,
 							'class' => 'form-control',
+							'id' => 'PopulationAge',
 							'name' => 'data[Population][' . $recordIndex . '][age]',
 							'value' => $row['age']
 						));
@@ -49,6 +52,7 @@ if (!empty($data)):
 							'after' => false,
 							'between' => false,
 							'class' => 'form-control',
+							'id' => 'PopulationMale',
 							'name' => 'data[Population][' . $recordIndex . '][male]',
 							'value' => $row['male']
 						));
@@ -62,6 +66,7 @@ if (!empty($data)):
 							'after' => false,
 							'between' => false,
 							'class' => 'form-control',
+							'id' => 'PopulationFemale',
 							'name' => 'data[Population][' . $recordIndex . '][female]',
 							'value' => $row['female']
 						));

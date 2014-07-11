@@ -57,7 +57,7 @@ echo $this->element('../Population/controls');
 							<td class="cell-number"><?php echo $row['age']; ?></td>
 							<td class="cell-number"><?php echo $row['male']; ?></td>
 							<td class="cell-number"><?php echo $row['female']; ?></td>
-							<td class="cell-number cell_total"><?php echo $row['male'] + $row['female']; ?></td>
+							<td class="cell-number cell-total"><?php echo $row['male'] + $row['female']; ?></td>
 						</tr>
 						<?php
 					endforeach;
@@ -68,7 +68,7 @@ echo $this->element('../Population/controls');
 			<tfoot>
 				<tr>
 					<td class="cell-number" colspan="4"><?php echo __('Total'); ?></td>
-					<td class="cell_value cell_number"><?php echo $allTotal; ?></td>
+					<td class="cell-number cell-value"><?php echo $allTotal; ?></td>
 				</tr>
 			</tfoot>
 		</table>
