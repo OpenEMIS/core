@@ -72,6 +72,17 @@ class InstitutionSiteStudentFee extends AppModel {
 		$schoolYear = ClassRegistry::init('SchoolYear');
 		$yearOptions = $schoolYear->institutionProgrammeYearList($controller->institutionSiteId);
 		$selectedYear = (isset($params->pass[0]) ? $params->pass[0] : key($yearOptions));
+
+		$programmeOptions = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammeOptions($controller->institutionSiteId, $selectedYear);
+		$selectedProgramme =  (isset($params->pass[1]) ? $params->pass[1] : 0);
+
+
+		$EducationGrade = ClassRegistry::init('EducationGrade');
+		$selectedGrade =  (isset($params->pass[2]) ? $params->pass[2] : 0);
+		$gradeOptions = array();
+
+
+
 		$data = $this->getListOfFees($selectedYear, $controller->institutionSiteId);
 
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
@@ -80,20 +91,40 @@ class InstitutionSiteStudentFee extends AppModel {
 		if(!empty($selectedYear)){
 			$controller->Session->write('InstitutionSiteStudentFee.selected_year', $selectedYear);
 		}
+		$controller->Session->write('InstitutionSiteStudentFee.selected_programme', $selectedProgramme);
+
+
+		$programmes = array();
+		if(empty($selectedProgramme)){
+			$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+		}else{
+			$gradeOptions = $EducationGrade->getGradeOptions($selectedProgramme, null);
+			$programmes = $EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('EducationProgramme.*'), 'conditions'=>array('EducationProgramme.id'=>$selectedProgramme)));
+		}
+
 		$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
 
-		$EducationGrade = ClassRegistry::init('EducationGrade');
 
-		foreach($programmes as $key => $programme){
-			$programmes[$key]['education_grades'] = $EducationGrade->find('list', array('recursive'=>-1, 'fields'=>array('id', 'name'), 'conditions'=>array('EducationGrade.education_programme_id'=>$programme['education_programme_id'])));
+		if(!empty($programmes)){
+
+			foreach($programmes as $key => $programme){
+				$conditions['EducationGrade.education_programme_id'] = $programme['education_programme_id'];
+				if(!empty($selectedGrade)){
+					$conditions['EducationGrade.id'] = $selectedGrade;
+				}
+				$programmes[$key]['education_grades'] = $EducationGrade->find('list', array('recursive'=>-1, 'fields'=>array('id', 'name'), 'conditions'=>$conditions));
+			}
+		}else{
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		}
+
+
 		$modelName = $this->name;
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'selectedYear', 'programmes', 'yearOptions', 'modelName'));
+		$controller->set(compact('data', 'selectedYear', 'selectedProgramme', 'selectedGrade', 'programmes', 'yearOptions', 'programmeOptions', 'gradeOptions', 'modelName'));
 	}
 
 	public function studentFeeView($controller, $params) {
-	
 		$studentId = empty($params['pass'][0])? 0:$params['pass'][0];
 		$feeId = empty($params['pass'][1])? 0:$params['pass'][1];
 
@@ -115,7 +146,8 @@ class InstitutionSiteStudentFee extends AppModel {
 			$controller->Session->write('InstitutionSiteStudentFee.id', (isset($studentFeeData['InstitutionSiteStudentFee']['id']) ? $studentFeeData['InstitutionSiteStudentFee']['id'] : 0));
 		}
 
-		$institutionSiteStudentFeeTransactions = $this->getListOfTransactions($controller);
+		$studentFeeId =  $controller->Session->read('InstitutionSiteStudentFee.id');
+		$institutionSiteStudentFeeTransactions = $this->getListOfTransactions($controller, $studentFeeId);
 
 		$this->addStudentBreadCrumb($controller);
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
@@ -133,11 +165,10 @@ class InstitutionSiteStudentFee extends AppModel {
 		$controller->set(compact('data', 'studentFeeData', 'institutionSiteFeeTypes', 'institutionSiteStudentFeeTransactions'));
 	}
 
-	private function getListOfTransactions($controller){
-		$id = $controller->Session->read('InstitutionSiteStudentFee.id');
+	public function getListOfTransactions($controller, $studentFeeId){
 		$institutionSiteStudentFeeTransactions = array();
-		if(!empty($id)){
-			$institutionSiteStudentFeeTransactions = $this->InstitutionSiteStudentFeeTransaction->find('all', array('conditions'=>array('InstitutionSiteStudentFeeTransaction.institution_site_student_fee_id'=>$id), 'order'=>array('InstitutionSiteStudentFeeTransaction.paid_date ASC')));
+		if(!empty($studentFeeId)){
+			$institutionSiteStudentFeeTransactions = $this->InstitutionSiteStudentFeeTransaction->find('all', array('conditions'=>array('InstitutionSiteStudentFeeTransaction.institution_site_student_fee_id'=>$studentFeeId), 'order'=>array('InstitutionSiteStudentFeeTransaction.paid_date ASC')));
 		}
 		
 		return $institutionSiteStudentFeeTransactions;
@@ -251,7 +282,9 @@ class InstitutionSiteStudentFee extends AppModel {
 		$studentId = $controller->Session->read('InstitutionSiteStudentFee.studentId');
 		$feeId = $controller->Session->read('InstitutionSiteStudentFee.feeId');
 
-		$feeData = $this->find('first', array('conditions'=>array('InstitutionSiteStudentFee.student_id'=>$studentId, 'InstitutionSiteStudentFee.institution_site_fee_id'=>$feeId)));
+		$feeD = $this->InstitutionSiteFee->find('first', array('recursive'=>-1, 'conditions'=>array('InstitutionSiteFee.id'=>$feeId)));
+
+		$feeData = $this->find('first', array('recursive'=>-1,'conditions'=>array('InstitutionSiteStudentFee.student_id'=>$studentId, 'InstitutionSiteStudentFee.institution_site_fee_id'=>$feeId)));
 
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -268,12 +301,12 @@ class InstitutionSiteStudentFee extends AppModel {
 			$saveData = $controller->request->data;
 			$id = (isset($saveData['InstitutionSiteStudentFeeTransaction'][0]['id']) ? $saveData['InstitutionSiteStudentFeeTransaction'][0]['id'] : 0);
 
-			$studentFeeId = isset($feeData) ? $feeData['InstitutionSiteStudentFee']['id'] : 0;
+			$studentFeeId = isset($feeData['InstitutionSiteStudentFee']['id']) ? $feeData['InstitutionSiteStudentFee']['id'] : 0;
 			$saveData['InstitutionSiteStudentFee']['id'] = $studentFeeId;
 			$saveData['InstitutionSiteStudentFee']['institution_site_fee_id'] = $feeId;
 			$saveData['InstitutionSiteStudentFee']['student_id'] = $studentId;
 
-			$totalFee = $feeData['InstitutionSiteFee']['total_fee'];
+			$totalFee = $feeD['InstitutionSiteFee']['total_fee'];
 			$paid = $saveData['InstitutionSiteStudentFeeTransaction'][0]['paid'];
 		
 			$this->computeFee($totalFee, $paid, $studentFeeId, $id, $saveData);
@@ -298,16 +331,11 @@ class InstitutionSiteStudentFee extends AppModel {
 		$totalPaid = $this->InstitutionSiteStudentFeeTransaction->find('first', array('fields'=>array('total_paid'), 'conditions'=>array('InstitutionSiteStudentFeeTransaction.institution_site_student_fee_id'=>$studentFeeId, 'InstitutionSiteStudentFeeTransaction.id !='.$id)));
 		$totalPaid = $totalPaid['InstitutionSiteStudentFeeTransaction']['total_paid'];
 
-		pr($totalPaid);
-
-	
 		$saveData['InstitutionSiteStudentFee']['total_paid'] = (floatval($totalPaid) + floatval($paid));
 		$saveData['InstitutionSiteStudentFee']['total_outstanding'] = floatval($totalFee) - floatval($totalPaid) - floatval($paid);
 		if($saveData['InstitutionSiteStudentFee']['total_outstanding']<0){
 			$saveData['InstitutionSiteStudentFee']['total_outstanding'] = 0;
 		}
-
-		pr($saveData['InstitutionSiteStudentFee']['total_paid'] );
 	}
 
 	private function getListOfFees($yearId, $institutionSiteId) {
