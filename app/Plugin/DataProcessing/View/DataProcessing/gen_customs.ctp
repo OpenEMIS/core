@@ -76,7 +76,7 @@ foreach($data as $Nav => $arrModules){
 			<thead>
 				<tr>
 					<?php if($_execute) { ?>
-					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+					<th class="checkbox-column"><input type="checkbox" class="icheck-input" value="0" onChange="toggleSelect(this)" /></th>
 					<?php } ?>
 					<td class="cell-report-name"><?php echo __('Name'); ?></td>
 					<td><?php echo __('Description'); ?></td>
