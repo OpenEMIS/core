@@ -956,6 +956,7 @@ class DataProcessingController extends DataProcessingAppController {
 
 
     public function getFieldOptionByModuleId($moduleID){
+        $this->autoRender = false;
         if(!empty($moduleID)){
              $DatawarehouseModule = ClassRegistry::init('DatawarehouseModule');
 
@@ -978,13 +979,12 @@ class DataProcessingController extends DataProcessingAppController {
             $fieldOptions = array();
 
             foreach($data as $d){
-                $fieldOptions[$d['Dataware']]
+                $fieldOptions[$d['DatawarehouseField']['name']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
                 $operatorOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
             }
-
-            pr($operatorOptions);
-
-            pr($data);
+            $jsonData['fieldOption'] = $fieldOptions;
+            $jsonData['operatorOption'] = $operatorOptions;
+            return json_encode($jsonData);
         }
     }
 
