@@ -28,8 +28,12 @@ class DataProcessingController extends DataProcessingAppController {
 		'DataProcessing.BatchProcess',
 		'SecurityUser'
 	);
+
+    public $modules = array(
+        'indicator' => 'DataProcessing.DatawarehouseIndicator'
+    ); 
 	
-	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6');
+	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'Paginator');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -950,6 +954,39 @@ class DataProcessingController extends DataProcessingAppController {
         }
     }
 
+
+    public function getFieldOptionByModuleId($moduleID){
+        if(!empty($moduleID)){
+             $DatawarehouseModule = ClassRegistry::init('DatawarehouseModule');
+
+             $data = $DatawarehouseModule->find('all', array(
+                'fields' => array('DatawarehouseModule.*', 'DatawarehouseField.*'),
+                'joins' => array(
+                    array(
+                        'type' => 'INNER',
+                        'table' => 'datawarehouse_fields',
+                        'alias' => 'DatawarehouseField',
+                        'conditions' => array('DatawarehouseModule.id = DatawarehouseField.datawarehouse_module_id')
+                    ),
+                ),
+                'conditions'=>array('DatawarehouseModule.id'=>$moduleID),
+                'recursive'=> -1
+                )
+            );
+
+            $operatorOptions = array();
+            $fieldOptions = array();
+
+            foreach($data as $d){
+                $fieldOptions[$d['Dataware']]
+                $operatorOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
+            }
+
+            pr($operatorOptions);
+
+            pr($data);
+        }
+    }
 
     
 }
