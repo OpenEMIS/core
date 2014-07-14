@@ -57,10 +57,13 @@ class StudentFee extends StudentsAppModel {
 
 		$studentId = $controller->Session->read('Student.id');
 		$data = $this->InstitutionSiteFee->find('all', array('recursive'=>2,'conditions'=>array('InstitutionSiteStudentFee.student_id'=>$studentId)));
-	
+		
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+
 		$modelName = $this->name;
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'selectedYear', 'selectedProgramme', 'programmes', 'programmeOptions', 'yearOptions', 'modelName'));
+		$controller->set(compact('data', 'modelName', 'currency'));
 	}
 
 	public function feeView($controller, $params) {
@@ -80,8 +83,13 @@ class StudentFee extends StudentsAppModel {
 
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+
 		$controller->set('subheader', $this->headerDefault . ' Details');
-		$controller->set(compact('data', 'studentFeeData', 'institutionSiteFeeTypes', 'institutionSiteStudentFeeTransactions'));
+		$controller->set(compact('data', 'studentFeeData', 'institutionSiteFeeTypes', 'institutionSiteStudentFeeTransactions', 'currency'));
 	}
+
+
 
 }

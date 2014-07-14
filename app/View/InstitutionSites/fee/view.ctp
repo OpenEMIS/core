@@ -34,7 +34,7 @@ $this->start('contentBody'); ?>
 <thead >
     <tr>
         <th><span class="left"><?php echo __('Type'); ?></span></th>
-        <th><span class="left"><?php echo __('Fee'); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)',__('Fee'), $currency); ?></span></th>
     </tr>
 </thead>
 <?php if(!empty($institutionSiteFeeTypes)){ ?>
@@ -54,8 +54,8 @@ echo $val['fee'];?>
 </tbody>
  <tfoot>
  	 <tr>
-        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-        <td class="table_cell cell_value cell_number total_fee" width="15%"><?php echo $totalFee; ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total'), $currency); ?></td>
+        <td class="table_cell cell_value cell_number total_fee" width="22%"><?php echo $totalFee; ?></td>
     </tr>
 </tfoot>
 <?php } ?>

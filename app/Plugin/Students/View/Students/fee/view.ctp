@@ -34,7 +34,7 @@ $this->start('contentBody'); ?>
 <thead >
     <tr>
         <th><span class="left"><?php echo $this->Label->get('general.type'); ?></span></th>
-        <th><span class="left"><?php echo $this->Label->get('FinanceFee.amount'); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.amount'), $currency); ?></span></th>
     </tr>
 </thead>
 <?php 
@@ -42,12 +42,14 @@ $totalFee = $data['InstitutionSiteFee']['total_fee'];
 ?>
 <tbody>
 <?php if(!empty($data['InstitutionSiteFeeType'])){
-foreach($data['InstitutionSiteFeeType'] as $key=>$val){ ?>
+foreach($data['InstitutionSiteFeeType'] as $key=>$val){ 
+if($val['fee']>0){?>
 <tr>
 <td><?php echo $val['FeeType']['name']; ?></d>
 <td><?php echo $val['fee']; ?></td>
 </tr>
 <?php 
+}
 } ?>
 <?php }else{ ?>
 <tr><td colspan="5" align="center"><?php echo $this->Label->get('FinanceFee.no_fees'); ?></td></tr>
@@ -55,8 +57,8 @@ foreach($data['InstitutionSiteFeeType'] as $key=>$val){ ?>
 </tbody>
  <tfoot>
     <tr>
-        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-        <td class="table_cell cell_value cell_number total_fee" width="15%"><?php echo number_format($totalFee,2); ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)', __('Total'), $currency); ?></td>
+        <td class="table_cell cell_value cell_number total_fee" width="22%"><?php echo number_format($totalFee,2); ?></td>
     </tr>
 </tfoot>
 </table>
@@ -72,8 +74,8 @@ foreach($data['InstitutionSiteFeeType'] as $key=>$val){ ?>
 <thead >
     <tr>
 	 	<th><span class="left"><?php echo $this->Label->get('general.date'); ?></span></th>
-        <th><span class="left"><?php echo $this->Label->get('FinanceFee.paid'); ?></span></th>
-        <th><span class="left"><?php echo $this->Label->get('FinanceFee.outstanding'); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.paid'), $currency); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.outstanding'), $currency); ?></span></th>
     </tr>
 </thead>
 <?php 
@@ -99,12 +101,12 @@ $totalFeeTransaction = $totalFeeTransaction - $val['InstitutionSiteStudentFeeTra
 </tbody>
  <tfoot>
     <tr>
-        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)', __('Total'), $currency); ?></td>
         <td class="table_cell cell_value cell_number total_paid" width="15%"><?php echo number_format($totalPaid,2); ?></td>
-        <td class="table_cell cell_value cell_number total_outstanding" width="15%"><?php echo number_format($totalFeeTransaction,2); ?></td>
+        <td class="table_cell cell_value cell_number total_outstanding" width="22%"><?php echo number_format($totalFeeTransaction,2); ?></td>
     </tr>
     <tr>
-        <td class="table_cell cell_label"><?php echo __('Total Fee'); ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)', __('Total Fee'), $currency); ?></td>
         <td class="table_cell cell_value cell_number total_fee" colspan="2" align="center"><?php echo number_format($totalPaid+$totalFeeTransaction,2); ?></td>
     </tr>
 </tfoot>

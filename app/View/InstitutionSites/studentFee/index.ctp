@@ -71,10 +71,10 @@ $this->start('contentBody');
                             <span class="left"><?php echo $this->Label->get('general.name');?></span>
                         </th>
                         <th>
-                            <span class="left"><?php echo $this->Label->get('FinanceFee.paid'); ?></span>
+                            <span class="left"><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.paid'), $currency); ?></span>
                         </th>
                           <th>
-                            <span class="left"><?php echo $this->Label->get('FinanceFee.outstanding'); ?></span>
+                            <span class="left"><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.outstanding'), $currency); ?></span>
                         </th>
                     </tr>
                </thead>
@@ -89,7 +89,7 @@ $this->start('contentBody');
                             ?>
                         </td>
                         <td class="table_cell" width="15%"><?php echo number_format($val['total_paid'],2); ?></td>
-                        <td class="table_cell" width="15%"><?php echo number_format($val['total_outstanding'],2); ?></td>
+                        <td class="table_cell" width="18%"><?php echo number_format($val['total_outstanding'],2); ?></td>
                     </tr>
                    <?php 
                     } 

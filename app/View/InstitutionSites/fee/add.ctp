@@ -29,7 +29,7 @@ echo $this->Form->input('education_grade_id', array('options' => $gradeOptions, 
 <thead >
     <tr>
         <th><span class="left"><?php echo __('Type'); ?></span></th>
-        <th><span class="left"><?php echo __('Fee'); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)',__('Fee'), $currency); ?></span></th>
     </tr>
 </thead>
 <?php if(isset($this->request->data['InstitutionSiteFeeType'])){ ?>
@@ -65,7 +65,7 @@ echo $this->Form->input('InstitutionSiteFeeType.'.$key.'.fee', array(
  <tfoot>
  	<?php echo $this->Form->input('total_fee', array('type'=> 'hidden', 'value'=>$totalFee));?>
     <tr>
-        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total'), $currency); ?></td>
         <td class="table_cell cell_value cell_number total_fee"><?php echo $totalFee; ?></td>
     </tr>
 </tfoot>

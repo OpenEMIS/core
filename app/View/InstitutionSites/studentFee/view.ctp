@@ -39,8 +39,8 @@ $this->start('contentBody'); ?>
 	 	<th><span class="left"><?php echo $this->Label->get('general.date'); ?></span></th>
 	  	<th><span class="left"><?php echo $this->Label->get('FinanceFee.created'); ?></span></th>
   		<th><span class="left"><?php echo $this->Label->get('general.comment'); ?></span></th>
-        <th><span class="left"><?php echo $this->Label->get('FinanceFee.paid'); ?></span></th>
-        <th><span class="left"><?php echo $this->Label->get('FinanceFee.outstanding'); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.paid'), $currency); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.outstanding'), $currency); ?></span></th>
     </tr>
 </thead>
 <?php 
@@ -70,13 +70,13 @@ $totalFeeTransaction = $totalFeeTransaction - $val['InstitutionSiteStudentFeeTra
  <tfoot>
     <tr>
         <td colspan="2"></td>
-        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total'), $currency); ?></td>
         <td class="table_cell cell_value cell_number total_fee" width="15%"><?php echo number_format($totalPaid,2); ?></td>
-        <td class="table_cell cell_value cell_number total_outstanding" width="15%"><?php echo number_format($totalFeeTransaction,2); ?></td>
+        <td class="table_cell cell_value cell_number total_outstanding" width="22%"><?php echo number_format($totalFeeTransaction,2); ?></td>
     </tr>
     <tr>
         <td colspan="2"></td>
-        <td class="table_cell cell_label"><?php echo __('Total Fee'); ?></td>
+        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total Fee'), $currency); ?></td>
         <td class="table_cell cell_value cell_number total_fee" colspan="2" align="center" width="15%"><?php echo number_format($totalPaid+$totalFeeTransaction,2); ?></td>
     </tr>
 </tfoot>
