@@ -6,9 +6,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
+
+$tableHeaders = array($this->Label->get('general.school_year'), $this->Label->get('EducationProgramme.name'), $this->Label->get('EducationGrade.name'), $this->Label->get('FinanceFee.fee'), $this->Label->get('FinanceFee.paid'), $this->Label->get('FinanceFee.outstanding'));
+$tableData = array();
 if(!empty($data)) { 
-	$tableHeaders = array($this->Label->get('general.school_year'), $this->Label->get('EducationProgramme.name'), $this->Label->get('EducationGrade.name'), $this->Label->get('FinanceFee.fee'), $this->Label->get('FinanceFee.paid'), $this->Label->get('FinanceFee.outstanding'));
-	$tableData = array();
 	foreach ($data as $obj) {
 		$row = array();
 		$row[] = array($obj['SchoolYear']['name'], array('class'=>array('center')));
@@ -19,7 +20,7 @@ if(!empty($data)) {
 		$row[] = $obj['InstitutionSiteStudentFee']['total_outstanding'];
 		$tableData[] = $row;
 	}
-	echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
 }
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
 $this->end();
 ?>
