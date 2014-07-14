@@ -308,6 +308,11 @@ class LabelHelper extends AppHelper {
 			'permissions' => 'Permissions',
 			'name' => 'Role',
 			'security_group_id' => 'Group'
+		),
+		'Datawarehouse' => array(
+			'indicator' => 'Indicator',
+			'unit' => 'Unit',
+			'module' => 'Module'
 		)
 	);
 	
