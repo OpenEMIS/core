@@ -20,6 +20,7 @@ $(document).ready(function() {
 var objDatawarehouse = {
     init: function() {
         objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
+        objDatawarehouse.populateByModule($(".numeratorOperatorOption"), "numerator");
     },
     getTrainingNeedTypeSelection: function(obj){
         if($(obj).val()== "1"){
@@ -37,8 +38,8 @@ var objDatawarehouse = {
         var fieldID = $('.'+objType+"FieldID");
       
         if(moduleID === ""){
-            operatorID.val("");
-            fieldOptionID.val("");
+            operatorID.children('option:not(:first)').remove();
+            fieldOptionID.children('option:not(:first)').remove();
             fieldID.val("");
         }else{
             url = $(obj).attr('url');
@@ -47,26 +48,52 @@ var objDatawarehouse = {
                 dataType: "json",
                 url: getRootURL()+url+moduleID,
                 success: function(data){
-                    var newTitle = '';
-                    var newCode = '';
-                    var newDescription = '';
-                    var newRequirement = '';
-                    
+                    operatorID.children('option:not(:first)').remove();
+                    fieldOptionID.children('option:not(:first)').remove();
+                    fieldID.val("");
+
                     if(data == null){
                         return;
                     }
-                    console.log(data);
-                    $.each(data, function(i,v){
-                        newTitle = v.TrainingCourse.title;
-                        newCode = v.TrainingCourse.code;
-                        newDescription = v.TrainingCourse.description;
-                        newRequirement = v.TrainingRequirement.name;
+                    
+                    $.each(data.fieldOption, function(key, value) {              
+                        $('<option>').val(key).text(value).appendTo(fieldOptionID);
                     });
 
-                    title.val(newTitle);
-                    code.val(newCode);
-                    description.val(newDescription);
-                    requirement.val(newRequirement);
+                     $.each(data.operatorOption, function(key, value) {              
+                        $('<option>').val(key).text(value).appendTo(operatorID);
+                    });
+
+                }
+            });
+        }
+    },
+    populateByOperator: function(obj, objType){
+        var operatorID = $(obj).val();
+        var fieldOptionID = $('.'+objType+"FieldOption");
+        var fieldID = $('.'+objType+"FieldID");
+      
+        if(moduleID === ""){
+            fieldOptionID.children('option:not(:first)').remove();
+            fieldID.val("");
+        }else{
+            url = $(obj).attr('url');
+            $.ajax({ 
+                type: "get",
+                dataType: "json",
+                url: getRootURL()+url+moduleID,
+                success: function(data){
+                    fieldOptionID.children('option:not(:first)').remove();
+                    fieldID.val("");
+
+                    if(data == null){
+                        return;
+                    }
+
+                     $.each(data.operatorOption, function(key, value) {              
+                        $('<option>').val(key).text(value).appendTo(operatorID);
+                    });
+
                 }
             });
         }

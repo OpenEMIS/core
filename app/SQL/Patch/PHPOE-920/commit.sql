@@ -147,12 +147,12 @@ INSERT INTO `datawarehouse_units` (`id`, `name`, `created_user_id`, `created`) V
 INSERT INTO `datawarehouse_units` (`id`, `name`, `created_user_id`, `created`) VALUES ('3', 'Ratio', '1', '2014-07-14');
 INSERT INTO `datawarehouse_units` (`id`, `name`, `created_user_id`, `created`) VALUES ('4', 'Percent', '1', '2014-07-14');
 
-INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('1', 'Age', 'COUNT', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('2', 'Age', 'MIN', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('3', 'Age', 'MAX', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('4', 'Age', 'AVG', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('5', 'Value', 'COUNT', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('6', 'Value', 'SUM', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('1', 'age', 'COUNT', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('2', 'age', 'MIN', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('3', 'age', 'MAX', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('4', 'age', 'AVG', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('5', 'value', 'COUNT', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('6', 'value', 'SUM', '1', '1', '2014-07-14');
 
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('1', 'Age', 'age', 'CensusStudent', '1', '1', '2014-07-14');
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('2', 'Gender', 'gender_id', 'FieldOptionValue', 'array(\n \'type\' => \'INNER\',\n  \'table\' => \'field_option_values\',\n \'alias\' => \'Gender\',\n  \'conditions\' => array(\'Gender.id = CensusStudent.gender_id\')\n)', '1', '1', '2014-07-14');
