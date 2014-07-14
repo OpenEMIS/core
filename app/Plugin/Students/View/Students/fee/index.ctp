@@ -7,7 +7,8 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
 
-$tableHeaders = array($this->Label->get('general.school_year'), $this->Label->get('EducationProgramme.name'), $this->Label->get('EducationGrade.name'), $this->Label->get('FinanceFee.fee'), $this->Label->get('FinanceFee.paid'), $this->Label->get('FinanceFee.outstanding'));
+$tableHeaders = array($this->Label->get('general.school_year'), $this->Label->get('EducationProgramme.name'), $this->Label->get('EducationGrade.name'), 
+	sprintf('%s (%s)', $this->Label->get('FinanceFee.fee'), $currency), sprintf('%s (%s)', $this->Label->get('FinanceFee.paid'), $currency), sprintf('%s (%s)', $this->Label->get('FinanceFee.outstanding'), $currency));
 $tableData = array();
 if(!empty($data)) { 
 	foreach ($data as $obj) {

@@ -49,7 +49,7 @@ $this->start('contentBody');
                     <span class="left"><?php echo __('Grade'); ?></span>
                 </th>
                 <th>
-                    <span class="left"><?php echo __('Fees'); ?></span>
+                    <span class="left"><?php echo sprintf('%s (%s)',__('Fees'), $currency); ?></span>
                 </th>
             </tr>
        </thead>

@@ -103,9 +103,12 @@ class InstitutionSiteFee extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		}
 		
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+
 		$modelName = $this->name;
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'selectedYear', 'selectedProgramme', 'programmes', 'programmeOptions', 'yearOptions', 'modelName'));
+		$controller->set(compact('data', 'currency', 'selectedYear', 'selectedProgramme', 'programmes', 'programmeOptions', 'yearOptions', 'modelName'));
 	}
 
 	public function feeView($controller, $params) {
@@ -122,8 +125,11 @@ class InstitutionSiteFee extends AppModel {
 		
 		$institutionSiteFeeTypes = $data['InstitutionSiteFeeType'];
 
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+
 		$controller->set('subheader', $this->headerDefault . ' Details');
-		$controller->set(compact('data', 'feeTypeOptions', 'institutionSiteFeeTypes'));
+		$controller->set(compact('data', 'currency', 'feeTypeOptions', 'institutionSiteFeeTypes'));
 	}
 
 	public function feeAdd($controller, $params) {
@@ -170,6 +176,9 @@ class InstitutionSiteFee extends AppModel {
 
 		$financeFeeTypeOptions = array_map('__', $this->InstitutionSiteFeeType->FeeType->getList());
 		$controller->set('modelName', $this->name);
+
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -238,7 +247,7 @@ class InstitutionSiteFee extends AppModel {
 		}
 		$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null);
        
-		$controller->set(compact('programmeOptions','gradeOptions', 'yearOptions', 'selected_year'));
+		$controller->set(compact('programmeOptions','gradeOptions', 'yearOptions', 'selected_year', 'currency'));
 	}
 
 	private function getListOfFees($yearId, $institutionSiteId) {
