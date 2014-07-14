@@ -14,7 +14,7 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 echo $this->Form->create($model, $formOptions);
 echo isset($this->request->data[$model][0]['id']) ? $this->Form->hidden($model.'.0.id') : '';
 echo $this->FormUtility->datepicker($model.'.0.paid_date', array('label' => $this->Label->get('general.date'), 'id' => 'paidDate', 'data-date' => (isset($this->request->data[$model][0]['paid_date']) ? $this->request->data[$model][0]['paid_date'] : date('Y-m-d'))));
-echo $this->Form->input($model.'.0.paid', array('min'=>'0', 'step'=>'1', 'pattern'=>'\d+', 'label' => array('text' => $this->Label->get('FinanceFee.amount'), 'class' => 'col-md-3 control-label')));
+echo $this->Form->input($model.'.0.paid', array('min'=>'0', 'step'=>'1', 'pattern'=>'\d+', 'label' => array('text' => sprintf('%s (%s)',$this->Label->get('FinanceFee.amount'), $currency), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input($model.'.0.comments', array('type' => 'textarea'));
 ?>
 <?php 

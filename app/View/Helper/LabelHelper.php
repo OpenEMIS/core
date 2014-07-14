@@ -313,6 +313,7 @@ class LabelHelper extends AppHelper {
 			'fee' => 'Fee',
 			'fees' => 'Fees',
 			'amount' => 'Amount',
+			'amount_currency' => 'Amount (%s)',
 			'paid' => 'Paid',
 			'outstanding' => 'Outstanding',
 			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
@@ -340,6 +341,17 @@ class LabelHelper extends AppHelper {
 		$field = $obj['field'];
 		$code = $model . '.' . $obj['field'];
 		
+		if(isset($obj['label'])){
+			if(is_array($obj['label'])){
+				$code = $obj['label'][0];
+				$arr = array_splice($obj['label'], 1);
+				$label = $this->get($code);
+				$label = vsprintf($label, $arr);
+			}else{
+				$label = Inflector::humanize($obj['label']);
+			}
+			return $label;
+		}
 		if(isset($obj['labelKey'])) {
 			$code = $obj['labelKey'];
 		} else if($field==='modified' || $field==='created') {

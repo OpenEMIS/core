@@ -76,12 +76,12 @@ class InstitutionSiteStudentFee extends AppModel {
 		$programmeOptions = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammeOptions($controller->institutionSiteId, $selectedYear);
 		$selectedProgramme =  (isset($params->pass[1]) ? $params->pass[1] : 0);
 
-
 		$EducationGrade = ClassRegistry::init('EducationGrade');
 		$selectedGrade =  (isset($params->pass[2]) ? $params->pass[2] : 0);
 		$gradeOptions = array();
 
-
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 
 		$data = $this->getListOfFees($selectedYear, $controller->institutionSiteId);
 
@@ -121,7 +121,7 @@ class InstitutionSiteStudentFee extends AppModel {
 
 		$modelName = $this->name;
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'selectedYear', 'selectedProgramme', 'selectedGrade', 'programmes', 'yearOptions', 'programmeOptions', 'gradeOptions', 'modelName'));
+		$controller->set(compact('data', 'currency', 'selectedYear', 'selectedProgramme', 'selectedGrade', 'programmes', 'yearOptions', 'programmeOptions', 'gradeOptions', 'modelName'));
 	}
 
 	public function studentFeeView($controller, $params) {
@@ -152,6 +152,9 @@ class InstitutionSiteStudentFee extends AppModel {
 		$this->addStudentBreadCrumb($controller);
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+
 		$data = array_merge($data, $studentData);
 
 		$grades = $this->InstitutionSiteFee->EducationGrade->find('first', array('conditions'=>array('EducationGrade.id'=>$data['InstitutionSiteFee']['education_grade_id'])));
@@ -162,7 +165,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$data['InstitutionSiteStudentFee']['name'] = $data['Student']['first_name'] . ' ' . $data['Student']['last_name'];
 
 		$controller->set('subheader', $this->headerDefault . ' Details');
-		$controller->set(compact('data', 'studentFeeData', 'institutionSiteFeeTypes', 'institutionSiteStudentFeeTransactions'));
+		$controller->set(compact('data', 'currency', 'studentFeeData', 'institutionSiteFeeTypes', 'institutionSiteStudentFeeTransactions'));
 	}
 
 	public function getListOfTransactions($controller, $studentFeeId){
@@ -191,12 +194,15 @@ class InstitutionSiteStudentFee extends AppModel {
 	}
 
 	public function getDisplayFields($controller, $model) {
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+		
         $fields = array(
             'model' => $model,
             'fields' => array(
                 array('field' => 'id', 'type' => 'hidden'),
              	array('field' => 'paid_date',  'labelKey' => 'general.date'),
-                array('field' => 'paid',  'labelKey' => 'FinanceFee.amount'),
+                array('field' => 'paid',  'label' => array('FinanceFee.amount_currency', $currency)),
 				array('field' => 'comments'),
 				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false, 'labelKey' => 'general.modified_by'),
                 array('field' => 'modified', 'edit' => false),
@@ -286,6 +292,9 @@ class InstitutionSiteStudentFee extends AppModel {
 
 		$feeData = $this->find('first', array('recursive'=>-1,'conditions'=>array('InstitutionSiteStudentFee.student_id'=>$studentId, 'InstitutionSiteStudentFee.institution_site_fee_id'=>$feeId)));
 
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 
@@ -323,7 +332,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			}
 		}
 		$model = 'InstitutionSiteStudentFeeTransaction';
-		$controller->set(compact('studentId','feeId', 'model'));
+		$controller->set(compact('studentId', 'currency', 'feeId', 'model'));
 	}
 
 	private function computeFee($totalFee, $paid, $studentFeeId, $id, &$saveData){
