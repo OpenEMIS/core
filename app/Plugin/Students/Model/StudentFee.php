@@ -61,9 +61,8 @@ class StudentFee extends StudentsAppModel {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 
-		$modelName = $this->name;
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'modelName', 'currency'));
+		$controller->set(compact('data', 'currency'));
 	}
 
 	public function feeView($controller, $params) {

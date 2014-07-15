@@ -1,32 +1,28 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-//echo $this->element('templates/year_options', array('url' => $_action));
 ?>
 <div class="row page-controls">
     <?php
     echo $this->Form->input('school_year_id', array(
         'id' => 'SchoolYearId',
-        'class' => 'search_select form-control',
+        'class' => 'form-control',
         'label' => false,
         'options' => $yearOptions,
         'default' => $selectedYear,
         'div' => 'col-md-2',
          'url' => sprintf('%s/%s', $this->params['controller'], $_action),
         'onchange' => 'jsForm.change(this)'
-
     ));
     ?>
     <?php
     echo $this->Form->input('education_programme_id', array(
         'id' => 'EducationProgrammeId',
-        'class' => 'search_select form-control',
+        'class' => 'form-control',
         'label' => false,
         'empty' => __('All Programmes'),
         'options' => $programmeOptions,
@@ -39,7 +35,7 @@ $this->start('contentBody');
     <?php
     echo $this->Form->input('education_grade_id', array(
         'id' => 'EducationGradeId',
-        'class' => 'search_select form-control',
+        'class' => 'form-control',
         'label' => false,
         'empty' => __('All Grades'),
         'options' => $gradeOptions,
@@ -82,14 +78,14 @@ $this->start('contentBody');
                 	<?php 
                     foreach($data[$programme['id'].'_'.$key] as $id=>$val) {  ?>
                     <tr row-id="<?php echo $val['id']; ?>">
-                        <td class="table_cell"><?php echo $val['identification_no']; ?></td>
-                    	<td class="table_cell">
+                        <td ><?php echo $val['identification_no']; ?></td>
+                    	<td>
                             <?php 
                             echo $this->Html->link($val['name'], array('action' => 'studentFeeView', $val['student_id'], $val['id']), array('escape' => false));
                             ?>
                         </td>
-                        <td class="table_cell" width="15%"><?php echo number_format($val['total_paid'],2); ?></td>
-                        <td class="table_cell" width="18%"><?php echo number_format($val['total_outstanding'],2); ?></td>
+                        <td width="15%"><?php echo number_format($val['total_paid'],2); ?></td>
+                        <td width="18%"><?php echo number_format($val['total_outstanding'],2); ?></td>
                     </tr>
                    <?php 
                     } 
