@@ -42,6 +42,31 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 		)
 	);
 
+
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter an Indicator name'
+			)
+		),
+		'code' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter an Indicator code'
+			)
+		),
+		'datawarehouse_numerator_field_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Numerator Field'
+			)
+		)
+	);
+
 	public $headerDefault = 'Indicators';
 
 	public function indicator($controller, $params) {
@@ -133,161 +158,63 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 
 		$datawarehouseOperatorFieldOptions = array();
 		$datawarehouseFieldOptions = array();
-		$controller->set(compact('datawarehouseUnitOptions', 'datawarehouseModuleOptions', 'datawarehouseOperatorFieldOptions', 'datawarehouseFieldOptions'));
-		$controller->set('modelName', $this->name);
-		/*
-		$provider = '';
+	
 
 		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			$sessionEditable = '1';
-			if(!empty($data)){
-				$sessionEditable = $this->getSessionResultStatus($id);
-				if(!$sessionEditable){
-					return $controller->redirect(array('action' => 'sessionView', $id));
-				}
+			
+		}else{
+			$saveData = $controller->request->data;
+			$saveData['DatawarehouseIndicator']['datawarehouse_field_id'] = $saveData['DatawarehouseIndicator']['datawarehouse_numerator_field_id'];
 
-				$provider = $data['TrainingSession']['training_provider_id'];
-				$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
-					array(
-						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
-						'recursive' => -1, 
-						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
-						'joins' => array(
-							array(
-								'type' => 'INNER',
-								'table' => 'staff',
-								'alias' => 'Staff',
-								'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
-							)
-						)
-					)
-				);
-				$trainingSessionTraineesVal = null;
-				if(!empty($trainingSessionTrainees)){
-					foreach($trainingSessionTrainees as $val){
-						$val['TrainingSessionTrainee']['first_name'] = $val['Staff']['first_name'];
-						$val['TrainingSessionTrainee']['last_name'] = $val['Staff']['last_name'];
-						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
+			if ($this->saveAll($saveData)){
+
+			}else{
+				$moduleID = $saveData['DatawarehouseField']['datawarehouse_module_id'];
+				$operatorOption = $saveData['DatawarehouseField']['datawarehouse_operator'];
+
+				if(!empty($moduleID)){
+					$data = $controller->Datawarehouse->getFieldOptionByModuleId($moduleID);
+					if(!empty($data)){
+						foreach($data as $d){
+			                 $datawarehouseFieldOptions[$d['DatawarehouseField']['name']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+                    		 $datawarehouseOperatorFieldOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
+			            }
 					}
 				}
 
-				$trainingSessionTrainers = $this->TrainingSessionTrainer->find('all',  
-					array(
-						'fields' => array('TrainingSessionTrainer.*'),
-						'recursive' => -1, 
-						'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$id),
-					)
-				);
-				$trainingSessionTrainersVal = null;
-				if(!empty($trainingSessionTrainers)){
-					foreach($trainingSessionTrainers as $val){
-						$trainingSessionTrainersVal[] = $val['TrainingSessionTrainer'];
-					}
-				}
-				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal, 'TrainingSessionTrainer'=>$trainingSessionTrainersVal));
-			}
-			$controller->request->data['TrainingSession']['sessionEditable'] = $sessionEditable;
-		}
-		else{
-			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
-
-				if(!isset($controller->request->data['TrainingSession']['sessionEditable']) || $controller->request->data['TrainingSession']['sessionEditable'] == '1'){
-					if ($controller->request->data['TrainingSession']['training_status_id']=='1') {
-				   	$controller->request->data['TrainingSession']['training_status_id'] = 1; 
-					} else if ($controller->request->data['TrainingSession']['training_status_id']=='2') {
-				      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
+				if(!empty($operatorOption)){
+					$data = $controller->Datawarehouse->getFieldOptionByOperatorId($moduleID, $operatorOption);
+					if(!empty($data)){
+						$datawarehouseFieldOptions = array();
+						foreach($data as $d){
+		                   	$datawarehouseFieldOptions[$d['DatawarehouseField']['id']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+			            }
 					}
 				}
 
-				$data = $controller->request->data;
-				if($data['TrainingSession']['sessionEditable']=='2'){
-					$this->TrainingSessionTrainee->bindModel(
-				        array('hasMany' => array(
-			                 	'TrainingSessionTraineeResult' => array(
-									'className' => 'TrainingSessionTraineeResult',
-									'foreignKey' => 'training_session_trainee_id',
-									'dependent' => true,
-									'exclusive' => true
-								),
-				            )
-				        ),
-				        false
-				    );
-
-					
-					$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-					$trainingCourseResultType->bindModel(
-				        array('belongsTo' => array(
-				                'TrainingResultType' => array(
-									'className' => 'FieldOptionValue',
-									'foreignKey' => 'training_result_type_id'
-								)
-				            )
-				        )
-				    );
-
-				    $trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingSession']['training_course_id'])));
-						
-					if(!empty($data['TrainingSessionTrainee'])){
-						$trainingSessionTraineeResults = array();
-						foreach($data['TrainingSessionTrainee'] as $key=>$value){
-							$data['TrainingSessionTrainee'][$key]['training_session_id'] = $data['TrainingSession']['id'];
-							if(!isset($data['TrainingSessionTrainee'][$key]['id'])){
-								$this->TrainingSessionTrainee->create();
-								$this->TrainingSessionTrainee->save($data['TrainingSessionTrainee'][$key]);
-								$insertId = $this->TrainingSessionTrainee->getLastInsertId();
-								unset($data['TrainingSessionTrainee'][$key]);
-								foreach($trainingCourseResultTypes as $key=>$val){
-									$trainingSessionTraineeResults[] = array('training_session_trainee_id'=>$insertId, 'training_result_type_id'=>$val['TrainingCourseResultType']['training_result_type_id']);
-								}
-							}
-						}
-						$this->TrainingSessionTrainee->saveAll($data['TrainingSessionTrainee']);
-						$this->TrainingSessionTrainee->TrainingSessionTraineeResult->saveAll($trainingSessionTraineeResults);
-					}
-
-					if(isset($data['DeleteTrainee'])){
-						$deletedId = array();
-						foreach($data['DeleteTrainee'] as $key=>$value){
-							$deletedId[] = $value['id'];
-						}
-						
-					 	$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id'=>$deletedId));
-					}
-					$controller->Message->alert('general.edit.success');
-					return $controller->redirect(array('action' => 'session'));
-					
-				}else{
-					if($this->saveAll($data)){
-						if(isset($data['DeleteTrainee'])){
-							$deletedId = array();
-							foreach($data['DeleteTrainee'] as $key=>$value){
-								$deletedId[] = $value['id'];
-							}
-							$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), false);
-						}
-						if(isset($data['DeleteTrainer'])){
-							$deletedId = array();
-							foreach($data['DeleteTrainer'] as $key=>$value){
-								$deletedId[] = $value['id'];
-							}
-							$this->TrainingSessionTrainer->deleteAll(array('TrainingSessionTrainer.id' => $deletedId), false);
-						}
-						if(empty($controller->request->data[$this->name]['id'])){
-						  	$controller->Message->alert('general.add.success');
-						}
-						else{	
-						  	$controller->Message->alert('general.edit.success');
-						}
-						return $controller->redirect(array('action' => 'session'));
-					}
+				if(array_key_exists('datawarehouse_numerator_field_id', $this->validationErrors)){
+					$numeratorErrorMsg = $this->validationErrors['datawarehouse_numerator_field_id'][0];
+					$controller->set('numeratorErrorMsg', $numeratorErrorMsg);
 				}
+				/*
+				if(!empty($operatorOption)){
+					$data = $DatawarehouseModule->getFieldOptionByOperatorId($moduleID, $operatorOption);
+
+					if(!empty($data)){
+			            foreach($data as $d){
+			                $datawarehouseFieldOptions[$d['DatawarehouseField']['id']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+			            }
+			        }
+				}*/
+				//$data = $DatawarehouseModule->getFieldOptionByModuleId($moduleID);
+
+
+				//$data = $DatawarehouseModule->getFieldOptionByOperatorId($moduleID, $operatorOption);
 			}
 		}
-		$controller->set('provider', $provider);*/
+
+		$controller->set(compact('datawarehouseUnitOptions', 'datawarehouseModuleOptions', 'datawarehouseOperatorFieldOptions', 'datawarehouseFieldOptions'));
+		
 	}
 
 }
