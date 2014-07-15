@@ -19,8 +19,9 @@ $(document).ready(function() {
 
 var objDatawarehouse = {
     init: function() {
-        objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
-        objDatawarehouse.populateByModule($(".numeratorOperatorOption"), "numerator");
+        // objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
+        //objDatawarehouse.populateByModuleOperator($(".numeratorOperatorOption"), "numerator");
+        //objDatawarehouse.populateByField($(".numeratorFieldOption"), "numerator");
     },
     getTrainingNeedTypeSelection: function(obj){
         if($(obj).val()== "1"){
@@ -33,14 +34,20 @@ var objDatawarehouse = {
     },
     populateByModule: function(obj, objType){
         var moduleID = $(obj).val();
-        var operatorID = $('.'+objType+"OperatorOption");
-        var fieldOptionID = $('.'+objType+"FieldOption");
+        var operatorOption = $('.'+objType+"OperatorOption");
+        var fieldOption = $('.'+objType+"FieldOption");
         var fieldID = $('.'+objType+"FieldID");
-      
+        
+        var addDimensionRow = $('.'+objType+'-add-dimension-row');
         if(moduleID === ""){
-            operatorID.children('option:not(:first)').remove();
-            fieldOptionID.children('option:not(:first)').remove();
+            operatorOption.children('option:not(:first)').remove();
+            fieldOption.children('option:not(:first)').remove();
             fieldID.val("");
+            if(!addDimensionRow.hasClass('hide')){
+                addDimensionRow.addClass('hide');
+            }
+            //$('.'+objType+"-dimension-row tbody").children().remove();
+            //$('.delete-'+objType+"-dimension-row").children().remove();
         }else{
             url = $(obj).attr('url');
             $.ajax({ 
@@ -48,54 +55,125 @@ var objDatawarehouse = {
                 dataType: "json",
                 url: getRootURL()+url+moduleID,
                 success: function(data){
-                    operatorID.children('option:not(:first)').remove();
-                    fieldOptionID.children('option:not(:first)').remove();
+                    operatorOption.children('option:not(:first)').remove();
+                    fieldOption.children('option:not(:first)').remove();
                     fieldID.val("");
+                    if(addDimensionRow.hasClass('hide')){
+                        addDimensionRow.removeClass('hide');
+                    }
+                    //$('.'+objType+"-dimension-row tbody").children().remove();
+                    //$('.delete-'+objType+"-dimension-row").children().remove();
 
                     if(data == null){
                         return;
                     }
                     
                     $.each(data.fieldOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(fieldOptionID);
+                        $('<option>').val(key).text(value).appendTo(fieldOption);
                     });
 
                      $.each(data.operatorOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(operatorID);
+                        $('<option>').val(key).text(value).appendTo(operatorOption);
                     });
 
                 }
             });
         }
     },
-    populateByOperator: function(obj, objType){
-        var operatorID = $(obj).val();
-        var fieldOptionID = $('.'+objType+"FieldOption");
+    populateByModuleOperator: function(obj, objType){
+        var operatorOption = $(obj).val();
+        var moduleID = $('.'+objType+"ModuleOption").val();
+        var fieldOption = $('.'+objType+"FieldOption");
         var fieldID = $('.'+objType+"FieldID");
       
-        if(moduleID === ""){
-            fieldOptionID.children('option:not(:first)').remove();
+        if(operatorOption=== "" || moduleID === ""){
+            fieldOption.children('option:not(:first)').remove();
             fieldID.val("");
         }else{
             url = $(obj).attr('url');
             $.ajax({ 
                 type: "get",
                 dataType: "json",
-                url: getRootURL()+url+moduleID,
+                url: getRootURL()+url+moduleID+'/'+operatorOption,
                 success: function(data){
-                    fieldOptionID.children('option:not(:first)').remove();
+                    fieldOption.children('option:not(:first)').remove();
                     fieldID.val("");
 
                     if(data == null){
                         return;
                     }
 
-                     $.each(data.operatorOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(operatorID);
+                     $.each(data.fieldOption, function(key, value) {              
+                        $('<option>').val(key).text(value).appendTo(fieldOption);
                     });
 
                 }
             });
         }
-    }
+    },
+    populateByField: function(obj, objType){
+        var fieldOption = $(obj).val();
+        var fieldID = $('.'+objType+"FieldID");
+        if(fieldOption === ""){
+            fieldID.val("");
+        }else{
+            fieldID.val(fieldOption);
+        }
+    },
+
+    addDimensionRow: function(obj, objType) {
+        var table = $('.'+objType+'-dimension-row');
+        var index = table.find('.table_row').length + $('.delete-'+objType+'-dimension-row input').length;
+        var moduleID =  $('.'+objType+"ModuleOption").val();
+        var maskId;
+        var params = {index: index, module_id: moduleID, type: objType};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body').append(data);
+                //var element = '#searchTrainee' + index;
+                //var url = getRootURL() + table.attr('url') + '/' + index + '/' + $('.training_course').val();
+                //objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainee);
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+    populateByDimensionOption: function(obj, index, objType){
+        var dimensionOption = $(obj).val();
+        var dimensionValueOption = $('.'+objType+index+"DimensionValueOption");
+
+      
+        if(dimensionOption === ""){
+            console.log(dimensionOption);
+            dimensionValueOption[0].options.length = 0;
+        }else{
+            url = $(obj).attr('url');
+            $.ajax({ 
+                type: "get",
+                dataType: "json",
+                url: getRootURL()+url+dimensionOption,
+                success: function(data){
+                     console.log(data);
+                    dimensionValueOption[0].options.length = 0;
+
+                    if(data == null){
+                        return;
+                    }
+
+                     $.each(data.dimensionValueOption, function(key, value) {              
+                        $('<option>').val(key).text(value).appendTo(dimensionValueOption);
+                    });
+
+                }
+            });
+        }
+    },
+
 }
