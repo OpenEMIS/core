@@ -28,34 +28,34 @@ $this->start('contentBody'); ?>
 
 <div class="form-group">
 
-<duv class="col-md-3"><?php echo $this->Label->get('general.type'); ?></div>
-<div class="table-responsive col-md-5">
+<div class="col-md-3"><?php echo $this->Label->get('general.type'); ?></div>
+<div class="table-responsive col-md-6">
 <table class="table table-striped table-hover table-bordered">
 <thead >
     <tr>
-        <th><span class="left"><?php echo __('Type'); ?></span></th>
-        <th><span class="left"><?php echo sprintf('%s (%s)',__('Fee'), $currency); ?></span></th>
+        <th><span class="left"><?php echo $this->Label->get('general.type'); ?></span></th>
+        <th><span class="left"><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.fee'), $currency); ?></span></th>
     </tr>
 </thead>
 <?php if(!empty($institutionSiteFeeTypes)){ ?>
 <tbody>
-<?php 
-$totalFee = $data['InstitutionSiteFee']['total_fee'];
-foreach($institutionSiteFeeTypes as $key=>$val){ ?>
-<tr>
-<td><?php echo $val['FeeType']['name']; ?></td>
-<td>
-<?php
-echo $val['fee'];?>
-</td>
-</tr>
-<?php 
-} ?>
+	<?php 
+	$totalFee = $data['InstitutionSiteFee']['total_fee'];
+	foreach($institutionSiteFeeTypes as $key=>$val){ ?>
+	<tr>
+		<td><?php echo $val['FeeType']['name']; ?></td>
+		<td>
+		<?php
+		echo $val['fee'];?>
+		</td>
+	</tr>
+	<?php 
+	} ?>
 </tbody>
  <tfoot>
  	 <tr>
-        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total'), $currency); ?></td>
-        <td class="table_cell cell_value cell_number total_fee" width="22%"><?php echo $totalFee; ?></td>
+        <td class="cell_label"><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.total'), $currency); ?></td>
+        <td class="cell_value cell_number total_fee" width="22%"><?php echo $totalFee; ?></td>
     </tr>
 </tfoot>
 <?php } ?>

@@ -5,7 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'studentFeeView', $studentId, $feeId), array('class' => 'divider', 'id'=>'back'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'studentFeeView', $studentId, $feeId), array('class' => 'divider', 'id'=>'back'));
 $this->end();
 
 $this->start('contentBody');
