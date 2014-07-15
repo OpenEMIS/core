@@ -23,6 +23,11 @@ class DatawarehouseModule extends DataProcessingAppModel {
 			'className' => 'DatawarehouseField',
 			'foreignKey' => 'datawarehouse_module_id',
 			'dependent' => true
+		),
+		'DatawarehouseDimension' => array(
+			'className' => 'DatawarehouseDimension',
+			'foreignKey' => 'datawarehouse_module_id',
+			'dependent' => true
 		)
 	);
 

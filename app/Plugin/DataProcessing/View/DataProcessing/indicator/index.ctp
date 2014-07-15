@@ -1,5 +1,4 @@
 <?php if(!isset($ajax) || !$ajax) {
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
@@ -43,10 +42,10 @@ $this->start('contentBody');
         <tbody>
         	<?php foreach($data as $id=>$val) { ?>
             <tr row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<td class="table_cell"><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></td>
-                <td class="table_cell"><?php echo $val[$modelName]['location']; ?></td>
-                <td class="table_cell"><?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'sessionView', $val[$modelName]['id']), array('escape' => false)); ?></td>
-                <td class="table_cell"><?php echo $val['TrainingStatus']['name']; ?></td>
+            	<td><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></td>
+                <td><?php echo $val[$modelName]['location']; ?></td>
+                <td><?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'sessionView', $val[$modelName]['id']), array('escape' => false)); ?></td>
+                <td><?php echo $val['TrainingStatus']['name']; ?></td>
             </tr>
            <?php } ?>
         </tbody>
