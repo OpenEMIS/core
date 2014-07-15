@@ -3,9 +3,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 
 $this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'studentFee'), array('class' => 'divider', 'id'=>'back'));
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'studentFee'), array('class' => 'divider', 'id'=>'back'));
 if($_add) {
-    echo $this->Html->link(__('Add'), array('action' => 'studentFeeAddTransaction'), array('class' => 'divider', 'id'=>'add'));
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'studentFeeAddTransaction'), array('class' => 'divider', 'id'=>'add'));
 }
 $this->end();
 
@@ -70,14 +70,14 @@ $totalFeeTransaction = $totalFeeTransaction - $val['InstitutionSiteStudentFeeTra
  <tfoot>
     <tr>
         <td colspan="2"></td>
-        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total'), $currency); ?></td>
-        <td class="table_cell cell_value cell_number total_fee" width="15%"><?php echo number_format($totalPaid,2); ?></td>
-        <td class="table_cell cell_value cell_number total_outstanding" width="22%"><?php echo number_format($totalFeeTransaction,2); ?></td>
+        <td class="cell_label"><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.total'), $currency); ?></td>
+        <td class="cell_value cell_number total_fee" width="15%"><?php echo number_format($totalPaid,2); ?></td>
+        <td class="cell_value cell_number total_outstanding" width="22%"><?php echo number_format($totalFeeTransaction,2); ?></td>
     </tr>
     <tr>
         <td colspan="2"></td>
-        <td class="table_cell cell_label"><?php echo sprintf('%s (%s)',__('Total Fee'), $currency); ?></td>
-        <td class="table_cell cell_value cell_number total_fee" colspan="2" align="center" width="15%"><?php echo number_format($totalPaid+$totalFeeTransaction,2); ?></td>
+        <td class="cell_label"><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.total_fee'), $currency); ?></td>
+        <td class="cell_value cell_number total_fee" colspan="2" align="center" width="15%"><?php echo number_format($totalPaid+$totalFeeTransaction,2); ?></td>
     </tr>
 </tfoot>
 

@@ -311,6 +311,8 @@ class LabelHelper extends AppHelper {
 		),
 		'FinanceFee' => array(
 			'fee' => 'Fee',
+			'total' => 'Total',
+			'total_fee' => 'Total Fee',
 			'fees' => 'Fees',
 			'amount' => 'Amount',
 			'amount_currency' => 'Amount (%s)',
