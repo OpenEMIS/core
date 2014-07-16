@@ -26,12 +26,19 @@ echo $this->element('../Population/controls');
     <legend id="area"><?php echo __('Area'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('area_id', array('value' => $areaId)); ?>
 </fieldset>
-<?php 
+<?php
 echo $this->Form->end();
 
 $formOptions = $this->FormUtility->getFormOptions(array('action' => 'edit', $selectedYear, $areaId));
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('Population', $formOptions);
+echo $this->Form->hidden('idsToBeDeleted', array(
+	'label' => false,
+	'div' => false,
+	'after' => false,
+	'between' => false,
+	'id' => 'idsToBeDeleted'
+));
 ?>
 
 <fieldset id="data_section_group" class="section_group edit">
@@ -47,11 +54,11 @@ echo $this->Form->create('Population', $formOptions);
 				<th class="cell_delete">&nbsp;</th>
 			</tr>
 		</thead>
-		<?php 
+		<?php
 		$allTotal = 0;
 		if (!empty($data)):
 			?>
-			<tbody><?php 
+			<tbody><?php
 				$recordIndex = 0;
 				foreach ($data AS $row):
 					$allTotal += $row['male'];
@@ -59,7 +66,7 @@ echo $this->Form->create('Population', $formOptions);
 					?>
 					<tr class="<?php echo $row['data_source'] == 0 ? '' : 'row_estimate'; ?>" record-id="<?php echo $row['id']; ?>">
 						<td>
-							<?php 
+							<?php
 							echo $this->Form->input('id', array(
 								'label' => false,
 								'div' => false,
@@ -70,7 +77,7 @@ echo $this->Form->create('Population', $formOptions);
 								'name' => 'data[Population][' . $recordIndex . '][id]',
 								'value' => $row['id']
 							));
-							
+
 							echo $this->Form->input('source', array(
 								'label' => false,
 								'div' => false,
@@ -133,8 +140,8 @@ echo $this->Form->create('Population', $formOptions);
 						<td class="cell-total"><?php echo $row['male'] + $row['female']; ?></td>
 						<td><span class="icon_delete" title="'+i18n.General.textDelete+'" onclick="population.removeRow(this)"></span></td>
 					</tr>
-					<?php 
-					$recordIndex ++;
+					<?php
+					$recordIndex++;
 				endforeach;
 				?>
 			</tbody>
@@ -154,7 +161,7 @@ echo $this->Form->create('Population', $formOptions);
 </fieldset>
 
 <script type="text/javascript">
-	var currentAreaId = <?php echo intval($areaId); ?>;
+					var currentAreaId = <?php echo intval($areaId); ?>;
 </script>
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>

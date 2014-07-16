@@ -106,6 +106,14 @@ class PopulationController extends AppController {
 		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
 		
         if($this->request->is('post')) {
+			$deletedIdStr = $this->request->data['Population']['idsToBeDeleted'];
+			unset($this->request->data['Population']['idsToBeDeleted']);
+			$idsArr = array();
+			if(!empty($deletedIdStr)){
+				$idsArr = explode(',', $deletedIdStr);
+			}
+			//pr($idsArr);die;
+			
 			if(!empty($this->request->data['Population'])){
 				$populationData = $this->request->data['Population'];
 				//pr($populationData);die;
@@ -113,18 +121,28 @@ class PopulationController extends AppController {
 				foreach($populationData AS $row){
 					$id = intval($row['id']);
 					$age = intval($row['age']);
+					$source = $row['source'];
 					
-					if($age > 0){
-						if($id == 0){
-							$this->Population->create();
-							
-							$row['data_source'] = 0;
-							$row['year'] = $selectedYear;
-							$row['area_id'] = $areaId;
+					if($age > 0 && !empty($source)){
+						$existingRecords = $this->Population->getPopulationRecords($age, $selectedYear, $source, $areaId);
+						if(empty($existingRecords)){
+							if($id == 0){
+								$this->Population->create();
+
+								$row['data_source'] = 0;
+								$row['year'] = $selectedYear;
+								$row['area_id'] = $areaId;
+							}
+
+							$this->Population->save(array('Population' => $row));
 						}
-						
-						$this->Population->save(array('Population' => $row));
 					}
+				}
+			}
+			
+			foreach($idsArr AS $id){
+				if(!empty($id)){
+					$this->Population->delete($id);
 				}
 			}
 			
