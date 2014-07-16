@@ -14,6 +14,7 @@ if($newRowIndex == 0){
 			'after' => false,
 			'between' => false,
 			'class' => 'form-control',
+			'id' => 'PopulationId',
 			'name' => 'data[Population][' . $newRowIndex . '][id]',
 			'value' => 0
 		));
@@ -23,6 +24,7 @@ if($newRowIndex == 0){
 			'after' => false,
 			'between' => false,
 			'class' => 'form-control',
+			'id' => 'PopulationSource',
 			'name' => 'data[Population][' . $newRowIndex . '][source]',
 			'value' => ''
 		));
@@ -36,8 +38,10 @@ if($newRowIndex == 0){
 			'after' => false,
 			'between' => false,
 			'class' => 'form-control',
+			'id' => 'PopulationAge',
 			'name' => 'data[Population][' . $newRowIndex . '][age]',
-			'value' => 0
+			'value' => 0,
+			'onkeypress' => 'return utility.integerCheck(event)'
 		));
 		?>
 	</td>
@@ -49,8 +53,11 @@ if($newRowIndex == 0){
 			'after' => false,
 			'between' => false,
 			'class' => 'form-control',
+			'id' => 'PopulationMale',
 			'name' => 'data[Population][' . $newRowIndex . '][male]',
-			'value' => 0
+			'value' => 0,
+			'onkeypress' => 'return utility.integerCheck(event)',
+			'onkeyup' => 'population.computeSubtotal(this)'
 		));
 		?>
 	</td>
@@ -62,8 +69,11 @@ if($newRowIndex == 0){
 			'after' => false,
 			'between' => false,
 			'class' => 'form-control',
+			'id' => 'PopulationFemale',
 			'name' => 'data[Population][' . $newRowIndex . '][female]',
-			'value' => 0
+			'value' => 0,
+			'onkeypress' => 'return utility.integerCheck(event)',
+			'onkeyup' => 'population.computeSubtotal(this)'
 		));
 		?>
 	</td>

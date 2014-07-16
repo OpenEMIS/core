@@ -62,9 +62,9 @@ $(document).ready(function() {
 	
 	$('select#populationYear').on('change', function(){
 		if($('#population').hasClass('edit')){
-			location.href = population.base + 'index/' + $(this).val() + '/' + currentAreaId;
-		}else{
 			location.href = population.base + 'edit/' + $(this).val() + '/' + currentAreaId;
+		}else{
+			location.href = population.base + 'index/' + $(this).val() + '/' + currentAreaId;
 		}
 	});
 
@@ -250,7 +250,8 @@ var population = {
     },
     
     computeSubtotal: function(obj) {
-        var row = $(obj).closest('.tr');
+//alert('fire');
+        var row = $(obj).closest('tr');
         var male = row.find('#PopulationMale');
         var female = row.find('#PopulationFemale');
         
@@ -262,8 +263,9 @@ var population = {
             female.val(0);
             obj.select();
         }
-        
-        row.find('.cell-total').html(male.val().toInt() + female.val().toInt());
+		alert(row.length);
+         row.find('.cell-total').html(male.val().toInt());
+       // row.find('.cell-total').html(male.val().toInt() + female.val().toInt());
         var table = $(obj).closest('table');
         population.computeTotal(table);
     },
