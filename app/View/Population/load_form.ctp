@@ -40,7 +40,8 @@ if (!empty($data)):
 							'class' => 'form-control',
 							'id' => 'PopulationAge',
 							'name' => 'data[Population][' . $recordIndex . '][age]',
-							'value' => $row['age']
+							'value' => $row['age'],
+							'onkeypress' => 'return utility.integerCheck(event)'
 						));
 					?>
 				</td>
@@ -54,7 +55,9 @@ if (!empty($data)):
 							'class' => 'form-control',
 							'id' => 'PopulationMale',
 							'name' => 'data[Population][' . $recordIndex . '][male]',
-							'value' => $row['male']
+							'value' => $row['male'],
+							'onkeypress' => 'return utility.integerCheck(event)',
+							'onkeyup' => 'population.computeSubtotal(this)'
 						));
 					?>
 				</td>
@@ -68,7 +71,9 @@ if (!empty($data)):
 							'class' => 'form-control',
 							'id' => 'PopulationFemale',
 							'name' => 'data[Population][' . $recordIndex . '][female]',
-							'value' => $row['female']
+							'value' => $row['female'],
+							'onkeypress' => 'return utility.integerCheck(event)',
+							'onkeyup' => 'population.computeSubtotal(this)'
 						));
 					?>
 				</td>
