@@ -22,14 +22,13 @@ var objDatawarehouse = {
         // objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
         //objDatawarehouse.populateByModuleOperator($(".numeratorOperatorOption"), "numerator");
         //objDatawarehouse.populateByField($(".numeratorFieldOption"), "numerator");
+        objDatawarehouse.getUnitType($("#DatawarehouseIndicatorDatawarehouseUnitId"));
     },
-    getTrainingNeedTypeSelection: function(obj){
+    getUnitType: function(obj){
         if($(obj).val()== "1"){
-            $('.divCourse').removeClass('hide');
-            $('.divNeed').addClass('hide');
+            $('#divDenominator').addClass('hide');
         }else{
-            $('.divNeed').removeClass('hide');
-            $('.divCourse').addClass('hide');
+            $('#divDenominator').removeClass('hide');
         }
     },
     populateByModule: function(obj, objType){
@@ -46,8 +45,8 @@ var objDatawarehouse = {
             if(!addDimensionRow.hasClass('hide')){
                 addDimensionRow.addClass('hide');
             }
-            //$('.'+objType+"-dimension-row tbody").children().remove();
-            //$('.delete-'+objType+"-dimension-row").children().remove();
+            $('.'+objType+"-dimension-row tbody").remove();
+            $('.delete-'+objType+"-dimension-row input").remove();
         }else{
             url = $(obj).attr('url');
             $.ajax({ 
@@ -61,8 +60,8 @@ var objDatawarehouse = {
                     if(addDimensionRow.hasClass('hide')){
                         addDimensionRow.removeClass('hide');
                     }
-                    //$('.'+objType+"-dimension-row tbody").children().remove();
-                    //$('.delete-'+objType+"-dimension-row").children().remove();
+                    $('.'+objType+"-dimension-row tbody").remove();
+                    $('.delete-'+objType+"-dimension-row input").remove();
 
                     if(data == null){
                         return;
@@ -130,9 +129,6 @@ var objDatawarehouse = {
         var success = function(data, status) {
             var callback = function() {
                 table.find('.table_body').append(data);
-                //var element = '#searchTrainee' + index;
-                //var url = getRootURL() + table.attr('url') + '/' + index + '/' + $('.training_course').val();
-                //objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainee);
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -148,11 +144,10 @@ var objDatawarehouse = {
     populateByDimensionOption: function(obj, index, objType){
         var dimensionOption = $(obj).val();
         var dimensionValueOption = $('.'+objType+index+"DimensionValueOption");
-
-      
+        var dimensionOptionName = $('.'+objType+index+"DimensionOptionName");
         if(dimensionOption === ""){
-            console.log(dimensionOption);
             dimensionValueOption[0].options.length = 0;
+            dimensionOptionName.val("");
         }else{
             url = $(obj).attr('url');
             $.ajax({ 
@@ -160,13 +155,11 @@ var objDatawarehouse = {
                 dataType: "json",
                 url: getRootURL()+url+dimensionOption,
                 success: function(data){
-                     console.log(data);
                     dimensionValueOption[0].options.length = 0;
-
+                    dimensionOptionName.val($(obj).find(":selected").text());
                     if(data == null){
                         return;
                     }
-
                      $.each(data.dimensionValueOption, function(key, value) {              
                         $('<option>').val(key).text(value).appendTo(dimensionValueOption);
                     });
@@ -174,6 +167,20 @@ var objDatawarehouse = {
                 }
             });
         }
+    },
+    deleteDimensionRow: function(obj, objType) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-'+objType+'-dimension-row');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
     },
 
 }
