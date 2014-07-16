@@ -77,7 +77,7 @@ if (!empty($data)):
 						));
 					?>
 				</td>
-				<td class="cell_total"><?php echo $row['male'] + $row['female']; ?></td>
+				<td class="cell-total"><?php echo $row['male'] + $row['female']; ?></td>
 				<td><span class="icon_delete" title="'+i18n.General.textDelete+'" onclick="population.removeRow(this)"></span></td>
 			</tr>
 			<?php 
