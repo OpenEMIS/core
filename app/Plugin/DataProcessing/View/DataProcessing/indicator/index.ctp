@@ -41,11 +41,11 @@ $this->start('contentBody');
        </thead>
         <tbody>
         	<?php foreach($data as $id=>$val) { ?>
-            <tr row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<td><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></td>
-                <td><?php echo $val[$modelName]['location']; ?></td>
-                <td><?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'sessionView', $val[$modelName]['id']), array('escape' => false)); ?></td>
-                <td><?php echo $val['TrainingStatus']['name']; ?></td>
+            <tr row-id="<?php echo $val[$model]['id']; ?>">
+            	<td><?php echo $this->Html->link($val[$model]['name'], array('action' => 'indicatorView', $val[$modelName]['id']), array('escape' => false)); ?></td>
+                <td><?php echo $val['DatawarehouseUnit']['name']; ?></td>
+                <td><?php echo $val['DatawarehouseModule']['name'];?></td>
+                <td><?php echo $val[$model]['type']; ?></td>
             </tr>
            <?php } ?>
         </tbody>

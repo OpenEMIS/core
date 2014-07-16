@@ -989,7 +989,7 @@ class DataProcessingController extends DataProcessingAppController {
          }
     }
 
-    public function ajax_add_numerator_condition(){
+    public function ajax_add_dimension_row(){
         $this->layout = 'ajax';
         $moduleID = $this->params->query['module_id'];
         if(!empty($moduleID)){
@@ -998,7 +998,7 @@ class DataProcessingController extends DataProcessingAppController {
             $this->set('datawarehouseDimensionOptions', $this->Datawarehouse->getDimensionOptions($moduleID));
             $this->set('operatorOptions', $this->Datawarehouse->operatorOptions());
             $this->set('valueOptions', array());
-            $this->render('/Elements/dimension_row');
+            $this->render('/Elements/datawarehouse_dimension_row');
         }
     }
 

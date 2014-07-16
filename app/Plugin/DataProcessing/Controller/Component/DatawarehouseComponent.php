@@ -121,7 +121,6 @@ class DatawarehouseComponent extends Component {
  			)
 
  		);
- 		pr($dimension);
  		$fieldOption = array();
  		if(!empty($dimension)){
  			$modelName = $dimension['DatawarehouseDimension']['model'];
@@ -135,18 +134,14 @@ class DatawarehouseComponent extends Component {
 				eval("\$join = array($joins);");
  			}
 
- 			pr($join);
  			$dimensionModel = ClassRegistry::init($parentModel);
  			
- 	
 	    	$data = $dimensionModel->find('all', array(
 	            'fields' => array('DISTINCT ' . $modelName.'.'.$fieldName, $modelName.'.'.$fieldName),
 	            'joins' => $join,
 	            'recursive'=> -1
 	            )
 	        );
-
-	        pr($data);
 
 
 	        if(!empty($data)){
@@ -158,6 +153,69 @@ class DatawarehouseComponent extends Component {
      	return $fieldOption;
     }
 
+    public function formatDimension($data, $datawarehouseModuleOptions, $editable=true){
+    	$requestData = array();
+
+
+		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+		$numeratorModuleID = $data['DatawarehouseField']['datawarehouse_module_id'];
+		$numeratorDatawarehouseDimensionOptions = $this->getDimensionOptions($numeratorModuleID);
+		$requestData['DatawarehouseField']['numerator_datawarehouse_module_id'] = ($editable ? $numeratorModuleID : $datawarehouseModuleOptions[$numeratorModuleID]);
+		$requestData['DatawarehouseField']['numerator_datawarehouse_operator'] = $data['DatawarehouseField']['type'];
+		$requestData['DatawarehouseField']['numerator_datawarehouse_field'] =  ($editable) ? $data['DatawarehouseField']['id'] : ucwords($data['DatawarehouseField']['name']);
+		$requestData['DatawarehouseIndicator']['numerator_datawarehouse_field_id'] = $data['DatawarehouseField']['id'];
+
+		if(!empty($data['DatawarehouseIndicatorCondition'])){
+			foreach($data['DatawarehouseIndicatorCondition'] as $key=>$val){
+				$data['DatawarehouseIndicatorCondition'][$key]['dimension_name'] = $numeratorDatawarehouseDimensionOptions[$val['datawarehouse_dimension_id']];
+
+			}
+		}
+
+		$requestData['NumeratorDatawarehouseDimension'] = $data['DatawarehouseIndicatorCondition'];
+		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+		if(isset($data['Denominator']) && !empty($data['Denominator'])){
+			$denominatorModuleID = $data['DatawarehouseField']['datawarehouse_module_id'];
+			$denominatorDatawarehouseDimensionOptions = $this->getDimensionOptions($denominatorModuleID);
+			$requestData['DatawarehouseField']['denominator_datawarehouse_module_id'] = ($editable ? $denominatorModuleID : $datawarehouseModuleOptions[$denominatorModuleID]);
+			$requestData['DatawarehouseField']['denominator_datawarehouse_operator'] =  $data['Denominator']['DatawarehouseField']['type'];
+			$requestData['DatawarehouseField']['denominator_datawarehouse_field'] = ($editable) ? $data['Denominator']['DatawarehouseField']['id'] : ucwords($data['Denominator']['DatawarehouseField']['name']);
+			$requestData['DatawarehouseIndicator']['denominator_datawarehouse_field_id'] = $data['Denominator']['DatawarehouseField']['id'];
+		
+			if(!empty($data['Denominator']['DatawarehouseIndicatorCondition'])){
+				foreach($data['Denominator']['DatawarehouseIndicatorCondition'] as $key=>$val){
+					$data['Denominator']['DatawarehouseIndicatorCondition'][$key]['dimension_name'] = $numeratorDatawarehouseDimensionOptions[$val['datawarehouse_dimension_id']];
+				}
+				$requestData['DenominatorDatawarehouseDimension'] = $data['Denominator']['DatawarehouseIndicatorCondition'];
+			}
+		}
+
+		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+		return $requestData;
+    }
+
+
+    public function populateDimensionOption($moduleID, $operatorOption, &$datawarehouseFieldOptions, &$datawarehouseOperatorFieldOptions){
+    	if(!empty($moduleID)){
+			$data = $this->getFieldOptionByModuleId($moduleID);
+			if(!empty($data)){
+				foreach($data as $d){
+	                 $datawarehouseFieldOptions[$d['DatawarehouseField']['name']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+            		 $datawarehouseOperatorFieldOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
+	            }
+			}
+		}
+
+		if(!empty($operatorOption)){
+			$data = $this->getFieldOptionByOperatorId($moduleID, $operatorOption);
+			if(!empty($data)){
+				$datawarehouseFieldOptions = array();
+				foreach($data as $d){
+                   	$datawarehouseFieldOptions[$d['DatawarehouseField']['id']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+	            }
+			}
+		}
+    }
 	
 }
 ?>
