@@ -77,7 +77,7 @@ if($newRowIndex == 0){
 		));
 		?>
 	</td>
-	<td class="cell_total">0</td>
+	<td class="cell-total">0</td>
 	<td><span class="icon_delete" title="'+i18n.General.textDelete+'" onclick="population.removeRow(this)"></span></td>
 </tr>
 <?php 

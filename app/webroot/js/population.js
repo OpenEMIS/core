@@ -250,7 +250,7 @@ var population = {
     },
     
     computeSubtotal: function(obj) {
-//alert('fire');
+
         var row = $(obj).closest('tr');
         var male = row.find('#PopulationMale');
         var female = row.find('#PopulationFemale');
@@ -263,9 +263,8 @@ var population = {
             female.val(0);
             obj.select();
         }
-		alert(row.length);
-         row.find('.cell-total').html(male.val().toInt());
-       // row.find('.cell-total').html(male.val().toInt() + female.val().toInt());
+		
+		row.find('.cell-total').html(male.val().toInt() + female.val().toInt());
         var table = $(obj).closest('table');
         population.computeTotal(table);
     },
@@ -303,21 +302,21 @@ var population = {
 	},
     
     removeRow: function(obj) {
-        var row = $(obj).closest('.table_row');
-        var table = row.closest('.table');
+        var row = $(obj).closest('tr');
+        var table = row.closest('table');
         var id = row.attr('record-id');
+		
+		var fieldDeletedIds = $('input#idsToBeDeleted');
 
-        if(id!==0) {
-            population.deletedRecords.push(id);
+        if(id !== '0') {
+            fieldDeletedIds.val(fieldDeletedIds.val() + id + ',');
         }
         row.remove();
         population.computeTotal(table);
-        population.checkEdited();
         
-        var totalRow = table.find('.table_row').length;
+        var totalRow = table.find('tbody tr').length;
         if(totalRow < 1){
-            //$('.btn_save').addClass('btn_disabled');
-            $('.table_body').hide();
+            table.find('tbody').remove();
         }
     },
 
