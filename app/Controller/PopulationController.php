@@ -43,18 +43,6 @@ class PopulationController extends AppController {
         $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1', 'Area.visible' => 1)));
         $this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
         $highestLevel[] = $topArea;
-/*
-        // add new population
-        if($this->request->is('post')){
-        	//echo '<pre>';
-            //var_dump($this->request->data);
-            //echo '</pre>';
-            if(isset($this->request->data['previousAction']) && $this->request->data['previousAction'] == 'edit'){
-
-            }
-                //$this->Population->savePopulationData($this->request->data['Population']);
-        }
-        */
 
         if($this->request->is('post')) {
             for ($i = 0; $i < count($this->request->data['Population'])-1; $i++) {
@@ -199,7 +187,6 @@ class PopulationController extends AppController {
 		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
 		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
 		
-		
         $data = $this->Utility->formatResult($this->Population->getPopulationData($year, $areaId));
         $this->set(compact('data'));
     }
@@ -209,7 +196,6 @@ class PopulationController extends AppController {
 		
 		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
 		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
-		
 		
         $data = $this->Utility->formatResult($this->Population->getPopulationData($year, $areaId));
         $this->set(compact('data'));
