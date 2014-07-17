@@ -33,7 +33,7 @@ class DataProcessingController extends DataProcessingAppController {
         'indicator' => 'DataProcessing.DatawarehouseIndicator'
     ); 
 	
-	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'Paginator', 'DataProcessing.Datawarehouse');
+	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'DevInfo6.DevInfo6Datawarehouse', 'Paginator', 'DataProcessing.Datawarehouse');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -524,16 +524,47 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-			$this->processGenerate($this->data['Reports']);
+			pr($this->request->data);
+            $this->DevInfo6Datawarehouse
+            //$this->processGenerate($this->data['Reports']);
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));
+		
+
+        $AreaLevel = ClassRegistry::init('AreaLevel');
+        $areaOptions = $AreaLevel->find('list',
+            array(
+                'fields' => array('Area.id', 'Area.name', 'AreaLevel.name'),
+                'joins' => array(
+                    array(
+                        'type' => 'INNER',
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('AreaLevel.id = Area.area_level_id')
+                    )
+                ),
+                'recursive'=> -1,
+                'order' => array('AreaLevel.name', 'Area.name')
+            )
+        );
+
+
+        $SchoolYear = ClassRegistry::init('SchoolYear');
+        $schoolYearOptions = $SchoolYear->find('list', array('fields'=>array('id', 'name'), 'order'=>array('start_year DESC')));
+
+        $this->set(compact('areaOptions', 'schoolYearOptions'));
+
+       
+        /*$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));
 		$QR = $this->Report->getQueuedRunningReport();
+        $tmp = $this->formatTable($data);*/
+
+        $tmp = $this->Datawarehouse->getReportList();
+        $QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){
 			$q[] = $arrV['Filename'];
 		}
 
-		$tmp = $this->formatTable($data);
 
 //		pr($tmp);die;
 		$this->set('data',$tmp);
