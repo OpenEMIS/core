@@ -23,9 +23,7 @@ echo $this->Form->create($model, $formOptions);
 
 <?php if(!empty($this->data[$model]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 <?php if(!empty($this->data['DatawarehouseIndicatorCondition']['id'])){ echo $this->Form->input('DatawarehouseIndicatorCondition.id', array('type'=> 'hidden')); } ?>
-<?php if(!empty($this->data[$model]['denominator'])){ echo $this->Form->input('denominator', array('type'=> 'hidden')); } ?>
 <?php if(!empty($this->data['Denominator']['id'])){ echo $this->Form->input('Denominator.id', array('type'=> 'hidden')); } ?>
-<?php if(!empty($this->data['Denominator']['DatawarehouseIndicatorCondition']['id'])){ echo $this->Form->input('Denominator.DatawarehouseIndicatorCondition.Denominator.id', array('type'=> 'hidden')); } ?>
 <?php  echo $this->Form->input($model.'.name', array('label'=>array('text'=> $this->Label->get('Datawarehouse.indicator'),'class'=>'col-md-3 control-label'))); ?>
 <?php echo $this->Form->input($model.'.description', array('type'=>'textarea'));?>
 <?php echo $this->Form->input($model.'.code');?>
