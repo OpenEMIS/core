@@ -1,7 +1,8 @@
 <?php 
 $typeOption = array('numerator', 'denominator');
 foreach($typeOption as $type){ ?>
-<div id="div<?php echo ucwords($type);?>" class="form-group">
+<div id="div<?php echo ucwords($type);?>" class="form-group <?php echo $type=='denominator' && (!isset($this->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id']) || 
+				empty($this->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id'])) ? 'hide' : '';?>">
 	<div class="col-md-12">
 	<fieldset class="section_group">
 		<legend><?php echo __(ucwords($type)); ?></legend>

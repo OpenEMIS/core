@@ -82,7 +82,7 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 		)
   	);
 
-	public $headerDefault = 'Indicators';
+	public $headerDefault = 'Custom Indicators';
 
 
 	public function beforeValidate($options = array()) {
@@ -139,7 +139,7 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 					'conditions' => array('DatawarehouseModule.id = DatawarehouseField.datawarehouse_module_id')
 				)
 		    ),
-		    'conditions'=>'DatawarehouseIndicator.denominator != 0',
+		    'conditions'=>array('DatawarehouseIndicator.denominator != 0 OR DatawarehouseIndicator.denominator is null'),
 	        'limit' => $this->paginateLimit,
 	        'recursive'=> -1,
 	        'order' => $order
@@ -192,7 +192,6 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 		$requestData = $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions, $editable);
 		
 		$controller->request->data = $requestData;
-
 		$controller->set(compact('data', 'editable'));
 	}
 
@@ -210,15 +209,19 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$data = $this->find('first',array('recursive'=>2, 'conditions' => array($this->name.'.id' => $id)));
-
-			if(empty($data)){
+			if(empty($data) && !empty($id)){
 				$controller->redirect(array('action'=>'indicatorAdd'));
 			}
 
 			$requestData =  $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions);
-			$requestData['DatawarehouseIndicator'] = array_merge($requestData['DatawarehouseIndicator'], $data['DatawarehouseIndicator']);
-
-
+			if(isset($data['DatawarehouseIndicator'])){
+				$requestData['DatawarehouseIndicator'] = array_merge($requestData['DatawarehouseIndicator'], $data['DatawarehouseIndicator']);
+			}
+			$denominator = array();
+			if(isset($data['Denominator'])){
+				$denominator = $data['Denominator'];
+			}
+			$requestData['Denominator'] = $denominator;
 			$controller->request->data = $requestData;
 		}else{
 			$data = $controller->request->data;
@@ -229,12 +232,15 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 			$saveData['DatawarehouseIndicator']['enabled'] = 1;
 			$saveData['DatawarehouseIndicator']['type'] = 'Custom';
 
+			$deleteDenominator = false;
 			if(isset($data['DatawarehouseIndicator']['datawarehouse_unit_id']) && $data['DatawarehouseIndicator']['datawarehouse_unit_id']!="1"){
 				$saveData['Denominator'] = $saveData['DatawarehouseIndicator'];
 				if(isset($data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'])){
 					$saveData['Denominator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'];
 				}
-				$saveData['Denominator']['denominator'] = 0;
+				if(isset($data['Denominator']['id'])){
+					$saveData['Denominator']['id'] = $data['Denominator']['id'];
+				}
 				$denominatorDimensionIndicatorCondition = array();
 				if(isset($data['DenominatorDatawarehouseDimension'])){
 					foreach($data['DenominatorDatawarehouseDimension'] as $d){
@@ -254,6 +260,11 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 					}
 				}
 				$saveData['Denominator']['DatawarehouseIndicatorCondition'] = $denominatorDimensionIndicatorCondition;
+			}else{
+				if(isset($data['Denominator']['id'])){
+					$saveData['DatawarehouseIndicator']['denominator'] = 0;
+					$deleteDenominator = true;
+				}
 			}
 
 			//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -280,7 +291,6 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 
 			$saveData['DeleteNumeratorDimensionRow'] = isset($data['DeleteNumeratorDimensionRow']) ? $data['DeleteNumeratorDimensionRow'] : array();
 			$saveData['DeleteDenominatorDimensionRow'] = isset($data['DeleteDenominatorDimensionRow']) ? $data['DeleteDenominatorDimensionRow'] : array();
-			
 			if ($this->saveAll($saveData)){
 				if(isset($saveData['DeleteNumeratorDimensionRow'])){
 					$deletedId = array();
@@ -296,22 +306,28 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 					}
 					$this->DatawarehouseIndicatorCondition->deleteAll(array('DatawarehouseIndicatorCondition.id' => $deletedId), false);
 				}
+				if($deleteDenominator){
+					$this->delete($data['Denominator']['id']);
+				}
 				//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+				
 				if(isset($saveData['Denominator']['DatawarehouseIndicatorCondition']) && !empty($saveData['Denominator']['DatawarehouseIndicatorCondition'])){
+					$saveDenominator['DatawarehouseIndicatorCondition'] = $saveData['Denominator']['DatawarehouseIndicatorCondition'];
 					$saveDenominator['DatawarehouseIndicator'] = $saveData['Denominator'];
 					if(!isset($saveData['Denominator']['id'])){
 						$saveDenominator['DatawarehouseIndicator']['id'] = $this->Denominator->getLastInsertId();
 					}
-					$saveDenominator['DatawarehouseIndicatorCondition'] = $saveData['Denominator']['DatawarehouseIndicatorCondition'];
+					unset($saveDenominator['DatawarehouseIndicator']['DatawarehouseIndicatorCondition']);
 					$this->saveAll($saveDenominator);
-
-					if(empty($controller->request->data[$this->name]['id'])){
-					  	$controller->Message->alert('general.add.success');
-					}else{	
-					  	$controller->Message->alert('general.edit.success');
-					}
-					return $controller->redirect(array('action' => 'indicator'));
 				}
+
+
+				if(empty($controller->request->data[$this->name]['id'])){
+				  	$controller->Message->alert('general.add.success');
+				}else{	
+				  	$controller->Message->alert('general.edit.success');
+				}
+				return $controller->redirect(array('action' => 'indicator'));
 				//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 			}else{
 				
