@@ -306,4 +306,22 @@ class Area extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function getParentId($areaId){
+		$result = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('Area.parent_id'),
+			'conditions' => array(
+				'OR' => array(
+					'Area.id' => $areaId
+				)
+			)
+		));
+		
+		if(!empty($result)){
+			return $result['Area']['parent_id'];
+		}else{
+			return NULL;
+		}
+	}
 }
