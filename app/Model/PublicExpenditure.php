@@ -22,7 +22,17 @@ class PublicExpenditure extends AppModel {
 	public function getAreas($areaId = 0, $parentAreaId = 0) {
 		$areaModel = ClassRegistry::init('Area');
 		$options = array(
-			'fields' => array("Area.id", "Area.name", "Area.parent_id", "Area.area_level_id"),
+			'fields' => array("Area.id", "Area.name", "Area.parent_id", "Area.area_level_id", "AreaLevel.name"),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'area_levels',
+					'alias' => 'AreaLevel',
+					'conditions' => array(
+						'Area.area_level_id = AreaLevel.id'
+					)
+				)
+			),
 			'conditions' => array(
 				"Area.visible" => 1,
 
@@ -73,7 +83,8 @@ class PublicExpenditure extends AppModel {
 				$listAreaId = $area['Area']['id'];
 				$listAreaName = $area['Area']['name'];
 				$listParentId = $area['Area']['parent_id'];
-				$listAreaLevel = $area['Area']['area_level_id'];
+				$listAreaLevelId = $area['Area']['area_level_id'];
+				$listAreaLevelName = $area['AreaLevel']['name'];
 
 				$result = $this->getPublicExpenditureByYearAndArea($year, $listAreaId);
 
@@ -85,7 +96,8 @@ class PublicExpenditure extends AppModel {
 	        			'name' => $listAreaName,
 	        			'area_id' => $listAreaId,
 	        			'parent_id' => $listParentId,
-	        			'area_level_id' => $listAreaLevel,
+	        			'area_level_id' => $listAreaLevelId,
+						'area_level_name' => $listAreaLevelName,
 	        			'gross_national_product' => $expenditureResult['gross_national_product'],
 	        			'year' => $expenditureResult['year'],
 	        			'id' => $expenditureResult['id'],
@@ -98,7 +110,8 @@ class PublicExpenditure extends AppModel {
 	        			'name' => $listAreaName,
 	        			'area_id' => $listAreaId,
 	        			'parent_id' => $listParentId,
-	        			'area_level_id' => $listAreaLevel,
+	        			'area_level_id' => $listAreaLevelId,
+						'area_level_name' => $listAreaLevelName,
 	        			'gross_national_product' => null,
 	        			'year' => null,
 	        			'id' => 0,
