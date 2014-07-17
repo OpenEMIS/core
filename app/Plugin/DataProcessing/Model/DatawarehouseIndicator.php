@@ -96,6 +96,7 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 	
+
 		if ($controller->request->is('post')) {
 			if (isset($controller->request->data['sortdir']) && isset($controller->request->data['order'])) {
 				if ($controller->request->data['sortdir'] != $controller->Session->read('Datawarehouse.Search.sortdir')) {
@@ -108,7 +109,6 @@ class DatawarehouseIndicator extends DataProcessingAppModel {
 				}
 			}
 		}
-		
 
 		$fieldordername = ($controller->Session->read('Datawarehouse.Search.order')) ? $controller->Session->read('Datawarehouse.Search.order') : array('DatawarehouseIndicator.name');
 		$fieldorderdir = ($controller->Session->read('Datawarehouse.Search.sortdir')) ? $controller->Session->read('Datawarehouse.Search.sortdir') : 'asc';

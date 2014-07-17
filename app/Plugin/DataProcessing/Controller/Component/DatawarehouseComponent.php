@@ -18,6 +18,8 @@ App::uses('Component', 'Controller');
 
 class DatawarehouseComponent extends Component {
 	public $components = array('Logger', 'Utility');
+
+	public $runLimit = 1000;
 	
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
@@ -217,6 +219,61 @@ class DatawarehouseComponent extends Component {
 	            }
 			}
 		}
+    }
+
+    //000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+    public function getReportList($format=true, $order=array('DatawarehouseIndicator.name')){
+		$DatawarehouseIndicator = ClassRegistry::init('DatawarehouseIndicator');
+
+    	$data = $DatawarehouseIndicator->find('all',
+	    	array(
+		        'fields' => array('DatawarehouseIndicator.*', 'DatawarehouseUnit.name', 'DatawarehouseModule.name'),
+		        'joins' => array(
+			        array(
+						'type' => 'INNER',
+						'table' => 'datawarehouse_units',
+						'alias' => 'DatawarehouseUnit',
+						'conditions' => array('DatawarehouseUnit.id = DatawarehouseIndicator.datawarehouse_unit_id')
+					),
+					array(
+						'type' => 'INNER',
+						'table' => 'datawarehouse_fields',
+						'alias' => 'DatawarehouseField',
+						'conditions' => array('DatawarehouseField.id = DatawarehouseIndicator.datawarehouse_field_id')
+					),
+					array(
+						'type' => 'INNER',
+						'table' => 'datawarehouse_modules',
+						'alias' => 'DatawarehouseModule',
+						'conditions' => array('DatawarehouseModule.id = DatawarehouseField.datawarehouse_module_id')
+					)
+			    ),
+			    'conditions'=>array('DatawarehouseIndicator.denominator != 0 OR DatawarehouseIndicator.denominator is null'),
+		        'recursive'=> -1,
+		        'order' => $order
+	       	)
+		);
+		if($format){
+			$data = $this->formatTable($data);
+		}
+		return $data;
+    }
+
+    private function formatTable($data){
+        $tmp = array();
+		foreach($data as $k => $val){
+			$module = 'Custom';
+
+			$tmp['Reports'][$module][$val['DatawarehouseIndicator']['name']] = $val['DatawarehouseIndicator'];
+		}
+		return $tmp;
+	}
+    
+	//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+    public function generateIndicator($id, $userId=0) {
+
     }
 	
 }
