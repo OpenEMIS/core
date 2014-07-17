@@ -158,23 +158,25 @@ class DatawarehouseComponent extends Component {
 
 
 		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-		$numeratorModuleID = $data['DatawarehouseField']['datawarehouse_module_id'];
-		$numeratorDatawarehouseDimensionOptions = $this->getDimensionOptions($numeratorModuleID);
-		$requestData['DatawarehouseField']['numerator_datawarehouse_module_id'] = ($editable ? $numeratorModuleID : $datawarehouseModuleOptions[$numeratorModuleID]);
-		$requestData['DatawarehouseField']['numerator_datawarehouse_operator'] = $data['DatawarehouseField']['type'];
-		$requestData['DatawarehouseField']['numerator_datawarehouse_field'] =  ($editable) ? $data['DatawarehouseField']['id'] : ucwords($data['DatawarehouseField']['name']);
-		$requestData['DatawarehouseIndicator']['numerator_datawarehouse_field_id'] = $data['DatawarehouseField']['id'];
+		if(isset($data['DatawarehouseField']['datawarehouse_module_id'])){
+			$numeratorModuleID = $data['DatawarehouseField']['datawarehouse_module_id'];
+			$numeratorDatawarehouseDimensionOptions = $this->getDimensionOptions($numeratorModuleID);
+			$requestData['DatawarehouseField']['numerator_datawarehouse_module_id'] = ($editable ? $numeratorModuleID : $datawarehouseModuleOptions[$numeratorModuleID]);
+			$requestData['DatawarehouseField']['numerator_datawarehouse_operator'] = $data['DatawarehouseField']['type'];
+			$requestData['DatawarehouseField']['numerator_datawarehouse_field'] =  ($editable) ? $data['DatawarehouseField']['id'] : ucwords($data['DatawarehouseField']['name']);
+			$requestData['DatawarehouseIndicator']['numerator_datawarehouse_field_id'] = $data['DatawarehouseField']['id'];
 
-		if(!empty($data['DatawarehouseIndicatorCondition'])){
-			foreach($data['DatawarehouseIndicatorCondition'] as $key=>$val){
-				$data['DatawarehouseIndicatorCondition'][$key]['dimension_name'] = $numeratorDatawarehouseDimensionOptions[$val['datawarehouse_dimension_id']];
+			if(!empty($data['DatawarehouseIndicatorCondition'])){
+				foreach($data['DatawarehouseIndicatorCondition'] as $key=>$val){
+					$data['DatawarehouseIndicatorCondition'][$key]['dimension_name'] = $numeratorDatawarehouseDimensionOptions[$val['datawarehouse_dimension_id']];
 
+				}
 			}
-		}
 
-		$requestData['NumeratorDatawarehouseDimension'] = $data['DatawarehouseIndicatorCondition'];
+			$requestData['NumeratorDatawarehouseDimension'] = $data['DatawarehouseIndicatorCondition'];
+		}
 		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-		if(isset($data['Denominator']) && !empty($data['Denominator'])){
+		if(isset($data['Denominator']) && !empty($data['Denominator']['id'])){
 			$denominatorModuleID = $data['DatawarehouseField']['datawarehouse_module_id'];
 			$denominatorDatawarehouseDimensionOptions = $this->getDimensionOptions($denominatorModuleID);
 			$requestData['DatawarehouseField']['denominator_datawarehouse_module_id'] = ($editable ? $denominatorModuleID : $datawarehouseModuleOptions[$denominatorModuleID]);
