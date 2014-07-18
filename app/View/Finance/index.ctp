@@ -141,6 +141,9 @@ echo $this->Form->create('Finance', $formOptions);
 
 <script type="text/javascript">
 	var currentAreaId = <?php echo intval($areaId); ?>;
+	$(document).ready(function() {
+		Finance.fetchGNP();
+	});
 </script>
 
 <?php $this->end(); ?>
