@@ -181,6 +181,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
+				$modelTable = null;
 				foreach($typeOption as $type){
 					$moduleId = ${'indicator'.$type.'ModuleId'};
 					$datawarehouseModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$moduleId)));
@@ -198,7 +199,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$fieldFormat = '%s(%s.%s) as %s';
 					$group = array($fieldName);
 
-					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, $type));
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)));
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
@@ -230,24 +231,33 @@ class DevInfo6DatawarehouseComponent extends Component {
 					pr(${'subquery'.$type});
 				}
 
-				$outerQueryFieldFormat = '%s as Total';
+				$outerQueryField = array('Numerator as Total');
 				switch($unitObj['id']){
-					 case 2:
-					 	//
-				        echo "i equals 0";
+					case 2:
+					 	//RATE
+				        
 				        break;
+				    case 3:
+					 	//RATIO
+				       
+				        break;
+				    case 4:
+					 	//PERCENT
+				       $outerQueryField = array('(Numerator.numerator/Denominator.denominator)*100 as Total');
+				       break;
 				}
+
 				
 				$outerQuery = $dbo->buildStatement(
 					array(
-						'fields' => array_merge($oFields, $oCFields),
-						'table' => '('.$subQuery.')',
-						'group' =>  $oFields,
-						'alias' => $modelTableName
+						'fields' => $outerQueryField,
+						'table' => '('.$subQueryNumerator.') as Numerator, ('. $subqueryDenominator.') as Denominator',
+						//'group' =>  $oFields,
+						'alias' => ''
 					)
 					,$modelTable
 				);
-
+				pr($outerQuery);
 				exit;
 
 
