@@ -117,13 +117,16 @@ class DevInfo6DatawarehouseComponent extends Component {
 		));
 
 		$areaList = $this->Area->getPath($areaId);
+
+
+		$areaList = array_merge($areaList, $this->Area->children($areaId));
+
 		$areaListId = array();
 		if(!empty($areaList)){
 			foreach($areaList as $key=>$val){
 				$areaListId[] = $val['Area']['id'];
 			}
 		}
-
 		
 		$this->Logger->start();
 		try {
@@ -146,7 +149,6 @@ class DevInfo6DatawarehouseComponent extends Component {
 						break;
 					}
 				}
-				pr($indicator);
 				$indicatorObj = $indicator['DatawarehouseIndicator'];
 				$unitObj = $indicator['DatawarehouseUnit'];
 				$indicatorNumeratorFieldObj = $indicator['DatawarehouseField'];
@@ -197,9 +199,9 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$aggregate = $fieldObj['type'];
 					$fieldName = $fieldObj['name'];
 					$fieldFormat = '%s(%s.%s) as %s';
-					$group = array($fieldName);
+					$group = array($modelName.'.id');
 
-					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)));
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), $modelName.'.'.$fieldName.' as '.$type.'Field');
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
@@ -231,7 +233,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 					pr(${'subquery'.$type});
 				}
 
-				$outerQueryField = array('Numerator as Total');
+				$outerQueryField = array('IFNULL(Numerator.numerator,0) as Total', 'Numerator.numeratorField');
 				switch($unitObj['id']){
 					case 2:
 					 	//RATE
@@ -243,21 +245,57 @@ class DevInfo6DatawarehouseComponent extends Component {
 				        break;
 				    case 4:
 					 	//PERCENT
-				       $outerQueryField = array('(Numerator.numerator/Denominator.denominator)*100 as Total');
+				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as Total', 'Numerator.numeratorField');
 				       break;
 				}
 
 				
-				$outerQuery = $dbo->buildStatement(
-					array(
-						'fields' => $outerQueryField,
-						'table' => '('.$subQueryNumerator.') as Numerator, ('. $subqueryDenominator.') as Denominator',
-						//'group' =>  $oFields,
-						'alias' => ''
-					)
-					,$modelTable
-				);
-				pr($outerQuery);
+				if(!empty($subqueryDenominator)){
+					$outerQuery = $dbo->buildStatement(
+						array(
+							'fields' => $outerQueryField,
+							'table' => '('.$subqueryNumerator.') as Numerator, ('. $subqueryDenominator.')',
+							'alias' => 'Denominator'
+						)
+						,$modelTable
+					);
+				}else{
+					$outerQuery = $dbo->buildStatement(
+						array(
+							'fields' => $outerQueryField,
+							'table' => '('.$subqueryNumerator.')',
+							'alias' => 'Numerator'
+						)
+						,$modelTable
+					);
+				}
+			
+
+
+				/*
+				$subgroups 			= $dataRow['subgroups'];
+				$classification		= $dataRow['classification'];
+				$diClassificationId = $this->IndicatorClassification->getPrimaryKey($classification, $TYPE_SECTOR, $sectorId);
+				$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
+				$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($dataRow['timeperiod']);
+				$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
+				$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
+				
+				$model = array();
+				$model['IUSNId'] 			= $diIUSId;
+				$model['TimePeriod_NId'] 	= $diTimePeriodId;
+				$model['Area_NId'] 			= $dataRow['area_id'];
+				$model['Data_Value'] 		= $dataRow['data_value'];
+				$model['Source_NId'] 		= $sourceId;
+				$model['Indicator_NId'] 	= $diIndicatorId;
+				$model['Unit_NId'] 			= $diUnitId;
+				$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
+				
+				$this->Data->createRecord($model);
+				*/
+				$modelData = $modelTable->query($outerQuery);
+				pr($modelData);
+
 				exit;
 
 
