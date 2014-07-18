@@ -524,8 +524,10 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-			pr($this->request->data);
-            $this->DevInfo6Datawarehouse
+            $settings['indicatorId'] = $this->request->data['Reports'];
+            $settings['areaId'] = $this->request->data['DataProcessing']['area_id'];
+            $settings['schoolYearId'] = $this->request->data['DataProcessing']['school_year_id'];
+            $this->DevInfo6Datawarehouse->export($settings);
             //$this->processGenerate($this->data['Reports']);
 		}
 		
