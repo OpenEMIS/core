@@ -26,9 +26,9 @@ class DevInfo6DatawarehouseComponent extends Component {
 	// OpenEMIS Models
 	public $Area;
 	public $ConfigItem;
-	public $BatchIndicator;
-	public $BatchIndicatorSubgroup;
-	public $BatchIndicatorResult;
+	public $DatawarehouseIndicator;
+	public $DatawarehouseIndicatorCondition;
+	public $DatawarehouseModule;
 	// DevInfo Models
 	public $Indicator;
 	public $Unit;
@@ -58,6 +58,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 		$this->ConfigItem  = ClassRegistry::init('ConfigItem');
 		$this->DatawarehouseIndicator = ClassRegistry::init('DataProcessing.DatawarehouseIndicator');
 		$this->DatawarehouseIndicatorCondition = ClassRegistry::init('DataProcessing.DatawarehouseIndicatorCondition');
+		$this->DatawarehouseModule = ClassRegistry::init('DataProcessing.DatawarehouseModule');
 		$this->Indicator  = ClassRegistry::init('DevInfo6.Indicator');
 		$this->Unit = ClassRegistry::init('DevInfo6.Unit');
 		$this->SubgroupVal = ClassRegistry::init('DevInfo6.SubgroupVal');
@@ -91,15 +92,12 @@ class DevInfo6DatawarehouseComponent extends Component {
 	public function truncateAllTables() {
 		$this->DIAreaLevel->truncate();
 		$this->DIArea->truncate();
-		$this->Unit->truncate();
-		$this->TimePeriod->truncate();
 	}
 
 
 	public function export($settings=array()) {
-        $indicatorIdsString = $settings['indicatorIds'];
-        $indicatorIdsArr = explode(',', $indicatorIdsString);
-        unset($settings['indicatorIds']);
+        $indicatorId = $settings['indicatorId'];
+        unset($settings['indicatorId']);
 
         $areaId = $settings['areaId'];
         $schoolYearId = $settings['schoolYearId'];
@@ -114,17 +112,26 @@ class DevInfo6DatawarehouseComponent extends Component {
 		$_settings = array_merge($_settings, $settings);
 		
 		$indicatorList = $this->DatawarehouseIndicator->find('all', array(
-			'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.unit', 'BatchIndicator.metadata', 'BatchIndicator.filename'),
-			'conditions' => array('BatchIndicator.enabled' => 1, 'BatchIndicator.id' => $indicatorIdsArr)
+			'recursive' => 2,
+			'conditions' => array('DatawarehouseIndicator.enabled' => 1, 'DatawarehouseIndicator.id' => $indicatorId)
 		));
-		$areaList = $this->Area->find('list', array('conditions' => array('Area.visible' => 1)));
-	
+
+		$areaList = $this->Area->getPath($areaId);
+		$areaListId = array();
+		if(!empty($areaList)){
+			foreach($areaList as $key=>$val){
+				$areaListId[] = $val['Area']['id'];
+			}
+		}
+
+		
 		$this->Logger->start();
 		try {
 			$this->Logger->write('Truncating all DevInfo tables.');
 			$this->truncateAllTables();
 			$this->Logger->write('Importing OpenEMIS Areas to DevInfo');
 			$this->DIArea->import($this->DIAreaLevel->import());
+
 			$adaptation = $this->ConfigItem->getAdaptation();
 			$source = sprintf($this->source, $adaptation, date("dMY"));
 			$sourceId = $this->IndicatorClassification->initSource($source);
@@ -139,57 +146,111 @@ class DevInfo6DatawarehouseComponent extends Component {
 						break;
 					}
 				}
-				$indicatorObj		= $indicator['BatchIndicator'];
+				pr($indicator);
+				$indicatorObj = $indicator['DatawarehouseIndicator'];
+				$unitObj = $indicator['DatawarehouseUnit'];
+				$indicatorNumeratorFieldObj = $indicator['DatawarehouseField'];
+				$indicatorNumeratorModuleId = $indicatorNumeratorFieldObj['datawarehouse_module_id'];
+				$indicatorNumeratorCondObj = $indicator['DatawarehouseIndicatorCondition'];
+				$typeOption = array('Numerator');
+
+				$indicatorDenominatorFieldObj = array();
+				$indicatorDenominatorModel = array();
+				$hasDenominator = false;
+				if(isset($indicator['Denominator']['id'])){
+					$typeOption = array('Numerator', 'Denominator');
+					$indicatorDenominatorFieldObj = $indicator['Denominator']['DatawarehouseField'];
+					$indicatorDenominatorModuleId= $indicatorDenominatorFieldObj['datawarehouse_module_id'];
+					$indicatorDenominatorCondObj = $indicator['Denominator']['DatawarehouseIndicatorCondition'];
+					$hasDenominator = true;
+				}
+
+
+		
 				$indicatorId 		= $indicatorObj['id'];
 				$indicatorName 		= $indicatorObj['name'];
-				$indicatorFilename 	= $indicatorObj['filename'];
-				$unitName 			= $indicatorObj['unit'];
-				$metadata 			= $indicatorObj['metadata'];
+				$unitName 			= $unitObj['name'];
+				$metadata 			= (!empty($indicatorObj['description']) ? $indicatorObj['description'] : $this->description);
 				
-				$subgroupTypes	= $this->BatchIndicatorSubgroup->getSubgroupTypes($indicatorId);
+				$subgroupTypes	= $this->getSubgroupType($indicatorId);
 
-				if(!isset($subgroupTypes) || empty($subgroupTypes)) $subgroupTypes = $this->getSubgroupTypefromXML($indicatorFilename);
+				//if(!isset($subgroupTypes) || empty($subgroupTypes)) $subgroupTypes = $this->getSubgroupTypefromXML($indicatorFilename);
 				$diIndicatorId 	= $this->Indicator->getPrimaryKey($indicatorName, $metadata);
 				$diUnitId 		= $this->Unit->getPrimaryKey($unitName);
-							
-				foreach($areaList as $areaId => $areaName) {
-					$conditions = array('BatchIndicatorResult.batch_indicator_id' => $indicatorId, 'BatchIndicatorResult.area_id' => $areaId);
-					$dataCount = $this->BatchIndicatorResult->find('count', array('conditions' => $conditions));
-					$pages = ceil($dataCount / $this->limit);
-					
-					$this->Logger->write(sprintf("Processing %s for Area [%s] [%s records]", $indicatorName, $areaName, $dataCount));
-					
-					for($i=0; $i<$pages; $i++) {
-						$data = $this->BatchIndicatorResult->find('all', array(
-							'conditions' => $conditions,
-							'offset' => $this->limit * $i,
-							'limit' => $this->limit
-						));
 						
-						foreach($data as $obj) {
-							$dataRow 			= $obj['BatchIndicatorResult'];
-							$subgroups 			= $dataRow['subgroups'];
-							$classification		= $dataRow['classification'];
-							$diClassificationId = $this->IndicatorClassification->getPrimaryKey($classification, $TYPE_SECTOR, $sectorId);
-							$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
-							$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($dataRow['timeperiod']);
-							$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
-							$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
-							
-							$model = array();
-							$model['IUSNId'] 			= $diIUSId;
-							$model['TimePeriod_NId'] 	= $diTimePeriodId;
-							$model['Area_NId'] 			= $dataRow['area_id'];
-							$model['Data_Value'] 		= $dataRow['data_value'];
-							$model['Source_NId'] 		= $sourceId;
-							$model['Indicator_NId'] 	= $diIndicatorId;
-							$model['Unit_NId'] 			= $diUnitId;
-							$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
-							
-							$this->Data->createRecord($model);
+
+				$subqueryNumerator = null;
+				$subqueryDenominator = null;	
+				foreach($typeOption as $type){
+					$moduleId = ${'indicator'.$type.'ModuleId'};
+					$datawarehouseModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$moduleId)));
+					$modelName = $datawarehouseModule['DatawarehouseModule']['model'];
+					$modelTable = ClassRegistry::init($modelName);
+					$joins = array();
+
+					if(isset($datawarehouseModule['DatawarehouseModule']['joins'])){
+						$tempJoin = $datawarehouseModule['DatawarehouseModule']['joins'];
+						eval("\$joins = $tempJoin;");
+					}
+					$fieldObj = ${'indicator'.$type.'FieldObj'};
+					$aggregate = $fieldObj['type'];
+					$fieldName = $fieldObj['name'];
+					$fieldFormat = '%s(%s.%s) as %s';
+					$group = array($fieldName);
+
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, $type));
+					$conditions['area_id'] = $areaListId;
+					$conditions['school_year_id'] = $schoolYearId;
+
+					$subJoins = array();
+
+					
+					$conditionObj = ${'indicator'.$type.'CondObj'};
+					if(!empty($conditionObj) && isset($conditionObj['DatawarehouseDimension'])){
+						$condJoin = $conditionObj['DatawarehouseDimension']['joins'];
+						if(!empty($condJoin)){
+							eval("\$tempJoin = $condJoin;");
+							$subJoins[] = $tempJoin;
 						}
 					}
+					$dbo = $modelTable->getDataSource();
+
+					${'subquery'.$type} = $dbo->buildStatement(
+						array(
+							'fields' => $fields,
+							'joins'=> array($joins),
+							'table' => $dbo->fullTableName($modelTable),
+							'alias' => $modelName,
+							'group' =>  $group,
+							'conditions' => $conditions,
+							'limit' => null
+						)
+						,$modelTable
+					);
+					pr(${'subquery'.$type});
 				}
+
+				$outerQueryFieldFormat = '%s as Total';
+				switch($unitObj['id']){
+					 case 2:
+					 	//
+				        echo "i equals 0";
+				        break;
+				}
+				
+				$outerQuery = $dbo->buildStatement(
+					array(
+						'fields' => array_merge($oFields, $oCFields),
+						'table' => '('.$subQuery.')',
+						'group' =>  $oFields,
+						'alias' => $modelTableName
+					)
+					,$modelTable
+				);
+
+				exit;
+
+
 			}
 			$this->Logger->write("End Processing Indicators");
 			$this->Logger->write("Creating Metadata");
@@ -233,6 +294,22 @@ class DevInfo6DatawarehouseComponent extends Component {
 		}
 		
 		return $this->Logger->end();
+	}
+
+	private function getSubgroupType($indicatorId){
+		$indicatorList = $this->DatawarehouseIndicator->find('first', array(
+			'recursive' => 2,
+			'conditions' => array('DatawarehouseIndicator.enabled' => 1, 'DatawarehouseIndicator.id' => $indicatorId)
+		));
+		$subgroupType = array();
+		if(!empty($indicatorList)){
+			$subgroupType[] = $indicatorList['DatawarehouseField']['name'];
+			if(isset($indicatorList['Denominator']['DatawarehouseField'])){
+				$subgroupType[] = $indicatorList['Denominator']['DatawarehouseField']['name'];
+			}
+		}
+
+		return $subgroupType;
 	}
 
 }
