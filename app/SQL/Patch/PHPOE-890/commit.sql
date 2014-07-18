@@ -1,9 +1,9 @@
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(148, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Fees', 'fee', '^fee', NULL, 3, 0, 141, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Fees', 'fee', '^fee', NULL, 3, 0, 141, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(149, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Students', 'studentFee', '^studentFee', NULL, 3, 0, 142, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'Institution', null, 'InstitutionSites', 'FINANCE', 'Students', 'studentFee', '^studentFee', NULL, 3, 0, 142, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(150, 'Student', 'Students', 'Students', 'DETAILS', 'Fees', 'fee', '^fee', NULL, 62, 0, 81, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'Student', 'Students', 'Students', 'DETAILS', 'Fees', 'fee', '^fee', NULL, 62, 0, 81, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 
 DROP TABLE IF EXISTS `institution_site_fees`;
@@ -75,15 +75,15 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 
 
 INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `field_option_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(19, 'Registration', 1, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(20, 'Typing', 2, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(21, 'Computer', 3, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(22, 'Activity/Sports', 4, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(23, 'Lab', 5, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(24, 'Library', 6, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(25, 'ID', 7, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(26, 'Graduation', 8, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(27, 'Paper/Stationary', 9, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(28, 'Maintentance', 10, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(29, 'Security', 11, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
-(30, 'Handbook', 12, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW());
+(NULL, 'Registration', 1, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Typing', 2, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Computer', 3, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Activity/Sports', 4, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Lab', 5, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Library', 6, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'ID', 7, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Graduation', 8, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Paper/Stationary', 9, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Maintentance', 10, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Security', 11, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
+(NULL, 'Handbook', 12, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW());
