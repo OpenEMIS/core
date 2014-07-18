@@ -75,11 +75,11 @@ class FinanceController extends AppController {
 	public function edit($id = null) {
 		$this->bodyTitle = 'National Denominators';
 		
-		$areas = array();
+		$highestLevel = array();
         $levels = $this->AreaLevel->find('list');
         $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1', 'Area.visible' => 1)));
         $this->Utility->unshiftArray($topArea, array('0'=>'--Select--'));
-        $areas[] = $topArea;
+        $highestLevel[] = $topArea;
 		
 		if($this->request->is('post')) {
         	//echo '<pre>';
@@ -89,7 +89,7 @@ class FinanceController extends AppController {
                 $area = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $this->request->data['Finance']['area_level_'.$i], 'Area.visible' => 1)));
                 
                 $this->Utility->unshiftArray($area, array('0'=>'--'.__('Select').'--'));
-                $areas[] = $area;
+                $highestLevel[] = $area;
                 //echo '<br/>';
             }
         	//echo '</pre>';
@@ -101,9 +101,17 @@ class FinanceController extends AppController {
             }
             $this->set('initAreaSelection', (isset($this->request->data['Finance']))?$this->request->data['Finance']: null);
         }
+		
+		$currentYear = intval(date('Y'));
+		$selectedYear = isset($this->params->pass[0])? intval($this->params->pass[0]) : $currentYear;
+		
+		$yearList = $this->DateTime->generateYear();
+		krsort($yearList);
+		
+		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
+		$parentAreaId = $areaId;
 
-		$this->set('levels', $levels);
-		$this->set('highestLevel', $areas);
+		$this->set(compact('areaId', 'levels', 'highestLevel', 'data', 'selectedYear', 'yearList'));
 	}
 
 	public function viewGNP($year = null, $countryId = 0) {
