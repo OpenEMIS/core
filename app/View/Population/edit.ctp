@@ -67,7 +67,7 @@ echo $this->Form->hidden('idsToBeDeleted', array(
 					<tr class="<?php echo $row['data_source'] == 0 ? '' : 'row_estimate'; ?>" record-id="<?php echo $row['id']; ?>">
 						<td>
 							<?php
-							echo $this->Form->input('id', array(
+							echo $this->Form->hidden('id', array(
 								'label' => false,
 								'div' => false,
 								'after' => false,
