@@ -17,7 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentGuardian extends StudentsAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'Students.GuardianRelation',
+		'GuardianRelation' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'guardian_relation_id'
+		),
 		'Students.Guardian',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -39,49 +42,24 @@ class StudentGuardian extends StudentsAppModel {
 		)
 	);
 
+	
 	public function getGuardian($guardianId, $studentId) {
+		$this->unbindModel(array('belongsTo' => array('Guardian')));
+		
 		$data = $this->find('first', array(
-			'recursive' => -1,
+			'recursive' => 0,
 			'fields' => array('Guardian.*', 'StudentGuardian.*', 'GuardianRelation.*', 'GuardianEducationLevel.*', 'CreatedUser.*', 'ModifiedUser.*'),
 			'joins' => array(
 				array(
 					'table' => 'guardians',
 					'alias' => 'Guardian',
-					'conditions' => array(
-						'StudentGuardian.guardian_id = Guardian.id'
-					)
+					'conditions' => array('Guardian.id = StudentGuardian.guardian_id')
 				),
 				array(
-					'table' => 'guardian_relations',
-					'alias' => 'GuardianRelation',
-					'conditions' => array(
-						'StudentGuardian.guardian_relation_id = GuardianRelation.id'
-					)
-				),
-				array(
-					'table' => 'guardian_education_levels',
+					'table' => 'field_option_values',
 					'alias' => 'GuardianEducationLevel',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'Guardian.guardian_education_level_id = GuardianEducationLevel.id'
-					)
+					'conditions' => array('GuardianEducationLevel.id = Guardian.guardian_education_level_id')
 				),
-				array(
-					'table' => 'security_users',
-					'alias' => 'CreatedUser',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'StudentGuardian.created_user_id = CreatedUser.id'
-					)
-				),
-				array(
-					'table' => 'security_users',
-					'alias' => 'ModifiedUser',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'StudentGuardian.modified_user_id = ModifiedUser.id'
-					)
-				)
 			),
 			'conditions' => array(
 				'StudentGuardian.guardian_id' => $guardianId,
@@ -90,50 +68,23 @@ class StudentGuardian extends StudentsAppModel {
 		));
 		return $data;
 	}
-
+	
 	public function getGuardians($studentId) {
+		$this->unbindModel(array('belongsTo' => array('Guardian')));
 		$data = $this->find('all', array(
-			'recursive' => -1,
+			'recursive' => 0,
 			'fields' => array('Guardian.*', 'StudentGuardian.*', 'GuardianRelation.*', 'GuardianEducationLevel.*', 'CreatedUser.*', 'ModifiedUser.*'),
 			'joins' => array(
 				array(
 					'table' => 'guardians',
 					'alias' => 'Guardian',
-					'conditions' => array(
-						'StudentGuardian.guardian_id = Guardian.id'
-					)
+					'conditions' => array('Guardian.id = StudentGuardian.guardian_id')
 				),
 				array(
-					'table' => 'guardian_relations',
-					'alias' => 'GuardianRelation',
-					'conditions' => array(
-						'StudentGuardian.guardian_relation_id = GuardianRelation.id'
-					)
-				),
-				array(
-					'table' => 'guardian_education_levels',
+					'table' => 'field_option_values',
 					'alias' => 'GuardianEducationLevel',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'Guardian.guardian_education_level_id = GuardianEducationLevel.id'
-					)
+					'conditions' => array('GuardianEducationLevel.id = Guardian.guardian_education_level_id')
 				),
-				array(
-					'table' => 'security_users',
-					'alias' => 'CreatedUser',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'StudentGuardian.created_user_id = CreatedUser.id'
-					)
-				),
-				array(
-					'table' => 'security_users',
-					'alias' => 'ModifiedUser',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'StudentGuardian.modified_user_id = ModifiedUser.id'
-					)
-				)
 			),
 			'conditions' => array(
 				'StudentGuardian.student_id' => $studentId
@@ -160,27 +111,31 @@ class StudentGuardian extends StudentsAppModel {
 				$data['StudentGuardian']['student_id'] = $controller->Session->read('Student.id');
 
 				$this->create();
+				$this->set($data);
 				
-				if ($this->saveAll($data, array('validate' => 'only'))){
-					if ($this->saveAll($data, array('validate' => false))){
+				if ($this->validates()){
+					if ($this->saveAll($data)){
 						$controller->Message->alert('general.add.success');
 						return $controller->redirect(array('action' => 'guardians'));
 					}
 				}
 			} else {
-				$Guardian = ClassRegistry::init('Guardian');
+				$Guardian = ClassRegistry::init('Students.Guardian');
 				
 				$Guardian->create();
-				if ($Guardian->saveAll($data, array('validate' => 'only'))){
-					if ($Guardian->saveAll($data, array('validate' => false))){
+				$Guardian->set($data);
+				
+				if ($Guardian->validates()){
+					if ($Guardian->saveAll($data)){
 						$guardianId = $Guardian->getInsertID();
 						$data['StudentGuardian']['guardian_id'] = $guardianId;
 						$data['StudentGuardian']['student_id'] = $controller->Session->read('Student.id');
 
 						$this->create();
+						$this->set($data);
 
-						if ($this->saveAll($data, array('validate' => 'only'))){
-							if ($this->saveAll($data, array('validate' => false))){
+						if ($this->validates()){
+							if ($this->saveAll($data)){
 								$controller->Message->alert('general.add.success');
 								return $controller->redirect(array('action' => 'guardians'));
 							}
@@ -193,9 +148,9 @@ class StudentGuardian extends StudentsAppModel {
 		}
 		
 		$genderOptions = array('M' => __('Male'), 'F' => __('Female'));
-		$relationshipOptions = $this->GuardianRelation->getOptions();
-		$GuardianEducationLevel = ClassRegistry::init('Students.GuardianEducationLevel');
-		$educationOptions = $GuardianEducationLevel->getOptions();
+		$relationshipOptions = $this->GuardianRelation->getList();
+		//$GuardianEducationLevel = ClassRegistry::init('Students.GuardianEducationLevel');
+		$educationOptions = $this->Guardian->GuardianEducationLevel->getList();
 
 		$controller->set(compact('header', 'genderOptions', 'relationshipOptions', 'educationOptions'));
 	}
@@ -211,9 +166,10 @@ class StudentGuardian extends StudentsAppModel {
 			}
 		} else {
 			$data = $controller->request->data;
+			$this->Guardian->set($data);
 			
-			if ($this->Guardian->saveAll($data, array('validate' => 'only'))){
-				if ($this->Guardian->saveAll($data, array('validate' => false))){
+			if ($this->Guardian->validates()){
+				if ($this->Guardian->saveAll($data) && $this->saveAll($data)){
 					$controller->Message->alert('general.edit.success');
 					$controller->redirect(array('action' => 'guardiansView', $guardianId));
 				}
@@ -221,8 +177,8 @@ class StudentGuardian extends StudentsAppModel {
 		}
 
 		$genderOptions = array('M' => __('Male'), 'F' => __('Female'));
-		$relationshipOptions = $this->GuardianRelation->getOptions();
-		$educationOptions = $this->GuardianEducationLevel->getOptions();
+		$relationshipOptions = $this->GuardianRelation->getList();
+		$educationOptions = $this->Guardian->GuardianEducationLevel->getList();
 
 		$controller->set('genderOptions', $genderOptions);
 		$controller->set('relationshipOptions', $relationshipOptions);
@@ -259,9 +215,9 @@ class StudentGuardian extends StudentsAppModel {
 	}
 	
 	public function guardiansAutoComplete($controller, $params) {
-		$controller->autoRender = false;
+		$this->render = false;
 		$search = $params->query['term'];
-		$Guardian = ClassRegistry::init('Guardian');
+		$Guardian = ClassRegistry::init('Students.Guardian');
 		$result = $Guardian->getAutoCompleteList($search, $controller->Session->read('Student.id'));
 		return json_encode($result);
 	}
