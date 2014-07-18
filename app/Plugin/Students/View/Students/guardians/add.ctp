@@ -13,7 +13,7 @@ echo $this->Form->create($model, $formOptions);
 
 $obj = $this->request->data; 
 echo $this->Form->input('Guardian.existing_id', array('type' => 'hidden', 'value' => isset($obj['Guardian']['existing_id']) ? $obj['Guardian']['existing_id'] : 0));
-echo $this->Form->input('Search.guardian_name');
+echo $this->Form->input('Search.search', array('id' => 'SearchGuardianName'));
 echo $this->Form->input('StudentGuardian.guardian_relation_id', array('options' => $relationshipOptions));
 echo $this->Form->input('Guardian.first_name'); 
 echo $this->Form->input('Guardian.last_name');
