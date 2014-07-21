@@ -1,0 +1,54 @@
+.content_wrapper  h1{
+	border-bottom: 1px dotted #CCCCCC;
+    color: #666666;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 10px;
+    padding-bottom: 8px;
+}
+
+.underline{
+	border-bottom: 1px dotted #CCCCCC;
+}
+
+.content_wrapper h1 a {
+    color: #809800;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.left_control{
+	float: left;
+	width: 280px;
+	padding-right: 20px;
+}
+
+.visualizer-list-table{
+	max-height: 500px;
+	overflow-y: auto;
+}
+
+.disable-overflow{
+	max-height: none !important;
+	overflow-y: none !important;
+}
+
+.visualizer-control-group{
+	margin-top: 20px;
+}
+
+a.btn_save{
+	text-decoration: none;
+}
+a.btn_save:hover,
+a.btn_save:active{
+	color: white;
+}
+
+.w500{
+	width: 500px;
+}
+
+.mt12{
+	margin-top: 12px;
+}
