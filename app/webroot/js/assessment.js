@@ -57,16 +57,16 @@ var Assessment = {
 			var ajaxParams = {gradeId: $this.val()};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					if(!$(data).hasClass('alert')) {
+					if(!$($.parseHTML(data)).hasClass('alert')) {
 						$('.items .table_body').html(data);
 						jsTable.fixTable('.items .table');
 					} else {
 						var alertOpt = {
 							id: 'assessment_alert',
 							parent: '.info',
-							type: $(data).attr('type'),
+							type: $('<div/>').html(data).find('span').first().attr('type'),
 							position: 'center',
-							text: $(data).html()
+							text: $('<div/>').html(data).find('span').first().html()
 						}
 						$.alert(alertOpt);
 					}

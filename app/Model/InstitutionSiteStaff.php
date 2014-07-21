@@ -418,14 +418,13 @@ class InstitutionSiteStaff extends AppModel {
 		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList($controller->institutionSiteId);
 		$selectedPositionId = !empty($positionOptions) ? key($positionOptions) : 0;
 		$FTEOtpions = $this->getFTEOptions($selectedPositionId, array('startDate' => date("Y-m-d")));
-		$statusOptions = $this->StaffStatus->findList(true);
-
+		
 		//Create 1 more field options "Staff Type"=> "full time / part time"
 		$staffTypeOptions = $this->StaffType->getList();
 		$staffTypeDefault = $this->StaffType->getDefaultValue();
 		
 		$this->staffSave($controller, $params);
-		$controller->set(compact('positionOptions', 'FTEOtpions', 'statusOptions', 'staffTypeOptions', 'selectedPositionId', 'staffTypeDefault'));
+		$controller->set(compact('positionOptions', 'FTEOtpions', 'staffTypeOptions', 'selectedPositionId', 'staffTypeDefault'));
 	}
 
 	private function staffSave($controller, $params) {
@@ -435,6 +434,7 @@ class InstitutionSiteStaff extends AppModel {
 			if ($this->validates()) {
 				$data = $controller->request->data['InstitutionSiteStaff'];
 				if (isset($data['staff_id'])) {
+					$data['staff_status_id'] = 1;
 					$data['institution_site_id'] = $controller->institutionSiteId;
 					$selectedDate = strtotime($data['start_date']);
 					$data['start_year'] = date('Y', $selectedDate);
