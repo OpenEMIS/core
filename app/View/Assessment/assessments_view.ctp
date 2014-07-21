@@ -15,7 +15,6 @@ $this->end();
 $this->assign('contentId', 'assessment');
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
 <fieldset class="section_group info">
 	<legend><?php echo __('Assessment Details'); ?></legend>
 	<div class="row">
@@ -55,10 +54,10 @@ $this->start('contentBody');
 	 <table class="table table-striped table-hover table-bordered">
 		<thead class="table_head">
 			<tr>
-				<td class="table_cell cell_subject_code"><?php echo __('Code'); ?></td>
-				<td class="table_cell"><?php echo __('Subject'); ?></td>
-				<td class="table_cell cell_number_input"><?php echo __('Minimum'); ?></td>
-				<td class="table_cell cell_number_input"><?php echo __('Maximum'); ?></td>
+				<th class="table_cell cell_subject_code"><?php echo __('Code'); ?></th>
+				<th class="table_cell"><?php echo __('Subject'); ?></th>
+				<th class="table_cell cell_number_input"><?php echo __('Minimum'); ?></th>
+				<th class="table_cell cell_number_input"><?php echo __('Maximum'); ?></th>
 			</tr>
 		</thead>
 		

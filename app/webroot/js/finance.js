@@ -34,6 +34,41 @@ $(document).ready(function() {
     $('select[name=data\\[Finance\\]\\[area_level_0\\]]').change(function(event) {
         Finance.fetchGNP();
     });
+	
+	$('#areapicker.areapicker').on('change', 'select', function(){
+		if($('#finance').hasClass('edit')){
+			Finance.fetchDataByArea($(this).val(), 'edit');
+		}else{
+			Finance.fetchDataByArea($(this).val(), '');
+		}
+
+		if($(this).val() != '' && $(this).val() > 0){
+			currentAreaId = $(this).val();
+		}
+		
+		$('a.withLatestAreaId').each(function(){
+			var newHref = $(this).attr('href').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('href', newHref);
+		});
+		
+		$('a.btn_cancel').each(function(){
+			var newCancelHref = $(this).attr('href').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('href', newCancelHref);
+		});
+		
+		$('form#FinanceEditForm').each(function(){
+			var newAction = $(this).attr('action').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('action', newAction);
+		});
+	});
+	
+	$('select#financeYear').on('change', function(){
+		if($('#finance').hasClass('edit')){
+			location.href = Finance.base + 'edit/' + $(this).val() + '/' + currentAreaId;
+		}else{
+			location.href = Finance.base + 'index/' + $(this).val() + '/' + currentAreaId;
+		}
+	});
 });
 
 
@@ -51,15 +86,15 @@ var Finance = {
 
 	// methods
     init: function() {
-        this.isEditable = false;
+        //this.isEditable = false;
         this.changeView();
-        this.addAreaSwitching();
-        this.year = $('#year_id').val();
-        if(Finance.changeOption<1){
-            $("#FinanceAreaLevel0").trigger("change");
-            this.addAreaSwitching();
-        }
-        this.numAreaSelectors = $('fieldset#area_section_group div.row').length;
+//        this.addAreaSwitching();
+//        this.year = $('#year_id').val();
+//        if(Finance.changeOption<1){
+//            $("#FinanceAreaLevel0").trigger("change");
+//            this.addAreaSwitching();
+//        }
+//        this.numAreaSelectors = $('fieldset#area_section_group div.row').length;
     },
 	show : function(id){
 		$('#'+id).css("visibility", "visible");
@@ -242,6 +277,33 @@ var Finance = {
         }
 
     },
+	
+	fetchDataByArea: function(areaId, mode) {
+		var year = $('select#financeYear').val();
+
+		var url;
+		if (mode === 'edit') {
+			url = Finance.base + 'loadForm/' + year + '/' + areaId;
+		} else {
+			url = Finance.base + 'loadData/' + year + '/' + areaId;
+		}
+
+		$.ajax({
+			type: 'GET',
+			dataType: 'html',
+			url: url,
+			success: function(data, textStatus) {
+				var replaceHolder = $('.replaceHolder');
+
+				if (data.length > 0) {
+					if (replaceHolder.length > 0) {
+						replaceHolder.html(data);
+					}
+				}
+			}
+		});
+	},
+	
     fetchData: function(currentObject){
 
         // init values

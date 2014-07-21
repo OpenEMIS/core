@@ -217,4 +217,18 @@ class Population extends AppModel {
 		$results['type'] = 0;
 		return $results;
 	}
+	
+	public function getPopulationRecords($age, $year, $source, $areaId) {
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'age' => $age,
+				'year LIKE' => $year,
+				'source LIKE' => $source,
+				'area_id' => $areaId
+			)
+		));
+				
+		return $data;
+	}
 }

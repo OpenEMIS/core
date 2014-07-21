@@ -1,6 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
@@ -24,16 +22,18 @@ if(!empty($data)) :
 			<tr>
 				<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
+				<th><?php echo $this->Label->get('general.category'); ?></th>
 			</tr>
 		</thead>
 
 		<tbody>
-			<?php foreach($data as $obj) { ?>
+			<?php foreach($data as $obj) : ?>
 			<tr>
 				<td><?php echo $obj['Student']['identification_no']; ?></td>
 				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $obj['StudentCategory']['name']; ?></td>
 			</tr>
-			<?php } ?>
+			<?php endforeach ?>
 		</tbody>
 	</table>
 </div>

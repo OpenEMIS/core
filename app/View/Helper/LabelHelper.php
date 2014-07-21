@@ -312,15 +312,20 @@ class LabelHelper extends AppHelper {
 			'name' => 'Role',
 			'security_group_id' => 'Group'
 		),
-		'datawarehouse' => array(
-			'indicator' => 'Indicator',
-			'unit' => 'Unit',
-			'dimension' => 'Dimension',
-			'time' => 'Time',
-			'area' => 'Area',
-			'source' => 'Source',
-			'review' => 'Review'
-		)
+		'FinanceFee' => array(
+			'fee' => 'Fee',
+			'total' => 'Total',
+			'total_fee' => 'Total Fee',
+			'fees' => 'Fees',
+			'amount' => 'Amount',
+			'amount_currency' => 'Amount (%s)',
+			'paid' => 'Paid',
+			'outstanding' => 'Outstanding',
+			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
+			'no_payment' => 'No Payment Records.',
+			'no_fees' => 'No Fee Records.',
+			'created' => 'Created'
+		),
 	);
 	
 	public function get($code) {
@@ -341,6 +346,17 @@ class LabelHelper extends AppHelper {
 		$field = $obj['field'];
 		$code = $model . '.' . $obj['field'];
 		
+		if(isset($obj['label'])){
+			if(is_array($obj['label'])){
+				$code = $obj['label'][0];
+				$arr = array_splice($obj['label'], 1);
+				$label = $this->get($code);
+				$label = vsprintf($label, $arr);
+			}else{
+				$label = Inflector::humanize($obj['label']);
+			}
+			return $label;
+		}
 		if(isset($obj['labelKey'])) {
 			$code = $obj['labelKey'];
 		} else if($field==='modified' || $field==='created') {

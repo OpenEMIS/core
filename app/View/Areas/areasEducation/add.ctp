@@ -13,7 +13,7 @@ echo $this->Form->create($model, $formOptions);
 echo $this->Form->input('name');
 echo $this->Form->input('code');
 echo $this->Form->input('parent', array('value' => $pathToString, 'disabled'));
-echo $this->Form->input('area_level_id', array('options' => $areaLevelOptions));
+echo $this->Form->input('area_education_level_id', array('options' => $areaLevelOptions));
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'areasEducation', 'parent' => $parentId)));
 echo $this->Form->end();
 
