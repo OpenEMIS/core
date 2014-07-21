@@ -184,6 +184,7 @@ class ConfigController extends AppController {
 					array('field' => 'type'),
 					array('field' => 'label'),
 					array('field' => 'value'),
+					array('field' => 'default_value'),
 					array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
 					array('field' => 'modified', 'edit' => false),
 					array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
@@ -315,27 +316,28 @@ class ConfigController extends AppController {
 		if ($this->request->is('post')) {
 			$data = $this->request->data;
 
-			if($id == 'LDAP Configuration') {
+			if($id == 'LDAP Configuration'){
 				$fields = array('host', 'port', 'version', 'base_dn');
 				$saveData = array();
 				$i = 0;
-				foreach($fields as $value) {
+				foreach($fields as $value){
 					$saveData[$i]['id'] = $data['ConfigItem'][$value.'Id'];
 					$saveData[$i]['value'] = $data['ConfigItem'][$value];
 					$i++;
 				}
-				if($this->ConfigItem->saveAll($saveData)) {
+				if($this->ConfigItem->saveAll($saveData)){
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
 				}
 			} else {
-				if($this->ConfigItem->save($data)) {
+				if($this->ConfigItem->save($data)){
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => 'view', $id));
+					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
 				}
 			}
 		} else {
 			$data = $this->getData($id);
+
 			$this->request->data = $data;
 		}
 

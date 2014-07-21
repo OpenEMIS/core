@@ -26,7 +26,7 @@
 
 /* legend styles */
 .row_item_legend {float:right;}
-.legend { list-style: none; }
+.legend { list-style: none; float: right; margin-top: 15px;}
 .legend li { float: left; margin-right: 10px;  display:inline-block; margin-top:-7px;  }
 .legend span { border: 1px solid #ccc; float: left; width: 8px; height: 8px; margin: 4px 2px; }
 .legend .dataentry { background-color: #666666; }

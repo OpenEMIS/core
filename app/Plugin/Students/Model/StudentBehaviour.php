@@ -117,11 +117,9 @@ class StudentBehaviour extends StudentsAppModel {
 	
 	public function beforeAction($controller, $action) {
         parent::beforeAction($controller, $action);
-		$this->plugin = false;
     }
 
     public function getBehaviourData($studentId, $institutionSiteId = null) {
-
         $options['recursive'] = -1;
         $options['joins'] = array(
             array(
@@ -156,6 +154,7 @@ class StudentBehaviour extends StudentsAppModel {
     }
     
 	public function behaviourStudentList($controller, $params) {
+		$this->plugin = false;
 		$controller->Navigation->addCrumb('Behaviour - Students');
 		$InstitutionId = $controller->Session->read('InstitutionSite.id'); 
 		$yearOptions = ClassRegistry::init('SchoolYear')->findList(array('orderBy' => 'name DESC', 'conditions' => array('SchoolYear.visible' => 1)));
@@ -173,6 +172,7 @@ class StudentBehaviour extends StudentsAppModel {
 	}
     //public function studentsBehaviour($controller, $params) {
 	public function behaviourStudent($controller, $params) {
+		$this->plugin = false;
         extract($controller->studentsCustFieldYrInits());
         $controller->Navigation->addCrumb('List of Behaviour');
 
@@ -186,6 +186,7 @@ class StudentBehaviour extends StudentsAppModel {
     }
 	
 	public function behaviourStudentAdd($controller, $params) {
+		$this->plugin = false;
 		$studentId = $controller->params['pass'][0];
 		$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 		$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
@@ -197,6 +198,7 @@ class StudentBehaviour extends StudentsAppModel {
 	}
 	
 	public function behaviourStudentEdit($controller, $params) {
+		$this->plugin = false;
 		$studentId = $controller->params['pass'][0];
 		$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 		$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);

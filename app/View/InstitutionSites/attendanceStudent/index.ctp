@@ -20,12 +20,49 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 ?>
 
 <div id="institutionStudentAttendance" class=" institutionAttendance">
-	<div class="topDropDownWrapper page-controls" url="InstitutionSites/attendanceStudent">
-		<?php
-		echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStudentAttendance(this)'));
-		echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStudentAttendance(this)'));
-		echo $this->Form->input('class_id', array('options' => $classOptions, 'value' => $classId, 'id' => 'classId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStudentAttendance(this)'));
-		?>
+	<div class="row page-controls">
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('school_year_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $yearList,
+				'value' => $yearId,
+				'id' => 'schoolYearId',
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action
+			));
+			?>
+		</div>
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('week_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $weekList,
+				'value' => $weekId,
+				'id' => 'weekId',
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId . '/' . $classId
+			));
+			?>
+		</div>
+		<div class="col-md-4">
+			<?php
+			echo $this->Form->input('class_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $classOptions,
+				'value' => $classId,
+				'id' => 'classId',
+				'class' => 'form-control',
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId
+			));
+			?>
+		</div>
 	</div>
 	<div id="mainlist">
 		<div class="table-responsive">
@@ -38,7 +75,7 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 					</tr>
 				</thead>
 				<tbody>
-					<?php 
+					<?php
 					$todayIndex = date('Ymd');
 					foreach ($studentList as $student):
 						$studentObj = $student['Student'];
@@ -50,29 +87,29 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 							<td><?php echo $studentName; ?></td>
 							<?php
 							foreach ($weekDayIndex as $index):
-								if(isset($absenceCheckList[$studentId][$index])){
+								if (isset($absenceCheckList[$studentId][$index])) {
 									$absenceObj = $absenceCheckList[$studentId][$index]['InstitutionSiteStudentAbsence'];
-									if($absenceObj['full_day_absent'] !== 'Yes'){
+									if ($absenceObj['full_day_absent'] !== 'Yes') {
 										$startTimeAbsent = $absenceObj['start_time_absent'];
 										$endTimeAbsent = $absenceObj['end_time_absent'];
 										$timeStr = sprintf(__('absent') . ' (%s - %s)', $startTimeAbsent, $endTimeAbsent);
 										?>
-											<td><?php echo $this->Html->link($timeStr, array('action' => 'attendanceStudentAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
-										<?php 
-									}else{
+										<td><?php echo $this->Html->link($timeStr, array('action' => 'attendanceStudentAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
+										<?php
+									} else {
 										?>
-											<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => 'attendanceStudentAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
-										<?php 
+										<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => 'attendanceStudentAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
+										<?php
 									}
-								}else{
-									if($index <= $todayIndex){
+								} else {
+									if ($index <= $todayIndex) {
 										?>
-											<td class="present"><?php echo "&#10003"; ?></td>
-										<?php 
-									}else{
+										<td class="present"><?php echo "&#10003"; ?></td>
+										<?php
+									} else {
 										?>
-											<td></td>
-										<?php 
+										<td></td>
+										<?php
 									}
 								}
 								?>

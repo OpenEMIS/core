@@ -198,7 +198,6 @@ fieldset#general.section_break > .profile_image{
 	margin-right:20px;
 }
 fieldset#general.section_break > .row{
-    float: right;
     margin-left:0;
 }
 .table_view .cell{

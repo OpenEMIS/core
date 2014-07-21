@@ -208,24 +208,26 @@ class FormUtilityHelper extends AppHelper {
 		$inputOptions = array();
 		$inputOptions['autocomplete'] = 'off';
 		$inputOptions['onchange'] = 'Area.getList(this)';
-		foreach($path as $i => $obj) {
-			$options = $AreaHandler->{$model}->find('list', array(
-				'conditions' => array('parent_id' => $obj[$model]['parent_id']),
-				'order' => array('order')
-			));
-			$options = array($this->Label->get('Area.select')) + $options;
-			$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
-			$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
-			
-			if(count($path) != 1) {
-				$inputOptions['default'] = $obj[$model]['id'];
+		if (!empty($path)) {
+			foreach($path as $i => $obj) {
+				$options = $AreaHandler->{$model}->find('list', array(
+					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
+					'order' => array('order')
+				));
+				$options = array($this->Label->get('Area.select')) + $options;
+				$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
+				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
+				
+				if(count($path) != 1) {
+					$inputOptions['default'] = $obj[$model]['id'];
+				}
+				$inputOptions['options'] = $options;
+				$label = $inputDefaults['label'];
+				$label['text'] = $levelName;
+				$inputOptions['label'] = $label;
+				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
+				$value = $obj[$model]['id'];
 			}
-			$inputOptions['options'] = $options;
-			$label = $inputDefaults['label'];
-			$label['text'] = $levelName;
-			$inputOptions['label'] = $label;
-			$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
-			$value = $obj[$model]['id'];
 		}
 		
 		$levels = $AreaHandler->{$levelModels[$model]}->find('list', array('limit' => -1, 'offset' => count($path), 'order' => 'level'));
@@ -252,9 +254,11 @@ class FormUtilityHelper extends AppHelper {
 		
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		$path = $AreaHandler->{$model}->getPath($value);
-		foreach($path as $i => $obj) {
-			$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
-			$html .= sprintf($row, sprintf($labelCol, $levelName) . sprintf($valueCol, $obj[$model]['name']));
+		if (!empty($path)) {
+			foreach($path as $i => $obj) {
+				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
+				$html .= sprintf($row, sprintf($labelCol, $levelName) . sprintf($valueCol, $obj[$model]['name']));
+			}
 		}
 		return $html;
 	}

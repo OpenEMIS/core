@@ -15,7 +15,7 @@ $tableData = array();
 
 foreach($data as $obj) {
 	$row = array();
-        $row[] = $this->Html->link($obj['Guardian']['first_name'], array('action' => 'bankAccountsView', $obj['Guardian']['id']), array('escape' => false));
+        $row[] = $this->Html->link($obj['Guardian']['first_name'], array('action' => 'guardiansView', $obj['Guardian']['id']), array('escape' => false));
         $row[] = $obj['Guardian']['last_name'];
         $row[] = $obj['GuardianRelation']['name'] ;
         $row[] = $obj['Guardian']['mobile_phone'];

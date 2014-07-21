@@ -1,5 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
@@ -14,7 +13,7 @@ if ($_edit) {
 if ($_delete) {
 	echo $this->Html->link(__('Delete'), array('action' => 'studentsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
-
+/*
 if ($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 	echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 }
@@ -69,7 +68,7 @@ $this->start('contentBody');
 	</div>
 
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Date of Birth'); ?></div>
+		<div class="col-md-3"><?php echo __('Date Of Birth'); ?></div>
 		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
 	</div>
 	<div class="row">
