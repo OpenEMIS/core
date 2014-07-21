@@ -23,15 +23,7 @@ $(document).ready(function() {
         $("#input_year").val(Finance.year);
     });
 
-    $('input[type="submit"]').click(function(event){
-        event.preventDefault();
-    });
-
-    $('.btn_cancel').click(function(event){
-        $('#viewLink').trigger('click');
-    });
-
-    $('select[name=data\\[Finance\\]\\[area_level_0\\]]').change(function(event) {
+    $('#areapicker.areapicker select').first().change(function(event) {
         Finance.fetchGNP();
     });
 	
@@ -247,10 +239,10 @@ var Finance = {
         });
     },
     fetchGNP: function() {
-        
-        var countryAreaId = $('select[name=data\\[Finance\\]\\[area_level_0\\]]').val();
+        var currentYear = $('select#financeYear').val();
+        var countryAreaId = $('#areapicker.areapicker select').first().val();
         var maskId;
-        var url = getRootURL()+'/Finance/viewGNP/'+this.year+'/'+countryAreaId;
+        var url = getRootURL()+'Finance/viewGNP/'+currentYear+'/'+countryAreaId;
 
         if (countryAreaId > 0) {
             $.ajax({

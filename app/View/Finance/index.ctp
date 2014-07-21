@@ -57,7 +57,7 @@ echo $this->Form->create('Finance', $formOptions);
 
 <div class="row total_public_expenditure">
 	<label class="col-md-3 control-label"><?php echo __('GNP'); ?> <?php echo $currency; ?></label>
-	<div id="gnp" class="col-md-4"><?php echo (!empty($data['PublicExpenditure']['gross_national_product'])) ? $data['PublicExpenditure']['gross_national_product'] : __("No Data"); ?></div>
+	<div id="gnp" class="col-md-4"><?php echo (!empty($gnp)) ? $gnp : __("No Data"); ?></div>
 </div>
 
 <fieldset id="area_section_group" class="section_group">
@@ -142,7 +142,7 @@ echo $this->Form->create('Finance', $formOptions);
 <script type="text/javascript">
 	var currentAreaId = <?php echo intval($areaId); ?>;
 	$(document).ready(function() {
-		Finance.fetchGNP();
+		//Finance.fetchGNP();
 	});
 </script>
 
