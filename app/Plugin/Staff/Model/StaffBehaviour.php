@@ -106,7 +106,6 @@ class StaffBehaviour extends StaffAppModel {
 
 	public function beforeAction($controller, $action) {
         parent::beforeAction($controller, $action);
-		$this->plugin = false;
     }
 
 	public function getDisplayFields($controller) {
@@ -202,6 +201,7 @@ class StaffBehaviour extends StaffAppModel {
 	
 	//Institution Site
 	public function behaviourStaffList($controller, $params) {
+		$this->plugin = false;
 		$controller->Navigation->addCrumb('Behaviour - Staff');
 		$InstitutionId = $controller->Session->read('InstitutionSite.id'); 
 		$yearOptions = ClassRegistry::init('SchoolYear')->findList(array('orderBy' => 'name DESC', 'conditions' => array('SchoolYear.visible' => 1), 'fields' => array( 'SchoolYear.name', 'SchoolYear.name')));
@@ -219,6 +219,7 @@ class StaffBehaviour extends StaffAppModel {
 	
 	public function behaviourStaff($controller, $params) {
 	//public function staffsBehaviour($controller, $params) {
+		$this->plugin = false;
 		extract($controller->staffCustFieldYrInits());
 		$controller->Navigation->addCrumb('List of Behaviour');
 
@@ -234,6 +235,7 @@ class StaffBehaviour extends StaffAppModel {
 	}
 	
 	public function behaviourStaffAdd($controller, $params) {
+		$this->plugin = false;
 		$staffId = $controller->params['pass'][0];
 		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
 		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
@@ -244,6 +246,7 @@ class StaffBehaviour extends StaffAppModel {
 		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	public function behaviourStaffEdit($controller, $params) {
+		$this->plugin = false;
 		$staffId = $controller->params['pass'][0];
 		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
 		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
@@ -283,8 +286,7 @@ class StaffBehaviour extends StaffAppModel {
 	}
 	
 	public function behaviourStaffView($controller, $params) {
-	//	$this->render = false;
-    //public function studentsBehaviourView($controller, $params) {
+		$this->plugin = false;
         $id = $controller->params['pass'][0];
 		
 		$data = $this->findById($id);
