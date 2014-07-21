@@ -41,7 +41,7 @@ class AppController extends Controller {
 	public $components = array(
 		'RequestHandler',
 		'Session',
-		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports')), 
+		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports', 'Visualizer')), 
 		'AccessControl',
 		'Utility',
 		'DateTime',
