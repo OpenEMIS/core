@@ -33,29 +33,6 @@ class FinanceController extends AppController {
 	
 	public function index() {
 		$this->Navigation->addCrumb('Total Public Expenditure');
-
-		$highestLevel = array();
-		$levels = $this->AreaLevel->find('list');
-		$topArea = $this->Area->find('list', array('conditions' => array('Area.parent_id' => '-1', 'Area.visible' => 1)));
-		$this->Utility->unshiftArray($topArea, array('0' => '--Select--'));
-		$highestLevel[] = $topArea;
-
-		if ($this->request->is('post')) {
-			for ($i = 0; $i < count($this->request->data['Finance']) - 1; $i++) {
-				//echo 'area_level_'. $i . ': '. $this->request->data['Finance']['area_level_'.$i] .'<br/>';
-				$area = $this->Area->find('list', array('conditions' => array('Area.parent_id' => $this->request->data['Finance']['area_level_' . $i], 'Area.visible' => 1)));
-
-				$this->Utility->unshiftArray($area, array('0' => '--Select--'));
-				$highestLevel[] = $area;
-				//echo '<br/>';
-			}
-
-			$this->set('selectedYear', (isset($this->request->data['year'])) ? $this->request->data['year'] : intval(date('Y')));
-			if (end($this->request->data['Finance']) == 0) {
-				array_pop($this->request->data['Finance']);
-			}
-			$this->set('initAreaSelection', (isset($this->request->data['Finance']) && count($this->request->data['Finance']) > 0) ? $this->request->data['Finance'] : null);
-		}
 		
 		$currentYear = intval(date('Y'));
 		$selectedYear = isset($this->params->pass[0])? intval($this->params->pass[0]) : $currentYear;
@@ -69,49 +46,86 @@ class FinanceController extends AppController {
 		$data = $this->PublicExpenditure->getPublicExpenditureData($selectedYear, $parentAreaId, $areaId);
 		//pr($data);
 		
-		$this->set(compact('areaId', 'levels', 'highestLevel', 'data', 'selectedYear', 'yearList'));
+		$gnpData = $this->PublicExpenditure->find('first', array(
+			'conditions' => array('year' => $selectedYear),
+			'fields' => array('gross_national_product'),
+			'order' => array('gross_national_product DESC')
+		));
+		
+		$gnp = isset($gnpData['PublicExpenditure']['gross_national_product']) ? $gnpData['PublicExpenditure']['gross_national_product'] : '';
+		
+		$this->set(compact('areaId', 'data', 'selectedYear', 'yearList', 'gnp'));
 	}
 
 	public function edit($id = null) {
 		$this->bodyTitle = 'National Denominators';
-		
-		$highestLevel = array();
-        $levels = $this->AreaLevel->find('list');
-        $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1', 'Area.visible' => 1)));
-        $this->Utility->unshiftArray($topArea, array('0'=>'--Select--'));
-        $highestLevel[] = $topArea;
-		
-		if($this->request->is('post')) {
-        	//echo '<pre>';
-        	// var_dump($this->request->data);
-            for ($i = 0; $i < count($this->request->data['Finance'])-1; $i++) {
-                //echo 'area_level_'. $i . ': '. $this->request->data['Finance']['area_level_'.$i] .'<br/>';
-                $area = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $this->request->data['Finance']['area_level_'.$i], 'Area.visible' => 1)));
-                
-                $this->Utility->unshiftArray($area, array('0'=>'--'.__('Select').'--'));
-                $highestLevel[] = $area;
-                //echo '<br/>';
-            }
-        	//echo '</pre>';
 
-
-            $this->set('selectedYear', (isset($this->request->data['year']))? $this->request->data['year']:intval(date('Y')));
-            if(end($this->request->data['Finance']) == 0 ){
-                array_pop($this->request->data['Finance']);
-            }
-            $this->set('initAreaSelection', (isset($this->request->data['Finance']))?$this->request->data['Finance']: null);
-        }
-		
 		$currentYear = intval(date('Y'));
-		$selectedYear = isset($this->params->pass[0])? intval($this->params->pass[0]) : $currentYear;
-		
+		$selectedYear = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : $currentYear;
+
 		$yearList = $this->DateTime->generateYear();
 		krsort($yearList);
-		
-		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
-		$parentAreaId = $areaId;
 
-		$this->set(compact('areaId', 'levels', 'highestLevel', 'data', 'selectedYear', 'yearList'));
+		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
+
+		$gnpData = $this->PublicExpenditure->find('first', array(
+			'conditions' => array('year' => $selectedYear),
+			'fields' => array('gross_national_product'),
+			'order' => array('gross_national_product DESC')
+		));
+
+		$gnp = isset($gnpData['PublicExpenditure']['gross_national_product']) ? $gnpData['PublicExpenditure']['gross_national_product'] : '';
+
+		$parentAreaId = $areaId;
+		$data = $this->PublicExpenditure->getPublicExpenditureData($selectedYear, $parentAreaId, $areaId);
+
+		//pr($data);die;
+		if (!empty($this->request->data['PublicExpenditure'])) {
+			$expenditureData = $this->request->data['PublicExpenditure'];
+			$financeData = $this->request->data['Finance'];
+			$inputYear = $financeData['year'];
+
+			$gnpInput = intval($financeData['gnp']);
+			//pr($this->request->data);die;
+
+			if (!empty($gnpInput)) {
+				foreach ($expenditureData AS $row) {
+					$id = intval($row['id']);
+					$age = intval($row['age']);
+					$source = $row['source'];
+
+					if ($age > 0 && !empty($source)) {
+						$existingRecords = $this->PublicExpenditure->getPopulationRecords($age, $selectedYear, $source, $areaId);
+						if (empty($existingRecords)) {
+							if ($id == 0) {
+								$this->PublicExpenditure->create();
+
+								$row['data_source'] = 0;
+								$row['year'] = $selectedYear;
+								$row['area_id'] = $areaId;
+							}
+
+							$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
+						}
+					}
+				}
+
+				return $this->redirect(array('action' => 'index', $selectedYear, $areaId));
+			} else {
+				$this->Message->alert('NationalDenominators.finance.gnpEmpty');
+				if (!empty($this->request->data['PublicExpenditure'])) {
+					$expenditure = $this->request->data['PublicExpenditure'];
+					$data['parent'][0] = array_merge($data['parent'][0], $expenditure['parent'][0]);
+					foreach ($data['children'] as $i => $obj) {
+						$data['children'][$i] = array_merge($data['children'][$i], $expenditure['children'][$i]);
+					}
+				}
+				
+				$gnp = '';
+			}
+		}
+
+		$this->set(compact('areaId', 'data', 'selectedYear', 'yearList', 'gnp'));
 	}
 
 	public function viewGNP($year = null, $countryId = 0) {

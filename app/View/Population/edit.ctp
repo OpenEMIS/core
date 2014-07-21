@@ -159,9 +159,8 @@ echo $this->Form->hidden('idsToBeDeleted', array(
 	<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') . ' ' . __('Age'); ?></a></div>
 		<?php echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'index', $selectedYear, $areaId))); ?>
 </fieldset>
-
+<?php echo $this->Form->end(); ?>
 <script type="text/javascript">
 					var currentAreaId = <?php echo intval($areaId); ?>;
 </script>
-<?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>
