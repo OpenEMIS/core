@@ -24,14 +24,6 @@ $(document).ready(function() {
             $("#input_year").val(population.year);
         }
     });
-
-//    $('input[type="submit"]').click(function(event){
-//        event.preventDefault();
-//    });
-
-    $('.btn_cancel').click(function(event){
-        $('#viewLink').trigger('click');
-    });
 	
 	$('#areapicker.areapicker').on('change', 'select', function(){
 		if($('#population').hasClass('edit')){

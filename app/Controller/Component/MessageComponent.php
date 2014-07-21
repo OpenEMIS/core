@@ -148,6 +148,11 @@ class MessageComponent extends Component {
 			'failed' => array(
 				'minSelection' => array('type' => 'error', 'msg' => 'Minimum 1 selection must be made in order to proceed.')
 			)
+		),
+		'NationalDenominators' => array(
+			'finance' => array(
+				'gnpEmpty' => array('type' => 'error', 'msg' => 'GNP value is required.')
+			)
 		)
 	);
 	
