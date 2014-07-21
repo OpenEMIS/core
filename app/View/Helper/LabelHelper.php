@@ -76,7 +76,10 @@ class LabelHelper extends AppHelper {
 				'fre' => 'French',
 				'ara' => 'Arabic',
 			),
-			'compile' => 'Compile'
+			'compile' => 'Compile',
+			'next' => 'Next',
+			'previous' => 'Previous',
+			'reset' => 'Reset'
 		),
 		'gender' => array(
 			'm' => 'Male',
@@ -308,6 +311,15 @@ class LabelHelper extends AppHelper {
 			'permissions' => 'Permissions',
 			'name' => 'Role',
 			'security_group_id' => 'Group'
+		),
+		'datawarehouse' => array(
+			'indicator' => 'Indicator',
+			'unit' => 'Unit',
+			'dimension' => 'Dimension',
+			'time' => 'Time',
+			'area' => 'Area',
+			'source' => 'Source',
+			'review' => 'Review'
 		)
 	);
 	
