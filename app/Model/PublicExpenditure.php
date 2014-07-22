@@ -158,5 +158,17 @@ class PublicExpenditure extends AppModel {
 		    array('year' => $year)
 		);
 	}
+	
+	public function getRecordsCount($year, $areaId){
+		$count = $this->find('count', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'year LIKE' => $year,
+				'area_id' => $areaId
+			)
+		));
+				
+		return $count;
+	}
 
 }
