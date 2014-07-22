@@ -16,13 +16,6 @@ have received a copy of the GNU General Public License along with this program. 
 $(document).ready(function() {
 	Finance.init();
 
-    $('#year_id').change(function(d, o){
-        Finance.year = $(this).val();
-        Finance.fetchData();
-        Finance.fetchGNP();
-        $("#input_year").val(Finance.year);
-    });
-
     $('#areapicker.areapicker select').first().change(function(event) {
         Finance.fetchGNP();
     });
@@ -295,13 +288,11 @@ var Finance = {
 			success: function(data, textStatus) {
 				var replaceHolder = $('.replaceHolder');
 
-				if (data.length > 0) {
+				if (data.length > 0 && replaceHolder.length === 1) {
 					if (replaceHolder.length > 0) {
 						replaceHolder.html(data);
 					}
 				}
-				
-				Finance.fetchGNP();
 			}
 		});
 	},
