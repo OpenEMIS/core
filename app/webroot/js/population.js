@@ -26,14 +26,22 @@ $(document).ready(function() {
     });
 	
 	$('#areapicker.areapicker').on('change', 'select', function(){
-		if($('#population').hasClass('edit')){
-			population.fetchDataByArea($(this).val(), 'edit');
-		}else{
-			population.fetchDataByArea($(this).val(), '');
-		}
-
 		if($(this).val() != '' && $(this).val() > 0){
 			currentAreaId = $(this).val();
+		}else{
+			var parentAreaSelect = $(this).parents('.form-group').prev('.form-group').find('select.form-control');
+			if(parentAreaSelect.length > 0){
+				var parentAreaId = parentAreaSelect.val();
+				currentAreaId = parentAreaId;
+			}else{
+				currentAreaId = 0;
+			}
+		}
+		
+		if($('#population').hasClass('edit')){
+			population.fetchDataByArea(currentAreaId, 'edit');
+		}else{
+			population.fetchDataByArea(currentAreaId, '');
 		}
 		
 		$('a.withLatestAreaId').each(function(){
