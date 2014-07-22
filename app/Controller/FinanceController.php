@@ -66,7 +66,7 @@ class FinanceController extends AppController {
 		$yearList = $this->DateTime->generateYear();
 		krsort($yearList);
 
-		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
+		$selectedAreaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
 
 		$gnpData = $this->PublicExpenditure->find('first', array(
 			'conditions' => array('year' => $selectedYear),
@@ -76,8 +76,8 @@ class FinanceController extends AppController {
 
 		$gnp = isset($gnpData['PublicExpenditure']['gross_national_product']) ? $gnpData['PublicExpenditure']['gross_national_product'] : '';
 
-		$parentAreaId = $areaId;
-		$data = $this->PublicExpenditure->getPublicExpenditureData($selectedYear, $parentAreaId, $areaId);
+		$parentAreaId = $selectedAreaId;
+		$data = $this->PublicExpenditure->getPublicExpenditureData($selectedYear, $parentAreaId, $selectedAreaId);
 
 		//pr($data);die;
 		if (!empty($this->request->data['PublicExpenditure'])) {
@@ -89,28 +89,33 @@ class FinanceController extends AppController {
 			//pr($this->request->data);die;
 
 			if (!empty($gnpInput)) {
-				foreach ($expenditureData AS $row) {
-					$id = intval($row['id']);
-					$age = intval($row['age']);
-					$source = $row['source'];
-
-					if ($age > 0 && !empty($source)) {
-						$existingRecords = $this->PublicExpenditure->getPopulationRecords($age, $selectedYear, $source, $areaId);
-						if (empty($existingRecords)) {
-							if ($id == 0) {
-								$this->PublicExpenditure->create();
-
-								$row['data_source'] = 0;
-								$row['year'] = $selectedYear;
-								$row['area_id'] = $areaId;
+				foreach ($expenditureData AS $group) {
+					foreach($group AS $row){
+						$row['year'] = $inputYear;
+						$row['gross_national_product'] = $gnpInput;
+						
+						$id = intval($row['id']);
+						$areaId = intval($row['area_id']);
+						
+						if(!empty($areaId) && (!empty($row['total_public_expenditure']) || !empty($row['total_public_expenditure_education']))){
+							$existingRecords = $this->PublicExpenditure->getRecordsCount($inputYear, $areaId);
+							
+							if(empty($id)){
+								if($existingRecords == 0){
+									$this->PublicExpenditure->create();
+									
+									$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
+								}
+							}else{
+								if($existingRecords == 1){
+									$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
+								}
 							}
-
-							$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
 						}
 					}
 				}
 
-				return $this->redirect(array('action' => 'index', $selectedYear, $areaId));
+				return $this->redirect(array('action' => 'index', $selectedYear, $selectedAreaId));
 			} else {
 				$this->Message->alert('NationalDenominators.finance.gnpEmpty');
 				if (!empty($this->request->data['PublicExpenditure'])) {
@@ -125,7 +130,7 @@ class FinanceController extends AppController {
 			}
 		}
 
-		$this->set(compact('areaId', 'data', 'selectedYear', 'yearList', 'gnp'));
+		$this->set(compact('selectedAreaId', 'data', 'selectedYear', 'yearList', 'gnp'));
 	}
 
 	public function viewGNP($year = null, $countryId = 0) {

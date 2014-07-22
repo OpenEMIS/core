@@ -112,17 +112,22 @@ class PopulationController extends AppController {
 					$source = $row['source'];
 					
 					if($age > 0 && !empty($source)){
-						$existingRecords = $this->Population->getPopulationRecords($age, $selectedYear, $source, $areaId);
-						if(empty($existingRecords)){
-							if($id == 0){
+						$existingRecords = $this->Population->getRecordsCount($age, $selectedYear, $source, $areaId);
+						
+						if($id == 0){
+							if($existingRecords == 0){
 								$this->Population->create();
 
 								$row['data_source'] = 0;
 								$row['year'] = $selectedYear;
 								$row['area_id'] = $areaId;
+								
+								$this->Population->save(array('Population' => $row));
 							}
-
-							$this->Population->save(array('Population' => $row));
+						}else{
+							if($existingRecords == 1){
+								$this->Population->save(array('Population' => $row));
+							}
 						}
 					}
 				}

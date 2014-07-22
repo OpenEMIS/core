@@ -218,8 +218,8 @@ class Population extends AppModel {
 		return $results;
 	}
 	
-	public function getPopulationRecords($age, $year, $source, $areaId) {
-		$data = $this->find('all', array(
+	public function getRecordsCount($age, $year, $source, $areaId) {
+		$count = $this->find('count', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'age' => $age,
@@ -229,6 +229,6 @@ class Population extends AppModel {
 			)
 		));
 				
-		return $data;
+		return $count;
 	}
 }
