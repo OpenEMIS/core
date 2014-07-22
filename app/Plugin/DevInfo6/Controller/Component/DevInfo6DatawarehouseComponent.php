@@ -199,23 +199,40 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$aggregate = $fieldObj['type'];
 					$fieldName = $fieldObj['name'];
 					$fieldFormat = '%s(%s.%s) as %s';
-					$group = array($modelName.'.id');
+					$group = array('area_id', 'school_year_id');
 
-					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), $modelName.'.'.$fieldName.' as '.$type.'Field');
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), 'area_id', 'school_year_id');
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
 					$subJoins = array();
 
-					
+
+					$arrCondition = array();
 					$conditionObj = ${'indicator'.$type.'CondObj'};
+
+				
 					if(!empty($conditionObj) && isset($conditionObj['DatawarehouseDimension'])){
-						$condJoin = $conditionObj['DatawarehouseDimension']['joins'];
-						if(!empty($condJoin)){
-							eval("\$tempJoin = $condJoin;");
-							$subJoins[] = $tempJoin;
-						}
+						/*foreach($conditionObj as $c){
+							if(isset($conditions[$c['DatawarehouseDimension']['model']][$c['DatawarehouseDimension']['field']])){
+								$temp = $conditions[$c['DatawarehouseDimension']]['model']][$c['DatawarehouseDimension']['field']];
+								unset($conditions[$c['DatawarehouseDimension']]['model']][$c['DatawarehouseDimension']['field']]);
+								
+								foreach($tempObj as $d){
+
+								}
+							}else{
+								$conditions[$c['DatawarehouseDimension']]['model']][$c['DatawarehouseDimension']['field']] = $c['value'];
+							}
+							/*
+							$condJoin = $conditionObj['DatawarehouseDimension']['joins'];
+							if(!empty($condJoin)){
+								eval("\$tempJoin = $condJoin;");
+								$subJoins[] = $tempJoin;
+							}
+						}*/
 					}
+
 					$dbo = $modelTable->getDataSource();
 
 					${'subquery'.$type} = $dbo->buildStatement(
@@ -233,7 +250,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 					pr(${'subquery'.$type});
 				}
 
-				$outerQueryField = array('IFNULL(Numerator.numerator,0) as Total', 'Numerator.numeratorField');
+ 				$outerQueryField = array('IFNULL(Numerator.numerator, "No Data") as DataValue', 'IFNULL(Numerator.numerator, 0) as Numerator', 'NULL as Denomincator', 'area_id', 'school_year_id');
 				switch($unitObj['id']){
 					case 2:
 					 	//RATE
@@ -245,7 +262,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 				        break;
 				    case 4:
 					 	//PERCENT
-				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as Total', 'Numerator.numeratorField');
+				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
 				       break;
 				}
 
