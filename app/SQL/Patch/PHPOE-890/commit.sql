@@ -87,3 +87,10 @@ INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`,
 (NULL, 'Maintentance', 10, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
 (NULL, 'Security', 11, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW()),
 (NULL, 'Handbook', 12, 1, 1, 0, NULL, NULL, 70, NULL, NULL, 1, NOW());
+
+
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(195, 'Fee', 'InstitutionSites', 'Institutions', 'Finance', 8, 'fee|feeView', '_view:feeEdit', '_view:feeAdd|feeAdd', '_view:feeDelete', NULL, 195, 1, NULL, NULL, 1, NOW()),
+(196, 'Student', 'InstitutionSites', 'Institutions', 'Finance', 8, 'studentFee|studentFeeView|studentFeeViewTransaction', '_view:studentFeeAdd|_view:studentFeeAddTransaction', 'studentFeeAdd|studentFeeAddTransaction', '_view:studentFeeDeleteTransaction', NULL, 196, 1, NULL, NULL, 1, NOW()),
+(197, 'Fee', 'Students', 'Students', 'Details', 66, 'fee|feeView', null, null, NULL, NULL, 197, 1, NULL, NULL, 1, NOW());

@@ -53,7 +53,7 @@ $this->start('contentBody');
        </thead>
         <tbody>
         	<?php 
-            if(!empty($data)){ 
+            if(!empty($data)){
             $programmeId = (isset($programme['education_programme_id']) ? $programme['education_programme_id'] : $programme['id']);
             foreach($data[$programmeId] as $id=>$val) {  ?>
             <tr row-id="<?php echo $val['id']; ?>">
@@ -65,7 +65,7 @@ $this->start('contentBody');
                         if($_add) {
                             echo $this->Html->link($val['grade'], array('action' => 'feeAdd', $val['education_grade_id']), array('escape' => false));
                         }else{
-                            $val['grade'];
+                            echo $val['grade'];
                         }
                     }
                     ?>
