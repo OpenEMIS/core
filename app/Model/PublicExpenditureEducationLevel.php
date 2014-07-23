@@ -35,6 +35,27 @@ class PublicExpenditureEducationLevel extends AppModel {
 		$educationLevels = $utility->formatResult($educationLevels);
 		return $educationLevels;
 	}
+	
+	public function getEducationLevelOptions() {
+		$educationLevels = $this->EducationLevel->find('list', array(
+			'recursive' => -1,
+			'fields' => array('EducationLevel.id', 'EducationLevel.name')
+		));
+
+		return $educationLevels;
+	}
+	
+	public function getEducationLevel($eduLevelId) {
+		$educationLevel = $this->EducationLevel->find('first', array(
+			'recursive' => -1,
+			'fields' => array('EducationLevel.id', 'EducationLevel.name'),
+			'conditions' => array(
+				'EducationLevel.id' => $eduLevelId
+			)
+		));
+
+		return $educationLevel;
+	}
 
 	public function getAreas($areaId = 0, $parentAreaId = 0) {
 
@@ -100,79 +121,91 @@ class PublicExpenditureEducationLevel extends AppModel {
 		return $result;
 	}
 
-	public function getData($year = 0, $areaId = 0, $parentAreaId = 0) {
+	public function getData($year = 0, $areaId = 0, $parentAreaId = 0, $eduLevelId) {
 
 		$utility = new UtilityComponent(new ComponentCollection);
-		if($year <= 0 || ($areaId <= 0 && $parentAreaId <= 0 )) {
+		if ($year <= 0 || ($areaId <= 0 && $parentAreaId <= 0 )) {
 			return false;
 		}
 
 		if ($parentAreaId >= 1) {
+			$level = $this->getEducationLevel($eduLevelId);
+			
+			if(empty($level)){
+				return false;
+			}
 
-			$levels = $this->getEducationLevels();
+			$listEducationLevelId = $level['EducationLevel']['id'];
+			$listEducationLevelName = $level['EducationLevel']['name'];
 
-			foreach ($levels as $level) {
-				$listEducationLevelId = $level['id'];
-				$listEducationLevelName = $level['name'];
+			$list[$listEducationLevelId]['education_level_id'] = $listEducationLevelId;
+			$list[$listEducationLevelId]['education_level_name'] = $listEducationLevelName;
 
-				$list[$listEducationLevelId]['education_level_id'] = $listEducationLevelId;
-				$list[$listEducationLevelId]['education_level_name'] = $listEducationLevelName;
-				
-				$areas = $this->getAreas($areaId, $parentAreaId);
-				$areas = $utility->formatResult($areas);
+			$areas = $this->getAreas($areaId, $parentAreaId);
+			$areas = $utility->formatResult($areas);
 
-				foreach ($areas as $area) {
+			foreach ($areas as $area) {
 
-					$listAreaId = $area['id'];
-					$listAreaName = $area['name'];
-					$listParentId = $area['parent_id'];
-					$listAreaLevel = $area['area_level_id'];
-					$listAreaLevelName = $area['area_level_name'];
+				$listAreaId = $area['id'];
+				$listAreaName = $area['name'];
+				$listParentId = $area['parent_id'];
+				$listAreaLevel = $area['area_level_id'];
+				$listAreaLevelName = $area['area_level_name'];
 
-					$result = $this->getPublicExpenditureByYearAndArea($year, $listAreaId, $listEducationLevelId);
+				$result = $this->getPublicExpenditureByYearAndArea($year, $listAreaId, $listEducationLevelId);
 
-					if (!empty($result)) {
-						$expenditureResult = $result[0]['PublicExpenditureEducationLevel'];
+				if (!empty($result)) {
+					$expenditureResult = $result[0]['PublicExpenditureEducationLevel'];
 
-						$list[$listEducationLevelId]['areas'][] = 
-	        			array(
-		        			'name' => $listAreaName,
-		        			'area_id' => $listAreaId,
-		        			'parent_id' => $listParentId,
-		        			'area_level_id' => $listAreaLevel,
-		        			'area_level_name' => $listAreaLevelName,
-		        			'education_level_id' => $expenditureResult['education_level_id'],
-		        			'year' => $expenditureResult['year'],
-		        			'id' => $expenditureResult['id'],
-		        			'value' => $expenditureResult['value']
-	        			);	
-					} else {
-						$list[$listEducationLevelId]['areas'][] =         			
-						array(
-		        			'name' => $listAreaName,
-		        			'area_id' => $listAreaId,
-		        			'parent_id' => $listParentId,
-		        			'area_level_id' => $listAreaLevel,
-		        			'area_level_name' => $listAreaLevelName,
-		        			'education_level_id' => $listEducationLevelId,
-		        			'year' => null,
-		        			'id' => 0,
-		        			'value' => ""
-	        			);
-					}
-					
+					$list[$listEducationLevelId]['areas'][] =
+							array(
+								'name' => $listAreaName,
+								'area_id' => $listAreaId,
+								'parent_id' => $listParentId,
+								'area_level_id' => $listAreaLevel,
+								'area_level_name' => $listAreaLevelName,
+								'education_level_id' => $expenditureResult['education_level_id'],
+								'year' => $expenditureResult['year'],
+								'id' => $expenditureResult['id'],
+								'value' => $expenditureResult['value']
+					);
+				} else {
+					$list[$listEducationLevelId]['areas'][] =
+							array(
+								'name' => $listAreaName,
+								'area_id' => $listAreaId,
+								'parent_id' => $listParentId,
+								'area_level_id' => $listAreaLevel,
+								'area_level_name' => $listAreaLevelName,
+								'education_level_id' => $listEducationLevelId,
+								'year' => null,
+								'id' => 0,
+								'value' => ""
+					);
 				}
 			}
 
 			// $list['parent'][] = array_shift($list['children']);
-
 		}
 		return $list;
 	}
 
-	public function getPublicExpenditureData($year, $areaId, $parentAreaId) {
-		$data = $this->getData($year, $areaId, $parentAreaId);
+	public function getPublicExpenditureData($year, $areaId, $parentAreaId, $eduLevelId) {
+		$data = $this->getData($year, $areaId, $parentAreaId, $eduLevelId);
 		return $data;
+	}
+	
+	public function getRecordsCount($year, $areaId, $educationLevelId){
+		$count = $this->find('count', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'year LIKE' => $year,
+				'area_id' => $areaId,
+				'education_level_id' => $educationLevelId
+			)
+		));
+				
+		return $count;
 	}
 
 }

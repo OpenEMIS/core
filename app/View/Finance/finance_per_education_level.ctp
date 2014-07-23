@@ -9,7 +9,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Total Public Expenditure Per Education Level'));
 $this->start('contentActions');
 if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'financePerEducationLevelEdit', $selectedYear, $areaId), array('id' => 'edit', 'class' => 'divider withLatestAreaId'));
+	echo $this->Html->link(__('Edit'), array('action' => 'financePerEducationLevelEdit', $selectedYear, $areaId, $selectedEduLevel), array('id' => 'edit', 'class' => 'divider withLatestAreaId'));
 }
 $this->end();
 $this->assign('contentId', 'financePerEducation');
@@ -24,7 +24,6 @@ $formOptions = $this->FormUtility->getFormOptions();
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('Finance', $formOptions);
 ?>
-
 <div class="row per_education_level">
 	<label class="col-md-3 control-label"><?php echo __('View'); ?></label>
 	<div type="select" name="view" value="1" class="col-md-4">
@@ -34,8 +33,7 @@ echo $this->Form->create('Finance', $formOptions);
 		</select>
 	</div>
 </div>
-
-<div class="row total_public_expenditure year">
+<div class="row">
 	<label class="col-md-3 control-label"><?php echo __('Year'); ?></label>
 	<div class="col-md-4">
 		<?php
@@ -47,62 +45,89 @@ echo $this->Form->create('Finance', $formOptions);
 			'id' => 'financeYear',
 			'options' => $yearList,
 			'class' => 'form-control',
-			'default' => $selectedYear,
-			'onchange' => 'jsForm.change(this)',
-			'url' => 'Finance/' . $this->action
+			'default' => $selectedYear
 		));
 		?>
 	</div>
 </div>
-
+<div class="row">
+	<label class="col-md-3 control-label"><?php echo __('Education Levels'); ?></label>
+	<div class="col-md-4">
+		<?php
+		echo $this->Form->input('education_level', array(
+			'label' => false,
+			'div' => false,
+			'between' => false,
+			'after' => false,
+			'id' => 'educationLevel',
+			'options' => $educationLevels,
+			'class' => 'form-control',
+			'default' => $selectedEduLevel
+		));
+		?>
+	</div>
+</div>
 <fieldset id="area_section_group" class="section_group">
 	<legend id="area"><?php echo __('Area'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('area_id', array('value' => $areaId)); ?>
 </fieldset>
-
 <?php echo $this->Form->end(); ?>
-<fieldset id="data_section_group" class="section_group">
-	<legend><?php echo __('Total Public Expenditure Per Education Level'); ?></legend>
-
-
-	<?php foreach ($eduLevels as $eduLevel): ?>
-		<fieldset class="section_break">
-			<legend><?php echo $eduLevel['name']; ?></legend>
-
-			<div class="mainlist" id="edu_level_<?php echo $eduLevel['id']; ?>" name="edu_level_<?php echo $eduLevel['id']; ?>">
-				<table class="table table-striped table-hover table-bordered">
-					<thead>
-						<tr>
-							<th class="cell_arealevel"><?php echo __('Area Level'); ?></th>
-							<th class=""><?php echo __('Area'); ?></th>
-							<th class=""><?php echo __('Amount'); ?> <?php echo $currency; ?></th>
-						</tr>
-					</thead>
-
-					<?php
-					if (!empty($data['parent'])):
-						?>
+<div class="replaceHolder">
+	<fieldset id="data_section_group" class="section_group">
+		<legend><?php echo __('Total Public Expenditure Per Education Level'); ?></legend>
+		<?php
+		if (!empty($data)):
+			foreach ($data AS $perEduLevel):
+				?>
+				<fieldset class="section_break">
+					<legend><?php echo $perEduLevel['education_level_name']; ?></legend>
+					<table class="table table-striped table-hover table-bordered">
+						<thead>
+							<tr>
+								<th class="cell_arealevel"><?php echo __('Area Level'); ?></th>
+								<th class=""><?php echo __('Area'); ?></th>
+								<th class=""><?php echo __('Amount'); ?> <?php echo $currency; ?></th>
+							</tr>
+						</thead>
 						<tbody>
 							<?php
-							foreach ($data['parent'] AS $row):
+							$rowIndex = 0;
+							foreach ($perEduLevel['areas'] AS $row):
 								?>
 								<tr>
-									<td class="cell-number"><?php echo $row['name']; ?></td>
-									<td class="cell-number"><?php echo $row['total_public_expenditure']; ?></td>
-									<td class="cell-number"><?php echo $row['total_public_expenditure_education']; ?></td>
+									<?php
+									if ($rowIndex == 0) {
+										?>
+										<td class=""><?php echo $row['area_level_name']; ?></td>
+										<?php
+									} else if ($rowIndex == 1) {
+										if (count($perEduLevel['areas']) > 2) {
+											?>
+											<td rowspan="<?php echo count($perEduLevel['areas']) - 1; ?>" class=""><?php echo $row['area_level_name']; ?></td>
+											<?php
+										} else {
+											?>
+											<td class=""><?php echo $row['area_level_name']; ?></td>
+											<?php
+										}
+									}
+									?>
+									<td class=""><?php echo $row['name']; ?></td>
+									<td class="cell-number"><?php echo $row['value']; ?></td>
 								</tr>
 								<?php
+								$rowIndex++;
 							endforeach;
 							?>
 						</tbody>
-					<?php endif; ?>
-				</table>
-			</div>
-		</fieldset>
-	<?php endforeach; ?>
-
-</fieldset>
-
+					</table>
+				</fieldset>
+				<?php
+			endforeach;
+		endif;
+		?>
+	</fieldset>
+</div>
 <script type="text/javascript">
 	var currentAreaId = <?php echo intval($areaId); ?>;
 </script>

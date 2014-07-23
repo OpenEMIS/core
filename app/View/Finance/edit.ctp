@@ -228,6 +228,4 @@ echo $this->Form->create('Finance', $formOptions);
 					//Finance.fetchGNP();
 				});
 </script>
-
-
 <?php $this->end(); ?>
