@@ -80,53 +80,55 @@ class FinanceController extends AppController {
 		$data = $this->PublicExpenditure->getPublicExpenditureData($selectedYear, $parentAreaId, $selectedAreaId);
 
 		//pr($data);die;
-		if (!empty($this->request->data['PublicExpenditure'])) {
-			$expenditureData = $this->request->data['PublicExpenditure'];
-			$financeData = $this->request->data['Finance'];
-			$inputYear = $financeData['year'];
+		if ($this->request->is('post')) {
+			if (!empty($this->request->data['PublicExpenditure'])) {
+				$expenditureData = $this->request->data['PublicExpenditure'];
+				$financeData = $this->request->data['Finance'];
+				$inputYear = $financeData['year'];
 
-			$gnpInput = intval($financeData['gnp']);
-			//pr($this->request->data);die;
+				$gnpInput = intval($financeData['gnp']);
+				//pr($this->request->data);die;
 
-			if (!empty($gnpInput)) {
-				foreach ($expenditureData AS $group) {
-					foreach($group AS $row){
-						$row['year'] = $inputYear;
-						$row['gross_national_product'] = $gnpInput;
-						
-						$id = intval($row['id']);
-						$areaId = intval($row['area_id']);
-						
-						if(!empty($areaId) && (!empty($row['total_public_expenditure']) || !empty($row['total_public_expenditure_education']))){
-							$existingRecords = $this->PublicExpenditure->getRecordsCount($inputYear, $areaId);
-							
-							if(empty($id)){
-								if($existingRecords == 0){
-									$this->PublicExpenditure->create();
-									
-									$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
-								}
-							}else{
-								if($existingRecords == 1){
-									$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
+				if (!empty($gnpInput)) {
+					foreach ($expenditureData AS $group) {
+						foreach ($group AS $row) {
+							$row['year'] = $inputYear;
+							$row['gross_national_product'] = $gnpInput;
+
+							$id = intval($row['id']);
+							$areaId = intval($row['area_id']);
+
+							if (!empty($areaId) && (!empty($row['total_public_expenditure']) || !empty($row['total_public_expenditure_education']))) {
+								$existingRecords = $this->PublicExpenditure->getRecordsCount($inputYear, $areaId);
+
+								if (empty($id)) {
+									if ($existingRecords == 0) {
+										$this->PublicExpenditure->create();
+
+										$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
+									}
+								} else {
+									if ($existingRecords == 1) {
+										$this->PublicExpenditure->save(array('PublicExpenditure' => $row));
+									}
 								}
 							}
 						}
 					}
-				}
 
-				return $this->redirect(array('action' => 'index', $selectedYear, $selectedAreaId));
-			} else {
-				$this->Message->alert('NationalDenominators.finance.gnpEmpty');
-				if (!empty($this->request->data['PublicExpenditure'])) {
-					$expenditure = $this->request->data['PublicExpenditure'];
-					$data['parent'][0] = array_merge($data['parent'][0], $expenditure['parent'][0]);
-					foreach ($data['children'] as $i => $obj) {
-						$data['children'][$i] = array_merge($data['children'][$i], $expenditure['children'][$i]);
+					return $this->redirect(array('action' => 'index', $selectedYear, $selectedAreaId));
+				} else {
+					$this->Message->alert('NationalDenominators.finance.gnpEmpty');
+					if (!empty($this->request->data['PublicExpenditure'])) {
+						$expenditure = $this->request->data['PublicExpenditure'];
+						$data['parent'][0] = array_merge($data['parent'][0], $expenditure['parent'][0]);
+						foreach ($data['children'] as $i => $obj) {
+							$data['children'][$i] = array_merge($data['children'][$i], $expenditure['children'][$i]);
+						}
 					}
+
+					$gnp = '';
 				}
-				
-				$gnp = '';
 			}
 		}
 
@@ -149,28 +151,6 @@ class FinanceController extends AppController {
 		}
 		echo json_encode($gnpData['PublicExpenditure']);
 	}
-
-	public function viewAreaChildren($id) {
-        $this->autoRender = false;
-        $value =$this->Area->find('list',array('conditions'=>array('Area.parent_id' => $id, 'Area.visible' => 1)));
-        $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'/*, '1' => 'ALL '*/));
-        echo json_encode($value);
-    }
-
-	public function viewData($year = null, $areaId, $parentAreaId = 0) {
-        $this->autoRender = false;
-        $year = (is_null($year))? intval(date('Y')): $year ;
-
-        $data = array();
-        if($parentAreaId > 0 && $areaId == 0){
-            $areaId = $parentAreaId;
-        }
-
-        $data = $this->PublicExpenditure->getPublicExpenditureData($year, $parentAreaId, $areaId);
-
-//         pr($data); die();
-		echo json_encode($data);
-    }
 	
 	public function loadData() {
 		$this->layout = false;
@@ -198,60 +178,6 @@ class FinanceController extends AppController {
         $this->set(compact('data', 'currency'));
     }
 
-	public function financeAjax() {
-		$this->autoRender = false;
-		
-		if($this->request->is('post')) {
-			$records = $this->data;
-			$keys = array();
-			$gnp = 0;
-			$year = 0;
-
-			foreach ($records as $record) {
-				$gnp = $record['gross_national_product'];
-				$year = $record['year'];
-				if ($record['id'] > 0) {
-					$this->PublicExpenditure->save($record);
-				} else if ($record['id'] == 0) {
-					$this->PublicExpenditure->save($record);
-					$keys[$record['index']] = $this->PublicExpenditure->id;
-				}
-			}
-
-			$this->PublicExpenditure->saveGNP($year, $gnp);
-
-			return json_encode($keys);
-		}
-	}
-
-	public function financePerEducationAjax() {
-		$this->autoRender = false;
-		
-		if($this->request->is('post')) {
-
-			$records = $this->data;
-			$keys = array();
-			$education_level_id = 0;
-			$value = 0;
-			$year = 0;
-
-			foreach ($records as $record) {
-				$value = $record['value'];
-				$education_level_id = $record['education_level_id'];
-				$year = $record['year'];
-				if ($record['id'] > 0) {
-					$this->PublicExpenditureEducationLevel->save($record);
-				} else if ($record['id'] == 0) {
-					$this->PublicExpenditureEducationLevel->save($record);
-					$keys[$record['index']] = $this->PublicExpenditureEducationLevel->id;
-				}
-			}
-
-
-			return json_encode($keys);
-		}
-	}
-
 	public function financePerEducationLevel() {
 		$this->Navigation->addCrumb('Total Public Expenditure Per Education Level');
 		
@@ -263,68 +189,74 @@ class FinanceController extends AppController {
 		
 		$areaId = isset($this->params->pass[1])? intval($this->params->pass[1]) : 0;
 		$parentAreaId = $areaId;
-
-        $eduLevels = $this->PublicExpenditureEducationLevel->getEducationLevels();
 		
-		$data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($selectedYear, $parentAreaId, $areaId);
-		pr($data);
+		$educationLevels = $this->PublicExpenditureEducationLevel->getEducationLevelOptions();
+		$selectedEduLevel = isset($this->params->pass[2]) ? intval($this->params->pass[2]) : key($educationLevels);
 		
-		$this->set(compact('areaId', 'eduLevels', 'data', 'selectedYear', 'yearList'));
+		$data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($selectedYear, $parentAreaId, $areaId, $selectedEduLevel);
+		//pr($data);
+		
+		$this->set(compact('areaId', 'data', 'selectedYear', 'yearList', 'educationLevels', 'selectedEduLevel'));
 	}
 
 	public function financePerEducationLevelEdit() {
 		$this->Navigation->addCrumb('Total Public Expenditure Per Education Level');
+
+		$currentYear = intval(date('Y'));
+		$selectedYear = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : $currentYear;
+
+		$yearList = $this->DateTime->generateYear();
+		krsort($yearList);
+
+		$selectedAreaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
+		$parentAreaId = $selectedAreaId;
 		
-		$areas = array();
-        $levels = $this->AreaLevel->find('list');
-        $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1', 'Area.visible' => 1)));
-        $this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
-        $areas[] = $topArea;
-		
-        $educationLevels = $this->PublicExpenditureEducationLevel->getEducationLevels();
+		$educationLevels = $this->PublicExpenditureEducationLevel->getEducationLevelOptions();
+		$selectedEduLevel = isset($this->params->pass[2]) ? intval($this->params->pass[2]) : key($educationLevels);
 
-		if($this->request->is('post')) {
-        	//echo '<pre>';
-        	// var_dump($this->request->data);
-            for ($i = 0; $i < count($this->request->data['Finance'])-1; $i++) {
-                //echo 'area_level_'. $i . ': '. $this->request->data['Finance']['area_level_'.$i] .'<br/>';
-                $area = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $this->request->data['Finance']['area_level_'.$i], 'Area.visible' => 1)));
-                
-                $this->Utility->unshiftArray($area, array('0'=>'--'.__('Select').'--'));
-                $areas[] = $area;
-                //echo '<br/>';
-            }
-        	//echo '</pre>';
+		$data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($selectedYear, $parentAreaId, $selectedAreaId, $selectedEduLevel);
+		//pr($data);
 
+		if ($this->request->is('post')) {
+			//pr($this->request->data);die;
+			if (!empty($this->request->data['PublicExpenditureEducationLevel'])) {
+				$expenditureData = $this->request->data['PublicExpenditureEducationLevel'];
+				$financeData = $this->request->data['Finance'];
+				$inputYear = $financeData['year'];
+				$eduLevelId = $financeData['education_level'];
 
-            $this->set('selectedYear', (isset($this->request->data['year']))? $this->request->data['year']:intval(date('Y')));
-            if(end($this->request->data['Finance']) == 0 ){
-                array_pop($this->request->data['Finance']);
-            }
-            $this->set('initAreaSelection', (isset($this->request->data['Finance']))?$this->request->data['Finance']: null);
-        }
+				foreach ($expenditureData AS $row) {
+					$row['year'] = $inputYear;
+					$row['education_level_id'] = $eduLevelId;
 
-		$this->set('levels', $levels);
-		$this->set('highestLevel', $areas);
-		$this->set('eduLevels', $educationLevels);
+					$id = intval($row['id']);
+					$value = intval($row['value']);
+					$areaId = intval($row['area_id']);
+					$educationLevelId = intval($row['education_level_id']);
+
+					if (!empty($value) && !empty($areaId) && !empty($educationLevelId)) {
+						$existingRecords = $this->PublicExpenditureEducationLevel->getRecordsCount($inputYear, $areaId, $educationLevelId);
+
+						if (empty($id)) {
+							if ($existingRecords == 0) {
+								$this->PublicExpenditureEducationLevel->create();
+
+								$this->PublicExpenditureEducationLevel->save(array('PublicExpenditureEducationLevel' => $row));
+							}
+						} else {
+							if ($existingRecords == 1) {
+								$this->PublicExpenditureEducationLevel->save(array('PublicExpenditureEducationLevel' => $row));
+							}
+						}
+					}
+				}
+
+				return $this->redirect(array('action' => 'financePerEducationLevel', $selectedYear, $selectedAreaId, $selectedEduLevel));
+			}
+		}
+
+		$this->set(compact('selectedAreaId', 'data', 'selectedYear', 'yearList', 'educationLevels', 'selectedEduLevel'));
 	}
-
-	public function viewPerEducationData($year = null, $areaId, $parentAreaId = 0) {
-        $this->autoRender = false;
-        $year = (is_null($year))? intval(date('Y')): $year ;
-
-        $data = array();
-        if($parentAreaId > 0 && $areaId == 0){
-            $areaId = $parentAreaId;
-        }
-
-        // $data = $this->PublicExpenditure->getPublicExpenditureData($year, $parentAreaId, $areaId);
-        $data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($year, $parentAreaId, $areaId);
-
-        // pr($data); 
-        // die();
-		echo json_encode($data);
-    }
 	
 	public function loadPerEducationData() {
 		$this->layout = false;
@@ -332,8 +264,9 @@ class FinanceController extends AppController {
 		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
 		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
 		$parentAreaId = $areaId;
+		$eduLevelId = isset($this->params->pass[2]) ? intval($this->params->pass[2]) : 0;
 		
-        $data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($year, $parentAreaId, $areaId);
+        $data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($year, $parentAreaId, $areaId, $eduLevelId);
 		$currency = "({$this->Session->read('configItem.currency')})";
 		
         $this->set(compact('data', 'currency'));
@@ -345,8 +278,9 @@ class FinanceController extends AppController {
 		$year = isset($this->params->pass[0]) ? intval($this->params->pass[0]) : date('Y');
 		$areaId = isset($this->params->pass[1]) ? intval($this->params->pass[1]) : 0;
 		$parentAreaId = $areaId;
+		$eduLevelId = isset($this->params->pass[2]) ? intval($this->params->pass[2]) : 0;
 		
-        $data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($year, $parentAreaId, $areaId);
+        $data = $this->PublicExpenditureEducationLevel->getPublicExpenditureData($year, $parentAreaId, $areaId, $eduLevelId);
 		$currency = "({$this->Session->read('configItem.currency')})";
 		
         $this->set(compact('data', 'currency'));
