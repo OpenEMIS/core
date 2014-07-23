@@ -149,42 +149,6 @@ class PopulationController extends AppController {
 		
 		$this->set(compact('selectedYear', 'levels', 'highestLevel', 'yearList', 'areaId', 'data'));
 	}
-
-	public function viewAreaChildren($id) {
-        $this->autoRender = false;
-        $value =$this->Area->find('list',array('conditions'=>array('Area.parent_id' => $id, 'Area.visible' => 1)));
-        $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'/*, '1' => 'ALL '*/));
-        echo json_encode($value);
-        
-    }
-
-	public function viewData($year = null, $areaId, $parentAreaId = 0) {
-        $this->autoRender = false;
-        $year = (is_null($year))? intval(date('Y')): $year ;
-        
-        //$params = array(
-        //	'fields' => array('Population.id', 'Population.age', 'Population.year', 'Population.source', 'Population.male', 'Population.female', 'Population.area_id')
-        //);
-
-        //$params['conditions']['Population.year'] = $year;
-
-        if($parentAreaId > 0 && $areaId == 0){
-	        //$params['conditions']['Population.area_id'] = $parentAreaId;
-            $areaId = $parentAreaId;
-        }//else{
-	        //$params['conditions']['Population.area_id'] = $areaId;
-        //}
-
-
-	    //$value =$this->Population->find('all', $params);
-
-        //echo json_encode($value);
-        //echo $areaId;
-        $data = $this->Utility->formatResult($this->Population->getPopulationData($year, $areaId));
-        //var_dump($data);die();
-        echo json_encode($data);
-        
-    }
 	
 	public function loadData() {
 		$this->layout = false;
@@ -214,14 +178,4 @@ class PopulationController extends AppController {
         $this->set(compact('newRowIndex'));
     }
 
-    public function populationAjax() {
-        $this->autoRender = false;
-        $return = array();
-        $return = $this->Population->savePopulationData($this->data);
-        // check if there data are updated/inserted
-        //   if data are updated/inserted pass msg "Records has been added/updated successfully".
-        // else 
-        //   tell the user that data was not not inserted or updated.
-        echo json_encode($return);
-    }
 }

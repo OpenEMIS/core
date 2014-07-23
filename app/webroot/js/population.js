@@ -83,14 +83,6 @@ var population = {
     changeOption: 0,
     // methods
 	init: function() {
-        this.isEditable = false;
-		this.addAreaSwitching();
-		this.year = $('#year_id').find(":selected").text();
-        if(population.changeOption<1){
-            $("#PopulationAreaLevel0").trigger("change");
-            this.addAreaSwitching();
-        }
-
         $('.link_add').click(function() {
 			var validSelects = $('#areapicker.areapicker select').filter(function(){
 				return parseInt($(this).val()) > 0;
@@ -116,77 +108,6 @@ var population = {
         });
 
 	},
-    show : function(id){
-        $('#'+id).css("visibility", "visible");
-    },
-    hide : function(id){
-        $('#'+id).css("visibility", "hidden");
-    },
-    addAreaSwitching : function(){
-        $('select[name*="[area_level_"]').each(function(i, obj){
-            $(obj).change(function (d, o){
-                population.changeOption = 1;
-                var TotalAreaLevel = $('select[name*="[area_level_"]').length;
-                var isAreaLevelForInput = $(this).parent().parent().parent().attr('id');
-                var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
-                var currentSelctedOptionTitle = $(this).find(':selected').html();
-                var currentSelect = $(this).attr('name').replace('data[Population][area_level_','');
-                currentSelect = currentSelect.replace(']','');
-                currentSelect = parseInt(currentSelect);
-
-                if(isAreaLevelForInput !== undefined && isAreaLevelForInput.match(/input/gi)){
-                    isAreaLevelForInput = true;
-                }else {
-                    isAreaLevelForInput = false;
-                }
-
-                if(isAreaLevelForInput){
-                    for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
-                        //disable the select element
-                        $('select[name=data\\[Population\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\[Population\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
-                        $('select[name=data\\[Population\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
-                    }
-                }else {
-                    for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
-                        //disable the select element
-                        $('select[name=data\\[Population\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\[Population\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
-                        $('select[name=data\\[Population\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
-                    }
-				}
-
-                if(currentSelctedOptionValue > 0 ){
-                    population.parentAreaIds[currentSelect] = currentSelctedOptionValue;//population.currentAreaId;
-                }else{
-                    population.parentAreaIds.splice(currentSelect, population.parentAreaIds.length - currentSelect);
-                }
-
-                population.currentAreaId = currentSelctedOptionValue;
-
-                population.renderLegendText($(this).find('option[value="'+currentSelctedOptionValue+'"]').html());
-
-
-                if(currentSelctedOptionValue >= 0 && !isAreaLevelForInput && population.parentAreaIds.length > 0 ) {
-                    population.fetchData(this);
-                }else{
-
-                    $('#mainlist .table .table_body').html('');
-                    $('.table_foot .cell_value').html(0);
-                }
-
-                if(((currentSelect === 0 && currentSelctedOptionValue > 0) || (currentSelect != 0 && currentSelctedOptionValue > 1))){
-                    population.fetchChildren(this);
-                }
-
-                if( currentSelect === 0 && currentSelctedOptionValue === 0){
-                    $('.table_body').hide();
-                    //$('.table_body').show();
-                }
-
-            });
-        });
-    },
 	
 	fetchDataByArea: function(areaId, mode) {
 		var year = $('select#populationYear').val();
@@ -221,33 +142,6 @@ var population = {
 			}
 		});
 	},
-
-    checkEdited: function() {
-        var obj = $(population.id);
-        var saveBtn = obj.find('.btn_save');
-        var disabledClass = 'btn_disabled';
-        var modified = false;
-        if(obj.find('.table_row[record-id="0"]').length>0 || population.deletedRecords.length>0) {
-            modified = true;
-        } else {
-            obj.find('.table_body input').each(function() {
-                if($(this).attr('defaultValue') != this.value) {
-                    modified = true;
-                    return false;
-                }
-            });
-        }
-        
-        if(modified) {
-            if(saveBtn.hasClass(disabledClass)) {
-                saveBtn.removeClass(disabledClass);
-            }
-        } else {
-            if(!saveBtn.hasClass(disabledClass)) {
-                saveBtn.addClass(disabledClass);
-            }
-        }
-    },
     
     computeSubtotal: function(obj) {
 
