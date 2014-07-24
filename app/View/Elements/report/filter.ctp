@@ -37,16 +37,16 @@
                 $modelFieldNot = $this->data[$modelClass][$field]['Not'];
             else
                 $modelFieldNot = false;            
-            echo $this->Form->checkbox($modelClass.'.'.$field.'.'.'Not',array('hiddenField' => true,'checked'=>$modelFieldNot));
+            echo $this->Form->checkbox($modelClass.'.'.$field.'.'.'Not',array('hiddenField' => true,'checked'=>$modelFieldNot, 'class'=>''));
             echo '</td>';            
             echo '<td>';
-            echo $this->Form->input($modelClass.'.'.$field.'.'.'Filter',array('type'=>'select','options'=>$filterOptions,'label'=>false));
+            echo $this->Form->input($modelClass.'.'.$field.'.'.'Filter',array('type'=>'select','options'=>$filterOptions,'label'=>false, 'class'=>'form-control'));
             echo '</td>';                   
             echo '<td>';
             if ($attributes['type']=='date' || $attributes['type']=='datetime')
-                $class = "datepicker";
+                $class = "datepicker form-control";
             else
-                $class = null;
+                $class = "form-control";
             echo $this->Form->input($modelClass.'.'.$field.'.'.'Example',array('type'=>'text','label'=>false,'class'=>$class));
             echo '</td>';          
             echo '</tr>';
