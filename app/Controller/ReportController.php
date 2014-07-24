@@ -78,12 +78,12 @@ class ReportController extends AppController {
             }
             $this->set('files',$this->listReports());
             $this->set('models',$models);
-        } else {pr($this->data);
+        } else {
             if (isset($this->data['Report']['new'])) {
                 $reportButton = 'new';
                 $modelClass = $this->data['Report']['model'];
-                $oneToManyOption = $this->data['Report']['one_to_many_option'];
-                $this->redirect(array('action'=>'reportsWizard',$reportButton, $modelClass, $oneToManyOption));
+                //$oneToManyOption = $this->data['Report']['one_to_many_option'];
+                $this->redirect(array('action'=>'reportsWizard',$reportButton, $modelClass));
             }
                 
             if (isset($this->data['load'])) {
@@ -369,6 +369,8 @@ class ReportController extends AppController {
             $oneToManyFieldsPosition  = array();
             $oneToManyFieldsType  = array();
             $oneToManyFieldsLength = array();
+			
+			
             
             foreach ($this->data  as $model => $fields) {
                 if ( is_array($fields) ) {
@@ -470,6 +472,8 @@ class ReportController extends AppController {
                 'order'=>$order,
                 'conditions'=>$conditions
             ));
+			
+			//pr($reportData);die;
             
             $this->layout = 'report';
                         
