@@ -149,6 +149,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 						break;
 					}
 				}
+
 				$indicatorObj = $indicator['DatawarehouseIndicator'];
 				$unitObj = $indicator['DatawarehouseUnit'];
 				$indicatorNumeratorFieldObj = $indicator['DatawarehouseField'];
@@ -184,6 +185,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
 				$modelTable = null;
+				$subgroupType = array();
 				foreach($typeOption as $type){
 					$moduleId = ${'indicator'.$type.'ModuleId'};
 					$datawarehouseModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$moduleId)));
@@ -191,46 +193,74 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$modelTable = ClassRegistry::init($modelName);
 					$joins = array();
 
+
+					pr($indicatorNumeratorFieldObj);
+
+
 					if(isset($datawarehouseModule['DatawarehouseModule']['joins'])){
-						$tempJoin = $datawarehouseModule['DatawarehouseModule']['joins'];
-						eval("\$joins = $tempJoin;");
+						$dimenJoin = $datawarehouseModule['DatawarehouseModule']['joins'];
+						eval("\$tempJoin = $dimenJoin;");
+						$joins[] = $tempJoin;
 					}
 					$fieldObj = ${'indicator'.$type.'FieldObj'};
 					$aggregate = $fieldObj['type'];
 					$fieldName = $fieldObj['name'];
-					$fieldFormat = '%s(%s.%s) as %s';
-					$group = array('area_id', 'school_year_id');
+					$fieldGroup = $fieldObj['group'];
 
-					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), 'area_id', 'school_year_id');
+					if(!empty($fieldGroup)){
+						eval("\$tempGroup = $fieldGroup;");
+					}
+
+					$group = array('area_id', 'school_year_id');
+					$classification = '';
+					foreach($tempGroup as $g){
+						$group[] = $g;
+						$subgroupName = ucwords($g);
+						$subgroup['All ' . Inflector::pluralize($subgroupName)] = 'All ' . Inflector::pluralize($subgroupName);
+
+						$subgroup[$subgroupName] = $subgroupName;
+						$classification[] = $g;
+						$subgroupType[] = $g;
+						$subgroups[] = $subgroupName;
+
+						//POPULATE SUBGROUP
+
+						//
+					}
+
+
+					$fieldFormat = '%s(%s.%s) as %s';
+
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), $g . ' as Classification', '"'. implode(",", $subgroups) . '" as SubGroups', 'area_id', 'school_year_id');
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
 					$subJoins = array();
 
 
-					$arrCondition = array();
+					$conditionTemp = array();
 					$conditionObj = ${'indicator'.$type.'CondObj'};
-
-				
-					if(!empty($conditionObj) && isset($conditionObj['DatawarehouseDimension'])){
-						/*foreach($conditionObj as $c){
-							if(isset($conditions[$c['DatawarehouseDimension']['model']][$c['DatawarehouseDimension']['field']])){
-								$temp = $conditions[$c['DatawarehouseDimension']]['model']][$c['DatawarehouseDimension']['field']];
-								unset($conditions[$c['DatawarehouseDimension']]['model']][$c['DatawarehouseDimension']['field']]);
-								
-								foreach($tempObj as $d){
-
-								}
-							}else{
-								$conditions[$c['DatawarehouseDimension']]['model']][$c['DatawarehouseDimension']['field']] = $c['value'];
-							}
-							/*
-							$condJoin = $conditionObj['DatawarehouseDimension']['joins'];
+					$conditionFormat = '%s.%s %s "%s"';
+					if(!empty($conditionObj)){
+						foreach($conditionObj as $c){
+							$conditionTemp[$c['DatawarehouseDimension']['model']][] = sprintf($conditionFormat, $c['DatawarehouseDimension']['model'],
+								$c['DatawarehouseDimension']['field'], $c['operator'], $c['value']);
+							
+							$condJoin = $c['DatawarehouseDimension']['joins'];
 							if(!empty($condJoin)){
 								eval("\$tempJoin = $condJoin;");
-								$subJoins[] = $tempJoin;
+								$joins[] = $tempJoin;
 							}
-						}*/
+						}
+					}
+
+
+					foreach($conditionTemp as $key=>$value){
+						if(count(array_keys($value))>1){
+							$conditions['OR'] = $value;
+						}else{
+							$conditions[] = $value;
+						}
 					}
 
 					$dbo = $modelTable->getDataSource();
@@ -238,7 +268,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 					${'subquery'.$type} = $dbo->buildStatement(
 						array(
 							'fields' => $fields,
-							'joins'=> array($joins),
+							'joins'=> $joins,
 							'table' => $dbo->fullTableName($modelTable),
 							'alias' => $modelName,
 							'group' =>  $group,
@@ -250,7 +280,10 @@ class DevInfo6DatawarehouseComponent extends Component {
 					pr(${'subquery'.$type});
 				}
 
- 				$outerQueryField = array('IFNULL(Numerator.numerator, "No Data") as DataValue', 'IFNULL(Numerator.numerator, 0) as Numerator', 'NULL as Denomincator', 'area_id', 'school_year_id');
+
+
+
+ 				$outerQueryField = array('IFNULL(Numerator.numerator, "No Data") as DataValue', 'Numerator.SubGroups', 'Numerator.Classification', 'IFNULL(Numerator.numerator, 0) as Numerator', 'NULL as Denomincator', 'area_id', 'school_year_id');
 				switch($unitObj['id']){
 					case 2:
 					 	//RATE
@@ -262,7 +295,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 				        break;
 				    case 4:
 					 	//PERCENT
-				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
+				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'Numerator.SubGroups', 'Numerator.Classification', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
 				       break;
 				}
 
