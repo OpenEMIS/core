@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 27, 2014 at 05:44 PM
+-- Generation Time: Jul 24, 2014 at 09:54 AM
 -- Server version: 5.6.11
 -- PHP Version: 5.4.24
 
@@ -109,5 +109,15 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (67, 'TrainingNeedCategory', 'Need Categories', 'Training', NULL, 68, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (68, 'TrainingResultType', 'Result Types', 'Training', NULL, 69, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (69, 'TrainingAchievementType', 'Achievement Types', 'Training', NULL, 70, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(70, 'FeeType', 'Fee Types', 'Finance', NULL, 71, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (71, 'StaffCustomField', 'Custom Fields', 'Staff', '{"model":"Staff.StaffCustomField"}', 66, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(72, 'StaffCustomFieldOption', 'Custom Fields Options', 'Staff', '{"model":"Staff.StaffCustomFieldOption"}', 67, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(72, 'StaffCustomFieldOption', 'Custom Fields Options', 'Staff', '{"model":"Staff.StaffCustomFieldOption"}', 67, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(73, 'StaffLeaveType', 'Leave Type', 'Staff', NULL, 72, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(74, 'LeaveStatus', 'Leave Status', 'Staff', NULL, 73, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `field_option_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(NULL, 'Sick Leave', 0, 1, 1, 0, NULL, NULL, 73, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Pending', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Approved', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Rejected', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Cancelled', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00');
