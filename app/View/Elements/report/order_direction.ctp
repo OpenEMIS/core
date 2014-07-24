@@ -8,7 +8,7 @@
             );
             echo '<tr>';         
             echo '<td>';
-            echo $this->Form->input('OrderDirection',array('type'=>'select','options'=>$directionOptions,'label'=>false));            
+            echo $this->Form->input('OrderDirection',array('type'=>'select','options'=>$directionOptions,'label'=>false, 'class'=>'form-control'));            
             echo '</td>';             
             echo '</tr>';
         ?>

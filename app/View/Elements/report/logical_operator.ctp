@@ -8,7 +8,7 @@
             );
             echo '<tr>';         
             echo '<td>';
-            echo $this->Form->input('Logical',array('type'=>'select','options'=>$logicalOptions,'label'=>false));            
+            echo $this->Form->input('Logical',array('type'=>'select','options'=>$logicalOptions,'label'=>false, 'class'=>'form-control'));            
             echo '</td>';             
             echo '</tr>';
         ?>
