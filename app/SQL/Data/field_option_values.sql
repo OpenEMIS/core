@@ -37,4 +37,9 @@ INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`,
 (13, 'Practical', 0, 1, 1, 0, '', '', 68, NULL, NULL, 1, '2014-05-09 17:21:35'),
 (14, 'Attendance', 0, 1, 1, 0, '', '', 68, NULL, NULL, 1, '2014-05-09 17:21:46'),
 (17, 'School Based Study', 1, 1, 1, 0, NULL, NULL, 69, NULL, NULL, 1, '2014-06-17 00:00:00'),
-(18, 'Self Based Study', 2, 1, 1, 0, NULL, NULL, 69, NULL, NULL, 1, '2014-06-17 00:00:00');
+(18, 'Self Based Study', 2, 1, 1, 0, NULL, NULL, 69, NULL, NULL, 1, '2014-06-17 00:00:00'),
+(NULL, 'Sick Leave', 0, 1, 1, 0, NULL, NULL, 73, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Pending', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Approved', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Rejected', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Cancelled', 0, 1, 1, 0, NULL, NULL, 74, NULL, NULL, 1, '0000-00-00 00:00:00');
