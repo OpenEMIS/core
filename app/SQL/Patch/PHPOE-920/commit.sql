@@ -139,7 +139,7 @@ from census_students_bu;
 
 DROP TABLE IF EXISTS `census_students_bu`;
 
-UPDATE `dev_openemis_demo`.`navigations` SET `action`='indicator', `pattern`='^indicator' WHERE `id`='43';
+UPDATE `navigations` SET `action`='indicator', `pattern`='^indicator' WHERE `id`='43';
 
 INSERT INTO `datawarehouse_modules` (`id`, `name`, `model`, `joins`, `enabled`, `created_user_id`, `created`) 
 VALUES ('1', 'Student', 'CensusStudent', 'array(\n  \'type\' => \'INNER\',\n  \'table\' => \'institution_sites\',\n \'alias\' => \'InstitutionSite\',\n \'conditions\' => array(\'CensusStudent.institution_site_id = InstitutionSite.id\')\n)', '1', '1', '2014-07-14');

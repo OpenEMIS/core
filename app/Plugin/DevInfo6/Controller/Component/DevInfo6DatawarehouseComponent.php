@@ -59,6 +59,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 		$this->DatawarehouseIndicator = ClassRegistry::init('DataProcessing.DatawarehouseIndicator');
 		$this->DatawarehouseIndicatorCondition = ClassRegistry::init('DataProcessing.DatawarehouseIndicatorCondition');
 		$this->DatawarehouseModule = ClassRegistry::init('DataProcessing.DatawarehouseModule');
+		$this->DatawarehouseDimension = ClassRegistry::init('DataProcessing.DatawarehouseDimension');
 		$this->Indicator  = ClassRegistry::init('DevInfo6.Indicator');
 		$this->Unit = ClassRegistry::init('DevInfo6.Unit');
 		$this->SubgroupVal = ClassRegistry::init('DevInfo6.SubgroupVal');
@@ -111,7 +112,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 		);
 		$_settings = array_merge($_settings, $settings);
 		
-		$indicatorList = $this->DatawarehouseIndicator->find('all', array(
+		$indicator = $this->DatawarehouseIndicator->find('first', array(
 			'recursive' => 2,
 			'conditions' => array('DatawarehouseIndicator.enabled' => 1, 'DatawarehouseIndicator.id' => $indicatorId)
 		));
@@ -143,7 +144,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 				
 			$this->Logger->write("Start Processing Indicators");
 			
-			foreach($indicatorList as $indicator) {
+			if(!empty($indicator)) {
 				if(!empty($onBeforeGenerate['callback'])) {
 					if(!call_user_func_array($onBeforeGenerate['callback'], $onBeforeGenerate['params'])) {
 						break;
@@ -153,9 +154,21 @@ class DevInfo6DatawarehouseComponent extends Component {
 				$indicatorObj = $indicator['DatawarehouseIndicator'];
 				$unitObj = $indicator['DatawarehouseUnit'];
 				$indicatorNumeratorFieldObj = $indicator['DatawarehouseField'];
-				$indicatorNumeratorModuleId = $indicatorNumeratorFieldObj['datawarehouse_module_id'];
 				$indicatorNumeratorCondObj = $indicator['DatawarehouseIndicatorCondition'];
 				$typeOption = array('Numerator');
+
+				$datawarehouseModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$indicatorNumeratorFieldObj['datawarehouse_module_id'])));
+				$modelName = $datawarehouseModule['DatawarehouseModule']['model'];
+				$modelTable = ClassRegistry::init($modelName);
+				$joins = array();
+
+
+				$datawarehouseDimension = $this->DatawarehouseDimension->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseDimension.datawarehouse_module_id'=>$indicatorNumeratorFieldObj['datawarehouse_module_id'])));
+				
+
+				if(!empty($datawarehouseDimension)){
+					
+				}
 
 				$indicatorDenominatorFieldObj = array();
 				$indicatorDenominatorModel = array();
@@ -163,7 +176,6 @@ class DevInfo6DatawarehouseComponent extends Component {
 				if(isset($indicator['Denominator']['id'])){
 					$typeOption = array('Numerator', 'Denominator');
 					$indicatorDenominatorFieldObj = $indicator['Denominator']['DatawarehouseField'];
-					$indicatorDenominatorModuleId= $indicatorDenominatorFieldObj['datawarehouse_module_id'];
 					$indicatorDenominatorCondObj = $indicator['Denominator']['DatawarehouseIndicatorCondition'];
 					$hasDenominator = true;
 				}
@@ -188,13 +200,13 @@ class DevInfo6DatawarehouseComponent extends Component {
 				$subgroupType = array();
 				foreach($typeOption as $type){
 					$moduleId = ${'indicator'.$type.'ModuleId'};
-					$datawarehouseModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$moduleId)));
-					$modelName = $datawarehouseModule['DatawarehouseModule']['model'];
-					$modelTable = ClassRegistry::init($modelName);
 					$joins = array();
 
+					if(!empty($datawarehouseModule['DatawarehouseDimension'])){
+						foreach($datawarehouseModule['DatawarehouseDimension'] as $key=>$val){
 
-					pr($indicatorNumeratorFieldObj);
+						}
+					}
 
 
 					if(isset($datawarehouseModule['DatawarehouseModule']['joins'])){
@@ -205,33 +217,36 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$fieldObj = ${'indicator'.$type.'FieldObj'};
 					$aggregate = $fieldObj['type'];
 					$fieldName = $fieldObj['name'];
-					$fieldGroup = $fieldObj['group'];
-
-					if(!empty($fieldGroup)){
-						eval("\$tempGroup = $fieldGroup;");
-					}
 
 					$group = array('area_id', 'school_year_id');
-					$classification = '';
+
+
+					$classification = array();
+
+
 					foreach($tempGroup as $g){
 						$group[] = $g;
 						$subgroupName = ucwords($g);
-						$subgroup['All ' . Inflector::pluralize($subgroupName)] = 'All ' . Inflector::pluralize($subgroupName);
+						$subgroups['All ' . Inflector::humanize(Inflector::pluralize($subgroupName))] = 'All ' . Inflector::humanize(Inflector::pluralize($subgroupName));
 
-						$subgroup[$subgroupName] = $subgroupName;
+						//$subgroups[$subgroupName] = $subgroupName;
 						$classification[] = $g;
 						$subgroupType[] = $g;
-						$subgroups[] = $subgroupName;
 
 						//POPULATE SUBGROUP
 
 						//
 					}
 
+					$classificationField = $classification;
+					if(count($classification)>1){
+						$classificationField = 'CONCAT('. implode($classification, ', "-", ') . ')';
+					}
+					$group[] = 'Classification';
 
 					$fieldFormat = '%s(%s.%s) as %s';
 
-					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), $g . ' as Classification', '"'. implode(",", $subgroups) . '" as SubGroups', 'area_id', 'school_year_id');
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), '"'. implode(",", $subgroups) . '" as SubGroups', 'area_id', 'school_year_id');
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
@@ -283,7 +298,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 
 
 
- 				$outerQueryField = array('IFNULL(Numerator.numerator, "No Data") as DataValue', 'Numerator.SubGroups', 'Numerator.Classification', 'IFNULL(Numerator.numerator, 0) as Numerator', 'NULL as Denomincator', 'area_id', 'school_year_id');
+ 				$outerQueryField = array('Numerator.numerator as DataValue', 'Numerator.SubGroups', 'Numerator.numerator as Numerator', 'NULL as Denomincator', 'area_id', 'school_year_id');
 				switch($unitObj['id']){
 					case 2:
 					 	//RATE
@@ -295,7 +310,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 				        break;
 				    case 4:
 					 	//PERCENT
-				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'Numerator.SubGroups', 'Numerator.Classification', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
+				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'Numerator.SubGroups', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
 				       break;
 				}
 
