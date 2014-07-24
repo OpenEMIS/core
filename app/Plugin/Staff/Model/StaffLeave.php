@@ -17,8 +17,14 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffLeave extends StaffAppModel {
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('date_from', 'date_to'));
 	public $belongsTo = array(
-		'StaffLeaveType',
-		'LeaveStatus',
+		'StaffLeaveType' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'staff_leave_type_id'
+		),
+		'LeaveStatus' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'leave_status_id'
+		),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -70,59 +76,59 @@ class StaffLeave extends StaffAppModel {
 	}
 	
 	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
+		$controller->set('model', $this->alias);
 		$controller->FileUploader->fileVar = 'files';
 		$controller->FileUploader->fileModel = 'StaffLeaveAttachment';
 		$controller->FileUploader->allowEmptyUpload = true;
 		$controller->FileUploader->additionalFileType();
-    }
+	}
 	
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'name', 'model' => 'StaffLeaveType', 'labelKey' => 'general.type'),
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'StaffLeaveType', 'labelKey' => 'general.type'),
 				array('field' => 'name', 'model' => 'LeaveStatus', 'labelKey' => 'general.status'),
-                array('field' => 'date_from'),
-                array('field' => 'date_to'),
-                array('field' => 'comments'),
+				array('field' => 'date_from'),
+				array('field' => 'date_to'),
+				array('field' => 'comments'),
 				array('field' => 'number_of_days'),
 				array('field' => 'file_name', 'model' => 'StaffLeaveAttachment', 'labelKey' => 'general.attachments', 'multi_records' => true, 'type' => 'files', 'url' => array('action' => 'leavesAttachmentsDownload')),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 	
 	public function leaves($controller, $params) {
-        $controller->Navigation->addCrumb('Leaves');
+		$controller->Navigation->addCrumb('Leaves');
 		$header = __('Leaves');
-        $staffId = $controller->Session->read('StaffId');
+		$staffId = $controller->Session->read('Staff.id');
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser')));
 		$data = $this->findAllByStaffId($staffId, array('StaffLeave.*', 'StaffLeaveType.name', 'LeaveStatus.name'), array('StaffLeave.date_from'));
-        $controller->set(compact('header','data'));
-    }
+		$controller->set(compact('header','data'));
+	}
 
-    public function leavesAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Leaves');
+	public function leavesAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Add Leaves');
 		$header = __('Add Leaves');
-        $typeOptions = $this->StaffLeaveType->findList(true);
-        $statusOptions = $this->LeaveStatus->findList(true);
+		$typeOptions = $this->StaffLeaveType->getList();
+		$statusOptions = $this->LeaveStatus->getList();
 
-        if ($controller->request->is('post')) {
+		if ($controller->request->is('post')) {
 			
 			$postData = $controller->request->data[$this->alias];
-            $postData['staff_id'] = $controller->Session->read('StaffId');
+			$postData['staff_id'] = $controller->Session->read('Staff.id');
 			unset($postData['files']);
 			$postFileData = $controller->request->data[$this->alias]['files'];
 			//pr($postFileData);
 			//pr($postData);die;
-            $this->set($postData);
-            if ($this->validates()) {
+			$this->set($postData);
+			if ($this->validates()) {
 				if($this->save($postData)){
 					$this->create();
 					$id = $this->getInsertID();
@@ -140,52 +146,52 @@ class StaffLeave extends StaffAppModel {
 					return $controller->redirect(array('action' => 'leaves'));
 					
 				}
-            }
-        }
+			}
+		}
 		
 		$controller->set(compact('header', 'statusOptions', 'typeOptions'));
-    }
+	}
 
-    public function leavesView($controller, $params) {
-        $controller->Navigation->addCrumb('Leaves Details');
+	public function leavesView($controller, $params) {
+		$controller->Navigation->addCrumb('Leaves Details');
 		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
 		$header = __('Leaves Details');
 		
 		$this->recursive = 1;
 		$data = $this->findById($id);
 		if (empty($data)) {
-		   $controller->Message->alert('general.noData');
-		   return $controller->redirect(array('action' => 'leaves'));
-	   }
-	   
-	   $attachments = $controller->FileUploader->getList(array('conditions' => array('StaffLeaveAttachment.staff_leave_id'=>$id)));
-	   $data['multi_records'] = $attachments;
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'leaves'));
+		}
+		
+		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffLeaveAttachment.staff_leave_id'=>$id)));
+		$data['multi_records'] = $attachments;
 
-	   $controller->Session->write('StaffLeaveId', $id);
-        $fields = $this->getDisplayFields($controller);
-        $controller->set(compact('data', 'header', 'fields', 'id'));
-    }
+		$controller->Session->write('StaffLeaveId', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('data', 'header', 'fields', 'id'));
+	}
 
-    public function leavesEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Edit Leaves');
+	public function leavesEdit($controller, $params) {
+		$controller->Navigation->addCrumb('Edit Leaves');
 		$header = __('Edit Leaves');
 		
 		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-        $typeOptions = $this->StaffLeaveType->findList(true);
-        $statusOptions = $this->LeaveStatus->findList(true);
+		$typeOptions = $this->StaffLeaveType->getList();
+		$statusOptions = $this->LeaveStatus->getList();
 		
 		$data = $this->findById($id);
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffLeaveAttachment.staff_leave_id'=>$id)));
 
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $postData = $controller->request->data[$this->alias];
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$postData = $controller->request->data[$this->alias];
 			//pr($postData);die;
-            $postData['staff_id'] = $controller->Session->read('StaffId');
+			$postData['staff_id'] = $controller->Session->read('Staff.id');
 			unset($postData['files']);
 			$postFileData = $controller->request->data[$this->alias]['files'];
 	
-            $this->set($postData);
-            if ($this->validates()) {
+			$this->set($postData);
+			if ($this->validates()) {
 				if($this->save($postData)){
 					//if(!empty($postFileData['tmp_name'])){ 
 						$controller->FileUploader->additionData = array('staff_leave_id' => $id);
@@ -200,62 +206,62 @@ class StaffLeave extends StaffAppModel {
 					//}
 					//return $controller->redirect(array('action' => 'leavesView', $id));
 				}
-            }
-        }
+			}
+		}
 		else{
 			if (empty($data)) {
-                return $controller->redirect(array('action' => 'leaves'));
-            }
-            $controller->request->data = $data;
+				return $controller->redirect(array('action' => 'leaves'));
+			}
+			$controller->request->data = $data;
 		}
 		
 		$controller->set(compact('header', 'statusOptions', 'typeOptions', 'attachments'));
-    }
+	}
 	
 	public function leavesDelete($controller, $params) {
-        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffLeaveId')) {
-            $id = $controller->Session->read('StaffLeaveId');
+		if ($controller->Session->check('StaffLeaveId')) {
+			$id = $controller->Session->read('StaffLeaveId');
 
-            if ($this->delete($id)) {
+			if ($this->delete($id)) {
 				$StaffLeaveAttachment = ClassRegistry::init('StaffLeaveAttachment');
 				$StaffLeaveAttachment->deleteAll(array('StaffLeaveAttachment.staff_leave_id' => $id)); 
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
 
-            $controller->Session->delete('StaffLeaveId');
+			$controller->Session->delete('StaffLeaveId');
 
-            return $controller->redirect(array('action' => 'leaves'));
-        }
-    }
+			return $controller->redirect(array('action' => 'leaves'));
+		}
+	}
 
-    public function leavesAjaxAttachmentsLeaveDelete($controller, $params) {
-        $this->render = false;
-        if ($controller->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $controller->Utility->setAjaxResult('alert', $result);
-            $id = $params->data['id'];
+	public function leavesAjaxAttachmentsLeaveDelete($controller, $params) {
+		$this->render = false;
+		if ($controller->request->is('post')) {
+			$result = array('alertOpt' => array());
+			$controller->Utility->setAjaxResult('alert', $result);
+			$id = $params->data['id'];
 
 			$StaffLeaveAttachment = ClassRegistry::init('StaffLeaveAttachment');
-            if ($StaffLeaveAttachment->delete($id)) {
+			if ($StaffLeaveAttachment->delete($id)) {
 				$msgData  = $controller->Message->get('FileUplaod.success.delete');
-                $result['alertOpt']['text'] = $msgData['msg'];// __('File is deleted successfully.');
-            } else {
+				$result['alertOpt']['text'] = $msgData['msg'];// __('File is deleted successfully.');
+			} else {
 				$msgData  = $controller->Message->get('FileUplaod.error.delete');
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = $msgData;//__('Error occurred while deleting file.');
-            }
+				$result['alertType'] = $this->Utility->getAlertType('alert.error');
+				$result['alertOpt']['text'] = $msgData;//__('Error occurred while deleting file.');
+			}
 			
-            return json_encode($result);
-        }
-    }
+			return json_encode($result);
+		}
+	}
 
-    public function leavesAttachmentsDownload($controller, $params) {
+	public function leavesAttachmentsDownload($controller, $params) {
 		$id = $params['pass'][0];
 		$this->render = false;
 		$controller->FileUploader->downloadFile($id);
-    }
+	}
 	
 	public function leavesAjaxAddField($controller, $params) {
 		$this->render =false;
