@@ -36,7 +36,7 @@ var objDatawarehouse = {
         var operatorOption = $('.'+objType+"OperatorOption");
         var fieldOption = $('.'+objType+"FieldOption");
         var fieldID = $('.'+objType+"FieldID");
-        
+        var maskId;
         var addDimensionRow = $('.'+objType+'-add-dimension-row');
         if(moduleID === ""){
             operatorOption.children('option:not(:first)').remove();
@@ -74,8 +74,9 @@ var objDatawarehouse = {
                      $.each(data.operatorOption, function(key, value) {              
                         $('<option>').val(key).text(value).appendTo(operatorOption);
                     });
-
-                }
+                    $.unmask({id: maskId});
+                },
+                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"-dimension-row"}); }
             });
         }
     },
@@ -145,6 +146,7 @@ var objDatawarehouse = {
         var dimensionOption = $(obj).val();
         var dimensionValueOption = $('.'+objType+index+"DimensionValueOption");
         var dimensionOptionName = $('.'+objType+index+"DimensionOptionName");
+        var maskId;
         if(dimensionOption === ""){
             dimensionValueOption[0].options.length = 0;
             dimensionOptionName.val("");
@@ -163,8 +165,9 @@ var objDatawarehouse = {
                      $.each(data.dimensionValueOption, function(key, value) {              
                         $('<option>').val(key).text(value).appendTo(dimensionValueOption);
                     });
-
-                }
+                    $.unmask({id: maskId});
+                },
+                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"-dimension-row"}); }
             });
         }
     },

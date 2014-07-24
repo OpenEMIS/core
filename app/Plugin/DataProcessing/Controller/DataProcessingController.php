@@ -997,7 +997,7 @@ class DataProcessingController extends DataProcessingAppController {
 
             if(!empty($data)){
                 foreach($data as $d){
-                    $fieldOptions[$d['DatawarehouseField']['name']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+                    $fieldOptions[$d['DatawarehouseField']['field']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
                     $operatorOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
                 }
             }
