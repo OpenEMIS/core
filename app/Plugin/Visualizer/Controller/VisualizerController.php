@@ -18,7 +18,7 @@
 class VisualizerController extends VisualizerAppController {
 
 	public $uses = Array('Visualizer.DIArea','Visualizer.DIData');
-	public $components = array('Paginator', 'FusionCharts.FusionCharts');
+	public $components = array('Paginator', 'FusionCharts.FusionCharts', 'HighCharts.HighCharts');
 	public $nextPg = '';
 	public $prevPg = '';
 	//public $rootURL = '';
@@ -78,13 +78,14 @@ class VisualizerController extends VisualizerAppController {
 			
 			$tabs['table'] = array('name' => 'Table', 'url' => $rootURL.'Visualizer/visualization/table/'.$id);
 			$tabs['column'] = array('name' => 'Column', 'url' => $rootURL.'Visualizer/visualization/column/'.$id);
-			$tabs['stackcolumn'] = array('name' => 'Stack Column', 'url' => $rootURL.'Visualizer/visualization/stackcolumn/'.$id);
+			$tabs['column-stack'] = array('name' => 'Stack Column', 'url' => $rootURL.'Visualizer/visualization/column-stack/'.$id);
 			$tabs['bar'] = array('name' => 'Bar', 'url' => $rootURL.'Visualizer/visualization/bar/'.$id);
-			$tabs['stackbar'] = array('name' => 'Stack Bar', 'url' => $rootURL.'Visualizer/visualization/stackbar/'.$id);
+			$tabs['bar-stack'] = array('name' => 'Stack Bar', 'url' => $rootURL.'Visualizer/visualization/bar-stack/'.$id);
 			$tabs['line'] = array('name' => 'Line', 'url' => $rootURL.'Visualizer/visualization/line/'.$id);
 			$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/visualization/area/'.$id);
 			$tabs['pie'] = array('name' => 'Pie', 'url' => $rootURL.'Visualizer/visualization/pie/'.$id);
 			$tabs['scatter'] = array('name' => 'Scatter', 'url' => $rootURL.'Visualizer/visualization/scatter/'.$id);
+	//		$tabs['hightchart'] = array('name' => 'HighChart', 'url' => $rootURL.'Visualizer/visualization/hightchart/'.$id);
 			
 			if(!empty($this->params['pass'][0])){
 				$selectedTab = $this->params['pass'][0];
@@ -552,18 +553,18 @@ class VisualizerController extends VisualizerAppController {
 				$showVisualization = false;
 				$this->Message->alert('visualizer.setting.minScatterDimension');
 			}
-			else{
+			/*else{
 				$setupChartOption = array('url' => array('controller' => 'Visualizer', 'action' => 'VisualizeFusionChart',$visualType, $id), 'width'=> 950, 'height' => 713);
 				$displayChartData = $this->FusionCharts->getDisplayType($visualType, $setupChartOption);//array('chartURLdata' => array('controller' => 'Visualizer', 'action' => 'VisualizeBarFusionChart', $id),'swfUrl' => 'ScrollColumn2D.swf', 'tWidth' => '940', 'tHeight' => '705');
 
 				$this->set('displayChartData',$displayChartData);
-			}
+			}*/
 		}
 		
 		$this->set(compact('header', 'data', 'visualType', 'showVisualization', 'id'));
 	}
 
-	
+	/*
 	public function VisualizeFusionChart($visualType, $id){
 		$this->autoRender = false;
 		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
@@ -607,6 +608,41 @@ class VisualizerController extends VisualizerAppController {
 		}
 		
 		return $fusionFormatData;
+	}
+	*/
+	
+	public function VisualizeHighChart($visualType, $id){
+		$this->autoRender = false;
+		
+		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$rawData = $this->DIData->find('all', $selectedOptions);
+		
+		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
+		$selectedUnitIds = $this->Session->read('visualizer.visualization.'.$id.'.unit');
+		$selectedDimensionIds = $this->Session->read('visualizer.visualization.'.$id.'.IUS');
+		$selectedAreaIds = $this->Session->read('visualizer.visualization.'.$id.'.area');
+		$selectedTimeperiodIds = $this->Session->read('visualizer.visualization.'.$id.'.timeperiod');
+		$selectedSourceIds = $this->Session->read('visualizer.visualization.'.$id.'.source');
+
+		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
+		$IUSRawData = $di6IndicatorUnitSubgroup->getDimensions(array('IUS' => $selectedDimensionIds));
+
+		$areaRawData = $this->DIArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
+
+		$di6TimePeriod = ClassRegistry::init('Visualizer.TimePeriod');
+		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds)));
+	
+		$this->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
+		
+		/*$jsonData['chart']= array('type' => 'bar');
+		$jsonData['title']= array('text' => 'Fruit Consumption');
+		$jsonData['xAxis']= array('categories' => array('Apples', 'Bananas', 'Oranges'));
+		$jsonData['yAxis']= array('title' => array('text' => 'Fruit eaten'));
+		$jsonData['series']= array(array('name' => 'Jane', 'data' => array(1, 0, 4)),array('name' => 'John', 'data' => array(5, 7, 3)));
+		*/
+		$jsonData = $this->HighCharts->getChartData($visualType, $rawData);
+		
+		return $jsonData;
 	}
 	
 	public function genCSV($id) {

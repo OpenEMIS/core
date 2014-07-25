@@ -2,9 +2,7 @@
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/HighCharts/js/highcharts', false);
-echo $this->Html->script('/HighCharts/js/modules/exporting', false);
-echo $this->Html->script('Visualizer.visualizer.visualization', false);
+echo $this->Html->script('/FusionCharts/js/Charts/FusionCharts', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
 $this->assign('contentHeader', $header);
@@ -40,7 +38,15 @@ if ($visualType == 'table') {
 	echo $this->Html->div('visualizer-list-table disable-overflow', $displayTable);
 } else {
 	if ($showVisualization) {
-		echo $this->Html->div('highchart-big', '', array('id' => 'highchart-container', 'ref' => $id, 'type' => $visualType));
+			$key = '0';
+			$setupData['chartContainerId'] = 'visualizerContainer' . $key;
+			$setupData['chartVarId'] = 'visualizerVar' . $key;
+			$setupData['chartId'] = 'visualizerId-' . $key;
+
+			$setupData = array_merge($setupData, $displayChartData);
+
+			echo $this->element('chartTemplate', $setupData, array('plugin' => 'FusionCharts'));
+		
 	}
 }
 

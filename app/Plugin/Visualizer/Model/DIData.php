@@ -22,12 +22,12 @@ class DIData extends VisualizerAppModel {
 		$data = $this->find('all', array(
 			'conditions' => array('DIData.IUSNID' => $ius),
 			'group' => array('DIData.TimePeriod_NId' ),
-			'fields' => array('Timeperiod.TimePeriod_NId','TimePeriod.TimePeriod'),
+			'fields' => array('TimePeriod.TimePeriod_NId','TimePeriod.TimePeriod'),
 			'joins' => array(
 				array(
 					'table' => 'ut_timeperiod',
 					'alias' => 'TimePeriod',
-					'conditions' => array('Timeperiod.TimePeriod_NId = DIData.TimePeriod_NId')
+					'conditions' => array('TimePeriod.TimePeriod_NId = DIData.TimePeriod_NId')
 				),
 			)
 		));
@@ -44,7 +44,7 @@ class DIData extends VisualizerAppModel {
 		$paginateOptions = array(
 			'conditions' => array('DIData.IUSNId' => $ius, 'DIData.Area_NId' => $areaIds, 'DIData.TimePeriod_NId' => $timeperiodIds, 'DIData.Source_NId' => $sourceIds),
 			'fields' => array(
-				'Timeperiod.TimePeriod_NId','TimePeriod.TimePeriod',
+				'TimePeriod.TimePeriod_NId','TimePeriod.TimePeriod',
 				'DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name',
 				'Indicator.Indicator_NId', 'Indicator.Indicator_Name',
 				'Unit.Unit_NId', 'Unit.Unit_Name',
@@ -57,7 +57,7 @@ class DIData extends VisualizerAppModel {
 					'table' => 'ut_timeperiod',
 					'alias' => 'TimePeriod',
 					'type' => $joinMethod,
-					'conditions' => array('Timeperiod.TimePeriod_NId = DIData.TimePeriod_NId')
+					'conditions' => array('TimePeriod.TimePeriod_NId = DIData.TimePeriod_NId')
 				),
 				array(
 					'table' => 'ut_area_en',
@@ -117,7 +117,7 @@ class DIData extends VisualizerAppModel {
 					'table' => 'ut_timeperiod',
 					'alias' => 'TimePeriod',
 					'type' => $joinMethod,
-					'conditions' => array('Timeperiod.TimePeriod_NId = DIData.TimePeriod_NId')
+					'conditions' => array('TimePeriod.TimePeriod_NId = DIData.TimePeriod_NId')
 				),
 				array(
 					'table' => 'ut_area_en',
