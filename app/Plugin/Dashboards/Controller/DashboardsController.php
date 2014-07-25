@@ -52,12 +52,11 @@ class DashboardsController extends DashboardsAppController {
 				$this->bodyTitle = $institutionSiteName;
 
 				$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
-				$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
+				$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index', 'plugin' => false));
 			} else {
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 			}
 		}
-		
 	}
 
 	public function dashboardReport(){
