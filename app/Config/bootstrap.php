@@ -165,6 +165,7 @@ CakePlugin::load(array('Dashboards' => array('routes' => true)));
 CakePlugin::load(array('Translations' => array('routes' => true)));
 CakePlugin::load(array('Visualizer' => array('routes' => true)));
 CakePlugin::load(array('FusionCharts' => array('routes' => true)));
+CakePlugin::load(array('HighCharts' => array('routes' => true)));
 CakePlugin::load('DevInfo6');
 
 // Custom Reports
