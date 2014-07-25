@@ -190,7 +190,7 @@
                       }
                     }     
 
-                    elmStepContainer.height($($(selStep, obj).attr("href"), obj).height() + 20);               
+                    elmStepContainer.height($($(selStep, obj).attr("href"), obj).height() + 15);               
                     if(options.transitionEffect == 'slide'){
                       $($(curStep, obj).attr("href"), obj).slideUp("fast",function(e){
                             $($(selStep, obj).attr("href"), obj).slideDown("fast");

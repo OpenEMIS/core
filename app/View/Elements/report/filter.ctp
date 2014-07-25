@@ -1,5 +1,5 @@
     <!-- Copyright (c) 2012-2013 Luis E. S. Dias - www.smartbyte.com.br -->
-    <fieldset>
+    <fieldset class="section_break">
         <legend><?php echo $modelClass; ?></legend>
         <table class="reportManagerFilterSelector" cellpadding="0" cellspacing="0">
             <thead>

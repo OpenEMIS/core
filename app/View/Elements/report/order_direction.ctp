@@ -1,4 +1,4 @@
-    <fieldset>
+    <fieldset class="section_break">
         <legend><?php echo __d('report_manager','Order Direction'); ?></legend>
         <table class="reportManagerOrderDirectionSelector" cellpadding="0" cellspacing="0">
 	<?php
