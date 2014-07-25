@@ -242,7 +242,7 @@ class QADashboardComponent extends Component {
 	
 	public function getSummaryJorData($options){
 		$jorIndicatorUnitSubgroupData = ClassRegistry::init('Dashboards.JORIndicatorUnitSubgroup');
-		
+	//	pr($options['areaIds']);die;
 		$conditions = array('TimePeriod_NId' => $options['TimePeriod_Nid']);
 		$indicators = $this->return_flat_array($options['indicators']);
 		$unitIndicators = $this->return_flat_array($options['UnitIds']);
@@ -252,7 +252,7 @@ class QADashboardComponent extends Component {
 		$IUSNid = $jorIndicatorUnitSubgroupData->getIUSNid($indicators, $unitIndicators ,$subgroupVal);
 		
 		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$conditions = array('JORData.IUSNId' => $IUSNid,'JORData.TimePeriod_NId' => $options['TimePeriod_Nid'], 'JORData.Area_NId' => $areas);
+		$conditions = array('IUSNId' => $IUSNid,'TimePeriod_NId' => $options['TimePeriod_Nid'], 'Area_NId' => $areas);
 		$data = $jorMainData->getData($conditions);
 
 		return $data;
@@ -292,7 +292,7 @@ class QADashboardComponent extends Component {
 	}*/
 	
 	
-	/*// ======================
+	// ======================
 	//	Setup Chart Data
 	// ======================
 	public function setupChartInfo($caption){
@@ -537,6 +537,6 @@ class QADashboardComponent extends Component {
 
 		return $returnData;
 	}
-*/
+
 }
 ?>
