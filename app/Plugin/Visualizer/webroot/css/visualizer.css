@@ -52,3 +52,7 @@ a.btn_save:active{
 .mt12{
 	margin-top: 12px;
 }
+
+.highchart-big{
+	height:713px;
+}
