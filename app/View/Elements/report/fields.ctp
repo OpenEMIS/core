@@ -1,4 +1,4 @@
-<fieldset>
+<fieldset class="section_break">
 	<legend><?php echo $modelClass; ?></legend>
 	<table class="reportManagerFieldSelector" cellpadding="0" cellspacing="0">
 		<thead>

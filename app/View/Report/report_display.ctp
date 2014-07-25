@@ -1,4 +1,13 @@
 <!--h1><?php echo ($reportName == '' ? 'Report Manager' : $reportName);?></h1-->
+<?php if ($this->Paginator->counter('{:pages}') > 1) : ?>
+	<div class="row">
+		<ul id="pagination">
+			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
+			<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
+			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
+		</ul>
+	</div>
+<?php endif; ?>
 <div id="reportManagerDisplay">
     <?php 
     $counter = 0;

@@ -1,4 +1,4 @@
-    <fieldset>
+    <fieldset class="section_break">
         <legend><?php echo __d('report_manager','Logical Operator'); ?></legend>
         <table class="reportManagerLogicalOperatorSelector" cellpadding="0" cellspacing="0">
 	<?php

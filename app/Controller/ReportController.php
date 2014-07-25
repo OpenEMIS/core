@@ -28,7 +28,7 @@ App::uses('File', 'Utility');
 class ReportController extends AppController {
     
     public $uses = array('ReportTemplate');
-    public $helpers = array('Number');
+    public $helpers = array('Number', 'Paginator');
     public $path = null;
 	public $models = array(
 		'InstitutionSite' => 'Institution Site', 
@@ -37,6 +37,10 @@ class ReportController extends AppController {
 		'Staff.Staff' => 'Staff', 
 		'CensusStudent' => 'Census Student'
 	);
+	
+	public $components = array(
+        'Paginator'
+    );
     
     public function __construct( $request = NULL, $response = NULL ) {
         $reportPath = Configure::read('ReportManager.reportPath');
@@ -202,11 +206,22 @@ class ReportController extends AppController {
             $reportName = $modelClass . '_Report_' . date('Ymd_His');
         }
 		
+		$reportDescription = isset($this->data['Report']['ReportDescription']) ? $this->data['Report']['ReportDescription'] : '';
+
 		$userId = $this->Auth->user('super_admin') == 0 ? $this->Auth->user('id') : 0;
+		$securityUserId = $userId;
+		if($userId == 0){
+			if(isset($this->data['Report']['SharedReport']) && ($this->data['Report']['SharedReport'] == 1)){
+				$securityUserId = 0;
+			}else{
+				$securityUserId = $this->Auth->user('id');
+				echo $this->Auth->user('id');
+			}
+		}
         
 		$template = array(
 			'name' => $reportName,
-			'description' => $this->data['Report']['ReportDescription'],
+			'description' => $reportDescription,
 			'model' => $modelClass,
 			'query' => $content
 		);
@@ -215,7 +230,7 @@ class ReportController extends AppController {
 			$template['id'] = $this->data['Report']['id'];
 		} else {
 			$this->ReportTemplate->create();
-			$template['security_user_id'] = $this->Auth->user('id');
+			$template['security_user_id'] = $securityUserId;
 		}
 		$this->ReportTemplate->save($template);
     }
@@ -282,7 +297,7 @@ class ReportController extends AppController {
 			$this->request->data['Report']['SaveReport'] = false;
         }
         
-        if (empty($this->data)) {        
+        if (empty($this->data)) {
             $displayForeignKeys = Configure::read('ReportManager.displayForeignKeys');
             $modelFieldIgnoreList = Configure::read('ReportManager.modelFieldIgnoreList');
 			
@@ -357,7 +372,7 @@ class ReportController extends AppController {
             $associatedModels = $this->{$modelClass}->getAssociated();
             $oneToManyOption = $this->data['Report']['OneToManyOption'];
             
-            $fieldsList = array();
+            $fieldList = array();
             $fieldsPosition = array();
             $fieldsType = array();
             $fieldsLength = array();
@@ -444,7 +459,7 @@ class ReportController extends AppController {
                 } // is array fields
             } // foreach model => fields
             asort($fieldsPosition);
-            $fieldsList = array_keys($fieldsPosition);
+            $fieldList = array_keys($fieldsPosition);
             $order = array();
             if ( isset($this->data['Report']['OrderBy1']) )
                 $order[] = $this->data['Report']['OrderBy1'] . ' ' . $this->data['Report']['OrderDirection'];
@@ -465,44 +480,48 @@ class ReportController extends AppController {
                 $showNoRelated = $this->data['Report']['ShowNoRelated'];
                 $recursive = 1;
             }
+			
+			$reportName = isset($this->data['Report']['ReportName']) ? $this->data['Report']['ReportName'] : '';
+			
+			if (isset($this->data['Report']['ReportName']) && $this->data['Report']['ReportName'] != '') {
+				$pageTitleReport = $this->data['Report']['ReportName'];
+			} else {
+				$pageTitleReport = $modelClass . ' Report ';
+			}
             
             $reportData = $this->{$modelClass}->find('all',array(
                 'recursive'=>$recursive,
-                'fields'=>$fieldsList,
+                'fields'=>$fieldList,
                 'order'=>$order,
                 'conditions'=>$conditions
             ));
-			
 			//pr($reportData);die;
             
-            $this->layout = 'report';
-                        
-            $this->set('tableColumnWidth',$tableColumnWidth);
-            $this->set('tableWidth',$tableWidth);
-            
-            $this->set('fieldList',$fieldsList);
-            $this->set('fieldsType',$fieldsType);
-            $this->set('fieldsLength',$fieldsLength);
-            $this->set('reportData',$reportData);
-            $this->set('reportName',$this->data['Report']['ReportName']);
+			$this->set(compact('tableColumnWidth', 'tableWidth', 'fieldList', 'fieldsType', 'fieldsLength', 'reportData', 'reportName', 'pageTitleReport'));
+            $this->layout = 'report_html';
 			
             if ( $this->data['Report']['Output'] == 'html') {
+				$this->Paginator->settings = array('limit' => 1000);
+				$PaginationConditions = array(
+					'SearchKey' => '',
+					'AdvancedSearch' => NULL,
+					'isSuperAdmin' => 1,
+					'userId' => 1,
+					'order' => NULL
+				);
+				$this->paginate('InstitutionSite', $PaginationConditions);
+				
                 if ($oneToManyOption == '')
                     $this->render('report_display');
                 else {
-                    $this->set('oneToManyOption',$oneToManyOption);
-                    $this->set('oneToManyFieldsList',$oneToManyFieldsList);
-                    $this->set('oneToManyFieldsType',$oneToManyFieldsType);
-                    $this->set('oneToManyTableColumnWidth',$oneToManyTableColumnWidth);
-                    $this->set('oneToManyTableWidth',$oneToManyTableWidth);
-                    $this->set('showNoRelated',$showNoRelated);
+					$this->set(compact('oneToManyOption', 'oneToManyFieldsList', 'oneToManyFieldsType', 'oneToManyTableColumnWidth', 'oneToManyTableWidth', 'showNoRelated'));
                     $this->render('report_display_one_to_many');
                 }
             } else { // Excel file
                 $this->layout = null;
                 $this->export2Xls(
                         $reportData, 
-                        $fieldsList, 
+                        $fieldList, 
                         $fieldsType, 
                         $oneToManyOption, 
                         $oneToManyFieldsList, 
