@@ -1,9 +1,9 @@
 <?php
-//echo $this->Html->script('report/index', false);
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 echo $this->Html->css('report/report_manager', 'stylesheet', array('inline' => false));
 echo $this->Html->css('report/smart_wizard', 'stylesheet', array('inline' => false));
+echo $this->Html->script('report/index', false);
 echo $this->Html->script('report/jquery-ui-1.8.18.min', false);
 echo $this->Html->script('report/jquery.smartWizard-2.0', false);
 echo $this->Html->script('report/default', false);
