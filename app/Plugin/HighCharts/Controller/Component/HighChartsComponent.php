@@ -75,12 +75,8 @@ class HighChartsComponent extends Component {
 	public function getChartData($type, $DIData) {
 		$chartTypeInfo = explode("-", $type);
 		$chartType = $chartTypeInfo[0];
-		$chartData['credits']['enabled'] = false;
-		$chartData['chart']['type'] = $chartType;
-		$chartData['chart']['zoomType'] = 'xy';
-		$chartData['title']['text'] = $this->getCaption();
-		$chartData['subtitle']['text'] = $this->getYearSubcaption();
-
+		$chartData = $this->customGenerateHeader(array('chartType' => $chartType, 'caption' => $this->getCaption(), 'subcaption' => $this->getYearSubcaption()));
+		
 		$plotOptions['stacking'] = !empty($chartTypeInfo[1]) ? $chartTypeInfo[1] : null;
 		$chartData = array_merge($chartData, $this->getPlotOptions($chartType, $plotOptions));
 
@@ -102,6 +98,33 @@ class HighChartsComponent extends Component {
 	}
 
 	/* ================================================
+	 * Customized Functions for DIY purpose
+	 * ================================================ */
+	
+	public function customGenerateHeader($_options){
+		$chartData['credits']['enabled'] = false;
+		$chartData['chart']['type'] = !empty($_options['chartType'])?$_options['chartType']: 'column';
+		$chartData['chart']['zoomType'] = !empty($_options['zoomType'])?$_options['zoomType']: 'xy';
+		if(!empty($_options['caption'])){
+			$chartData['title']['text'] = __($_options['caption']);
+		}
+		if(!empty($_options['subcaption'])){
+			$chartData['subtitle']['text'] = __($_options['subcaption']);
+		}
+		return $chartData;
+	}
+	
+	public function getPlotOptions($type, $_options) {
+		$chartData = array();
+		if (!empty($_options['stacking']) && ($type == 'bar' || $type == 'column')) {
+			$chartData['plotOptions'][$type]['stacking'] = 'normal';
+		} else if ($type == 'scatter') {
+			$chartData['plotOptions'][$type]['tooltip']['pointFormat'] = '{point.titlex}: <b>{point.x}</b> <br/> {point.titley}: <b>{point.y}</b>';
+		}
+
+		return $chartData;
+	}
+	/* ================================================
 	 * populating data into highchart format
 	 * ================================================ */
 
@@ -122,16 +145,7 @@ class HighChartsComponent extends Component {
 		return $chartData;
 	}
 
-	private function getPlotOptions($type, $_options) {
-		$chartData = array();
-		if (!empty($_options['stacking']) && ($type == 'bar' || $type == 'column')) {
-			$chartData['plotOptions'][$type]['stacking'] = 'normal';
-		} else if ($type == 'scatter') {
-			$chartData['plotOptions'][$type]['tooltip']['pointFormat'] = '{point.titlex}: <b>{point.x}</b> <br/> {point.titley}: <b>{point.y}</b>';
-		}
-
-		return $chartData;
-	}
+	
 
 	private function setupChartCategory($chartType) {
 		$finalData = array();

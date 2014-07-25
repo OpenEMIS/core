@@ -22,12 +22,12 @@ class DIData extends VisualizerAppModel {
 		$data = $this->find('all', array(
 			'conditions' => array('DIData.IUSNID' => $ius),
 			'group' => array('DIData.TimePeriod_NId' ),
-			'fields' => array('Timeperiod.TimePeriod_NId','TimePeriod.TimePeriod'),
+			'fields' => array('TimePeriod.TimePeriod_NId','TimePeriod.TimePeriod'),
 			'joins' => array(
 				array(
 					'table' => 'ut_timeperiod',
 					'alias' => 'TimePeriod',
-					'conditions' => array('Timeperiod.TimePeriod_NId = DIData.TimePeriod_NId')
+					'conditions' => array('TimePeriod.TimePeriod_NId = DIData.TimePeriod_NId')
 				),
 			)
 		));

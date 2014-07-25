@@ -20,7 +20,7 @@ class DashboardsController extends DashboardsAppController {
 	public $institutionSiteId,$institutionSiteAreaId;
 	public $uses = array();
     public $helpers = array('Js' => array('Jquery'));
-    public $components = array('UserSession', 'Dashboards.QADashboard' );
+    public $components = array('UserSession', 'Dashboards.QADashboard', 'HighCharts.HighCharts' );
     public $modules = array(
         'InstitutionQA' => 'Dashboards.DashboardInstitutionQA',
     );
@@ -125,9 +125,8 @@ class DashboardsController extends DashboardsAppController {
 		if($this->request->is('post')){
 			$temp_geo_id = $this->request->data['Dashboards']['geo_level_id'];
 			$temp_area_id = $this->request->data['Dashboards']['area_level_id'];
-			//$temp_fd_id = $this->request->data['Dashboards']['fd_level_id'];
 			$temp_year_id = $this->request->data['Dashboards']['year_id'];
-			return $this->redirect(array('controller' => 'Dashboards', 'action' => 'overview',$id,$temp_geo_id,$temp_area_id,/*$temp_fd_id,*/$temp_year_id));
+			return $this->redirect(array('controller' => 'Dashboards', 'action' => 'overview',$id,$temp_geo_id,$temp_area_id,$temp_year_id));
 		}
 		
 		$countryData = $this->QADashboard->getCountry();
@@ -139,7 +138,6 @@ class DashboardsController extends DashboardsAppController {
 		
 		$geoLvlId = empty($this->params['pass'][1])? 0: $this->params['pass'][1]; //Country ID/Geo Level Id
 		$areaId = empty($this->params['pass'][2])? 0: $this->params['pass'][2]; //Area Id 
-		//$FDId = empty($this->params['pass'][3])? 0: $this->params['pass'][3]; //FD Id 
 		$yearId = empty($this->params['pass'][3])? 0: $this->params['pass'][3]; //year Id 
 		
 		$Report = ClassRegistry::init('Report');
@@ -156,28 +154,17 @@ class DashboardsController extends DashboardsAppController {
 		$geoLvlId = (empty($geoLvlId))? key($geoLvlOptions): $geoLvlId;
 		
 		$areaLvlOptions = $this->QADashboard->getAreasByLevel($geoLvlId);
-		$areaId = (empty($areaId))? key($areaLvlOptions): $areaId;
-		$FDId = 0;
-		/*$FDLvlOptions = $this->QADashboard->getAreaChildLevel($areaId);
-		$FDLvlOptions[0] = 'ALL';
-		ksort($FDLvlOptions);
-		$FDId = (empty($FDId))? key($FDLvlOptions): $FDId;*/
+		$selectedAreaId = (empty($areaId))? key($areaLvlOptions): $areaId;
 		
 		$yearsOptions = $this->QADashboard->getYears();
 		$yearId = (empty($yearId))? key($yearsOptions): $yearId;
-		
-		$selectedAreaId = !empty($FDId)?$FDId :$areaId;
 
-		
-		//$this->localityJSON($selectedAreaId, $yearId);
-		//pr($areaLvlOptions);
-		//$tableTitle = (empty($FDId)?$areaLvlOptions[$selectedAreaId]:$FDLvlOptions[$selectedAreaId]);
 		$tableTitle = $areaLvlOptions[$selectedAreaId];
 		$tableTitle .= " ".__('Year')." ".$yearsOptions[$yearId];	
-		$QATableData = $this->setupQATableData($areaId,$yearId);
+	//	$QATableData = $this->setupQATableData($selectedAreaId,$yearId);
 		
 		//setup chart data
-		$displayChartData = array(
+	/*	$displayChartData = array(
 			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
 			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $yearId, $yearsOptions[$yearId]), 'swfUrl' => 'MSLine.swf'),
 		//	'break',
@@ -192,9 +179,27 @@ class DashboardsController extends DashboardsAppController {
 		//	'break',
 			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
 		//	'break',
+		);*/
+		
+		$displayChartData = array(
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $yearId)),
+			/*array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $yearId, $yearsOptions[$yearId])),
+		//	'break',
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AdminBreakdownJSON', $selectedAreaId, $yearId)),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TechBreakdownJSON', $selectedAreaId, $yearId)),
+		//	'break',
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDBothBreakdownJSON', $selectedAreaId, $yearId)),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDTechAdminBreakdownJSON', $selectedAreaId, $yearId)),
+		//	'break',
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AppointmentJSON', $selectedAreaId, $yearId)),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'OwnershipJSON', $selectedAreaId, $yearId)),
+		//	'break',
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId)),*/
+		//	'break',
 		);
 		
-		$this->set(compact('header', 'geoLvlId', 'areaId', 'FDId','yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
+		
+		$this->set(compact('header', 'geoLvlId', 'areaId', /*'FDId',*/'yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
 		
     }
 	
@@ -222,12 +227,33 @@ class DashboardsController extends DashboardsAppController {
 		$countryName = $this->Session->read('Dashboard.Overview.CountryName');
 		
 		$areaName = $this->QADashboard->getAreaName($selectedAreaId);
-		$data = $this->QADashboard->setupChartInfo("Administrative and Technical Aspects");
+		$indData = $this->QADashboard->getIndicatorByGID($this->QADashboard->indicators['QA_AdminTechBoth_Score']);
+		$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']));
+		
+		
+		
+		//Preparing HighCharts Data
+		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
+	
+		$setupOptions = array(
+			'areaIds' => array($selectedAreaId => $areaName ,$countryId => $countryName),
+			'TimePeriod_Nid' => $yearId,
+			'indicators' => $indData,
+			'UnitIds' => $unitIndData,//array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']),
+			'Subgroup_Val_GId' => $this->QADashboard->indicators['SubgrpVal']['Total'],
+		);
+		
+		//pr($setupOptions);
+		$tempAreaData = $this->QADashboard->getSummaryJorData($setupOptions);
+		
+		//pr($tempAreaData);
+		
+		/*$data = $this->QADashboard->setupChartInfo("Administrative and Technical Aspects");
 		$indData = $this->QADashboard->getIndicatorByGID($this->QADashboard->indicators['QA_AdminTechBoth_Score']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
 		$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']));
 		
 		$data = array_merge($data, $this->QADashboard->setupChartCategory($indData));
-		
+	
 		$setupOptions = array(
 			'areaIds' => $selectedAreaId,
 			'TimePeriod_Nid' => $yearId,
@@ -256,7 +282,7 @@ class DashboardsController extends DashboardsAppController {
 			'color' => 'green'
 		);
 		$data['dataset'][] =  $this->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
-		//pr($data);die;
+		//pr($data);die;*/
 		return json_encode($data);
 	}
 	
