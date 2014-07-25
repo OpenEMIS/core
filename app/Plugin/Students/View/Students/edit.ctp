@@ -43,10 +43,8 @@ echo $this->Form->create($model, $formOptions);
 		} else {
 			if ($this->Session->check('Student.id')) {
 				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
-			}
-			else{
-				echo $autoid;
-				echo $this->Form->hidden('identification_no');
+			} else {
+				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel, 'value' => $autoid));
 			}
 		}
 		
