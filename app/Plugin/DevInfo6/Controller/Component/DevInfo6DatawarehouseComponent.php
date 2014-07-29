@@ -95,8 +95,20 @@ class DevInfo6DatawarehouseComponent extends Component {
 		$this->DIArea->truncate();
 	}
 
+	public function remove_prefix($arr, $prefix)
+	{
+		return str_replace($prefix, "", $arr);
+	}
 
 	public function export($settings=array()) {
+		$cat = array('lok_work','lok_party',
+			'lok_casual', 'lok_formal',
+			'lok_outdoor', 'fsh_clothing', 'bty_hair');
+        
+		
+		pr(array_map("remove_prefix", $cat, 'lok_'));
+
+		exit;
         $indicatorId = $settings['indicatorId'];
         unset($settings['indicatorId']);
 
@@ -143,7 +155,8 @@ class DevInfo6DatawarehouseComponent extends Component {
 			$TYPE_SECTOR = 'SC';
 				
 			$this->Logger->write("Start Processing Indicators");
-			
+			$subgroups = array();
+			$subgroupTypes = array();
 			if(!empty($indicator)) {
 				if(!empty($onBeforeGenerate['callback'])) {
 					if(!call_user_func_array($onBeforeGenerate['callback'], $onBeforeGenerate['params'])) {
@@ -163,12 +176,16 @@ class DevInfo6DatawarehouseComponent extends Component {
 				$joins = array();
 
 
-				$datawarehouseDimension = $this->DatawarehouseDimension->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseDimension.datawarehouse_module_id'=>$indicatorNumeratorFieldObj['datawarehouse_module_id'])));
+				$datawarehouseDimension = $this->DatawarehouseDimension->find('all', array('recursive'=>-1, 'conditions'=>array('DatawarehouseDimension.datawarehouse_module_id'=>$indicatorNumeratorFieldObj['datawarehouse_module_id'])));
 				
-
+				$subgroup = '';
 				if(!empty($datawarehouseDimension)){
-					
+					foreach($datawarehouseDimension as $dimension){
+						$subgroups[] = 'All ' . Inflector::humanize(Inflector::pluralize($dimension['DatawarehouseDimension']['name']));
+						$subgroupTypes[] = $dimension['DatawarehouseDimension']['name'];
+					}
 				}
+
 
 				$indicatorDenominatorFieldObj = array();
 				$indicatorDenominatorModel = array();
@@ -179,7 +196,6 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$indicatorDenominatorCondObj = $indicator['Denominator']['DatawarehouseIndicatorCondition'];
 					$hasDenominator = true;
 				}
-
 
 		
 				$indicatorId 		= $indicatorObj['id'];
@@ -196,18 +212,9 @@ class DevInfo6DatawarehouseComponent extends Component {
 
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
-				$modelTable = null;
-				$subgroupType = array();
+				
 				foreach($typeOption as $type){
-					$moduleId = ${'indicator'.$type.'ModuleId'};
 					$joins = array();
-
-					if(!empty($datawarehouseModule['DatawarehouseDimension'])){
-						foreach($datawarehouseModule['DatawarehouseDimension'] as $key=>$val){
-
-						}
-					}
-
 
 					if(isset($datawarehouseModule['DatawarehouseModule']['joins'])){
 						$dimenJoin = $datawarehouseModule['DatawarehouseModule']['joins'];
@@ -221,9 +228,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$group = array('area_id', 'school_year_id');
 
 
-					$classification = array();
-
-
+					/*
 					foreach($tempGroup as $g){
 						$group[] = $g;
 						$subgroupName = ucwords($g);
@@ -243,10 +248,11 @@ class DevInfo6DatawarehouseComponent extends Component {
 						$classificationField = 'CONCAT('. implode($classification, ', "-", ') . ')';
 					}
 					$group[] = 'Classification';
+					*/
 
 					$fieldFormat = '%s(%s.%s) as %s';
 
-					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), '"'. implode(",", $subgroups) . '" as SubGroups', 'area_id', 'school_year_id');
+					$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type)), 'area_id', 'school_year_id');
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
@@ -258,6 +264,11 @@ class DevInfo6DatawarehouseComponent extends Component {
 					$conditionFormat = '%s.%s %s "%s"';
 					if(!empty($conditionObj)){
 						foreach($conditionObj as $c){
+							pr($c['DatawarehouseDimension']['name']);
+							pr(array_search('All ' . Inflector::humanize(Inflector::pluralize($c['DatawarehouseDimension']['name'])), $subgroups));
+
+
+
 							$conditionTemp[$c['DatawarehouseDimension']['model']][] = sprintf($conditionFormat, $c['DatawarehouseDimension']['model'],
 								$c['DatawarehouseDimension']['field'], $c['operator'], $c['value']);
 							
@@ -310,7 +321,7 @@ class DevInfo6DatawarehouseComponent extends Component {
 				        break;
 				    case 4:
 					 	//PERCENT
-				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'Numerator.SubGroups', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
+				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'area_id', 'school_year_id');
 				       break;
 				}
 

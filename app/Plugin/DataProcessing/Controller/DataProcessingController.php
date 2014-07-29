@@ -524,10 +524,14 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-            $settings['indicatorId'] = $this->request->data['Reports'];
             $settings['areaId'] = $this->request->data['DataProcessing']['area_id'];
             $settings['schoolYearId'] = $this->request->data['DataProcessing']['school_year_id'];
-            $this->DevInfo6Datawarehouse->export($settings);
+            if(isset($this->request->data['Reports']) && !empty($this->request->data['Reports'])){
+                foreach($this->request->data['Reports'] as $reportId){
+                    $settings['indicatorId'] = $reportId;
+                    $this->DevInfo6Datawarehouse->export($settings);
+                }
+            }
             //$this->processGenerate($this->data['Reports']);
 		}
 		
@@ -987,61 +991,5 @@ class DataProcessingController extends DataProcessingAppController {
         }
     }
 
-
-    public function ajax_populate_by_module($moduleID){
-        $this->autoRender = false;
-        if(!empty($moduleID)){
-            $data = $this->Datawarehouse->getFieldOptionByModuleId($moduleID);
-            $operatorOptions = array();
-            $fieldOptions = array();
-
-            if(!empty($data)){
-                foreach($data as $d){
-                    $fieldOptions[$d['DatawarehouseField']['field']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
-                    $operatorOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
-                }
-            }
-            $jsonData['fieldOption'] = $fieldOptions;
-            $jsonData['operatorOption'] = $operatorOptions;
-            return json_encode($jsonData);
-        }
-    }
-
-    public function ajax_populate_by_operator($moduleID, $operatorOption){
-         $this->autoRender = false;
-         if(!empty($moduleID) && !empty($operatorOption)){
-            $data = $this->Datawarehouse->getFieldOptionByOperatorId($moduleID, $operatorOption);
-            $fieldOptions = array();
-            if(!empty($data)){
-                foreach($data as $d){
-                    $fieldOptions[$d['DatawarehouseField']['id']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
-                }
-            }
-            $jsonData['fieldOption'] = $fieldOptions;
-            return json_encode($jsonData);
-         }
-    }
-
-    public function ajax_add_dimension_row(){
-        $this->layout = 'ajax';
-        $moduleID = $this->params->query['module_id'];
-        if(!empty($moduleID)){
-            $this->set('index', $this->params->query['index']);
-            $this->set('type', $this->params->query['type']);
-            $this->set('datawarehouseDimensionOptions', $this->Datawarehouse->getDimensionOptions($moduleID));
-            $this->set('operatorOptions', $this->Datawarehouse->operatorOptions());
-            $this->set('valueOptions', array());
-            $this->render('/Elements/datawarehouse_dimension_row');
-        }
-    }
-
-    public function ajax_populate_by_dimension($dimensionOption){
-         $this->autoRender = false;
-         if(!empty($dimensionOption)){
-            $data = $this->Datawarehouse->getDimensionValueOption($dimensionOption);
-            $jsonData['dimensionValueOption'] = $data;
-            return json_encode($jsonData);
-         }
-    }
 
 }
