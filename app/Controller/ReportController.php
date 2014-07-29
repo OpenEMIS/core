@@ -188,10 +188,10 @@ class ReportController extends AppController {
         return $tableWidth;
     }
 
-    public function export2Xls(&$reportData = array(),&$fieldsList=array(), &$fieldsType=array(), &$oneToManyOption=null, &$oneToManyFieldsList=null, &$oneToManyFieldsType = null, &$showNoRelated = false ) {
+    public function export2Xls(&$reportData = array(),&$fieldsList=array(), &$fieldsType=array(), &$oneToManyOption=null, &$oneToManyFieldsList=null, &$oneToManyFieldsType = null, &$showNoRelated = false, &$recursive = null, &$fieldList = null, &$order = null, &$conditions = null, &$totalRows = null, &$rowsPerPage = null, &$modelClass = null) {
         App::import('Vendor', 'Excel');
         $xls = new Excel();      
-        $xls->buildXls($reportData,$fieldsList, $fieldsType, $oneToManyOption, $oneToManyFieldsList, $oneToManyFieldsType, $showNoRelated );
+        $xls->buildXlsCustom($reportData,$fieldsList, $fieldsType, $oneToManyOption, $oneToManyFieldsList, $oneToManyFieldsType, $showNoRelated, $recursive, $fieldList, $order, $conditions, $totalRows, $rowsPerPage, $modelClass);
     }
  
     public function saveReport($modelClass = null, $oneToManyOption = null) {
@@ -270,7 +270,8 @@ class ReportController extends AppController {
         return $files;
     }
 
-    public function reportsWizard($param1 = null,$param2 = null, $param3 = null) {
+    public function reportsWizard($param1 = null,$param2 = null) {
+		
         if (is_null($param1) || is_null($param2)) {
             $this->Session->setFlash(__('Please select a model or a saved report'));
             $this->redirect(array('action'=>'index'));
@@ -286,13 +287,23 @@ class ReportController extends AppController {
         
         if ( $reportAction == "new" ) {
             $modelClass = $param2;
-            $oneToManyOption = $param3;
+            //$oneToManyOption = $param3;
+			
+			if(empty($this->data) && isset($this->params['pass'][2]) && $this->Session->check('CumtomReportData')){
+				$this->data = $this->Session->read('CumtomReportData');
+			}
         }
 		
         if ( $reportAction == "load" ) {
 			$modelClass = $this->ReportTemplate->field('model', array('id' => $param2));
-			$output = $this->request->data['Report']['Output'];
-			$this->loadReport($param2);
+			
+			if(empty($this->data) && $this->Session->check('CumtomReportData')){
+				$output = 'html';
+				$this->data = $this->Session->read('CumtomReportData');
+			}else{
+				$output = $this->request->data['Report']['Output'];
+				$this->loadReport($param2);
+			}
 			$this->request->data['Report']['Output'] = $output;
 			$this->request->data['Report']['SaveReport'] = false;
         }
@@ -364,13 +375,18 @@ class ReportController extends AppController {
             $this->set('associatedModelsSchema',$associatedModelsSchema);
             $this->set('oneToManyOption',$oneToManyOption);
         } else {
+			//pr($this->data);
+			//pr($this->params['pass']);
+			
+			$this->Session->write('CumtomReportData', $this->data);
+			
             $this->loadModel($modelClass);
 			if(strpos($modelClass, '.') !== false) {
 				$split = explode('.', $modelClass);
 				$modelClass = $split[1];
 			}
             $associatedModels = $this->{$modelClass}->getAssociated();
-            $oneToManyOption = $this->data['Report']['OneToManyOption'];
+            //$oneToManyOption = $this->data['Report']['OneToManyOption'];
             
             $fieldList = array();
             $fieldsPosition = array();
@@ -385,8 +401,6 @@ class ReportController extends AppController {
             $oneToManyFieldsType  = array();
             $oneToManyFieldsLength = array();
 			
-			
-            
             foreach ($this->data  as $model => $fields) {
                 if ( is_array($fields) ) {
                     foreach ($fields  as $field => $parameters) {
@@ -481,35 +495,46 @@ class ReportController extends AppController {
                 $recursive = 1;
             }
 			
-			$reportName = isset($this->data['Report']['ReportName']) ? $this->data['Report']['ReportName'] : '';
-			
 			if (isset($this->data['Report']['ReportName']) && $this->data['Report']['ReportName'] != '') {
 				$pageTitleReport = $this->data['Report']['ReportName'];
 			} else {
 				$pageTitleReport = $modelClass . ' Report ';
 			}
             
-            $reportData = $this->{$modelClass}->find('all',array(
-                'recursive'=>$recursive,
-                'fields'=>$fieldList,
-                'order'=>$order,
-                'conditions'=>$conditions
-            ));
-			//pr($reportData);die;
-            
-			$this->set(compact('tableColumnWidth', 'tableWidth', 'fieldList', 'fieldsType', 'fieldsLength', 'reportData', 'reportName', 'pageTitleReport'));
+			$this->set(compact('tableColumnWidth', 'tableWidth', 'fieldList', 'fieldsType', 'fieldsLength', 'pageTitleReport', 'pageTitleReport'));
             $this->layout = 'report_html';
 			
+			$rowsPerPage = 100;
+			
+			$totalRows = $this->{$modelClass}->find('count', array(
+				'recursive' => $recursive,
+				'fields' => $fieldList,
+				'order' => $order,
+				'conditions' => $conditions
+			));
+			
             if ( $this->data['Report']['Output'] == 'html') {
-				$this->Paginator->settings = array('limit' => 1000);
-				$PaginationConditions = array(
-					'SearchKey' => '',
-					'AdvancedSearch' => NULL,
-					'isSuperAdmin' => 1,
-					'userId' => 1,
-					'order' => NULL
-				);
-				$this->paginate('InstitutionSite', $PaginationConditions);
+				if(isset($this->params['pass'][2])){
+					$currentPage = intval($this->params['pass'][2]);
+					if($currentPage < 1){
+						$currentPage = 1;
+					}
+				}else{
+					$currentPage = 1;
+				}
+				
+				$reportData = $this->{$modelClass}->find('all',array(
+					'recursive'=>$recursive,
+					'fields'=>$fieldList,
+					'order'=>$order,
+					'conditions'=>$conditions,
+					'limit' => $rowsPerPage,
+					'offset' => (($currentPage-1) * $rowsPerPage),
+				));
+				
+				$this->set(compact('reportData'));
+				// params for pagination
+				$this->set(compact('param1', 'param2', 'totalRows', 'rowsPerPage', 'currentPage'));
 				
                 if ($oneToManyOption == '')
                     $this->render('report_display');
@@ -518,6 +543,14 @@ class ReportController extends AppController {
                     $this->render('report_display_one_to_many');
                 }
             } else { // Excel file
+				// start excel file xlsBOF
+//				foreach (pages) {
+//					// find
+//					// write to excel
+//				}
+				// end excel file xlsEOF
+				$reportData = array();
+				
                 $this->layout = null;
                 $this->export2Xls(
                         $reportData, 
@@ -526,7 +559,7 @@ class ReportController extends AppController {
                         $oneToManyOption, 
                         $oneToManyFieldsList, 
                         $oneToManyFieldsType, 
-                        $showNoRelated );
+                        $showNoRelated, $recursive, $fieldList, $order, $conditions, $totalRows, $rowsPerPage, $modelClass);
             }
             if ($this->data['Report']['SaveReport'])
                 $this->saveReport($modelClass,$oneToManyOption);
