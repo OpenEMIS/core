@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_modules` (
 DROP TABLE IF EXISTS `datawarehouse_fields`;
 CREATE TABLE IF NOT EXISTS `datawarehouse_fields` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
-  `group` varchar(200) NOT NULL,
   `name` varchar(200) NOT NULL,
   `type` varchar(20) NOT NULL,
   `datawarehouse_module_id` int(5) NOT NULL,
@@ -73,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_fields` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `datawarehouse_module_id` (`datawarehouse_module_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=8 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 
 DROP TABLE IF EXISTS `datawarehouse_dimensions`;
@@ -149,12 +148,12 @@ INSERT INTO `datawarehouse_units` (`id`, `name`, `created_user_id`, `created`) V
 INSERT INTO `datawarehouse_units` (`id`, `name`, `created_user_id`, `created`) VALUES ('3', 'Ratio', '1', '2014-07-14');
 INSERT INTO `datawarehouse_units` (`id`, `name`, `created_user_id`, `created`) VALUES ('4', 'Percent', '1', '2014-07-14');
 
-INSERT INTO `datawarehouse_fields` (`id`, `group`, `name`, `type`, `datawarehouse_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1, 'array(''age'')', 'value', 'COUNT', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
-(2, 'array(''age'')', 'value', 'MIN', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
-(3, 'array(''age'')', 'value', 'MAX', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
-(4, 'array(''age'')', 'value', 'AVG', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
-(5, 'array(''age'')', 'value', 'SUM', 1, NULL, NULL, 1, '2014-07-14 00:00:00');
+INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'value', 'COUNT', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
+(2, 'value', 'MIN', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
+(3, 'value', 'MAX', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
+(4, 'value', 'AVG', 1, NULL, NULL, 1, '2014-07-14 00:00:00'),
+(5, 'value', 'SUM', 1, NULL, NULL, 1, '2014-07-14 00:00:00');
 
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('1', 'Age', 'age', 'CensusStudent', '1', '1', '2014-07-14');
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('2', 'Gender', 'id', 'Gender', 'array(\n \'type\' => \'INNER\',\n  \'table\' => \'field_option_values\',\n \'alias\' => \'Gender\',\n  \'conditions\' => array(\'Gender.id = CensusStudent.gender_id\')\n)', '1', '1', '2014-07-14');

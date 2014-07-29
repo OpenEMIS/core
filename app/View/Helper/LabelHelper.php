@@ -312,7 +312,9 @@ class LabelHelper extends AppHelper {
 		'Datawarehouse' => array(
 			'indicator' => 'Indicator',
 			'unit' => 'Unit',
-			'module' => 'Module'
+			'module' => 'Module',
+			'function' => 'Function',
+			'dimensions' => 'Dimensions'
 		)
 	);
 	
