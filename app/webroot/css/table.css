@@ -28,6 +28,7 @@
 .cell-action { width: 100px; }
 .cell-hours-required { width: 200px; }
 .cell-report-name { width: 200px; }
+.cell-delete { width: 34px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
 
