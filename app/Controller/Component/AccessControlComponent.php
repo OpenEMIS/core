@@ -31,7 +31,6 @@ class AccessControlComponent extends Component {
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
 		'STUDENTS' => array('viewStudent'),
-		//'TEACHERS' => array('viewTeacher'),
 		'STAFF' => array('viewStaff')
 	);
 	public $operations = array('_view', '_edit', '_add', '_delete', '_execute');
@@ -57,13 +56,19 @@ class AccessControlComponent extends Component {
 			$this->{$model} = ClassRegistry::init($modelClass);
 		}
 		$this->setUserPermissions($this->Auth->user('id'));
+		if(!$controller->request->is('ajax')) {
+			$this->checkAccess();
+		}
 	}
 	
 	//called after Controller::beforeFilter()
 	public function startup(Controller $controller) {}
 	
 	//called after Controller::beforeRender()
-	public function beforeRender(Controller $controller) {}
+	public function beforeRender(Controller $controller) {
+		$this->apply();
+		$controller->set('_accessControl', $this);
+	}
 	
 	//called after Controller::render()
 	public function shutdown(Controller $controller) {}
@@ -83,6 +88,25 @@ class AccessControlComponent extends Component {
 		} else {
 			$this->Session->delete('permissions');
 		}
+	}
+	
+	public function getAction() {
+		$action = $this->controller->action;
+		$module = null;
+		if (in_array($action, $this->controller->modules)) {
+			$module = $action;
+		}/* else if (array_key_exists($action, $this->controller->modules)) {
+			$module = $action;
+		}*/
+		
+		if (!is_null($module)) {
+			if (!isset($this->controller->params->pass[0])) {
+				$action = $module . '.index';
+			} else {
+				$action = $module . '.' . $this->controller->params->pass[0];
+			}
+		}
+		return $action;
 	}
 	
 	public function getPermissions($userId) {
@@ -135,6 +159,10 @@ class AccessControlComponent extends Component {
 							
 							$actionList = explode($divider, $actionParent);
 							foreach($actionList as $a) {
+								$explode = explode('.', $a);
+								if (count($explode) > 1) {
+									$a = $explode[1];
+								}
 								if(!isset($apply[$controller][$a])) {
 									$apply[$controller][$a] = array();
 								}
@@ -166,8 +194,12 @@ class AccessControlComponent extends Component {
 		return $permissions;
 	}
 	
-	public function apply($controller, $action) {
-		$controller = strtoupper($controller);
+	public function apply() {
+		$controller = strtoupper($this->controller->params['controller']);
+		$action = $this->getAction();
+		$action = explode('.', $action);
+		$action = count($action) == 1 ? $action[0] : $action[1];
+		
 		$permissions = $this->Session->read('permissions');
 		$apply = $permissions['apply'];
 		
@@ -238,7 +270,7 @@ class AccessControlComponent extends Component {
 		$access = false;
 		$controller = strtoupper($controller);
 		$currentController = $this->controller->params['controller'];
-		$currentAction = $this->controller->action;
+		$currentAction = $this->getAction();//$this->controller->action;
 		
 		if($this->Session->check('permissions')) {
 			$permissions = $this->Session->read('permissions');
@@ -287,7 +319,6 @@ class AccessControlComponent extends Component {
 										}
 									}
 								}
-
 								$access = $checkAllRoleIds;
 							}
 						}
@@ -330,7 +361,7 @@ class AccessControlComponent extends Component {
 	
 	public function checkAccess() {
 		$controller = $this->controller->params['controller'];
-		$action = $this->controller->action;
+		$action = $this->getAction();// $this->controller->action;
 				
 		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
 			return;

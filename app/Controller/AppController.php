@@ -68,9 +68,6 @@ class AppController extends Controller {
 		$this->set('lang_dir', $catalog['direction']);
 
 		Configure::write('Config.language', $lang);
-		if(!$this->request->is('ajax')) {
-			$this->AccessControl->checkAccess();
-		}
 	
 		if($this->Auth->loggedIn()){
 			$token = null;
@@ -85,17 +82,17 @@ class AppController extends Controller {
 	}
 	 
 	public function beforeRender() {
-		$this->AccessControl->apply($this->params['controller'], $this->params['action']);
 		$this->set('bodyTitle', $this->bodyTitle);
-		$this->set('_accessControl', $this->AccessControl);
 	}
 	
 	public function invokeAction(CakeRequest $request) {
 		try {
+			// intercept for ControllerAction behavior
 			$action = $request->params['action'];
 			if(!method_exists($this, $action)) {
 				return $this->processAction();
 			}
+			// End ControllerAction
 			$method = new ReflectionMethod($this, $request->params['action']);
 
 			if ($this->_isPrivateAction($method, $request)) {
@@ -117,12 +114,12 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-		$action = strtolower($this->action);
-		if(!empty($this->modules)) { // for modules / plugin 
-		//search for exact match
+		if(!empty($this->modules)) {
+			// deprecated logic, should be removed after all modules are moved to the new logic
+			$action = strtolower($this->action);
 			foreach($this->modules as $name => $module) {
 				if($action == strtolower($name)) {
-                                    
+									
 					$this->loadModel($module);
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
@@ -131,7 +128,8 @@ class AppController extends Controller {
 					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
 				}
 			}
-		//if nothing match, search by partial string
+			
+			//if nothing match, search by partial string
 			foreach($this->modules as $name => $module) { 
 				if(strpos($action, strtolower($name)) === 0) {
 					$this->loadModel($module);
@@ -142,24 +140,25 @@ class AppController extends Controller {
 					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
 				}
 			}
-		}
-		
-		/*
-		if(!empty($this->components)) { // for components
-			$actionCamel = Inflector::camelize($action);
-			$name = '';
-			foreach($this->components as $component => $option) {
-				if(is_string($component) && strpos($actionCamel, $component) === 0) {
-					$name = $component;
-				} else if (is_string($option) && strpos($actionCamel, $option) === 0) {
-					$name = $option;
+			// end deprecated
+			
+			$action = $this->action;
+			$module = null;
+			if (in_array($action, $this->modules)) {
+				$module = array();
+			} else if (array_key_exists($action, $this->modules)) {
+				$module = $this->modules[$action];
+			}
+			
+			if (!is_null($module)) {
+				$plugin = isset($module['plugin']) ? $module['plugin'] : '';
+				$this->loadModel($plugin . '.' . $action);
+				if (!$this->{$action}->Behaviors->loaded('ControllerAction2')) {
+					pr('ControllerActionBehavior is not loaded in ' . $action . ' Model');
+					die;
 				}
-				if(strlen($name) != 0) {
-					$action = substr($actionCamel, strlen($name));
-					return $this->{$name}->processAction($this, $action);
-				}
+				return $this->{$action}->processAction($this);
 			}
 		}
-		*/
 	}
 }
