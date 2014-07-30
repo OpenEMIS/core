@@ -100,6 +100,6 @@ UPDATE `security_functions` set category = 'Finance' where id = '197';
 UPDATE `navigations` SET `header`='FINANCE' WHERE `id`='150';
 
 INSERT INTO `navigations` (`id`, `module`, `controller`, `header`, `title`, `action`, `pattern`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) 
-VALUES ('151', 'Institution', 'InstitutionReports', 'REPORTS', 'Finance', 'finance', 'finance', '3', '0', '36', '1', '1', '0000-00-00 00:00:00');
+VALUES (NULL, 'Institution', 'InstitutionReports', 'REPORTS', 'Finance', 'finance', 'finance', '3', '0', '36', '1', '1', '0000-00-00 00:00:00');
 
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES ('198', 'Finance', 'InstitutionReports', 'Institutions', 'Reports', '8', 'finance', 'generate', '198', '1', '1', '0000-00-00 00:00:00');
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (NULL, 'Finance', 'InstitutionReports', 'Institutions', 'Reports', '8', 'finance', 'generate', '198', '1', '1', '0000-00-00 00:00:00');
