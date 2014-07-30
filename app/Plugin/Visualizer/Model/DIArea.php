@@ -33,7 +33,13 @@ class DIArea extends VisualizerAppModel {
 		
 		foreach($data as $obj){
 			$path = $this->getPath($obj[$this->alias]['Area_NId']);
-			$fullPathData[] = $path;
+			if(!empty($path)){
+				$fullPathData[] = $path;
+			}
+			else{
+				$str = 'Parent_Nid was not found for Area_Nid : '.$obj[$this->alias]['Area_NId'];
+				$this->log($str, 'debug');
+			}
 		}
 		
 		return $fullPathData;
