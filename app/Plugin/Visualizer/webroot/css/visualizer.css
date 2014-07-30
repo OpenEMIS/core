@@ -25,6 +25,7 @@
 
 .visualizer-list-table{
 	max-height: 500px;
+	min-height: 100px;
 	overflow-y: auto;
 }
 
@@ -51,4 +52,8 @@ a.btn_save:active{
 
 .mt12{
 	margin-top: 12px;
+}
+
+.highchart-big{
+	height:713px;
 }
