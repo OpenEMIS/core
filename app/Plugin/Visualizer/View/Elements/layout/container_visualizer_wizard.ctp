@@ -16,7 +16,7 @@
 		<div class="visualizer-control-group center">
 			<?php
 			if (!empty($prevPg)) {
-				$btn_prev = '<a class="btn_cancel btn_right" href="/OpenEmisv2/Visualizer/' . $prevPg . '">' . __('Previous') . '</a>'; //$this->Html->link( __('Previous'), $this->Html->url(array("controller" => "Visualizer", "action" => $prevPg, 'plugin' => 'Visualizer')), array('class' => 'btn_cancel btn_left'));
+				$btn_prev = '<a class="btn_cancel btn_right" href="./' . $prevPg . '">' . __('Previous') . '</a>'; //$this->Html->link( __('Previous'), $this->Html->url(array("controller" => "Visualizer", "action" => $prevPg, 'plugin' => 'Visualizer')), array('class' => 'btn_cancel btn_left'));
 				echo $btn_prev;
 			}
 			
