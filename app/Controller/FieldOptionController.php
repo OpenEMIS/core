@@ -88,7 +88,7 @@ class FieldOptionController extends AppController {
 			$this->set(compact('subOptions', 'selectedSubOption', 'conditionId'));
 		}
 		$data = $this->FieldOptionValue->getAllValues($conditions);
-		$fields = $this->FieldOptionValue->getFields();
+		$fields = $this->FieldOptionValue->getValueFields();
 		
 		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model', 'fields'));
 		$this->Navigation->addCrumb($header);
@@ -151,7 +151,7 @@ class FieldOptionController extends AppController {
 		$obj = $this->optionList[$selectedOption];
 		$this->FieldOptionValue->setParent($obj);
 		$header = $this->FieldOptionValue->getHeader();
-		$fields = $this->FieldOptionValue->getFields();
+		$fields = $this->FieldOptionValue->getValueFields();
 		$model = $this->FieldOptionValue->getModel();
 		$selectedSubOption = false;
 		$conditionId = false;
@@ -205,7 +205,7 @@ class FieldOptionController extends AppController {
 			return $this->redirect(array('action' => 'index', $selectedOption));
 		}
 		$header = $this->FieldOptionValue->getHeader();
-		$fields = $this->FieldOptionValue->getFields();
+		$fields = $this->FieldOptionValue->getValueFields();
 		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue'));
 		$this->Navigation->addCrumb($header);
 	}
@@ -245,7 +245,7 @@ class FieldOptionController extends AppController {
 			$this->request->data = $this->FieldOptionValue->getValue($selectedValue);
 		}
 		$header = $this->FieldOptionValue->getHeader();
-		$fields = $this->FieldOptionValue->getFields();
+		$fields = $this->FieldOptionValue->getValueFields();
 		$this->set(compact('header', 'fields', 'selectedOption', 'selectedValue'));
 		$this->Navigation->addCrumb($header);
 	}
