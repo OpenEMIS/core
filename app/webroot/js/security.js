@@ -194,32 +194,6 @@ var Security = {
 		});
 	},
 	
-	addGroupAccessOptions: function(obj) {
-		var parent = $(obj).closest('.section_break');
-		var index = parent.find('tr').length;
-		var exclude = [];
-		parent.find('.value_id').each(function() {
-			exclude.push($(this).val());
-		});
-		
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: getRootURL() + $(obj).attr('url'),
-			data: {index: index, exclude: exclude},
-			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: parent, text: i18n.General.textAddingRow});
-			},
-			success: function (data, textStatus) {
-				var callback = function() {
-					parent.find('tbody').append(data);
-					jsTable.init(parent);
-				};
-				$.unmask({id: maskId, callback: callback});
-			}
-		});
-	},
-	
 	addGroupValueOptions: function(obj) {
 		var parent = $(obj).closest('.section_break');
 		var parentId = $(obj).val();

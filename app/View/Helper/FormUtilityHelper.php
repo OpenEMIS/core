@@ -316,4 +316,21 @@ class FormUtilityHelper extends AppHelper {
 		$checkBoxDiv = $this->Html->div('form-group',$checkBoxDiv);
 		echo $checkBoxDiv;
 	}
+	
+	public function isFieldVisible($attr, $type) {
+		$visible = false;
+
+		if (array_key_exists('visible', $attr)) {
+			$visibleField = $attr['visible'];
+
+			if (is_bool($visibleField)) {
+				$visible = $visibleField;
+			} else if (is_array($visibleField)) {
+				if (array_key_exists($type, $visibleField)) {
+					$visible = isset($visibleField[$type]) ? $visibleField[$type] : true;
+				}
+			}
+		}
+		return $visible;
+	}
 }

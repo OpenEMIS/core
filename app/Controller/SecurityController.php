@@ -43,6 +43,7 @@ class SecurityController extends AppController {
 	);
 	
 	public $modules = array(
+		'SecurityGroup',
 		'permissions' => 'SecurityRoleFunction',
 		'roles' => 'SecurityRole'
 	);
@@ -535,6 +536,7 @@ class SecurityController extends AppController {
 		$this->set('groupCount', $this->SecurityGroup->paginateCount($conditions));
 	}
 	
+	/*
 	public function groupsAddAccessOptions() {
 		$this->layout = 'ajax';
 		
@@ -570,6 +572,7 @@ class SecurityController extends AppController {
 			$this->render('groups_add_institution_options');
 		}
 	}
+	*/
 	
 	public function groupsLoadValueOptions() {
 		$this->layout = 'ajax';
@@ -604,44 +607,6 @@ class SecurityController extends AppController {
 		}
 		$result['msg'] = $msg;
 		return json_encode($result);
-	}
-	
-	public function groupsAdd() {
-		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-				$this->Navigation->addCrumb('Add Group');
-		
-		if($this->request->is('post')) {
-			$groupData = $this->data['SecurityGroup'];
-			$groupObj = $this->SecurityGroup->save($groupData);
-
-			if($groupObj) {
-				$groupId = $groupObj['SecurityGroup']['id'];
-				
-				// Group Users
-				if(isset($this->data['SecurityGroupUser'])) {
-					$userData = $this->data['SecurityGroupUser'];
-					$role = $this->SecurityRole->getGroupAdministratorRole();
-					foreach($userData as &$user) {
-						$user['security_group_id'] = $groupId;
-						$user['security_role_id'] = $role['SecurityRole']['id'];
-					}
-					$this->SecurityGroupUser->saveMany($userData);
-				}
-				
-				// Group Areas
-				if(isset($this->data['SecurityGroupArea'])) {
-					$areaData = $this->data['SecurityGroupArea'];
-					$this->SecurityGroupArea->saveGroupAccess($groupId, $areaData);
-				}
-				
-				// Group Institution Sites
-				if(isset($this->data['SecurityGroupInstitutionSite'])) {
-					$siteData = $this->data['SecurityGroupInstitutionSite'];
-					$this->SecurityGroupInstitutionSite->saveGroupAccess($groupId, $siteData);
-				}
-				$this->redirect(array('action' => 'groupsView', $groupId));
-			}
-		}
 	}
 	
 	public function groupsView() {
