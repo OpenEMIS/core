@@ -10,7 +10,7 @@ $this->assign('contentId', 'staff');
 $this->assign('contentHeader', __('List of Staff'));
 $this->start('contentActions');
 if ($_add_staff) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'StaffAdd'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'staffAdd'), array('class' => 'divider'));
 }
 $this->end();
 
