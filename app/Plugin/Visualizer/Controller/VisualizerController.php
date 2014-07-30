@@ -37,13 +37,13 @@ class VisualizerController extends VisualizerAppController {
 		//	$this->Session->delete('visualizer.wizard');
 		if ($this->action != 'visualization') {
 			if (!$this->Session->check('visualizer.wizard')) {
-				$tabs['indicator'] = array('name' => 'Step 1 :<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
-				$tabs['unit'] = array('name' => 'Step 2 :<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
-				$tabs['dimension'] = array('name' => 'Step 3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
-				$tabs['area'] = array('name' => 'Step 4 :<br/>Area', 'url' => $rootURL.'Visualizer/area');
-				$tabs['time'] = array('name' => 'Step 5 :<br/>Time', 'url' => $rootURL.'Visualizer/time');
-				$tabs['source'] = array('name' => 'Step 6 :<br/>Source', 'url' => $rootURL.'Visualizer/source');
-				$tabs['review'] = array('name' => 'Step 7 :<br/>Review', 'url' => $rootURL.'Visualizer/review');
+				$tabs['indicator'] = array('name' => 'Step 1:<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
+				$tabs['unit'] = array('name' => 'Step 2:<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
+				$tabs['dimension'] = array('name' => 'Step3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
+				$tabs['area'] = array('name' => 'Step 4:<br/>Area', 'url' => $rootURL.'Visualizer/area');
+				$tabs['time'] = array('name' => 'Step 5:<br/>Time', 'url' => $rootURL.'Visualizer/time');
+				$tabs['source'] = array('name' => 'Step 6:<br/>Source', 'url' => $rootURL.'Visualizer/source');
+				$tabs['review'] = array('name' => 'Step 7:<br/>Review', 'url' => $rootURL.'Visualizer/review');
 			} else {
 				$tabs = $this->Session->read('visualizer.wizard');
 				if (array_key_exists($currentPg, $tabs)) {
