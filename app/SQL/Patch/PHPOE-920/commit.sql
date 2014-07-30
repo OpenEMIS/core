@@ -30,11 +30,9 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_units` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `datawarehouse_indicator_conditions`;
-CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_conditions` (
+DROP TABLE IF EXISTS `datawarehouse_indicator_dimensions`;
+CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_dimensions` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
-  `operator` varchar(20) NOT NULL,
-  `value` varchar(50) NOT NULL,
   `datawarehouse_dimension_id` int(5) NOT NULL,
   `datawarehouse_indicator_id` int(5) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
@@ -44,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_conditions` (
   PRIMARY KEY (`id`),
   KEY `datawarehouse_dimension_id` (`datawarehouse_dimension_id`),
   KEY `datawarehouse_indicator_id` (`datawarehouse_indicator_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `datawarehouse_modules`;
 CREATE TABLE IF NOT EXISTS `datawarehouse_modules` (
@@ -90,6 +88,19 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_dimensions` (
   PRIMARY KEY (`id`),
   KEY `datawarehouse_module_id` (`datawarehouse_module_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_subgroups` (
+  `id` int(5) NOT NULL AUTO_INCREMENT,
+  `subgroup` text NOT NULL,
+  `value` text NOT NULL,
+  `datawarehouse_indicator_dimension_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `datawarehouse_indicator_dimension_id` (`datawarehouse_indicator_dimension_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 

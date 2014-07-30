@@ -9,7 +9,7 @@ class DatawarehouseController extends DatawarehouseAppController {
         'indicator' => 'Datawarehouse.DatawarehouseIndicator'
     ); 
 	
-	public $components = array('Paginator', 'Datawarehouse.Indicator');
+	public $components = array('Paginator', 'Datawarehouse.Datawarehouse', 'DataProcessing.Indicator');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -23,21 +23,35 @@ class DatawarehouseController extends DatawarehouseAppController {
 		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->name, 'action' => 'build'));
 	}
 
-    public function ajax_populate_by_module($moduleID){
+    public function test(){
+        $this->autoRender = false;
+        $this->Indicator->generateIndicator(4, 0);
+    }
+
+    public function ajax_populate_by_module($moduleID, $type){
         $this->autoRender = false;
         if(!empty($moduleID)){
-            $data = $this->Datawarehouse->getFieldOptionByModuleId($moduleID);
+            $data = $this->Indicator->getFieldOptionByModuleId($moduleID);
+            $dimensionOption = $this->Indicator->getDimensionOptions($moduleID);
             $operatorOptions = array();
             $fieldOptions = array();
 
             if(!empty($data)){
                 foreach($data as $d){
-                    $fieldOptions[$d['DatawarehouseField']['field']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
+                    $fieldOptions[$d['DatawarehouseField']['name']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
                     $operatorOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
                 }
             }
             $jsonData['fieldOption'] = $fieldOptions;
             $jsonData['operatorOption'] = $operatorOptions;
+
+
+            $this->set('type', $type);
+            $this->set($type.'DatawarehouseDimensionOptions', $dimensionOption);
+
+            $View = new View($this);
+            $dimensionRow =  $View->element('dimensionOption');
+            $jsonData['dimensionRow'] = $dimensionRow;
             return json_encode($jsonData);
         }
     }
@@ -77,5 +91,12 @@ class DatawarehouseController extends DatawarehouseAppController {
             $jsonData['dimensionValueOption'] = $data;
             return json_encode($jsonData);
          }
+    }
+
+    public function ajax_populate_subgroup($moduleID, $dimensionId){
+         $this->autoRender = false;
+         $dimensionOption = explode(",", $dimensionId);
+         $this->Datawarehouse->getSubgroupOptions($moduleID, $dimensionOption);
+        
     }
 }
