@@ -43,6 +43,11 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 			'className' => 'DatawarehouseIndicatorDimension',
 			'foreignKey' => 'datawarehouse_indicator_id',
 			'dependent' => true
+		),
+		'DatawarehouseIndicatorSubgroup' => array(
+			'className' => 'DatawarehouseIndicatorSubgroup',
+			'foreignKey' => 'datawarehouse_indicator_id',
+			'dependent' => true
 		)
 	);
 
@@ -194,10 +199,11 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		$DatawarehouseModule = ClassRegistry::init('DatawarehouseModule');
 		$datawarehouseModuleOptions = $DatawarehouseModule->find('list', array('fields'=> array('id', 'name')));
 
+		$numeratorDatawarewarehouseDimensionOptions = $controller->Datawarehouse->getDimensionOptions($data['DatawarehouseField']['datawarehouse_module_id']);
 		$requestData = $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions, $editable);
+		$data = array_merge($data, $requestData);
 		
-		$controller->request->data = $requestData;
-		$controller->set(compact('data', 'editable'));
+		$controller->set(compact('data', 'editable',  'numeratorDatawarewarehouseDimensionOptions'));
 	}
 
 	private function setup_add_edit_form($controller, $params){
@@ -212,20 +218,31 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		$currentStep = 0;
 
 		$tabStep = array('indicator', 'numerator', 'review');
+
 		$currentTab = $tabStep[key($tabStep)];
 		if($controller->request->is('get')){
+			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+			$data = $this->find('first',array('recursive'=>2, 'conditions' => array($this->name.'.id' => $id)));
+			if(empty($data) && !empty($id)){
+				$controller->redirect(array('action'=>'indicatorAdd'));
+			}
 
+			$requestData =  $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions);
+			$requestData['DatawarehouseIndicator'] = $data['DatawarehouseIndicator'];
+			$denominator = array();
+			if(isset($data['Denominator'])){
+				$denominator = $data['Denominator'];
+			}
+			$requestData['Denominator'] = $denominator;
+			$controller->request->data = $requestData;
 		}else{
 			$data = $controller->request->data;
-			//$data['DatawarehouseIndicator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['numerator_datawarehouse_field_id'];
-
+			
 			$saveData['DatawarehouseIndicator'] = $data['DatawarehouseIndicator'];
 			$saveData['DatawarehouseIndicator']['editable'] = 1;
 			$saveData['DatawarehouseIndicator']['enabled'] = 1;
 			$saveData['DatawarehouseIndicator']['type'] = 'Custom';
-
-			//$saveData['DeleteNumeratorDimensionRow'] = isset($data['DeleteNumeratorDimensionRow']) ? $data['DeleteNumeratorDimensionRow'] : array();
-			//$saveData['DeleteDenominatorDimensionRow'] = isset($data['DeleteDenominatorDimensionRow']) ? $data['DeleteDenominatorDimensionRow'] : array();
+			$saveData['DatawarehouseIndicator']['datawarehouse_field_id'] = $data['DatawarehouseField']['numerator_datawarehouse_field_id'];
 
 			if($data['DatawarehouseIndicator']['datawarehouse_unit_id']!=1){
 				$tabStep = array('indicator', 'numerator', 'denominator', 'review');
@@ -235,11 +252,9 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 				//WIZARD
 				$errorFlag = false;
 
-				pr($data);
 				$currentStep = array_search($data['DatawarehouseIndicator']['type'], $tabStep);
 				$nextStep = 0;
 				if ($this->saveAll($saveData, array('validate'=>'only'))){
-					pr('test');
 					if(isset($data['nextStep'])){
 						$currentStep = $currentStep+1;
 					}else if(isset($data['prevStep'])){
@@ -248,13 +263,75 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 					$currentTab = $tabStep[$currentStep];
 					pr($currentStep);
 				}else{
-					pr('error');
 					$errorFlag = true;
 				}
 				$controller->set('errorFlag', $errorFlag);
 			}else{
-				if ($this->saveAll($saveData)){
+				$denominatorFlag = false;
+				$saveTypeOptions = array('numerator');
+				if (isset($data[$this->name]['datawarehouse_unit_id']) && $data[$this->name]['datawarehouse_unit_id']!="1") {
+					$denominatorFlag = true;
+					$saveTypeOptions = array('numerator', 'denominator');
+				}
 
+				if($denominatorFlag){
+					$saveData['Denominator'] = $saveData['DatawarehouseIndicator'];
+					if(isset($data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'])){
+						$saveData['Denominator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'];
+					}
+					if(isset($data['Denominator']['id'])){
+						$saveData['Denominator']['id'] = $data['Denominator']['id'];
+					}else{
+						unset($saveData['Denominator']['id']);
+					}
+					$saveData['Denominator']['denominator'] = 0;
+				}
+				foreach($data['DatawarehouseField']['numerator_datawarehouse_dimension_id'] as $key=>$val){
+					$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
+				}
+
+				foreach($saveTypeOptions as $type){
+					$moduleID = $data['DatawarehouseField'][$type.'_datawarehouse_module_id'];
+					$datawarewarehouseDimensionOptions = $controller->Datawarehouse->getDimensionOptions($moduleID);
+
+					$dimensionValues = $controller->Datawarehouse->getAllDimension(array_keys($datawarewarehouseDimensionOptions));
+				
+					foreach($data['DatawarehouseField']['numerator_datawarehouse_subgroup_id'] as $key=>$val){
+						$saveData['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
+
+						$arrSubgroupType = split(", ", $val);
+						$conditionFormat = '%s.%s="%s"';
+						$condition = '';
+						$conditionConcat = '';
+						foreach($arrSubgroupType as $subgroupType){
+							if(strpos($subgroupType, "All")===false){
+								if(strrpos($subgroupType, ":")!==false){
+									$subgroup = substr($subgroupType, 0, strrpos($subgroupType, ":"));
+									$subgroupVal = substr($subgroupType, strrpos($subgroupType, ":")+2);
+									$subgroupID = array_search($subgroup, $datawarewarehouseDimensionOptions);
+
+									$condition .= $conditionConcat . sprintf($conditionFormat, $dimensionValues[$subgroupID]['DatawarehouseDimension']['model'],$dimensionValues[$subgroupID]['DatawarehouseDimension']['field'],$subgroupVal);
+								}
+							}
+						}
+						$saveData['datawarehouseSubgroup'][$key]['value'] = $condition;
+					}
+				}
+
+				$id = $controller->request->data[$this->name]['id'];
+				if(!empty($id)){
+					$this->DatawarehouseIndicatorDimension->deleteAll(array('DatawarehouseIndicatorDimension.datawarehouse_indicator_id' => $id), false);
+					$this->DatawarehouseIndicatorSubgroup->deleteAll(array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id' => $id), false);
+				}
+				if ($this->saveAll($saveData)){
+					if(empty($id)){
+					  	$controller->Message->alert('general.add.success');
+					}else{	
+					  	$controller->Message->alert('general.edit.success');
+					}
+					return $controller->redirect(array('action' => 'indicator'));
+				}else{
+					pr($this->invalidFields);
 				}
 			}
 
@@ -264,9 +341,15 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		foreach($typeOptions as $type){
 			$moduleID = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id'] : key($datawarehouseModuleOptions);
 			$operatorOption = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_operator']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_operator'] : key($operatorOptions);
-			$dimensionOption = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_field_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_field_id'] : null;
-	
-			$datawarehouseSubgroupOptions = $controller->Datawarehouse->getSubgroupOptions($moduleID, $dimensionOption);
+			$dimensionOption = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_dimension_id']) && !empty($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_dimension_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'] : array();
+			
+			$datawarehouseSubgroupOptions = array();
+			$datawarehouseSubgroups= $controller->Datawarehouse->getSubgroupOptions($moduleID, $dimensionOption);
+			foreach($datawarehouseSubgroups as $datawarehouseSubgroup){
+			 	$val = rtrim($controller->Datawarehouse->array2string($datawarehouseSubgroup), ', ');
+                $datawarehouseSubgroupOptions[$val] = $val;
+			}
+
 			$selectedSubgroup  = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] : array_keys($datawarehouseSubgroupOptions);
 			
 			$datawarewarehouseDimensionOptions = $controller->Datawarehouse->getDimensionOptions($moduleID);
