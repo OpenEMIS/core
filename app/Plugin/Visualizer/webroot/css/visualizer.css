@@ -25,6 +25,7 @@
 
 .visualizer-list-table{
 	max-height: 500px;
+	min-height: 100px;
 	overflow-y: auto;
 }
 

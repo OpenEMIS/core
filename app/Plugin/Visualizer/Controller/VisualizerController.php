@@ -37,13 +37,13 @@ class VisualizerController extends VisualizerAppController {
 		//	$this->Session->delete('visualizer.wizard');
 		if ($this->action != 'visualization') {
 			if (!$this->Session->check('visualizer.wizard')) {
-				$tabs['indicator'] = array('name' => 'Step 1 :<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
-				$tabs['unit'] = array('name' => 'Step 2 :<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
-				$tabs['dimension'] = array('name' => 'Step 3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
-				$tabs['area'] = array('name' => 'Step 4 :<br/>Area', 'url' => $rootURL.'Visualizer/area');
-				$tabs['time'] = array('name' => 'Step 5 :<br/>Time', 'url' => $rootURL.'Visualizer/time');
-				$tabs['source'] = array('name' => 'Step 6 :<br/>Source', 'url' => $rootURL.'Visualizer/source');
-				$tabs['review'] = array('name' => 'Step 7 :<br/>Review', 'url' => $rootURL.'Visualizer/review');
+				$tabs['indicator'] = array('name' => 'Step 1:<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
+				$tabs['unit'] = array('name' => 'Step 2:<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
+				$tabs['dimension'] = array('name' => 'Step3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
+				$tabs['area'] = array('name' => 'Step 4:<br/>Area', 'url' => $rootURL.'Visualizer/area');
+				$tabs['time'] = array('name' => 'Step 5:<br/>Time', 'url' => $rootURL.'Visualizer/time');
+				$tabs['source'] = array('name' => 'Step 6:<br/>Source', 'url' => $rootURL.'Visualizer/source');
+				$tabs['review'] = array('name' => 'Step 7:<br/>Review', 'url' => $rootURL.'Visualizer/review');
 			} else {
 				$tabs = $this->Session->read('visualizer.wizard');
 				if (array_key_exists($currentPg, $tabs)) {
@@ -289,10 +289,12 @@ class VisualizerController extends VisualizerAppController {
 		$header = __('Visualizer - Indicator');
 
 		if ($this->request->is(array('post', 'put'))) {
-			$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
+			if(!empty($this->request->data['indicator']['id'])){
+				$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
 
-			if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
-				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
+					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				}
 			}
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['indicator']['search']);
@@ -303,7 +305,9 @@ class VisualizerController extends VisualizerAppController {
 		$di6Indicator = ClassRegistry::init('Visualizer.Indicator');
 		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info')));
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId'));
 	}
 
@@ -316,10 +320,12 @@ class VisualizerController extends VisualizerAppController {
 		}
 
 		if ($this->request->is(array('post', 'put'))) {
-			$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
-			
-			if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
-				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+			if(!empty($this->request->data['unit']['id'])){
+				$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
+
+				if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
+					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				}
 			}
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['unit']['search']);
@@ -332,7 +338,10 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getUnits($selectedIndicatorId);
 
 		$tableRowData = $this->processUnitRawData($data,$selectedUnitIds);
-
+		
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedUnitIds'));
 	}
 
@@ -361,7 +370,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getDimensions(array('indicators' => $selectedIndicatorId, 'units' => $selectedUnitIds));
 
 		$tableRowData = $this->processDimensionRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedDimensionIds'));
 	}
 
@@ -402,7 +413,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $this->Paginator->paginate('DIArea');
 		$fullPathData = $this->DIArea->getAreaTreaFullPath($data);
 		$tableRowData = $this->processAreaRawData($fullPathData, $areaLevelOptions);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableHeaders', 'tableRowData', 'areaLevelOptions', 'selectedAreaLevel', 'selectedAreaIds'));
 	}
 
@@ -458,7 +471,9 @@ class VisualizerController extends VisualizerAppController {
 		$di6Data = ClassRegistry::init('Visualizer.DIData');
 		$data = $di6Data->getTimePeriodList($selectedDimensionIds);
 		$tableRowData = $this->processTimeRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedTimeperiodIds'));
 	}
 
@@ -485,7 +500,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorClassification->getSource($selectedDimensionIds, $selectedTimeperiodIds);
 
 		$tableRowData = $this->processSourceRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedSourceIds'));
 	}
 
