@@ -17,3 +17,12 @@ update `security_functions`
 set _view = 'SecurityGroup|SecurityGroup.index|groupsView',
 _add = 'SecurityGroup.add|groupsAdd'
 where id = 55;
+
+update `security_functions` set _view = 'index|view|advanced' where id = 8;
+update `security_functions` set _add = '_view:attachmentsAdd' where id = 10;
+update `security_functions` set _add = '_view:bankAccountsAdd' where id = 11;
+update `security_functions` set _add = NULL, _delete = NULL where id = 13;
+update `security_functions` set _add = '_view:positionsAdd' where id = 14;
+update `security_functions` set _add = '_view:classesAdd' where id = 15;
+update `security_functions` set _add = '_view:staffAdd|staffSave' where id = 27;
+update `security_functions` set _add = '_view:feeAdd' where id = 195;
