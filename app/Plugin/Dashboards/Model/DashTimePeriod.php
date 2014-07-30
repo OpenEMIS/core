@@ -14,9 +14,10 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class JORTimePeriod extends DashboardsAppModel {
+class DashTimePeriod extends DashboardsAppModel {
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_timeperiod';
+	public $alias = 'TimePeriod';
 	
 	/*public function createRecord($data) {
 		$model = array(

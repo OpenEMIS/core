@@ -26,6 +26,7 @@ class HighChartsComponent extends Component {
 	public $selectedAreas;
 	public $selectedUnits;
 	public $selectedTimeperiods;
+	public $selectedIUS;
 
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
@@ -67,9 +68,28 @@ class HighChartsComponent extends Component {
 		$this->selectedUnits = array_unique(array_map(function ($i) {
 					return $i['Unit']['Unit_Name'];
 				}, $IUSData));
+		$this->selectedIUS = array_unique(array_map(function ($i) {
+					return $i['IndicatorUnitSubgroup']['IUSNId'];
+				}, $IUSData));
 
 		$this->selectedAreas = $AreaData;
 		$this->selectedTimeperiods = $TimeperiodData;
+	}
+	
+	public function getAreaIds(){
+		$data = array_unique(array_map(function ($i) {
+					return $i['DIArea']['Area_Nid'];
+				}, $this->selectedAreas));
+		
+		return $data;
+	}
+	
+	public function getTimeperiodIds(){
+		$data = array_unique(array_map(function ($i) {
+					return $i['TimePeriod']['TimePeriod_NId'];
+				}, $this->selectedTimeperiods));
+		
+		return $data;
 	}
 
 	public function getChartData($type, $DIData) {
@@ -128,7 +148,7 @@ class HighChartsComponent extends Component {
 	 * populating data into highchart format
 	 * ================================================ */
 
-	private function getGenericChartData($chartType, $DIData) {
+	public function getGenericChartData($chartType, $DIData) {
 		$chartData = $this->setupChartCategory($chartType);
 		$chartData = array_merge($chartData, $this->setupChartDataset($DIData, $this->getChartBreak($chartType)));
 		return $chartData;
