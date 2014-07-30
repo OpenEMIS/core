@@ -24,7 +24,9 @@ class Student extends StudentsAppModel {
 				'Students.StudentCustomValue'
 			)
 		),
-		'CustomReport',
+		'CustomReport' => array(
+			'_default' => array('photo_name', 'photo_content')
+		),
 		'DatePicker' => array('date_of_birth'),
 		'FileUpload' => array(
 			array(

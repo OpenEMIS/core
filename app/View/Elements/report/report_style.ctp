@@ -1,7 +1,12 @@
 <div style="margin-top: 10px; padding-left: 5px;">
 	<div class="row">
 		<label class="col-md-3"><?php echo __('Output'); ?></label>
-		<div class="col-md-4"><?php echo $this->Form->input('Output', array('label' => false, 'class' => 'form-control', 'options' => $outputOptions)); ?></div>
+		<div class="col-md-4">
+			<?php 
+			echo $this->Form->input('Output', array('label' => false, 'class' => 'form-control', 'options' => $outputOptions));
+			echo $this->Form->hidden('MainModel', array('label' => false, 'value' => $modelClass));
+			?>
+		</div>
 	</div>
 	<div class="row">
 		<label class="col-md-3"><?php echo __('Save Report'); ?></label>

@@ -4,12 +4,6 @@
 if ($totalRows < 1) {
 	echo $this->Label->get('ReportInHtml.no_data');
 } else {
-	$totalPages = ceil($totalRows / $rowsPerPage);
-
-	if ($currentPage > $totalPages) {
-		$currentPage = 1;
-	}
-
 	// generate pagination
 	$paginationStr = '';
 	$paginationStr .= '<div class="row">';

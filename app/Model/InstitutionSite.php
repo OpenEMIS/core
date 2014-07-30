@@ -96,6 +96,11 @@ class InstitutionSite extends AppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Address'
+			),
+			'ruleMaximum' => array(
+				'rule' => array('maxLength', 255),
+				'required' => true,
+				'message' => 'Please eneter an address within 255 characters'
 			)
 		),
 		'postal_code' => array(
