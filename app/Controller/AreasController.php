@@ -20,8 +20,8 @@ class AreasController extends AppController {
 	public $uses = array('Area', 'AreaLevel', 'AreaEducation', 'AreaEducationLevel');
 	
 	public $modules = array(
+		'Area',
 		'areasEducation' => 'AreaEducation',
-		'areas' => 'Area',
 		'levelsEducation' => 'AreaEducationLevel',
 		'levels' => 'AreaLevel'
 	);
@@ -33,7 +33,7 @@ class AreasController extends AppController {
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
 		
 		$areaOptions = array(
-			'areas' => __('Areas'),
+			'Area' => __('Areas'),
 			'levels' => __('Area Levels'),
 			'areasEducation' => __('Areas (Education)'),
 			'levelsEducation' => __('Area Levels (Education)')
@@ -58,7 +58,7 @@ class AreasController extends AppController {
 	}
 	
 	public function index() {
-		return $this->redirect(array('action' => 'areas'));
+		return $this->redirect(array('action' => 'Area'));
 	}
 	
 	public function ajaxGetAreaOptions($model='Area', $parentId=0) {
