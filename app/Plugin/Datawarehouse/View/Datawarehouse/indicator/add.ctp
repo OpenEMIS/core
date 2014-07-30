@@ -45,6 +45,7 @@ echo $this->Form->input('type', array('type'=> 'hidden', 'value'=>$currentTab));
 	<div id='content' class="tab-content">
 		<?php echo $this->element('indicator');?>
 	  	<?php echo $this->element('dimension');?>
+	  	<?php echo $this->element('review');?>
 	</div> 
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>  

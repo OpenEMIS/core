@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class DatawarehouseIndicatorSubgroup extends DatawarehouseAppModel {
 	
 	public $belongsTo = array(
-		'DatawarehouseIndicatorDimension',
+		'DatawarehouseIndicator',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'

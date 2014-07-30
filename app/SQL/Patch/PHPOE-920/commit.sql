@@ -93,13 +93,13 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_subgroups` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
   `subgroup` text NOT NULL,
   `value` text NOT NULL,
-  `datawarehouse_indicator_dimension_id` int(11) NOT NULL,
+  `datawarehouse_indicator_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `datawarehouse_indicator_dimension_id` (`datawarehouse_indicator_dimension_id`)
+  KEY `datawarehouse_indicator_id` (`datawarehouse_indicator_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -149,7 +149,7 @@ from census_students_bu;
 
 DROP TABLE IF EXISTS `census_students_bu`;
 
-UPDATE `navigations` SET `action`='indicator', `pattern`='^indicator' WHERE `id`='43';
+UPDATE `navigations` SET SET `plugin`='Datawarehouse', `controller`='Datawarehouse', `action`='indicator', `pattern`='^indicator' WHERE `id`='43';
 
 INSERT INTO `datawarehouse_modules` (`id`, `name`, `model`, `joins`, `enabled`, `created_user_id`, `created`) 
 VALUES ('1', 'Student', 'CensusStudent', 'array(\n  \'type\' => \'INNER\',\n  \'table\' => \'institution_sites\',\n \'alias\' => \'InstitutionSite\',\n \'conditions\' => array(\'CensusStudent.institution_site_id = InstitutionSite.id\')\n)', '1', '1', '2014-07-14');
@@ -167,10 +167,10 @@ INSERT INTO `datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_
 (5, 'value', 'SUM', 1, NULL, NULL, 1, '2014-07-14 00:00:00');
 
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('1', 'Age', 'age', 'CensusStudent', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('2', 'Gender', 'id', 'Gender', 'array(\n \'type\' => \'INNER\',\n  \'table\' => \'field_option_values\',\n \'alias\' => \'Gender\',\n  \'conditions\' => array(\'Gender.id = CensusStudent.gender_id\')\n)', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('3', 'Institution Site Locality', 'name', 'InstitutionSiteLocality',null, '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('4', 'Student Category', 'name', 'StudentCategory', '1', '1', '2014-07-14');
-INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('5', 'Education Grade', 'name', 'EducationGrade', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('2', 'Sex', 'name', 'Gender', 'array(\n \'type\' => \'INNER\',\n  \'table\' => \'field_option_values\',\n \'alias\' => \'Gender\',\n  \'conditions\' => array(\'Gender.id = CensusStudent.gender_id\')\n)', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('3', 'Locality', 'name', 'InstitutionSiteLocality',null, '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('4', 'Category', 'name', 'StudentCategory', '1', '1', '2014-07-14');
+INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('5', 'Grade', 'name', 'EducationGrade', '1', '1', '2014-07-14');
 
 INSERT INTO `dev_openemis_demo`.`datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('7', 'value', 'SUM', '1', '1', '2014-07-14 00:00:00');
 UPDATE `dev_openemis_demo`.`datawarehouse_fields` SET `type`='COUNT' WHERE `id`='6';
