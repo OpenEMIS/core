@@ -305,7 +305,9 @@ class VisualizerController extends VisualizerAppController {
 		$di6Indicator = ClassRegistry::init('Visualizer.Indicator');
 		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info')));
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId'));
 	}
 
@@ -336,7 +338,10 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getUnits($selectedIndicatorId);
 
 		$tableRowData = $this->processUnitRawData($data,$selectedUnitIds);
-
+		
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedUnitIds'));
 	}
 
@@ -365,7 +370,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getDimensions(array('indicators' => $selectedIndicatorId, 'units' => $selectedUnitIds));
 
 		$tableRowData = $this->processDimensionRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedDimensionIds'));
 	}
 
@@ -406,7 +413,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $this->Paginator->paginate('DIArea');
 		$fullPathData = $this->DIArea->getAreaTreaFullPath($data);
 		$tableRowData = $this->processAreaRawData($fullPathData, $areaLevelOptions);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableHeaders', 'tableRowData', 'areaLevelOptions', 'selectedAreaLevel', 'selectedAreaIds'));
 	}
 
@@ -462,7 +471,9 @@ class VisualizerController extends VisualizerAppController {
 		$di6Data = ClassRegistry::init('Visualizer.DIData');
 		$data = $di6Data->getTimePeriodList($selectedDimensionIds);
 		$tableRowData = $this->processTimeRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedTimeperiodIds'));
 	}
 
@@ -489,7 +500,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorClassification->getSource($selectedDimensionIds, $selectedTimeperiodIds);
 
 		$tableRowData = $this->processSourceRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedSourceIds'));
 	}
 
