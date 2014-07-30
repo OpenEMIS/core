@@ -39,8 +39,8 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 	);
 
 	public $hasMany = array(
-		'DatawarehouseIndicatorCondition' => array(
-			'className' => 'DatawarehouseIndicatorCondition',
+		'DatawarehouseIndicatorDimension' => array(
+			'className' => 'DatawarehouseIndicatorDimension',
 			'foreignKey' => 'datawarehouse_indicator_id',
 			'dependent' => true
 		)
@@ -61,7 +61,10 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 				'required' => true,
 				'message' => 'Please enter an Indicator code'
 			)
-		),
+		)
+	);
+
+	public $validateNumerator = array(
 		'numerator_datawarehouse_field_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -69,9 +72,7 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 				'message' => 'Please select a Numerator Field'
 			)
 		)
-	);
-
-
+  	);
 	public $validateDenominator = array(
 		'denominator_datawarehouse_field_id' => array(
 			'ruleRequired' => array(
@@ -87,7 +88,11 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 
 	public function beforeValidate($options = array()) {
 		if (isset($this->data[$this->name]['datawarehouse_unit_id']) && $this->data[$this->name]['datawarehouse_unit_id']!="1") {
-			$this->validate = array_merge($this->validate, $this->validateDenominator);
+			if($this->data[$this->name]['type']=='numerator'){
+				$this->validate = array_merge($this->validate, $this->validateNumerator);
+			}else if($this->data[$this->name]['type']=='denominator'){
+				$this->validate = array_merge($this->validate, $this->validateDenominator);
+			}
 		}
 		return true;
 	}
@@ -189,7 +194,7 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		$DatawarehouseModule = ClassRegistry::init('DatawarehouseModule');
 		$datawarehouseModuleOptions = $DatawarehouseModule->find('list', array('fields'=> array('id', 'name')));
 
-		$requestData = $controller->Indicator->formatDimension($data, $datawarehouseModuleOptions, $editable);
+		$requestData = $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions, $editable);
 		
 		$controller->request->data = $requestData;
 		$controller->set(compact('data', 'editable'));
@@ -201,161 +206,84 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		$DatawarehouseModule = ClassRegistry::init('DatawarehouseModule');
 		$datawarehouseModuleOptions = $DatawarehouseModule->find('list', array('fields'=> array('id', 'name')));
 
-		$operatorOptions = $controller->Indicator->operatorOptions();
+		$operatorOptions = $controller->Datawarehouse->operatorOptions();
 
 		$typeOptions = array('numerator', 'denominator');
+		$currentStep = 0;
 
-		$editable = true;
+		$tabStep = array('indicator', 'numerator', 'review');
+		$currentTab = $tabStep[key($tabStep)];
 		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$data = $this->find('first',array('recursive'=>2, 'conditions' => array($this->name.'.id' => $id)));
-			if(empty($data) && !empty($id)){
-				$controller->redirect(array('action'=>'indicatorAdd'));
-			}
 
-			$requestData =  $controller->Indicator->formatDimension($data, $datawarehouseModuleOptions);
-			if(isset($data['DatawarehouseIndicator'])){
-				$requestData['DatawarehouseIndicator'] = array_merge($requestData['DatawarehouseIndicator'], $data['DatawarehouseIndicator']);
-			}
-			$denominator = array();
-			if(isset($data['Denominator'])){
-				$denominator = $data['Denominator'];
-			}
-			$requestData['Denominator'] = $denominator;
-			$controller->request->data = $requestData;
 		}else{
 			$data = $controller->request->data;
-			$data['DatawarehouseIndicator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['numerator_datawarehouse_field_id'];
+			//$data['DatawarehouseIndicator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['numerator_datawarehouse_field_id'];
 
 			$saveData['DatawarehouseIndicator'] = $data['DatawarehouseIndicator'];
 			$saveData['DatawarehouseIndicator']['editable'] = 1;
 			$saveData['DatawarehouseIndicator']['enabled'] = 1;
 			$saveData['DatawarehouseIndicator']['type'] = 'Custom';
 
-			$deleteDenominator = false;
-			if(isset($data['DatawarehouseIndicator']['datawarehouse_unit_id']) && $data['DatawarehouseIndicator']['datawarehouse_unit_id']!="1"){
-				$saveData['Denominator'] = $saveData['DatawarehouseIndicator'];
-				if(isset($data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'])){
-					$saveData['Denominator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'];
-				}
-				if(isset($data['Denominator']['id'])){
-					$saveData['Denominator']['id'] = $data['Denominator']['id'];
-				}
-				$denominatorDimensionIndicatorCondition = array();
-				if(isset($data['DenominatorDatawarehouseDimension'])){
-					foreach($data['DenominatorDatawarehouseDimension'] as $d){
-						$temp = array();
-						if(isset($d['value'])){
-							$temp['operator'] = $d['operator'];
-							$temp['datawarehouse_dimension_id'] = $d['datawarehouse_dimension_id'];
-							$temp['value'] = $d['value'];
-							if(isset($d['id'])){
-								$temp['id'] = $d['id'];
-							}
-							if(isset($d['datawarehouse_indicator_id'])){
-								$temp['datawarehouse_indicator_id'] = $d['datawarehouse_indicator_id'];
-							}
-							$denominatorDimensionIndicatorCondition[] = $temp;
-						}
+			//$saveData['DeleteNumeratorDimensionRow'] = isset($data['DeleteNumeratorDimensionRow']) ? $data['DeleteNumeratorDimensionRow'] : array();
+			//$saveData['DeleteDenominatorDimensionRow'] = isset($data['DeleteDenominatorDimensionRow']) ? $data['DeleteDenominatorDimensionRow'] : array();
+
+			if($data['DatawarehouseIndicator']['datawarehouse_unit_id']!=1){
+				$tabStep = array('indicator', 'numerator', 'denominator', 'review');
+			}
+
+			if(!isset($data['save'])){
+				//WIZARD
+				$errorFlag = false;
+
+				pr($data);
+				$currentStep = array_search($data['DatawarehouseIndicator']['type'], $tabStep);
+				$nextStep = 0;
+				if ($this->saveAll($saveData, array('validate'=>'only'))){
+					pr('test');
+					if(isset($data['nextStep'])){
+						$currentStep = $currentStep+1;
+					}else if(isset($data['prevStep'])){
+						$currentStep = $currentStep-1;
 					}
+					$currentTab = $tabStep[$currentStep];
+					pr($currentStep);
+				}else{
+					pr('error');
+					$errorFlag = true;
 				}
-				$saveData['Denominator']['DatawarehouseIndicatorCondition'] = $denominatorDimensionIndicatorCondition;
+				$controller->set('errorFlag', $errorFlag);
 			}else{
-				if(isset($data['Denominator']['id'])){
-					$saveData['DatawarehouseIndicator']['denominator'] = 0;
-					$deleteDenominator = true;
+				if ($this->saveAll($saveData)){
+
 				}
 			}
 
-			//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-			$numeratorDimensionIndicatorCondition = array();
-			if(isset($data['NumeratorDatawarehouseDimension'])){
-				foreach($data['NumeratorDatawarehouseDimension'] as $d){
-					$temp = array();
-					if(isset($d['value'])){
-						$temp['operator'] = $d['operator'];
-						$temp['datawarehouse_dimension_id'] = $d['datawarehouse_dimension_id'];
-						$temp['value'] = $d['value'];
-						if(isset($d['id'])){
-							$temp['id'] = $d['id'];
-						}
-						if(isset($d['datawarehouse_indicator_id'])){
-							$temp['datawarehouse_indicator_id'] = $d['datawarehouse_indicator_id'];
-						}
-						$numeratorDimensionIndicatorCondition[] = $temp;
-					}
-				}
-			}
-			$saveData['DatawarehouseIndicatorCondition'] = $numeratorDimensionIndicatorCondition;
-			//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
-			$saveData['DeleteNumeratorDimensionRow'] = isset($data['DeleteNumeratorDimensionRow']) ? $data['DeleteNumeratorDimensionRow'] : array();
-			$saveData['DeleteDenominatorDimensionRow'] = isset($data['DeleteDenominatorDimensionRow']) ? $data['DeleteDenominatorDimensionRow'] : array();
-			if ($this->saveAll($saveData)){
-				if(isset($saveData['DeleteNumeratorDimensionRow'])){
-					$deletedId = array();
-					foreach($saveData['DeleteNumeratorDimensionRow'] as $key=>$value){
-						$deletedId[] = $value['id'];
-					}
-					$this->DatawarehouseIndicatorCondition->deleteAll(array('DatawarehouseIndicatorCondition.id' => $deletedId), false);
-				}
-				if(isset($saveData['DeleteDenominatorDimensionRow'])){
-					$deletedId = array();
-					foreach($saveData['DeleteDenominatorDimensionRow'] as $key=>$value){
-						$deletedId[] = $value['id'];
-					}
-					$this->DatawarehouseIndicatorCondition->deleteAll(array('DatawarehouseIndicatorCondition.id' => $deletedId), false);
-				}
-				if($deleteDenominator){
-					$this->delete($data['Denominator']['id']);
-				}
-				//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-				
-				if(isset($saveData['Denominator']['DatawarehouseIndicatorCondition']) && !empty($saveData['Denominator']['DatawarehouseIndicatorCondition'])){
-					$saveDenominator['DatawarehouseIndicatorCondition'] = $saveData['Denominator']['DatawarehouseIndicatorCondition'];
-					$saveDenominator['DatawarehouseIndicator'] = $saveData['Denominator'];
-					if(!isset($saveData['Denominator']['id'])){
-						$saveDenominator['DatawarehouseIndicator']['id'] = $this->Denominator->getLastInsertId();
-					}
-					unset($saveDenominator['DatawarehouseIndicator']['DatawarehouseIndicatorCondition']);
-					$this->saveAll($saveDenominator);
-				}
-
-
-				if(empty($controller->request->data[$this->name]['id'])){
-				  	$controller->Message->alert('general.add.success');
-				}else{	
-				  	$controller->Message->alert('general.edit.success');
-				}
-				return $controller->redirect(array('action' => 'indicator'));
-				//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-			}else{
-				
-				if(array_key_exists('numerator_datawarehouse_field_id', $this->validationErrors)){
-					$numeratorErrorMsg = $this->validationErrors['numerator_datawarehouse_field_id'][0];
-					$controller->set('numeratorErrorMsg', $numeratorErrorMsg);
-				}
-				if(array_key_exists('denominator_datawarehouse_field_id', $this->validationErrors)){
-					$denominatorErrorMsg = $this->validationErrors['denominator_datawarehouse_field_id'][0];
-					$controller->set('denominatorErrorMsg', $denominatorErrorMsg);
-				}
-			}
 		}
 
-		foreach($typeOptions as $type){
-			$moduleID = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id'] : null;
-			$operatorOption = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_operator']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_operator'] : null;
 
+		foreach($typeOptions as $type){
+			$moduleID = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_module_id'] : key($datawarehouseModuleOptions);
+			$operatorOption = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_operator']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_operator'] : key($operatorOptions);
+			$dimensionOption = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_field_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_field_id'] : null;
+	
+			$datawarehouseSubgroupOptions = $controller->Datawarehouse->getSubgroupOptions($moduleID, $dimensionOption);
+			$selectedSubgroup  = isset($controller->request->data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id']) ? $controller->request->data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] : array_keys($datawarehouseSubgroupOptions);
+			
+			$datawarewarehouseDimensionOptions = $controller->Datawarehouse->getDimensionOptions($moduleID);
+			
 			$datawarehouseOperatorFieldOptions = array();
 			$datawarehouseFieldOptions = array();
 			
-			$controller->Indicator->populateDimensionOption($moduleID, $operatorOption, $datawarehouseFieldOptions, $datawarehouseOperatorFieldOptions);
-
+			$controller->Datawarehouse->populateDimensionOption($moduleID, $operatorOption, $datawarehouseFieldOptions, $datawarehouseOperatorFieldOptions);
+			$controller->set($type.'DatawarehouseDimensionOptions', $datawarewarehouseDimensionOptions);
+			$controller->set($type.'DatawarehouseSubgroupOptions', $datawarehouseSubgroupOptions);
 			$controller->set($type.'DatawarehouseOperatorFieldOptions', $datawarehouseOperatorFieldOptions);
 			$controller->set($type.'DatawarehouseFieldOptions', $datawarehouseFieldOptions);
+
+			$controller->set($type.'SelectedSubgroup', $selectedSubgroup);
 		}
 
-		$controller->set(compact('datawarehouseUnitOptions', 'datawarehouseModuleOptions', 'operatorOptions', 'editable'));
+		$controller->set(compact('datawarehouseUnitOptions', 'datawarehouseModuleOptions', 'operatorOptions', 'editable', 'tabStep', 'currentStep', 'currentTab'));
 		
 	}
 

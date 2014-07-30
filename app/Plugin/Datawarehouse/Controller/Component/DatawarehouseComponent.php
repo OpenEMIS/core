@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('Component', 'Controller');
 
-class IndicatorComponent extends Component {
+class DatawarehouseComponent extends Component {
 	public $components = array('Logger', 'Utility');
 
 	public $runLimit = 1000;
@@ -272,9 +272,71 @@ class IndicatorComponent extends Component {
     
 	//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
-    public function generateIndicator($id, $userId=0) {
+		
 
+
+
+    public function getSubgroupOptions($moduleID, $dimensionOption) {
+    	$subgroupOptions = array();
+    	if(!empty($moduleID)){
+    		$allDimensionOptions = $this->getDimensionOptions($moduleID);
+    		
+    		
+    		if(!empty($allDimensionOptions)){
+    			$permutationList = array();
+    			foreach($allDimensionOptions as $key=>$dimension){
+    				$subgroups = "All " . Inflector::pluralize($dimension);
+    				$i = 0;
+    				$permutationList[$dimension] = array($i++ => $subgroups);
+    				if(array_key_exists($key, array_keys($dimensionOption))){
+    					pr($key);
+    					$value = $this->getDimensionValueOption($dimenOpt);
+    					if(!empty($value)){
+		    				foreach($value as $key=>$val){
+		    				 	$permutationList[$dimension[$dimenOpt]] = array($i++ => $val);
+			    			}
+			    		}
+		    		}
+    			}
+    		}
+
+    		pr($permutationList);
+    		//exit;
+		  	$subgroupOptions = $this->permutate($permutationList);
+    		pr($subgroupOptions);
+    	}
+    	return $subgroupOptions;
     }
-	
+
+    public function permutate($array) {
+        $permutations = array();
+        $iter = 0;
+
+        while(1) {
+            $num = $iter++;
+            $pick = array();
+
+            for($i=0; $i<sizeof($array); $i++) {
+                $groupSize = sizeof($array[$i]);
+                $r = $num % $groupSize;
+                $num = ($num - $r) / $groupSize;
+                array_push($pick, $array[$i][$r]);
+            }
+            if($num > 0) break;
+
+            array_push($permutations, $pick);
+        }
+        return $permutations;
+    }
+
+    private function isMaxPermutations(&$counter){
+        $max = 5;
+        if($counter > $max){
+            return true;
+        }else{
+            $counter++;
+            return false;
+        }
+    }
 }
 ?>

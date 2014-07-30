@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class DatawarehouseIndicatorCondition extends DatawarehouseAppModel {
+class DatawarehouseIndicatorDimension extends DatawarehouseAppModel {
 	
 	public $belongsTo = array(
 		'DatawarehouseIndicator',

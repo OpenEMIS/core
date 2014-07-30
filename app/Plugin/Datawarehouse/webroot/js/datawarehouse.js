@@ -19,11 +19,47 @@ $(document).ready(function() {
 
 var objDatawarehouse = {
     init: function() {
+        $('.numeratorDimension .filter-dimension input:checkbox').click(function() {
+            objDatawarehouse.generateSubgroup('numerator');
+        });
+
+         $('.nav-tabs > li  > a').click(function(){
+            if(!$(this).parent().hasClass('disabled')){
+                var type = $(this).attr('href').replace('#tab-', "");
+                $('#DatawarehouseIndicatorType').val(type);
+            }
+        });
         // objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
         //objDatawarehouse.populateByModuleOperator($(".numeratorOperatorOption"), "numerator");
         //objDatawarehouse.populateByField($(".numeratorFieldOption"), "numerator");
-        $('#tabs').tab();
-        objDatawarehouse.getUnitType($("#DatawarehouseIndicatorDatawarehouseUnitId"));
+
+        //objDatawarehouse.getUnitType($("#DatawarehouseIndicatorDatawarehouseUnitId"));
+        objDatawarehouse.setSelectedTab();
+    },
+
+    generateSubgroup: function(objType){
+        var dimensionId = [];
+        $('.'+objType+'Dimension .filter-dimension input:checkbox:checked').each(function () {
+            dimensionId.push($(this).val());
+        });
+
+        var moduleID = $('.'+objType+'ModuleOption').val();
+        if(dimensionId.length>0){
+            url = 'Datawarehouse/ajax_populate_subgroup/';
+            $.ajax({ 
+                type: "get",
+                dataType: "json",
+                url: getRootURL()+url+moduleID+'/'+dimensionId,
+                success: function(data){
+                    if(data == null){
+                        return;
+                    }
+                    
+                    $.unmask({id: maskId});
+                },
+                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"Dimension"}); }
+            });
+        }
     },
     getUnitType: function(obj){
         if($(obj).val()== "1"){
@@ -32,159 +68,45 @@ var objDatawarehouse = {
             $('#divDenominator').removeClass('hide');
         }
     },
+    setSelectedTab: function(){
+        $('.tab-pane').each(function(){
+            $(this).removeClass('active');
+        });
+       $($('.nav-tabs .active > a').attr('href')).addClass('active');
+    },
     populateByModule: function(obj, objType){
         var moduleID = $(obj).val();
         var operatorOption = $('.'+objType+"OperatorOption");
-        var fieldOption = $('.'+objType+"FieldOption");
-        var fieldID = $('.'+objType+"FieldID");
         var maskId;
-        var addDimensionRow = $('.'+objType+'-add-dimension-row');
         if(moduleID === ""){
-            operatorOption.children('option:not(:first)').remove();
-            fieldOption.children('option:not(:first)').remove();
-            fieldID.val("");
-            if(!addDimensionRow.hasClass('hide')){
-                addDimensionRow.addClass('hide');
-            }
-            $('.'+objType+"-dimension-row tbody").remove();
-            $('.delete-'+objType+"-dimension-row input").remove();
+            operatorOption.children().remove();
         }else{
             url = $(obj).attr('url');
             $.ajax({ 
                 type: "get",
                 dataType: "json",
-                url: getRootURL()+url+moduleID,
+                url: getRootURL()+url+moduleID+'/'+objType,
                 success: function(data){
-                    operatorOption.children('option:not(:first)').remove();
-                    fieldOption.children('option:not(:first)').remove();
-                    fieldID.val("");
-                    if(addDimensionRow.hasClass('hide')){
-                        addDimensionRow.removeClass('hide');
-                    }
-                    $('.'+objType+"-dimension-row tbody").remove();
-                    $('.delete-'+objType+"-dimension-row input").remove();
-
+                    operatorOption.children().remove();
+                   // $('.'+objType.'Dimension .filter-dimension').remove();
                     if(data == null){
                         return;
                     }
+                    $('.'+objType+'Dimension .form-dimension').remove();
                     
-                    $.each(data.fieldOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(fieldOption);
-                    });
+                    $('.'+objType+'Dimension').prepend(data.dimensionRow);
 
-                     $.each(data.operatorOption, function(key, value) {              
+                    $.each(data.operatorOption, function(key, value) {              
                         $('<option>').val(key).text(value).appendTo(operatorOption);
                     });
                     $.unmask({id: maskId});
                 },
-                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"-dimension-row"}); }
+                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"Dimension"}); }
             });
         }
     },
-    populateByModuleOperator: function(obj, objType){
-        var operatorOption = $(obj).val();
-        var moduleID = $('.'+objType+"ModuleOption").val();
-        var fieldOption = $('.'+objType+"FieldOption");
-        var fieldID = $('.'+objType+"FieldID");
-      
-        if(operatorOption=== "" || moduleID === ""){
-            fieldOption.children('option:not(:first)').remove();
-            fieldID.val("");
-        }else{
-            url = $(obj).attr('url');
-            $.ajax({ 
-                type: "get",
-                dataType: "json",
-                url: getRootURL()+url+moduleID+'/'+operatorOption,
-                success: function(data){
-                    fieldOption.children('option:not(:first)').remove();
-                    fieldID.val("");
-
-                    if(data == null){
-                        return;
-                    }
-
-                     $.each(data.fieldOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(fieldOption);
-                    });
-
-                }
-            });
-        }
-    },
-    populateByField: function(obj, objType){
-        var fieldOption = $(obj).val();
-        var fieldID = $('.'+objType+"FieldID");
-        if(fieldOption === ""){
-            fieldID.val("");
-        }else{
-            fieldID.val(fieldOption);
-        }
-    },
-
-    addDimensionRow: function(obj, objType) {
-        var table = $('.'+objType+'-dimension-row');
-        var index = table.find('.table_row').length + $('.delete-'+objType+'-dimension-row input').length;
-        var moduleID =  $('.'+objType+"ModuleOption").val();
-        var maskId;
-        var params = {index: index, module_id: moduleID, type: objType};
-        var success = function(data, status) {
-            var callback = function() {
-                table.find('.table_body').append(data);
-            };
-            $.unmask({id: maskId, callback: callback});
-        };
-        $.ajax({
-            type: 'GET',
-            dataType: 'text',
-            url: getRootURL() + $(obj).attr('url'),
-            data: params,
-            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
-            success: success
-        });
-    },
-    populateByDimensionOption: function(obj, index, objType){
-        var dimensionOption = $(obj).val();
-        var dimensionValueOption = $('.'+objType+index+"DimensionValueOption");
-        var dimensionOptionName = $('.'+objType+index+"DimensionOptionName");
-        var maskId;
-        if(dimensionOption === ""){
-            dimensionValueOption[0].options.length = 0;
-            dimensionOptionName.val("");
-        }else{
-            url = $(obj).attr('url');
-            $.ajax({ 
-                type: "get",
-                dataType: "json",
-                url: getRootURL()+url+dimensionOption,
-                success: function(data){
-                    dimensionValueOption[0].options.length = 0;
-                    dimensionOptionName.val($(obj).find(":selected").text());
-                    if(data == null){
-                        return;
-                    }
-                     $.each(data.dimensionValueOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(dimensionValueOption);
-                    });
-                    $.unmask({id: maskId});
-                },
-                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"-dimension-row"}); }
-            });
-        }
-    },
-    deleteDimensionRow: function(obj, objType) {
-        var row = $(obj).closest('.table_row');
-        var id = row.attr('row-id');
-
-        if(id != undefined) {
-            var div = $('.delete-'+objType+'-dimension-row');
-            var index = div.find('input').length;
-            var name = div.attr('name').replace('{index}', index);
-            var controlId = $('.control-id');
-            var input = row.find(controlId).attr({name: name});
-            div.append(input);
-        }
-        row.remove();
-    },
+    populateByDimension: function(obj, objType) {
+        alert($(obj).val());
+    } 
 
 }

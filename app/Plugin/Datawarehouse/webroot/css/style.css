@@ -4,3 +4,14 @@ display: none;
 .tab-content>.active {
 display: block;
 }
+.filter-option {
+	width: 200px;
+	display:block; 
+ 	word-wrap: break-word;
+ 	white-space: nowrap;
+}
+
+.filter-option input[type="checkbox"] { 
+	margin-right: 3px; 
+	margin-left: 3px; 
+}
