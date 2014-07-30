@@ -19,10 +19,19 @@ $this->start('contentBody');
 	<div class="navbar-inner">
 		<div class="container-wizard">
 			<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-				<li class="active"><a href="#tab-indicator" id="lnk-indicator" data-toggle="tab">Indicator</a></li>
-				<li class="disabled"><a href="#tab-numerator" id="lnk-numerator" class="void"  data-toggle="tab">Numerator</a></li>
-				<li class="disabled"><a href="#tab-denominator" id="lnk-denominator" class="void" data-toggle="tab">Denominator</a></li>
-				<li class="disabled"><a href="#tab-review" id="lnk-review" class="void" data-toggle="tab">Review</a></li>
+				<?php 
+				$i = 0;
+				foreach($tabStep as $step){ 
+					$activeStep = false;
+
+					if($currentStep>=$i){
+						$activeStep	= true;
+					}
+				?>
+					<li class="<?php echo ($currentStep==$i) ? 'active' : ($activeStep ? '' :'disabled');?>"><a href="#tab-<?php echo $step;?>" id="lnk-<?php echo $step;?>" data-toggle="tab" class="<?php echo ($activeStep) ? '' : 'void';?>"><?php echo ucwords($step);?></a></li>
+				<?php 
+				$i++;
+				} ?>
 			</ul>
 		</div>
 	</div>
@@ -31,6 +40,7 @@ $this->start('contentBody');
 <?php
 $formOptions = $this->FormUtility->getFormOptions();
 echo $this->Form->create($model, $formOptions);
+echo $this->Form->input('type', array('type'=> 'hidden', 'value'=>$currentTab));
 ?>	
 	<div id='content' class="tab-content">
 		<?php echo $this->element('indicator');?>
