@@ -20,7 +20,10 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteFee extends AppModel {
 
 	public $actsAs = array(
-		'ControllerAction'
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
 	public $belongsTo = array(
 		'InstitutionSite',
@@ -298,5 +301,115 @@ class InstitutionSiteFee extends AppModel {
 		
 		return $data;
 	}
+
+	public function reportsGetHeader($args) {
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+   		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+
+		$header = array(
+			__('School Year'),
+			__('Education Programme'),
+			__('Education Grade')
+		);
+
+		$financeFeeTypeOptions = array_map('__', $this->InstitutionSiteFeeType->FeeType->getList());
+
+		foreach($financeFeeTypeOptions as $ft){
+			$header[] = $ft;
+		}
+
+		$header[] = __('Total Fee') . ' ('.$currency.')';
+
+		return $header;
+	}
+	
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = array(
+				'SchoolYear.name', 
+				'SchoolYear.id', 
+				'EducationProgramme.name', 
+				'EducationGrade.id',
+				'EducationGrade.name',
+			);
+
+			$options['order'] = array('InstitutionSiteProgramme.school_year_id', 'EducationProgramme.id', 'EducationGrade.id');
+			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
+			$options['joins'] = array(
+					array(
+						'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
+						'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+					),
+					array(
+						'table' => 'institution_site_programmes',
+						'alias' => 'InstitutionSiteProgramme',
+						'conditions' => array(
+							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
+						)
+					),
+					array(
+						'table' => 'school_years',
+						'alias' => 'SchoolYear',
+						'conditions' => array('SchoolYear.id = InstitutionSiteProgramme.school_year_id')
+					),
+				);
+			$data = $this->EducationGrade->find('all', $options);
+
+			$fees = $this->find('all', array('conditions'=>array('InstitutionSiteFee.institution_site_id'=>$institutionSiteId), 'order'=>array('InstitutionSiteFee.school_year_id', 'InstitutionSiteFee.education_grade_id')));
+	
+			$financeFeeTypeOptions = array_map('__', $this->InstitutionSiteFeeType->FeeType->getList());
+
+			$newData = array();
+			foreach($data AS $row){
+				$tempRow = array();
+				
+				$schoolYear = $row['SchoolYear'];
+				$educationProgramme = $row['EducationProgramme'];
+				$educationGrade = $row['EducationGrade'];
+				
+				$tempRow[] = $schoolYear['name'];
+				$tempRow[] = $educationProgramme['name'];
+				$tempRow[] = $educationGrade['name'];
+				
+				$totalFee = 0;
+				if(!empty($financeFeeTypeOptions)){
+					$tempFT = array();
+					foreach($financeFeeTypeOptions as $key=>$ft){
+						$tempFT[$key] = number_format(0, 2);
+					}
+					foreach($fees as $fee){
+						if($fee['EducationGrade']['id']==$educationGrade['id'] && $fee['SchoolYear']['id']==$schoolYear['id']){
+							if(isset($fee['InstitutionSiteFeeType'])){
+								foreach($fee['InstitutionSiteFeeType'] as $key=>$val){
+									$tempFT[$val['fee_type_id']] = $val['fee'];
+									$totalFee += $val['fee'];
+								}
+							}
+							break;
+						}
+					}
+					foreach($tempFT as $val){
+						$tempRow[] = $val;
+					}
+				}
+				$tempRow[] = number_format($totalFee, 2);
+				$newData[] = $tempRow;
+			}
+
+			return $newData;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		$index = $args[1];
+		return 'Report_Finance_Fee';
+	}
+	
 
 }
