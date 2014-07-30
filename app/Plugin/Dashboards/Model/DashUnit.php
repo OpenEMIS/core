@@ -14,18 +14,16 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class JORAreaLevel extends DashboardsAppModel {
+class DashUnit extends DashboardsAppModel {
 	public $useDbConfig = 'di6';
-	//public $useTable = 'ut_area_level_en';
+	public $useTable = 'ut_unit_en';
+	public $alias = 'Unit';
 	
-	public function getAreaLevel($maxLvl = NULL) {
-		$this->setSource('ut_area_level_'.$this->setupUseTableLang());
-		if(!empty($maxLvl)){
-			$options['limit'] = $maxLvl;
-		}
-		$options['fields'] = array('Level_Nid', 'Area_Level_Name');
-		$options['order'] = array('Area_Level');
-		$data = $this->find('list', $options);
+	public function getUnitIndicatorByGId($gid) {
+		//$this->setSource('ut_unit_'.$this->setupUseTableLang());
+		$options['conditions'] = array('Unit_GId' => $gid);
+		$data = $this->find('all', $options);
+
 		return $data;
 	}
 }

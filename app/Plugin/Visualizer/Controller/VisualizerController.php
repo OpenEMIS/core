@@ -541,7 +541,7 @@ class VisualizerController extends VisualizerAppController {
 		$id = $this->params['pass'][1];
 		$showVisualization = true;
 		if($visualType == 'table'){
-			$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id), 'LEFT');
+			$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id), 'LEFT');
 		
 			$this->Paginator->settings = $selectedOptions;//array_merge(array('limit' => 20), $selectedOptions);
 			$data = $this->Paginator->paginate('DIData');
@@ -567,7 +567,7 @@ class VisualizerController extends VisualizerAppController {
 	/*
 	public function VisualizeFusionChart($visualType, $id){
 		$this->autoRender = false;
-		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
 		$rawData = $this->DIData->find('all', $selectedOptions);
 		//Retrive selected info 
 		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
@@ -614,7 +614,7 @@ class VisualizerController extends VisualizerAppController {
 	public function VisualizeHighChart($visualType, $id){
 		$this->autoRender = false;
 		
-		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
 		$rawData = $this->DIData->find('all', $selectedOptions);
 		
 		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
