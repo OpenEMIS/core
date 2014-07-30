@@ -18,7 +18,7 @@
 class VisualizerController extends VisualizerAppController {
 
 	public $uses = Array('Visualizer.DIArea','Visualizer.DIData');
-	public $components = array('Paginator', 'FusionCharts.FusionCharts');
+	public $components = array('Paginator', 'FusionCharts.FusionCharts', 'HighCharts.HighCharts');
 	public $nextPg = '';
 	public $prevPg = '';
 	//public $rootURL = '';
@@ -37,13 +37,13 @@ class VisualizerController extends VisualizerAppController {
 		//	$this->Session->delete('visualizer.wizard');
 		if ($this->action != 'visualization') {
 			if (!$this->Session->check('visualizer.wizard')) {
-				$tabs['indicator'] = array('name' => 'Step 1 :<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
-				$tabs['unit'] = array('name' => 'Step 2 :<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
-				$tabs['dimension'] = array('name' => 'Step 3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
-				$tabs['area'] = array('name' => 'Step 4 :<br/>Area', 'url' => $rootURL.'Visualizer/area');
-				$tabs['time'] = array('name' => 'Step 5 :<br/>Time', 'url' => $rootURL.'Visualizer/time');
-				$tabs['source'] = array('name' => 'Step 6 :<br/>Source', 'url' => $rootURL.'Visualizer/source');
-				$tabs['review'] = array('name' => 'Step 7 :<br/>Review', 'url' => $rootURL.'Visualizer/review');
+				$tabs['indicator'] = array('name' => 'Step 1:<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
+				$tabs['unit'] = array('name' => 'Step 2:<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
+				$tabs['dimension'] = array('name' => 'Step3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
+				$tabs['area'] = array('name' => 'Step 4:<br/>Area', 'url' => $rootURL.'Visualizer/area');
+				$tabs['time'] = array('name' => 'Step 5:<br/>Time', 'url' => $rootURL.'Visualizer/time');
+				$tabs['source'] = array('name' => 'Step 6:<br/>Source', 'url' => $rootURL.'Visualizer/source');
+				$tabs['review'] = array('name' => 'Step 7:<br/>Review', 'url' => $rootURL.'Visualizer/review');
 			} else {
 				$tabs = $this->Session->read('visualizer.wizard');
 				if (array_key_exists($currentPg, $tabs)) {
@@ -78,13 +78,14 @@ class VisualizerController extends VisualizerAppController {
 			
 			$tabs['table'] = array('name' => 'Table', 'url' => $rootURL.'Visualizer/visualization/table/'.$id);
 			$tabs['column'] = array('name' => 'Column', 'url' => $rootURL.'Visualizer/visualization/column/'.$id);
-			$tabs['stackcolumn'] = array('name' => 'Stack Column', 'url' => $rootURL.'Visualizer/visualization/stackcolumn/'.$id);
+			$tabs['column-stack'] = array('name' => 'Stack Column', 'url' => $rootURL.'Visualizer/visualization/column-stack/'.$id);
 			$tabs['bar'] = array('name' => 'Bar', 'url' => $rootURL.'Visualizer/visualization/bar/'.$id);
-			$tabs['stackbar'] = array('name' => 'Stack Bar', 'url' => $rootURL.'Visualizer/visualization/stackbar/'.$id);
+			$tabs['bar-stack'] = array('name' => 'Stack Bar', 'url' => $rootURL.'Visualizer/visualization/bar-stack/'.$id);
 			$tabs['line'] = array('name' => 'Line', 'url' => $rootURL.'Visualizer/visualization/line/'.$id);
 			$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/visualization/area/'.$id);
 			$tabs['pie'] = array('name' => 'Pie', 'url' => $rootURL.'Visualizer/visualization/pie/'.$id);
 			$tabs['scatter'] = array('name' => 'Scatter', 'url' => $rootURL.'Visualizer/visualization/scatter/'.$id);
+	//		$tabs['hightchart'] = array('name' => 'HighChart', 'url' => $rootURL.'Visualizer/visualization/hightchart/'.$id);
 			
 			if(!empty($this->params['pass'][0])){
 				$selectedTab = $this->params['pass'][0];
@@ -288,10 +289,12 @@ class VisualizerController extends VisualizerAppController {
 		$header = __('Visualizer - Indicator');
 
 		if ($this->request->is(array('post', 'put'))) {
-			$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
+			if(!empty($this->request->data['indicator']['id'])){
+				$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
 
-			if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
-				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
+					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				}
 			}
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['indicator']['search']);
@@ -302,7 +305,9 @@ class VisualizerController extends VisualizerAppController {
 		$di6Indicator = ClassRegistry::init('Visualizer.Indicator');
 		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info')));
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId'));
 	}
 
@@ -315,10 +320,12 @@ class VisualizerController extends VisualizerAppController {
 		}
 
 		if ($this->request->is(array('post', 'put'))) {
-			$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
-			
-			if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
-				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+			if(!empty($this->request->data['unit']['id'])){
+				$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
+
+				if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
+					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				}
 			}
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['unit']['search']);
@@ -331,7 +338,10 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getUnits($selectedIndicatorId);
 
 		$tableRowData = $this->processUnitRawData($data,$selectedUnitIds);
-
+		
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedUnitIds'));
 	}
 
@@ -360,7 +370,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getDimensions(array('indicators' => $selectedIndicatorId, 'units' => $selectedUnitIds));
 
 		$tableRowData = $this->processDimensionRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedDimensionIds'));
 	}
 
@@ -401,7 +413,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $this->Paginator->paginate('DIArea');
 		$fullPathData = $this->DIArea->getAreaTreaFullPath($data);
 		$tableRowData = $this->processAreaRawData($fullPathData, $areaLevelOptions);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableHeaders', 'tableRowData', 'areaLevelOptions', 'selectedAreaLevel', 'selectedAreaIds'));
 	}
 
@@ -457,7 +471,9 @@ class VisualizerController extends VisualizerAppController {
 		$di6Data = ClassRegistry::init('Visualizer.DIData');
 		$data = $di6Data->getTimePeriodList($selectedDimensionIds);
 		$tableRowData = $this->processTimeRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedTimeperiodIds'));
 	}
 
@@ -484,7 +500,9 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorClassification->getSource($selectedDimensionIds, $selectedTimeperiodIds);
 
 		$tableRowData = $this->processSourceRawData($data);
-
+		if(empty($tableRowData)){
+			$this->Message->alert('general.noData');
+		}
 		$this->set(compact('header', 'tableRowData', 'selectedSourceIds'));
 	}
 
@@ -552,18 +570,18 @@ class VisualizerController extends VisualizerAppController {
 				$showVisualization = false;
 				$this->Message->alert('visualizer.setting.minScatterDimension');
 			}
-			else{
+			/*else{
 				$setupChartOption = array('url' => array('controller' => 'Visualizer', 'action' => 'VisualizeFusionChart',$visualType, $id), 'width'=> 950, 'height' => 713);
 				$displayChartData = $this->FusionCharts->getDisplayType($visualType, $setupChartOption);//array('chartURLdata' => array('controller' => 'Visualizer', 'action' => 'VisualizeBarFusionChart', $id),'swfUrl' => 'ScrollColumn2D.swf', 'tWidth' => '940', 'tHeight' => '705');
 
 				$this->set('displayChartData',$displayChartData);
-			}
+			}*/
 		}
 		
 		$this->set(compact('header', 'data', 'visualType', 'showVisualization', 'id'));
 	}
 
-	
+	/*
 	public function VisualizeFusionChart($visualType, $id){
 		$this->autoRender = false;
 		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
@@ -607,6 +625,41 @@ class VisualizerController extends VisualizerAppController {
 		}
 		
 		return $fusionFormatData;
+	}
+	*/
+	
+	public function VisualizeHighChart($visualType, $id){
+		$this->autoRender = false;
+		
+		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$rawData = $this->DIData->find('all', $selectedOptions);
+		
+		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
+		$selectedUnitIds = $this->Session->read('visualizer.visualization.'.$id.'.unit');
+		$selectedDimensionIds = $this->Session->read('visualizer.visualization.'.$id.'.IUS');
+		$selectedAreaIds = $this->Session->read('visualizer.visualization.'.$id.'.area');
+		$selectedTimeperiodIds = $this->Session->read('visualizer.visualization.'.$id.'.timeperiod');
+		$selectedSourceIds = $this->Session->read('visualizer.visualization.'.$id.'.source');
+
+		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
+		$IUSRawData = $di6IndicatorUnitSubgroup->getDimensions(array('IUS' => $selectedDimensionIds));
+
+		$areaRawData = $this->DIArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
+
+		$di6TimePeriod = ClassRegistry::init('Visualizer.TimePeriod');
+		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds)));
+	
+		$this->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
+		
+		/*$jsonData['chart']= array('type' => 'bar');
+		$jsonData['title']= array('text' => 'Fruit Consumption');
+		$jsonData['xAxis']= array('categories' => array('Apples', 'Bananas', 'Oranges'));
+		$jsonData['yAxis']= array('title' => array('text' => 'Fruit eaten'));
+		$jsonData['series']= array(array('name' => 'Jane', 'data' => array(1, 0, 4)),array('name' => 'John', 'data' => array(5, 7, 3)));
+		*/
+		$jsonData = $this->HighCharts->getChartData($visualType, $rawData);
+		
+		return $jsonData;
 	}
 	
 	public function genCSV($id) {
