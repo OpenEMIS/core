@@ -21,7 +21,17 @@ class Area extends AppModel {
 		'Tree',
 		'Reorder',
 		'CustomReport',
-		'ControllerAction'
+		'ControllerAction2'
+	);
+	
+	public $belongsTo = array('AreaLevel');
+	
+	public $hasMany = array(
+		'TrainingSession' => array(
+			'className' => 'TrainingSession',
+			'foreignKey' => 'area_id',
+			'dependent' => true
+		)
 	);
 	
 	public $validate = array(
@@ -44,23 +54,19 @@ class Area extends AppModel {
 			)
 		)
 	);
-
-	public $hasMany = array(
-		'TrainingSession' => array(
-			'className' => 'TrainingSession',
-			'foreignKey' => 'area_id',
-			'dependent' => true
-		)
-	);
 	
-	public $belongsTo = array('AreaLevel');
-	
-	public function beforeAction($controller, $action) {
-        parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb('Areas');
-		$controller->set('header', __('Areas'));
+	public function beforeAction() {
+        parent::beforeAction();
+		
+		$this->fields['parent_id']['type'] = 'hidden';
+		$this->fields['lft']['visible'] = false;
+		$this->fields['rght']['visible'] = false;
+		$this->fields['order']['visible'] = false;
+		
+		$this->Navigation->addCrumb('Areas');
+		$this->setVar('header', __('Areas'));
     }
-	
+	/*
 	public function getDisplayFields($controller) {
 		$yesnoOptions = $controller->Option->get('yesno');
         $fields = array(
@@ -79,8 +85,10 @@ class Area extends AppModel {
         );
         return $fields;
     }
+	*/
 	
-	public function areas($controller, $params) {
+	public function index() {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
@@ -93,10 +101,11 @@ class Area extends AppModel {
 				'order' => array('order')
 			));
 		}
-		$controller->set(compact('paths', 'data', 'parentId', 'maxLevel'));
+		$this->setVar(compact('paths', 'data', 'parentId', 'maxLevel'));
 	}
 	
 	public function areasReorder($controller, $params) {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
@@ -108,21 +117,23 @@ class Area extends AppModel {
 				'order' => array('order')
 			));
 		}
-		$controller->set(compact('paths', 'data', 'parentId'));
+		$this->setVar(compact('paths', 'data', 'parentId'));
 	}
 	
 	public function areasMove($controller, $params) {
-		if ($controller->request->is('post') || $controller->request->is('put')) {
+		if ($this->request->is(array('post', 'put'))) {
 			$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
-			$data = $controller->request->data;
+			$data = $this->request->data;
 			$conditions = array('parent_id' => $parentId);
 			$this->moveOrder($data, $conditions);
 			$redirect = array('action' => 'areasReorder', 'parent' => $parentId);
-			return $controller->redirect($redirect);
+			return $this->redirect($redirect);
 		}
 	}
 	
-	public function areasAdd($controller, $params) {
+	public function add() {
+		$this->fields['visible']['visible'] = false;
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
@@ -136,46 +147,45 @@ class Area extends AppModel {
 		$level = $this->AreaLevel->field('level', array('id' => $area[$this->alias]['area_level_id']));
 		$areaLevelOptions = $this->AreaLevel->find('list', array('conditions' => array('level >' => $level)));
 		
-		if($controller->request->is('post') || $controller->request->is('put')) {
-			$controller->request->data[$this->alias]['parent_id'] = $parentId;
-			$controller->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
-			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'areasView', 'parent' => $parentId, $this->id));
+		if($this->request->is(array('post', 'put'))) {
+			$this->request->data[$this->alias]['parent_id'] = $parentId;
+			$this->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
+			if ($this->save($this->request->data)) {
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => 'areasView', 'parent' => $parentId, $this->id));
 			}
 		}
-		$controller->set(compact('data', 'fields', 'parentId', 'pathToString', 'areaLevelOptions'));
+		$this->setVar(compact('data', 'fields', 'parentId', 'pathToString', 'areaLevelOptions'));
 	}
 	
-	public function areasView($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+	public function view($id=0) {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$data = $this->findById($id);
 		
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('data', 'fields', 'parentId'));
+		$this->setVar(compact('data', 'parentId'));
 	}
 	
-	public function areasEdit($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+	public function edit($id=0) {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$data = $this->findById($id);
-		$fields = $this->getDisplayFields($controller);
+		//$fields = $this->getDisplayFields($controller);
 		$yesnoOptions = $controller->Option->get('yesno');
 		
 		if(!empty($data)) {
-			$controller->set(compact('fields', 'yesnoOptions', 'parentId'));
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.edit.success');
-					return $controller->redirect(array('action' => 'areasView', 'parent' => $parentId, $id));
+			$this->setVar(compact('yesnoOptions', 'parentId'));
+			if($this->request->is(array('post', 'put'))) {
+				if ($this->save($this->request->data)) {
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $id));
 				}
 			} else {
-				$controller->request->data = $data;
+				$this->request->data = $data;
 			}
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'areas', 'parent' => $parentId));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => get_class($this), 'parent' => $parentId));
 		}
 	}
 	

@@ -17,6 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroupInstitutionSite extends AppModel {
+	public $belongsTo = array(
+		'SecurityGroup',
+		'InstitutionSite'
+	);
+	
+	/*
 	public function saveGroupAccess($groupId, $data) {
 		$id = array();
 		$this->deleteAll(array('SecurityGroupInstitutionSite.security_group_id' => $groupId), false);
@@ -34,31 +40,30 @@ class SecurityGroupInstitutionSite extends AppModel {
 			}
 		}
 	}
+	*/
 	
 	public function getSites($groupId) {
 		$this->formatResult = true;
 		$data = $this->find('all', array(
-			'fields' => array('Institution.name AS institution_name', 'InstitutionSite.id AS institution_site_id', 'InstitutionSite.name AS institution_site_name'),
+			'recursive' => -1,
+			'fields' => array('InstitutionSite.id AS institution_site_id', 'InstitutionSite.name AS institution_site_name'),
 			'joins' => array(
 				array(
 					'table' => 'institution_sites',
 					'alias' => 'InstitutionSite',
 					'conditions' => array('InstitutionSite.id = SecurityGroupInstitutionSite.institution_site_id')
-				),
-				array(
-					'table' => 'institutions',
-					'alias' => 'Institution',
-					'conditions' => array('Institution.id = InstitutionSite.institution_id')
 				)
 			),
 			'conditions' => array('SecurityGroupInstitutionSite.security_group_id' => $groupId),
-			'order' => array('Institution.name', 'InstitutionSite.name')
+			'order' => array('InstitutionSite.name')
 		));
 		return $data;
 	}
 	
 	public function fetchSites($institutionList, $conditions) {
 		$this->formatResult = true;
+		
+		$this->unbindModel(array('belongsTo' => array('InstitutionSite')));
 		$list = $this->find('all', array(
 			'fields' => array('SecurityRoleInstitutionSite.institution_site_id', 'InstitutionSite.name', 'InstitutionSite.institution_id'),
 			'conditions' => $conditions,
