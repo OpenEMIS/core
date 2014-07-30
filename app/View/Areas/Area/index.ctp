@@ -5,7 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'areasAdd', 'parent' => $parentId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', 'parent' => $parentId), array('class' => 'divider'));
 }
 if ($_edit && count($data) > 1) {
 	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'areasReorder', 'parent' => $parentId), array('class' => 'divider'));
@@ -38,13 +38,13 @@ echo $this->element('../Areas/breadcrumbs');
 					if($obj['AreaLevel']['level'] == $maxLevel) {
 						echo $obj[$model]['name'];
 					} else {
-						echo $this->Html->link($obj[$model]['name'], array('action' => $this->action, 'parent' => $obj[$model]['id']));
+						echo $this->Html->link($obj[$model]['name'], array('action' => $model, 'parent' => $obj[$model]['id']));
 					}
 					?>
 				</td>
 				<td><?php echo $obj[$model]['code']; ?></td>
 				<td><?php echo $obj['AreaLevel']['name']; ?></td>
-				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => 'areasView', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>
