@@ -107,6 +107,32 @@ class DatawarehouseComponent extends Component {
     	return $operatorOptions;
     }
 
+ 	public function getAllDimension($dimensionOption){
+    	$dimensions = $this->DatawarehouseDimension->find('all', 
+ 			array(
+ 				'fields'=>array('DatawarehouseDimension.*', 'DatawarehouseModule.*'),
+ 				'joins' => array(
+                    array(
+                        'type' => 'INNER',
+                        'table' => 'datawarehouse_modules',
+                        'alias' => 'DatawarehouseModule',
+                        'conditions' => array('DatawarehouseModule.id = DatawarehouseDimension.datawarehouse_module_id')
+                    ),
+                ),
+ 				'conditions'=>array('DatawarehouseDimension.id'=>$dimensionOption)
+ 			)
+
+ 		);
+
+ 		$data = array();
+ 		foreach($dimensions as $dimension){
+ 			$data[$dimension['DatawarehouseDimension']['id']]['DatawarehouseDimension'] = $dimension['DatawarehouseDimension'];
+ 			$data[$dimension['DatawarehouseDimension']['id']]['DatawarehouseModule'] = $dimension['DatawarehouseModule'];
+ 			
+ 		}
+     	return $data;
+    }
+
      public function getDimensionValueOption($dimensionOption){
  		$dimension = $this->DatawarehouseDimension->find('first', 
  			array(
@@ -158,24 +184,23 @@ class DatawarehouseComponent extends Component {
     public function formatDimension($data, $datawarehouseModuleOptions, $editable=true){
     	$requestData = array();
 
-
 		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 		if(isset($data['DatawarehouseField']['datawarehouse_module_id'])){
 			$numeratorModuleID = $data['DatawarehouseField']['datawarehouse_module_id'];
 			$numeratorDatawarehouseDimensionOptions = $this->getDimensionOptions($numeratorModuleID);
+
 			$requestData['DatawarehouseField']['numerator_datawarehouse_module_id'] = ($editable ? $numeratorModuleID : $datawarehouseModuleOptions[$numeratorModuleID]);
-			$requestData['DatawarehouseField']['numerator_datawarehouse_operator'] = $data['DatawarehouseField']['type'];
-			$requestData['DatawarehouseField']['numerator_datawarehouse_field'] =  ($editable) ? $data['DatawarehouseField']['id'] : ucwords($data['DatawarehouseField']['name']);
-			$requestData['DatawarehouseIndicator']['numerator_datawarehouse_field_id'] = $data['DatawarehouseField']['id'];
+			$requestData['DatawarehouseField']['numerator_datawarehouse_field_id'] = ($editable) ? $data['DatawarehouseField']['id'] : ucwords($data['DatawarehouseField']['name']);
+			$requestData['DatawarehouseField']['numerator_datawarehouse_operator'] =  $data['DatawarehouseField']['type'];
+			
 
-			if(!empty($data['DatawarehouseIndicatorCondition'])){
-				foreach($data['DatawarehouseIndicatorCondition'] as $key=>$val){
-					$data['DatawarehouseIndicatorCondition'][$key]['dimension_name'] = $numeratorDatawarehouseDimensionOptions[$val['datawarehouse_dimension_id']];
-
+			if(!empty($data['DatawarehouseIndicatorDimension'])){
+				$dimensionId = array();
+				foreach($data['DatawarehouseIndicatorDimension'] as $key=>$val){
+					$dimensionId[] = $val['datawarehouse_dimension_id'];
 				}
+				$requestData['DatawarehouseField']['numerator_datawarehouse_dimension_id'] = $dimensionId;
 			}
-
-			$requestData['NumeratorDatawarehouseDimension'] = $data['DatawarehouseIndicatorCondition'];
 		}
 		//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 		if(isset($data['Denominator']) && !empty($data['Denominator']['id'])){
@@ -183,14 +208,14 @@ class DatawarehouseComponent extends Component {
 			$denominatorDatawarehouseDimensionOptions = $this->getDimensionOptions($denominatorModuleID);
 			$requestData['DatawarehouseField']['denominator_datawarehouse_module_id'] = ($editable ? $denominatorModuleID : $datawarehouseModuleOptions[$denominatorModuleID]);
 			$requestData['DatawarehouseField']['denominator_datawarehouse_operator'] =  $data['Denominator']['DatawarehouseField']['type'];
-			$requestData['DatawarehouseField']['denominator_datawarehouse_field'] = ($editable) ? $data['Denominator']['DatawarehouseField']['id'] : ucwords($data['Denominator']['DatawarehouseField']['name']);
-			$requestData['DatawarehouseIndicator']['denominator_datawarehouse_field_id'] = $data['Denominator']['DatawarehouseField']['id'];
+			$requestData['DatawarehouseField']['numerator_datawarehouse_field_id'] = ($editable) ? $data['Denominator']['DatawarehouseField']['id'] : ucwords($data['Denominator']['DatawarehouseField']['name']);
 		
-			if(!empty($data['Denominator']['DatawarehouseIndicatorCondition'])){
-				foreach($data['Denominator']['DatawarehouseIndicatorCondition'] as $key=>$val){
-					$data['Denominator']['DatawarehouseIndicatorCondition'][$key]['dimension_name'] = $numeratorDatawarehouseDimensionOptions[$val['datawarehouse_dimension_id']];
+			if(!empty($data['Denominator']['DatawarehouseIndicatorDimension'])){
+				$dimensionId = array();
+				foreach($data['Denominator']['DatawarehouseIndicatorDimension'] as $key=>$val){
+					$dimensionId[] = $val['datawarehouse_dimension_id'];
 				}
-				$requestData['DenominatorDatawarehouseDimension'] = $data['Denominator']['DatawarehouseIndicatorCondition'];
+				$requestData['DatawarehouseField']['denominator_datawarehouse_dimension_id'] = $dimensionId;
 			}
 		}
 
@@ -205,7 +230,7 @@ class DatawarehouseComponent extends Component {
 			if(!empty($data)){
 				foreach($data as $d){
 	                 $datawarehouseFieldOptions[$d['DatawarehouseField']['name']] = Inflector::camelize(strtolower($d['DatawarehouseField']['name']));
-            		 $datawarehouseOperatorFieldOptions[$d['DatawarehouseField']['type']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
+            		 $datawarehouseOperatorFieldOptions[$d['DatawarehouseField']['id']] = Inflector::camelize(strtolower($d['DatawarehouseField']['type']));
 	            }
 			}
 		}
@@ -272,38 +297,39 @@ class DatawarehouseComponent extends Component {
     
 	//000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
-		
-
-
 
     public function getSubgroupOptions($moduleID, $dimensionOption) {
     	$subgroupOptions = array();
+	 	$subgroupTypes = array();
+ 	 	$index = 0;
+	 	$subgroupIndex = 0;
+
     	if(!empty($moduleID)){
     		$allDimensionOptions = $this->getDimensionOptions($moduleID);
-    		
     		
     		if(!empty($allDimensionOptions)){
     			$permutationList = array();
     			foreach($allDimensionOptions as $key=>$dimension){
-    				$subgroups = "All " . Inflector::pluralize($dimension);
+    				$type = $dimension;
+    				$name = "All " . Inflector::pluralize($dimension);
+				 	if(!isset($subgroupTypes[$type])) {
+		                $subgroupTypes[$type] = $index++;
+		            }
     				$i = 0;
-    				$permutationList[$dimension] = array($i++ => $subgroups);
-    				if(array_key_exists($key, array_keys($dimensionOption))){
-    					pr($key);
-    					$value = $this->getDimensionValueOption($dimenOpt);
+    				$permutationList[$subgroupTypes[$type]][] = array($subgroupIndex++ => $name);
+    				if(in_array($key, $dimensionOption)){
+    					$value = $this->getDimensionValueOption($key);
     					if(!empty($value)){
-		    				foreach($value as $key=>$val){
-		    				 	$permutationList[$dimension[$dimenOpt]] = array($i++ => $val);
+		    				foreach($value as $val){
+	    					 	$permutationList[$subgroupTypes[$type]][] = array($subgroupIndex => $dimension . ': ' . $val);
+	    				 	  	$subgroupIndex++;
 			    			}
 			    		}
 		    		}
     			}
     		}
 
-    		pr($permutationList);
-    		//exit;
 		  	$subgroupOptions = $this->permutate($permutationList);
-    		pr($subgroupOptions);
     	}
     	return $subgroupOptions;
     }
@@ -337,6 +363,19 @@ class DatawarehouseComponent extends Component {
             $counter++;
             return false;
         }
+    }
+
+     public function array2string($array){
+        $str="";
+        foreach($array as $k=>$i){
+            if(is_array($i)){
+                $str.=$this->array2string($i);
+            }
+            else{
+                $str.= $i . ', ';
+            }
+        }
+        return $str;
     }
 }
 ?>

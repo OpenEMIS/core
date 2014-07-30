@@ -93,10 +93,28 @@ class DatawarehouseController extends DatawarehouseAppController {
          }
     }
 
-    public function ajax_populate_subgroup($moduleID, $dimensionId){
-         $this->autoRender = false;
-         $dimensionOption = explode(",", $dimensionId);
-         $this->Datawarehouse->getSubgroupOptions($moduleID, $dimensionOption);
+    public function ajax_populate_subgroup($moduleID, $dimensionId, $type){
+        $this->autoRender = false;
+        $dimensionOption = explode(",", $dimensionId);
+        $subgroups = $this->Datawarehouse->getSubgroupOptions($moduleID, $dimensionOption);
+       
+        if(!empty($subgroups)){
+            foreach($subgroups as $subgroup){
+                $val = rtrim($this->Datawarehouse->array2string($subgroup), ', ');
+                $subgroupOption[$val] = $val;
+            }
+        }
+
+        $this->set('type', $type);
+        $this->set($type.'DatawarehouseSubgroupOptions', $subgroupOption);
+        $this->set($type.'SelectedSubgroup', array_keys($subgroupOption));
         
+        $View = new View($this);
+        $subgroupRow =  $View->element('subgroupOption');
+        $jsonData['subgroupRow'] = $subgroupRow;
+
+        return json_encode($jsonData);
     }
+
+
 }

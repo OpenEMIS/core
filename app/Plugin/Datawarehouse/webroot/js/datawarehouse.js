@@ -22,6 +22,9 @@ var objDatawarehouse = {
         $('.numeratorDimension .filter-dimension input:checkbox').click(function() {
             objDatawarehouse.generateSubgroup('numerator');
         });
+        $('.denominatorDimension .filter-dimension input:checkbox').click(function() {
+            objDatawarehouse.generateSubgroup('denominator');
+        });
 
          $('.nav-tabs > li  > a').click(function(){
             if(!$(this).parent().hasClass('disabled')){
@@ -31,7 +34,8 @@ var objDatawarehouse = {
         });
         // objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
         //objDatawarehouse.populateByModuleOperator($(".numeratorOperatorOption"), "numerator");
-        //objDatawarehouse.populateByField($(".numeratorFieldOption"), "numerator");
+        objDatawarehouse.populateByOperator($(".numeratorFieldOption"), "numerator");
+        objDatawarehouse.populateByOperator($(".denominatorFieldOption"), "denominator");
 
         //objDatawarehouse.getUnitType($("#DatawarehouseIndicatorDatawarehouseUnitId"));
         objDatawarehouse.setSelectedTab();
@@ -44,17 +48,20 @@ var objDatawarehouse = {
         });
 
         var moduleID = $('.'+objType+'ModuleOption').val();
+
         if(dimensionId.length>0){
             url = 'Datawarehouse/ajax_populate_subgroup/';
             $.ajax({ 
                 type: "get",
                 dataType: "json",
-                url: getRootURL()+url+moduleID+'/'+dimensionId,
+                url: getRootURL()+url+moduleID+'/'+dimensionId+'/'+objType,
                 success: function(data){
                     if(data == null){
                         return;
                     }
+                    $('.'+objType+'Dimension .form-subgroup').remove();
                     
+                    $('.'+objType+'Dimension .divSubgroupList').append(data.subgroupRow);
                     $.unmask({id: maskId});
                 },
                  beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"Dimension"}); }
@@ -76,10 +83,10 @@ var objDatawarehouse = {
     },
     populateByModule: function(obj, objType){
         var moduleID = $(obj).val();
-        var operatorOption = $('.'+objType+"OperatorOption");
+        var fieldOption = $('.'+objType+"FieldOption");
         var maskId;
         if(moduleID === ""){
-            operatorOption.children().remove();
+            fieldOption.children().remove();
         }else{
             url = $(obj).attr('url');
             $.ajax({ 
@@ -87,7 +94,7 @@ var objDatawarehouse = {
                 dataType: "json",
                 url: getRootURL()+url+moduleID+'/'+objType,
                 success: function(data){
-                    operatorOption.children().remove();
+                    fieldOption.children().remove();
                    // $('.'+objType.'Dimension .filter-dimension').remove();
                     if(data == null){
                         return;
@@ -96,8 +103,8 @@ var objDatawarehouse = {
                     
                     $('.'+objType+'Dimension').prepend(data.dimensionRow);
 
-                    $.each(data.operatorOption, function(key, value) {              
-                        $('<option>').val(key).text(value).appendTo(operatorOption);
+                    $.each(data.fieldOption, function(key, value) {              
+                        $('<option>').val(key).text(value).appendTo(fieldOption);
                     });
                     $.unmask({id: maskId});
                 },
@@ -107,6 +114,16 @@ var objDatawarehouse = {
     },
     populateByDimension: function(obj, objType) {
         alert($(obj).val());
-    } 
+    },
+    populateByOperator: function(obj, objType){
+        var fieldOption = $(obj).val();
+        var operatorID = $('.'+objType+"OperatorOption");
+        if(fieldOption === ""){
+            operatorID.val("");
+        }else{
+            operatorID.val($(obj).find('option:selected').text());
+        }
+    },
+
 
 }
