@@ -32,7 +32,11 @@ echo $this->Form->create('Report', array(
 
 <div class="row">
 	<label class="col-md-3"><?php echo __('Format'); ?></label>
-	<div class="col-md-4"><?php echo $this->Form->input('Output', array('label' => false, 'class' => 'form-control', 'options' => $outputOptions)); ?></div>
+	<div class="col-md-4">
+		<?php 
+		echo $this->Form->input('Output', array('label' => false, 'class' => 'form-control', 'options' => $outputOptions));
+		?>
+	</div>
 </div>
 <?php
 // security_user_id = 0 (shared report)
