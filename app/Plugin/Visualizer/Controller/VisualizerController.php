@@ -289,10 +289,12 @@ class VisualizerController extends VisualizerAppController {
 		$header = __('Visualizer - Indicator');
 
 		if ($this->request->is(array('post', 'put'))) {
-			$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
+			if(!empty($this->request->data['indicator']['id'])){
+				$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
 
-			if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
-				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
+					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				}
 			}
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['indicator']['search']);
@@ -316,10 +318,12 @@ class VisualizerController extends VisualizerAppController {
 		}
 
 		if ($this->request->is(array('post', 'put'))) {
-			$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
-			
-			if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
-				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+			if(!empty($this->request->data['unit']['id'])){
+				$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
+
+				if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
+					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
+				}
 			}
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['unit']['search']);
