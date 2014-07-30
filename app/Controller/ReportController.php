@@ -67,7 +67,7 @@ class ReportController extends AppController {
 		$this->set('globalReport', $globalReport);
 		$this->set('myReport', $myReport);
 		
-        if (empty($this->data)) {
+        if (empty($this->request->data)) {
             $modelIgnoreList = Configure::read('ReportManager.modelIgnoreList'); 
             
             //$models = App::objects('Model');
@@ -83,16 +83,16 @@ class ReportController extends AppController {
             $this->set('files',$this->listReports());
             $this->set('models',$models);
         } else {
-            if (isset($this->data['Report']['new'])) {
+            if (isset($this->request->data['Report']['new'])) {
                 $reportButton = 'new';
-                $modelClass = $this->data['Report']['model'];
-                //$oneToManyOption = $this->data['Report']['one_to_many_option'];
+                $modelClass = $this->request->data['Report']['model'];
+                //$oneToManyOption = $this->request->data['Report']['one_to_many_option'];
                 $this->redirect(array('action'=>'reportsWizard',$reportButton, $modelClass));
             }
                 
-            if (isset($this->data['load'])) {
+            if (isset($this->request->data['load'])) {
                 $reportButton = 'load';
-                $reportId = $this->data['Report']['id'];
+                $reportId = $this->request->data['Report']['id'];
                 $this->redirect(array('action'=>'reportsWizard', $reportButton, $reportId));                
             }
                 
@@ -196,26 +196,26 @@ class ReportController extends AppController {
  
     public function saveReport($modelClass = null, $oneToManyOption = null) {
         $content='$reportFields=';
-        $content.= var_export($this->data,1);
+        $content.= var_export($this->request->data,1);
         $content.=';';
         
-        if ($this->data['Report']['ReportName'] != '') {
-            $reportName = str_replace('.', '_', $this->data['Report']['ReportName']);
-            $reportName = str_replace(' ', '_', $this->data['Report']['ReportName']);
+        if ($this->request->data['Report']['ReportName'] != '') {
+            $reportName = str_replace('.', '_', $this->request->data['Report']['ReportName']);
+            $reportName = str_replace(' ', '_', $this->request->data['Report']['ReportName']);
         } else {
             $reportName = $modelClass . '_Report_' . date('Ymd_His');
         }
 		
-		$reportDescription = isset($this->data['Report']['ReportDescription']) ? $this->data['Report']['ReportDescription'] : '';
+		$reportDescription = isset($this->request->data['Report']['ReportDescription']) ? $this->request->data['Report']['ReportDescription'] : '';
 
 		$userId = $this->Auth->user('super_admin') == 0 ? $this->Auth->user('id') : 0;
 		$securityUserId = $userId;
 		if($userId == 0){
-			if(isset($this->data['Report']['SharedReport']) && ($this->data['Report']['SharedReport'] == 1)){
+			if(isset($this->request->data['Report']['SharedReport']) && ($this->request->data['Report']['SharedReport'] == 1)){
 				$securityUserId = 0;
 			}else{
 				$securityUserId = $this->Auth->user('id');
-				echo $this->Auth->user('id');
+				//echo $this->Auth->user('id');
 			}
 		}
         
@@ -226,8 +226,8 @@ class ReportController extends AppController {
 			'query' => $content
 		);
 		
-		if(isset($this->data['Report']['id'])) {
-			$template['id'] = $this->data['Report']['id'];
+		if(isset($this->request->data['Report']['id'])) {
+			$template['id'] = $this->request->data['Report']['id'];
 		} else {
 			$this->ReportTemplate->create();
 			$template['security_user_id'] = $securityUserId;
@@ -241,8 +241,9 @@ class ReportController extends AppController {
 			$template = $this->ReportTemplate->findById($id);
 			$query = $template['ReportTemplate']['query'];
 			eval($query);
-			$this->data = $reportFields;
-        	$this->set($this->data);
+			$this->request->data = $reportFields;
+			$this->request->data['Report']['MainModel'] = $template['ReportTemplate']['model'];
+        	$this->set($this->request->data);
 		} else {
 			return $this->redirect(array('action' => 'index'));
 		}
@@ -271,7 +272,6 @@ class ReportController extends AppController {
     }
 
     public function reportsWizard($param1 = null,$param2 = null) {
-		
         if (is_null($param1) || is_null($param2)) {
             $this->Session->setFlash(__('Please select a model or a saved report'));
             $this->redirect(array('action'=>'index'));
@@ -289,17 +289,17 @@ class ReportController extends AppController {
             $modelClass = $param2;
             //$oneToManyOption = $param3;
 			
-			if(empty($this->data) && isset($this->params['pass'][2]) && $this->Session->check('CumtomReportData')){
-				$this->data = $this->Session->read('CumtomReportData');
+			if(empty($this->request->data) && isset($this->params['pass'][2]) && $this->Session->check('CumtomReportData')){
+				$this->request->data = $this->Session->read('CumtomReportData');
 			}
         }
 		
         if ( $reportAction == "load" ) {
 			$modelClass = $this->ReportTemplate->field('model', array('id' => $param2));
 			
-			if(empty($this->data) && $this->Session->check('CumtomReportData')){
+			if(empty($this->request->data) && $this->Session->check('CumtomReportData')){
 				$output = 'html';
-				$this->data = $this->Session->read('CumtomReportData');
+				$this->request->data = $this->Session->read('CumtomReportData');
 			}else{
 				$output = $this->request->data['Report']['Output'];
 				$this->loadReport($param2);
@@ -308,7 +308,7 @@ class ReportController extends AppController {
 			$this->request->data['Report']['SaveReport'] = false;
         }
         
-        if (empty($this->data)) {
+        if (empty($this->request->data)) {
             $displayForeignKeys = Configure::read('ReportManager.displayForeignKeys');
             $modelFieldIgnoreList = Configure::read('ReportManager.modelFieldIgnoreList');
 			
@@ -375,10 +375,10 @@ class ReportController extends AppController {
             $this->set('associatedModelsSchema',$associatedModelsSchema);
             $this->set('oneToManyOption',$oneToManyOption);
         } else {
-			//pr($this->data);
+			//pr($this->request->data);die;
 			//pr($this->params['pass']);
 			
-			$this->Session->write('CumtomReportData', $this->data);
+			$this->Session->write('CumtomReportData', $this->request->data);
 			
             $this->loadModel($modelClass);
 			if(strpos($modelClass, '.') !== false) {
@@ -386,7 +386,7 @@ class ReportController extends AppController {
 				$modelClass = $split[1];
 			}
             $associatedModels = $this->{$modelClass}->getAssociated();
-            //$oneToManyOption = $this->data['Report']['OneToManyOption'];
+            //$oneToManyOption = $this->request->data['Report']['OneToManyOption'];
             
             $fieldList = array();
             $fieldsPosition = array();
@@ -401,7 +401,7 @@ class ReportController extends AppController {
             $oneToManyFieldsType  = array();
             $oneToManyFieldsLength = array();
 			
-            foreach ($this->data  as $model => $fields) {
+            foreach ($this->request->data  as $model => $fields) {
                 if ( is_array($fields) ) {
                     foreach ($fields  as $field => $parameters) {
                         if ( is_array($parameters) ) {                          
@@ -468,17 +468,17 @@ class ReportController extends AppController {
                         } // is array parameters
                     } // foreach field => parameters
                     if (count($conditionsList)>0) {
-                        $conditions[$this->data['Report']['Logical']] = $conditionsList;
+                        $conditions[$this->request->data['Report']['Logical']] = $conditionsList;
                     }
                 } // is array fields
             } // foreach model => fields
             asort($fieldsPosition);
             $fieldList = array_keys($fieldsPosition);
             $order = array();
-            if ( isset($this->data['Report']['OrderBy1']) )
-                $order[] = $this->data['Report']['OrderBy1'] . ' ' . $this->data['Report']['OrderDirection'];
-            if ( isset($this->data['Report']['OrderBy2']) )
-                $order[] = $this->data['Report']['OrderBy2'] . ' ' . $this->data['Report']['OrderDirection'];
+            if ( isset($this->request->data['Report']['OrderBy1']) )
+                $order[] = $this->request->data['Report']['OrderBy1'] . ' ' . $this->request->data['Report']['OrderDirection'];
+            if ( isset($this->request->data['Report']['OrderBy2']) )
+                $order[] = $this->request->data['Report']['OrderBy2'] . ' ' . $this->request->data['Report']['OrderDirection'];
             
             $tableColumnWidth = $this->getTableColumnWidth($fieldsLength,$fieldsType);
             $tableWidth = $this->getTableWidth($tableColumnWidth);
@@ -491,12 +491,12 @@ class ReportController extends AppController {
                 $oneToManyTableWidth = $this->getTableWidth($oneToManyTableColumnWidth);                
                 asort($oneToManyFieldsPosition);
                 $oneToManyFieldsList = array_keys($oneToManyFieldsPosition);
-                $showNoRelated = $this->data['Report']['ShowNoRelated'];
+                $showNoRelated = $this->request->data['Report']['ShowNoRelated'];
                 $recursive = 1;
             }
 			
-			if (isset($this->data['Report']['ReportName']) && $this->data['Report']['ReportName'] != '') {
-				$pageTitleReport = $this->data['Report']['ReportName'];
+			if (isset($this->request->data['Report']['ReportName']) && $this->request->data['Report']['ReportName'] != '') {
+				$pageTitleReport = $this->request->data['Report']['ReportName'];
 			} else {
 				$pageTitleReport = $modelClass . ' Report ';
 			}
@@ -512,8 +512,15 @@ class ReportController extends AppController {
 				'order' => $order,
 				'conditions' => $conditions
 			));
-			
-            if ( $this->data['Report']['Output'] == 'html') {
+			//echo $this->request->data['Report']['Output'];
+            if ( $this->request->data['Report']['Output'] == 'html') {
+				//pr($this->request->data);die;
+				if($this->request->data['Report']['MainModel'] != $modelClass){
+					return $this->redirect(array('action' => 'index'));
+				}
+				
+				$totalPages = ceil($totalRows / $rowsPerPage);
+				
 				if(isset($this->params['pass'][2])){
 					$currentPage = intval($this->params['pass'][2]);
 					if($currentPage < 1){
@@ -523,18 +530,22 @@ class ReportController extends AppController {
 					$currentPage = 1;
 				}
 				
+				if ($currentPage > $totalPages) {
+					$currentPage = 1;
+				}
+				
 				$reportData = $this->{$modelClass}->find('all',array(
 					'recursive'=>$recursive,
 					'fields'=>$fieldList,
 					'order'=>$order,
 					'conditions'=>$conditions,
 					'limit' => $rowsPerPage,
-					'offset' => (($currentPage-1) * $rowsPerPage),
+					'offset' => (($currentPage-1) * $rowsPerPage)
 				));
 				
 				$this->set(compact('reportData'));
 				// params for pagination
-				$this->set(compact('param1', 'param2', 'totalRows', 'rowsPerPage', 'currentPage'));
+				$this->set(compact('param1', 'param2', 'totalRows', 'rowsPerPage', 'totalPages', 'currentPage'));
 				
                 if ($oneToManyOption == '')
                     $this->render('report_display');
@@ -542,13 +553,9 @@ class ReportController extends AppController {
 					$this->set(compact('oneToManyOption', 'oneToManyFieldsList', 'oneToManyFieldsType', 'oneToManyTableColumnWidth', 'oneToManyTableWidth', 'showNoRelated'));
                     $this->render('report_display_one_to_many');
                 }
-            } else { // Excel file
-				// start excel file xlsBOF
-//				foreach (pages) {
-//					// find
-//					// write to excel
-//				}
-				// end excel file xlsEOF
+			} else if($this->request->data['Report']['Output'] != 'html' && isset($this->params['pass'][2])){
+				return $this->redirect(array('action' => 'index'));
+			}else { // Excel file
 				$reportData = array();
 				
                 $this->layout = null;
@@ -561,7 +568,7 @@ class ReportController extends AppController {
                         $oneToManyFieldsType, 
                         $showNoRelated, $recursive, $fieldList, $order, $conditions, $totalRows, $rowsPerPage, $modelClass);
             }
-            if ($this->data['Report']['SaveReport'])
+            if ($this->request->data['Report']['SaveReport'])
                 $this->saveReport($modelClass,$oneToManyOption);
         }
     }
