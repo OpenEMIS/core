@@ -22,25 +22,29 @@ class SecurityGroupInstitutionSite extends AppModel {
 		'InstitutionSite'
 	);
 	
-	/*
-	public function saveGroupAccess($groupId, $data) {
-		$id = array();
-		$this->deleteAll(array('SecurityGroupInstitutionSite.security_group_id' => $groupId), false);
+	public function autocomplete($search, $exclude) {
+		$list = $this->InstitutionSite->find('all', array(
+			'fields' => array('InstitutionSite.id', 'InstitutionSite.code', 'InstitutionSite.name'),
+			'conditions' => array(
+				'OR' => array(
+					'InstitutionSite.code LIKE' => $search,
+					'InstitutionSite.name LIKE' => $search
+				),
+				'InstitutionSite.id NOT' => $exclude
+			),
+			'order' => array('InstitutionSite.name')
+		));
 		
-		foreach($data as $obj) {
-			$siteId = $obj['institution_site_id'];
-			if(!in_array($siteId, $id)) {
-				$dataObj = array('SecurityGroupInstitutionSite' => array(
-					'security_group_id' => $groupId,
-					'institution_site_id' => $siteId
-				));
-				$this->create();
-				$this->save($dataObj);
-				$id[] = $siteId;
-			}
+		$data = array();
+		foreach($list as $obj) {
+			$site = $obj['InstitutionSite'];
+			$data[] = array(
+				'label' => sprintf('%s - %s', $site['code'], $site['name']),
+				'value' => array('value-id' => $site['id'], 'site-name' => $site['name'], 'site-code' => $site['code'])
+			);
 		}
+		return $data;
 	}
-	*/
 	
 	public function getSites($groupId) {
 		$this->formatResult = true;
