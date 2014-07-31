@@ -155,4 +155,3 @@ class DIData extends VisualizerAppModel {
 		return $paginateOptions;
 	}
 }
-/*
