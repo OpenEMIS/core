@@ -23,6 +23,30 @@ class SecurityGroupUser extends AppModel {
 		'SecurityUser'
 	);
 	
+	public function autocomplete($search, $exclude) {
+		$list = $this->SecurityUser->find('all', array(
+			'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
+			'conditions' => array(
+				'OR' => array(
+					'SecurityUser.first_name LIKE' => $search,
+					'SecurityUser.last_name LIKE' => $search
+				),
+				'SecurityUser.id NOT' => $exclude
+			),
+			'order' => array('SecurityUser.first_name', 'SecurityUser.last_name')
+		));
+		
+		$data = array();
+		foreach($list as $obj) {
+			$user = $obj['SecurityUser'];
+			$data[] = array(
+				'label' => trim(sprintf('%s %s', $user['first_name'], $user['last_name'])),
+				'value' => array('value-id' => $user['id'], 'user-name' => trim(sprintf('%s %s', $user['first_name'], $user['last_name'])))
+			);
+		}
+		return $data;
+	}
+	
 	public function getUsers($groupId) {
 		$roles = $this->find('all', array(
 			'recursive' => -1,
