@@ -296,6 +296,7 @@ class VisualizerController extends VisualizerAppController {
 					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
 				}
 			}
+			$displayError = true;
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['indicator']['search']);
 		}
@@ -305,7 +306,7 @@ class VisualizerController extends VisualizerAppController {
 		$di6Indicator = ClassRegistry::init('Visualizer.Indicator');
 		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info')));
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
-		if(empty($tableRowData)){
+		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
 		}
 		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId'));
@@ -327,6 +328,7 @@ class VisualizerController extends VisualizerAppController {
 					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
 				}
 			}
+			$displayError = true;
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['unit']['search']);
 		}
@@ -339,7 +341,7 @@ class VisualizerController extends VisualizerAppController {
 
 		$tableRowData = $this->processUnitRawData($data,$selectedUnitIds);
 		
-		if(empty($tableRowData)){
+		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
 		}
 		$this->set(compact('header', 'tableRowData', 'selectedUnitIds'));
@@ -358,6 +360,7 @@ class VisualizerController extends VisualizerAppController {
 			if (count($this->Session->read('visualizer.selectedOptions.IUS')) > 0) {
 				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
 			}
+			$displayError = true;
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['dimension']['search']);
 		}
@@ -370,7 +373,7 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorUnitSubgroup->getDimensions(array('indicators' => $selectedIndicatorId, 'units' => $selectedUnitIds));
 
 		$tableRowData = $this->processDimensionRawData($data);
-		if(empty($tableRowData)){
+		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
 		}
 		$this->set(compact('header', 'tableRowData', 'selectedDimensionIds'));
@@ -389,6 +392,7 @@ class VisualizerController extends VisualizerAppController {
 			if (count($this->Session->read('visualizer.selectedOptions.area')) > 0) {
 				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
 			}
+			$displayError = true;
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['area']['search']);
 		}
@@ -413,7 +417,7 @@ class VisualizerController extends VisualizerAppController {
 		$data = $this->Paginator->paginate('DIArea');
 		$fullPathData = $this->DIArea->getAreaTreaFullPath($data);
 		$tableRowData = $this->processAreaRawData($fullPathData, $areaLevelOptions);
-		if(empty($tableRowData)){
+		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
 		}
 		$this->set(compact('header', 'tableHeaders', 'tableRowData', 'areaLevelOptions', 'selectedAreaLevel', 'selectedAreaIds'));
@@ -461,6 +465,7 @@ class VisualizerController extends VisualizerAppController {
 			if (count($this->Session->read('visualizer.selectedOptions.timeperiod')) > 0) {
 				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
 			}
+			$displayError = true;
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['time']['search']);
 		}
@@ -471,7 +476,7 @@ class VisualizerController extends VisualizerAppController {
 		$di6Data = ClassRegistry::init('Visualizer.DIData');
 		$data = $di6Data->getTimePeriodList($selectedDimensionIds);
 		$tableRowData = $this->processTimeRawData($data);
-		if(empty($tableRowData)){
+		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
 		}
 		$this->set(compact('header', 'tableRowData', 'selectedTimeperiodIds'));
@@ -489,6 +494,7 @@ class VisualizerController extends VisualizerAppController {
 			if (count($this->Session->read('visualizer.selectedOptions.source')) > 0) {
 				return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
 			}
+			$displayError = true;
 			$this->Message->alert('visualizer.failed.minSelection');
 			unset($this->request->data['source']['search']);
 		}
@@ -500,7 +506,7 @@ class VisualizerController extends VisualizerAppController {
 		$data = $di6IndicatorClassification->getSource($selectedDimensionIds, $selectedTimeperiodIds);
 
 		$tableRowData = $this->processSourceRawData($data);
-		if(empty($tableRowData)){
+		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
 		}
 		$this->set(compact('header', 'tableRowData', 'selectedSourceIds'));
