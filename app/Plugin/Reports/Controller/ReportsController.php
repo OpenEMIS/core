@@ -35,16 +35,31 @@ class ReportsController extends ReportsAppController {
 		'SchoolYear'
 	);
 	public $standardReports = array( //parameter passed to Index
-		'Institution'=>array('enable'=>true),
-		'Student'=>array('enable'=>true),
-		'Teacher'=>array('enable'=>true),
-		'Staff'=>array('enable'=>true),
-		'Training'=>array('enable'=>true),
-		'Consolidated'=>array('enable'=>true),
-		'Indicator'=>array('enable'=>true),
-		'DataQuality'=>array('enable'=>true),
-		'Custom'=>array('enable'=>true),
-		'QualityAssurance'=>array('enable'=>true)
+		'InstitutionGeneral'=>array('enable'=>true),
+		'InstitutionDetails'=>array('enable'=>true),
+		'InstitutionAttendance'=>array('enable'=>true),
+		'InstitutionAssessment'=>array('enable'=>true),
+		'InstitutionBehaviors'=>array('enable'=>true),
+		'InstitutionFinance'=>array('enable'=>true),
+		'InstitutionTotals'=>array('enable'=>true),
+		'InstitutionQuality'=>array('enable'=>true),
+		
+		'StudentGeneral'=>array('enable'=>true),
+		'StudentDetails'=>array('enable'=>true),
+		'StudentFinance'=>array('enable'=>true),
+		'StudentHealth'=>array('enable'=>true),
+		
+		'StaffGeneral'=>array('enable'=>true),
+		'StaffDetails'=>array('enable'=>true),
+		'StaffFinance'=>array('enable'=>true),
+		'StaffHealth'=>array('enable'=>true),
+		'StaffTraining'=>array('enable'=>true),
+		
+		'YearbookGeneral'=>array('enable'=>true),
+		'MapGeneral'=>array('enable'=>true),
+		'DashboardGeneral'=>array('enable'=>true),
+		'SystemDataQuality'=>array('enable'=>true),
+		'CustomGeneral'=>array('enable'=>true)
 	);
 
 	public $customView = array( //exclude from Index view.
@@ -91,10 +106,10 @@ class ReportsController extends ReportsAppController {
 	}
 	
 	public function index() {
-		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'Institution'));
+		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'InstitutionGeneral'));
 	}
 	
-	public function Institution(){}
+	public function InstitutionGeneral(){}
 	public function InstitutionDownload(){}
 	public function Student(){}
 	public function StudentDownload(){}
@@ -114,8 +129,8 @@ class ReportsController extends ReportsAppController {
 	public function DataQualityDownload(){}
 	
 	public function renderReport($reportType = 'Institution') {
-		$reportTitle  = Inflector::underscore($reportType);
-		$reportTitle  = Inflector::humanize($reportTitle);
+		$reportTitleUnderscored  = Inflector::underscore($reportType);
+		$reportTitle  = Inflector::humanize($reportTitleUnderscored);
 		if(isset($this->params['pass'][0])){
 			$this->Navigation->addCrumb($reportTitle.' Reports', array('controller' => 'Reports', 'action' => $this->action));
 			$this->Navigation->addCrumb('Generated Files');
@@ -132,21 +147,21 @@ class ReportsController extends ReportsAppController {
 		}
 		
 		//pr($this->InstitutionSiteProgramme->find('all',array('limit'=>2)));
-		$reportType = Inflector::underscore($reportType);
-		$reportType = str_replace('_',' ',$reportType);
-		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'category'=>$reportType.' Reports'), 'order' => array('Report.order')));
+		//$reportType = Inflector::underscore($reportType);
+		//$reportType = str_replace('_',' ',$reportType);
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'category'=>$reportTitle.' Reports'), 'order' => array('Report.order')));
 		
-		$checkFileExist = array();
+		//$checkFileExist = array();
 		$tmp = array();
 		
 		//arrange and sort according to grounp
-		foreach($data as $k => $val){
+		foreach($data as $val){
 			//$pathFile = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$val['Report']['category']).DS.$val['Report']['module'].DS.str_replace(' ','_',$val['Report']['name']).'.'.$val['Report']['file_type'];
 			$module = $val['Report']['module'];
 			$category = $val['Report']['category'];
 			$name = $val['Report']['name'];
 			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
-			$tmp[$reportType.' Reports'][$module][$name] =  $val['Report']; 
+			$tmp[$category][$module][$name] =  $val['Report']; 
 		}
 
 			  
