@@ -244,7 +244,8 @@ class DashboardsController extends DashboardsAppController {
 		
 		$rawData = $this->QADashboard->getDashboardRawData(array('IUS' => $this->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
 		//pr($this->HighCharts->selectedAreas);
-		pr($rawData);
+	//	pr($rawData);
+		
  		//$indData = $this->QADashboard->getIndicatorByGID($this->QADashboard->indicators['QA_AdminTechBoth_Score']);
 		//$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']));
 		
@@ -258,7 +259,10 @@ class DashboardsController extends DashboardsAppController {
 		
 		
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-	
+		$this->HighCharts->customGenerateCategory();
+		pr($rawData);
+		//$data = array_merge($data, $this->HighCharts->getGenericChartData('column', $rawData));
+	//	$jsonData = $this->HighCharts->getChartData('column', $rawData);
 		/*$setupOptions = array(
 			'areaIds' => array($selectedAreaId => $areaName ,$countryId => $countryName),
 			'TimePeriod_Nid' => $yearId,

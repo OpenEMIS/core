@@ -7,14 +7,14 @@ $(document).ready(function() {
 	if($('#hc_graph_container').children().length > 0){
 		$('#hc_graph_container').children().each(function (){
 			//alert($(this).attr('id'));
-			
+			var graphWrapper = $(this);
 			$.ajax({
 				type: "POST",
 				dataType: 'json',
-				url:  $(this).attr('url'),
+				url:  graphWrapper.attr('url'),
 				//data: {searchStr: $(this).val(), areaLvl: $('#areaLevel').val()},
 				success: function(data) {
-					$(this).highcharts(data);
+					graphWrapper.highcharts(data);
 				}
 			});
 
