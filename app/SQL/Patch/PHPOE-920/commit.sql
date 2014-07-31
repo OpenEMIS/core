@@ -172,7 +172,3 @@ INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`,
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('4', 'Category', 'name', 'StudentCategory', '1', '1', '2014-07-14');
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('5', 'Grade', 'name', 'EducationGrade', '1', '1', '2014-07-14');
 
-INSERT INTO `dev_openemis_demo`.`datawarehouse_fields` (`id`, `name`, `type`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('7', 'value', 'SUM', '1', '1', '2014-07-14 00:00:00');
-UPDATE `dev_openemis_demo`.`datawarehouse_fields` SET `type`='COUNT' WHERE `id`='6';
-UPDATE `dev_openemis_demo`.`datawarehouse_fields` SET `name`='age', `type`='SUM' WHERE `id`='5';
-
