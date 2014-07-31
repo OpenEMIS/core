@@ -23,8 +23,8 @@ class DatawarehouseDimension extends DatawarehouseAppModel {
 	);
 
 	public $hasMany = array(
-		'DatawarehouseIndicatorCondition' => array(
-			'className' => 'DatawarehouseIndicatorCondition',
+		'DatawarehouseIndicatorDimension' => array(
+			'className' => 'DatawarehouseIndicatorDimension',
 			'foreignKey' => 'datawarehouse_dimension_id',
 			'dependent' => true
 		)

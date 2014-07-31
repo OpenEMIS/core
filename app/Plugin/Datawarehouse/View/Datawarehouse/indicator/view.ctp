@@ -39,7 +39,12 @@ if(isset($data['DatawarehouseIndicator']['datawarehouse_unit_id']) && $data['Dat
 	$typeOption = array('numerator', 'denominator');
 }
 foreach($typeOption as $type){
-	$typeFieldModel = 'DatawarehouseField';
+	$typeSubgroupModel = $data['DatawarehouseIndicatorSubgroup'];
+	$typeDimensionModel = $data['DatawarehouseIndicatorDimension'];
+	if($type=='denominator'){
+		$typeSubgroupModel = $data['Denominator']['DatawarehouseIndicatorSubgroup'];
+		$typeDimensionModel = $data['Denominator']['DatawarehouseIndicatorDimension'];
+	}
  ?>
    <fieldset class="section_group">
 	<legend><?php echo __(ucwords($type)); ?></legend>
@@ -53,13 +58,13 @@ foreach($typeOption as $type){
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo $this->Label->get('Datawarehouse.dimensions');?></div>
-		<div class="col-md-6"><?php if(!empty($data['DatawarehouseIndicatorDimension'])){ foreach($data['DatawarehouseIndicatorDimension'] as $val) { 
+		<div class="col-md-6"><?php if(!empty($typeDimensionModel)){ foreach($typeDimensionModel as $val) { 
 			echo $numeratorDatawarewarehouseDimensionOptions[$val['datawarehouse_dimension_id']] . '<br />'; } }?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"></div>
-		<div class="col-md-6"><?php foreach($data['DatawarehouseIndicatorSubgroup'] as $val) { 
-			echo $val['subgroup'] . '<br />'; }?></div>
+		<div class="col-md-6"><?php if(!empty($typeSubgroupModel)){ foreach($typeSubgroupModel as $val) { 
+			echo $val['subgroup'] . '<br />'; } }?></div>
 	</div>
  </fieldset>
  <?php  } ?>

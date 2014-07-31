@@ -33,7 +33,7 @@ class DataProcessingController extends DataProcessingAppController {
         'indicator' => 'DataProcessing.DatawarehouseIndicator'
     ); 
 	
-	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'DevInfo6.DevInfo6Datawarehouse', 'Paginator', 'DataProcessing.Datawarehouse');
+	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'Paginator', 'Datawarehouse.Datawarehouse', 'Datawarehouse.DevInfo');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -524,12 +524,12 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-            $settings['areaId'] = $this->request->data['DataProcessing']['area_id'];
+            $settings['areaLevelId'] = $this->request->data['DataProcessing']['area_level_id'];
             $settings['schoolYearId'] = $this->request->data['DataProcessing']['school_year_id'];
             if(isset($this->request->data['Reports']) && !empty($this->request->data['Reports'])){
                 foreach($this->request->data['Reports'] as $reportId){
                     $settings['indicatorId'] = $reportId;
-                    $this->DevInfo6Datawarehouse->export($settings);
+                    $this->DevInfo->export($settings);
                 }
             }
             //$this->processGenerate($this->data['Reports']);
@@ -537,19 +537,11 @@ class DataProcessingController extends DataProcessingAppController {
 		
 
         $AreaLevel = ClassRegistry::init('AreaLevel');
-        $areaOptions = $AreaLevel->find('list',
+        $areaLevelOptions = $AreaLevel->find('list',
             array(
-                'fields' => array('Area.id', 'Area.name', 'AreaLevel.name'),
-                'joins' => array(
-                    array(
-                        'type' => 'INNER',
-                        'table' => 'areas',
-                        'alias' => 'Area',
-                        'conditions' => array('AreaLevel.id = Area.area_level_id')
-                    )
-                ),
+                'fields' => array('AreaLevel.id', 'AreaLevel.name'),
                 'recursive'=> -1,
-                'order' => array('AreaLevel.name', 'Area.name')
+                'order' => array('AreaLevel.level')
             )
         );
 
@@ -557,7 +549,7 @@ class DataProcessingController extends DataProcessingAppController {
         $SchoolYear = ClassRegistry::init('SchoolYear');
         $schoolYearOptions = $SchoolYear->find('list', array('fields'=>array('id', 'name'), 'order'=>array('start_year DESC')));
 
-        $this->set(compact('areaOptions', 'schoolYearOptions'));
+        $this->set(compact('areaLevelOptions', 'schoolYearOptions'));
 
        
         /*$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));
