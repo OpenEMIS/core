@@ -22,10 +22,10 @@ $arrMap = array(
 </div>
 <div class="col-md-4">
 	<?php
-	echo  $this->Form->input('area_id', array(
+	echo  $this->Form->input('area_level_id', array(
 		'label' => false,
 		'div' => false,
-		'options' => $areaOptions,
+		'options' => $areaLevelOptions,
 		'class'=>'form-control'
 	));
 	?>

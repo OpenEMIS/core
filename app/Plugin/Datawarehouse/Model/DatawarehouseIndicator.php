@@ -226,15 +226,16 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 			if(empty($data) && !empty($id)){
 				$controller->redirect(array('action'=>'indicatorAdd'));
 			}
-
-			$requestData =  $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions);
-			$requestData['DatawarehouseIndicator'] = $data['DatawarehouseIndicator'];
-			$denominator = array();
-			if(isset($data['Denominator'])){
-				$denominator = $data['Denominator'];
+			if(!empty($data)){
+				$requestData =  $controller->Datawarehouse->formatDimension($data, $datawarehouseModuleOptions);
+				$requestData['DatawarehouseIndicator'] = $data['DatawarehouseIndicator'];
+				$denominator = array();
+				if(isset($data['Denominator'])){
+					$denominator = $data['Denominator'];
+				}
+				$requestData['Denominator'] = $denominator;
+				$controller->request->data = $requestData;
 			}
-			$requestData['Denominator'] = $denominator;
-			$controller->request->data = $requestData;
 		}else{
 			$data = $controller->request->data;
 			
@@ -261,7 +262,6 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 						$currentStep = $currentStep-1;
 					}
 					$currentTab = $tabStep[$currentStep];
-					pr($currentStep);
 				}else{
 					$errorFlag = true;
 				}
@@ -273,11 +273,10 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 					$denominatorFlag = true;
 					$saveTypeOptions = array('numerator', 'denominator');
 				}
-
 				if($denominatorFlag){
 					$saveData['Denominator'] = $saveData['DatawarehouseIndicator'];
-					if(isset($data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'])){
-						$saveData['Denominator']['datawarehouse_field_id'] = $data['DatawarehouseIndicator']['denominator_datawarehouse_field_id'];
+					if(isset($data['DatawarehouseField']['denominator_datawarehouse_field_id'])){
+						$saveData['Denominator']['datawarehouse_field_id'] = $data['DatawarehouseField']['denominator_datawarehouse_field_id'];
 					}
 					if(isset($data['Denominator']['id'])){
 						$saveData['Denominator']['id'] = $data['Denominator']['id'];
@@ -286,19 +285,16 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 					}
 					$saveData['Denominator']['denominator'] = 0;
 				}
-				foreach($data['DatawarehouseField']['numerator_datawarehouse_dimension_id'] as $key=>$val){
-					$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
-				}
-
+				
+				$id = isset($controller->request->data[$this->name]['id']) ? $controller->request->data[$this->name]['id'] : null;
+				
 				foreach($saveTypeOptions as $type){
 					$moduleID = $data['DatawarehouseField'][$type.'_datawarehouse_module_id'];
 					$datawarewarehouseDimensionOptions = $controller->Datawarehouse->getDimensionOptions($moduleID);
 
 					$dimensionValues = $controller->Datawarehouse->getAllDimension(array_keys($datawarewarehouseDimensionOptions));
-				
-					foreach($data['DatawarehouseField']['numerator_datawarehouse_subgroup_id'] as $key=>$val){
-						$saveData['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
-
+					
+					foreach($data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] as $key=>$val){
 						$arrSubgroupType = split(", ", $val);
 						$conditionFormat = '%s.%s="%s"';
 						$condition = '';
@@ -314,24 +310,40 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 								}
 							}
 						}
-						$saveData['datawarehouseSubgroup'][$key]['value'] = $condition;
+						if($type=='denominator'){
+							$saveData['Denominator']['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
+							$saveData['Denominator']['DatawarehouseIndicatorSubgroup'][$key]['value'] = $condition;
+							$saveData['Denominator']['DatawarehouseIndicatorSubgroup'][$key]['datawarehouse_indicator_id'] = $id;
+
+						}else{
+							$saveData['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
+							$saveData['DatawarehouseIndicatorSubgroup'][$key]['value'] = $condition;
+							$saveData['DatawarehouseIndicatorSubgroup'][$key]['datawarehouse_indicator_id'] = $id;
+						}
+
+					}
+					foreach($data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'] as $key=>$val){
+						if($type=='denominator'){
+							$saveData['Denominator']['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
+							$saveData['Denominator']['DatawarehouseIndicatorDimension'][$key]['datawarehouse_indicator_id'] = $id;
+						}else{
+							$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
+							$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_indicator_id'] = $id;
+						}
 					}
 				}
 
-				$id = $controller->request->data[$this->name]['id'];
 				if(!empty($id)){
 					$this->DatawarehouseIndicatorDimension->deleteAll(array('DatawarehouseIndicatorDimension.datawarehouse_indicator_id' => $id), false);
 					$this->DatawarehouseIndicatorSubgroup->deleteAll(array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id' => $id), false);
 				}
-				if ($this->saveAll($saveData)){
+				if ($this->saveAll($saveData, array('deep' => true))){
 					if(empty($id)){
 					  	$controller->Message->alert('general.add.success');
 					}else{	
 					  	$controller->Message->alert('general.edit.success');
 					}
 					return $controller->redirect(array('action' => 'indicator'));
-				}else{
-					pr($this->invalidFields);
 				}
 			}
 
