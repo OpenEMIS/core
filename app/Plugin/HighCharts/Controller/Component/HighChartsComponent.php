@@ -134,6 +134,17 @@ class HighChartsComponent extends Component {
 		return $chartData;
 	}
 	
+	public function customGenerateCategory($chartType){
+		$linebreak = $this->getChartBreak($chartType);
+		$totalColumn = count($this->selectedTimeperiods) * count($this->selectedAreas);
+		$rotateLabel = $this->getLabelRotate($chartType);
+		
+		foreach($this->selectedIndicator as $indObj){
+			$finalData['xAxis']['categories'][] = $indObj;//sprintf('%s - %s', $indObj['TimePeriod']['TimePeriod'], $indObj['DIArea']['Area_Name']);
+		}
+	}
+	
+	
 	public function getPlotOptions($type, $_options) {
 		$chartData = array();
 		if (!empty($_options['stacking']) && ($type == 'bar' || $type == 'column')) {
@@ -148,7 +159,7 @@ class HighChartsComponent extends Component {
 	 * populating data into highchart format
 	 * ================================================ */
 
-	public function getGenericChartData($chartType, $DIData) {
+	private function getGenericChartData($chartType, $DIData) {
 		$chartData = $this->setupChartCategory($chartType);
 		$chartData = array_merge($chartData, $this->setupChartDataset($DIData, $this->getChartBreak($chartType)));
 		return $chartData;
