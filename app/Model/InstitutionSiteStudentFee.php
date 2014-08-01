@@ -354,7 +354,6 @@ class InstitutionSiteStudentFee extends AppModel {
 		foreach($programmeGrades as $programGrade){
 			$gradeCondition = array_keys($programGrade['education_grades']);
 			if(!empty($selectedGrade)){
-				pr($selectedGrade);
 				$gradeCondition = array_push($gradeCondition, $selectedGrade);
 			}
 			if(!empty($selectedProgramme)){
