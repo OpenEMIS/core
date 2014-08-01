@@ -17,26 +17,40 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroupArea extends AppModel {
-	public function saveGroupAccess($groupId, $data) {
-		$id = array();
-		$this->deleteAll(array('SecurityGroupArea.security_group_id' => $groupId), false);
+	public $belongsTo = array(
+		'SecurityGroup',
+		'Area'
+	);
+	
+	public function autocomplete($search, $exclude) {
+		$list = $this->Area->find('all', array(
+			'fields' => array('Area.id', 'Area.code', 'Area.name', 'AreaLevel.name'),
+			'conditions' => array(
+				'OR' => array(
+					'Area.name LIKE' => $search,
+					'Area.code LIKE' => $search,
+					'AreaLevel.name LIKE' => $search
+				),
+				'Area.id NOT' => $exclude
+			),
+			'order' => array('AreaLevel.level', 'Area.order')
+		));
 		
-		foreach($data as $obj) {
-			$areaId = $obj['area_id'];
-			if(!in_array($areaId, $id)) {
-				$dataObj = array('SecurityGroupArea' => array(
-					'security_group_id' => $groupId,
-					'area_id' => $areaId
-				));
-				$this->create();
-				$this->save($dataObj);
-				$id[] = $areaId;
-			}
+		$data = array();
+		foreach($list as $obj) {
+			$area = $obj['Area'];
+			$level = $obj['AreaLevel'];
+			$data[] = array(
+				'label' => sprintf('%s - %s (%s)', $level['name'], $area['name'], $area['code']),
+				'value' => array('value-id' => $area['id'], 'area-name' => $area['name'], 'area-code' => $area['code'])
+			);
 		}
+		return $data;
 	}
 	
 	public function getAreas($groupId) {
 		$this->formatResult = true;
+		$this->unbindModel(array('belongsTo' => array('Area')));
 		$data = $this->find('all', array(
 			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.area_level_id AS area_level_id', 'Area.name AS area_name'),
 			'joins' => array(
