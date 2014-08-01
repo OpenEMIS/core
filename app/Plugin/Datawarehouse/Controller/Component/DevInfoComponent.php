@@ -360,12 +360,13 @@ class DevInfoComponent extends Component {
 
 				pr($subgroups);
 				pr($subgroupTypes);
-				$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
-				$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
 
 
 				
 				foreach($modelData as $data){
+					$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($data['Subgroup'], $subgroupTypes);
+					$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
+
 					$model = array();
 					$model['IUSNId'] 			= $diIUSId;
 					$model['TimePeriod_NId'] 	= $diTimePeriodId;

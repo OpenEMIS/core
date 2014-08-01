@@ -19,17 +19,23 @@ $(document).ready(function() {
 
 var objDatawarehouse = {
     init: function() {
-        $('.numeratorDimension .filter-dimension input:checkbox').click(function() {
+        $('.numeratorDimension').on('click', '.filter-dimension input:checkbox', function(){
             objDatawarehouse.generateSubgroup('numerator');
         });
-        $('.denominatorDimension .filter-dimension input:checkbox').click(function() {
+        $('.denominatorDimension').on('click', '.filter-dimension input:checkbox', function(){
             objDatawarehouse.generateSubgroup('denominator');
+
+        });
+        $('.denominatorDimension').on('click', '.filter-option input:checkbox', function(){
+              $('.denominatorDimension .filter-option input[type="checkbox"]').not(this).prop("checked", false);
         });
 
          $('.nav-tabs > li  > a').click(function(){
             if(!$(this).parent().hasClass('disabled')){
-                var type = $(this).attr('href').replace('#tab-', "");
-                $('#DatawarehouseIndicatorType').val(type);
+                try{
+                    var type = $(this).attr('href').replace('#tab-', "");
+                    $('#DatawarehouseIndicatorType').val(type);
+                }catch(err) {}
             }
         });
         // objDatawarehouse.populateByModule($(".numeratorModuleOption"), "numerator");
@@ -46,27 +52,30 @@ var objDatawarehouse = {
         $('.'+objType+'Dimension .filter-dimension input:checkbox:checked').each(function () {
             dimensionId.push($(this).val());
         });
-
+        var denominatorFlag = 0;
         var moduleID = $('.'+objType+'ModuleOption').val();
-
-        if(dimensionId.length>0){
-            url = 'Datawarehouse/ajax_populate_subgroup/';
-            $.ajax({ 
-                type: "get",
-                dataType: "json",
-                url: getRootURL()+url+moduleID+'/'+dimensionId+'/'+objType,
-                success: function(data){
-                    if(data == null){
-                        return;
-                    }
-                    $('.'+objType+'Dimension .form-subgroup').remove();
-                    
-                    $('.'+objType+'Dimension .divSubgroupList').append(data.subgroupRow);
-                    $.unmask({id: maskId});
-                },
-                 beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"Dimension"}); }
-            });
+        if(dimensionId.length==0){
+            dimensionId.push(0);
         }
+        if($('#DatawarehouseIndicatorDatawarehouseUnitId').val()!="1"){
+            denominatorFlag = 1;
+        }
+        url = 'Datawarehouse/ajax_populate_subgroup/';
+        $.ajax({ 
+            type: "get",
+            dataType: "json",
+            url: getRootURL()+url+moduleID+'/'+dimensionId+'/'+objType+'/'+denominatorFlag,
+            success: function(data){
+                if(data == null){
+                    return;
+                }
+                $('.'+objType+'Dimension .form-subgroup').remove();
+                
+                $('.'+objType+'Dimension .divSubgroupList').append(data.subgroupRow);
+                $.unmask({id: maskId});
+            },
+             beforeSend: function (jqXHR) { maskId = $.mask({parent: "."+objType+"Dimension"}); }
+        });
     },
     getUnitType: function(obj){
         if($(obj).val()== "1"){
@@ -79,7 +88,11 @@ var objDatawarehouse = {
         $('.tab-pane').each(function(){
             $(this).removeClass('active');
         });
-       $($('.nav-tabs .active > a').attr('href')).addClass('active');
+        try{
+           $($('.nav-tabs .active > a').attr('href')).addClass('active');
+        }
+        catch(err) {
+        }
     },
     populateByModule: function(obj, objType){
         var moduleID = $(obj).val();
