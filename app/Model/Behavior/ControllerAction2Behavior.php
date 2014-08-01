@@ -118,7 +118,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 		}
 	}
 	
-	public function remove(Model $model, $id) {
+	public function remove(Model $model) {
 		if ($model->Session->check($model->alias . '.id')) {
 			$id = $model->Session->read($model->alias . '.id');
 			if($model->delete($id)) {
