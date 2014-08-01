@@ -17,6 +17,36 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroupUser extends AppModel {
+	public $belongsTo = array(
+		'SecurityGroup',
+		'SecurityRole',
+		'SecurityUser'
+	);
+	
+	public function autocomplete($search, $exclude) {
+		$list = $this->SecurityUser->find('all', array(
+			'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
+			'conditions' => array(
+				'OR' => array(
+					'SecurityUser.first_name LIKE' => $search,
+					'SecurityUser.last_name LIKE' => $search
+				),
+				'SecurityUser.id NOT' => $exclude
+			),
+			'order' => array('SecurityUser.first_name', 'SecurityUser.last_name')
+		));
+		
+		$data = array();
+		foreach($list as $obj) {
+			$user = $obj['SecurityUser'];
+			$data[] = array(
+				'label' => trim(sprintf('%s %s', $user['first_name'], $user['last_name'])),
+				'value' => array('value-id' => $user['id'], 'user-name' => trim(sprintf('%s %s', $user['first_name'], $user['last_name'])))
+			);
+		}
+		return $data;
+	}
+	
 	public function getUsers($groupId) {
 		$roles = $this->find('all', array(
 			'recursive' => -1,
@@ -83,19 +113,12 @@ class SecurityGroupUser extends AppModel {
 	public function getRolesByUserId($userId) {
 		$data = $this->find('all', array(
 			'fields' => array('SecurityRole.*'),
-			'joins' => array(
-				array(
-					'table' => 'security_roles',
-					'alias' => 'SecurityRole',
-					'conditions' => array('SecurityRole.id = SecurityGroupUser.security_role_id')
-				)
-			),
 			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
 		));
 		return $data;
 	}
-        
-        public function getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId) {
+	
+	public function getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId) {
 		$data1 = $this->find('list', array(
 			'fields' => array('SecurityGroupUser.security_role_id', 'SecurityGroupUser.security_role_id'),
 			'joins' => array(
@@ -103,62 +126,62 @@ class SecurityGroupUser extends AppModel {
 					'table' => 'security_group_institution_sites',
 					'alias' => 'SecurityGroupInstitutionSite',
 					'conditions' => array(
-                                            'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
-                                            'SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId
-                                         )
+						'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
+						'SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId
+					)
 				)
 			),
 			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
 		));
-                
-                $roleAreas = $this->find('all', array(
-                        'recursive' => -1,
+				
+		$roleAreas = $this->find('all', array(
+			'recursive' => -1,
 			'fields' => array('SecurityGroupUser.security_role_id', 'Area.lft', 'Area.rght'),
 			'joins' => array(
 				array(
 					'table' => 'security_group_areas',
 					'alias' => 'SecurityGroupArea',
 					'conditions' => array(
-                                            'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id'
-                                         )
+						'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id'
+					)
 				),
-                                array(
+				array(
 					'table' => 'areas',
 					'alias' => 'Area',
 					'conditions' => array(
-                                            'SecurityGroupArea.area_id = Area.id'
-                                         )
+						'SecurityGroupArea.area_id = Area.id'
+					)
 				)
 			),
 			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
 		));
-                
-                $AreaModel = ClassRegistry::init('Area');
-                $siteArea = $AreaModel->find('first', array(
-                        'recursive' => -1,
+				
+		$AreaModel = ClassRegistry::init('Area');
+		$siteArea = $AreaModel->find('first', array(
+			'recursive' => -1,
 			'fields' => array('Area.lft', 'Area.rght'),
 			'joins' => array(
-                                array(
+				array(
 					'table' => 'institution_sites',
 					'alias' => 'InstitutionSite',
 					'conditions' => array(
-                                            'InstitutionSite.area_id = Area.id',
-                                            'InstitutionSite.id = ' . $institutionSiteId
-                                         )
+						'InstitutionSite.area_id = Area.id',
+						'InstitutionSite.id = ' . $institutionSiteId
+					)
 				)
 			)
-                ));
-                
-                $data2 = array();
-                if(count($siteArea) > 0){
-                    foreach($roleAreas AS $rowIndex => $row){
-                        if($siteArea['Area']['lft'] >= $row['Area']['lft'] && $siteArea['Area']['rght'] <= $row['Area']['rght']){
-                            if(!in_array($row['SecurityGroupUser']['security_role_id'], $data2)){
-                                $data2[] = $row['SecurityGroupUser']['security_role_id'];
-                            }
-                        }
-                    }
-                }
+		));
+				
+		$data2 = array();
+		if(count($siteArea) > 0){
+			foreach($roleAreas AS $rowIndex => $row){
+				if($siteArea['Area']['lft'] >= $row['Area']['lft'] && $siteArea['Area']['rght'] <= $row['Area']['rght']){
+					if(!in_array($row['SecurityGroupUser']['security_role_id'], $data2)){
+						$data2[] = $row['SecurityGroupUser']['security_role_id'];
+					}
+				}
+			}
+		}
 		return array_merge($data1, $data2);
 	}
 	
