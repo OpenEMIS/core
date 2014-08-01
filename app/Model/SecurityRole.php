@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class SecurityRole extends AppModel {
 	public $actsAs = array('ControllerAction');
+	public $belongsTo = array('SecurityGroup');
 	public $hasMany = array('SecurityRoleFunction', 'SecurityGroupUser');
 	
 	public $validate = array(
