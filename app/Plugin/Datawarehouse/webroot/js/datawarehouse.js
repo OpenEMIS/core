@@ -26,7 +26,7 @@ var objDatawarehouse = {
             objDatawarehouse.generateSubgroup('denominator');
 
         });
-        $('.denominatorDimension').on('click', '.filter-option input:checkbox', function(){
+         $('.denominatorDimension').on('click', '.filter-option input:checkbox', function(){
               $('.denominatorDimension .filter-option input[type="checkbox"]').not(this).prop("checked", false);
         });
 
