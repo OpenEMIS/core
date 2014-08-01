@@ -310,6 +310,11 @@ class LabelHelper extends AppHelper {
 		'StaffCustomFieldOption' => array(
 			'staff_custom_field_id' => 'Custom Field'
 		),
+		'SecurityGroup' => array(
+			'SecurityGroupArea' => 'Areas',
+			'SecurityGroupInstitutionSite' => 'Institutions',
+			'SecurityGroupUser' => 'Users'
+		),
 		'SecurityRole' => array(
 			'systemDefined' => 'System Defined Roles',
 			'userDefined' => 'User Defined Roles',
@@ -317,6 +322,9 @@ class LabelHelper extends AppHelper {
 			'permissions' => 'Permissions',
 			'name' => 'Role',
 			'security_group_id' => 'Group'
+		),
+		'SecurityUser' => array(
+			'name' => 'User'
 		),
 		'FinanceFee' => array(
 			'fee' => 'Fee',

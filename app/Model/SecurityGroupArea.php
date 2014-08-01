@@ -22,6 +22,32 @@ class SecurityGroupArea extends AppModel {
 		'Area'
 	);
 	
+	public function autocomplete($search, $exclude) {
+		$list = $this->Area->find('all', array(
+			'fields' => array('Area.id', 'Area.code', 'Area.name', 'AreaLevel.name'),
+			'conditions' => array(
+				'OR' => array(
+					'Area.name LIKE' => $search,
+					'Area.code LIKE' => $search,
+					'AreaLevel.name LIKE' => $search
+				),
+				'Area.id NOT' => $exclude
+			),
+			'order' => array('AreaLevel.level', 'Area.order')
+		));
+		
+		$data = array();
+		foreach($list as $obj) {
+			$area = $obj['Area'];
+			$level = $obj['AreaLevel'];
+			$data[] = array(
+				'label' => sprintf('%s - %s (%s)', $level['name'], $area['name'], $area['code']),
+				'value' => array('value-id' => $area['id'], 'area-name' => $area['name'], 'area-code' => $area['code'])
+			);
+		}
+		return $data;
+	}
+	
 	public function getAreas($groupId) {
 		$this->formatResult = true;
 		$this->unbindModel(array('belongsTo' => array('Area')));
