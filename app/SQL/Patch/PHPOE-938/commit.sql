@@ -13,11 +13,6 @@ _edit = 'Area.edit|areasEdit|areasReorder|areasMove|areasEducationEdit|areasEduc
 _add = '_view:Area.add|areasAdd|areasEducationAdd'
 where id = 44;
 
-update `security_functions`
-set _view = 'SecurityGroup|SecurityGroup.index|groupsView',
-_add = 'SecurityGroup.add|groupsAdd'
-where id = 55;
-
 update `security_functions` set _view = 'index|view|advanced' where id = 8;
 update `security_functions` set _add = '_view:attachmentsAdd' where id = 10;
 update `security_functions` set _add = '_view:bankAccountsAdd' where id = 11;
@@ -26,3 +21,12 @@ update `security_functions` set _add = '_view:positionsAdd' where id = 14;
 update `security_functions` set _add = '_view:classesAdd' where id = 15;
 update `security_functions` set _add = '_view:staffAdd|staffSave' where id = 27;
 update `security_functions` set _add = '_view:feeAdd' where id = 195;
+
+delete from `security_functions` where id = 56; -- delete security group users
+
+update `security_functions`
+set _view = 'SecurityGroup|SecurityGroup.index|SecurityGroup.view',
+_add = '_view:SecurityGroup.add',
+_edit = '_view:SecurityGroup.edit',
+_delete = '_view:SecurityGroup.remove'
+where id = 55;
