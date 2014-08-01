@@ -52,6 +52,31 @@ class SecurityGroup extends AppModel {
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Groups');
+		
+		$this->fields['SecurityGroupArea'] = array(
+			'type' => 'element',
+			'element' => '../Security/SecurityGroup/area',
+			'class' => 'col-md-8',
+			'order' => 1,
+			'visible' => true
+		);
+		$this->fields['SecurityGroupInstitutionSite'] = array(
+			'type' => 'element',
+			'element' => '../Security/SecurityGroup/institution_site',
+			'class' => 'col-md-8',
+			'order' => 2,
+			'visible' => true
+		);
+		$this->fields['SecurityGroupUser'] = array(
+			'type' => 'element',
+			'element' => '../Security/SecurityGroup/security_user',
+			'class' => 'col-md-8',
+			'order' => 3,
+			'visible' => true
+		);
+		$this->setFieldOrder('SecurityGroupArea', 2);
+		$this->setFieldOrder('SecurityGroupInstitutionSite', 3);
+		$this->setFieldOrder('SecurityGroupUser', 4);
 	}
 	
 	public function ajaxGetAccessOptionsRow($type, $id=0) {
@@ -140,11 +165,13 @@ class SecurityGroup extends AppModel {
 		if ($this->exists($id)) {
 			$this->recursive = 0;
 			$data = $this->findById($id);
-			$areas = $this->SecurityGroupArea->findAllBySecurityGroupId($id, null, array('Area.order'));
-			$institutions = $this->SecurityGroupInstitutionSite->findAllBySecurityGroupId($id, null, array('InstitutionSite.name'));
+			$data[$this->alias]['SecurityGroupArea'] = $this->SecurityGroupArea->findAllBySecurityGroupId($id, null, array('Area.order'));
+			$data[$this->alias]['SecurityGroupInstitutionSite'] = $this->SecurityGroupInstitutionSite->findAllBySecurityGroupId($id, null, array('InstitutionSite.name'));
+			$data[$this->alias]['SecurityGroupUser'] = $this->SecurityGroupUser->findAllBySecurityGroupId($id, null, array('SecurityUser.first_name'));
 			$levels = $this->SecurityGroupArea->Area->AreaLevel->find('list');
+			
 			$this->Session->write($this->alias.'.id', $id);
-			$this->setVar(compact('data', 'areas', 'levels', 'institutions'));
+			$this->setVar(compact('data', 'levels'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this)));
@@ -191,39 +218,42 @@ class SecurityGroup extends AppModel {
 		if ($this->exists($id)) {
 			$this->recursive = 0;
 			$data = $this->findById($id);
-			$areas = $this->SecurityGroupArea->findAllBySecurityGroupId($id, null, array('Area.order'));
-			$institutions = $this->SecurityGroupInstitutionSite->findAllBySecurityGroupId($id, null, array('InstitutionSite.name'));
+			$data[$this->alias]['SecurityGroupArea'] = $this->SecurityGroupArea->findAllBySecurityGroupId($id, null, array('Area.order'));
+			$data[$this->alias]['SecurityGroupInstitutionSite'] = $this->SecurityGroupInstitutionSite->findAllBySecurityGroupId($id, null, array('InstitutionSite.name'));
+			$data[$this->alias]['SecurityGroupUser'] = $this->SecurityGroupUser->findAllBySecurityGroupId($id, null, array('SecurityUser.first_name'));
 			
 			if ($this->request->is(array('post', 'put'))) {
-				if (isset($this->request->data['SecurityGroupArea'])) {
-					$areaData = $this->request->data['SecurityGroupArea'];
-					foreach ($areaData as $i => $area) {
-						if (empty($area['area_id'])) {
-							unset($this->request->data['SecurityGroupArea'][$i]);
-						}
-					}
-				}
+				$models = array(
+					'SecurityGroupArea' => 'area_id',
+					'SecurityGroupInstitutionSite' => 'institution_site_id',
+					'SecurityGroupUser' => 'security_user_id'
+				);
 				
-				if (isset($this->request->data['SecurityGroupInstitutionSite'])) {
-					$siteData = $this->request->data['SecurityGroupInstitutionSite'];
-					foreach ($siteData as $i => $site) {
-						if (empty($site['institution_site_id'])) {
-							unset($this->request->data['SecurityGroupInstitutionSite'][$i]);
+				foreach ($models as $model => $attr) {
+					if (isset($this->request->data[$model])) {
+						$data = $this->request->data[$model];
+						foreach ($data as $i => $obj) {
+							if (empty($obj[$attr])) {
+								unset($this->request->data[$model][$i]);
+							}
 						}
 					}
 				}
 				
 				$data = array();
-				$models = array($this->alias, 'SecurityGroupArea', 'SecurityGroupInstitutionSite');
-				foreach ($models as $model) {
+				$models[$this->alias] = 'id';
+				foreach ($models as $model => $attr) {
 					if (!empty($this->request->data[$model])) {
 						$data[$model] = $this->request->data[$model];
 					}
 				}
 				
-				// remove all areas from groups and re-insert
-				$this->SecurityGroupArea->deleteAll(array('security_group_id' => $id), false);
-				$this->SecurityGroupInstitutionSite->deleteAll(array('security_group_id' => $id), false);
+				// remove all related records from groups and re-insert
+				foreach ($models as $model => $attr) {
+					if ($this->alias == $model) continue;
+					$this->{$model}->recursive = -1;
+					$this->{$model}->deleteAll(array("$model.security_group_id" => $id), false);
+				}
 				if ($this->saveAll($data)) {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => get_class($this), 'view', $id));
@@ -234,7 +264,6 @@ class SecurityGroup extends AppModel {
 			} else {
 				$this->request->data = $data;
 			}
-			$this->setVar(compact('areas', 'institutions'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this)));
