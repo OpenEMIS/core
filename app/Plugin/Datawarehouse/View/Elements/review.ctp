@@ -45,10 +45,12 @@
 			<div class="col-md-6"><?php if(!empty($data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'])){ foreach($data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'] as $val) { 
 				echo $dimensionOptions[$val] . '<br />'; } }?></div>
 		</div>
-		<div class="row">
-			<div class="col-md-3"></div>
-			<div class="col-md-6"><?php foreach($data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] as $val) { 
-				echo $val . '<br />'; }?></div>
+		<div style="height: 200px; overflow-x: hidden;overflow-y: scroll;">
+			<div class="row">
+				<div class="col-md-3"></div>
+				<div class="col-md-6"><?php foreach($data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] as $val) { 
+					echo $val . '<br />'; }?></div>
+			</div>
 		</div>
 	 </fieldset>
 	 <?php  } ?>

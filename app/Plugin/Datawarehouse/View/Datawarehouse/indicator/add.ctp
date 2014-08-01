@@ -27,6 +27,12 @@ $this->start('contentBody');
 					if($currentStep>=$i){
 						$activeStep	= true;
 					}
+
+					if(isset($this->request->data['DatawarehouseIndicator']['datawarehouse_unit_id']) && $this->request->data['DatawarehouseIndicator']['datawarehouse_unit_id']=='1'){
+						if($step=='denominator'){
+							$activeStep = false;
+						}
+					}
 				?>
 					<li class="<?php echo ($currentStep==$i) ? 'active' : ($activeStep ? '' :'disabled');?>"><a href="#tab-<?php echo $step;?>" id="lnk-<?php echo $step;?>" data-toggle="tab" class="<?php echo ($activeStep) ? '' : 'void';?>"><?php echo ucwords($step);?></a></li>
 				<?php 
