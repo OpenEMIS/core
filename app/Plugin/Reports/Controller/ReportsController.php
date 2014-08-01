@@ -109,34 +109,22 @@ class ReportsController extends ReportsAppController {
 		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'InstitutionGeneral'));
 	}
 	
-	public function InstitutionGeneral(){}
-	public function InstitutionDownload(){}
-	public function Student(){}
-	public function StudentDownload(){}
-	public function Staff(){}
-	public function StaffDownload(){}
-	public function Teacher(){}
-	public function TeacherDownload(){}
-	public function Training(){}
-	public function TrainingDownload(){}
-	public function QualityAssurance(){}
-	public function QualityAssuranceDownload(){}
-	public function Consolidated(){}
-	public function ConsolidatedDownload(){}
-//  public function Indicator(){}
-//  public function IndicatorDownload(){}
-	public function DataQuality(){}
-	public function DataQualityDownload(){}
-	
 	public function renderReport($reportType = 'Institution') {
+		$Navigation = ClassRegistry::init('Navigation');
+		$navigationRecord = $Navigation->find('first', array('recursive' => -1, 'conditions' => array('controller' => 'Reports', 'action' => $this->action)));
+		if(!empty($navigationRecord)){
+			$navHeader = ucfirst(strtolower($navigationRecord['Navigation']['header']));
+			$navTitle = $navigationRecord['Navigation']['title'];
+			
+			$reportNameCrumb = __($navHeader) . ' - ' . __($navTitle);
+		}else{
+			$reportNameCrumb = '';
+		}
+		
 		$reportTitleUnderscored  = Inflector::underscore($reportType);
 		$reportTitle  = Inflector::humanize($reportTitleUnderscored);
-		if(isset($this->params['pass'][0])){
-			$this->Navigation->addCrumb($reportTitle.' Reports', array('controller' => 'Reports', 'action' => $this->action));
-			$this->Navigation->addCrumb('Generated Files');
-		}else{
-			$this->Navigation->addCrumb($reportTitle.' Reports');
-		}
+		
+		$this->Navigation->addCrumb($reportNameCrumb);
 
 		if(array_key_exists($reportType, $this->standardReports)){
 			if(!$this->standardReports[$reportType]['enable'] === false){
@@ -164,11 +152,15 @@ class ReportsController extends ReportsAppController {
 			$tmp[$category][$module][$name] =  $val['Report']; 
 		}
 
+		if(empty($tmp)){
+			$this->Message->alert('general.noData');
+		}
 			  
 		$msg = (isset($_GET['processing']))?'processing':'';
 		$this->set('msg',$msg);
 		$this->set('data',$tmp);
 		$this->set('controllerName', $this->controller);
+		$this->set('reportNameCrumb',$reportNameCrumb);
 	}
 
 	public function Indicator($indicatorId = ''){

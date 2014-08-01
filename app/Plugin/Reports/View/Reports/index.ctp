@@ -1,15 +1,10 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-if (count($data) > 0) {
-	$this->assign('contentHeader', __(ucwords(key($data))));
-} else {
-	$this->assign('contentHeader', __('Custom Reports'));
-}
+$this->assign('contentHeader', __($reportNameCrumb));
 $this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'index'), array('class' => 'divider'));
+//echo $this->Html->link(__('List'), array('action' => 'index'), array('class' => 'divider'));
 $this->end();
 $this->assign('contentId', 'report-list');
 $this->start('contentBody');
@@ -94,8 +89,8 @@ if (@$enabled === true):
 						<table class="table table-striped table-hover table-bordered">
 							<thead>
 								<tr>
-									<td class="col_name"><?php echo __('Name'); ?></td>
-									<td class="col_desc"><?php echo __('Description'); ?></td>
+									<th class="col_name"><?php echo __('Name'); ?></th>
+									<th class="col_desc"><?php echo __('Description'); ?></th>
 								</tr> 
 							</thead> 
 
@@ -122,21 +117,6 @@ if (@$enabled === true):
 		<?php endforeach; ?>
 		<?php
 		$ctr++;
-	else:
-		?> 
-		<div class="table-responsive">
-			<table class="table table-striped table-hover table-bordered">
-				<thead>
-					<tr>
-						<td class="col_name"><?php echo __('Name'); ?></td>
-						<td class="col_desc"><?php echo __('Description'); ?></td>
-					</tr>
-				</thead>
-
-			</table>	
-		</div>
-		<div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null, 'controller' => 'Home', 'action' => 'support')) ?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on Custom Reports.'); ?></div>
-	<?php
 	endif;
 else:
 	echo __('Report Feature disabled');
