@@ -5,9 +5,12 @@ $html = '';
 $row = '
 <div class="row">
 	<div class="col-md-3">%s</div>
-	<div class="col-md-6">%s</div>
+	<div class="%s">%s</div>
 </div>
 ';
+
+$class = 'col-md-6';
+
 foreach ($fields as $key => $field) {
 	$fieldType = isset($field['type']) ? $field['type'] : 'string';
 	$visible = $this->FormUtility->isFieldVisible($field, 'view');
@@ -22,7 +25,7 @@ foreach ($fields as $key => $field) {
 		}
 		
 		if (array_key_exists($key, $data[$fieldModel])) {
-			$value = $data[$fieldModel][$key];
+			$value = isset($data[$fieldModel][$key]) ? $data[$fieldModel][$key] : '';
 
 			switch ($fieldType) {
 				case 'select':
@@ -42,6 +45,14 @@ foreach ($fields as $key => $field) {
 				case 'download':
 					$value = $this->Html->link($value, $field['attr']['url']);
 					break;
+					
+				case 'element':
+					$element = $field['element'];
+					if (array_key_exists('class', $field)) {
+						$class = $field['class'];
+					}
+					$value = $this->element($element);
+					break;
 
 				case 'modified_user_id':
 				case 'created_user_id':
@@ -55,10 +66,10 @@ foreach ($fields as $key => $field) {
 					break;
 			}
 
-			if (strlen(trim($value)) == 0) {
+			if (is_string($value) && strlen(trim($value)) == 0) {
 				$value = '&nbsp;';
 			}
-			$html .= sprintf($row, $label, $value);
+			$html .= sprintf($row, $label, $class, $value);
 		} else {
 			pr(sprintf('Field [%s] does not exist in Model [%s]', $key, $fieldModel));
 		}

@@ -103,7 +103,6 @@ class LabelHelper extends AppHelper {
 			'addmore' => 'Add More'
 		),
 		'Area' => array(
-			'title' => 'Areas',
 			'name' => 'Area',
 			'select' => '-- Select Area --'
 		),
@@ -145,7 +144,6 @@ class LabelHelper extends AppHelper {
 			'education_programme_orientation_id' => 'Programme Orientation'
 		),
 		'Institution' => array(
-			'title' => 'Institutions',
 			'name' => 'Institution'
 		),
 		'InstitutionSite' => array(
@@ -312,6 +310,11 @@ class LabelHelper extends AppHelper {
 		'StaffCustomFieldOption' => array(
 			'staff_custom_field_id' => 'Custom Field'
 		),
+		'SecurityGroup' => array(
+			'SecurityGroupArea' => 'Areas',
+			'SecurityGroupInstitutionSite' => 'Institutions',
+			'SecurityGroupUser' => 'Users'
+		),
 		'SecurityRole' => array(
 			'systemDefined' => 'System Defined Roles',
 			'userDefined' => 'User Defined Roles',
@@ -321,7 +324,6 @@ class LabelHelper extends AppHelper {
 			'security_group_id' => 'Group'
 		),
 		'SecurityUser' => array(
-			'title' => 'Users',
 			'name' => 'User'
 		),
 		'FinanceFee' => array(

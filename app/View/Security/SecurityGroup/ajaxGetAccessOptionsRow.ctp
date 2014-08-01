@@ -14,7 +14,7 @@
 	<?php if ($attr[0] == 'SecurityGroupUser') : ?>
 	<td>
 		<?php
-		echo $this->Form->input('security_role_id', array(
+		echo $this->Form->input("$attr[0].$index.security_role_id", array(
 			'label' => false,
 			'div' => false,
 			'class' => 'form-control',
