@@ -291,3 +291,39 @@ UPDATE `_openemis_`.`reports` SET
 `category` = 'Map General Reports' 
 WHERE `reports`.`id` =111;
 
+--
+-- updates to table security_functions
+--
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(200, 'Reports Index', 'Reports', 'Reports', 'Report', -1, 'index', NULL, NULL, NULL, NULL, 201, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionGeneral', NULL , NULL , NULL , '_view:InstitutionGeneralDownload', '202', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Details', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionDetails', NULL , NULL , NULL , '_view:InstitutionDetailsDownload', '203', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Attendance', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionAttendance', NULL , NULL , NULL , '_view:InstitutionAttendanceDownload', '204', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Assessment', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionAssessment', NULL , NULL , NULL , '_view:InstitutionAssessmentDownload', '205', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Behaviors', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionBehaviors', NULL , NULL , NULL , '_view:InstitutionBehaviorsDownload', '206', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Finance', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionFinance', NULL , NULL , NULL , '_view:InstitutionFinanceDownload', '207', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Totals', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionTotals', NULL , NULL , NULL , '_view:InstitutionTotalsDownload', '208', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Quality', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionQuality', NULL , NULL , NULL , '_view:InstitutionQualityDownload', '209', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'General', 'Reports', 'Reports', 'Students', '200', 'StudentGeneral', NULL , NULL , NULL , '_view:StudentGeneralDownload', '210', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Details', 'Reports', 'Reports', 'Students', '200', 'StudentDetails', NULL , NULL , NULL , '_view:StudentDetailsDownload', '211', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Finance', 'Reports', 'Reports', 'Students', '200', 'StudentFinance', NULL , NULL , NULL , '_view:StudentFinanceDownload', '212', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Health', 'Reports', 'Reports', 'Students', '200', 'StudentHealth', NULL , NULL , NULL , '_view:StudentHealthDownload', '213', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'General', 'Reports', 'Reports', 'Staff', '200', 'StaffGeneral', NULL , NULL , NULL , '_view:StaffGeneralDownload', '214', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Details', 'Reports', 'Reports', 'Staff', '200', 'StaffDetails', NULL , NULL , NULL , '_view:StaffDetailsDownload', '215', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Finance', 'Reports', 'Reports', 'Staff', '200', 'StaffFinance', NULL , NULL , NULL , '_view:StaffFinanceDownload', '216', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Health', 'Reports', 'Reports', 'Staff', '200', 'StaffHealth', NULL , NULL , NULL , '_view:StaffHealthDownload', '217', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Training', 'Reports', 'Reports', 'Staff', '200', 'StaffTraining', NULL , NULL , NULL , '_view:StaffTrainingDownload', '218', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'General', 'Reports', 'Reports', 'Yearbook', '200', 'YearbookGeneral', NULL , NULL , NULL , '_view:YearbookGeneralDownload', '219', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'General', 'Reports', 'Reports', 'Maps', '200', 'MapGeneral', NULL , NULL , NULL , '_view:MapGeneralDownload', '220', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'General', 'Reports', 'Reports', 'Dashboards', '200', 'DashboardGeneral', NULL , NULL , NULL , '_view:DashboardGeneralDownload', '221', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'Data Quality', 'Reports', 'Reports', 'System', '200', 'SystemDataQuality', NULL , NULL , NULL , '_view:SystemDataQualityDownload', '222', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+
+(NULL , 'General', 'Report', 'Reports', 'Custom', '200', 'index|reportsView', NULL, '_view:reportsNew|reportsWizard', '_view:reportsDelete' , '_view:reportsWizard', '223', '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+
