@@ -13,7 +13,7 @@ foreach ($modelSchema as $field => $attributes):
 	echo ( isset($labelFieldList[$modelClass][$field]) ? $labelFieldList[$modelClass][$field] : ( isset($labelFieldList['*'][$field]) ? $labelFieldList['*'][$field] : $field ));
 	echo '</td>';
 	echo '<td>';
-	echo $this->Form->input($modelClass.'.'.$field.'.'.'Position',array('type'=>'text','label'=>'','size'=>'4','maxlength'=>'4','class'=>'position'));
+	echo $this->Form->input($modelClass.'.'.$field.'.'.'Position',array('type'=>'text','label'=>false,'size'=>'4','maxlength'=>'4','class'=>'position form-control'));
 	$currType = ( isset($attributes['type']) ? $attributes['type'] : $attributes['Type'] );
 	echo $this->Form->input($modelClass.'.'.$field.'.'.'Type',array('type'=>'hidden','value'=>$currType));
 	$currLength = ( isset($attributes['length']) ? $attributes['length'] : 
