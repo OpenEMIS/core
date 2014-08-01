@@ -61,10 +61,12 @@ foreach($typeOption as $type){
 		<div class="col-md-6"><?php if(!empty($typeDimensionModel)){ foreach($typeDimensionModel as $val) { 
 			echo $numeratorDatawarewarehouseDimensionOptions[$val['datawarehouse_dimension_id']] . '<br />'; } }?></div>
 	</div>
-	<div class="row">
-		<div class="col-md-3"></div>
-		<div class="col-md-6"><?php if(!empty($typeSubgroupModel)){ foreach($typeSubgroupModel as $val) { 
-			echo $val['subgroup'] . '<br />'; } }?></div>
+	<div style="height: 200px; overflow-x: hidden;overflow-y: scroll;">
+		<div class="row">
+			<div class="col-md-3"></div>
+			<div class="col-md-6"><?php if(!empty($typeSubgroupModel)){ foreach($typeSubgroupModel as $val) { 
+				echo $val['subgroup'] . '<br />'; } }?></div>
+		</div>
 	</div>
  </fieldset>
  <?php  } ?>
