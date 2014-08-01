@@ -6,7 +6,7 @@ echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Groups'));
 $this->start('contentActions');
-if($_accessControl->check($this->params['controller'], 'groupsAdd')) {
+if($_add) {
 	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 }
 $this->end();

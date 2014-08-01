@@ -50,17 +50,19 @@ var SecurityGroup = {
 	},
 
 	attachAutoComplete: function(element, callback) {
-		var url = $(element).attr('url');
-		$(element).autocomplete({
-			source: url,
-			minLength: 2,
-			select: callback,
-			focus: SecurityGroup.focus
+		$(element).each(function() {
+			var url = getRootURL() + $(this).attr('url');
+			$(this).autocomplete({
+				source: url,
+				minLength: 2,
+				select: callback,
+				focus: SecurityGroup.focus
+			});
 		});
 	},
 	
 	getAccessOptionsRow: function(obj) {
-		var parent = $(obj).siblings('table');
+		var parent = $(obj).parent().find('table');
 		var index = 0;
 		var row = parent.find('tbody tr').last();
 		if (row.length > 0) {
@@ -71,10 +73,15 @@ var SecurityGroup = {
 			exclude.push($(this).val());
 		});
 		
+		var url = getRootURL() + $(obj).attr('url');
+		if ($('#SecurityGroupId').length > 0) {
+			url += '/' + $('#SecurityGroupId').val();
+		}
+		
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
-			url: getRootURL() + $(obj).attr('url'),
+			url: url,
 			data: {index: index, exclude: exclude},
 			beforeSend: function (jqXHR) {
 				maskId = $.mask({parent: parent, text: i18n.General.textAddingRow});
