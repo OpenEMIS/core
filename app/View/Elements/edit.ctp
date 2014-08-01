@@ -9,7 +9,7 @@ foreach($fields as $key => $field) {
 		$fieldModel = array_key_exists('model', $field) ? $field['model'] : $model;
 		$fieldName = $fieldModel . '.' . $key;
 		$options = array();
-		$label = $this->Label->getLabel($fieldModel, $key, $field);
+		$label = $this->Label->getLabel2($fieldModel, $key, $field);
 		if(!empty($label)) {
 			$options['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
@@ -46,6 +46,11 @@ foreach($fields as $key => $field) {
 				$options['type'] = 'hidden';
 				$options['label'] = false;
 				$options['div'] = false;
+				break;
+				
+			case 'element':
+				$element = $field['element'];
+				echo $this->element($element);
 				break;
 				
 			case 'image':
@@ -93,7 +98,7 @@ foreach($fields as $key => $field) {
 		if (isset($field['value'])) {
 			$options['value'] = $field['value'];
 		}
-		if (!in_array($fieldType, array('image', 'date', 'time', 'file', 'file_upload'))) {
+		if (!in_array($fieldType, array('image', 'date', 'time', 'file', 'file_upload', 'element'))) {
 			echo $this->Form->input($fieldName, $options);
 		}
 	}

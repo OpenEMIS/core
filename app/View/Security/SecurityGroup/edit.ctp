@@ -14,10 +14,7 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edit', $this->data[$model]['id']));
 echo $this->Form->create($model, $formOptions);
-echo $this->Form->hidden('id');
-echo $this->Form->input('name');
-echo $this->element('../Security/SecurityGroup/area');
-echo $this->element('../Security/SecurityGroup/institution_site');
+echo $this->element('edit');
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model)));
 echo $this->Form->end();
 $this->end();
