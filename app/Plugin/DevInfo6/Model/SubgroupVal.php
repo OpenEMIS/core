@@ -28,6 +28,8 @@ class SubgroupVal extends DevInfo6AppModel {
 		$Subgroup = ClassRegistry::init('DevInfo6.Subgroup');
 		$SubgroupValsSubgroup = ClassRegistry::init('DevInfo6.SubgroupValsSubgroup');
 		
+		pr($name);
+		exit;
 		if(isset($this->dataSet[$set][$name])) {
 			$id = $this->dataSet[$set][$name];
 		} else {
