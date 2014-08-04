@@ -49,6 +49,8 @@ class LabelHelper extends AppHelper {
 			'default' => 'Default',
 			'modified_by' => 'Modified by',
 			'created_by' => 'Created by',
+			'modified_user_id' => 'Modified by',
+			'created_user_id' => 'Created by',
 			'enabled' => 'Enabled',
 			'disabled' => 'Disabled',
 			'category' => 'Category',
@@ -101,6 +103,7 @@ class LabelHelper extends AppHelper {
 			'addmore' => 'Add More'
 		),
 		'Area' => array(
+			'name' => 'Area',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
@@ -139,6 +142,9 @@ class LabelHelper extends AppHelper {
 		),
 		'EducationFieldOfStudy' => array(
 			'education_programme_orientation_id' => 'Programme Orientation'
+		),
+		'Institution' => array(
+			'name' => 'Institution'
 		),
 		'InstitutionSite' => array(
 			'institution_site_provider_id' => 'Provider',
@@ -304,6 +310,11 @@ class LabelHelper extends AppHelper {
 		'StaffCustomFieldOption' => array(
 			'staff_custom_field_id' => 'Custom Field'
 		),
+		'SecurityGroup' => array(
+			'SecurityGroupArea' => 'Areas',
+			'SecurityGroupInstitutionSite' => 'Institutions',
+			'SecurityGroupUser' => 'Users'
+		),
 		'SecurityRole' => array(
 			'systemDefined' => 'System Defined Roles',
 			'userDefined' => 'User Defined Roles',
@@ -311,6 +322,9 @@ class LabelHelper extends AppHelper {
 			'permissions' => 'Permissions',
 			'name' => 'Role',
 			'security_group_id' => 'Group'
+		),
+		'SecurityUser' => array(
+			'name' => 'User'
 		),
 		'FinanceFee' => array(
 			'fee' => 'Fee',
@@ -340,6 +354,20 @@ class LabelHelper extends AppHelper {
 			}
 		}
 		return !is_bool($message) ? __($message) : $message;
+	}
+	
+	public function getLabel2($model, $key, $attr) {
+		$labelKey = $model;
+		if (array_key_exists('labelKey', $attr)) {
+			$labelKey = $attr['labelKey'];
+		}
+		$code = $labelKey .'.'. $key;
+		$label = $this->get($code);
+		
+		if($label === false) {
+			$label = __(Inflector::humanize($key));
+		}
+		return $label;
 	}
 	
 	public function getLabel($model, $obj) {
