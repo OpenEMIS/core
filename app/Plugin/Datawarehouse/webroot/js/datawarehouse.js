@@ -26,7 +26,12 @@ var objDatawarehouse = {
             objDatawarehouse.generateSubgroup('denominator');
 
         });
-         $('.denominatorDimension').on('click', '.filter-option input:checkbox', function(){
+        $('.numeratorDimension').on('click', '.filter-option input:checkbox', function(){
+            if($('#DatawarehouseIndicatorDatawarehouseUnitId').val()!="1"){
+                $('.numeratorDimension .filter-option input[type="checkbox"]').not(this).prop("checked", false);
+            }
+        });
+        $('.denominatorDimension').on('click', '.filter-option input:checkbox', function(){
               $('.denominatorDimension .filter-option input[type="checkbox"]').not(this).prop("checked", false);
         });
 

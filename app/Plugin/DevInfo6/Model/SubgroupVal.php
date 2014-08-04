@@ -27,9 +27,7 @@ class SubgroupVal extends DevInfo6AppModel {
 		$set = 'primaryKey';
 		$Subgroup = ClassRegistry::init('DevInfo6.Subgroup');
 		$SubgroupValsSubgroup = ClassRegistry::init('DevInfo6.SubgroupValsSubgroup');
-		
-		pr($name);
-		exit;
+
 		if(isset($this->dataSet[$set][$name])) {
 			$id = $this->dataSet[$set][$name];
 		} else {
@@ -47,7 +45,8 @@ class SubgroupVal extends DevInfo6AppModel {
 				$save = $this->save($model);
 				$id = $save[$modelName]['id'];
 				
-				$subgroupList = explode(' - ', $name);
+				//$subgroupList = explode(' - ', $name);
+				$subgroupList = explode(', ', $name);
 				foreach($subgroupList as $subgroupName) {
 					$subgroupType = $this->getSubgroupType($subgroupTypes, $subgroupName);
 					$subgroupId = $Subgroup->getPrimaryKey($subgroupName, $subgroupType);
