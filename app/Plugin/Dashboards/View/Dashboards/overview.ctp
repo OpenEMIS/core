@@ -67,7 +67,7 @@ foreach ($displayChartData as $key => $item) {
 }
 echo $this->Html->div(NULL, $allGraph, array('id' => 'hc_graph_container'));
 
-/*
+
 $tableHeaders = $QATableData['tableHeaders'];
 $tableData = $QATableData['tableData'];
 
@@ -81,4 +81,4 @@ $tableData = $QATableData['tableData'];
 		<?php echo $this->Html->link(__('Download CSV'), array('action' => 'genCSV', $areaId, $yearId), array('class' => 'btn_save')); ?>
 	</div>
 </div>
-<?php */$this->end();?>
+<?php $this->end();?>
