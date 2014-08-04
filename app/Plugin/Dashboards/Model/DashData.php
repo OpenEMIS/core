@@ -142,7 +142,7 @@ class DashData extends DashboardsAppModel {
 	  $this->save($model);
 	  } */
 	
-	public function getQueryOptionsSetup($params, $joinMethod = 'inner'){
+	public function getQueryOptionsSetup($params, $joinMethod = 'left'){
 		$ius = $params['IUS'];
 		$areaIds = $params['area'];
 		$timeperiodIds = $params['timeperiod'];
@@ -203,12 +203,17 @@ class DashData extends DashboardsAppModel {
 	}
 	
 	public function getLatestSourceID($ius,$timeperiod){
-		$data = $this->find('first', array(
-			'conditions' => array('DIData.IUSNID' => $ius, 'DIData.TimePeriod_NId' => $timeperiod),
+		$data = $this->find('all', array(
+			'conditions' => array('DIData.IUSNId' => $ius, 'DIData.TimePeriod_NId' => $timeperiod),
 			'group' => array('DIData.Source_NId' ),
 			'fields' => array('DIData.Source_NId'),
 			'order' => 'DIData.Source_NId DESC'
 		));
+		
+		$data = array_values(array_unique(array_map(function ($i) {
+							return $i['DIData']['Source_NId'];
+						}, $data)));
+	
 		return $data;
 	}
 	
