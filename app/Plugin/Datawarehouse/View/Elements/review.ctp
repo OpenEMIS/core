@@ -56,7 +56,7 @@
 	 <?php  } ?>
      <?php } ?>
 	 <div class="form-group"><div class="col-md-offset-4">
-        <input type="submit" value="<?php echo __("Previous"); ?>" name='prevStep' class="btn_save btn_right"/>
+        <input type="submit" value="<?php echo __("Previous"); ?>" name='prevStep' class="btn_cancel btn_right"/>
         <input type="submit" value="<?php echo __('Finish');?>" name='save' class="btn_save btn_right" >
         <a href="indicator" class="btn_cancel btn_left"><?php echo __('Cancel');?></a></div>
     </div>

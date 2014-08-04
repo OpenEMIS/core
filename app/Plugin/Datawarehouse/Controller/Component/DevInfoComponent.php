@@ -99,6 +99,8 @@ class DevInfoComponent extends Component {
 	}
 
 	public function export($settings=array()) {
+		set_time_limit(0);
+
         $indicatorId = $settings['indicatorId'];
         unset($settings['indicatorId']);
 
@@ -148,6 +150,7 @@ class DevInfoComponent extends Component {
 			$this->Logger->write("Start Processing Indicators");
 			$subgroups = array();
 			$subgroupTypes = array();
+
 			if(!empty($indicator)) {
 				if(!empty($onBeforeGenerate['callback'])) {
 					if(!call_user_func_array($onBeforeGenerate['callback'], $onBeforeGenerate['params'])) {
@@ -160,6 +163,8 @@ class DevInfoComponent extends Component {
 				$indicatorNumeratorFieldObj = $indicator['DatawarehouseField'];
 				$indicatorNumeratorModuleID = $indicatorNumeratorFieldObj['datawarehouse_module_id'];
 				$indicatorNumeratorDimensionObj = $indicator['DatawarehouseIndicatorDimension'];
+
+				$indicatorName = $indicatorNumeratorObj['name'];
 				$typeOption = array('Numerator');
 
 				$subgroupTypes = array();
@@ -181,232 +186,227 @@ class DevInfoComponent extends Component {
 					$hasDenominator = true;
 				}
 
-		
-				$indicatorName 		= $indicatorNumeratorObj['name'];
 				$unitName 			= $unitObj['name'];
 				$metadata 			= (!empty($indicatorNumeratorObj['description']) ? $indicatorNumeratorObj['description'] : $this->description);
-				
 
 				//if(!isset($subgroupTypes) || empty($subgroupTypes)) $subgroupTypes = $this->getSubgroupTypefromXML($indicatorFilename);
 				$diIndicatorId 	= $this->Indicator->getPrimaryKey($indicatorName, $metadata);
 				$diUnitId 		= $this->Unit->getPrimaryKey($unitName);
-						
-
+					
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
-
-
 
 				$schoolYear = $this->SchoolYear->find('first', array('recursive'=>-1, 'conditions'=>array('SchoolYear.id'=>$schoolYearId)));
 				$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($schoolYear['SchoolYear']['name']);
 				
 
-				$subgroups = array();
-				foreach($typeOption as $type){
-					$joins = array();
-					$moduleID = ${'indicator'.$type.'ModuleID'};
-					$indicatorObj = ${'indicator'.$type.'Obj'};
-					$indicatorID = $indicatorObj['id'];
-					
-					$datawarehouseModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$moduleID)));
 
-					$modelName = $datawarehouseModule['DatawarehouseModule']['model'];
-					$modelTable = ClassRegistry::init($modelName);
-					$joins = array();
-
-
-					$datawarehouseDimension = $this->DatawarehouseDimension->find('all', array('recursive'=>-1, 'conditions'=>array('DatawarehouseDimension.datawarehouse_module_id'=>$moduleID)));
-					
-
-					if(isset($datawarehouseModule['DatawarehouseModule']['joins'])){
-						$dimenJoin = $datawarehouseModule['DatawarehouseModule']['joins'];
-						eval("\$tempJoin = $dimenJoin;");
-						$joins[] = $tempJoin;
-					}
-
-					if(!empty($datawarehouseDimension)){
-						foreach($datawarehouseDimension as $c){
-							$dimensionJoin = $c['DatawarehouseDimension']['joins'];
-							if(!empty($dimensionJoin)){
-								eval("\$tempJoin = $dimensionJoin;");
-								$joins[] = $tempJoin;
-							}
-						}
-					}
-
-					$fieldObj = ${'indicator'.$type.'FieldObj'};
-					$aggregate = $fieldObj['type'];
-					$fieldName = $fieldObj['name'];
-
+				do {
+					$numeratorID = $indicatorNumeratorObj['id'];
+					$numeratorFieldName = $indicatorNumeratorFieldObj['name'];
 
 					$group = array('area_id', 'school_year_id');
 
+					$numeratorModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$indicatorNumeratorFieldObj['datawarehouse_module_id'])));
+					$numeratorModelName = $numeratorModule['DatawarehouseModule']['model'];
+					$numeratorModelTable = ClassRegistry::init($numeratorModelName);
 
-					$dbo = $modelTable->getDataSource();
+					$dbo = $numeratorModelTable->getDataSource();
 					
 					$offset = 0;
-					${'subquery'.$type} = array();
 
 					$fieldFormat = '%s(%s.%s) as %s, "%s" as Subgroup, %s as AreaID, %s as SchoolYearID';
 
 					$conditions['area_id'] = $areaListId;
 					$conditions['school_year_id'] = $schoolYearId;
 
-					do {
-						$datawarehouseSubgroups = $this->DatawarehouseIndicatorSubgroup->find('all', array('recursive'=>-1, 
-							'conditions'=>array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id'=>$indicatorID),
-							'limit'=>$this->limit,
-							'offset'=>$offset
-							)
-						);
-						if(!empty($datawarehouseSubgroups)){
-							foreach($datawarehouseSubgroups as $subgroup){
-								$subgroupConditions = $conditions;
-								if(!empty($subgroup['DatawarehouseIndicatorSubgroup']['value'])){
-									$subgroupConditions[] = $subgroup['DatawarehouseIndicatorSubgroup']['value'];
+					$numeratorSubgroups = $this->DatawarehouseIndicatorSubgroup->find('all', array('recursive'=>-1, 
+						'conditions'=>array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id'=>$numeratorID),
+						'limit'=>$this->limit,
+						'offset'=>$offset
+						)
+					);
+
+					$denominatorModelTable = array();
+
+					$numeratorJoins = array();
+					$numeratorJoinUnique = array();
+
+					if(!empty($numeratorSubgroups)){
+						foreach($numeratorSubgroups as $numeratorSubgroup){
+							$numeratorSubgroupConditions = $conditions;
+							if(!empty($numeratorSubgroup['DatawarehouseIndicatorSubgroup']['value'])){
+								$numeratorSubgroupConditions[] = $numeratorSubgroup['DatawarehouseIndicatorSubgroup']['value'];
+							}
+							$numeratorAggregate = $indicatorNumeratorFieldObj['type'];
+							$type = 'numerator';
+							$tempJoin = array();
+							if(isset($numeratorModule['DatawarehouseModule']['joins'])){
+								$dimenJoin = $numeratorModule['DatawarehouseModule']['joins'];
+								eval("\$tempJoin[] = $dimenJoin;");
+								$this->mergeJoin($numeratorJoins, $tempJoin);
+							}
+
+
+							if(!empty($indicatorNumeratorDimensionObj)){
+								foreach($indicatorNumeratorDimensionObj as $c){
+									$dimensionJoin = $c['DatawarehouseDimension']['joins'];
+
+									$tempJoin = array();
+									if(!empty($dimensionJoin)){
+										eval("\$tempJoin[] = $dimensionJoin;");
+										$this->mergeJoin($numeratorJoins, $tempJoin);
+									}
 								}
-								$subgroups[] = $subgroup['DatawarehouseIndicatorSubgroup']['subgroup']; 
+							}
 
-								$fields = array(sprintf($fieldFormat, $aggregate, $modelName, $fieldName, strtolower($type), $subgroup['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'school_year_id'));
 
-								${'subquery'.$type}[] =
+							$numeratorFields = array(sprintf($fieldFormat, $numeratorAggregate, $numeratorModelName, $numeratorFieldName, strtolower($type), $numeratorSubgroup['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'school_year_id'));
+
+							$subqueryNumerator =
+								$dbo->buildStatement(
+								array(
+									'fields' => $numeratorFields,
+									'joins'=> $numeratorJoins,
+									'table' => $dbo->fullTableName($numeratorModelTable),
+									'alias' => $numeratorModelName,
+									'group' =>  $group,
+									'conditions' => $numeratorSubgroupConditions,
+									'limit' => null
+								)
+								,$numeratorModelTable
+							);
+
+							if($hasDenominator){
+								$denominatorJoins = array();
+
+								$denominatorID = $indicatorDenominatorObj['id'];
+								$denominatorFieldName = $indicatorDenominatorObj['name'];
+
+								$datawarehouseDenominatorSubgroups = $this->DatawarehouseIndicatorSubgroup->find('first', array('recursive'=>-1, 
+									'conditions'=>array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id'=>$denominatorID)
+									)
+								);
+
+								$denominatorModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$indicatorDenominatorObj['datawarehouse_module_id'])));
+								$denominatorModelName = $denominatorModule['DatawarehouseModule']['model'];
+								$denominatorModelTable = ClassRegistry::init($denominatorModelName);
+
+								$type = 'denominator';
+
+								$denominatorAggregate = $indicatorDenominatorObj['type'];
+
+								$tempJoin = array();
+								if(isset($denominatorModule['DatawarehouseModule']['joins'])){
+									$dimenJoin = $denominatorModule['DatawarehouseModule']['joins'];
+									eval("\$tempJoin[] = $dimenJoin;");
+									$this->mergeJoin($denominatorJoins, $tempJoin);
+								}
+
+								if(!empty($indicatorDenominatorFieldObj)){
+									foreach($indicatorDenominatorFieldObj as $c){
+										$dimensionJoin = $c['DatawarehouseDimension']['joins'];
+										$tempJoin = array();
+										if(!empty($dimensionJoin)){
+											eval("\$tempJoin[] = $dimensionJoin;");
+											$this->mergeJoin($denominatorJoins, $tempJoin);
+										}
+									}
+								}
+
+
+								$denominatorSubgroupConditions = array();
+								if(!empty($datawarehouseDenominatorSubgroups)){
+									$denominatorSubgroupConditions = $conditions;
+									if(!empty($datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['value'])){
+										$denominatorSubgroupConditions[] = $datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['value'];
+									} 
+
+								}
+
+								$denominatorFields = array(sprintf($fieldFormat, $denominatorAggregate, $denominatorModelName, $denominatorFieldName, strtolower($type), $datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'school_year_id'));
+
+
+								$dbo = $denominatorModelTable->getDataSource();
+
+								$subqueryDenominator =
 									$dbo->buildStatement(
 									array(
-										'fields' => $fields,
-										'joins'=> $joins,
-										'table' => $dbo->fullTableName($modelTable),
-										'alias' => $modelName,
+										'fields' => $denominatorFields,
+										'joins'=> $denominatorJoins,
+										'table' => $dbo->fullTableName($denominatorModelTable),
+										'alias' => $denominatorModelName,
 										'group' =>  $group,
-										'conditions' => $subgroupConditions,
+										'conditions' => $denominatorSubgroupConditions,
 										'limit' => null
 									)
-									,$modelTable
+									,$denominatorModelTable
 								);
 							}
-							
-							$offset += $this->limit;
+
+							$outerQueryField = array('Numerator.numerator as DataValue', 'Numerator.Subgroup as Subgroup', 'Numerator.numerator as Numerator', 'NULL as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
+							switch($unitObj['id']){
+								case 2:
+								 	//RATE
+							        
+							        break;
+							    case 3:
+								 	//RATIO
+							       
+							        break;
+							    case 4:
+								 	//PERCENT
+							       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'Numerator.Subgroup as Subgroup', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
+							       break;
+							}
+							if($hasDenominator){
+								$outerQuery = $dbo->buildStatement(
+									array(
+										'fields' => $outerQueryField,
+										'table' => '('.$subqueryNumerator.') as Numerator, ('. $subqueryDenominator.')',
+										'alias' => 'Denominator'
+									)
+									,$numeratorModelTable
+								);
+							}else{
+								$outerQuery = $dbo->buildStatement(
+									array(
+										'fields' => $outerQueryField,
+										'table' => '('.$subqueryNumerator.')',
+										'alias' => 'Numerator'
+									)
+									,$numeratorModelTable
+								);
+							}
+
+							$modelData = $numeratorModelTable->query($outerQuery);
+							if(!empty($modelData)){
+								$subgroups 			= $modelData[0]['Numerator']['Subgroup'];
+								$classification		= $modelData[0]['Numerator']['Subgroup'];
+								$diClassificationId = $this->IndicatorClassification->getPrimaryKey($classification, $TYPE_SECTOR, $sectorId);
+								$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
+								$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
+								$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
+								
+								$model = array();
+								$model['IUSNId'] 			= $diIUSId;
+								$model['TimePeriod_NId'] 	= $diTimePeriodId;
+								$model['Area_NId'] 			= $modelData[0]['Numerator']['AreaID'];
+								$model['Data_Value'] 		= $modelData[0]['Numerator']['DataValue'];
+								$model['Source_NId'] 		= $sourceId;
+								$model['Indicator_NId'] 	= $diIndicatorId;
+								$model['Unit_NId'] 			= $diUnitId;
+								$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
+								
+								$this->Data->createRecord($model);
+							}
 						}
-						if(empty($datawarehouseSubgroups)){
-							break;
-						}
-					} while(true);
-					${'subquery'.$type} = implode(" UNION ", ${'subquery'.$type});
-				} 
-
-
-
-
- 				$outerQueryField = array('Numerator.numerator as DataValue', 'Numerator.Subgroup', 'Numerator.numerator as Numerator', 'NULL as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
-				switch($unitObj['id']){
-					case 2:
-					 	//RATE
-				        
-				        break;
-				    case 3:
-					 	//RATIO
-				       
-				        break;
-				    case 4:
-					 	//PERCENT
-				       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
-				       break;
-				}
-
-				
-				if(!empty($subqueryDenominator)){
-					$outerQuery = $dbo->buildStatement(
-						array(
-							'fields' => $outerQueryField,
-							'table' => '('.$subqueryNumerator.') as Numerator, ('. $subqueryDenominator.')',
-							'alias' => 'Denominator'
-						)
-						,$modelTable
-					);
-				}else{
-					$outerQuery = $dbo->buildStatement(
-						array(
-							'fields' => $outerQueryField,
-							'table' => '('.$subqueryNumerator.')',
-							'alias' => 'Numerator'
-						)
-						,$modelTable
-					);
-				}
-			
-
-
-				/*
-				$subgroups 			= $dataRow['subgroups'];
-				$classification		= $dataRow['classification'];
-				$diClassificationId = $this->IndicatorClassification->getPrimaryKey($classification, $TYPE_SECTOR, $sectorId);
-				$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
-				$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($dataRow['timeperiod']);
-				$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
-				$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
-				
-				$model = array();
-				$model['IUSNId'] 			= $diIUSId;
-				$model['TimePeriod_NId'] 	= $diTimePeriodId;
-				$model['Area_NId'] 			= $dataRow['area_id'];
-				$model['Data_Value'] 		= $dataRow['data_value'];
-				$model['Source_NId'] 		= $sourceId;
-				$model['Indicator_NId'] 	= $diIndicatorId;
-				$model['Unit_NId'] 			= $diUnitId;
-				$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
-				
-				$this->Data->createRecord($model);
-				*/
-				$modelData = $modelTable->query($outerQuery);
-
-				pr($subgroups);
-				pr($subgroupTypes);
-
-
-				
-				foreach($modelData as $data){
-					$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($data['Subgroup'], $subgroupTypes);
-					$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
-
-					$model = array();
-					$model['IUSNId'] 			= $diIUSId;
-					$model['TimePeriod_NId'] 	= $diTimePeriodId;
-					$model['Area_NId'] 			= $data['AreaID'];
-					$model['Data_Value'] 		= $data['DataValue'];
-					$model['Source_NId'] 		= $sourceId;
-					$model['Indicator_NId'] 	= $diIndicatorId;
-					$model['Unit_NId'] 			= $diUnitId;
-					$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
-					$this->Data->createRecord($model);
-				}			
-				pr($modelData);
-
-				exit;
-
-
+						$offset += $this->limit;
+					}else{
+						break;
+					}
+				}while(true);
 			}
-			$this->Logger->write("End Processing Indicators");
-			$this->Logger->write("Creating Metadata");
-			$dbMetadata = array(
-				'DBMetaData' => array(
-					'DBMtd_Desc' => $this->description,
-					'DBMtd_PubName' => '',
-					'DBMtd_PubDate' => date('Y-m-d H:i:s'),
-					'DBMtd_PubCountry' => '',
-					'DBMtd_PubRegion' => '',
-					'DBMtd_PubOffice' => '',
-					'DBMtd_AreaCnt' => $this->DIArea->find('count'),
-					'DBMtd_IndCnt' => $this->Indicator->find('count'),
-					'DBMtd_IUSCnt' => $this->IndicatorUnitSubgroup->find('count'),
-					'DBMtd_TimeCnt' => $this->TimePeriod->find('count'),
-					'DBMtd_SrcCnt' => $this->IndicatorClassification->find('count', array(
-						'conditions' => array('IC_Parent_NId <>' => '-1', 'IC_Type' => 'SR')
-					)),
-					'DBMtd_DataCnt' => $this->Data->find('count')
-				)
-			);
-			
-			$this->DBMetaData->create();
-			$this->DBMetaData->save($dbMetadata);
 		} catch(Exception $ex) {
 			$error = $ex->getMessage();
 			$this->Logger->write("Exception encountered while exporting indicator\n\n" . $error);
@@ -440,5 +440,26 @@ class DevInfoComponent extends Component {
 		return $subgroupTypes;
 	}
 
+	private function mergeJoin(&$joins, $newJoins){
+		if(!empty($newJoins)){
+			foreach($newJoins as $key=>$newJoin){
+				if(!empty($joins)){
+					$addFlag = true;
+					foreach($joins as $join){
+						if($join['table'] == $newJoin['table']){
+							$addFlag = false;
+							break;
+						}
+					}
+					if($addFlag){
+						$joins[] = $newJoins[$key];
+					}
+				}else{
+					$joins[] = $newJoins[$key];
+				}
+			}
+		}
+		return $joins;
+	}
 }
 ?>
