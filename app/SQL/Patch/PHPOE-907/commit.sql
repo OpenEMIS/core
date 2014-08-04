@@ -3,13 +3,14 @@
 --
 
 DELETE FROM `navigations` 
-WHERE `module` LIKE 'Report';
+WHERE `module` LIKE 'Report' 
+AND `id` <= 147;
 
 --
 -- 2. insert records for new report structrue
 -- 
-
--- need to check existing table to ensure that the biggest id is 153 and the biggest order is 150
+SET @reportLatestOrder := 0;
+SELECT MAX(`order`) INTO @reportLatestOrder from `navigations`;
 
 INSERT INTO `navigations` (
 `id` ,
@@ -31,28 +32,52 @@ INSERT INTO `navigations` (
 `created`
 )
 VALUES 
-('154' , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'General', 'InstitutionGeneral', 'InstitutionGeneral', NULL , '-1', '0', '151', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Details', 'InstitutionDetails', 'InstitutionDetails', NULL , '154', '0', '152', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Attendance', 'InstitutionAttendance', 'InstitutionAttendance', NULL , '154', '0', '153', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Assessment', 'InstitutionAssessment', 'InstitutionAssessment', NULL , '154', '0', '154', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Behaviors', 'InstitutionBehaviors', 'InstitutionBehaviors', NULL , '154', '0', '155', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Finance', 'InstitutionFinance', 'InstitutionFinance', NULL , '154', '0', '156', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Totals', 'InstitutionTotals', 'InstitutionTotals', NULL , '154', '0', '157', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Quality', 'InstitutionQuality', 'InstitutionQuality', NULL , '154', '0', '158', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'General', 'StudentGeneral', 'StudentGeneral', NULL , '154', '0', '159', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'Details', 'StudentDetails', 'StudentDetails', NULL , '154', '0', '160', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'Finance', 'StudentFinance', 'StudentFinance', NULL , '154', '0', '161', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'Health', 'StudentHealth', 'StudentHealth', NULL , '154', '0', '162', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'General', 'StaffGeneral', 'StaffGeneral', NULL , '154', '0', '163', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Details', 'StaffDetails', 'StaffDetails', NULL , '154', '0', '164', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Finance', 'StaffFinance', 'StaffFinance', NULL , '154', '0', '165', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Health', 'StaffHealth', 'StaffHealth', NULL , '154', '0', '166', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Training', 'StaffTraining', 'StaffTraining', NULL , '154', '0', '167', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'YEARBOOK', 'General', 'YearbookGeneral', 'YearbookGeneral', NULL , '154', '0', '168', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'MAPS', 'General', 'MapGeneral', 'MapGeneral', NULL , '154', '0', '169', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'DASHBOARDS', 'General', 'DashboardGeneral', 'DashboardGeneral', NULL , '154', '0', '170', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', 'Reports', 'Reports', 'SYSTEM', 'Data Quality', 'SystemDataQuality', 'SystemDataQuality', NULL , '154', '0', '171', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Report', NULL, 'Report', 'CUSTOM', 'General', 'index', 'index|^reports', NULL , '154', '0', '172', '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'General', 'InstitutionGeneral', 'InstitutionGeneral', NULL , '-1', '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+
+SET @reportLatestId := 0;
+
+SELECT `id` INTO @reportLatestId FROM `navigations` WHERE `controller` = 'Reports' AND `action` = 'InstitutionGeneral';
+
+INSERT INTO `navigations` (
+`id` ,
+`module` ,
+`plugin` ,
+`controller` ,
+`header` ,
+`title` ,
+`action` ,
+`pattern` ,
+`attributes` ,
+`parent` ,
+`is_wizard` ,
+`order` ,
+`visible` ,
+`modified_user_id` ,
+`modified` ,
+`created_user_id` ,
+`created`
+) VALUES 
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Details', 'InstitutionDetails', 'InstitutionDetails', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Attendance', 'InstitutionAttendance', 'InstitutionAttendance', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Assessment', 'InstitutionAssessment', 'InstitutionAssessment', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Behaviors', 'InstitutionBehaviors', 'InstitutionBehaviors', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Finance', 'InstitutionFinance', 'InstitutionFinance', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Totals', 'InstitutionTotals', 'InstitutionTotals', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'INSTITUTIONS', 'Quality', 'InstitutionQuality', 'InstitutionQuality', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'General', 'StudentGeneral', 'StudentGeneral', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'Details', 'StudentDetails', 'StudentDetails', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'Finance', 'StudentFinance', 'StudentFinance', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STUDENTS', 'Health', 'StudentHealth', 'StudentHealth', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'General', 'StaffGeneral', 'StaffGeneral', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Details', 'StaffDetails', 'StaffDetails', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Finance', 'StaffFinance', 'StaffFinance', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Health', 'StaffHealth', 'StaffHealth', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'STAFF', 'Training', 'StaffTraining', 'StaffTraining', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'YEARBOOK', 'General', 'YearbookGeneral', 'YearbookGeneral', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'MAPS', 'General', 'MapGeneral', 'MapGeneral', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'DASHBOARDS', 'General', 'DashboardGeneral', 'DashboardGeneral', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', 'Reports', 'Reports', 'SYSTEM', 'Data Quality', 'SystemDataQuality', 'SystemDataQuality', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Report', NULL, 'Report', 'CUSTOM', 'General', 'index', 'index|^reports', NULL , @reportLatestId, '0', (@reportLatestOrder := @reportLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 
 --
 -- 3. update table reports, change to new category
@@ -207,123 +232,135 @@ UPDATE `reports` SET
 `category` = 'Student General Reports' 
 WHERE `reports`.`id` =1028
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Overview',
 `category` = 'Staff General Reports' 
 WHERE `reports`.`id` =101;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Custom Field',
 `category` = 'Staff General Reports' 
 WHERE `reports`.`id` =102;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Courses',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1029;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Completed',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1030;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Needs',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1031;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Uncompleted',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1032;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Trainers',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1033;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Exceptions',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1034;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Statistics',
 `category` = 'Staff Training Reports' 
 WHERE `reports`.`id` =1035;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Yearbook',
 `category` = 'Yearbook General Reports' 
 WHERE `reports`.`id` =112;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'ECE QA',
 `category` = 'Dashboard General Reports' 
 WHERE `reports`.`id` =4001;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Non-Responsive Schools',
 `category` = 'System Data Quality Reports' 
 WHERE `reports`.`id` =151;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Data Discrepancy',
 `category` = 'System Data Quality Reports' 
 WHERE `reports`.`id` =152;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `category` = 'System Data Quality Reports' 
 WHERE `reports`.`id` =153;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Missing Coordinates',
 `category` = 'System Data Quality Reports' 
 WHERE `reports`.`id` =154;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Institution with No Area',
 `category` = 'System Data Quality Reports' 
 WHERE `reports`.`id` =1038;
 
-UPDATE `_openemis_`.`reports` SET 
+UPDATE `reports` SET 
 `name` = 'Google Earth',
 `category` = 'Map General Reports' 
 WHERE `reports`.`id` =111;
 
+
 --
--- updates to table security_functions
+-- 4. delete existing security_functions records
 --
+
+DELETE FROM `security_functions`
+WHERE `id` <= 193 
+AND `module` LIKE 'Reports';
+
+--
+-- 5. updates to table security_functions, add new records
+--
+
+SET @securityFuncLatestOrder := 0;
+
+SELECT MAX(`order`) INTO @securityFuncLatestOrder from `security_functions`;
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(200, 'Reports Index', 'Reports', 'Reports', 'Report', -1, 'index', NULL, NULL, NULL, NULL, 201, 0, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(NULL , 'General', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionGeneral', NULL , NULL , NULL , '_view:InstitutionGeneralDownload', '202', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Details', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionDetails', NULL , NULL , NULL , '_view:InstitutionDetailsDownload', '203', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Attendance', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionAttendance', NULL , NULL , NULL , '_view:InstitutionAttendanceDownload', '204', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Assessment', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionAssessment', NULL , NULL , NULL , '_view:InstitutionAssessmentDownload', '205', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Behaviors', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionBehaviors', NULL , NULL , NULL , '_view:InstitutionBehaviorsDownload', '206', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Finance', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionFinance', NULL , NULL , NULL , '_view:InstitutionFinanceDownload', '207', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Totals', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionTotals', NULL , NULL , NULL , '_view:InstitutionTotalsDownload', '208', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Quality', 'Reports', 'Reports', 'Institutions', '200', 'InstitutionQuality', NULL , NULL , NULL , '_view:InstitutionQualityDownload', '209', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionGeneral', NULL , NULL , NULL , '_view:InstitutionGeneralDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Details', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionDetails', NULL , NULL , NULL , '_view:InstitutionDetailsDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Attendance', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionAttendance', NULL , NULL , NULL , '_view:InstitutionAttendanceDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Assessment', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionAssessment', NULL , NULL , NULL , '_view:InstitutionAssessmentDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Behaviors', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionBehaviors', NULL , NULL , NULL , '_view:InstitutionBehaviorsDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Finance', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionFinance', NULL , NULL , NULL , '_view:InstitutionFinanceDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Totals', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionTotals', NULL , NULL , NULL , '_view:InstitutionTotalsDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Quality', 'Reports', 'Reports', 'Institutions', '-1', 'InstitutionQuality', NULL , NULL , NULL , '_view:InstitutionQualityDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'General', 'Reports', 'Reports', 'Students', '200', 'StudentGeneral', NULL , NULL , NULL , '_view:StudentGeneralDownload', '210', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Details', 'Reports', 'Reports', 'Students', '200', 'StudentDetails', NULL , NULL , NULL , '_view:StudentDetailsDownload', '211', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Finance', 'Reports', 'Reports', 'Students', '200', 'StudentFinance', NULL , NULL , NULL , '_view:StudentFinanceDownload', '212', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Health', 'Reports', 'Reports', 'Students', '200', 'StudentHealth', NULL , NULL , NULL , '_view:StudentHealthDownload', '213', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Students', '-1', 'StudentGeneral', NULL , NULL , NULL , '_view:StudentGeneralDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Details', 'Reports', 'Reports', 'Students', '-1', 'StudentDetails', NULL , NULL , NULL , '_view:StudentDetailsDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Finance', 'Reports', 'Reports', 'Students', '-1', 'StudentFinance', NULL , NULL , NULL , '_view:StudentFinanceDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Health', 'Reports', 'Reports', 'Students', '-1', 'StudentHealth', NULL , NULL , NULL , '_view:StudentHealthDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'General', 'Reports', 'Reports', 'Staff', '200', 'StaffGeneral', NULL , NULL , NULL , '_view:StaffGeneralDownload', '214', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Details', 'Reports', 'Reports', 'Staff', '200', 'StaffDetails', NULL , NULL , NULL , '_view:StaffDetailsDownload', '215', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Finance', 'Reports', 'Reports', 'Staff', '200', 'StaffFinance', NULL , NULL , NULL , '_view:StaffFinanceDownload', '216', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Health', 'Reports', 'Reports', 'Staff', '200', 'StaffHealth', NULL , NULL , NULL , '_view:StaffHealthDownload', '217', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
-(NULL , 'Training', 'Reports', 'Reports', 'Staff', '200', 'StaffTraining', NULL , NULL , NULL , '_view:StaffTrainingDownload', '218', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Staff', '-1', 'StaffGeneral', NULL , NULL , NULL , '_view:StaffGeneralDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Details', 'Reports', 'Reports', 'Staff', '-1', 'StaffDetails', NULL , NULL , NULL , '_view:StaffDetailsDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Finance', 'Reports', 'Reports', 'Staff', '-1', 'StaffFinance', NULL , NULL , NULL , '_view:StaffFinanceDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Health', 'Reports', 'Reports', 'Staff', '-1', 'StaffHealth', NULL , NULL , NULL , '_view:StaffHealthDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Training', 'Reports', 'Reports', 'Staff', '-1', 'StaffTraining', NULL , NULL , NULL , '_view:StaffTrainingDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'General', 'Reports', 'Reports', 'Yearbook', '200', 'YearbookGeneral', NULL , NULL , NULL , '_view:YearbookGeneralDownload', '219', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Yearbook', '-1', 'YearbookGeneral', NULL , NULL , NULL , '_view:YearbookGeneralDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'General', 'Reports', 'Reports', 'Maps', '200', 'MapGeneral', NULL , NULL , NULL , '_view:MapGeneralDownload', '220', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Maps', '-1', 'MapGeneral', NULL , NULL , NULL , '_view:MapGeneralDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'General', 'Reports', 'Reports', 'Dashboards', '200', 'DashboardGeneral', NULL , NULL , NULL , '_view:DashboardGeneralDownload', '221', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'General', 'Reports', 'Reports', 'Dashboards', '-1', 'DashboardGeneral', NULL , NULL , NULL , '_view:DashboardGeneralDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'Data Quality', 'Reports', 'Reports', 'System', '200', 'SystemDataQuality', NULL , NULL , NULL , '_view:SystemDataQualityDownload', '222', '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Data Quality', 'Reports', 'Reports', 'System', '-1', 'SystemDataQuality', NULL , NULL , NULL , '_view:SystemDataQualityDownload', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 
-(NULL , 'General', 'Report', 'Reports', 'Custom', '200', 'index|reportsView', NULL, '_view:reportsNew|reportsWizard', '_view:reportsDelete' , '_view:reportsWizard', '223', '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+(NULL , 'General', 'Report', 'Reports', 'Custom', '-1', 'index|reportsView', NULL, '_view:reportsNew|reportsWizard', '_view:reportsDelete' , '_view:reportsWizard', (@securityFuncLatestOrder := @securityFuncLatestOrder + 1), '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 
