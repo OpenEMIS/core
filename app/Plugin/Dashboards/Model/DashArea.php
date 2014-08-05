@@ -14,14 +14,15 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class JORArea extends DashboardsAppModel {
+class DashArea extends DashboardsAppModel {
 	public $useDbConfig = 'di6';
+	public $alias = 'DIArea';
 	public $actsAs = array('Tree');
-	//public $useTable = 'ut_area_en';
+	public $useTable = 'ut_area_en';
 	public $countryIndicator = array('Jordan' => '2ed8e897-7d7f-4970-a3ae-4c2e40277fdc');
 	
 	public function getCountry(){
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
 		
 		$options['conditions'] = array('Area_Parent_NId' => -1);
 		$data = $this->find('first', $options);
@@ -30,7 +31,7 @@ class JORArea extends DashboardsAppModel {
 	}
 	
 	public function getAreasByLevel($level, $mode = 'all', $withCode = true){
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
 		
 		$options['conditions'] = array('Area_Level' => $level);
 		
@@ -38,7 +39,7 @@ class JORArea extends DashboardsAppModel {
 		if($mode == 'list'){
 			$listData = array();
 			foreach($data as $item){
-				$item = $item['JORArea'];
+				$item = $item['DIArea'];
 				if($withCode){
 					$listData[$item['Area_NId']] = sprintf('%s - %s', $item['Area_ID'],$item['Area_Name']);
 				}
@@ -53,7 +54,7 @@ class JORArea extends DashboardsAppModel {
 	}
 	
 	public function getAreaByAreaGId($gid = NULL) {
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
 		if (empty($gid)) {
 			$gid = $this->countryIndicator['Jordan'];
 		}
@@ -65,9 +66,10 @@ class JORArea extends DashboardsAppModel {
 	}
 	
 	public function getAreaById($id, $mode = 'all') {
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
 
 		$options['conditions'] = array('Area_Nid' => $id);
+		$options['fields'] = array('Area_Nid' ,'Area_ID' ,'Area_Name');
 		$data = $this->find('all', $options);
 
 		if($mode == 'list'){
@@ -78,12 +80,21 @@ class JORArea extends DashboardsAppModel {
 	}
 
 	public function getAllChildByLevel($id, $lvl, $mode = 'all', $withCode){
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
+		
 		$options['conditions'] = array('Area_NId' => $id);
 		$parentData = $this->find('first', $options);
 		
+		if($parentData['DIArea']['Area_Level'] == $lvl){
+			$options['conditions'] = array('Area_NId' => $parentData['DIArea']['Area_Parent_NId'] );
+			$parentData = $this->find('first', $options);
+		}
+		
+		
 		$options = array();
-		$options['conditions'] = array('lft > ' => $parentData['JORArea']['lft'], 'rght < '=> $parentData['JORArea']['rght'], 'Area_Level' => $lvl);
+		$options['fields'] = array('Area_Nid' ,'Area_ID' ,'Area_Name');
+		//$options['limit'] = 100;
+		$options['conditions'] = array('lft > ' => $parentData['DIArea']['lft'], 'rght < '=> $parentData['DIArea']['rght'], 'Area_Level' => $lvl);
 		$data = $this->find('all', $options);
 		if($mode == 'list'){
 			$data = $this->processAreaData($data, $withCode);
@@ -92,10 +103,19 @@ class JORArea extends DashboardsAppModel {
 	}
 	
 	public function getChildLevel($mode = 'all', $id = -1, $withCode){
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
+		$options['fields'] = array('Area_Nid' ,'Area_ID' ,'Area_Name');
 		$options['conditions'] = array('Area_Parent_NId' => $id);
 		$options['order'] = array('Area_ID');
 		$data = $this->find('all', $options);
+		
+		if(empty($data)){
+			$options = array();
+			$options['conditions'] = array('Area_NId' => $id);
+			$parentData = $this->find('first', $options);
+			
+			$data = $this->getChildLevel($mode, $parentData['DIArea']['Area_Parent_NId'], $withCode);
+		}
 		
 		if($mode == 'list'){
 			$data = $this->processAreaData($data, $withCode);
@@ -105,15 +125,15 @@ class JORArea extends DashboardsAppModel {
 	}
 	
 	public function getAreaName($id){
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
 		$data = $this->find('first', array( 'conditions' => array('Area_NId' => $id), 'fields' => array('Area_Name')));
-		return $data['JORArea']['Area_Name'];
+		return $data['DIArea']['Area_Name'];
 	}
 	
 	public function getParentInfo($id){
-		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		//$this->setSource('ut_area_'.$this->setupUseTableLang());
 		$parentData = $this->find('first', array( 'conditions' => array('Area_NId' => $id), 'fields' => array('Area_Parent_NId')));
-		$parentID = $parentData['JORArea']['Area_Parent_NId'];
+		$parentID = $parentData['DIArea']['Area_Parent_NId'];
 		$data = $this->find('first', array( 'conditions' => array('Area_NId' => $parentID)));
 		return $data;
 	}
@@ -122,7 +142,7 @@ class JORArea extends DashboardsAppModel {
 	private function processAreaData($data, $withCode){
 		$listData = array();
 		foreach($data as $item){
-			$item = $item['JORArea'];
+			$item = $item['DIArea'];
 			if($withCode){
 				$listData[$item['Area_NId']] = sprintf('%s - %s', $item['Area_ID'],$item['Area_Name']);
 			}
