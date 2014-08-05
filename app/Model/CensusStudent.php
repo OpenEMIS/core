@@ -80,13 +80,28 @@ class CensusStudent extends AppModel {
 		));
 		return $data;
 	}
-		
+	
 	public function getCensusDataOrderByAge($siteId, $yearId, $programmeId, $categoryId){
 		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female', 'CensusStudent.source', 'CensusStudent.education_grade_id'),
+			'fields' => array(
+				'CensusStudent.id', 
+				'CensusStudent.age', 
+				'CensusStudent.value', 
+				'CensusStudent.source', 
+				'CensusStudent.education_grade_id',
+				'Gender.id AS genderId',
+				'Gender.name AS genderName'
+			),
 			'joins' => array(
+				array(
+					'table' => 'field_option_values',
+					'alias' => 'Gender',
+					'conditions' => array(
+						'CensusStudent.gender_id = Gender.id'
+					)
+				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
@@ -371,16 +386,12 @@ class CensusStudent extends AppModel {
 				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
 				$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 				
-				$enrolment = array();
-				if(!empty($gradeList)) {
-					$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
-				} else {
+				if(empty($gradeList)) {
 					$gradeList[0] = '-- ' . __('No Grade') . ' --';
 				}
 				$data[] = array(
 					'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
 					'grades' => $gradeList,
-					'enrolment' => $enrolment,
 					'dataRowsArr' => $dataRowsArr,
 					'education_programme_id' => $obj['education_programme_id'],
 					'admission_age' => $obj['admission_age']
@@ -415,16 +426,12 @@ class CensusStudent extends AppModel {
 					$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
 					$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 					
-					$enrolment = array();
-					if(!empty($gradeList)) {
-						$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
-					} else {
+					if(empty($gradeList)) {
 						$gradeList[0] = '-- ' . __('No Grade') . ' --';
 					}
 					$data[] = array(
 						'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
 						'grades' => $gradeList,
-						'enrolment' => $enrolment,
 						'dataRowsArr' => $dataRowsArr,
 						'education_programme_id' => $obj['education_programme_id'],
 						'admission_age' => $obj['admission_age']
@@ -438,7 +445,6 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsView($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$EducationGrade = $this->EducationGrade;
 	
 		$admission_age = $age;
 		
@@ -467,13 +473,18 @@ class CensusStudent extends AppModel {
 		foreach ($censusDataOrderByAge AS $row) {
 			$recordId = $row['id'];
 			$age = $row['age'];
-			$male = $row['male'];
-			$female = $row['female'];
+			
+			if($row['genderName'] == 'Male'){
+				$male = $row['value'];
+				$enrolmentArr[$age][$education_grade_id]['male'] = $male;
+			}else if($row['genderName'] == 'Female'){
+				$female = $row['value'];
+				$enrolmentArr[$age][$education_grade_id]['female'] = $female;
+			}
+			
 			$education_grade_id = $row['education_grade_id'];
 			$source = $row['source'];
 
-			$enrolmentArr[$age][$education_grade_id]['male'] = $male;
-			$enrolmentArr[$age][$education_grade_id]['female'] = $female;
 			$enrolmentArr[$age][$education_grade_id]['censusId'] = $recordId;
 			$enrolmentArr[$age][$education_grade_id]['source'] = $source;
 
@@ -719,7 +730,6 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$EducationGrade = $this->EducationGrade;
 	
 		$admission_age = $age;
 		$agePlus = $ConfigItem->getValue('admission_age_plus');
@@ -749,13 +759,18 @@ class CensusStudent extends AppModel {
 		foreach ($censusDataOrderByAge AS $row) {
 			$recordId = $row['id'];
 			$age = $row['age'];
-			$male = $row['male'];
-			$female = $row['female'];
+			
+			if($row['genderName'] == 'Male'){
+				$male = $row['value'];
+				$enrolmentArr[$age][$education_grade_id]['male'] = $male;
+			}else if($row['genderName'] == 'Female'){
+				$female = $row['value'];
+				$enrolmentArr[$age][$education_grade_id]['female'] = $female;
+			}
+			
 			$education_grade_id = $row['education_grade_id'];
 			$source = $row['source'];
 
-			$enrolmentArr[$age][$education_grade_id]['male'] = $male;
-			$enrolmentArr[$age][$education_grade_id]['female'] = $female;
 			$enrolmentArr[$age][$education_grade_id]['censusId'] = $recordId;
 			$enrolmentArr[$age][$education_grade_id]['source'] = $source;
 
