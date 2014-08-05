@@ -17,7 +17,7 @@ echo $this->Form->create($this->action, $formOptions);
 
 if ($visualType == 'table') {
 	$tableClass = 'table-checkable table-input';
-	$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), 'Source');
+	$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), __('Source'));
 	$tableData = array();
 	if (!empty($data)) {
 		$i = 0;

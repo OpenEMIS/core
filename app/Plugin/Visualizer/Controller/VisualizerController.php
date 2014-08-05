@@ -37,13 +37,13 @@ class VisualizerController extends VisualizerAppController {
 		//	$this->Session->delete('visualizer.wizard');
 		if ($this->action != 'visualization') {
 			if (!$this->Session->check('visualizer.wizard')) {
-				$tabs['indicator'] = array('name' => 'Step 1:<br/>Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
-				$tabs['unit'] = array('name' => 'Step 2:<br/>Unit', 'url' => $rootURL.'Visualizer/unit');
-				$tabs['dimension'] = array('name' => 'Step3 :<br/>Dimension', 'url' => $rootURL.'Visualizer/dimension');
-				$tabs['area'] = array('name' => 'Step 4:<br/>Area', 'url' => $rootURL.'Visualizer/area');
-				$tabs['time'] = array('name' => 'Step 5:<br/>Time', 'url' => $rootURL.'Visualizer/time');
-				$tabs['source'] = array('name' => 'Step 6:<br/>Source', 'url' => $rootURL.'Visualizer/source');
-				$tabs['review'] = array('name' => 'Step 7:<br/>Review', 'url' => $rootURL.'Visualizer/review');
+				$tabs['indicator'] = array('name' => 'Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
+				$tabs['unit'] = array('name' => 'Unit', 'url' => $rootURL.'Visualizer/unit');
+				$tabs['dimension'] = array('name' => 'Dimension', 'url' => $rootURL.'Visualizer/dimension');
+				$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/area');
+				$tabs['time'] = array('name' => 'Time', 'url' => $rootURL.'Visualizer/time');
+				$tabs['source'] = array('name' => 'Source', 'url' => $rootURL.'Visualizer/source');
+				$tabs['review'] = array('name' => 'Review', 'url' => $rootURL.'Visualizer/review');
 			} else {
 				$tabs = $this->Session->read('visualizer.wizard');
 				if (array_key_exists($currentPg, $tabs)) {
@@ -78,9 +78,9 @@ class VisualizerController extends VisualizerAppController {
 			
 			$tabs['table'] = array('name' => 'Table', 'url' => $rootURL.'Visualizer/visualization/table/'.$id);
 			$tabs['column'] = array('name' => 'Column', 'url' => $rootURL.'Visualizer/visualization/column/'.$id);
-			$tabs['column-stack'] = array('name' => 'Stack Column', 'url' => $rootURL.'Visualizer/visualization/column-stack/'.$id);
+			$tabs['column-stack'] = array('name' => 'Stacked Column', 'url' => $rootURL.'Visualizer/visualization/column-stack/'.$id);
 			$tabs['bar'] = array('name' => 'Bar', 'url' => $rootURL.'Visualizer/visualization/bar/'.$id);
-			$tabs['bar-stack'] = array('name' => 'Stack Bar', 'url' => $rootURL.'Visualizer/visualization/bar-stack/'.$id);
+			$tabs['bar-stack'] = array('name' => 'Stacked Bar', 'url' => $rootURL.'Visualizer/visualization/bar-stack/'.$id);
 			$tabs['line'] = array('name' => 'Line', 'url' => $rootURL.'Visualizer/visualization/line/'.$id);
 			$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/visualization/area/'.$id);
 			$tabs['pie'] = array('name' => 'Pie', 'url' => $rootURL.'Visualizer/visualization/pie/'.$id);
@@ -286,7 +286,7 @@ class VisualizerController extends VisualizerAppController {
 
 	public function indicator() {
 		$this->Navigation->addCrumb('Indicator');
-		$header = __('Visualizer - Indicator');
+		$header = __('Visualizer').' - '.__('Indicator');
 
 		if ($this->request->is(array('post', 'put'))) {
 			if(!empty($this->request->data['indicator']['id'])){
@@ -314,7 +314,7 @@ class VisualizerController extends VisualizerAppController {
 
 	public function unit() {
 		$this->Navigation->addCrumb('Unit');
-		$header = __('Visualizer - Unit');
+		$header = __('Visualizer').' - '.__('Unit');
 
 		if (!$this->Session->check('visualizer.selectedOptions')) {
 			return $this->redirect(array('action' => 'indicator', 'plugin' => 'Visualizer'));
@@ -349,7 +349,7 @@ class VisualizerController extends VisualizerAppController {
 
 	public function dimension() {
 		$this->Navigation->addCrumb('Dimension');
-		$header = __('Visualizer - Dimension');
+		$header = __('Visualizer').' - '.__('Dimension');
 		$selectType = 'checkbox';
 
 		if (!$this->Session->check('visualizer.selectedOptions')) {
@@ -382,7 +382,7 @@ class VisualizerController extends VisualizerAppController {
 	public function area() {
 		//$this->autoRender = false;
 		$this->Navigation->addCrumb('Area');
-		$header = __('Visualizer - Area');
+		$header = __('Visualizer').' - '.__('Area');
 
 		if (!$this->Session->check('visualizer.selectedOptions')) {
 			return $this->redirect(array('action' => 'indicator', 'plugin' => 'Visualizer'));
@@ -455,7 +455,7 @@ class VisualizerController extends VisualizerAppController {
 
 	public function time() {
 		$this->Navigation->addCrumb('Time');
-		$header = __('Visualizer - Time');
+		$header = __('Visualizer').' - '.__('Time');
 
 		if (!$this->Session->check('visualizer.selectedOptions')) {
 			return $this->redirect(array('action' => 'indicator', 'plugin' => 'Visualizer'));
@@ -484,7 +484,7 @@ class VisualizerController extends VisualizerAppController {
 
 	public function source() {
 		$this->Navigation->addCrumb('Source');
-		$header = __('Visualizer - Source');
+		$header = __('Visualizer').' - '.__('Source');
 
 		if (!$this->Session->check('visualizer.selectedOptions')) {
 			return $this->redirect(array('action' => 'indicator', 'plugin' => 'Visualizer'));
@@ -514,7 +514,7 @@ class VisualizerController extends VisualizerAppController {
 
 	public function review() {
 		$this->Navigation->addCrumb('Review');
-		$header = __('Visualizer - Review');
+		$header = __('Visualizer').' - '.__('Review');
 
 		if (!$this->Session->check('visualizer.selectedOptions')) {
 			return $this->redirect(array('action' => 'indicator', 'plugin' => 'Visualizer'));
@@ -559,12 +559,15 @@ class VisualizerController extends VisualizerAppController {
 
 	public function visualization() {
 		$this->Navigation->addCrumb('Visualization');
-		$header = __('Visualizer - Visualization');
+		
 		$visualType = $this->params['pass'][0];
 		$id = $this->params['pass'][1];
+		
+		$header = __('Visualizer').' - '.__(ucfirst(strtolower($visualType)));
+		
 		$showVisualization = true;
 		if($visualType == 'table'){
-			$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id), 'LEFT');
+			$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id), 'LEFT');
 		
 			$this->Paginator->settings = $selectedOptions;//array_merge(array('limit' => 20), $selectedOptions);
 			$data = $this->Paginator->paginate('DIData');
@@ -590,7 +593,7 @@ class VisualizerController extends VisualizerAppController {
 	/*
 	public function VisualizeFusionChart($visualType, $id){
 		$this->autoRender = false;
-		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
 		$rawData = $this->DIData->find('all', $selectedOptions);
 		//Retrive selected info 
 		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
@@ -637,7 +640,7 @@ class VisualizerController extends VisualizerAppController {
 	public function VisualizeHighChart($visualType, $id){
 		$this->autoRender = false;
 		
-		$selectedOptions = $this->DIData->getPaginationOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
 		$rawData = $this->DIData->find('all', $selectedOptions);
 		
 		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
@@ -672,7 +675,7 @@ class VisualizerController extends VisualizerAppController {
         $this->autoRender = false;
 		$selectedOptions = $this->DIData->getCSVOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
 		$data = $this->DIData->find('all', $selectedOptions);
-		$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), 'Source');
+		$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), __('Source'));
 		$fileName = 'Visualization_'. date("Y.m.d");
 		$downloadedFile = $fileName . '.csv';
 		
@@ -700,7 +703,7 @@ class VisualizerController extends VisualizerAppController {
 	
 	
 	private function addReportDate($csv_file){
-        $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
+        $footer = array(__("Report Generated"). ": " . date("Y-m-d H:i:s"));
         fputcsv($csv_file, array(), ',', '"');
         fputcsv($csv_file, $footer, ',', '"');
     }

@@ -1,7 +1,8 @@
 <?php
 echo $this->Html->css('Dashboards.dashboard', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/Dashboards/js/Charts/FusionCharts', false);
+echo $this->Html->script('/HighCharts/js/highcharts', false);
+echo $this->Html->script('/HighCharts/js/modules/exporting', false);
 echo $this->Html->script('Dashboards.dashboards', false);
 
 $this->extend('/Elements/layout/container_blank');
@@ -23,26 +24,19 @@ echo $this->Form->input('geo_level_id', array(
 	
 	'url' => 'Dashboards/dashboardsAjaxGetArea',
 	'onchange' => 'Dashboards.areaChange(this)',
-	//'before' => '<div class="col-md-4 form-group">',
 	'between' => '<div class="col-md-5">',
-	//'after' => '</div>',
-	//'after' => '</div></div>',
 	'label' => array('text' => __('Geographical Level'), 'class' => 'col-md-7 control-label')
 ));
 echo $this->Form->input('area_level_id', array(
 	'options' => $areaLvlOptions,
 	'default' => $areaId,
-	//'before' => '<div class="col-md-5 form-group">',
 	'between' => '<div class="col-md-8">',
-	//'after' => '</div></div>',
 	'label' => array('text' => __('Area'), 'class' => 'col-md-4 control-label')
 ));
 echo $this->Form->input('year_id', array(
 	'options' => $yearsOptions,
 	'default' => $yearId,
-	//'before' => '<div class="col-md-3 form-group">',
 	'between' => '<div class="col-md-5">',
-	//'after' => '</div></div>',
 	'label' => array('text' => __('Year'), 'class' => 'col-md-5 control-label')
 ));
 
@@ -51,17 +45,14 @@ echo $this->Form->input(__('Update'), array(
 	'label' => false,
 	'div' => 'col-md-1 form-group',
 	'after' => false,
-	//'before' => '<div class="col-md-1 form-group">',
 	'class' => 'btn_save btn_right',
 	'onclick' => 'return Config.checkValidate()',
-	//'before' => '<div class="col-md-1 form-group">',
-	//'after' => '</div>',
 ));
 
 echo $this->Html->div('clear_both underline', '', array('style' => "margin-bottom:10px;"));
 
 echo $this->Form->end();
-foreach ($displayChartData as $key => $item) {
+/*foreach ($displayChartData as $key => $item) {
 	$setupData['chartContainerId'] = 'dashboardChartContainer' . $key;
 	$setupData['chartVarId'] = 'dashboardChartVar' . $key;
 	$setupData['chartId'] = 'dashboardChartId-' . $key;
@@ -69,12 +60,18 @@ foreach ($displayChartData as $key => $item) {
 	$setupData = array_merge($setupData, $item);
 
 	echo $this->element('chartTemplate', $setupData, array('plugin' => 'Dashboards'));
+*/
+$allGraph = '';
+foreach ($displayChartData as $key => $item) {
+	$allGraph .= $this->Html->div('hc_graph_wrapper row', '', array('id' => 'highchart-container-'.$key, 'url' => $this->Html->url($item['chartURLdata'])));
 }
+echo $this->Html->div(NULL, $allGraph, array('id' => 'hc_graph_container'));
+
 
 $tableHeaders = $QATableData['tableHeaders'];
 $tableData = $QATableData['tableData'];
 
-echo $this->Html->div('clear_both', '');
+//echo $this->Html->div('clear_both', '');
 ?>
 <div class="form-group">
 	<h5><?php echo $tableTitle; ?></h5>
