@@ -116,8 +116,8 @@ class HighChartsComponent extends Component {
 		return $data;
 	}
 
-	public function getChartData($type, $DIData) {
-		$chartTypeInfo = explode("-", $type);
+	public function getChartData($ctype, $DIData) {
+		$chartTypeInfo = explode("-", $ctype);
 		$chartType = $chartTypeInfo[0];
 		$chartData = $this->customGenerateHeader(array('chartType' => $chartType, 'caption' => $this->getCaption(), 'subcaption' => $this->getYearSubcaption()));
 
@@ -139,9 +139,19 @@ class HighChartsComponent extends Component {
 		$plotOptions['stacking'] = !empty($chartTypeInfo[1]) ? $chartTypeInfo[1] : null;
 		$chartData = array_merge($chartData, $this->getPlotOptions($chartType, $plotOptions));
 		
+		
+		$chartData['xAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['xAxis']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['xAxis']['plotBands']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['plotBands']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['plotOptions']['series']['dataLabels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		
 		return json_encode($chartData, JSON_NUMERIC_CHECK);
 	}
-
+	
+	
 	/* ================================================
 	 * Customized Functions for DIY purpose
 	 * ================================================ */
@@ -156,6 +166,11 @@ class HighChartsComponent extends Component {
 		if (!empty($_options['subcaption'])) {
 			$chartData['subtitle']['text'] = __($_options['subcaption']);
 		}
+		$chartData['tooltip']['useHTML'] = true;
+		$chartData['legend']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['subtitle']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		//$chartData['chart']['resetZoomButton']['useHTML'] = true;
 		return $chartData;
 	}
 
@@ -174,12 +189,17 @@ class HighChartsComponent extends Component {
 				$chartData = $this->sortIndicatorAsCatergory($totalColumn, $rotateLabel);
 				break;
 		}
+		/*$chartData['xAxis']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['xAxis']['plotBands']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['plotBands']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';*/
 		return $chartData;
 	}
 	
 	public function setupCustomTextChartCategory() {
 		$chartData = array();
-		
+		//$chartData['xAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		//$chartData['yAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
 		switch ($this->plotBy) {
 			case 'indicator':
 				$chartData['xAxis']['title']['text'] = $this->selectedIndicator[0];
@@ -196,18 +216,22 @@ class HighChartsComponent extends Component {
 		return $chartData;
 	}
 	public function customGetGenericChartData($chartType, $DIData) {
-		$chartData = $this->setupChartDataset($DIData, $this->getChartBreak($chartType));
+		$chartData = $this->customGenerateCategory($chartType);
+		$chartData = array_merge($chartData, $this->setupChartDataset($DIData, $this->getChartBreak($chartType)));
 		return $chartData;
 	}
 	
 	public function customGetScatterChartData($DIData) {
-		$chartData = $this->setupScatterChartDataset($DIData, $this->getChartBreak('scatter'));
-		$chartData = array_merge($chartData, $this->getPlotOptions('scatter', array('totalDisplayRecords' => count($DIData))));
+		$chartType = 'scatter';
+		$chartData = $this->setupScatterChartDataset($DIData, $this->getChartBreak($chartType));
+		$chartData = array_merge($chartData, $this->getPlotOptions($chartType, array('totalDisplayRecords' => count($DIData))));
 		return $chartData;
 	}
 	
 	public function customGetLineChartData($DIData){
-		$chartData = $this->setupLineChartDataset($DIData, $this->getChartBreak('line'));
+		$chartType = 'line';
+		$chartData = $this->customGenerateCategory($chartType);
+		$chartData =  array_merge($chartData,$this->setupLineChartDataset($DIData, $this->getChartBreak($chartType)));
 		return $chartData;
 	}
 
@@ -222,7 +246,7 @@ class HighChartsComponent extends Component {
 				$chartData['plotOptions'][$type]['turboThreshold']= $_options['totalDisplayRecords'];
 			}
 		}
-
+		//$chartData['plotOptions']['series']['dataLabels']['useHTML'] = 'js:Highcharts.hasBidiBug';
 		return $chartData;
 	}
 
@@ -252,7 +276,7 @@ class HighChartsComponent extends Component {
 		$totalColumn = count($this->selectedTimeperiods) * count($this->selectedAreas);
 		$rotateLabel = $this->getLabelRotate($chartType);
 		
-		$chartData = $this->sortTimeAreaAsCatergory($totalColumn, $rotateLabel);
+		$chartData = $this->sortTimeAreaAsCatergory($totalColumn, $rotateLabel, $linebreak);
 		return $chartData;
 	}
 
@@ -289,17 +313,17 @@ class HighChartsComponent extends Component {
 
 						//	$selectedKey = ($this->plotBy == 'subgroup')?$sKey:$aKey;
 						$counterKey = array_search($selectedKey, $selectedFilterGrp);
+						$selectedCounter = $counterKey;
 						$chartData['series'][$counterKey]['data'][] = $vObj;
 						$chartData['series'][$counterKey]['name'] = $selectedKey;
 					}
 					if ($linebreak && count($selectedFilterGrp) > 1) {
-						$chartData['series'][$counter]['data'][] = null;
+						$chartData['series'][$selectedCounter]['data'][] = null;
 					}
 				}
 			}
-			$counter++;
+		//	$counter++;
 		}
-
 		return $chartData;
 	}
 
@@ -500,6 +524,8 @@ class HighChartsComponent extends Component {
 			$chartData['xAxis']['labels']['maxStaggerLines'] = 1;
 		}
 		$chartData['yAxis']['min'] = 0;
+		//$chartData['xAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		//$chartData['yAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
 		$chartData['yAxis']['title']['text'] = $this->selectedUnits[0];
 		return $chartData;
 	}
@@ -516,11 +542,13 @@ class HighChartsComponent extends Component {
 			$chartData['xAxis']['labels']['maxStaggerLines'] = 1;
 		}
 		$chartData['yAxis']['min'] = 0;
+		//$chartData['xAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		//$chartData['yAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
 		$chartData['yAxis']['title']['text'] = $this->selectedUnits[0];
 		return $chartData;
 	}
 	
-	private function sortTimeAreaAsCatergory($totalColumn, $rotateLabel){
+	private function sortTimeAreaAsCatergory($totalColumn, $rotateLabel, $linebreak = false){
 		$chartData = array();
 		foreach ($this->selectedTimeperiods as $timeObj) {
 			foreach ($this->selectedAreas as $areaObj) {
@@ -537,9 +565,16 @@ class HighChartsComponent extends Component {
 			}
 		}
 
+		/*$chartData['xAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['title']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['xAxis']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['xAxis']['plotBands']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';
+		$chartData['yAxis']['plotBands']['labels']['useHTML'] = 'js:Highcharts.hasBidiBug';*/
 		$chartData['yAxis']['title']['text'] = $this->selectedUnits[0];
 		return $chartData;
 	}
+	
 }
 
 ?>

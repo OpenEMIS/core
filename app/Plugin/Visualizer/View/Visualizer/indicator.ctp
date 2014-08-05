@@ -15,7 +15,7 @@ echo $this->Html->link($this->Label->get('general.reset'), array('action' => 're
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Visualizer'));
-$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label';
+$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label left';
 
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($this->action, $formOptions);

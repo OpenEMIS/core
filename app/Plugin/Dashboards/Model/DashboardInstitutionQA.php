@@ -85,7 +85,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 
 		$controller->HighCharts->plotBy = 'indicator';
 		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
+		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
 
 		$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
 
@@ -117,7 +117,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
 
 		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects', 'chartType' => 'line'));
-		$data = array_merge($data, $controller->HighCharts->customGenerateCategory('line'));
+		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('line'));
 		$data = array_merge($data, $controller->HighCharts->customGetLineChartData($rawData));
 
 		return json_encode($data, JSON_NUMERIC_CHECK);
@@ -150,7 +150,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$controller->HighCharts->plotBy = 'indicator';
 		$controller->HighCharts->rotateLabel = true;
 		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
+		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
 
 		$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
 
@@ -183,7 +183,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 
 		$controller->HighCharts->plotBy = 'indicator';
 		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
+		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
 
 		$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
 
