@@ -85,6 +85,12 @@ class DashArea extends DashboardsAppModel {
 		$options['conditions'] = array('Area_NId' => $id);
 		$parentData = $this->find('first', $options);
 		
+		if($parentData['DIArea']['Area_Level'] == $lvl){
+			$options['conditions'] = array('Area_NId' => $parentData['DIArea']['Area_Parent_NId'] );
+			$parentData = $this->find('first', $options);
+		}
+		
+		
 		$options = array();
 		$options['fields'] = array('Area_Nid' ,'Area_ID' ,'Area_Name');
 		//$options['limit'] = 100;
@@ -102,6 +108,14 @@ class DashArea extends DashboardsAppModel {
 		$options['conditions'] = array('Area_Parent_NId' => $id);
 		$options['order'] = array('Area_ID');
 		$data = $this->find('all', $options);
+		
+		if(empty($data)){
+			$options = array();
+			$options['conditions'] = array('Area_NId' => $id);
+			$parentData = $this->find('first', $options);
+			
+			$data = $this->getChildLevel($mode, $parentData['DIArea']['Area_Parent_NId'], $withCode);
+		}
 		
 		if($mode == 'list'){
 			$data = $this->processAreaData($data, $withCode);

@@ -11,7 +11,7 @@
 					$class = (!isset($tabValue['url']) || $state == 'disabled')?'void':'';
 					$url = isset($tabValue['url'])? 'href=\''.$tabValue['url'].'\'':'';
 					?>
-					<li class='<?php echo $state; ?> center'><a <?php echo $url?> class='<?php echo $class; ?>' data-toggle="tab<?php echo $tabId; ?>"><?php echo __($tabValue['name']); ?></a></li>
+					<li class='<?php echo $state; ?> center'><a <?php echo $url?> class='<?php echo $class; ?>' data-toggle="tab<?php echo $tabId; ?>"><?php echo __('Step '.$count).':<br/>'.__($tabValue['name']); ?></a></li>
 						<?php
 						$count++;
 					}

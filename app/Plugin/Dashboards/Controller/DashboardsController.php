@@ -227,7 +227,7 @@ class DashboardsController extends DashboardsAppController {
 		
 		$this->HighCharts->plotBy = 'indicator';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+		//$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
@@ -256,7 +256,7 @@ class DashboardsController extends DashboardsAppController {
 
 	//	$this->HighCharts->plotBy = 'indicator';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects', 'chartType' => 'line'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('line'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('line'));
 		$data = array_merge($data, $this->HighCharts->customGetLineChartData($rawData));
 		
 		return  json_encode($data, JSON_NUMERIC_CHECK);
@@ -290,7 +290,7 @@ class DashboardsController extends DashboardsAppController {
 		$this->HighCharts->plotBy = 'indicator';
 		$this->HighCharts->rotateLabel = true;
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
@@ -323,7 +323,7 @@ class DashboardsController extends DashboardsAppController {
 		
 		$this->HighCharts->plotBy = 'indicator';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
@@ -358,7 +358,7 @@ class DashboardsController extends DashboardsAppController {
 		
 		$this->HighCharts->plotBy = 'indicator';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Distribution of Both Aspects'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
@@ -422,7 +422,7 @@ class DashboardsController extends DashboardsAppController {
 		
 	//	$this->HighCharts->plotBy = 'indicator';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Appointment'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
@@ -453,7 +453,7 @@ class DashboardsController extends DashboardsAppController {
 		
 	//	$this->HighCharts->plotBy = 'dimension';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Ownership'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
@@ -484,7 +484,7 @@ class DashboardsController extends DashboardsAppController {
 		
 	//	$this->HighCharts->plotBy = 'dimension';
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Locality'));
-		$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
+	//	$data = array_merge($data, $this->HighCharts->customGenerateCategory('column'));
 		
 		$data = array_merge($data, $this->HighCharts->customGetGenericChartData('column',$rawData));
 		
