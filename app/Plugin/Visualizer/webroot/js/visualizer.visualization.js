@@ -5,7 +5,10 @@
  */
 
 $(document).ready(function() {
+	
 	if($('#highchart-container').length > 0){
+		
+		
 		var container = $('#highchart-container');
 		
 		$.ajax({
@@ -15,6 +18,7 @@ $(document).ready(function() {
 			//data: {searchStr: $(this).val(), areaLvl: $('#areaLevel').val()},
 			success: function(data) {
 				$('#highchart-container').highcharts(data);
+				
 			}
 		});
 	}

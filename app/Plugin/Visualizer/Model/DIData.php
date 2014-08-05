@@ -35,7 +35,7 @@ class DIData extends VisualizerAppModel {
 	}
 	
 	
-	public function getPaginationOptionsSetup($params, $joinMethod = 'inner'){
+	public function getQueryOptionsSetup($params, $joinMethod = 'inner'){
 		$ius = $params['IUS'];
 		$areaIds = $params['area'];
 		$timeperiodIds = $params['timeperiod'];
