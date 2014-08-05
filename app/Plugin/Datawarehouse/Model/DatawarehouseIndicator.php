@@ -408,4 +408,6 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		
 	}
 
+	
+
 }

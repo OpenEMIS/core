@@ -100,6 +100,7 @@ class DevInfoComponent extends Component {
 
 	public function export($settings=array()) {
 		set_time_limit(0);
+		//ini_set('max_execution_time', 300);
 
         $indicatorId = $settings['indicatorId'];
         unset($settings['indicatorId']);
@@ -135,6 +136,7 @@ class DevInfoComponent extends Component {
 		}
 		
 		$this->Logger->start();
+		 $this->out('Ended - ' . date('Y-m-d H:i:s'));
 		try {
 			$this->Logger->write('Truncating all DevInfo tables.');
 			$this->truncateAllTables();
@@ -192,6 +194,7 @@ class DevInfoComponent extends Component {
 				//if(!isset($subgroupTypes) || empty($subgroupTypes)) $subgroupTypes = $this->getSubgroupTypefromXML($indicatorFilename);
 				$diIndicatorId 	= $this->Indicator->getPrimaryKey($indicatorName, $metadata);
 				$diUnitId 		= $this->Unit->getPrimaryKey($unitName);
+				$diClassificationId = $this->IndicatorClassification->getPrimaryKey($source, $TYPE_SECTOR, $sectorId);
 					
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
@@ -381,9 +384,9 @@ class DevInfoComponent extends Component {
 
 							$modelData = $numeratorModelTable->query($outerQuery);
 							if(!empty($modelData)){
+								//pr($modelData);
 								$subgroups 			= $modelData[0]['Numerator']['Subgroup'];
 								$classification		= $modelData[0]['Numerator']['Subgroup'];
-								$diClassificationId = $this->IndicatorClassification->getPrimaryKey($classification, $TYPE_SECTOR, $sectorId);
 								$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
 								$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
 								$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);

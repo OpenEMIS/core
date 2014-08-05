@@ -64,10 +64,10 @@ class DataProcessingController extends DataProcessingAppController {
 		return $tmp;
 	}
 	
-	private function processGenerate($data){
-		$this->Report->processRequest($this->data['Reports']);
-			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
-			$this->redirect(array('action'=>'processes'));
+	private function processGenerate($data, $indicator=true){
+		$this->Report->processRequest($this->data['Reports'], $indicator);
+		$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
+		$this->redirect(array('action'=>'processes'));
 	}
 
 //    public function cusIndicators() {
@@ -524,15 +524,16 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-            $settings['areaLevelId'] = $this->request->data['DataProcessing']['area_level_id'];
+            /*$settings['areaLevelId'] = $this->request->data['DataProcessing']['area_level_id'];
             $settings['schoolYearId'] = $this->request->data['DataProcessing']['school_year_id'];
             if(isset($this->request->data['Reports']) && !empty($this->request->data['Reports'])){
                 foreach($this->request->data['Reports'] as $reportId){
                     $settings['indicatorId'] = $reportId;
                     $this->DevInfo->export($settings);
                 }
-            }
-            //$this->processGenerate($this->data['Reports']);
+            }*/
+            //pr($this->data['Reports']);
+            $this->processGenerate($this->data['Reports'], false);
 		}
 		
 
@@ -758,6 +759,7 @@ class DataProcessingController extends DataProcessingAppController {
             }else{
                 $nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
             }
+
             $shellCmd = sprintf($nohup, $cmd, APP);
             //$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
