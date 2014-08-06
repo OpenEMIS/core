@@ -31,7 +31,16 @@ echo $this->Form->input('search', array('id' => 'search'));
 		'url' => 'Visualizer/ajaxUpdateUserCBSelection'
 		));
 	
-	$tableHeaders = array($headerfirstCol,__('Indicator'),__('Unit'),__('Dimension'));
+	$colArr = array(
+		array('name' => 'Indicator'),
+		array('name' => 'Unit'),
+		array('name' => 'Dimension', 'col' => 'SubgroupVal.Subgroup_Val'),
+	);
+
+	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
+	array_unshift($tableHeaders, $headerfirstCol); 
+	
+	//$tableHeaders = array($headerfirstCol,__('Indicator'),__('Unit'),__('Dimension'));
 
 	$tableData = array();
 	if (!empty($tableRowData)) {
@@ -65,7 +74,7 @@ echo $this->Form->input('search', array('id' => 'search'));
 			$i++;
 		}
 	}
-	echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+	echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
 	?>
 </div>
 

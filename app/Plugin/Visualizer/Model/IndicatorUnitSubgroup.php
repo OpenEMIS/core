@@ -20,7 +20,9 @@ class IndicatorUnitSubgroup extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_indicator_unit_subgroup';
 
-	public function getUnits($indicatorId) {
+	public function getUnits($indicatorId, $order = NULL) {
+		$order = (empty($order))? NULL:array($order);
+		
 		$data = $this->find('all', array(
 			'conditions' => array('IndicatorUnitSubgroup.Indicator_NId' => $indicatorId),
 			'fields' => array('DISTINCT Unit.Unit_NId', 'Unit.Unit_Name', 'Indicator.Indicator_Name'),
@@ -35,13 +37,16 @@ class IndicatorUnitSubgroup extends VisualizerAppModel {
 						'alias' => 'Indicator',
 						'conditions' => array('Indicator.Indicator_NId = IndicatorUnitSubgroup.Indicator_NId')
 					),
-				)
+				),
+			'order' => $order
 		));
 		
 		return $data;
 	}
 
-	public function getDimensions($options){
+	public function getDimensions($options, $order = NULL){
+		$order = (empty($order))? NULL:array($order);
+		$_qOptions['order'] = $order; 
 		if(isset($options['IUS'])){
 			$ius = $options['IUS'];
 			$_qOptions['conditions'] = array('IndicatorUnitSubgroup.IUSNId' => $ius);
