@@ -46,6 +46,7 @@ class SubgroupVal extends DevInfo6AppModel {
 				$id = $save[$modelName]['id'];
 				
 				//$subgroupList = explode(' - ', $name);
+				pr($name);
 				$subgroupList = explode(', ', $name);
 				foreach($subgroupList as $subgroupName) {
 					$subgroupType = $this->getSubgroupType($subgroupTypes, $subgroupName);
@@ -65,11 +66,23 @@ class SubgroupVal extends DevInfo6AppModel {
 	}
 	
 	private function getSubgroupType($types, $subgroup) {
-		foreach($types as $type => $list) {
+		/*foreach($types as $type => $list) {
 			if(in_array($subgroup, $list)) {
 				return array($type => $list['order']);
 			}
 		}
+		return NULL;*/
+		//JAMIE
+		if(strrpos($subgroup, ": ")!==false){
+			$subgroup = substr($subgroup, 0, strrpos($subgroup, ": "));
+		}
+		foreach($types as $type => $list) {
+			if($list==$subgroup){
+				return array($subgroup => ($type+1));
+				break;
+			}
+		}
+
 		return NULL;
 	}
 }

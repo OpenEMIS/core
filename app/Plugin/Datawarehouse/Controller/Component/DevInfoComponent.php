@@ -78,7 +78,7 @@ class DevInfoComponent extends Component {
 		$this->Data = ClassRegistry::init('DevInfo6.Data');
 		$this->DBMetaData = ClassRegistry::init('DevInfo6.DBMetaData');
 		
-		$this->Logger->init('devinfo6');
+		$this->Logger->init('datawarehouse');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -99,7 +99,7 @@ class DevInfoComponent extends Component {
 	}
 
 	public function export($settings=array()) {
-		set_time_limit(0);
+		//set_time_limit(0);
 		//ini_set('max_execution_time', 300);
 
         $indicatorId = $settings['indicatorId'];
@@ -136,7 +136,6 @@ class DevInfoComponent extends Component {
 		}
 		
 		$this->Logger->start();
-		 $this->out('Ended - ' . date('Y-m-d H:i:s'));
 		try {
 			$this->Logger->write('Truncating all DevInfo tables.');
 			$this->truncateAllTables();
@@ -192,9 +191,14 @@ class DevInfoComponent extends Component {
 				$metadata 			= (!empty($indicatorNumeratorObj['description']) ? $indicatorNumeratorObj['description'] : $this->description);
 
 				//if(!isset($subgroupTypes) || empty($subgroupTypes)) $subgroupTypes = $this->getSubgroupTypefromXML($indicatorFilename);
+
 				$diIndicatorId 	= $this->Indicator->getPrimaryKey($indicatorName, $metadata);
+				$this->Logger->write("Populate ut_indicator_en - " . $indicatorName);
+
 				$diUnitId 		= $this->Unit->getPrimaryKey($unitName);
+				$this->Logger->write("Populate ut_unit_en - " . $unitName);
 				$diClassificationId = $this->IndicatorClassification->getPrimaryKey($source, $TYPE_SECTOR, $sectorId);
+				$this->Logger->write("Populate ut_indicator_classifications_en - " . $source);
 					
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
@@ -202,7 +206,7 @@ class DevInfoComponent extends Component {
 				$schoolYear = $this->SchoolYear->find('first', array('recursive'=>-1, 'conditions'=>array('SchoolYear.id'=>$schoolYearId)));
 				$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($schoolYear['SchoolYear']['name']);
 				
-
+				$this->Logger->write("Populate ut_timeperiod - " . $schoolYear['SchoolYear']['name']);
 
 				do {
 					$numeratorID = $indicatorNumeratorObj['id'];
@@ -384,9 +388,9 @@ class DevInfoComponent extends Component {
 
 							$modelData = $numeratorModelTable->query($outerQuery);
 							if(!empty($modelData)){
-								//pr($modelData);
 								$subgroups 			= $modelData[0]['Numerator']['Subgroup'];
 								$classification		= $modelData[0]['Numerator']['Subgroup'];
+
 								$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
 								$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
 								$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
@@ -400,8 +404,7 @@ class DevInfoComponent extends Component {
 								$model['Indicator_NId'] 	= $diIndicatorId;
 								$model['Unit_NId'] 			= $diUnitId;
 								$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
-								
-								$this->Data->createRecord($model);
+								//$this->Data->createRecord($model);
 							}
 						}
 						$offset += $this->limit;
