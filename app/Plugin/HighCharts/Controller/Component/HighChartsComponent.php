@@ -317,32 +317,24 @@ class HighChartsComponent extends Component {
 						$chartData['series'][$counterKey]['data'][] = $vObj;
 						$chartData['series'][$counterKey]['name'] = $selectedKey;
 					}
-					if ($linebreak && count($selectedFilterGrp) > 1) {
+					if ($linebreak) {
 						$chartData['series'][$selectedCounter]['data'][] = null;
 					}
 				}
+				//$counter++;
 			}
-		//	$counter++;
+		//	
 		}
+		
+		//pr($chartData);
 		return $chartData;
 	}
 
+	//Currently is being use in dashboard only
 	private function setupLineChartDataset($data, $linebreak = false) {
 		$chartData = array();
 		$dataStructure = $this->reformatDataWithNewStructure($data);
 
-		//$selectedFilterGrp = ($this->plotBy == 'subgroup')? $this->selectedDimensions:$this->selectedAreaID;
-	/*	switch ($this->plotBy) {
-			case 'indicator':
-				$selectedFilterGrp = $this->selectedAreaID;
-				break;
-			case 'dimension':
-			case 'subgroup':
-			default:
-				$selectedFilterGrp = $this->selectedDimensions;
-				break;
-		}*/
-		
 		$selectedFilterGrp = $this->selectedIndicator;
 		//Format Data to fusionchart structure
 		$counter = 0;
@@ -350,25 +342,16 @@ class HighChartsComponent extends Component {
 			foreach ($sData as $sKey => $yData) {
 				foreach ($yData as $yKey => $aData) {
 					foreach ($aData as $aKey => $vObj) {
-						/*switch ($this->plotBy) {
-							case 'indicator':
-								$selectedKey = $aKey;
-								break;
-							case 'dimension':
-							case 'subgroup':
-							default:
-								$selectedKey = $sKey;
-								break;
-						}*/
 						$selectedKey = $iKey;
+						$selectedCounter = $counterKey;
 						//	$selectedKey = ($this->plotBy == 'subgroup')?$sKey:$aKey;
 						$counterKey = array_search($selectedKey, $selectedFilterGrp);
 						$chartData['series'][$counterKey]['data'][] = $vObj;
 						$chartData['series'][$counterKey]['name'] = $selectedKey;
 					}
-					/*if ($linebreak && count($selectedFilterGrp) > 1) {
-						$chartData['series'][$counter]['data'][] = null;
-					}*/
+					if ($linebreak) {
+						$chartData['series'][$selectedCounter]['data'][] = null;
+					}
 				}
 			}
 			$counter++;
