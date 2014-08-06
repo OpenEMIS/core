@@ -14,47 +14,24 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class FieldOptionBehavior extends ModelBehavior {
-	public $optionFields = array(
-		'fields' => array(
-			array('field' => 'id', 'type' => 'hidden'),
-			array('field' => 'name'),
-			array('field' => 'international_code'),
-			array('field' => 'national_code'),
-			array('field' => 'visible', 'type' => 'select'),
-			array('field' => 'default', 'type' => 'select'),
-			array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-			array('field' => 'modified', 'label' => 'Modified On', 'edit' => false),
-			array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-			array('field' => 'created', 'label' => 'Created On', 'edit' => false)
-		)
-	);
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
-		)
-	);
-	
+class FieldOptionBehavior extends ModelBehavior {	
 	public function setup(Model $model, $settings = array()) {
+		$validate = array(
+			'name' => array(
+				'ruleRequired' => array(
+					'rule' => 'notEmpty',
+					'required' => true,
+					'message' => 'Please enter a valid Option'
+				)
+			)
+		);
+		
 		$schema = $model->schema();
-		foreach($this->validate as $name => $rule) {
+		foreach($validate as $name => $rule) {
 			if(!array_key_exists($name, $model->validate) && array_key_exists($name, $schema)) {
 				$model->validate[$name] = $rule;
 			}
 		}
-		/*
-		if (!isset($this->settings[$model->alias])) {
-			$this->settings[$model->alias] = array(
-				'model' => 'FieldOptionValue'
-			);
-		}
-		$this->settings[$model->alias] = array_merge($this->settings[$model->alias], (array)$settings);
-		*/
 	}
 	
 	public function reorder(Model $model, $data, $conditions=array()) {
@@ -155,24 +132,42 @@ class FieldOptionBehavior extends ModelBehavior {
 	}
 	
 	public function getOptionFields(Model $model) {
-		$schema = $model->schema();
-		$fields = $this->optionFields;
-		foreach($fields['fields'] as $key => $field) {
-			if(!isset($schema[$field['field']])) {
-				unset($fields['fields'][$key]);
-			} else {
-				if($field['field'] === 'visible' && $field['type'] === 'select') {
-					$fields['fields'][$key]['options'] = array(1 => __('Yes'), 0 => __('No'));
-				} else if($field['field'] === 'default' && $field['type'] === 'select') {
-					$fields['fields'][$key]['options'] = array(1 => __('Yes'), 0 => __('No'));
-					$fields['fields'][$key]['default'] = 0;
-				}
-			}
+		$fields = $model->getFields();
+		
+		if (array_key_exists('order', $fields)) {
+			$fields['order']['type'] = 'hidden';
+			$fields['order']['default'] = 0;
 		}
-		$fields['model'] = $model->alias;
+		if (array_key_exists('visible', $fields)) {
+			$fields['visible']['labelKey'] = 'FieldOption';
+			$fields['visible']['type'] = 'select';
+			$fields['visible']['default'] = 1;
+			$fields['visible']['options'] = array(1 => __('Yes'), 0 => __('No'));
+		}
+		if (array_key_exists('default', $fields)) {
+			$fields['default']['default'] = 0;
+			$fields['default']['type'] = 'select';
+			$fields['default']['options'] = array(1 => __('Yes'), 0 => __('No'));
+		}
+		if (array_key_exists('editable', $fields)) {
+			$fields['editable']['visible'] = false;
+		}
+		if (array_key_exists('field_option_id', $fields)) {
+			$fields['field_option_id']['type'] = 'hidden';
+		}
+		if (array_key_exists('international_code', $fields)) {
+			$fields['international_code']['labelKey'] = 'general';
+			$fields['international_code']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		}
+		if (array_key_exists('national_code', $fields)) {
+			$fields['national_code']['labelKey'] = 'general';
+			$fields['national_code']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		}
+		$model->fields = $fields;
 		return $fields;
 	}
 	
+	/*
 	public function addOptionField(Model $model, $addField, $mode, $targetField) {
 		$newOptionFields = array();
 		foreach($this->optionFields['fields'] as $key => $obj) {
@@ -197,5 +192,18 @@ class FieldOptionBehavior extends ModelBehavior {
 				}
 			}
 		}
+	}
+	*/
+	
+	public function getRender(Model $model) {
+		return array();
+	}
+	
+	public function postAdd($controller) {
+		return false;
+	}
+	
+	public function postEdit($controller) {
+		return false;
 	}
 }

@@ -81,7 +81,10 @@ class LabelHelper extends AppHelper {
 			'compile' => 'Compile',
 			'next' => 'Next',
 			'previous' => 'Previous',
-			'reset' => 'Reset'
+			'reset' => 'Reset',
+			'preview' => 'Preview',
+			'international_code' => 'International Code',
+			'national_code' => 'National Code'
 		),
 		'gender' => array(
 			'm' => 'Male',
@@ -340,6 +343,13 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
+		
+		'CensusGrid' => array(
+			'x_title' => 'Table Header',
+			'x_categories' => 'Columns',
+			'y_categories' => 'Rows',
+			'update_preview' => 'Update Preview'
+		)
 	);
 	
 	public function get($code) {
