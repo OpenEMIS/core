@@ -10,7 +10,7 @@ if(isset($conditionId)) {
 }
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 
-$this->end(); // end contentActions
+$this->end();
 
 $this->start('contentBody');
 
