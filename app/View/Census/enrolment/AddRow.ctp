@@ -1,4 +1,4 @@
-<tr age="<?php echo $age; ?>" gender="male" type="input">
+<tr age="<?php echo $age; ?>" gender="male" type="input" gender_id="<?php echo $maleGenderId; ?>">
     <td rowspan="2">
         <div class="input_wrapper">
             <?php
@@ -47,7 +47,7 @@
         <span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="CensusEnrolment.removeRow(this);"></span>
     </td>
 </tr>
-<tr age="<?php echo $age; ?>" gender="female" type="input">
+<tr age="<?php echo $age; ?>" gender="female" type="input" gender_id="<?php echo $femaleGenderId; ?>">
     <td>F</td>
     <?php 
         foreach($gradeList AS $gradeId => $gradeName){
