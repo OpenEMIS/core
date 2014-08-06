@@ -64,7 +64,7 @@ echo $this->element('census/year_options');
 				
 				<?php foreach($obj['dataRowsArr'] AS $row){?>
 					<?php if($row['type'] == 'input'){?>
-						<tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>" type="input">
+						<tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>" type="input" gender_id="<?php echo $row['genderId']; ?>">
 					<?php }else{?>
 						<tr>
 					<?php }?>
@@ -165,6 +165,9 @@ echo $this->element('census/year_options');
 			</tbody>
 		</table>
 	</div>
+	<?php if($_add) { ?>
+		<div class="row"><a class="void icon_plus" url="Census/enrolmentAddRow"><?php echo __('Add').' '.__('Age'); ?></a></div>
+	<?php } ?>
 </fieldset>
 
 <?php endforeach; ?>
