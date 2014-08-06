@@ -16,9 +16,9 @@ $this->start('contentBody');
 
 $formURL = array_merge($params, array('action' => 'add'));
 $formOptions = $this->FormUtility->getFormOptions($formURL);
-echo $this->Form->create($fields['model'], $formOptions);
+echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('order', array('value' => 0));
-echo $this->element('layout/edit', array('fields' => $fields));
+echo $this->element('edit');
 echo $this->FormUtility->getFormButtons(array('cancelURL' => $params));
 echo $this->Form->end();
 

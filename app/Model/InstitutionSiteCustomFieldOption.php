@@ -48,23 +48,6 @@ class InstitutionSiteCustomFieldOption extends AppModel {
 		return $data;
 	}
 	
-	public function getOptionFields() {
-		$options = $this->getSubOptions();
-		$suboptions = array();
-		foreach($options as $key => $opt) {
-			foreach($opt as $id => $name) {
-				$suboptions[$id] = $name;
-			}
-		}
-		$value = array('field' => 'value', 'type' => 'text');
-		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $suboptions);
-		$this->removeOptionFields(array('name', 'international_code', 'national_code'));
-		$this->addOptionField($field, 'after', 'id');
-		$this->addOptionField($value, 'after', $this->getConditionId());
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
-	}
-	
 	public function getConditionId() {
 		return 'institution_site_custom_field_id';
 	}
