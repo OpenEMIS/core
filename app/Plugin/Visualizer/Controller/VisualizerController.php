@@ -44,13 +44,13 @@ class VisualizerController extends VisualizerAppController {
 			}
 			
 			if (!$this->Session->check('visualizer.wizard')) {
-				$tabs['indicator'] = array('name' => 'Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator');
-				$tabs['unit'] = array('name' => 'Unit', 'url' => $rootURL.'Visualizer/unit');
-				$tabs['dimension'] = array('name' => 'Dimension', 'url' => $rootURL.'Visualizer/dimension');
-				$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/area');
-				$tabs['time'] = array('name' => 'Time', 'url' => $rootURL.'Visualizer/time');
-				$tabs['source'] = array('name' => 'Source', 'url' => $rootURL.'Visualizer/source');
-				$tabs['review'] = array('name' => 'Review', 'url' => $rootURL.'Visualizer/review');
+				$tabs['indicator'] = array('name' => 'Indicator', 'state' => 'active', 'url' => $rootURL.'Visualizer/indicator', 'showStep' => true);
+				$tabs['unit'] = array('name' => 'Unit', 'url' => $rootURL.'Visualizer/unit', 'showStep' => true);
+				$tabs['dimension'] = array('name' => 'Dimension', 'url' => $rootURL.'Visualizer/dimension', 'showStep' => true);
+				$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/area', 'showStep' => true);
+				$tabs['time'] = array('name' => 'Time', 'url' => $rootURL.'Visualizer/time', 'showStep' => true);
+				$tabs['source'] = array('name' => 'Source', 'url' => $rootURL.'Visualizer/source', 'showStep' => true);
+				$tabs['review'] = array('name' => 'Review', 'url' => $rootURL.'Visualizer/review', 'showStep' => true);
 			} else {
 				$tabs = $this->Session->read('visualizer.wizard');
 				if (array_key_exists($currentPg, $tabs)) {
@@ -92,7 +92,7 @@ class VisualizerController extends VisualizerAppController {
 			$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/visualization/area/'.$id);
 			$tabs['pie'] = array('name' => 'Pie', 'url' => $rootURL.'Visualizer/visualization/pie/'.$id);
 			$tabs['scatter'] = array('name' => 'Scatter', 'url' => $rootURL.'Visualizer/visualization/scatter/'.$id);
-	//		$tabs['hightchart'] = array('name' => 'HighChart', 'url' => $rootURL.'Visualizer/visualization/hightchart/'.$id);
+		//	$tabs['map'] = array('name' => 'Map', 'url' => $rootURL.'Visualizer/visualization/map/'.$id);
 			
 			if(!empty($this->params['pass'][0])){
 				$selectedTab = $this->params['pass'][0];
