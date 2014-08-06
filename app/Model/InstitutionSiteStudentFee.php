@@ -102,13 +102,27 @@ class InstitutionSiteStudentFee extends AppModel {
 			$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
 		}else{
 			$gradeOptions = $EducationGrade->getGradeOptions($selectedProgramme, null);
-			$programmes = $EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('EducationProgramme.*'), 'conditions'=>array('EducationProgramme.id'=>$selectedProgramme)));
+			
+			$programmesTemp =  $EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('InstitutionSiteProgramme.id', 'EducationProgramme.*'),
+			'joins' => array(
+					array(
+						'table' => 'institution_site_programmes',
+						'alias' => 'InstitutionSiteProgramme',
+						'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+					),
+			),
+		 	'conditions'=>array('EducationProgramme.id'=>$selectedProgramme, 'InstitutionSiteProgramme.institution_site_id'=>$institutionSiteId)));
+			//$programmes = $EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('EducationProgramme.*'), 'conditions'=>array('EducationProgramme.id'=>$selectedProgramme)));
+			if(!empty($programmesTemp)){
+				$programmes['EducationProgramme'] = $programmesTemp['EducationProgramme'];
+				$programmes['EducationProgramme']['education_programme_id'] = $programmesTemp['EducationProgramme']['id'];
+				$programmes['EducationProgramme']['id'] = $programmesTemp['InstitutionSiteProgramme']['id'];
+			}
 		}
-
 		if(!empty($programmes)){
 
 			foreach($programmes as $key => $programme){
-				$conditions['EducationGrade.education_programme_id'] = (isset($programme['education_programme_id']) ? $programme['education_programme_id'] : $programme['id']);
+				$conditions['EducationGrade.education_programme_id'] = $programme['education_programme_id'];
 				if(!empty($selectedGrade)){
 					$conditions['EducationGrade.id'] = $selectedGrade;
 				}
@@ -364,7 +378,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			$conditions['InstitutionSiteProgramme.institution_site_id'] = $institutionSiteId;
 			$conditions['EducationGrade.id'] = $gradeCondition;
 
-			$fees = $this->InstitutionSiteFee->find('all', array(
+			$fees = ClassRegistry::init('EducationProgramme')->find('all', array(
 				'recursive' => -1,
 				'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name', 'InstitutionSiteFee.id', 
 					'InstitutionSiteStudentFee.id', 'InstitutionSiteStudentFee.total_paid', 'InstitutionSiteFee.total_fee',
@@ -374,11 +388,6 @@ class InstitutionSiteStudentFee extends AppModel {
 					array(
 						'table' => 'education_grades',
 						'alias' => 'EducationGrade',
-						'conditions' => array('EducationGrade.id = InstitutionSiteFee.education_grade_id')
-					),
-					array(
-						'table' => 'education_programmes',
-						'alias' => 'EducationProgramme',
 						'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
 					),
 					array(
@@ -399,6 +408,12 @@ class InstitutionSiteStudentFee extends AppModel {
 						'table' => 'students',
 						'alias' => 'Student',
 						'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
+					),
+					array(
+						'type' => 'LEFT',
+						'table' => 'institution_site_fees',
+						'alias' => 'InstitutionSiteFee',
+						'conditions' => array('InstitutionSiteFee.education_grade_id = EducationGrade.id')
 					),
 					array(
 						'type' => 'LEFT',
@@ -432,6 +447,8 @@ class InstitutionSiteStudentFee extends AppModel {
 				}
 			}
 		}
+
+		pr($data);
 		
 		return $data;
 	}
