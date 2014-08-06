@@ -37,9 +37,11 @@ if (!empty($tableRowData)) {
 
 //setup pagination
 if ($this->Paginator->counter('{:pages}') > 1) {
+	$this->Paginator->options(array('url' => array('action' => 'area')));
 	$pgData = $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions());
 	$pgData .= $this->Paginator->numbers($this->Utility->getPageNumberOptions());
 	$pgData .= $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions());
+
 	$ajaxTableData['pages'] = $pgData;
 }
 $ajaxTableData['rows'] = $this->Html->tableCells($tableData);

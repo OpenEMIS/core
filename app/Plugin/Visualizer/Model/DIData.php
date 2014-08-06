@@ -18,7 +18,8 @@ class DIData extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_data';
 	
-	public function getTimePeriodList($ius){
+	public function getTimePeriodList($ius, $order = NULL){
+		$order = (empty($order))? NULL:array($order);
 		$data = $this->find('all', array(
 			'conditions' => array('DIData.IUSNID' => $ius),
 			'group' => array('DIData.TimePeriod_NId' ),
@@ -29,7 +30,8 @@ class DIData extends VisualizerAppModel {
 					'alias' => 'TimePeriod',
 					'conditions' => array('TimePeriod.TimePeriod_NId = DIData.TimePeriod_NId')
 				),
-			)
+			),
+			'order' => $order
 		));
 		return $data;
 	}
