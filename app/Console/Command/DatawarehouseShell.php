@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class DatawarehouseShell extends AppShell {
-    public $uses = array('DataProcessing.BatchProcess','Reports.BatchReport', 'Datawarehouse.DatawarehouseIndicator');
+    public $uses = array('DataProcessing.BatchProcess','Datawarehouse.DatawarehouseIndicator');
 	
   	public $tasks = array('Common');
       
@@ -93,27 +93,20 @@ class DatawarehouseShell extends AppShell {
     		$this->autoRender = false;
         try {
           $this->BatchProcess->start($BatchProcessId);
-          /*$settings['onBeforeGenerate'] = array('callback' => array($this->BatchProcess, 'check'), 'params' => array($BatchProcessId));
+          $settings['onBeforeGenerate'] = array('callback' => array($this->BatchProcess, 'check'), 'params' => array($BatchProcessId));
           $settings['onError'] = array('callback' => array($this->BatchProcess, 'error'), 'params' => array($BatchProcessId));
-          
-          /* Not required to run the indicator
-          //$indicatorIds = $this->BatchProcess->field('reference_id', array('id' => $processId));
-          
-          $Indicator = new IndicatorComponent(new ComponentCollection);
-          $Indicator->init();
-          $log = $Indicator->run($settings);
-          */
+    
           $this->out('test');
-         pr($settings);
+          pr($settings);
           
-         /*
+     
           $format = 'Datawarehouse';
-          $componentObj = $format.'Component';
+          $componentObj = 'DevInfoComponent';
           App::uses($componentObj, $format.'.Controller/Component');
           $component = new $componentObj(new ComponentCollection);
           $component->init();
           $log = $component->export($settings);
-          $this->BatchProcess->completed($BatchProcessId, $log);*/
+          $this->BatchProcess->completed($BatchProcessId, $log);
         } catch(Exception $ex) {
           echo $ex->getMessage() . "\n\n";
         }
