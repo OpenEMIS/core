@@ -167,34 +167,6 @@ class FieldOptionBehavior extends ModelBehavior {
 		return $fields;
 	}
 	
-	/*
-	public function addOptionField(Model $model, $addField, $mode, $targetField) {
-		$newOptionFields = array();
-		foreach($this->optionFields['fields'] as $key => $obj) {
-			if($mode == 'after') {
-				$newOptionFields[] = $obj;
-			}
-			if($obj['field'] === $targetField) {
-				$newOptionFields[] = $addField;
-			}
-			if($mode == 'before') {
-				$newOptionFields[] = $obj;
-			}
-		}
-		$this->optionFields['fields'] = $newOptionFields;
-	}
-	
-	public function removeOptionFields(Model $model, $fields = array()) {
-		if(is_array($fields)) {
-			foreach($this->optionFields['fields'] as $key => $obj) {
-				if(in_array($obj['field'], $fields)) {
-					unset($this->optionFields['fields'][$key]);
-				}
-			}
-		}
-	}
-	*/
-	
 	public function getRender(Model $model) {
 		return array();
 	}

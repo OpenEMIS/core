@@ -194,6 +194,9 @@ class LabelHelper extends AppHelper {
 		'FinanceType' => array(
 			'finance_nature_id' => 'Nature'
 		),
+		'FinanceCategory' => array(
+			'finance_type_id' => 'Type'
+		),
 		'ContactType' => array(
 			'contact_option_id' => 'Contact Option'
 		),

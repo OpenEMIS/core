@@ -163,11 +163,6 @@ class FieldOptionController extends AppController {
 			$conditionId = key($this->request->params['named']);
 			$selectedSubOption = current($this->request->params['named']);
 			$this->set(compact('conditionId', 'selectedSubOption'));
-			foreach($fields['fields'] as $key => $obj) {
-				if($obj['field']==$conditionId) {
-					$fields['fields'][$key]['default'] = $selectedSubOption;
-				}
-			}
 		}
 		
 		if($this->request->is(array('post', 'put'))) {
