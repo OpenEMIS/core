@@ -142,39 +142,32 @@ class CensusStudent extends AppModel {
 		return $data;
 	}
 	
-	public function saveCensusData($data, $institutionSiteId,$source=0) {
+	public function saveCensusData($data, $institutionSiteId, $source = 0) {
 		$keys = array();
 		$deleted = array();
-		
-		if(isset($data['deleted'])) {
-			 $deleted = $data['deleted'];
-			 unset($data['deleted']);
+
+		if (isset($data['deleted'])) {
+			$deleted = $data['deleted'];
+			unset($data['deleted']);
 		}
-		foreach($deleted as $id) {
+		foreach ($deleted as $id) {
 			$this->delete($id);
 		}
-				
-		for($i=0; $i<sizeof($data); $i++) {
+
+		for ($i = 0; $i < sizeof($data); $i++) {
 			$row = $data[$i];
-			if($row['age'] > 0 && (($row['male'] !== '' && $row['male'] >= 0) || ($row['female'] !== '' && $row['female'] >= 0))) {
-								if($row['male'] === ''){
-								   $row['male'] = 0; 
-								}
-								
-								if($row['female'] === ''){
-									$row['female'] = 0;
-								}
-								
-				if($row['id'] == 0) {
+			if ($row['age'] > 0 && !empty($row['value'])) {
+				if ($row['id'] == 0) {
 					$this->create();
 				}
+				
 				$row['institution_site_id'] = $institutionSiteId;
 				$row['source'] = $source;
 				$save = $this->save(array('CensusStudent' => $row));
-				if($row['id'] == 0) {
-					$keys[strval($i+1)] = $save['CensusStudent']['id'];
+				if ($row['id'] == 0) {
+					$keys[strval($i + 1)] = $save['CensusStudent']['id'];
 				}
-			} else if($row['id'] > 0 && $row['male'] === '' && $row['female'] === '') {
+			} else if ($row['id'] > 0 && empty($row['value'])) {
 				$this->delete($row['id']);
 			}
 		}
@@ -473,19 +466,21 @@ class CensusStudent extends AppModel {
 		foreach ($censusDataOrderByAge AS $row) {
 			$recordId = $row['id'];
 			$age = $row['age'];
+			$education_grade_id = $row['education_grade_id'];
+			$source = $row['source'];
 			
 			if($row['genderName'] == 'Male'){
 				$male = $row['value'];
 				$enrolmentArr[$age][$education_grade_id]['male'] = $male;
+				
+				$enrolmentArr[$age][$education_grade_id]['censusId']['male'] = $recordId;
 			}else if($row['genderName'] == 'Female'){
 				$female = $row['value'];
 				$enrolmentArr[$age][$education_grade_id]['female'] = $female;
+				
+				$enrolmentArr[$age][$education_grade_id]['censusId']['female'] = $recordId;
 			}
-			
-			$education_grade_id = $row['education_grade_id'];
-			$source = $row['source'];
 
-			$enrolmentArr[$age][$education_grade_id]['censusId'] = $recordId;
 			$enrolmentArr[$age][$education_grade_id]['source'] = $source;
 
 			if (!in_array($age, $ageRange)) {
@@ -521,7 +516,7 @@ class CensusStudent extends AppModel {
 				if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
 					if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['male'])){
 						$tempRowMale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
-						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['male'];
 						$tempRowMale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
 						//$tempRowMale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
 
@@ -547,7 +542,7 @@ class CensusStudent extends AppModel {
 						}
 
 						if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
-							$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+							$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['male'];
 						} else {
 							$tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
 						}
@@ -566,7 +561,7 @@ class CensusStudent extends AppModel {
 					$tempRowMale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
 
 					if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
-						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['male'];
 					} else {
 						$tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
 					}
@@ -577,7 +572,7 @@ class CensusStudent extends AppModel {
 				if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
 					if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['female'])){
 						$tempRowFemale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
-						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['female'];
 						$tempRowFemale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
 						//$tempRowFemale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
 
@@ -602,7 +597,7 @@ class CensusStudent extends AppModel {
 						}
 
 						if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
-							$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+							$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['female'];
 						} else {
 							$tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
 						}
@@ -622,7 +617,7 @@ class CensusStudent extends AppModel {
 					$tempRowFemale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
 
 					if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
-						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['female'];
 					} else {
 						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
 					}
@@ -730,6 +725,10 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
+		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+		
+		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
+		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
 	
 		$admission_age = $age;
 		$agePlus = $ConfigItem->getValue('admission_age_plus');
@@ -754,24 +753,26 @@ class CensusStudent extends AppModel {
 		//pr($gradeList);
 
 		$censusDataOrderByAge = $this->getCensusDataOrderByAge($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId);
-		//pr($censusDataOrderByAge);
+		//pr($censusDataOrderByAge);die;
 		$enrolmentArr = array();
 		foreach ($censusDataOrderByAge AS $row) {
 			$recordId = $row['id'];
 			$age = $row['age'];
+			$education_grade_id = $row['education_grade_id'];
+			$source = $row['source'];
 			
 			if($row['genderName'] == 'Male'){
 				$male = $row['value'];
 				$enrolmentArr[$age][$education_grade_id]['male'] = $male;
+				
+				$enrolmentArr[$age][$education_grade_id]['censusId']['male'] = $recordId;
 			}else if($row['genderName'] == 'Female'){
 				$female = $row['value'];
 				$enrolmentArr[$age][$education_grade_id]['female'] = $female;
+				
+				$enrolmentArr[$age][$education_grade_id]['censusId']['female'] = $recordId;
 			}
-			
-			$education_grade_id = $row['education_grade_id'];
-			$source = $row['source'];
 
-			$enrolmentArr[$age][$education_grade_id]['censusId'] = $recordId;
 			$enrolmentArr[$age][$education_grade_id]['source'] = $source;
 
 			if (!in_array($age, $ageRange)) {
@@ -794,6 +795,7 @@ class CensusStudent extends AppModel {
 			$tempRowMale['type'] = 'input';
 			$tempRowMale['age'] = $ageOnCheck;
 			$tempRowMale['gender'] = 'M';
+			$tempRowMale['genderId'] = $maleGenderId;
 			$tempRowMale['data']['age'] = $ageOnCheck;
 			$tempRowMale['data']['gender'] = 'M';
 			if(!in_array($ageOnCheck, $ageRangeStand)){
@@ -804,13 +806,14 @@ class CensusStudent extends AppModel {
 			$tempRowFemale['type'] = 'input';
 			$tempRowFemale['age'] = $ageOnCheck;
 			$tempRowFemale['gender'] = 'F';
+			$tempRowFemale['genderId'] = $femaleGenderId;
 			$tempRowFemale['data']['gender'] = 'F';
 
 			foreach ($gradeList AS $gradeId => $gradeName) {
 				if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
 					if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['male'])){
 						$tempRowMale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
-						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['male'];
 						$tempRowMale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
 						//$tempRowMale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
 
@@ -836,7 +839,7 @@ class CensusStudent extends AppModel {
 						}
 
 						if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
-							$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+							$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['male'];
 						} else {
 							$tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
 						}
@@ -855,7 +858,7 @@ class CensusStudent extends AppModel {
 					$tempRowMale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
 
 					if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
-						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['male'];
 					} else {
 						$tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
 					}
@@ -866,7 +869,7 @@ class CensusStudent extends AppModel {
 				if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
 					if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['female'])){
 						$tempRowFemale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
-						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['female'];
 						$tempRowFemale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
 						//$tempRowFemale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
 
@@ -891,7 +894,7 @@ class CensusStudent extends AppModel {
 						}
 
 						if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
-							$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+							$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['female'];
 						} else {
 							$tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
 						}
@@ -911,7 +914,7 @@ class CensusStudent extends AppModel {
 					$tempRowFemale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
 
 					if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
-						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId']['female'];
 					} else {
 						$tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
 					}
@@ -976,7 +979,7 @@ class CensusStudent extends AppModel {
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 			
 		$this->render = false;
-		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+
 		if($controller->request->is('get')) {
 			$yearId = $controller->params['pass'][0];
 			//$gradeId = $controller->params->query['gradeId'];
@@ -1012,9 +1015,10 @@ class CensusStudent extends AppModel {
 	}
 	
 	public function enrolmentAddRow($controller, $params) {
-		$EducationProgramme = ClassRegistry::init('EducationProgramme');
-			
 		$controller->layout = 'ajax';
+		
+		$EducationProgramme = ClassRegistry::init('EducationProgramme');
+
 		$age = $controller->params->query['age'];
 		$programmeId = $controller->params->query['programmeId'];
 				
@@ -1028,7 +1032,12 @@ class CensusStudent extends AppModel {
 		$conditions = array('EducationGrade.education_programme_id' => $programmeId);
 		$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 		
-		$controller->set(compact('age', 'gradeList'));	 
+		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+		
+		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
+		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+		
+		$controller->set(compact('age', 'gradeList', 'maleGenderId', 'femaleGenderId'));	 
 	}
 	
 	public function reportsGetHeader($args) {

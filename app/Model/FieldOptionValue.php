@@ -137,5 +137,31 @@ class FieldOptionValue extends AppModel {
 		));
 		return $list;
 	}
+	
+	public function getGenderIdByName($genderName) {
+		$result = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('FieldOptionValue.id'),
+			'joins' => array(
+				array(
+					'table' => 'field_options',
+					'alias' => 'FieldOption',
+					'conditions' => array(
+						'FieldOption.id = FieldOptionValue.field_option_id',
+						'FieldOption.code LIKE "Gender"'
+					)
+				)
+			),
+			'conditions' => array(
+				'FieldOptionValue.name' => $genderName
+			)
+		));
+
+		if(!empty($result)){
+			return $result['FieldOptionValue']['id'];
+		}else{
+			return NULL;
+		}
+	}
 }
 ?>

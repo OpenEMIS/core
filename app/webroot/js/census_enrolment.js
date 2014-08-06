@@ -210,32 +210,40 @@ var CensusEnrolment = {
 	
 	removeRow: function(obj) {
 		var row = $(obj).closest('tr');
-                var tbody = row.closest('tbody');
-                var age = row.attr('age');
-                var rowFemale = row.next("tr[gender='female']");
-                var currentFieldset = $(obj).closest('fieldset');
-                var totalAll = 0;
+		var tbody = row.closest('tbody');
+		var age = row.attr('age');
+		var rowFemale = row.next("tr[gender='female']");
+		var currentFieldset = $(obj).closest('fieldset');
+		var totalAll = 0;
+		var censusId;
 
-                row.find('.input_wrapper').each(function(){
-                    var censusId = $(this).attr('census_id');
-                    if(censusId !== 0){
-                        CensusEnrolment.deletedRecords.push(censusId);
-                    }
-                });
-                
+		row.find('.input_wrapper').each(function() {
+			censusId = $(this).attr('census_id');
+			if (censusId !== 0) {
+				CensusEnrolment.deletedRecords.push(censusId);
+			}
+		});
+		
+		rowFemale.find('.input_wrapper').each(function() {
+			censusId = $(this).attr('census_id');
+			if (censusId !== 0) {
+				CensusEnrolment.deletedRecords.push(censusId);
+			}
+		});
+
 		row.remove();
-                rowFemale.remove();
-                
-                var rowTotalRightCol = currentFieldset.find('td.rowTotalRightCol');
-                
-                currentFieldset.find('td.totalByAgeAllGender').each(function(){
-                    if($(this).html() !== ''){
-                        totalAll += $(this).html().toInt();
-                    }
-                });
-                
-                rowTotalRightCol.html(totalAll);
-                
+		rowFemale.remove();
+
+		var rowTotalRightCol = currentFieldset.find('td.rowTotalRightCol');
+
+		currentFieldset.find('td.totalByAgeAllGender').each(function() {
+			if ($(this).html() !== '') {
+				totalAll += $(this).html().toInt();
+			}
+		});
+
+		rowTotalRightCol.html(totalAll);
+
 	},
 	
 	validateData: function() {
@@ -259,51 +267,67 @@ var CensusEnrolment = {
 	},
 	
 	save: function() {
-		if(!CensusEnrolment.validateData()) {
-                    var alertOpt = {
-			text: i18n.Enrolment.textDuplicateAges,
-			type: alertType.warn,
-			position: 'center'
-                    };
-                    $.alert(alertOpt);
-                    return false;
+		if (!CensusEnrolment.validateData()) {
+			var alertOpt = {
+				text: i18n.Enrolment.textDuplicateAges,
+				type: alertType.warn,
+				position: 'center'
+			};
+			$.alert(alertOpt);
+			return false;
 		}
-                var yearId = $('#CensusStudentSchoolYearId').val();
-                var id, age, male, female;
-                var obj, gradeId, data = [];
-                var objTrMale, inputFieldMale;
-                $('fieldset').each(function() {
-                    obj = $(this);
-                    obj.find("tr[gender='male'][type='input']").each(function() {
-                        objTrMale = $(this);
-                        if(objTrMale.find("input#CensusStudentAge").length > 0){
-                            age = objTrMale.find("input#CensusStudentAge").val();
-                        }else{
-                            age = objTrMale.attr('age');
-                        }
-                        
-                        objTrMale.find("input#CensusStudentMale").each(function(){
-                            inputFieldMale = $(this);
-                            id = inputFieldMale.parent(".input_wrapper").attr('census_id');
-                            gradeId = inputFieldMale.parent(".input_wrapper").attr('grade_id');
-                            male = inputFieldMale.val();
-                            female = objTrMale.next("tr[gender='female']").find(".input_wrapper[census_id=" + id + "][grade_id='" + gradeId + "']").find("input#CensusStudentFemale").val();
-                            
-                            if(!age.isEmpty()) {
-					data.push({
-						id: id,
-						age: age,
-						male: male,
-						female: female,
-						education_grade_id: gradeId,
-						student_category_id: obj.find('#StudentCategoryId').val(),
-						school_year_id: yearId
-					});
+		var yearId = $('#CensusStudentSchoolYearId').val();
+		var maleCensusId, femaleCensusId, age, male, female, maleGenderId, femaleGenderId;
+		var obj, gradeId, data = [];
+		var objTrMale, inputFieldMale;
+		$('fieldset').each(function() {
+			obj = $(this);
+			obj.find("tr[gender='male'][type='input']").each(function() {
+				objTrMale = $(this);
+				if (objTrMale.find("input#CensusStudentAge").length > 0) {
+					age = objTrMale.find("input#CensusStudentAge").val();
+				} else {
+					age = objTrMale.attr('age');
 				}
-                        });
-                    });
-                });
-		
+				
+				maleGenderId = objTrMale.attr('gender_id');
+				femaleGenderId = objTrMale.next("tr[gender='female']").attr('gender_id');
+
+				objTrMale.find("input#CensusStudentMale").each(function() {
+					inputFieldMale = $(this);
+					gradeId = inputFieldMale.parent(".input_wrapper").attr('grade_id');
+					
+					maleCensusId = inputFieldMale.parent(".input_wrapper").attr('census_id');
+					femaleCensusId = objTrMale.next("tr[gender='female']").find(".input_wrapper[grade_id='" + gradeId + "']").attr('census_id');
+					
+					male = inputFieldMale.val();
+					female = objTrMale.next("tr[gender='female']").find(".input_wrapper[grade_id='" + gradeId + "']").find("input#CensusStudentFemale").val();
+
+					if (!age.isEmpty()) {
+						data.push({
+							id: maleCensusId,
+							age: age,
+							value: male,
+							gender_id: maleGenderId,
+							education_grade_id: gradeId,
+							student_category_id: obj.find('#StudentCategoryId').val(),
+							school_year_id: yearId
+						});
+						
+						data.push({
+							id: femaleCensusId,
+							age: age,
+							value: female,
+							gender_id: femaleGenderId,
+							education_grade_id: gradeId,
+							student_category_id: obj.find('#StudentCategoryId').val(),
+							school_year_id: yearId
+						});
+					}
+				});
+			});
+		});
+
 		var maskId;
 		var url = this.base + this.ajaxUrl;
 		$.ajax({
@@ -311,13 +335,13 @@ var CensusEnrolment = {
 			dataType: 'json',
 			url: url,
 			data: {data: data, deleted: CensusEnrolment.deletedRecords},
-			beforeSend: function (jqXHR) {
+			beforeSend: function(jqXHR) {
 				maskId = $.mask({id: maskId, text: i18n.General.textSaving});
 			},
-			success: function (data, textStatus) {
+			success: function(data, textStatus) {
 				var callback = function() {
-                                        window.onbeforeunload = null;
-                                        location.href = CensusEnrolment.base + CensusEnrolment.viewUrl + yearId;
+					window.onbeforeunload = null;
+					location.href = CensusEnrolment.base + CensusEnrolment.viewUrl + yearId;
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
