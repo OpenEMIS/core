@@ -27,35 +27,42 @@ echo $this->Form->input('search', array('id' => 'search'));
 
 	//$headerfirstCol = array($this->Form->input(null, array('class' => 'icheck-input', 'label' => false, 'div' => false, 'type' => 'checkbox', 'checked' => false)) => array('class' => 'checkbox-column'));
 	$headerfirstCol = array('' => array('class' => 'checkbox-column'));
-	$tableHeaders = array($headerfirstCol, __('Indicator'), __('Unit'));
+
+	$colArr = array(
+		array('name' => 'Indicator'),
+		array('name' => 'Unit', 'col' => 'Unit.Unit_Name'),
+	);
+
+	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
+	array_unshift($tableHeaders, $headerfirstCol); 
+
 
 	$tableData = array();
 	if (!empty($tableRowData)) {
 		$i = 0;
 		foreach ($tableRowData as $obj) {
-			/*if (empty($selectedUnitIds)) {
-				$checked = false;
-			} else {
-				$checked = (in_array($obj['id'], $selectedUnitIds)) ? 'checked' : false;
-			}
+			/* if (empty($selectedUnitIds)) {
+			  $checked = false;
+			  } else {
+			  $checked = (in_array($obj['id'], $selectedUnitIds)) ? 'checked' : false;
+			  }
 
-			$bodyFirstColOptions = array(
-				'type' => 'checkbox', 
-				'class' => 'icheck-input', 
-				'label' => false, 
-				'div' => false, 
-				'checked' => $checked, 
-				'value' => $obj['id'],
-				'sectionType' => 'unit', 
-				'onchange' => 'Visualizer.checkboxChange(this)',
-				'url' => 'Visualizer/ajaxUpdateUserCBSelection');
-			$additionalClass = 'checkbox-column center';
-			$input = $this->Form->input($this->action . '.id.' . $i, $bodyFirstColOptions);*/
+			  $bodyFirstColOptions = array(
+			  'type' => 'checkbox',
+			  'class' => 'icheck-input',
+			  'label' => false,
+			  'div' => false,
+			  'checked' => $checked,
+			  'value' => $obj['id'],
+			  'sectionType' => 'unit',
+			  'onchange' => 'Visualizer.checkboxChange(this)',
+			  'url' => 'Visualizer/ajaxUpdateUserCBSelection');
+			  $additionalClass = 'checkbox-column center';
+			  $input = $this->Form->input($this->action . '.id.' . $i, $bodyFirstColOptions); */
 			$bodyFirstColOptions = array('type' => 'radio', 'options' => array($obj['id'] => ''), 'value' => $selectedUnitIds, 'label' => false, 'div' => false, 'class' => false);
-			if($obj['checked']){
+			if ($obj['checked']) {
 				$bodyFirstColOptions['checked'] = 'checked';
-			}
-			else{
+			} else {
 				$bodyFirstColOptions['checked'] = false;
 			}
 			$additionalClass = 'center';
@@ -70,7 +77,7 @@ echo $this->Form->input('search', array('id' => 'search'));
 			$i++;
 		}
 	}
-	echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+	echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
 	?>
 </div>
 
