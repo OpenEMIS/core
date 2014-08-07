@@ -93,7 +93,7 @@ UPDATE `reports` SET
 `category` = 'Institution General Reports' 
 WHERE `reports`.`id` =11;
 
-PDATE `reports` SET 
+UPDATE `reports` SET 
 `name` = 'Programmes',
 `category` = 'Institution Details Reports' 
 WHERE `reports`.`id` =15;
@@ -230,7 +230,7 @@ WHERE `reports`.`id` =82;
 UPDATE `reports` SET 
 `name` = 'Out of School',
 `category` = 'Student General Reports' 
-WHERE `reports`.`id` =1028
+WHERE `reports`.`id` =1028;
 
 UPDATE `reports` SET 
 `name` = 'Overview',
