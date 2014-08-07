@@ -13,7 +13,7 @@ $xCount = count($x);
 
 <div class="custom_field">
 	<div class="field_label">Preview</div>
-	<div class="field_value" style="padding-bottom: 20px;">
+	<div class="field_value">
 	
 		<?php if (!empty($obj['name'])) : ?>
 		<fieldset class="custom_section_break">
@@ -62,5 +62,11 @@ $xCount = count($x);
 		</div>
 		<?php endif ?>
 	</div>
+	<?php if ($this->action != 'view') : ?>
+	<hr />
+	<div class="center" style="margin-bottom: 20px;">
+	<?php echo $this->Form->submit($this->Label->get("$model.update_preview"), array('name' => 'submit', 'value' => 'update', 'class' => 'btn_save', 'div' => false)); ?>
+	</div>
+	<?php endif ?>
 </div>
 <hr />
