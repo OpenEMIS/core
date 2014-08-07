@@ -38,7 +38,7 @@ UPDATE `reports` SET
 `category` = 'Institution Reports' 
 WHERE `reports`.`id` =11;
 
-PDATE `reports` SET 
+UPDATE `reports` SET 
 `name` = 'Institution Programme Report',
 `category` = 'Institution Reports' 
 WHERE `reports`.`id` =15;
