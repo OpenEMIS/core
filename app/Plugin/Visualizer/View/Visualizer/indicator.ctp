@@ -25,19 +25,24 @@ echo $this->Form->input('search', array('id' => 'search'));
 	<?php
 	$tableClass = 'table-checkable table-input';
 	$headerfirstCol = array('' => array('class' => 'checkbox-column'));
+	
+	$colArr = array(
+		array('name' => 'Indicator', 'col' => 'Indicator_Name'),
+		array('name' => 'Description', 'col' => 'Indicator_Info'),
+	);
 
-	$tableHeaders = array($headerfirstCol, __('Indicator'), __('Description'));
+	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
+	array_unshift($tableHeaders, $headerfirstCol); 
 
 	$tableData = array();
 	if (!empty($tableRowData)) {
 		$i = 0;
 		foreach ($tableRowData as $obj) {
-	//	pr((($obj['checked'])? 'checked': ''));
+			//	pr((($obj['checked'])? 'checked': ''));
 			$bodyFirstColOptions = array('type' => 'radio', 'options' => array($obj['id'] => ''), 'value' => $selectedIndicatorId, 'label' => false, 'div' => false, 'class' => false);
-			if($obj['checked']){
+			if ($obj['checked']) {
 				$bodyFirstColOptions['checked'] = 'checked';
-			}
-			else{
+			} else {
 				$bodyFirstColOptions['checked'] = false;
 			}
 			$additionalClass = 'center';

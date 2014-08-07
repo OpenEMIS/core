@@ -4,6 +4,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/HighCharts/js/highcharts', false);
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
+echo $this->Html->script('Visualizer.visualizer', false);
 echo $this->Html->script('Visualizer.visualizer.visualization', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -16,8 +17,24 @@ $formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label';
 echo $this->Form->create($this->action, $formOptions);
 
 if ($visualType == 'table') {
+	$pageTitle = '';
+	
 	$tableClass = 'table-checkable table-input';
-	$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), __('Source'));
+	
+	$colArr = array(
+		array('name' => 'Time Period', 'col' => 'TimePeriod.TimePeriod'),
+		array('name' => 'Area ID', 'col' => 'DIArea.Area_ID'),
+		array('name' => 'Area Name', 'col' => 'DIArea.Area_Name'),
+		//array('name' => 'Indicator', 'col' => 'Indicator.Indicator_Name'),
+		array('name' => 'Data Value', 'col' => 'DIData.Data_Value'),
+		//array('name' => 'Unit', 'col' => 'Unit.Unit_Name'),
+		array('name' => 'Dimension', 'col' => 'SubgroupVal.Subgroup_Val'),
+		array('name' => 'Source', 'col' => 'IndicatorClassification.IC_Name'),
+	);
+
+	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
+	
+	//$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), __('Source'));
 	$tableData = array();
 	if (!empty($data)) {
 		$i = 0;
@@ -26,17 +43,21 @@ if ($visualType == 'table') {
 			$row[] = $obj['TimePeriod']['TimePeriod'];
 			$row[] = $obj['DIArea']['Area_ID'];
 			$row[] = $obj['DIArea']['Area_Name'];
-			$row[] = $obj['Indicator']['Indicator_Name'];
+			//$row[] = $obj['Indicator']['Indicator_Name'];
 			$row[] = $obj['DIData']['Data_Value'];
-			$row[] = $obj['Unit']['Unit_Name'];
+			//$row[] = $obj['Unit']['Unit_Name'];
 			$row[] = $obj['SubgroupVal']['Subgroup_Val'];
 			$row[] = $obj['IndicatorClassification']['IC_Name'];
 
+			if(empty($pageTitle)){
+				$pageTitle = sprintf('%s - %s', $obj['Indicator']['Indicator_Name'], $obj['Unit']['Unit_Name']);
+			}
 			$tableData[] = $row;
 			$i++;
 		}
 	}
-	$displayTable = $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+	$displayTable = $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
+	echo $this->Html->div('visualizer-table-caption', $pageTitle);
 	echo $this->Html->div('visualizer-list-table disable-overflow', $displayTable);
 } else {
 	if ($showVisualization) {

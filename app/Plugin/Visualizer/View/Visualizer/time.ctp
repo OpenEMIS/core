@@ -31,7 +31,14 @@ echo $this->Form->input('search', array('id' => 'search'));
 		'url' => 'Visualizer/ajaxUpdateUserCBSelection'
 		));
 	
-	$tableHeaders = array($headerfirstCol,__('Time Period'));
+	$colArr = array(
+		array('name' => 'Time Period', 'col' => 'TimePeriod.TimePeriod'),
+	);
+
+	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
+	array_unshift($tableHeaders, $headerfirstCol); 
+	
+//	$tableHeaders = array($headerfirstCol,__('Time Period'));
 
 	$tableData = array();
 	if (!empty($tableRowData)) {
@@ -63,7 +70,7 @@ echo $this->Form->input('search', array('id' => 'search'));
 			$i++;
 		}
 	}
-	echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+	echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
 	?>
 </div>
 
