@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteType extends AppModel {
 	public $actsAs = array('FieldOption');
-	public $hasMany = array('InstitutionsSite');
+	public $hasMany = array('InstitutionSite');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
