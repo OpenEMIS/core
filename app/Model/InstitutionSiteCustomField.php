@@ -43,15 +43,15 @@ class InstitutionSiteCustomField extends AppModel {
 	}
 	
 	public function getOptionFields() {
-		$siteTypeOptions = $this->getSubOptions();
-		$fieldTypeOptions = $this->getCustomFieldTypes();
-		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions, 'display' => true);
-		$siteType = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $siteTypeOptions);
-		$this->removeOptionFields(array('international_code', 'national_code'));
-		$this->addOptionField($fieldType, 'after', 'name');
-		$this->addOptionField($siteType, 'after', 'type');
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
+		parent::getOptionFields();
+		
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['institution_site_type_id']['type'] = 'select';
+		$this->fields['institution_site_type_id']['options'] = $this->getSubOptions();
+		$this->setFieldOrder('institution_site_type_id', 4);
+
+		return $this->fields;
 	}
 	
 	public function getConditionId() {

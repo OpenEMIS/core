@@ -33,11 +33,11 @@ class StaffCustomField extends StaffAppModel {
 	}
 	
 	public function getOptionFields() {
-		$fieldTypeOptions = $this->getCustomFieldTypes();
-		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions, 'display' => true);
-		$this->removeOptionFields(array('international_code', 'national_code'));
-		$this->addOptionField($fieldType, 'after', 'name');
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
+		parent::getOptionFields();
+		
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+
+		return $this->fields;
 	}
 }

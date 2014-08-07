@@ -53,14 +53,13 @@ class BankBranch extends AppModel {
 	}
 	
 	public function getOptionFields() {
-		$bankOptions = $this->getSubOptions();
-		$codeField = array('field' => 'code');
-		$bankField = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $bankOptions);
-		$this->removeOptionFields(array('international_code', 'national_code'));
-		$this->addOptionField($codeField, 'after', 'name'); // add code after name
-		$this->addOptionField($bankField, 'before', 'name'); // add bank before name
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
+		parent::getOptionFields();
+		
+		$this->fields[$this->getConditionId()]['type'] = 'select';
+		$this->fields[$this->getConditionId()]['options'] = $this->getSubOptions();
+		$this->setFieldOrder($this->getConditionId(), 1);
+
+		return $this->fields;
 	}
 	
 	public function getConditionId() {
