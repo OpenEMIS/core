@@ -389,23 +389,25 @@ class DevInfoComponent extends Component {
 							}
 							$modelData = $numeratorModelTable->query($outerQuery);
 							if(!empty($modelData)){
-								$subgroups 			= $modelData[0]['Numerator']['Subgroup'];
-								$classification		= $modelData[0]['Numerator']['Subgroup'];
+								foreach($modelData as $data){
+									$subgroups 			= $data['Numerator']['Subgroup'];
+									$classification		= $data['Numerator']['Subgroup'];
 
-								$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
-								$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
-								$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
-								
-								$model = array();
-								$model['IUSNId'] 			= $diIUSId;
-								$model['TimePeriod_NId'] 	= $diTimePeriodId;
-								$model['Area_NId'] 			= $modelData[0]['Numerator']['AreaID'];
-								$model['Data_Value'] 		= isset($modelData[0]['Numerator']['DataValue']) ? $modelData[0]['Numerator']['DataValue'] : $modelData[0][0]['DataValue'];
-								$model['Source_NId'] 		= $sourceId;
-								$model['Indicator_NId'] 	= $diIndicatorId;
-								$model['Unit_NId'] 			= $diUnitId;
-								$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
-								$this->Data->createRecord($model);
+									$diSubgroupValId 	= $this->SubgroupVal->getPrimaryKey($subgroups, $subgroupTypes);
+									$diIUSId 			= $this->IndicatorUnitSubgroup->getPrimaryKey($diIndicatorId, $diUnitId, $diSubgroupValId);
+									$this->IndicatorClassificationIUS->getPrimaryKey($diClassificationId, $diIUSId);
+									
+									$model = array();
+									$model['IUSNId'] 			= $diIUSId;
+									$model['TimePeriod_NId'] 	= $diTimePeriodId;
+									$model['Area_NId'] 			= $data['Numerator']['AreaID'];
+									$model['Data_Value'] 		= isset($data['Numerator']['DataValue']) ? $data['Numerator']['DataValue'] : $data[0]['DataValue'];
+									$model['Source_NId'] 		= $sourceId;
+									$model['Indicator_NId'] 	= $diIndicatorId;
+									$model['Unit_NId'] 			= $diUnitId;
+									$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
+									$this->Data->createRecord($model);
+								}
 							}
 						}
 					}else{
