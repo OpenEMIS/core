@@ -54,15 +54,47 @@ CREATE TABLE IF NOT EXISTS `census_students` (
 
 INSERT INTO census_students (`age`, `gender_id`, `value`, `student_category_id`, `education_grade_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 select age, @maleGenderId, male, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
-from census_students_bu;
+from census_students_bak;
 
 INSERT INTO census_students (`age`, `gender_id`, `value`, `student_category_id`, `education_grade_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 select age, @femaleGenderId, female, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
-from census_students_bu;
+from census_students_bak;
 
 -- DROP TABLE IF EXISTS `census_students_bak`;
 
 --
--- 3. 
+-- 3. chnage table census_staff
 --
+
+RENAME TABLE `census_staff` TO `census_staff_bak` ;
+
+CREATE TABLE `census_staff` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gender_id` int(11) NOT NULL,
+  `value` int(11) NOT NULL DEFAULT '0',
+  `staff_category_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `school_year_id` int(11) NOT NULL,
+  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `institution_site_id` (`institution_site_id`),
+  KEY `school_year_id` (`school_year_id`),
+  KEY `source` (`source`),
+  KEY `gender_id` (`gender_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+INSERT INTO census_staff (`gender_id`, `value`, `staff_category_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+select @maleGenderId, male, staff_category_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
+from census_staff_bak;
+
+INSERT INTO census_staff (`gender_id`, `value`, `staff_category_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+select @femaleGenderId, female, staff_category_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
+from census_staff_bak;
+
+-- DROP TABLE IF EXISTS `census_staff_bak`;
+
 

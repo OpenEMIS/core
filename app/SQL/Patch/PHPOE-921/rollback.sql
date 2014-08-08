@@ -18,5 +18,10 @@ ALTER TABLE `census_students_bak`
 RENAME TO  `census_students` ;
 
 --
--- 3. 
+-- 3. restore the original table census_staff
 --
+
+DROP TABLE IF EXISTS `census_staff`;
+
+RENAME TABLE `census_staff_bak` TO `census_staff` ;
+
