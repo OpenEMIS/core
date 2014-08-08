@@ -387,6 +387,7 @@ class DevInfoComponent extends Component {
 									,$numeratorModelTable
 								);
 							}
+							$this->Logger->write($outerQuery);
 							$modelData = $numeratorModelTable->query($outerQuery);
 							if(!empty($modelData)){
 								foreach($modelData as $data){
