@@ -46,16 +46,17 @@ class SubgroupVal extends DevInfo6AppModel {
 				$id = $save[$modelName]['id'];
 				
 				//$subgroupList = explode(' - ', $name);
-				pr($name);
 				$subgroupList = explode(', ', $name);
 				foreach($subgroupList as $subgroupName) {
 					$subgroupType = $this->getSubgroupType($subgroupTypes, $subgroupName);
-					$subgroupId = $Subgroup->getPrimaryKey($subgroupName, $subgroupType);
+					if(!empty($subgroupType)){
+						$subgroupId = $Subgroup->getPrimaryKey($subgroupName, $subgroupType);
 					
-					$model = array('SubgroupValsSubgroup' => array('Subgroup_Val_NId' => $id, 'Subgroup_NId' => $subgroupId));
-					
-					$SubgroupValsSubgroup->create();
-					$SubgroupValsSubgroup->save($model);
+						$model = array('SubgroupValsSubgroup' => array('Subgroup_Val_NId' => $id, 'Subgroup_NId' => $subgroupId));
+						
+						$SubgroupValsSubgroup->create();
+						$SubgroupValsSubgroup->save($model);
+					}
 				}
 			} else {
 				$id = $first[$modelName]['Subgroup_Val_NId'];
@@ -77,8 +78,8 @@ class SubgroupVal extends DevInfo6AppModel {
 			$subgroup = substr($subgroup, 0, strrpos($subgroup, ": "));
 		}
 		foreach($types as $type => $list) {
-			if($list==$subgroup){
-				return array($subgroup => ($type+1));
+			if($list==$subgroup || ('All ' . inflector::pluralize($list)==$subgroup)){
+				return array($list => ($type+1));
 				break;
 			}
 		}
