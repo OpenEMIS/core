@@ -38,11 +38,11 @@ class CensusStaff extends AppModel {
 			'fields' => array(
 				'StaffCategory.id AS staff_category_id',
 				'StaffCategory.name AS staff_category_name',
-				'StaffCategory.visible AS staff_category_visible',
 				'CensusStaff.id',
-				'CensusStaff.male',
-				'CensusStaff.female',
-				'CensusStaff.source'
+				'CensusStaff.value',
+				'CensusStaff.source',
+				'FieldOptionValue.id AS genderId',
+				'FieldOptionValue.name AS genderName'
 			),
 			'joins' => array(
 				array(
@@ -54,12 +54,38 @@ class CensusStaff extends AppModel {
 						'CensusStaff.institution_site_id = ' . $siteId,
 						'CensusStaff.school_year_id = ' . $yearId
 					)
+				),
+				array(
+					'table' => 'field_option_values',
+					'alias' => 'FieldOptionValue',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'CensusStaff.gender_id = FieldOptionValue.id'
+					)
 				)
 			),
+			'conditions' => array('StaffCategory.visible' => 1),
 			'order' => array('StaffCategory.order')
 		));
+		//pr($list);die;
 		
-		return $list;
+		$data = array();
+		foreach($list AS $row){
+			$censusId = $row['id'];
+			$staffCatId = $row['staff_category_id'];
+			$genderId = $row['genderId'];
+			
+			if(!empty($censusId) && !empty($genderId)){
+				$data[$staffCatId][$genderId] = array(
+					'censusId' => $censusId,
+					'value' => $row['value'],
+					'source' => $row['source']
+				);
+			}
+		}
+		//pr($data);die;
+		
+		return $data;
 	}
 	
 	public function saveCensusData($data, $institutionSiteId) {
@@ -70,12 +96,12 @@ class CensusStaff extends AppModel {
 			$obj['school_year_id'] = $yearId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			
-			if($obj['male'] > 0 || $obj['female'] > 0) {
+			if($obj['value'] > 0) {
 				if($obj['id'] == 0) {
 					$this->create();
 				}
 				$save = $this->save(array('CensusStaff' => $obj));
-			} else if($obj['id'] > 0 && $obj['male'] == 0 && $obj['female'] == 0) {
+			} else if($obj['id'] > 0 && $obj['value'] == 0) {
 				$this->delete($obj['id']);
 			}
 		}
@@ -173,10 +199,28 @@ class CensusStaff extends AppModel {
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$data = $this->getCensusData($institutionSiteId, $selectedYear);
+		//pr($data);
+		
+		$StaffCategory = ClassRegistry::init('Staff.StaffCategory');
+		$staffCategories = $StaffCategory->find('list' , array(
+			'recursive' => '-1',
+			'conditions' => array('StaffCategory.visible' => 1),
+			'order' => array('StaffCategory.order')
+		));
+		//pr($staffCategories);die;
+		
+		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
+		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+		$genderOptions = array(
+			$maleGenderId => 'Male', 
+			$femaleGenderId => 'Female'
+		);
+		//pr($genderOptions);die;
 		
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 
-		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable', 'staffCategories', 'genderOptions'));
 	}
 
 	public function staffEdit($controller, $params) {
@@ -191,11 +235,29 @@ class CensusStaff extends AppModel {
 				$controller->redirect(array('action' => 'staff', $selectedYear));
 			} else {
 				$data = $this->getCensusData($institutionSiteId, $selectedYear);
+				
+				
+				$StaffCategory = ClassRegistry::init('Staff.StaffCategory');
+				$staffCategories = $StaffCategory->find('list' , array(
+					'recursive' => '-1',
+					'conditions' => array('StaffCategory.visible' => 1),
+					'order' => array('StaffCategory.order')
+				));
 
-				$controller->set(compact('selectedYear', 'yearList', 'data'));
+				$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+				$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
+				$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+				$genderOptions = array(
+					$maleGenderId => 'Male', 
+					$femaleGenderId => 'Female'
+				);
+				//pr($genderOptions);die;
+
+				$controller->set(compact('selectedYear', 'yearList', 'data', 'staffCategories', 'genderOptions'));
 			}
 		} else {
 			$data = $controller->data['CensusStaff'];
+			//pr($data);die;
 			$yearId = $data['school_year_id'];
 			$this->saveCensusData($data, $institutionSiteId);
 			$controller->Message->alert('general.edit.success');

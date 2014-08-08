@@ -23,26 +23,45 @@ echo $this->element('census/year_options');
 			<?php
 			$tableData = array();
 			$total = 0;
-			foreach($data as $obj) {
-				if($obj['staff_category_visible'] == 1) {
-					$total += $obj['male'] + $obj['female'];
-					$recordTag="";
-					foreach ($source_type as $k => $v) {
-						if ($obj['source']==$v) {
-							$recordTag = "row_" . $k;
+
+			foreach($staffCategories AS $staffCatId => $staffCatName){
+				$maleValue = 0;
+				$femaleValue = 0;
+				
+				foreach($genderOptions AS $genderId => $genderName){
+					$recordTagMale = "";
+					$recordTagFemale = "";
+					
+					if(!empty($data[$staffCatId][$genderId])){
+						foreach ($source_type as $k => $v) {
+							if ($data[$staffCatId][$genderId]['source'] == $v) {
+								if($genderOptions[$genderId] == 'Male'){
+									$recordTagMale = "row_" . $k;
+								}else{
+									$recordTagFemale = "row_" . $k;
+								}
+							}
+						}
+						
+						if($genderName == 'Male'){
+							$maleValue = $data[$staffCatId][$genderId]['value'];
+						}else{
+							$femaleValue = $data[$staffCatId][$genderId]['value'];
 						}
 					}
-					$male = is_null($obj['male']) ? 0 : $obj['male'];
-					$female = is_null($obj['female']) ? 0 : $obj['female'];
-					$subtotal = $obj['male'] + $obj['female'];
-					$tableData[] = array(
-						$obj['staff_category_name'],
-						array($male, array('class' => 'cell-number ' . $recordTag)),
-						array($female, array('class' => 'cell-number ' . $recordTag)),
-						array($subtotal, array('class' => 'cell-number ' . $recordTag))
-					);
 				}
+				
+				$subTotal = $maleValue + $femaleValue;
+				$total += $subTotal;
+	
+				$tableData[] = array(
+					$staffCatName,
+					array($maleValue, array('class' => 'cell-number ' . $recordTagMale)),
+					array($femaleValue, array('class' => 'cell-number ' . $recordTagFemale)),
+					array($subTotal, array('class' => 'cell-number'))
+				);
 			}
+			
 			echo $this->Html->tableCells($tableData);
 			?>
 		</tbody>
