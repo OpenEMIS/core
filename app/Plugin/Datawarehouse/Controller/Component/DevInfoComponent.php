@@ -124,16 +124,17 @@ class DevInfoComponent extends Component {
 
 		$areaListId = array();
 		$areaList = $this->Area->find('list', array('fields'=>array('id', 'id'), 'conditions'=>array('Area.area_level_id'=>$areaLevelId)));
-		
+
 		foreach($areaList as $areaID){
-			$areaListId[] = $areaID;
+			$areaListId[$areaID] = $areaID;
 			$childAreaList = $this->Area->children($areaID);
 			if(!empty($childAreaList)){
 				foreach($childAreaList as $key=>$val){
-					$areaListId[] = $val['Area']['id'];
+					$areaListId[$val['Area']['id']] = $val['Area']['id'];
 				}
 			}
 		}
+
 		
 		$this->Logger->start();
 		try {
@@ -175,9 +176,10 @@ class DevInfoComponent extends Component {
 				$indicatorDenominatorFieldObj = array();
 				$indicatorDenominatorModel = array();
 				$hasDenominator = false;
+
 				if(isset($indicator['Denominator']['id'])){
 					$typeOption = array('Numerator', 'Denominator');
-					$indicatorDenominatorObj = $indicator['DatawarehouseIndicator'];
+					$indicatorDenominatorObj = $indicator['Denominator'];
 					$indicatorDenominatorFieldObj = $indicator['Denominator']['DatawarehouseField'];
 					$indicatorDenominatorModuleID = $indicatorDenominatorFieldObj['datawarehouse_module_id'];
 					$indicatorDenominatorDimensionObj = $indicator['Denominator']['DatawarehouseIndicatorDimension'];
@@ -208,6 +210,7 @@ class DevInfoComponent extends Component {
 				
 				$this->Logger->write("Populate ut_timeperiod - " . $schoolYear['SchoolYear']['name']);
 
+				$offset = 0;
 				do {
 					$numeratorID = $indicatorNumeratorObj['id'];
 					$numeratorFieldName = $indicatorNumeratorFieldObj['name'];
@@ -220,8 +223,6 @@ class DevInfoComponent extends Component {
 
 					$dbo = $numeratorModelTable->getDataSource();
 					
-					$offset = 0;
-
 					$fieldFormat = '%s(%s.%s) as %s, "%s" as Subgroup, %s as AreaID, %s as SchoolYearID';
 
 					$conditions['area_id'] = $areaListId;
@@ -230,7 +231,8 @@ class DevInfoComponent extends Component {
 					$numeratorSubgroups = $this->DatawarehouseIndicatorSubgroup->find('all', array('recursive'=>-1, 
 						'conditions'=>array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id'=>$numeratorID),
 						'limit'=>$this->limit,
-						'offset'=>$offset
+						'offset'=>$offset,
+						'page'=>ceil(1 + $offset/$this->limit)
 						)
 					);
 
@@ -278,8 +280,7 @@ class DevInfoComponent extends Component {
 									'table' => $dbo->fullTableName($numeratorModelTable),
 									'alias' => $numeratorModelName,
 									'group' =>  $group,
-									'conditions' => $numeratorSubgroupConditions,
-									'limit' => null
+									'conditions' => $numeratorSubgroupConditions
 								)
 								,$numeratorModelTable
 							);
@@ -288,20 +289,19 @@ class DevInfoComponent extends Component {
 								$denominatorJoins = array();
 
 								$denominatorID = $indicatorDenominatorObj['id'];
-								$denominatorFieldName = $indicatorDenominatorObj['name'];
+								$denominatorFieldName = $indicatorDenominatorFieldObj['name'];
 
 								$datawarehouseDenominatorSubgroups = $this->DatawarehouseIndicatorSubgroup->find('first', array('recursive'=>-1, 
 									'conditions'=>array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id'=>$denominatorID)
 									)
 								);
-
-								$denominatorModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$indicatorDenominatorObj['datawarehouse_module_id'])));
+								$denominatorModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$indicatorDenominatorModuleID)));
 								$denominatorModelName = $denominatorModule['DatawarehouseModule']['model'];
 								$denominatorModelTable = ClassRegistry::init($denominatorModelName);
 
 								$type = 'denominator';
 
-								$denominatorAggregate = $indicatorDenominatorObj['type'];
+								$denominatorAggregate = $indicatorDenominatorFieldObj['type'];
 
 								$tempJoin = array();
 								if(isset($denominatorModule['DatawarehouseModule']['joins'])){
@@ -309,14 +309,16 @@ class DevInfoComponent extends Component {
 									eval("\$tempJoin[] = $dimenJoin;");
 									$this->mergeJoin($denominatorJoins, $tempJoin);
 								}
-
-								if(!empty($indicatorDenominatorFieldObj)){
-									foreach($indicatorDenominatorFieldObj as $c){
-										$dimensionJoin = $c['DatawarehouseDimension']['joins'];
-										$tempJoin = array();
-										if(!empty($dimensionJoin)){
-											eval("\$tempJoin[] = $dimensionJoin;");
-											$this->mergeJoin($denominatorJoins, $tempJoin);
+								if(!empty($indicatorDenominatorDimensionObj) && isset($indicatorDenominatorDimensionObj[0]['datawarehouse_dimension_id'])){
+									$denominatorDimensionObj = $this->DatawarehouseDimension->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseDimension.id'=>$indicatorDenominatorDimensionObj[0]['datawarehouse_dimension_id'])));
+									if(!empty($denominatorDimensionObj)){
+										foreach($denominatorDimensionObj as $c){
+											$dimensionJoin = $c['joins'];
+											$tempJoin = array();
+											if(!empty($dimensionJoin)){
+												eval("\$tempJoin[] = $dimensionJoin;");
+												$this->mergeJoin($denominatorJoins, $tempJoin);
+											}
 										}
 									}
 								}
@@ -355,15 +357,15 @@ class DevInfoComponent extends Component {
 							switch($unitObj['id']){
 								case 2:
 								 	//RATE
-							        
+							        $outerQueryField = array('ROUND(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0),2) as DataValue', 'Numerator.Subgroup as Subgroup', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
 							        break;
 							    case 3:
 								 	//RATIO
-							       
+							       	$outerQueryField = array('CONCAT(IFNULL(Numerator.numerator,0), ":", IFNULL(Denominator.denominator,0))  as DataValue', 'Numerator.Subgroup as Subgroup', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
 							        break;
 							    case 4:
 								 	//PERCENT
-							       $outerQueryField = array('(IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100 as DataValue', 'Numerator.Subgroup as Subgroup', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
+							       $outerQueryField = array('ROUND((IFNULL(Numerator.numerator,0)/IFNULL(Denominator.denominator,0))*100,2) as DataValue', 'Numerator.Subgroup as Subgroup', 'IFNULL(Numerator.numerator, 0) as Numerator', 'IFNULL(Denominator.denominator, 0) as Denominator', 'Numerator.AreaID', 'Numerator.SchoolYearID');
 							       break;
 							}
 							if($hasDenominator){
@@ -385,7 +387,6 @@ class DevInfoComponent extends Component {
 									,$numeratorModelTable
 								);
 							}
-
 							$modelData = $numeratorModelTable->query($outerQuery);
 							if(!empty($modelData)){
 								$subgroups 			= $modelData[0]['Numerator']['Subgroup'];
@@ -399,20 +400,45 @@ class DevInfoComponent extends Component {
 								$model['IUSNId'] 			= $diIUSId;
 								$model['TimePeriod_NId'] 	= $diTimePeriodId;
 								$model['Area_NId'] 			= $modelData[0]['Numerator']['AreaID'];
-								$model['Data_Value'] 		= $modelData[0]['Numerator']['DataValue'];
+								$model['Data_Value'] 		= isset($modelData[0]['Numerator']['DataValue']) ? $modelData[0]['Numerator']['DataValue'] : $modelData[0][0]['DataValue'];
 								$model['Source_NId'] 		= $sourceId;
 								$model['Indicator_NId'] 	= $diIndicatorId;
 								$model['Unit_NId'] 			= $diUnitId;
 								$model['Subgroup_Val_NId'] 	= $diSubgroupValId;
-								//$this->Data->createRecord($model);
+								$this->Data->createRecord($model);
 							}
 						}
-						$offset += $this->limit;
 					}else{
 						break;
 					}
+					$offset += $this->limit;
 				}while(true);
 			}
+					
+			$this->Logger->write("End Processing Indicators");
+			$this->Logger->write("Creating Metadata");
+			$dbMetadata = array(
+				'DBMetaData' => array(
+					'DBMtd_Desc' => $this->description,
+					'DBMtd_PubName' => '',
+					'DBMtd_PubDate' => date('Y-m-d H:i:s'),
+					'DBMtd_PubCountry' => '',
+					'DBMtd_PubRegion' => '',
+					'DBMtd_PubOffice' => '',
+					'DBMtd_AreaCnt' => $this->DIArea->find('count'),
+					'DBMtd_IndCnt' => $this->Indicator->find('count'),
+					'DBMtd_IUSCnt' => $this->IndicatorUnitSubgroup->find('count'),
+					'DBMtd_TimeCnt' => $this->TimePeriod->find('count'),
+					'DBMtd_SrcCnt' => $this->IndicatorClassification->find('count', array(
+						'conditions' => array('IC_Parent_NId <>' => '-1', 'IC_Type' => 'SR')
+					)),
+					'DBMtd_DataCnt' => $this->Data->find('count')
+				)
+			);
+			
+			$this->DBMetaData->create();
+			$this->DBMetaData->save($dbMetadata);
+			$this->Logger->write("Completed");
 		} catch(Exception $ex) {
 			$error = $ex->getMessage();
 			$this->Logger->write("Exception encountered while exporting indicator\n\n" . $error);

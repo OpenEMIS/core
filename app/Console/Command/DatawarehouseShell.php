@@ -47,10 +47,6 @@ class DatawarehouseShell extends AppShell {
     			     $errLog = '';
       			   
       			   
-      			   /*$name2 = str_replace('_',' ',$name);
-      			     $ext = pathinfo($name2, PATHINFO_EXTENSION); 
-      			     $name = pathinfo($name2, PATHINFO_FILENAME);*/
-      			   
                 //DOUBLE CHECK if Status was Aborted or what - else just proceed with the Next QUEUE
                 $check = $this->BatchProcess->find('first',array('conditions'=>array('BatchProcess.id'=>$id)));
           
@@ -58,12 +54,9 @@ class DatawarehouseShell extends AppShell {
                 if($check['BatchProcess']['status'] != 1) continue;
 
                 // Update the status for the one Being Processed to (2) Processing
-                //$this->Common->updateStatus($id,2);
+                $this->Common->updateStatus($id,2);
          
-         
-                //Get the Report Id from Report Table
-                //$ReportRec = $this->Report->find('first',array('conditions'=>array('name'=>$name,'file_type'=>$ext)));
-
+        
                 $settings['areaLevelId'] = $areaLevelID;
                 $settings['schoolYearId'] = $schoolYearID;
                 
@@ -75,7 +68,7 @@ class DatawarehouseShell extends AppShell {
                 if($check === false) continue;
       			   
                 // Update the status for the Processed item to (3) Complete
-                //$this->Common->updateStatus($id,3);
+                $this->Common->updateStatus($id,3);
 
           } catch (Exception $e) {
             // Update the status for the Processed item to (-1) ERROR
@@ -95,9 +88,6 @@ class DatawarehouseShell extends AppShell {
           $this->BatchProcess->start($BatchProcessId);
           $settings['onBeforeGenerate'] = array('callback' => array($this->BatchProcess, 'check'), 'params' => array($BatchProcessId));
           $settings['onError'] = array('callback' => array($this->BatchProcess, 'error'), 'params' => array($BatchProcessId));
-    
-          $this->out('test');
-          pr($settings);
           
      
           $format = 'Datawarehouse';
