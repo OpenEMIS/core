@@ -24,9 +24,9 @@ foreach ($fields as $key => $field) {
 			$options['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
 		
-		if (array_key_exists($key, $data[$fieldModel])) {
+		if (array_key_exists($key, $data[$fieldModel]) || $fieldType == 'element') {
 			$value = isset($data[$fieldModel][$key]) ? $data[$fieldModel][$key] : '';
-
+			
 			switch ($fieldType) {
 				case 'select':
 					if (array_key_exists($value, $field['options'])) {
@@ -69,7 +69,11 @@ foreach ($fields as $key => $field) {
 			if (is_string($value) && strlen(trim($value)) == 0) {
 				$value = '&nbsp;';
 			}
-			$html .= sprintf($row, $label, $class, $value);
+			if (!array_key_exists('override', $field)) {
+				$html .= sprintf($row, $label, $class, $value);
+			} else {
+				echo $value;
+			}
 		} else {
 			pr(sprintf('Field [%s] does not exist in Model [%s]', $key, $fieldModel));
 		}
