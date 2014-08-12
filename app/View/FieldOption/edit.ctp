@@ -10,14 +10,14 @@ if(isset($conditionId)) {
 }
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 
-$this->end(); // end contentActions
+$this->end();
 
 $this->start('contentBody');
 
 $formURL = array_merge($params, array('action' => 'edit'));
 $formOptions = $this->FormUtility->getFormOptions($formURL);
-echo $this->Form->create($fields['model'], $formOptions);
-echo $this->element('layout/edit', array('fields' => $fields));
+echo $this->Form->create($model, $formOptions);
+echo $this->element('edit');
 echo $this->FormUtility->getFormButtons(array('cancelURL' => $params));
 echo $this->Form->end();
 

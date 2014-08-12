@@ -153,7 +153,7 @@ input.default { width: 240px; }
 .custom_section_break {
 	border: none;
 	border-top: 1px solid #CCCCCC;
-	margin: 20px 10px 0px 0px;
+	margin: 20px 10px 10px 0px;
 }
 
 .ie8 .custom_section_break {
@@ -166,6 +166,11 @@ input.default { width: 240px; }
 	font-size: 11px;
 	font-weight: bold;
 	color: #999999;
+	
+	/* override bootstrap defaults */
+	border-width: 0;
+	width: auto;
+	margin-bottom: 0;
 }
 
 .custom_field .field_label {
