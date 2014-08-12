@@ -2,6 +2,7 @@
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 if ($visualType != 'map') {
 	echo $this->Html->script('/HighCharts/js/highcharts', false);
 } else {

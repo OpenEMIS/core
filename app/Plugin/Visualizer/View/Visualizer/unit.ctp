@@ -5,6 +5,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
