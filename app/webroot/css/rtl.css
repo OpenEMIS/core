@@ -299,6 +299,11 @@ fieldset#general.section_break > .row{
 	float:right;
 }
 
+.hc_graph_wrapper:nth-child(odd){
+	margin-left: 10px !important;
+	margin-right: 0px !important;
+}
+
 fieldset.section_break > .profile-image {
 	right: auto;
 	left: 0;
@@ -309,3 +314,13 @@ fieldset.section_break > .profile-image {
 .language { float: left; }
 .version { text-align: left; }
 .col-md-offset-4 { margin-right:33.33333333333333%; }
+
+
+/* Visualizer */ 
+
+#visualizer .navbar ul{
+	padding-right: 0px !important;
+}
+#visualizer .navbar ul li{
+	float:right !important;
+}
