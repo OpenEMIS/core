@@ -17,11 +17,11 @@ echo $this->Html->link($this->Label->get('general.reset'), array('action' => 're
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Visualizer'));
-$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label';
+$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label left';
 
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($this->action, $formOptions);
-echo $this->Form->input('search', array('id' => 'searchDB', 'url' => 'Visualizer/ajaxAreaSearch'));
+echo $this->Form->input('search', array('id' => 'searchDB', 'url' => 'Visualizer/ajaxAreaSearch','reseturl' => 'Visualizer/ajaxResetSearch'));
 echo $this->Form->input('area_level', array('id'=> 'areaLevel' ,'options' => $areaLevelOptions, 'selected'=> $selectedAreaLevel,  'empty' => 'All', 'onchange' => 'Visualizer.areaLevelChange(this)', 'url' => 'Visualizer/'.$this->action));
 ?>
 <div class='visualizer-list-table disable-overflow'>

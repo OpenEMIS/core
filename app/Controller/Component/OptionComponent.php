@@ -37,4 +37,19 @@ class OptionComponent extends Component {
 		}
 		return $option;
 	}
+	
+	public function prepend($list, $items) {
+		$data = array();
+		if (!is_array($items)) {
+			$data[] = $items;
+		} else {
+			foreach ($items as $key => $value) {
+				$data[$key] = $value;
+			}	
+		}		
+		foreach ($list as $key => $value) {
+			$data[$key] = $value;
+		}
+		return $data;
+	}
 }

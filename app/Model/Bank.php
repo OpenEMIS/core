@@ -31,13 +31,5 @@ class Bank extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
-	public function getOptionFields() {
-		$codeField = array('field' => 'code');
-		$this->removeOptionFields(array('international_code', 'national_code'));
-		$this->addOptionField($codeField, 'after', 'name'); // add code after name
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
-	}
 }
 ?>
