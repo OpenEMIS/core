@@ -1078,7 +1078,7 @@ class ReportsController extends ReportsAppController {
 			$info['size'] = $this->convFileSize($info['filesize']);
 			//pr($info);
 			$info['lock'] = false;
-			$fp = fopen($file->path, "r+");
+			$fp = fopen($file->path, "r");
 
 			if (flock($fp, LOCK_EX)) {  // acquire an exclusive lock
 			    flock($fp, LOCK_UN);    // release the lock
