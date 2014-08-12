@@ -39,7 +39,16 @@ echo $this->Form->input('search', array('id' => 'search'));
 		$i = 0;
 		foreach ($tableRowData as $obj) {
 			//	pr((($obj['checked'])? 'checked': ''));
-			$bodyFirstColOptions = array('type' => 'radio', 'options' => array($obj['id'] => ''), 'value' => $selectedIndicatorId, 'label' => false, 'div' => false, 'class' => false);
+			$bodyFirstColOptions = array(
+				'type' => 'radio',
+				'options' => array($obj['id'] => ''), 
+				'value' => $selectedIndicatorId, 
+				'label' => false, 
+				'div' => false, 
+				'class' => false, 
+				'sectionType' => 'indicator', 
+				'onchange' => 'Visualizer.radioChange(this)',
+				'url' => 'Visualizer/ajaxUpdateUserRBSelection');
 			if ($obj['checked']) {
 				$bodyFirstColOptions['checked'] = 'checked';
 			} else {
