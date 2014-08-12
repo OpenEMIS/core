@@ -32,6 +32,7 @@ $this->start('contentBody');
 			if($fileType === 'csv'){
 			?>
 				<td class="table_cell col_lastgen center">
+					TEST
 					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>, 
 					<?php echo $this->Html->link('HTML', array('action' => $this->action.'ViewHtml', $arrFileInfo['basename']), array('escape' => false, 'target' => '_blank')); ?>
 				</td>
