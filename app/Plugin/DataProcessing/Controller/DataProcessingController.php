@@ -527,17 +527,17 @@ class DataProcessingController extends DataProcessingAppController {
             $areaLevelID = $this->request->data['DataProcessing']['area_level_id'];
             $schoolYearID = $this->request->data['DataProcessing']['school_year_id'];
             if(isset($this->request->data['Reports']) && !empty($this->request->data['Reports'])){
-               /*foreach($this->request->data['Reports'] as $reportId){
+                /*foreach($this->request->data['Reports'] as $reportId){
                     $settings['indicatorId'] = $reportId;
                     $settings['areaLevelId'] = $areaLevelID;
                     $settings['schoolYearId'] = $schoolYearID;
                     $this->DevInfo->export($settings);
-                } */
+                }*/
                 $this->Report->processRequest($this->data['Reports'], false);
                 $this->runJob(array('datawarehouse', 'run', $this->Session->read('configItem.language'), $areaLevelID, $schoolYearID));
             
                 $this->redirect(array('action'=>'processes'));
-
+                
             }
 		}
 		
