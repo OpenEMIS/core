@@ -98,7 +98,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		if(empty($selectedProgramme)){
 			$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
 		}else{
-			$gradeOptions = $EducationGrade->getGradeOptions($selectedProgramme, null);
+			$gradeOptions = $EducationGrade->getGradeOptions($selectedProgramme, null, true);
 			$programmes = $EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('EducationProgramme.*'), 'conditions'=>array('EducationProgramme.id'=>$selectedProgramme)));
 		}
 
@@ -109,6 +109,7 @@ class InstitutionSiteStudentFee extends AppModel {
 
 			foreach($programmes as $key => $programme){
 				$conditions['EducationGrade.education_programme_id'] = $programme['education_programme_id'];
+				$conditions['EducationGrade.visible'] = 1;
 				if(!empty($selectedGrade)){
 					$conditions['EducationGrade.id'] = $selectedGrade;
 				}
@@ -401,7 +402,8 @@ class InstitutionSiteStudentFee extends AppModel {
 				'conditions' => array(
 					'InstitutionSiteProgramme.school_year_id' => $yearId,
 					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-					'EducationGrade.id' => array_keys($programGrade['education_grades'])
+					'EducationGrade.id' => array_keys($programGrade['education_grades']),
+					'EducationGrade.visible' => 1
 				),
 				'order' => array('EducationGrade.id', 'Student.first_name', 'Student.last_name')
 			));
