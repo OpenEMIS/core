@@ -1,0 +1,1 @@
+<?php echo $this->Form->input('DatawarehouseField.'.$type.'_datawarehouse_subgroup_id', array('type'=>'select', 'multiple'=>'checkbox', 'label'=>false, 'div'=>'form-group form-subgroup', 'class'=>'col-md-12 filter-option', 'selected'=>${$type.'SelectedSubgroup'}, 'between'=>'<div class="col-md-offset-3 col-md-9">', 'options'=>${$type.'DatawarehouseSubgroupOptions'})); ?>
