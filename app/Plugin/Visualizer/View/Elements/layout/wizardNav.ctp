@@ -7,13 +7,13 @@
 				foreach ($tabs as $key => $tabValue) {
 					if($this->action != 'visualization'){
 						$icon = $this->Html->tag('i', '', array('class' => 'fa fa-2x ' . $this->Visualizer->getTabIcon($key)));
-						$iconDiv = $this->Html->div('iconDiv', $icon);
+						//$iconDiv = $this->Html->div('iconDiv', $icon);
 					}
 					else{
-						$icon = $this->Html->tag('i', '', array('class' => 'fa fa-2x ' . $this->Visualizer->getVisualizarionTabIcon($key)));
+						$icon = $this->Html->tag('i', '', array('class' =>  $this->Visualizer->getVisualizarionTabIcon($key)));
 						
-						$iconDiv = '';
-					}
+						//$iconDiv = '';
+					}$iconDiv = $this->Html->div('iconDiv', $icon);
 					
 					$state = isset($tabValue['state']) ? $tabValue['state'] : 'disabled';
 					$tabId = $count;
