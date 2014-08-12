@@ -14,9 +14,10 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class DIData extends VisualizerAppModel {
+class VisualizerData extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_data';
+	public $alias = 'DIData';
 	
 	public function getTimePeriodList($ius, $order = NULL){
 		$order = (empty($order))? NULL:array($order);
