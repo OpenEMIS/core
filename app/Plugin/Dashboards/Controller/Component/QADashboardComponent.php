@@ -116,8 +116,8 @@ class QADashboardComponent extends Component {
 	// ======================
 	//	Data Retriving 
 	// ======================
-	public function getUnitIndicatorByGID($gid){
-		$jorUnitData = ClassRegistry::init('Dashboards.JORUnit');
+	/*public function getUnitIndicatorByGID($gid){
+		$jorUnitData = ClassRegistry::init('Dashboards.Unit');
 	
 		if(is_array($gid)){
 			$gid = $this->return_flat_array($gid, 'value');
@@ -127,7 +127,7 @@ class QADashboardComponent extends Component {
 		
 		$finalData = array();
 		foreach($data as $obj){
-			$obj = $obj['JORUnit'];
+			$obj = $obj['Unit'];
 			$finalData[$obj['Unit_NId']] = $obj['Unit_Name'];
 		}
 		return $finalData;
@@ -135,7 +135,7 @@ class QADashboardComponent extends Component {
 
 
 	public function getIndicatorByGID($gid){
-		$jorIndicatorData = ClassRegistry::init('Dashboards.JORIndicator');
+		$jorIndicatorData = ClassRegistry::init('Dashboards.Indicator');
 	
 		if(is_array($gid)){
 			$gid = $this->return_flat_array($gid, 'value');
@@ -145,68 +145,75 @@ class QADashboardComponent extends Component {
 		
 		$finalData = array();
 		foreach($data as $obj){
-			$obj = $obj['JORIndicator'];
+			$obj = $obj['Indicator'];
 			$finalData[$obj['Indicator_NId']] = $obj['Indicator_Name'];
 		}
 		return $finalData;
 	}
+	*/
+	
+	public function getIUSByIndividualGId($_options){
+		$iusData = ClassRegistry::init('Dashboards.DashIndicatorUnitSubgroup');
+		$data = $iusData->getIUSByIndividualGId($_options['indicatorGId'],$_options['unitGId'],$_options['subgroupValGId']);
+		return $data;
+	}
 	
 	public function getCountry(){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getCountry();
 		return $data;
 	}
 	
 	public function getAreasByLevel($lvl){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getAreasByLevel($lvl, 'list');
 		return $data;
 	}
-	
+	/*
 	public function getAreaByGID($gid = NULL){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getAreaByAreaGId($gid);
 		return $data;
 	}
-	
-	public function getAreaById($id, $mode){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+	*/
+	public function getAreaById($id, $mode = 'all'){
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getAreaById($id, $mode);
 		return $data;
 	}
 	
 	public function getAreaName($id){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getAreaName($id);
 		return $data;
 	}
-	
+	/*
 	public function getAreaParentData($id){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getParentInfo($id);
 		return $data;
 	}
-	
+	*/
 	public function getAreaChildLevel($id, $withCode = true){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
-		$data = $jorAreaData->getChildLevel('list', $id, $withCode);
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
+		$data = $jorAreaData->getChildLevel('all', $id, $withCode);
 		return $data;
 	}
 	
 	public function getAllAreaChildByLevel($id, $lvl, $withCode = true){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
-		$data = $jorAreaData->getAllChildByLevel($id, $lvl,'list', $withCode);
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
+		$data = $jorAreaData->getAllChildByLevel($id, $lvl,'all', $withCode);
 		return $data;
 	}
-	
+	/*
 	public function getAreaAllChildLevel($id, $withCode = true){
-		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$jorAreaData = ClassRegistry::init('Dashboards.DashArea');
 		$data = $jorAreaData->getAllChildLevel('list', $id, $withCode);
 		return $data;
 	}
-	
+	*/
 	public function getAreaLevel($maxLvl = NULL){
-		$jorAreaLevel = ClassRegistry::init('Dashboards.JORAreaLevel');
+		$jorAreaLevel = ClassRegistry::init('Dashboards.DashAreaLevel');
 		
 		$data = $jorAreaLevel->getAreaLevel($maxLvl);
 		
@@ -214,35 +221,65 @@ class QADashboardComponent extends Component {
 	}
 	
 	public function getYear($id){
-		$jorTimePeriodData = ClassRegistry::init('Dashboards.JORTimePeriod');
+		$jorTimePeriodData = ClassRegistry::init('Dashboards.TimePeriod');
 		
 		$options['fields'] = array('TimePeriod_NId', 'TimePeriod');
 		$options['conditions'] = array('TimePeriod_NId' => $id);
 		
 		$data = $jorTimePeriodData->find('first', $options);
 		
-		return $data['JORTimePeriod']['TimePeriod'];
+		return $data['TimePeriod']['TimePeriod'];
 	}
 	
-	public function getYears($limit = NULL, $toYear = NULL){
-		$jorTimePeriodData = ClassRegistry::init('Dashboards.JORTimePeriod');
+	public function getYears($mode = 'list', $_options = NULL){//$id = NULL, $limit = NULL, $toYear = NULL){
+		$jorTimePeriodData = ClassRegistry::init('Dashboards.DashTimePeriod');
 		
 		$options['fields'] = array('TimePeriod_NId', 'TimePeriod');
 		$options['order'] = array('TimePeriod ASC');
-		if(!empty($limit)){
-			$options['limit'] = $limit;
+		if(!empty($_options['id'])){
+			$options['conditions'] = array('TimePeriod_NId' => $_options['id']);
 		}
-		if(!empty($toYear)){
-			$options['conditions'] = array('TimePeriod <=' => $toYear + (floor($limit/2)), 'TimePeriod >' => $toYear  - (floor($limit/2)));
+		if(!empty($_options['limit'])){
+			$options['limit'] = $_options['limit'];
 		}
-		$data = $jorTimePeriodData->find('list', $options);
+		/*if(!empty($_options['toYear'])){
+			$options['conditions'] = array('TimePeriod <=' => $_options['toYear'] + (floor($limit/2)), 'TimePeriod >' => $_options['toYear']  - (floor($limit/2)));
+		}*/
+		$data = $jorTimePeriodData->find($mode, $options);
+		
+		return $data;
+	}
+	public function getYearRange($id, $limit){
+		$jorTimePeriodData = ClassRegistry::init('Dashboards.DashTimePeriod');
+		$options['limit'] = round($limit/2);
+		$options['conditions'] = array('TimePeriod_NId <=' => $id);
+		$options['order'] = array('TimePeriod DESC');
+		
+		$data = $jorTimePeriodData->find('all', $options);
+		
+		$options['conditions'] = array('TimePeriod_NId >' => $id);
+		$options['order'] = array('TimePeriod ASC');
+		
+		$data2 = $jorTimePeriodData->find('all', $options);
+		
+		foreach($data2 as $obj){
+			$data[] = $obj;
+		}
+		
+		usort($data, array('QADashboardComponent', 'sortTime'));
 		
 		return $data;
 	}
 	
+	function sortTime($a, $b) {
+		return $a["TimePeriod"]["TimePeriod"]-$b["TimePeriod"]["TimePeriod"];
+	}
+
+	
+	/*
 	public function getSummaryJorData($options){
-		$jorIndicatorUnitSubgroupData = ClassRegistry::init('Dashboards.JORIndicatorUnitSubgroup');
-	//	pr($options['areaIds']);die;
+		$jorIndicatorUnitSubgroupData = ClassRegistry::init('Dashboards.IndicatorUnitSubgroup');
+		
 		$conditions = array('TimePeriod_NId' => $options['TimePeriod_Nid']);
 		$indicators = $this->return_flat_array($options['indicators']);
 		$unitIndicators = $this->return_flat_array($options['UnitIds']);
@@ -251,15 +288,15 @@ class QADashboardComponent extends Component {
 
 		$IUSNid = $jorIndicatorUnitSubgroupData->getIUSNid($indicators, $unitIndicators ,$subgroupVal);
 		
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$conditions = array('IUSNId' => $IUSNid,'TimePeriod_NId' => $options['TimePeriod_Nid'], 'Area_NId' => $areas);
+		$jorMainData = ClassRegistry::init('Dashboards.DIData');
+		$conditions = array('DIData.IUSNId' => $IUSNid,'DIData.TimePeriod_NId' => $options['TimePeriod_Nid'], 'DIData.Area_NId' => $areas);
 		$data = $jorMainData->getData($conditions);
 
 		return $data;
 	}
 	
 	public function getSummaryTrendJorData($options){
-		$jorIndicatorUnitSubgroupData = ClassRegistry::init('Dashboards.JORIndicatorUnitSubgroup');
+		$jorIndicatorUnitSubgroupData = ClassRegistry::init('Dashboards.IndicatorUnitSubgroup');
 		$indicators = $this->return_flat_array($options['indicators']);
 		$unitIndicators = $this->return_flat_array($options['UnitIds']);
 		$IUSNid = $jorIndicatorUnitSubgroupData->getIUSNid($indicators, $unitIndicators ,$options['Subgroup_Val_GId']);
@@ -267,7 +304,7 @@ class QADashboardComponent extends Component {
 		
 		$years = $this->return_flat_array($options['years']);
 		
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
+		$jorMainData = ClassRegistry::init('Dashboards.DIData');
 		$conditions = array('IUSNId' => $IUSNid,'TimePeriod_NId' => $years, 'Area_NId' => $areas);
 		
 		$data = $jorMainData->getData($conditions);
@@ -275,24 +312,24 @@ class QADashboardComponent extends Component {
 	}
 	
 /*	public function getSummaryAllFDBreakdownJorData($areaId,$yearId){
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$conditions = array('JORData.IUSNId' => array(8,15,18));
+		$jorMainData = ClassRegistry::init('Dashboards.DIData');
+		$conditions = array('DIData.IUSNId' => array(8,15,18));
 		$data = $jorMainData->getFDData($areaId,$yearId, $conditions);
 	
 		return $data;
 	}
 	
 	public function getSummaryAllAspectTotalKG($areaId,$yearId){
-		$conditions =  array('JORData.IUSNId' => array(20,21,22,23),'JORData.TimePeriod_NId' => $yearId);
+		$conditions =  array('DIData.IUSNId' => array(20,21,22,23),'DIData.TimePeriod_NId' => $yearId);
 		
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
+		$jorMainData = ClassRegistry::init('Dashboards.DIData');
 		$data = $jorMainData->getTotalKGData($areaId, $conditions);
 		
 		return $data;
 	}*/
 	
 	
-	// ======================
+	/*// ======================
 	//	Setup Chart Data
 	// ======================
 	public function setupChartInfo($caption){
@@ -337,7 +374,7 @@ class QADashboardComponent extends Component {
 		foreach($unitIndData as $uKey => $unit){
 			foreach($indData as $key => $indName){
 				foreach($data as $item){
-					$item = $item['JORData'];
+					$item = $item['DIData'];
 					if($item[$compareKey] == $key && $item['Unit_NId'] == $uKey){
 						$filtedData[$item[$compareKey]][$unit] = $item['Data_Value'];
 						continue;
@@ -451,7 +488,7 @@ class QADashboardComponent extends Component {
 		$xaxisKey = key($indData);
 		$dataSet = array();
 		foreach($data as $item){
-			$item = $item['JORData'];
+			$item = $item['DIData'];
 			$plotXY = ($xaxisKey == $item['Indicator_NId'])? 'x': 'y';
 			$dataSet[$item['Area_NId']][$plotXY] = $item['Data_Value'];
 		}
@@ -507,7 +544,7 @@ class QADashboardComponent extends Component {
 			foreach ($yearOptions as $yKey => $year) {
 				foreach ($unitIndData as $uKey => $unit) {
 					foreach ($data as $i => $item) {
-						$item = $item['JORData'];
+						$item = $item['DIData'];
 
 						if ($item['TimePeriod_NId'] == $yKey && $item['Indicator_NId'] == $indKey && $item['Unit_NId'] == $uKey) {
 							$filtedData[$item['Indicator_NId']][$year][$unit] = $item['Data_Value'];
@@ -537,6 +574,21 @@ class QADashboardComponent extends Component {
 
 		return $returnData;
 	}
+*/
+	
+	public function getDashboardRawData($options){
+		$dashData = ClassRegistry::init('Dashboards.DashData');
+		$selectedOptions = $dashData->getQueryOptionsSetup($options);
+		$data = $dashData->find('all', $selectedOptions);
 
+		return $data;
+	}
+	
+	public function getLatestSourceID($ius, $timeperiod){
+		$dashData = ClassRegistry::init('Dashboards.DashData');
+		$sourceId = $dashData->getLatestSourceID($ius,$timeperiod);
+	
+		return $sourceId;
+	}
 }
 ?>

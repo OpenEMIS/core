@@ -14,12 +14,13 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class JORIndicator extends DashboardsAppModel {
+class DashIndicator extends DashboardsAppModel {
 	public $useDbConfig = 'di6';
-	//public $useTable = 'ut_indicator_en';
+	public $useTable = 'ut_indicator_en';
+	public $alias = 'Indicator';
 	
 	public function getIndicatorByAreaGId($gid) {
-		$this->setSource('ut_indicator_'.$this->setupUseTableLang());
+	//	$this->setSource('ut_indicator_'.$this->setupUseTableLang());
 		$options['conditions'] = array('Indicator_GId' => $gid);
 		$data = $this->find('all', $options);
 

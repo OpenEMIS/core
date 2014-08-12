@@ -57,3 +57,20 @@ a.btn_save:active{
 .highchart-big{
 	height:713px;
 }
+
+fieldset > legend {
+	cursor: pointer;
+}
+
+fieldset > legend:hover {
+	text-decoration: underline;
+}
+
+.visualizer-table-caption{
+	font-size: 18px;
+	text-align: center;
+	color: rgb(51, 51, 51);
+	word-wrap:break-word;
+	padding: 5px 0 15px 0;
+	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
+}
