@@ -257,6 +257,7 @@ class DevInfoComponent extends Component {
 							}
 
 
+
 							if(!empty($indicatorNumeratorDimensionObj)){
 								foreach($indicatorNumeratorDimensionObj as $c){
 									$dimensionJoin = $c['DatawarehouseDimension']['joins'];
@@ -330,7 +331,6 @@ class DevInfoComponent extends Component {
 									if(!empty($datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['value'])){
 										$denominatorSubgroupConditions[] = $datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['value'];
 									} 
-
 								}
 
 								$denominatorFields = array(sprintf($fieldFormat, $denominatorAggregate, $denominatorModelName, $denominatorFieldName, strtolower($type), $datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'school_year_id'));
@@ -387,8 +387,23 @@ class DevInfoComponent extends Component {
 									,$numeratorModelTable
 								);
 							}
+
 							$this->Logger->write($outerQuery);
-							$modelData = $numeratorModelTable->query($outerQuery);
+							try{
+								$modelData = $numeratorModelTable->query($outerQuery);
+							} catch(Exception $ex) {
+								$error = $ex->getMessage();
+								$this->Logger->write("Exception encountered while executing query\n\n" . $error);
+								$logFile = $this->Logger->end();
+								
+								if(!empty($onError['callback'])) {
+									$params = array_merge($onError['params'], array($logFile));
+									if(!call_user_func_array($onError['callback'], $params)) {
+										// do something on false
+									}
+								}
+							}
+
 							if(!empty($modelData)){
 								foreach($modelData as $data){
 									$subgroups 			= $data['Numerator']['Subgroup'];
