@@ -28,8 +28,12 @@ class DataProcessingController extends DataProcessingAppController {
 		'DataProcessing.BatchProcess',
 		'SecurityUser'
 	);
+
+    public $modules = array(
+        'indicator' => 'DataProcessing.DatawarehouseIndicator'
+    ); 
 	
-	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6');
+	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'Paginator', 'Datawarehouse.Datawarehouse', 'Datawarehouse.DevInfo');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -60,10 +64,10 @@ class DataProcessingController extends DataProcessingAppController {
 		return $tmp;
 	}
 	
-	private function processGenerate($data){
-		$this->Report->processRequest($this->data['Reports']);
-			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
-			$this->redirect(array('action'=>'processes'));
+	private function processGenerate($data, $indicator=true){
+		$this->Report->processRequest($this->data['Reports'], $indicator);
+        $this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
+		$this->redirect(array('action'=>'processes'));
 	}
 
 //    public function cusIndicators() {
@@ -520,16 +524,51 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-			$this->processGenerate($this->data['Reports']);
+            $areaLevelID = $this->request->data['DataProcessing']['area_level_id'];
+            $schoolYearID = $this->request->data['DataProcessing']['school_year_id'];
+            if(isset($this->request->data['Reports']) && !empty($this->request->data['Reports'])){
+               /*foreach($this->request->data['Reports'] as $reportId){
+                    $settings['indicatorId'] = $reportId;
+                    $settings['areaLevelId'] = $areaLevelID;
+                    $settings['schoolYearId'] = $schoolYearID;
+                    $this->DevInfo->export($settings);
+                } */
+                $this->Report->processRequest($this->data['Reports'], false);
+                $this->runJob(array('datawarehouse', 'run', $this->Session->read('configItem.language'), $areaLevelID, $schoolYearID));
+            
+                $this->redirect(array('action'=>'processes'));
+
+            }
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));
+		
+
+        $AreaLevel = ClassRegistry::init('AreaLevel');
+        $areaLevelOptions = $AreaLevel->find('list',
+            array(
+                'fields' => array('AreaLevel.id', 'AreaLevel.name'),
+                'recursive'=> -1,
+                'order' => array('AreaLevel.level')
+            )
+        );
+
+
+        $SchoolYear = ClassRegistry::init('SchoolYear');
+        $schoolYearOptions = $SchoolYear->find('list', array('fields'=>array('id', 'name'), 'order'=>array('start_year DESC')));
+
+        $this->set(compact('areaLevelOptions', 'schoolYearOptions'));
+
+       
+        /*$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));
 		$QR = $this->Report->getQueuedRunningReport();
+        $tmp = $this->formatTable($data);*/
+
+        $tmp = $this->Datawarehouse->getReportList();
+        $QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){
 			$q[] = $arrV['Filename'];
 		}
 
-		$tmp = $this->formatTable($data);
 
 //		pr($tmp);die;
 		$this->set('data',$tmp);
@@ -951,5 +990,4 @@ class DataProcessingController extends DataProcessingAppController {
     }
 
 
-    
 }
