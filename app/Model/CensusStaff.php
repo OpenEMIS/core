@@ -287,25 +287,50 @@ class CensusStaff extends AppModel {
 				$yearName = $rowYear['SchoolYear']['name'];
 
 				$censusData = $this->getCensusData($institutionSiteId, $yearId);
+
+				$StaffCategory = ClassRegistry::init('Staff.StaffCategory');
+				$staffCategories = $StaffCategory->find('list', array(
+					'recursive' => '-1',
+					'conditions' => array('StaffCategory.visible' => 1),
+					'order' => array('StaffCategory.order')
+				));
+
+				$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+				$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
+				$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+				$genderOptions = array(
+					$maleGenderId => 'Male',
+					$femaleGenderId => 'Female'
+				);
+
 				if (count($censusData) > 0) {
 					$data[] = $header;
 					$total = 0;
-					foreach ($censusData AS $row) {
-						if ($row['staff_category_visible'] == 1) {
-							$male = empty($row['male']) ? 0 : $row['male'];
-							$female = empty($row['female']) ? 0 : $row['female'];
+					foreach ($staffCategories AS $staffCatId => $staffCatName) {
+						$maleValue = 0;
+						$femaleValue = 0;
 
-							$data[] = array(
-								$yearName,
-								$row['staff_category_name'],
-								$male,
-								$female,
-								$male + $female
-							);
-
-							$total += $male;
-							$total += $female;
+						foreach ($genderOptions AS $genderId => $genderName) {
+							if (!empty($censusData[$staffCatId][$genderId])) {
+								
+								if ($genderName == 'Male') {
+									$maleValue = $censusData[$staffCatId][$genderId]['value'];
+								} else {
+									$femaleValue = $censusData[$staffCatId][$genderId]['value'];
+								}
+							}
 						}
+
+						$subTotal = $maleValue + $femaleValue;
+						$total += $subTotal;
+
+						$data[] = array(
+							$yearName,
+							$staffCatName,
+							$maleValue,
+							$femaleValue,
+							$subTotal
+						);
 					}
 
 					$data[] = array('', '', '', __('Total'), $total);
