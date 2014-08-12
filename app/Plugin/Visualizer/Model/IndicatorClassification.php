@@ -19,7 +19,8 @@ class IndicatorClassification extends VisualizerAppModel {
 	public $useTable = 'ut_indicator_classifications_en';
 	
 	
-	public function getSource($ius, $timeperiod) {
+	public function getSource($ius, $timeperiod, $order = NULL) {
+		$order = (empty($order))? NULL:array($order);
 		$data = $this->find('all', array(
 			'fields' => array('DISTINCT IndicatorClassification.IC_NId', 'IndicatorClassification.IC_Name'),
 			'conditions' => array('Data.IUSNId' => $ius,'Data.TimePeriod_NId' => $timeperiod),
@@ -30,6 +31,7 @@ class IndicatorClassification extends VisualizerAppModel {
 					'conditions' => array('Data.Source_NId = IndicatorClassification.IC_NId')
 				),
 			),
+			'order' => $order
 		));
 		
 		return $data;

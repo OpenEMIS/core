@@ -15,11 +15,13 @@ echo $this->Html->link($this->Label->get('general.reset'), array('action' => 're
 $this->end();
 $this->start('contentBody');
 $tableClass = 'table-checkable table-input';
+$tableWrapperClass = 'collapse';
 ?>
 
 <fieldset>
-    <legend><?php echo __('Indicators')?></legend>
+    <legend data-toggle="collapse" data-target="#collapseIndicator"><?php echo __('Indicators')?></legend>
 	<?php 
+		$tableWrapperId = 'collapseIndicator';
 		$tableHeaders = array(__('Indicator'),__('Unit'),__('Dimension'));
 		$tableData = array();
 		foreach ($reviewData['indicator'] as $obj) {
@@ -30,13 +32,14 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 
 <fieldset>
-    <legend><?php echo __('Areas')?></legend>
+    <legend data-toggle="collapse" data-target="#collapseArea"><?php echo __('Areas')?></legend>
 	<?php 
+		$tableWrapperId = 'collapseArea';
 		$tableHeaders = $areaLevelOptions;
 		$tableData = array();
 		foreach ($reviewData['area'] as $obj) {
@@ -47,13 +50,14 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 
 <fieldset>
-    <legend><?php echo __('Time Periods')?></legend>
+    <legend data-toggle="collapse" data-target="#collapseTime"><?php echo __('Time Periods')?></legend>
 	<?php 
+		$tableWrapperId = 'collapseTime';
 		$tableHeaders = array(__('Time Period'));
 		$tableData = array();
 		foreach ($reviewData['timeperiod'] as $obj) {
@@ -62,13 +66,14 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 
 <fieldset>
-    <legend><?php echo __('Sources')?></legend>
+    <legend data-toggle="collapse" data-target="#collapseSource"><?php echo __('Sources')?></legend>
 	<?php 
+		$tableWrapperId = 'collapseSource';
 		$tableHeaders = array(__('Source'));
 		$tableData = array();
 		foreach ($reviewData['source'] as $obj) {
@@ -77,7 +82,7 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 <?php
