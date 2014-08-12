@@ -16,24 +16,52 @@ have received a copy of the GNU General Public License along with this program. 
 $(document).ready(function() {
 	Finance.init();
 
-    $('#year_id').change(function(d, o){
-        Finance.year = $(this).val();
-        Finance.fetchData();
-        Finance.fetchGNP();
-        $("#input_year").val(Finance.year);
-    });
-
-    $('input[type="submit"]').click(function(event){
-        event.preventDefault();
-    });
-
-    $('.btn_cancel').click(function(event){
-        $('#viewLink').trigger('click');
-    });
-
-    $('select[name=data\\[Finance\\]\\[area_level_0\\]]').change(function(event) {
+    $('#areapicker.areapicker select').first().change(function(event) {
         Finance.fetchGNP();
     });
+	
+	$('#areapicker.areapicker').on('change', 'select', function(){
+		if($(this).val() != '' && $(this).val() > 0){
+			currentAreaId = $(this).val();
+		}else{
+			var parentAreaSelect = $(this).parents('.form-group').prev('.form-group').find('select.form-control');
+			if(parentAreaSelect.length > 0){
+				var parentAreaId = parentAreaSelect.val();
+				currentAreaId = parentAreaId;
+			}else{
+				currentAreaId = 0;
+			}
+		}
+		
+		if($('#finance').hasClass('edit')){
+			Finance.fetchDataByArea(currentAreaId, 'edit');
+		}else{
+			Finance.fetchDataByArea(currentAreaId, '');
+		}
+		
+		$('a.withLatestAreaId').each(function(){
+			var newHref = $(this).attr('href').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('href', newHref);
+		});
+		
+		$('a.btn_cancel').each(function(){
+			var newCancelHref = $(this).attr('href').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('href', newCancelHref);
+		});
+		
+		$('form#FinanceEditForm').each(function(){
+			var newAction = $(this).attr('action').replace(/(\/\d{4}\/)\d*/, '$1'+currentAreaId);
+			$(this).attr('action', newAction);
+		});
+	});
+	
+	$('select#financeYear').on('change', function(){
+		if($('#finance').hasClass('edit')){
+			location.href = Finance.base + 'edit/' + $(this).val() + '/' + currentAreaId;
+		}else{
+			location.href = Finance.base + 'index/' + $(this).val() + '/' + currentAreaId;
+		}
+	});
 });
 
 
@@ -51,15 +79,15 @@ var Finance = {
 
 	// methods
     init: function() {
-        this.isEditable = false;
+        //this.isEditable = false;
         this.changeView();
-        this.addAreaSwitching();
-        this.year = $('#year_id').val();
-        if(Finance.changeOption<1){
-            $("#FinanceAreaLevel0").trigger("change");
-            this.addAreaSwitching();
-        }
-        this.numAreaSelectors = $('fieldset#area_section_group div.row').length;
+//        this.addAreaSwitching();
+//        this.year = $('#year_id').val();
+//        if(Finance.changeOption<1){
+//            $("#FinanceAreaLevel0").trigger("change");
+//            this.addAreaSwitching();
+//        }
+//        this.numAreaSelectors = $('fieldset#area_section_group div.row').length;
     },
 	show : function(id){
 		$('#'+id).css("visibility", "visible");
@@ -212,10 +240,10 @@ var Finance = {
         });
     },
     fetchGNP: function() {
-        
-        var countryAreaId = $('select[name=data\\[Finance\\]\\[area_level_0\\]]').val();
+        var currentYear = $('select#financeYear').val();
+        var countryAreaId = $('#areapicker.areapicker select').first().val();
         var maskId;
-        var url = getRootURL()+'/Finance/viewGNP/'+this.year+'/'+countryAreaId;
+        var url = getRootURL()+'Finance/viewGNP/'+currentYear+'/'+countryAreaId;
 
         if (countryAreaId > 0) {
             $.ajax({
@@ -242,6 +270,33 @@ var Finance = {
         }
 
     },
+	
+	fetchDataByArea: function(areaId, mode) {
+		var year = $('select#financeYear').val();
+
+		var url;
+		if (mode === 'edit') {
+			url = Finance.base + 'loadForm/' + year + '/' + areaId;
+		} else {
+			url = Finance.base + 'loadData/' + year + '/' + areaId;
+		}
+
+		$.ajax({
+			type: 'GET',
+			dataType: 'html',
+			url: url,
+			success: function(data, textStatus) {
+				var replaceHolder = $('.replaceHolder');
+
+				if (data.length > 0 && replaceHolder.length === 1) {
+					if (replaceHolder.length > 0) {
+						replaceHolder.html(data);
+					}
+				}
+			}
+		});
+	},
+	
     fetchData: function(currentObject){
 
         // init values

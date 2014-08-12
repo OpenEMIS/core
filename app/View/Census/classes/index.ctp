@@ -9,7 +9,7 @@ $this->assign('contentHeader', __('Classes'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-    echo $this->Html->link(__('Edit'), array('action' => 'classesEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'classesEdit', $selectedYear), array('class' => 'divider'));
 }
 $this->end();
 
@@ -17,126 +17,123 @@ $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
 
-<div id="classes" class="content_wrapper">
+<div class="table-responsive">
 
-    <?php if ($displayContent) { ?>
-        <fieldset class="section_group">
-            <legend><?php echo __('Single Grade Classes Only'); ?></legend>
+	<?php if ($displayContent) { ?>
+		<fieldset class="section_group">
+			<legend><?php echo __('Single Grade Classes Only'); ?></legend>
 
-            <table class="table table-striped table-hover table-bordered">
-                <thead>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+						<th><?php echo __('Programme'); ?></th>
+						<th class="cell_grade"><?php echo __('Grade'); ?></th>
+						<th class="cell_classes"><?php echo __('Classes'); ?></th>
+						<th class="cell_classes"><?php echo __('Seats'); ?></th>
+					</tr>
+				</thead>
+				<?php 
+				$totalClasses = 0;
+				$totalSeats = 0;
+				if (!empty($singleGradeData)) : ?>
+				<tbody>
+					<?php
+					foreach ($singleGradeData as $name => $programme) {
+						foreach ($programme['education_grades'] as $gradeId => $grade) {
+							$totalClasses += $grade['classes'];
+							$totalSeats += $grade['seats'];
+							$record_tag = "";
+							foreach ($source_type as $k => $v) {
+								if ($grade['source'] == $v) {
+									$record_tag = "row_" . $k;
+								}
+							}
+							?>
+							<tr>
+								<td class="<?php echo $record_tag; ?>"><?php echo $name; ?></td>
+								<td class="<?php echo $record_tag; ?>"><?php echo $grade['name']; ?></td>
+								<td class="cell-number <?php echo $record_tag; ?>"><?php echo $grade['classes']; ?></td>
+								<td class="cell-number <?php echo $record_tag; ?>"><?php echo $grade['seats']; ?></td>
+							</tr>
 
+							<?php
+						}
+					}
+					?>
+				</tbody>
+				<?php endif; ?>
 
-                    <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell cell_classes"><?php echo __('Classes'); ?></td>
-                        <td class="table_cell cell_classes"><?php echo __('Seats'); ?></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $totalClasses = 0;
-                    $totalSeats = 0;
+				<tfoot>
+					<tr>
+						<td class="cell_label cell-number" colspan="2"><?php echo __('Total'); ?></td>
+						<td class="cell_value cell-number"><?php echo $totalClasses; ?></td>
+						<td class="cell_value cell-number"><?php echo $totalSeats; ?></td>
+					</tr>
+				</tfoot>
+			</table>
+		</fieldset>
 
-                    foreach ($singleGradeData as $name => $programme) {
-                        foreach ($programme['education_grades'] as $gradeId => $grade) {
-                            $totalClasses += $grade['classes'];
-                            $totalSeats += $grade['seats'];
-                            $record_tag = "";
-                            foreach ($source_type as $k => $v) {
-                                if ($grade['source'] == $v) {
-                                    $record_tag = "row_" . $k;
-                                }
-                            }
-                            ?>
-                            <tr>
-                                <td class="table_cell <?php echo $record_tag; ?>"><?php echo $name; ?></td>
-                                <td class="table_cell <?php echo $record_tag; ?>"><?php echo $grade['name']; ?></td>
-                                <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $grade['classes']; ?></td>
-                                <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $grade['seats']; ?></td>
-                            </tr>
+		<fieldset class="section_group multi">
+			<legend><?php echo __('Multi Grade Classes'); ?></legend>
 
-                            <?php
-                        }
-                    }
-                    ?>
-                </tbody>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+						<th><?php echo __('Programme'); ?></th>
+						<th class="cell_grade"><?php echo __('Grade'); ?></th>
+						<th class="cell_classes"><?php echo __('Classes'); ?></th>
+						<th class="cell_classes"><?php echo __('Seats'); ?></th>
+					</tr>
+				</thead>
 
-                <tfoot>
-                    <tr>
+				<?php
+				$totalClasses = 0;
+				$totalSeats = 0;
+				if (!empty($multiGradeData)) {
+					?>
+					<tbody>
+						<?php foreach ($multiGradeData as $obj) { ?>
+							<tr>
 
-                        <td class="table_cell"></td>
-                        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-                        <td class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></td>
-                        <td class="table_cell cell_value cell_number"><?php echo $totalSeats; ?></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </fieldset>
+								<?php
+								$totalClasses += $obj['classes'];
+								$totalSeats += $obj['seats'];
+								$record_tag = "";
+								foreach ($source_type as $k => $v) {
+									if ($obj['source'] == $v) {
+										$record_tag = "row_" . $k;
+									}
+								}
+								?>
+								<td class="<?php echo $record_tag; ?>">
+									<?php foreach ($obj['programmes'] as $programmeId => $programmeName) { ?>
+										<div class="table_cell_row"><?php echo $programmeName; ?></div>
+									<?php } ?>
+								</td>
 
-        <fieldset class="section_group multi">
-            <legend><?php echo __('Multi Grade Classes'); ?></legend>
+								<td class="<?php echo $record_tag; ?>">
+									<?php foreach ($obj['grades'] as $gradeId => $gradeName) { ?>
+										<div class="table_cell_row"><?php echo $gradeName; ?></div>
+									<?php } ?>
+								</td>
 
-            <table class="table table-striped table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell cell_classes"><?php echo __('Classes'); ?></td>
-                        <td class="table_cell cell_classes"><?php echo __('Seats'); ?></td>
-                    </tr>
-                </thead>
+								<td class="cell-number"><?php echo $obj['classes']; ?></td>
+								<td class="cell-number"><?php echo $obj['seats']; ?></td>
+							</tr>
+						<?php } // end for (multigrade) ?>
+					</tbody>
+				<?php } // end if empty(multigrade) ?>
+				<tfoot>
+					<tr>
+						<td class="cell_label cell-number" colspan="2"><?php echo __('Total'); ?></td>
+						<td class="cell_value cell-number"><?php echo $totalClasses; ?></td>
+						<td class="cell_value cell-number"><?php echo $totalSeats; ?></td>
+					</tr>
+				</tfoot>
+			</table>
+		</fieldset>
 
-                <?php
-                $totalClasses = 0;
-                $totalSeats = 0;
-                if (!empty($multiGradeData)) {
-                    ?>
-                    <tbody>
-                        <?php foreach ($multiGradeData as $obj) { ?>
-                            <tr>
-
-                                <?php
-                                $totalClasses += $obj['classes'];
-                                $totalSeats += $obj['seats'];
-                                $record_tag = "";
-                                foreach ($source_type as $k => $v) {
-                                    if ($obj['source'] == $v) {
-                                        $record_tag = "row_" . $k;
-                                    }
-                                }
-                                ?>
-                                <td class="table_cell <?php echo $record_tag; ?>">
-                                    <?php foreach ($obj['programmes'] as $programmeId => $programmeName) { ?>
-                                        <div class="table_cell_row"><?php echo $programmeName; ?></div>
-                                    <?php } ?>
-                                </td>
-
-                                <td class="table_cell <?php echo $record_tag; ?>">
-                                    <?php foreach ($obj['grades'] as $gradeId => $gradeName) { ?>
-                                        <div class="table_cell_row"><?php echo $gradeName; ?></div>
-                                    <?php } ?>
-                                </td>
-
-                                <td class="table_cell cell_number"><?php echo $obj['classes']; ?></td>
-                                <td class="table_cell cell_number"><?php echo $obj['seats']; ?></td>
-                            </tr>
-                        <?php } // end for (multigrade) ?>
-                    </tbody>
-                <?php } // end if empty(multigrade) ?>
-                <tfoot>
-                    <tr>
-                        <td class="table_cell"></td>
-                        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-                        <td class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></td>
-                        <td class="table_cell cell_value cell_number"><?php echo $totalSeats; ?></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </fieldset>
-
-    <?php } ?>
+	<?php } ?>
 </div>
 
 <?php $this->end(); ?>

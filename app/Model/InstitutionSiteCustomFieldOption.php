@@ -32,21 +32,32 @@ class InstitutionSiteCustomFieldOption extends AppModel {
 		)
 	);
 	
-	public function getSubOptions() {
-		$conditions = array(
-			'OR' => array(
-				'InstitutionSiteCustomField.type' => 3,
-				'InstitutionSiteCustomField.type' => 4
+	public $validate = array(
+		'institution_site_custom_field_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a custom field'
 			)
-		);
+		)
+	);
+	
+	public function getSubOptions() {
+		$conditions = array('InstitutionSiteCustomField.type' => array(3, 4));
 		$data = $this->InstitutionSiteCustomField->findList(array('conditions' => $conditions));
 		return $data;
 	}
 	
 	public function getOptionFields() {
 		$options = $this->getSubOptions();
+		$suboptions = array();
+		foreach($options as $key => $opt) {
+			foreach($opt as $id => $name) {
+				$suboptions[$id] = $name;
+			}
+		}
 		$value = array('field' => 'value', 'type' => 'text');
-		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $suboptions);
 		$this->removeOptionFields(array('name', 'international_code', 'national_code'));
 		$this->addOptionField($field, 'after', 'id');
 		$this->addOptionField($value, 'after', $this->getConditionId());

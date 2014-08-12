@@ -32,23 +32,33 @@ class SecurityController extends AppController {
 		'SecurityGroupArea',
 		'SecurityGroupInstitutionSite',
 		'SecurityUserAccess',
-		'Teachers.Teacher',
+		//'Teachers.Teacher',
 		'Staff.Staff',
 		'Students.Student',
 		'ConfigAttachment'
 	);
+	
 	public $components = array(
 		'LDAP'
 	);
+	
+	public $modules = array(
+		'SecurityGroup',
+		'permissions' => 'SecurityRoleFunction',
+		'roles' => 'SecurityRole'
+	);
+	
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->renderFooter();
 		$this->Auth->allow('login');
 		$this->Auth->allow('login_remote');
+		$this->Auth->allow('switchLanguage');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
 			$this->bodyTitle = 'Administration';
-			$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+			$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
+			$this->Navigation->addCrumb('Accounts & Security', array('controller' => $this->name, 'action' => 'users'));
 		}
 	}
 	
@@ -57,28 +67,52 @@ class SecurityController extends AppController {
 			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 		}
 	}
+
+	public function switchLanguage(){
+	  	$this->autoRender = false;
+		$lang = $this->ConfigItem->getValue('language');
+		$showLanguage = $this->ConfigItem->getValue('language_menu');
+
+		if (!$this->Auth->loggedIn()) {
+			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
+			if(isset($this->request->query['lang']) && in_array($this->request->query['lang'], $languageList)) {
+				$lang = $this->request->query['lang'];
+				setcookie('language', $lang, time()+(60*60*24*7), '/');
+			} else if($showLanguage && isset($_COOKIE['language'])) {
+				$lang = $_COOKIE['language'];
+			}
+
+
+			$userName = '';
+			$userPassword = '';
+
+			if(isset($this->request->query['username'])){
+				$userName = $this->request->query['username'];
+			}
+			if(isset($this->request->query['userpassword'])){
+				$userPassword = $this->request->query['userpassword'];
+			}
+			$this->Session->write('login.username', $userName);
+		 	$this->Session->write('login.password', $userPassword);
+
+			// Assign the language to session and configuration
+			$this->Session->write('configItem.language', $lang);
+		}
+	}
 	
     public function login() {
 		$this->autoLayout = false;
 		$lang = $this->ConfigItem->getValue('language');
 		$showLanguage = $this->ConfigItem->getValue('language_menu');
-		if(isset($this->request->query['lang'])) {
-			$lang = $this->request->query['lang'];
-		} else if(count($this->request->params['pass']) > 0) {
-			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
-			if(in_array($this->request->params['pass'][0], $languageList)) {
-				$lang = $this->request->params['pass'][0];
-				setcookie('language', $lang, time()+(60*60*24*7), '/');
-			} else {
-				$lang = 'eng';
-			}
-		} else if($showLanguage && isset($_COOKIE['language'])) {
-			$lang = $_COOKIE['language'];
-			
+		$lang = 'eng';
+		if($this->Session->check('configItem.language')){
+			$lang = $this->Session->read('configItem.language');
+		}else{
+			$this->Session->write('configItem.language', $lang);
 		}
+
 		$this->set('showLanguage', $showLanguage);
 		// Assign the language to session and configuration
-		$this->Session->write('configItem.language', $lang);
 		if($this->request->is('post')) {
 			$username = $this->data['SecurityUser']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
@@ -171,7 +205,7 @@ class SecurityController extends AppController {
 		} else {
 			if(!$this->RequestHandler->isAjax()) { // normal login
 				if($this->Auth->user()) { // user already login
-					$this->redirect($this->Auth->redirect('home'));
+					return $this->redirect(array('controller' => 'Home'));
 				}
 			} else { // ajax login
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
@@ -202,24 +236,24 @@ class SecurityController extends AppController {
 			}
 		}
 		$this->set('images', $imageData);
-    }
+	}
 
-    public function login_remote() {
-        $this->autoRender = false;
-        $this->Session->write('login.username', $this->data['username']);
-        $this->Session->write('login.password', $this->data['password']);
-        return $this->redirect(array('action' => 'login'));
-    }
+	public function login_remote() {
+		$this->autoRender = false;
+		$this->Session->write('login.username', $this->data['username']);
+		$this->Session->write('login.password', $this->data['password']);
+		return $this->redirect(array('action' => 'login'));
+	}
 
-    public function logout() {
+	public function logout() {
 		$redirect = $this->Auth->logout();
 		if ($this->Session->check('configItem.language')) {
 			$lang = $this->ConfigItem->getValue('language');
 		}
 		$this->Session->destroy();
 		$this->Session->write('configItem.language', $lang);
-        $this->redirect($redirect);
-    }
+		$this->redirect($redirect);
+	}
 	
 	public function index() {
 		$this->redirect(array('action' => 'users'));
@@ -230,6 +264,8 @@ class SecurityController extends AppController {
 		if (!$this->Session->check('configItem.language')) {
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 		}
+
+		$this->Session->write('login.token', $this->SecurityUser->createToken());
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
 		$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 	}
@@ -297,7 +333,7 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-                                $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+				$allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
@@ -321,7 +357,7 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-                                $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+								$allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
 			}
 			
 			if(!$allowEdit) {
@@ -426,7 +462,7 @@ class SecurityController extends AppController {
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
 			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$moduleOptions = array('Student' => __('Student'), 'Teacher' => __('Teacher'), 'Staff' => __('Staff'));
+			$moduleOptions = array('Student' => __('Student'), /*'Teacher' => __('Teacher'), */'Staff' => __('Staff'));
 			$this->set('data', $data);
 			$this->set('moduleOptions', $moduleOptions);
 			$this->Navigation->addCrumb($name);
@@ -446,545 +482,6 @@ class SecurityController extends AppController {
 				);
 				$this->SecurityUserAccess->deleteAll($conditions, false);
 			}
-		}
-	}
-	
-	public function usersAddAdmin() {
-		$this->layout = 'ajax';
-		$index = $this->params->query['index'];
-		
-		$this->set('index', $index);
-	}
-	
-	public function groups() {
-		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('Groups');
-		
-		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
-		
-		$selectedYear = "";
-		$selectedProgramme = "";
-		$searchField = "";
-		$orderBy = 'SecurityGroup.name';
-		$order = 'asc';
-		$prefix = 'SecurityGroup.Search.%s';
-		if($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->data['SecurityGroup']['SearchField']));
-			if(isset($this->data['SecurityGroup']['orderBy'])) {
-				$orderBy = $this->data['SecurityGroup']['orderBy'];
-			}
-			if(isset($this->data['SecurityGroup']['order'])) {
-				$order = $this->data['SecurityGroup']['order'];
-			}
-		}
-		$conditions = array(
-			'search' => $searchField, 
-			'super_admin' => $this->Auth->user('super_admin')==1,
-			'user_id' => $this->Auth->user('id')
-		);
-		
-		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
-		$data = $this->paginate('SecurityGroup', $conditions);
-		
-		foreach($data as &$group) {
-			$obj = $group['SecurityGroup'];
-			$count = $this->SecurityGroupUser->find('count', array('conditions' => array('SecurityGroupUser.security_group_id' => $obj['id'])));
-			$group['SecurityGroup']['count'] = $count;
-		}
-		
-		$this->set('searchField', $searchField);
-		$this->set('page', $page);
-		$this->set('orderBy', $orderBy);
-		$this->set('order', $order);
-		$this->set('data', $data);
-		$this->set('groupCount', $this->SecurityGroup->paginateCount($conditions));
-	}
-	
-	public function groupsAddAccessOptions() {
-		$this->layout = 'ajax';
-		
-		$type = $this->params['pass'][0];
-		$index = $this->params->query['index'];
-		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
-		
-		$levelOptions = array();
-		$valueOptions = array();
-		$model = $type==='areas' ? $this->Area : $this->InstitutionSite;
-		$levelOptions = $model->getGroupAccessList($exclude);
-		
-		$emptyOption = '-- ' . __('No records') . ' --';
-		
-		if(!empty($levelOptions)) {
-			$parentId = key($levelOptions);
-			$valueOptions = $model->getGroupAccessValueList($parentId, $exclude);
-			if(empty($valueOptions)) {
-				$valueOptions = array('0' => $emptyOption);
-			}
-		} else {
-			$levelOptions = array('0' => $emptyOption);
-		}
-		
-		$this->set('index', $index);
-		$this->set('type', $type);
-		$this->set('levelOptions', $levelOptions);
-		$this->set('valueOptions', $valueOptions);
-		
-		if($type==='areas'){
-			$this->render('groups_add_access_options');
-		}else if($type==='sites'){
-			$this->render('groups_add_institution_options');
-		}
-	}
-	
-	public function groupsLoadValueOptions() {
-		$this->layout = 'ajax';
-		$type = $this->params['pass'][0];
-		$parentId = $this->params->query['parentId'];
-		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
-		$model = $type==='areas' ? $this->Area : $this->InstitutionSite;
-		$emptyOption = '-- ' . __('No records') . ' --';
-		
-		$valueOptions = $model->getGroupAccessValueList($parentId, $exclude);
-		if(empty($valueOptions)) {
-			$valueOptions = array('0' => $emptyOption);
-		}
-		$this->set('valueOptions', $valueOptions);
-	}
-	
-	public function groupsAddValidate() {
-		$this->autoRender = false;
-		$name = trim($this->params->query['name']);
-		
-		$msg = '';
-		$result = array('type' => 'error');
-		if(empty($name)) {
-			$msg = $this->Utility->getMessage('SECURITY_GRP_NO_NAME');
-		} else {
-			$found = $this->SecurityGroup->field('id', array('SecurityGroup.name' => $name));
-			if($found) {
-				$msg = $this->Utility->getMessage('SECURITY_GRP_NAME_EXISTS');
-			} else {
-				$result['type'] = 'ok';
-			}
-		}
-		$result['msg'] = $msg;
-		return json_encode($result);
-	}
-	
-	public function groupsAdd() {
-		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-                $this->Navigation->addCrumb('Add Group');
-		
-		if($this->request->is('post')) {
-			$groupData = $this->data['SecurityGroup'];
-			$groupObj = $this->SecurityGroup->save($groupData);
-
-			if($groupObj) {
-				$groupId = $groupObj['SecurityGroup']['id'];
-				
-				// Group Users
-				if(isset($this->data['SecurityGroupUser'])) {
-					$userData = $this->data['SecurityGroupUser'];
-					$role = $this->SecurityRole->getGroupAdministratorRole();
-					foreach($userData as &$user) {
-						$user['security_group_id'] = $groupId;
-						$user['security_role_id'] = $role['SecurityRole']['id'];
-					}
-					$this->SecurityGroupUser->saveMany($userData);
-				}
-				
-				// Group Areas
-				if(isset($this->data['SecurityGroupArea'])) {
-					$areaData = $this->data['SecurityGroupArea'];
-					$this->SecurityGroupArea->saveGroupAccess($groupId, $areaData);
-				}
-				
-				// Group Institution Sites
-				if(isset($this->data['SecurityGroupInstitutionSite'])) {
-					$siteData = $this->data['SecurityGroupInstitutionSite'];
-					$this->SecurityGroupInstitutionSite->saveGroupAccess($groupId, $siteData);
-				}
-				$this->redirect(array('action' => 'groupsView', $groupId));
-			}
-		}
-	}
-	
-	public function groupsView() {
-		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-
-		if(isset($this->params['pass'][0])) {
-			$groupId = $this->params['pass'][0];
-			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
-			if($data) {
-				$this->Navigation->addCrumb($data['SecurityGroup']['name']);
-
-				$areas = $this->SecurityGroupArea->getAreas($groupId);
-				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
-				$systemRoles = $this->SecurityRole->getRoles(0);
-				$userRoles = $this->SecurityRole->getRoles($groupId);
-				$roles = array('system' => $systemRoles, 'user' => $userRoles);
-				
-				foreach($roles as &$roleList) {
-					foreach($roleList as &$role) {
-						$role['count'] = $this->SecurityGroupUser->find('count', array(
-							'conditions' => array('SecurityGroupUser.security_group_id' => $groupId, 'SecurityGroupUser.security_role_id' => $role['id'])
-						));
-					}
-				}
-				$data['SecurityGroup']['areas'] = $areas;
-				$data['SecurityGroup']['sites'] = $sites;
-				$data['SecurityRole'] = $roles;
-				
-				$this->set('data', $data);
-			} else {
-				$this->redirect(array('action' => 'groups'));
-			}
-		} else {
-			$this->redirect(array('action' => 'groups'));
-		}
-	}
-	
-	public function groupsEdit() {
-                $this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-		
-		if(isset($this->params['pass'][0])) {
-			$groupId = $this->params['pass'][0];
-			
-			if($this->request->is('post')) {
-				$this->SecurityGroup->save($this->data['SecurityGroup']);
-				$areaData = isset($this->data['SecurityGroupArea']) ? $this->data['SecurityGroupArea'] : array();
-				$siteData = isset($this->data['SecurityGroupInstitutionSite']) ? $this->data['SecurityGroupInstitutionSite'] : array();
-				$this->SecurityGroupArea->saveGroupAccess($groupId, $areaData);
-				$this->SecurityGroupInstitutionSite->saveGroupAccess($groupId, $siteData);
-				
-				$this->redirect(array('action' => 'groupsView', $groupId));
-			}
-			
-			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
-			if($data) {
-                                $this->Navigation->addCrumb($data['SecurityGroup']['name']);
-				
-                                $areas = $this->SecurityGroupArea->getAreas($groupId);
-				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
-				$systemRoles = $this->SecurityRole->getRoles(0);
-				$userRoles = $this->SecurityRole->getRoles($groupId);
-				$roles = array('system' => $systemRoles, 'user' => $userRoles);
-				
-				foreach($roles as &$roleList) {
-					foreach($roleList as &$role) {
-						$role['count'] = $this->SecurityGroupUser->find('count', array(
-							'conditions' => array('SecurityGroupUser.security_group_id' => $groupId, 'SecurityGroupUser.security_role_id' => $role['id'])
-						));
-					}
-				}
-				$data['SecurityGroup']['areas'] = $areas;
-				$data['SecurityGroup']['sites'] = $sites;
-				$data['SecurityRole'] = $roles;
-				
-				$this->set('data', $data);
-			} else {
-				$this->redirect(array('action' => 'groups'));
-			}
-		} else {
-			$this->redirect(array('action' => 'groups'));
-		}
-	}
-	
-	public function groupsRolesAdd() {
-		$this->Navigation->addCrumb('Add Group Roles');
-		
-		if(isset($this->params['pass'][0])) {
-			$groupId = $this->params['pass'][0];
-			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
-			if($data) {
-				$this->set('data', $data);
-				
-			} else {
-				$this->redirect(array('action' => 'groups'));
-			}
-		} else {
-			$this->redirect(array('action' => 'groups'));
-		}
-	}
-	
-	public function groupsUserAdd() {
-		if($this->request->is('post')) {
-			$data = $this->data['SecurityGroupUser'];
-			$groupId = $data['security_group_id'];
-			if($this->SecurityGroupUser->save($data)) {
-				$this->Utility->alert($this->Utility->getMessage('SECURITY_GRP_USER_ADD'));
-			}
-			$this->redirect(array('action' => 'groupsUsers', $groupId, 'edit'));
-		}
-	}
-	
-	public function groupsUserRemove() {
-		if($this->RequestHandler->isAjax()) {
-			$this->autoRender = false;
-			$groupId = $this->params['pass'][0];
-			$roleId = $this->params['pass'][1];
-			$userId = $this->params['pass'][2];
-			
-			$this->SecurityGroupUser->deleteAll(array(
-				'SecurityGroupUser.security_group_id' => $groupId,
-				'SecurityGroupUser.security_user_id' => $userId,
-				'SecurityGroupUser.security_role_id' => $roleId
-			), false);
-		}
-	}
-	
-	public function groupsUsers() {
-		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-		
-		if(isset($this->params['pass'][0])) {
-			$groupId = $this->params['pass'][0];
-			$group = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
-			if($group) {
-				$this->Navigation->addCrumb($group['SecurityGroup']['name']);
-                            
-                                $data = $this->SecurityGroupUser->getUsers($groupId);
-				$this->set('group', $group['SecurityGroup']);
-				$this->set('data', $data);
-				
-				if(isset($this->params['pass'][1]) && $this->params['pass'][1] === 'edit') {
-					$this->render('groupsUsersEdit');
-				}
-			} else {
-				$this->redirect(array('action' => 'groups'));
-			}
-		} else {
-			$this->redirect(array('action' => 'groups'));
-		}
-	}
-	
-	public function roles() {
-		$this->Navigation->addCrumb('Roles');
-		
-		$systemRoles = $this->SecurityRole->getRoles(array(0, -1));
-		$isSuperUser = $this->Auth->user('super_admin')==1;
-		$groupOptions = $this->SecurityGroup->getGroupOptions($isSuperUser ? false : $this->Auth->user('id'));
-		$userRoles = array();
-		$selectedGroup = 0;
-		
-		if(!empty($groupOptions)) {
-			if(isset($this->params['pass'][0])) {
-				$groupId = $this->params['pass'][0];
-				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
-			} else {
-				$selectedGroup = key($groupOptions);
-			}
-			$userRoles = $this->SecurityRole->getRoles($selectedGroup);
-		}
-		
-		$this->set('systemRoles', $systemRoles);
-		$this->set('userRoles', $userRoles);
-		$this->set('groupOptions', $groupOptions);
-		$this->set('selectedGroup', $selectedGroup);
-	}
-	
-	public function rolesEdit() {
-		$this->Navigation->addCrumb('Roles');
-		
-		$systemRoles = $this->SecurityRole->getRoles(array(0, -1));
-		$isSuperUser = $this->Auth->user('super_admin')==1;
-		$groupOptions = $this->SecurityGroup->getGroupOptions($isSuperUser ? false : $this->Auth->user('id'));
-		$userRoles = array();
-		$selectedGroup = 0;
-		
-		if(!empty($groupOptions)) {
-			if(isset($this->params['pass'][0])) {
-				$groupId = $this->params['pass'][0];
-				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
-			} else {
-				$selectedGroup = key($groupOptions);
-			}
-			$userRoles = $this->SecurityRole->getRoles($selectedGroup);
-		}
-		
-		if($this->request->is('post')) {
-			$data = $this->data;
-			$groupId = $this->params['pass'][0];
-			$data = $this->SecurityRole->removeUnnamed($data);
-			$this->SecurityRole->saveMany($data['SecurityRole']);
-			$this->redirect(array('action' => 'roles', $groupId));
-		}
-		
-		$this->set('systemRoles', $systemRoles);
-		$this->set('userRoles', $userRoles);
-		$this->set('groupOptions', $groupOptions);
-		$this->set('selectedGroup', $selectedGroup);
-	}
-	
-	public function rolesAdd() {
-		$this->layout = 'ajax';
-		$size = $this->params->query['size'];
-		$order = $this->params->query['order'] + 1;
-		$groupId = $this->params->query['groupId'];
-		$this->set('size', $size);
-		$this->set('order', $order);
-		$this->set('groupId', $groupId);
-	}
-	
-	/*
-	public function roleUsers() {
-		$this->Navigation->addCrumb('Role Assignment');
-		
-		if(isset($this->params['pass'][0])) {
-			$roleId = $this->params['pass'][0];
-			$roleList = $this->SecurityRole->findList(true); // TODO: must be able to search for non-visible records
-
-			if(array_key_exists($roleId, $roleList)) {
-				$userIds = $this->SecurityUserRole->find('list', array(
-					'fields' => array('SecurityUserRole.id', 'SecurityUserRole.security_user_id'),
-					'conditions' => array('SecurityUserRole.security_role_id' => $roleId)
-				));
-				
-				$users = $this->SecurityUser->find('all', array(
-					'recursive' => 0,
-					'conditions' => array('SecurityUser.id' => array_values($userIds), 'SecurityUser.super_admin' => 0)
-				));
-				
-				$data = $this->SecurityUser->formatArray($users);
-				$this->set('roleId', $roleId);
-				$this->set('roleOptions', $roleList);
-				$this->set('data', $data);
-			} else {
-				$this->redirect(array('action' => 'roles'));
-			}
-		} else {
-			$this->redirect(array('action' => 'roles'));
-		}
-	}
-	
-	public function roleUsersEdit() {
-		$this->Navigation->addCrumb('Edit Role Assignment');
-		
-		if(isset($this->params['pass'][0])) {
-			$roleId = $this->params['pass'][0];
-			
-			if($this->request->is('post')) {
-				$data = array();
-				$userList = $this->data['SecurityUser'];
-				
-				$this->SecurityUserRole->deleteAll(array('SecurityUserRole.security_role_id' => $roleId));
-				foreach($userList as $userId => $value) {
-					$data[] = array('security_user_id' => $userId, 'security_role_id' => $roleId);
-				}
-				$this->SecurityUserRole->saveMany($data);
-				$this->redirect(array('action' => 'roleUsers', $roleId));
-			}
-			
-			$roleList = $this->SecurityRole->findList(true);
-
-			if(array_key_exists($roleId, $roleList)) {
-				$userIds = $this->SecurityUserRole->find('list', array(
-					'fields' => array('SecurityUserRole.id', 'SecurityUserRole.security_user_id'),
-					'conditions' => array('SecurityUserRole.security_role_id' => $roleId)
-				));
-				$users = $this->SecurityUser->find('all', array('recursive' => 0, 'conditions' => array('SecurityUser.super_admin' => 0)));
-				$data = array(0 => array(), 1 => array());
-				foreach($users as $user) {
-					$obj = $user['SecurityUser'];
-					if(in_array($obj['id'], $userIds)) {
-						$data[0][] = $obj;
-					} else {
-						$data[1][] = $obj;
-					}
-				}
-				$this->set('roleId', $roleId);
-				$this->set('roleOptions', $roleList);
-				$this->set('data', $data);
-				
-			} else {
-				$this->redirect(array('action' => 'roles'));
-			}
-		} else {
-			$this->redirect(array('action' => 'roles'));
-		}
-	}
-	*/
-	
-	public function permissions() {
-		$this->Navigation->addCrumb('Permissions');
-		if(isset($this->params['pass'][0])) {
-			$selectedRole = $this->params['pass'][0];
-			
-			$isSuperUser = $this->Auth->user('super_admin')==1;
-			$userId = $isSuperUser ? false : $this->Auth->user('id');
-			$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
-			
-			$allowEdit = true;
-			if(!$isSuperUser) {
-				$userRoles = $this->SecurityGroupUser->getRolesByUserId($userId);
-				foreach($userRoles as $obj) {
-					if($obj['SecurityRole']['id'] === $selectedRole) {
-						$allowEdit = false;
-						break;
-					}
-				}
-			}
-			$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
-			$permissions = array();
-			if($isSuperUser) {
-				$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
-			} else {
-				$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
-			}
-			$this->set('_operations', $this->AccessControl->operations);
-			$this->set('selectedRole', $selectedRole);
-			$this->set('roles', $roles);
-			$this->set('permissions', $permissions);
-			$this->set('group', $groupObj);
-			$this->set('allowEdit', $allowEdit);
-		} else {
-			$this->redirect(array('action' => 'roles'));
-		}
-	}
-	
-	public function permissionsEdit() {
-		if(isset($this->params['pass'][0])) {
-			$selectedRole = $this->params['pass'][0];
-			
-			if($this->request->is('get')) {
-				$this->Navigation->addCrumb('Edit Permissions');
-				
-				$isSuperUser = $this->Auth->user('super_admin')==1;
-				$userId = $isSuperUser ? false : $this->Auth->user('id');			
-				$allowEdit = true;
-				if(!$isSuperUser) {
-					$userRoles = $this->SecurityGroupUser->getRolesByUserId($userId);
-					foreach($userRoles as $obj) {
-						if($obj['SecurityRole']['id'] === $selectedRole) {
-							$allowEdit = false;
-							break;
-						}
-					}
-				}
-				if($allowEdit) {
-					$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
-					$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
-					$permissions = array();
-					if($isSuperUser) {
-						$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
-					} else {
-						$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
-					}
-					
-					$this->set('_operations', $this->AccessControl->operations);
-					$this->set('selectedRole', $selectedRole);
-					$this->set('roles', $roles);
-					$this->set('permissions', $permissions);
-					$this->set('group', $groupObj);
-				} else {
-					$this->redirect(array('action' => 'permissions', $selectedRole));
-				}
-			} else {
-				$data = $this->data['SecurityRoleFunction'];
-				$this->SecurityRoleFunction->saveAll($data);
-				$this->redirect(array('action' => 'permissions', $selectedRole));
-			}
-		} else {
-			$this->redirect(array('action' => 'roles'));
 		}
 	}
 }

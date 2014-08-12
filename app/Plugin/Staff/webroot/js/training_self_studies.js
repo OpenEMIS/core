@@ -5,91 +5,37 @@
 var objTrainingSelfStudies = {
 
     init: function() {
-        $(".icon_plus").unbind( "click" );
-        $('.icon_plus').click(objTrainingSelfStudies.addRow);
+        var elementSelfStudy = '#searchTrainingProvider';
+        objTrainingSelfStudies.attachAutoComplete(elementSelfStudy, getRootURL() + $(elementSelfStudy).attr('url'), objTrainingSelfStudies.selectTrainingProviderField);
     },
 
-    validateFileSize: function(obj) {
-      //this.files[0].size gets the size of your file.
-      var fileSize = obj.files[0].size;
-      var fileAttr = $(obj).attr('index');
-      if(fileSize/1024 > 2050){
-        $('.file_index_' + fileAttr).parent().append('<div id="fileinput_message_' + fileAttr + '" class="error-message custom-file-msg">Invalid File Size</div>');
-      }else{
-        $("#fileinput_message_" + fileAttr).remove();
-    
-      }
+   selectTrainingProviderField: function(event, ui) {
+        var val = ui.item.value;
+        var element;
+        console.log(ui);
+        for(var i in val) {
+            element = $('.' + i);
+
+            if(element.get(0).tagName.toUpperCase() === 'INPUT' && element.get(0).id == 'searchTrainingProvider') {
+                element.val(val[i]);
+            } else {
+                element.html(val[i]);
+            }
+        }
+        return false;
     },
 
     
-    addRow: function() {
-        var size = $('.table_row').length;
-        var maskId;
-        var controller = $('#controller').text();
-        var url = getRootURL() + controller + '/attachmentsTrainingSelfStudyAdd';
-
-        $.ajax({
-            type: 'GET',
-            dataType: 'text',
-            url: url,
-            data: {size: size},
-            beforeSend: function (jqXHR) {
-                maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
-            },
-            success: function (data, textStatus) {
-                var callback = function() {
-                    $('.file_upload .table_body').append(data);
-                };
-                $.unmask({id: maskId, callback: callback});
+    attachAutoComplete: function(element, url, callback) {
+        $(element).autocomplete({
+            source: url,
+            minLength: 2,
+            select: callback,
+            focus: function() {
+                return false;
             }
         });
     },
-
-    deleteFile: function(id) {
-        var dlgId = 'deleteDlg';
-        var btn = {
-            value: i18n.General.textDelete,
-            callback: function() {
-                var maskId;
-                var controller = $('#controller').text();
-                var url = getRootURL() + controller + '/attachmentsTrainingSelfStudyDelete/';
-                $.ajax({
-                    type: 'POST',
-                    dataType: 'json',
-                    url: url,
-                    data: {id: id},
-                    beforeSend: function (jqXHR) {
-                        maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
-                    },
-                    success: function (data, textStatus) {
-                        var callback = function() {
-                            var closeEvent = function() {
-                                var successHandler = function() {
-                                    $('[file-id=' + id + ']').fadeOut(600, function() {
-                                        $(this).remove();
-                                        attachments.renderTable();
-                                    });
-                                };
-                                jsAjax.result({data: data, callback: successHandler});
-                            };
-                            $.closeDialog({id: dlgId, onClose: closeEvent});
-                        };
-                        $.unmask({id: maskId, callback: callback});
-                    }
-                });
-            }
-        };
-        
-        var dlgOpt = {  
-            id: dlgId,
-            title: i18n.Attachments.titleDeleteAttachment,
-            content: i18n.Attachments.contentDeleteAttachment,
-            buttons: [btn]
-        };
-        
-        $.dialog(dlgOpt);
-    },
-
   
     errorFlag: function() {
         var errorMsg = $('.custom-file-msg').length;

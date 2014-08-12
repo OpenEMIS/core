@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffAward extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date'));
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -46,35 +46,30 @@ class StaffAward extends StaffAppModel {
 	);
 
 	public $headerDefault = 'Awards';
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
 	
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'issue_date'),
-                array('field' => 'award', 'labelKey' => 'general.name' ),
-                array('field' => 'issuer'),
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'issue_date'),
+				array('field' => 'award', 'labelKey' => 'general.name' ),
+				array('field' => 'issuer'),
 				array('field' => 'comment'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 	
 	public function award($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
 		$header = __($this->headerDefault);
 		$controller->set(compact('header', 'data'));
-		
 	}
 
 	public function awardView($controller, $params){
@@ -89,39 +84,30 @@ class StaffAward extends StaffAppModel {
 			$controller->redirect(array('action'=>'award'));
 		}
 		
-		$controller->Session->write('StaffAwardId', $id);
+		$controller->Session->write('StaffAward.id', $id);
 		$fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields', 'id'));
+		$controller->set(compact('header', 'data', 'fields', 'id'));
 	}
 	
 	public function awardDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffAwardId')) {
-            $id = $controller->Session->read('StaffAwardId');
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-			$controller->Session->delete('StaffAwardId');
-            $controller->redirect(array('action' => 'award'));
-        }
-    }
+		return $this->remove($controller, 'award');
+	}
 	
 	public function awardAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('header', __('Add '.$this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	
 	public function awardEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
 		$controller->set('header', __('Edit '.$this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'edit');
 		
 		$this->render = 'add';
 	}
 	
-	function setup_add_edit_form($controller, $params){
+	function setup_add_edit_form($controller, $params, $type){
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -131,30 +117,9 @@ class StaffAward extends StaffAppModel {
 			}
 		}
 		else{
-			$addMore = false;
-			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($controller->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($controller->action);
-            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $controller->Navigation->validateModel($controller->action,$this->name);
-            }
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
 			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$id = $this->getLastInsertId();
-					if($addMore){
-						$controller->Message->alert('general.add.success');
-					}
-                	$controller->Navigation->updateWizard($controller->action,$id,$addMore);	
-                	$controller->Message->alert('general.add.success');
-				}
-				else{
-                	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Message->alert('general.add.success');
-				}
+				$controller->Message->alert('general.' . $type . '.success');
 				return $controller->redirect(array('action' => 'award'));
 			}
 		}
@@ -177,10 +142,10 @@ class StaffAward extends StaffAppModel {
 		$data = array();
 		
 		foreach($list as $obj) {
-			$staffAwardField = $obj['StaffAward'][$field];
+			$staffAwardField = $obj[$this->alias][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $staffAwardField)),
+				'label' => trim($staffAwardField),
 				'value' => array($field => $staffAwardField)
 			);
 		}
@@ -190,13 +155,13 @@ class StaffAward extends StaffAppModel {
 	
 	//Ajax method
 	public function awardAjaxFindAward($controller, $params) {
-        if ($controller->request->is('ajax')) {
+		if ($controller->request->is('ajax')) {
 			$this->render = false;
 			$type = $params['pass'][0];
-            $search = $params->query['term'];
-            $data = $this->autocomplete($search, $type);
+			$search = $params->query['term'];
+			$data = $this->autocomplete($search, $type);
 
-            return json_encode($data);
-        }
-    }
+			return json_encode($data);
+		}
+	}
 }

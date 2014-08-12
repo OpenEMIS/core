@@ -1,6 +1,5 @@
 <?php
 class TrainingCoursePrerequisite extends TrainingAppModel {
-	//public $useTable = 'student_health_histories';
 	
 	public $belongsTo = array(
 		'TrainingCourse' => array(

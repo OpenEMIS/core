@@ -51,6 +51,11 @@ class IndTask extends AppTask {
 		$path = $this->Common->getResultPath().str_replace(' ','_',$category).DS.$module.DS;
         //$type = ($batch == 0)?'w':'a';//if first run truncate the file to 0
 		$type = 'w+';
+		
+		if (!file_exists($path)) {
+			mkdir($path, 0777, true);
+		}
+		
         $this->fileFP = fopen($path.$filename, $type);
 		// fputs ($this->fileFP, $header."\n");
 		fputs ($this->fileFP, implode(",", $arrHeader)."\n");

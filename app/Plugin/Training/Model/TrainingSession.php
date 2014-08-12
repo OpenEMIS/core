@@ -15,13 +15,17 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TrainingSession extends TrainingAppModel {
-	//public $useTable = 'student_health_histories';
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Containable', 'DatePicker' => array('start_date', 'end_date'));
+
+	public $trainerTypeOptions = array('1'=>'Internal', '2'=>'External');
+
+	public $trainerTypes = array('Staff'=>'Internal', '1'=>'External');
 	
 	public $belongsTo = array(
 		'TrainingCourse',
 		'TrainingStatus',
 		'TrainingProvider',
+		'Area',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -32,12 +36,26 @@ class TrainingSession extends TrainingAppModel {
 		)
 	);
 
+	
 	public $hasMany = array(
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
 			'foreignKey' => 'training_session_id',
 			'dependent' => true
 		),
+		'TrainingSessionResult' => array(
+			'className' => 'TrainingSessionResult',
+			'foreignKey' => 'training_session_id',
+			'dependent' => true
+		),
+		'TrainingSessionTrainer' => array(
+			'className' => 'TrainingSessionTrainer',
+			'foreignKey' => 'training_session_id',
+			'dependent' => true
+		)
+	);
+
+	public $hasOne = array(
 		'TrainingSessionResult' => array(
 			'className' => 'TrainingSessionResult',
 			'foreignKey' => 'training_session_id',
@@ -73,13 +91,6 @@ class TrainingSession extends TrainingAppModel {
 				'required' => true,
 				'message' => 'Please enter a valid Location.'
 			)
-		),
-		'trainer' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid Trainer.'
-			)
 		)
 	);
 
@@ -95,58 +106,49 @@ class TrainingSession extends TrainingAppModel {
 	public $headerDefault = 'Sessions';
 
 
-	public function autocomplete($search, $type='1') {
+	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();
-		if($type==1){
-			$list = $this->find('all', array(
-				'recursive' => -1,
-				'fields' => array('DISTINCT TrainingSession.location'),
-				'conditions' => array('TrainingSession.location LIKE' => $search
-				),
-				'order' => array('TrainingSession.location')
-			));
-			
-			foreach($list as $obj) {
-				$valField = $obj['TrainingSession']['location'];
-				
-				$data[] = array(
-					'label' => trim(sprintf('%s', $valField)),
-					'value' => array('location' => $valField)
-				);
-			}
-		}else if($type==2){
-			$securityUser = ClassRegistry::init('SecurityUser');
-			$list = $securityUser->find('all', array(
-				'recursive' => -1,
-				'fields' => array('DISTINCT SecurityUser.first_name', 'SecurityUser.last_name'),
-				'conditions' => array(
-					'OR' => array(
-						'SecurityUser.first_name LIKE' => $search,
-						'SecurityUser.last_name LIKE' => $search,
-						'SecurityUser.identification_no LIKE' => $search
-					)
-				),
-				'order' => array('SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name')
-			));
-			
-			$data = array();
-			
-			foreach($list as $obj) {
-				$data[] = array(
-					'label' => trim(sprintf('%s, %s', $obj['SecurityUser']['first_name'], $obj['SecurityUser']['last_name'])),
-					'value' => array('trainer' => trim(sprintf('%s, %s', $obj['SecurityUser']['first_name'], $obj['SecurityUser']['last_name'])))
-				);
-			}
-		}
+	
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT TrainingSession.location'),
+			'conditions' => array('TrainingSession.location LIKE' => $search
+			),
+			'order' => array('TrainingSession.location')
+		));
 		
+		foreach($list as $obj) {
+			$valField = $obj['TrainingSession']['location'];
+			
+			$data[] = array(
+				'label' => trim(sprintf('%s', $valField)),
+				'value' => array('location' => $valField)
+			);
+		}
 
 		return $data;
 	}
 
+	private function getSessionResultStatus($sessionId){
+		$trainingSessions = $this->find('first', array('recursive'=>-1,'conditions'=>array('TrainingSession.id'=>$sessionId)));
+		
+		if($trainingSessions['TrainingSession']['training_status_id']=='1'){
+			return '1';
+		}else if($trainingSessions['TrainingSession']['training_status_id']=='3'){
+			$trainingSessionResults = $this->TrainingSessionResult->find('first', array('recursive'=>-1,'conditions'=>array('TrainingSessionResult.training_session_id'=>$sessionId)));
+		
+			if(!empty($trainingSessionResults)){
+				if($trainingSessionResults['TrainingSessionResult']['training_status_id']=='1'){
+					return '2';
+				}
+			}
+		}
+		return '0';
+	}
+
 	
 	public function session($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 
@@ -154,10 +156,18 @@ class TrainingSession extends TrainingAppModel {
 		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
-		if(!empty($selectedStatus)){
-			$data = $this->find('all', array('order'=> array('start_date'), 'conditions' => array('TrainingSession.training_status_id' => $selectedStatus)));
-		}else{
-			$data = $this->find('all', array('order'=> array('start_date')));
+
+		if ($controller->request->is('post')) {
+			if (isset($controller->request->data['sortdir']) && isset($controller->request->data['order'])) {
+				if ($controller->request->data['sortdir'] != $controller->Session->read('Search.sortdirTrainingSession')) {
+					$controller->Session->delete('Search.sortdirTrainingSession');
+					$controller->Session->write('Search.sortdirTrainingSession', $controller->request->data['sortdir']);
+				}
+				if ($controller->request->data['order'] != $controller->Session->read('Search.orderTrainingSession')) {
+					$controller->Session->delete('Search.orderTrainingSession');
+					$controller->Session->write('Search.orderTrainingSession', $controller->request->data['order']);
+				}
+			}
 		}
 
 		$conditions = array();
@@ -167,34 +177,53 @@ class TrainingSession extends TrainingAppModel {
 			$conditions['NOT']['TrainingSession.training_status_id'] = 4;
 		}
 
-		$data = $this->find('all', 
-			array(
-				'recursive' => -1, 
-				'fields' => array('TrainingCourse.*', 'TrainingSession.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'training_courses',
-						'alias' => 'TrainingCourse',
-						'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
-					)
-				),
-				'order'=> array('TrainingSession.start_date', 'TrainingSession.location', 'TrainingCourse.code', 'TrainingCourse.title',  'TrainingSession.training_status_id'), 
-				'conditions' => $conditions
-			)
-		);
 
+		$fieldordername = ($controller->Session->read('Search.orderTrainingSession')) ? $controller->Session->read('Search.orderTrainingSession') : array('TrainingSession.start_date', 'TrainingSession.location', 'TrainingCourse.code',  'TrainingSession.training_status_id');
+		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingSession')) ? $controller->Session->read('Search.sortdirTrainingSession') : 'asc';
+		$order = $fieldordername;
+		if($controller->Session->check('Search.orderTrainingSession')){
+			$order = array($fieldordername => $fieldorderdir);
+		}
+
+		$controller->Paginator->settings = array(
+	        'conditions' => $conditions,
+	        'fields' => array('TrainingSession.*', 'TrainingCourse.code', 'TrainingCourse.title', 'TrainingStatus.id', 'TrainingStatus.name'),
+	        'joins' => array(
+		        array(
+					'type' => 'INNER',
+					'table' => 'training_courses',
+					'alias' => 'TrainingCourse',
+					'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+				),
+				array(
+					'type' => 'INNER',
+					'table' => 'training_statuses',
+					'alias' => 'TrainingStatus',
+					'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
+				)
+		    ),
+	        'limit' => 25,
+	        'recursive'=> -1,
+	        'order' => $order
+	    );
+		
+		$data = $controller->paginate('TrainingSession');
+		$data = $controller->Workflow->populateWorkflowStatus($this->name, 'TrainingStatus', $data);	
+
+		if (empty($data) && !$controller->request->is('ajax')) {
+			$controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+
+		$controller->set('sortedcol', $fieldordername);
+		$controller->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
 		$controller->set('statusOptions', $statusOptions);
 		$controller->set('selectedStatus', $selectedStatus);
+		if ($controller->request->is('post')) {
+			$controller->set('ajax', true);
+		}
 	}
 
 	public function sessionView($controller, $params){
@@ -209,20 +238,39 @@ class TrainingSession extends TrainingAppModel {
 			$controller->redirect(array('action'=>'session'));
 		}
 		
-		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
-		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
+		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 			array(
-				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
+				'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
+				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
+				'joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+					)
+				)
 			)
 		);
 
+		$trainingSessionTrainers = $this->TrainingSessionTrainer->find('all',  
+			array(
+				'fields' => array('TrainingSessionTrainer.*'),
+				'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$id)
+			)
+		);
 
+		$sessionEditable = $this->getSessionResultStatus($id);
+		
 		$controller->Session->write('TrainingSessionId', $id);
 		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
+		$controller->set('trainingSessionTrainers', $trainingSessionTrainers);
 		$controller->set('data', $data);
+		$controller->set('sessionEditable', $sessionEditable);
 
 		//APROVAL
-		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$pending = $data['TrainingSession']['training_status_id']=='2' ? true : false;
+		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'session');
 		$controller->set('controller', 'Training');
 		$controller->set('plugin', 'Training');
@@ -237,7 +285,7 @@ class TrainingSession extends TrainingAppModel {
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	            $this->delete($id);
-	            $controller->Utility->alert($name . ' have been deleted successfully.');
+	            $controller->Message->alert('general.delete.success');
 				$controller->Session->delete('TrainingSessionId');
 			}
             $controller->redirect(array('action' => 'session'));
@@ -261,7 +309,7 @@ class TrainingSession extends TrainingAppModel {
 				$data['training_status_id'] = '1';
 
 				$this->TrainingSessionResult->save($data);
-	            $controller->Utility->alert($name . ' have been activated successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'session'));
         }
@@ -279,7 +327,7 @@ class TrainingSession extends TrainingAppModel {
     			array('TrainingSession.training_status_id' => 4),
     			array('TrainingSession.id '=> $id)
 			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
+            $controller->Message->alert('Training.inactivate.success');
             $controller->redirect(array('action' => 'session'));
         }
     }
@@ -306,7 +354,7 @@ class TrainingSession extends TrainingAppModel {
 			} else if (isset($saveData['reject'])) {
 		      	$saveData['WorkflowLog']['approve'] = 0; 
 			}
-		
+
 			if($controller->Workflow->updateApproval($saveData)){
 				if($saveData['WorkflowLog']['approve']==1){
 					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
@@ -316,6 +364,29 @@ class TrainingSession extends TrainingAppModel {
 						$data['training_status_id'] = '1';
 
 						$this->TrainingSessionResult->save($data);
+
+						$trainingSessions = $this->find('first', array('conditions'=>array('TrainingSession.id'=>$saveData['WorkflowLog']['record_id'])));
+						$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
+						$trainingCourseResultType->bindModel(
+					        array('belongsTo' => array(
+					                'TrainingResultType' => array(
+										'className' => 'FieldOptionValue',
+										'foreignKey' => 'training_result_type_id'
+									)
+					            )
+					        )
+					    );
+
+						$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingSessions['TrainingSession']['training_course_id'])));
+						$trainingSessionTraineeResults = array();
+						foreach($trainingSessions['TrainingSessionTrainee'] as $key=>$val){
+							foreach($trainingCourseResultTypes as $key2=>$val2){
+								$trainingSessionTraineeResults[] = array('training_session_trainee_id'=>$val['id'], 'training_result_type_id'=>$val2['TrainingCourseResultType']['training_result_type_id']);
+							}
+						}
+						
+						$trainingSessionTraineeResult = ClassRegistry::init('TrainingSessionTraineeResult');
+						$trainingSessionTraineeResult->saveAll($trainingSessionTraineeResults);
 					}
 				}else{
 					$this->id =  $saveData['WorkflowLog']['record_id'];
@@ -325,66 +396,253 @@ class TrainingSession extends TrainingAppModel {
 			}
 		}
 	}
-	
+
+	public function sessionDownloadTemplate($controller, $params){
+ 	 	$result = array();
+ 	 	$fieldName = array(__('OpenEmis ID'));
+	 	
+	 	echo $controller->download(__('TrainingSessionTrainee').'_' . date('Ymdhis') . '.csv');
+
+		echo $controller->array2csv($result, $fieldName);
+	 	die();
+	}
+
+	public function sessionTraineeListDownload($controller, $params){
+	 	if($controller->Session->check('TrainingSessionId')) {
+ 			$fieldName = array(__('OpenEmis ID'), __('First Name'), __('Last Name'));
+	 	 	$id = $controller->Session->read('TrainingSessionId');
+	 	 	$this->TrainingSessionTrainee->bindModel(
+		        array('belongsTo' => array(
+		                'Staff' => array(
+							'className' => 'Staff.Staff',
+							'foreignKey' => 'staff_id'
+						)
+		            )
+		        )
+		    );
+	 	 	$result = array();
+ 	 		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all', array('fields'=>array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name'), 'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)));
+ 	 		if(!empty($trainingSessionTrainees)){
+		        $i = 0;
+		        foreach($trainingSessionTrainees as $obj){
+		        	$result[$i]['Staff.identification_no'] =  $obj['Staff']['identification_no'];
+	        		$result[$i]['Staff.first_name'] =  $obj['Staff']['first_name'];
+        			$result[$i]['Staff.last_name'] =  $obj['Staff']['last_name'];
+		        	$i++;
+		        }
+		    }
+ 	 		echo $controller->download(__('TrainingSessionTrainee').'_' . date('Ymdhis') . '.csv');
+
+			echo $controller->array2csv($result, $fieldName);
+		 	die();
+		}else{
+ 		  	$controller->redirect(array('action' => 'session'));
+	 	}
+	}
+
+	public function sessionDuplicate($controller, $params){
+		if($controller->Session->check('TrainingSessionId')) {
+		 	$id = $controller->Session->read('TrainingSessionId');
+			$trainingSession = $this->find('all', array('conditions'=>array('TrainingSession.id'=>$id)));
+			if(!empty($trainingSession)){
+				$data['TrainingSession'] = $trainingSession[0]['TrainingSession'];
+				$data['TrainingSessionTrainee'] = $trainingSession[0]['TrainingSessionTrainee'];
+				$data['TrainingSessionTrainer'] = $trainingSession[0]['TrainingSessionTrainer'];
+			}
+			
+			$data['TrainingSession']['training_status_id'] = 1;
+			unset($data['TrainingSession']['modified_user_id']);
+			unset($data['TrainingSession']['modified']);
+			unset($data['TrainingSession']['created_user_id']);
+			unset($data['TrainingSession']['created']);
+			unset($data['TrainingSession']['id']);
+			if(!empty($data['TrainingSessionTrainee'])){
+				foreach($data['TrainingSessionTrainee'] as $key=>$val){
+					unset($data['TrainingSessionTrainee'][$key]['id']);
+					unset($data['TrainingSessionTrainee'][$key]['training_session_id']);
+				}
+			}
+			if(!empty($data['TrainingSessionTrainer'])){
+				foreach($data['TrainingSessionTrainer'] as $key=>$val){
+					unset($data['TrainingSessionTrainer'][$key]['id']);
+					unset($data['TrainingSessionTrainer'][$key]['training_session_id']);
+				}
+			}
+
+			if($this->saveAll($data)){
+				$controller->Message->alert('general.duplicate.success');
+				$controller->redirect(array('action' => 'sessionEdit', $this->getLastInsertId()));
+			}else{
+				$controller->Message->alert('general.duplicate.failed');
+				$controller->redirect(array('action' => 'session'));
+			}
+			
+		}else{
+ 		  	$controller->redirect(array('action' => 'session'));
+	 	}
+	}
+
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingCourse = ClassRegistry::init('TrainingCourse');
-		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
-	
+		$trainingCourseOptions = $this->TrainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
+		$areaOptions = $this->Area->find('list', array('fields'=> array('id', 'name'), 'conditions'=>array('area_level_id'=>4, 'visible'=>1), 'order'=>array('order')));
+
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+		$controller->set('areaOptions', $areaOptions);
+
+		$trainerTypeOptions = array_map('__', $this->trainerTypeOptions);
+		$controller->set('trainerTypeOptions', $trainerTypeOptions);
 
 		$controller->set('modelName', $this->name);
 		
 		$provider = '';
+
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
 			$data = $this->findById($id);
+			$sessionEditable = '1';
 			if(!empty($data)){
-				if($data['TrainingSession']['training_status_id']!=1){
+				$sessionEditable = $this->getSessionResultStatus($id);
+				if(!$sessionEditable){
 					return $controller->redirect(array('action' => 'sessionView', $id));
 				}
 
 				$provider = $data['TrainingSession']['training_provider_id'];
-				$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 				$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 					array(
+						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
 						'recursive' => -1, 
-						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
+						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
+						'joins' => array(
+							array(
+								'type' => 'INNER',
+								'table' => 'staff',
+								'alias' => 'Staff',
+								'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+							)
+						)
 					)
 				);
-
 				$trainingSessionTraineesVal = null;
 				if(!empty($trainingSessionTrainees)){
 					foreach($trainingSessionTrainees as $val){
+						$val['TrainingSessionTrainee']['first_name'] = $val['Staff']['first_name'];
+						$val['TrainingSessionTrainee']['last_name'] = $val['Staff']['last_name'];
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
-				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal));
+
+				$trainingSessionTrainers = $this->TrainingSessionTrainer->find('all',  
+					array(
+						'fields' => array('TrainingSessionTrainer.*'),
+						'recursive' => -1, 
+						'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$id),
+					)
+				);
+				$trainingSessionTrainersVal = null;
+				if(!empty($trainingSessionTrainers)){
+					foreach($trainingSessionTrainers as $val){
+						$trainingSessionTrainersVal[] = $val['TrainingSessionTrainer'];
+					}
+				}
+				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal, 'TrainingSessionTrainer'=>$trainingSessionTrainersVal));
 			}
+			$controller->request->data['TrainingSession']['sessionEditable'] = $sessionEditable;
 		}
 		else{
 			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
-				if (isset($controller->request->data['save'])) {
+
+				if(!isset($controller->request->data['TrainingSession']['sessionEditable']) || $controller->request->data['TrainingSession']['sessionEditable'] == '1'){
+					if ($controller->request->data['TrainingSession']['training_status_id']=='1') {
 				   	$controller->request->data['TrainingSession']['training_status_id'] = 1; 
-				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
+					} else if ($controller->request->data['TrainingSession']['training_status_id']=='2') {
+				      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
+					}
 				}
-				if($this->saveAll($controller->request->data)){
-					if(isset($controller->request->data['DeleteTrainee'])){
+
+				$data = $controller->request->data;
+				if($data['TrainingSession']['sessionEditable']=='2'){
+					$this->TrainingSessionTrainee->bindModel(
+				        array('hasMany' => array(
+			                 	'TrainingSessionTraineeResult' => array(
+									'className' => 'TrainingSessionTraineeResult',
+									'foreignKey' => 'training_session_trainee_id',
+									'dependent' => true,
+									'exclusive' => true
+								),
+				            )
+				        ),
+				        false
+				    );
+
+					
+					$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
+					$trainingCourseResultType->bindModel(
+				        array('belongsTo' => array(
+				                'TrainingResultType' => array(
+									'className' => 'FieldOptionValue',
+									'foreignKey' => 'training_result_type_id'
+								)
+				            )
+				        )
+				    );
+
+				    $trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingSession']['training_course_id'])));
+						
+					if(!empty($data['TrainingSessionTrainee'])){
+						$trainingSessionTraineeResults = array();
+						foreach($data['TrainingSessionTrainee'] as $key=>$value){
+							$data['TrainingSessionTrainee'][$key]['training_session_id'] = $data['TrainingSession']['id'];
+							if(!isset($data['TrainingSessionTrainee'][$key]['id'])){
+								$this->TrainingSessionTrainee->create();
+								$this->TrainingSessionTrainee->save($data['TrainingSessionTrainee'][$key]);
+								$insertId = $this->TrainingSessionTrainee->getLastInsertId();
+								unset($data['TrainingSessionTrainee'][$key]);
+								foreach($trainingCourseResultTypes as $key=>$val){
+									$trainingSessionTraineeResults[] = array('training_session_trainee_id'=>$insertId, 'training_result_type_id'=>$val['TrainingCourseResultType']['training_result_type_id']);
+								}
+							}
+						}
+						$this->TrainingSessionTrainee->saveAll($data['TrainingSessionTrainee']);
+						$this->TrainingSessionTrainee->TrainingSessionTraineeResult->saveAll($trainingSessionTraineeResults);
+					}
+
+					if(isset($data['DeleteTrainee'])){
 						$deletedId = array();
-						foreach($controller->request->data['DeleteTrainee'] as $key=>$value){
+						foreach($data['DeleteTrainee'] as $key=>$value){
 							$deletedId[] = $value['id'];
 						}
-						$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), false);
+						
+					 	$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id'=>$deletedId));
 					}
-					if(empty($controller->request->data[$this->name]['id'])){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-					}
-					else{
-						$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-					}
+					$controller->Message->alert('general.edit.success');
 					return $controller->redirect(array('action' => 'session'));
+					
+				}else{
+					if($this->saveAll($data)){
+						if(isset($data['DeleteTrainee'])){
+							$deletedId = array();
+							foreach($data['DeleteTrainee'] as $key=>$value){
+								$deletedId[] = $value['id'];
+							}
+							$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), false);
+						}
+						if(isset($data['DeleteTrainer'])){
+							$deletedId = array();
+							foreach($data['DeleteTrainer'] as $key=>$value){
+								$deletedId[] = $value['id'];
+							}
+							$this->TrainingSessionTrainer->deleteAll(array('TrainingSessionTrainer.id' => $deletedId), false);
+						}
+						if(empty($controller->request->data[$this->name]['id'])){
+						  	$controller->Message->alert('general.add.success');
+						}
+						else{	
+						  	$controller->Message->alert('general.edit.success');
+						}
+						return $controller->redirect(array('action' => 'session'));
+					}
 				}
 			}
 		}

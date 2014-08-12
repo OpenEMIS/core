@@ -32,7 +32,94 @@ App::uses('Model', 'Model');
  */
 class AppModel extends Model {
 	public $formatResult = false;
-	public $render = true; // ControllerActionBehaviour variable
+	// ControllerActionBehaviour Properties
+	public $render = true;
+	public $plugin = true; // deprecated
+	public $Session;
+	public $Message;
+	public $Navigation;
+	public $controller;
+	public $request;
+	public $action;
+	public $fields;
+	
+	public function setField($field, $obj, $order=0) {
+		$fields = $this->fields;
+		if (empty($fields)) {
+			$fields = $this->getFields();
+		}
+		$key = $field;
+		if (array_key_exists($field, $fields)) {
+			$key = $obj[$field]['model'] . '.' . $field;
+		}
+		$fields[$key] = $obj[$field];
+		$fields[$key]['order'] = count($fields);
+		$this->fields = $fields;
+		$this->setFieldOrder($key, $order);
+	}
+	
+	public function getFields($options=array()) {
+		$fields = $this->schema();
+		$belongsTo = $this->belongsTo;
+		
+		$i = 0;
+		foreach($fields as $key => $obj) {
+			$fields[$key]['order'] = $i++;
+			$fields[$key]['visible'] = true;
+			if (!array_key_exists('model', $fields[$key])) {
+				$fields[$key]['model'] = $this->alias;
+			}
+		}
+		
+		$fields['id']['type'] = 'hidden';
+		$defaultFields = array('modified_user_id', 'modified', 'created_user_id', 'created', 'order');
+		foreach ($defaultFields as $field) {
+			if (array_key_exists($field, $fields)) {
+				if ($field == 'modified_user_id') {
+					$fields[$field]['type'] = $field;
+					$fields[$field]['dataModel'] = 'ModifiedUser';
+				}
+				if ($field == 'created_user_id') {
+					$fields[$field]['type'] = $field;
+					$fields[$field]['dataModel'] = 'CreatedUser';
+				}
+				$fields[$field]['visible'] = array('view' => true, 'edit' => false);
+				$fields[$field]['labelKey'] = 'general';
+			}
+		}
+		if (array_key_exists('name', $fields)) {
+			$fields['name']['labelKey'] = 'general';
+		}
+
+		$this->fields = $fields;
+		return $fields;
+	}
+	
+	public function setFieldOrder($field, $order) {
+		$fields = $this->fields;
+		$found = false;
+		foreach ($fields as $key => $obj) {
+			if ($found && $key !== $field) {
+				$fields[$key]['order'] = $fields[$key]['order'] + 1;
+			} else {
+				if ($field === $key) {
+					$found = true;
+					$fields[$key]['order'] = $order;
+				} else if ($fields[$key]['order'] == $order) {
+					$found = true;
+					$fields[$key]['order'] = $order + 1;
+				}
+			}
+		}		
+		$fields[$field]['order'] = $order;
+		uasort($fields, array($this->alias, 'sortFields'));
+		$this->fields = $fields;
+	}
+	
+	public static function sortFields($a, $b) {
+		return $a['order'] >= $b['order'];
+	}
+	// End ControllerActionBehaviour
 	
 	public function findList($options=array()) {
 		$class = $this->alias;
@@ -42,10 +129,11 @@ class AppModel extends Model {
 			$options['conditions'] = array($class.'.visible' => 1);
 		}
 		$conditions = !isset($options['conditions']) ? array() : $options['conditions'];
+		$fields = !isset($options['fields']) ? array($class . '.id', $class . '.name') : $options['fields'];
 		$orderBy = !isset($options['orderBy']) ? 'order' : $options['orderBy'];
 		$order = !isset($options['order']) ? 'ASC' : $options['order'];
 		$list = $this->find('list', array(
-				'fields' => array($class . '.id', $class . '.name'),
+				'fields' => $fields,
 				'conditions' => $conditions,
 				'order' => array($class . '.' . $orderBy)
 			)

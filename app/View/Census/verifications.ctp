@@ -21,15 +21,14 @@ $this->end();
 $this->start('contentBody');
 ?>
 
-<div id="attendance" class="">
-
+<div class="table-responsive">
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
-                <th class="table_cell"><?php echo __('Year'); ?></th>
-                <th class="table_cell"><?php echo __('By'); ?></th>
-                <th class="table_cell"><?php echo __('Date'); ?></th>
-                <th class="table_cell"><?php echo __('Status'); ?></th>
+                <th><?php echo __('Year'); ?></th>
+                <th><?php echo __('By'); ?></th>
+                <th><?php echo __('Date'); ?></th>
+                <th><?php echo __('Status'); ?></th>
             </tr>
         </thead>
 
@@ -55,10 +54,10 @@ $this->start('contentBody');
                 }
                 ?>
                 <tr class="<?php echo $highlight ?>">
-                    <td class="table_cell"><?php echo $year; ?></td>
-                    <td class="table_cell"><?php echo $by; ?></td>
-                    <td class="table_cell"><?php echo $date; ?></td>
-                    <td class="table_cell"><?php echo $status; ?></td>
+                    <td><?php echo $year; ?></td>
+                    <td><?php echo $by; ?></td>
+                    <td><?php echo $date; ?></td>
+                    <td><?php echo $status; ?></td>
                 </tr>
             <?php } ?>
         </tbody>

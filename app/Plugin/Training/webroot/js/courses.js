@@ -1,7 +1,6 @@
 
 $(document).ready(function() {
-    //objTrainingCourses.init();
-    console.log('test');
+    objTrainingCourses.init();
 });
 
 function in_array (needle, haystack, argStrict) {
@@ -43,13 +42,19 @@ function in_array (needle, haystack, argStrict) {
 
 var objTrainingCourses = {
     init: function() {
-        $(".icon_plus").unbind( "click" );
-        $('.icon_plus').click(objTrainingCourses.addRow);
+        //$(".icon_plus").unbind( "click");
+        //$('.icon_plus').click(jsForm.insertNewInputFile, validateFileSize);
+        //$('#TrainingCourseFiles').bind("onchange", objTrainingCourses.validateFileSize(this));
+        //$(".icon_plus").removeAttr('onclick');
+        //$(".icon_plus").attr('onclick', 'jsForm.insertNewInputFile;objTrainingCourses.getFileInput(this);');
     },
+
 
     validateFileSize: function(obj) {
       //this.files[0].size gets the size of your file.
-      var fileSize = obj.files[0].size;
+      var fileSize = objfiles[0].size;
+      //console.log(fileSize);
+      //files[0].size
       var fileAttr = $(obj).attr('index');
       if(fileSize/1024 > 2050){
         $('.table_row ' + fileAttr).parent().append('<div id="fileinput_message_' + fileAttr + '" class="error-message custom-file-msg">Invalid File Size</div>');
@@ -58,79 +63,6 @@ var objTrainingCourses = {
     
       }
     },
-
-
-    addRow: function() {
-        var table = $('.file_upload');
-        var size = table.find('.table_row').length;
-
-        var maskId;
-        var controller = $('#controller').text();
-
-        var url = getRootURL() + controller + '/attachmentsCourseAdd';
-    
-        $.ajax({
-            type: 'GET',
-            dataType: 'text',
-            url: url,
-            data: {size: size},
-            beforeSend: function (jqXHR) {
-                maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
-            },
-            success: function (data, textStatus) {
-                var callback = function() {
-                    $('.file_upload .table_body').append(data);
-                };
-                $.unmask({id: maskId, callback: callback});
-            }
-        });
-    },
-
-    deleteFile: function(id) {
-        var dlgId = 'deleteDlg';
-        var btn = {
-            value: i18n.General.textDelete,
-            callback: function() {
-                var maskId;
-                var controller = $('#controller').text();
-                var url = getRootURL() + controller + '/attachmentsCourseDelete/';
-                $.ajax({
-                    type: 'POST',
-                    dataType: 'json',
-                    url: url,
-                    data: {id: id},
-                    beforeSend: function (jqXHR) {
-                        maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
-                    },
-                    success: function (data, textStatus) {
-                        var callback = function() {
-                            var closeEvent = function() {
-                                var successHandler = function() {
-                                    $('[file-id=' + id + ']').fadeOut(600, function() {
-                                        $(this).remove();
-                                        attachments.renderTable();
-                                    });
-                                };
-                                jsAjax.result({data: data, callback: successHandler});
-                            };
-                            $.closeDialog({id: dlgId, onClose: closeEvent});
-                        };
-                        $.unmask({id: maskId, callback: callback});
-                    }
-                });
-            }
-        };
-        
-        var dlgOpt = {  
-            id: dlgId,
-            title: i18n.Attachments.titleDeleteAttachment,
-            content: i18n.Attachments.contentDeleteAttachment,
-            buttons: [btn]
-        };
-        
-        $.dialog(dlgOpt);
-    },
-
 
     validateTargetPopulation: function() {
           var val = new Array();
@@ -155,7 +87,7 @@ var objTrainingCourses = {
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
-                table.find('.table_body').append(data);
+                table.find('.table_body tbody').append(data);
                 var element = '#searchTargetPopulation' + index;
                 var url = getRootURL() + table.attr('url') + '/' + index;
                 objTrainingCourses.attachAutoComplete(element, url, objTrainingCourses.selectTargetPopulation);
@@ -203,13 +135,13 @@ var objTrainingCourses = {
         objTrainingCourses.validateTargetPopulation();
     },
 
-   validatePrerequisite: function() {
+   validateCoursePrerequisite: function() {
           var val = new Array();
           var c = 0;
-          $("#prerequisite_message").remove();
-          $('.validate-prerequisite').each(function(i, obj) {
+          $("#course_prerequisite_message").remove();
+          $('.validate-course-prerequisite').each(function(i, obj) {
              if(in_array(obj.value, val)){
-                $('.prerequisite').prepend('<div id="prerequisite_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Prerequisite</div>');
+                $('.course_prerequisite').prepend('<div id="course_prerequisite_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Course Prerequisite</div>');
                 return false;
              }else{
                 val[c] = obj.value;
@@ -219,17 +151,17 @@ var objTrainingCourses = {
           
     },
 
-    addPrerequisite: function(obj) {
-        var table = $('.prerequisite');
-        var index = table.find('.table_row').length + $('.delete-prerequisite input').length;
+    addCoursePrerequisite: function(obj) {
+        var table = $('.course_prerequisite');
+        var index = table.find('.table_row').length + $('.delete-course_prerequisite input').length;
         var maskId;
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
-                table.find('.table_body').append(data);
-                var element = '#searchPrerequisite' + index;
+                table.find('.table_body tbody').append(data);
+                var element = '#searchCoursePrerequisite' + index;
                 var url = getRootURL() + table.attr('url') + '/' + index;
-                objTrainingCourses.attachAutoComplete(element, url, objTrainingCourses.selectPrerequisite);
+                objTrainingCourses.attachAutoComplete(element, url, objTrainingCourses.selectCoursePrerequisite);
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -238,12 +170,12 @@ var objTrainingCourses = {
             dataType: 'text',
             url: getRootURL() + $(obj).attr('url'),
             data: params,
-            beforeSend: function (jqXHR) { maskId = $.mask({parent: ".row_prerequisite"}); },
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: ".row_course_prerequisite"}); },
             success: success
         });
     },
 
-    selectPrerequisite: function(event, ui) {
+    selectCoursePrerequisite: function(event, ui) {
         var val = ui.item.value;
         var element;
         for(var i in val) {
@@ -254,15 +186,15 @@ var objTrainingCourses = {
                 element.html(val[i]);
             }
         }
-        objTrainingCourses.validatePrerequisite();
+        objTrainingCourses.validateCoursePrerequisite();
         return false;
     },
     
-    deletePrerequisite: function(obj) {
+    deleteCoursePrerequisite: function(obj) {
         var row = $(obj).closest('.table_row');
         var id = row.attr('row-id');
         if(id != undefined) {
-            var div = $('.delete-prerequisite');
+            var div = $('.delete-course_prerequisite');
             var index = div.find('input').length;
             var name = div.attr('name').replace('{index}', index);
             var controlId = $('.control-id');
@@ -270,7 +202,7 @@ var objTrainingCourses = {
             div.append(input);
         }
         row.remove();
-        objTrainingCourses.validatePrerequisite();
+        objTrainingCourses.validateCoursePrerequisite();
     },
 
 
@@ -282,7 +214,8 @@ var objTrainingCourses = {
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
-                table.find('.table_body').append(data);
+                table.find('.table_body tbody').append(data);
+                 objTrainingCourses.validateProvider();
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -309,14 +242,208 @@ var objTrainingCourses = {
             div.append(input);
         }
         row.remove();
-        //objTrainingCourses.validateTargetPopulation();
+        objTrainingCourses.validateProvider();
+    },
+
+     validateProvider: function() {
+          var val = new Array();
+          var c = 0;
+          $("#provider_message").remove();
+          $('.validate-provider').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.provider').prepend('<div id="provider_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Provider</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    validateResultType: function() {
+          var val = new Array();
+          var c = 0;
+          $("#result_type_message").remove();
+          $('.validate-result-type').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.result_type').prepend('<div id="result_type_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Result Type</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addResultType: function(obj) {
+        var table = $('.result_type');
+        var index = table.find('.table_row').length + $('.delete-result-type input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                objTrainingCourses.validateResultType();
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+    
+    deleteResultType: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-result-type');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingCourses.validateResultType();
+    },
+
+   validateSpecialisation: function() {
+          var val = new Array();
+          var c = 0;
+          $("#specialisation_message").remove();
+          $('.validate-specialisation').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.specialisation').prepend('<div id="specialisation_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Specialisation</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addSpecialisation: function(obj) {
+        var table = $('.specialisation');
+        var index = table.find('.table_row').length + $('.delete-specialisation input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                objTrainingCourses.validateSpecialisation();
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+    
+    deleteSpecialisation: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-specialisation');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingCourses.validateSpecialisation();
+    },
+
+    validateExperience: function() {
+          var val = new Array();
+          var c = 0;
+          $("#experience_message").remove();
+          $('.validate-experience').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.experience').prepend('<div id="experience_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Experience</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addExperience: function(obj) {
+        var table = $('.experience');
+        var index = table.find('.table_row').length + $('.delete-experience input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                 $(".months-selection-"+index).on("change", function(event){
+                       objTrainingCourses.autoFill(index);
+                });
+            };
+            $('.add_experience').addClass('hide');
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+
+    autoFill:function(index){
+       var month = parseInt($('#searchExperienceMonth'+index).val());
+       var year = parseInt($('#searchExperienceYear'+index).val());
+       var totalMonth = (year*12) + month;
+
+       $('.experience-validate-'+index).val(totalMonth);
+       objTrainingCourses.validateExperience();
+    },
+    
+    deleteExperience: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-experience');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+            $('.add_experience').removeClass('hide');
+        }
+        row.remove();
+        objTrainingCourses.validateExperience();
     },
 
     attachAutoComplete: function(element, url, callback) {
         $(element).autocomplete({
             source: url,
             minLength: 2,
-            select: callback
+            select: callback,
+            focus: function() {
+                return false;
+            }
         });
     },
 

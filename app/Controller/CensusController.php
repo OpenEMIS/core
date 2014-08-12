@@ -19,14 +19,13 @@ App::uses('AppController', 'Controller');
 class CensusController extends AppController {
 	public $institutionSiteId;
 	public $source_type=array(
-						"dataentry" => 0,
-						"external" => 1,
-						"internal" => 3,
-						"estimate" => 2
-						);
+		"dataentry" => 0,
+		"external" => 1,
+		"internal" => 2,
+		"estimate" => 3
+	);
 
 	public $uses = array(
-		'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
 		'EducationCycle',
@@ -60,10 +59,6 @@ class CensusController extends AppController {
 		'CensusGridYCategory',
 		'CensusCustomField',
 		'CensusCustomValue',
-		'FinanceSource',
-		'FinanceNature',
-		'FinanceType',
-		'FinanceCategory',
 		'InfrastructureCategory',
 		'InfrastructureBuilding',
 		'InfrastructureResource',
@@ -75,41 +70,39 @@ class CensusController extends AppController {
 		'InfrastructureStatus',
 		'InfrastructureMaterial',
 		'Students.StudentCategory',
-                'EducationProgramme'
+		'EducationProgramme'
 	);
-        
-        public $modules = array(
-            'enrolment' => 'CensusStudent',
-            'teachers' => 'CensusTeacher',
-            'staff' => 'CensusStaff',
-            'classes' => 'CensusClass',
-            'shifts' => 'CensusShift',
-            'graduates' => 'CensusGraduate',
-            'assessments' => 'CensusAssessment',
-            'behaviour' => 'CensusBehaviour',
-            'textbooks' => 'CensusTextbook',
-            'finances' => 'CensusFinance',
-			'attendance' => 'CensusAttendance'
-        );
+		
+	public $modules = array(
+		'enrolment' => 'CensusStudent',
+		'teachers' => 'CensusTeacher',
+		'staff' => 'CensusStaff',
+		'classes' => 'CensusClass',
+		'shifts' => 'CensusShift',
+		'graduates' => 'CensusGraduate',
+		'assessments' => 'CensusAssessment',
+		'behaviour' => 'CensusBehaviour',
+		'textbooks' => 'CensusTextbook',
+		'finances' => 'CensusFinance',
+		'attendance' => 'CensusAttendance',
+		'otherforms' => 'CensusCustomField'
+	);
 	
 	public function beforeFilter() {
-                parent::beforeFilter();
+		parent::beforeFilter();
 
-                if ($this->Session->check('InstitutionSiteId')) {
-                    //$institutionId = $this->Session->read('InstitutionId');
-                    //$institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
-                    $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
-                    $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
+		if ($this->Session->check('InstitutionSiteId')) {
+			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
+			$institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
 
-                    $this->bodyTitle = $institutionSiteName;
-                    $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-                    //$this->Navigation->addCrumb($institutionName, array('controller' => 'Institutions', 'action' => 'view'));
-                    $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
-                } else {
-                    $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-                }
-                $this->set('source_type', $this->source_type);
-        }
+			$this->bodyTitle = $institutionSiteName;
+			$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
+			$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+		} else {
+			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
+		$this->set('source_type', $this->source_type);
+	}
 	
 	public function getAvailableYearId($yearList) {
 		$yearId = 0;
@@ -221,11 +214,11 @@ class CensusController extends AppController {
 		$this->set('yearList', $yearList);
 		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
-        
+		
 	public function infrastructureEdit() {
 		$this->Navigation->addCrumb('Edit Infrastructure');
 		$data = $this->InfrastructureCategory->find('list',array('conditions'=>array('InfrastructureCategory.visible'=>1),'order'=>'InfrastructureCategory.order'));
-                
+				
 		if($this->request->is('post')) {
 			//pr($this->request->data);die;
 			$sanitationGender = $this->request->data['CensusSanitation']['gender'];
@@ -354,7 +347,7 @@ class CensusController extends AppController {
 		return $ret = array_merge(array('data'=>$data),array('types'=>$types));
 	   
 	}
-        
+		
 	private function energy($yr){
 		$data =  $this->CensusEnergy->find('all',array('conditions'=>array('CensusEnergy.school_year_id'=>$yr,'CensusEnergy.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureEnergy->find('list',array('conditions'=>array('InfrastructureEnergy.visible'=>1)));
@@ -413,222 +406,5 @@ class CensusController extends AppController {
 		
 	public function getFinanceCatByFinanceType($typeid){
 		return $cat = $this->FinanceCategory->find('list',array('conditions'=>array('FinanceCategory.finance_type_id'=>$typeid)));
-	}
-	
-	public function financesDelete($id) {
-		if ($this->request->is('get')) {
-			throw new MethodNotAllowedException();
-		}
-		$this->CensusFinance->id = $id;
-		$info = $this->CensusFinance->read();
-		if ($this->CensusFinance->delete($id)) {
-			$message = __('Record Deleted!', true);
-		}else{
-			$message = __('Error Occured. Please, try again.', true);
-		}
-		if($this->RequestHandler->isAjax()){
-			$this->autoRender = false;
-			$this->layout = 'ajax';
-			echo json_encode(compact('message'));
-		}
-	}
-
-	public function financeSource() {
-		$this->autoRender = false;
-		$data = $this->FinanceSource->find('all',array('conditions'=>array('FinanceSource.visible'=>1)));
-		echo json_encode($data);
-	}
-
-	public function financeData() {
-		$this->autoRender = false;
-		$data = $this->FinanceNature->find('all',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
-		echo json_encode($data);
-	}
-        
-	public function otherforms(){
-		$this->Navigation->addCrumb('Other Forms');
-			
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$arrCensusInfra = array();
-		
-		$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-		$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
-			
-		//pr($data);
-		foreach($data as &$arrDataVal){
-			$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$selectedYear)));
-			
-			$tmp = array();
-			foreach($dataAnswer as $arrV){
-			   $tmp[$arrV['CensusGridValue']['census_grid_x_category_id']][$arrV['CensusGridValue']['census_grid_y_category_id']] =  $arrV['CensusGridValue'];
-			}
-			$dataAnswer = $tmp;
-			$arrDataVal['answer'] = $dataAnswer;
-			
-		}
-			
-		//pr($data);
-		
-		/***
-		 * CustomFields
-		 */
-		$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-		$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>array($site['InstitutionSite']['institution_site_type_id'],0)), 'order'=>array('CensusCustomField.institution_site_type_id','CensusCustomField.order')));
-		//$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id']), 'order'=>'CensusCustomField.order'));
-		//pr($datafields); echo "d2";
-		$this->CensusCustomValue->unbindModel(
-			array('belongsTo' => array('InstitutionSite'))
-		);
-		$datavalues = $this->CensusCustomValue->find('all',array('conditions'=>array('CensusCustomValue.institution_site_id'=>$this->institutionSiteId,'CensusCustomValue.school_year_id'=>$selectedYear)));
-		$tmp=array();
-		foreach($datavalues as $arrV){
-			$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];
-		}
-		$datavalues = $tmp;
-		//pr($datafields);
-		
-		$this->set('datafields',$datafields);
-		$this->set('datavalues',$tmp);
-		$this->set('data',$data);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
-	}
-	
-	public function otherformsEdit(){
-		$this->Navigation->addCrumb('Edit Other Forms');
-			
-		if($this->request->is('post')) {
-			//pr($this->request->data);die;
-			$schoolYearId = $this->request->data['CensusGridValue']['school_year_id'];
-			unset($this->request->data['CensusGridValue']['school_year_id']);
-			
-			foreach($this->request->data['CensusGridValue'] as  $k => &$arrVal){
-				if($arrVal['value'] == '' && $arrVal['id'] == ''){ 
-					unset($this->request->data['CensusGridValue'][$k]);
-				}elseif($arrVal['value'] == '' && $arrVal['id'] != ''){//if there's an ID but value was set to blank == delete the record
-					$this->CensusGridValue->delete($arrVal['id']);
-					unset($this->request->data['CensusGridValue'][$k]);
-				}else{
-					$arrVal['school_year_id'] = $schoolYearId;
-					$arrVal['institution_site_id'] = $this->institutionSiteId;
-				}
-			}
-			
-			//pr($this->request->data);die;
-			if(count($this->request->data['CensusGridValue'])>0){
-				
-				$this->CensusGridValue->saveAll($this->request->data['CensusGridValue']);
-			}
-			
-			/**
-			* Note to Preserve the Primary Key to avoid exhausting the max PK limit
-			*/
-			
-		   $arrFields = array('textbox','dropdown','checkbox','textarea');
-		   foreach($arrFields as $fieldVal){
-			   if(!isset($this->request->data['CensusCustomValue'][$fieldVal]))  continue;
-			   foreach($this->request->data['CensusCustomValue'][$fieldVal] as $key => $val){
-				   if($fieldVal == "checkbox"){
-					   
-					   $arrCustomValues = $this->CensusCustomValue->find('list',array('fields'=>array('value'),'conditions' => array('CensusCustomValue.school_year_id' => $schoolYearId,'CensusCustomValue.institution_site_id' => $this->institutionSiteId,'CensusCustomValue.census_custom_field_id' => $key)));
-						
-						   $tmp = array();
-						   if(count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-						   foreach($arrCustomValues as $pk => $intVal){
-							   //pr($val['value']); echo "$intVal";
-							   if(!in_array($intVal, $val['value'])){
-								   //echo "not in db so remove \n";
-								  $this->CensusCustomValue->delete($pk);
-							   }
-						   }
-						   $ctr = 0;
-						   if(count($arrCustomValues) < count($val['value'])){ //if answer has greater value than db, insert
-							   //pr($arrCustomValues);pr($val['value']);echo $key;die;
-							foreach($val['value'] as $intVal){
-								//pr($val['value']); echo "$intVal";
-								if(!in_array($intVal, $arrCustomValues)){
-									$this->CensusCustomValue->create();
-									$arrV['census_custom_field_id']  = $key;
-									$arrV['value']  = $val['value'][$ctr];
-									$arrV['school_year_id'] = $schoolYearId;
-									$arrV['institution_site_id']  = $this->institutionSiteId;
-									$this->CensusCustomValue->save($arrV);
-									unset($arrCustomValues[$ctr]);
-								}
-								 $ctr++;
-							}
-						   }
-				   }else{ // if editing reuse the Primary KEY; so just update the record
-					   
-					   
-					   $x = $this->CensusCustomValue->find('first',array('fields'=>array('id','value'),'conditions' => array('CensusCustomValue.school_year_id' => $schoolYearId,'CensusCustomValue.institution_site_id' => $this->institutionSiteId,'CensusCustomValue.census_custom_field_id' => $key)));
-					  
-					   
-					   $this->CensusCustomValue->create();
-					   if($x) $this->CensusCustomValue->id = $x['CensusCustomValue']['id'];
-					   $arrV['census_custom_field_id']  = $key;
-					   $arrV['value']  = $val['value'];
-					   $arrV['school_year_id'] = $schoolYearId;
-					   $arrV['institution_site_id']  = $this->institutionSiteId;
-					   
-					   $this->CensusCustomValue->save($arrV);
-					   
-				   }
-			   }
-		   }
-		   $this->redirect(array('action' => 'otherforms'));
-		}
-		
-		$arrCensusInfra = array();
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$selectedYear = $this->getAvailableYearId($yearList);
-		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-		if(!$editable) {
-			$this->redirect(array('action' => 'otherforms', $selectedYear));
-		} else {
-			$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-                        $data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
-			//$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
-			
-			foreach($data as &$arrDataVal){
-				$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$selectedYear)));
-				
-				$tmp = array();
-				foreach($dataAnswer as $arrV){
-				   $tmp[$arrV['CensusGridValue']['census_grid_x_category_id']][$arrV['CensusGridValue']['census_grid_y_category_id']] =  $arrV['CensusGridValue'];
-				}
-				$dataAnswer = $tmp;
-				$arrDataVal['answer'] = $dataAnswer;
-				
-			}
-				
-			/***
-			 * CustomFields
-			 */
-			$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-			//$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
-			//$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
-                        $datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>array($site['InstitutionSite']['institution_site_type_id'],0)), 'order' => array('CensusCustomField.institution_site_type_id','CensusCustomField.order')));
-			//pr($datafields); echo "d2";
-			$this->CensusCustomValue->unbindModel(
-				array('belongsTo' => array('InstitutionSite'))
-			);
-			$datavalues = $this->CensusCustomValue->find('all',array('conditions'=>array('CensusCustomValue.institution_site_id'=>$this->institutionSiteId,'CensusCustomValue.school_year_id'=>$selectedYear)));
-			$tmp=array();
-			foreach($datavalues as $arrV){
-				$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];
-			}
-			$datavalues = $tmp;
-			
-			//pr($datafields);
-				
-			$this->set('datafields',$datafields);
-			$this->set('datavalues',$tmp);
-			$this->set('data',$data);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('years', $yearList);
-		}
 	}
 }

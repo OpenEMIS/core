@@ -7,9 +7,11 @@ $obj = $data[$modelName];
 $this->start('contentActions');
 echo $this->Html->link($this->Label->get('general.list'), array('action' => 'session'), array('class' => 'divider'));
 if($_edit) {
-	if($obj['training_status_id'] == 1){
+	if($sessionEditable){
 	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'sessionEdit', $obj['id']), array('class' => 'divider'));
 	}
+	echo $this->Html->link(__('Duplicate Session'), array('action' => 'sessionDuplicate'), array('class' => 'divider'));
+	echo $this->Html->link(__('Download Trainees'), array('action' => 'sessionTraineeListDownload'), array('class' => 'divider'));
 }
 if($_delete) {
 	if($obj['training_status_id'] == 1){
@@ -52,6 +54,10 @@ $this->start('contentBody'); ?>
 	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 </div>
 <div class="row">
+	<div class="col-md-3"><?php echo __('Area'); ?></div>
+	<div class="col-md-6"><?php echo $data['Area']['name']; ?></div>
+</div>
+<div class="row">
 	<div class="col-md-3"><?php echo __('Location'); ?></div>
 	<div class="col-md-6"><?php echo $obj['location']; ?></div>
 </div>
@@ -61,7 +67,16 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainer'); ?></div>
-	<div class="col-md-6"><?php echo $obj['trainer']; ?></div>
+	<div class="col-md-6">
+		<?php 
+		if (!empty($trainingSessionTrainers)){ 
+			foreach($trainingSessionTrainers as $val){
+				echo $val['TrainingSessionTrainer']['ref_trainer_name'] . '<br />';
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainees'); ?></div>
@@ -69,7 +84,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingSessionTrainees)){ 
 			foreach($trainingSessionTrainees as $val){
-				echo $val['TrainingSessionTrainee']['identification_first_name'] . ', ' . $val['TrainingSessionTrainee']['identification_last_name'] . '<br />';
+				echo $val['Staff']['first_name'] . ', ' . $val['Staff']['last_name'] . '<br />';
 			}
 		}else{
 			echo "-";

@@ -52,6 +52,7 @@ var i18n = {
 		textProgrammeSelect: '<?php echo T("Please select a programme first.", true); ?>',
 		textClassSelectStudent: '<?php echo T("Please select a student first."); ?>',
 		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>',
+		textClassSelectStaff: '<?php echo T("Please select a staff first."); ?>',
 		textClassSelectSubject: '<?php echo T("Please select a subject first."); ?>'
 	},
 	Training : {
@@ -135,6 +136,13 @@ var i18n = {
 	},
 	Olap: {
 		textLoadingCube : '<?php echo T("Loading Cube...", true); ?>',
-		textGeneratingCube : '<?php echo T("Generating Cube...", true); ?>'
+		textGeneratingCube : '<?php echo T("Generating Cube...", true); ?>',
+		textValidateCube : '<?php echo T("Row and Column Dimension cannot be the same", true); ?>'
+	},
+	Translation: {
+		textCompiling : '<?php echo T("Compiling...", true); ?>',
+		textCompile : '<?php echo T("Compile", true); ?>',
+		textTranslationCompileTitle : '<?php echo T("Compile Translation File", true); ?>', 
+		contentTranslationCompile : '<?php echo T("Do you wish to compile this language?", true); ?>',
 	}
 }

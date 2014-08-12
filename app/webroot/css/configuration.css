@@ -3,11 +3,9 @@
 }
 
 .table{
-	margin: 10px 0 0 3px;
 	margin-bottom: 0;
-	table-layout: auto;
-	width: 99% !important;
 }
+
 .table textarea{
 	width: 98% !important;
 }

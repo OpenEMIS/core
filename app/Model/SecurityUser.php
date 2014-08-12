@@ -97,6 +97,31 @@ class SecurityUser extends AppModel {
 		parent::beforeSave();
 		return true;
 	}
+
+	public function createToken() {
+	  $loginToken = "";
+	  $secret = Router::url('/', true);
+	  for ($i=0; $i<8; $i++) $loginToken .= $this->rand_alphanumeric();
+	  return $loginToken . md5($loginToken . $secret);
+	}
+
+	public function validateToken($loginToken) {
+	    $rs = substr($loginToken, 0, 8);
+     	$secret = Router::url('/', true);
+	    return $loginToken === $rs . md5($rs . $secret);
+  	}
+
+	private function rand_alphanumeric() {
+		$subsets[0] = array('min' => 48, 'max' => 57); // ascii digits
+		$subsets[1] = array('min' => 65, 'max' => 90); // ascii lowercase English letters
+		$subsets[2] = array('min' => 97, 'max' => 122); // ascii uppercase English letters
+
+		// random choice between lowercase, uppercase, and digits
+		$s = rand(0, 2);
+		$ascii_code = rand($subsets[$s]['min'], $subsets[$s]['max']);
+
+		return chr( $ascii_code );
+	}
 	
 	public function updateLastLogin($id) {
 		$this->id = $id;

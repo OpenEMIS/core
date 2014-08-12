@@ -26,7 +26,6 @@ $(document).ajaxComplete(function() {
 
 $(document).ready(function() {	
 	jsForm.init();
-	jsTable.init();
 	jsList.init();
 });
 
@@ -543,7 +542,10 @@ var jsForm = {
 								var successHandler = function() {
 									$('[file-id=' + id + ']').parent().fadeOut(600, function() {
 										$(this).remove();
-										attachments.renderTable();
+										if (typeof attachments !== 'undefined') {
+											attachments.renderTable();
+										}
+										
 									});
 								};
 								jsAjax.result({data: data, callback: successHandler});
@@ -565,6 +567,20 @@ var jsForm = {
 
 		$.dialog(dlgOpt);
 	},
+	
+	filterAbsenceByMonth: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldMonth = $("select#monthId");
+		if(fieldSchoolYear.length !== 1 || fieldMonth.length !== 1){
+			return false;
+		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldMonth.val();
+		
+		window.location.href = url;
+	}
 };
 
 var jsList = {

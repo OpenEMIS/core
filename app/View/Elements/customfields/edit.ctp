@@ -20,11 +20,12 @@ $this->start('contentBody');
 	?>
 	<div class="row year"  style="margin-left:5px;">
 		<div class="col-md-2"><?php echo __('Year'); ?></div>
-		<div class="col-md-10">
+		<div class="col-md-3">
 			<?php
 				echo $this->Form->input('school_year_id', array(
 					'label' => false,
 					'div' => false,
+					'class' => 'form-control',
 					'options' => $years,
 					'default' => $selectedYear,
 					'onchange' => 'custom.view.changeCategory(this)',
@@ -59,7 +60,7 @@ $this->start('contentBody');
 								$val = (isset($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']))?
 									$dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']:"";
 								
-								echo '<input type="text" class="default" name="data['.$arrMap['CustomValue'].'][textbox]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" value="'.$val.'" >';
+								echo '<input type="text" class="default form-control" name="data['.$arrMap['CustomValue'].'][textbox]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" value="'.$val.'" >';
 						  echo '</div>
 						</div>';
 			}elseif($arrVals[$arrMap['CustomField']]['type'] == 3) {//DropDown
@@ -68,7 +69,7 @@ $this->start('contentBody');
 								<div class="field_value">';
 								   
 									if(count($arrVals[$arrMap['CustomFieldOption']])> 0){
-										echo '<select name="data['.$arrMap['CustomValue'].'][dropdown]['.$arrVals[$arrMap['CustomField']]["id"].'][value]">';
+										echo '<select name="data['.$arrMap['CustomValue'].'][dropdown]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" class="form-control">';
 										foreach($arrVals[$arrMap['CustomFieldOption']] as $arrDropDownVal){
 											if(isset($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value'])){
 												$defaults =  $dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value'];
@@ -114,7 +115,7 @@ $this->start('contentBody');
 								if(isset($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value'])){
 									$val = ($dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']?$dataValues[$arrVals[$arrMap['CustomField']]['id']][0]['value']:""); 
 								}
-								echo '<textarea name="data['.$arrMap['CustomValue'].'][textarea]['.$arrVals[$arrMap['CustomField']]["id"].'][value]">'.@$val.'</textarea>';
+								echo '<textarea name="data['.$arrMap['CustomValue'].'][textarea]['.$arrVals[$arrMap['CustomField']]["id"].'][value]" class="form-control">'.@$val.'</textarea>';
 						  echo '</div>
 						</div>';
 			}

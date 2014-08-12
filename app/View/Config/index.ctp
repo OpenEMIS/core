@@ -11,8 +11,8 @@ $this->end();
 
 $this->start('contentBody'); ?>
 
-<div class="row select_row form-group">
-    <div class="col-md-6">
+<div class="row select_row page-controls">
+    <div class="col-md-4">
         <?php
             echo $this->Form->input('type', array(
                 'options' => $typeOptions,
@@ -37,20 +37,18 @@ $this->start('contentBody'); ?>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td><?php echo __('No');?></td>
-					<td><?php echo __('Name');?></td>
-					<td><?php echo __('Value');?></td>
+					<th><?php echo __('Name');?></th>
+					<th><?php echo __('Value');?></th>
 				</tr>
 			</thead>
 
-			<tbody class="table_body">
+			<tbody>
 				<?php 
 				$i = 0;
 				foreach($element as $innerKey => $innerElement){
 					$item = $innerElement;
 				 ?>
 				<tr>
-					<td><?php echo ++$i;?></td>
 					<td><?php echo $this->Html->link($item['label'], array('action' => 'view', $item['id']), array('escape' => false));?></td>
 					<?php if($item['name']=='yearbook_logo'){ ?>
 					<td>

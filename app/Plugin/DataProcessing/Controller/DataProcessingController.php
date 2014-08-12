@@ -39,7 +39,8 @@ class DataProcessingController extends DataProcessingAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
+		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->name, 'action' => 'build'));
 	}
 	
 	public function index() {
@@ -477,7 +478,7 @@ class DataProcessingController extends DataProcessingAppController {
             }*/
             $this->processGenerate($this->data['Reports']);
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus'))), 'order' => array('Report.order')));
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus','html'))), 'order' => array('Report.order')));
 		$QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){

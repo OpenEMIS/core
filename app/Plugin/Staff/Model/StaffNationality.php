@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffNationality extends StaffAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'Staff',
+		'Staff.Staff',
 		'Country',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -28,7 +28,6 @@ class StaffNationality extends StaffAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
 	public $validate = array(
 		'country_id' => array(
 			'ruleRequired' => array(
@@ -38,139 +37,99 @@ class StaffNationality extends StaffAppModel {
 			)
 		)
 	);
-	
+
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'name', 'model' => 'Country'),
-                array('field' => 'comments'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-    
-    public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'Country'),
+				array('field' => 'comments'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 	
 	public function nationalities($controller, $params) {
-        $controller->Navigation->addCrumb('Nationalities');
-        $header = __('Nationalities');
-        $this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser','CreatedUser')));
-        $data = $this->findAllByStaffId($controller->staffId);
-        $controller->set(compact('header', 'data'));
-    }
-	
+		$controller->Navigation->addCrumb('Nationalities');
+		$header = __('Nationalities');
+		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser','CreatedUser')));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
+		$controller->set(compact('header', 'data'));
+	}
 	
 	public function nationalitiesAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Nationalities');
-        $header = __('Add Nationalities');
-        
-        if ($controller->request->is('post')) {
-            $data = $controller->request->data['StaffNationality'];
-            $addMore = false;
-            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->action);
-            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->action);
-            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
-                $addMore = true;
-            } else {
-                $controller->Navigation->validateModel($controller->action, 'StaffNationality');
-            }
+		$controller->Navigation->addCrumb('Add Nationalities');
+		$header = __('Add Nationalities');
+		
+		if ($controller->request->is('post')) {
+			$data = $controller->request->data[$this->alias];
 
-            $this->create();
-            $data['staff_id'] = $controller->staffId;
+			$this->create();
+			$data['staff_id'] = $controller->Session->read('Staff.id');
 
-            if ($this->save($data)) {
-                $id = $this->getLastInsertId();
-                if ($addMore) {
-                    $controller->Message->alert('general.add.success');
-                }
-                $controller->Navigation->updateWizard($controller->action, $id, $addMore);
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'nationalities'));
-            }
-        }
-        $ConfigItem = ClassRegistry::init('ConfigItem');
-        $defaultCountryId = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
-        
-        $countryOptions = $this->Country->getOptions();
-        $controller->UserSession->readStatusSession($controller->request->action);
-        
-        $controller->set(compact('header', 'countryOptions','defaultCountryId'));
-    }
-	
+			if ($this->save($data)) {
+				$id = $this->getLastInsertId();
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'nationalities'));
+			}
+		}
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+		$defaultCountryId = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
+		
+		$countryOptions = $this->Country->getOptions();
+		$controller->set(compact('header', 'countryOptions','defaultCountryId'));
+	}
+
 	public function nationalitiesView($controller, $params) {
-        $id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
-        $controller->Navigation->addCrumb('Nationality Details');
-        $header = __('Nationality Details');
-        $data = $this->findById($id);
+		$id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Nationality Details');
+		$header = __('Nationality Details');
+		$data = $this->findById($id);
 
-        if (empty($data)) {
-            $controller->Message->alert('general.noData');
-            return $controller->redirect(array('action' => 'nationalities'));
-        }
-        $controller->Session->write('StaffNationalityId', $id);
-        $fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields', 'id'));
-    }
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'nationalities'));
+		}
+		$controller->Session->write('StaffNationality.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
 
 	public function nationalitiesEdit($controller, $params)  {
-        $id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
-        $controller->Navigation->addCrumb('Edit Nationality');
-        $header = __('Edit Nationality');
-        
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $nationalityData = $controller->request->data['StaffNationality'];
+		$id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Edit Nationality');
+		$header = __('Edit Nationality');
+		
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$nationalityData = $controller->request->data[$this->alias];
+			$nationalityData['staff_id'] = $controller->Session->read('Staff.id');
 
-            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->action);
-            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->action);
-            }
+			if ($this->save($nationalityData)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'nationalitiesView', $id));
+			}
+		}
+		else{
+			$this->recursive = -1;
+			$data = $this->findById($id);
 
-            $nationalityData['student_id'] = $controller->studentId;
-
-            if ($this->save($nationalityData)) {
-                $controller->Navigation->updateWizard($controller->action, $id);
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'nationalitiesView', $id));
-            }
-        }
-        else{
-            $this->recursive = -1;
-            $data = $this->findById($id);
-
-            if (empty($data)) {
-                return $controller->redirect(array('action' => 'nationalities'));
-            }
-            $controller->request->data = $data;
-        }
-        $countryOptions = $this->Country->getOptions();
-        
-        $controller->set(compact('id', 'header', 'countryOptions'));
-    }
+			if (empty($data)) {
+				return $controller->redirect(array('action' => 'nationalities'));
+			}
+			$controller->request->data = $data;
+		}
+		$countryOptions = $this->Country->getOptions();
+		
+		$controller->set(compact('id', 'header', 'countryOptions'));
+	}
 
 	public function nationalitiesDelete($controller, $params) {
-        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffNationalityId')) {
-            $id = $controller->Session->read('StaffNationalityId');
-            
-            if ($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
+		return $this->remove($controller, 'nationalities');
+	}
 
-            $controller->Session->delete('StaffNationalityId');
-            
-            return $controller->redirect(array('action' => 'nationalities'));
-        }
-    }
 }

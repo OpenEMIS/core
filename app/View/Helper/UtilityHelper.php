@@ -242,10 +242,10 @@ class UtilityHelper extends AppHelper {
             if($mylevel===''){
                 $display = 'display:none;';
             }
-            echo '<div class="form-group row" style="'.$display.'">
+            echo '<div class="form-group" style="'.$display.'">
                     <label class="col-md-3 control-label">'.$mylevel.'</label>
                     '. $form->input($arealevelfk.'_'.$ctr,
-                                                        array('class'=>'areapicker default form-control',
+                                                        array('class'=>'areapicker form-control',
                                                         'style'=>'float:left;',
 														'div' => false,
 														'label' => false,
@@ -663,31 +663,50 @@ class UtilityHelper extends AppHelper {
 		return $option[$flag];
 	}
 	
-	// for permissions	
-	public function getPermissionInput($form, $fieldName, $type, $value) {
-		$options = array(
-			'id' => $type,
-			'name' => sprintf($fieldName, $type),
-			'type' => 'checkbox',
-			'value' => 1,
-			'autocomplete' => 'off',
-			'before' => '<div class="table_cell center">',
-			'after' => '</div>'
-		);
+	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){
+		$stampFirstDateAbsent = strtotime($firstDateAbsent);
+		$stampLastDateAbsent = strtotime($lastDateAbsent);
 		
-		if(is_null($value)) {
-			$options['disabled'] = 'disabled';
-		} else {
-			if($value == 1) {
-				$options['checked'] = 'checked';
-			} else if($value == 2) {
-				$options['checked'] = 'checked';
-				$options['disabled'] = 'disabled';
+		$totalWeekdays = 0;
+		while($stampFirstDateAbsent <= $stampLastDateAbsent){
+			$weekday = strtolower(date('l', $stampFirstDateAbsent));
+			if(in_array($weekday, $settingWeekdays)){
+				$totalWeekdays++;
+			}
+			
+			$stampFirstDateAbsent = strtotime('+1 day', $stampFirstDateAbsent);
+		}
+		
+		return $totalWeekdays;
+	}
+	
+	public function generatePaginationLinks($totalRows, $currentPage, $rowsPerPage, $fileName){
+		$paginationStr = '';
+		$paginationStr .= '<div class="row">';
+		$paginationStr .= '<ul id="pagination">';
+		
+		$totalPages = ceil($totalRows/$rowsPerPage);
+		
+		//$numOfLinkFront = 10;
+		
+		if($currentPage > 1){
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . ($currentPage-1) . '">Previous</a></li>';
+		}
+		
+		if($currentPage < 5){
+			for($i=1; $i<5; $i++){
+				$paginationStr .= '<li class=""><a href="' . $fileName . '/' . $i . '">' . $i . '</a></li>';
 			}
 		}
 		
-		$input = $form->input($type, $options);
-		return $input;
+		if($currentPage < $totalPages){
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . $totalPages . '">' . $totalPages . '</a></li>';
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . ($currentPage+1) . '">Next</a></li>';
+		}
+		
+		$paginationStr .= '</ul>';
+		$paginationStr .= '</div>';
+		
+		return $paginationStr;
 	}
-	// end permissions
 }

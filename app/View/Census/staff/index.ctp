@@ -37,13 +37,13 @@ echo $this->element('census/year_options');
 					$subtotal = $obj['male'] + $obj['female'];
 					$tableData[] = array(
 						$obj['staff_category_name'],
-						array($male, array('class' => 'cell-number')),
-						array($female, array('class' => 'cell-number')),
-						array($subtotal, array('class' => 'cell-number'))
+						array($male, array('class' => 'cell-number ' . $recordTag)),
+						array($female, array('class' => 'cell-number ' . $recordTag)),
+						array($subtotal, array('class' => 'cell-number ' . $recordTag))
 					);
 				}
 			}
-			echo $this->Html->tableCells($tableData, array('class' => $recordTag), array('class' => $recordTag));
+			echo $this->Html->tableCells($tableData);
 			?>
 		</tbody>
 		<tfoot>

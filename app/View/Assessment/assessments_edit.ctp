@@ -13,7 +13,6 @@ $this->assign('contentId', 'assessmentAdd');
 $this->assign('contentClass', 'edit');
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
 <?php
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Assessment','action' => 'assessmentsEdit', $data['id']));
@@ -40,7 +39,7 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 	</div>
 	<?php
 	echo $this->Form->input('visible', array(
-		'class' => 'default',
+		'class' => 'form-control',
 		'options' => array(1 => __('Active'), 0 => __('Inactive')),
 		'default' => $data['visible'] 
 	));
@@ -54,11 +53,11 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 	 <table class="table table-striped table-hover table-bordered">
 		<thead class="table_head">
 			<tr>
-				<td class="table_cell cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></td>
-				<td class="table_cell cell_subject_code"><?php echo __('Subject Code'); ?></td>
-				<td class="table_cell"><?php echo __('Subject Name'); ?></td>
-				<td class="table_cell cell_number_input"><?php echo __('Minimum'); ?></td>
-				<td class="table_cell cell_number_input"><?php echo __('Maximum'); ?></td>
+				<th class="cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></th>
+				<th class="cell_subject_code"><?php echo __('Subject Code'); ?></th>
+				<th class=""><?php echo __('Subject Name'); ?></th>
+				<th class="cell_number_input"><?php echo __('Minimum'); ?></th>
+				<th class="cell_number_input"><?php echo __('Maximum'); ?></th>
 			</tr>
 		</thead>
 		<tbody class="table_body">
@@ -78,34 +77,34 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 				echo $this->Form->hidden('name', array('name' => sprintf($fieldName, $i, 'name'), 'value' => $item['name']));
 				echo $this->Form->hidden('assessment_item_type_id', array('name' => sprintf($fieldName, $i, 'assessment_item_type_id'), 'value' => $data['id']));
 				?>
-				<td class="table_cell">
+				<td class="">
 					<input type="checkbox" name="<?php echo sprintf($fieldName, $i, 'visible'); ?>" value="1" autocomplete="off" onChange="jsList.activate(this, '.table_row')" <?php echo $visible ? 'checked="checked"' : ''; ?>/>
 				</td>
-				<td class="table_cell"><?php echo $item['code']; ?></td>
-				<td class="table_cell"><?php echo $item['name']; ?></td>
-				<td class="table_cell">
-					<div class="input_wrapper">
+				<td class=""><?php echo $item['code']; ?></td>
+				<td class=""><?php echo $item['name']; ?></td>
+				<td class="input">
 					<?php 
 						echo $this->Form->input('min', array(
+							'label' => false,
+							'div' => false,
 							'name' => sprintf($fieldName, $i, 'min'),
 							'value' => strlen($item['min'])==0 ? 50 : $item['min'],
 							'maxlength' => 4,
 							'onkeypress' => 'return utility.integerCheck(event)'
 						));
 					?>
-					</div>
 				</td>
-				<td class="table_cell">
-					<div class="input_wrapper">
+				<td class="input">
 					<?php 
 						echo $this->Form->input('max', array(
+							'label' => false,
+							'div' => false,
 							'name' => sprintf($fieldName, $i, 'max'),
 							'value' => strlen($item['max'])==0 ? 100 : $item['max'],
 							'maxlength' => 4,
 							'onkeypress' => 'return utility.integerCheck(event)'
 						));
 					?>
-					</div>
 				</td>
 			</tr>
 			<?php } ?>
