@@ -60,19 +60,19 @@ echo $this->element('census/year_options');
 			<table class="table table-striped table-hover table-bordered">
 				<thead class="table_head">
 					<tr>
-						<th class="table_cell cell_category"><?php echo __('Category'); ?></th>
+						<th class="cell_category"><?php echo __('Category'); ?></th>
 						<?php
 						$statusCount = 0;
 						foreach ($arrval['status'] as $statVal) {
 							$statusCount++;
 							?>
-							<th class="table_cell"><?php echo $statVal; ?></th>
+							<th><?php echo $statVal; ?></th>
 						<?php } ?>
-						<th class="table_cell"><?php echo __('Total'); ?></th>
+						<th><?php echo __('Total'); ?></th>
 					</tr>
 				</thead>
 
-				<tbody class="table_body" id="<?php echo $infraname; ?>_section">
+				<tbody id="<?php echo $infraname; ?>_section">
 					<?php
 					$ctrModel = 1;
 					foreach ($arrval['types'] as $typeid => $typeVal) {
@@ -153,7 +153,7 @@ echo $this->element('census/year_options');
 									<input type="hidden" name="<?php echo $inputName . '[infrastructure_status_id]'; ?>" value="<?php echo $statids; ?>">
 								</td> <!-- end table_cell -->
 							<?php } // end foreach(status)   ?>
-							<td class="table_cell cell_total cell_number"><?php
+							<td class="cell_total cell-number"><?php
 								echo $statusTotal > 0 ? $statusTotal : '';
 								$total += $statusTotal;
 								?></td>
@@ -164,10 +164,10 @@ echo $this->element('census/year_options');
 				<tfoot class="table_foot">
 					<tr>
 						<?php for ($i = 0; $i < $statusCount; $i++) { ?>
-							<td class="table_cell"></td>
+							<!--td class="table_cell"></td-->
 						<?php } ?>
-						<td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-						<td class="table_cell cell_value cell_number"><?php echo $total; ?></td>
+						<td style="text-align: right;" colspan="<?php echo $statusCount+1; ?>"><?php echo __('Total'); ?></td>
+						<td class="cell_value cell-number"><?php echo $total; ?></td>
 					</tr>
 				</tfoot>
 			</table>

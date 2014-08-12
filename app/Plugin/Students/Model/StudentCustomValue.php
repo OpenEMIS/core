@@ -16,13 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StudentCustomValue extends StudentsAppModel {
 	public $belongsTo = array(
-		'StudentCustomField', 
-		'Student'
+		'Students.StudentCustomField', 
+		'Students.Student'
 	);
-	
-	/* can't work if recursive is set to 0
-	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
-	);
-	*/
 }

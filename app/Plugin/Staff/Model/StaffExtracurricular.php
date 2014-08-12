@@ -15,11 +15,11 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffExtracurricular extends StaffAppModel {
-	public $actsAs = array('ControllerAction','Datepicker' => 'start_date');
+	public $actsAs = array('ControllerAction','DatePicker' => 'start_date');
 	public $belongsTo = array(
 		'Staff',
 		'SchoolYear',
-        'ExtracurricularType',
+		'ExtracurricularType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -59,28 +59,6 @@ class StaffExtracurricular extends StaffAppModel {
 		return $endDate > $startDate;
 	}
 	
-	/*
-	public function getAllList($type, $value){
-		$options['conditions'] = array('StaffExtracurricular.'.$type=>$value);	
-		$options['joins'] = array(
-			array(
-				'table' => 'extracurricular_types',
-				'alias' => 'ExtracurricularType',
-				'conditions' => array('ExtracurricularType.id = StaffExtracurricular.extracurricular_type_id')
-			),
-			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYears',
-				'conditions' => array('SchoolYears.id = StaffExtracurricular.school_year_id')
-			)
-		);
-		$options['fields'] = array('StaffExtracurricular.*', 'ExtracurricularType.name', 'SchoolYears.name', 'ModifiedUser.*', 'CreatedUser.*');
-		
-		$data = $this->find('all', $options);
-		
-		return $data;
-	}
-	*/
 	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
 		$data = $this->find('list', array(
@@ -97,143 +75,123 @@ class StaffExtracurricular extends StaffAppModel {
 		return $data;
 	}
 	
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
-    
-    public function getDisplayFields($controller) {
-        
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'name', 'model' => 'SchoolYear'),
-                array('field' => 'name', 'model' => 'ExtracurricularType', 'labelKey' => 'general.type'),
-                array('field' => 'name', 'labelKey' => 'general.title'),
-                array('field' => 'start_date', 'type' => 'datepicker'),
-                array('field' => 'end_date', 'type' => 'datepicker'),
-                array('field' => 'hours'),
-                array('field' => 'points'),
-                array('field' => 'location'),
-                array('field' => 'comment'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-    
-    public function extracurricular($controller, $params) {
-        $controller->Navigation->addCrumb('Extracurricular');
-        $header = __('Extracurricular');
-        $this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser', 'CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('staff_id' => $controller->staffId), 'order' => 'SchoolYear.start_date')); //$this->getAllList('staff_id', $controller->staffId);
-      
-        $controller->set(compact('data', 'header'));
-    }
+	public function getDisplayFields($controller) {
+		
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'name', 'model' => 'SchoolYear'),
+				array('field' => 'name', 'model' => 'ExtracurricularType', 'labelKey' => 'general.type'),
+				array('field' => 'name', 'labelKey' => 'general.title'),
+				array('field' => 'start_date', 'type' => 'datepicker'),
+				array('field' => 'end_date', 'type' => 'datepicker'),
+				array('field' => 'hours'),
+				array('field' => 'points'),
+				array('field' => 'location'),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
+	
+	public function extracurricular($controller, $params) {
+		$controller->Navigation->addCrumb('Extracurricular');
+		$header = __('Extracurricular');
+		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser', 'CreatedUser')));
+		$data = $this->find('all', array('conditions' => array('staff_id' => $controller->Session->read('Staff.id')), 'order' => 'SchoolYear.start_date'));
+	  
+		$controller->set(compact('data', 'header'));
+	}
 
-    public function extracurricularView($controller, $params) {
-        $id = isset($params['pass'][0])?$params['pass'][0]:0;
-        $data = $this->findById($id);//$this->getAllList('id', $id);
-        if (empty($data)) {
-            $controller->Message->alert('general.noData');
-            return $controller->redirect(array('action' => 'extracurricular'));
-        }
-        
-        $controller->Navigation->addCrumb('Extracurricular Details');
-        $header = __('Details');
+	public function extracurricularView($controller, $params) {
+		$id = isset($params['pass'][0])?$params['pass'][0]:0;
+		$data = $this->findById($id);
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'extracurricular'));
+		}
+		
+		$controller->Navigation->addCrumb('Extracurricular Details');
+		$header = __('Details');
 
-        $controller->Session->write('StaffExtracurricularId', $id);
-         $fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields'));
-    }
+		$controller->Session->write('StaffExtracurricular.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields'));
+	}
 
-    public function extracurricularAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Extracurricular');
-        $header = __('Add Extracurricular');
-        
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $data = $controller->request->data;
-            
-            $data[$this->alias]['start_date'] = date('Y-m-d', strtotime($data[$this->alias]['start_date']));
-            $data[$this->alias]['end_date'] = date('Y-m-d', strtotime($data[$this->alias]['end_date']));
-            $data[$this->alias]['staff_id'] = $controller->staffId;
-            if ($this->save($data)) {
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'extracurricular'));
-            }
-        }
-        
-        $SchoolYear = ClassRegistry::init('SchoolYear');
-        $ExtracurricularType = ClassRegistry::init('ExtracurricularType');
-        $yearOptions = $SchoolYear->getYearList();
-        $yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);//$this->getAvailableYearId($yearList);
-        $typeOptions = $ExtracurricularType->findList(array('orderBy' => 'name'));
+	public function extracurricularAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Add Extracurricular');
+		$header = __('Add Extracurricular');
+		
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$data = $controller->request->data;
+			
+			$data[$this->alias]['start_date'] = date('Y-m-d', strtotime($data[$this->alias]['start_date']));
+			$data[$this->alias]['end_date'] = date('Y-m-d', strtotime($data[$this->alias]['end_date']));
+			$data[$this->alias]['staff_id'] = $controller->Session->read('Staff.id');
+			if ($this->save($data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'extracurricular'));
+			}
+		}
+		
+		$yearOptions = $this->SchoolYear->getYearList();
+		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
+		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
 
-        $controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
-    }
+		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
+	}
 
-    public function extracurricularEdit($controller, $params) {
-        $id = isset($params['pass'][0])? $params['pass'][0] : 0;
-        $controller->Navigation->addCrumb('Edit Extracurricular');
-        $header = __('Edit Extracurricular');
-       
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $data = $controller->data;
-            $data[$this->alias]['staff_id'] = $controller->staffId;
-            $data[$this->alias]['start_date'] = date('Y-m-d', strtotime($data[$this->alias]['start_date']));
-            $data[$this->alias]['end_date'] = date('Y-m-d', strtotime($data[$this->alias]['end_date']));
-            if ($this->save($data)) {
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'extracurricularView', $data['StaffExtracurricular']['id']));
-            }
-        }
-        else{
-            $data = $this->findById($id);
-            
-            if (empty($data)) {
-                $controller->Message->alert('general.noData');
-                return $controller->redirect(array('action' => 'extracurricular'));
-            }
-            $controller->request->data = $data;
-        }
+	public function extracurricularEdit($controller, $params) {
+		$id = isset($params['pass'][0])? $params['pass'][0] : 0;
+		$controller->Navigation->addCrumb('Edit Extracurricular');
+		$header = __('Edit Extracurricular');
+	   
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$data = $controller->data;
+			$data[$this->alias]['staff_id'] = $controller->Session->read('Staff.id');
+			$data[$this->alias]['start_date'] = date('Y-m-d', strtotime($data[$this->alias]['start_date']));
+			$data[$this->alias]['end_date'] = date('Y-m-d', strtotime($data[$this->alias]['end_date']));
+			if ($this->save($data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'extracurricularView', $data['StaffExtracurricular']['id']));
+			}
+		}
+		else{
+			$data = $this->findById($id);
+			
+			if (empty($data)) {
+				$controller->Message->alert('general.noData');
+				return $controller->redirect(array('action' => 'extracurricular'));
+			}
+			$controller->request->data = $data;
+		}
+		
+		$yearOptions = $this->SchoolYear->getYearList();
+		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
+		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
+		
+		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
+	}
 
-        $SchoolYear = ClassRegistry::init('SchoolYear');
-        $ExtracurricularType = ClassRegistry::init('ExtracurricularType');
-        $yearOptions = $SchoolYear->getYearList();
-        $yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-        $typeOptions = $ExtracurricularType->findList(array('orderBy' => 'name'));
+	public function extracurricularDelete($controller, $params) {
+		return $this->remove($controller, 'extracurricular');
+	}
 
-        $controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
-    }
-
-    public function extracurricularDelete($controller, $params) {
-        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffExtracurricularId')) {
-            $id = $controller->Session->read('StaffExtracurricularId');
-            $staffId = $controller->Session->read('StaffId');
-           
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-            
-            $controller->Session->delete('StaffExtracurricularId');
-            $controller->redirect(array('action' => 'extracurricular'));
-        }
-    }
-
-    public function extracurricularSearchAutoComplete($controller, $params) {
-        $this->render = false;
-        if ($controller->request->is('get')) {
-            if ($controller->request->is('ajax')) {
-                
-                $search = $params->query['term'];
-                $result = $this->autocomplete($search);
-                return json_encode($result);
-            }
-        }
-    }
+	public function extracurricularSearchAutoComplete($controller, $params) {
+		$this->render = false;
+		if ($controller->request->is('get')) {
+			if ($controller->request->is('ajax')) {
+				
+				$search = $params->query['term'];
+				$result = $this->autocomplete($search);
+				return json_encode($result);
+			}
+		}
+	}
 }
 ?>

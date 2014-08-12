@@ -20,15 +20,14 @@ echo $this->Form->create('CensusBehaviour', array(
 echo $this->element('census/year_options');
 ?>
 
-<div id="behaviour" class="content_wrapper edit">
-
+<div class="table-responsive">
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
-                <td class="table_cell cell_category"><?php echo __('Category'); ?></td>
-                <td class="table_cell"><?php echo __('Male'); ?></td>
-                <td class="table_cell"><?php echo __('Female'); ?></td>
-                <td class="table_cell"><?php echo __('Total'); ?></td>
+                <th class="table_cell cell_category"><?php echo __('Category'); ?></th>
+                <th class="table_cell"><?php echo __('Male'); ?></th>
+                <th class="table_cell"><?php echo __('Female'); ?></th>
+                <th class="table_cell"><?php echo __('Total'); ?></th>
             </tr>
         </thead>
 
@@ -100,7 +99,7 @@ echo $this->element('census/year_options');
 
     <div class="controls">
         <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-<?php echo $this->Html->link(__('Cancel'), array('action' => 'behaviour', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'behaviour', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
     </div>
 <?php echo $this->Form->end(); ?>
 </div>

@@ -4,7 +4,7 @@ echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 echo $this->Html->css('report', 'stylesheet', array('inline' => false));
 echo $this->Html->script('census_enrolment', false);
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'enrolment');
+//$this->assign('contentId', 'enrolment');
 $this->assign('contentHeader', __('Students'));
 
 $this->start('contentActions');
@@ -18,7 +18,7 @@ echo $this->Form->create('CensusStudent', array(
 ));
 echo $this->element('census/year_options');
 ?>
-
+<div id="enrolment" class=" edit">
 <?php foreach($data as $key => $obj) : ?>
 
 <fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
@@ -105,7 +105,7 @@ echo $this->element('census/year_options');
 								<td rowspan="2"><?php echo $dataValue; ?></td>
 							<?php } else if ($dataKey == 'age') { ?>
 								<?php if(isset($row['ageEditable']) && $row['ageEditable'] == 'yes'){?>
-									<td rowspan="2">
+									<td rowspan="2" class="inputField">
 										<div class="input_wrapper">
 														<?php
 														$record_tag = "";
@@ -175,7 +175,7 @@ echo $this->element('census/year_options');
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'enrolment', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 <?php endif; ?>
-	
+</div>
 <?php echo $this->Form->end(); ?>
 	
 <?php $this->end(); ?>

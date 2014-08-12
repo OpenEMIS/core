@@ -17,10 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusTeacher extends AppModel {
-        public $actsAs = array(
-                'ControllerAction'
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
-    
+	
 	public $belongsTo = array(
 		'SchoolYear',
 		'InstitutionSite'
@@ -80,30 +83,22 @@ class CensusTeacher extends AppModel {
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
-											'EducationProgramme.visible = 1',
-					)
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id',
-											'EducationCycle.visible = 1'
-					)
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id',
-											'EducationLevel.visible = 1'
-					)
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id',
-											'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
 				),
 				array(
 					'table' => 'census_teacher_grades',
@@ -164,29 +159,22 @@ class CensusTeacher extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = CensusTeacherGrade.education_grade_id',
-											'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.id = CensusTeacherGrade.education_grade_id')
 				),
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id',
-											'EducationProgramme.visible = 1'
-					)
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id',
-											'EducationCycle.visible = 1')
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id',
-											'EducationLevel.visible = 1'
-					)
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				)
 			),
 			'conditions' => array('CensusTeacher.id' => $list),
@@ -331,16 +319,19 @@ class CensusTeacher extends AppModel {
 			$joins[] = array(
 				'table' => 'institution_sites',
 				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.id = CensusTeacher.institution_site_id')
-			);
-			$joins[] = array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
 				'conditions' => array(
-					'Institution.id = InstitutionSite.institution_id',
-					'Institution.institution_provider_id = ' . $extras['providerId']
+					'InstitutionSite.id = CensusTeacher.institution_site_id',
+					'InstitutionSite.institution_site_provider_id' => $extras['providerId']
 				)
 			);
+//			$joins[] = array(
+//				'table' => 'institutions',
+//				'alias' => 'Institution',
+//				'conditions' => array(
+//					'Institution.id = InstitutionSite.institution_id',
+//					'Institution.institution_provider_id = ' . $extras['providerId']
+//				)
+//			);
 		}
 		$options['joins'] = $joins;
 		$options['conditions'] = array('CensusTeacher.school_year_id' => $yearId);
@@ -380,121 +371,301 @@ class CensusTeacher extends AppModel {
 		return $data;
 	}
 	// End Yearbook
-        
-        public function teachers($controller, $params) {
-        $controller->Navigation->addCrumb('Teachers');
+		
+	public function teachers($controller, $params) {
+		$controller->Navigation->addCrumb('Teachers');
 
-        $yearList = $controller->SchoolYear->getYearList();
-        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-        $displayContent = true;
+		$yearList = $this->SchoolYear->getAvailableYears();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$displayContent = true;
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
 
-        $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $selectedYear);
-        if (empty($programmeGrades)) {
-            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-            $displayContent = false;
-        } else {
-            $fte = $controller->CensusTeacherFte->getCensusData($controller->institutionSiteId, $selectedYear);
-            $training = $controller->CensusTeacherTraining->getCensusData($controller->institutionSiteId, $selectedYear);
-            $singleGradeTeachers = $controller->CensusTeacher->getSingleGradeData($controller->institutionSiteId, $selectedYear);
-            $multiGradeData = $controller->CensusTeacher->getMultiGradeData($controller->institutionSiteId, $selectedYear);
-            $singleGradeData = $programmeGrades;
-            $controller->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
-            
-            $controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData'));
-        }
-        
-        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-        
-        $controller->set(compact('displayContent', 'selectedYear', 'yearList', 'isEditable'));
-    }
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+		if (empty($programmes)) {
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
+			$displayContent = false;
+		} else {
+			$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
+			$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
+			$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
+			$multiGradeData = array();// $this->getMultiGradeData($institutionSiteId, $selectedYear);
+			$singleGradeData = $programmeGrades;
+			$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+			
+			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData'));
+		}
+		
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		
+		$controller->set(compact('displayContent', 'selectedYear', 'yearList', 'isEditable'));
+	}
 
-    public function teachersEdit($controller, $params) {
-        if ($controller->request->is('get')) {
-            $controller->Navigation->addCrumb('Edit Teachers');
+	public function teachersEdit($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		
+		if ($controller->request->is('get')) {
+			$controller->Navigation->addCrumb('Edit Teachers');
 
-            $yearList = $controller->SchoolYear->getAvailableYears();
-            $selectedYear = $controller->getAvailableYearId($yearList);
-            $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-            if (!$editable) {
-                $controller->redirect(array('action' => 'teachers', $selectedYear));
-            } else {
-                $displayContent = true;
-                $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $selectedYear);
+			$yearList = $this->SchoolYear->getAvailableYears();
+			$selectedYear = $controller->getAvailableYearId($yearList);	
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+			if (!$editable) {
+				$controller->redirect(array('action' => 'teachers', $selectedYear));
+			} else {
+				$displayContent = true;
+				$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
 
-                if (empty($programmeGrades)) {
-                    $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-                    $displayContent = false;
-                } else {
-                    $programmes = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $selectedYear, false);
-                    $fte = $controller->CensusTeacherFte->getCensusData($controller->institutionSiteId, $selectedYear);
-                    $training = $controller->CensusTeacherTraining->getCensusData($controller->institutionSiteId, $selectedYear);
-                    $singleGradeTeachers = $controller->CensusTeacher->getSingleGradeData($controller->institutionSiteId, $selectedYear);
-                    $multiGradeData = $controller->CensusTeacher->getMultiGradeData($controller->institutionSiteId, $selectedYear);
-                    $singleGradeData = $programmeGrades;
-                    $controller->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
-                    
-                    $controller->set(compact('programmes', 'programmeGrades', 'fte', 'training', 'singleGradeData', 'multiGradeData'));
-                }
-                
-                $controller->set(compact('displayContent', 'selectedYear', 'yearList'));
-            }
-        } else {
-            $yearId = $controller->data['CensusTeacher']['school_year_id'];
-            unset($controller->request->data['CensusTeacher']['school_year_id']);
-            $fte = $controller->data['CensusTeacherFte'];
-            $training = $controller->data['CensusTeacherTraining'];
-            $teachers = $controller->data['CensusTeacher'];
-            $controller->CensusTeacherFte->saveCensusData($fte, $yearId, $controller->institutionSiteId);
-            $controller->CensusTeacherTraining->saveCensusData($training, $yearId, $controller->institutionSiteId);
-            $duplicate = false;
-            $data = $controller->CensusTeacher->clean($teachers, $yearId, $controller->institutionSiteId, $duplicate);
-            if ($duplicate) {
-                $controller->Utility->alert($controller->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
-            }
-            $controller->CensusTeacher->saveCensusData($data);
-            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
-            $controller->redirect(array('action' => 'teachers', $yearId));
-        }
-    }
+				if (empty($programmeGrades)) {
+					$controller->Message->alert('InstitutionSiteProgramme.noData');
+					$displayContent = false;
+				} else {
+					$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear, false);
+					$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
+					$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
+					$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
+					$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedYear);
+					$singleGradeData = $programmeGrades;
+					$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+					
+					$controller->set(compact('programmes', 'programmeGrades', 'fte', 'training', 'singleGradeData', 'multiGradeData'));
+				}
+				
+				$controller->set(compact('displayContent', 'selectedYear', 'yearList'));
+			}
+		} else {
+			$yearId = $controller->data['CensusTeacher']['school_year_id'];
+			unset($controller->request->data['CensusTeacher']['school_year_id']);
+			$fte = $controller->data['CensusTeacherFte'];
+			$training = $controller->data['CensusTeacherTraining'];
+			$teachers = $controller->data['CensusTeacher'];
+			$controller->CensusTeacherFte->saveCensusData($fte, $yearId, $institutionSiteId);
+			$controller->CensusTeacherTraining->saveCensusData($training, $yearId, $institutionSiteId);
+			$duplicate = false;
+			$data = $this->clean($teachers, $yearId, $institutionSiteId, $duplicate);
+			if ($duplicate) {
+				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
+			}
+			$this->saveCensusData($data);
+			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+			$controller->redirect(array('action' => 'teachers', $yearId));
+		}
+	}
 
-    public function teachersAddMultiTeacher($controller, $params) {
-        $controller->layout = 'ajax';
-        //$this->render = false;
+	public function teachersAddMultiTeacher($controller, $params) {
+		$controller->layout = 'ajax';
+		//$this->render = false;
 
-        $yearId = $controller->params['pass'][0];
-        $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $yearId);
-        $programmes = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $yearId, false);
+		$yearId = $controller->params['pass'][0];
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId, false);
 
-        $i = $controller->params->query['index'];
-        $body = $controller->params->query['tableBody'];
-        
-        $controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId'));
-    }
+		$i = $controller->params->query['index'];
+		$body = $controller->params->query['tableBody'];
+		
+		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId'));
+	}
 
-    public function teachersAddMultiGrade($controller, $params) {
-        $this->render = false;
+	public function teachersAddMultiGrade($controller, $params) {
+		$this->render = false;
 
-        $row = $controller->params->query['row'];
-        $index = $controller->params->query['index'];
-        $yearId = $controller->params['pass'][0];
-        $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $yearId);
-        $programmes = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $yearId, false);
-        $grades = $programmeGrades[current($programmes)]['education_grades'];
+		$row = $controller->params->query['row'];
+		$index = $controller->params->query['index'];
+		$yearId = $controller->params['pass'][0];
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId, false);
+		$grades = $programmeGrades[current($programmes)]['education_grades'];
 
-        $option = '<option value="%d">%s</option>';
-        $programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
-        foreach ($programmes as $id => $value) {
-            $programmesHtml .= sprintf($option, $id, $value);
-        }
-        $programmesHtml .= '</select></div>';
+		$option = '<option value="%d">%s</option>';
+		$programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
+		foreach ($programmes as $id => $value) {
+			$programmesHtml .= sprintf($option, $id, $value);
+		}
+		$programmesHtml .= '</select></div>';
 
-        $gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
-        foreach ($grades as $id => $value) {
-            $gradesHtml .= sprintf($option, $id, $value);
-        }
-        $gradesHtml .= '</select></div>';
+		$gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
+		foreach ($grades as $id => $value) {
+			$gradesHtml .= sprintf($option, $id, $value);
+		}
+		$gradesHtml .= '</select></div>';
 
-        $data = array('programmes' => $programmesHtml, 'grades' => $gradesHtml);
-        return json_encode($data);
-    }
+		$data = array('programmes' => $programmesHtml, 'grades' => $gradesHtml);
+		return json_encode($data);
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+
+			$headerFTE = array(__('Year'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
+			$headerTraining = $headerFTE;
+			$headerSingleGrade = array(__('Year'), __('Teacher Type'), __('Programme'), __('Grade'), __('Male'), __('Female'));
+			$headerMultiGrade = $headerSingleGrade;
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				// FTE teachers data start
+				$CensusTeacherFteModel = ClassRegistry::init('CensusTeacherFte');
+				$dataFTE = $CensusTeacherFteModel->getCensusData($institutionSiteId, $yearId);
+				if (count($dataFTE) > 0) {
+					$data[] = $headerFTE;
+					$totalFTE = 0;
+					foreach ($dataFTE AS $rowFTE) {
+						$maleFTE = empty($rowFTE['male']) ? 0 : $rowFTE['male'];
+						$femaleFTE = empty($rowFTE['female']) ? 0 : $rowFTE['female'];
+
+						$data[] = array(
+							$yearName,
+							'Full Time Equivalent Teachers',
+							$rowFTE['education_level_name'],
+							$maleFTE,
+							$femaleFTE,
+							$maleFTE + $femaleFTE
+						);
+
+						$totalFTE += $maleFTE;
+						$totalFTE += $femaleFTE;
+					}
+
+					$data[] = array('', '', '', '', __('Total'), $totalFTE);
+					$data[] = array();
+				}
+				// FTE teachers data end
+				// trained teachers data start
+				$CensusTeacherTrainingModel = ClassRegistry::init('CensusTeacherTraining');
+				$dataTraining = $CensusTeacherTrainingModel->getCensusData($institutionSiteId, $yearId);
+				if (count($dataTraining) > 0) {
+					$data[] = $headerTraining;
+					$totalTraining = 0;
+					foreach ($dataTraining AS $rowTraining) {
+						$maleTraining = empty($rowTraining['male']) ? 0 : $rowTraining['male'];
+						$femaleTraining = empty($rowTraining['female']) ? 0 : $rowTraining['female'];
+
+						$data[] = array(
+							$yearName,
+							'Trained Teachers',
+							$rowTraining['education_level_name'],
+							$maleTraining,
+							$femaleTraining,
+							$maleTraining + $femaleTraining
+						);
+
+						$totalTraining += $maleTraining;
+						$totalTraining += $femaleTraining;
+					}
+
+					$data[] = array('', '', '', '', __('Total'), $totalTraining);
+					$data[] = array();
+				}
+				// trained teachers data end
+				// single grade teachers data start
+				$programmeGrades = $InstitutionSiteProgrammeModel->getProgrammeList($institutionSiteId, $yearId);
+				$singleGradeData = $programmeGrades;
+				$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $yearId);
+				$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+
+				if (count($singleGradeData) > 0) {
+					$data[] = $headerSingleGrade;
+					$totalMaleSingleGrade = 0;
+					$totalFemaleSingleGrade = 0;
+					foreach ($singleGradeData AS $programmeName => $programmeData) {
+						foreach ($programmeData['education_grades'] AS $gradeId => $gradeData) {
+							$maleSingleGrade = empty($gradeData['male']) ? 0 : $gradeData['male'];
+							$femaleSingleGrade = empty($gradeData['female']) ? 0 : $gradeData['female'];
+
+							$data[] = array(
+								$yearName,
+								'Single Grade Teachers Only',
+								$programmeName,
+								$gradeData['name'],
+								$gradeData['male'],
+								$gradeData['female']
+							);
+
+							$totalMaleSingleGrade += $maleSingleGrade;
+							$totalFemaleSingleGrade += $femaleSingleGrade;
+						}
+					}
+
+					$data[] = array('', '', '', __('Total'), $totalMaleSingleGrade, $totalFemaleSingleGrade);
+					$data[] = array();
+				}
+				// single grade teachers data end
+				// multi grades teachers data start
+				$multiGradesData = $this->getMultiGradeData($institutionSiteId, $yearId);
+
+				if (count($multiGradesData) > 0) {
+					$data[] = $headerMultiGrade;
+					$totalMaleMultiGrades = 0;
+					$totalFemaleMultiGrades = 0;
+					foreach ($multiGradesData AS $rowMultiGrades) {
+						$maleMultiGrades = empty($rowMultiGrades['male']) ? 0 : $rowMultiGrades['male'];
+						$femaleMultiGrades = empty($rowMultiGrades['female']) ? 0 : $rowMultiGrades['female'];
+						$multiProgrammes = '';
+						$multiProgrammeCount = 0;
+						foreach ($rowMultiGrades['programmes'] AS $multiProgramme) {
+							if ($multiProgrammeCount > 0) {
+								$multiProgrammes .= "\n\r";
+								$multiProgrammes .= $multiProgramme;
+							} else {
+								$multiProgrammes .= $multiProgramme;
+							}
+							$multiProgrammeCount++;
+						}
+
+						$multiGrades = '';
+						$multiGradeCount = 0;
+						foreach ($rowMultiGrades['grades'] AS $multiGrade) {
+							if ($multiGradeCount > 0) {
+								$multiGrades .= "\n\r";
+								$multiGrades .= $multiGrade;
+							} else {
+								$multiGrades .= $multiGrade;
+							}
+							$multiGradeCount++;
+						}
+
+						$data[] = array(
+							$yearName,
+							'Multi Grade Teachers',
+							$multiProgrammes,
+							$multiGrades,
+							$maleMultiGrades,
+							$femaleMultiGrades
+						);
+
+						$totalMaleMultiGrades += $maleMultiGrades;
+						$totalFemaleMultiGrades += $femaleMultiGrades;
+					}
+
+					$data[] = array('', '', '', __('Total'), $totalMaleMultiGrades, $totalFemaleMultiGrades);
+					$data[] = array();
+				}
+				// multi grades teachers data end
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Teachers';
+	}
 }

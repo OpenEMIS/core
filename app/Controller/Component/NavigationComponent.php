@@ -30,7 +30,7 @@ class NavigationComponent extends Component {
 		$this->controller =& $controller;
 		$this->navigations = $this->getLinks();
 		$this->topNavigations = array();
-        $this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+		$this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -41,7 +41,6 @@ class NavigationComponent extends Component {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
-		$this->checkWizardModeLink();
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
@@ -54,7 +53,7 @@ class NavigationComponent extends Component {
 	//called before Controller::redirect()
 	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) {}
 	
-	public function addCrumb($title, $options=array()) {		
+	public function addCrumb($title, $options=array()) {
 		$item = array(
 			'title' => __($title),
 			'link' => array('url' => $options),
@@ -77,7 +76,7 @@ class NavigationComponent extends Component {
 	public function apply($controller, $action) {
 		$navigations = array();
 		$found = false;
-                //pr($this->navigations);
+		//pr($this->navigations);
 		foreach($this->navigations as $module => $obj) {
 			foreach($obj['links'] as $links) {
 				foreach($links as $title => &$linkList) {
@@ -89,8 +88,8 @@ class NavigationComponent extends Component {
 						
 						// Checking access control
 						$check = $this->AccessControl->newCheck($_controller, $attr['action']);
+						//pr($_controller . ' : ' . $attr['action'] . ' : ' . ($check ? 'true' : 'false'));
 						//pr($attr);
-						
 						if($check || $_controller === 'Home') {
 							$linkList['display'] = true;
 							$attr['display'] = true;
@@ -119,7 +118,7 @@ class NavigationComponent extends Component {
 							$attr['selected'] = true;
 							$this->topNavigations[$module]['selected'] = true;
 						}
-                                                
+												
 					}
 				}
 				if($found) {
@@ -127,7 +126,7 @@ class NavigationComponent extends Component {
 						$this->leftNavigations = $links;
 					}
 				}
-                                //pr($this->leftNavigations);
+								//pr($this->leftNavigations);
 			}
 		}//pr($this->navigations);
 	}
@@ -135,8 +134,7 @@ class NavigationComponent extends Component {
 	public function getLinks() {
 		$nav = array();
 		$nav['Home'] = array('controller' => 'Home', 'links' => $this->getHomeLinks());
-		//$nav['Institutions'] = array('controller' => 'Institutions', 'links' => $this->getInstitutionsLinks());
-                $nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
+		$nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
 		
 		// Initialise navigations from plugins
 		$modules = $this->settings['modules'];
@@ -158,8 +156,8 @@ class NavigationComponent extends Component {
 		$links = $navigation->getByModule('Home', true);
 		return $links;
 	}
-        
-        public function getInstitutionsLinks() {
+		
+		public function getInstitutionsLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Institution', true);
 		return $links;
@@ -191,6 +189,7 @@ class NavigationComponent extends Component {
 		}
 	}
 
+	/*
 	public function checkWizardModeLink(){
 		$wizardMode = false;
 		if(!empty($this->leftNavigations)){
@@ -209,7 +208,7 @@ class NavigationComponent extends Component {
 			}
 			if(!$wizardMode){
 				$this->Session->delete('WizardMode');
-		        $this->Session->delete('WizardLink');
+				$this->Session->delete('WizardLink');
 			}
 		}
 	}
@@ -221,7 +220,7 @@ class NavigationComponent extends Component {
 		foreach($links as $link){
 			$chkAction = $link['Navigation']['action'] . 'Add';
 			
-			if(/*$link['Navigation']['action'] == "attachments" ||*/ $link['Navigation']['action'] == "additional"){
+			if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
 				$chkAction = $link['Navigation']['action'] . 'Edit';
 			}else if($link['Navigation']['action']=='view'){
 				$chkAction = 'edit';
@@ -248,7 +247,7 @@ class NavigationComponent extends Component {
 				$link['Navigation']['completed'] = '-1';
 				$link['Navigation']['multiple'] = false;
 			}else{
-				if(/*$link['Navigation']['action'] == "attachments" ||*/ $link['Navigation']['action'] == "additional"){
+				if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
 					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Edit';
 					$link['Navigation']['multiple'] = false;
 				}else{
@@ -262,149 +261,149 @@ class NavigationComponent extends Component {
 	}
 
 
-    private function getLastWizardStep($step=false){
-         $wizardLink = $this->Session->read('WizardLink');
-         $i = 0;
-         foreach($wizardLink as $link){
-            if($link['completed']=='-1'){
-                if($step){
-                    return $i;
-                }else{
-                    return $link;
-                }
-                break;
-            }
-            $i++;
-        }
-    }
-
-    public function getMandatoryWizard($action){
-    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
-			return;
+	private function getLastWizardStep($step=false){
+		 $wizardLink = $this->Session->read('WizardLink');
+		 $i = 0;
+		 foreach($wizardLink as $link){
+			if($link['completed']=='-1'){
+				if($step){
+					return $i;
+				}else{
+					return $link;
+				}
+				break;
+			}
+			$i++;
 		}
+	}
 
-		$configItemName = str_replace('Add', '', $action);
-        $configItemName = str_replace('Edit', '', $configItemName);
-
-
-        $ConfigItem = ClassRegistry::init('ConfigItem');
-       
-        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
-        
-        return $mandatory;
-
-    }
-
-    public function getWizard($action){
+	public function getMandatoryWizard($action){
 		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
 
-        $newAction = '';
+		$configItemName = str_replace('Add', '', $action);
+		$configItemName = str_replace('Edit', '', $configItemName);
 
-        $actionConcat = str_replace("Add", "", $action);
-        $actionConcat = str_replace("Edit", "", $actionConcat);
 
-        $mandatory = $this->getMandatoryWizard($this->controller->action);
-        $this->controller->set('mandatory', $mandatory);
-        $linkCurrent = $this->getLastWizardStep(false);
-        $wizardLink = $this->Session->read('WizardLink');
-        $nextLink = '';
-        $wizardEnd = '0';
-       
-        if($action == 'view'){
-            $newAction = 'edit';
-            $this->controller->redirect(array('action'=>$newAction));
-        }else if($this->action!='edit'){
-            $i = 0;
-            foreach($wizardLink as $link){
-                if($link['action']==$actionConcat){
-                    if($i+1 < count($wizardLink)){
-                        $nextLink = $wizardLink[$i+1]['new_action'];
-                        if(isset($wizardLink[$i+1]['new_id'])){
-                             $nextLink .= '/' . $wizardLink[$i+1]['new_id'];
-                        }
-                    }
-                }
-                if($link['action']==$action){
-                    if($link['completed']=='0'){
-                        if(isset($linkCurrent['new_id'])){
-                            $this->controller->redirect(array('action'=>$linkCurrent['new_action'], $linkCurrent['new_id']));
-                        }else{
-                            $this->controller->redirect(array('action'=>$linkCurrent['new_action']));
-                        }
-                    }else if($link['completed']=='1'){
-                        if(isset($link['new_id'])){
-                           $this->controller->redirect(array('action'=>$link['new_action'], $link['new_id']));
-                        }else{
-                            $this->controller->redirect(array('action'=>$link['new_action']));
-                        }
-                    }else{
-                        $newAction = $link['action'] . 'Add';
-                        if($link['multiple']==false){
-	                    	if(substr($link['new_action'], -3) != 'Add'){
-	                         	$newAction = $link['action'] . 'Edit';
-	                    	}
-                    	}
-                        $this->controller->redirect(array('action'=>$newAction));
-                    }
-                    break;
-                }
-                $i++;
-            }
-        }else{
-        	break;
-        }
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   
+		$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+		
+		return $mandatory;
 
-        if($action==$wizardLink[count($wizardLink)-1]['new_action']){
-        	$wizardEnd = '1';
-        }
+	}
 
-        $this->controller->set('wizardEnd', $wizardEnd);
-        $this->controller->set('nextLink', $nextLink);
-        
-    }
-
-    private function getWizardLink($action, $full=false){
-    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+	public function getWizard($action){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        $action = str_replace("Add", "", $action);
-        $action = str_replace("Edit", "", $action);
 
-        $wizardLink = $this->Session->read('WizardLink');
-        $i=0;
-        foreach($wizardLink as $link){
-            if($link['action']==$action){
-                if($full){
-                    return $link;
-                }else{
-                    return $i;
-                }
-                break;
-            }
-            $i++;
-        }
-    }
+		$newAction = '';
 
-    public function skipWizardLink($action){
-    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+		$actionConcat = str_replace("Add", "", $action);
+		$actionConcat = str_replace("Edit", "", $actionConcat);
+
+		$mandatory = $this->getMandatoryWizard($this->controller->action);
+		$this->controller->set('mandatory', $mandatory);
+		$linkCurrent = $this->getLastWizardStep(false);
+		$wizardLink = $this->Session->read('WizardLink');
+		$nextLink = '';
+		$wizardEnd = '0';
+	   
+		if($action == 'view'){
+			$newAction = 'edit';
+			$this->controller->redirect(array('action'=>$newAction));
+		}else if($this->action!='edit'){
+			$i = 0;
+			foreach($wizardLink as $link){
+				if($link['action']==$actionConcat){
+					if($i+1 < count($wizardLink)){
+						$nextLink = $wizardLink[$i+1]['new_action'];
+						if(isset($wizardLink[$i+1]['new_id'])){
+							 $nextLink .= '/' . $wizardLink[$i+1]['new_id'];
+						}
+					}
+				}
+				if($link['action']==$action){
+					if($link['completed']=='0'){
+						if(isset($linkCurrent['new_id'])){
+							$this->controller->redirect(array('action'=>$linkCurrent['new_action'], $linkCurrent['new_id']));
+						}else{
+							$this->controller->redirect(array('action'=>$linkCurrent['new_action']));
+						}
+					}else if($link['completed']=='1'){
+						if(isset($link['new_id'])){
+						   $this->controller->redirect(array('action'=>$link['new_action'], $link['new_id']));
+						}else{
+							$this->controller->redirect(array('action'=>$link['new_action']));
+						}
+					}else{
+						$newAction = $link['action'] . 'Add';
+						if($link['multiple']==false){
+							if(substr($link['new_action'], -3) != 'Add'){
+							 	$newAction = $link['action'] . 'Edit';
+							}
+						}
+						$this->controller->redirect(array('action'=>$newAction));
+					}
+					break;
+				}
+				$i++;
+			}
+		}else{
+			break;
+		}
+
+		if($action==$wizardLink[count($wizardLink)-1]['new_action']){
+			$wizardEnd = '1';
+		}
+
+		$this->controller->set('wizardEnd', $wizardEnd);
+		$this->controller->set('nextLink', $nextLink);
+		
+	}
+
+	private function getWizardLink($action, $full=false){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        /*$linkIndex = $this->getWizardLink($action);
-        $wizardLink = $this->Session->read('WizardLink');
-        $wizardLink[$linkIndex]['completed'] = '1';
-        $currentLinkIndex = $this->getLastWizardStep(true);
-        if($linkIndex+1 < count($wizardLink)){
-            if(($linkIndex+1)>=$currentLinkIndex){
-                $wizardLink[$linkIndex+1]['completed'] = '-1';
-            }
-        }*/
+		$action = str_replace("Add", "", $action);
+		$action = str_replace("Edit", "", $action);
+
+		$wizardLink = $this->Session->read('WizardLink');
+		$i=0;
+		foreach($wizardLink as $link){
+			if($link['action']==$action){
+				if($full){
+					return $link;
+				}else{
+					return $i;
+				}
+				break;
+			}
+			$i++;
+		}
+	}
+
+	public function skipWizardLink($action){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
+		//$linkIndex = $this->getWizardLink($action);
+		//$wizardLink = $this->Session->read('WizardLink');
+		//$wizardLink[$linkIndex]['completed'] = '1';
+		//$currentLinkIndex = $this->getLastWizardStep(true);
+		//if($linkIndex+1 < count($wizardLink)){
+		//	if(($linkIndex+1)>=$currentLinkIndex){
+		//		$wizardLink[$linkIndex+1]['completed'] = '-1';
+		//	}
+		//}
 		$linkIndex = $this->getWizardLink($action);
 		$wizardLink = $this->Session->read('WizardLink');
 
-        $ConfigItem = ClassRegistry::init('ConfigItem');
-       	
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	
    		for($c=$linkIndex+1;$c<=count($wizardLink);$c++){
    			$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$c]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
 
@@ -412,130 +411,131 @@ class NavigationComponent extends Component {
    			if($mandatory!='2'){
 				if(isset($wizardLink[$c]['new_id'])){
 				  	$this->Session->write('WizardLink', $wizardLink);
-	                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
-	            }else{
-            	  	$this->Session->write('WizardLink', $wizardLink);
-	                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
-	            }
-	            break;
+					$this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
+				}else{
+				  	$this->Session->write('WizardLink', $wizardLink);
+					$this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
+				}
+				break;
    			}
    		}
    		$this->Session->write('WizardLink', $wizardLink);
-        $this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
+		$this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
 
-        //$this->Session->write('WizardLink', $wizardLink);
-        //$this->controller->redirect(array('action'=>$wizardLink[$linkIndex+1]['new_action']));
-    }
+		//$this->Session->write('WizardLink', $wizardLink);
+		//$this->controller->redirect(array('action'=>$wizardLink[$linkIndex+1]['new_action']));
+	}
 
-    public function previousWizardLink($action){
-    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+	public function previousWizardLink($action){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        $linkIndex = $this->getWizardLink($action);
-        $wizardLink = $this->Session->read('WizardLink');
+		$linkIndex = $this->getWizardLink($action);
+		$wizardLink = $this->Session->read('WizardLink');
 
-        $ConfigItem = ClassRegistry::init('ConfigItem');
+		$ConfigItem = ClassRegistry::init('ConfigItem');
 
-        for($i=($linkIndex-1);$i>=0;$i--){
-        	$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$i]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+		for($i=($linkIndex-1);$i>=0;$i--){
+			$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$i]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
 
-            if($mandatory!='2'){
-               if(isset($wizardLink[$i]['new_id'])){
-	                $this->controller->redirect(array('action'=>$wizardLink[$i]['new_action'], $wizardLink[$i]['new_id']));
-	            }else{
-	                $this->controller->redirect(array('action'=>$wizardLink[$i]['new_action']));
-	            }
-	            break;
-            }
-        }
+			if($mandatory!='2'){
+			   if(isset($wizardLink[$i]['new_id'])){
+					$this->controller->redirect(array('action'=>$wizardLink[$i]['new_action'], $wizardLink[$i]['new_id']));
+				}else{
+					$this->controller->redirect(array('action'=>$wizardLink[$i]['new_action']));
+				}
+				break;
+			}
+		}
 
-        $this->controller->redirect(array('action'=>$wizardLink[0]['new_action']));
-    }
+		$this->controller->redirect(array('action'=>$wizardLink[0]['new_action']));
+	}
 
-    public function exitWizard($cancel = true){
+	public function exitWizard($cancel = true){
 	 	$this->Session->delete('WizardMode');
-        $this->Session->delete('WizardLink');
-        if($cancel){
-	        $this->Session->delete($this->controller->className.'Id');
-	        $this->controller->redirect(array('action'=>'index'));
-	    }else{
+		$this->Session->delete('WizardLink');
+		if($cancel){
+			$this->Session->delete($this->controller->className.'Id');
+			$this->controller->redirect(array('action'=>'index'));
+		}else{
   			$this->controller->redirect(array('action'=>'view'));
-	    }
-    }
+		}
+	}
 
-    public function updateWizard($action, $id=null, $addMore=false){
-    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+	public function updateWizard($action, $id=null, $addMore=false){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        $i = 0;
-        $wizardLink = $this->Session->read('WizardLink');
-        $action = str_replace("Add", "", $action);
-        $action = str_replace("Edit", "", $action);
-        foreach($wizardLink as $link){
-            if($link['action']==$action && $link['multiple']==false){
-                $wizardLink[$i]['completed'] = '1';
-                if($link['new_action']!='edit'){
-                    $wizardLink[$i]['new_action'] = $link['action'] . "Edit";
-                    $wizardLink[$i]['new_id'] = $id; 
-                }else{
-                    $this->Session->write($this->controller->className.'Id',$id);
-                }
-                break;
-            }else if($link['action']==$action && $link['multiple']==true && !$addMore){
+		$i = 0;
+		$wizardLink = $this->Session->read('WizardLink');
+		$action = str_replace("Add", "", $action);
+		$action = str_replace("Edit", "", $action);
+		foreach($wizardLink as $link){
+			if($link['action']==$action && $link['multiple']==false){
 				$wizardLink[$i]['completed'] = '1';
-            	break;
-            }
-            $i++;
-        }
+				if($link['new_action']!='edit'){
+					$wizardLink[$i]['new_action'] = $link['action'] . "Edit";
+					$wizardLink[$i]['new_id'] = $id; 
+				}else{
+					$this->Session->write($this->controller->className.'Id',$id);
+				}
+				break;
+			}else if($link['action']==$action && $link['multiple']==true && !$addMore){
+				$wizardLink[$i]['completed'] = '1';
+				break;
+			}
+			$i++;
+		}
 
 		if($addMore){
-    		 $this->controller->redirect(array('action'=>$action));
-    		 return;
-    	}
+			 $this->controller->redirect(array('action'=>$action));
+			 return;
+		}
 
-    	if($i+1 >= count($wizardLink)){
-            $this->exitWizard(false);
-        }else{
-            $currentLinkIndex = $this->getLastWizardStep(true);
-            
-            if(($i+1)>=$currentLinkIndex){
-                $wizardLink[$i+1]['completed'] = '-1';
-            }
+		if($i+1 >= count($wizardLink)){
+			$this->exitWizard(false);
+		}else{
+			$currentLinkIndex = $this->getLastWizardStep(true);
+			
+			if(($i+1)>=$currentLinkIndex){
+				$wizardLink[$i+1]['completed'] = '-1';
+			}
 
-         	$ConfigItem = ClassRegistry::init('ConfigItem');
-       	
-       		for($c=$i+1;$c<=count($wizardLink);$c++){
-       			$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$c]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+		 	$ConfigItem = ClassRegistry::init('ConfigItem');
+	   	
+	   		for($c=$i+1;$c<=count($wizardLink);$c++){
+	   			$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$c]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
 
-       			$wizardLink[$c]['completed'] = '-1';
-       			if($mandatory!='2'){
+	   			$wizardLink[$c]['completed'] = '-1';
+	   			if($mandatory!='2'){
 					if(isset($wizardLink[$c]['new_id'])){
 					  	$this->Session->write('WizardLink', $wizardLink);
-		                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
-		            }else{
-	            	  	$this->Session->write('WizardLink', $wizardLink);
-		                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
-		            }
-		            break;
-       			}
-       		}
-        }
+						$this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
+					}else{
+					  	$this->Session->write('WizardLink', $wizardLink);
+						$this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
+					}
+					break;
+	   			}
+	   		}
+		}
 
    		$this->Session->write('WizardLink', $wizardLink);
-        $this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
-       
-    }
+		$this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
+	   
+	}
 
 
-    public function validateModel($action, $modelName){
-    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+	public function validateModel($action, $modelName){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
 		$id = $this->Session->read($this->controller->className.'Id');
-    	$count = $this->controller->{$modelName}->find('count', array('conditions'=>array(strtolower($this->controller->className.'_id')=>$id)));
-    	if($count>0){
-    		$this->updateWizard($action, null, false);
-    	}
-    }
+		$count = $this->controller->{$modelName}->find('count', array('conditions'=>array(strtolower($this->controller->className.'_id')=>$id)));
+		if($count>0){
+			$this->updateWizard($action, null, false);
+		}
+	}
+	*/
 }
 ?>

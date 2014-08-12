@@ -17,7 +17,7 @@ $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
 
-<div id="shifts" class="content_wrapper">
+<div class="table-responsive">
 
     <?php if ($displayContent) { ?>
         <fieldset class="section_group">
@@ -26,15 +26,15 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell"><?php echo __('Classes'); ?></td>
+                        <th><?php echo __('Programme'); ?></th>
+                        <th class="cell_grade"><?php echo __('Grade'); ?></th>
+                        <th><?php echo __('Classes'); ?></th>
                         <?php
                         for ($i = 1; $i <= intval($noOfShifts); $i++) {
-                            echo '<td class="table_cell cell_shifts">' . __('Shift') . ' ' . $i . '</td>';
+                            echo '<th class="cell_shifts">' . __('Shift') . ' ' . $i . '</th>';
                         }
                         ?>
-                        <td class="table_cell"><?php echo __('Total'); ?></td>
+                        <th><?php echo __('Total'); ?></th>
                     </tr>
                 </thead>
 
@@ -51,9 +51,9 @@ echo $this->element('census/year_options');
                         $totalClasses += $value['classes'];
                         ?>
                         <tr>
-                            <td class="table_cell <?php echo $record_tag; ?>"><?php echo $value['education_programme_name']; ?></td>
-                            <td class="table_cell <?php echo $record_tag; ?>"><?php echo $value['education_grade_name']; ?></td>
-                            <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></td>
+                            <td class="<?php echo $record_tag; ?>"><?php echo $value['education_programme_name']; ?></td>
+                            <td class="<?php echo $record_tag; ?>"><?php echo $value['education_grade_name']; ?></td>
+                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></td>
                             <?php
                             $totalShifts = 0;
                             for ($s = 1; $s <= intval($noOfShifts); $s++) {
@@ -62,11 +62,11 @@ echo $this->element('census/year_options');
                                     $shift = $value['shift_' . $s];
                                     $totalShifts += $shift;
                                 }
-                                echo '<td class="table_cell cell_number ' . $record_tag . '">' . $shift . '</td>';
+                                echo '<td class="cell-number ' . $record_tag . '">' . $shift . '</td>';
                             }
                             ?>
 
-                            <td class="table_cell cell_number cell_subtotal"><?php echo $totalShifts; ?></td>
+                            <td class="cell-number cell_subtotal"><?php echo $totalShifts; ?></td>
                         </tr>
 
                         <?php
@@ -76,9 +76,8 @@ echo $this->element('census/year_options');
 
                 <tfoot>
                     <tr>
-                        <td class="table_cell"></td>
-                        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-                        <td class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></td>
+                        <td class="cell_label" colspan="2"><?php echo __('Total'); ?></td>
+                        <td class="cell_value cell-number"><?php echo $totalClasses; ?></td>
                     </tr>
                 </tfoot>
             </table>
@@ -89,15 +88,15 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell"><?php echo __('Classes'); ?></td>
+                        <th><?php echo __('Programme'); ?></th>
+                        <th class="cell_grade"><?php echo __('Grade'); ?></th>
+                        <th><?php echo __('Classes'); ?></th>
                         <?php
                         for ($i = 1; $i <= intval($noOfShifts); $i++) {
-                            echo '<td class="table_cell cell_shifts">' . __('Shift') . ' ' . $i . '</td>';
+                            echo '<th class="cell_shifts">' . __('Shift') . ' ' . $i . '</th>';
                         }
                         ?>
-                        <td class="table_cell"><?php echo __('Total'); ?></td>
+                        <th class="table_cell"><?php echo __('Total'); ?></th>
                     </tr>
                 </thead>
 
@@ -118,18 +117,18 @@ echo $this->element('census/year_options');
                             ?>
                             <tr>
 
-                                <td class="table_cell <?php echo $record_tag; ?>">
+                                <td class="<?php echo $record_tag; ?>">
                                     <?php foreach ($value['programmes'] as $programmeId => $programmeName) { ?>
                                         <div class="table_cell_row"><?php echo $programmeName; ?></div>
                                     <?php } ?>
                                 </td>
 
-                                <td class="table_cell <?php echo $record_tag; ?>">
+                                <td class="<?php echo $record_tag; ?>">
                                     <?php foreach ($value['grades'] as $gradeId => $gradeName) { ?>
                                         <div class="table_cell_row"><?php echo $gradeName; ?></div>
                                     <?php } ?>
                                 </td>
-                                <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></td>
+                                <td class="cell-number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></td>
                                 <?php
                                 $totalShifts = 0;
                                 for ($s = 1; $s <= intval($noOfShifts); $s++) {
@@ -138,11 +137,11 @@ echo $this->element('census/year_options');
                                         $shift = $value['shift_' . $s];
                                         $totalShifts += $shift;
                                     }
-                                    echo '<td class="table_cell cell_number ' . $record_tag . '">' . $shift . '</td>';
+                                    echo '<td class="cell-number ' . $record_tag . '">' . $shift . '</td>';
                                 }
                                 ?>
 
-                                <td class="table_cell cell_number cell_subtotal"><?php echo $totalShifts; ?></td>
+                                <td class="cell-number cell_subtotal"><?php echo $totalShifts; ?></td>
                             </tr>
 
                             <?php
@@ -152,9 +151,8 @@ echo $this->element('census/year_options');
                 <?php } ?>
                 <tfoot>
                     <tr>
-                        <td class="table_cell"></td>
-                        <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-                        <td class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></td>
+                        <td class="cell_label" colspan="2"><?php echo __('Total'); ?></td>
+                        <td class="cell_value cell-number"><?php echo $totalClasses; ?></td>
                     </tr>
                 </tfoot>
             </table>

@@ -33,7 +33,7 @@ class ReportController extends AppController {
 	public $models = array(
 		'InstitutionSite' => 'Institution Site', 
 		'Students.Student' => 'Student', 
-		'Teachers.Teacher' => 'Teacher', 
+		//'Teachers.Teacher' => 'Teacher', 
 		'Staff.Staff' => 'Staff', 
 		'CensusStudent' => 'Census Student'
 	);
@@ -78,7 +78,7 @@ class ReportController extends AppController {
             }
             $this->set('files',$this->listReports());
             $this->set('models',$models);
-        } else {
+        } else {pr($this->data);
             if (isset($this->data['Report']['new'])) {
                 $reportButton = 'new';
                 $modelClass = $this->data['Report']['model'];

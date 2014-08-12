@@ -1,18 +1,15 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Openemis Version 1.0\n"
+"Project-Id-Version: Openemis Version 2.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-03-13 10:37+0800\n"
+"PO-Revision-Date: 2014-06-27 09:32+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: chi\n"
 "X-Generator: Poedit 1.6.4\n"
-"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
-"X-Poedit-Basepath: .\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"Language: zh\n"
 
 msgid "Home"
 msgstr "首页"
@@ -41,7 +38,7 @@ msgstr "教师"
 msgid "Staff"
 msgstr "工作人员"
 
-msgid "Reports"
+msgid "REPORTS"
 msgstr "报告"
 
 msgid "Settings"
@@ -50,9 +47,6 @@ msgstr "设置"
 msgid "Administration"
 msgstr "管理"
 
-# ###########################################################################
-# General
-# ###########################################################################
 msgid "Demo"
 msgstr "试用版"
 
@@ -77,7 +71,7 @@ msgstr "女"
 msgid "Unisex"
 msgstr "不分"
 
-msgid "Select File"
+msgid "Select file"
 msgstr "选择文件"
 
 msgid "Edit"
@@ -107,9 +101,6 @@ msgstr "上一页"
 msgid "Next"
 msgstr "下一页"
 
-# ###########################################################################
-# Home
-# ###########################################################################
 msgid "Statistics"
 msgstr "统计"
 
@@ -137,15 +128,9 @@ msgstr " ——"
 msgid "Notice"
 msgstr "启事"
 
-# ###########################################################################
-# Attachments
-# ###########################################################################
 msgid "Note: Max upload file size is 2MB."
 msgstr "注意：最大的文件上传容量为 2MB。"
 
-# ###########################################################################
-# File Type
-# ###########################################################################
 msgid "Image"
 msgstr "图片"
 
@@ -158,15 +143,9 @@ msgstr "Excel"
 msgid "Powerpoint"
 msgstr "Powerpoint"
 
-# ###########################################################################
-# File Alert Messages
-# ###########################################################################
 msgid "File is deleted successfully."
 msgstr "文件已删除。"
 
-# ###########################################################################
-# File Alert Messages
-# ###########################################################################
 msgid "File was deleted successfully."
 msgstr "文件已删除。"
 
@@ -197,15 +176,9 @@ msgstr "搜索中…"
 msgid "%s have been deleted successfully."
 msgstr "% 已被成功删除。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a unique Identification No"
 msgstr "请输入没有被使用的证件号码"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a unique Code"
 msgstr "请输入没有被使用的代码"
 
@@ -214,9 +187,6 @@ msgstr "学生名单"
 
 msgid "Add new Student"
 msgstr "添加新学生"
-
-msgid "Details"
-msgstr "详细资料"
 
 msgid "DETAILS"
 msgstr "详细资料"
@@ -236,7 +206,7 @@ msgstr "附加信息"
 msgid "STUDENT INFORMATION"
 msgstr "学生资料"
 
-msgid "Static Fields"
+msgid "Static fields"
 msgstr ""
 
 msgid "Field Options"
@@ -290,9 +260,6 @@ msgstr "姓氏"
 msgid "Gender"
 msgstr "性别"
 
-msgid "Date of Birth"
-msgstr "出生日期"
-
 msgid "Date Of Birth"
 msgstr "出生日期"
 
@@ -338,9 +305,6 @@ msgstr "电子邮件"
 msgid "E-mail"
 msgstr "电子邮件"
 
-msgid "General"
-msgstr "基本资料"
-
 msgid "GENERAL"
 msgstr "基本资料"
 
@@ -380,10 +344,10 @@ msgstr "添加教师"
 msgid "Qualifications"
 msgstr "资格"
 
-msgid "Training"
+msgid "TRAINING"
 msgstr "培训"
 
-msgid "TEACHER INFORMATION"
+msgid "Teacher Information"
 msgstr "教师资料"
 
 msgid "OTHER INFORMATION"
@@ -422,51 +386,30 @@ msgstr "没有教师记录。"
 msgid "Teacher"
 msgstr "教师"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid First Name"
 msgstr "请输入一个有效的名字"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Last Name"
 msgstr "请输入一个有效的姓氏"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Identification No"
 msgstr "请输入一个有效的证件号码"
 
 msgid "Please select a Gender"
 msgstr "请选择性别"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Address"
 msgstr "请输入一个有效的地址"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Postal Code"
 msgstr "请输入有效的邮政编码"
 
 msgid "Please select a Date of Birth"
 msgstr "请选择出生日期"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Email"
 msgstr "请输入一个有效的电子邮件"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid username"
 msgstr "请输入有效的用户名"
 
@@ -476,15 +419,9 @@ msgstr "此用户名已被使用。"
 msgid "Password must be at least 6 characters"
 msgstr "密码必须至少有6个字符"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid password"
 msgstr "请输入一个有效的密码"
 
-# ###########################################################################
-# Controller - Security
-# ###########################################################################
 msgid "You need to assign a role to the user"
 msgstr "你需要为用户设立任务"
 
@@ -614,15 +551,9 @@ msgstr "学院分校详细资料"
 msgid "Institution Site Code"
 msgstr "学院分校详细资料"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Name"
 msgstr "请输入有效名称"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a valid Code"
 msgstr "请输入有效代码"
 
@@ -632,9 +563,6 @@ msgstr "请选择提供者"
 msgid "Please select a Status"
 msgstr "请选择状态"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please select the Date Opened"
 msgstr "请选择起始日期"
 
@@ -653,9 +581,6 @@ msgstr "学院代码"
 msgid "Institution Name or Code"
 msgstr "学院名称或学院代码"
 
-# ###########################################################################
-# Home
-# ###########################################################################
 msgid "Status"
 msgstr "状态"
 
@@ -707,7 +632,7 @@ msgstr "年级"
 msgid "Seats"
 msgstr "座椅"
 
-msgid "Age"
+msgid "age"
 msgstr "年龄"
 
 msgid "Attendance"
@@ -719,7 +644,7 @@ msgstr "Behaviour"
 msgid "Results"
 msgstr "Results"
 
-msgid "TOTALS"
+msgid "Totals"
 msgstr "总数"
 
 msgid "Total"
@@ -779,9 +704,6 @@ msgstr "更改密码"
 msgid "successfully updated."
 msgstr "更新完成。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please try again later."
 msgstr "请稍后再试。"
 
@@ -797,9 +719,6 @@ msgstr "请输入新密码。"
 msgid "Please enter a min of 6 alpha numeric characters."
 msgstr "请输入至少6个字母。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter alpha numeric characters."
 msgstr "请输入字母字符。"
 
@@ -809,7 +728,7 @@ msgstr "密码错误。"
 msgid "System Information"
 msgstr "系统资料"
 
-msgid "Support"
+msgid "support"
 msgstr "支援"
 
 msgid "License"
@@ -824,7 +743,7 @@ msgstr "财政"
 msgid "Total Public Expenditure"
 msgstr "公共开支总额"
 
-msgid "National Denominators"
+msgid "NATIONAL DENOMINATORS"
 msgstr "国家分母"
 
 msgid "Select"
@@ -833,9 +752,6 @@ msgstr "选项"
 msgid "Total Public Expenditure Per Education Level"
 msgstr "人均教育水平的公共开支总额"
 
-# ###########################################################################
-# Controller - Education
-# ###########################################################################
 msgid "System"
 msgstr "系统"
 
@@ -851,7 +767,7 @@ msgstr "计划"
 msgid "Orientation"
 msgstr "方向"
 
-msgid "Field of Study"
+msgid "Field Of Study"
 msgstr "研究领域"
 
 msgid "Certification"
@@ -860,9 +776,6 @@ msgstr "证书"
 msgid "Subject"
 msgstr "科目"
 
-# ###########################################################################
-# Controller - DateTime
-# ###########################################################################
 msgid "January"
 msgstr "一月"
 
@@ -899,9 +812,6 @@ msgstr "十一月"
 msgid "December"
 msgstr "十二月"
 
-# ###########################################################################
-# Component - UTILITY
-# ###########################################################################
 msgid "Your session is timed out. Please login again."
 msgstr "你操作超时，请重新登陆。"
 
@@ -943,9 +853,6 @@ msgstr "无效的JSON数据。"
 msgid "Request Timeout"
 msgstr "请求超时"
 
-msgid "Your request has been timed out. Please try again."
-msgstr "您的请求已超时。请再试一次。"
-
 msgid "Request Aborted"
 msgstr "请求已中止"
 
@@ -958,9 +865,6 @@ msgstr "意外错误 "
 msgid "Edit System Configurations"
 msgstr "编辑系统配置"
 
-# ###########################################################################
-# File Alert Messages
-# ###########################################################################
 msgid "File is updated successfully."
 msgstr "文件已更新."
 
@@ -985,21 +889,9 @@ msgstr "请缩小文件大小"
 msgid "Image resolution is too small."
 msgstr "图片像素太低"
 
-# ###########################################################################
-# Component - FileAttachment
-# ###########################################################################
-msgid "error"
-msgstr "错误"
-
-# ###########################################################################
-# Component - FileAttachment
-# ###########################################################################
 msgid "Error"
 msgstr "错误"
 
-# #############################
-# Component - Navigation
-# #############################
 msgid "log does not exists"
 msgstr "日志不存在"
 
@@ -1012,9 +904,6 @@ msgstr "学院资料"
 msgid "SITE INFORMATION"
 msgstr "分校信息"
 
-msgid "Add new Institution Site"
-msgstr "添加学院分校"
-
 msgid "Add New Institution Site"
 msgstr "添加学院分校"
 
@@ -1024,7 +913,7 @@ msgstr "银行帐户"
 msgid "Bank Account"
 msgstr "银行帐户"
 
-msgid "CENSUS"
+msgid "Census"
 msgstr "人口调查"
 
 msgid "Enrolment"
@@ -1078,19 +967,16 @@ msgstr "编辑自定义表"
 msgid "System Configurations"
 msgstr "系统配置"
 
-msgid "ACCOUNTS &amp; SECURITY"
-msgstr "帐目及安全性"
+msgid "Accounts &amp; Security"
+msgstr "帐户号码和安全系统"
 
 msgid "ACCOUNTS & SECURITY"
 msgstr "帐目及安全性"
 
-msgid "NATIONAL DENOMINATORS"
-msgstr "国家分母"
-
 msgid "Population"
 msgstr "人口"
 
-msgid "DATA PROCESSING"
+msgid "Data Processing"
 msgstr "数据处理"
 
 msgid "Generate Reports"
@@ -1102,7 +988,7 @@ msgstr "输出指标"
 msgid "Processes"
 msgstr "流程"
 
-msgid "DATABASE"
+msgid "Database"
 msgstr "数据库"
 
 msgid "Backup"
@@ -1126,9 +1012,6 @@ msgstr "没有自定义调查表格。"
 msgid "Message Not Found."
 msgstr "无信息"
 
-# ###########################################################################
-# View - Infrastructure
-# ###########################################################################
 msgid "Good"
 msgstr "好"
 
@@ -1157,7 +1040,7 @@ msgid "Please enter your current password."
 msgstr "请输入您当前的密码。"
 
 msgid "Areas"
-msgstr "区域"
+msgstr ""
 
 msgid "Visible"
 msgstr "显示"
@@ -1166,7 +1049,7 @@ msgid "Area Level"
 msgstr "区域级别"
 
 msgid "Area Levels"
-msgstr "区域级别"
+msgstr ""
 
 msgid "Edit Area Levels"
 msgstr "编辑区域级别"
@@ -1175,7 +1058,7 @@ msgid "Structure"
 msgstr "结构"
 
 msgid "Education"
-msgstr "教育"
+msgstr ""
 
 msgid "Education Level"
 msgstr "教育程度"
@@ -1191,9 +1074,6 @@ msgstr "计划方向"
 
 msgid "Order"
 msgstr "秩序"
-
-msgid "Field Of Study"
-msgstr "研究领域"
 
 msgid "ISCED Level"
 msgstr "ISCED 水准"
@@ -1219,9 +1099,6 @@ msgstr "返回到列表"
 msgid "Graduates"
 msgstr "毕业生"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please select a programme first."
 msgstr "请先选择一个教育计划。"
 
@@ -1324,9 +1201,6 @@ msgstr "单行文本"
 msgid "Multi Line Text"
 msgstr "多行文本"
 
-msgid "DropDown List"
-msgstr "下拉列表"
-
 msgid "Dropdown List"
 msgstr "下拉列表"
 
@@ -1372,9 +1246,6 @@ msgstr "Y 类别"
 msgid "List"
 msgstr "列表"
 
-# ###########################################################################
-# Component - Settings/Config
-# ###########################################################################
 msgid "Dashboard Image"
 msgstr "板图相片"
 
@@ -1411,20 +1282,8 @@ msgstr "教育管理信息系统（Education Management Information System）"
 msgid "Function"
 msgstr "功能"
 
-msgid "Institution Site"
-msgstr "学院分校"
-
 msgid "INSTITUTION SITE"
 msgstr "学院分校"
-
-msgid "Census"
-msgstr "人口调查"
-
-msgid "Accounts &amp; Security"
-msgstr "帐户号码和安全系统"
-
-msgid "Data Processing"
-msgstr "数据处理"
 
 msgid "Export Indicator"
 msgstr "出口指标"
@@ -1459,12 +1318,6 @@ msgstr "所有模件均可进入"
 msgid "Back to Roles"
 msgstr "返回到列表"
 
-# ###########################################################################
-# View - Home/Help
-# ###########################################################################
-msgid "Database"
-msgstr "数据库"
-
 msgid "PHP Version"
 msgstr "PHP版本"
 
@@ -1477,9 +1330,6 @@ msgstr "操作系统"
 msgid "Data not available."
 msgstr "数据不详。"
 
-# ###########################################################################
-# View - Home/Reports
-# ###########################################################################
 msgid "The selected report is currently being processed."
 msgstr "所选的报告正在处理中"
 
@@ -1512,9 +1362,6 @@ msgstr "自定义报告"
 
 msgid "Please contact"
 msgstr "请联系"
-
-msgid "support"
-msgstr "支援"
 
 msgid "for more information on Custom Reports."
 msgstr "更多的资讯请浏览自定义报告。"
@@ -1552,13 +1399,13 @@ msgstr "学院分校额外信息报告"
 msgid "Institution Site Programme Report"
 msgstr "学院分校教育计划"
 
-msgid "List of Institution Sites with Programmes"
+msgid "List of Institution Sites with programmes"
 msgstr "学院分校计划列表"
 
 msgid "Institution Site Bank Account Report"
 msgstr "学院分校银行帐户"
 
-msgid "List of Institution Sites with Bank Accounts"
+msgid "List of Institution Sites with bank accounts"
 msgstr "学院分校的银行帐户名单"
 
 msgid "Enrolment Report"
@@ -1791,16 +1638,6 @@ msgstr ""
 msgid "Gross Enrolment Rate Report"
 msgstr "毛入学率报告"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in a given level of "
-"education regardless of age by the population of the age group which "
-"officially corresponds to the given level of education, and multiply the "
-"result by 100. This indicator has dimension values of sex, locality and "
-"grade."
-msgstr ""
-"划分的学生人数（或学生）参加在给定的教育水平，不论年龄由年龄组正式对应于给定"
-"的受教育程度的人口，将结果乘以100。该指标包含性别，地区和年级数据。"
-
 msgid "Net Intake Rate Report"
 msgstr "净录取率报告"
 
@@ -1815,6 +1652,16 @@ msgstr ""
 
 msgid "Gross Intake Rate Report"
 msgstr "毛入学率报告"
+
+msgid ""
+"Divide the number of pupils (or students) enrolled in a given level of "
+"education regardless of age by the population of the age group which "
+"officially corresponds to the given level of education, and multiply the "
+"result by 100. This indicator has dimension values of sex, locality and "
+"grade."
+msgstr ""
+"划分的学生人数（或学生）参加在给定的教育水平，不论年龄由年龄组正式对应于给定"
+"的受教育程度的人口，将结果乘以100。该指标包含性别，地区和年级数据。"
 
 msgid ""
 "Divide the number of new entrants in grade 1, irrespective of age, by the "
@@ -2069,9 +1916,6 @@ msgstr "导出到"
 msgid "Export"
 msgstr "导出"
 
-# ###########################################################################
-# View - Population & Finance
-# ###########################################################################
 msgid "No Data"
 msgstr "无资料"
 
@@ -2087,9 +1931,6 @@ msgstr "没有财务记录"
 msgid "Gender Parity Index"
 msgstr "性别平等指数"
 
-# ###########################################################################
-# View - Database
-# ###########################################################################
 msgid "Click the Generate button to create a restore point."
 msgstr "点击生成按钮，创建修复。"
 
@@ -2120,13 +1961,13 @@ msgstr "取消全选"
 msgid "Generate"
 msgstr "生成"
 
+msgid "Generated Files"
+msgstr "生成 文档"
+
 msgid ""
 "The system will %s the current data and restore to your previous data based "
 "on the restore point you selected."
 msgstr "系统将以你选择的修复点进行修复，并显示当前所完成修复数据的百分比。"
-
-msgid "OVERWRITE ALL"
-msgstr "覆盖所有"
 
 msgid "Please note that the system will not restore the following tables:"
 msgstr "请注意，系统不会恢复以下列表："
@@ -2147,9 +1988,6 @@ msgstr "图片过大。"
 msgid "Resolution too large."
 msgstr "解像度太大。"
 
-# ###########################################################################
-# File Alert Messages
-# ###########################################################################
 msgid "File uploaded with success."
 msgstr "已成功更新文件。"
 
@@ -2174,20 +2012,11 @@ msgstr "文件写入磁盘失败。"
 msgid "A PHP extension stopped the file upload."
 msgstr "一个PHP扩展停止文件上传。"
 
-# ###########################################################################
-# Lib - ImageValidate
-# ###########################################################################
 msgid "Max Resolution:"
 msgstr "最大解像度："
 
 msgid "Max File Size:"
 msgstr "最大文件大小:"
-
-# ###########################################################################
-# Lib - ImageValidate
-# ###########################################################################
-msgid "Max Resolution: %s pixels"
-msgstr "最大解像度：%s 像素"
 
 msgid "Format Supported:"
 msgstr "支持格式:"
@@ -2195,60 +2024,36 @@ msgstr "支持格式:"
 msgid "Profile Image"
 msgstr "头像"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter the code for the Area."
 msgstr "请输入有效验证码。"
 
 msgid "There are duplicate area code."
 msgstr "有重复的区号。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter the name for the Area."
 msgstr "请输入区域名称。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please supply a valid image."
 msgstr "请提供有效图像。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a name for the Field of Study."
 msgstr "请进入研究领域的名称。"
 
 msgid "This Field of Study already exists in the system."
 msgstr "这一研究领域已经存在于系统中。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please select the programme orientation."
 msgstr "请选择计划的方向。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a name for the Subject."
 msgstr "请输入一个科目标题。"
 
 msgid "This subject already exists in the system."
 msgstr "这个科目是已经存在于系统中。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "You have entered an invalid username or password."
 msgstr "您输入了一个无效的用户名或密码。"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please enter a duration."
 msgstr "请输入期限。"
 
@@ -2277,9 +2082,6 @@ msgstr "更新附件…"
 
 msgid "Bank Branch is required!"
 msgstr "请输入银行分行！"
-
-msgid "Value"
-msgstr "数据"
 
 msgid "value"
 msgstr "数据"
@@ -2383,18 +2185,12 @@ msgstr "运行中…"
 msgid "Adding Field..."
 msgstr "附加项"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please select a valid Start Date"
 msgstr "请选择有效起始日期"
 
 msgid "Please select a valid End Date"
 msgstr "请选择有效结束日期"
 
-# ###########################################################################
-# Validation Messages
-# ###########################################################################
 msgid "Please add a programme to this institution site."
 msgstr "请为此学院分校添加教育计划。"
 
@@ -2408,11 +2204,11 @@ msgstr "机构网站和纬度/经度值是0或空列表"
 msgid "OLAP Report"
 msgstr "OLAP 报告"
 
+msgid "OLAP Reports"
+msgstr ""
+
 msgid "Generated"
 msgstr "生成"
-
-msgid "Generated Files"
-msgstr "生成 文档"
 
 msgid "Generating OLAP Report..."
 msgstr "生成 OLAP 报告..."
@@ -2528,6 +2324,9 @@ msgstr "教育年级"
 msgid "Student Category"
 msgstr "学生类别"
 
+msgid "No backup files found."
+msgstr ""
+
 msgid "Yearbook"
 msgstr "年鉴"
 
@@ -2584,19 +2383,456 @@ msgstr "上一年级的女"
 msgid "Data Discrepancy Reports"
 msgstr "数据差异报告"
 
-msgid "age"
-msgstr "年龄"
+msgid "Rubrics"
+msgstr ""
 
-msgid "Partners"
+msgid "Quality - Rubrics"
+msgstr ""
+
+msgid "Weighthings"
+msgstr ""
+
+msgid "Pass Mark"
+msgstr ""
+
+msgid "Back"
+msgstr ""
+
+msgid "Modified by"
+msgstr ""
+
+msgid "Modified on"
+msgstr ""
+
+msgid "Created by"
+msgstr ""
+
+msgid "Created on"
+msgstr ""
+
+msgid "View Rubric"
+msgstr ""
+
+msgid "Descriptions"
+msgstr ""
+
+msgid "QUALITY"
+msgstr ""
+
+msgid "Rubric Details"
+msgstr ""
+
+msgid "Quality - Rubric Details"
+msgstr ""
+
+msgid "Quality - Edit Rubric Details"
+msgstr ""
+
+msgid "Add Heading"
+msgstr ""
+
+msgid "Add Criteria Row"
+msgstr ""
+
+msgid "Add Level Column"
+msgstr ""
+
+msgid "Edit Rubric Details"
+msgstr ""
+
+msgid "Visits"
+msgstr ""
+
+msgid "Quality - Rubric"
+msgstr ""
+
+msgid "Supervisor"
+msgstr ""
+
+msgid "Quality - Rubric Detail"
+msgstr ""
+
+msgid "Color"
+msgstr ""
+
+msgid "Quality - Visit"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Comment"
+msgstr ""
+
+msgid "Visit Types"
+msgstr ""
+
+msgid "National Code"
+msgstr ""
+
+msgid "International Code"
+msgstr ""
+
+msgid "Quality - Add Rubric"
+msgstr ""
+
+msgid "Add Rubric"
+msgstr ""
+
+msgid "Quality - Rubric Infomations"
+msgstr ""
+
+msgid "Rubric Infomations"
+msgstr ""
+
+msgid "Quality - Edit Rubric"
+msgstr ""
+
+msgid "Edit Rubric"
+msgstr ""
+
+msgid "Quality - Setup Rubric Criteria"
+msgstr ""
+
+msgid "Setup Rubric Criteria"
+msgstr ""
+
+msgid "Quality - Add Rubric Criteria"
+msgstr ""
+
+msgid "Add Rubric Criteria"
+msgstr ""
+
+msgid "Quality - Edit Rubric Criteria"
+msgstr ""
+
+msgid "Edit Rubric Criteria"
+msgstr ""
+
+msgid "Quality - Rubric Criteria"
+msgstr ""
+
+msgid "Rubric Criteria"
+msgstr ""
+
+msgid "Quality - Status"
+msgstr ""
+
+msgid "Quality - Add Status"
+msgstr ""
+
+msgid "Quality - Edit Status"
+msgstr ""
+
+msgid "Quality - Add Rubrics"
+msgstr ""
+
+msgid "Quality - Edit Rubrics"
+msgstr ""
+
+msgid "Quality - Add Visit"
+msgstr ""
+
+msgid "Quality - Edit Visit"
+msgstr ""
+
+msgid "Identities"
+msgstr ""
+
+msgid "Identity Details"
+msgstr ""
+
+msgid "Edit Identity Details"
+msgstr ""
+
+msgid "Number"
+msgstr ""
+
+msgid "Issued"
+msgstr ""
+
+msgid "Expiry"
+msgstr ""
+
+msgid "Issue Date"
+msgstr ""
+
+msgid "Expiry Date"
+msgstr ""
+
+msgid "Issue Location"
+msgstr ""
+
+msgid "Courses"
+msgstr ""
+
+msgid "Sessions"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "New"
+msgstr ""
+
+msgid "Pending for Approval"
+msgstr ""
+
+msgid "Course Code"
+msgstr ""
+
+msgid "Course Title"
+msgstr ""
+
+msgid "Course Description"
+msgstr ""
+
+msgid "Goal / Objectives"
+msgstr ""
+
+msgid "Category / Field of Study"
+msgstr ""
+
+msgid "Target Population"
+msgstr ""
+
+msgid "Add Target Population"
+msgstr ""
+
+msgid "Credit Hours"
+msgstr ""
+
+msgid "Mode Of Delivery"
+msgstr ""
+
+msgid "Training Provider"
+msgstr ""
+
+msgid "Training Requirement"
+msgstr ""
+
+msgid "Training Level"
+msgstr ""
+
+msgid "Prerequisite"
+msgstr ""
+
+msgid "Add Prerequisite"
+msgstr ""
+
+msgid "Pass Result"
+msgstr ""
+
+msgid "Submit for Approval"
+msgstr ""
+
+msgid "Courses Details"
+msgstr ""
+
+msgid "Sessions Details"
+msgstr ""
+
+msgid "Inactivate"
+msgstr ""
+
+msgid "Activate"
+msgstr ""
+
+msgid "Trainer"
+msgstr ""
+
+msgid "Trainees"
+msgstr ""
+
+msgid "Course"
+msgstr ""
+
+msgid "Results Details"
+msgstr ""
+
+msgid "Needs"
+msgstr ""
+
+msgid "Self-Study"
+msgstr ""
+
+msgid "Credit"
+msgstr ""
+
+msgid "Training Needs"
+msgstr ""
+
+msgid "Training Needs Details"
+msgstr ""
+
+msgid "Priority"
+msgstr ""
+
+msgid "Training Results"
+msgstr ""
+
+msgid "Training Results Details"
+msgstr ""
+
+msgid "Training Self Study"
+msgstr ""
+
+msgid "Training Self Study Details"
+msgstr ""
+
+msgid "Result"
+msgstr ""
+
+msgid "Credits"
+msgstr ""
+
+msgid "Comments"
+msgstr ""
+
+msgid "Your data has been saved successfully."
+msgstr ""
+
+msgid "Please select a Type"
+msgstr ""
+
+msgid "Please enter a valid Message"
+msgstr ""
+
+msgid "Please enter a valid Number"
+msgstr ""
+
+msgid "Please enter a valid Issue Location"
+msgstr ""
+
+msgid "Expiry Date must be greater than Issue Date"
+msgstr ""
+
+msgid "Nationalities"
+msgstr ""
+
+msgid "Nationality Details"
+msgstr ""
+
+msgid "Edit Nationality Details"
+msgstr ""
+
+msgid "Please select a Country"
+msgstr ""
+
+msgid "Sms"
+msgstr ""
+
+msgid "Messages"
+msgstr ""
+
+msgid "Responses"
+msgstr ""
+
+msgid "Logs"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Add Message"
+msgstr ""
+
+msgid "Message Details"
+msgstr ""
+
+msgid "Edit Message Details"
+msgstr ""
+
+msgid "All logs have been deleted successfully."
+msgstr ""
+
+msgid "All responses have been deleted successfully."
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Sent"
+msgstr ""
+
+msgid "Received"
+msgstr ""
+
+msgid "Warning"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid ""
+"Note: Please clear the Responses page as existing responses may no longer "
+"match the updated Messages."
+msgstr ""
+
+msgid "Do you wish to clear all records?"
+msgstr ""
+
+msgid "Date/Time"
+msgstr ""
+
+msgid "Confirmation"
+msgstr ""
+
+msgid "Confirm"
+msgstr ""
+
+msgid "Do you wish to inactivate this record?"
+msgstr ""
+
+msgid "Do you wish to activate this record?"
+msgstr ""
+
+msgid "Field of Studies"
+msgstr ""
+
+msgid "Levels"
+msgstr ""
+
+msgid "Mode of Deliveries"
+msgstr ""
+
+msgid "Priorities"
+msgstr ""
+
+msgid "Providers"
+msgstr ""
+
+msgid "Requirements"
+msgstr ""
+
+msgid "Statuses"
+msgstr ""
+
+msgid "Edit Field Options"
+msgstr ""
+
+msgid "Add Trainee"
+msgstr ""
+
+msgid "Identification No, First Name or Last Name"
+msgstr ""
+
+msgid "Pass"
+msgstr ""
+
+msgid "Course Type"
+msgstr ""
+
+msgid "Course Types"
 msgstr ""
 
 msgid "Please add an area level to this area"
 msgstr ""
 
 msgid "There are no assessments"
-msgstr ""
-
-msgid "Static fields"
 msgstr ""
 
 msgid "Groups"
@@ -2650,8 +2886,1261 @@ msgstr ""
 msgid "No File Chosen"
 msgstr ""
 
+msgid "Max Resolution"
+msgstr ""
+
+msgid "Your request has been timed out. Please try again."
+msgstr "您的请求已超时。请再试一次。"
+
+msgid "OVERWRITE ALL"
+msgstr "覆盖所有"
+
+msgid "Max Resolution: %s pixels"
+msgstr "最大解像度：%s 像素"
+
 msgid "Choose File"
 msgstr ""
 
-msgid "Max Resolution"
+msgid "File have not been updated successfully."
+msgstr ""
+
+msgid "Completion Rate / Gross Primary Graduation Ratio"
+msgstr ""
+
+msgid ""
+"Divide the number of primary graduates, irrespective of age, by the "
+"population of theoretical primary graduation, and multiply the result by 100."
+msgstr ""
+
+msgid "Percentage of Trained Teachers"
+msgstr ""
+
+msgid "Divide the female value of a given indicator by that of the male."
+msgstr ""
+
+msgid "Percent of Female Students"
+msgstr ""
+
+msgid "Percent of Female Teachers"
+msgstr ""
+
+msgid "Percentage of Private Enrolment"
+msgstr ""
+
+msgid "Percentage of schools with improved drinking water sources"
+msgstr ""
+
+msgid "Percentage of schools with adequate sanitation facilities"
+msgstr ""
+
+msgid ""
+"Public Expenditure as percentage of Total Public Expenditure on Education"
+msgstr ""
+
+msgid ""
+"Divide public current expenditure devoted to each level of education by the "
+"total public current expenditure on education, and multiply the result by "
+"100. Divide public current expenditure on education in a given financial "
+"year by the total public expenditure on education for the same financial "
+"year and multiply the result by 100."
+msgstr ""
+
+msgid "Public Expenditure as percentage of Total Government Expenditure"
+msgstr ""
+
+msgid "Public Expenditure as percentage of Gross National Product (GNP)"
+msgstr ""
+
+msgid "Number of teachers"
+msgstr ""
+
+msgid "Net Admission Rate / Net Intake Rate"
+msgstr ""
+
+msgid "Gross Admission Rate / Gross Intake Rate"
+msgstr ""
+
+msgid "Summary report on Census Additional Information about enrolment"
+msgstr ""
+
+msgid "Summary report on Buildings"
+msgstr ""
+
+msgid "Report on Rooms"
+msgstr ""
+
+msgid "Report on number of Sanitations and Conditions"
+msgstr ""
+
+msgid "Report on number of Furnitures and its conditions"
+msgstr ""
+
+msgid "Report on number and kinds of Resources as well as Condition status"
+msgstr ""
+
+msgid "Report on Power sources"
+msgstr ""
+
+msgid "Report on number of Powers types and Conditions"
+msgstr ""
+
+msgid "Report on Water"
+msgstr ""
+
+msgid "Report on conditions, number, kinds of water source of Institutions"
+msgstr ""
+
+msgid "Student List"
+msgstr ""
+
+msgid "Report on student additional info"
+msgstr ""
+
+msgid "Report on Teachers Additional Info"
+msgstr ""
+
+msgid "Report on Staff Additional Info"
+msgstr ""
+
+msgid "List of institution's additional info"
+msgstr ""
+
+msgid "Enrolment Summary"
+msgstr ""
+
+msgid "Class List"
+msgstr ""
+
+msgid "Report on classes"
+msgstr ""
+
+msgid "Summary report on Textbooks"
+msgstr ""
+
+msgid "Summary report on Teachers"
+msgstr ""
+
+msgid "Trainings"
+msgstr ""
+
+msgid "Staffs"
+msgstr ""
+
+msgid "Summary report on Institution Staffs"
+msgstr ""
+
+msgid "Summary report on Census Table Related Information"
+msgstr ""
+
+msgid "Summary report on income"
+msgstr ""
+
+msgid "Report on expenditure"
+msgstr ""
+
+msgid "Institution List"
+msgstr ""
+
+msgid "Report on institutions"
+msgstr ""
+
+msgid "Institution Site List"
+msgstr ""
+
+msgid "Report on institution sites"
+msgstr ""
+
+msgid "Please contact support for more information on Custom Report."
+msgstr ""
+
+msgid "This is a report on classes"
+msgstr ""
+
+msgid "This is a report on student"
+msgstr ""
+
+msgid "This is a report on Teachers"
+msgstr ""
+
+msgid "This is a report on Staff"
+msgstr ""
+
+msgid "Wizard"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "have been deleted successfully."
+msgstr ""
+
+msgid "Edit Attachments"
+msgstr ""
+
+msgid "Institution Site Name"
+msgstr ""
+
+msgid "Partners"
+msgstr ""
+
+msgid "Verifications"
+msgstr ""
+
+msgid "Shifts"
+msgstr ""
+
+msgid "Training Reports"
+msgstr ""
+
+msgid "Summary of buildings and conditions from census"
+msgstr ""
+
+msgid "Room Report"
+msgstr ""
+
+msgid "Summary of sanitation, gender and conditions from census"
+msgstr ""
+
+msgid "Summary of resources and conditions from census"
+msgstr ""
+
+msgid "Summary of water and conditions from census"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Add Provider"
+msgstr ""
+
+msgid "Hours"
+msgstr ""
+
+msgid "Course Prerequisite"
+msgstr ""
+
+msgid "Add Course Prerequisite"
+msgstr ""
+
+msgid "There are no assessments."
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Advanced Search"
+msgstr ""
+
+msgid "Education Cycle"
+msgstr ""
+
+msgid "Nursery"
+msgstr ""
+
+msgid "Kindergarten"
+msgstr ""
+
+msgid "Number of Shifts"
+msgstr ""
+
+msgid "Auto Generated OpenEMIS ID"
+msgstr ""
+
+msgid "Student Prefix"
+msgstr ""
+
+msgid "Teacher Prefix"
+msgstr ""
+
+msgid "Staff Prefix"
+msgstr ""
+
+msgid "Custom Validation"
+msgstr ""
+
+msgid "Institution Telephone"
+msgstr ""
+
+msgid "Institution Fax"
+msgstr ""
+
+msgid "Institution Postal Code"
+msgstr ""
+
+msgid "Institution Site Telephone"
+msgstr ""
+
+msgid "Institution Site Fax"
+msgstr ""
+
+msgid "Institution Site Postal Code"
+msgstr ""
+
+msgid "Student Telephone"
+msgstr ""
+
+msgid "Student Postal Code"
+msgstr ""
+
+msgid "Teacher Telephone"
+msgstr ""
+
+msgid "Teacher Postal Code"
+msgstr ""
+
+msgid "Staff Telephone"
+msgstr ""
+
+msgid "Staff Postal Code"
+msgstr ""
+
+msgid "LDAP Configuration"
+msgstr ""
+
+msgid "LDAP Server"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Base DN"
+msgstr ""
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Where's My School Config"
+msgstr ""
+
+msgid "Where is my School URL"
+msgstr ""
+
+msgid "Starting Longitude"
+msgstr ""
+
+msgid "Starting Latitude"
+msgstr ""
+
+msgid "Starting Range"
+msgstr ""
+
+msgid "SMS Provider URL"
+msgstr ""
+
+msgid "SMS Number"
+msgstr ""
+
+msgid "SMS Content"
+msgstr ""
+
+msgid "SMS Retry Times"
+msgstr ""
+
+msgid "SMS Retry Delay"
+msgstr ""
+
+msgid "Credit Hour"
+msgstr ""
+
+msgid "Nationality"
+msgstr ""
+
+msgid "Default Country"
+msgstr ""
+
+msgid "System Defined Roles"
+msgstr ""
+
+msgid "User Defined Roles"
+msgstr ""
+
+msgid "List of Institutions with custom fields"
+msgstr ""
+
+msgid "Institution Custom Field Report"
+msgstr ""
+
+msgid "Report on all available courses by status"
+msgstr ""
+
+msgid "Training Course Report"
+msgstr ""
+
+msgid "Report on all completed courses by staff, date, location and results"
+msgstr ""
+
+msgid "Training Course Completed Report"
+msgstr ""
+
+msgid "Report on Staff training needs by course"
+msgstr ""
+
+msgid "Staff Training Need Report"
+msgstr ""
+
+msgid "Report on Teacher training needs by course"
+msgstr ""
+
+msgid "Teacher Training Need Report"
+msgstr ""
+
+msgid "Report on who has not completed a course by location"
+msgstr ""
+
+msgid "Training Course Uncompleted Report"
+msgstr ""
+
+msgid "Report of trainers by name, course and date"
+msgstr ""
+
+msgid "Training Trainer Report"
+msgstr ""
+
+msgid ""
+"Report of Exceptions to see if a staff is enrolled in two courses at the "
+"same time or has already completed the course"
+msgstr ""
+
+msgid "Training Exception Report"
+msgstr ""
+
+msgid ""
+"Report on the number of staff actually trained verses target groups for each "
+"program"
+msgstr ""
+
+msgid "Training Staff Statistics Report"
+msgstr ""
+
+msgid ""
+"Report on the number of teachers actually trained verses target groups for "
+"each program"
+msgstr ""
+
+msgid "Training Teacher Statistic Report"
+msgstr ""
+
+msgid "List of Institution Sites with custom fields"
+msgstr ""
+
+msgid "Institution Site Custom Field Report"
+msgstr ""
+
+msgid "Institution Site Totals"
+msgstr ""
+
+msgid "Summary of verifications from census"
+msgstr ""
+
+msgid "Verification Report"
+msgstr ""
+
+msgid "Summary of student enrolment from census"
+msgstr ""
+
+msgid "Summary of graduates from census"
+msgstr ""
+
+msgid "Graduate Report"
+msgstr ""
+
+msgid "Summary of attendances from census"
+msgstr ""
+
+msgid "Attendance Report"
+msgstr ""
+
+msgid "Summary of assessment from census"
+msgstr ""
+
+msgid "Assessment Report"
+msgstr ""
+
+msgid "Summary of behaviours from census"
+msgstr ""
+
+msgid "Behaviour Report"
+msgstr ""
+
+msgid "Summary of custom fields from census"
+msgstr ""
+
+msgid "Custom Field Report"
+msgstr ""
+
+msgid "Summary of custom tables from census"
+msgstr ""
+
+msgid "Custom Table Report"
+msgstr ""
+
+msgid "Summary of rooms and conditions from census"
+msgstr ""
+
+msgid "Summary of furniture and conditions from census"
+msgstr ""
+
+msgid "Summary of resources and conditions from census "
+msgstr ""
+
+msgid "Summary of power and conditions from census"
+msgstr ""
+
+msgid "Summary of water and conditions from census "
+msgstr ""
+
+msgid "List of Students with custom fields"
+msgstr ""
+
+msgid "Student Custom Field Report"
+msgstr ""
+
+msgid "Summary of assessment results from Students"
+msgstr ""
+
+msgid "Student Assessment Report"
+msgstr ""
+
+msgid "List of out of school Students"
+msgstr ""
+
+msgid "Student Out of School Report"
+msgstr ""
+
+msgid "List of Teachers with custom fields"
+msgstr ""
+
+msgid "Teacher Custom Field Report"
+msgstr ""
+
+msgid "List of Staff with custom fields"
+msgstr ""
+
+msgid "Staff Custom Field Report"
+msgstr ""
+
+msgid "Standard"
+msgstr ""
+
+msgid "SURVEY"
+msgstr ""
+
+msgid "New Surveys"
+msgstr ""
+
+msgid "Completed Surveys"
+msgstr ""
+
+msgid "Synchronized"
+msgstr ""
+
+msgid "Sync"
+msgstr ""
+
+msgid "Training Staff Statistic Report"
+msgstr ""
+
+msgid ""
+"Report on the number of teacher actually trained verses target groups for "
+"each program"
+msgstr ""
+
+msgid "New Staff"
+msgstr ""
+
+msgid "Contacts"
+msgstr ""
+
+msgid "Languages"
+msgstr ""
+
+msgid "Special Needs"
+msgstr ""
+
+msgid "Awards"
+msgstr ""
+
+msgid "Memberships"
+msgstr ""
+
+msgid "Licenses"
+msgstr ""
+
+msgid "Positions"
+msgstr ""
+
+msgid "Leave"
+msgstr ""
+
+msgid "Extracurricular"
+msgstr ""
+
+msgid "Employment"
+msgstr ""
+
+msgid "Salary"
+msgstr ""
+
+msgid "HEALTH"
+msgstr ""
+
+msgid "Family"
+msgstr ""
+
+msgid "Immunizations"
+msgstr ""
+
+msgid "Medications"
+msgstr ""
+
+msgid "Allergies"
+msgstr ""
+
+msgid "Tests"
+msgstr ""
+
+msgid "Consultations"
+msgstr ""
+
+msgid "Achievements"
+msgstr ""
+
+msgid "REPORT"
+msgstr ""
+
+msgid "Mobile"
+msgstr ""
+
+msgid "Phone"
+msgstr ""
+
+msgid "Preferred"
+msgstr ""
+
+msgid "Writing"
+msgstr ""
+
+msgid "Reading"
+msgstr ""
+
+msgid "Speaking"
+msgstr ""
+
+msgid "Listening"
+msgstr ""
+
+msgid "Issuer"
+msgstr ""
+
+msgid "Staff Label"
+msgstr ""
+
+msgid "Check Box"
+msgstr ""
+
+msgid "Employment Status"
+msgstr ""
+
+msgid "Hours per Week"
+msgstr ""
+
+msgid "Commencement Date"
+msgstr ""
+
+msgid "Document No."
+msgstr ""
+
+msgid "Qualification Title"
+msgstr ""
+
+msgid "Graduate Year "
+msgstr ""
+
+msgid "No position found"
+msgstr ""
+
+msgid "Total days absent"
+msgstr ""
+
+msgid "Total days attended"
+msgstr ""
+
+msgid "Number of days"
+msgstr ""
+
+msgid "Last day "
+msgstr ""
+
+msgid "First day"
+msgstr ""
+
+msgid "Total Days"
+msgstr ""
+
+msgid "List of Behaviours"
+msgstr ""
+
+msgid "No record available"
+msgstr ""
+
+msgid "Net"
+msgstr ""
+
+msgid "Deductions"
+msgstr ""
+
+msgid "Additions"
+msgstr ""
+
+msgid "Gross"
+msgstr ""
+
+msgid "Conditions"
+msgstr ""
+
+msgid "Relationship"
+msgstr ""
+
+msgid "Dosage"
+msgstr ""
+
+msgid "Ended"
+msgstr ""
+
+msgid "Commenced"
+msgstr ""
+
+msgid "Severe"
+msgstr ""
+
+msgid "Treatment"
+msgstr ""
+
+msgid "Training Achievements"
+msgstr ""
+
+msgid "Health - History"
+msgstr ""
+
+msgid "Health - Family"
+msgstr ""
+
+msgid "Health - Immunizations"
+msgstr ""
+
+msgid "Health - Medications"
+msgstr ""
+
+msgid "Health - Medication"
+msgstr ""
+
+msgid "Health - Allergies"
+msgstr ""
+
+msgid "Health - Tests"
+msgstr ""
+
+msgid "Health - Consultations"
+msgstr ""
+
+msgid "File size"
+msgstr ""
+
+msgid "Please enter a valid OpenEMIS ID"
+msgstr ""
+
+msgid "Dashboards"
+msgstr ""
+
+msgid "Dashboard Reports"
+msgstr ""
+
+msgid "ECE QA Dashboard"
+msgstr ""
+
+msgid "Early Childhood Education Quality Assurance Data"
+msgstr ""
+
+msgid "Early Childhood Education Quality Assurance"
+msgstr ""
+
+msgid "Geographical Level"
+msgstr ""
+
+msgid "Administrative and Technical Aspects"
+msgstr ""
+
+msgid "Trends"
+msgstr ""
+
+msgid "Administrative Domains"
+msgstr ""
+
+msgid "Technical Domains"
+msgstr ""
+
+msgid "Distribution of Both Aspects"
+msgstr ""
+
+msgid "Scatterplot of Administrative and Technical and Aspects"
+msgstr ""
+
+msgid "Appointment"
+msgstr ""
+
+msgid "Report - Dashboard"
+msgstr ""
+
+msgid "Owned"
+msgstr ""
+
+msgid "Rented"
+msgstr ""
+
+msgid "Both"
+msgstr ""
+
+msgid "Permanent"
+msgstr ""
+
+msgid "Contract"
+msgstr ""
+
+msgid "Urban"
+msgstr ""
+
+msgid "Rural"
+msgstr ""
+
+msgid "Administrative"
+msgstr ""
+
+msgid "Technical"
+msgstr ""
+
+msgid "Download CSV"
+msgstr ""
+
+msgid "Weightings"
+msgstr ""
+
+msgid "Weighting"
+msgstr ""
+
+msgid "Add Header"
+msgstr ""
+
+msgid "Evaluator"
+msgstr ""
+
+msgid "Add Criteria"
+msgstr ""
+
+msgid "Edit Criteria"
+msgstr ""
+
+msgid "Criteria Details"
+msgstr ""
+
+msgid "Quality Assurance Reports"
+msgstr ""
+
+msgid "Quality Assurance"
+msgstr ""
+
+msgid ""
+"Report generated at the school, FD and national level for each aspect "
+"(category) and domain (technical or administrative) "
+msgstr ""
+
+msgid "QA Schools Report"
+msgstr ""
+
+msgid ""
+"Report generated by type, category, result (pass or fail) and a table with "
+"the average, minimum and maximum values and also compare results from one "
+"year to the next "
+msgstr ""
+
+msgid "QA Results Report"
+msgstr ""
+
+msgid "Report generation for those who hasn't completed the rubric"
+msgstr ""
+
+msgid "QA Rubric Not Completed Report"
+msgstr ""
+
+msgid "Maximum 150 words per comment"
+msgstr ""
+
+msgid "Date Enabled"
+msgstr ""
+
+msgid "Date Disabled"
+msgstr ""
+
+msgid "Target Grades"
+msgstr ""
+
+msgid "Security Role"
+msgstr ""
+
+msgid "Setup Criteria Column"
+msgstr ""
+
+msgid "Header"
+msgstr ""
+
+msgid "Criteria"
+msgstr ""
+
+msgid "Descriptors"
+msgstr ""
+
+msgid "New row has been added at the bottom of the rubric table."
+msgstr ""
+
+msgid "Header / Sub-Header / Title"
+msgstr ""
+
+msgid "Section Header"
+msgstr ""
+
+msgid "Add Section Header"
+msgstr ""
+
+msgid "Reorder"
+msgstr ""
+
+msgid "Add Grade"
+msgstr ""
+
+msgid "Add Visit"
+msgstr ""
+
+msgid "Visit"
+msgstr ""
+
+msgid "Edit Rubric Headers"
+msgstr ""
+
+msgid "Edit Headers"
+msgstr ""
+
+msgid "There are no records."
+msgstr ""
+
+msgid "Create Rubric Table"
+msgstr ""
+
+msgid "Reorder Criteria"
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Edit Status"
+msgstr ""
+
+msgid "Add Status"
+msgstr ""
+
+msgid "Criteria Level Description"
+msgstr ""
+
+msgid "View Details"
+msgstr ""
+
+msgid "Weightage"
+msgstr ""
+
+msgid "Selected Grade(s)"
+msgstr ""
+
+msgid "Status Details"
+msgstr ""
+
+msgid "Rubric Name"
+msgstr ""
+
+msgid "Total Weighting(%)"
+msgstr ""
+
+msgid "Pass/Fail"
+msgstr ""
+
+msgid "Grand Total Weighting(%)"
+msgstr ""
+
+msgid "QA Report"
+msgstr ""
+
+msgid "Visit Report"
+msgstr ""
+
+msgid "Reports - Quality"
+msgstr ""
+
+msgid "Report Generated"
+msgstr ""
+
+msgid "Staff Type"
+msgstr ""
+
+msgid "Fail"
+msgstr ""
+
+msgid "Quality Type"
+msgstr ""
+
+msgid "Visit Date"
+msgstr ""
+
+msgid "Evaluator Name"
+msgstr ""
+
+msgid "Total Classes"
+msgstr ""
+
+msgid "Maximum"
+msgstr ""
+
+msgid "Minimum"
+msgstr ""
+
+msgid "Average"
+msgstr ""
+
+msgid "Pass/ Fail"
+msgstr ""
+
+msgid "Total Questions"
+msgstr ""
+
+msgid "Total Answered"
+msgstr ""
+
+msgid "There are no available files found for this report."
+msgstr ""
+
+msgid "Goal Objective"
+msgstr ""
+
+msgid "Requirement"
+msgstr ""
+
+msgid "Trainer Type"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Target Group"
+msgstr ""
+
+msgid "Total Target Group"
+msgstr ""
+
+msgid "Total Trained"
+msgstr ""
+
+msgid "Target Group Percentage"
+msgstr ""
+
+msgid "Last Updated By"
+msgstr ""
+
+msgid "Behaviour - Staff"
+msgstr ""
+
+msgid "Behaviour - Students"
+msgstr ""
+
+msgid "*File size should not be larger than 2MB."
+msgstr ""
+
+msgid ""
+"*Maximum 5 files are permitted on single upload. Each file size should not "
+"be larger than 2MB."
+msgstr ""
+
+msgid "Result Type"
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "Add Result Type"
+msgstr ""
+
+msgid "Goal / objective"
+msgstr ""
+
+msgid "Internal"
+msgstr ""
+
+msgid "External"
+msgstr ""
+
+msgid "Add Trainer"
+msgstr ""
+
+msgid "Overall Result"
+msgstr ""
+
+msgid "Trainers"
+msgstr ""
+
+msgid "Edit Results Details"
+msgstr ""
+
+msgid "Download Template"
+msgstr ""
+
+msgid "Upload Results"
+msgstr ""
+
+msgid "Passed"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Upload File"
+msgstr ""
+
+msgid "Upload"
+msgstr ""
+
+msgid "Invalid File Format"
+msgstr ""
+
+msgid "Columns/Data do not match."
+msgstr ""
+
+msgid "Error encountered, record(s) could not be updated"
+msgstr ""
+
+msgid "%s Record(s) have been updated"
+msgstr ""
+
+msgid "Column %s only accepts 0 or 1 as input."
+msgstr ""
+
+msgid "Row %s: %s"
+msgstr ""
+
+msgid "TrainingResult"
+msgstr ""
+
+msgid "OpenEmis ID"
+msgstr ""
+
+msgid "(1=Pass/0=Fail)"
+msgstr ""
+
+msgid "Need Type"
+msgstr ""
+
+msgid "Training Priority"
+msgstr ""
+
+msgid "Achievement Type"
+msgstr ""
+
+msgid "Course Goal / Objectives"
+msgstr ""
+
+msgid "Add Training Needs"
+msgstr ""
+
+msgid "Course Catalogue"
+msgstr ""
+
+msgid "Need Category"
+msgstr ""
+
+msgid "Add Achievements"
+msgstr ""
+
+msgid "Achievements Details"
+msgstr ""
+
+msgid "Edit Achievements"
+msgstr ""
+
+msgid "TrainingSessionTrainee"
+msgstr ""
+
+msgid "Approval"
+msgstr ""
+
+msgid "Reject"
+msgstr ""
+
+msgid "Experience"
+msgstr ""
+
+msgid "Specialisation"
+msgstr ""
+
+msgid "Years"
+msgstr ""
+
+msgid "Months"
+msgstr ""
+
+msgid "Add Experience"
+msgstr ""
+
+msgid "Add Specialisation"
+msgstr ""
+
+msgid "Upload Trainee"
+msgstr ""
+
+msgid "Staff with OpenEmis ID %s does not exist."
+msgstr ""
+
+msgid "Staff with OpenEmis ID %s does not meet the Course requirement."
+msgstr ""
+
+msgid "Edit Sessions Details"
+msgstr ""
+
+msgid "Evaluation Tools"
+msgstr ""
+
+msgid "Compile"
+msgstr ""
+
+msgid "The translation file has been compiled successfully."
+msgstr ""
+
+msgid "Translations"
+msgstr ""
+
+msgid "List of Translations"
+msgstr ""
+
+msgid "Add Translation"
+msgstr ""
+
+msgid "Edit Translation"
+msgstr ""
+
+msgid "Translation Details"
+msgstr ""
+
+msgid "Please ensure the english translation is keyed in."
+msgstr ""
+
+msgid "Download Trainees"
+msgstr ""
+
+msgid "Download Trainee Results"
+msgstr ""
+
+msgid "Duplicate Session"
 msgstr ""

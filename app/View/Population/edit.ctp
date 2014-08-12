@@ -1,163 +1,166 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('population', 'stylesheet', array('inline' => false));	
-
-echo $this->Html->script('population', false);
-
-$currentYear = intval(date('Y'));
-$selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
-?>
-
-<?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('population', 'stylesheet', array('inline' => false));
-
+echo $this->Html->script('app.area', false);
 echo $this->Html->script('population', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Population'));
+
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('controller' => 'Population', 'action' => 'index'), array('id' => 'viewLink', 'class' => 'divider')); 
+echo $this->Html->link(__('View'), array('controller' => 'Population', 'action' => 'index', $selectedYear, $areaId), array('id' => 'viewLink', 'class' => 'divider withLatestAreaId'));
 $this->end();
+
 $this->assign('contentId', 'population');
 $this->assign('contentClass', 'edit');
 $this->start('contentBody');
 
-$currentYear = intval(date('Y'));
-$selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
+$formOptions = $this->FormUtility->getFormOptions();
+$labelOptions = $formOptions['inputDefaults']['label'];
+echo $this->Form->create('Population', $formOptions);
+
+echo $this->element('../Population/controls');
 ?>
-<?php echo $this->element('alert'); ?>
-
-</script>
-
-<?php
-echo $this->Form->create('Population', array(
-		'url' => array(
-			'controller' => 'Population',
-			'action' => 'index'
-		),
-		'model' => 'Population',
-        'inputDefaults' => array('label' => false, 'div' =>false)
-	)
-);
-
-//echo $this->Form->hidden('action',array('value'=>'edit'));
-
-?>
-	<input type="hidden" name="data[previousAction]" value="edit"/>
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-	<?php 
-		echo $this->Utility->getYearList($this->Form,'data[year]',array(
-			'name' => "data[year]",
-			'id' => "year_id",
-			'class'=>'form-control',
-			'div' => 'col-md-4',
-			'maxlength' => 30,
-			'desc' => true,
-			'label' => false,
-			'default' => $selectedYear,
-			'div' => false), true);
-	?>
-		<!-- <select name="data[year]" id="year_id" onSelect="">
-			<option value="0">--select--</option>
-			<!--option vallue="<?php echo $currentYear; ?>" selected="selected"><?php echo $currentYear; ?></option-->
-			<?php
-				// for ($i=$currentYear; $i >= 1970 ; $i--) { 
-
-				// 	if($i == $selectedYear){
-				// 		echo '<option value="'.$i.'" selected="selected">'.$i.'</option>';
-				// 	}else{
-				// 		echo '<option value="'.$i.'">'.$i.'</option>';
-				// 	} 
-				// }
-				
-			?>
-		<!-- </select> -->
-                    <?php echo $this->element('census_legend_population'); ?>
-	</div>
+<input type="hidden" name="data[previousAction]" value="edit"/>
 <fieldset id="area_section_group" class="section_group">
     <legend id="area"><?php echo __('Area'); ?></legend>
-    <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+	<?php echo $this->FormUtility->areapicker('area_id', array('value' => $areaId)); ?>
 </fieldset>
+<?php
+echo $this->Form->end();
 
-<?php echo $this->Form->end(); ?>
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'edit', $selectedYear, $areaId));
+$labelOptions = $formOptions['inputDefaults']['label'];
+echo $this->Form->create('Population', $formOptions);
+echo $this->Form->hidden('idsToBeDeleted', array(
+	'label' => false,
+	'div' => false,
+	'after' => false,
+	'between' => false,
+	'id' => 'idsToBeDeleted'
+));
+?>
+
 <fieldset id="data_section_group" class="section_group edit">
 	<legend><?php echo __('Population'); ?></legend>
-	<div id="mainlist">
-		<div class="table">
-			<div class="table_head">
-					<!--div class="table_cell"><span class="left">Area Level</span><span class="icon_sort_down"></span></div-->
-					<div class="table_cell cell_source"><?php echo __('Source'); ?></div>
-					<div class="table_cell"><?php echo __('Age'); ?></div>
-					<div class="table_cell"><?php echo __('Male'); ?></div>
-					<div class="table_cell"><?php echo __('Female'); ?></div>
-					<div class="table_cell"><?php echo __('Total'); ?></div>
-					<div class="table_cell cell_delete">&nbsp;</div>
-			</div>
-			<div class="table_body" style="display:none;">&nbsp;</div>
-			
-			<div class="table_foot">
-				<div class="table_cell"></div>
-				<div class="table_cell"></div>
-				<div class="table_cell"></div>
-				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-				<div class="table_cell cell_value cell_number">0</div>
-				<div class="table_cell"></div>
-			</div>
-		</div>
-		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Age'); ?></a></div>
-	</div>
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right btn_disabled" onClick="population.save()" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
-	</div>
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="cell_source"><?php echo __('Source'); ?></th>
+				<th><?php echo __('Age'); ?></th>
+				<th><?php echo __('Male'); ?></th>
+				<th><?php echo __('Female'); ?></th>
+				<th><?php echo __('Total'); ?></th>
+				<th class="cell_delete">&nbsp;</th>
+			</tr>
+		</thead>
+		<?php
+		$allTotal = 0;
+		if (!empty($data)):
+			?>
+			<tbody><?php
+				$recordIndex = 0;
+				foreach ($data AS $row):
+					$allTotal += $row['male'];
+					$allTotal += $row['female'];
+					?>
+					<tr class="<?php echo $row['data_source'] == 0 ? '' : 'row_estimate'; ?>" record-id="<?php echo $row['id']; ?>">
+						<td>
+							<?php
+							echo $this->Form->hidden('id', array(
+								'label' => false,
+								'div' => false,
+								'after' => false,
+								'between' => false,
+								'class' => 'form-control',
+								'id' => 'PopulationId',
+								'name' => 'data[Population][' . $recordIndex . '][id]',
+								'value' => $row['id']
+							));
+
+							echo $this->Form->input('source', array(
+								'label' => false,
+								'div' => false,
+								'after' => false,
+								'between' => false,
+								'class' => 'form-control',
+								'id' => 'PopulationSource',
+								'name' => 'data[Population][' . $recordIndex . '][source]',
+								'value' => $row['source']
+							));
+							?>
+						</td>
+						<td>
+							<?php
+							echo $this->Form->input('age', array(
+								'label' => false,
+								'div' => false,
+								'after' => false,
+								'between' => false,
+								'class' => 'form-control',
+								'id' => 'PopulationAge',
+								'name' => 'data[Population][' . $recordIndex . '][age]',
+								'value' => $row['age'],
+								'onkeypress' => 'return utility.integerCheck(event)'
+							));
+							?>
+						</td>
+						<td>
+							<?php
+							echo $this->Form->input('male', array(
+								'label' => false,
+								'div' => false,
+								'after' => false,
+								'between' => false,
+								'class' => 'form-control',
+								'id' => 'PopulationMale',
+								'name' => 'data[Population][' . $recordIndex . '][male]',
+								'value' => $row['male'],
+								'onkeypress' => 'return utility.integerCheck(event)',
+								'onkeyup' => 'population.computeSubtotal(this)'
+							));
+							?>
+						</td>
+						<td>
+							<?php
+							echo $this->Form->input('female', array(
+								'label' => false,
+								'div' => false,
+								'after' => false,
+								'between' => false,
+								'class' => 'form-control',
+								'id' => 'PopulationFemale',
+								'name' => 'data[Population][' . $recordIndex . '][female]',
+								'value' => $row['female'],
+								'onkeypress' => 'return utility.integerCheck(event)',
+								'onkeyup' => 'population.computeSubtotal(this)'
+							));
+							?>
+						</td>
+						<td class="cell-total"><?php echo $row['male'] + $row['female']; ?></td>
+						<td><span class="icon_delete" title="'+i18n.General.textDelete+'" onclick="population.removeRow(this)"></span></td>
+					</tr>
+					<?php
+					$recordIndex++;
+				endforeach;
+				?>
+			</tbody>
+			<?php
+		endif;
+		?>
+		<tfoot>
+			<tr>
+				<td colspan="4" class="cell-number"><?php echo __('Total'); ?></td>
+				<td class="cell-value cell-number"><?php echo $allTotal; ?></td>
+				<td></td>
+			</tr>
+		</tfoot>
+	</table>
+	<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') . ' ' . __('Age'); ?></a></div>
+		<?php echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'index', $selectedYear, $areaId))); ?>
 </fieldset>
-
+<?php echo $this->Form->end(); ?>
 <script type="text/javascript">
-
-$(document).ready(function(){
-
-	var selectedYear = <?php echo $selectedYear?>
-	
-	if($('#year_id').children().first().val().length < 1){
-		$('#year_id').children().first().remove();
-	}
-
-	if(selectedYear !== null){
-		//$("#year_id option[value='"+ selectedYear +"']").attr('selected','selected').trigger('change');
-		population.year = $("#year_id option[value='"+ selectedYear +"']").attr('selected','selected').val();
-
-	}else{
-
-		//$("#year_id option[value='"+ new Date().getFullYear() +"']").attr('selected','selected').trigger('change');
-		population.year = $("#year_id option[value='"+ new Date().getFullYear() +"']").attr('selected','selected').val();
-	}
-	// $('#year_id').change(function(){
-	// 	$('#addYear_id').val($(this).val());
-	// });
-
-	$('#viewLink').click(function(event){
-		event.preventDefault();
-		$('form').submit();
-	});
-
-	population.isEditable = true;
-	<?php if(isset($initAreaSelection) && count($initAreaSelection)>0){ ?>
-	population.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
-	var currentSelect;
-	for(var key in population.initAreaSelection){
-		currentSelect = $('select[name*="['+key+']"]');
-		population.parentAreaIds.push(parseInt(population.initAreaSelection[key]));
-		currentSelect.find($('option[value="'+population.initAreaSelection[key]+'"]')).attr('selected','selected');
-		//$('select[name*="['+key+']"]').find($('option[value="'+population.initAreaSelection[key]+'"]')).attr('selected','selected').trigger('change');
-	}
-
-	currentSelect.find($('option[value="'+population.initAreaSelection[key]+'"]')).trigger('change');	
-	<?php } ?>
-
-});
-
+					var currentAreaId = <?php echo intval($areaId); ?>;
 </script>
-
 <?php $this->end(); ?>

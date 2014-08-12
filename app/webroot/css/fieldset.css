@@ -48,6 +48,15 @@ fieldset.section_break {
 	border-top: 1px solid #CCCCCC;
 	margin: 5px 10px 0px 0px;
 	padding-top: 15px;
+	position: relative;
+}
+
+fieldset.section_break > .profile-image {
+	position: absolute;
+    width: 90px;
+    height: 115px;
+    border: 1px solid #CCCCCC;
+	right: 0;
 }
 
 fieldset.section_break > legend {

@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright � 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -39,7 +39,7 @@ class ControllerActionBehavior extends ModelBehavior {
 		if(empty($ctp)) {
 			$ctp = 'index';
 		}
-		if(!is_null($plugin)) {
+		if(!is_null($plugin) && $model->plugin == true) {
 			$name = $plugin . '/' . $name;
 		}
 
@@ -52,5 +52,19 @@ class ControllerActionBehavior extends ModelBehavior {
 		}
 		
 		return $result;
+	}
+	
+	public function remove(Model $model, $controller, $redirect) {
+		if ($controller->Session->check($model->alias . '.id')) {
+			$id = $controller->Session->read($model->alias . '.id');
+			if($model->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			
+			$controller->Session->delete($model->alias . '.id');
+			return $controller->redirect(array('action' => $redirect));
+		}
 	}
 }

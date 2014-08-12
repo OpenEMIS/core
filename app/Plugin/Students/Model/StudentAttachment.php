@@ -1,27 +1,23 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
-
-// App::uses('StudentsAppModel', 'Model');
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 class StudentAttachment extends StudentsAppModel {
-
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
 		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser')
 	);
@@ -64,7 +60,7 @@ class StudentAttachment extends StudentsAppModel {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Attachments');
 		$header = __('Attachments');
-		$data = $this->findAllByStudentIdAndVisible($controller->studentId, 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
+		$data = $this->findAllByStudentIdAndVisible($controller->Session->read('Student.id'), 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
 		$arrFileExtensions = $controller->Utility->getFileExtensionList();
 
 		$controller->set(compact('data', 'arrFileExtensions', 'header'));
@@ -83,7 +79,7 @@ class StudentAttachment extends StudentsAppModel {
 				$controller->redirect(array('action' => 'attachments'));
 			}
 		} else {
-			$data = $this->findById($id); //pr($data);
+			$data = $this->findById($id);
 			$controller->request->data = $data;
 		}
 		$controller->set(compact('header', 'data', 'id'));
@@ -94,36 +90,14 @@ class StudentAttachment extends StudentsAppModel {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Add Attachment');
 		$header = __('Add Attachment');
-		//$controller->set('params', $params);
 
 		if ($controller->request->is(array('post', 'put'))) {
-			if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
-				$controller->Navigation->skipWizardLink($controller->action);
-			} else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
-				$controller->Navigation->previousWizardLink($controller->action);
-			} else {
-				$controller->Navigation->validateModel($controller->action, 'StudentAttachment');
-			}
-			/* if (!empty($_FILES)) {
-			  $errors = $this->FileAttachment->saveAll($controller->request->data, $_FILES, $id);
-			  if (sizeof($errors) == 0) {
-			  $controller->Navigation->updateWizard($controller->request->action, null);
-			  $controller->Utility->alert(__('Files have been saved successfully.'));
-			  $controller->redirect(array('action' => 'attachments'));
-			  } else {
-			  $controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-			  }
-			  } else {
-			  $controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-			  } */
-
 			$this->set($controller->request->data);
 			if ($this->validates()) {
 				$postData = $controller->request->data[$this->alias];
-				$controller->FileUploader->additionData = array('student_id' => $controller->studentId, 'name' => $postData['name'], 'description' => $postData['description']);
+				$controller->FileUploader->additionData = array('student_id' => $controller->Session->read('Student.id'), 'name' => $postData['name'], 'description' => $postData['description']);
 				$controller->FileUploader->uploadFile();
 				if ($controller->FileUploader->success) {
-					$controller->Navigation->updateWizard($controller->action, null);
 					return $controller->redirect(array('action' => 'attachments'));
 				}
 			}
@@ -144,32 +118,18 @@ class StudentAttachment extends StudentsAppModel {
 			$controller->redirect(array('action' => 'attachmentsView', $id));
 		}
 
-		$controller->Session->write('StudentAttachmentId', $id);
+		$controller->Session->write('StudentAttachment.id', $id);
 		$fields = $this->getDisplayFields($controller);
 		$controller->set(compact('data', 'fields'));
 		$controller->render('/Elements/attachment/view');
 	}
 
 	public function attachmentsDelete($controller, $params) {
-		$controller->autoRender = false;
-		if ($controller->Session->check('StudentId') && $controller->Session->check('StudentAttachmentId')) {
-			$id = $controller->Session->read('StudentAttachmentId');
-
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StudentAttachmentId');
-			return $controller->redirect(array('action' => 'attachments'));
-		}
+		return $this->remove($controller, 'attachments');
 	}
 
 	public function attachmentsDownload($controller, $params) {
 		$id = $params['pass'][0];
 		$controller->FileUploader->downloadFile($id);
 	}
-
 }
-
-?>

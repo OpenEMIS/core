@@ -28,7 +28,7 @@ class SecurityUserAccess extends AppModel {
 	
 	public function getAccess($userId) {
 		$modules = array(
-			'Teacher' => ClassRegistry::init('Teachers.Teacher'),
+			//'Teacher' => ClassRegistry::init('Teachers.Teacher'),
 			'Staff' => ClassRegistry::init('Staff.Staff'),
 			'Student' => ClassRegistry::init('Students.Student')
 		);

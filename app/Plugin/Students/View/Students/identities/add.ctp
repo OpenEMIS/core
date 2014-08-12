@@ -20,12 +20,11 @@ echo $this->FormUtility->datepicker('expiry_date', array('id' => 'ExpiryDate', '
 echo $this->Form->input('issue_location', array('label' => array('text'=> $this->Label->get('Identities.issue_location'), 'class'=>'col-md-3 control-label')));
 echo $this->Form->input('comments', array('type'=>'textarea'));
 
-echo $this->FormUtility->getFormWizardButtons(array(
-    'cancelURL' => array('action' => 'identities'),
-    'WizardMode' => $WizardMode,
-    'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
-    'WizardMandatory' => isset($mandatory)?$mandatory : NULL
-));
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'identities')));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
 
 echo $this->Form->end();
 $this->end();

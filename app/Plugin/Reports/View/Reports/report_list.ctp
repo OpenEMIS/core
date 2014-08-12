@@ -26,9 +26,22 @@ $this->start('contentBody');
 	<?php foreach($arrV as $time => $arrFileInfo){	?>
 	
 		<tr row-id="<?php echo $arrFileInfo['basename'];?>" class="table_row">
-			<td class="table_cell col_name"><?php echo $this->Html->link($arrFileInfo['name'], array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?></td>
+			<td class="table_cell col_name"><?php echo __($arrFileInfo['name']); ?></td>
 			<td class="table_cell col_name center"><?php echo $arrFileInfo['size'];?></td>
-			<td class="table_cell col_lastgen center"><?php echo $fileType;?></td>
+			<?php  
+			if($fileType === 'csv'){
+			?>
+				<td class="table_cell col_lastgen center">
+					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>, 
+					<?php echo $this->Html->link('HTML', array('action' => $this->action.'ViewHtml', $arrFileInfo['basename']), array('escape' => false, 'target' => '_blank')); ?>
+				</td>
+			<?php 
+			}else{
+			?>
+				<td class="table_cell col_lastgen center"><?php echo $fileType;?></td>
+			<?php 
+			}
+			?>
 			<td class="table_cell col_name center"><?php echo $arrFileInfo['time'];?></td>  
 		</tr>
 	

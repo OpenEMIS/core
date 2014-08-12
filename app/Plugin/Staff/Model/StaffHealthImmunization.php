@@ -18,7 +18,7 @@
 class StaffHealthImmunization extends StaffAppModel {
 
 	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction', 'Datepicker' => 'date');
+	public $actsAs = array('ControllerAction', 'DatePicker' => 'date');
 	public $belongsTo = array(
 		//'Staff',
 		'HealthImmunization',

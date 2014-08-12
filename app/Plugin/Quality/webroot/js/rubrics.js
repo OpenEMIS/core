@@ -81,22 +81,18 @@ var rubricsTemplate = {
         });
     },
     addRubricTemplateGrade: function(obj) {
-        var parent = $('#gradeWraper').parent();
-        var index = $('#gradeWraper .table_row:last-child').attr('row-id');//find('.table_row').length;// + $('.delete-trainee input').length;
+        var parent = $('.content_wrapper ');//.parent();
+        var index = $('#gradeWraper tbody tr:last-child').attr('row-id');//find('.table_row').length;// + $('.delete-trainee input').length;
 
         if (typeof index === "undefined") {
             index = 0;
         }
-
         var maskId;
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
-                $('#gradeWraper .table_body').append(data);
-                /*   table.find('.table_body').append(data);
-                 var element = '#searchTrainee' + index;
-                 var url = getRootURL() + table.attr('url') + '/' + index + '/' + $('.training_course').val();
-                 objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainee);*/
+                $('#gradeWraper tbody' ).append(data);
+				
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -113,8 +109,8 @@ var rubricsTemplate = {
         });
     },
     removeRubricTemplateGrade: function(obj) {
-        var row = $(obj).closest('.table_row');
-        var id = row.attr('row-id');
-        row.remove()
+        var row = $(obj).closest('tr');
+      //  var id = row.attr('row-id');
+        row.remove();
     }
 };
