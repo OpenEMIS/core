@@ -29,4 +29,9 @@ class AreaLevel extends VisualizerAppModel {
 		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name'), 'conditions' => array('Area_Level <= ' => $areaLevelData['AreaLevel']['Area_Level'])));
 		return $data;
 	}
+	
+	public function getAllAreaLevel(){
+		$data = $this->find('all', array('fields' => array('Level_NId', 'Area_Level_Name','Area_Level')));
+		return $data;
+	}
 }

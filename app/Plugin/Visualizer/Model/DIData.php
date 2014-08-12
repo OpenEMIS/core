@@ -47,7 +47,7 @@ class DIData extends VisualizerAppModel {
 			'conditions' => array('DIData.IUSNId' => $ius, 'DIData.Area_NId' => $areaIds, 'DIData.TimePeriod_NId' => $timeperiodIds, 'DIData.Source_NId' => $sourceIds),
 			'fields' => array(
 				'TimePeriod.TimePeriod_NId','TimePeriod.TimePeriod',
-				'DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name',
+				'DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name', 'DIArea.Area_Level',
 				'Indicator.Indicator_NId', 'Indicator.Indicator_Name',
 				'Unit.Unit_NId', 'Unit.Unit_Name',
 				'SubgroupVal.Subgroup_Val_NId', 'SubgroupVal.Subgroup_Val',

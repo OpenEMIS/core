@@ -41,4 +41,67 @@ class VisualizerHelper extends AppHelper {
 		return $tableHeaders;
 	}
 
+	
+	public function getTabIcon($tab){
+		$icon = '';
+		switch($tab){
+			case 'indicator':
+				$icon = 'fa-hand-o-up';
+				break;
+			case 'area':
+				$icon = 'fa-map-marker';
+				break;
+			case 'time':
+				$icon = 'fa-clock-o';
+				break;
+			case 'source':
+				$icon = 'fa-book';
+				break;
+			case 'unit':
+				$icon = 'fa-arrows-h';
+				break;
+			case 'dimension':
+				$icon = 'fa-cube';
+				break;
+			case 'review':
+				$icon = 'fa-check';
+				break;
+		}
+		
+		return $icon;
+	}
+	
+	public function getVisualizarionTabIcon($tab){
+		$icon = '';
+		switch($tab){
+			case 'table':
+				$icon = 'fa fa-table';
+				break;
+			case 'column':
+			case 'column-stack':
+				$icon = 'icon-bars';
+				break;
+			case 'bar':
+			case 'bar-stack':
+				$icon = 'icon-bars rotate-left';
+				break;
+			case 'line':
+				$icon = 'icon-stats';
+				break;
+			case 'area':
+				$icon = 'icon-stats-3';
+				break;
+			case 'pie':
+				$icon = 'icon-pie';
+				break;
+			case 'scatter':
+				$icon = 'icon-stats';
+				break;
+			case 'map':
+				$icon = 'icon-compass';
+				break;
+		}
+		
+		return $icon;
+	}
 }
