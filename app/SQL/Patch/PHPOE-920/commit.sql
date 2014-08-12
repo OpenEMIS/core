@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_subgroups` (
 SET @fieldOptionId := 0;
 
 SELECT MAX(`id`) + 1 INTO @fieldOptionId FROM `field_options`;
-SELECT @fieldOptionId;
+-- SELECT @fieldOptionId;
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`, `created`) VALUES (@fieldOptionId, 'Gender', 'Gender', 'Student', @fieldOptionId, '1', '1', NOW());
 
@@ -121,8 +121,8 @@ RENAME TO  `census_students_bu` ;
 CREATE TABLE IF NOT EXISTS `census_students` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `age` int(5) NOT NULL,
-  `gender_id` int(11) NOT NULL DEFAULT '0',
   `value` int(11) NOT NULL DEFAULT '0',
+  `gender_id` int(11) NOT NULL,
   `student_category_id` int(11) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
   `institution_site_id` int(11) NOT NULL,
@@ -133,15 +133,14 @@ CREATE TABLE IF NOT EXISTS `census_students` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `education_grade_id` (`education_grade_id`),
-  KEY `school_year_id` (`school_year_id`),
-  KEY `student_category_id` (`student_category_id`),
-  KEY `unique_yearage_census` (`institution_site_id`,`education_grade_id`,`student_category_id`),
-  KEY `source` (`source`),
-  KEY `institution_site_id` (`institution_site_id`),
-  KEY `age` (`age`),
   KEY `gender_id` (`gender_id`),
-  KEY `value` (`value`)
+  KEY `student_category_id` (`student_category_id`),
+  KEY `education_grade_id` (`education_grade_id`),
+  KEY `institution_site_id` (`institution_site_id`),
+  KEY `school_year_id` (`school_year_id`),
+  KEY `source` (`source`),
+  KEY `age` (`age`),
+  KEY `unique_yearage_census` (`institution_site_id`,`education_grade_id`,`student_category_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 SET @maleID := 0;
