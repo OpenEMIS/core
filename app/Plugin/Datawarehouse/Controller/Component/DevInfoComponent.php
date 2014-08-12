@@ -396,7 +396,6 @@ class DevInfoComponent extends Component {
 							}
 
 							$this->Logger->write($outerQuery);
-
 							try{
 								$modelData = $numeratorModelTable->query($outerQuery);
 							} catch(Exception $ex) {
