@@ -86,6 +86,16 @@ var Visualizer = {
 	areaLevelChange: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
 	},
+	radioChange: function(obj){
+		$.ajax({
+			type: "POST",
+			url: getRootURL() + $(obj).attr('url'),
+			data: {sectionType: $(obj).attr('sectionType'), value: $(obj).val()},
+			success : function (data){
+				location.reload();
+			}
+		});
+	},
 	checkboxChange: function(obj) {
 		var checked = $(obj).parent().hasClass('checked') ? 'unchecked' : 'checked';
 
