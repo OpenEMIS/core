@@ -14,9 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TimePeriod extends VisualizerAppModel {
+class VisualizerUnit extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'ut_timeperiod';
-	
-	
+	public $useTable = 'ut_unit_en';
+	public $alias = 'Unit';
 }
