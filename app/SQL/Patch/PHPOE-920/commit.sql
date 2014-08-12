@@ -178,3 +178,8 @@ INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `joins`,
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('4', 'Category', 'name', 'StudentCategory', '1', '1', '2014-07-14');
 INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawarehouse_module_id`, `created_user_id`, `created`) VALUES ('5', 'Grade', 'name', 'EducationGrade', '1', '1', '2014-07-14');
 
+
+UPDATE `datawarehouse_dimensions` SET `joins`='array(  \'type\' => \'INNER\',      \'table\' => \'institution_sites\',     \'alias\' => \'InstitutionSite\',      \'conditions\' => array(\'InstitutionSite.id = CensusStudent.institution_site_id\')  ), array(     \'type\' => \'INNER\',      \'table\' => \'institution_site_localities\',     \'alias\' => \'InstitutionSiteLocality\',      \'conditions\' => array(\'InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id\')  )', `datawarehouse_module_id`='1' WHERE `id`='3';
+UPDATE `datawarehouse_dimensions` SET `joins`='array(  \'type\' => \'INNER\',   \'table\' => \'education_grades\',  \'alias\' => \'EducationGrade\',   \'conditions\' => array(\'EducationGrade.id = CensusStudent.education_grade_id\') )' WHERE `id`='5';
+
+
