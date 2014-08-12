@@ -332,13 +332,15 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 						}
 
 					}
-					foreach($data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'] as $key=>$val){
-						if($type=='denominator'){
-							$saveData['Denominator']['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
-							$saveData['Denominator']['DatawarehouseIndicatorDimension'][$key]['datawarehouse_indicator_id'] = $id;
-						}else{
-							$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
-							$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_indicator_id'] = $id;
+					if (!empty($data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'])) {
+						foreach($data['DatawarehouseField'][$type.'_datawarehouse_dimension_id'] as $key=>$val){
+							if($type=='denominator'){
+								$saveData['Denominator']['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
+								$saveData['Denominator']['DatawarehouseIndicatorDimension'][$key]['datawarehouse_indicator_id'] = $id;
+							}else{
+								$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_dimension_id'] = $val;
+								$saveData['DatawarehouseIndicatorDimension'][$key]['datawarehouse_indicator_id'] = $id;
+							}
 						}
 					}
 				}
