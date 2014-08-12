@@ -2,11 +2,20 @@
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/HighCharts/js/highcharts', false);
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.metro-ui.icon-font', 'stylesheet', array('inline' => false));
+//echo $this->Html->css('Visualizer.bootstrap.icon-large', 'stylesheet', array('inline' => false));
+if ($visualType != 'map') {
+	echo $this->Html->script('/HighCharts/js/highcharts', false);
+} else {
+	echo $this->Html->script('/HighCharts/js/highmaps', false);
+	echo $this->Html->script('/HighCharts/js/modules/data', false);
+	echo $this->Html->script('/HighCharts/js/modules/drilldown', false);
+}
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
+
 echo $this->Html->script('Visualizer.visualizer', false);
 echo $this->Html->script('Visualizer.visualizer.visualization', false);
-
 $this->extend('Elements/layout/container_visualizer_wizard');
 $this->assign('contentHeader', $header);
 $this->assign('contentId', 'visualizer');
@@ -18,9 +27,9 @@ echo $this->Form->create($this->action, $formOptions);
 
 if ($visualType == 'table') {
 	$pageTitle = '';
-	
+
 	$tableClass = 'table-checkable table-input';
-	
+
 	$colArr = array(
 		array('name' => 'Time Period', 'col' => 'TimePeriod.TimePeriod'),
 		array('name' => 'Area ID', 'col' => 'DIArea.Area_ID'),
@@ -33,7 +42,7 @@ if ($visualType == 'table') {
 	);
 
 	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
-	
+
 	//$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), __('Source'));
 	$tableData = array();
 	if (!empty($data)) {
@@ -49,7 +58,7 @@ if ($visualType == 'table') {
 			$row[] = $obj['SubgroupVal']['Subgroup_Val'];
 			$row[] = $obj['IndicatorClassification']['IC_Name'];
 
-			if(empty($pageTitle)){
+			if (empty($pageTitle)) {
 				$pageTitle = sprintf('%s - %s', $obj['Indicator']['Indicator_Name'], $obj['Unit']['Unit_Name']);
 			}
 			$tableData[] = $row;
