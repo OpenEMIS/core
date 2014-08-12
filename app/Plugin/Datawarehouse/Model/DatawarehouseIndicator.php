@@ -309,7 +309,7 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 						$arrSubgroupType = split(", ", $val);
 						$conditionFormat = '%s.%s="%s"';
 						$condition = '';
-					
+						$conditionConcat = '';
 						foreach($arrSubgroupType as $subgroupType){
 							if(strpos($subgroupType, "All")===false){
 								if(strrpos($subgroupType, ":")!==false){
@@ -318,9 +318,9 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 									$subgroupID = array_search($subgroup, $datawarewarehouseDimensionOptions);
 
 									$condition .= $conditionConcat . sprintf($conditionFormat, $dimensionValues[$subgroupID]['DatawarehouseDimension']['model'],$dimensionValues[$subgroupID]['DatawarehouseDimension']['field'],$subgroupVal);
+									$conditionConcat = ' AND ';
 								}
 							}
-							$conditionConcat = ' AND ';
 						}
 						if($type=='denominator'){
 							$saveData['Denominator']['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
