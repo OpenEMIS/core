@@ -15,11 +15,12 @@
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
 
-class IndicatorUnitSubgroup extends VisualizerAppModel {
+class VisualizerIndicatorUnitSubgroup extends VisualizerAppModel {
 
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_indicator_unit_subgroup';
-
+	public $alias = 'IndicatorUnitSubgroup';
+	
 	public function getUnits($indicatorId, $order = NULL) {
 		$order = (empty($order))? NULL:array($order);
 		
