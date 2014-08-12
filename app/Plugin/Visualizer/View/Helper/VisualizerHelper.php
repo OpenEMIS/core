@@ -75,30 +75,30 @@ class VisualizerHelper extends AppHelper {
 		$icon = '';
 		switch($tab){
 			case 'table':
-				$icon = 'fa-table';
+				$icon = 'fa fa-table';
 				break;
 			case 'column':
 			case 'column-stack':
-				$icon = 'fa-signal';
+				$icon = 'icon-bars';
 				break;
 			case 'bar':
 			case 'bar-stack':
-				$icon = 'fa-align-left';
+				$icon = 'icon-bars rotate-left';
 				break;
 			case 'line':
-				$icon = 'fa-book';
+				$icon = 'icon-stats';
 				break;
 			case 'area':
-				$icon = 'fa-arrows-h';
+				$icon = 'icon-stats-3';
 				break;
 			case 'pie':
-				$icon = 'fa-cube';
+				$icon = 'icon-pie';
 				break;
 			case 'scatter':
-				$icon = 'fa-check';
+				$icon = 'icon-stats';
 				break;
 			case 'map':
-				$icon = 'fa-compass';
+				$icon = 'icon-compass';
 				break;
 		}
 		

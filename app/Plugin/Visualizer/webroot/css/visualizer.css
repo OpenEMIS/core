@@ -79,6 +79,13 @@ legend.reviewTitle{
 	font-size: 13px;
 }
 
+.rotate-left{
+	 -webkit-transform:rotate(90deg);
+    -moz-transform:rotate(90deg);
+    -o-transform:rotate(90deg);
+    .rotate(90deg);
+}
+
 /*
 Icons
 */
