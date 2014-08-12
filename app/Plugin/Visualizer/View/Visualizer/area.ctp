@@ -6,6 +6,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -62,8 +63,9 @@ echo $this->Form->input('area_level', array('id'=> 'areaLevel' ,'options' => $ar
 
 			$row = array();
 			$row[] = array($input, array('class' => $additionalClass));
-			for ($i = 1; $i < count($tableHeaders); $i++) {
-				$row[] = array($obj['level_' . $i . '_name'], array('class' => 'data-list'));
+			$row[] = array($obj['Area_ID'], array('class' => 'data-list'));
+			for ($i = 2; $i < count($tableHeaders); $i++) {
+				$row[] = array($obj['level_' . ($i-1) . '_name'], array('class' => 'data-list'));
 			}
 			$tableData[] = $row;
 			$i++;

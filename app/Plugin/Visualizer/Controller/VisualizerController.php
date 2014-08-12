@@ -92,7 +92,7 @@ class VisualizerController extends VisualizerAppController {
 			$tabs['area'] = array('name' => 'Area', 'url' => $rootURL.'Visualizer/visualization/area/'.$id);
 			$tabs['pie'] = array('name' => 'Pie', 'url' => $rootURL.'Visualizer/visualization/pie/'.$id);
 			$tabs['scatter'] = array('name' => 'Scatter', 'url' => $rootURL.'Visualizer/visualization/scatter/'.$id);
-		//	$tabs['map'] = array('name' => 'Map', 'url' => $rootURL.'Visualizer/visualization/map/'.$id);
+			$tabs['map'] = array('name' => 'Map', 'url' => $rootURL.'Visualizer/visualization/map/'.$id);
 			
 			if(!empty($this->params['pass'][0])){
 				$selectedTab = $this->params['pass'][0];
@@ -221,7 +221,8 @@ class VisualizerController extends VisualizerAppController {
 				foreach ($rowData as $obj) {
 					//	pr('level '.$obj['DIArea']['Area_Level']. ' -- '.$obj['DIArea']['Area_Name']);
 					$row['Area_NId'] = $obj['DIArea']['Area_NId'];
-					$row['level_' . $obj['DIArea']['Area_Level'] . '_name'] = sprintf('%s - %s',$obj['DIArea']['Area_ID'],$obj['DIArea']['Area_Name']);
+					$row['Area_ID'] = $obj['DIArea']['Area_ID'];
+					$row['level_' . $obj['DIArea']['Area_Level'] . '_name'] = /*sprintf('%s - %s',$obj['DIArea']['Area_ID'],*/$obj['DIArea']['Area_Name']/*)*/;
 				}
 
 				for ($i = 1; $i < count($columnsHeaderData); $i++) {
@@ -292,12 +293,54 @@ class VisualizerController extends VisualizerAppController {
 			}
 		}
 	}
+	
+	public function ajaxUpdateUserRBSelection() {
+		$this->autoRender = false;
+		if ($this->request->is('ajax')) {
+			$type = $this->request->data['sectionType'];
+			$value = $this->request->data['value'];
+			
+			$this->resetTabsAfter($type);
+			$this->Session->write('visualizer.selectedOptions.'.$type, $value);
+		}
+	}
+	
 
 	public function index() {
 		return $this->redirect(array('action' => 'indicator'));
 	}
 
-	public function reset() {
+	public function resetTabsAfter($selecetedTab) {
+		$tabs = $this->Session->read('visualizer.wizard');
+		$starttoReset = false;
+		
+		foreach ($tabs as $key => $singleTabObj) {
+			if($starttoReset){
+				switch($key){
+					case 'time':
+						$optKey = 'timeperiod';
+						break;
+					case 'dimension':
+						$optKey = 'IUS';
+						break;
+					default :
+						$optKey = $key;
+						
+				}
+				
+				$this->Session->delete('visualizer.selectedOptions.'.$optKey);
+				unset($singleTabObj['state']);
+				$tabs[$key] = $singleTabObj;
+			}
+			if($key == $selecetedTab){
+				$starttoReset = true;
+			}
+			
+		}
+		$this->Session->write('visualizer.wizard',$tabs);
+	}
+
+	public function reset($redirect = true) {
 		$this->autoRender = false;
 		$this->Session->delete('visualizer');
 		return $this->redirect(array('action' => 'indicator'));
@@ -310,7 +353,7 @@ class VisualizerController extends VisualizerAppController {
 		if ($this->request->is(array('post', 'put'))) {
 			if(!empty($this->request->data['indicator']['id'])){
 				$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
-
+			
 				if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
 					$this->Session->delete('visualizer.sort');
 					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
@@ -439,7 +482,8 @@ class VisualizerController extends VisualizerAppController {
 		$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
 		$areaLevelOptions = $di6AreaLevel->getAreaLevelList();
 		$tableHeaders = $areaLevelOptions; //$di6AreaLevel->getAreaLevelList();
-		$options['order'] = array('DIArea.lft' => 'asc');
+		
+		$options['order'] = array('DIArea.Area_ID' => 'asc');
 
 		$selectedAreaLevel = '';
 		if (!empty($this->params['pass'])) {
@@ -449,12 +493,14 @@ class VisualizerController extends VisualizerAppController {
 				$tableHeaders = $di6AreaLevel->getAreaLevelUpto($selectedAreaLevel); //$di6AreaLevel->getAreaLevelList();
 			}
 		}
+		array_unshift($tableHeaders, __('Area ID'));
 		
 		if ($this->Session->check('visualizer.selectedOptions.area')) {
 			$searchStr = $this->Session->read('visualizer.areaSearch.str');
 			$this->request->data['area']['search'] = $searchStr;
 			$options['conditions']['OR'] = array('DIArea.Area_Name LIKE' => '%' . $searchStr . '%', 'DIArea.Area_ID LIKE'=> '%' . $searchStr . '%');
 		}
+		
 		$this->Paginator->settings = array_merge(array('limit' => 20), $options);
 
 		$data = $this->Paginator->paginate('DIArea');
@@ -485,7 +531,7 @@ class VisualizerController extends VisualizerAppController {
 
 			$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
 			$areaLevelOptions = $di6AreaLevel->getAreaLevelList();
-			$options['order'] = array('DIArea.lft' => 'asc');
+			$options['order'] = array('DIArea.Area_ID' => 'asc');
 
 			if (!empty($selectedAreaLevel)) {
 				$options['conditions']['DIArea.Area_Level'] = $selectedAreaLevel;
@@ -495,7 +541,7 @@ class VisualizerController extends VisualizerAppController {
 				$options['conditions']['OR'] = array('DIArea.Area_Name LIKE' => '%' . $searchStr . '%', 'DIArea.Area_ID LIKE'=> '%' . $searchStr . '%');
 				//$options['conditions']['DIArea.Area_Name LIKE'] = '%' . $searchStr . '%';
 			}
-
+			
 			$this->Paginator->settings = array_merge(array('limit' => 20), $options);
 			
 			
@@ -730,21 +776,23 @@ class VisualizerController extends VisualizerAppController {
 		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
 		$IUSRawData = $di6IndicatorUnitSubgroup->getDimensions(array('IUS' => $selectedDimensionIds));
 
-		$areaRawData = $this->DIArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
+		$areaRawData = $this->DIArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name', 'DIArea.Area_Level'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
 
 		$di6TimePeriod = ClassRegistry::init('Visualizer.TimePeriod');
-		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds)));
+		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds), 'order' => 'TimePeriod.TimePeriod DESC'));
 	
 		$this->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
 		
-		/*$jsonData['chart']= array('type' => 'bar');
-		$jsonData['title']= array('text' => 'Fruit Consumption');
-		$jsonData['xAxis']= array('categories' => array('Apples', 'Bananas', 'Oranges'));
-		$jsonData['yAxis']= array('title' => array('text' => 'Fruit eaten'));
-		$jsonData['series']= array(array('name' => 'Jane', 'data' => array(1, 0, 4)),array('name' => 'John', 'data' => array(5, 7, 3)));
-		*/
-		$jsonData = $this->HighCharts->getChartData($visualType, $rawData);
-		
+		if($visualType == 'map'){
+			$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
+			$areaLastLevel = $di6AreaLevel->getAllAreaLevel();
+			
+			$this->HighCharts->getAreaLevel($areaRawData,$areaLastLevel);
+			$jsonData = $this->HighCharts->getMapData($rawData);
+		}
+		else{
+			$jsonData = $this->HighCharts->getChartData($visualType, $rawData);
+		}
 		return $jsonData;
 	}
 	
