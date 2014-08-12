@@ -55,6 +55,7 @@ $this->start('contentBody');
         	<?php 
             if(!empty($data)){
             $programmeId = (isset($programme['education_programme_id']) ? $programme['education_programme_id'] : $programme['id']);
+            if(isset($data[$programmeId])){ 
             foreach($data[$programmeId] as $id=>$val) {  ?>
             <tr row-id="<?php echo $val['id']; ?>">
             	<td>
@@ -70,9 +71,11 @@ $this->start('contentBody');
                     }
                     ?>
                 </td>
-                <td><?php echo $val['total_fee']; ?></td>
+                <td width="18%"><?php echo $val['total_fee']; ?></td>
             </tr>
-           <?php } 
+           <?php 
+                }
+                } 
             }
            ?>
         </tbody>

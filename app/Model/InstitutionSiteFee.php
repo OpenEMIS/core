@@ -179,7 +179,7 @@ class InstitutionSiteFee extends AppModel {
 				}
 
 				$programmeId = $educationGrades['EducationProgramme']['id'];
-				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null);
+				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null, true);
 				$i = 0;
 				$data = array();
 				$data['InstitutionSiteFee']['school_year_id'] = $selectedYear;
@@ -209,7 +209,7 @@ class InstitutionSiteFee extends AppModel {
 				$programmeId = $grades['EducationProgramme']['id'];
 				$data['InstitutionSiteFee']['programme_id'] = $programmeId;
 
-				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null);
+				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null, true);
 
 				$data['InstitutionSiteFee']['school_year'] = $yearOptions[$selectedYear];
 				$data['InstitutionSiteFee']['programme'] = $programmeOptions[$programmeId];
@@ -250,6 +250,7 @@ class InstitutionSiteFee extends AppModel {
 		$data = array();
 
 		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $yearId);
+
 		foreach($programmeGrades as $programGrade){
 			$fees = $this->EducationGrade->find('all', array(
 				'recursive'=>-1,
@@ -281,7 +282,8 @@ class InstitutionSiteFee extends AppModel {
 				'conditions' => array(
 					'InstitutionSiteProgramme.school_year_id' => $yearId,
 					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-					'EducationGrade.id' => array_keys($programGrade['education_grades'])
+					'EducationGrade.id' => array_keys($programGrade['education_grades']),
+					'EducationGrade.visible' => 1
 				),
 				'order' => array('EducationGrade.id')
 			));
