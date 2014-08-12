@@ -17,7 +17,7 @@
 
 class VisualizerController extends VisualizerAppController {
 
-	public $uses = Array('Visualizer.DIArea','Visualizer.DIData');
+	public $uses = Array('Visualizer.VisualizerArea','Visualizer.VisualizerData');
 	public $components = array('Paginator'/*, 'FusionCharts.FusionCharts'*/, 'HighCharts.HighCharts');
 	public $helpers = array('Visualizer.Visualizer');
 	public $nextPg = '';
@@ -371,7 +371,7 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'up';
 		$order = $this->configSortData($sortDirection,$sortType,$sortCol);
 		
-		$di6Indicator = ClassRegistry::init('Visualizer.Indicator');
+		$di6Indicator = ClassRegistry::init('Visualizer.VisualizerIndicator');
 		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info'), 'order' => $order));
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
 		if(empty($tableRowData) && empty($displayError)){
@@ -410,7 +410,7 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'up';
 		$order = $this->configSortData($sortDirection,$sortType,$sortCol);
 		
-		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
+		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.VisualizerIndicatorUnitSubgroup');
 		$data = $di6IndicatorUnitSubgroup->getUnits($selectedIndicatorId,$order);
 
 		$tableRowData = $this->processUnitRawData($data,$selectedUnitIds);
@@ -449,7 +449,7 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'up';
 		$order = $this->configSortData($sortDirection,$sortType,$sortCol);
 		
-		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
+		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.VisualizerIndicatorUnitSubgroup');
 		$data = $di6IndicatorUnitSubgroup->getDimensions(array('indicators' => $selectedIndicatorId, 'units' => $selectedUnitIds),$order);
 
 		$tableRowData = $this->processDimensionRawData($data);
@@ -479,7 +479,7 @@ class VisualizerController extends VisualizerAppController {
 
 		$selectedAreaIds = $this->Session->read('visualizer.selectedOptions.area');
 
-		$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
+		$di6AreaLevel = ClassRegistry::init('Visualizer.VisualizerAreaLevel');
 		$areaLevelOptions = $di6AreaLevel->getAreaLevelList();
 		$tableHeaders = $areaLevelOptions; //$di6AreaLevel->getAreaLevelList();
 		
@@ -503,8 +503,8 @@ class VisualizerController extends VisualizerAppController {
 		
 		$this->Paginator->settings = array_merge(array('limit' => 20), $options);
 
-		$data = $this->Paginator->paginate('DIArea');
-		$fullPathData = $this->DIArea->getAreaTreaFullPath($data);
+		$data = $this->Paginator->paginate('VisualizerArea');
+		$fullPathData = $this->VisualizerArea->getAreaTreaFullPath($data);
 		$tableRowData = $this->processAreaRawData($fullPathData, $areaLevelOptions);
 		if(empty($tableRowData) && empty($displayError)){
 			$this->Message->alert('general.noData');
@@ -529,7 +529,7 @@ class VisualizerController extends VisualizerAppController {
 			$this->Session->write('visualizer.areaSearch.str', $searchStr);
 			$selectedAreaIds = $this->Session->read('visualizer.selectedOptions.area');
 
-			$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
+			$di6AreaLevel = ClassRegistry::init('Visualizer.VisualizerAreaLevel');
 			$areaLevelOptions = $di6AreaLevel->getAreaLevelList();
 			$options['order'] = array('DIArea.Area_ID' => 'asc');
 
@@ -545,8 +545,8 @@ class VisualizerController extends VisualizerAppController {
 			$this->Paginator->settings = array_merge(array('limit' => 20), $options);
 			
 			
-			$data = $this->Paginator->paginate('DIArea');
-			$fullPathData = $this->DIArea->getAreaTreaFullPath($data);
+			$data = $this->Paginator->paginate('VisualizerArea');
+			$fullPathData = $this->VisualizerArea->getAreaTreaFullPath($data);
 			$tableRowData = $this->processAreaRawData($fullPathData, $areaLevelOptions);
 		}
 		$this->set(compact('tableRowData', 'areaLevelOptions', 'selectedAreaIds'));
@@ -579,7 +579,7 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'down';
 		$order = $this->configSortData($sortDirection,$sortType,$sortCol);
 		
-		$di6Data = ClassRegistry::init('Visualizer.DIData');
+		$di6Data = ClassRegistry::init('Visualizer.VisualizerData');
 		$data = $di6Data->getTimePeriodList($selectedDimensionIds, $order);
 		$tableRowData = $this->processTimeRawData($data);
 		if(empty($tableRowData) && empty($displayError)){
@@ -615,7 +615,7 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'down';
 		$order = $this->configSortData($sortDirection,$sortType,$sortCol);
 		
-		$di6IndicatorClassification = ClassRegistry::init('Visualizer.IndicatorClassification');
+		$di6IndicatorClassification = ClassRegistry::init('Visualizer.VisualizerIndicatorClassification');
 		$data = $di6IndicatorClassification->getSource($selectedDimensionIds, $selectedTimeperiodIds,$order);
 
 		$tableRowData = $this->processSourceRawData($data);
@@ -643,15 +643,15 @@ class VisualizerController extends VisualizerAppController {
 		$selectedTimeperiodIds = $this->Session->read('visualizer.selectedOptions.timeperiod');
 		$selectedSourceIds = $this->Session->read('visualizer.selectedOptions.source');
 
-		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
+		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.VisualizerIndicatorUnitSubgroup');
 		$indicatorRawData = $di6IndicatorUnitSubgroup->getDimensions(array('IUS' => $selectedDimensionIds));
 
 		$reviewData['indicator'] = $this->processDimensionRawData($indicatorRawData);
 
-		$areaRawData = $this->DIArea->find('all', array('conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
-		$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
+		$areaRawData = $this->VisualizerArea->find('all', array('conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
+		$di6AreaLevel = ClassRegistry::init('Visualizer.VisualizerAreaLevel');
 		//$tableHeaders =  $di6AreaLevel->getAreaLevelList();
-		$fullPathData = $this->DIArea->getAreaTreaFullPath($areaRawData);
+		$fullPathData = $this->VisualizerArea->getAreaTreaFullPath($areaRawData);
 
 		$lastRow = end($fullPathData);
 		$lastItem = end($lastRow);
@@ -659,11 +659,11 @@ class VisualizerController extends VisualizerAppController {
 
 		$reviewData['area'] = $this->processAreaRawData($fullPathData, $areaLevelOptions);
 
-		$di6TimePeriod = ClassRegistry::init('Visualizer.TimePeriod');
+		$di6TimePeriod = ClassRegistry::init('Visualizer.VisualizerTimePeriod');
 		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds)));
 		$reviewData['timeperiod'] = $this->processTimeRawData($timePeriodRawData);
 
-		$di6IndicatorClassification = ClassRegistry::init('Visualizer.IndicatorClassification');
+		$di6IndicatorClassification = ClassRegistry::init('Visualizer.VisualizerIndicatorClassification');
 		$sourceRawData = $di6IndicatorClassification->find('all', array('conditions' => array('IndicatorClassification.IC_NId' => $selectedSourceIds)));
 		$reviewData['source'] = $this->processSourceRawData($sourceRawData);
 
@@ -680,7 +680,7 @@ class VisualizerController extends VisualizerAppController {
 		
 		$showVisualization = true;
 		if($visualType == 'table'){
-			$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id), 'LEFT');
+			$selectedOptions = $this->VisualizerData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id), 'LEFT');
 		
 			$sortType = 'DESC';
 			$sortCol = 'TimePeriod.TimePeriod';
@@ -691,8 +691,10 @@ class VisualizerController extends VisualizerAppController {
 			$this->Paginator->settings = $selectedOptions;//array_merge(array('limit' => 20), $selectedOptions);
 			
 		
-			$data = $this->Paginator->paginate('DIData');
-			
+			$data =  $this->Paginator->paginate('VisualizerData');
+			if(empty($data)){
+				$this->Message->alert('general.noData');
+			}
 			$this->set(compact('sortCol', 'sortDirection'));
 		}
 		else{
@@ -716,8 +718,8 @@ class VisualizerController extends VisualizerAppController {
 	/*
 	public function VisualizeFusionChart($visualType, $id){
 		$this->autoRender = false;
-		$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
-		$rawData = $this->DIData->find('all', $selectedOptions);
+		$selectedOptions = $this->VisualizerData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$rawData = $this->VisualizerData->find('all', $selectedOptions);
 		//Retrive selected info 
 		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
 		$selectedUnitIds = $this->Session->read('visualizer.visualization.'.$id.'.unit');
@@ -729,7 +731,7 @@ class VisualizerController extends VisualizerAppController {
 		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
 		$IUSRawData = $di6IndicatorUnitSubgroup->getDimensions(array('IUS' => $selectedDimensionIds));
 
-		$areaRawData = $this->DIArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
+		$areaRawData = $this->VisualizerArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
 
 		$di6TimePeriod = ClassRegistry::init('Visualizer.TimePeriod');
 		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds)));
@@ -763,8 +765,8 @@ class VisualizerController extends VisualizerAppController {
 	public function VisualizeHighChart($visualType, $id){
 		$this->autoRender = false;
 		
-		$selectedOptions = $this->DIData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
-		$rawData = $this->DIData->find('all', $selectedOptions);
+		$selectedOptions = $this->VisualizerData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$rawData = $this->VisualizerData->find('all', $selectedOptions);
 		
 		$selectedIndicatorId = $this->Session->read('visualizer.visualization.'.$id.'.indicator');
 		$selectedUnitIds = $this->Session->read('visualizer.visualization.'.$id.'.unit');
@@ -773,18 +775,18 @@ class VisualizerController extends VisualizerAppController {
 		$selectedTimeperiodIds = $this->Session->read('visualizer.visualization.'.$id.'.timeperiod');
 		$selectedSourceIds = $this->Session->read('visualizer.visualization.'.$id.'.source');
 
-		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.IndicatorUnitSubgroup');
+		$di6IndicatorUnitSubgroup = ClassRegistry::init('Visualizer.VisualizerIndicatorUnitSubgroup');
 		$IUSRawData = $di6IndicatorUnitSubgroup->getDimensions(array('IUS' => $selectedDimensionIds));
 
-		$areaRawData = $this->DIArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name', 'DIArea.Area_Level'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
+		$areaRawData = $this->VisualizerArea->find('all', array('fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name', 'DIArea.Area_Level'),  'conditions' => array('DIArea.Area_NId' => $selectedAreaIds), 'order' => array('DIArea.lft asc')));
 
-		$di6TimePeriod = ClassRegistry::init('Visualizer.TimePeriod');
+		$di6TimePeriod = ClassRegistry::init('Visualizer.VisualizerTimePeriod');
 		$timePeriodRawData = $di6TimePeriod->find('all', array('conditions' => array('TimePeriod.TimePeriod_NId' => $selectedTimeperiodIds), 'order' => 'TimePeriod.TimePeriod DESC'));
 	
 		$this->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
 		
 		if($visualType == 'map'){
-			$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
+			$di6AreaLevel = ClassRegistry::init('Visualizer.VisualizerAreaLevel');
 			$areaLastLevel = $di6AreaLevel->getAllAreaLevel();
 			
 			$this->HighCharts->getAreaLevel($areaRawData,$areaLastLevel);
@@ -798,8 +800,8 @@ class VisualizerController extends VisualizerAppController {
 	
 	public function genCSV($id) {
         $this->autoRender = false;
-		$selectedOptions = $this->DIData->getCSVOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
-		$data = $this->DIData->find('all', $selectedOptions);
+		$selectedOptions = $this->VisualizerData->getCSVOptionsSetup($this->Session->read('visualizer.visualization.'.$id));
+		$data = $this->VisualizerData->find('all', $selectedOptions);
 		$tableHeaders = array(__('Time Period'), __('Area ID'), __('Area Name'), __('Indicator'), __('Data Value'), __('Unit'), __('Dimension'), __('Source'));
 		$fileName = 'Visualization_'. date("Y.m.d");
 		$downloadedFile = $fileName . '.csv';
