@@ -15,9 +15,9 @@ if($_edit) {
 	}
 	echo $this->Html->link($this->Label->get('general.edit'), $params, array('class' => 'divider'));
 }
-$this->end(); // end contentActions
+$this->end();
 
 $this->start('contentBody');
-echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+echo $this->element('view');
 $this->end();
 ?>
