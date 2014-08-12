@@ -130,6 +130,7 @@ class CsvTask extends AppTask {
         $line = "\n";
         $line .= __("Report Generated").": "  . date("Y-m-d H:i:s");
         fputs ($this->fileFP, $line);
+	 	flock($this->fileFP, LOCK_UN);
 		fclose ($this->fileFP);
 	}
 	
