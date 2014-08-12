@@ -74,3 +74,27 @@ fieldset > legend:hover {
 	padding: 5px 0 15px 0;
 	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
 }
+
+legend.reviewTitle{
+	font-size: 13px;
+}
+
+.rotate-left{
+	 -webkit-transform:rotate(90deg);
+    -moz-transform:rotate(90deg);
+    -o-transform:rotate(90deg);
+    .rotate(90deg);
+}
+
+/*
+Icons
+*/
+.nav-tabs .iconDiv {
+	display: inline-block; 
+	vertical-align: top;
+	padding: 3px 5px 0 0;
+}
+
+.nav-tabs .strDiv {
+	display: inline-block; 
+}
