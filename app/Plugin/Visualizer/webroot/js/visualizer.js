@@ -77,7 +77,7 @@ $(document).ready(function() {
 		}
 	});
 
-});
+	});
 
 var Visualizer = {
 	formSubmit: function() {
@@ -139,5 +139,19 @@ var Visualizer = {
 				location.reload();
 			}
 		});
+	},
+	legendShowHide: function(obj){
+		//alert($(obj).next( "div" ).attr('id'));
+	
+		$($(obj).next( "div" )).on('shown.bs.collapse', function() {
+			$(obj).children( "i" ).addClass('fa-minus').removeClass('fa-plus');
+		  //  $(".servicedrop").addClass('glyphicon-chevron-up').removeClass('glyphicon-chevron-down');
+		  });
+
+		$($(obj).next( "div" )).on('hidden.bs.collapse', function() {
+			$(obj).children( "i" ).addClass('fa-plus').removeClass('fa-minus');
+		  //  $(".servicedrop").addClass('glyphicon-chevron-down').removeClass('glyphicon-chevron-up');
+		  });
+	
 	}
 }
