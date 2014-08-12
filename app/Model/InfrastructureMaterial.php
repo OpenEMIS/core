@@ -46,11 +46,13 @@ class InfrastructureMaterial extends AppModel {
 	}
 	
 	public function getOptionFields() {
-		$options = $this->getSubOptions();
-		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
-		$this->addOptionField($field, 'after', 'name');
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
+		parent::getOptionFields();
+		
+		$this->fields[$this->getConditionId()]['type'] = 'select';
+		$this->fields[$this->getConditionId()]['options'] = $this->getSubOptions();
+		$this->setFieldOrder($this->getConditionId(), 2);
+
+		return $this->fields;
 	}
 	
 	public function getConditionId() {

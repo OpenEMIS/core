@@ -121,6 +121,21 @@ class AppModel extends Model {
 	}
 	// End ControllerActionBehaviour
 	
+	public function prepend($list, $items) {
+		$data = array();
+		if (!is_array($items)) {
+			$data[] = $items;
+		} else {
+			foreach ($items as $key => $value) {
+				$data[$key] = $value;
+			}	
+		}		
+		foreach ($list as $key => $value) {
+			$data[$key] = $value;
+		}
+		return $data;
+	}
+	
 	public function findList($options=array()) {
 		$class = $this->alias;
 		
