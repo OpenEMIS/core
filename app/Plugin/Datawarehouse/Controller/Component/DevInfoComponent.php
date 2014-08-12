@@ -252,10 +252,11 @@ class DevInfoComponent extends Component {
 							$tempJoin = array();
 							if(isset($numeratorModule['DatawarehouseModule']['joins'])){
 								$dimenJoin = $numeratorModule['DatawarehouseModule']['joins'];
-								eval("\$tempJoin[] = $dimenJoin;");
-								$this->mergeJoin($numeratorJoins, $tempJoin);
+								eval("\$tempJoin = array($dimenJoin);");
+								foreach($tempJoin as $k=>$j){
+									$this->mergeJoin($numeratorJoins, $j);
+								}
 							}
-
 
 
 							if(!empty($indicatorNumeratorDimensionObj)){
@@ -264,8 +265,10 @@ class DevInfoComponent extends Component {
 
 									$tempJoin = array();
 									if(!empty($dimensionJoin)){
-										eval("\$tempJoin[] = $dimensionJoin;");
-										$this->mergeJoin($numeratorJoins, $tempJoin);
+										eval("\$tempJoin = array($dimensionJoin);");
+										foreach($tempJoin as $k=>$j){
+											$this->mergeJoin($numeratorJoins, $j);
+										}
 									}
 								}
 							}
@@ -307,8 +310,10 @@ class DevInfoComponent extends Component {
 								$tempJoin = array();
 								if(isset($denominatorModule['DatawarehouseModule']['joins'])){
 									$dimenJoin = $denominatorModule['DatawarehouseModule']['joins'];
-									eval("\$tempJoin[] = $dimenJoin;");
-									$this->mergeJoin($denominatorJoins, $tempJoin);
+									eval("\$tempJoin = array($dimenJoin);");
+									foreach($tempJoin as $k=>$j){
+										$this->mergeJoin($denominatorJoins, $j);
+									}
 								}
 								if(!empty($indicatorDenominatorDimensionObj) && isset($indicatorDenominatorDimensionObj[0]['datawarehouse_dimension_id'])){
 									$denominatorDimensionObj = $this->DatawarehouseDimension->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseDimension.id'=>$indicatorDenominatorDimensionObj[0]['datawarehouse_dimension_id'])));
@@ -317,8 +322,10 @@ class DevInfoComponent extends Component {
 											$dimensionJoin = $c['joins'];
 											$tempJoin = array();
 											if(!empty($dimensionJoin)){
-												eval("\$tempJoin[] = $dimensionJoin;");
-												$this->mergeJoin($denominatorJoins, $tempJoin);
+												eval("\$tempJoin = array($dimensionJoin);");
+												foreach($tempJoin as $k=>$j){
+													$this->mergeJoin($numeratorJoins, $j);
+												}
 											}
 										}
 									}
@@ -490,23 +497,21 @@ class DevInfoComponent extends Component {
 		return $subgroupTypes;
 	}
 
-	private function mergeJoin(&$joins, $newJoins){
-		if(!empty($newJoins)){
-			foreach($newJoins as $key=>$newJoin){
-				if(!empty($joins)){
-					$addFlag = true;
-					foreach($joins as $join){
-						if($join['table'] == $newJoin['table']){
-							$addFlag = false;
-							break;
-						}
+	private function mergeJoin(&$joins, $newJoin){
+		if(!empty($newJoin)){
+			if(!empty($joins)){
+				$addFlag = true;
+				foreach($joins as $join){
+					if($join['table'] == $newJoin['table']){
+						$addFlag = false;
+						break;
 					}
-					if($addFlag){
-						$joins[] = $newJoins[$key];
-					}
-				}else{
-					$joins[] = $newJoins[$key];
 				}
+				if($addFlag){
+					$joins[] = $newJoin;
+				}
+			}else{
+				$joins[] = $newJoin;
 			}
 		}
 		return $joins;
