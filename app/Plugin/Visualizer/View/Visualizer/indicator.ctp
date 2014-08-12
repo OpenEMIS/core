@@ -5,6 +5,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -39,7 +40,16 @@ echo $this->Form->input('search', array('id' => 'search'));
 		$i = 0;
 		foreach ($tableRowData as $obj) {
 			//	pr((($obj['checked'])? 'checked': ''));
-			$bodyFirstColOptions = array('type' => 'radio', 'options' => array($obj['id'] => ''), 'value' => $selectedIndicatorId, 'label' => false, 'div' => false, 'class' => false);
+			$bodyFirstColOptions = array(
+				'type' => 'radio',
+				'options' => array($obj['id'] => ''), 
+				'value' => $selectedIndicatorId, 
+				'label' => false, 
+				'div' => false, 
+				'class' => false, 
+				'sectionType' => 'indicator', 
+				'onchange' => 'Visualizer.radioChange(this)',
+				'url' => 'Visualizer/ajaxUpdateUserRBSelection');
 			if ($obj['checked']) {
 				$bodyFirstColOptions['checked'] = 'checked';
 			} else {
