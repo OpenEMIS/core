@@ -73,9 +73,8 @@ $this->start('contentBody');
                 </td>
                 <td width="18%"><?php echo $val['total_fee']; ?></td>
             </tr>
-           <?php 
+           <?php } 
                 }
-                } 
             }
            ?>
         </tbody>

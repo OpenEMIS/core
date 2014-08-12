@@ -157,4 +157,22 @@ class InstitutionReportsController extends AppController {
 		$this->set(compact('data', 'header'));
 		$this->render('index');
 	}
+
+	public function finance() {
+		$header = __('Finance');
+		$this->Navigation->addCrumb($header);
+		$data = array(
+			array('name' => 'Fees', 'model' => 'InstitutionSiteFee', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Student', 'model' => 'InstitutionSiteStudentFee', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+		);
+		
+		foreach($data as $i => $obj) {
+			$model = ClassRegistry::init($obj['model']);
+			$formats = $model->getSupportedFormats();
+			$data[$i]['formats'] = $formats;
+		}
+		
+		$this->set(compact('data', 'header'));
+		$this->render('index');
+	}
 }	
