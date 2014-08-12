@@ -62,9 +62,11 @@ class CsvTask extends AppTask {
 	//	pr($arrTpl);die;
 		$type = 'w+';
         $this->fileFP = fopen($path.$filename, $type);
-		$header = implode(',',$arrTpl);
-		if(!empty($header)){
-			fputs ($this->fileFP, implode(',',$arrTpl)."\n");
+ 		if (flock($this->fileFP, LOCK_EX)) {
+			$header = implode(',',$arrTpl);
+			if(!empty($header)){
+				fputs ($this->fileFP, implode(',',$arrTpl)."\n");
+			}
 		}
 	}
 	
