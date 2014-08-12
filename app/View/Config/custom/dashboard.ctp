@@ -13,8 +13,8 @@ if($_add){
 }
 $this->end();
 $this->start('contentBody'); ?>
-<div class="row select_row form-group">
-    <div class="col-md-6">
+<div class="row select_row page-controls">
+    <div class="col-md-4">
         <?php
             echo $this->Form->input('type', array(
                 'options' => $typeOptions,
@@ -37,14 +37,14 @@ $this->start('contentBody'); ?>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td><?php echo __('Active');?></td>
-					<td><?php echo __('File');?></td>
-					<td><?php echo __('File Type');?></td>
-					<td><?php echo __('UploadedOn');?></td>
+					<th><?php echo __('Active');?></th>
+					<th><?php echo __('File');?></th>
+					<th><?php echo __('File Type');?></th>
+					<th><?php echo __('UploadedOn');?></th>
 				</tr>
 			</thead>
 
-			<tbody class="table_body">
+			<tbody>
 				<?php 
 				foreach($items as $value) {
 					$obj = $value[$_model];

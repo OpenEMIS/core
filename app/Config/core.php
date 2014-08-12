@@ -24,6 +24,11 @@
  */
 require_once dirname(__DIR__) . '/Vendor/autoload.php';
 
+$scriptname = $_SERVER['SCRIPT_NAME'];
+if (strpos($scriptname, '/core/www/') !== false) {
+	Configure::write('App.base', '/core');
+}
+
 /**
  * CakePHP Debug Level:
  *
@@ -37,7 +42,12 @@ require_once dirname(__DIR__) . '/Vendor/autoload.php';
  * In production mode, flash messages redirect after a time interval.
  * In development mode, you need to click the flash message to continue.
  */
+
+if (strpos($scriptname, '/core/www/') !== false) {
+	Configure::write('debug', 0); 
+} else {
 	Configure::write('debug', 2);
+}
 
 /**
  * Configure the Error handler used to handle errors for your application.  By default

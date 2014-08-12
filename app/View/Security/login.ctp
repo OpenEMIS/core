@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
 ?>
 
@@ -9,7 +9,8 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 	<?php echo $this->Html->charset(); ?>
 	<title><?php echo $description ?></title>
 	<?php
-		echo $this->Html->meta('icon');
+		echo $this->Html->meta('favicon', 'favicon.ico?v=2', array('type' => 'icon'));
+		echo $this->fetch('meta');
 		
 		echo $this->Html->css('common');
 		echo $this->Html->css('login');
@@ -23,6 +24,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->script('app');
 		echo $this->Html->script('css_browser_selector');
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getJSConfig');
+		echo $this->Html->script('login');
 	?>
 	<style>
 	.clear {
@@ -102,8 +104,8 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 					'div' => false,
 					'options' => $languages,
 					'value' => $selectedLang,
-					'url' => $this->params['controller'] . '/' . $this->params['action'],
-					'onchange' => 'jsForm.change(this)'
+					'url' => $this->params['controller'] . '/switchLanguage',
+					'onchange' => 'Login.switchLang(this)'
 				));
 				?>
 			</div>
@@ -136,6 +138,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			?>
 			</div>
 			<br />
+			<div class="version">
             <?php 
 				if($this->Session->check('footer')){
 					echo $this->Session->read('footer');
@@ -143,6 +146,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 					echo "&copy; ".date("Y")." openemis.org";
 				}
 			?>
+			</div>
         </div>
     </div><!-- end footer -->
     <!-- ******************************************end footer(2) -->

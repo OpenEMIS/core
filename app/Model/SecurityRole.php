@@ -17,8 +17,149 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityRole extends AppModel {
-	public $hasMany = array('SecurityRoleFunction');
-	public $actsAs = array('Named');
+	public $actsAs = array('ControllerAction');
+	public $belongsTo = array('SecurityGroup');
+	public $hasMany = array('SecurityRoleFunction', 'SecurityGroupUser');
+	
+	public $validate = array(
+		'name' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			)
+		),
+		'security_group_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a group'
+			)
+		)
+	);
+	
+	public function getDisplayFields($controller) {
+		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		$userId = $controller->Auth->user('id');
+		$groupList = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
+		$yesnoOptions = $controller->Option->get('yesno');
+		$groupOptions = array();
+		
+		if ($isSuperUser) {
+			$system = __('System Defined');
+			$user = __('User Defined');
+			
+			$groupOptions[0] = $system;
+			$groupOptions[$user] = $groupList;
+			$groupList[0] = $system;
+		} else {
+			$groupOptions = $groupList;
+		}
+		
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'name'),
+				array('field' => 'security_group_id', 'type' => 'select', 'options' => $groupList),
+				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		$controller->set('groupOptions', $groupOptions);
+		$controller->set('yesnoOptions', $yesnoOptions);
+		return $fields;
+	}
+	
+	public function beforeAction($controller, $action) {
+        parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb('Roles');
+		$controller->set('header', __('Roles'));
+		$controller->set('fields', $this->getDisplayFields($controller));
+    }
+	
+	public function roles($controller, $params) {
+		$systemRoles = $this->getRoles(array(0, -1));
+		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		$userId = $controller->Auth->user('id');
+		$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
+		$userRoles = array();
+		$selectedGroup = 0;
+		
+		if(!empty($groupOptions)) {
+			if(isset($params['pass'][0])) {
+				$groupId = $params['pass'][0];
+				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
+			} else {
+				$selectedGroup = key($groupOptions);
+			}
+			$userRoles = $this->getRoles($selectedGroup);
+		}
+		
+		$controller->set('isSuperUser', $isSuperUser);
+		$controller->set('systemRoles', $systemRoles);
+		$controller->set('userRoles', $userRoles);
+		$controller->set('groupOptions', $groupOptions);
+		$controller->set('selectedGroup', $selectedGroup);
+	}
+	
+	public function rolesView($controller, $params) {
+		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+		if ($this->exists($id)) {
+			$data = $this->findById($id);
+			$selectedGroup = $data[$this->alias]['security_group_id'];
+			if ($selectedGroup == -1) {
+				$controller->Message->alert('general.notEditable');
+				return $controller->redirect(array('action' => 'roles'));
+			} else {
+				$controller->set(compact('data', 'selectedGroup'));
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'roles'));
+		}
+	}
+	
+	public function rolesEdit($controller, $params) {
+		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+		if ($this->exists($id)) {
+			$data = $this->findById($id);
+			$selectedGroup = $data[$this->alias]['security_group_id'];
+			if ($selectedGroup == -1) {
+				$controller->Message->alert('general.notEditable');
+				return $controller->redirect(array('action' => 'roles'));
+			} else {
+				if ($controller->request->is(array('post', 'put'))) {
+					$data = $controller->request->data;
+					if ($this->save($data)) {
+						$controller->Message->alert('general.edit.success');
+						return $controller->redirect(array('action' => 'rolesView', $id));
+					} else {
+						$controller->Message->alert('general.edit.failed');
+					}
+				} else {
+					$controller->request->data = $data;
+				}
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'roles'));
+		}
+	}
+	
+	public function rolesAdd($controller, $params) {
+		if ($controller->request->is(array('post', 'put'))) {
+			$data = $controller->request->data;
+			$data[$this->alias]['order'] = $this->find('count');
+			$result = $this->save($data);
+			if ($result) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'rolesView', $result[$this->alias]['id']));
+			}
+		}
+	}
 	
 	public function getGroupAdministratorRole() {
 		$roleId = 1; // Role Id for Group Administrator is always 1
@@ -117,14 +258,14 @@ class SecurityRole extends AppModel {
 		}
 		return $data;
 	}
-        
-        public function getRubricRoleOptions(){
-            $this->formatResult = true;
-            $options['fields'] = array('SecurityRole.id', 'SecurityRole.name');
-            $options['conditions'] = array('SecurityRole.name' => array('QA Assessors','ECE Assessors'), 'SecurityRole.visible' => 1);
-            
-            $data = $this->find('list', $options);
-            
-            return $data;
-        }
+	
+	public function getRubricRoleOptions(){
+		$this->formatResult = true;
+		$options['fields'] = array('SecurityRole.id', 'SecurityRole.name');
+		$options['conditions'] = array('SecurityRole.name' => array('QA Assessors','ECE Assessors'), 'SecurityRole.visible' => 1);
+		
+		$data = $this->find('list', $options);
+		
+		return $data;
+	}
 }

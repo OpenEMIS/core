@@ -5,8 +5,8 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit && !$WizardMode) {
-            echo $this->Html->link(__('Back'), array('action' => 'languages'), array('class' => 'divider'));
-        }
+	echo $this->Html->link(__('Back'), array('action' => 'languages'), array('class' => 'divider'));
+}
 $this->end();
 $this->start('contentBody');
 
@@ -20,12 +20,11 @@ echo $this->Form->input('speaking', array('options'=>$gradeOptions));
 echo $this->Form->input('reading', array('options'=>$gradeOptions));
 echo $this->Form->input('writing', array('options'=>$gradeOptions));
 
-echo $this->FormUtility->getFormWizardButtons(array(
-    'cancelURL' => array('action' => 'languages'),
-    'WizardMode' => $WizardMode,
-    'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
-    'WizardMandatory' => isset($mandatory)?$mandatory : NULL
-));
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'languages')));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
 
 echo $this->Form->end();
 $this->end();

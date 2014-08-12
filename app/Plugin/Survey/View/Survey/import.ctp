@@ -5,21 +5,21 @@ echo $this->Html->script('/Survey/js/survey', false);
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 
 
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Completed Surveys'));
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link(__('Synchronized'), array('action' => 'synced'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
 
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 <input type="hidden" id="pageType" value="import">
-<div id="users" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Completed Surveys'); ?></span>
-		<?php
-		if($_add) {
-			echo $this->Html->link(__('Synchronized'), array('action' => 'synced'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-    
+
     <div style="display:none;">
 	<?php
 	
@@ -145,28 +145,32 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 		</div>
 	</div>
 	<?php echo $this->element('alert'); ?>
-	<div class="table full_width" >
-		<div class="table_head">
-			<div class="table_cell cell_visible"><?php 
-			echo $this->Form->input('checked', array('label'=>false, 'type' => 'checkbox','onchange'=>'Survey.activateSync(this)'));
-			?></div>
-			<div class="table_cell"><?php echo __('Name'); ?></div>
-			<div class="table_cell cell_time"><?php echo __('Date'); ?></div>
-			<div class="table_cell cell_filesize"><?php echo __('Filesize'); ?></div>
-			<!--div class="table_cell cell_status"><?php echo __('Status'); ?></div-->
-		</div>
+	<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead class="table_head">
+			<tr>
+				<td class="table_cell cell_visible"><?php 
+				echo $this->Form->input('checked', array('label'=>false, 'type' => 'checkbox','onchange'=>'Survey.activateSync(this)'));
+				?></td>
+				<td class="table_cell"><?php echo __('Name'); ?></td>
+				<td class="table_cell cell_time"><?php echo __('Date'); ?></td>
+				<td class="table_cell cell_filesize"><?php echo __('Filesize'); ?></td>
+				<!--div class="table_cell cell_status"><?php echo __('Status'); ?></div-->
+			</tr>
+		</thead>
         <?php if(@$data){ ?>
-		<div class="table_body" id="results" cat="response">
+		<tbody class="table_body" id="results" cat="response">
 			<?php foreach($data as $obj) { ?>
-			<div class="table_row" >
-				<div class="table_cell cell_visible"><?php echo $this->Form->input('choices',array('type'=>'checkbox','label'=>false,'value'=>$obj['basename']));?></div>
-				<div class="table_cell"><?php echo str_replace('.json', '',  $obj['basename']); ?></div>
-				<div class="table_cell cell_time center"><?php echo $obj['time'] ; ?></div>
-				<div class="table_cell cell_filesize center"><?php echo $obj['size'] ; ?></div>
-			</div>
+			<tr class="table_row" >
+				<td class="table_cell cell_visible"><?php echo $this->Form->input('choices',array('type'=>'checkbox','label'=>false,'value'=>$obj['basename']));?></td>
+				<td class="table_cell"><?php echo str_replace('.json', '',  $obj['basename']); ?></td>
+				<td class="table_cell cell_time center"><?php echo $obj['time'] ; ?></td>
+				<td class="table_cell cell_filesize center"><?php echo $obj['size'] ; ?></td>
+			</tr>
 			<?php } ?>
-		</div>
+		</tbody>
         <?php } ?>
+       </table>
 	</div>
 	<?php if(sizeof($data)==0) { ?>
         <div class="row center" style="color: red;"><?php echo __('No Survey found.'); ?></div>
@@ -186,11 +190,10 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 		</div>
 	
 
-</div>
 <script>
     $("#fileupload").change(function() {
         $(this).closest('form').submit();
     });
 </script>
-
+  <?php echo $this->end(); ?> 
 

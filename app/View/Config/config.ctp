@@ -77,6 +77,8 @@ function getRootURL() {
 }
 
 function ajaxErrorHandler(jqXHR, textStatus, errorThrown) {
+	if (jqXHR.status === 0) return;
+	
 	var dlgOpt = { id: 'ajax-error-dialog' };
 	$('.mask').each(function() {
 		if($(this).attr('id') != 'ajax_dialog_mask') {
@@ -86,10 +88,12 @@ function ajaxErrorHandler(jqXHR, textStatus, errorThrown) {
 	
 	if (jqXHR.status === 0) {
 		<?php 
+		/*
 			$handler = $ajaxErrorHandler[0];
 			foreach($handler as $name => $val) {
 				echo "dlgOpt." . $name . " = '" . addslashes($val) . "';";
 			}
+		 */
 		?>
 	} else if (jqXHR.status == 403 || jqXHR.status == 503) { // Forbidden, session timed out
 		<?php 

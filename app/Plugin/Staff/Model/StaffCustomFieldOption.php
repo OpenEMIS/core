@@ -15,8 +15,39 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffCustomFieldOption extends StaffAppModel {
+	public $actsAs = array('FieldOption');
 	public $belongsTo = array(
 		'StaffCustomField'
 	);
 	
+	public $validate = array(
+		'staff_custom_field_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a custom field'
+			)
+		)
+	);
+	
+	public function getSubOptions() {
+		$conditions = array('StaffCustomField.type' => array(3, 4));
+		$data = $this->StaffCustomField->findList(array('conditions' => $conditions));
+		return $data;
+	}
+	
+	public function getOptionFields() {
+		$options = $this->getSubOptions();
+		$value = array('field' => 'value', 'type' => 'text');
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$this->removeOptionFields(array('name', 'international_code', 'national_code'));
+		$this->addOptionField($field, 'after', 'id');
+		$this->addOptionField($value, 'after', $this->getConditionId());
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'staff_custom_field_id';
+	}
 }

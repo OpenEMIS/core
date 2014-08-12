@@ -59,11 +59,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingCourseTargetPopulations)){ 
 			foreach($trainingCourseTargetPopulations as $val){
-				if($val['TrainingCourseTargetPopulation']['position_title_table']=='teacher_position_titles'){
-					echo $teacherPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
-				}else{
-					echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
-				}
+				echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['staff_position_title_id']] . '<br />';
 			}
 		}else{
 			echo "-";
@@ -100,10 +96,10 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Training Level'); ?></div>
-	<div class="col-md-6"><?php echo $obj['training_level_id']; ?></div>
+	<div class="col-md-6"><?php echo $data['TrainingLevel']['name']; ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Prerequisite'); ?></div>
+	<div class="col-md-3"><?php echo __('Course Prerequisite'); ?></div>
 	<div class="col-md-6">
 		<?php if (!empty($trainingCoursePrerequisites)){ 
 			foreach($trainingCoursePrerequisites as $val){
@@ -115,8 +111,43 @@ $this->start('contentBody'); ?>
 	</div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Pass Result'); ?></div>
-	<div class="col-md-6"><?php echo $obj['pass_result']; ?></div>
+	<div class="col-md-3"><?php echo __('Specialisation'); ?></div>
+	<div class="col-md-6">
+		<?php if (!empty($trainingCourseSpecialisations)){ 
+			foreach($trainingCourseSpecialisations as $val){
+				echo $val['QualificationSpecialisation']['name']  . '<br />';
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo __('Experience'); ?></div>
+	<div class="col-md-6">
+		<?php 
+		if (!empty($trainingCourseExperiences)){ 
+			foreach($trainingCourseExperiences as $val){
+				$years = floor(intval($val['TrainingCourseExperience']['months'])/12);
+				$months = intval($val['TrainingCourseExperience']['months']) - ($years*12);
+				echo $years.$this->TrainingUtility->plural($years, 'Year', 'Years').', '.$months.$this->TrainingUtility->plural($months, 'Month', 'Months');
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo __('Result Type'); ?></div>
+	<div class="col-md-6">
+		<?php if (!empty($trainingCourseResultTypes)){ 
+			foreach($trainingCourseResultTypes as $val){
+				echo $val['TrainingResultType']['name']  . '<br />';
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
 </div>
 <div class="row">
     <div class="col-md-3"><?php echo __('Attachments'); ?></div>

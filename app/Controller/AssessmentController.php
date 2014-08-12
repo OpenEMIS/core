@@ -29,7 +29,7 @@ class AssessmentController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		if($this->action === 'index') {
 			$this->Navigation->addCrumb('National Assessments');
 		} else {
@@ -229,6 +229,27 @@ class AssessmentController extends AppController {
 			$this->set('data', $data);
 		} else {
 			$this->redirect(array('action' => 'index'));
+		}
+	}
+	
+	public function move() {
+		if ($this->request->is('post') || $this->request->is('put')) {
+			$data = $this->request->data;
+			if(isset($this->params['pass'][0])){
+				$programmeId = $this->params['pass'][0];
+			}else{
+				return $this->redirect(array('action' => 'index'));
+			}
+			
+			$conditions = array(
+				'education_grade_id' => $data['AssessmentItemType']['gradeId'],
+				'type' => 1
+			);
+			
+			$modelObj = ClassRegistry::init('AssessmentItemType');
+			$modelObj->moveOrder($data, $conditions);
+
+			$this->redirect(array('action' => 'indexEdit', $programmeId));
 		}
 	}
 }

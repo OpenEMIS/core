@@ -21,17 +21,13 @@ class StaffTrainingResult extends AppModel {
 
 	public $headerDefault = 'Training Results';
 	
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
-	
 	public function trainingResult($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$controller->set('modelName', 'TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('all',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),
+				'fields' => array('TrainingSessionResult.id','TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),
 				'joins' => array(
 					array(
 						'type' => 'INNER',
@@ -67,8 +63,7 @@ class StaffTrainingResult extends AppModel {
 					)
 				),
 				'conditions'=> array(
-					'identification_id'=> $controller->staffId,
-					'identification_table'=> 'staff'
+					'staff_id'=> $controller->staffId
 				)
 			)
 		);
@@ -87,9 +82,10 @@ class StaffTrainingResult extends AppModel {
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+
 		$data = $trainingSessionTrainee->find('first',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 'TrainingProvider.*', 
+				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*',  'TrainingProvider.*', 
 					'TrainingSessionResult.*', 'CreatedUser.*', 'ModifiedUser.*'
 					),
 				'joins' => array(
@@ -134,14 +130,6 @@ class StaffTrainingResult extends AppModel {
 						)
 					),
 					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingSessionStatus',
-						'conditions' => array(
-							'TrainingSessionStatus.id = TrainingSession.training_status_id'
-						)
-					),
-					array(
 						'type' => 'LEFT',
 						'table' => 'security_users',
 						'alias' => 'CreatedUser',
@@ -163,11 +151,57 @@ class StaffTrainingResult extends AppModel {
 				)
 			)
 		);
+		
 		if(empty($data)){
 			$controller->redirect(array('action'=>'trainingResult'));
 		}
+
+		$trainingSessionTrainee->bindModel(
+	        array('hasMany' => array(
+                 	'TrainingSessionTraineeResult' => array(
+						'className' => 'TrainingSessionTraineeResult',
+						'foreignKey' => 'training_session_trainee_id',
+						'dependent' => true
+					),
+	            )
+	        ), false
+	    );
+
+
+		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
+			array(
+				'fields' => array('*'),
+				'conditions'=>array('TrainingSessionTrainee.id'=>$id)
+			)
+		);
+
+
+		$trainingSessionTrainer = ClassRegistry::init('TrainingSessionTrainer');
+		$trainingSessionTrainers = $trainingSessionTrainer->find('all',  
+			array(
+				'fields' => array('TrainingSessionTrainer.*'),
+				'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$data['TrainingSession']['id']),
+			)
+		);
+
+		$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
+		$trainingCourseResultType->bindModel(
+		        array('belongsTo' => array(
+		                'TrainingResultType' => array(
+							'className' => 'FieldOptionValue',
+							'foreignKey' => 'training_result_type_id'
+						)
+		            )
+		        )
+	    );
+
+		$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingCourse']['id'])));	
+		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);
+	
 		
 		$controller->Session->write('TeacherTrainingResultId', $id);
+		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
+		$controller->set('trainingSessionTrainers', $trainingSessionTrainers);
 		$controller->set('data', $data);
 		$controller->set('header', $header);
 	}

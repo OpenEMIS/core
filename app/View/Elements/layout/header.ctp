@@ -13,7 +13,6 @@ $lastName = AuthComponent::user('last_name');
 		
 		<div>
 			<div class="header_side_nav">
-				<div id="user_name"><?php echo sprintf('%s, %s %s', __('Welcome'), $firstName, $lastName); ?></div>
 				<div id="header_side_nav_container">
 					<?php
 					$link = sprintf('<a href="%s%%s">%%s</a>', $this->webroot);
@@ -27,6 +26,7 @@ $lastName = AuthComponent::user('last_name');
 					echo sprintf('<a href="%s%s" class="logout">%s</a>', $this->webroot, 'Security/logout', __('Logout'));
 					?>
 				</div>
+				<div id="user_name"><?php echo sprintf('%s, %s %s', __('Welcome'), $firstName, $lastName); ?></div>
 			</div><!-- end header_side_nav -->
 		</div>
 		<?php echo $this->element('layout/top_nav'); ?>

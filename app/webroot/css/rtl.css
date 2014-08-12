@@ -12,11 +12,12 @@
 .header_side_nav{
 	float:left;
 }
+#header_side_nav_container { float: left; }
 #header_side_nav_container a{
 	float:right;
 }
 #user_name{
-	float:right;
+	float:left;
 	margin:0 6px;
 }
 .header_side_nav_function_divi{
@@ -30,7 +31,7 @@
 }
 .header_nav{
 	float:right;
-	margin:29px 82px 0 0;
+	margin:29px 98px 0 0;
 }
 .header_logo{
 	margin-right:16px;
@@ -123,28 +124,47 @@
 	float:right;
 }
 
+/* bootstrap calendar */
+.input-group.date .form-control {
+	border-radius: 4px;
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0;
+}
+
+.input-group.date .input-group-addon {
+	border-radius: 4px;
+	border-right: 0;
+	border-left: 1px solid #CCCCCC;
+	border-bottom-right-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.page-controls > div { float: right; padding-right: 0px; }
+.row { margin-right: 0px; }
+
 /*table*/
 .left{
 	float:right;
 }
 .icon_sort_up, .icon_sort_down{
-	float:left;
+	float:left !important;
 }
-.label{
+.row .col-md-3, .form-group .col-md-3 {
 	float:right;
 	margin-right:0;
 	margin-left:10px;
 }
-.value{
+.row .col-md-6, .form-group .col-md-4, .form-group .col-md-5, .form-group .col-md-6, .form-group .col-md-7 {
 	float:right;
 }
+.form-horizontal .control-label { text-align: left; }
 fieldset.section_break > legend{
 	margin-left:0;
 	margin-right:-8px;
 }
 .view_controls{
 	text-align:right;
-	padding:14px 160px 0 0;
+	padding:14px 200px 0 0;
 }
 .btn_right{
 	margin-right:0;
@@ -178,7 +198,6 @@ fieldset#general.section_break > .profile_image{
 	margin-right:20px;
 }
 fieldset#general.section_break > .row{
-    float: right;
     margin-left:0;
 }
 .table_view .cell{
@@ -259,6 +278,7 @@ fieldset#general.section_break > .row{
 	float:right;
 }
 .error-message{
+	float: right;
 	margin-left:0;
 	margin-right:10px;
 }
@@ -274,3 +294,18 @@ fieldset#general.section_break > .row{
 	float:right;
 	margin-left:8px;
 }
+
+#dashboard .left_control, #dashboard .left_control label {
+	float:right;
+}
+
+fieldset.section_break > .profile-image {
+	right: auto;
+	left: 0;
+}
+
+.panel-title .accordion-toggle { background-position: 12px 14px; }
+.panel-title .accordion-toggle:hover { background-position: 12px 14px; }
+.language { float: left; }
+.version { text-align: left; }
+.col-md-offset-4 { margin-right:33.33333333333333%; }

@@ -17,6 +17,129 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteClassSubject extends AppModel {
+	public $actsAs = array('ControllerAction');
+	
+	public $belongsTo = array(
+		'InstitutionSiteClass'
+	);
+	
+	public $_action = 'classesSubject';
+	
+	public function beforeAction($controller, $action) {
+		parent::beforeAction($controller, $action);
+		$id = $controller->Session->read('InstitutionSiteClass.id');
+		
+		if($this->InstitutionSiteClass->exists($id)) {
+			$header = $this->InstitutionSiteClass->field('name', array('id' => $id));
+			$controller->Navigation->addCrumb($header);
+			$controller->set('header', $header);
+			$controller->set('_action', $this->_action);
+			$controller->set('selectedAction', $this->_action);
+			$controller->set('actionOptions', $this->InstitutionSiteClass->getClassActions($controller));
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => $this->InstitutionSiteClass->_action));
+		}
+	}
+	
+	public function classesSubject($controller, $params) {
+		$id = $controller->Session->read('InstitutionSiteClass.id');
+		
+		$data = $this->find('all', array(
+			'fields' => array(
+				'EducationGradeSubject.id', 'EducationGrade.name', 'EducationSubject.code', 'EducationSubject.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_grades_subjects',
+					'alias' => 'EducationGradeSubject',
+					'conditions' => array('EducationGradeSubject.id = InstitutionSiteClassSubject.education_grade_subject_id')
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = EducationGradeSubject.education_grade_id')
+				),
+				array(
+					'table' => 'education_subjects',
+					'alias' => 'EducationSubject',
+					'conditions' => array('EducationSubject.id = EducationGradeSubject.education_subject_id')
+				)
+			),
+			'conditions' => array(
+				'institution_site_class_id' => $id,
+				'status' => 1
+			),
+			'order' => array('EducationSubject.order ASC')
+		));
+		if(empty($data)) {
+			$controller->Message->alert('general.noData');
+		}
+		$controller->set(compact('data'));
+	}
+	
+	public function classesSubjectEdit($controller, $params) {
+		$id = $controller->Session->read('InstitutionSiteClass.id');
+		if($controller->request->is('get')) {
+			$data = ClassRegistry::init('EducationSubject')->find('all', array(
+				'recursive' => 0,
+				'fields' => array(
+					'EducationGradeSubject.id', 'EducationGrade.name', 'EducationSubject.code', 'EducationSubject.name',
+					'InstitutionSiteClassSubject.id', 'InstitutionSiteClassSubject.status'
+				),
+				'joins' => array(
+					array(
+						'table' => 'education_grades_subjects',
+						'alias' => 'EducationGradeSubject',
+						'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
+					),
+					array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array(
+							'EducationGrade.id = EducationGradeSubject.education_grade_id'
+						)
+					),
+					array(
+						'table' => 'institution_site_class_grades',
+						'alias' => 'InstitutionSiteClassGrade',
+						'conditions' => array(
+							'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id',
+							'InstitutionSiteClassGrade.institution_site_class_id = ' . $id
+						)
+					),
+					array(
+						'table' => 'institution_site_class_subjects',
+						'alias' => $this->alias,
+						'type' => 'LEFT',
+						'conditions' => array(
+							$this->alias . '.institution_site_class_id = InstitutionSiteClassGrade.institution_site_class_id',
+							$this->alias . '.education_grade_subject_id = EducationGradeSubject.id'
+						)
+					)
+				),
+				'order' => array('EducationSubject.order', 'InstitutionSiteClassSubject.id DESC')
+			));
+			if(empty($data)) {
+				$controller->Message->alert('general.noData');
+			}
+			$controller->set(compact('data', 'id'));
+		} else {
+			$data = $controller->request->data;
+			if(isset($data[$this->alias])) {
+				foreach($data[$this->alias] as $i => $obj) {
+					if(empty($obj['id']) && $obj['status'] == 0) {
+						unset($data[$this->alias][$i]);
+					}
+				}
+				if(!empty($data[$this->alias])) {
+					$this->saveAll($data[$this->alias]);
+				}
+			}
+			$controller->Message->alert('general.edit.success');
+			return $controller->redirect(array('action' => $this->_action));
+		}
+	}
 	
 	// used by InstitutionSite.classesEdit/classesView
 	public function getSubjects($classId) {

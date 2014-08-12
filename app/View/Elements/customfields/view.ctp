@@ -16,13 +16,15 @@ $this->end();
 
 $this->start('contentBody');
 ?>
+<div class="content_wrapper">
 	<div class="row year">
 		<div class="col-md-2"><?php echo __('Year'); ?></div>
-		<div class="col-md-10">
+		<div class="col-md-3">
 			<?php
 				echo $this->Form->input('school_year_id', array(
 					'label' => false,
 					'div' => false,
+					'class' => 'form-control',
 					'options' => $years,
 					'default' => $selectedYear,
 					'onchange' => 'custom.view.changeCategory(this)',
@@ -33,12 +35,13 @@ $this->start('contentBody');
 	</div>
 	<?php if(isset($institution_sites)) { ?>
 	<div class="row" >
-		<div class="col-md-3"><?php echo __('Institution Sites'); ?></div>
-		<div class="col-md-6" style="margin-bottom: 10px;">
+		<div class="col-md-2"><?php echo __('Institution Sites'); ?></div>
+		<div class="col-md-4" style="margin-bottom: 10px;">
 			<?php
 				echo $this->Form->input('institution_site_id', array(
 					'label' => false,
 					'div' => false,
+					'class' => 'form-control',
 					'options' => $institution_sites,
 					'default' => $siteid,
 					'onchange' => 'custom.view.changeCategory(this,true)',
@@ -123,4 +126,5 @@ $this->start('contentBody');
 		
 	}
 	?>
+	</div>
 <?php 	$this->end();?>

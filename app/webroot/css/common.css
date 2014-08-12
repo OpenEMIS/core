@@ -84,6 +84,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:72px;
 }
 .header_side_nav{
+	width: 100%;
 	float: right;
 	text-align:right;
 	padding:0;
@@ -97,12 +98,12 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 }
 
 #user_name{
-	float:left;
+	float:right;
 	margin:0 6px 0 0;
 	font-style:italic;
 }
 #header_side_nav_container{
-	float:left;
+	float:right;
 	margin:0;
 	padding:2px 4px;
 	border-radius:0 0 4px 4px;
@@ -111,7 +112,6 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .header_side_nav_function_divi{
 	float:left;
 	background-color:#6993b2;
-	border-left:1px solid #3F6482;
 	width:1px;
 	height:20px;
 	margin:0 2px;
@@ -151,7 +151,6 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:1px;
 	height:16px;
 	background-color:#cccccc;
-	border-right:1px solid #999999;
 	margin:5px 0 0 0;
 }
 .header_nav_function{

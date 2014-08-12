@@ -66,7 +66,13 @@ echo $this->element('census/year_options');
 					foreach($row['data'] as $dataKey => $dataValue) {
 						if($dataKey == 'grades') {
 							foreach($dataValue AS $gradeId => $censusValue) {
-								echo '<td>' . $censusValue['value'] . '</td>';
+								$record_tag="";
+								foreach ($source_type as $k => $v) {
+									if (isset($censusValue['source']) && $censusValue['source'] == $v) {
+										$record_tag = "row_" . $k;
+									}
+								}
+								echo '<td class="' . $record_tag . '">' . $censusValue['value'] . '</td>';
 							}
 						} else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age') {
 							echo '<td rowspan="2">' . $dataValue . '</td>';

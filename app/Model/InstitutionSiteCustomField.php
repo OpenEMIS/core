@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteCustomField extends AppModel {
 	public $actsAs = array('FieldOption', 'ControllerAction');
 	public $hasMany = array(
-		'InstitutionSiteCustomFieldOption' => array('order'=>'order'),
+		'InstitutionSiteCustomFieldOption' => array('order' => 'order'),
 		'InstitutionSiteCustomValue'
 	);
 	public $belongsTo = array(
@@ -45,7 +45,7 @@ class InstitutionSiteCustomField extends AppModel {
 	public function getOptionFields() {
 		$siteTypeOptions = $this->getSubOptions();
 		$fieldTypeOptions = $this->getCustomFieldTypes();
-		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions);
+		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions, 'display' => true);
 		$siteType = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $siteTypeOptions);
 		$this->removeOptionFields(array('international_code', 'national_code'));
 		$this->addOptionField($fieldType, 'after', 'name');
@@ -89,7 +89,8 @@ class InstitutionSiteCustomField extends AppModel {
 	
 	public function additional($controller, $params) {
         $controller->Navigation->addCrumb('More');
-
+		
+		$this->unbindModel(array('hasMany' => array('InstitutionSiteCustomValue')));
         $data = $this->find('all', array(
 			'conditions' => array(
 				'InstitutionSiteCustomField.visible' => 1, 
@@ -115,13 +116,14 @@ class InstitutionSiteCustomField extends AppModel {
             //pr($this->data);
             //die();
             $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-            /**
-             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-             */
+           
+            // Note to Preserve the Primary Key to avoid exhausting the max PK limit
+             
+			
             foreach ($arrFields as $fieldVal) {
-                if (!isset($controller->request->data['InstitutionsSiteCustomFieldValue'][$fieldVal]))
+                if (!isset($controller->request->data['InstitutionSiteCustomValue'][$fieldVal]))
                     continue;
-                foreach ($controller->request->data['InstitutionsSiteCustomFieldValue'][$fieldVal] as $key => $val) {
+                foreach ($controller->request->data['InstitutionSiteCustomValue'][$fieldVal] as $key => $val) {
                     if ($fieldVal == "checkbox") {
                         $arrCustomValues = $this->InstitutionSiteCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $controller->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
 
@@ -156,6 +158,7 @@ class InstitutionSiteCustomField extends AppModel {
                         $arrV['institution_site_custom_field_id'] = $key;
                         $arrV['value'] = $val['value'];
                         $arrV['institution_site_id'] = $controller->institutionSiteId;
+						
                         $this->InstitutionSiteCustomValue->save($arrV);
                     }
                 }
@@ -163,6 +166,7 @@ class InstitutionSiteCustomField extends AppModel {
             $controller->redirect(array('action' => 'additional'));
         }
 		
+		$this->unbindModel(array('hasMany' => array('InstitutionSiteCustomValue')));
         $data = $this->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($controller->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
 
         $this->InstitutionSiteCustomValue->unbindModel(array('belongsTo' => array('InstitutionSite')));

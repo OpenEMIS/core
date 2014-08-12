@@ -1,6 +1,8 @@
 
 $(document).ready(function() {
     objTrainingSessions.init();
+
+    
 });
 
 function in_array (needle, haystack, argStrict) {
@@ -29,12 +31,10 @@ var objTrainingSessions = {
 
     init: function() {
         var elementLocation = '#searchLocation';
-        var elementTrainer = '#searchTrainer';
-        var table = $('#training_session');
-        var url = getRootURL() + table.attr('url');
-        objTrainingSessions.attachAutoComplete(elementLocation, url + '1/', objTrainingSessions.selectLocationField);
-        objTrainingSessions.attachAutoComplete(elementTrainer, url + '2/', objTrainingSessions.selectTrainerField);
+        objTrainingSessions.attachAutoComplete(elementLocation, getRootURL() + $(elementLocation).attr('url'), objTrainingSessions.selectLocationField);
         objTrainingSessions.getDetailsAfterChangeCourse($("#TrainingSessionTrainingCourseId"));
+
+        
     },
 
     selectProvider: function(obj){
@@ -51,8 +51,6 @@ var objTrainingSessions = {
 
         var selProvider = $('.provider');
         defaultVal = $(selProvider).val();
-
-        
 
         if(trainingCourseId === ""){
             provider[0].options.length = 0;
@@ -133,7 +131,84 @@ var objTrainingSessions = {
           
     },
 
-    addTrainee: function(obj) {
+
+    uploadTrainee: function(obj) {
+        if($("#divUpload").hasClass("hide")){
+            $('#divUpload').removeClass("hide");
+        }else{
+            $('#divUpload').addClass("hide");
+        }
+    },
+
+    processUploadTrainee: function(obj) {
+        var table = $('.trainee');
+        var index = table.find('.table_row').length + $('.delete-trainee input').length;
+        var maskId;
+        $("#divUploadMsg").val(''); 
+        $('#divUploadMsg').removeClass();
+        $("#divUploadMsg").addClass('hide');
+
+        var trainingCourseId = $('.training_course').val();
+        $('.training_course').removeClass('form-error');
+        $('.training_course').parent().parent().find('.error-message').remove();
+        $('.training_course').parent().parent().removeClass('error');
+        if(trainingCourseId==""){
+            $("html, body").animate({ scrollTop: 0 }, "fast");
+            $('.training_course').parent().parent().append('<div class="error-message">Please select a valid Course.</div>');
+            $('.training_course').parent().parent().addClass('error');
+            $('.training_course').addClass('form-error');
+            return false;
+        }
+        var data = new FormData();  
+
+        jQuery.each($('#upload_file')[0].files, function(i, file) {
+            data.append(i, file);
+        });
+
+        $.ajax({
+            url: getRootURL() + 'Training/ajax_upload_trainee/'+index+'/'+trainingCourseId,
+            data: data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'POST',
+            dataType: 'json',
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: function(data) {
+                var callback = function() {
+                    var obj = data;
+                    if (obj.layout == undefined || obj.layout == null || obj.layout.length == 0){
+
+                    }else{
+                        if (table.find('.table_body tbody').length > 0) { 
+                            table.find('.table_body tbody').append(obj.layout);
+                        }else{
+                            table.find('.table_body').append('<tbody>'+obj.layout+'</tbody>');
+                        }
+                        objTrainingSessions.validateTrainee();
+                    }
+                    if(obj.errorFlag){
+                         $('#divUploadMsg').addClass('error-message');
+                    }else{
+                        $('#divUploadMsg').addClass('text-success');
+                    }
+
+                    if(obj.message!=""){
+                        $('#divUploadMsg').html(obj.message);
+                        $("#divUploadMsg").removeClass('hide');
+                    }
+                }
+                $.unmask({id: maskId, callback: callback});
+            },
+             error: function (data) {
+                console.log("error");
+            } 
+        });
+
+    },
+
+
+     addTrainee: function(obj) {
         var table = $('.trainee');
         var index = table.find('.table_row').length + $('.delete-trainee input').length;
         var maskId;
@@ -188,13 +263,99 @@ var objTrainingSessions = {
         objTrainingSessions.validateTrainee();
     },
 
+    addTrainer: function(obj) {
+        var table = $('.trainer');
+        var index = table.find('.table_row').length + $('.delete-trainer input').length;
+        var trainer_type = $('.trainer_type :selected').text(); 
+        var maskId;
+        var params = {index: index, trainer_type: trainer_type};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                var element = '#searchTrainer' + index;
+                var url = getRootURL() + table.attr('url') + '/' + index;
+                if($('.trainer_type').val()=='1'){
+                    objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainer);
+                }else{
+                    $("#searchTrainer"+index).on("keydown", function(event){
+                         objTrainingSessions.autoFill(index);
+                    });
+                }
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
     
+    autoFill:function(index){
+        $('.trainer-id-'+index).val('0');
+        $('.trainer-table-'+index).val('');
+        $('.trainer-validate-'+index).val('_'+$('#searchTrainer'+index).val());
+        objTrainingSessions.validateTrainer();
+    },
+    
+    selectTrainer: function(event, ui) {
+        var val = ui.item.value;
+        var element;
+        for(var i in val) {
+            element = $('.' + i);
+            if(element.get(0).tagName.toUpperCase() === 'INPUT') {
+                element.val(val[i]);
+            } else {
+                element.html(val[i]);
+            }
+        }
+        objTrainingSessions.validateTrainer();
+        return false;
+    },
+    
+    deleteTrainer: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-trainer');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingSessions.validateTrainer();
+    },
+
+    validateTrainer: function() {
+          var val = new Array();
+          var c = 0;
+          $("#trainer_message").remove();
+          $('.validate-trainer').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.trainer').prepend('<div id="trainer_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Trainer</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
 
     attachAutoComplete: function(element, url, callback) {
         $(element).autocomplete({
             source: url,
             minLength: 2,
-            select: callback
+            select: callback,
+            focus: function() {
+                return false;
+            }
         });
     },
 
@@ -205,6 +366,24 @@ var objTrainingSessions = {
             return true;
         }else{
             return false;
+        }
+    },
+
+    save: function(obj) {
+       if(objTrainingSessions.errorFlag()){ 
+            var status = 1;
+            if(obj.name=="submitForApproval"){
+                status = 2;
+            }
+            if( $('#TrainingSessionSessionAddForm').length )  {
+                $('.training-status').val(status);
+                $('#TrainingSessionSessionAddForm').submit();
+            }else{
+                $('.training-status').val(status);
+                $('#TrainingSessionSessionEditForm').submit();
+            }
+        }else{ 
+            return false; 
         }
     }
 

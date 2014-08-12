@@ -17,14 +17,29 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class Area extends AppModel {
-	public $actsAs = array('Tree', 'CustomReport');
+	public $actsAs = array(
+		'Tree',
+		'Reorder',
+		'CustomReport',
+		'ControllerAction2'
+	);
+	
+	public $belongsTo = array('AreaLevel');
+	
+	public $hasMany = array(
+		'TrainingSession' => array(
+			'className' => 'TrainingSession',
+			'foreignKey' => 'area_id',
+			'dependent' => true
+		)
+	);
 	
 	public $validate = array(
 		'code' => array(
 			'notEmpty' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				 'message' => 'Please enter the code for the Area.'
+				'message' => 'Please enter the code for the Area.'
 			),
 			'isUnique' => array(
 				'rule' => 'isUnique',
@@ -40,7 +55,139 @@ class Area extends AppModel {
 		)
 	);
 	
-	public $belongsTo = array('AreaLevel');
+	public function beforeAction() {
+        parent::beforeAction();
+		
+		$this->fields['parent_id']['type'] = 'hidden';
+		$this->fields['lft']['visible'] = false;
+		$this->fields['rght']['visible'] = false;
+		$this->fields['order']['visible'] = false;
+		
+		$this->Navigation->addCrumb('Areas');
+		$this->setVar('header', __('Areas'));
+    }
+	/*
+	public function getDisplayFields($controller) {
+		$yesnoOptions = $controller->Option->get('yesno');
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'name'),
+                array('field' => 'code'),
+				array('field' => 'name', 'model' => 'AreaLevel'),
+				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+	*/
+	
+	public function index() {
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
+		$area = end($paths);
+		$data = array();
+		$maxLevel = $this->AreaLevel->field('level', null, 'level DESC');
+		
+		if($area !== false) {
+			$data = $this->find('all', array(
+				'conditions' => array('parent_id' => $area[$this->alias]['id']),
+				'order' => array('order')
+			));
+		}
+		$this->setVar(compact('paths', 'data', 'parentId', 'maxLevel'));
+	}
+	
+	public function areasReorder($controller, $params) {
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
+		$area = end($paths);
+		$data = array();
+		
+		if($area !== false) {
+			$data = $this->find('all', array(
+				'conditions' => array('parent_id' => $area[$this->alias]['id']),
+				'order' => array('order')
+			));
+		}
+		$this->setVar(compact('paths', 'data', 'parentId'));
+	}
+	
+	public function areasMove($controller, $params) {
+		if ($this->request->is(array('post', 'put'))) {
+			$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+			$data = $this->request->data;
+			$conditions = array('parent_id' => $parentId);
+			$this->moveOrder($data, $conditions);
+			$redirect = array('action' => 'areasReorder', 'parent' => $parentId);
+			return $this->redirect($redirect);
+		}
+	}
+	
+	public function add() {
+		$this->fields['visible']['visible'] = false;
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
+		$area = end($paths);
+		
+		$pathList = array();
+		foreach($paths as $item) {
+			$pathList[] = $item[$this->alias]['name'];
+		}
+		$pathToString = implode(' / ', $pathList);
+		$parentId = $area[$this->alias]['id'];
+		$level = $this->AreaLevel->field('level', array('id' => $area[$this->alias]['area_level_id']));
+		$areaLevelOptions = $this->AreaLevel->find('list', array('conditions' => array('level >' => $level)));
+		
+		if($this->request->is(array('post', 'put'))) {
+			$this->request->data[$this->alias]['parent_id'] = $parentId;
+			$this->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
+			if ($this->save($this->request->data)) {
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => 'areasView', 'parent' => $parentId, $this->id));
+			}
+		}
+		$this->setVar(compact('data', 'fields', 'parentId', 'pathToString', 'areaLevelOptions'));
+	}
+	
+	public function view($id=0) {
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$data = $this->findById($id);
+		
+		$this->setVar(compact('data', 'parentId'));
+	}
+	
+	public function edit($id=0) {
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$data = $this->findById($id);
+		//$fields = $this->getDisplayFields($controller);
+		$yesnoOptions = $controller->Option->get('yesno');
+		
+		if(!empty($data)) {
+			$this->setVar(compact('yesnoOptions', 'parentId'));
+			if($this->request->is(array('post', 'put'))) {
+				if ($this->save($this->request->data)) {
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $id));
+				}
+			} else {
+				$this->request->data = $data;
+			}
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => get_class($this), 'parent' => $parentId));
+		}
+	}
 	
 	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
@@ -123,10 +270,6 @@ class Area extends AppModel {
 
 	}
 
-	/**
-	 * get Area name based on Area Id
-	 * @return string 	area name
-	 */
 	public function getName($id) {
 		$data = $this->findById($id);	
 		return $data['Area']['name'];
@@ -172,5 +315,23 @@ class Area extends AppModel {
 			'order' => array('Area.order')
 		));
 		return $data;
+	}
+	
+	public function getParentId($areaId){
+		$result = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('Area.parent_id'),
+			'conditions' => array(
+				'OR' => array(
+					'Area.id' => $areaId
+				)
+			)
+		));
+		
+		if(!empty($result)){
+			return $result['Area']['parent_id'];
+		}else{
+			return NULL;
+		}
 	}
 }

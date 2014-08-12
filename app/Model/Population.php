@@ -217,4 +217,18 @@ class Population extends AppModel {
 		$results['type'] = 0;
 		return $results;
 	}
+	
+	public function getRecordsCount($age, $year, $source, $areaId) {
+		$count = $this->find('count', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'age' => $age,
+				'year LIKE' => $year,
+				'source LIKE' => $source,
+				'area_id' => $areaId
+			)
+		));
+				
+		return $count;
+	}
 }

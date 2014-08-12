@@ -4,13 +4,18 @@
 .page-controls > div {
 	padding-left: 0;
 }
-.page-controls .form-control {
+.form-control {
 	font-size: 11px;
     height: 25px;
-    padding: 4px 6px;
+    padding: 5px 6px;
 }
+.form-horizontal .control-label { padding-top: 5px; font-size: 11px; }
 
 .table-checkable .checkbox-column { width: 36px; }
+.input-group-addon { font-size: 12px; padding: 5px 8px; }
+.fileupload .btn { font-size: 12px; padding: 4px 12px; }
+.form-buttons { margin-top: 15px; }
+.form-buttons input:first-child { margin-left: 15px; }
 /* end bootstrap */
 
 textarea { resize: none; }
@@ -46,13 +51,13 @@ a.link_back span { font-size: 16px; }
 	font-size: 11px;
 	color: #FF0000;
 	line-height: 19px;
-	padding: 6px 12px;
+	padding: 2px 10px;
 	border: 1px solid #FF7171;
 	background-color: #FCE1E2;
 	border-radius: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
-	max-width: 220px;
+	max-width: 230px;
 }
 /* end error messages */
 
@@ -141,8 +146,8 @@ input.default { width: 240px; }
 /* styles for Additional Info */
 .custom_field {
 	overflow: hidden;
-	margin: 0 15px 15px 10px;
 	border: 1px solid #CCCCCC;
+	margin-bottom: 10px;
 }
 
 .custom_section_break {
@@ -398,4 +403,36 @@ fieldset.area .label{
 	font-size: 15px;
 	color: #666;
 }
-
+.topDropDownWrapper{
+	margin-bottom: 12px;
+}
+.topDropDownWrapper select.form-control{
+	display: inline-block;
+}
+.topDropDownWrapper select#schoolYearId{
+	width: 15%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#weekId{
+	width: 45%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#classId{
+	width: 30%;
+}
+.topDropDownWrapper select#monthId{
+	width: 15%;
+}
+td.present{
+	color: green;
+}
+h3.reportHtmlTitle{
+	margin-bottom: 5px;
+}
+.reportHtmlDate{
+	font-size: 11px;
+	margin-bottom: 15px;
+}
+td.input .col-md-4{
+	width: 100%;
+}

@@ -44,14 +44,7 @@
 				if(!$in && $link['selected']) {
 					$in = true;
 				}
-				$tmpurl = $url;
-				$parsedURL = Router::parse($tmpurl);
-				if($this->webroot != "/"){
-					$parsedURL['controller'] = $parsedURL['action'];
-					$parsedURL['action'] = ((count($parsedURL['pass']) > 0)?$parsedURL['pass'][0]:'index');
-				}
-				$icon = $this->Html->image('nav_icons/'.$parsedURL['controller'].'/'.$parsedURL['action'].".png");
-
+				$icon = $this->Html->image(sprintf('nav_icons/%s/%s.png', $controller, $link['action']));
 				$wizard = $link['wizard'] ? 'wizard="true"' : '';
 				$itemHtml .= sprintf($item, $url, $wizard, $selected, $icon, __($link['title']));
 			}

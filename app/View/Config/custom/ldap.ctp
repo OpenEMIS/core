@@ -13,8 +13,8 @@ $this->assign('contentHeader', $this->Label->get('Config.name'));
 $this->end();
 
 $this->start('contentBody'); ?>
-<div class="row select_row form-group">
-    <div class="col-md-6">
+<div class="row select_row page-controls">
+    <div class="col-md-4">
         <?php
             echo $this->Form->input('type', array(
                 'options' => $typeOptions,
@@ -39,15 +39,14 @@ $this->start('contentBody'); ?>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td><?php echo __('Host');?></td>
-					<td><?php echo __('Port');?></td>
-					<td><?php echo __('Version');?></td>
-					<td><?php echo __('Base Dn');?></td>
+					<th><?php echo __('Host');?></th>
+					<th><?php echo __('Port');?></th>
+					<th><?php echo __('Version');?></th>
+					<th><?php echo __('Base Dn');?></th>
 				</tr>
 			</thead>
 
-			<tbody class="table_body">
-
+			<tbody>
 				<tr>
 				<?php 
 				$i = 0;
@@ -95,7 +94,6 @@ $this->end();
 
 $this->start('contentBody'); ?>
 
-<?php echo $this->element('alert'); ?>
 <div class="ldap">
 <?php
 	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, $id));
@@ -115,16 +113,17 @@ $this->start('contentBody'); ?>
 	echo $this->Form->input('type', array('disabled' => 'disabled'));
 	
 	?>
+	
 	<div class="form-group">
 		<label class="col-md-3 control-label"><?php echo __('Test Connection');?></label>
 		<div class="col-md-4"><?php echo $this->Form->button('Connect',array('div' => false, 'type'=>'button', 'onclick'=>'Config.checkLDAPconn()')); ?>
 		</div>
 	</div>
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view', $id), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	<?php echo $this->Form->end(); ?>
+
+	<?php
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view', $id)));
+	echo $this->Form->end();
+	?>
 </div>
 <?php $this->end(); ?> 
- <?php } ?>
+<?php } ?>
