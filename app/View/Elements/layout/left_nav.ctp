@@ -37,6 +37,13 @@
 		foreach($obj as $link) {
 			if(is_array($link)) {
 				if(!$link['display']) continue;
+				
+				// hide the add existing student/staff if institution site id is not set
+				if ($link['controller'] == 'Students' && $link['action'] == 'add') {
+					if (!$this->Session->check('InstitutionSite.id')) {
+						continue;
+					}
+				}
 				$controller = $link['controller'];
 				$params = (isset($link['params']) ? '/'.$link['params'] : '') . (strlen($_params)>0 ? '/'.$_params : '');
 				$url = sprintf('%s%s/%s', $this->webroot, $controller , $link['action']) . $params;

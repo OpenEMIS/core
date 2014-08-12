@@ -1,4 +1,16 @@
-<div class="body_title"><?php echo __($bodyTitle); ?></div>
+<div class="body_title">
+	<?php
+	$controllers = array('InstitutionSites', 'InstitutionSiteReports', 'Census', 'Students', 'Staff');
+	// if the current controller exists in the list, hyperlink the header
+	if (in_array($this->params['controller'], $controllers) && $this->Session->check('InstitutionSite.id')) {
+		$id = $this->Session->read('InstitutionSite.id');
+		$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
+		echo $this->Html->link($name, array('controller' => 'InstitutionSites', 'action' => 'view', $id));
+	} else {
+		echo __($bodyTitle);
+	}
+	?>
+</div>
 <div class="body_content">
 	<?php echo $this->element('layout/left_nav'); ?>
 	<div class="body_content_right">
