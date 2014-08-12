@@ -304,6 +304,7 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 
 					$dimensionValues = $controller->Datawarehouse->getAllDimension(array_keys($datawarewarehouseDimensionOptions));
 					
+					$conditionConcat = '';
 					foreach($data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] as $key=>$val){
 						$arrSubgroupType = split(", ", $val);
 						$conditionFormat = '%s.%s="%s"';
@@ -317,9 +318,9 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 									$subgroupID = array_search($subgroup, $datawarewarehouseDimensionOptions);
 
 									$condition .= $conditionConcat . sprintf($conditionFormat, $dimensionValues[$subgroupID]['DatawarehouseDimension']['model'],$dimensionValues[$subgroupID]['DatawarehouseDimension']['field'],$subgroupVal);
+									$conditionConcat = ' AND ';
 								}
 							}
-							$conditionConcat = ' AND ';
 						}
 						if($type=='denominator'){
 							$saveData['Denominator']['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
