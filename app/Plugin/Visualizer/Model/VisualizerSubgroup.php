@@ -14,8 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class Subgroup extends VisualizerAppModel {
+class VisualizerSubgroup extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_subgroup_en';
+	public $alias = 'Subgroup';
 	
 }
