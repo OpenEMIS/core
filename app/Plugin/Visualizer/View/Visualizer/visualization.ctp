@@ -74,7 +74,7 @@ if ($visualType == 'table') {
 	}
 }
 
-if ($visualType == 'table') {
+if ($visualType == 'table' && !empty($data)) {
 	if ($this->Paginator->counter('{:pages}') > 1) :
 		?>
 		<div class="left w500">

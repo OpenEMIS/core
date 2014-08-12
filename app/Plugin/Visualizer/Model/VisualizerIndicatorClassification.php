@@ -14,24 +14,26 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class AreaLevel extends VisualizerAppModel {
+class VisualizerIndicatorClassification extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'ut_area_level_en';
+	public $useTable = 'ut_indicator_classifications_en';
+	public $alias = 'IndicatorClassification';
 	
-	public function getAreaLevelList(){
-		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name')));
-		return $data;
-	}
-	
-	public function getAreaLevelUpto($arealevel_nid){
-		$areaLevelData = $this->find('first', array('fields' => array('Area_Level'), 'conditions' => array('Level_NId '=>$arealevel_nid)));
+	public function getSource($ius, $timeperiod, $order = NULL) {
+		$order = (empty($order))? NULL:array($order);
+		$data = $this->find('all', array(
+			'fields' => array('DISTINCT IndicatorClassification.IC_NId', 'IndicatorClassification.IC_Name'),
+			'conditions' => array('Data.IUSNId' => $ius,'Data.TimePeriod_NId' => $timeperiod),
+			'joins' => array(
+				array(
+					'table' => 'ut_data',
+					'alias' => 'Data',
+					'conditions' => array('Data.Source_NId = IndicatorClassification.IC_NId')
+				),
+			),
+			'order' => $order
+		));
 		
-		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name'), 'conditions' => array('Area_Level <= ' => $areaLevelData['AreaLevel']['Area_Level'])));
-		return $data;
-	}
-	
-	public function getAllAreaLevel(){
-		$data = $this->find('all', array('fields' => array('Level_NId', 'Area_Level_Name','Area_Level')));
 		return $data;
 	}
 }
