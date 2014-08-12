@@ -319,6 +319,7 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 									$condition .= $conditionConcat . sprintf($conditionFormat, $dimensionValues[$subgroupID]['DatawarehouseDimension']['model'],$dimensionValues[$subgroupID]['DatawarehouseDimension']['field'],$subgroupVal);
 								}
 							}
+							$conditionConcat = ' AND ';
 						}
 						if($type=='denominator'){
 							$saveData['Denominator']['DatawarehouseIndicatorSubgroup'][$key]['subgroup'] = $val;
