@@ -5,6 +5,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -41,25 +42,16 @@ echo $this->Form->input('search', array('id' => 'search'));
 	if (!empty($tableRowData)) {
 		$i = 0;
 		foreach ($tableRowData as $obj) {
-			/* if (empty($selectedUnitIds)) {
-			  $checked = false;
-			  } else {
-			  $checked = (in_array($obj['id'], $selectedUnitIds)) ? 'checked' : false;
-			  }
-
-			  $bodyFirstColOptions = array(
-			  'type' => 'checkbox',
-			  'class' => 'icheck-input',
-			  'label' => false,
-			  'div' => false,
-			  'checked' => $checked,
-			  'value' => $obj['id'],
-			  'sectionType' => 'unit',
-			  'onchange' => 'Visualizer.checkboxChange(this)',
-			  'url' => 'Visualizer/ajaxUpdateUserCBSelection');
-			  $additionalClass = 'checkbox-column center';
-			  $input = $this->Form->input($this->action . '.id.' . $i, $bodyFirstColOptions); */
-			$bodyFirstColOptions = array('type' => 'radio', 'options' => array($obj['id'] => ''), 'value' => $selectedUnitIds, 'label' => false, 'div' => false, 'class' => false);
+			$bodyFirstColOptions = array(
+				'type' => 'radio', 
+				'options' => array($obj['id'] => ''), 
+				'value' => $selectedUnitIds, 
+				'label' => false, 
+				'div' => false, 
+				'class' => false, 
+				'sectionType' => 'unit', 
+				'onchange' => 'Visualizer.radioChange(this)',
+				'url' => 'Visualizer/ajaxUpdateUserRBSelection');
 			if ($obj['checked']) {
 				$bodyFirstColOptions['checked'] = 'checked';
 			} else {
