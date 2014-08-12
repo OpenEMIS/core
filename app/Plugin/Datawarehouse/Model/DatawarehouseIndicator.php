@@ -304,11 +304,12 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 
 					$dimensionValues = $controller->Datawarehouse->getAllDimension(array_keys($datawarewarehouseDimensionOptions));
 					
+					$conditionConcat = '';
 					foreach($data['DatawarehouseField'][$type.'_datawarehouse_subgroup_id'] as $key=>$val){
 						$arrSubgroupType = split(", ", $val);
 						$conditionFormat = '%s.%s="%s"';
 						$condition = '';
-						$conditionConcat = '';
+					
 						foreach($arrSubgroupType as $subgroupType){
 							if(strpos($subgroupType, "All")===false){
 								if(strrpos($subgroupType, ":")!==false){
