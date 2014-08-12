@@ -14,9 +14,25 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class Indicator extends VisualizerAppModel {
+class VisualizerAreaLevel extends VisualizerAppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'ut_indicator_en';
+	public $useTable = 'ut_area_level_en';
+	public $alias = 'AreaLevel';
 	
+	public function getAreaLevelList(){
+		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name')));
+		return $data;
+	}
 	
+	public function getAreaLevelUpto($arealevel_nid){
+		$areaLevelData = $this->find('first', array('fields' => array('Area_Level'), 'conditions' => array('Level_NId '=>$arealevel_nid)));
+		
+		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name'), 'conditions' => array('Area_Level <= ' => $areaLevelData['AreaLevel']['Area_Level'])));
+		return $data;
+	}
+	
+	public function getAllAreaLevel(){
+		$data = $this->find('all', array('fields' => array('Level_NId', 'Area_Level_Name','Area_Level')));
+		return $data;
+	}
 }
