@@ -221,7 +221,8 @@ class VisualizerController extends VisualizerAppController {
 				foreach ($rowData as $obj) {
 					//	pr('level '.$obj['DIArea']['Area_Level']. ' -- '.$obj['DIArea']['Area_Name']);
 					$row['Area_NId'] = $obj['DIArea']['Area_NId'];
-					$row['level_' . $obj['DIArea']['Area_Level'] . '_name'] = sprintf('%s - %s',$obj['DIArea']['Area_ID'],$obj['DIArea']['Area_Name']);
+					$row['Area_ID'] = $obj['DIArea']['Area_ID'];
+					$row['level_' . $obj['DIArea']['Area_Level'] . '_name'] = /*sprintf('%s - %s',$obj['DIArea']['Area_ID'],*/$obj['DIArea']['Area_Name']/*)*/;
 				}
 
 				for ($i = 1; $i < count($columnsHeaderData); $i++) {
@@ -351,6 +352,8 @@ class VisualizerController extends VisualizerAppController {
 		
 		if ($this->request->is(array('post', 'put'))) {
 			if(!empty($this->request->data['indicator']['id'])){
+				$this->Session->write('visualizer.selectedOptions.indicator', $this->request->data['indicator']['id']);
+			
 				if (count($this->Session->read('visualizer.selectedOptions.indicator')) > 0) {
 					$this->Session->delete('visualizer.sort');
 					return $this->redirect(array('action' => $this->nextPg, 'plugin' => 'Visualizer'));
@@ -387,7 +390,7 @@ class VisualizerController extends VisualizerAppController {
 
 		if ($this->request->is(array('post', 'put'))) {
 			if(!empty($this->request->data['unit']['id'])){
-				
+				$this->Session->write('visualizer.selectedOptions.unit', $this->request->data['unit']['id']);
 
 				if (count($this->Session->read('visualizer.selectedOptions.unit')) > 0) {
 					$this->Session->delete('visualizer.sort');
@@ -479,7 +482,8 @@ class VisualizerController extends VisualizerAppController {
 		$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
 		$areaLevelOptions = $di6AreaLevel->getAreaLevelList();
 		$tableHeaders = $areaLevelOptions; //$di6AreaLevel->getAreaLevelList();
-		$options['order'] = array('DIArea.lft' => 'asc');
+		
+		$options['order'] = array('DIArea.Area_ID' => 'asc');
 
 		$selectedAreaLevel = '';
 		if (!empty($this->params['pass'])) {
@@ -489,12 +493,14 @@ class VisualizerController extends VisualizerAppController {
 				$tableHeaders = $di6AreaLevel->getAreaLevelUpto($selectedAreaLevel); //$di6AreaLevel->getAreaLevelList();
 			}
 		}
+		array_unshift($tableHeaders, __('Area ID'));
 		
 		if ($this->Session->check('visualizer.selectedOptions.area')) {
 			$searchStr = $this->Session->read('visualizer.areaSearch.str');
 			$this->request->data['area']['search'] = $searchStr;
 			$options['conditions']['OR'] = array('DIArea.Area_Name LIKE' => '%' . $searchStr . '%', 'DIArea.Area_ID LIKE'=> '%' . $searchStr . '%');
 		}
+		
 		$this->Paginator->settings = array_merge(array('limit' => 20), $options);
 
 		$data = $this->Paginator->paginate('DIArea');
@@ -525,7 +531,7 @@ class VisualizerController extends VisualizerAppController {
 
 			$di6AreaLevel = ClassRegistry::init('Visualizer.AreaLevel');
 			$areaLevelOptions = $di6AreaLevel->getAreaLevelList();
-			$options['order'] = array('DIArea.lft' => 'asc');
+			$options['order'] = array('DIArea.Area_ID' => 'asc');
 
 			if (!empty($selectedAreaLevel)) {
 				$options['conditions']['DIArea.Area_Level'] = $selectedAreaLevel;
@@ -535,7 +541,7 @@ class VisualizerController extends VisualizerAppController {
 				$options['conditions']['OR'] = array('DIArea.Area_Name LIKE' => '%' . $searchStr . '%', 'DIArea.Area_ID LIKE'=> '%' . $searchStr . '%');
 				//$options['conditions']['DIArea.Area_Name LIKE'] = '%' . $searchStr . '%';
 			}
-
+			
 			$this->Paginator->settings = array_merge(array('limit' => 20), $options);
 			
 			
