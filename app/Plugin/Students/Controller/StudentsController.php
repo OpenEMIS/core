@@ -70,7 +70,8 @@ class StudentsController extends StudentsAppController {
 		'guardians' => 'Students.StudentGuardian',
 		'behaviour' => 'Students.StudentBehaviour',
 		'additional' => 'Students.StudentCustomField',
-		'fee' => 'Students.studentFee'
+		'fee' => 'Students.studentFee',
+		'InstitutionSiteStudent'
 	);
 
 	public function beforeFilter() {
@@ -234,9 +235,16 @@ class StudentsController extends StudentsAppController {
 		$this->set('data', $data);
 	}
 	
-	public function add() {
+	public function create() {
 		$this->Wizard->start();
 		return $this->redirect(array('action' => 'edit'));
+	}
+	
+	// to add students to institution sites
+	public function add() {
+		$model = 'InstitutionSiteStudent';
+		$this->Navigation->addCrumb('Add existing Student');
+		$this->set(compact('model'));
 	}
 
 	public function edit() {

@@ -257,6 +257,9 @@ class LabelHelper extends AppHelper {
 			'generate' => 'Generate',
 			'custom_indicators' => 'Custom Indicators'
 		),
+		'Student' => array(
+			'add_existing' => 'Add existing Student'
+		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
