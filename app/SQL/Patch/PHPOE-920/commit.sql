@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_indicators` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `datawarehouse_field_id` (`datawarehouse_field_id`),
-  KEY `datawarehouse_unit_id` (`datawarehouse_unit_id`)
+  KEY `datawarehouse_unit_id` (`datawarehouse_unit_id`),
+  KEY `denominator` (`denominator`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `datawarehouse_units`;
@@ -89,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_dimensions` (
   KEY `datawarehouse_module_id` (`datawarehouse_module_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `datawarehouse_indicator_subgroups`;
 CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_subgroups` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
   `subgroup` text NOT NULL,
@@ -106,11 +108,11 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_subgroups` (
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`) VALUES ('71', 'Gender', 'Gender', 'Student', '71', '1', '1');
 
-INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES ('31', 'Male', '1', '1', '1', '0', '71', '1', '2014-07-14');
-INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES ('32','Female', '2', '1', '1', '0', '71', '1', '2014-07-14');
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Male', '1', '1', '1', '0', '71', '1', '2014-07-14');
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL,'Female', '2', '1', '1', '0', '71', '1', '2014-07-14');
 
-ALTER TABLE `dev_openemis_demo`.`census_students` 
-RENAME TO  `dev_openemis_demo`.`census_students_bu` ;
+ALTER TABLE `census_students` 
+RENAME TO  `census_students_bu` ;
 
 CREATE TABLE IF NOT EXISTS `census_students` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -138,18 +140,22 @@ CREATE TABLE IF NOT EXISTS `census_students` (
   KEY `value` (`value`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
+SET @maleID := 0;
+SET @femaleID := 0;
+SELECT `id` INTO @maleID FROM `field_option_values` WHERE `field_option_id` = 71 AND `name` = 'Male';
+SELECT `id` INTO @femaleID FROM `field_option_values` WHERE `field_option_id` = 71 AND `name` = 'Female';
 
 INSERT INTO census_students (`age`, `gender_id`, `value`, `student_category_id`, `education_grade_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-select age, 31, male, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
+select age, @maleID, male, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
 from census_students_bu;
 
 INSERT INTO census_students (`age`, `gender_id`, `value`, `student_category_id`, `education_grade_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-select age, 32, female, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
+select age, @femaleID, female, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
 from census_students_bu;
 
-DROP TABLE IF EXISTS `census_students_bu`;
+/*DROP TABLE IF EXISTS `census_students_bu`;*/
 
-UPDATE `navigations` SET SET `plugin`='Datawarehouse', `controller`='Datawarehouse', `action`='indicator', `pattern`='^indicator' WHERE `id`='43';
+UPDATE `navigations` SET `plugin`='Datawarehouse', `controller`='Datawarehouse', `action`='indicator', `pattern`='^indicator' WHERE `id`='43';
 
 INSERT INTO `datawarehouse_modules` (`id`, `name`, `model`, `joins`, `enabled`, `created_user_id`, `created`) 
 VALUES ('1', 'Student', 'CensusStudent', 'array(\n  \'type\' => \'INNER\',\n  \'table\' => \'institution_sites\',\n \'alias\' => \'InstitutionSite\',\n \'conditions\' => array(\'CensusStudent.institution_site_id = InstitutionSite.id\')\n)', '1', '1', '2014-07-14');
