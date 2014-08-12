@@ -15,10 +15,10 @@
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
 
-class IndicatorClassificationIUS extends VisualizerAppModel {
+class VisualizerIndicatorClassificationIUS extends VisualizerAppModel {
 
 	public $useDbConfig = 'di6';
 	public $useTable = 'ut_indicator_classifications_ius';
-
+	public $alias = 'IndicatorClassificationIUS';
 
 }
