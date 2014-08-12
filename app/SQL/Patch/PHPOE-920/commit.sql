@@ -105,11 +105,15 @@ CREATE TABLE IF NOT EXISTS `datawarehouse_indicator_subgroups` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+SET @fieldOptionId := 0;
 
-INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`) VALUES ('71', 'Gender', 'Gender', 'Student', '71', '1', '1');
+SELECT MAX(`id`) + 1 INTO @fieldOptionId FROM `field_options`;
+SELECT @fieldOptionId;
 
-INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Male', '1', '1', '1', '0', '71', '1', '2014-07-14');
-INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL,'Female', '2', '1', '1', '0', '71', '1', '2014-07-14');
+INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`, `created`) VALUES (@fieldOptionId, 'Gender', 'Gender', 'Student', @fieldOptionId, '1', '1', NOW());
+
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Male', '1', '1', '1', '0', @fieldOptionId, '1', '2014-07-14');
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Female', '2', '1', '1', '0', @fieldOptionId, '1', '2014-07-14');
 
 ALTER TABLE `census_students` 
 RENAME TO  `census_students_bu` ;
@@ -142,8 +146,8 @@ CREATE TABLE IF NOT EXISTS `census_students` (
 
 SET @maleID := 0;
 SET @femaleID := 0;
-SELECT `id` INTO @maleID FROM `field_option_values` WHERE `field_option_id` = 71 AND `name` = 'Male';
-SELECT `id` INTO @femaleID FROM `field_option_values` WHERE `field_option_id` = 71 AND `name` = 'Female';
+SELECT `id` INTO @maleID FROM `field_option_values` WHERE `field_option_id` = @fieldOptionId AND `name` = 'Male';
+SELECT `id` INTO @femaleID FROM `field_option_values` WHERE `field_option_id` = @fieldOptionId AND `name` = 'Female';
 
 INSERT INTO census_students (`age`, `gender_id`, `value`, `student_category_id`, `education_grade_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 select age, @maleID, male, student_category_id, education_grade_id, institution_site_id, school_year_id, source, modified_user_id, modified, created_user_id, created 
