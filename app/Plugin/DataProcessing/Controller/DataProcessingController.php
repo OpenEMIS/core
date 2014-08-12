@@ -537,7 +537,7 @@ class DataProcessingController extends DataProcessingAppController {
                 $this->runJob(array('datawarehouse', 'run', $this->Session->read('configItem.language'), $areaLevelID, $schoolYearID));
             
                 $this->redirect(array('action'=>'processes'));
-
+                
             }
 		}
 		
