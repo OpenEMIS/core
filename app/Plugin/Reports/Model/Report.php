@@ -33,6 +33,13 @@ class Report extends ReportsAppModel {
 		}
 		return $data;
 	}
+
+	public function getCustomReportsWithIndicators($arrIds){
+		$datawarehouseIndicator = ClassRegistry::init('Datawarehouse.DatawarehouseIndicator');
+		$data = $datawarehouseIndicator->find('all',array('recursive'=>-1, 'conditions'=>array('id'=>$arrIds)));
+		
+		return $data;
+	}
 	
 	public function getQueuedRunningReport(){
 		$BatchProcess = ClassRegistry::init('DataProcessing.BatchProcess');
@@ -51,21 +58,28 @@ class Report extends ReportsAppModel {
 		}
 		$arr = $tmp;
 	}
-	public function processRequest($arrIds){
+	public function processRequest($arrIds, $indicator=true){
 		$this->fixCheckBoxVal($arrIds);
 		$BatchIndicator = ClassRegistry::init('BatchIndicator');
-		$data = $this->getReportsWithIndicators($arrIds);
+		$data = array();
+		if(!$indicator){
+			$data = $this->getCustomReportsWithIndicators($arrIds);
+		}else{
+			$data = $this->getReportsWithIndicators($arrIds);
+		}
 		$QR = $this->getQueuedRunningReport();
-		$this->insertToBatchProcess($data);
+
+		$this->insertToBatchProcess($data, $indicator);
 	}
 	
-	private function insertToBatchProcess($data){
+	private function insertToBatchProcess($data, $indicator){
 		$BatchProcess = ClassRegistry::init('BatchProcess');
 		$tmp = array();
 		
 		foreach($data as $k => $v){
 			$BatchProcess->create();
-			$tmp = array(
+			if($indicator){
+				$tmp = array(
 				'name'=>$v['Report']['name'],
 				//'file_name'=>  ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$v['Report']['category']).DS.$v['Report']['module'].DS.str_replace(' ', '_', $v['Report']['name']).'.'.$v['Report']['file_type'],
 				'start_date'=>date('Y-m-d H:i:s'),
@@ -74,6 +88,17 @@ class Report extends ReportsAppModel {
 				'reference_table' => 'reports',
 				'status'=>1
 				);
+			}else{
+				$tmp = array(
+					'name'=>$v['DatawarehouseIndicator']['name'],
+					//'file_name'=>  ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$v['Report']['category']).DS.$v['Report']['module'].DS.str_replace(' ', '_', $v['Report']['name']).'.'.$v['Report']['file_type'],
+					'start_date'=>date('Y-m-d H:i:s'),
+					'finish_date'=>'0000-00-00 00:00:00',
+					'reference_id' => $v['DatawarehouseIndicator']['id'],
+					'reference_table' => 'datawarehouse_indicators',
+					'status'=>1
+				);
+			}
 			$rec = $BatchProcess->save($tmp);
 			if(isset($rec['BatchProcess']['id'])){
 				$BatchProcess->id = $rec['BatchProcess']['id'];

@@ -346,12 +346,18 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
-		
 		'CensusGrid' => array(
 			'x_title' => 'Table Header',
 			'x_categories' => 'Columns',
 			'y_categories' => 'Rows',
 			'update_preview' => 'Update Preview'
+		),
+		'Datawarehouse' => array(
+			'indicator' => 'Indicator',
+			'unit' => 'Unit',
+			'module' => 'Module',
+			'function' => 'Function',
+			'dimensions' => 'Dimensions'
 		)
 	);
 	

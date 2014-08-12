@@ -65,7 +65,10 @@ echo $this->Form->create('DataProcessing', array(
 	'inputDefaults' => array('label' => false, 'div' => false),	
 	'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
 ));
-echo $this->element('select',array('plugin','DataProcessing'));
+echo $this->element('devinfo_select',array('plugin','DataProcessing'));
+
+
+
 foreach($data as $Nav => $arrModules){
 ?>
 
@@ -86,17 +89,18 @@ foreach($data as $Nav => $arrModules){
 			<tbody>
 				<?php foreach($arrv as $arrValues) {
 					$beingProc = 0;
-					$chkval = implode(',',array_keys($arrValues['file_kinds']));
+					/*$chkval = implode(',',array_keys($arrValues['file_kinds']));
 					foreach($arrValues['file_kinds'] as $kindsv) {
 						foreach($queued as $qK => $qV){
 							if(stristr($qV, str_replace(' ','_',$arrValues['name']).'.'.$kindsv)){
 								$beingProc = 1;
 							}
 						}
-					}
+					}*/
+					$chkval = $arrValues['id'];
 					$beingProc = ($isBackupRunning) ? 1: $beingProc;
-					$arrExtra = array('hiddenField' => false,'type'=>'checkbox','class' => 'icheck-input', 'name'=>'data[Reports][]','value'=>$chkval,'onchange'=>'toggleGenerate();');
-					$arrExtra = ($beingProc == 1)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
+					$arrExtra = array('hiddenField' => false,'type'=>'checkbox','class' => 'icheck-input', 'name'=>'data[Reports][]','value'=>$chkval,'onchange'=>'toggleGenerate();');;
+					$arrExtra = ($beingProc == 1)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra
 				?>
 				
 				<tr>
