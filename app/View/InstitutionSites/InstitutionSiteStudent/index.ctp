@@ -1,5 +1,4 @@
 <?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
@@ -10,15 +9,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'students_search');
 $this->assign('contentClass', 'search');
 $this->assign('contentHeader', __('List of Students'));
-$this->start('contentActions');
-if($_add_student) {
-	echo $this->Html->link(__('Add'), array('action' => 'studentsAdd', $selectedYear), array('class' => 'divider'));
-}
-$this->end();
 
 $this->start('contentBody');
 echo $this->Form->create('Student', array(
-	'url' => array('controller' => 'InstitutionSites', 'action' => 'students'),
+	'url' => array('controller' => 'InstitutionSites', 'action' => $model),
 	'inputDefaults' => array('label' => false, 'div' => false)
 )); 
 ?>
