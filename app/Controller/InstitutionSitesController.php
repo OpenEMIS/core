@@ -255,6 +255,9 @@ class InstitutionSitesController extends AppController {
     
 	public function advanced() {
         $key = 'InstitutionSite.AdvancedSearch';
+
+        $EducationProgramme = ClassRegistry::init('EducationProgramme');
+        $educationProgrammeOptions = $EducationProgramme->findList();
         if ($this->request->is('get')) {
             if ($this->request->is('ajax')) {
                 $this->autoRender = false;
@@ -309,9 +312,11 @@ class InstitutionSitesController extends AppController {
             }
             $this->redirect(array('action' => 'index'));
         }
+
+        $this->set(compact('educationProgrammeOptions'));
     }
         
-    	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
+	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
              $this->layout = false;
              $arrSettings = array(
                                                             'CustomField'=>$customfields.'CustomField',
