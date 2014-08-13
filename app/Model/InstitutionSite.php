@@ -595,6 +595,7 @@ class InstitutionSite extends AppModel {
                             foreach($arrAdvanced as $key => $advanced){
                                //echo $key;
                                 if($key == 'Search'){
+                                	$joins = array();
                                     if($advanced['area_id'] > 0) { // search by area and all its children
                                             $joins = array(
                                                     array(
@@ -608,21 +609,29 @@ class InstitutionSite extends AppModel {
                                                             'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['area_id'])
                                                     )
                                             );
-                                            $dbo = $this->getDataSource();
-                                            $query = $dbo->buildStatement(array(
-                                                    'fields' => array('InstitutionSite.id'),
-                                                    'table' => 'institution_sites',
-                                                    'alias' => 'InstitutionSite',
-                                                    'limit' => null, 
-                                                    'offset' => null,
-                                                    'joins' => $joins,
-                                                    //'conditions' => array('InstitutionSite.institution_id = Institution.id'),
-                                                    'group' => array('InstitutionSite.id'),
-                                                    'order' => null
-                                            ), $this);
-                                            //pr($query);
-                                            $conditions[] = 'InstitutionSite.id IN (' . $query . ')';
                                     }
+									if($advanced['education_programme_id'] > 0) { 
+										$joins[] = array(
+											'table' => 'institution_site_programmes',
+											'alias' => 'InstitutionSiteProgramme',
+											'conditions' => array('InstitutionSiteProgramme.institution_site_id = InstitutionSite.id', 'InstitutionSiteProgramme.education_programme_id = ' . $advanced['education_programme_id'])
+										);
+									}
+                                    $dbo = $this->getDataSource();
+                                    $query = $dbo->buildStatement(array(
+                                            'fields' => array('InstitutionSite.id'),
+                                            'table' => 'institution_sites',
+                                            'alias' => 'InstitutionSite',
+                                            'limit' => null, 
+                                            'offset' => null,
+                                            'joins' => $joins,
+                                            //'conditions' => array('InstitutionSite.institution_id = Institution.id'),
+                                            'group' => array('InstitutionSite.id'),
+                                            'order' => null
+                                    ), $this);
+                                    //pr($query);
+                                    $conditions[] = 'InstitutionSite.id IN (' . $query . ')';
+
                                 }
                                 /*
                                  * 
