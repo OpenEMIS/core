@@ -30,9 +30,13 @@ $this->start('contentBody');
 			<?php  
 			if($fileType === 'csv'){
 			?>
-				<td class="col_lastgen center">
+				<td class="table_cell col_lastgen center">
+					<?php if(!$arrFileInfo['lock']){ ?>
 					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>, 
 					<?php echo $this->Html->link('HTML', array('action' => $this->action.'ViewHtml', $arrFileInfo['basename']), array('escape' => false, 'target' => '_blank')); ?>
+					<?php }else {
+						echo __($this->Label->get('DataProcessing.processing'));
+					} ?>
 				</td>
 			<?php 
 			}else{

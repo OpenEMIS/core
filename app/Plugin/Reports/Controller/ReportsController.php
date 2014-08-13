@@ -1084,6 +1084,12 @@ class ReportsController extends ReportsAppController {
 			$info['time'] = date($this->DateTime->getConfigDateFormat()." H:i:s",$time);
 			$info['size'] = $this->convFileSize($info['filesize']);
 			//pr($info);
+			$info['lock'] = false;
+			$fp = fopen($file->path, "r");
+
+			if (!flock($fp, LOCK_SH | LOCK_NB)) { // acquire an exclusive lock
+			    $info['lock'] = true;
+			}
 			
 			$this->parseFilename($info);
 			
