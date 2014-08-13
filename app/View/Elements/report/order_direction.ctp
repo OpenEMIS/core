@@ -1,4 +1,4 @@
-    <fieldset>
+    <fieldset class="section_break">
         <legend><?php echo __d('report_manager','Order Direction'); ?></legend>
         <table class="reportManagerOrderDirectionSelector" cellpadding="0" cellspacing="0">
 	<?php
@@ -8,7 +8,7 @@
             );
             echo '<tr>';         
             echo '<td>';
-            echo $this->Form->input('OrderDirection',array('type'=>'select','options'=>$directionOptions,'label'=>false));            
+            echo $this->Form->input('OrderDirection',array('type'=>'select','options'=>$directionOptions,'label'=>false, 'class'=>'form-control'));            
             echo '</td>';             
             echo '</tr>';
         ?>

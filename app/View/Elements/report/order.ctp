@@ -1,4 +1,4 @@
-    <fieldset>
+    <fieldset class="section_break">
         <legend><?php echo $modelClass; ?></legend>
         <table class="reportManagerOrderSelector" cellpadding="0" cellspacing="0">
             <thead>
@@ -20,6 +20,7 @@
                         'legend'=>false,
                         'label'=>'',
                         'type'=>'radio',
+						'class' => '',
                         'default'=>( isset($this->data['Report']['OrderBy1']) && $this->data['Report']['OrderBy1'] == $modelClass.'.'.$field ? $modelClass.'.'.$field : ''),
                         'hiddenField' => false,
                         'options'=>array($modelClass.'.'.$field => ''))
@@ -30,6 +31,7 @@
                     array('name'=>'data[Report][OrderBy2]',
                         'legend'=>false,
                         'label'=>'',
+						'class' => '',
                         'type'=>'radio',
                         'default'=>( isset($this->data['Report']['OrderBy2']) && $this->data['Report']['OrderBy2'] == $modelClass.'.'.$field ? $modelClass.'.'.$field : ''),
                         'hiddenField' => false,
