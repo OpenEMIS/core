@@ -123,6 +123,90 @@ class Excel {
             $this->xlsEOF();
         endif;                 
     }
+	
+	public function buildXlsCustom(&$reportData = array(), &$fieldList = array(), &$fieldsType = array(), &$oneToManyOption = null, &$oneToManyFieldsList = null, &$oneToManyFieldsType = null, &$showNoRelated = false, &$recursive = null, &$fieldList = null, &$order = null, &$conditions = null, &$totalRows = null, &$rowsPerPage = null, &$modelClass = null) {
+		$this->sendHeaders();
+		$row = 0;
+		$col = 0;
+
+		$model = ClassRegistry::init($modelClass);
+		$totalPages = ceil($totalRows / $rowsPerPage);
+		if ($totalPages >= 1) {
+			$this->xlsBOF();
+
+			for ($i = 1; $i <= $totalPages; $i++) {
+				$reportData = $model->find('all', array(
+					'recursive' => $recursive,
+					'fields' => $fieldList,
+					'order' => $order,
+					'conditions' => $conditions,
+					'limit' => $rowsPerPage,
+					'offset' => (($i - 1) * $rowsPerPage),
+				));
+
+				if (!empty($reportData)) {
+					foreach ($reportData as $reportItem):
+						if ($oneToManyOption != '' && !$showNoRelated && count($reportItem[$oneToManyOption]) == 0)
+							continue;
+						if ($row == 0) {
+							$col = 0;
+							foreach ($fieldList as $field):
+								$modelClass = substr($field, 0, strpos($field, '.'));
+								$modelClass = Inflector::humanize(Inflector::underScore($modelClass));
+								$displayField = substr($field, strpos($field, '.') + 1);
+								$displayField = str_replace('_', ' ', $displayField);
+								$displayField = $modelClass . ' ' . ucfirst($displayField);
+								$this->xlsWriteLabel($row, $col, utf8_decode($displayField));
+								$col++;
+							endforeach;
+							$row++;
+						}
+						$col = 0;
+						foreach ($fieldList as $field):
+							$params = explode('.', $field);
+							if ($fieldsType[$field] == 'float') {
+								$this->xlsWriteNumber($row, $col, utf8_decode($reportItem[$params[0]][$params[1]]));
+							}
+							else
+								$this->xlsWriteLabel($row, $col, utf8_decode($reportItem[$params[0]][$params[1]]));
+							$col++;
+						endforeach;
+						$row++;
+						if ($oneToManyOption != '') {
+							if (count($reportItem[$oneToManyOption]) > 0) {
+								$row++;
+								$col = 1;
+								foreach ($oneToManyFieldsList as $field):
+									$displayField = substr($field, strpos($field, '.') + 1);
+									$displayField = str_replace('_', ' ', $displayField);
+									$displayField = ucfirst($displayField);
+									$this->xlsWriteLabel($row, $col, utf8_decode($displayField));
+									$col++;
+								endforeach;
+								$row++;
+								foreach ($reportItem[$oneToManyOption] as $oneToManyReportItem):
+									$col = 1;
+									foreach ($oneToManyFieldsList as $field):
+										$params = explode('.', $field);
+										if ($oneToManyFieldsType[$field] == 'float') {
+											$this->xlsWriteNumber($row, $col, utf8_decode($oneToManyReportItem[$params[1]]));
+										}
+										else
+											$this->xlsWriteLabel($row, $col, utf8_decode($oneToManyReportItem[$params[1]]));
+										$col++;
+									endforeach;
+									$row++;
+								endforeach;
+								$row++;
+							};
+						};
+					endforeach;
+				}
+			}
+
+			$this->xlsEOF();
+		}
+	}
     
 }
 ?>

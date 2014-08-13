@@ -21,7 +21,7 @@
 <head>
 <?php echo $this->Html->charset(); ?>
 <title>
-    <?php echo __($pageTitleReport); ?>
+    <?php echo isset($pageTitleReport) ? __($pageTitleReport) : ''; ?>
 </title>
 <?php
     echo $this->Html->meta('icon');
