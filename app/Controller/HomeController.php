@@ -265,6 +265,7 @@ class HomeController extends AppController {
 			'thousands' => ',',
 		));
 	}
+	
 	public function getLatestActivities(){
 		$this->autoLayout = false;
 		$query = '';
@@ -273,46 +274,46 @@ class HomeController extends AppController {
 		// $dbo = $this->getDataSource();
 		
 		$limit = 7;
-				$data = array();
-				foreach ($this->tableCounts as $key => $element) {
-					foreach($element as $Model => $tablename){
-						$this->logtimer('Start '.$Model);
-						$sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
-						if($this->debug) echo "<br><br>".$sql;
-						$recs = $this->{$Model}->query($sql);
-						$data[$Model] = $recs;
-						$this->logtimer('End '.$Model);
-					}
-					
+		$data = array();
+		foreach ($this->tableCounts as $key => $element) {
+			foreach($element as $Model => $tablename){
+				$this->logtimer('Start '.$Model);
+				$sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
+				if($this->debug) echo "<br><br>".$sql;
+				$recs = $this->{$Model}->query($sql);
+				$data[$Model] = $recs;
+				$this->logtimer('End '.$Model);
+			}
+			
+		}
+		$activities = array();
+		
+		foreach($data as $tableName => &$arrVal){
+			$action = (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
+			
+			foreach($arrVal as $krec => &$vrec ){
+				if($action == 'Edited'){
+					$parentTable = str_replace('History','',$tableName);
+					$foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
+					$rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
+					if(!$rec) $action = 'Deleted';
 				}
-				$activities = array();
-				
-				foreach($data as $tableName => &$arrVal){
-					$action =  (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
-					
-					foreach($arrVal as $krec => &$vrec ){
-						if($action == 'Edited'){
-							$parentTable = str_replace('History','',$tableName);
-							$foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
-							$rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
-							if(!$rec) $action = 'Deleted';
-						}
-						$vrec['t']['user_first_name'] = $vrec['su']['first_name'];
-						$vrec['t']['user_last_name'] = $vrec['su']['last_name'];
-						$vrec['t']['action'] = $action;
-						$tableName = str_ireplace('history','', $tableName);
-						$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
-						$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
-						$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
-						$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
-					}
-				}
-				krsort($activities);
-				$activities = array_slice($activities, 0, $limit);
-				$this->logtimer('END');
-				$this->logtimer('Start lastest Activities');
+				$vrec['t']['user_first_name'] = $vrec['su']['first_name'];
+				$vrec['t']['user_last_name'] = $vrec['su']['last_name'];
+				$vrec['t']['action'] = $action;
+				$tableName = str_ireplace('history','', $tableName);
+				$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
+				$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
+				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+				$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
+			}
+		}
+		krsort($activities);
+		$activities = array_slice($activities, 0, $limit);
+		$this->logtimer('END');
+		$this->logtimer('Start lastest Activities');
 		$this->set('latestActivities', $activities);
-				$this->logtimer('End lastest Activities');
+		$this->logtimer('End lastest Activities');
 	}
 
 	private function checkActivityDeleteStatus($obj) {
