@@ -62,11 +62,10 @@ class CsvTask extends AppTask {
 	//	pr($arrTpl);die;
 		$type = 'w+';
         $this->fileFP = fopen($path.$filename, $type);
- 		if (flock($this->fileFP, LOCK_EX)) {
-			$header = implode(',',$arrTpl);
-			if(!empty($header)){
-				fputs ($this->fileFP, implode(',',$arrTpl)."\n");
-			}
+ 		
+		$header = implode(',',$arrTpl);
+		if(!empty($header)){
+			fputs ($this->fileFP, implode(',',$arrTpl)."\n");
 		}
 	}
 	
@@ -174,30 +173,31 @@ class CsvTask extends AppTask {
 		$arrCount = $this->Common->getCountCustom($settings['reportId']);
 		$recusive = ceil($arrCount['total'] / $this->limit);
 		$this->prepareCSV($settings);
-		for($i=0;$i<$recusive;$i++){
-			$sql = $settings['sql'];
-			$offset = ($this->limit*$i);
-			$offsetStr = $offset;
-			$offsetStr = (string)$offsetStr;
-			//str_replace('all',)
-			$cond = '\'offset\'=>'.$offset.',\'limit\'=>$this->limit';
-			$sql = str_replace('{cond}',$cond,$sql);
-			try{
-				eval($sql);
-			} catch (Exception $e) {
-				// Update the status for the Processed item to (-1) ERROR
-				$errLog = $e->getMessage();
-				$this->Common->updateStatus($procId,'-1');
-				$this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
+		if (flock($this->fileFP, LOCK_EX)) {
+			for($i=0;$i<$recusive;$i++){
+				$sql = $settings['sql'];
+				$offset = ($this->limit*$i);
+				$offsetStr = $offset;
+				$offsetStr = (string)$offsetStr;
+				//str_replace('all',)
+				$cond = '\'offset\'=>'.$offset.',\'limit\'=>$this->limit';
+				$sql = str_replace('{cond}',$cond,$sql);
+				try{
+					eval($sql);
+				} catch (Exception $e) {
+					// Update the status for the Processed item to (-1) ERROR
+					$errLog = $e->getMessage();
+					$this->Common->updateStatus($procId,'-1');
+					$this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
+				}
+	                        
+                if(empty($settings['custom3LayerFormat']) || !$settings['custom3LayerFormat']){
+                    $this->Common->formatData($data);//pr($data);
+                }
+				$this->writeCSV($data, $settings);
+				echo json_encode(array('processed_records'=>($offset+$this->limit),'batch'=>($i+1)));
 			}
-                        
-                        if(empty($settings['custom3LayerFormat']) || !$settings['custom3LayerFormat']){
-                            $this->Common->formatData($data);//pr($data);
-                        }
-			$this->writeCSV($data, $settings);
-			echo json_encode(array('processed_records'=>($offset+$this->limit),'batch'=>($i+1)));
 		}
-		
 		$this->closeCSV();
     }
 }
