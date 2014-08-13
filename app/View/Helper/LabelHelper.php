@@ -255,7 +255,8 @@ class LabelHelper extends AppHelper {
 			'process' => 'Processes',
 			'export' => 'Export',
 			'generate' => 'Generate',
-			'custom_indicators' => 'Custom Indicators'
+			'custom_indicators' => 'Custom Indicators',
+			'processing' => 'Processing'
 		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
