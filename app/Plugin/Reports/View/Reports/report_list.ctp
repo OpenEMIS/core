@@ -19,35 +19,37 @@ $this->start('contentBody');
 			<th class="col_name"><?php echo __('Generated'); ?></th>
 		</tr>
 	</thead>
-	<?php foreach($files as $fileType => $arrV){ ?>
+	<?php foreach($files as $fileType => $arrV): ?>
 	
 	<tbody>
-	<?php foreach($arrV as $time => $arrFileInfo){	?>
+	<?php foreach($arrV as $time => $arrFileInfo):	?>
 	
 		<tr row-id="<?php echo $arrFileInfo['basename'];?>">
 			<td class="col_name"><?php echo __($arrFileInfo['name']); ?></td>
 			<td class="col_name center"><?php echo $arrFileInfo['size'];?></td>
 			<?php  
-			if($fileType === 'csv'){
+			if($fileType === 'csv'):
 			?>
 				<td class="col_lastgen center">
 					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>, 
 					<?php echo $this->Html->link('HTML', array('action' => $this->action.'ViewHtml', $arrFileInfo['basename']), array('escape' => false, 'target' => '_blank')); ?>
 				</td>
 			<?php 
-			}else{
+			else:
 			?>
-				<td class="col_lastgen center"><?php echo $fileType;?></td>
+				<td class="col_lastgen center">
+					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>
+				</td>
 			<?php 
-			}
+			endif;
 			?>
 			<td class="col_name"><?php echo $arrFileInfo['time'];?></td>  
 		</tr>
 	
-	<?php } ?>
+	<?php endforeach; ?>
 	</tbody>
 	
-	<?php } ?>
+	<?php endforeach; ?>
 </table>
 </div>
 <?php } ?>
