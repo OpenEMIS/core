@@ -86,10 +86,8 @@ class CensusStaff extends AppModel {
 		$this->formatResult = true;
 		
 		$fieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderRecord = $fieldOptionValue->find('first', array('conditions' => array('name' => 'Male')));
-		$maleGenderId = $maleGenderRecord['FieldOptionValue']['id'];
-		$femaleGenderRecord = $fieldOptionValue->find('first', array('conditions' => array('name' => 'Female')));
-		$femaleGenderId = $femaleGenderRecord['FieldOptionValue']['id'];
+		$maleGenderId = $fieldOptionValue->getGenderIdByName('Male');
+		$femaleGenderId = $fieldOptionValue->getGenderIdByName('Female');
 		
 		$optionsMale = array(
 			'recursive' => -1,
@@ -151,10 +149,8 @@ class CensusStaff extends AppModel {
 		$this->formatResult = true;
 		
 		$fieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderRecord = $fieldOptionValue->find('first', array('conditions' => array('name' => 'Male')));
-		$maleGenderId = $maleGenderRecord['FieldOptionValue']['id'];
-		$femaleGenderRecord = $fieldOptionValue->find('first', array('conditions' => array('name' => 'Female')));
-		$femaleGenderId = $femaleGenderRecord['FieldOptionValue']['id'];
+		$maleGenderId = $fieldOptionValue->getGenderIdByName('Male');
+		$femaleGenderId = $fieldOptionValue->getGenderIdByName('Female');
 		
 		$optionsMale = array(
 			'recursive' => -1,
