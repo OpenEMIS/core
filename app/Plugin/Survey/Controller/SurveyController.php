@@ -61,7 +61,6 @@ class SurveyController extends SurveyAppController {
 	
 	public $category = array( //parameter passed to Category Dropdown
 									'Institution',
-									'InstitutionSite',
 									'Student',
 									//'Teacher',
 									'Staff');
@@ -158,13 +157,14 @@ class SurveyController extends SurveyAppController {
 	//============================================================================================================================================
 	private function fixData(&$arrdata){
 		$topCnt = 1;
-		
 		foreach($arrdata as $k1 => &$value){
 			$secCnt = 0;
 			foreach($value as $k => $v){
 				if(isset($v['order'])){
 					$arrdata[$k1][$k]['order'] = ''.$secCnt;
 					$secCnt++;
+				}else{
+					continue;
 				}
 				
 				if($k!='order'){
@@ -227,15 +227,12 @@ class SurveyController extends SurveyAppController {
 			if (isset($_POST['CancelButton'])) {
 				$this->redirect(array('controller' => 'Survey', 'action' => 'index'));
 			}else{
-				$myYear = $this->request->data['year'];
-				$myCategory = $this->request->data['category'];
-				$mySiteID = $this->request->data['siteTypes'];
-				$name = $this->request->data['filename'];
-				unset($this->request->data['SaveButton']);
-				unset($this->request->data['year']);
-				unset($this->request->data['category']);
-				unset($this->request->data['siteTypes']);
 				$details = array_shift($this->request->data);
+				unset($this->request->data['SaveButton']);
+				$myYear = $details['year'];
+				$myCategory = $details['category'];
+				$mySiteID = $details['siteTypes'];
+				$name = $details['filename'];
 				$this->fixData($this->request->data);
 				$file = $name;
 				// Fill Code,Year,Category,SiteType into Json File
@@ -247,7 +244,7 @@ class SurveyController extends SurveyAppController {
 				$this->request->data = array_merge($this->request->data ,$arrCat);
 				$this->JSON->prepareJSONFile($file);
 				$this->JSON->createJSONFile($this->request->data);
-				$this->redirect(array('plugin'=>'Survey', 'action' => 'index'));
+				$this->redirect(array('action' => 'index'));
 			}
 		}
 		
@@ -258,7 +255,7 @@ class SurveyController extends SurveyAppController {
 			}
 		}
 		
-		if($catID>1){
+		if($catID>0){
 			$mySiteID = 2;
 		}
 		
@@ -270,7 +267,10 @@ class SurveyController extends SurveyAppController {
 		$this->set('name',$name);
 		$this->set('myYear' , $myYear);
 		$this->set('myCategory' , $myCategory);
+		$this->set('myCatID' , $catID);
 		$this->set('mySiteID',$mySiteID);
+		$sitetypes = $this->InstitutionSiteType->getSiteTypesList();
+		$this->set('mySiteType',  $sitetypes[$mySiteID]);
 	}
 	
 	private function parseSurveyOEX($name){		
@@ -322,16 +322,18 @@ class SurveyController extends SurveyAppController {
 	
 	
 	public function download($filename){
+
         if($filename == '' ){
             die();
         }else{
 			$this->getReportFilesPath();
+			$fileWithoutExt = preg_replace('/\\.[^.\\s]{3,4}$/', '', $filename);
 			$info['basename'] = $filename;
             $this->viewClass = 'Media';
             // Download app/outside_webroot_dir/example.zip
             $params = array(
                 'id'        => $filename,
-                'name'      => $filename,
+                'name'      => $fileWithoutExt,
                 'download'  => true,
                 'extension' => '',
                 //'path'      => APP . 'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS
@@ -403,7 +405,7 @@ class SurveyController extends SurveyAppController {
 				if($details['filename']!=''){ // If user has own custom filename to use
 					$file = $details['filename'].'.json';
 				}else{ // Otherwise use default filename
-					if($details['category']!=1){
+					if($details['category']!=0){
 					$file = $details['year'].'_'.$this->category[$details['category']].'.json';
 					}else{
 						$file = $details['year'].'_'.$this->category[$details['category']].'_'.$arr[$details['siteTypes']].'.json';
@@ -419,11 +421,11 @@ class SurveyController extends SurveyAppController {
 				$this->request->data = array_merge($this->request->data ,$arrCat);
 				$this->JSON->prepareJSONFile($file);
 				$this->JSON->createJSONFile($this->request->data);
-				$this->redirect(array('plugin'=>'Survey', 'action' => 'index'));
+				$this->redirect(array('action' => 'index'));
 			}
 		}
 		//Tables
-		$arr = array('catID'=> '1', 'siteID'=>'2');
+		$arr = array('catID'=> '0', 'siteID'=>'2');
 		$arrayQuestions = $this->SurveyCategory->getCategoryQuestion($arr);
 		
 		$sitetypes = $this->InstitutionSiteType->getSiteTypesList();
