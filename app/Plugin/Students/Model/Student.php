@@ -105,5 +105,29 @@ class Student extends StudentsAppModel {
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
 		return $this->getPaginateCount($conditions, $recursive, $extra);
 	}
+	
+	// used by InstitutionSiteStudent
+	public function autocomplete($search) {
+		$search = '%' . $search . '%';
+		
+		$conditions = array(
+			'OR' => array(
+				$this->alias . '.identification_no LIKE' => $search,
+				$this->alias . '.first_name LIKE' => $search,
+				$this->alias . '.middle_name LIKE' => $search,
+				$this->alias . '.last_name LIKE' => $search
+			)
+		);
+		$options = array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array($this->alias . '.first_name')
+		);
+		
+		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'gender', 'identification_no', 'date_of_birth');
+		$data = $this->find('all', $options);
+		
+		return $data;
+	}
 }
 ?>
