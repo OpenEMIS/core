@@ -16,7 +16,7 @@ var Survey = {
 			url: getRootURL() + 'Survey/filter/'+resp,
 			data: {schoolYear:sy,siteType:st,category:sc},
 			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textLoading});
+				maskId = $.mask({parent: '#divSurvey', text: i18n.General.textLoading});
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
@@ -32,23 +32,21 @@ var Survey = {
 		var maskId;
 		var id = document.getElementById("siteTypes").value;
 		var catid = document.getElementById("category").value;
-		if(catid!=1){
-			document.getElementById("SiteTypeDDL").style.display = 'none';
+		if(catid!=0){
+			$('.SiteTypeDDL').addClass('hide');
 		}else{
-			document.getElementById("SiteTypeDDL").style.display = 'block';
+			$('.SiteTypeDDL').removeClass('hide');
 		}
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
 			url: getRootURL() + 'Survey/sitetypechange/',
 			data: {siteId: id, catId: catid},
-			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textLoading});
-			},
+			beforeSend: function (jqXHR) { $("#questionOps").empty(); maskId = $.mask({parent: '#divSurvey'}); },
 			success: function (data, textStatus) {
 				var callback = function() {
 					$("#questionOps").html(data);
-			   		jsForm.attachHoverOnClickEvent();
+			   		//jsForm.attachHoverOnClickEvent();
 				};
 				$.unmask({id: maskId, callback: callback});
 			}	
@@ -201,13 +199,11 @@ var Survey = {
 		var category = document.getElementById('category').value;
 		var year = document.getElementById('year').value;
 		var catName = "Institution";
-		if(category==1){ catName = "InstitutionSite"; }
-		if(category==2){ catName = "Student"; }
-		if(category==3){ catName = "Teacher"; }
-		if(category==4){ catName = "Staff"; }
+		if(category==1){ catName = "Student"; }
+		if(category==2){ catName = "Staff"; }
 		
 		if(surveyName==""){
-			if(category!=1){
+			if(category!=0){
 				surveyName = year+'_'+catName+'.json';
 			}else{
 				var siteType = document.getElementById("newSkill");
