@@ -85,9 +85,8 @@ class CensusStaff extends AppModel {
 	public function getCountByCycleId($yearId, $cycleId) {
 		$this->formatResult = true;
 		
-		$fieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderId = $fieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $fieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 		
 		$optionsMale = array(
 			'recursive' => -1,
@@ -148,9 +147,8 @@ class CensusStaff extends AppModel {
 	public function getCountByAreaId($yearId, $areaId) {
 		$this->formatResult = true;
 		
-		$fieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderId = $fieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $fieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 		
 		$optionsMale = array(
 			'recursive' => -1,

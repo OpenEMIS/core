@@ -32,7 +32,11 @@ class CensusStudent extends AppModel {
 		'SchoolYear',
 		'EducationGrade',
 		'StudentCategory',
-		'InstitutionSite'
+		'InstitutionSite',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -191,9 +195,8 @@ class CensusStudent extends AppModel {
 	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
 		$this->formatResult = true;
 		
-		$fieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderId = $fieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $fieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 		
 		$optionsMale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS M'));
 		$optionsFemale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS F'));
@@ -276,10 +279,9 @@ class CensusStudent extends AppModel {
 	
 	public function getCountByAreaId($yearId, $areaId) {
 		$this->formatResult = true;
-		
-		$fieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderId = $fieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $fieldOptionValue->getGenderIdByName('Female');
+
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 		
 		$optionsMale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS M'));
 		$optionsFemale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS F'));
@@ -412,7 +414,7 @@ class CensusStudent extends AppModel {
 				
 				$enrolment = array();
 				if(!empty($gradeList)) {
-					$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+					//$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
 				} else {
 					$gradeList[0] = '-- ' . __('No Grade') . ' --';
 				}
