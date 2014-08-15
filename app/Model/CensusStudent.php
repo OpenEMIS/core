@@ -414,7 +414,7 @@ class CensusStudent extends AppModel {
 				
 				$enrolment = array();
 				if(!empty($gradeList)) {
-					//$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+					$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
 				} else {
 					$gradeList[0] = '-- ' . __('No Grade') . ' --';
 				}

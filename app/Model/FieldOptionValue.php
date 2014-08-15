@@ -142,26 +142,10 @@ class FieldOptionValue extends AppModel {
 		$alias = $this->alias;
 		
 		$result = $this->find('first', array(
-			'recursive' => -1,
-			'joins' => array(
-				array(
-					'table' => 'field_options',
-					'alias' => 'FieldOption',
-					'conditions' => array(
-						'FieldOption.id = ' . $alias . '.field_option_id',
-						"FieldOption.code = '" . $alias . "'"
-					)
-				)
-			),
-			'conditions' => array($alias.'.name' => $name),
-			'order' => array($alias.'.order')
+			'conditions' => array($alias.'.name' => $name, 'FieldOption.code' => $alias)
 		));
 		
-		if(!empty($result)){
-			return $result[$alias]['id'];
-		}else{
-			return NULL;
-		}
+		return !empty($result) ? $result[$alias]['id'] : NULL;
 	}
 }
 ?>
