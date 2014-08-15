@@ -34,4 +34,13 @@ UPDATE `institution_site_students` SET `student_status_id` = (SELECT `id` from `
 
 UPDATE `navigations` SET `action` = 'InstitutionSiteStudent', `pattern` = 'InstitutionSiteStudent' WHERE `controller` = 'InstitutionSites' AND `action` = 'students';
 
+ALTER TABLE `institution_site_students` ADD `institution_site_id` INT( 11 ) NOT NULL AFTER `student_status_id` , ADD INDEX ( `institution_site_id` ) ;
+ALTER TABLE `institution_site_students` ADD `education_programme_id` INT( 11 ) NOT NULL AFTER `institution_site_id` , ADD INDEX ( `education_programme_id` ) ;
+
+UPDATE `institution_site_students`
+JOIN `institution_site_programmes`
+	ON `institution_site_programmes`.`id` = `institution_site_students`.`institution_site_programme_id`
+SET `institution_site_students`.`institution_site_id` = `institution_site_programmes`.`institution_site_id`,
+`institution_site_students`.`education_programme_id` = `institution_site_programmes`.`education_programme_id`;
+
 -- add security function for new link

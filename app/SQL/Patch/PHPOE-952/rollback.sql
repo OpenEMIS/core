@@ -14,3 +14,6 @@ UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @ordering;
 UPDATE `navigations` SET `action` = 'add', `pattern` = 'add$' WHERE `controller` = 'Students' AND `action` = 'create';
 UPDATE `security_functions` SET `_add` = 'add' WHERE `controller` = 'Students' AND `category` = 'General' AND `_add` = 'create';
 UPDATE `navigations` SET `action` = 'students', `pattern` = 'students' WHERE `controller` = 'InstitutionSites' AND `action` = 'InstitutionSiteStudent';
+
+ALTER TABLE `institution_site_students` DROP `institution_site_id` ;
+ALTER TABLE `institution_site_students` DROP `education_programme_id` ;

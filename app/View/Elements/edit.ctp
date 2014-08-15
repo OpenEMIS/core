@@ -8,7 +8,7 @@ foreach($fields as $key => $field) {
 	if ($visible) {
 		$fieldModel = array_key_exists('model', $field) ? $field['model'] : $model;
 		$fieldName = $fieldModel . '.' . $key;
-		$options = array();
+		$options = isset($field['attr']) ? $field['attr'] : array();
 		$label = $this->Label->getLabel2($fieldModel, $key, $field);
 		if(!empty($label)) {
 			$options['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
@@ -21,7 +21,7 @@ foreach($fields as $key => $field) {
 				if (isset($field['options'])) {
 					$options['value'] = $field['options'][$this->request->data[$fieldModel][$key]];
 				}
-				echo $this->Form->hidden($fieldName);
+				//echo $this->Form->hidden($fieldName);
 				break;
 				
 			case 'select':

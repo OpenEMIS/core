@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-
+App::uses('Sanitize', 'Utility');
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
@@ -21,7 +21,9 @@ class InstitutionSiteStudent extends AppModel {
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
-		)
+		),
+		'DatePicker' => array('start_date', 'end_date'),
+		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
 	
 	public $validate = array(
@@ -32,7 +34,14 @@ class InstitutionSiteStudent extends AppModel {
 				'message' => 'Please enter a OpenEMIS ID or name.'
 			)
 		),
-		'institution_site_programme_id' => array(
+		'institution_site_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Institution.'
+			)
+		),
+		'education_programme_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
@@ -41,12 +50,14 @@ class InstitutionSiteStudent extends AppModel {
 		)
 	);
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'StudentStatus' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'student_status_id'
 		),
-		'InstitutionSiteProgramme'
+		//'InstitutionSiteProgramme'
+		'EducationProgramme',
+		'InstitutionSite'
 	);
 	
 	public $reportMapping = array(
@@ -117,6 +128,183 @@ class InstitutionSiteStudent extends AppModel {
 		)
 	);
 	
+	public function beforeAction() {
+		parent::beforeAction();
+		
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$this->fields['institution'] = array(
+			'type' => 'disabled',
+			'value' => $this->Session->read('InstitutionSite.data.InstitutionSite.name'),
+			'visible' => true
+		);
+		$this->setFieldOrder('institution', 1);
+		
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		
+		$yearOptions = $SchoolYear->find('list', array('order' => array('order')));
+		$this->fields['year'] = array(
+			'type' => 'select',
+			'options' => $yearOptions,
+			'visible' => true,
+			'attr' => array('onchange' => "$('#reload').click()")
+		);
+		$this->setFieldOrder('year', 2);
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
+		$this->fields['student_id']['type'] = 'hidden';
+		$this->fields['student_id']['attr'] = array('class' => 'student_id');
+		$this->fields['student_status_id']['type'] = 'select';
+		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
+		$this->fields['institution_site_id']['type'] = 'hidden';
+		$this->fields['institution_site_id']['value'] = $institutionSiteId;
+		$this->fields['education_programme_id']['type'] = 'select';
+		$this->fields['institution_site_programme_id']['visible'] = false; // to be remove after column dropped
+		
+		if ($this->action == 'add') {
+			if ($this->request->is('get')) {
+				$yearId = key($yearOptions);
+				$yearObj = $SchoolYear->findById($yearId);
+				$startDate = $yearObj['SchoolYear']['start_date'];
+				$endDate = $yearObj['SchoolYear']['end_date'];
+				$date = new DateTime($startDate);
+				$date->add(new DateInterval('P1D')); // plus 1 day
+				
+				$this->fields['start_date']['attr'] = array(
+					'startDate' => $startDate,
+					'endDate' => $endDate,
+					'data-date' => $startDate
+				);
+				$this->fields['end_date']['attr'] = array(
+					'startDate' => $date->format('d-m-Y'),
+					'data-date' => $date->format('d-m-Y')
+				);
+				$programmeOptions = $this->EducationProgramme->getProgrammeOptionsByInstitution($institutionSiteId, $yearId);
+				$this->fields['education_programme_id']['options'] = $programmeOptions;
+			}
+		}
+	}
+	
+	public function index() {
+		$this->Navigation->addCrumb('List of Students');
+		$params = $this->controller->params;
+		$page = isset($params->named['page']) ? $params->named['page'] : 1;
+
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'Student.first_name';
+		$order = 'asc';
+		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
+		$statusOptions = $this->StudentStatus->getList();
+		
+		$prefix = 'InstitutionSiteStudent.Search.%s';
+		if ($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->request->data['Student']['SearchField']));
+			$selectedYear = $this->request->data['Student']['school_year'];
+			$selectedProgramme = $this->request->data['Student']['education_programme_id'];
+			$selectedStatus = $this->request->data['Student']['student_status_id'];
+			$orderBy = $this->request->data['Student']['orderBy'];
+			$order = $this->request->data['Student']['order'];
+
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
+			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
+			$this->Session->write(sprintf($prefix, 'StudentStatusId'), $selectedStatus);
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
+			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
+			$selectedStatus = $this->Session->read(sprintf($prefix, 'StudentStatusId'));
+
+			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if ($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
+		}
+		$conditions = array('institution_site_id' => $institutionSiteId, 'order' => array($orderBy => $order));
+		$conditions['search'] = $searchField;
+		if (!empty($selectedYear)) {
+			$conditions['year'] = $selectedYear;
+		}
+
+		if (!empty($selectedProgramme)) {
+			$conditions['education_programme_id'] = $selectedProgramme;
+		}
+
+		if (!empty($selectedStatus)) {
+			$conditions['student_status_id'] = $selectedStatus;
+		}
+		
+		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100);
+		$data = $this->controller->paginate($this->alias, $conditions);
+
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
+		
+		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data', 'statusOptions'));
+	}
+	
+	public function add() {
+		$this->Navigation->addCrumb('Add existing Student');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			$yearId = $data[$this->alias]['year'];
+			
+			$yearObj = $SchoolYear->findById($yearId);
+			$startDate = $yearObj['SchoolYear']['start_date'];
+			$endDate = $yearObj['SchoolYear']['end_date'];
+			$date = new DateTime($startDate);
+			$date->add(new DateInterval('P1D')); // plus 1 day
+			
+			$this->fields['start_date']['attr'] = array(
+				'startDate' => $startDate,
+				'endDate' => $endDate,
+				'data-date' => $startDate
+			);
+			$this->fields['end_date']['attr'] = array(
+				'startDate' => $date->format('d-m-Y'),
+				'data-date' => $date->format('d-m-Y')
+			);
+			$programmeOptions = $this->EducationProgramme->getProgrammeOptionsByInstitution($institutionSiteId, $yearId);
+			$this->fields['education_programme_id']['options'] = $programmeOptions;
+			
+			$submit = $this->request->data['submit'];
+			if ($submit == 'Save') {
+				$studentId = $data[$this->alias]['student_id'];
+				$count = $this->find('count', array('conditions' => array('institution_site_id' => $institutionSiteId, 'student_id' => $studentId)));
+				
+				if ($count > 0) {
+					$this->Message->alert('general.exists');
+				} else {
+					if (!empty($data[$this->alias]['education_programme_id'])) {
+						$programmeId = $this->EducationProgramme->InstitutionSiteProgramme->field('id', array(
+							'institution_site_id' => $institutionSiteId,
+							'education_programme_id' => $data[$this->alias]['education_programme_id'],
+							'school_year_id' => $yearId
+						));
+						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
+					}
+					if ($this->save($data)) {
+						$this->Message->alert('general.add.success');
+						return $this->redirect(array('action' => get_class($this)));
+					} else {
+						$this->Message->alert('general.add.failed');
+					}
+				}
+			}
+		}
+	}
+	
 	public function getDetails($studentId, $institutionSiteId) {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteProgramme')));
 		$data = $this->find('all', array(
@@ -141,164 +329,6 @@ class InstitutionSiteStudent extends AppModel {
 			'order' => array('InstitutionSiteStudent.start_date')
 		));
 		$this->bindModel(array('belongsTo' => array('InstitutionSiteProgramme')));
-		return $data;
-	}
-	
-	public function getGenderTotal($siteProgrammeId) {
-		$joins = array(
-			array('table' => 'students', 'alias' => 'Student')
-		);
-		
-		$gender = array('M' => 0, 'F' => 0);
-		$studentConditions = array('Student.id = InstitutionSiteStudent.student_id');
-		
-		foreach($gender as $i => $val) {
-			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
-			$joins[0]['conditions'] = $studentConditions;
-			$gender[$i] = $this->find('count', array(
-				'joins' => $joins,
-				'conditions' => array('InstitutionSiteStudent.institution_site_programme_id' => $siteProgrammeId)
-			));
-		}
-		return $gender;
-	}
-	
-	public function getStudentSelectList($year, $institutionSiteId, $gradeId) {
-		$conditions = array( // if the year falls between the start and end date
-			'InstitutionSiteStudent.start_year <=' => $year,
-			'InstitutionSiteStudent.end_year >=' => $year
-		);
-		
-		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-		$exclude = $InstitutionSiteClassGrade->getStudentIdsByProgramme($gradeId);
-		
-		$studentConditions = array('Student.id = InstitutionSiteStudent.student_id');
-		if(!empty($exclude)) {
-			$studentConditions[] = 'Student.id NOT IN (' . implode(',', array_keys($exclude)) . ')';
-		}
-		
-		$data = $this->find('all', array(
-			'fields' => array(
-				'Student.id', 'Student.identification_no', 
-				'Student.first_name', 'Student.middle_name', 'Student.last_name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => $studentConditions
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-					)
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.education_programme_id = InstitutionSiteProgramme.education_programme_id')
-				),
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.id = ' . $gradeId,
-						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
-					)
-				)
-			),
-			'conditions' => $conditions,
-			'group' => array('Student.id'),
-			'order' => array('Student.first_name')
-		));
-		return $data;
-	}
-	
-	public function addStudentToProgramme($studentId, $programmeId, $institutionSiteId, $yearId) {
-		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
-		
-		$siteProgramme = $InstitutionSiteProgramme->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'InstitutionSiteProgramme.id',
-				'EducationProgramme.duration',
-				'SchoolYear.start_year AS year'
-			),
-			'joins' => array(
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteProgramme.school_year_id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.education_programme_id' => $programmeId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId
-			)
-		));
-		
-		$siteProgrammeId = $siteProgramme[0]['InstitutionSiteProgramme']['id'];
-		$duration = $siteProgramme[0]['EducationProgramme']['duration'];
-		$year = $siteProgramme[0]['SchoolYear']['year'];
-		
-		$startDate = $year . '-' . date('m-d');
-		$endYear = $year+$duration;
-		$endDate = $endYear . '-' . date('m-d');
-		
-		$obj = array(
-			'start_date' => $startDate,
-			'start_year' => $year,
-			'end_date' => $endDate,
-			'end_year' => $endYear,
-			'student_id' => $studentId,
-			'institution_site_programme_id' => $siteProgrammeId
-		);
-		return $this->save($obj);
-	}
-	
-	public function getStudentList($programmeId, $institutionSiteId, $yearId) {
-		$this->formatResult = true;
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'InstitutionSiteStudent.id', 'SchoolYear.name AS year',
-				'InstitutionSiteStudent.start_date, InstitutionSiteStudent.end_date',
-				'Student.id AS student_id',	'Student.identification_no', 
-				'Student.first_name', 'Student.middle_name', 'Student.last_name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
-						'InstitutionSiteProgramme.education_programme_id = ' . $programmeId,
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.school_year_id = ' . $yearId
-					)
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteProgramme.school_year_id')
-				)
-			),
-			'order' => array('Student.first_name', 'Student.last_name')
-		));
 		return $data;
 	}
 	
@@ -401,24 +431,6 @@ class InstitutionSiteStudent extends AppModel {
 		$this->bindModel(array('belongsTo' => array('Student', 'InstitutionSiteProgramme')));
 		return $count;
 	}
-		
-	public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
-		$data = $this->find('list', array(
-			'fields' => array('InstitutionSiteStudent.id'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $InstitutionSiteId
-					)
-				)
-			),
-			'conditions' => array('InstitutionSiteStudent.student_id = ' . $studentId)
-		));
-		return $data;
-	}
 	
 	/*
 	public function checkWithinCurrentSite($studentId, $startYear, $InstitutionSiteId){
@@ -484,117 +496,23 @@ class InstitutionSiteStudent extends AppModel {
 	}
 	*/
 	
-	public function index() {
-		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('List of Students');
-		$params = $this->controller->params;
-		$page = isset($params->named['page']) ? $params->named['page'] : 1;
-
-		$selectedYear = "";
-		$selectedProgramme = "";
-		$searchField = "";
-		$orderBy = 'Student.first_name';
-		$order = 'asc';
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
-		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
-		$statusOptions = $this->StudentStatus->getList();
-		
-		$prefix = 'InstitutionSiteStudent.Search.%s';
-		if ($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->request->data['Student']['SearchField']));
-			$selectedYear = $this->request->data['Student']['school_year'];
-			$selectedProgramme = $this->request->data['Student']['education_programme_id'];
-			$selectedStatus = $this->request->data['Student']['student_status_id'];
-			$orderBy = $this->request->data['Student']['orderBy'];
-			$order = $this->request->data['Student']['order'];
-
-			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
-			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
-			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
-			$this->Session->write(sprintf($prefix, 'StudentStatusId'), $selectedStatus);
-			$this->Session->write(sprintf($prefix, 'order'), $order);
-			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
-		} else {
-			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
-			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
-			$selectedStatus = $this->Session->read(sprintf($prefix, 'StudentStatusId'));
-
-			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
-				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+	public function autocomplete() {
+		if ($this->request->is('ajax')) {
+			$this->render = false;
+			$params = $this->controller->params;
+			$search = $params->query['term'];
+			$list = $this->Student->autocomplete($search);
+			
+			$data = array();
+			foreach ($list as $obj) {
+				$studentInfo = $obj['Student'];
+				$data[] = array(
+					'label' => sprintf('%s - %s %s', $studentInfo['identification_no'], $studentInfo['first_name'], $studentInfo['last_name']),
+					'value' => array('student_id' => $studentInfo['id']) 
+				);
 			}
-			if ($this->Session->check(sprintf($prefix, 'order'))) {
-				$order = $this->Session->read(sprintf($prefix, 'order'));
-			}
+			return json_encode($data);
 		}
-		$conditions = array('institution_site_id' => $institutionSiteId, 'order' => array($orderBy => $order));
-		$conditions['search'] = $searchField;
-		if (!empty($selectedYear)) {
-			$conditions['year'] = $selectedYear;
-		}
-
-		if (!empty($selectedProgramme)) {
-			$conditions['education_programme_id'] = $selectedProgramme;
-		}
-
-		if (!empty($selectedStatus)) {
-			$conditions['student_status_id'] = $selectedStatus;
-		}
-		
-		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100);
-		$data = $this->controller->paginate($this->alias, $conditions);
-
-		if (empty($data)) {
-			$this->Message->alert('general.noData');
-		}
-		
-		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data', 'statusOptions'));
-	}
-
-	private function studentsSearch($search) {
-		$params = array('limit' => 100);
-		$Student = ClassRegistry::init('Students.Student');
-		$list = $Student->search($search, $params);
-		
-		$data = array();
-		foreach ($list as $obj) {
-			$studentInfo = $obj['Student'];
-			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $studentInfo['identification_no'], $studentInfo['first_name'], $studentInfo['middle_name'], $studentInfo['last_name'], $studentInfo['preferred_name']),
-				'value' => $studentInfo['id']
-			);
-		}
-		return $data;
-	}
-	
-	public function beforeAction() {
-		parent::beforeAction();
-		
-		$this->fields['institution'] = array(
-			'type' => 'disabled',
-			'value' => $this->Session->read('InstitutionSite.data.InstitutionSite.name'),
-			'visible' => true
-		);
-		$this->setFieldOrder('institution', 1);
-		
-		$yearOptions = $this->InstitutionSiteProgramme->SchoolYear->find('list', array('order' => array('order')));
-		$this->fields['year'] = array(
-			'type' => 'select',
-			'options' => $yearOptions,
-			'visible' => true
-		);
-		$this->setFieldOrder('year', 2);
-		$this->fields['start_year']['visible'] = false;
-		$this->fields['end_year']['visible'] = false;
-		$this->fields['student_id']['visible'] = false;
-		$this->fields['student_status_id']['type'] = 'select';
-		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
-	}
-	
-	public function add() {
-		$this->Navigation->addCrumb('Add existing Student');
-		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 	}
 	
 	/*
@@ -770,6 +688,24 @@ class InstitutionSiteStudent extends AppModel {
 	}
 	*/
 	
+	public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteStudent.id'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
+						'InstitutionSiteProgramme.institution_site_id = ' . $InstitutionSiteId
+					)
+				)
+			),
+			'conditions' => array('InstitutionSiteStudent.student_id = ' . $studentId)
+		));
+		return $data;
+	}
+	
 	public function getAutoCompleteList($search,  $institutionSiteId = NULL, $limit = NULL) {
 		$search = sprintf('%%%s%%', $search);
 		
@@ -820,32 +756,6 @@ class InstitutionSiteStudent extends AppModel {
 			);
 		}
 		return $data;
-	}
-	
-	//Ajax method
-	public function studentsAjaxFind($controller, $params) {
-		if ($controller->request->is('ajax')) {
-			$this->render = false;
-			$search = $params->query['term'];
-			
-			$data = $this->studentsSearch($search);
-
-			return json_encode($data);
-		}
-	}
-	
-	public function studentsAjaxStartDate($controller, $params) {
-		if ($controller->request->is('ajax')) {
-			$this->render = false;
-			$returnData = array();
-			$yearData = ClassRegistry::init('SchoolYear')->findById($controller->request->query['yearId'], array('start_date', 'end_date'));
-			if(!empty($yearData)){
-				$returnData['dateData'] = array('startDate'=>date('d-m-Y',  strtotime($yearData['SchoolYear']['start_date']) ), 'endDate' => date('d-m-Y',  strtotime($yearData['SchoolYear']['end_date'])));
-			}
-			
-			return json_encode($returnData);
-		}
-		
 	}
 	
 	public function reportsGetHeader($args) {
