@@ -622,20 +622,22 @@ class InstitutionSite extends AppModel {
 											'conditions' => array('InstitutionSiteProgramme.institution_site_id = InstitutionSite.id', 'InstitutionSiteProgramme.education_programme_id = ' . $advanced['education_programme_id'])
 										);
 									}
-                                    $dbo = $this->getDataSource();
-                                    $query = $dbo->buildStatement(array(
-                                            'fields' => array('InstitutionSite.id'),
-                                            'table' => 'institution_sites',
-                                            'alias' => 'InstitutionSite',
-                                            'limit' => null, 
-                                            'offset' => null,
-                                            'joins' => $joins,
-                                            //'conditions' => array('InstitutionSite.institution_id = Institution.id'),
-                                            'group' => array('InstitutionSite.id'),
-                                            'order' => null
-                                    ), $this);
-                                    //pr($query);
-                                    $conditions[] = 'InstitutionSite.id IN (' . $query . ')';
+									if(!empty($joins)){
+	                                    $dbo = $this->getDataSource();
+	                                    $query = $dbo->buildStatement(array(
+	                                            'fields' => array('InstitutionSite.id'),
+	                                            'table' => 'institution_sites',
+	                                            'alias' => 'InstitutionSite',
+	                                            'limit' => null, 
+	                                            'offset' => null,
+	                                            'joins' => $joins,
+	                                            //'conditions' => array('InstitutionSite.institution_id = Institution.id'),
+	                                            'group' => array('InstitutionSite.id'),
+	                                            'order' => null
+	                                    ), $this);
+	                                    //pr($query);
+	                                    $conditions[] = 'InstitutionSite.id IN (' . $query . ')';
+	                                }
 
                                 }
                                 /*
