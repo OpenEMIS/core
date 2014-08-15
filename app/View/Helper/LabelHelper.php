@@ -287,6 +287,10 @@ class LabelHelper extends AppHelper {
 			'teaching' => 'Teaching',
 			'number' => 'Number'
 		),
+		'InstitutionSiteStudent' => array(
+			'student_status_id' => 'Status',
+			'institution_site_programme_id' => 'Programme'
+		),
 		'InstitutionSiteStudentAbsence' => array(
 			'reason' => 'Reason',
 			'first_date_absent' => 'First Date Absent',

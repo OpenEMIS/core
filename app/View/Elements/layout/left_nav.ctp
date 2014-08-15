@@ -39,7 +39,7 @@
 				if(!$link['display']) continue;
 				
 				// hide the add existing student/staff if institution site id is not set
-				if ($link['controller'] == 'Students' && $link['action'] == 'add') {
+				if ($link['controller'] == 'Students' && $link['action'] == 'InstitutionSiteStudent/add') {
 					if (!$this->Session->check('InstitutionSite.id')) {
 						continue;
 					}
@@ -51,7 +51,8 @@
 				if(!$in && $link['selected']) {
 					$in = true;
 				}
-				$icon = $this->Html->image(sprintf('nav_icons/%s/%s.png', $controller, $link['action']));
+				$filename = str_replace('/', '.', $link['action']);
+				$icon = $this->Html->image(sprintf('nav_icons/%s/%s.png', $controller, $filename));
 				$wizard = $link['wizard'] ? 'wizard="true"' : '';
 				$itemHtml .= sprintf($item, $url, $wizard, $selected, $icon, __($link['title']));
 			}
