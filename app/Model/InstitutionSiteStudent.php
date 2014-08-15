@@ -568,6 +568,35 @@ class InstitutionSiteStudent extends AppModel {
 		return $data;
 	}
 	
+	public function beforeAction() {
+		parent::beforeAction();
+		
+		$this->fields['institution'] = array(
+			'type' => 'disabled',
+			'value' => $this->Session->read('InstitutionSite.data.InstitutionSite.name'),
+			'visible' => true
+		);
+		$this->setFieldOrder('institution', 1);
+		
+		$yearOptions = $this->InstitutionSiteProgramme->SchoolYear->find('list', array('order' => array('order')));
+		$this->fields['year'] = array(
+			'type' => 'select',
+			'options' => $yearOptions,
+			'visible' => true
+		);
+		$this->setFieldOrder('year', 2);
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
+		$this->fields['student_id']['visible'] = false;
+		$this->fields['student_status_id']['type'] = 'select';
+		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
+	}
+	
+	public function add() {
+		$this->Navigation->addCrumb('Add existing Student');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+	}
+	
 	/*
 	public function studentsAdd($controller, $params) {
 		$formData = isset($controller->request->data['InstitutionSiteStudent'])? $controller->request->data['InstitutionSiteStudent']: array();
