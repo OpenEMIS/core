@@ -62,7 +62,7 @@ class CustomFieldBehavior extends ModelBehavior {
 				foreach ($controller->request->data[$valueModel][$fieldVal] as $id => $val) {
 
 					if ($fieldVal == "checkbox") {
-						if ($mandatory && count($val['value'])==0) {
+						if (count($val['value'])==0) {
 							$controller->Message->alert('general.error');
 							$error = true;
 							break;
