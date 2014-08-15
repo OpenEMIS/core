@@ -81,7 +81,7 @@ class StudentsController extends StudentsAppController {
 		$actions = array('index', 'advanced');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Students');
-			$this->Session->delete('Student');
+			//$this->Session->delete('Student');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
 		} else if ($this->Session->check('Student.data.name')) {
@@ -96,7 +96,7 @@ class StudentsController extends StudentsAppController {
 
 	public function index() {
 		$this->Navigation->addCrumb('List of Students');
-		$this->Session->delete('Student');
+		//$this->Session->delete('Student');
 		
 		if ($this->request->is('post')) {
 			if (isset($this->request->data['Student']['SearchField'])) {
@@ -154,6 +154,10 @@ class StudentsController extends StudentsAppController {
 	public function advanced() {
 		$key = 'Student.AdvancedSearch';
 		$this->set('header', __('Advanced Search'));
+
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$identityTypeOptions = $IdentityType->findList();
+
 		if ($this->request->is('get')) {
 			if ($this->request->is('ajax')) {
 				$this->autoRender = false;
@@ -172,11 +176,14 @@ class StudentsController extends StudentsAppController {
 			}
 		} else {
 			$search = $this->request->data;
+
 			if (!empty($search)) {
 				$this->Session->write($key, $search);
 			}
+
 			$this->redirect(array('action' => 'index'));
 		}
+		$this->set(compact('identityTypeOptions'));
 	}
 		
 	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Student') {
