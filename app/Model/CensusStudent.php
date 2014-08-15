@@ -1056,6 +1056,11 @@ class CensusStudent extends AppModel {
 			$header = array(__('Year'), __('Programme'), __('Grade'), __('Category'), __('Age'), __('Male'), __('Female'), __('Total'));
 
 			$baseData = $this->groupByYearGradeCategory($institutionSiteId);
+			
+			$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+		
+			$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
+			$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
 
 			foreach ($baseData AS $row) {
 				$year = $row['SchoolYear']['name'];
@@ -1070,8 +1075,8 @@ class CensusStudent extends AppModel {
 					'recursive' => -1,
 					'fields' => array(
 						'CensusStudent.age',
-						'CensusStudent.male',
-						'CensusStudent.female'
+						'CensusStudent.gender_id',
+						'CensusStudent.value'
 					),
 					'conditions' => array(
 						'CensusStudent.institution_site_id' => $institutionSiteId,
@@ -1079,25 +1084,46 @@ class CensusStudent extends AppModel {
 						'CensusStudent.education_grade_id' => $row['CensusStudent']['education_grade_id'],
 						'CensusStudent.student_category_id' => $row['CensusStudent']['student_category_id']
 					),
-					'group' => array('CensusStudent.age')
-						)
-				);
-
-				$total = 0;
+					'order' => array('CensusStudent.age')
+				));
+				
+				$tempData = array();
+				
 				foreach ($censusData AS $censusRow) {
+					$age = $censusRow['CensusStudent']['age'];
+					$genderId = $censusRow['CensusStudent']['gender_id'];
+					$value = $censusRow['CensusStudent']['value'];
+					
+					$tempData[$age][$genderId] = $value;
+				}
+				
+				$total = 0;
+				foreach ($tempData AS $age => $ageArr) {
+					if(!empty($ageArr[$maleGenderId])){
+						$maleValue = $ageArr[$maleGenderId];
+					}else{
+						$maleValue = 0;
+					}
+					
+					if(!empty($ageArr[$femaleGenderId])){
+						$femaleValue = $ageArr[$femaleGenderId];
+					}else{
+						$femaleValue = 0;
+					}
+					
 					$data[] = array(
 						$year,
 						$educationCycle . ' - ' . $educationProgramme,
 						$educationGrade,
 						$studentCategory,
-						$censusRow['CensusStudent']['age'],
-						$censusRow['CensusStudent']['male'],
-						$censusRow['CensusStudent']['female'],
-						$censusRow['CensusStudent']['male'] + $censusRow['CensusStudent']['female']
+						$age,
+						$maleValue,
+						$femaleValue,
+						$maleValue + $femaleValue
 					);
 
-					$total += $censusRow['CensusStudent']['male'];
-					$total += $censusRow['CensusStudent']['female'];
+					$total += $maleValue;
+					$total += $femaleValue;
 				}
 
 				$data[] = array('', '', '', '', '', '', __('Total'), $total);
