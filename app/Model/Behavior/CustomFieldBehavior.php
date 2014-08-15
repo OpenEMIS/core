@@ -32,6 +32,7 @@ class CustomFieldBehavior extends ModelBehavior {
 		$key = $valueModel . '.' . Inflector::underscore($module.'Id');
 		$conditions[$key] = $controller->Session->read($module . '.id');
 		
+		$model->unbindModel(array('hasMany' => array($valueModel)));
 		$data = $model->find('all', array('conditions' => array($model->alias . '.visible' => 1), 'order' => $model->alias . '.order'));
 		$valuesData = $model->{$valueModel}->find('all', array('conditions' => $conditions));
 		
@@ -61,7 +62,7 @@ class CustomFieldBehavior extends ModelBehavior {
 				foreach ($controller->request->data[$valueModel][$fieldVal] as $id => $val) {
 
 					if ($fieldVal == "checkbox") {
-						if ($mandatory && count($val['value'])==0) {
+						if (count($val['value'])==0) {
 							$controller->Message->alert('general.error');
 							$error = true;
 							break;
@@ -133,6 +134,7 @@ class CustomFieldBehavior extends ModelBehavior {
 				)
 			)
 		));
+		$model->unbindModel(array('hasMany' => array($valueModel)));
 		$data = $model->find('all', array('conditions' => array($fieldModel . '.visible' => 1), 'order' => $fieldModel . '.order'));
 		$dataValues = $model->{$valueModel}->find('all', array('conditions' => array($valueModel . '.' . $key => $keyValue)));
 		$tmp = array();
