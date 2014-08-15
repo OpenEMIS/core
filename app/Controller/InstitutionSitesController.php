@@ -277,6 +277,9 @@ class InstitutionSitesController extends AppController {
 
                 // custom fields start
                 $sitetype = 0;
+                if($this->Session->check('InstitutionSite.AdvancedSearch.siteType')){
+                     $sitetype = $this->Session->read('InstitutionSite.AdvancedSearch.siteType');
+                }
                 $customfields = 'InstitutionSite';
                 
                 $arrSettings = array(
@@ -296,6 +299,7 @@ class InstitutionSitesController extends AppController {
                 //pr(array($customfields));
                 $this->set("customfields", array($customfields));
                 $this->set('types', $types);
+
                 $this->set('typeSelected', $sitetype);
                 $this->set('dataFields', $dataFields);
                 //pr($dataFields);
@@ -332,6 +336,7 @@ class InstitutionSitesController extends AppController {
             $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
             $dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
             $types = $this->InstitutionSiteType->findList(1);
+
             //pr(array($customfields));
             $this->set("customfields",array($customfields));
             $this->set('types',  $types);        
