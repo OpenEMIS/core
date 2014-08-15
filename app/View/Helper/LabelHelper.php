@@ -231,7 +231,8 @@ class LabelHelper extends AppHelper {
 			'uploaded_on' => 'Uploaded On'
 		),
 		'Identities' => array(
-			'issue_location' => 'Issuer'
+			'issue_location' => 'Issuer',
+			'identity' => 'Identity'
 		),
 		'QualificationLevel' => array(
 			'name' => 'Level'
