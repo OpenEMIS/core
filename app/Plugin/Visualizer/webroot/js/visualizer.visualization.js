@@ -9,7 +9,11 @@ $(document).ready(function() {
 
 	if ($('#highchart-container').length > 0) {
 		var container = $('#highchart-container');
+		
+		container.append('<div class="row vertical-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');
+		
 		if (container.attr('type') != 'map') {
+			
 			$.ajax({
 				type: "POST",
 				dataType: 'json',
@@ -17,6 +21,7 @@ $(document).ready(function() {
 				//data: {searchStr: $(this).val(), areaLvl: $('#areaLevel').val()},
 				success: function(data) {
 					if (typeof data['errorMsg'] !== 'undefined') {
+						container.empty();
 						$(data['errorMsg']).insertBefore('#visualizer .navbar');
 					}
 					else {
@@ -35,6 +40,7 @@ $(document).ready(function() {
 				success: function(data) {
 					if (typeof data['errorMsg'] !== 'undefined') {
 						$(data['errorMsg']).insertBefore('#visualizer .navbar');
+						container.empty();
 					}
 					else {
 						$.ajax({
@@ -69,6 +75,8 @@ $(document).ready(function() {
 												if (!e.seriesOptions) {
 													console.log(e.point.loadSchool);
 													var chart = this;
+													
+													chart.showLoading('<i class="fa fa-spinner fa-spin fa-4x"></i>');
 													$.ajax({
 														type: "POST",
 														dataType: 'json',
@@ -88,6 +96,8 @@ $(document).ready(function() {
 																	}
 																});
 															});
+															chart.hideLoading();
+															
 															chart.addSeriesAsDrilldown(e.point, {
 																name: e.point.name,
 																data: finalData,
