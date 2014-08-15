@@ -95,6 +95,27 @@ legend.reviewTitle{
     .rotate(90deg);
 }
 
+.vertical-center {
+  height:100%;
+  width:100%;
+
+  text-align: center;  /* align the inline(-block) elements horizontally */
+  //font: 0/0 a;         /* remove the gap between inline(-block) elements */
+}
+
+.vertical-center:before {    /* create a full-height inline block pseudo=element */
+  content: ' ';
+  display: inline-block;
+  vertical-align: middle;  /* vertical alignment of the inline element */
+  height: 100%;
+}
+
+.vertical-center > i {
+	max-width: 100%;
+  display: inline-block;
+  vertical-align: middle;  /* vertical alignment of the inline element */
+}
+
 /*
 Icons
 */
