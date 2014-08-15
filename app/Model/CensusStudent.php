@@ -32,7 +32,11 @@ class CensusStudent extends AppModel {
 		'SchoolYear',
 		'EducationGrade',
 		'StudentCategory',
-		'InstitutionSite'
+		'InstitutionSite',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -725,10 +729,9 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
 		
-		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 	
 		$admission_age = $age;
 		$agePlus = $ConfigItem->getValue('admission_age_plus');
@@ -1032,10 +1035,8 @@ class CensusStudent extends AppModel {
 		$conditions = array('EducationGrade.education_programme_id' => $programmeId);
 		$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 		
-		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		
-		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 		
 		$controller->set(compact('age', 'gradeList', 'maleGenderId', 'femaleGenderId'));	 
 	}
@@ -1057,10 +1058,8 @@ class CensusStudent extends AppModel {
 
 			$baseData = $this->groupByYearGradeCategory($institutionSiteId);
 			
-			$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		
-			$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-			$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+			$maleGenderId = $this->Gender->getIdByName('Male');
+			$femaleGenderId = $this->Gender->getIdByName('Female');
 
 			foreach ($baseData AS $row) {
 				$year = $row['SchoolYear']['name'];

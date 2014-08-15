@@ -25,7 +25,11 @@ class CensusGraduate extends AppModel {
 	);
 	
 	public $belongsTo = array(
-		'SchoolYear'
+		'SchoolYear',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -42,8 +46,8 @@ class CensusGraduate extends AppModel {
 				'EducationCertification.name AS education_certification_name',
 				'InstitutionSiteProgramme.institution_site_id',
 				'CensusGraduate.id',
-				'CensusGraduate.male',
-				'CensusGraduate.female',
+				'CensusGraduate.gender_id',
+				'CensusGraduate.value',
 				'CensusGraduate.source'
 			),
 			'joins' => array(
@@ -131,6 +135,13 @@ class CensusGraduate extends AppModel {
 				$controller->Message->alert('CensusGraduate.notRequired');
 			}
 		}
+		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		$genderOptions = array(
+					$maleGenderId => 'Male',
+					$femaleGenderId => 'Female'
+		);
 		
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 		
