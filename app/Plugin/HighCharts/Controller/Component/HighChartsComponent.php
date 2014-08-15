@@ -631,13 +631,17 @@ class HighChartsComponent extends Component {
 				$seriesOptions['series'][0]['dataLabels']['format'] = $_options['dataLabels']['format'];
 			}
 			
-			if (!empty($_options['city']['enabled'])) {
-				$seriesOptions['series'][1]['name'] = 'Cities';
+		//	if (!empty($_options['city']['enabled'])) {
+			/*	$seriesOptions['series'][1]['name'] = 'Cities';
 				$seriesOptions['series'][1]['type'] = 'mappoint';
 				$seriesOptions['series'][1]['color'] = 'red';
-				$seriesOptions['series'][1]['marker'] = array('radius'=> 10);
-				$seriesOptions['series'][1]['data'] = array('name' => 'Johor', 'properties' => array('name' => 'Johor - 2'), 'x' => 50, 'y'=>50);
-			}
+				$seriesOptions['series'][1]['marker'] = array('radius'=> 3);
+				$seriesOptions['series'][1]['dataLabels'] = array('color'=> 'white', 'borderColor'=> 'green');
+				$seriesOptions['series'][1]['data'] = array(
+					array('name' => 'Johor', 'properties' => array('name' => 'Johor - 2'), 'x' => 35.5, 'y'=>-30),
+				//	array('name' => 'Singapore', 'properties' => array('name' => 'sg - 2'), 'x' => 150, 'y'=>50)
+					);*/
+		//	}
 		}
 
 		$seriesOptions['drilldown']['animation'] = false;
@@ -667,12 +671,14 @@ class HighChartsComponent extends Component {
 				$tempArr['value'] = $obj['DIData']['Data_Value'];
 				$tempArr['TimePeriod'] = $obj['TimePeriod']['TimePeriod'];
 				$tempArr['dimension'] = $obj['SubgroupVal']['Subgroup_Val'];
+				$tempArr['dimension'] = $obj['DIArea']['Area_Level'];
 
 				$nextLevel = $this->getCheckDrillDown($obj['DIArea']['Area_Level']);
 				if (!empty($nextLevel)) {
 					$tempArr['mapURL'] = $this->mapGetLevel(array('level'=>$nextLevel)); 
 					$tempArr['drilldown'] = $obj['DIArea']['Area_ID']; 
 				}
+				
 
 				$data[] = $tempArr;
 			}
