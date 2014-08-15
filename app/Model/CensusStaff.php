@@ -27,7 +27,11 @@ class CensusStaff extends AppModel {
 	public $useTable = 'census_staff';
 	
 	public $belongsTo = array(
-		'SchoolYear'
+		'SchoolYear',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -41,8 +45,7 @@ class CensusStaff extends AppModel {
 				'CensusStaff.id',
 				'CensusStaff.value',
 				'CensusStaff.source',
-				'FieldOptionValue.id AS genderId',
-				'FieldOptionValue.name AS genderName'
+				'CensusStaff.gender_id'
 			),
 			'joins' => array(
 				array(
@@ -53,14 +56,6 @@ class CensusStaff extends AppModel {
 						'CensusStaff.staff_category_id = StaffCategory.id',
 						'CensusStaff.institution_site_id = ' . $siteId,
 						'CensusStaff.school_year_id = ' . $yearId
-					)
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'FieldOptionValue',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'CensusStaff.gender_id = FieldOptionValue.id'
 					)
 				)
 			),
@@ -73,7 +68,7 @@ class CensusStaff extends AppModel {
 		foreach($list AS $row){
 			$censusId = $row['id'];
 			$staffCatId = $row['staff_category_id'];
-			$genderId = $row['genderId'];
+			$genderId = $row['gender_id'];
 			
 			if(!empty($censusId) && !empty($genderId)){
 				$data[$staffCatId][$genderId] = array(
@@ -209,9 +204,8 @@ class CensusStaff extends AppModel {
 		));
 		//pr($staffCategories);die;
 		
-		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
-		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
 		$genderOptions = array(
 			$maleGenderId => 'Male', 
 			$femaleGenderId => 'Female'
@@ -244,9 +238,8 @@ class CensusStaff extends AppModel {
 					'order' => array('StaffCategory.order')
 				));
 
-				$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
-				$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-				$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+				$maleGenderId = $this->Gender->getIdByName('Male');
+				$femaleGenderId = $this->Gender->getIdByName('Female');
 				$genderOptions = array(
 					$maleGenderId => 'Male', 
 					$femaleGenderId => 'Female'
@@ -295,9 +288,8 @@ class CensusStaff extends AppModel {
 					'order' => array('StaffCategory.order')
 				));
 
-				$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
-				$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-				$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+				$maleGenderId = $this->Gender->getIdByName('Male');
+				$femaleGenderId = $this->Gender->getIdByName('Female');
 				$genderOptions = array(
 					$maleGenderId => 'Male',
 					$femaleGenderId => 'Female'
