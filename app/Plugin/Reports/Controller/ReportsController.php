@@ -18,6 +18,7 @@ App::uses('Folder', 'Utility');
 App::uses('File', 'Utility');
 App::uses('Sanitize', 'Utility');
 class ReportsController extends ReportsAppController {
+
 	public $bodyTitle = 'Reports';
 	public $headerSelected = 'Reports';
 	public $limit = 1000;
@@ -299,7 +300,7 @@ class ReportsController extends ReportsAppController {
 			array_push($school_years, $value);
 
 		}
-  
+
 		$this->set('hideTableColumnsLabel', $this->hideOlapTableColumnsLabel);
 
 		$this->set('data', $data);
