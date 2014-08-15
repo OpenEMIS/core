@@ -19,10 +19,10 @@ class VisualizerData extends VisualizerAppModel {
 	public $useTable = 'ut_data';
 	public $alias = 'DIData';
 	
-	public function getTimePeriodList($ius, $order = NULL){
+	public function getTimePeriodList($ius, $areaIds, $order = NULL){
 		$order = (empty($order))? NULL:array($order);
 		$data = $this->find('all', array(
-			'conditions' => array('DIData.IUSNID' => $ius),
+			'conditions' => array('DIData.IUSNID' => $ius,'DIData.Area_NId' => $areaIds),
 			'group' => array('DIData.TimePeriod_NId' ),
 			'fields' => array('TimePeriod.TimePeriod_NId','TimePeriod.TimePeriod'),
 			'joins' => array(
@@ -33,6 +33,28 @@ class VisualizerData extends VisualizerAppModel {
 				),
 			),
 			'order' => $order
+		));
+		return $data;
+	}
+	
+	public function getAreaLevel($ius, $areaIds, $timeperiodId){
+		$data = $this->find('all', array(
+			'conditions' => array('DIData.IUSNID' => $ius,'DIData.Area_NId' => $areaIds, 'TimePeriod.TimePeriod_NId'=> $timeperiodId),
+		//	'group' => array('DIData.TimePeriod_NId' ),
+			'fields' => array('DISTINCT DIArea.Area_Level', 'DIArea.Area_Name'),
+			'joins' => array(
+				array(
+					'table' => 'ut_timeperiod',
+					'alias' => 'TimePeriod',
+					'conditions' => array('TimePeriod.TimePeriod_NId = DIData.TimePeriod_NId')
+				),
+				array(
+					'table' => 'ut_area_en',
+					'alias' => 'DIArea',
+					'conditions' => array('DIArea.Area_NId = DIData.Area_NId')
+				)
+			),
+			'order' => array('DIArea.Area_Level ASC')
 		));
 		return $data;
 	}

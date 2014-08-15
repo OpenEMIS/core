@@ -102,7 +102,10 @@ var Visualizer = {
 		$.ajax({
 			type: "POST",
 			url: getRootURL() + $(obj).attr('url'),
-			data: {sectionType: $(obj).attr('sectionType'), value: $(obj).val(), checked: checked}
+			data: {sectionType: $(obj).attr('sectionType'), value: $(obj).val(), checked: checked},
+			success : function (data){
+				//location.reload();
+			}
 		});
 	},
 	checkboxChangeAll: function(obj) {
@@ -117,7 +120,10 @@ var Visualizer = {
 				$.ajax({
 					type: "POST",
 					url: getRootURL() + singleCheckbox.attr('url'),
-					data: {sectionType: singleCheckbox.attr('sectionType'), value: singleCheckbox.val(), checked: checkAll}
+					data: {sectionType: singleCheckbox.attr('sectionType'), value: singleCheckbox.val(), checked: checkAll},
+					success : function (data){
+						//location.reload();
+					}
 				});
 			}
 		});

@@ -34,8 +34,9 @@ class HighChartsComponent extends Component {
 	/*
 	 * For Map purpose
 	 */
-	public $selectedAreaLevel;
-	public $dbLastDrillDownLevel;
+	public $selectedMapAreaLevel;
+	public $dbAllLevel;
+	public $selectedCountry;
 
 	/*
 	 *  types for var plotBy - 'subgroup', 'indicator'
@@ -120,7 +121,7 @@ class HighChartsComponent extends Component {
 	public function getChartData($ctype, $DIData) {
 		$chartTypeInfo = explode("-", $ctype);
 		$chartType = $chartTypeInfo[0];
-		$chartData = $this->customGenerateHeader(array('chartType' => $chartType, 'caption' => $this->getCaption(), 'subcaption' => $this->getYearSubcaption()));
+		$chartData = $this->customGenerateHeader(array('chartType' => $chartType, 'caption' => $this->getCaption(), 'subcaption' => $this->getSubCaption()));
 
 		switch ($chartType) {
 			case 'pie':
@@ -335,7 +336,7 @@ class HighChartsComponent extends Component {
 
 		$selectedFilterGrp = $this->selectedIndicator;
 		//Format Data to fusionchart structure
-		$counter = 0;
+		//$counter = 0;
 		foreach ($dataStructure as $iKey => $sData) {
 			foreach ($sData as $sKey => $yData) {
 				foreach ($yData as $yKey => $aData) {
@@ -349,7 +350,7 @@ class HighChartsComponent extends Component {
 					}
 				}
 			}
-			$counter++;
+			//$counter++;
 		}
 
 		return $chartData;
@@ -413,16 +414,29 @@ class HighChartsComponent extends Component {
 	}
 
 	private function getCaption() {
-		$caption = sprintf('%s - %s', $this->selectedIndicator[0], $this->selectedUnits[0]);
+		$caption = $this->selectedIndicator[0];//sprintf('%s - %s', $this->selectedIndicator[0], $this->selectedUnits[0]);
 		return $caption;
 	}
 
-	private function getYearSubcaption() {
+	private function getSubCaption($year = NULL) {
+		if(empty($year)){
+			$year = $this->getYearSubcaption();
+		}
+		$year = isset($year)? $year : $this->getYearSubcaption();
+		$caption = sprintf('Year : %s  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unit : %s', $year, $this->selectedUnits[0]);
+		return $caption;
+	}
+	
+	public function getYearSubcaption($timeperiod = NULL) {
+		
+		if(empty($timeperiod)){
+			$timeperiod = $this->selectedTimeperiods;
+		}
 		$yearRange = array_unique(array_map(function ($i) {
 					return $i['TimePeriod']['TimePeriod'];
-				}, $this->selectedTimeperiods));
+				}, $timeperiod));
 		sort($yearRange);
-		$yearSubcaption = '(' . implode(', ', $yearRange) . ')';
+		$yearSubcaption = implode(', ', $yearRange) ;
 
 		return $yearSubcaption;
 	}
@@ -542,31 +556,36 @@ class HighChartsComponent extends Component {
 	 * 					Map Component
 	 * =================================================================== */
 
-	public function getAreaLevel($areaLevel, $dbAllLevel) {
-		$this->selectedAreaLevel = array_values(array_unique(array_map(function ($i) {
+	public function initMapAreaInfo($areaLevel, $dbAllLevel, $countryData) {
+		$this->selectedMapAreaLevel = array_values(array_unique(array_map(function ($i) {
 							return $i['DIArea']['Area_Level'];
 						}, $areaLevel)));
 
-		$dbAreaLvl = $dbAllLevel[count($dbAllLevel) - 2];
-		$this->dbLastDrillDownLevel = $dbAreaLvl['AreaLevel']['Area_Level'];
+	//	$dbAreaLvl = $dbAllLevel[count($dbAllLevel) - 2];
+		$this->dbAllLevel = $dbAllLevel;//['AreaLevel']['Area_Level'];
+		$this->selectedCountry = $countryData;
 	}
 
 	public function getMapData($DIData) {
-		$data = $this->mapInit(array('caption' => $this->getCaption(), 'subCaption'=> $this->selectedTimeperiods[0]['TimePeriod']['TimePeriod']));
+		$this->checkFunctionExist();
+		
+		$data = $this->mapInit(array('caption' => $this->getCaption(), 'subcaption' => $this->getSubCaption($this->selectedTimeperiods[0]['TimePeriod']['TimePeriod'])));
 		$foramtedDBData = $this->mapFormatDBData($DIData);
 		//$file = file_get_contents($rootURL.'HighCharts/map/jor/jor_l03_2004.json', FILE_USE_INCLUDE_PATH);
-
+	
 		$seriesOptions['hoverColor'] = '#BADA55';
 		$seriesOptions['dataLabels']['enabled'] = true;
 		$seriesOptions['dataLabels']['format'] = '{point.Area_Name}';
+		$seriesOptions['dataLabels']['conutry_name'] = $this->selectedCountry['DIArea']['Area_Name'];
 		$data = array_merge($data, $this->mapSeriesData($seriesOptions));
 //pr($foramtedDBData);
 
 		$finalData['dbData'] = $foramtedDBData;
 		$finalData['mapChartInfo'] = $data;
-		reset($this->selectedAreaLevel);
-		$finalData['mapURL'] = $this->mapGetLevel(current($this->selectedAreaLevel));
-
+		reset($this->selectedMapAreaLevel);
+		//pr('init current = '.current($this->selectedMapAreaLevel));
+		$finalData['mapURL'] = $this->mapGetLevel(array('level'=>current($this->selectedMapAreaLevel)));
+		
 		return json_encode($finalData, JSON_NUMERIC_CHECK);
 	}
 
@@ -574,8 +593,8 @@ class HighChartsComponent extends Component {
 		$mapData['title']['text'] = !empty($_options['caption']) ? $_options['caption'] : 'Map';
 		$mapData['title']['useHTML'] = true;
 
-		if (!empty($_options['subCaption'])) {
-			$mapData['subtitle']['text'] = $_options['subCaption'];
+		if (!empty($_options['subcaption'])) {
+			$mapData['subtitle']['text'] = $_options['subcaption'];
 			$mapData['subtitle']['useHTML'] = true;
 		}
 
@@ -604,12 +623,20 @@ class HighChartsComponent extends Component {
 			$seriesOptions['series'][0]['dataLabels']['enabled'] = $_options['dataLabels']['enabled'];
 			$seriesOptions['series'][0]['dataLabels']['color'] = 'white';
 			$seriesOptions['series'][0]['joinBy'] = 'ID_';
-			$seriesOptions['series'][0]['name'] = 'Jordan';
+			$seriesOptions['series'][0]['name'] = $_options['dataLabels']['conutry_name'];
 			//	$seriesOptions['plotOptions']['series']['dataLabels']['useHTML'] = 'js:Highcharts.hasBidiBug';
 
 			if (!empty($_options['dataLabels']['format'])) {
 				//format eg : '{point.name}'
 				$seriesOptions['series'][0]['dataLabels']['format'] = $_options['dataLabels']['format'];
+			}
+			
+			if (!empty($_options['city']['enabled'])) {
+				$seriesOptions['series'][1]['name'] = 'Cities';
+				$seriesOptions['series'][1]['type'] = 'mappoint';
+				$seriesOptions['series'][1]['color'] = 'red';
+				$seriesOptions['series'][1]['marker'] = array('radius'=> 10);
+				$seriesOptions['series'][1]['data'] = array('name' => 'Johor', 'properties' => array('name' => 'Johor - 2'), 'x' => 50, 'y'=>50);
 			}
 		}
 
@@ -628,11 +655,10 @@ class HighChartsComponent extends Component {
 		$latestYearObj = $this->selectedTimeperiods[0];
 		$singleDimension = $this->selectedDimensions[0];
 
-		$lastLevel = $this->selectedAreaLevel[count($this->selectedAreaLevel) - 1];
 
 		foreach ($DIData as $obj) {
 			if ($obj['TimePeriod']['TimePeriod'] == $latestYearObj['TimePeriod']['TimePeriod'] && $obj['SubgroupVal']['Subgroup_Val'] == $singleDimension) {
-				//	pr($obj);
+					//pr($obj);
 				$tempArr = array();
 				$tempArr['ID_'] = $obj['DIArea']['Area_ID'];
 				$tempArr['Area_Name'] = $obj['DIArea']['Area_Name'];
@@ -642,46 +668,61 @@ class HighChartsComponent extends Component {
 				$tempArr['TimePeriod'] = $obj['TimePeriod']['TimePeriod'];
 				$tempArr['dimension'] = $obj['SubgroupVal']['Subgroup_Val'];
 
-				if ($lastLevel > $obj['DIArea']['Area_Level'] && $this->dbLastDrillDownLevel > $obj['DIArea']['Area_Level']) {
-					$tempArr['mapURL'] = $this->mapGetLevel($obj['DIArea']['Area_Level'], true); //'HighCharts/map/jor/jor_l0' . $level . '_2014.json'; //$obj['SubgroupVal']['Subgroup_Val'];
-					$tempArr['drilldown'] = $obj['DIArea']['Area_ID']; //'HighCharts/map/jor/jor_l0'.$level.'_2014.json';//$obj['SubgroupVal']['Subgroup_Val'];
+				$nextLevel = $this->getCheckDrillDown($obj['DIArea']['Area_Level']);
+				if (!empty($nextLevel)) {
+					$tempArr['mapURL'] = $this->mapGetLevel(array('level'=>$nextLevel)); 
+					$tempArr['drilldown'] = $obj['DIArea']['Area_ID']; 
 				}
-
 
 				$data[] = $tempArr;
 			}
-		}
+		}//pr('----');
 		return $data;
 	}
 
-	private function mapGetLevel($level, $isNext = false) {
-	//	pr('level = '.$level);
-	//	pr($this->selectedAreaLevel);
-	//	pr('dbLastDrillDownLevel = '.$this->dbLastDrillDownLevel);
-		$diffValue = 1;
-		if ($isNext) {
-			reset($this->selectedAreaLevel);
-			//pr('current pointer = '.current($this->selectedAreaLevel));
-			while (current($this->selectedAreaLevel) !== $level) {
-			//	next($this->selectedAreaLevel);
-				next($this->selectedAreaLevel);
-				$nextItem = current($this->selectedAreaLevel);
-			//	pr('next item = '.$nextItem);
-			}
-			next($this->selectedAreaLevel);
-			$nextItem = current($this->selectedAreaLevel);
-			//pr('final item = '.$nextItem);
-			$nextItem = (empty($nextItem)) ? 0 : $nextItem;
-
-			$finalItemLevel = $nextItem + $diffValue;
-		} else {
-			$finalItemLevel = $level + $diffValue;
+	private function getCheckDrillDown($level) {
+		$firstLevel = $this->selectedMapAreaLevel[0];
+		$lastLevel = $this->selectedMapAreaLevel[count($this->selectedMapAreaLevel)-1];
+		$lastDrillDownLevel = $this->dbAllLevel[count($this->dbAllLevel) - 2]['AreaLevel']['Area_Level'];
+		
+		if(count($this->selectedMapAreaLevel) == 1){
+			return false;
 		}
-		$url = 'HighCharts/map/jor/jor_l0' . $finalItemLevel . '_2014.json';
-		//pr($url);
+		
+		reset($this->selectedMapAreaLevel);
+		while (current($this->selectedMapAreaLevel) !== $level) {
+			next($this->selectedMapAreaLevel);
+			$nextItem = current($this->selectedMapAreaLevel);
+		}
+		next($this->selectedMapAreaLevel);
+		$nextItem = current($this->selectedMapAreaLevel);
+		if($nextItem == $firstLevel || $lastDrillDownLevel < $nextItem){
+			$nextItem = false;
+		}
+		
+		return $nextItem;
+	}
+
+	private function mapGetLevel($_options) {
+		$level = $_options['level'];
+		$lastDrillDownLevel = $this->dbAllLevel[count($this->dbAllLevel) - 2]['AreaLevel']['Area_Level'];
+//		pr($_options);
+		$lastLevel = $this->selectedMapAreaLevel[count($this->selectedMapAreaLevel)-1];
+	
+		$diffValue = ($level > $lastDrillDownLevel)? 0:1;
+		$finalItemLevel = $level + $diffValue;
+	//	pr($finalItemLevel);
+		$controller = isset($_options['controller'])?$_options['controller'] : 'Visualizer';
+		//$url = 'HighCharts/map/jor/jor_l0' . $finalItemLevel . '_2014.json';
+		$url = $controller.DS.'loadJsonMap'.DS.$this->selectedCountry['DIArea']['Area_ID'].DS.$finalItemLevel;
 		return $url;
 	}
 
+	private function checkFunctionExist(){
+		if (!method_exists($this->controller, 'loadJsonMap')) {
+			pr('function loadJsonMap(country, level) must be implemented.');
+		}
+	}
 	/* ======================| End Map Component |======================== */
 }
 
