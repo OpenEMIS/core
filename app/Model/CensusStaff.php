@@ -27,7 +27,11 @@ class CensusStaff extends AppModel {
 	public $useTable = 'census_staff';
 	
 	public $belongsTo = array(
-		'SchoolYear'
+		'SchoolYear',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId) {
