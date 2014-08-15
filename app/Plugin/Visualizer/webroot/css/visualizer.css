@@ -71,7 +71,16 @@ fieldset > legend:hover {
 	text-align: center;
 	color: rgb(51, 51, 51);
 	word-wrap:break-word;
-	padding: 5px 0 15px 0;
+	padding: 5px 0 0px 0;
+	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
+}
+
+.visualizer-table-subcaption{
+	font-size: 12px;
+	text-align: center;
+	color: rgb(85, 85, 85);
+	word-wrap:break-word;
+	padding: 1px 0 15px 0;
 	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
 }
 
