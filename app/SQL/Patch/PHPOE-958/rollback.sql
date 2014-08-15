@@ -35,4 +35,12 @@ UPDATE `reports` SET
 `category` = 'Student Reports' 
 WHERE `reports`.`id` =83;
 
+--
+-- 4. restore the original table census_staff
+--
+
+DROP TABLE IF EXISTS `census_staff`;
+
+RENAME TABLE `census_staff_bak` TO `census_staff` ;
+
 
