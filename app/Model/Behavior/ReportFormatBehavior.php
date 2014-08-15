@@ -50,9 +50,8 @@ class ReportFormatBehavior extends ModelBehavior {
 			$dataFormatted = false;
 		}
 		
-		$header = $model->reportsGetHeader($args);
-		
 		$data = $model->reportsGetData($args);
+		$header = $model->reportsGetHeader($args);
 		//pr($data);die;
 		$fileName = $model->reportsGetFileName($args);
 
