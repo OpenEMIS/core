@@ -1,7 +1,5 @@
 <?php
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
-echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
-echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', array('inline' => false));
 echo $this->Html->script('app.autocomplete', array('inline' => false));
 

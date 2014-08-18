@@ -1,13 +1,13 @@
-SET @ordering := 0;
-SELECT `order` + 1 into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'add';
--- SELECT @ordering;
-
 UPDATE `navigations` SET `action` = 'create', `pattern` = 'create' WHERE `controller` = 'Students' AND `action` = 'add';
 UPDATE `security_functions` SET `_add` = 'create' WHERE `controller` = 'Students' AND `category` = 'General' AND `_add` = 'add';
 
+-- Insert 'Add existing Student' link and reorder
+SET @ordering := 0;
+SELECT `order` + 1 into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'create';
 UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @ordering;
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(NULL, 'Student', 'Students', 'Students', NULL, 'Add existing Student', 'add', 'add$', NULL, 60, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'Student', 'Students', 'Students', NULL, 'Add existing Student', 'add', 'add$', NULL, 60, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`, `created`) VALUES
 (56, 'StudentStatus', 'Status', 'Student', 58, 0, 1, '0000-00-00 00:00:00');
@@ -42,5 +42,14 @@ JOIN `institution_site_programmes`
 	ON `institution_site_programmes`.`id` = `institution_site_students`.`institution_site_programme_id`
 SET `institution_site_students`.`institution_site_id` = `institution_site_programmes`.`institution_site_id`,
 `institution_site_students`.`education_programme_id` = `institution_site_programmes`.`education_programme_id`;
+
+-- Insert 'Programmes' link to Student
+SELECT `order` + 1 into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'guardians';
+UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @ordering;
+INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(NULL, 'Student', 'Students', 'Students', 'DETAILS', 'Programmes', 'Programme', 'Programme', NULL, 62, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00')
+
+-- Delete Students link from Institution Sites
+DELETE FROM `navigations` WHERE `id` = 10;
 
 -- add security function for new link

@@ -95,7 +95,11 @@ foreach($fields as $key => $field) {
 				break;
 			
 		}
-		if (isset($field['value'])) {
+		if (array_key_exists('dataModel', $field) && array_key_exists('dataField', $field)) {
+			$dataModel = $field['dataModel'];
+			$dataField = $field['dataField'];
+			$options['value'] = $this->request->data[$dataModel][$dataField];
+		} else if (isset($field['value'])) {
 			$options['value'] = $field['value'];
 		}
 		if (!in_array($fieldType, array('image', 'date', 'time', 'file', 'file_upload', 'element'))) {
