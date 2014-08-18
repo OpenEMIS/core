@@ -226,7 +226,7 @@ class FormUtilityHelper extends AppHelper {
 				$label['text'] = $levelName;
 				$inputOptions['label'] = $label;
 				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
-				$value = $obj[$model]['id'];
+				//$value = $obj[$model]['id'];
 			}
 		}
 		
