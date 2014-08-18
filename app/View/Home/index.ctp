@@ -17,12 +17,13 @@
 		<?php if(isset($image)){ ?>
 		<div style="overflow:hidden;width:<?php echo $image['width']; ?>px;height:<?php echo $image['height']; ?>px;" >
 		<?php 
-			$leftPos = "left:-{$image['x']}px;";
-			if($lang_dir=='rtl'){
-				$leftPos ="margin-left:-{$image['x']}px;";
-			}
+		 	$leftPos = '-'.$image['x'];
+            if($lang_dir=='rtl'){
+           		$leftPos = $image['original_width']-($image['width']+$image['x']);
+            }
+
 			 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]), array(
-				'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;$leftPos"
+				'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;left:{$leftPos}px;"
 			));
 		?>
 		</div>

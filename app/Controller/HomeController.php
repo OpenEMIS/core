@@ -61,6 +61,11 @@ class HomeController extends AppController {
 			$image = array_merge($image['ConfigAttachment']);
 			$image['width'] = $this->ConfigItem->getValue('dashboard_img_width');
 			$image['height'] = $this->ConfigItem->getValue('dashboard_img_height');
+
+			$imageData = $this->ConfigAttachment->getResolution($image['file_name']);
+			$image['original_width'] = $imageData['width'];
+			$image['original_height'] = $imageData['height'];
+
 			$image = array_merge($image, $this->ConfigAttachment->getCoordinates($image['file_name']));
 			$this->set('image', $image);
 			
