@@ -45,12 +45,11 @@ $fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
 <div class="row">
 	<div style="overflow:hidden;width:<?php echo $image['width']; ?>px;height:<?php echo $image['height']; ?>px;" >
         <?php 
-             // echo $this->Html->image($image['imagePath'], array(
-            $leftPos = "-" . $image['x'];
+            $leftPos = '-'.$image['x'];
             if($lang_dir=='rtl'){
-                $leftPos = $image['x'];
+           		$leftPos = $image['original_width']-($image['width']+$image['x']);
             }
-             echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $obj["id"]), array(
+            echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $obj["id"]), array(
                 'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;left:{$leftPos}px;"
             ));
         ?>
