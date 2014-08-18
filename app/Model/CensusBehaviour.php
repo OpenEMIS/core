@@ -26,16 +26,20 @@ class CensusBehaviour extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
 		'Students.StudentBehaviourCategory',
-		'InstitutionSite'
+		'InstitutionSite',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId) {
 		$this->StudentBehaviourCategory->formatResult = true;
 		
-		$data = $this->StudentBehaviourCategory->find('all', array(
+		$list = $this->StudentBehaviourCategory->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'CensusBehaviour.id', 'CensusBehaviour.male', 'CensusBehaviour.female', 
+				'CensusBehaviour.id', 'CensusBehaviour.value',  'CensusBehaviour.gender_id',  
 				'CensusBehaviour.source', 'StudentBehaviourCategory.name', 'StudentBehaviourCategory.id AS student_behaviour_category_id'
 			),
 			'joins' => array(
@@ -53,6 +57,22 @@ class CensusBehaviour extends AppModel {
 			'conditions' => array('StudentBehaviourCategory.visible' => 1),
 			'order' => array('StudentBehaviourCategory.order')
 		));
+		
+		$data = array();
+		foreach($list AS $row){
+			$censusId = $row['id'];
+			$behaviourCatId = $row['student_behaviour_category_id'];
+			$genderId = $row['gender_id'];
+			
+			if(!empty($censusId) && !empty($genderId)){
+				$data[$behaviourCatId][$genderId] = array(
+					'censusId' => $censusId,
+					'value' => $row['value'],
+					'source' => $row['source']
+				);
+			}
+		}
+		
 		return $data;
 	}
 	
@@ -101,10 +121,26 @@ class CensusBehaviour extends AppModel {
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		
+		$behaviourCategories = $this->StudentBehaviourCategory->find('list' , array(
+			'recursive' => '-1',
+			'fields' => array('StudentBehaviourCategory.id', 'StudentBehaviourCategory.name'),
+			'conditions' => array('StudentBehaviourCategory.visible' => 1),
+			'order' => array('StudentBehaviourCategory.order')
+		));
+		//pr($staffCategories);die;
 
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		$genderOptions = array(
+			$maleGenderId => 'Male', 
+			$femaleGenderId => 'Female'
+		);
+		//pr($genderOptions);die;
+		
 		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
-		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable', 'genderOptions', 'behaviourCategories'));
 	}
 
 	public function behaviourEdit($controller, $params) {
@@ -118,8 +154,23 @@ class CensusBehaviour extends AppModel {
 			if (!$editable) {
 				$controller->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
+				$behaviourCategories = $this->StudentBehaviourCategory->find('list' , array(
+					'recursive' => '-1',
+					'fields' => array('StudentBehaviourCategory.id', 'StudentBehaviourCategory.name'),
+					'conditions' => array('StudentBehaviourCategory.visible' => 1),
+					'order' => array('StudentBehaviourCategory.order')
+				));
+				//pr($staffCategories);die;
+
+				$maleGenderId = $this->Gender->getIdByName('Male');
+				$femaleGenderId = $this->Gender->getIdByName('Female');
+				$genderOptions = array(
+					$maleGenderId => 'Male', 
+					$femaleGenderId => 'Female'
+				);
+				//pr($genderOptions);die;
 				
-				$controller->set(compact('selectedYear', 'yearList', 'data'));
+				$controller->set(compact('selectedYear', 'yearList', 'data', 'genderOptions', 'behaviourCategories'));
 			}
 		} else {
 			$data = $controller->data['CensusBehaviour'];
