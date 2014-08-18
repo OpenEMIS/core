@@ -14,8 +14,8 @@ $this->end();
 $this->start('contentBody');
 
 echo $this->Form->create('CensusBehaviour', array(
-    'inputDefaults' => array('label' => false, 'div' => false),
-    'url' => array('controller' => 'Census', 'action' => 'behaviourEdit')
+'inputDefaults' => array('label' => false, 'div' => false),
+ 'url' => array('controller' => 'Census', 'action' => 'behaviourEdit')
 ));
 echo $this->element('census/year_options');
 ?>
@@ -24,83 +24,76 @@ echo $this->element('census/year_options');
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
-                <th class="table_cell cell_category"><?php echo __('Category'); ?></th>
-                <th class="table_cell"><?php echo __('Male'); ?></th>
-                <th class="table_cell"><?php echo __('Female'); ?></th>
-                <th class="table_cell"><?php echo __('Total'); ?></th>
+                <th class="cell_category"><?php echo __('Category'); ?></th>
+                <th><?php echo __('Male'); ?></th>
+                <th><?php echo __('Female'); ?></th>
+                <th><?php echo __('Total'); ?></th>
             </tr>
         </thead>
 
         <tbody>
-            <?php
-            $total = 0;
-            $index = 0;
-            foreach ($data as $record) {
-                $total += $record['male'] + $record['female'];
-                $record_tag = "";
-                switch ($record['source']) {
-                    case 1:
-                        $record_tag.="row_external";
-                        break;
-                    case 2:
-                        $record_tag.="row_estimate";
-                        break;
-                }
-                ?>
-                <tr>
-                    <?php
-                    echo $this->Form->hidden($index . '.id', array('value' => $record['id']));
-                    echo $this->Form->hidden($index . '.student_behaviour_category_id', array('value' => $record['student_behaviour_category_id']));
-                    ?>
-                    <td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['name']; ?></td>
-                    <td class="table_cell">
-                        <div class="input_wrapper">
-                            <?php
-                            echo $this->Form->input($index . '.male', array(
-                                'type' => 'text',
-                                'class' => 'computeTotal ' . $record_tag,
-                                'value' => empty($record['male']) ? 0 : $record['male'],
-                                'maxlength' => 10,
-                                'onkeypress' => 'return utility.integerCheck(event)',
-                                'onkeyup' => 'Census.computeTotal(this)'
-                            ));
-                            ?>
-                        </div>
-                    </td>
-                    <td class="table_cell">
-                        <div class="input_wrapper">
-                            <?php
-                            echo $this->Form->input($index . '.female', array(
-                                'type' => 'text',
-                                'class' => 'computeTotal ' . $record_tag,
-                                'value' => empty($record['female']) ? 0 : $record['female'],
-                                'maxlength' => 10,
-                                'onkeypress' => 'return utility.integerCheck(event)',
-                                'onkeyup' => 'Census.computeTotal(this)'
-                            ));
-                            ?>
-                        </div>
-                    </td>
-                    <td class="table_cell cell_total cell_number"><?php echo $record['male'] + $record['female']; ?></td>
-                </tr>
-    <?php $index++;
-} ?>
+			<?php
+			foreach ($behaviourCategories AS $catId => $catName):
+			$subTotal = 0;
+			?>
+			<tr>
+				<td><?php echo $catName; ?></td>
+				<?php
+				foreach ($genderOptions AS $genderId => $genderName):
+				?>
+				<td>
+					<div class="input_wrapper">
+						<?php
+						echo $this->Form->hidden($index . '.id', array('value' => !empty($data[$catId][$genderId]['census_id']) ? $data[$catId][$genderId]['census_id'] : 0));
+						echo $this->Form->hidden($index . '.student_behaviour_category_id', array('value' => $catId));
+						echo $this->Form->hidden($index . '.gender_id', array('value' => $genderId));
+
+						$record_tag = "";
+						foreach ($source_type as $k => $v):
+						if (isset($data[$catId][$genderId]['source']) && $data[$catId][$genderId]['source'] == $v):
+						$record_tag = "row_" . $k;
+						endif;
+						endforeach;
+
+						if (!empty($data[$catId][$genderId]['value'])):
+						$value = $data[$catId][$genderId]['value'];
+						else:
+						$value = 0;
+						endif;
+
+						echo $this->Form->input($index . '.value', array(
+						'id' => 'CensusGraduateMale',
+						'class' => 'computeTotal ' . $record_tag,
+						'type' => 'text',
+						'maxlength' => 10,
+						'value' => $value,
+						'onkeypress' => 'return utility.integerCheck(event)',
+						'onkeyup' => 'Census.computeTotal(this)'
+						));
+
+						$subTotal += $value;
+						?>
+					</div>
+				</td>
+				<?php
+				$index++;
+				endforeach;
+				?>
+
         </tbody>
 
         <tfoot>
             <tr>
-                <td class="table_cell"></td>
-                <td class="table_cell"></td>
-                <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-                <td class="table_cell cell_value cell_number"><?php echo $total; ?></td>
+                <td></td>
+                <td></td>
+                <td class="cell-label"><?php echo __('Total'); ?></td>
+                <td class="cell-value cell-number"><?php echo $total; ?></td>
             </tr>
         </tfoot>
     </table>
-
-    <div class="controls">
-        <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'behaviour', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
-    </div>
-<?php echo $this->Form->end(); ?>
+	<?php
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'behaviour', $selectedYear)));
+	echo $this->Form->end();
+	?>
 </div>
 <?php $this->end(); ?>

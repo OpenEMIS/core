@@ -9,7 +9,7 @@ $this->assign('contentHeader', __('Graduates'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-    echo $this->Html->link(__('Edit'), array('action' => 'graduatesEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'graduatesEdit', $selectedYear), array('class' => 'divider'));
 }
 $this->end();
 
@@ -18,43 +18,75 @@ echo $this->element('census/year_options');
 ?>
 
 <div class="table-responsive">
+	<?php
+	foreach ($programmeData as $cycleName => $programmes):
+		$total = 0;
+		?>
+		<fieldset class="section_group">
+			<legend><?php echo $cycleName ?></legend>
 
-    <?php foreach ($data as $key => $val) { ?>
-        <fieldset class="section_group">
-            <legend><?php echo $key ?></legend>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+						<th class="cell_programme"><?php echo __('Programme'); ?></th>
+						<th class="cell_certificate"><?php echo __('Certification'); ?></th>
+						<th><?php echo __('Male'); ?></th>
+						<th><?php echo __('Female'); ?></th>
+						<th><?php echo __('Total'); ?></th>
+					</tr>
+				</thead>
 
-            <table class="table table-striped table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th class="cell_programme"><?php echo __('Programme'); ?></th>
-                        <th class="cell_certificate"><?php echo __('Certification'); ?></th>
-                        <th><?php echo __('Male'); ?></th>
-                        <th><?php echo __('Female'); ?></th>
-                        <th><?php echo __('Total'); ?></th>
-                    </tr>
-                </thead>
+				<tbody>
+					<?php
+					foreach ($programmes as $programmeId => $programme):
+						$maleValue = 0;
+						$femaleValue = 0;
 
-                <tbody>
-                    <?php
-                    foreach ($val as $record) {
-                        $record_tag = "";
-                        foreach ($source_type as $k => $v) {
-                            if ($record['source'] == $v) {
-                                $record_tag = "row_" . $k;
-                            }
-                        }
-                        ?>
-                        <tr>
-                            <td class="<?php echo $record_tag; ?>"><?php echo $record['education_programme_name']; ?></td>
-                            <td class="<?php echo $record_tag; ?>"><?php echo $record['education_certification_name']; ?></td>
-                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></td>
-                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></td>
-                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo $record['total']; ?></td>
-                        </tr>
-    <?php } ?>
-                </tbody>
-            </table>
-        </fieldset>
-<?php } ?>
+						$recordTagMale = "";
+						$recordTagFemale = "";
+
+						foreach ($genderOptions AS $genderId => $genderName):
+							if (!empty($censusData[$programmeId][$genderId])):
+								foreach ($source_type as $k => $v):
+									if ($censusData[$programmeId][$genderId]['source'] == $v):
+										if ($genderName == 'Male'):
+											$recordTagMale = "row_" . $k;
+										else:
+											$recordTagFemale = "row_" . $k;
+										endif;
+									endif;
+								endforeach;
+
+								if ($genderName == 'Male'):
+									$maleValue = $censusData[$programmeId][$genderId]['value'];
+								else:
+									$femaleValue = $censusData[$programmeId][$genderId]['value'];
+								endif;
+							endif;
+						endforeach;
+
+						$rowTotal = $maleValue + $femaleValue;
+						$total += $rowTotal;
+						?>
+						<tr>
+							<td><?php echo $programme['programmeName']; ?></td>
+							<td><?php echo $programme['certificationName']; ?></td>
+							<td class="cell-number <?php echo $recordTagMale; ?>"><?php echo $maleValue; ?></td>
+							<td class="cell-number <?php echo $recordTagFemale; ?>"><?php echo $femaleValue; ?></td>
+							<td class="cell-number"><?php echo $rowTotal; ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+
+				<tfoot>
+					<tr>
+						<td colspan="3"></td>
+						<td class="cell-label">Total</td>
+						<td class="cell-value cell-number"><?php echo $total; ?></td>
+					</tr>
+				</tfoot>
+			</table>
+		</fieldset>
+	<?php endforeach; ?>
 </div>
 <?php $this->end(); ?>

@@ -45,7 +45,7 @@ class CensusGraduate extends AppModel {
 				'EducationCertification.id AS education_certification_id',
 				'EducationCertification.name AS education_certification_name',
 				'InstitutionSiteProgramme.institution_site_id',
-				'CensusGraduate.id',
+				'CensusGraduate.id AS census_id',
 				'CensusGraduate.gender_id',
 				'CensusGraduate.value',
 				'CensusGraduate.source'
@@ -59,7 +59,10 @@ class CensusGraduate extends AppModel {
 				array(
 					'table' => 'education_certifications',
 					'alias' => 'EducationCertification',
-					'conditions' => array('EducationCertification.id = EducationProgramme.education_certification_id')
+					'conditions' => array(
+						'EducationCertification.id = EducationProgramme.education_certification_id',
+						'EducationCertification.id != 1'
+					)
 				),
 				array(
 					'table' => 'education_cycles',
@@ -88,29 +91,48 @@ class CensusGraduate extends AppModel {
 			),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
-		$data = array();
-		foreach($list as $obj) {
-			if($obj['education_certification_id'] != 1) {
-				$level = $obj['education_level_name'];
-				if(!isset($data[$level])) {
-					$data[$level] = array();
-				}
-				$obj['education_programme_name'] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
-				$obj['total'] = $obj['male'] + $obj['female'];
-				$data[$level][] = $obj;
+		
+		$programmesData = array();
+		$censusData = array();
+		
+		foreach ($list as $obj) {
+			$level = $obj['education_level_name'];
+			$genderId = $obj['gender_id'];
+			$programmeId = $obj['education_programme_id'];
+			
+			if(!empty($programmeId) && !empty($genderId)){
+				$censusData[$programmeId][$genderId] = array(
+					'census_id' =>  $obj['census_id'],
+					'value' => $obj['value'],
+					'source' => $obj['source']
+				);
 			}
+			
+			$programmesData[$level][$programmeId] = array(
+				'programmeName' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
+				'certificationName' => $obj['education_certification_name']
+			);
 		}
+		
+		$data = array(
+			'programmeData' => $programmesData,
+			'censusData' => $censusData
+		);
+		
+		// pr($data);die;
 		return $data;
 	}
 	
-	public function saveCensusData($data) {
+	public function saveCensusData($data, $institutionSiteId) {
 		$yearId = $data['school_year_id'];
 		unset($data['school_year_id']);
 		//pr($data);die;
+		
 		foreach($data as $obj) {
 			$obj['school_year_id'] = $yearId;
+			$obj['institution_site_id'] = $institutionSiteId;
 			if($obj['id'] == 0) {
-				if($obj['male'] > 0 || $obj['female'] > 0) {
+				if($obj['value'] > 0) {
 					$this->create();
 					$this->save(array('CensusGraduate' => $obj));
 				}
@@ -126,42 +148,52 @@ class CensusGraduate extends AppModel {
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
-		$data = array();
+		
+		$censusData = array();
+		$programmeData = array();
+		
 		if (empty($programmes)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		} else {
 			$data = $this->getCensusData($institutionSiteId, $selectedYear);
-			if (empty($data)) {
+			$censusData = $data['censusData'];
+			$programmeData = $data['programmeData'];
+			
+			if (empty($censusData)) {
 				$controller->Message->alert('CensusGraduate.notRequired');
 			}
 		}
-		
+
 		$maleGenderId = $this->Gender->getIdByName('Male');
 		$femaleGenderId = $this->Gender->getIdByName('Female');
 		$genderOptions = array(
-					$maleGenderId => 'Male',
-					$femaleGenderId => 'Female'
+			$maleGenderId => 'Male',
+			$femaleGenderId => 'Female'
 		);
-		
+
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
-		
-		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+
+		$controller->set(compact('selectedYear', 'yearList', 'genderOptions', 'isEditable', 'censusData', 'programmeData'));
 	}
 
 	public function graduatesEdit($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		
 		if ($controller->request->is('post')) {
 			$data = $controller->data['CensusGraduate'];
 			$yearId = $data['school_year_id'];
-			$this->saveCensusData($data);
+			$this->saveCensusData($data, $institutionSiteId);
 			$controller->Message->alert('general.edit.success');
 			$controller->redirect(array('action' => 'graduates', $yearId));
 		}
 		$controller->Navigation->addCrumb('Edit Graduates');
-		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$yearList = $this->SchoolYear->getAvailableYears();
 		$selectedYear = $controller->getAvailableYearId($yearList);
 		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
-		$data = array();
+		
+		$censusData = array();
+		$programmeData = array();
+		
 		$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 		if (!$editable) {
 			$controller->redirect(array('action' => 'graduates', $selectedYear));
@@ -170,13 +202,23 @@ class CensusGraduate extends AppModel {
 				$controller->Message->alert('InstitutionSiteProgramme.noData');
 			} else {
 				$data = $this->getCensusData($institutionSiteId, $selectedYear);
-				if (empty($data)) {
+				$censusData = $data['censusData'];
+				$programmeData = $data['programmeData'];
+			
+				if (empty($censusData)) {
 					$controller->Message->alert('CensusGraduate.notRequired');
 				}
 			}
 		}
 		
-		$controller->set(compact('selectedYear', 'yearList', 'data'));
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		$genderOptions = array(
+			$maleGenderId => 'Male',
+			$femaleGenderId => 'Female'
+		);
+		
+		$controller->set(compact('selectedYear', 'yearList', 'genderOptions', 'censusData', 'programmeData'));
 	}
 	
 	public function reportsGetHeader($args) {
@@ -190,7 +232,15 @@ class CensusGraduate extends AppModel {
 		$index = $args[1];
 
 		if ($index == 1) {
-			$data = array();
+			$reportData = array();
+			
+			$maleGenderId = $this->Gender->getIdByName('Male');
+			$femaleGenderId = $this->Gender->getIdByName('Female');
+			$genderOptions = array(
+				$maleGenderId => 'Male',
+				$femaleGenderId => 'Female'
+			);
+			
 			$header = array(__('Year'), __('Education Level'), __('Education Programme'), __('Certification'), __('Male'), __('Female'), __('Total'));
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
@@ -200,34 +250,50 @@ class CensusGraduate extends AppModel {
 				$yearId = $rowYear['SchoolYear']['id'];
 				$yearName = $rowYear['SchoolYear']['name'];
 
-				$dataCensus = $this->getCensusData($institutionSiteId, $yearId);
+				$data = $this->getCensusData($institutionSiteId, $yearId);
+				$censusData = $data['censusData'];
+				$programmeData = $data['programmeData'];
 
-				if (count($dataCensus) > 0) {
-					foreach ($dataCensus AS $levelName => $dataByLevel) {
-						$data[] = $header;
-						foreach ($dataByLevel AS $rowCensus) {
-							$programme = $rowCensus['education_programme_name'];
-							$certificationName = $rowCensus['education_certification_name'];
-							$male = empty($rowCensus['male']) ? 0 : $rowCensus['male'];
-							$female = empty($rowCensus['female']) ? 0 : $rowCensus['female'];
-							$total = $male + $female;
-
-							$data[] = array(
-								$yearName,
-								$levelName,
-								$programme,
-								$certificationName,
-								$male,
-								$female,
-								$total
-							);
+				if (count($censusData) > 0) {
+					foreach ($programmeData as $cycleName => $programmes) {
+						$total = 0;
+						$reportData[] = $header;
+						foreach ($programmes as $programmeId => $programme){
+							$maleValue = 0;
+							$femaleValue = 0;
+							
+							foreach ($genderOptions AS $genderId => $genderName){
+								if (!empty($censusData[$programmeId][$genderId])){
+									if ($genderName == 'Male'):
+										$maleValue = $censusData[$programmeId][$genderId]['value'];
+									else:
+										$femaleValue = $censusData[$programmeId][$genderId]['value'];
+									endif;
+								}
+							}
+							
+							if($maleValue > 0 || $femaleValue > 0){
+								$rowTotal = $maleValue + $femaleValue;
+							
+								$reportData[] = array(
+									$yearName,
+									$cycleName,
+									$programme['programmeName'],
+									$programme['certificationName'],
+									$maleValue,
+									$femaleValue,
+									$rowTotal
+								);
+								
+								$total += $rowTotal;
+							}
 						}
-						$data[] = array();
+						$reportData[] = array('', '', '', '', '', __('Total'), $total);
+						$reportData[] = array();
 					}
 				}
 			}
-			//pr($data);
-			return $data;
+			return $reportData;
 		}
 	}
 
