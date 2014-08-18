@@ -54,9 +54,9 @@ class ControllerAction2Behavior extends ModelBehavior {
 		
 		if ($model->render === 'auto') {
 			if ($action == 'add' || $action == 'edit') {
-				//$controller->render('../Elements/templates/edit');
+				$controller->render('../Elements/templates/edit');
 			} else if ($action == 'view') {
-				//$controller->render('../Elements/templates/view');
+				$controller->render('../Elements/templates/view');
 			}
 		} else if ($model->render === true) {
 			$controller->render($module . '/' . $action);

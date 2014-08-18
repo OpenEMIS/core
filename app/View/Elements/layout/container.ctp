@@ -29,6 +29,8 @@
 </div>
 <?php
 if(isset($datepicker) && !empty($datepicker)) {
+	echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
+	echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', array('inline' => false));
 	echo $this->element('layout/datepicker');
 }
 if(isset($timepicker) && !empty($timepicker)) {
