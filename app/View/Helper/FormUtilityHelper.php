@@ -22,6 +22,7 @@ class FormUtilityHelper extends AppHelper {
 	
 	public function getFormOptions($url=array(), $type='') {
 		if(!isset($url['controller'])) {
+			$url['plugin'] = false;
 			$url['controller'] = $this->_View->params['controller'];
 		}
 		$options = array(

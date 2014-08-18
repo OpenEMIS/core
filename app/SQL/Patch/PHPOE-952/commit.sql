@@ -1,3 +1,4 @@
+UPDATE `navigations` SET `pattern` = 'index$|advanced|InstitutionSiteStudent.index' WHERE `controller` = 'Students' AND `action` = 'index';
 UPDATE `navigations` SET `action` = 'create', `pattern` = 'create' WHERE `controller` = 'Students' AND `action` = 'add';
 UPDATE `security_functions` SET `_add` = 'create' WHERE `controller` = 'Students' AND `category` = 'General' AND `_add` = 'add';
 
@@ -6,7 +7,7 @@ SET @ordering := 0;
 SELECT `order` + 1 into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'create';
 UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @ordering;
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(NULL, 'Student', 'Students', 'Students', NULL, 'Add existing Student', 'add', 'add$', NULL, 60, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(NULL, 'Student', 'Students', 'Students', NULL, 'Add existing Student', 'InstitutionSiteStudent/add', 'InstitutionSiteStudent.add', NULL, 60, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`, `created`) VALUES

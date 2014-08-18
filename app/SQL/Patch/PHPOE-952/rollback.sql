@@ -10,8 +10,9 @@ DELETE FROM `field_options` WHERE `id` = 56;
 ALTER TABLE `field_option_values` DROP `old_id`;
 
 UPDATE `navigations` SET `action` = 'add', `pattern` = 'add$' WHERE `controller` = 'Students' AND `action` = 'create';
-UPDATE `security_functions` SET `_add` = 'add' WHERE `controller` = 'Students' AND `category` = 'General' AND `_add` = 'create';
 UPDATE `navigations` SET `action` = 'students', `pattern` = 'students' WHERE `controller` = 'InstitutionSites' AND `action` = 'InstitutionSiteStudent';
+UPDATE `navigations` SET `pattern` = 'index$|advanced' WHERE `controller` = 'Students' AND `action` = 'index';
+UPDATE `security_functions` SET `_add` = 'add' WHERE `controller` = 'Students' AND `category` = 'General' AND `_add` = 'create';
 
 ALTER TABLE `institution_site_students` DROP `institution_site_id` ;
 ALTER TABLE `institution_site_students` DROP `education_programme_id` ;
