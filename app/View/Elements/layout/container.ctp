@@ -5,7 +5,7 @@
 	if (in_array($this->params['controller'], $controllers) && $this->Session->check('InstitutionSite.id')) {
 		$id = $this->Session->read('InstitutionSite.id');
 		$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
-		echo $this->Html->link($name, array('controller' => 'InstitutionSites', 'action' => 'view', $id));
+		echo $this->Html->link($name, array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'view', $id));
 	} else {
 		echo __($bodyTitle);
 	}

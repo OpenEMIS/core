@@ -26,6 +26,17 @@ class InstitutionSiteStudent extends AppModel {
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
 	
+	public $belongsTo = array(
+		'Students.Student',
+		'StudentStatus' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'student_status_id'
+		),
+		'InstitutionSiteProgramme',
+		'EducationProgramme',
+		'InstitutionSite'
+	);
+	
 	public $validate = array(
 		'search' => array(
 			'ruleRequired' => array(
@@ -48,16 +59,6 @@ class InstitutionSiteStudent extends AppModel {
 				'message' => 'Please select a Programme.'
 			)
 		)
-	);
-	public $belongsTo = array(
-		'Students.Student',
-		'StudentStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'student_status_id'
-		),
-		//'InstitutionSiteProgramme'
-		'EducationProgramme',
-		'InstitutionSite'
 	);
 	
 	public $reportMapping = array(
@@ -130,7 +131,6 @@ class InstitutionSiteStudent extends AppModel {
 	
 	public function beforeAction() {
 		parent::beforeAction();
-		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$this->fields['institution'] = array(
 			'type' => 'disabled',
@@ -178,7 +178,7 @@ class InstitutionSiteStudent extends AppModel {
 					'startDate' => $date->format('d-m-Y'),
 					'data-date' => $date->format('d-m-Y')
 				);
-				$programmeOptions = $this->EducationProgramme->getProgrammeOptionsByInstitution($institutionSiteId, $yearId);
+				$programmeOptions = $this->EducationProgramme->getProgrammeOptionsByInstitution($institutionSiteId, $yearId, true);
 				$this->fields['education_programme_id']['options'] = $programmeOptions;
 			}
 		}
@@ -201,12 +201,12 @@ class InstitutionSiteStudent extends AppModel {
 		
 		$prefix = 'InstitutionSiteStudent.Search.%s';
 		if ($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->request->data['Student']['SearchField']));
-			$selectedYear = $this->request->data['Student']['school_year'];
-			$selectedProgramme = $this->request->data['Student']['education_programme_id'];
-			$selectedStatus = $this->request->data['Student']['student_status_id'];
-			$orderBy = $this->request->data['Student']['orderBy'];
-			$order = $this->request->data['Student']['order'];
+			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['SearchField']));
+			$selectedYear = $this->request->data[$this->alias]['school_year'];
+			$selectedProgramme = $this->request->data[$this->alias]['education_programme_id'];
+			$selectedStatus = $this->request->data[$this->alias]['student_status_id'];
+			$orderBy = $this->request->data[$this->alias]['orderBy'];
+			$order = $this->request->data[$this->alias]['order'];
 
 			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
 			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
@@ -227,27 +227,39 @@ class InstitutionSiteStudent extends AppModel {
 				$order = $this->Session->read(sprintf($prefix, 'order'));
 			}
 		}
-		$conditions = array('institution_site_id' => $institutionSiteId, 'order' => array($orderBy => $order));
-		$conditions['search'] = $searchField;
+		$conditions = array('InstitutionSiteStudent.institution_site_id' => $institutionSiteId);
+		
+		if (!empty($searchField)) {
+			$search = '%' . $searchField . '%';
+			$conditions['OR'] = array(
+				'Student.identification_no LIKE' => $search,
+				'Student.first_name LIKE' => $search,
+				'Student.middle_name LIKE' => $search,
+				'Student.last_name LIKE' => $search,
+				'Student.preferred_name LIKE' => $search
+			);
+		}
+		
 		if (!empty($selectedYear)) {
-			$conditions['year'] = $selectedYear;
+			// if the year falls between the start and end date
+			$conditions['InstitutionSiteStudent.start_year <='] = $selectedYear;
+			$conditions['InstitutionSiteStudent.end_year >='] = $selectedYear;
 		}
 
 		if (!empty($selectedProgramme)) {
-			$conditions['education_programme_id'] = $selectedProgramme;
+			$conditions['EducationProgramme.id'] = $selectedProgramme;
 		}
 
 		if (!empty($selectedStatus)) {
-			$conditions['student_status_id'] = $selectedStatus;
+			$conditions['InstitutionSiteStudent.student_status_id'] = $selectedStatus;
 		}
 		
-		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100);
+		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
 		$data = $this->controller->paginate($this->alias, $conditions);
 
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		
 		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data', 'statusOptions'));
 	}
 	
@@ -281,25 +293,36 @@ class InstitutionSiteStudent extends AppModel {
 			$submit = $this->request->data['submit'];
 			if ($submit == 'Save') {
 				$studentId = $data[$this->alias]['student_id'];
-				$count = $this->find('count', array('conditions' => array('institution_site_id' => $institutionSiteId, 'student_id' => $studentId)));
+				$data[$this->alias]['institution_site_programme_id'] = 0;
 				
-				if ($count > 0) {
-					$this->Message->alert('general.exists');
-				} else {
-					if (!empty($data[$this->alias]['education_programme_id'])) {
+				$this->set($data[$this->alias]);
+				if ($this->validates()) {
+					$count = $this->find('count', array(
+						'conditions' => array(
+							$this->alias . '.institution_site_id' => $institutionSiteId, 
+							$this->alias . '.student_id' => $studentId,
+							$this->alias . '.education_programme_id' => $data[$this->alias]['education_programme_id']
+						)
+					));
+					
+					if ($count > 0) {
+						$this->Message->alert('general.exists');
+					} else {
 						$programmeId = $this->EducationProgramme->InstitutionSiteProgramme->field('id', array(
 							'institution_site_id' => $institutionSiteId,
 							'education_programme_id' => $data[$this->alias]['education_programme_id'],
 							'school_year_id' => $yearId
 						));
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
+						if ($this->save($data)) {
+							$this->Message->alert('general.add.success');
+							return $this->redirect(array('action' => get_class($this)));
+						} else {
+							$this->Message->alert('general.add.failed');
+						}
 					}
-					if ($this->save($data)) {
-						$this->Message->alert('general.add.success');
-						return $this->redirect(array('action' => get_class($this)));
-					} else {
-						$this->Message->alert('general.add.failed');
-					}
+				} else {
+					$this->Message->alert('general.add.failed');
 				}
 			}
 		}
@@ -332,103 +355,23 @@ class InstitutionSiteStudent extends AppModel {
 		return $data;
 	}
 	
-	public function isStudentExistsInProgramme($studentId, $siteProgrammeId, $year) {
-		$count = $this->find('count', array(
-			'conditions' => array(
-				'InstitutionSiteStudent.student_id' => $studentId,
-				'InstitutionSiteStudent.institution_site_programme_id' => $siteProgrammeId,
-				'InstitutionSiteStudent.start_year' => $year
-			)
-		));
-		return $count==1;
-	}
-	
-	public function paginateJoins(&$conditions) {
-		$institutionSiteId = $conditions['institution_site_id'];
-		unset($conditions['institution_site_id']);
-		
-		$programmeConditions = array(
-			'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
-			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		);
-		
-		if(isset($conditions['year'])) {
-			$year = $conditions['year'];
-			unset($conditions['year']);
-			
-			$conditions = array_merge($conditions, array( // if the year falls between the start and end date
-				'InstitutionSiteStudent.start_year <=' => $year,
-				'InstitutionSiteStudent.end_year >=' => $year
-			));
-		}
-		
-		if(isset($conditions['education_programme_id'])) {
-			$programmeConditions[] = 'InstitutionSiteProgramme.education_programme_id = ' . $conditions['education_programme_id'];
-			unset($conditions['education_programme_id']);
-		}
-		
-		$joins = array(
-			array(
-				'table' => 'students',
-				'alias' => 'Student',
-				'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
-			),
-			array(
-				'table' => 'institution_site_programmes',
-				'alias' => 'InstitutionSiteProgramme',
-				'conditions' => $programmeConditions
-			),
-			array(
-				'table' => 'education_programmes',
-				'alias' => 'EducationProgramme',
-				'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
-			)
-		);
-		return $joins;
-	}
-	
-	public function paginateConditions(&$conditions) {
-		if(isset($conditions['search']) && !empty($conditions['search'])) {
-			$search = $conditions['search'];
-			$search = '%' . $search . '%';
-			$conditions['OR'] = array(
-				'Student.identification_no LIKE' => $search,
-				'Student.first_name LIKE' => $search,
-				'Student.middle_name LIKE' => $search,
-				'Student.last_name LIKE' => $search,
-				'Student.preferred_name LIKE' => $search
-			);
-		}
-		unset($conditions['search']);
-	}
-	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$order = $conditions['order'];
-		unset($conditions['order']);
-		$this->paginateConditions($conditions);
-		$this->unbindModel(array('belongsTo' => array('Student', 'InstitutionSiteProgramme')));
 		$data = $this->find('all', array(
-			'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name', 'EducationProgramme.name', 'StudentStatus.name'),
-			'joins' => $this->paginateJoins($conditions),
+			'fields' => array(
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
+				'Student.last_name', 'EducationProgramme.name', 'StudentStatus.name'
+			),
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
 			'group' => array('Student.id', 'EducationProgramme.id'),
 			'order' => $order
 		));
-		$this->bindModel(array('belongsTo' => array('Student', 'InstitutionSiteProgramme')));
 		return $data;
 	}
 	 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		unset($conditions['order']);
-		$this->paginateConditions($conditions);
-		$this->unbindModel(array('belongsTo' => array('Student', 'InstitutionSiteProgramme')));
-		$count = $this->find('count', array(
-			'joins' => $this->paginateJoins($conditions), 
-			'conditions' => $conditions
-		));
-		$this->bindModel(array('belongsTo' => array('Student', 'InstitutionSiteProgramme')));
+		$count = $this->find('count', array('conditions' => $conditions));
 		return $count;
 	}
 	
