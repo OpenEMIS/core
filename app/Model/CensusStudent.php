@@ -32,7 +32,11 @@ class CensusStudent extends AppModel {
 		'SchoolYear',
 		'EducationGrade',
 		'StudentCategory',
-		'InstitutionSite'
+		'InstitutionSite',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -190,7 +194,13 @@ class CensusStudent extends AppModel {
 	//Used by Yearbook
 	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
 		$this->formatResult = true;
-		$options = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.male) AS M', 'SUM(CensusStudent.female) AS F'));
+		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$optionsMale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS M'));
+		$optionsFemale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS F'));
+		
 		$joins = array(
 			array(
 				'table' => 'education_grades',
@@ -246,41 +256,72 @@ class CensusStudent extends AppModel {
 //				)
 //			);
 		}
-		$options['joins'] = $joins;
-		$options['conditions'] = array('CensusStudent.school_year_id' => $yearId);
-		$options['group'] = array('EducationProgramme.education_cycle_id');
-		$data = $this->find('first', $options);
+		
+		$optionsMale['joins'] = $joins;
+		$optionsFemale['joins'] = $joins;
+		
+		$optionsMale['conditions'] = array('CensusStudent.school_year_id' => $yearId, 'CensusStudent.gender_id' => $maleGenderId);
+		$optionsFemale['conditions'] = array('CensusStudent.school_year_id' => $yearId, 'CensusStudent.gender_id' => $femaleGenderId);
+		
+		$optionsMale['group'] = array('EducationProgramme.education_cycle_id');
+		$optionsFemale['group'] = array('EducationProgramme.education_cycle_id');
+		
+		$dataMale = $this->find('first', $optionsMale);
+		$dataFemale = $this->find('first', $optionsFemale);
+		
+		$data = array(
+			'M' => $dataMale['M'],
+			'F' => $dataFemale['F']
+		);
+		
 		return $data;
 	}
 	
 	public function getCountByAreaId($yearId, $areaId) {
 		$this->formatResult = true;
-		$data = $this->find('first', array(
-			'recursive' => -1,
-			'fields' => array('SUM(CensusStudent.male) AS M', 'SUM(CensusStudent.female) AS F'),
-			'joins' => array(
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array('InstitutionSite.id = CensusStudent.institution_site_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'AreaSite',
-					'conditions' => array('AreaSite.id = InstitutionSite.area_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'Area',
-					'conditions' => array(
-						'Area.id = ' . $areaId,
-						'Area.lft <= AreaSite.lft',
-						'Area.rght >= AreaSite.rght'
-					)
-				)
+
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$optionsMale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS M'));
+		$optionsFemale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS F'));
+		
+		$joins = array(
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.id = CensusStudent.institution_site_id')
 			),
-			'conditions' => array('CensusStudent.school_year_id' => $yearId)
-		));
+			array(
+				'table' => 'areas',
+				'alias' => 'AreaSite',
+				'conditions' => array('AreaSite.id = InstitutionSite.area_id')
+			),
+			array(
+				'table' => 'areas',
+				'alias' => 'Area',
+				'conditions' => array(
+					'Area.id = ' . $areaId,
+					'Area.lft <= AreaSite.lft',
+					'Area.rght >= AreaSite.rght'
+				)
+			)
+		);
+		
+		$optionsMale['joins'] = $joins;
+		$optionsFemale['joins'] = $joins;
+		
+		$optionsMale['conditions'] = array('CensusStudent.school_year_id' => $yearId, 'CensusStudent.gender_id' => $maleGenderId);
+		$optionsFemale['conditions'] = array('CensusStudent.school_year_id' => $yearId, 'CensusStudent.gender_id' => $femaleGenderId);
+		
+		$dataMale = $this->find('first', $optionsMale);
+		$dataFemale = $this->find('first', $optionsFemale);
+		
+		$data = array(
+			'M' => $dataMale['M'],
+			'F' => $dataFemale['F']
+		);
+		
 		return $data;
 	}
 	// End Yearbook
