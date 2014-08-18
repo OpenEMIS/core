@@ -73,7 +73,8 @@ echo $this->element('census/year_options');
 					?>
 					<td class="cell-total cell-number"><?php echo $subTotal; ?></td>
 				</tr>
-				<?php
+				<?php 
+				$total += $subTotal;
 			endforeach;
 			?>
 		</tbody>
@@ -85,11 +86,9 @@ echo $this->element('census/year_options');
 		</tfoot>
 	</table>
 </div>
-
-<div class="controls">
-	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'staff', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
-</div>
-<?php echo $this->Form->end(); ?>
+<?php 
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'staff', $selectedYear)));
+echo $this->Form->end(); 
+?>
 
 <?php $this->end(); ?>

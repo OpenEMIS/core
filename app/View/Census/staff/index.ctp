@@ -28,10 +28,10 @@ echo $this->element('census/year_options');
 				$maleValue = 0;
 				$femaleValue = 0;
 				
-				foreach($genderOptions AS $genderId => $genderName){
-					$recordTagMale = "";
-					$recordTagFemale = "";
-					
+				$recordTagMale = "";
+				$recordTagFemale = "";
+				
+				foreach($genderOptions AS $genderId => $genderName){	
 					if(!empty($data[$staffCatId][$genderId])){
 						foreach ($source_type as $k => $v) {
 							if ($data[$staffCatId][$genderId]['source'] == $v) {
