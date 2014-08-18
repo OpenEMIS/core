@@ -48,7 +48,9 @@ class StudentsController extends StudentsAppController {
 		'AccessControl',
 		'Wizard'
 	);
+	
 	public $modules = array(
+		// old ControllerAction
 		'healthHistory' => 'Students.StudentHealthHistory',
 		'healthFamily' => 'Students.StudentHealthFamily',
 		'healthImmunization' => 'Students.StudentHealthImmunization',
@@ -71,7 +73,9 @@ class StudentsController extends StudentsAppController {
 		'behaviour' => 'Students.StudentBehaviour',
 		'additional' => 'Students.StudentCustomField',
 		'fee' => 'Students.studentFee',
-		'InstitutionSiteStudent'
+		// new ControllerAction
+		'InstitutionSiteStudent',
+		'Programme' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {

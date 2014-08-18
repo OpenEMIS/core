@@ -86,6 +86,10 @@ class LabelHelper extends AppHelper {
 			'international_code' => 'International Code',
 			'national_code' => 'National Code'
 		),
+		'date' => array(
+			'start' => 'Start Date',
+			'end' => 'End Date'
+		),
 		'gender' => array(
 			'm' => 'Male',
 			'f' => 'Female'
@@ -158,6 +162,7 @@ class LabelHelper extends AppHelper {
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution',
+			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
 		),
