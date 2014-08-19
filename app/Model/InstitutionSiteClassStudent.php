@@ -147,7 +147,7 @@ class InstitutionSiteClassStudent extends AppModel {
 						'alias' => 'InstitutionSiteClass',
 						'conditions' => array(
 							'InstitutionSiteClass.institution_site_id = InstitutionSiteProgramme.institution_site_id',
-							'InstitutionSiteClass.id = ' . $id
+							'InstitutionSiteClass.id = ' . $id,
 						)
 					),
 					array(
@@ -155,7 +155,8 @@ class InstitutionSiteClassStudent extends AppModel {
 						'alias' => 'InstitutionSiteClassGrade',
 						'conditions' => array(
 							'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-							'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
+							'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id',
+							'InstitutionSiteClassGrade.education_grade_id' => $selectedGrade
 						)
 					),
 					array(
@@ -185,14 +186,17 @@ class InstitutionSiteClassStudent extends AppModel {
 				'group' => array('Student.id'),
 				'order' => array($this->alias.'.status DESC')
 			));
+
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
 			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedGrade'));
 		} else {
 			$data = $controller->request->data;
-			if(isset($data[$this->alias])) {
+			$selectedGrade = null;
+ 			if(isset($data[$this->alias])) {
 				foreach($data[$this->alias] as $i => $obj) {
+					$selectedGrade = $obj['education_grade_id'];
 					if(empty($obj['id']) && $obj['status'] == 0) {
 						unset($data[$this->alias][$i]);
 					}
@@ -202,7 +206,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				}
 			}
 			$controller->Message->alert('general.edit.success');
-			return $controller->redirect(array('action' => $this->_action));
+			return $controller->redirect(array('action' => $this->_action, $selectedGrade));
 		}
 	}
 	
