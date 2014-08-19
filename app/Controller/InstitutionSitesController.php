@@ -398,7 +398,7 @@ class InstitutionSitesController extends AppController {
         $id = $this->Session->read('InstitutionSite.id');
 		$this->InstitutionSite->id = $id;
 		$data = $this->InstitutionSite->findById($id);
-		
+
         if ($this->request->is(array('post', 'put'))) {
 			$dateOpened = $this->request->data['InstitutionSite']['date_opened'];
 			$dateClosed = $this->request->data['InstitutionSite']['date_closed'];
@@ -420,6 +420,8 @@ class InstitutionSitesController extends AppController {
 			$data = $this->request->data;
         } else {
 			$this->request->data = $data;
+            $this->request->data['InstitutionSite']['area_id_select'] = $data['InstitutionSite']['area_id'];
+            $this->request->data['InstitutionSite']['area_education_id_select'] = $data['InstitutionSite']['area_education_id'];
 		}
 		$visible = true;
         $typeOptions = $this->InstitutionSiteType->findList($visible);
