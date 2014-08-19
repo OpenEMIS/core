@@ -18,15 +18,7 @@ App::uses('AppModel', 'Model');
 
 class Language extends AppModel {
 	public $actsAs = array('FieldOption');
-	public $hasMany = array('StaffLanguage', 'StudentLanguage', 'TeacherLanguage');
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Languages' => array('model' => 'Language')
-		);
-		return $lookup;
-	}
-
+	public $hasMany = array('StaffLanguage', 'StudentLanguage');
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('Language.order')));
