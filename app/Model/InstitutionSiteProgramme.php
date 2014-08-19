@@ -424,7 +424,7 @@ class InstitutionSiteProgramme extends AppModel {
     public function programmes($controller, $params) {
         $controller->Navigation->addCrumb('Programmes');
 		
-        $yearOptions = $this->SchoolYear->getAvailableYears();
+        $yearOptions = $this->SchoolYear->getAvailableYears(true, 'DESC');
 		$selectedYear = isset($params['pass'][0]) ? $params['pass'][0] : key($yearOptions);
         $data = $this->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
         $controller->set(compact('yearOptions', 'selectedYear', 'data'));
