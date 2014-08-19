@@ -424,7 +424,7 @@ class InstitutionSitesController extends AppController {
     }
 
 	public function add() {
-        $this->Navigation->addCrumb('Add New Institution');
+        $this->Navigation->addCrumb('Add new Institution');
 		$areaId = false;
 		$areaEducationId = false;
         if ($this->request->is('post')) {
