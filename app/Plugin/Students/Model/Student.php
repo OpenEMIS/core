@@ -107,5 +107,6 @@ class Student extends StudentsAppModel {
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
 		return $this->getPaginateCount($conditions, $recursive, $extra);
 	}
+
 }
 ?>
