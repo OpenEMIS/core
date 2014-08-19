@@ -10,6 +10,10 @@ UPDATE `navigations` SET `header` = 'Reports' WHERE `controller` = 'Staff' and `
 UPDATE `navigations` SET `title` = 'Assessments' WHERE `controller` = 'Reports' and `title` = 'Assessment';
 UPDATE `navigations` SET `title` = 'Behaviour' WHERE `controller` = 'Reports' and `title` = 'Behaviors';
 
+-- to add specialisation to field options
+INSERT INTO `dev_openemis_demo`.`field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+(NULL, 'QualificationSpecialisation', 'Specialisations', 'Staff', '{"model":"QualificationSpecialisation"}', '78', '1', NULL, NULL, '1', '2014-08-19 00:00:00');
+
 TRUNCATE TABLE `translations`;
 --
 -- Dumping data for table `translations`
