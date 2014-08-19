@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
@@ -1138,5 +1139,4 @@ class ReportsController extends ReportsAppController {
 		}
 		return $bytes;
 	}
-	
 }
