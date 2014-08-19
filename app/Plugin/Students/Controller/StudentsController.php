@@ -245,18 +245,11 @@ class StudentsController extends StudentsAppController {
 		$this->set('data', $data);
 	}
 	
-	public function create() {
+	public function add() {
 		$this->Wizard->start();
 		return $this->redirect(array('action' => 'edit'));
 	}
 	
-	// to add students to institution sites
-	public function add() {
-		$model = 'InstitutionSiteStudent';
-		$this->Navigation->addCrumb('Add existing Student');
-		$this->set(compact('model'));
-	}
-
 	public function edit() {
 		$model = 'Student';
 		$id = null;

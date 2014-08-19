@@ -79,7 +79,9 @@ class StaffController extends StaffAppController {
 		'behaviour' =>'Staff.StaffBehaviour',
 		'training' => 'Staff.StaffTraining',
 		'report' => 'Staff.StaffReport',
-		'additional' => 'Staff.StaffCustomField'
+		'additional' => 'Staff.StaffCustomField',
+		// new ControllerAction
+		'InstitutionSiteStaff',
 	);
 
 	public function beforeFilter() {
@@ -104,6 +106,12 @@ class StaffController extends StaffAppController {
 	}
 
 	public function index() {
+		// redirect to InstitutionSiteStaff index page if institution is selected
+		if ($this->Session->check('InstitutionSite.id')) {
+			//return $this->redirect(array('action' => 'InstitutionSiteStaff'));
+		}
+		// end redirect
+		
 		$this->Navigation->addCrumb('List of Staff');
 		if ($this->request->is('post')) {
 			if (isset($this->request->data['Staff']['SearchField'])) {
