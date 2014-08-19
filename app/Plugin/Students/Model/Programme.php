@@ -49,7 +49,7 @@ class Programme extends AppModel {
 	public function beforeAction() {
 		parent::beforeAction();
 		$studentId = $this->Session->read('Student.id');
-		if (!is_null($studentId)) {		
+		if (!is_null($studentId)) {
 			$this->Navigation->addCrumb('Programmes');
 			$institutionSiteId = $this->Session->read('InstitutionSite.id');
 			

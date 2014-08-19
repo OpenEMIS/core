@@ -114,7 +114,7 @@ echo $this->Form->end();
 				?>
 				<tr>
 					<td><?php echo $idNo; ?></td>
-					<td><?php echo $this->Html->link($fullName, array('controller' => 'Students', 'action' => 'view', $obj['Student']['id']), array('escape' => false)); ?></td>
+					<td><?php echo $this->Html->link($fullName, array('plugin' => false, 'controller' => 'Students', 'action' => 'view', $obj['Student']['id']), array('escape' => false)) ?></td>
 					<td><?php echo $obj['EducationProgramme']['name']; ?></td>
 					<td><?php echo $obj['StudentStatus']['name']; ?></td>
 				</tr>

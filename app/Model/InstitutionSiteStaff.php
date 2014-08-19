@@ -1,27 +1,26 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
-
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
+App::uses('Sanitize', 'Utility');
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStaff extends AppModel {
-
+	public $useTable = 'institution_site_staff';
 	public $fteOptions = array(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	public $actsAs = array(
-		'ControllerAction', 
+		'ControllerAction2', 
 		'DatePicker' => array('start_date', 'end_date'),
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -42,17 +41,17 @@ class InstitutionSiteStaff extends AppModel {
 				'message' => 'Please enter a Position.'
 			)
 		)
-		);
-	public $useTable = 'institution_site_staff';
+	);
+
 	public $belongsTo = array(
-		'InstitutionSite',
 		'Staff.Staff',
-		'StaffStatus',
+		'InstitutionSite',
 		'InstitutionSitePosition',
 		'StaffType' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'staff_type_id'
-		)
+		),
+		'StaffStatus'
 	);
 	
 	public $reportMapping = array(
@@ -127,6 +126,8 @@ class InstitutionSiteStaff extends AppModel {
 		$endDate = new DateTime($this->data[$this->name][$compareField]);
 		return $endDate >= $startDate;
 	}
+	
+	
 
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
@@ -290,13 +291,7 @@ class InstitutionSiteStaff extends AppModel {
 
 	public function paginateJoins($conditions) {
 		$year = $conditions['year'];
-		$joins = array();
 		$joins = array(
-			/* array(
-			  'table' => 'staff',
-			  'alias' => 'Staff',
-			  'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
-			  ), */
 			array(
 				'table' => 'institution_site_positions',
 				'alias' => 'InstitutionSitePosition',
@@ -353,7 +348,87 @@ class InstitutionSiteStaff extends AppModel {
 		));
 		return $count;
 	}
+	
+	public function index() {
+		$this->Navigation->addCrumb('List of Staff');
+		$params = $this->controller->params;
+		$page = isset($params->named['page']) ? $params->named['page'] : 1;
 
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'Student.first_name';
+		$order = 'asc';
+		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
+		$statusOptions = $this->StudentStatus->getList();
+		
+		$prefix = 'InstitutionSiteStudent.Search.%s';
+		if ($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['SearchField']));
+			$selectedYear = $this->request->data[$this->alias]['school_year'];
+			$selectedProgramme = $this->request->data[$this->alias]['education_programme_id'];
+			$selectedStatus = $this->request->data[$this->alias]['student_status_id'];
+			$orderBy = $this->request->data[$this->alias]['orderBy'];
+			$order = $this->request->data[$this->alias]['order'];
+
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
+			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
+			$this->Session->write(sprintf($prefix, 'StudentStatusId'), $selectedStatus);
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
+			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
+			$selectedStatus = $this->Session->read(sprintf($prefix, 'StudentStatusId'));
+
+			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if ($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
+		}
+		$conditions = array('InstitutionSiteStudent.institution_site_id' => $institutionSiteId);
+		
+		if (!empty($searchField)) {
+			$search = '%' . $searchField . '%';
+			$conditions['OR'] = array(
+				'Student.identification_no LIKE' => $search,
+				'Student.first_name LIKE' => $search,
+				'Student.middle_name LIKE' => $search,
+				'Student.last_name LIKE' => $search,
+				'Student.preferred_name LIKE' => $search
+			);
+		}
+		
+		if (!empty($selectedYear)) {
+			// if the year falls between the start and end date
+			$conditions['InstitutionSiteStudent.start_year <='] = $selectedYear;
+			$conditions['InstitutionSiteStudent.end_year >='] = $selectedYear;
+		}
+
+		if (!empty($selectedProgramme)) {
+			$conditions['EducationProgramme.id'] = $selectedProgramme;
+		}
+
+		if (!empty($selectedStatus)) {
+			$conditions['InstitutionSiteStudent.student_status_id'] = $selectedStatus;
+		}
+		
+		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
+		$data = $this->controller->paginate($this->alias, $conditions);
+
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
+		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data', 'statusOptions'));
+	}
+
+/*
 	public function staff($controller, $params) {
 		$controller->Navigation->addCrumb('List of Staff');
 		$page = isset($params->named['page']) ? $params->named['page'] : 1;
@@ -466,6 +541,7 @@ class InstitutionSiteStaff extends AppModel {
 			}
 		}
 	}
+	*/
 
 	public function staffAjaxRetriveUpdatedFTE($controller, $params) {
 		$this->render = false;
@@ -632,15 +708,15 @@ class InstitutionSiteStaff extends AppModel {
 
 	//Ajax method
 	public function staffAjaxFind($controller, $params) {
-        if ($controller->request->is('ajax')) {
+		if ($controller->request->is('ajax')) {
 			$this->render = false;
-            $search = $params->query['term'];
+			$search = $params->query['term'];
 			
-            $data = $this->staffSearch($search);
+			$data = $this->staffSearch($search);
 
-            return json_encode($data);
-        }
-    }
+			return json_encode($data);
+		}
+	}
 	
 	
 	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
