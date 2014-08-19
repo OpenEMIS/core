@@ -530,8 +530,12 @@ class ConfigController extends AppController {
 			return $this->redirect(array('action'=>'index', 'Dashboard'));
 		}
 
+		$imageData = $this->ConfigAttachment->getResolution($data['ConfigAttachment']['file_name']);
+
 		$image['width'] = $this->ConfigItem->getValue('dashboard_img_width');
 		$image['height'] = $this->ConfigItem->getValue('dashboard_img_height');
+		$image['original_width'] = $imageData['width'];
+		$image['original_height'] = $imageData['height'];
 		$image = array_merge($image, $this->ConfigAttachment->getCoordinates($data['ConfigAttachment']['file_name']));
 
 		$this->Session->write('DashboardId', $id);
