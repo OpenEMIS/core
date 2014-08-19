@@ -14,7 +14,7 @@ if($this->Session->check('_alert')) {
 
 	<div class="<?php echo $class; ?>" <?php echo $dismiss; ?>>
 		<div class="alert_icon"></div>
-		<div class="alert_content"><?php echo $_alert['message']; ?></div>
+		<div class="alert_content"><?php echo __($_alert['message']); ?></div>
 	</div>
 
 <?php } ?>
