@@ -145,11 +145,11 @@ class CensusAssessment extends AppModel {
 		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		$data = array();
 		if (empty($programmes)) {
-			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		} else {
 			$data = $controller->CensusAssessment->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 			if (empty($data)) {
-				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+				$controller->Message->alert('Census.noSubjects');
 			}
 		}
 		
@@ -171,11 +171,11 @@ class CensusAssessment extends AppModel {
 				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->Session->read('InstitutionSite.id'), $selectedYear);
 				$data = array();
 				if (empty($programmes)) {
-					$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+					$controller->Message->alert('InstitutionSiteProgramme.noData');
 				} else {
 					$data = $controller->CensusAssessment->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 					if (empty($data)) {
-						$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+						$controller->Message->alert('Census.noSubjects');
 					}
 				}
 				
@@ -185,7 +185,7 @@ class CensusAssessment extends AppModel {
 			$data = $controller->data['CensusAssessment'];
 			$yearId = $data['school_year_id'];
 			$controller->CensusAssessment->saveCensusData($data);
-			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+			$controller->Message->alert('general.edit.success');
 			$controller->redirect(array('action' => 'assessments', $yearId));
 		}
 	}
