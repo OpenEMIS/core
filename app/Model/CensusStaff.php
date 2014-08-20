@@ -27,7 +27,11 @@ class CensusStaff extends AppModel {
 	public $useTable = 'census_staff';
 	
 	public $belongsTo = array(
-		'SchoolYear'
+		'SchoolYear',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -84,61 +88,125 @@ class CensusStaff extends AppModel {
 	//Used by Yearbook
 	public function getCountByCycleId($yearId, $cycleId) {
 		$this->formatResult = true;
-		$data = $this->find('first', array(
+		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$optionsMale = array(
 			'recursive' => -1,
-			'fields' => array('SUM(CensusStaff.male) AS M', 'SUM(CensusStaff.female) AS F'),		
-			'joins' => array(
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = CensusStaff.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = CensusStaff.school_year_id'
-					)
-				),
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
-						'EducationProgramme.education_cycle_id = ' . $cycleId
-					)
+			'fields' => array('SUM(CensusStaff.value) AS M')
+		);
+		
+		$optionsFemale = array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusStaff.value) AS F')
+		);
+		
+		$joins = array(
+			array(
+				'table' => 'institution_site_programmes',
+				'alias' => 'InstitutionSiteProgramme',
+				'conditions' => array(
+					'InstitutionSiteProgramme.institution_site_id = CensusStaff.institution_site_id',
+					'InstitutionSiteProgramme.school_year_id = CensusStaff.school_year_id'
 				)
 			),
-			'conditions' => array('CensusStaff.school_year_id' => $yearId),
-			'group' => array('EducationProgramme.education_cycle_id')
-		));
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array(
+					'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+					'EducationProgramme.education_cycle_id = ' . $cycleId
+				)
+			)
+		);
+		
+		$optionsMale['joins'] = $joins;
+		$optionsFemale['joins'] = $joins;
+		
+		$optionsMale['group'] =  array('EducationProgramme.education_cycle_id');
+		$optionsFemale['group'] = array('EducationProgramme.education_cycle_id');
+		
+		$optionsMale['conditions'] = array(
+			'CensusStaff.school_year_id' => $yearId,
+			'CensusStaff.gender_id' => $maleGenderId
+		);
+		
+		$optionsFemale['conditions'] = array(
+			'CensusStaff.school_year_id' => $yearId,
+			'CensusStaff.gender_id' => $femaleGenderId
+		);
+		
+		$dataMale = $this->find('first', $optionsMale);
+		$dataFemale = $this->find('first', $optionsFemale);
+		
+		$data = array(
+			'M' => $dataMale['M'],
+			'F' => $dataFemale['F']
+		);
+		
 		return $data;
 	}
 	
 	public function getCountByAreaId($yearId, $areaId) {
 		$this->formatResult = true;
-		$data = $this->find('first', array(
+		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$optionsMale = array(
 			'recursive' => -1,
-			'fields' => array('SUM(CensusStaff.male) AS M', 'SUM(CensusStaff.female) AS F'),
-			'joins' => array(
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array('InstitutionSite.id = CensusStaff.institution_site_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'AreaSite',
-					'conditions' => array('AreaSite.id = InstitutionSite.area_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'Area',
-					'conditions' => array(
-						'Area.id = ' . $areaId,
-						'Area.lft <= AreaSite.lft',
-						'Area.rght >= AreaSite.rght'
-					)
-				)
+			'fields' => array('SUM(CensusStaff.value) AS M')
+		);
+		
+		$optionsFemale = array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusStaff.value) AS F')
+		);
+		
+		$joins = array(
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.id = CensusStaff.institution_site_id')
 			),
-			'conditions' => array('CensusStaff.school_year_id' => $yearId)
-		));
+			array(
+				'table' => 'areas',
+				'alias' => 'AreaSite',
+				'conditions' => array('AreaSite.id = InstitutionSite.area_id')
+			),
+			array(
+				'table' => 'areas',
+				'alias' => 'Area',
+				'conditions' => array(
+					'Area.id = ' . $areaId,
+					'Area.lft <= AreaSite.lft',
+					'Area.rght >= AreaSite.rght'
+				)
+			)
+		);
+		
+		$optionsMale['joins'] = $joins;
+		$optionsFemale['joins'] = $joins;
+		
+		$optionsMale['conditions'] = array('
+			CensusStaff.school_year_id' => $yearId,
+			'CensusStaff.gender_id' => $maleGenderId
+		);
+		
+		$optionsFemale['conditions'] = array('
+			CensusStaff.school_year_id' => $yearId,
+			'CensusStaff.gender_id' => $femaleGenderId
+		);
+		
+		$dataMale = $this->find('first', $optionsMale);
+		$dataFemale = $this->find('first', $optionsFemale);
+		
+		$data = array(
+			'M' => $dataMale['M'],
+			'F' => $dataFemale['F']
+		);
+		
 		return $data;
 	}
 		
