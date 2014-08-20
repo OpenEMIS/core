@@ -4,7 +4,7 @@ echo $this->Html->script('jquery-ui.min', array('inline' => false));
 echo $this->Html->script('app.autocomplete', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Add Student'));
+$this->assign('contentHeader', __('Add Staff'));
 
 $this->start('contentBody');
 
