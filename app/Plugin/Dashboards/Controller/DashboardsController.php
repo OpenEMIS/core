@@ -18,7 +18,7 @@
 
 class DashboardsController extends DashboardsAppController {
 	public $institutionSiteId,$institutionSiteAreaId;
-	public $uses = array();
+	public $uses = array('Report');
     public $helpers = array('Js' => array('Jquery'));
     public $components = array('UserSession', 'Dashboards.QADashboard', 'HighCharts.HighCharts' );
     public $modules = array(
@@ -63,9 +63,7 @@ class DashboardsController extends DashboardsAppController {
 		$this->Navigation->addCrumb('Dashboards');
 		$header = __('Dashboards');
 		$this->set('enabled',true);
-		$reportType = 'dashboard';
-		$Report = ClassRegistry::init('Report');
-        $reportData = $Report->find('all',array('conditions'=>array('Report.visible' => 1, 'category'=>$reportType.' Reports'), 'order' => array('Report.order')));
+        $reportData = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'Report.module'=>'Dashboard'), 'order' => array('Report.order')));
   
         $checkFileExist = array();
         $data = array();

@@ -1,5 +1,5 @@
-<?php if(strpos($_SERVER['SERVER_NAME'], 'dev') !== false
-	  || strpos($_SERVER['SERVER_NAME'], 'tst') !== false
+<?php if($this->base == '/core/dev'
+	  || $this->base == '/core/tst'
 	  || strpos($_SERVER['SERVER_NAME'], 'localhost') !== false) { ?>
 
 <style type="text/css">
