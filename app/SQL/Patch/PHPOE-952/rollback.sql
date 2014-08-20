@@ -1,15 +1,15 @@
+-- Student
+UPDATE `navigations` SET `pattern` = 'index$|advanced' WHERE `controller` = 'Students' AND `action` = 'index';
 SET @ordering := 0;
-SELECT `order` into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'add';
+SELECT `order` into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'InstitutionSiteStudent/add';
 UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @ordering;
-DELETE FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'add';
+DELETE FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'InstitutionSiteStudent/add';
 
 UPDATE `institution_site_students` SET `student_status_id` = (SELECT `old_id` from `field_option_values` WHERE `field_option_id` = 56 and `id` = `student_status_id`);
 
 DELETE FROM `field_option_values` WHERE `field_option_id` = 56;
 DELETE FROM `field_options` WHERE `id` = 56;
 ALTER TABLE `field_option_values` DROP `old_id`;
-
-UPDATE `navigations` SET `pattern` = 'index$|advanced' WHERE `controller` = 'Students' AND `action` = 'index';
 
 ALTER TABLE `institution_site_students` DROP `institution_site_id` ;
 ALTER TABLE `institution_site_students` DROP `education_programme_id` ;
@@ -25,6 +25,16 @@ INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `ti
 
 -- Staff
 UPDATE `navigations` SET `pattern` = 'index$|advanced' WHERE `controller` = 'Staff' AND `action` = 'index';
+SET @ordering := 0;
+SELECT `order` into @ordering FROM `navigations` WHERE `controller` = 'Staff' AND `action` = 'InstitutionSiteStaff/add';
+UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @ordering;
+DELETE FROM `navigations` WHERE `controller` = 'Staff' AND `action` = 'InstitutionSiteStaff/add';
+
+-- Staff Status
+SET @staffStatusId := 0;
+SELECT `id` INTO @staffStatusId FROM `field_options` WHERE `code` = 'StaffStatus';
+DELETE FROM `field_option_values` WHERE `field_option_id` = @staffStatusId;
+DELETE FROM `field_options` WHERE `id` = @staffStatusId;
 
 -- Re-insert Staff link to Institution Sites
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
