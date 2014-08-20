@@ -149,6 +149,9 @@ class FormUtilityHelper extends AppHelper {
 		if($disabled !== false) {
 			$_datepickerOptions['disabled'] = $disabled;
 		}
+		if (array_key_exists('dateOptions', $_options)) {
+			$_datepickerOptions = array_merge($_datepickerOptions, $options['dateOptions']);
+		}
 		if(!is_null($this->_View->get('datepicker'))) {
 			$datepickers = $this->_View->get('datepicker');
 			$datepickers[] = $_datepickerOptions;

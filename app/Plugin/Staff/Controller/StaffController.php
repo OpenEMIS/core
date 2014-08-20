@@ -98,7 +98,7 @@ class StaffController extends StaffAppController {
 		} else if ($this->Session->check('Staff.data.name')) {
 			$name = $this->Session->read('Staff.data.name');
 			$this->staffId = $this->Session->read('Staff.id'); // for backward compatibility
-			if ($this->action != 'view') {
+			if ($this->action != 'view' && $this->action != 'InstitutionSiteStaff') {
 				$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 			}
 			$this->bodyTitle = $name;
@@ -108,7 +108,7 @@ class StaffController extends StaffAppController {
 	public function index() {
 		// redirect to InstitutionSiteStaff index page if institution is selected
 		if ($this->Session->check('InstitutionSite.id')) {
-			//return $this->redirect(array('action' => 'InstitutionSiteStaff'));
+			return $this->redirect(array('action' => 'InstitutionSiteStaff'));
 		}
 		// end redirect
 		

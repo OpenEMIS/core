@@ -84,16 +84,22 @@ class InstitutionSitePosition extends AppModel {
     }
 
     
-    public function getInstitutionSitePositionList($institutionId = false) {
+    public function getInstitutionSitePositionList($institutionId = false, $status = false) {
 		$options['recursive'] = -1;
-		if($institutionId != false) {
-			$options['conditions'] = array('institution_site_id' => $institutionId);
+		$conditions = array();
+		if ($institutionId !== false) {
+			$conditions['institution_site_id'] = $institutionId;
+		}
+		if ($status !== false) {
+			$conditions['status'] = $status;
+		}
+		if (!empty($conditions)) {
+			$options['conditions'] = $conditions;
 		}
 		$data = $this->find('all', $options);
 		$list = array();
 		if (!empty($data)) {
-			$StaffPositionTitle = ClassRegistry::init('StaffPositionTitle');
-			$staffOptions = $StaffPositionTitle->findList(true);
+			$staffOptions = $this->StaffPositionTitle->findList(true);
 			foreach ($data as $obj) {
 				$posInfo = $obj['InstitutionSitePosition'];
 				$list[$posInfo['id']] = sprintf('%s - %s', $posInfo['position_no'], $staffOptions[$posInfo['staff_position_title_id']]);

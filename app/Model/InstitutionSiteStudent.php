@@ -357,10 +357,10 @@ class InstitutionSiteStudent extends AppModel {
 			
 			$data = array();
 			foreach ($list as $obj) {
-				$studentInfo = $obj['Student'];
+				$info = $obj['Student'];
 				$data[] = array(
-					'label' => sprintf('%s - %s %s', $studentInfo['identification_no'], $studentInfo['first_name'], $studentInfo['last_name']),
-					'value' => array('student_id' => $studentInfo['id']) 
+					'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+					'value' => array('student_id' => $info['id']) 
 				);
 			}
 			return json_encode($data);
@@ -385,6 +385,7 @@ class InstitutionSiteStudent extends AppModel {
 		return $data;
 	}
 	
+	// used by InstitutionSiteStudentAbsence
 	public function getAutoCompleteList($search,  $institutionSiteId = NULL, $limit = NULL) {
 		$search = sprintf('%%%s%%', $search);
 		
