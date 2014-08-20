@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppTask', 'Console/Command/Task');
 
 class PdfTask extends AppTask {
-	public $tasks = array('Mpdf');
+	public $tasks = array('Mpdf', 'Common');
 	
 	public function renderPdf($item) {
 		$query = $item['query'];
@@ -45,7 +45,16 @@ class PdfTask extends AppTask {
 		$module = str_replace(" ", "_", $settings['module']);
 		$category = str_replace(" ", "_", $settings['category']);
 		$filename = str_replace(" ", "_", $settings['name']);
-		$file = sprintf('%s/reports/%s/%s/%d_%d_%s.pdf', WWW_ROOT, $category, $module, $settings['reportId'], $settings['batchProcessId'], $filename);
+		// $file = sprintf('%s/reports/%s/%s/%d_%d_%s.pdf', WWW_ROOT, $category, $module, $settings['reportId'], $settings['batchProcessId'], $filename);
+		// $file = $this->Common->getResultPath() . sprintf('%s/%s/%d_%d_%s.pdf', $category, $module, $settings['reportId'], $settings['batchProcessId'], $filename);
+		
+		$path = $this->Common->getResultPath() . sprintf('%s/%s/', $category, $module);
+		if (!file_exists($path)) {
+			mkdir($path, 0777, true);
+		}
+		
+		$file = $path . sprintf('%d_%d_%s.pdf', $settings['reportId'], $settings['batchProcessId'], $filename);
+
 		$config = $ConfigItem->find('first', array(
 			'fields' => array('ConfigItem.value', 'ConfigItem.default_value'),
 			'conditions' => array(
