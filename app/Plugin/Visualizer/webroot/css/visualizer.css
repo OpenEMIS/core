@@ -71,7 +71,16 @@ fieldset > legend:hover {
 	text-align: center;
 	color: rgb(51, 51, 51);
 	word-wrap:break-word;
-	padding: 5px 0 15px 0;
+	padding: 5px 0 0px 0;
+	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
+}
+
+.visualizer-table-subcaption{
+	font-size: 12px;
+	text-align: center;
+	color: rgb(85, 85, 85);
+	word-wrap:break-word;
+	padding: 1px 0 15px 0;
 	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,sans-serif;
 }
 
@@ -84,6 +93,27 @@ legend.reviewTitle{
     -moz-transform:rotate(90deg);
     -o-transform:rotate(90deg);
     .rotate(90deg);
+}
+
+.vertical-center {
+  height:100%;
+  width:100%;
+
+  text-align: center;  /* align the inline(-block) elements horizontally */
+  //font: 0/0 a;         /* remove the gap between inline(-block) elements */
+}
+
+.vertical-center:before {    /* create a full-height inline block pseudo=element */
+  content: ' ';
+  display: inline-block;
+  vertical-align: middle;  /* vertical alignment of the inline element */
+  height: 100%;
+}
+
+.vertical-center > i {
+	max-width: 100%;
+  display: inline-block;
+  vertical-align: middle;  /* vertical alignment of the inline element */
 }
 
 /*
