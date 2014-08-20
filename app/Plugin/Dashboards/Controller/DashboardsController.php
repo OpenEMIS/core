@@ -63,6 +63,7 @@ class DashboardsController extends DashboardsAppController {
 		$this->Navigation->addCrumb('Dashboards');
 		$header = __('Dashboards');
 		$this->set('enabled',true);
+		$reportType = 'dashboard';
         $reportData = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'Report.module'=>'Dashboard'), 'order' => array('Report.order')));
   
         $checkFileExist = array();
