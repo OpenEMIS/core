@@ -579,11 +579,6 @@ class InstitutionSite extends AppModel {
 			if($advanced['Search']['area_id'] > 0) { // search by area and all its children
 				$joins[] = array(
 					'table' => 'areas',
-					'alias' => 'Area',
-					'conditions' => array('Area.id = InstitutionSite.area_id')
-				);
-				$joins[] = array(
-					'table' => 'areas',
 					'alias' => 'AreaAll',
 					'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['Search']['area_id'])
 				);
