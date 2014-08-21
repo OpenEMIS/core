@@ -24,7 +24,7 @@ class TranslationsController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('plugin'=>false,'controller' => 'Areas', 'action' => 'index'));
 		$this->Navigation->addCrumb('Translations', array('controller' => 'Translations', 'action' => 'index'));
 	}
 
