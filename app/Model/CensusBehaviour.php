@@ -84,9 +84,14 @@ class CensusBehaviour extends AppModel {
 			$obj['school_year_id'] = $yearId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			if($obj['id'] == 0) {
-				$this->create();
+				if($obj['value'] > 0) {
+					$this->create();
+					$this->save(array('CensusBehaviour' => $obj));
+				}
+			}else{
+				$this->save(array('CensusBehaviour' => $obj));
 			}
-			$save = $this->save(array('CensusBehaviour' => $obj));
+			
 		}
 	}
 		
@@ -122,12 +127,7 @@ class CensusBehaviour extends AppModel {
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
-		$behaviourCategories = $this->StudentBehaviourCategory->find('list' , array(
-			'recursive' => '-1',
-			'fields' => array('StudentBehaviourCategory.id', 'StudentBehaviourCategory.name'),
-			'conditions' => array('StudentBehaviourCategory.visible' => 1),
-			'order' => array('StudentBehaviourCategory.order')
-		));
+		$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
 		//pr($staffCategories);die;
 
 		$maleGenderId = $this->Gender->getIdByName('Male');
@@ -154,12 +154,7 @@ class CensusBehaviour extends AppModel {
 			if (!$editable) {
 				$controller->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
-				$behaviourCategories = $this->StudentBehaviourCategory->find('list' , array(
-					'recursive' => '-1',
-					'fields' => array('StudentBehaviourCategory.id', 'StudentBehaviourCategory.name'),
-					'conditions' => array('StudentBehaviourCategory.visible' => 1),
-					'order' => array('StudentBehaviourCategory.order')
-				));
+				$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
 				//pr($staffCategories);die;
 
 				$maleGenderId = $this->Gender->getIdByName('Male');
@@ -193,6 +188,15 @@ class CensusBehaviour extends AppModel {
 
 		if ($index == 1) {
 			$data = array();
+			
+			$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+			
+			$maleGenderId = $this->Gender->getIdByName('Male');
+			$femaleGenderId = $this->Gender->getIdByName('Female');
+			$genderOptions = array(
+				$maleGenderId => 'Male',
+				$femaleGenderId => 'Female'
+			);
 
 			$header = array(__('Year'), __('Category'), __('Male'), __('Female'), __('Total'));
 
@@ -207,20 +211,34 @@ class CensusBehaviour extends AppModel {
 				if (count($dataBehaviour) > 0) {
 					$data[] = $header;
 					$total = 0;
-					foreach ($dataBehaviour AS $row) {
-						$male = empty($row['male']) ? 0 : $row['male'];
-						$female = empty($row['female']) ? 0 : $row['female'];
-
-						$data[] = array(
-							$yearName,
-							$row['name'],
-							$male,
-							$female,
-							$male + $female
-						);
-
-						$total += $male;
-						$total += $female;
+					
+					foreach ($behaviourCategories AS $catId => $catName){
+						$maleValue = 0;
+						$femaleValue = 0;
+						
+						foreach ($genderOptions AS $genderId => $genderName) {
+							if (!empty($dataBehaviour[$catId][$genderId])) {
+								if ($genderName == 'Male') {
+									$maleValue = $dataBehaviour[$catId][$genderId]['value'];
+								} else {
+									$femaleValue = $dataBehaviour[$catId][$genderId]['value'];
+								}
+							}
+						}
+						
+						if($maleValue > 0 || $femaleValue > 0){
+							$rowTotal = $maleValue + $femaleValue;
+							
+							$data[] = array(
+								$yearName,
+								$catName,
+								$maleValue,
+								$femaleValue,
+								$rowTotal
+							);
+							
+							$total += $rowTotal;
+						}
 					}
 
 					$data[] = array('', '', '', __('Total'), $total);
