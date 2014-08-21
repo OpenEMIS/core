@@ -20,7 +20,6 @@ class DatawarehouseController extends DatawarehouseAppController {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->name, 'action' => 'build'));
 	}
 
     public function test(){
