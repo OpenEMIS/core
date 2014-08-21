@@ -44,8 +44,7 @@ class CensusTeacher extends AppModel {
 				$female = 0;
 				$source = 0;
 				foreach($data as $value) {
-					if($value['education_grade_id'] == $gradeId 
-					&& $value['education_programme_id'] == $obj['education_programme_id']) {
+					if($value['education_grade_id'] == $gradeId && $value['education_programme_id'] == $obj['education_programme_id']) {
 						$male = $value['male'];
 						$female = $value['female'];
 						$source = $value['source'];
@@ -387,11 +386,12 @@ class CensusTeacher extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
-			$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
-			$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
+			//$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
+			//$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
 			$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
 			$multiGradeData = array();// $this->getMultiGradeData($institutionSiteId, $selectedYear);
 			$singleGradeData = $programmeGrades;
+			
 			$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 			
 			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData'));

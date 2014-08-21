@@ -62,8 +62,8 @@ class CensusTeacherFte extends AppModel {
 				'EducationLevel.name AS education_level_name',
 				'CensusTeacherFte.id',
 				'CensusTeacherFte.source',
-				'CensusTeacherFte.male',
-				'CensusTeacherFte.female'
+				'CensusTeacherFte.gender_id',
+				'CensusTeacherFte.value'
 			),
 			'joins' => array(
 				array(
@@ -106,7 +106,22 @@ class CensusTeacherFte extends AppModel {
 			'order' => array('EducationLevel.order')
 		));
 		
-		return $list;
+		$data = array();
+		foreach($list AS $row){
+			$censusId = $row['id'];
+			$eduLevelId = $row['education_level_id'];
+			$genderId = $row['gender_id'];
+			
+			if(!empty($censusId) && !empty($genderId)){
+				$data[$eduLevelId][$genderId] = array(
+					'censusId' => $censusId,
+					'value' => $row['value'],
+					'source' => $row['source']
+				);
+			}
+		}
+		
+		return $data;
 	}
 	
 	public function saveCensusData($data, $yearId, $institutionSiteId) {

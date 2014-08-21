@@ -162,7 +162,7 @@ echo $this->element('census/year_options');
 			</table>
 		</fieldset>
 
-		<!--fieldset class="section_group multi">
+		<fieldset class="section_group multi">
 			<legend><?php echo __('Multi Grade Teachers'); ?></legend>
 
 			<table class="table table-striped table-hover table-bordered">
@@ -217,7 +217,7 @@ echo $this->element('census/year_options');
 					</tr>
 				</tfoot>
 			</table>
-		</fieldset-->
+		</fieldset>
 
 	<?php } // end display content   ?>
 </div>
