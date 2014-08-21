@@ -70,7 +70,6 @@ echo $this->element('census/year_options');
 										endif;
 
 										echo $this->Form->input($index . '.value', array(
-											'id' => 'CensusGraduateMale',
 											'class' => 'computeTotal ' . $record_tag,
 											'type' => 'text',
 											'maxlength' => 9,
