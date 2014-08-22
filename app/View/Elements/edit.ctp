@@ -30,10 +30,11 @@ foreach($fields as $key => $field) {
 				}
 				if (isset($field['default'])) {
 					$options['default'] = $field['default'];
-				}
-				if (!empty($this->request->data)) {
-					if(!empty($this->request->data[$fieldModel][$key])) {
-						$options['default'] = $this->request->data[$fieldModel][$key];
+				} else {
+					if (!empty($this->request->data)) {
+						if(!empty($this->request->data[$fieldModel][$key])) {
+							$options['default'] = $this->request->data[$fieldModel][$key];
+						}
 					}
 				}
 				break;

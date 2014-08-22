@@ -1,90 +1,69 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 App::uses('AppModel', 'Model');
 
 class InstitutionSitePosition extends AppModel {
-	public $actsAs = array('ControllerAction');
-   // public $status = array('Disabled', 'Enabled');
-   // public $workType = array('Non-Teaching', 'Teaching');
-    public $belongsTo = array(
-        //'Student',
-        /* 'RubricsTemplate' => array(
-          'foreignKey' => 'rubric_template_id'
-          ), */
+	public $actsAs = array('ControllerAction2');
+   
+	public $belongsTo = array(
 		'StaffPositionTitle',
 		'StaffPositionGrade',
-		/*'PositionTitle' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_position_title_id'
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
 		),
-		'PositionGrade' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_Position_grade_id'
-		),*/
-        'ModifiedUser' => array(
-            'className' => 'SecurityUser',
-            'foreignKey' => 'modified_user_id'
-        ),
-        'CreatedUser' => array(
-            'className' => 'SecurityUser',
-            'foreignKey' => 'created_user_id'
-        )
-    );
-    public $validate = array(
-        'position_no' => array(
-            'ruleRequired' => array(
-                'rule' => 'notEmpty',
-                'required' => true,
-                'message' => 'Please enter a valid Number.'
-            )
-        ),
-        'staff_position_title_id' => array(
-            'ruleRequired' => array(
-                'rule' => 'checkDropdownData',
-                //  'required' => true,
-                'message' => 'Please select a valid Title.'
-            )
-        ),
-        'staff_position_grade_id' => array(
-            'ruleRequired' => array(
-                'rule' => 'checkDropdownData',
-                //  'required' => true,
-                'message' => 'Please select a valid Grade.'
-            )
-        ),
-            /* 'teacher_position_step_id' => array(
-              'ruleRequired' => array(
-              'rule' => 'checkDropdownData',
-              //  'required' => true,
-              'message' => 'Please select a valid Step.'
-              )
-              ), */
-    );
-
-    public function checkDropdownData($check) {
-        $value = array_values($check);
-        $value = $value[0];
-
-        return !empty($value);
-    }
-
-    
-    public function getInstitutionSitePositionList($institutionId = false, $status = false) {
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	
+	public $hasMany = array(
+		'InstitutionSiteStaff' => array(
+			'dependent' => true // for cascade deletes
+		)
+	);
+	
+	public $validate = array(
+		'position_no' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Number.'
+			)
+		),
+		'staff_position_title_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Title.'
+			)
+		),
+		'staff_position_grade_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Grade.'
+			)
+		)
+	);
+	
+	// Used by InstitutionSiteStaff.add
+	public function getInstitutionSitePositionList($institutionId = false, $status = false) {
 		$options['recursive'] = -1;
 		$conditions = array();
 		if ($institutionId !== false) {
@@ -108,250 +87,143 @@ class InstitutionSitePosition extends AppModel {
 
 		return $list;
 	}
-
-	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-				array('field' => 'position_no', 'labelKey' => 'Position.number'),
-                array('field' => 'name', 'model' => 'StaffPositionTitle', 'labelKey' => 'general.title'),
-				array('field' => 'name', 'model' => 'StaffPositionGrade', 'labelKey' => 'general.grade'),
-				array('field' => 'type', 'type' => 'select', 'options' => $controller->Option->get('yesno'), 'labelKey' => 'Position.teaching'),
-				array('field' => 'status', 'type' => 'select', 'options' => $controller->Option->get('enableOptions')),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
 	
-	public function getDisplayFieldsHistory($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-				array('field' => 'position_no', 'labelKey' => 'Position.number'),
-                array('field' => 'name', 'model' => 'StaffPositionTitle', 'labelKey' => 'general.title'),
-				array('field' => 'name', 'model' => 'StaffPositionGrade', 'labelKey' => 'general.grade'),
-				array('field' => 'type', 'type' => 'select', 'options' => $controller->Option->get('yesno'), 'labelKey' => 'Position.teaching'),
-				array('field' => 'status', 'type' => 'select', 'options' => $controller->Option->get('enableOptions'))
-            )
-        );
-        return $fields;
-    }
-
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
-	
-	public function positions($controller, $params) {
-        $controller->Navigation->addCrumb('Positions');
-		$header = __('Positions');
-        $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-        $data = $this->findAllByInstitutionSiteId($controller->institutionSiteId);
-		$enableOptions = $controller->Option->get('enableOptions');
-        $controller->set(compact('header', 'data', 'enableOptions'));
-    }
-
-    public function positionsAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Position');
-     //   $type = 'add';
-        $controller->set('header', __('Add Position'));
-        $this->setup_add_edit_form($controller, $params);
-    }
-
-    public function positionsEdit($controller, $params)  {
-        $controller->Navigation->addCrumb('Edit Position');
-		$controller->set('header', __('Edit Position'));
-        $this->setup_add_edit_form($controller, $params);
-		$this->render = 'add';
-    }
-
-    public function positionsView($controller, $params) {
-		$controller->Navigation->addCrumb('Position Details');
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$header = __('Position Details');
+	public function beforeAction() {
+		parent::beforeAction();
+		$this->Navigation->addCrumb('Positions');
+		$this->setVar(compact('contentHeader'));
 		
-		$this->recursive = 1;
-		$data = $this->findById($id);
-		if (empty($data)) {
-		   $controller->Message->alert('general.noData');
-		   return $controller->redirect(array('action' => 'leaves'));
-	   }
-	   
-	   $controller->Session->write('InstitutionSitePositionId', $id);
-        $fields = $this->getDisplayFields($controller);
-        $controller->set(compact('data', 'header', 'fields', 'id'));
-    }
-
-    public function positionsDelete($controller, $params) {
-        if ($controller->Session->check('InstitutionSitePositionId')) {
-            $id = $controller->Session->read('InstitutionSitePositionId');
-            if ($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-			$controller->Session->delete('InstitutionSitePositionId');
-            $controller->redirect(array('action' => 'positions'));
-        }
-    }
-	
-	function setup_add_edit_form($controller, $params) {
-        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $controller->request->data[$this->alias]['institution_site_id'] = $controller->institutionSiteId;
-            if ($this->save($controller->request->data)) {
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'positions'));
-            }
-        } else {
-            $this->recursive = -1;
-            $data = $this->findById($id);
-            if (!empty($data)) {
-                $controller->request->data = $data;
-            }
-			else{
-				$controller->request->data[$this->alias]['status'] = 1;
-			}
-        }
-        $positionTitleOptions = $this->StaffPositionTitle->findList(true);
-        $positionGradeOptions = $this->StaffPositionGrade->findList(true);
-		$yesnoOptions = $controller->Option->get('yesno');
-		$enableOptions = $controller->Option->get('enableOptions');
+		$this->fields['institution_site_id']['type'] = 'hidden';
+		$this->fields['institution_site_id']['value'] = $this->Session->read('InstitutionSite.id');
+		$this->fields['staff_position_title_id']['type'] = 'select';
+		$this->fields['staff_position_grade_id']['type'] = 'select';
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $this->controller->Option->get('staffTypes');
+		$this->fields['status']['type'] = 'select';
+		$this->fields['status']['options'] = $this->controller->Option->get('status');
 		
-		$controller->set(compact('positionTitleOptions', 'positionGradeOptions', 'yesnoOptions','enableOptions'));
-    }
-	
-	public function positionsHistory($controller, $params) {
-		$controller->Navigation->addCrumb('Position History');
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$header = __('Position History');
-
-		$this->recursive = 1;
-		$data = $this->findById($id);
-		if (empty($data)) {
-		   $controller->Message->alert('general.noData');
-		   return $controller->redirect(array('action' => 'leaves'));
+		if ($this->action == 'add') {
+			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->findList(true);
+			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->findList(true);
+		} else {
+			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->findList();
+			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->findList();
 		}
 		
-		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-		$staffList = $InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndInstitutionSiteId($id,$controller->institutionSiteId, array('Staff.first_name','Staff.middle_name','Staff.last_name','Staff.id','Staff.identification_no', 'InstitutionSiteStaff.id','InstitutionSiteStaff.FTE','InstitutionSiteStaff.start_date','InstitutionSiteStaff.end_date'));
-		//pr($id);
-
-		$controller->Session->write('InstitutionSitePositionId', $id);
-		$fields = $this->getDisplayFieldsHistory($controller);
-		$controller->set(compact('data', 'header', 'fields', 'id', 'staffList'));
-    }
-	
-	public function positionsHistoryEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit Position History');
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$header = __('Edit Position History');
-
-		$this->recursive = 1;
-		$data = $this->findById($id);
-		if (empty($data)) {
-		   $controller->Message->alert('general.noData');
-		   return $controller->redirect(array('action' => 'positionsHistory'));
+		if ($this->action == 'view') {
+			$this->fields['current'] = array(
+				'type' => 'element',
+				'element' => '../InstitutionSites/InstitutionSitePosition/current',
+				'order' => 10,
+				'override' => true,
+				'visible' => true
+			);
+			$this->fields['past'] = array(
+				'type' => 'element',
+				'element' => '../InstitutionSites/InstitutionSitePosition/past',
+				'order' => 11,
+				'override' => true,
+				'visible' => true
+			);
 		}
 		
-		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-		$staffList = $InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndInstitutionSiteId($id,$controller->institutionSiteId, array('Staff.first_name','Staff.middle_name','Staff.last_name','Staff.id','Staff.identification_no','InstitutionSiteStaff.start_date','InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.id'));
-		
-		$controller->Session->write('InstitutionSitePositionId', $id);
-		$fields = $this->getDisplayFieldsHistory($controller);
-		$controller->set(compact('data', 'header', 'fields', 'id', 'staffList'));
+		$this->setFieldOrder('staff_position_title_id', 2);
+		$this->setFieldOrder('staff_position_grade_id', 3);
+		$this->setFieldOrder('type', 4);
+		$this->setFieldOrder('status', 5);
 	}
 	
-	public function positionsStaffEdit($controller, $params) {
-		//$this->render = false;
-		$controller->Navigation->addCrumb('Edit Staff Position');
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$header = __('Edit Staff Position');
-
-		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-
-		$InstitutionSiteStaff->unbindModel(array('belongsTo' => array('StaffType', 'InstitutionSite', 'StaffStatus')));
-		$data = $InstitutionSiteStaff->findById($id, array('fields' => 'Staff.first_name,Staff.middle_name,Staff.last_name,Staff.identification_no,InstitutionSiteStaff.id,InstitutionSiteStaff.staff_status_id,InstitutionSiteStaff.start_date,InstitutionSiteStaff.FTE,InstitutionSiteStaff.end_date,InstitutionSitePosition.id,InstitutionSitePosition.staff_position_title_id'));
-		$positionData = $this->StaffPositionTitle->findById($data['InstitutionSitePosition']['staff_position_title_id'], array('fields' => 'StaffPositionTitle.name'));
-
-		$calFTE = $data['InstitutionSiteStaff']['FTE']*100;
-		
-		$FTEOtpions = $InstitutionSiteStaff->getFTEOptions($data['InstitutionSitePosition']['id'], array('startDate' => $data['InstitutionSiteStaff']['start_date'], 'endDate' => $data['InstitutionSiteStaff']['end_date'], 'FTE_value'=> $calFTE,'includeSelfNum'=> true));
-		$data = array_merge($data, $positionData);
-
-		$StaffStatus = ClassRegistry::init('StaffStatus');
-		$statusOptions = $StaffStatus->findList(true);
-		//$staffTypeDefault = $this->StaffType->getDefaultValue();
-		//pr($staffTypeOptions);
-		$controller->Session->write('InstitutionSiteStaffId', $id);
-				
-		if ($controller->request->is(array('post', 'put'))) {
-			$postData = $controller->request->data;
-
-			$postData['InstitutionSiteStaff']['start_year'] = date('Y', strtotime($postData['InstitutionSiteStaff']['start_date']));
-			
-			$enabledEndDate = $postData['InstitutionSiteStaff']['enable_end_date'];
-			if(!$enabledEndDate){
-				$postData['InstitutionSiteStaff']['end_date'] = null;
-				$postData['InstitutionSiteStaff']['end_year'] = null;
-			}
-			else{
-				$postData['InstitutionSiteStaff']['end_year'] = date('Y', strtotime($postData['InstitutionSiteStaff']['end_date']));
-			}
-			$postData['InstitutionSiteStaff']['FTE'] = $postData['InstitutionSiteStaff']['FTE']/100;
-			$InstitutionSiteStaff->validate = array_merge(
-					$InstitutionSiteStaff->validate, array(
-				'start_date' => array(
-					'ruleNotLater' => array(
-						'rule' => array('compareDate', 'end_date'),
-						'message' => 'Start Date cannot be later than Ended Date'
-					),
-				)
-					)
+	public function afterAction() {
+		if ($this->action == 'view') {
+			$id = $this->controller->viewVars['data'][$this->alias]['id'];
+			$fields = array(
+				'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name',
+				'InstitutionSiteStaff.id', 'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date',
+				'InstitutionSiteStaff.FTE', 'StaffStatus.name'
 			);
-			$InstitutionSiteStaff->validator()->remove('search');
-			$InstitutionSiteStaff->validator()->remove('institution_site_position_id');
-			if ($InstitutionSiteStaff->saveAll($postData)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'positionsHistory', $data['InstitutionSitePosition']['id']));
+			$this->InstitutionSiteStaff->recursive = 0;
+			$current = $this->InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndEndDate($id, null, $fields, array('InstitutionSiteStaff.start_date'));
+			$past = $this->InstitutionSiteStaff->find('all', array(
+				'fields' => $fields,
+				'conditions' => array(
+					'InstitutionSiteStaff.institution_site_position_id' => $id,
+					'InstitutionSiteStaff.end_date IS NOT NULL'
+				),
+				'order' => array('InstitutionSiteStaff.start_date')
+			));
+			$this->setVar(compact('current', 'past'));
+		}
+		parent::afterAction();
+	}
+	
+	public function index() {
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));	
+		$this->recursive = 0;
+		$data = $this->findAllByInstitutionSiteId($institutionSiteId);
+		$this->setVar(compact('data'));
+	}
+	
+	public function staffEdit($staffId=0) {
+		$id = $this->Session->read($this->alias . '.id');
+		
+		if ($this->InstitutionSiteStaff->exists($staffId)) {
+			$this->recursive = 0;
+			$position = $this->findById($id);
+			$this->InstitutionSiteStaff->recursive = 0;
+			$staff = $this->InstitutionSiteStaff->findById($staffId);
+			
+			$startDate = $staff['InstitutionSiteStaff']['start_date'];
+			$endDate = $staff['InstitutionSiteStaff']['end_date'];
+			$staffFields = $this->InstitutionSiteStaff->getFields();
+			$staffFields['institution_site_id']['visible'] = false;
+			$staffFields['institution_site_position_id']['type'] = 'disabled';
+			$staffFields['institution_site_position_id']['value'] = $position['StaffPositionTitle']['name'];
+			$staffFields['start_date']['type'] = 'disabled';
+			$staffFields['start_date']['value'] = $startDate;
+			$staffFields['staff_status_id']['type'] = 'select';
+			$staffFields['staff_status_id']['options'] = $this->InstitutionSiteStaff->StaffStatus->getList();
+			$staffFields['FTE']['type'] = 'select';
+			$staffFields['FTE']['options'] = $this->InstitutionSiteStaff->getFTEOptions($id, array('startDate' => $startDate));
+			$staffFields['FTE']['default'] = $staff['InstitutionSiteStaff']['FTE'] * 100;
+			$staffFields['FTE']['value'] = $staffFields['FTE']['default'];
+			
+			$date = new DateTime($startDate);
+			$date->add(new DateInterval('P1D')); // plus 1 day
+			$staffFields['end_date']['attr'] = array(
+				'startDate' => $date->format('d-m-Y'),
+				'data-date' => empty($endDate) ? '' : $date->format('d-m-Y')
+			);
+			
+			if ($this->request->is(array('post', 'put'))) {
+				$data = $this->request->data;
+				$data['InstitutionSiteStaff']['FTE'] = !empty($data['InstitutionSiteStaff']['FTE']) ? ($data['InstitutionSiteStaff']['FTE'] / 100) : NULL;
+				$data['InstitutionSiteStaff']['institution_site_position_id'] = $id;
+				
+				$this->InstitutionSiteStaff->validator()->remove('search');
+				if ($this->InstitutionSiteStaff->save($data)) {
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => $this->alias, 'view', $id));
+				} else {
+					$this->Message->alert('general.edit.failed');
+				}
 			} else {
-				$controller->request->data = $data;
-				$controller->request->data['InstitutionSiteStaff']['start_date'] = $postData['InstitutionSiteStaff']['start_date'];
-				$controller->request->data['InstitutionSiteStaff']['end_date'] = $postData['InstitutionSiteStaff']['end_date'];
+				$this->request->data = $staff;
 			}
 		} else {
-			$data['InstitutionSiteStaff']['FTE'] = $calFTE;
-			$controller->request->data = $data;
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => $this->alias, 'view', $id));
 		}
-
-		$controller->set(compact('header', 'FTEOtpions','statusOptions'));
+		$this->setVar(compact('id', 'staffId', 'staffFields'));
 	}
-
-	public function positionsAjaxGetFTE($controller, $params) {
-		if ($controller->request->is('ajax')) {
-			$this->render = false;
-			
-			$id =  $controller->request->query['InstitutionSiteStaffId'];
-			pr($id);
-			$startDate = $controller->request->query['startDate'];
-			$endDate = $controller->request->query['endDate'];
-
-			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-
-			$InstitutionSiteStaff->unbindModel(array('belongsTo' => array('StaffType', 'InstitutionSite', 'StaffStatus')));
-			$data = $InstitutionSiteStaff->findById($id, array('fields' => 'InstitutionSitePosition.id'));
-
-			$FTEOtpions = $InstitutionSiteStaff->getFTEOptions($data['InstitutionSitePosition']['id'], array('startDate' => $startDate, 'endDate' =>$endDate));
-		
-			$returnString = '';
-
-			foreach ($FTEOtpions as $obj) {
-				$returnString .= '<option value="' . $obj . '">' . $obj . '</option>';
-			}
-			echo $returnString;
+	
+	public function staffDelete($staffId) {
+		$id = $this->Session->read($this->alias . '.id');
+		if($this->InstitutionSiteStaff->delete($staffId)) {
+			$this->Message->alert('general.delete.success');
+		} else {
+			$this->Message->alert('general.delete.failed');
 		}
+		return $this->redirect(array('action' => $this->alias, 'view', $id));
 	}
 }

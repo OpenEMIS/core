@@ -87,9 +87,16 @@ class NavigationComponent extends Component {
 						$pattern = $attr['pattern'];
 						
 						// Checking access control
-						$check = $this->AccessControl->newCheck($_controller, $attr['action']);
-						//pr($_controller . ' : ' . $attr['action'] . ' : ' . ($check ? 'true' : 'false'));
-						//pr($attr);
+						$attrAction = str_replace('/', '.', $attr['action']);
+						$check = $this->AccessControl->newCheck($_controller, $attrAction);
+						
+						// debug mode
+						if ($_controller == 'Students' && $attr['action'] == 'InstitutionSiteStudent/add') {
+							//pr($_controller . ' : ' . $attr['action'] . ' : ' . ($check ? 'true' : 'false'));
+							//pr($attr);
+						}
+						// end debug
+						
 						if($check || $_controller === 'Home') {
 							$linkList['display'] = true;
 							$attr['display'] = true;

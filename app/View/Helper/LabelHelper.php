@@ -84,11 +84,16 @@ class LabelHelper extends AppHelper {
 			'reset' => 'Reset',
 			'preview' => 'Preview',
 			'international_code' => 'International Code',
-			'national_code' => 'National Code'
+			'national_code' => 'National Code',
+			'current' => 'Current',
+			'past' => 'Past'
 		),
 		'date' => array(
 			'start' => 'Start Date',
-			'end' => 'End Date'
+			'end' => 'End Date',
+			'from' => 'From',
+			'to' => 'To',
+			'since' => 'Since'
 		),
 		'gender' => array(
 			'm' => 'Male',
@@ -300,6 +305,11 @@ class LabelHelper extends AppHelper {
 			'staff_status_id' => 'Status',
 			'staff_type_id' => 'Type',
 			'institution_site_position_id' => 'Position'
+		),
+		'InstitutionSitePosition' => array(
+			'title' => 'Positions',
+			'staff_position_title_id' => 'Title',
+			'staff_position_grade_id' => 'Grade'
 		),
 		'InstitutionSiteStudentAbsence' => array(
 			'reason' => 'Reason',

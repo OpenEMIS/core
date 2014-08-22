@@ -1,16 +1,25 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $contentHeader);
+$this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 
 $this->start('contentActions');
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'view', $this->request->data[$model]['id']), array('class' => 'divider'));
+	$params = array('action' => $model);
+	if ($action == 'edit') {
+		$params[] = 'view';
+		$params[] = $this->request->data[$model]['id'];
+	}
+	echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
-	$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edit', $this->request->data[$model]['id']));
+	$formAction = array('action' => $model, $action);
+	if ($action == 'edit') {
+		$formAction[] = $this->request->data[$model]['id'];
+	}
+	$formOptions = $this->FormUtility->getFormOptions($formAction);
 	echo $this->Form->create($model, $formOptions);
 	echo $this->element('edit');
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $this->request->data[$model]['id'])));
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => $params));
 	echo $this->Form->end();
 $this->end();
 ?>

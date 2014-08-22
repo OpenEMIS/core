@@ -139,11 +139,8 @@ class InstitutionSiteStaff extends AppModel {
 		return $endDate >= $startDate;
 	}
 	
-	public function beforeAction() {
-		parent::beforeAction();
-		
-		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		
+	public function getFields($options = array()) {
+		$this->fields = parent::getFields($options);
 		$this->fields['institution_site_id']['labelKey'] = 'InstitutionSite';
 		
 		$this->fields['start_year']['visible'] = false;
@@ -153,14 +150,11 @@ class InstitutionSiteStaff extends AppModel {
 		$this->fields['staff_type_id']['type'] = 'select';
 		$this->fields['staff_type_id']['options'] = $this->StaffType->getList(true);
 		
-	}
-	
-	public function afterAction() {
 		$this->setFieldOrder('institution_site_id', 1);
 		$this->setFieldOrder('institution_site_position_id', 2);
 		$this->setFieldOrder('start_date', 3);
 		$this->setFieldOrder('staff_type_id', 5);
-		parent::afterAction();
+		return $this->fields;
 	}
 	
 	public function index($selectedYear = '') {
@@ -227,7 +221,7 @@ class InstitutionSiteStaff extends AppModel {
 				if ($submit == 'Save') {
 					$this->set($data[$this->alias]);
 					if ($this->validates()) {
-						$data[$this->alias]['FTE'] = !empty($data['FTE']) ? $data['FTE'] / 100 : '0';
+						$data[$this->alias]['FTE'] = !empty($data[$this->alias]['FTE']) ? ($data[$this->alias]['FTE'] / 100) : NULL;
 						$data[$this->alias]['institution_site_id'] = $institutionSiteId;
 						$selectedDate = date('Y-m-d', strtotime($startDate));
 						$count = $this->find('count', array(
@@ -463,38 +457,6 @@ class InstitutionSiteStaff extends AppModel {
 		}
 
 		return $filterFTEOptions;
-	}
-
-	public function staffPositionDelete($controller, $params) {
-		/* $this->render = false;
-		  if ($controller->request->is('post')) {
-		  $result = array('alertOpt' => array());
-		  $controller->Utility->setAjaxResult('alert', $result);
-		  $id = $params->data['id'];
-
-		  if ($this->delete($id)) {
-		  $msgData = $controller->Message->get('general.delete.success');
-		  $result['alertOpt']['text'] = $msgData['msg']; // __('File is deleted successfully.');
-		  } else {
-		  $msgData = $controller->Message->get('general.delete.failed');
-		  $result['alertType'] = $this->Utility->getAlertType('alert.error');
-		  $result['alertOpt']['text'] = $msgData; //__('Error occurred while deleting file.');
-		  }
-		  return json_encode($result);
-		  } */
-		$this->render = false;
-
-		if ($controller->Session->check('InstitutionSiteStaffId')) {
-			$InstitutionSitePositionId = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-			$id = $controller->Session->read('InstitutionSiteStaffId');
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('InstitutionSiteStaffId');
-			$controller->redirect(array('action' => 'positionsHistory', $InstitutionSitePositionId));
-		}
 	}
 	
 	// used by InstitutionSiteStaffAbsence
