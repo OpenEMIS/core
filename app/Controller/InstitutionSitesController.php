@@ -41,7 +41,6 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteClass',
 		'InstitutionSiteClassSubject',
 		'InstitutionSiteClassGrade',
-		'InstitutionSiteClassGradeStudent',
 		'InstitutionSiteCustomField',
 		'InstitutionSiteCustomFieldOption',
 		'InstitutionSiteCustomValue',
@@ -112,7 +111,6 @@ class InstitutionSitesController extends AppController {
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
-		'positions' => 'InstitutionSitePosition',
 		'behaviourStaff' => 'Staff.StaffBehaviour',
 		'staff' => 'InstitutionSiteStaff',
 		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
@@ -120,7 +118,7 @@ class InstitutionSitesController extends AppController {
 		'assessments' => 'AssessmentItemResult',
 		'fee' => 'InstitutionSiteFee',
 		'studentFee' => 'InstitutionSiteStudentFee',
-		'InstitutionSiteStudent'
+		'InstitutionSitePosition'
 	);
 	
 	public function beforeFilter() {

@@ -83,7 +83,7 @@ foreach ($fields as $key => $field) {
 			if (!array_key_exists('override', $field)) {
 				$html .= sprintf($row, $label, $class, $value);
 			} else {
-				echo $value;
+				$html .= '<div class="row">' . $value . '</div>';
 			}
 		} else {
 			pr(sprintf('Field [%s] does not exist in Model [%s]', $key, $fieldModel));
