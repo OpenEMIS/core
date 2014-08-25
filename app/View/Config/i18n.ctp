@@ -117,11 +117,11 @@ var i18n = {
 		iconMoveUp : '<?php echo T("Move Up", true); ?>',
 		iconMoveDown : '<?php echo T("Move Down", true); ?>',
 		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>',
-                textStayOnPage : '<?php echo T("Stay on Page", true); ?>',
-                textLeavePage : '<?php echo T("Leave Page", true); ?>',
-                textBeforeUnloadTitle : '<?php echo T("Unsave data detected.", true); ?>',
-                textBeforeUnloadBroweser : '<?php echo T("All unsaved changes will be lost.", true); ?>',
-                textBeforeRedirect : '<?php echo T("Are you sure you want to leave this page? All unsaved changes will be lost.", true); ?>'
+		textStayOnPage : '<?php echo T("Stay on Page", true); ?>',
+		textLeavePage : '<?php echo T("Leave Page", true); ?>',
+		textBeforeUnloadTitle : '<?php echo T("Unsaved data detected.", true); ?>',
+		textBeforeUnloadBroweser : '<?php echo T("All unsaved changes will be lost.", true); ?>',
+		textBeforeRedirect : '<?php echo T("Are you sure you want to leave this page? All unsaved changes will be lost.", true); ?>'
 	},
 	SMS: {
 		confirmModifySmsMessageContent: '<?php echo T("Note: Please clear the Responses page as existing responses may no longer match the updated Messages.", true); ?>'
@@ -143,6 +143,6 @@ var i18n = {
 		textCompiling : '<?php echo T("Compiling...", true); ?>',
 		textCompile : '<?php echo T("Compile", true); ?>',
 		textTranslationCompileTitle : '<?php echo T("Compile Translation File", true); ?>', 
-		contentTranslationCompile : '<?php echo T("Do you wish to compile this language?", true); ?>',
+		contentTranslationCompile : '<?php echo T("Do you wish to compile this language?", true); ?>'
 	}
 }
