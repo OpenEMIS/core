@@ -148,4 +148,45 @@ class EducationLevel extends AppModel {
 			return $controller->redirect(array('action' => 'systems'));
 		}
 	}
+	
+	public function getInstitutionLevelsBySchoolYear($institutionSiteId, $schoolYearId){
+		$list = $this->find('list' , array(
+			'recursive' => -1,
+			'fields' => array(
+				'EducationLevel.id AS education_level_id',
+				'EducationLevel.name AS education_level_name'
+			),
+			'joins' => array(	
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id',
+						'EducationCycle.visible = 1'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationCycle.id = EducationProgramme.education_cycle_id',
+						'EducationProgramme.visible = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+						'InstitutionSiteProgramme.school_year_id' => $schoolYearId
+					)
+				)
+			),
+			'conditions' => array('EducationLevel.visible' => 1),
+			'order' => array('EducationLevel.order')
+		));
+		
+		return $list;
+	}
 }

@@ -26,7 +26,11 @@ class CensusTeacher extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'InstitutionSite'
+		'InstitutionSite',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getTeacherId($institutionSiteId, $yearId) {
@@ -38,20 +42,45 @@ class CensusTeacher extends AppModel {
 	}
 	
 	public function mergeSingleGradeData(&$class, $data) {
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		$genderOptions = array(
+			$maleGenderId => 'Male', 
+			$femaleGenderId => 'Female'
+		);
+		//pr($genderOptions);die;
+		
 		foreach($class as $key => &$obj) {
 			foreach($obj['education_grades'] as $gradeId => &$grade) {
-				$male = 0;
-				$female = 0;
-				$source = 0;
+				$maleChecked = 0;
+				$femaleChecked = 0;
 				foreach($data as $value) {
 					if($value['education_grade_id'] == $gradeId && $value['education_programme_id'] == $obj['education_programme_id']) {
-						$male = $value['male'];
-						$female = $value['female'];
+						$genderId = $value['gender_id'];
+						$genderName = $genderOptions[$genderId];
+						$value = $value['value'];
 						$source = $value['source'];
-						break;
+						
+						$grade = array(
+							'genderId' => array(
+								'genderName' => $genderName,
+								'gradeName' => $grade,
+								'value' => $value,
+								'source' => $source
+							)
+						);
+						
+						if($genderName == 'Male'){
+							$maleChecked = 1;
+						}else{
+							$femaleChecked = 1;
+						}
+						
+						if($maleChecked == 1 && $femaleChecked == 1){
+							break;
+						}
 					}
 				}
-				$grade = array('name' => $grade, 'male' => $male, 'female' => $female,'source' => $source);
 			}
 		}
 	}
@@ -62,8 +91,8 @@ class CensusTeacher extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'CensusTeacher.id',
-				'CensusTeacher.male',
-				'CensusTeacher.female',
+				'CensusTeacher.gender_id',
+				'CensusTeacher.value',
 				'CensusTeacher.source',
 				'EducationProgramme.id AS education_programme_id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
@@ -112,7 +141,7 @@ class CensusTeacher extends AppModel {
 				'CensusTeacher.school_year_id' => $yearId,
 				'CensusTeacher.institution_site_id' => $institutionSiteId
 			),
-			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) <= 1'),
+			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) = 1'),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		
@@ -141,8 +170,8 @@ class CensusTeacher extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'CensusTeacher.id',
-				'CensusTeacher.male',
-				'CensusTeacher.female',
+				'CensusTeacher.gender_id',
+				'CensusTeacher.value',
 				'CensusTeacher.source',
 				'EducationProgramme.id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
@@ -182,12 +211,12 @@ class CensusTeacher extends AppModel {
 		
 		$data = array();
 		foreach($gradeList as $obj) {
-			$programme = $obj['EducationProgramme'];
 			$grade = $obj['EducationGrade'];
 			$teacher = $obj['CensusTeacher'];
+			$censusTeacherId = $teacher['id'];
 			
-			if(!isset($data[$teacher['id']])) {
-				$data[$teacher['id']] = array(
+			if(!isset($data[$censusTeacherId])) {
+				$data[$censusTeacherId] = array(
 					'male' => $teacher['male'],
 					'female' => $teacher['female'],
 					'source' => $teacher['source'],
@@ -195,8 +224,8 @@ class CensusTeacher extends AppModel {
 					'grades' => array()
 				);
 			}
-			$data[$teacher['id']]['programmes'][] = $obj[0]['education_programme_name'];
-			$data[$teacher['id']]['grades'][$grade['id']] = $grade['name'];
+			$data[$censusTeacherId]['programmes'][] = $obj[0]['education_programme_name'];
+			$data[$censusTeacherId]['grades'][$grade['id']] = $grade['name'];
 		}
 		return $data;
 	}
@@ -386,15 +415,26 @@ class CensusTeacher extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
-			//$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
-			//$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
+			$maleGenderId = $this->Gender->getIdByName('Male');
+			$femaleGenderId = $this->Gender->getIdByName('Female');
+			$genderOptions = array(
+				$maleGenderId => 'Male', 
+				$femaleGenderId => 'Female'
+			);
+			//pr($genderOptions);die;
+			
+			$EducationLevel = ClassRegistry::init('EducationLevel');
+			$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
+			
+			$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
+			$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
 			$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
-			$multiGradeData = array();// $this->getMultiGradeData($institutionSiteId, $selectedYear);
+			$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedYear);
 			$singleGradeData = $programmeGrades;
 			
 			$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 			
-			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData'));
+			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData', 'genderOptions', 'eduLevelOptions'));
 		}
 		
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);

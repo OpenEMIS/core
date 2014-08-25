@@ -26,3 +26,6 @@ RENAME TABLE `census_teacher_training_bak` TO `census_teacher_training` ;
 
 DROP TABLE IF EXISTS `census_teachers`;
 RENAME TABLE `census_teachers_bak` TO `census_teachers` ;
+
+DROP TABLE IF EXISTS `census_teacher_grades`;
+RENAME TABLE `census_teacher_grades_bak` TO `census_teacher_grades` ;
