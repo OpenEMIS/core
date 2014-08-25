@@ -5,13 +5,13 @@
 	 	<?php 
 			echo $this->Form->input('TrainingCourseExperience.' . $index . '.number_years', array('id' => 'searchExperienceYear'.$index, 'options'=>$yearOptions, 'label'=>false, 'between'=>false, 'div'=>false, 'class'=>'form-control months-selection-'.$index));
 		?>
-		<?php echo __('Year(s)');?>
+		<?php echo __('Year');?>
 		</div>
 		<div class="col-md-6" style="padding:3px;">
 			<?php 
 				echo $this->Form->input('TrainingCourseExperience.' . $index . '.number_months', array('id' => 'searchExperienceMonth'.$index, 'options'=>$monthOptions, 'label'=>false, 'between'=>false, 'div'=>false, 'class'=>'form-control months-selection-'.$index)); 
 			?>	
-			<?php echo __('Month(s)');?>
+			<?php echo __('Month');?>
 		</div>
 		<?php echo $this->Form->hidden('TrainingCourseExperience.' . $index . '.months', array('class' => 'experience-validate-'.$index . ' validate-experience')); ?>
     </td>
