@@ -22,10 +22,17 @@ class HighChartsMap extends HighChartsAppModel {
 		$code = $_options['code'];
 		$level = $_options['level'];
 		
-		$data = $this->find('first', array('conditions' => array('code'=> $code, 'level' => $level), 'order' => array('start_year DESC')));
+		$data = array();
+		try {
+			$data = $this->find('first', array('conditions' => array('code'=> $code, 'level' => $level), 'order' => array('start_year DESC')));
+		} catch (Exception $e) {
+			$this->log('Caught exception: '.$e->getMessage(), 'debug');
+		}
+		
 		
 		if(empty($data)){
-			return false;
+			$data['errorMsg'] = 'Failed to load data from database.';
+			return $data;
 		}
 		else{
 			return $data['HighChartsMap']['geojson'];
