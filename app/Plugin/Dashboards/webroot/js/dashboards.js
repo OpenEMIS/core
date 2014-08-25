@@ -17,7 +17,7 @@ $(document).ready(function() {
 					graphWrapper.highcharts(data);
 				}
 			});
-
+			
 		});
 	}
 });

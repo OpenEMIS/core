@@ -727,6 +727,7 @@ class HighChartsComponent extends Component {
 	private function checkFunctionExist(){
 		if (!method_exists($this->controller, 'loadJsonMap')) {
 			pr('function loadJsonMap(country, level) must be implemented.');
+			$this->log('function loadJsonMap(country, level) must be implemented.', 'debug');
 		}
 	}
 	/* ======================| End Map Component |======================== */
