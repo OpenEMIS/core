@@ -1,8 +1,6 @@
 <?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
 echo $this->Html->script('institution_site_students', false);
 
@@ -10,17 +8,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'students_search');
 $this->assign('contentClass', 'search');
 $this->assign('contentHeader', __('List of Students'));
-$this->start('contentActions');
-if($_add_student) {
-	echo $this->Html->link(__('Add'), array('action' => 'studentsAdd', $selectedYear), array('class' => 'divider'));
-}
-$this->end();
 
 $this->start('contentBody');
-echo $this->Form->create('Student', array(
-	'url' => array('controller' => 'InstitutionSites', 'action' => 'students'),
-	'inputDefaults' => array('label' => false, 'div' => false)
-)); 
+
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model));
+$formOptions['inputDefaults'] = array('label' => false, 'div' => false);
+echo $this->Form->create($model, $formOptions);
 ?>
 <div class="row">
 	<div class="search_wrapper">
@@ -65,9 +58,8 @@ echo $this->Form->create('Student', array(
 	echo $this->Form->input('student_status_id', array(
 		'id' => 'StudentStatusId',
 		'class' => 'search_select form-control',
-	//	'empty' => __('All Programmes'),
-		'options' => $statusOptions,
-	//	'default' => $selectedYear
+		'empty' => __('All Statuses'),
+		'options' => $statusOptions
 	));
 	?>
 </div>
@@ -122,7 +114,7 @@ echo $this->Form->end();
 				?>
 				<tr>
 					<td><?php echo $idNo; ?></td>
-					<td><?php echo $this->Html->link($fullName, array('action' => 'studentsView', $obj['Student']['id']), array('escape' => false)); ?></td>
+					<td><?php echo $this->Html->link($fullName, array('plugin' => false, 'controller' => 'Students', 'action' => 'view', $obj['Student']['id']), array('escape' => false)) ?></td>
 					<td><?php echo $obj['EducationProgramme']['name']; ?></td>
 					<td><?php echo $obj['StudentStatus']['name']; ?></td>
 				</tr>

@@ -1,6 +1,4 @@
 <?php
-
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
@@ -9,17 +7,17 @@ echo $this->Html->script('jquery-ui.min', false);
 echo $this->Html->script('institution_site_students', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Add Student'));
+$this->assign('contentHeader', $this->Label->get('Student.add_existing'));
 
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => $this->action));
-$formOptions['autocompleteURL'] = $this->params['controller'] . "/studentsAjaxFind/";
-$formOptions['id'] = "AddStudentForm";
-$formOptions['inputDefaults']['autocomplete'] =  'off';
+//$formOptions['autocompleteURL'] = $this->params['controller'] . "/$model/studentsAjaxFind/";
+//$formOptions['id'] = "AddStudentForm";
+//$formOptions['inputDefaults']['autocomplete'] =  'off';
 
 $labelOptions = $formOptions['inputDefaults']['label'];
-echo $this->Form->create('InstitutionSiteStudent', $formOptions);
+echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('student_id', array('id' => 'StudentId'));
 
 $labelOptions['text'] = $this->Label->get('general.openemisId');

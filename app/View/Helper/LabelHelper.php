@@ -84,7 +84,16 @@ class LabelHelper extends AppHelper {
 			'reset' => 'Reset',
 			'preview' => 'Preview',
 			'international_code' => 'International Code',
-			'national_code' => 'National Code'
+			'national_code' => 'National Code',
+			'current' => 'Current',
+			'past' => 'Past'
+		),
+		'date' => array(
+			'start' => 'Start Date',
+			'end' => 'End Date',
+			'from' => 'From',
+			'to' => 'To',
+			'since' => 'Since'
 		),
 		'gender' => array(
 			'm' => 'Male',
@@ -158,6 +167,7 @@ class LabelHelper extends AppHelper {
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution',
+			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
 		),
@@ -259,6 +269,9 @@ class LabelHelper extends AppHelper {
 			'custom_indicators' => 'Custom Indicators',
 			'processing' => 'Processing'
 		),
+		'Student' => array(
+			'add_existing' => 'Add existing Student'
+		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
@@ -285,6 +298,20 @@ class LabelHelper extends AppHelper {
 		'Position' => array(
 			'teaching' => 'Teaching',
 			'number' => 'Number'
+		),
+		'InstitutionSiteStudent' => array(
+			'student_status_id' => 'Status',
+			'education_programme_id' => 'Programme'
+		),
+		'InstitutionSiteStaff' => array(
+			'staff_status_id' => 'Status',
+			'staff_type_id' => 'Type',
+			'institution_site_position_id' => 'Position'
+		),
+		'InstitutionSitePosition' => array(
+			'title' => 'Positions',
+			'staff_position_title_id' => 'Title',
+			'staff_position_grade_id' => 'Grade'
 		),
 		'InstitutionSiteStudentAbsence' => array(
 			'reason' => 'Reason',
