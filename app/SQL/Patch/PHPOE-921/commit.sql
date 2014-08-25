@@ -156,17 +156,28 @@ CREATE TABLE `census_teachers` (
   KEY `old_id` (`old_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
-INSERT INTO `census_teachers` (`id`, `gender_id`, `value`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+INSERT INTO `census_teachers` (`old_id`, `gender_id`, `value`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
 SELECT `id`, @maleGenderId, `male`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM census_teachers_bak;
 
-INSERT INTO `census_teachers` (`id`, `gender_id`, `value`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+INSERT INTO `census_teachers` (`old_id`, `gender_id`, `value`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
 SELECT `id`, @femaleGenderId, `female`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM census_teachers_bak;
 
 -- DROP TABLE IF EXISTS `census_teachers_bak`;
 
 RENAME TABLE `census_teacher_grades` TO `census_teacher_grades_bak` ;
 
-INSERT INTO `census_teacher_grades` (`id`, `gender_id`, `value`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-SELECT `id`, @maleGenderId, `male`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM census_teacher_grades_bak AS g, census_teachers AS t 
+CREATE TABLE `census_teacher_grades` (
+  `census_teacher_id` int(11) NOT NULL,
+  `education_grade_id` int(11) NOT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`census_teacher_id`,`education_grade_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `census_teacher_grades` (`census_teacher_id`, `education_grade_id`, `created_user_id`, `created`) 
+SELECT t.`id`, g.`education_grade_id`, g.`created_user_id`, g.`created` FROM census_teacher_grades_bak AS g, census_teachers AS t 
 WHERE g.census_teacher_id = t.old_id;
 
+-- DROP TABLE IF EXISTS `census_teacher_grades_bak`;
+
+ALTER TABLE `census_teachers` DROP `old_id`;
