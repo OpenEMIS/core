@@ -3,6 +3,7 @@ echo $this->Html->css('Dashboards.dashboard', 'stylesheet', array('inline' => fa
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/HighCharts/js/highcharts', false);
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
+echo $this->Html->script('/HighCharts/js/modules/no-data-to-display', false);
 echo $this->Html->script('Dashboards.dashboards', false);
 
 $this->extend('/Elements/layout/container_blank');
