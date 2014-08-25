@@ -13,6 +13,6 @@ if($_delete) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+echo $this->element('view');
 $this->end();
 ?>

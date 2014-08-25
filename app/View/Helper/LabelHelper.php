@@ -70,14 +70,6 @@ class LabelHelper extends AppHelper {
 			'class' => 'Class',
 			'comment' => 'Comment',
 			'view_details' => 'View Details',
-			'language' => array(
-				'eng' => 'English',
-				'chi' => 'Chinese',
-				'rus' => 'Russian',
-				'spa' => 'Spanish',
-				'fre' => 'French',
-				'ara' => 'Arabic',
-			),
 			'compile' => 'Compile',
 			'next' => 'Next',
 			'previous' => 'Previous',
@@ -378,6 +370,14 @@ class LabelHelper extends AppHelper {
 			'x_categories' => 'Columns',
 			'y_categories' => 'Rows',
 			'update_preview' => 'Update Preview'
+		),
+		'Translation' => array(
+			'eng' => 'English',
+			'chi' => 'Chinese',
+			'rus' => 'Russian',
+			'spa' => 'Spanish',
+			'fre' => 'French',
+			'ara' => 'Arabic'
 		)
 	);
 	
