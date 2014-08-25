@@ -83,7 +83,7 @@ var Visualizer = {
 	formSubmit: function() {
 		$('#visualizer form').submit();
 	},
-	areaLevelChange: function(obj) {
+	dropdownChange: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
 	},
 	radioChange: function(obj){

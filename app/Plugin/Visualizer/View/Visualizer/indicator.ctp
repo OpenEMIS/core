@@ -21,6 +21,7 @@ $formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label left';
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($this->action, $formOptions);
 echo $this->Form->input('search', array('id' => 'search'));
+echo $this->Form->input('classification', array('id'=> 'classification' ,'options' => $classificationOptions, 'selected'=> $selectedClassification,  'empty' => 'All', 'onchange' => 'Visualizer.dropdownChange(this)', 'url' => 'Visualizer/'.$this->action));
 ?>
 <div class='visualizer-list-table'>
 	<?php
@@ -28,8 +29,9 @@ echo $this->Form->input('search', array('id' => 'search'));
 	$headerfirstCol = array('' => array('class' => 'checkbox-column'));
 	
 	$colArr = array(
-		array('name' => 'Indicator', 'col' => 'Indicator_Name'),
-		array('name' => 'Description', 'col' => 'Indicator_Info'),
+		array('name' => 'Indicator', 'col' => 'Indicator.Indicator_Name'),
+		array('name' => 'Classification', 'col' => 'IndicatorClassification.IC_Name'),
+		array('name' => 'Description', 'col' => 'Indicator.Indicator_Info'),
 	);
 
 	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
@@ -61,6 +63,7 @@ echo $this->Form->input('search', array('id' => 'search'));
 			$row = array();
 			$row[] = array($input, array('class' => $additionalClass));
 			$row[] = array($obj['name'], array('class' => 'data-list'));
+			$row[] = $obj['classification'];/*, array('class' => 'data-list'));*/
 			$row[] = $obj['desc'];
 			$tableData[] = $row;
 			$i++;
