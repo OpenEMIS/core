@@ -4,12 +4,12 @@ echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
+if (!empty($this->data[$model]['id'])) {
+	$redirectAction = array('action' => 'employmentsView', $this->data[$model]['id']);
+} else {
+	$redirectAction = array('action' => 'employments');
+}
 if ($_edit) {
-	if (!empty($this->data[$model]['id'])) {
-		$redirectAction = array('action' => 'employmentsView', $this->data[$model]['id']);
-	} else {
-		$redirectAction = array('action' => 'employments');
-	}
 	echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
 }
 $this->end();

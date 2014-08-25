@@ -129,7 +129,7 @@ class InstitutionSiteAttachment extends AppModel {
 
 	public function attachmentsDelete($controller, $params) {
 		$controller->autoRender = false;
-		if ($controller->Session->check('InstitutionSiteId') && $controller->Session->check('InstitutionSiteAttachmentId')) {
+		if ($controller->Session->check('InstitutionSite.id') && $controller->Session->check('InstitutionSiteAttachmentId')) {
 			$id = $controller->Session->read('InstitutionSiteAttachmentId');
 
 			if ($this->delete($id)) {
@@ -146,7 +146,5 @@ class InstitutionSiteAttachment extends AppModel {
 		$id = $params['pass'][0];
 		$controller->FileUploader->downloadFile($id);
 	}
-
 }
-
 ?>
