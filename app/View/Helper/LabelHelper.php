@@ -92,8 +92,7 @@ class LabelHelper extends AppHelper {
 			'start' => 'Start Date',
 			'end' => 'End Date',
 			'from' => 'From',
-			'to' => 'To',
-			'since' => 'Since'
+			'to' => 'To'
 		),
 		'gender' => array(
 			'm' => 'Male',

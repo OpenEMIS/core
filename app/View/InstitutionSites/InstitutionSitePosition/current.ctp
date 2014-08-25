@@ -6,7 +6,7 @@
 				<tr>
 					<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 					<th><?php echo $this->Label->get('general.name'); ?></th>
-					<th><?php echo $this->Label->get('date.since'); ?></th>
+					<th><?php echo $this->Label->get('date.start'); ?></th>
 					<th>FTE</th>
 				</tr>
 			</thead>
