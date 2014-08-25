@@ -36,4 +36,32 @@ class VisualizerIndicatorClassification extends VisualizerAppModel {
 		
 		return $data;
 	}
+	
+	public function getListOfClassification( $order = NULL) {
+		$order = (empty($order))? NULL:array($order);
+		$data = $this->find('list', array(
+			'fields' => array('IndicatorClassification.IC_NId', 'IndicatorClassification.IC_Name'),
+			'conditions' => array('IndicatorClassification.IC_Type !=' => 'SR'),
+			'joins' => array(
+				array(
+					'table' => 'ut_indicator_classifications_ius',
+					'alias' => 'IndicatorClassificationIUS',
+					'conditions' => array('IndicatorClassificationIUS.IC_NId = IndicatorClassification.IC_NId')
+				),
+				array(
+					'table' => 'ut_indicator_unit_subgroup',
+					'alias' => 'IndicatorUnitSubgroup',
+					'conditions' => array('IndicatorUnitSubgroup.IUSNId = IndicatorClassificationIUS.IUSNId')
+				),
+				array(
+					'table' => 'ut_indicator_en',
+					'alias' => 'Indicator',
+					'conditions' => array('Indicator.Indicator_NId = IndicatorUnitSubgroup.Indicator_NId')
+				),
+			),
+			'order' => $order
+		));
+		
+		return $data;
+	}
 }

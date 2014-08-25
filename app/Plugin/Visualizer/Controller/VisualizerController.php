@@ -171,6 +171,7 @@ class VisualizerController extends VisualizerAppController {
 			$row = array();
 			$row['id'] = $obj['Indicator']['Indicator_NId'];
 			$row['name'] = $obj['Indicator']['Indicator_Name'];
+			$row['classification'] = $obj['IndicatorClassification']['IC_Name'];
 			$row['desc'] = $obj['Indicator']['Indicator_Info'];
 			$row['checked'] = ($selectedIndicatorId == $obj['Indicator']['Indicator_NId'] ) ? true : false;
 
@@ -367,6 +368,7 @@ class VisualizerController extends VisualizerAppController {
 			unset($this->request->data['indicator']['search']);
 		}
 
+		
 		$selectedIndicatorId = $this->Session->read('visualizer.selectedOptions.indicator');
 
 		$sortType = 'ASC';
@@ -374,13 +376,28 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'up';
 		$order = $this->configSortData($sortDirection, $sortType, $sortCol);
 
+		$di6IndicatorClassification = ClassRegistry::init('Visualizer.VisualizerIndicatorClassification');
+		$classificationOptions = $di6IndicatorClassification->getListofClassification();
+		
+		$selectedClassification = '';
+		if (!empty($this->params['pass'])) {
+			if (array_key_exists($this->params['pass'][0], $classificationOptions)) {
+				$selectedClassification = $this->params['pass'][0];
+				$options['conditions']['IndicatorClassificationIUS.IC_NId'] = $selectedClassification;
+				//$selectedClassification = $this->params['pass'][0];
+				//$tableHeaders = $di6AreaLevel->getAreaLevelUpto($selectedAreaLevel); //$di6AreaLevel->getAreaLevelList();
+			}
+		}
+		
 		$di6Indicator = ClassRegistry::init('Visualizer.VisualizerIndicator');
-		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info'), 'order' => $order));
+		$options['order'] = $order;
+		$data = $di6Indicator->getIndicators($options);
+	
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
 		if (empty($tableRowData) && empty($displayError)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId', 'sortCol', 'sortDirection'));
+		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId', 'sortCol', 'sortDirection', 'classificationOptions','selectedClassification'));
 	}
 
 	public function unit() {
