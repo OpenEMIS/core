@@ -70,14 +70,6 @@ class LabelHelper extends AppHelper {
 			'class' => 'Class',
 			'comment' => 'Comment',
 			'view_details' => 'View Details',
-			'language' => array(
-				'eng' => 'English',
-				'chi' => 'Chinese',
-				'rus' => 'Russian',
-				'spa' => 'Spanish',
-				'fre' => 'French',
-				'ara' => 'Arabic',
-			),
 			'compile' => 'Compile',
 			'next' => 'Next',
 			'previous' => 'Previous',
@@ -271,6 +263,9 @@ class LabelHelper extends AppHelper {
 		'Student' => array(
 			'add_existing' => 'Add existing Student'
 		),
+		'Student' => array(
+			'add_existing' => 'Add existing Student'
+		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
@@ -374,18 +369,20 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
+		
 		'CensusGrid' => array(
 			'x_title' => 'Table Header',
 			'x_categories' => 'Columns',
 			'y_categories' => 'Rows',
 			'update_preview' => 'Update Preview'
 		),
-		'Datawarehouse' => array(
-			'indicator' => 'Indicator',
-			'unit' => 'Unit',
-			'module' => 'Module',
-			'function' => 'Function',
-			'dimensions' => 'Dimensions'
+		'Translation' => array(
+			'eng' => 'English',
+			'chi' => 'Chinese',
+			'rus' => 'Russian',
+			'spa' => 'Spanish',
+			'fre' => 'French',
+			'ara' => 'Arabic'
 		)
 	);
 	
