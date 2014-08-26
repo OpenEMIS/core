@@ -37,30 +37,44 @@ echo $this->element('census/year_options');
                     $total = 0;
                     $i = 0;
                     $fieldName = 'data[CensusTeacherFte][%d][%s]';
-                    foreach ($fte as $record) {
-                        $total += $record['male'] + $record['female'];
-                        $record_tag = "";
-                        foreach ($source_type as $k => $v) {
-                            if ($record['source'] == $v) {
-                                $record_tag = "row_" . $k;
-                            }
-                        }
+					
+                    foreach ($eduLevelOptions as $eduLevelId => $eduLevelName):
+						$subTotal = 0;
                         ?>
                         <tr>
                             <?php
-                            echo $this->Form->hidden('id', array('name' => sprintf($fieldName, $i, 'id'), 'value' => $record['id']));
-                            echo $this->Form->hidden('education_level_id', array('name' => sprintf($fieldName, $i, 'education_level_id'), 'value' => $record['education_level_id']));
+                            
                             ?>
                             <td class=" <?php echo $record_tag; ?>"><?php echo $record['education_level_name']; ?></td>
+							<?php
+							foreach ($genderOptions AS $genderId => $genderName):
+							?>
                             <td>
                                 <div class="input_wrapper">
-                                    <?php
-                                    echo $this->Form->input('male', array(
+                                    <?php 
+									echo $this->Form->hidden('id', array('name' => sprintf($fieldName, $index, 'id'), 'value' => $record['id']));
+									echo $this->Form->hidden('education_level_id', array('name' => sprintf($fieldName, $index, 'education_level_id'), 'value' => $record['education_level_id']));
+									
+									$record_tag = '';
+									foreach ($source_type as $k => $v):
+										if (isset($fte[$eduLevelId][$genderId]['source']) && $fte[$eduLevelId][$genderId]['source'] == $v) {
+											$record_tag = "row_" . $k;
+										}
+									endforeach;
+
+									if (!empty($fte[$eduLevelId][$genderId]['value'])) {
+										$value = $fte[$eduLevelId][$genderId]['value'];
+										$subTotal += $value;
+									} else {
+										$value = 0;
+									}
+									
+                                    echo $this->Form->input('value', array(
                                         'type' => 'text',
                                         'class' => $record_tag,
-                                        'name' => sprintf($fieldName, $i, 'male'),
+                                        'name' => sprintf($fieldName, $index, 'value'),
                                         'computeType' => 'cell_value',
-                                        'value' => is_null($record['male']) || (!$record['male'] > 0) ? 0 : str_replace(".0", "", $record['male']),
+                                        'value' => $value,
                                         'maxlength' => 7,
                                         'onkeypress' => 'return CensusTeachers.decimalCheck(event,1)',
                                         'onkeyup' => 'CensusTeachers.computeSubtotal(this)',
@@ -69,28 +83,15 @@ echo $this->element('census/year_options');
                                     ?>
                                 </div>
                             </td>
-                            <td>
-                                <div class="input_wrapper">
-                                    <?php
-                                    echo $this->Form->input('female', array(
-                                        'type' => 'text',
-                                        'name' => sprintf($fieldName, $i, 'female'),
-                                        'class' => $record_tag,
-                                        'computeType' => 'cell_value',
-                                        'value' => is_null($record['female']) || (!$record['female'] > 0) ? 0 : str_replace(".0", "", $record['female']),
-                                        'maxlength' => 7,
-                                        'onkeypress' => 'return CensusTeachers.decimalCheck(event,1)',
-                                        'onkeyup' => 'CensusTeachers.computeSubtotal(this)',
-                                        'onblur' => 'CensusTeachers.clearBlank(this)'
-                                    ));
-                                    ?>
-                                </div>
-                            </td>
-                            <td class=" cell_number cell_subtotal"><?php echo $record['male'] + $record['female']; ?></td>
+							<?php 
+							$index++;
+							endforeach;
+							?>
+                            <td class=" cell_number cell_subtotal"><?php echo $subTotal; ?></td>
                         </tr>
                         <?php
-                        $i = $i + 1;
-                    }
+						$total += $subTotal;
+                    endforeach;
                     ?>
                 </tbody>
                 <tfoot>
