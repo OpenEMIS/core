@@ -102,15 +102,22 @@ class TranslationsController extends AppController {
 		$languages = array('eng', 'ara', 'spa', 'chi', 'rus', 'fre');
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
+			/*
 			$data['Translation']['code'] = empty($data['Translation']['code'])? NULL: nl2br($data['Translation']['code']);
 			
 			foreach ($languages as $lang) {
 				$data['Translation'][$lang] = empty($data['Translation'][$lang])? NULL : nl2br($data['Translation'][$lang]);
 			}
+			*/
 			
 			if ($this->Translation->save($data)) {
 				$this->Message->alert('general.' . $type . '.success');
-				return $this->redirect(array('action' => 'index'));
+				$action = array('action' => 'index');
+				if ($type == 'edit') {
+					$action['action'] = 'view';
+					$action[] = $id;
+				}
+				return $this->redirect($action);
 			}
 		} else {
 			$this->recursive = -1;
