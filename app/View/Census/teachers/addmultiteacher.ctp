@@ -86,12 +86,13 @@ foreach ($programmeGrades as $obj) {
 
         <td class="table_cell">
             <div class="input_wrapper">
-                <?php
-                echo $this->Form->input('male', array(
+                <?php 
+				echo $this->Form->hidden('gender_id', array('name' => sprintf('data[CensusTeacher][%d][gender_id]', $i), 'value' => $maleGenderId));
+                echo $this->Form->input('value', array(
                     'div' => false,
                     'label' => false,
                     'type' => 'text',
-                    'name' => sprintf('data[CensusTeacher][%d][male]', $i),
+                    'name' => sprintf('data[CensusTeacher][%d][value]', $i),
                     'computeType' => 'total_male',
                     'value' => 0,
                     'maxlength' => 10,
@@ -103,12 +104,13 @@ foreach ($programmeGrades as $obj) {
         </td>
         <td class="table_cell">
             <div class="input_wrapper">
-                <?php
-                echo $this->Form->input('female', array(
+                <?php 
+				echo $this->Form->hidden('gender_id', array('name' => sprintf('data[CensusTeacher][%d][gender_id]', $i), 'value' => $femaleGenderId));
+                echo $this->Form->input('value', array(
                     'div' => false,
                     'label' => false,
                     'type' => 'text',
-                    'name' => sprintf('data[CensusTeacher][%d][female]', $i),
+                    'name' => sprintf('data[CensusTeacher][%d][value]', $i),
                     'computeType' => 'total_female',
                     'value' => 0,
                     'maxlength' => 10,
