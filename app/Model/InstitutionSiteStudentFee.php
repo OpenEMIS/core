@@ -393,6 +393,12 @@ class InstitutionSiteStudentFee extends AppModel {
 						'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
 					),
 					array(
+						'type' => 'LEFT',
+						'table' => 'institution_site_fees',
+						'alias' => 'InstitutionSiteFee',
+						'conditions' => array('InstitutionSiteFee.education_grade_id = EducationGrade.id')
+					),
+					array(
 						'table' => 'institution_site_programmes',
 						'alias' => 'InstitutionSiteProgramme',
 						'conditions' => array(
@@ -410,12 +416,6 @@ class InstitutionSiteStudentFee extends AppModel {
 						'table' => 'students',
 						'alias' => 'Student',
 						'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
-					),
-					array(
-						'type' => 'LEFT',
-						'table' => 'institution_site_fees',
-						'alias' => 'InstitutionSiteFee',
-						'conditions' => array('InstitutionSiteFee.education_grade_id = EducationGrade.id')
 					),
 					array(
 						'type' => 'LEFT',
@@ -449,8 +449,6 @@ class InstitutionSiteStudentFee extends AppModel {
 				}
 			}
 		}
-
-		pr($data);
 		
 		return $data;
 	}
