@@ -17,13 +17,13 @@
 
 class DashboardsController extends DashboardsAppController {
 
-	public $institutionSiteId, $institutionSiteAreaId;
-	public $uses = array();
-	public $helpers = array('Js' => array('Jquery'));
-	public $components = array('UserSession', 'Dashboards.QADashboard', 'HighCharts.HighCharts');
-	public $modules = array(
-		'InstitutionQA' => 'Dashboards.DashboardInstitutionQA',
-	);
+	public $institutionSiteId,$institutionSiteAreaId;
+	public $uses = array('Report');
+    public $helpers = array('Js' => array('Jquery'));
+    public $components = array('UserSession', 'Dashboards.QADashboard', 'HighCharts.HighCharts' );
+    public $modules = array(
+        'InstitutionQA' => 'Dashboards.DashboardInstitutionQA',
+    );
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -62,21 +62,21 @@ class DashboardsController extends DashboardsAppController {
 		$header = __('Dashboards');
 		$this->set('enabled', true);
 		$reportType = 'dashboard';
-		$Report = ClassRegistry::init('Report');
-		$reportData = $Report->find('all', array('conditions' => array('Report.visible' => 1, 'category' => $reportType . ' Reports'), 'order' => array('Report.order')));
 
-		$checkFileExist = array();
-		$data = array();
-
-		//arrange and sort according to grounp
-		foreach ($reportData as $k => $val) {
-			//$pathFile = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$val['Report']['category']).DS.$val['Report']['module'].DS.str_replace(' ','_',$val['Report']['name']).'.'.$val['Report']['file_type'];
-			$module = $val['Report']['module'];
-			$category = $val['Report']['category'];
-			$name = $val['Report']['name'];
-			$val['Report']['file_type'] = ($val['Report']['file_type'] == 'ind' ? 'csv' : $val['Report']['file_type']);
-			$data[$reportType . ' Reports'][$module][$name] = $val['Report'];
-		}
+        $reportData = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'Report.module'=>'Dashboard'), 'order' => array('Report.order')));
+  
+        $checkFileExist = array();
+        $data = array();
+        
+        //arrange and sort according to grounp
+        foreach($reportData as $k => $val){
+            //$pathFile = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$val['Report']['category']).DS.$val['Report']['module'].DS.str_replace(' ','_',$val['Report']['name']).'.'.$val['Report']['file_type'];
+            $module = $val['Report']['module'];
+            $category = $val['Report']['category'];
+            $name = $val['Report']['name'];
+            $val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
+            $data[$reportType.' Reports'][$module][$name] =  $val['Report']; 
+        }
 		$controllerName = $this->controller;
 		$msg = (isset($_GET['processing'])) ? 'processing' : '';
 		$this->set(compact('header', 'msg', 'data', 'controllerName'));
