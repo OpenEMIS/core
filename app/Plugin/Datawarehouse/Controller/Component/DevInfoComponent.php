@@ -146,8 +146,9 @@ class DevInfoComponent extends Component {
 			$adaptation = $this->ConfigItem->getAdaptation();
 			$source = sprintf($this->source, $adaptation, date("dMY"));
 			$sourceId = $this->IndicatorClassification->initSource($source);
-			$sectorId = $this->IndicatorClassification->initSector($this->sector);
-			$TYPE_SECTOR = 'SC';
+
+
+			
 				
 			$this->Logger->write("Start Processing Indicators");
 			$subgroups = array();
@@ -159,6 +160,12 @@ class DevInfoComponent extends Component {
 						break;
 					}
 				}
+				$sector = $this->sector;
+				if(!empty($indicator['DatawarehouseIndicator']['classification'])){
+					$sector = $indicator['DatawarehouseIndicator']['classification'];
+				}
+				$sectorId = $this->IndicatorClassification->initSector($sector);
+				$TYPE_SECTOR = 'SC';
 
 				$indicatorNumeratorObj = $indicator['DatawarehouseIndicator'];
 				$unitObj = $indicator['DatawarehouseUnit'];
