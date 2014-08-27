@@ -171,6 +171,7 @@ class VisualizerController extends VisualizerAppController {
 			$row = array();
 			$row['id'] = $obj['Indicator']['Indicator_NId'];
 			$row['name'] = $obj['Indicator']['Indicator_Name'];
+			$row['classification'] = $obj['IndicatorClassification']['IC_Name'];
 			$row['desc'] = $obj['Indicator']['Indicator_Info'];
 			$row['checked'] = ($selectedIndicatorId == $obj['Indicator']['Indicator_NId'] ) ? true : false;
 
@@ -367,6 +368,7 @@ class VisualizerController extends VisualizerAppController {
 			unset($this->request->data['indicator']['search']);
 		}
 
+		
 		$selectedIndicatorId = $this->Session->read('visualizer.selectedOptions.indicator');
 
 		$sortType = 'ASC';
@@ -374,13 +376,28 @@ class VisualizerController extends VisualizerAppController {
 		$sortDirection = 'up';
 		$order = $this->configSortData($sortDirection, $sortType, $sortCol);
 
+		$di6IndicatorClassification = ClassRegistry::init('Visualizer.VisualizerIndicatorClassification');
+		$classificationOptions = $di6IndicatorClassification->getListofClassification();
+		
+		$selectedClassification = '';
+		if (!empty($this->params['pass'])) {
+			if (array_key_exists($this->params['pass'][0], $classificationOptions)) {
+				$selectedClassification = $this->params['pass'][0];
+				$options['conditions']['IndicatorClassificationIUS.IC_NId'] = $selectedClassification;
+				//$selectedClassification = $this->params['pass'][0];
+				//$tableHeaders = $di6AreaLevel->getAreaLevelUpto($selectedAreaLevel); //$di6AreaLevel->getAreaLevelList();
+			}
+		}
+		
 		$di6Indicator = ClassRegistry::init('Visualizer.VisualizerIndicator');
-		$data = $di6Indicator->find('all', array('fields' => array('Indicator_NId', 'Indicator_Name', 'Indicator_Info'), 'order' => $order));
+		$options['order'] = $order;
+		$data = $di6Indicator->getIndicators($options);
+	
 		$tableRowData = $this->processIndicatorRawData($data, $selectedIndicatorId);
 		if (empty($tableRowData) && empty($displayError)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId', 'sortCol', 'sortDirection'));
+		$this->set(compact('header', 'tableRowData', 'selectedIndicatorId', 'sortCol', 'sortDirection', 'classificationOptions','selectedClassification'));
 	}
 
 	public function unit() {
@@ -787,7 +804,7 @@ class VisualizerController extends VisualizerAppController {
 		$selectedOptions = $this->VisualizerData->getQueryOptionsSetup($this->Session->read('visualizer.visualization.' . $id));
 		$rawData = $this->VisualizerData->find('all', $selectedOptions);
 
-		if (!empty($rawData)) {
+		if (!empty($rawData) && !empty($IUSRawData)) {
 			if ($visualType == 'map') {
 				$countryData = $this->VisualizerArea->getCountry();
 
@@ -814,11 +831,7 @@ class VisualizerController extends VisualizerAppController {
 				$jsonData = $this->HighCharts->getChartData($visualType, $rawData);
 			}
 		} else {
-			$errorMsg = '<div class="alert alert_view alert_info" title="Click to dismiss">
-				<div class="alert_icon"></div>
-				<div class="alert_content">There are no records.</div>
-				</div>';
-			$jsonData = json_encode(array('errorMsg' => $errorMsg));
+			$jsonData = json_encode(array('errorMsg' => $this->alertView('There are no records.')));
 			//$jsonData = json_encode(array('error' =>$this->Message->alert('general.noData')));
 			//	pr($this->Message->alert('general.noData'));
 		}
@@ -827,8 +840,12 @@ class VisualizerController extends VisualizerAppController {
 
 	public function loadJsonMap($code, $level) {
 		$this->autoRender = false;
+		$mapData = array();
 		if ($this->request->is('ajax')) {
 			$mapData = ClassRegistry::init('HighCharts.HighChartsMap')->getJsonMap(array('code' => $code, 'level' => $level));
+			if (isset($mapData['errorMsg'])) {
+				$mapData = json_encode(array('errorMsg' => $this->alertView($mapData['errorMsg'], 'error')));
+			}
 			return $mapData;
 		}
 	}
@@ -876,6 +893,15 @@ class VisualizerController extends VisualizerAppController {
 			$sortCol = $this->Session->read('visualizer.sort.col');
 		}
 		return sprintf('%s %s', $sortCol, $sortType);
+	}
+	
+	private function alertView($msg, $errorType = 'info'){
+		$errorMsg = '<div class="alert alert_view alert_'.$errorType.'" title="Click to dismiss">
+				<div class="alert_icon"></div>
+				<div class="alert_content">'.__($msg).'</div>
+				</div>';
+		
+		return $errorMsg;
 	}
 
 }
