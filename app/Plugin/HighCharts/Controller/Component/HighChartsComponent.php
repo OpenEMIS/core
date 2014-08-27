@@ -671,7 +671,7 @@ class HighChartsComponent extends Component {
 				$tempArr['value'] = $obj['DIData']['Data_Value'];
 				$tempArr['TimePeriod'] = $obj['TimePeriod']['TimePeriod'];
 				$tempArr['dimension'] = $obj['SubgroupVal']['Subgroup_Val'];
-				$tempArr['dimension'] = $obj['DIArea']['Area_Level'];
+				$tempArr['areaLevel'] = $obj['DIArea']['Area_Level'];
 
 				$nextLevel = $this->getCheckDrillDown($obj['DIArea']['Area_Level']);
 				if (!empty($nextLevel)) {
@@ -727,6 +727,7 @@ class HighChartsComponent extends Component {
 	private function checkFunctionExist(){
 		if (!method_exists($this->controller, 'loadJsonMap')) {
 			pr('function loadJsonMap(country, level) must be implemented.');
+			$this->log('function loadJsonMap(country, level) must be implemented.', 'debug');
 		}
 	}
 	/* ======================| End Map Component |======================== */

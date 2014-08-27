@@ -13,6 +13,7 @@ if ($visualType != 'map') {
 	echo $this->Html->script('/HighCharts/js/modules/drilldown', false);
 }
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
+echo $this->Html->script('/HighCharts/js/modules/no-data-to-display', false);
 
 echo $this->Html->script('Visualizer.visualizer', false);
 echo $this->Html->script('Visualizer.visualizer.visualization', false);

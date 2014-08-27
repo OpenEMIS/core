@@ -73,22 +73,19 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$_options['subgroupValGId'] = array($controller->QADashboard->indicators['SubgrpVal']['Total']);
 
 		$IUSRawData = $controller->QADashboard->getIUSByIndividualGId($_options);
-
-		$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
-
-		$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
-		$areaIds = $controller->HighCharts->getAreaIds();
-		$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
-
-		$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
-
-
-		$controller->HighCharts->plotBy = 'indicator';
 		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
+		if (!empty($IUSRawData)) {
+			$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
 
-		$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
+			$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
+			$areaIds = $controller->HighCharts->getAreaIds();
+			$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
 
+			$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
+
+			$controller->HighCharts->plotBy = 'indicator';
+			$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
+		}
 		return json_encode($data, JSON_NUMERIC_CHECK);
 	}
 
@@ -107,19 +104,19 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$_options['subgroupValGId'] = array($controller->QADashboard->indicators['SubgrpVal']['Total']);
 
 		$IUSRawData = $controller->QADashboard->getIUSByIndividualGId($_options);
+		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Trend', 'chartType' => 'line'));
 
-		$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
+		if (!empty($IUSRawData)) {
+			$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
 
-		$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
-		$areaIds = $controller->HighCharts->getAreaIds();
-		$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
+			$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
+			$areaIds = $controller->HighCharts->getAreaIds();
+			$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
 
-		$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
+			$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
 
-		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects', 'chartType' => 'line'));
-		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('line'));
-		$data = array_merge($data, $controller->HighCharts->customGetLineChartData($rawData));
-
+			$data = array_merge($data, $controller->HighCharts->customGetLineChartData($rawData));
+		}
 		return json_encode($data, JSON_NUMERIC_CHECK);
 	}
 
@@ -138,22 +135,21 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$_options['subgroupValGId'] = array($controller->QADashboard->indicators['SubgrpVal']['Total']);
 
 		$IUSRawData = $controller->QADashboard->getIUSByIndividualGId($_options);
+		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative Domains'));
+		if (!empty($IUSRawData)) {
+			$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
 
-		$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
+			$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
+			$areaIds = $controller->HighCharts->getAreaIds();
+			$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
 
-		$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
-		$areaIds = $controller->HighCharts->getAreaIds();
-		$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
+			$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
 
-		$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
+			$controller->HighCharts->plotBy = 'indicator';
+			$controller->HighCharts->rotateLabel = true;
 
-		$controller->HighCharts->plotBy = 'indicator';
-		$controller->HighCharts->rotateLabel = true;
-		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
-
-		$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
-
+			$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
+		}
 		return json_encode($data, JSON_NUMERIC_CHECK);
 	}
 
@@ -171,22 +167,20 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$_options['subgroupValGId'] = array($controller->QADashboard->indicators['SubgrpVal']['Total']);
 
 		$IUSRawData = $controller->QADashboard->getIUSByIndividualGId($_options);
+		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Technical Domains'));
+		if (!empty($IUSRawData)) {
+			$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
 
-		$controller->HighCharts->initVariables($IUSRawData, $areaRawData, $timePeriodRawData);
+			$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
+			$areaIds = $controller->HighCharts->getAreaIds();
+			$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
 
-		$timeperiodIds = $controller->HighCharts->getTimeperiodIds();
-		$areaIds = $controller->HighCharts->getAreaIds();
-		$sourceID = $controller->QADashboard->getLatestSourceID($controller->HighCharts->selectedIUS, $timeperiodIds);
+			$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
 
-		$rawData = $controller->QADashboard->getDashboardRawData(array('IUS' => $controller->HighCharts->selectedIUS, 'area' => $areaIds, 'timeperiod' => $timeperiodIds, 'source' => $sourceID));
+			$controller->HighCharts->plotBy = 'indicator';
 
-
-		$controller->HighCharts->plotBy = 'indicator';
-		$data = $controller->HighCharts->customGenerateHeader(array('caption' => 'Administrative and Technical Aspects'));
-		//$data = array_merge($data, $controller->HighCharts->customGenerateCategory('column'));
-
-		$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
-
+			$data = array_merge($data, $controller->HighCharts->customGetGenericChartData('column', $rawData));
+		}
 		return json_encode($data, JSON_NUMERIC_CHECK);
 	}
 
