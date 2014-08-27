@@ -543,7 +543,10 @@ class CensusTeacher extends AppModel {
 		$i = $controller->params->query['index'];
 		$body = $controller->params->query['tableBody'];
 		
-		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId'));
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId', 'maleGenderId', 'femaleGenderId'));
 	}
 
 	public function teachersAddMultiGrade($controller, $params) {
@@ -557,7 +560,7 @@ class CensusTeacher extends AppModel {
 		$grades = $programmeGrades[current($programmes)]['education_grades'];
 
 		$option = '<option value="%d">%s</option>';
-		$programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
+		$programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="Census.loadGradeList(this)">', $index);
 		foreach ($programmes as $id => $value) {
 			$programmesHtml .= sprintf($option, $id, $value);
 		}
@@ -565,7 +568,7 @@ class CensusTeacher extends AppModel {
 
 		$gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
 		foreach ($grades as $id => $value) {
-			$gradesHtml .= sprintf($option, $id, $value);
+			$gradesHtml .= sprintf($option, $id, $value['gradeName']);
 		}
 		$gradesHtml .= '</select></div>';
 

@@ -150,7 +150,7 @@ class EducationLevel extends AppModel {
 	}
 	
 	public function getInstitutionLevelsBySchoolYear($institutionSiteId, $schoolYearId){
-		$list = $this->find('list' , array(
+		$list = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
 				'EducationLevel.id AS education_level_id',
@@ -186,7 +186,14 @@ class EducationLevel extends AppModel {
 			'conditions' => array('EducationLevel.visible' => 1),
 			'order' => array('EducationLevel.order')
 		));
+
+		$data = array();
+		foreach($list AS $row){
+			$levelId = $row['EducationLevel']['education_level_id'];
+			$levelName = $row['EducationLevel']['education_level_name'];
+			$data[$levelId] = $levelName;
+		}
 		
-		return $list;
+		return $data;
 	}
 }

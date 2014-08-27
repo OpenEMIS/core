@@ -27,9 +27,11 @@ echo $this->element('census/year_options');
 				<thead>
 					<?php echo $this->Html->tableHeaders(array(__('Education Level'), __('Male'), __('Female'), __('Total'))); ?>
 				</thead>
+				<?php
+				$totalFte = 0;
+				?>
 				<tbody>
 					<?php
-					$totalFte = 0;
 					$tableDataFte = array();
 					foreach ($eduLevelOptions as $eduLevelId => $eduLevelName) {
 						$rowTotal = 0;
@@ -91,9 +93,11 @@ echo $this->element('census/year_options');
 					<?php echo $this->Html->tableHeaders(array(__('Education Level'), __('Male'), __('Female'), __('Total'))); ?>
 				</thead>
 
+				<?php
+				$totalTraining = 0;
+				?>
 				<tbody>
 					<?php
-					$totalTraining = 0;
 					$tableDataTraining = array();
 					foreach ($eduLevelOptions as $eduLevelId => $eduLevelName) {
 						$rowTotal = 0;
@@ -137,7 +141,6 @@ echo $this->element('census/year_options');
 					echo $this->Html->tableCells($tableDataTraining, array('class' => ''));
 					?>
 				</tbody>
-
 				<tfoot>
 					<tr>
 						<td class="cell-number" colspan="3"><?php echo __('Total'); ?></td>
@@ -155,58 +158,58 @@ echo $this->element('census/year_options');
 					<?php echo $this->Html->tableHeaders(array(__('Programme'), __('Grade'), __('Male'), __('Female'))); ?>
 				</thead>
 
-				<tbody>
-					<?php
-					$totalMale = 0;
-					$totalFemale = 0;
-					$tableData = array();
+				<?php if (!empty($singleGradeData)): ?>
+					<tbody>
+						<?php
+						$totalMale = 0;
+						$totalFemale = 0;
+						$tableData = array();
 
-					foreach ($singleGradeData as $name => $programme) {
-						foreach ($programme['education_grades'] as $gradeId => $gradeData) {
-							$maleValue = 0;
-							$femaleValue = 0;
+						foreach ($singleGradeData as $programmeName => $programmeData):
+							foreach ($programmeData['education_grades'] as $gradeId => $gradeData):
+								$maleValue = 0;
+								$femaleValue = 0;
 
-							$recordTagMale = "";
-							$recordTagFemale = "";
-							$gradeName = $gradeData;
+								$recordTagMale = "";
+								$recordTagFemale = "";
+								$gradeName = isset($gradeData['gradeName']) ? $gradeData['gradeName'] : '';
 
-							foreach ($genderOptions AS $genderId => $genderName) {
-								if (!empty($gradeData[$genderId]['value'])) {
-									$gradeName = $gradeData[$genderId]['gradeName'];
-
-									foreach ($source_type as $k => $v) {
-										if ($gradeData[$genderId]['source'] == $v) {
-											if ($genderName == 'Male') {
-												$recordTagMale = "row_" . $k;
-											} else {
-												$recordTagFemale = "row_" . $k;
+								foreach ($genderOptions AS $genderId => $genderName):
+									if (!empty($gradeData[$genderId]['value'])) {
+										foreach ($source_type as $k => $v) {
+											if ($gradeData[$genderId]['source'] == $v) {
+												if ($genderName == 'Male') {
+													$recordTagMale = "row_" . $k;
+												} else {
+													$recordTagFemale = "row_" . $k;
+												}
 											}
 										}
+
+										if ($genderName == 'Male') {
+											$maleValue = $gradeData[$genderId]['value'];
+										} else {
+											$femaleValue = $gradeData[$genderId]['value'];
+										}
 									}
+								endforeach;
 
-									if ($genderName == 'Male') {
-										$maleValue = $gradeData[$genderId]['value'];
-									} else {
-										$femaleValue = $gradeData[$genderId]['value'];
-									}
-								}
-							}
+								$totalMale += $maleValue;
+								$totalFemale += $femaleValue;
 
-							$totalMale += $maleValue;
-							$totalFemale += $femaleValue;
+								$tableData[] = array(
+									$programmeName,
+									array($gradeName, array('class' => '')),
+									array($maleValue, array('class' => 'cell-number ' . $recordTagMale)),
+									array($femaleValue, array('class' => 'cell-number ' . $recordTagFemale))
+								);
+							endforeach;
+						endforeach;
 
-							$tableData[] = array(
-								$name,
-								array($gradeName, array('class' => '')),
-								array($maleValue, array('class' => 'cell-number ' . $recordTagMale)),
-								array($femaleValue, array('class' => 'cell-number ' . $recordTagFemale))
-							);
-						}
-					}
-
-					echo $this->Html->tableCells($tableData, array('class' => ''));
-					?>
-				</tbody>
+						echo $this->Html->tableCells($tableData, array('class' => ''));
+						?>
+					</tbody>
+				<?php endif; ?>
 				<tfoot>
 					<tr>
 						<td class="cell-number" colspan="2"><?php echo __('Total'); ?></td>
@@ -226,20 +229,21 @@ echo $this->element('census/year_options');
 				</thead>
 
 				<?php
-				$totalMale = 0;
-				$totalFemale = 0;
-				$tableData = array();
-				if (!empty($multiGradeData)) {
+				if (!empty($multiGradeData)):
 					?>
 					<tbody>
-						<?php foreach ($multiGradeData as $obj) { ?>
+						<?php
+						$totalMale = 0;
+						$totalFemale = 0;
+						$tableData = array();
+						foreach ($multiGradeData as $obj):
+							?>
 							<tr>
 								<td>
 									<?php foreach ($obj['programmes'] as $programmeId => $programmeName) { ?>
 										<div class="table_cell_row"><?php echo $programmeName; ?></div>
 									<?php } ?>
 								</td>
-
 								<td>
 									<?php foreach ($obj['grades'] as $gradeId => $gradeName) { ?>
 										<div class="table_cell_row"><?php echo $gradeName; ?></div>
@@ -277,9 +281,9 @@ echo $this->element('census/year_options');
 								<td class="cell-number <?php echo $recordTagMale; ?>"><?php echo $maleValue; ?></td>
 								<td class="cell-number <?php echo $recordTagFemale; ?>"><?php echo $femaleValue; ?></td>
 							</tr> 
-						<?php } // end for (multigrade)   ?>
+						<?php endforeach; // end for (multigrade)   ?>
 					</tbody>
-				<?php } // end if empty(multigrade)  ?>
+				<?php endif; // end if empty(multigrade)   ?>
 
 				<tfoot>
 					<tr>
