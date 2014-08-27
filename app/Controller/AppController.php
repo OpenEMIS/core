@@ -46,8 +46,8 @@ class AppController extends Controller {
 		'Utility',
 		'DateTime',
 		'Auth' => array(
-			'loginAction' => array('controller' => 'Security', 'action' => 'login'),
-			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login'),
+			'loginAction' => array('controller' => 'Security', 'action' => 'login', 'plugin' => false),
+			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login', 'plugin' => false),
 			'authenticate' => array('Form' => array('userModel' => 'SecurityUser'))
 		),
 		'Workflow',
