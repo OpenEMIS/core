@@ -20,14 +20,14 @@ class VisualizerAreaLevel extends VisualizerAppModel {
 	public $alias = 'AreaLevel';
 	
 	public function getAreaLevelList(){
-		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name')));
+		$data = $this->find('list', array('fields' => array('Area_Level', 'Area_Level_Name')));
 		return $data;
 	}
 	
 	public function getAreaLevelUpto($arealevel_nid){
 		$areaLevelData = $this->find('first', array('fields' => array('Area_Level'), 'conditions' => array('Level_NId '=>$arealevel_nid)));
 		
-		$data = $this->find('list', array('fields' => array('Level_NId', 'Area_Level_Name'), 'conditions' => array('Area_Level <= ' => $areaLevelData['AreaLevel']['Area_Level'])));
+		$data = $this->find('list', array('fields' => array('Area_Level', 'Area_Level_Name'), 'conditions' => array('Area_Level <= ' => $areaLevelData['AreaLevel']['Area_Level'])));
 		return $data;
 	}
 	

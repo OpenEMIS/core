@@ -19,4 +19,31 @@ class VisualizerIndicator extends VisualizerAppModel {
 	public $useTable = 'ut_indicator_en';
 	public $alias = 'Indicator';
 	
+	public function getIndicators($_options){
+		$options['fields'] = array('Indicator.Indicator_NId', 'Indicator.Indicator_Name', 'Indicator.Indicator_Info', 'IndicatorClassification.IC_Name');
+		$options['joins'] = array(
+			array(
+				'table' => 'ut_indicator_unit_subgroup',
+				'alias' => 'IndicatorUnitSubgroup',
+				'conditions' => array('IndicatorUnitSubgroup.Indicator_NId = Indicator.Indicator_NId')
+			),
+			array(
+				'table' => 'ut_indicator_classifications_ius',
+				'alias' => 'IndicatorClassificationIUS',
+				'conditions' => array('IndicatorClassificationIUS.IUSNId = IndicatorUnitSubgroup.IUSNId')
+			),
+			array(
+				'table' => 'ut_indicator_classifications_en',
+				'alias' => 'IndicatorClassification',
+				'conditions' => array('IndicatorClassification.IC_NId = IndicatorClassificationIUS.IC_NId')
+			),
+		);
+		
+		$options['group'] = array('IndicatorClassification.IC_Name','Indicator.Indicator_Name');
+		$options['conditions'] = array('IndicatorClassification.IC_Type != '=> 'SR');
+		$options = array_merge($options,$_options);
+		$data = $this->find('all',$options);
+		
+		return $data;
+	}
 }

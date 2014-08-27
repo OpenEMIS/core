@@ -17,10 +17,14 @@
 					
 					$state = isset($tabValue['state']) ? $tabValue['state'] : 'disabled';
 					$tabId = $count;
-
-					$class = (!isset($tabValue['url']) || $state == 'disabled') ? 'void' : '';
+if($state == 'disabled'){
+	$class = 'void';
+	$url = '';
+}
+else{
+					$class = (!isset($tabValue['url']) ) ? 'void' : '';
 					$url = isset($tabValue['url']) ? 'href=\'' . $tabValue['url'] . '\'' : '';
-
+}
 					$tabStr = __($tabValue['name']);
 					if (isset($tabValue['showStep']) && $tabValue['showStep']) {
 						$tabStr = __('Step ' . $count) . ':<br/>' . $tabStr;
