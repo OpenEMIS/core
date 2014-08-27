@@ -9,6 +9,8 @@ class DatawarehouseController extends DatawarehouseAppController {
         'indicator' => 'Datawarehouse.DatawarehouseIndicator'
     ); 
 	
+    public $uses = array('Datawarehouse.DatawarehouseIndicator');
+
 	public $components = array('Paginator', 'Datawarehouse.Datawarehouse', 'DataProcessing.Indicator');
 	
 	private function getLogPath(){
@@ -22,11 +24,6 @@ class DatawarehouseController extends DatawarehouseAppController {
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->name, 'action' => 'build'));
 	}
-
-    public function test(){
-        $this->autoRender = false;
-        $this->Indicator->generateIndicator(4, 0);
-    }
 
     public function ajax_populate_by_module($moduleID, $type){
         $this->autoRender = false;
@@ -119,6 +116,20 @@ class DatawarehouseController extends DatawarehouseAppController {
         $jsonData['subgroupRow'] = $subgroupRow;
 
         return json_encode($jsonData);
+    }
+
+
+
+    public function ajax_find_classification() {
+        $this->autoRender = false;
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+
+            $data = $this->DatawarehouseIndicator->autocompleteClassification($search);
+
+            return json_encode($data);
+         }
     }
 
 
