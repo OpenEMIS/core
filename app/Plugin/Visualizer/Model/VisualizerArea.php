@@ -45,4 +45,9 @@ class VisualizerArea extends VisualizerAppModel {
 		
 		return $fullPathData;
 	}
+	
+	public function getCountry(){
+		$data = $this->find('first', array('conditions' => array('DIArea.Area_Parent_NId' => -1, 'DIArea.Area_Level' => 1), 'fields' => array('DIArea.Area_NId', 'DIArea.Area_ID', 'DIArea.Area_Name')));
+		return $data;
+	}
 }

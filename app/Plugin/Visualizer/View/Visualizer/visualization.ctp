@@ -13,6 +13,7 @@ if ($visualType != 'map') {
 	echo $this->Html->script('/HighCharts/js/modules/drilldown', false);
 }
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
+echo $this->Html->script('/HighCharts/js/modules/no-data-to-display', false);
 
 echo $this->Html->script('Visualizer.visualizer', false);
 echo $this->Html->script('Visualizer.visualizer.visualization', false);
@@ -59,18 +60,27 @@ if ($visualType == 'table') {
 			$row[] = $obj['IndicatorClassification']['IC_Name'];
 
 			if (empty($pageTitle)) {
-				$pageTitle = sprintf('%s - %s', $obj['Indicator']['Indicator_Name'], $obj['Unit']['Unit_Name']);
+				$pageTitle = $obj['Indicator']['Indicator_Name'];// sprintf('%s - %s', $obj['Indicator']['Indicator_Name'], $obj['Unit']['Unit_Name']);
+				$pageSubTitle = sprintf('Year : %s  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unit : %s', $yearCaption, $obj['Unit']['Unit_Name']);
 			}
 			$tableData[] = $row;
 			$i++;
 		}
+		
+		$displayTable = $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->Html->div('visualizer-table-caption', $pageTitle);
+		echo $this->Html->div('visualizer-table-subcaption', $pageSubTitle);
+		echo $this->Html->div('visualizer-list-table disable-overflow', $displayTable);
 	}
-	$displayTable = $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
-	echo $this->Html->div('visualizer-table-caption', $pageTitle);
-	echo $this->Html->div('visualizer-list-table disable-overflow', $displayTable);
+	
 } else {
 	if ($showVisualization) {
-		echo $this->Html->div('highchart-big', '', array('id' => 'highchart-container', 'ref' => $id, 'type' => $visualType));
+		echo $this->Html->div('highchart-big', '', array(
+			'id' => 'highchart-container', 
+			'ref' => $id, 
+			'type' => $visualType,
+			'url' =>'Visualizer/VisualizeHighChart/'.$visualType.DS.$id,
+			'redirecturl' =>'Visualizer/visualization/table'.DS.$id ));
 	}
 }
 
