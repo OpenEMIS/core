@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class CensusCustomField extends AppModel {
 	public $actsAs = array(
+		'CustomField' => array('module' => 'Census'),
 		'FieldOption', 
 		'ControllerAction',
 		'ReportFormat' => array(
@@ -50,9 +51,18 @@ class CensusCustomField extends AppModel {
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
 		$this->fields['institution_site_type_id']['type'] = 'select';
 		$this->fields['institution_site_type_id']['options'] = $this->getSubOptions();
 		$this->setFieldOrder('institution_site_type_id', 4);
+		
+		$this->fields['options'] = array(
+			'type' => 'element',
+			'element' => '../FieldOption/CustomField/options',
+			'visible' => true
+		);
+		$this->setFieldOrder('options', 7);
 
 		return $this->fields;
 	}
