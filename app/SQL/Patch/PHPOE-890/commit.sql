@@ -94,3 +94,12 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (195, 'Fee', 'InstitutionSites', 'Institutions', 'Finance', 8, 'fee|feeView', '_view:feeEdit', '_view:feeAdd|feeAdd', '_view:feeDelete', NULL, 195, 1, NULL, NULL, 1, NOW()),
 (196, 'Student', 'InstitutionSites', 'Institutions', 'Finance', 8, 'studentFee|studentFeeView|studentFeeViewTransaction', '_view:studentFeeAdd|_view:studentFeeAddTransaction', 'studentFeeAdd|studentFeeAddTransaction', '_view:studentFeeDeleteTransaction', NULL, 196, 1, NULL, NULL, 1, NOW()),
 (197, 'Fee', 'Students', 'Students', 'Details', 66, 'fee|feeView', null, null, NULL, NULL, 197, 1, NULL, NULL, 1, NOW());
+
+
+UPDATE `security_functions` set category = 'Finance' where id = '197';
+UPDATE `navigations` SET `header`='FINANCE' WHERE `id`='150';
+
+INSERT INTO `navigations` (`id`, `module`, `controller`, `header`, `title`, `action`, `pattern`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) 
+VALUES (NULL, 'Institution', 'InstitutionReports', 'REPORTS', 'Finance', 'finance', 'finance', '3', '0', '36', '1', '1', '0000-00-00 00:00:00');
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (NULL, 'Finance', 'InstitutionReports', 'Institutions', 'Reports', '8', 'finance', 'generate', '198', '1', '1', '0000-00-00 00:00:00');
