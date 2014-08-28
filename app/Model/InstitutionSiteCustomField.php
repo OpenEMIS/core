@@ -17,7 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomField extends AppModel {
-	public $actsAs = array('FieldOption', 'ControllerAction');
+	public $actsAs = array(
+		'CustomField' => array('module' => 'InstitutionSite'), // has to be before FieldOptionBehavior to override postAdd and postEdit
+		'FieldOption', 
+		'ControllerAction'
+	);
 	public $hasMany = array(
 		'InstitutionSiteCustomFieldOption' => array('order' => 'order'),
 		'InstitutionSiteCustomValue'
@@ -47,12 +51,145 @@ class InstitutionSiteCustomField extends AppModel {
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
 		$this->fields['institution_site_type_id']['type'] = 'select';
 		$this->fields['institution_site_type_id']['options'] = $this->getSubOptions();
 		$this->setFieldOrder('institution_site_type_id', 4);
-
+		
+		$this->fields['options'] = array(
+			'type' => 'element',
+			'element' => '../FieldOption/CustomField/options',
+			'visible' => true
+		);
+		$this->setFieldOrder('options', 7);
+		
 		return $this->fields;
 	}
+	
+	/*
+	public function getRender($controller) {
+		$views = array();
+		
+		$modelOption = $this->alias . 'Option';
+		if ($controller->action == 'view') {
+			$data = $controller->viewVars['data'];
+			$id = $data[$this->alias]['id'];
+			$options = $this->{$modelOption}->findAllByInstitutionSiteCustomFieldId($id, array(), array("$modelOption.visible" => 'DESC', "$modelOption.order"));
+			foreach ($options as $obj) {
+				$data[$modelOption][] = $obj[$modelOption];
+			}
+			$controller->set('data', $data);
+		} else if ($controller->action == 'edit') {
+			if ($controller->request->is('get')) {
+				$data = $controller->request->data;
+				$id = $data[$this->alias]['id'];
+				
+				$options = $this->{$modelOption}->findAllByInstitutionSiteCustomFieldId($id, array(), array("$modelOption.visible" => 'DESC', "$modelOption.order"));
+				foreach ($options as $obj) {
+					$controller->request->data[$modelOption][] = $obj[$modelOption];
+				}
+			}
+		}
+		
+		return $views;
+	}
+	
+	public function postAdd($controller) {
+		$selectedOption = $controller->params->pass[0];
+		$modelOption = $this->alias . 'Option';
+		if (isset($controller->request->data['submit'])) {
+			$submit = $controller->request->data['submit'];
+			
+			switch ($submit) {
+				case $modelOption:
+					$obj = array('value' => '');
+					if (!isset($controller->request->data[$submit])) {
+						$controller->request->data[$submit] = array();
+					}
+					
+					$obj['order'] = count($controller->request->data[$submit]);
+					$controller->request->data[$submit][] = $obj;
+					break;
+					
+				case 'Save':
+					$data = $controller->request->data;
+					
+					$models = array($modelOption);
+					// remove all records that doesn't have values
+					foreach ($models as $m) {
+						if (isset($data[$m])) {
+							$x = $data[$m];
+							foreach ($x as $i => $obj) {
+								if (empty($obj['value'])) {
+									unset($controller->request->data[$m][$i]);
+								}
+							}
+						}
+					}
+					if ($this->saveAll($controller->request->data)) {
+						$controller->Message->alert('general.add.success');
+						return $controller->redirect(array('controller' => $controller->name, 'action' => 'view', $selectedOption, $this->getLastInsertID()));
+					} else {
+						$this->log($this->validationErrors, 'error');
+						$controller->Message->alert('general.add.failed');
+					}
+					break;
+				
+				default:
+					break;
+			}
+		}
+		return true;
+	}
+	
+	public function postEdit($controller) {
+		$selectedOption = $controller->params->pass[0];
+		$modelOption = $this->alias . 'Option';
+		if (isset($controller->request->data['submit'])) {
+			$submit = $controller->request->data['submit'];
+			
+			switch ($submit) {
+				case $modelOption:
+					$obj = array('value' => '');
+					if (!isset($controller->request->data[$submit])) {
+						$controller->request->data[$submit] = array();
+					}
+					$obj['order'] = count($controller->request->data[$submit]);
+					$controller->request->data[$submit][] = $obj;
+					break;
+					
+				case 'Save':
+					$data = $controller->request->data;
+					$id = $data[$this->alias]['id'];
+					$models = array($modelOption);
+					foreach ($models as $m) {
+						if (isset($data[$m])) {
+							$x = $data[$m];
+							foreach ($x as $i => $obj) {
+								if (empty($obj['value'])) {
+									unset($controller->request->data[$m][$i]);
+								}
+							}
+						}
+					}
+					
+					if ($this->saveAll($controller->request->data)) {
+						$controller->Message->alert('general.edit.success');
+						return $controller->redirect(array('controller' => $controller->name, 'action' => 'view', $selectedOption, $id));
+					} else {
+						$this->log($this->validationErrors, 'error');
+						$controller->Message->alert('general.edit.failed');
+					}
+					break;
+				
+				default:
+					break;
+			}
+		}
+		return true;
+	}
+	*/
 	
 	public function getConditionId() {
 		return 'institution_site_type_id';

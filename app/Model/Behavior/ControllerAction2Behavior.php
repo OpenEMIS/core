@@ -91,6 +91,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 				$model->Message->alert('general.add.success');
 				return $model->redirect(array('action' => get_class($model)));
 			} else {
+				$this->log($model->validationErrors, 'error');
 				$model->Message->alert('general.add.failed');
 			}
 		}
@@ -107,6 +108,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 					$model->Message->alert('general.edit.success');
 					return $model->redirect(array('action' => get_class($model), 'view', $id));
 				} else {
+					$this->log($model->validationErrors, 'error');
 					$model->Message->alert('general.edit.failed');
 				}
 			} else {
