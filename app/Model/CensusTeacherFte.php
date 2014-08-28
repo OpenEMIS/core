@@ -106,10 +106,9 @@ class CensusTeacherFte extends AppModel {
 				)
 			),
 			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
-			'group' => array('EducationLevel.id'),
 			'order' => array('EducationLevel.order')
 		));
-		
+
 		$data = array();
 		foreach($list AS $row){
 			$censusId = $row['id'];
@@ -133,7 +132,7 @@ class CensusTeacherFte extends AppModel {
 			$obj['school_year_id'] = $yearId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			if(empty($obj['id'])) {
-				if($obj['male'] > 0 || $obj['female'] > 0) {
+				if($obj['value'] > 0) {
 					$this->create();
 					$this->save($obj);
 				}

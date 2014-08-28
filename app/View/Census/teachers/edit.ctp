@@ -197,7 +197,7 @@ echo $this->element('census/year_options');
 						<?php
 						$totalMale = 0;
 						$totalFemale = 0;
-						$index = 0;
+						$conbinedIndex = 0;
 						$fieldName = 'data[CensusTeacher][%d][%s]';
 
 						foreach ($singleGradeData as $programmeName => $programmeData):
@@ -234,15 +234,15 @@ echo $this->element('census/year_options');
 												endif;
 
 												echo $this->Form->hidden('education_grade_id', array(
-													'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][0]', $index),
+													'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][0]', $conbinedIndex),
 													'value' => $gradeId
 												));
-												echo $this->Form->hidden('gender_id', array('name' => sprintf($fieldName, $index, 'gender_id'), 'value' => $genderId));
+												echo $this->Form->hidden('gender_id', array('name' => sprintf($fieldName, $conbinedIndex, 'gender_id'), 'value' => $genderId));
 
 												echo $this->Form->input('value', array(
 													'type' => 'text',
 													'class' => $record_tag,
-													'name' => sprintf($fieldName, $index, 'value'),
+													'name' => sprintf($fieldName, $conbinedIndex, 'value'),
 													'computeType' => $genderName == 'Male' ? 'total_male' : 'total_female',
 													'value' => $value,
 													'maxlength' => 10,
@@ -253,7 +253,7 @@ echo $this->element('census/year_options');
 											</div>
 										</td>
 										<?php
-										$index++;
+										$conbinedIndex++;
 									endforeach;
 									?>
 								</tr>
@@ -287,7 +287,6 @@ echo $this->element('census/year_options');
 						<?php
 						$totalMale = 0;
 						$totalFemale = 0;
-						$index = 0;
 						$fieldName = 'data[CensusTeacher][%d][%s]';
 
 						foreach ($multiGradeData as $obj):
@@ -305,9 +304,15 @@ echo $this->element('census/year_options');
 											<?php
 											echo $gradeName;
 											echo $this->Form->hidden('education_grade_id', array(
-												'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][%d]', $index, $gradeIndex++),
+												'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][%d]', $conbinedIndex, $gradeIndex),
 												'value' => $gradeId
 											));
+											echo $this->Form->hidden('education_grade_id', array(
+												'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][%d]', $conbinedIndex+1, $gradeIndex),
+												'value' => $gradeId
+											));
+											
+											$gradeIndex++;
 											?>
 										</div>
 									<?php } ?>
@@ -337,12 +342,12 @@ echo $this->element('census/year_options');
 												}
 											endif;
 
-											echo $this->Form->hidden('gender_id', array('name' => sprintf($fieldName, $index, 'gender_id'), 'value' => $genderId));
+											echo $this->Form->hidden('gender_id', array('name' => sprintf($fieldName, $conbinedIndex, 'gender_id'), 'value' => $genderId));
 
 											echo $this->Form->input('value', array(
 												'type' => 'text',
 												'class' => $record_tag,
-												'name' => sprintf($fieldName, $index, 'value'),
+												'name' => sprintf($fieldName, $conbinedIndex, 'value'),
 												'computeType' => $genderName == 'Male' ? 'total_male' : 'total_female',
 												'value' => $value,
 												'maxlength' => 10,
@@ -353,7 +358,7 @@ echo $this->element('census/year_options');
 										</div>
 									</td>
 									<?php
-									$index++;
+									$conbinedIndex++;
 								endforeach;
 								?>
 								<td>
