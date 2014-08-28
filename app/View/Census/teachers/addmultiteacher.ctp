@@ -57,28 +57,48 @@ foreach ($programmeGrades as $obj) {
 
         <td class="table_cell grade_list">
             <div class="table_cell_row">
-                <?php
+                <?php 
+				$firstGradeOptions = array();
+				foreach($displayDefault[0]['grades'] AS $gradeId => $gradeData){
+					$firstGradeOptions[$gradeId] = $gradeData['gradeName'];
+				}
                 echo $this->Form->input('education_grade_id', array(
                     'div' => false,
                     'label' => false,
                     'class' => 'form-control',
                     'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][0]', $i),
-                    'options' => $displayDefault[0]['grades'],
+                    'options' => $firstGradeOptions,
                     'default' => $displayDefault[0]['selectedGrade'],
-                    'index' => 0
+                    'index' => 0,
+					'onchange' => 'CensusTeachers.updateHiddenGradeId(this)'
+                ));
+				echo $this->Form->hidden('education_grade_id', array(
+                    'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][0]', $i+1),
+                    'default' => $displayDefault[0]['selectedGrade'],
+					'class' => 'hiddenGradeId'
                 ));
                 ?>
             </div>
             <div class="table_cell_row">
-                <?php
+                <?php 
+				$secondGradeOptions = array();
+				foreach($displayDefault[1]['grades'] AS $gradeId => $gradeData){
+					$secondGradeOptions[$gradeId] = $gradeData['gradeName'];
+				}
                 echo $this->Form->input('education_grade_id', array(
                     'div' => false,
                     'label' => false,
                     'class' => 'form-control',
                     'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][1]', $i),
-                    'options' => $displayDefault[1]['grades'],
+                    'options' => $secondGradeOptions,
                     'default' => $displayDefault[1]['selectedGrade'],
-                    'index' => 1
+                    'index' => 1,
+					'onchange' => 'CensusTeachers.updateHiddenGradeId(this)'
+                ));
+				echo $this->Form->hidden('education_grade_id', array(
+                    'name' => sprintf('data[CensusTeacher][%d][CensusTeacherGrade][1]', $i+1),
+                    'default' => $displayDefault[1]['selectedGrade'],
+					'class' => 'hiddenGradeId'
                 ));
                 ?>
             </div>
@@ -105,12 +125,12 @@ foreach ($programmeGrades as $obj) {
         <td class="table_cell">
             <div class="input_wrapper">
                 <?php 
-				echo $this->Form->hidden('gender_id', array('name' => sprintf('data[CensusTeacher][%d][gender_id]', $i), 'value' => $femaleGenderId));
+				echo $this->Form->hidden('gender_id', array('name' => sprintf('data[CensusTeacher][%d][gender_id]', $i+1), 'value' => $femaleGenderId));
                 echo $this->Form->input('value', array(
                     'div' => false,
                     'label' => false,
                     'type' => 'text',
-                    'name' => sprintf('data[CensusTeacher][%d][value]', $i),
+                    'name' => sprintf('data[CensusTeacher][%d][value]', $i+1),
                     'computeType' => 'total_female',
                     'value' => 0,
                     'maxlength' => 10,

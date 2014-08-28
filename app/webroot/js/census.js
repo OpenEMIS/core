@@ -50,7 +50,10 @@ var Census = {
 				for(var i in data) {
 					html += '<option value="' + i + '">' + data[i] + '</option>';
 				}
-				$(obj).closest('.table_cell').siblings('.grade_list').find('select[index="' + index + '"]').html(html);
+				var gradeSelect  = $(obj).closest('.table_cell').siblings('.grade_list').find('select[index="' + index + '"]');
+				gradeSelect.html(html);
+				
+				gradeSelect.parent().find('input.hiddenGradeId').val(gradeSelect.val());
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
@@ -65,7 +68,7 @@ var Census = {
 	},
 	
 	addMultiGradeRow: function() {
-		var index = $('tr').length;
+		var index = ($('tr').length) * 2;
 		var tableBody = $('.multi tbody').length;
 		var maskId;
 		var ajaxParams = {index: index, tableBody: tableBody};
