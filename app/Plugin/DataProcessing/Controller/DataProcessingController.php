@@ -44,7 +44,7 @@ class DataProcessingController extends DataProcessingAppController {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->name, 'action' => 'build'));
+		$this->Navigation->addCrumb('Custom Indicators', array('plugin'=>'Datawarehouse', 'controller' => 'indicator', 'action' => 'index'));
 	}
 	
 	public function index() {
