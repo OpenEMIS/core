@@ -123,17 +123,16 @@ class SurveyCategoryComponent extends Component {
         $catID = $arr['catID'];
         $siteID = $arr['siteID'];
         $arrayQuestions = array();
-        
         switch($catID){
-            case '0':
+            /*case '0':
                 $arrayQuestions = $this->getInstitutionQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);
-                break;
-            case '1':
+                break;*/
+            case '0':
                 $arrayQuestions = $this->getInstitutionSiteQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);
                 break;
-            case '2':
+            case '1':
                 $arrayQuestions = $this->getStudentQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);
                 break;
@@ -143,7 +142,7 @@ class SurveyCategoryComponent extends Component {
                 $this->clearEmptyQuestions($arrayQuestions);
                 break;
 				*/
-            case '4':
+            case '2':
                 $arrayQuestions = $this->getStaffQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);
                 break;
@@ -191,44 +190,6 @@ class SurveyCategoryComponent extends Component {
         return $arrayQuestions;
     }
     
-    private function getTeacherQuestions($siteID=2){
-        // Create the Custom Fields
-        $customTeachArr = array('tableName'=>'Teachers.Teacher','id'=>$siteID,'customName'=>'Teachers.TeachersCustomField','labelName'=>'More','cnt'=>'');
-    
-        // Declare the Database Tables to use for Survey
-        // ---- Institution Table
-        $tableTeacher =  array('Teacher - INFORMATION'=>array('Teachers.Teacher'=>array()));
-        $tableTeacherNames = array('Teachers.Teacher'=>'General');
-        $tableTeacherLinkField = array(); // No linkup needed
-        
-        $arrayQuestions = array();
-        
-        // Some of the methods can be refactored
-        // Replace this with for loop and counter if need dynamic populate ---------------------------------------------------------------------------------------------------
-        $arrayQuestions = array_merge($arrayQuestions, $this->createFields($tableTeacher,$tableTeacherLinkField,$tableTeacherNames,$customTeachArr,'Single',1,$siteID));
-        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        $arrayQuestions = array_filter($arrayQuestions);
-        
-        // Clear empty arrays
-        foreach($arrayQuestions as $topicID => $topicVal) {
-            if(count($topicVal)>1){
-                foreach($topicVal as $sectID => $sectVal) {
-                    if($sectID!='order'){
-                        foreach($sectVal as $qID => $qVal) {
-                            if($qID=='questions'){
-                                if(count($qVal)<1){
-                                    unset($arrayQuestions[$topicID][$sectID]);
-                                }
-                            }
-                        }
-                    }
-                }
-            }else{
-                unset($arrayQuestions[$topicID]);
-            }
-        }
-        return $arrayQuestions;
-    }
     
     private function getStudentQuestions($siteID=2){
         // Create the Custom Fields
@@ -700,19 +661,20 @@ class SurveyCategoryComponent extends Component {
         $fTablename = $arr['tbl'];
         $infrastructure_category_id = $arr['catId'];
         $result = array();
+
         switch($fTablename){
             case 'InfrastructureStatus':
-                    $result = $this->{$fTablename}->find('list', array('conditions' => array("infrastructure_category_id" => $infrastructure_category_id,
+                    $result = $this->{$fTablename}->find('list', array('recursive'=>-1,'conditions' => array("infrastructure_category_id" => $infrastructure_category_id,
                                                                                              "visible" => "1")));
                     break;
             case 'InfrastructureMaterial':
-                    $result = $this->{$fTablename}->find('list', array('conditions' => array("infrastructure_category_id" => $infrastructure_category_id,
+                    $result = $this->{$fTablename}->find('list', array('recursive'=>-1,'conditions' => array("infrastructure_category_id" => $infrastructure_category_id,
                                                                                              "visible" => "1")));
                     break;
             case 'Area':
                     $lowest_level = Set::flatten($this->{$fTablename}->query('SELECT MAX(`level`) FROM `area_levels`'));
                     $lowest_level = $lowest_level[key($lowest_level)];
-                    $result = $this->{$fTablename}->find('list', array('conditions' => array("area_level_id" => $lowest_level,"visible" => "1")));
+                    $result = $this->{$fTablename}->find('list', array('recursive'=>-1,'conditions' => array("area_level_id" => $lowest_level,"visible" => "1")));
                     break;
             case 'EducationProgramme':
                     $result = $this->{$fTablename}->find('all', array(
@@ -849,7 +811,7 @@ class SurveyCategoryComponent extends Component {
                     break;
             default:
                     try{
-                        $result = $this->{$fTablename}->find('list', array('conditions' => array("visible" => "1")));
+                        $result = $this->{$fTablename}->find('list', array('recursive'=>-1,'conditions' => array($fTablename.".visible" => "1")));
                     }catch(Exception $e){
                         $result = $this->{$fTablename}->find('list');
                     }
@@ -945,7 +907,7 @@ class SurveyCategoryComponent extends Component {
         // Database Values Lookup
         switch($tableName){
             case 'InstitutionSite':
-                $datafields = $this->{$tableName.'CustomField'}->find('all',array('conditions'=>array('visible'=>1,         
+                $datafields = $this->{$tableName.'CustomField'}->find('all',array('conditions'=>array($tableName.'CustomField.visible'=>1,         
                                                                                                       'institution_site_type_id'=>$id)));
                 $this->{$tableName.'CustomValue'}->unbindModel(array('belongsTo' => array($actualtableName)));
                 $datavalues = $this->{$tableName.'CustomValue'}->find('all',array('conditions'=>array('institution_site_id'=>$id)));
@@ -1106,8 +1068,7 @@ class SurveyCategoryComponent extends Component {
                              "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("label"=>'Grade',"box"=>0)), 
                              "student_category_id" => array_merge($arr['questions']["student_category_id"],array("label"=>'Category',"box"=>0)), 
                              "age" => array_merge($arr['questions']["age"],array("label"=>'Age',"box"=>1)),
-                             "male" => array_merge($arr['questions']["male"],array("label"=>'Male',"box"=>1)), 
-                             "female" => array_merge($arr['questions']["female"],array("label"=>'Female',"box"=>1)));
+                             "gender_id" => array_merge($arr['questions']["gender_id"],array("label"=>'Male',"box"=>1)));
                 break;
             case 'CensusGraduate':
                 $arr['type'] = 'Grid_Fix';

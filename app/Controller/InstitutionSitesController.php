@@ -255,6 +255,9 @@ class InstitutionSitesController extends AppController {
     
 	public function advanced() {
         $key = 'InstitutionSite.AdvancedSearch';
+
+        $EducationProgramme = ClassRegistry::init('EducationProgramme');
+        $educationProgrammeOptions = $EducationProgramme->findList();
         if ($this->request->is('get')) {
             if ($this->request->is('ajax')) {
                 $this->autoRender = false;
@@ -274,6 +277,9 @@ class InstitutionSitesController extends AppController {
 
                 // custom fields start
                 $sitetype = 0;
+                if($this->Session->check('InstitutionSite.AdvancedSearch.siteType')){
+                     $sitetype = $this->Session->read('InstitutionSite.AdvancedSearch.siteType');
+                }
                 $customfields = 'InstitutionSite';
                 
                 $arrSettings = array(
@@ -293,6 +299,7 @@ class InstitutionSitesController extends AppController {
                 //pr(array($customfields));
                 $this->set("customfields", array($customfields));
                 $this->set('types', $types);
+
                 $this->set('typeSelected', $sitetype);
                 $this->set('dataFields', $dataFields);
                 //pr($dataFields);
@@ -309,9 +316,11 @@ class InstitutionSitesController extends AppController {
             }
             $this->redirect(array('action' => 'index'));
         }
+
+        $this->set(compact('educationProgrammeOptions'));
     }
         
-    	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
+	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
              $this->layout = false;
              $arrSettings = array(
                                                             'CustomField'=>$customfields.'CustomField',
@@ -327,6 +336,7 @@ class InstitutionSitesController extends AppController {
             $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
             $dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
             $types = $this->InstitutionSiteType->findList(1);
+
             //pr(array($customfields));
             $this->set("customfields",array($customfields));
             $this->set('types',  $types);        

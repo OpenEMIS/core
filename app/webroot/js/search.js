@@ -92,8 +92,10 @@ var objCustomFieldSearch = {
         //Default Action fir Tabs
         //$(".tab_content").hide(); //Hide all content
         //$("ul.tabs li:first").addClass("active").show(); //Activate first tab
-        $(".tab_content:first").show(); //Show first tab content
-
+       // $(".tab_content:first").show(); //Show first tab content
+       if( $('#site_type_id').length ) {
+   			objCustomFieldSearch.getDataFields($('#site_type_id').val());
+       }
         //On Click Event
         $("ul.tabs li").click(function() {
             $("ul.tabs li").removeClass("active"); //Remove any "active" class
@@ -104,7 +106,9 @@ var objCustomFieldSearch = {
             return false;
         });
     },
+
     getDataFields : function (site,customfield){
+
     if(!customfield){
         customfield = 'InstitutionSite';
     }

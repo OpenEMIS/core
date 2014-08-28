@@ -49,7 +49,7 @@ $this->start('contentBody');
 <?php if(isset($programmes)) { 
     foreach($programmes as $programme){ ?>
     <fieldset class="section_group">
-    <legend><?php echo $programme['education_programme_name']; ?></legend>
+    <legend><?php echo isset($programme['education_programme_name']) ? $programme['education_programme_name'] : $programme['name'];?></legend>
       <?php 
       if(isset($programme['education_grades'])){
       foreach($programme['education_grades'] as $key=>$val){ ?>

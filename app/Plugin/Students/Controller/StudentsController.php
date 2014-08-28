@@ -70,7 +70,7 @@ class StudentsController extends StudentsAppController {
 		'guardians' => 'Students.StudentGuardian',
 		'behaviour' => 'Students.StudentBehaviour',
 		'additional' => 'Students.StudentCustomField',
-		'fee' => 'Students.studentFee'
+		'fee' => 'Students.StudentFee'
 	);
 
 	public function beforeFilter() {
