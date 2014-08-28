@@ -176,7 +176,7 @@ echo $this->element('census/year_options');
 
 								foreach ($genderOptions AS $genderId => $genderName):
 									if (!empty($gradeData[$genderId]['value'])) {
-										foreach ($source_type as $k => $v) {
+										foreach ($source_type as $k => $v):
 											if ($gradeData[$genderId]['source'] == $v) {
 												if ($genderName == 'Male') {
 													$recordTagMale = "row_" . $k;
@@ -184,7 +184,7 @@ echo $this->element('census/year_options');
 													$recordTagFemale = "row_" . $k;
 												}
 											}
-										}
+										endforeach;
 
 										if ($genderName == 'Male') {
 											$maleValue = $gradeData[$genderId]['value'];
