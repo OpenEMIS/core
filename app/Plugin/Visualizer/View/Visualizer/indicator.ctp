@@ -30,8 +30,8 @@ echo $this->Form->input('classification', array('id'=> 'classification' ,'option
 	
 	$colArr = array(
 		array('name' => 'Indicator', 'col' => 'Indicator.Indicator_Name'),
-		array('name' => 'Classification', 'col' => 'IndicatorClassification.IC_Name'),
 		array('name' => 'Description', 'col' => 'Indicator.Indicator_Info'),
+		array('name' => 'Classification', 'col' => 'IndicatorClassification.IC_Name'),
 	);
 
 	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
@@ -63,8 +63,8 @@ echo $this->Form->input('classification', array('id'=> 'classification' ,'option
 			$row = array();
 			$row[] = array($input, array('class' => $additionalClass));
 			$row[] = array($obj['name'], array('class' => 'data-list'));
-			$row[] = $obj['classification'];/*, array('class' => 'data-list'));*/
 			$row[] = $obj['desc'];
+			$row[] = $obj['classification'];/*, array('class' => 'data-list'));*/
 			$tableData[] = $row;
 			$i++;
 		}
