@@ -1133,5 +1133,4 @@ class ReportsController extends ReportsAppController {
 		}
 		return $bytes;
 	}
-	
 }

@@ -102,7 +102,9 @@ class InstitutionSiteCustomField extends AppModel {
         $dataValues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $controller->institutionSiteId)));
         $tmp = array();
         foreach ($dataValues as $obj) {
-            $tmp[$obj['InstitutionSiteCustomField']['id']][] = $obj['InstitutionSiteCustomValue'];
+        	$customVal = $obj['InstitutionSiteCustomValue'];
+        	$customVal['value'] = htmlentities($customVal['value']);
+            $tmp[$obj['InstitutionSiteCustomField']['id']][] = $customVal;
         }
         $dataValues = $tmp;
         $controller->set('data', $data);
