@@ -98,7 +98,13 @@ class AppModel extends Model {
 	public function setFieldOrder($field, $order) {
 		$fields = $this->fields;
 		$found = false;
+		$count = 0;
 		foreach ($fields as $key => $obj) {
+			$count++;
+			if (!isset($fields[$key]['order'])) {
+				$fields[$key]['order'] = $count;
+			}
+			
 			if ($found && $key !== $field) {
 				$fields[$key]['order'] = $fields[$key]['order'] + 1;
 			} else {
@@ -110,7 +116,7 @@ class AppModel extends Model {
 					$fields[$key]['order'] = $order + 1;
 				}
 			}
-		}		
+		}
 		$fields[$field]['order'] = $order;
 		uasort($fields, array($this->alias, 'sortFields'));
 		$this->fields = $fields;
