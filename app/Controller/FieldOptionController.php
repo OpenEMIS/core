@@ -1,4 +1,4 @@
-<?php
+ <?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
@@ -29,7 +29,7 @@ class FieldOptionController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index'));
 		$this->Navigation->addCrumb('Field Options', array('controller' => 'FieldOption', 'action' => 'index'));
 		$this->optionList = $this->FieldOption->findOptions(true);
 		// change the index to start from 1
