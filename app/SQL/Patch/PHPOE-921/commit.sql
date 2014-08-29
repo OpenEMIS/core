@@ -1,5 +1,5 @@
-SET @maleGenderId = 0;
-SET @femaleGenderId = 0;
+SET @maleGenderId := 0;
+SET @femaleGenderId := 0;
 
 SELECT `id` INTO @maleGenderId FROM `field_option_values` WHERE `name` LIKE 'Male';
 SELECT `id` INTO @femaleGenderId FROM `field_option_values` WHERE `name` LIKE 'Female';
@@ -181,3 +181,72 @@ WHERE g.census_teacher_id = t.old_id;
 -- DROP TABLE IF EXISTS `census_teacher_grades_bak`;
 
 ALTER TABLE `census_teachers` DROP `old_id`;
+
+--
+-- 4. add field option sanitation gender
+--
+
+SET @fieldOptionId := 0;
+SELECT MAX(`id`) + 1 INTO @fieldOptionId FROM `field_options`;
+
+SET @sanitationOrder := 0;
+SELECT `order` INTO @sanitationOrder FROM `field_options` WHERE `code` LIKE 'InfrastructureSanitation';
+
+UPDATE `field_options` SET `order` = `order`+1 WHERE `order` > @sanitationOrder;
+
+INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `order`, `visible`, `created_user_id`, `created`) VALUES (@fieldOptionId, 'SanitationGender', 'Sanitation Gender', 'Infrastructure', @sanitationOrder+1, '1', '1', NOW());
+
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Male', '1', '1', '0', '0', 'male', 'male', @fieldOptionId, '1', NOW());
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Female', '2', '1', '0', '0', 'female', 'female', @fieldOptionId, '1', NOW());
+INSERT INTO `field_option_values` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `field_option_id`, `created_user_id`, `created`) VALUES (NULL, 'Unisex', '3', '1', '0', '0', 'unisex', 'unisex', @fieldOptionId, '1', NOW());
+
+
+--
+-- 5. chnage table census_sanitations
+--
+
+SET @sanitationMaleId := 0;
+SET @sanitationFemaleId := 0;
+SET @sanitationUnisexId := 0;
+
+SET @sanitationGenderOptionId := 0;
+SELECT `id` INTO @sanitationGenderOptionId FROM `field_options` WHERE `code` LIKE 'SanitationGender';
+
+SELECT `id` INTO @sanitationMaleId FROM `field_option_values` WHERE `name` LIKE 'Male' AND `field_option_id` = @sanitationGenderOptionId;
+SELECT `id` INTO @sanitationFemaleId FROM `field_option_values` WHERE `name` LIKE 'Female' AND `field_option_id` = @sanitationGenderOptionId;
+SELECT `id` INTO @sanitationUnisexId FROM `field_option_values` WHERE `name` LIKE 'Unisex' AND `field_option_id` = @sanitationGenderOptionId;
+
+RENAME TABLE `census_sanitations` TO `census_sanitations_bak` ;
+
+CREATE TABLE `census_sanitations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gender_id` int(11) NOT NULL,
+  `value` int(11) NOT NULL DEFAULT '0',
+  `infrastructure_sanitation_id` int(11) NOT NULL,
+  `infrastructure_material_id` int(11) NOT NULL,
+  `infrastructure_status_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `school_year_id` int(11) NOT NULL,
+  `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `institution_site_id` (`institution_site_id`),
+  KEY `school_year_id` (`school_year_id`),
+  KEY `infrastructure_status_id` (`infrastructure_status_id`),
+  KEY `source` (`source`),
+  KEY `gender_id` (`gender_id`) 
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+INSERT INTO `census_sanitations` (`gender_id`, `value`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+SELECT @sanitationMaleId, `male`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `census_sanitations_bak`;
+
+INSERT INTO `census_sanitations` (`gender_id`, `value`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+SELECT @sanitationFemaleId, `female`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `census_sanitations_bak`;
+
+INSERT INTO `census_sanitations` (`gender_id`, `value`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+SELECT @sanitationUnisexId, `unisex`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `census_sanitations_bak`;
+
+-- DROP TABLE IF EXISTS `census_sanitations_bak`;
