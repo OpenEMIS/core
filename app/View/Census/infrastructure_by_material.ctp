@@ -49,11 +49,11 @@ foreach($data as $infraname => $arrval){
 				}
 			 }elseif($infraname == 'Sanitation'){ //building = got 3 dimension
 				
-				$infraVal = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$gender])
-						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$gender]
+				$infraVal = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$genderId]['value'])
+						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$genderId]['value']
 						  : '';
-				$infraSource = @isset($data[$infraname]['data'][$typeid][$statids][$material_id][$source])
-						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$source]
+				$infraSource = @isset($data[$infraname]['data'][$typeid][$statids][$material_id][$genderId][$source])
+						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$genderId][$source]
 						  : '';
 
 				if($is_edit == "true"){
@@ -73,7 +73,7 @@ foreach($data as $infraname => $arrval){
 							'value' => $infraVal
 						)
 					);
-					$cell_html.= '<input type="hidden" name="' . $inputName . '[id]" value="'.(isset($data[$infraname]['data'][$typeid][$statids][$material_id]['id'])?$data[$infraname]['data'][$typeid][$statids][$material_id]['id']:'').'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[id]" value="'.(isset($data[$infraname]['data'][$typeid][$statids][$material_id][$genderId]['id']) ? $data[$infraname]['data'][$typeid][$statids][$material_id][$genderId]['id'] : '').'">';
 				} else {
 					$cell_html.= $infraVal;
 				}

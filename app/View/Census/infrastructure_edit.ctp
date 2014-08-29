@@ -48,14 +48,17 @@ echo $this->element('census/year_options');
 				}
 			}
 			?>
-			<?php if ($infraname === 'Sanitation') { ?>
-				<select name="data[Census<?php echo $infranameSing; ?>][gender]" id="SanitationGender" class="form-control" style="margin: 0 0 10px 10px;">
-					<option value="male"><?php echo __('Male'); ?></option>
-					<option value="female"><?php echo __('Female'); ?></option>
-					<option value="unisex" ><?php echo __('Unisex'); ?></option>
-
-				</select>
-			<?php } ?>
+			<?php if ($infraname === 'Sanitation') { 
+				echo $this->Form->input('gender_id', array(
+					'id' => 'SanitationGender',
+					'name' => 'data[CensusSanitation][gender]',
+					'label' => false,
+					'div' => false,
+					'class' => 'form-control topSelectControl',
+					'options' => $genderOptions,
+					'autocomplete' => 'off'
+				));
+			} ?>
 
 			<table class="table table-striped table-hover table-bordered">
 				<thead class="table_head">
@@ -104,9 +107,9 @@ echo $this->element('census/year_options');
 										<?php
 									} elseif ($infraname === 'Sanitation') {
 
-										$infraId = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id'] : '';
-										$infraVal = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male'] : '';
-										$infraSource = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '';
+										$infraId = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['id']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['id'] : '';
+										$infraVal = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value'] : '';
+										$infraSource = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source'] : '';
 										?>	
 										<input type="hidden" name="<?php echo $inputName . '[infrastructure_material_id]'; ?>" value="<?php echo key($data[$infraname]['materials']); ?>">
 										<input type="hidden" name="<?php echo $inputName . '[infrastructure_' . rtrim(strtolower($infraname), "s") . '_id]'; ?>" value="<?php echo $typeid; ?>">
