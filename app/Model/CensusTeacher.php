@@ -613,9 +613,6 @@ class CensusTeacher extends AppModel {
 			);
 			//pr($genderOptions);die;
 			
-			$EducationLevel = ClassRegistry::init('EducationLevel');
-			$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
-			
 			$data = array();
 
 			$headerFTE = array(__('Year'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
@@ -629,6 +626,9 @@ class CensusTeacher extends AppModel {
 			foreach ($dataYears AS $rowYear) {
 				$yearId = $rowYear['SchoolYear']['id'];
 				$yearName = $rowYear['SchoolYear']['name'];
+				
+				$EducationLevel = ClassRegistry::init('EducationLevel');
+				$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $yearId);
 
 				// FTE teachers data start
 				$CensusTeacherFteModel = ClassRegistry::init('CensusTeacherFte');
@@ -720,10 +720,12 @@ class CensusTeacher extends AppModel {
 							$femaleSingleGrade = 0;
 							
 							foreach ($genderOptions AS $genderId => $genderName) {
-								if ($genderName == 'Male') {
-									$maleSingleGrade = $gradeData[$genderId]['value'];
-								} else {
-									$femaleSingleGrade = $gradeData[$genderId]['value'];
+								if(!empty($gradeData[$genderId])){
+									if ($genderName == 'Male') {
+										$maleSingleGrade = $gradeData[$genderId]['value'];
+									} else {
+										$femaleSingleGrade = $gradeData[$genderId]['value'];
+									}
 								}
 							}
 
@@ -746,18 +748,18 @@ class CensusTeacher extends AppModel {
 				}
 				// single grade teachers data end
 				// multi grades teachers data start
-				$multiGradesData = $this->getMultiGradeData($institutionSiteId, $yearId);
+				$multiGradeData = $this->getMultiGradeData($institutionSiteId, $yearId);
 
-				if (count($multiGradesData) > 0) {
+				if (count($multiGradeData) > 0) {
 					$data[] = $headerMultiGrade;
 					$totalMaleMultiGrades = 0;
 					$totalFemaleMultiGrades = 0;
-					foreach ($multiGradesData AS $rowMultiGrades) {
-						$maleMultiGrades = empty($rowMultiGrades['male']) ? 0 : $rowMultiGrades['male'];
-						$femaleMultiGrades = empty($rowMultiGrades['female']) ? 0 : $rowMultiGrades['female'];
+					foreach ($multiGradeData as $obj){
+						$maleMultiGrades = 0;
+						$femaleMultiGrades = 0;
 						$multiProgrammes = '';
 						$multiProgrammeCount = 0;
-						foreach ($rowMultiGrades['programmes'] AS $multiProgramme) {
+						foreach ($obj['programmes'] AS $multiProgramme) {
 							if ($multiProgrammeCount > 0) {
 								$multiProgrammes .= "\n\r";
 								$multiProgrammes .= $multiProgramme;
@@ -769,7 +771,7 @@ class CensusTeacher extends AppModel {
 
 						$multiGrades = '';
 						$multiGradeCount = 0;
-						foreach ($rowMultiGrades['grades'] AS $multiGrade) {
+						foreach ($obj['grades'] AS $multiGrade) {
 							if ($multiGradeCount > 0) {
 								$multiGrades .= "\n\r";
 								$multiGrades .= $multiGrade;
@@ -777,6 +779,16 @@ class CensusTeacher extends AppModel {
 								$multiGrades .= $multiGrade;
 							}
 							$multiGradeCount++;
+						}
+						
+						foreach ($genderOptions AS $genderId => $genderName) {
+							if (!empty($obj['genders'][$genderId])) {
+								if ($genderName == 'Male') {
+									$maleMultiGrades = $obj['genders'][$genderId]['value'];
+								} else {
+									$femaleMultiGrades = $obj['genders'][$genderId]['value'];
+								}
+							}
 						}
 
 						$data[] = array(
