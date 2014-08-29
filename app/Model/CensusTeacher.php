@@ -407,9 +407,14 @@ class CensusTeacher extends AppModel {
 		$optionsMale['joins'] = $joins;
 		$optionsFemale['joins'] = $joins;
 		
-		$options['conditions'] = array('CensusTeacher.school_year_id' => $yearId);
-		$optionsMale['conditions'] = $options['conditions'];
-		$optionsFemale['conditions'] = $options['conditions'];
+		$optionsMale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $maleGenderId
+		);
+		$optionsFemale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $femaleGenderId
+		);
 		
 		$options['group'] = array('EducationProgramme.education_cycle_id');
 		$optionsMale['group'] = $options['group'];
@@ -467,9 +472,14 @@ class CensusTeacher extends AppModel {
 		$optionsMale['joins'] = $joins;
 		$optionsFemale['joins'] = $joins;
 		
-		$conditions = array('CensusTeacher.school_year_id' => $yearId);
-		$optionsMale['conditions'] = $conditions;
-		$optionsFemale['conditions'] = $conditions;
+		$optionsMale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $maleGenderId
+		);
+		$optionsFemale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $femaleGenderId
+		);
 		
 		$dataMale = $this->find('first', $optionsMale);
 		$dataFemale = $this->find('first', $optionsFemale);
