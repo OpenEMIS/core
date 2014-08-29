@@ -436,3 +436,7 @@ h3.reportHtmlTitle{
 td.input .col-md-4{
 	width: 100%;
 }
+select.topSelectControl{
+	margin-bottom: 10px;
+	margin-right: 10px;
+}
