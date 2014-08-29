@@ -48,7 +48,7 @@ echo $this->Form->create($model, array(
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<td><?php echo __('Group'); ?></td>
+				<td><?php echo __('Groups'); ?></td>
 				<td><?php echo __('No of Users'); ?></td>
 			</tr>
 		</thead>
