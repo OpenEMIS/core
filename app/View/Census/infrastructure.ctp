@@ -46,7 +46,7 @@ echo $this->element('census/year_options');
 			<?php if ($infraname === 'Sanitation') { 
 				echo $this->Form->input('gender_id', array(
 					'id' => 'SanitationGender',
-					'name' => 'data[CensusCensusSanitation][gender]',
+					'name' => 'data[CensusSanitation][gender]',
 					'label' => false,
 					'div' => false,
 					'class' => 'form-control topSelectControl',
@@ -88,8 +88,8 @@ echo $this->element('census/year_options');
 									$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '');
 								} elseif ($infraname === 'Sanitation') {
 									//echo $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id'];
-									$val = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male'] : '');
-									$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '');
+									$val = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value'] : '');
+									$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source'] : '');
 								} else {
 									$val = (isset($data[$infraname]['data'][$typeid][$statids]['value']) ? $data[$infraname]['data'][$typeid][$statids]['value'] : '');
 									$source = (isset($data[$infraname]['data'][$typeid][$statids]['source']) ? $data[$infraname]['data'][$typeid][$statids]['source'] : '');
