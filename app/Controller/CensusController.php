@@ -209,10 +209,16 @@ class CensusController extends AppController {
 			}
 		}
 		//pr($arrCensusInfra);
+		
+		$CensusSanitation = ClassRegistry::init('CensusSanitation');
+		$genderOptions = $CensusSanitation->SanitationGender->getList();
+		
 		$this->set('data',$arrCensusInfra);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('yearList', $yearList);
 		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
+		
+		$this->set('genderOptions',$genderOptions);
 	}
 		
 	public function infrastructureEdit() {
