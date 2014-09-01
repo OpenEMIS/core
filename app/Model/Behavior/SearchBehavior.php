@@ -234,9 +234,8 @@ class SearchBehavior extends ModelBehavior {
 			if($advanced['Search']['identity'] > 0 || $advanced['Search']['identity_type_id'] > 0) { // search by area and all its children
 
 				$joinConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
-				if($advanced['Search']['identity'] > 0) { 
-					$joinConditions[$class.'Identity.number'] = $advanced['Search']['identity'];
-				}
+				$joinConditions[$class.'Identity.number'] = $advanced['Search']['identity'];
+				
 				if($advanced['Search']['identity_type_id'] > 0) { 
 					$joinConditions[$class.'Identity.identity_type_id'] = $advanced['Search']['identity_type_id'];
 				}
