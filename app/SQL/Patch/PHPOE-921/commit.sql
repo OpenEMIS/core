@@ -1,8 +1,11 @@
 SET @maleGenderId := 0;
 SET @femaleGenderId := 0;
 
-SELECT `id` INTO @maleGenderId FROM `field_option_values` WHERE `name` LIKE 'Male';
-SELECT `id` INTO @femaleGenderId FROM `field_option_values` WHERE `name` LIKE 'Female';
+SET @commonGenderOptionId := 0;
+SELECT `id` INTO @commonGenderOptionId FROM `field_options` WHERE `code` LIKE 'Gender';
+
+SELECT `id` INTO @maleGenderId FROM `field_option_values` WHERE `name` LIKE 'Male' AND `field_option_id` = @commonGenderOptionId;
+SELECT `id` INTO @femaleGenderId FROM `field_option_values` WHERE `name` LIKE 'Female' AND `field_option_id` = @commonGenderOptionId;
 
 --
 -- 1. chnage table census_graduates
@@ -250,3 +253,34 @@ INSERT INTO `census_sanitations` (`gender_id`, `value`, `infrastructure_sanitati
 SELECT @sanitationUnisexId, `unisex`, `infrastructure_sanitation_id`, `infrastructure_material_id`, `infrastructure_status_id`, `institution_site_id`, `school_year_id`, `source`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `census_sanitations_bak`;
 
 -- DROP TABLE IF EXISTS `census_sanitations_bak`;
+
+--
+-- 6. chnage table census_attendances
+--
+
+RENAME TABLE `census_attendances` TO `census_attendances_bak` ;
+
+CREATE TABLE `census_attendances` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gender_id` int(11) NOT NULL,
+  `value` int(11) NOT NULL DEFAULT '0',
+  `source` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> Data Entry, 1 -> External, 2 -> Estimate',
+  `education_grade_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `school_year_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `education_grade_id` (`education_grade_id`),
+  KEY `institution_site_id` (`institution_site_id`),
+  KEY `school_year_id` (`school_year_id`),
+  KEY `gender_id` (`gender_id`) 
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+INSERT INTO `census_attendances` (`gender_id`, `value`, `source`, `education_grade_id`, `institution_site_id`, `school_year_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+SELECT @maleGenderId, `absent_male`, `source`, `education_grade_id`, `institution_site_id`, `school_year_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM census_attendances_bak;
+
+INSERT INTO `census_attendances` (`gender_id`, `value`, `source`, `education_grade_id`, `institution_site_id`, `school_year_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+SELECT @femaleGenderId, `absent_female`, `source`, `education_grade_id`, `institution_site_id`, `school_year_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM census_attendances_bak;
