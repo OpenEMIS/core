@@ -46,9 +46,17 @@ SELECT `order` INTO @sanitationOrder FROM `field_options` WHERE `code` LIKE 'Inf
 UPDATE `field_options` SET `order` = `order`-1 WHERE `order` > @sanitationOrder AND `order` > `id`;
 
 --
--- 4. restore the original table census_sanitations
+-- 5. restore the original table census_sanitations
 --
 
 DROP TABLE IF EXISTS `census_sanitations`;
 
 RENAME TABLE `census_sanitations_bak` TO `census_sanitations` ;
+
+--
+-- 6. restore the original table census_attendances
+--
+
+DROP TABLE IF EXISTS `census_attendances`;
+
+RENAME TABLE `census_attendances_bak` TO `census_attendances` ;
