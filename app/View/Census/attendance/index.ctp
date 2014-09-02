@@ -16,19 +16,14 @@ $this->end();
 $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
-
 <div id="attendance" class="dataDisplay">
-
-
 	<div class="row school_days">
 		<div class="label"><?php echo __('School Days'); ?></div>
 		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
-
-	<?php foreach ($data as $programmeData) { ?>
+	<?php foreach ($data['programmeData'] as $programmeId => $programmeData) { ?>
 		<fieldset class="section_group">
 			<legend><?php echo $programmeData['programmeName']; ?></legend>
-
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
 					<tr>
@@ -41,37 +36,48 @@ echo $this->element('census/year_options');
 				</thead>
 
 				<tbody>
-					<?php
-					$total = 0;
-					foreach ($programmeData['genders'] as $record) {
-						$record_tag = "";
-						switch ($record['source']) {
-							case 1:
-								$record_tag.="row_external";
-								break;
-							case 2:
-								$record_tag.="row_estimate";
-								break;
-						}
+					<?php 
+					foreach ($programmeData['grades'] as $gradeId => $gradeName):
 						?>
 						<tr>
-							<td><?php echo $record['education_grade_name']; ?></td>
+							<td><?php echo $gradeName; ?></td>
 							<?php 
+							$recordTagMale = "";
+							$recordTagFemale = "";
+							$maleValue = 0;
+							$femaleValue = 0;
+							foreach ($genderOptions AS $genderId => $genderName):
+								if (isset($data['censusData'][$programmeId][$gradeId][$genderId])):
+									$value = $data['censusData'][$programmeId][$gradeId][$genderId]['value'];
+									
+									foreach ($source_type as $k => $v):
+										if ($data['censusData'][$programmeId][$gradeId][$genderId]['source'] == $v):
+											if($genderName == 'Male'):
+												$recordTagMale = "row_" . $k;
+											else:
+												$recordTagFemale = "row_" . $k;
+											endif;
+										endif;
+									endforeach;
+									
+									if($genderName == 'Male'):
+										$maleValue = $value;
+									else:
+										$femaleValue = $value;
+									endif;
+								endif;
+							endforeach;
 							
-							 foreach($genderOptions AS $genderId => $genderName):
-								 if(isset($record[$genderId])):
-									 $value = $record['value'];
-								 endif;
+							$maleAttended = ($schoolDays - $maleValue) >= 0 ? ($schoolDays - $maleValue) : 0;
+							$femaleAttended = ($schoolDays - $femaleValue) >= 0 ? ($schoolDays - $femaleValue) : 0;
 							?>
-								<td class="cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['absent_male']) ? 0 : $record['absent_male']; ?></td>
-							<?php 
-							 endforeach;
-							?>
-							<td class="cell_number"><?php echo is_null($record['attended_male']) ? 0 : $record['attended_male']; ?></td>
-							<td class="cell_number"><?php echo is_null($record['attended_female']) ? 0 : $record['attended_female']; ?></td>
+							<td class="cell-number <?php echo $recordTagMale; ?>"><?php echo $maleValue; ?></td>
+							<td class="cell-number <?php echo $recordTagFemale; ?>"><?php echo $femaleValue; ?></td>
+							<td class="cell-number"><?php echo $maleAttended; ?></td>
+							<td class="cell-number"><?php echo $femaleAttended; ?></td>
 						</tr>
 						<?php
-					} // end for
+					endforeach;
 					?>
 				</tbody>
 			</table>
