@@ -166,5 +166,19 @@ var Census = {
 				success: ajaxSuccess
 			});
 		}
+	},
+	
+	computeAttendance: function(obj, gender, totalSchoolDays){
+		var targetTd = '';
+		var value = $(obj).val();
+		var resultValue = (totalSchoolDays - value) >= 0 ? (totalSchoolDays - value) : 0;
+		
+		if(gender === 'male'){
+			targetTd = $(obj).closest('tr').find('td.maleAttendance');
+		}else{
+			targetTd = $(obj).closest('tr').find('td.femaleAttendance');
+		}
+		
+		targetTd.html(resultValue);
 	}
 }
