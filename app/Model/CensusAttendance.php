@@ -111,12 +111,13 @@ class CensusAttendance extends AppModel {
 			$genderId = $row['CensusAttendance']['gender_id'];
 			
 			if(!isset($programmesData[$programmeId])){
-				$data[$programmeId]['programmeName'] = $cycleName . ' - ' . $programmeName;
-				$data[$programmeId]['grades'] = array();
+				$programmesData[$programmeId]['programmeName'] = $cycleName . ' - ' . $programmeName;
+				$programmesData[$programmeId]['grades'] = array();
 			}
 			
-			$data[$programmeName][$gradeId] = $gradeName;
-
+			$programmesData[$programmeId]['grades'][$gradeId] = $gradeName;
+			
+			$censusData[$programmeId][$gradeId][$genderId] = $row['CensusAttendance'];
 		}
 		
 		$data = array(
@@ -149,7 +150,7 @@ class CensusAttendance extends AppModel {
 		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYear));
 
-		if (empty($data)) {
+		if (empty($data['censusData'])) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		}
 		
@@ -169,19 +170,18 @@ class CensusAttendance extends AppModel {
 			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYear));
 
-			$data = array();
 			$editable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
 			if (!$editable) {
 				$controller->redirect(array('action' => 'attendance', $selectedYear));
 			} else {
-				if (empty($programmes)) {
+				if (empty($data['censusData'])) {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 				}
 				
-				$controller->set('data', $data);
-				$controller->set('selectedYear', $selectedYear);
-				$controller->set('yearList', $yearList);
-				$controller->set('schoolDays', $schoolDays);
+				$genderOptions = $this->Gender->getList();
+				//pr($genderOptions);die;
+				
+				$controller->set(compact('genderOptions', 'data', 'selectedYear', 'yearList', 'schoolDays'));
 			}
 		} else {
 			$data = $controller->data['CensusAttendance'];
@@ -204,49 +204,59 @@ class CensusAttendance extends AppModel {
 
 		if ($index == 1) {
 			$data = array();
-			$header = array(__('Year'), __('School Days'), __('Programme'), __('Grade'), __('Days Attended (Male)'), __('Days Attended (Female)'), __('Days Absent (Male)'), __('Days Absent (Female)'), __('Total'));
+			$header = array(__('Year'), __('School Days'), __('Programme'), __('Grade'), __('Days Absent (Male)'), __('Days Absent (Female)'), __('Days Attended (Male)'), __('Days Attended (Female)'));
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
 			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+			$genderOptions = $this->Gender->getList();
 
 			foreach ($dataYears AS $rowYear) {
 				$yearId = $rowYear['SchoolYear']['id'];
 				$yearName = $rowYear['SchoolYear']['name'];
 
-				$programmes = $InstitutionSiteProgrammeModel->getSiteProgrammes($institutionSiteId, $yearId);
+				$dataReturned = $this->getCensusData($institutionSiteId, $yearId);
+				$programmeData = $dataReturned['programmeData'];
+				$censusData = $dataReturned['censusData'];
 				
 				$SchoolYearModel = ClassRegistry::init('SchoolYear');
 				$schoolDays = $SchoolYearModel->field('school_days', array('SchoolYear.id' => $yearId));
 
-				if (count($programmes) > 0) {
-					foreach ($programmes as $obj) {
+				if (!empty($censusData)) {
+					foreach ($programmeData as $programmeId => $programmeData) {
 						$data[] = $header;
-						$programmeId = $obj['education_programme_id'];
-						$dataCensus = $this->getCensusData($institutionSiteId, $yearId, $programmeId);
-						$programmeName = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
-						$total = 0;
-						foreach ($dataCensus AS $rowCensus) {
-							$gradeName = $rowCensus['education_grade_name'];
-							$attendedMale = empty($rowCensus['attended_male']) ? 0 : $rowCensus['attended_male'];
-							$attendedFemale = empty($rowCensus['attended_female']) ? 0 : $rowCensus['attended_female'];
-							$absentMale = empty($rowCensus['absent_male']) ? 0 : $rowCensus['absent_male'];
-							$absentFemale = empty($rowCensus['absent_female']) ? 0 : $rowCensus['absent_female'];
-							$totalRow = $attendedMale + $attendedFemale + $absentMale + $absentFemale;
+						$programmeName = $programmeData['programmeName'];
+						
+						foreach($programmeData['grades'] as $gradeId => $gradeName){
+							$maleValue = 0;
+							$femaleValue = 0;
+							
+							foreach ($genderOptions AS $genderId => $genderName){
+								if (isset($censusData[$programmeId][$gradeId][$genderId])){
+									$value = $censusData[$programmeId][$gradeId][$genderId]['value'];
+									
+									if($genderName == 'Male'){
+										$maleValue = $value;
+									}else{
+										$femaleValue = $value;
+									}
+								}
+							}
+							
+							$maleAttended = ($schoolDays - $maleValue) >= 0 ? ($schoolDays - $maleValue) : 0;
+							$femaleAttended = ($schoolDays - $femaleValue) >= 0 ? ($schoolDays - $femaleValue) : 0;
+							
 							$data[] = array(
 								$yearName,
 								$schoolDays,
 								$programmeName,
 								$gradeName,
-								$attendedMale,
-								$attendedFemale,
-								$absentMale,
-								$absentFemale,
-								$totalRow
+								$maleValue,
+								$femaleValue,
+								$maleAttended,
+								$femaleAttended
 							);
-
-							$total += $totalRow;
 						}
-						$data[] = array('', '', '', '', '', '', '', __('Total'), $total);
+						
 						$data[] = array();
 					}
 				}

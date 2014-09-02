@@ -274,10 +274,10 @@ class EstTask extends AppTask {
 	*/
 	
 	public function censusAggregateFromStudentRegisters($current_year,$options=array()){
-		$FieldOptionValue = ClassRegistry::init('FieldOptionValue');
+		$CensusStudent = ClassRegistry::init('CensusStudent');
 		
-		$maleGenderId = $FieldOptionValue->getGenderIdByName('Male');
-		$femaleGenderId = $FieldOptionValue->getGenderIdByName('Female');
+		$maleGenderId = $CensusStudent->Gender->getIdByName('Male');
+		$femaleGenderId = $CensusStudent->Gender->getIdByName('Female');
 		
 		$sql = <<<EOD
 				DELETE FROM census_students WHERE source = 3 AND school_year_id = {curr_year};
