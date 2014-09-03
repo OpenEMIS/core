@@ -63,7 +63,15 @@ class InstitutionSiteClass extends AppModel {
 			'numeric' => array(
 				'rule' => 'numeric',
 				'message' => 'Please enter a numeric value'
-			)
+			),
+			'maxValue' => array(
+                'rule'    => array('comparison', '<=', 100),
+                'message' => 'Please enter a value between 0 and 100'
+            ),
+			'minValue' => array(
+                'rule'    => array('comparison', '>=', 0),
+                'message' => 'Please enter a value between 0 and 100'
+            )
 		),
 		'institution_site_shift_id' => array(
 			'ruleRequired' => array(
