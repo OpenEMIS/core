@@ -205,7 +205,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	margin:-2px 6px 0 0;
 }
 
-.row { margin-left: 0 }
+.row { margin-left: 0; margin-right: 0; }
 
 
 /*footer*/

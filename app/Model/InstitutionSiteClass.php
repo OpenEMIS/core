@@ -183,7 +183,7 @@ class InstitutionSiteClass extends AppModel {
 	public function classesAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add Class');
 		
-		$institutionSiteId = $controller->Session->read('InstitutionSiteId');
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		//$yearOptions = $this->SchoolYear->getAvailableYears();
 		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
 		if(!empty($yearOptions)) {

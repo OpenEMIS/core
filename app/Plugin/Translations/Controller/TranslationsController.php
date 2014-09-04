@@ -17,14 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('Sanitize', 'Utility');
 App::uses('Converter', 'Translations.Lib');
 class TranslationsController extends AppController {
-
-	public $uses = Array('Translation');
 	public $components = array('Paginator');
 
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('plugin' => false, 'controller' => 'Areas', 'action' => 'index'));
 		$this->Navigation->addCrumb('Translations', array('controller' => 'Translations', 'action' => 'index'));
 	}
 
@@ -71,7 +69,6 @@ class TranslationsController extends AppController {
 		if (empty($this->params['pass'][0])) {
 			return $this->redirect(array('action' => 'index'));
 		}
-
 		$id = $this->params['pass'][0];
 
 		$this->Navigation->addCrumb('Translation Details');
@@ -79,30 +76,10 @@ class TranslationsController extends AppController {
 
 		$data = $this->Translation->findById($id);
 
-		$fields = $this->getDisplayFields();
+		$fields = $this->Translation->getFields();
 		$this->Session->write('Translation.id', $id);
 
 		$this->set(compact('header', 'data', 'fields', 'id'));
-	}
-
-	private function getDisplayFields() {
-		$fields = array(
-			'model' => 'Translation',
-			'fields' => array(
-				array('field' => 'code'),
-				array('field' => 'eng', 'labelKey' => 'general.language.eng'),
-				array('field' => 'ara', 'labelKey' => 'general.language.ara'),
-				array('field' => 'spa', 'labelKey' => 'general.language.spa'),
-				array('field' => 'chi', 'labelKey' => 'general.language.chi'),
-				array('field' => 'rus', 'labelKey' => 'general.language.rus'),
-				array('field' => 'fre', 'labelKey' => 'general.language.fre'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
 	}
 
 	public function add() {
@@ -122,15 +99,16 @@ class TranslationsController extends AppController {
 
 	private function setupAddEditForm($type) {
 		$id = empty($this->params['pass'][0]) ? 0 : $this->params['pass'][0];
-		if ($this->request->is('post') || $this->request->is('put')) {
-			$this->request->data['Translation']['code'] = empty($this->request->data['Translation']['code'])? NULL: nl2br($this->request->data['Translation']['code']);
-			$this->request->data['Translation']['eng'] = nl2br($this->request->data['Translation']['eng']);
-			$this->request->data['Translation']['ara'] = empty($this->request->data['Translation']['ara'])? NULL: nl2br($this->request->data['Translation']['ara']);
-			$this->request->data['Translation']['spa'] = empty($this->request->data['Translation']['spa'])? NULL: nl2br($this->request->data['Translation']['spa']);
-			$this->request->data['Translation']['chi'] = empty($this->request->data['Translation']['chi'])? NULL: nl2br($this->request->data['Translation']['chi']);
-			$this->request->data['Translation']['rus'] = empty($this->request->data['Translation']['rus'])? NULL: nl2br($this->request->data['Translation']['rus']);
-			$this->request->data['Translation']['fre'] = empty($this->request->data['Translation']['fre'])? NULL: nl2br($this->request->data['Translation']['fre']);
-			if ($this->Translation->save($this->request->data)) {
+		$languages = array('eng', 'ara', 'spa', 'chi', 'rus', 'fre');
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			$data['Translation']['code'] = empty($data['Translation']['code'])? NULL: nl2br($data['Translation']['code']);
+			
+			foreach ($languages as $lang) {
+				$data['Translation'][$lang] = empty($data['Translation'][$lang])? NULL : nl2br($data['Translation'][$lang]);
+			}
+			
+			if ($this->Translation->save($data)) {
 				$this->Message->alert('general.' . $type . '.success');
 				return $this->redirect(array('action' => 'index'));
 			}

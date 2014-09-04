@@ -1,24 +1,22 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundationclas
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 App::uses('AppModel', 'Model');
 
 class CensusCustomField extends AppModel {
-
 	public $actsAs = array(
 		'FieldOption', 
 		'ControllerAction',
@@ -48,15 +46,15 @@ class CensusCustomField extends AppModel {
 	}
 
 	public function getOptionFields() {
-		$siteTypeOptions = $this->getSubOptions();
-		$fieldTypeOptions = $this->getCustomFieldTypes();
-		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions);
-		$siteType = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $siteTypeOptions);
-		$this->removeOptionFields(array('international_code', 'national_code'));
-		$this->addOptionField($fieldType, 'after', 'name');
-		$this->addOptionField($siteType, 'after', 'type');
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
+		parent::getOptionFields();
+		
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['institution_site_type_id']['type'] = 'select';
+		$this->fields['institution_site_type_id']['options'] = $this->getSubOptions();
+		$this->setFieldOrder('institution_site_type_id', 4);
+
+		return $this->fields;
 	}
 
 	public function getConditionId() {
@@ -103,7 +101,6 @@ class CensusCustomField extends AppModel {
 		$p = $controller->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $institutionSiteId));
 		$data = $controller->CensusGrid->find('all', array('conditions' => array('CensusGrid.institution_site_type_id' => array($p, 0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id', 'CensusGrid.order')));
 
-		//pr($data);
 		foreach ($data as &$arrDataVal) {
 			$dataAnswer = $controller->CensusGridValue->find('all', array('conditions' => array('CensusGridValue.institution_site_id' => $institutionSiteId, 'CensusGridValue.census_grid_id' => $arrDataVal['CensusGrid']['id'], 'CensusGridValue.school_year_id' => $selectedYear)));
 
@@ -114,8 +111,6 @@ class CensusCustomField extends AppModel {
 			$dataAnswer = $tmp;
 			$arrDataVal['answer'] = $dataAnswer;
 		}
-
-		//pr($data);
 
 		/*		 * *
 		 * CustomFields

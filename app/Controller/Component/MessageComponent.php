@@ -27,7 +27,7 @@ class MessageComponent extends Component {
 		'general' => array(
 			'notExists' => array('type' => 'info', 'msg' => 'The Record does not exist.'),
 			'notEditable' => array('type' => 'warn', 'msg' => 'This record is not editable'),
-			'exists' => array('type' => 'info', 'msg' => 'Please ensure no data duplication.'),
+			'exists' => array('type' => 'error', 'msg' => 'The record is exists in the system.'),
 			'noData' => array('type' => 'info', 'msg' => 'There are no records.'),
 			'error' => array('type' => 'error', 'msg' => 'An unexpected error has been encounted. Please contact the administrator for assistance.'),
 			'add' => array(
