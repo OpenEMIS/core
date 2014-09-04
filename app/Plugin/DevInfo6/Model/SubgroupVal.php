@@ -27,7 +27,7 @@ class SubgroupVal extends DevInfo6AppModel {
 		$set = 'primaryKey';
 		$Subgroup = ClassRegistry::init('DevInfo6.Subgroup');
 		$SubgroupValsSubgroup = ClassRegistry::init('DevInfo6.SubgroupValsSubgroup');
-		
+
 		if(isset($this->dataSet[$set][$name])) {
 			$id = $this->dataSet[$set][$name];
 		} else {
@@ -45,15 +45,18 @@ class SubgroupVal extends DevInfo6AppModel {
 				$save = $this->save($model);
 				$id = $save[$modelName]['id'];
 				
-				$subgroupList = explode(' - ', $name);
+				//$subgroupList = explode(' - ', $name);
+				$subgroupList = explode(', ', $name);
 				foreach($subgroupList as $subgroupName) {
 					$subgroupType = $this->getSubgroupType($subgroupTypes, $subgroupName);
-					$subgroupId = $Subgroup->getPrimaryKey($subgroupName, $subgroupType);
+					if(!empty($subgroupType)){
+						$subgroupId = $Subgroup->getPrimaryKey($subgroupName, $subgroupType);
 					
-					$model = array('SubgroupValsSubgroup' => array('Subgroup_Val_NId' => $id, 'Subgroup_NId' => $subgroupId));
-					
-					$SubgroupValsSubgroup->create();
-					$SubgroupValsSubgroup->save($model);
+						$model = array('SubgroupValsSubgroup' => array('Subgroup_Val_NId' => $id, 'Subgroup_NId' => $subgroupId));
+						
+						$SubgroupValsSubgroup->create();
+						$SubgroupValsSubgroup->save($model);
+					}
 				}
 			} else {
 				$id = $first[$modelName]['Subgroup_Val_NId'];
@@ -64,11 +67,23 @@ class SubgroupVal extends DevInfo6AppModel {
 	}
 	
 	private function getSubgroupType($types, $subgroup) {
-		foreach($types as $type => $list) {
+		/*foreach($types as $type => $list) {
 			if(in_array($subgroup, $list)) {
 				return array($type => $list['order']);
 			}
 		}
+		return NULL;*/
+		//JAMIE
+		if(strrpos($subgroup, ": ")!==false){
+			$subgroup = substr($subgroup, 0, strrpos($subgroup, ": "));
+		}
+		foreach($types as $type => $list) {
+			if($list==$subgroup || ('All ' . inflector::pluralize($list)==$subgroup)){
+				return array($list => ($type+1));
+				break;
+			}
+		}
+
 		return NULL;
 	}
 }

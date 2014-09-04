@@ -1,4 +1,4 @@
-<fieldset>
+<fieldset class="section_break">
 	<legend><?php echo $modelClass; ?></legend>
 	<table class="reportManagerFieldSelector" cellpadding="0" cellspacing="0">
 		<thead>
@@ -18,7 +18,7 @@ foreach ($modelSchema as $field => $attributes):
 		echo ( isset($labelFieldList[$modelClass][$field]) ? $labelFieldList[$modelClass][$field] : ( isset($labelFieldList['*'][$field]) ? $labelFieldList['*'][$field] : $field ));
 		echo '</td>';
 		echo '<td>';
-		echo $this->Form->input($modelClass.'.'.$field.'.'.'Position',array('label'=>'','size'=>'4','maxlength'=>'4','class'=>'position'));
+		echo $this->Form->input($modelClass.'.'.$field.'.'.'Position',array('label'=>false,'size'=>'4','maxlength'=>'4','class'=>'position form-control'));
 		echo $this->Form->input($modelClass.'.'.$field.'.'.'Type',array('type'=>'hidden','value'=>$attributes['type']));
 		echo $this->Form->input($modelClass.'.'.$field.'.'.'Length',array('type'=>'hidden','value'=>$attributes['length']));
 		echo '</td>';          

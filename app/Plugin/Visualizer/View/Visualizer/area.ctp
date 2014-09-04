@@ -6,6 +6,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -17,11 +18,11 @@ echo $this->Html->link($this->Label->get('general.reset'), array('action' => 're
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Visualizer'));
-$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label';
+$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label left';
 
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($this->action, $formOptions);
-echo $this->Form->input('search', array('id' => 'searchDB', 'url' => 'Visualizer/ajaxAreaSearch'));
+echo $this->Form->input('search', array('id' => 'searchDB', 'url' => 'Visualizer/ajaxAreaSearch','reseturl' => 'Visualizer/ajaxResetSearch'));
 echo $this->Form->input('area_level', array('id'=> 'areaLevel' ,'options' => $areaLevelOptions, 'selected'=> $selectedAreaLevel,  'empty' => 'All', 'onchange' => 'Visualizer.areaLevelChange(this)', 'url' => 'Visualizer/'.$this->action));
 ?>
 <div class='visualizer-list-table disable-overflow'>
@@ -62,8 +63,9 @@ echo $this->Form->input('area_level', array('id'=> 'areaLevel' ,'options' => $ar
 
 			$row = array();
 			$row[] = array($input, array('class' => $additionalClass));
-			for ($i = 1; $i < count($tableHeaders); $i++) {
-				$row[] = array($obj['level_' . $i . '_name'], array('class' => 'data-list'));
+			$row[] = array($obj['Area_ID'], array('class' => 'data-list'));
+			for ($i = 2; $i < count($tableHeaders); $i++) {
+				$row[] = array($obj['level_' . ($i-1) . '_name'], array('class' => 'data-list'));
 			}
 			$tableData[] = $row;
 			$i++;

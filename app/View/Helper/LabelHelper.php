@@ -364,7 +364,7 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
-		
+
 		'CensusGrid' => array(
 			'x_title' => 'Table Header',
 			'x_categories' => 'Columns',
@@ -378,6 +378,13 @@ class LabelHelper extends AppHelper {
 			'spa' => 'Spanish',
 			'fre' => 'French',
 			'ara' => 'Arabic'
+		),
+		'Datawarehouse' => array(
+			'indicator' => 'Indicator',
+			'unit' => 'Unit',
+			'module' => 'Module',
+			'function' => 'Function',
+			'dimensions' => 'Dimensions'
 		)
 	);
 	
