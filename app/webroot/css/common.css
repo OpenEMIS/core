@@ -155,22 +155,26 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 }
 .header_nav_function{
 	float:left;
-	width:148px;
+	/*width:146px;*/
 	text-align:center;
-	padding:6px 0;
+	padding:6px 5px;
 	font-size:14px;
 	line-height:14px;
 	font-weight:bold;
 }
+.header_nav_function span{
+	padding:0 28px;
+}
 .ie7 .header_nav_function{
-	width:146px;
+/*	width:146px;*/
 }
 .header_nav_function_hover{
 	display:none;
-	position:absolute;
+	/*position:absolute;*/
 	height:4px;
-	width:130px;
-	margin:8px 8px 0 8px;
+	width:100%;
+	/*width:130px;*/
+	margin:8px 0;
 	box-shadow:0 0 2px #2CC1FD;
 }
 .ie7 .header_nav_function_hover {

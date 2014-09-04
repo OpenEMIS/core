@@ -137,3 +137,7 @@ table.reportManagerReportStyleSelector thead
 {
     background:#f3f9ff;
 }
+
+.stepContainer fieldset legend{
+	font-size: 12px;
+}
