@@ -70,18 +70,21 @@ class LabelHelper extends AppHelper {
 			'class' => 'Class',
 			'comment' => 'Comment',
 			'view_details' => 'View Details',
-			'language' => array(
-				'eng' => 'English',
-				'chi' => 'Chinese',
-				'rus' => 'Russian',
-				'spa' => 'Spanish',
-				'fre' => 'French',
-				'ara' => 'Arabic',
-			),
 			'compile' => 'Compile',
 			'next' => 'Next',
 			'previous' => 'Previous',
-			'reset' => 'Reset'
+			'reset' => 'Reset',
+			'preview' => 'Preview',
+			'international_code' => 'International Code',
+			'national_code' => 'National Code',
+			'current' => 'Current',
+			'past' => 'Past'
+		),
+		'date' => array(
+			'start' => 'Start Date',
+			'end' => 'End Date',
+			'from' => 'From',
+			'to' => 'To'
 		),
 		'gender' => array(
 			'm' => 'Male',
@@ -155,6 +158,7 @@ class LabelHelper extends AppHelper {
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution',
+			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
 		),
@@ -190,6 +194,9 @@ class LabelHelper extends AppHelper {
 		),
 		'FinanceType' => array(
 			'finance_nature_id' => 'Nature'
+		),
+		'FinanceCategory' => array(
+			'finance_type_id' => 'Type'
 		),
 		'ContactType' => array(
 			'contact_option_id' => 'Contact Option'
@@ -251,6 +258,9 @@ class LabelHelper extends AppHelper {
 			'generate' => 'Generate',
 			'custom_indicators' => 'Custom Indicators'
 		),
+		'Student' => array(
+			'add_existing' => 'Add existing Student'
+		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
@@ -277,6 +287,20 @@ class LabelHelper extends AppHelper {
 		'Position' => array(
 			'teaching' => 'Teaching',
 			'number' => 'Number'
+		),
+		'InstitutionSiteStudent' => array(
+			'student_status_id' => 'Status',
+			'education_programme_id' => 'Programme'
+		),
+		'InstitutionSiteStaff' => array(
+			'staff_status_id' => 'Status',
+			'staff_type_id' => 'Type',
+			'institution_site_position_id' => 'Position'
+		),
+		'InstitutionSitePosition' => array(
+			'title' => 'Positions',
+			'staff_position_title_id' => 'Title',
+			'staff_position_grade_id' => 'Grade'
 		),
 		'InstitutionSiteStudentAbsence' => array(
 			'reason' => 'Reason',
@@ -340,6 +364,21 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
+		
+		'CensusGrid' => array(
+			'x_title' => 'Table Header',
+			'x_categories' => 'Columns',
+			'y_categories' => 'Rows',
+			'update_preview' => 'Update Preview'
+		),
+		'Translation' => array(
+			'eng' => 'English',
+			'chi' => 'Chinese',
+			'rus' => 'Russian',
+			'spa' => 'Spanish',
+			'fre' => 'French',
+			'ara' => 'Arabic'
+		)
 	);
 	
 	public function get($code) {

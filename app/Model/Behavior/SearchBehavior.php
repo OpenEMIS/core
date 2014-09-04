@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class SearchBehavior extends ModelBehavior {
-	// Generic search function for Students/Teachers/Staff used by InstitutionSiteController
+	// Generic search function for Students/Staff used by InstitutionSiteController
 	public function search(Model $model, $search, $params=array()) {
 		$class = $model->alias;
 		$search = '%' . $search . '%';
@@ -25,9 +25,9 @@ class SearchBehavior extends ModelBehavior {
 			'OR' => array(
 				$class . '.identification_no LIKE' => $search,
 				$class . '.first_name LIKE' => $search,
-                                $class . '.middle_name LIKE' => $search,
+				$class . '.middle_name LIKE' => $search,
 				$class . '.last_name LIKE' => $search,
-                                $class . '.preferred_name LIKE' => $search
+				$class . '.preferred_name LIKE' => $search
 			)
 		);
 		$options = array(

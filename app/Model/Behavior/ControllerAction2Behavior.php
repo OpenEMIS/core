@@ -54,9 +54,9 @@ class ControllerAction2Behavior extends ModelBehavior {
 		
 		if ($model->render === 'auto') {
 			if ($action == 'add' || $action == 'edit') {
-				//$controller->render('../Elements/templates/edit');
+				$controller->render('../Elements/templates/edit');
 			} else if ($action == 'view') {
-				//$controller->render('../Elements/templates/view');
+				$controller->render('../Elements/templates/view');
 			}
 		} else if ($model->render === true) {
 			$controller->render($module . '/' . $action);
@@ -87,7 +87,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 		$model->render = 'auto';
 		if ($model->request->is(array('post', 'put'))) {
 			$model->create();
-			if ($model->save($model->request->data)) {
+			if ($model->saveAll($model->request->data)) {
 				$model->Message->alert('general.add.success');
 				return $model->redirect(array('action' => get_class($model)));
 			} else {
@@ -103,7 +103,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 			$data = $model->findById($id);
 			
 			if ($model->request->is(array('post', 'put'))) {
-				if ($model->save($model->request->data)) {
+				if ($model->saveAll($model->request->data)) {
 					$model->Message->alert('general.edit.success');
 					return $model->redirect(array('action' => get_class($model), 'view', $id));
 				} else {
@@ -132,6 +132,9 @@ class ControllerAction2Behavior extends ModelBehavior {
 	}
 	
 	public function redirect(Model $model, $url) {
+		if (!array_key_exists('plugin', $url)) {
+			$url['plugin'] = false;
+		}
 		return $model->controller->redirect($url);
 	}
 	
