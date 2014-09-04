@@ -118,8 +118,7 @@ class AppController extends Controller {
 			// deprecated logic, should be removed after all modules are moved to the new logic
 			$action = strtolower($this->action);
 			foreach($this->modules as $name => $module) {
-				if($action == strtolower($name)) {
-									
+				if($action == strtolower($name) && !is_array($module)) {
 					$this->loadModel($module);
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
@@ -131,7 +130,7 @@ class AppController extends Controller {
 			
 			//if nothing match, search by partial string
 			foreach($this->modules as $name => $module) { 
-				if(strpos($action, strtolower($name)) === 0) {
+				if(strpos($action, strtolower($name)) === 0 && !is_array($module)) {
 					$this->loadModel($module);
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;

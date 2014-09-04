@@ -17,7 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class Translation extends AppModel {
-	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -38,30 +37,12 @@ class Translation extends AppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please ensure the english translation is keyed in.'
+				'message' => 'Please enter the English label.'
+			),
+			'ruleUnique' => array(
+				'rule' => 'isUnique',
+				'message' => 'The label is already exists in the system.'
 			)
 		)
 	);
-	
-	//public $actsAs = array('FieldOption');
-	//public $hasMany = array('StaffLanguage', 'StudentLanguage', 'TeacherLanguage');
-	
-	/*public function getLookupVariables() {
-		$lookup = array(
-			'Languages' => array('model' => 'Language')
-		);
-		return $lookup;
-	}
-
-
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('Language.order')));
-		$list = array();
-		foreach($data as $obj){
-			$list[$obj['Language']['id']] = $obj['Language']['name'];
-		}
-
-		return $list;
-	}*/
-
 }

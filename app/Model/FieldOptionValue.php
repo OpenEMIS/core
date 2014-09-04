@@ -70,8 +70,17 @@ class FieldOptionValue extends AppModel {
 	
 	public function getDefaultValue() {
 		$model = $this->getModel();
-		$model->recursive = -1;
-		$data = $model->findByDefault(1);
+		$model->recursive = 0;
+		
+		$data = array();
+		if ($model->alias == $this->alias) {
+			$data = $model->find('first', array(
+				'fields' => array('id'),
+				'conditions' => array('FieldOption.code' => $model->alias)
+			));
+		} else {
+			$data = $model->findByDefault(1);
+		}
 		if(empty($data)){
 			return 0;
 		}
@@ -119,10 +128,10 @@ class FieldOptionValue extends AppModel {
 		return $key;
 	}
         
-	public function getList() {
+	public function getList($status = false) {
 		$alias = $this->alias;
 		
-		$list = $this->find('list', array(
+		$options = array(
 			'joins' => array(
 				array(
 					'table' => 'field_options',
@@ -134,8 +143,12 @@ class FieldOptionValue extends AppModel {
 				)
 			),
 			'order' => array($alias.'.order')
-		));
-		return $list;
+		);
+		
+		if ($status !== false) {
+			$options['conditions'] = array("$alias.visible" => $status);
+		}
+		return $this->find('list', $options);
 	}
 }
 ?>
