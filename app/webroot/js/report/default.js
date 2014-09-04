@@ -35,19 +35,31 @@ $(document).ready(function() {
     }
     
     function validateSteps(stepnumber){
-        var isStepValid = true;
-        if(stepnumber == 1){
-            isStepValid = false;
-            $("tr :checkbox[name*='[Add]']").each(function(){
-                if ( $(this).is(':checked')) {
-                    isStepValid = true;
-                }
-            });            
-        }
-        if ( !isStepValid )
-            $('#wizard').smartWizard('showMessage','No field selected');
-        return isStepValid;
-        
+        //var isStepValid = true;
+//        if(stepnumber == 1){
+//            isStepValid = false;
+//            $("tr :checkbox[name*='[Add]']").each(function(){
+//                if ( $(this).is(':checked')) {
+//                    isStepValid = true;
+//                }
+//            });            
+//        }
+
+		isStepValid = false;
+		
+		$("tr :checkbox[name*='[Add]']").each(function() {
+			if ($(this).is(':checked')) {
+				isStepValid = true;
+			}
+		});
+
+		if (!isStepValid){
+			$('#wizard').smartWizard('showMessage', 'No field selected');
+		}else{
+			$('#wizard .msgBox').hide();
+		}
+
+		return isStepValid;
     }
     
     function validateAllSteps(){
@@ -63,7 +75,8 @@ $(document).ready(function() {
     
     // change tr background color when checked
     // closest parent element
-    $("tr :checkbox[name*='[Add]']").live("click", function() {
+	
+    $("tr :checkbox[name*='[Add]']").on("click", function() {
         $(this).closest("tr").css("background-color", this.checked ? "#eee" : "");
     });
     
