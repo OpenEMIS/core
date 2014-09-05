@@ -166,6 +166,41 @@ class EducationGrade extends AppModel {
 		}
 	}
 	
+	// Used by InstitutionSiteFee
+	public function getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $yearId, $visible = false) {
+		$conditions = array();
+		if ($visible !== false) {
+			$conditions['EducationProgramme.visible'] = 1;
+			$conditions['EducationGrade.visible'] = 1;
+		}
+		
+		$list = $this->find('all', array(
+			'recursive' => 0,
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteProgramme.school_year_id = ' . $yearId,
+						'InstitutionSiteProgramme.status = 1'
+					)
+				)
+			),
+			'conditions' => $conditions,
+			'order' => array('EducationProgramme.order', 'EducationGrade.order')
+		));
+		
+		$data = array();
+		foreach ($list as $obj) {
+			$grade = $obj['EducationGrade'];
+			$data[$grade['id']] = $obj['EducationProgramme']['name'] . ' - ' . $grade['name'];
+		}
+		
+		return $data;
+	}
+	
 	public function findListAsSubgroups() {
 		return $this->findList(true);
 	}
