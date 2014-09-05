@@ -73,7 +73,6 @@ class ControllerAction2Behavior extends ModelBehavior {
 	public function view(Model $model, $id=0) {
 		$model->render = 'auto';
 		if ($model->exists($id)) {
-			$model->recursive = 0;
 			$data = $model->findById($id);
 			$model->Session->write($model->alias.'.id', $id);
 			$model->setVar(compact('data'));
@@ -89,8 +88,13 @@ class ControllerAction2Behavior extends ModelBehavior {
 			$model->create();
 			if ($model->saveAll($model->request->data)) {
 				$model->Message->alert('general.add.success');
-				return $model->redirect(array('action' => get_class($model)));
+				$params = $model->controller->params->pass;
+				unset($params[0]);
+				$action = array('action' => get_class($model), 'index');
+				$action = array_merge($action, $params);
+				return $model->redirect($action);
 			} else {
+				$this->log($model->validationErrors, 'debug');
 				$model->Message->alert('general.add.failed');
 			}
 		}
@@ -99,14 +103,18 @@ class ControllerAction2Behavior extends ModelBehavior {
 	public function edit(Model $model, $id=0) {
 		$model->render = 'auto';
 		if ($model->exists($id)) {
-			$this->recursive = 0;
 			$data = $model->findById($id);
 			
 			if ($model->request->is(array('post', 'put'))) {
 				if ($model->saveAll($model->request->data)) {
 					$model->Message->alert('general.edit.success');
-					return $model->redirect(array('action' => get_class($model), 'view', $id));
+					$params = $model->controller->params->pass;
+					unset($params[0]);
+					$action = array('action' => get_class($model), 'view');
+					$action = array_merge($action, $params);
+					return $model->redirect($action);
 				} else {
+					$this->log($model->validationErrors, 'debug');
 					$model->Message->alert('general.edit.failed');
 				}
 			} else {
@@ -124,10 +132,15 @@ class ControllerAction2Behavior extends ModelBehavior {
 			if($model->delete($id)) {
 				$model->Message->alert('general.delete.success');
 			} else {
+				$this->log($model->validationErrors, 'debug');
 				$model->Message->alert('general.delete.failed');
 			}
 			$model->Session->delete($model->alias . '.id');
-			return $model->redirect(array('action' => get_class($model)));
+			$params = $model->controller->params->pass;
+			unset($params[0]);
+			$action = array('action' => get_class($model), 'index');
+			$action = array_merge($action, $params);
+			return $model->redirect($action);
 		}
 	}
 	

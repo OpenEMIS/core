@@ -59,10 +59,10 @@ CREATE TABLE IF NOT EXISTS `institution_site_fees` (
 
 DROP TABLE IF EXISTS `institution_site_fee_types`;
 CREATE TABLE IF NOT EXISTS `institution_site_fee_types` (
+  `id` char(36) NOT NULL COMMENT 'To be compatible with CakePHP cascade delete',
   `institution_site_fee_id` int(11) NOT NULL,
   `fee_type_id` int(11) NOT NULL,
   `amount` decimal(11,2) NOT NULL,
-  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`institution_site_fee_id`, `fee_type_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
