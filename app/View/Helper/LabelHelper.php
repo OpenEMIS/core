@@ -263,9 +263,6 @@ class LabelHelper extends AppHelper {
 		'Student' => array(
 			'add_existing' => 'Add existing Student'
 		),
-		'Student' => array(
-			'add_existing' => 'Add existing Student'
-		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
