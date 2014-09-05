@@ -116,8 +116,9 @@ class InstitutionSitesController extends AppController {
 		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
 		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
 		'assessments' => 'AssessmentItemResult',
-		'fee' => 'InstitutionSiteFee',
+		//'fee' => 'InstitutionSiteFee',
 		'studentFee' => 'InstitutionSiteStudentFee',
+		'InstitutionSiteFee',
 		'InstitutionSitePosition'
 	);
 	

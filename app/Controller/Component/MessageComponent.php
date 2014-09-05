@@ -153,6 +153,9 @@ class MessageComponent extends Component {
 			'finance' => array(
 				'gnpEmpty' => array('type' => 'error', 'msg' => 'GNP value is required.')
 			)
+		),
+		'EducationGrade' => array(
+			'noData' => array('type' => 'warn', 'msg' => 'There are no grades.')
 		)
 	);
 	
