@@ -19,6 +19,7 @@ $this->start('contentBody');
 	$formOptions = $this->FormUtility->getFormOptions($formAction);
 	echo $this->Form->create($model, $formOptions);
 	echo $this->element('edit');
+	echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 	echo $this->FormUtility->getFormButtons(array('cancelURL' => $params));
 	echo $this->Form->end();
 $this->end();

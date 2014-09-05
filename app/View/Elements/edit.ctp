@@ -26,6 +26,9 @@ foreach($fields as $key => $field) {
 				
 			case 'select':
 				if (isset($field['options'])) {
+					if (empty($field['options'])) {
+						$field['options'][''] = $this->Label->get('general.noData');
+					}
 					$options['options'] = $field['options'];
 				}
 				if (isset($field['default'])) {

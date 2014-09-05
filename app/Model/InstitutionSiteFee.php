@@ -1,30 +1,29 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteFee extends AppModel {
-
 	public $actsAs = array(
-		'ControllerAction',
+		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		)
 	);
+	
 	public $belongsTo = array(
 		'InstitutionSite',
 		'SchoolYear',
@@ -42,67 +41,177 @@ class InstitutionSiteFee extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-
+	
 	public $hasMany = array(
-		'InstitutionSiteFeeType' => array(
-			'dependent' => true
-		)
+		'InstitutionSiteFeeType' => array('dependent' => true)
 	);
 
-
+	/*
 	public $hasOne = array(
 		'InstitutionSiteStudentFee' => array(
 			'dependent' => true
 		)
 	);
-
-	public $headerDefault = 'Fees';
-
-	public $_action = 'fee';
 	
-	public function beforeAction($controller, $action) {
-		parent::beforeAction($controller, $action);
-		$controller->set('_action', $this->_action);
-		$controller->set('selectedAction', $this->_action . 'View');
+	public function afterSave($created, $options = array()) {
+		//pr($this->data);die;
+		$id = $this->data[$this->alias]['id'];
+		$total = $this->InstitutionSiteFeeType->find('all', array(
+			'recursive' => -1,
+			'fields' => array('SUM(amount) AS total'),
+			'conditions' => array('InstitutionSiteFeeType.institution_site_fee_id' => $id),
+			'group' => array('InstitutionSiteFeeType.institution_site_fee_id')
+		));
+		$this->log($total, 'debug');
+		parent::afterSave($created, $options);
 	}
-
-	public function fee($controller, $params) {
-		$controller->Navigation->addCrumb($this->headerDefault);
-
-		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-
-		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($institutionSiteId);
-		$selectedYear = (isset($params->pass[0]) ? $params->pass[0] : key($yearOptions));
-
-		$programmeOptions = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammeOptions($institutionSiteId, $selectedYear);
-		$selectedProgramme =  (isset($params->pass[1]) ? $params->pass[1] : 0);
-
-		$data = $this->getListOfFees($selectedYear, $institutionSiteId);
-
+	*/
+	
+	private function cleanFeeTypes(&$data) {
+		if (isset($data['InstitutionSiteFeeType'])) {
+			$types = $data['InstitutionSiteFeeType'];
+			foreach ($types as $i => $obj) {
+				if (empty($obj['amount'])) {
+					unset($data['InstitutionSiteFeeType'][$i]);
+				}
+			}
+		}
+	}
+	
+	public function updateTotal($id) {
+		$total = $this->InstitutionSiteFeeType->find('all', array(
+			'recursive' => -1,
+			'fields' => array('SUM(amount) AS total'),
+			'conditions' => array('InstitutionSiteFeeType.institution_site_fee_id' => $id),
+			'group' => array('InstitutionSiteFeeType.institution_site_fee_id')
+		));
+		pr($total);
+	}
+	
+	public function beforeAction() {
+		parent::beforeAction();
+		$contentHeader = 'Fees';
+		$this->Navigation->addCrumb($contentHeader);
 		
-		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
-
-		if(!empty($selectedYear)){
-			$controller->Session->write('InstitutionSiteFee.selected_year', $selectedYear);
-		}
-		$controller->Session->write('InstitutionSiteFee.selected_programme', $selectedProgramme);
-
-		$programmes = array();
-		if(empty($selectedProgramme)){
-			$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
-		}else{
-			$programmes = $this->EducationGrade->EducationProgramme->find('first', array('recursive'=>-1,'fields'=>array('EducationProgramme.*'), 'conditions'=>array('EducationProgramme.id'=>$selectedProgramme)));
-		}
-
-		if(empty($programmes)){
-			$controller->Message->alert('InstitutionSiteProgramme.noData');
-		}
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$yearOptions = $this->SchoolYear->getAvailableYears(true, 'DESC');
+		
+		$this->fields['total']['visible'] = false;
+		$this->fields['institution_site_id']['type'] = 'hidden';
+		$this->fields['institution_site_id']['value'] = $institutionSiteId;
+		$this->fields['school_year_id']['type'] = 'select';
+		$this->fields['school_year_id']['options'] = $yearOptions;
+		$this->fields['fee_types'] = array(
+			'type' => 'element',
+			'element' => '../InstitutionSites/InstitutionSiteFee/fee_types',
+			'visible' => true
+		);
+		$this->setFieldOrder('fee_types', 5);
 		
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
+		$this->setVar('currency', $currency);
+		$this->setVar('contentHeader', __($contentHeader));
+	}
+	
+	public function index($selectedYear=0) {
+		$params = $this->controller->params;
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$yearOptions = $this->SchoolYear->getAvailableYears(true, 'DESC');
+		
+		if ($selectedYear == 0) {
+			$selectedYear = key($yearOptions);
+		}
+		
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteFee.*', 'EducationGrade.name', 'EducationGrade.education_programme_id'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = InstitutionSiteFee.education_grade_id')
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteFee.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteFee.school_year_id' => $selectedYear
+			),
+			'order' => array('EducationProgramme.order', 'EducationGrade.order')
+		));
+		
+		$programmeOptions = $this->EducationGrade->EducationProgramme->find('list');
+		
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
 
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'currency', 'selectedYear', 'selectedProgramme', 'programmes', 'programmeOptions', 'yearOptions'));
+		$this->setVar(compact('data', 'selectedYear', 'programmeOptions', 'yearOptions'));
+	}
+	
+	public function add($selectedYear=0) {
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		
+		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(true);
+		
+		if ($this->request->is('get')) {
+			$yearOptions = $this->SchoolYear->getAvailableYears(true, 'DESC');
+		
+			if ($selectedYear == 0) {
+				$selectedYear = key($yearOptions);
+			}
+			
+			foreach ($feeTypes as $key => $val) {
+				$this->request->data['InstitutionSiteFeeType'][] = array(
+					'fee_type_id' => $key,
+					'name' => $val,
+					'amount' => ''
+				);
+			}
+		} else {
+			$data = $this->request->data;
+			$submit = $data['submit'];
+			$selectedYear = $data[$this->alias]['school_year_id'];
+			
+			if ($submit == 'Save') {
+				$this->cleanFeeTypes($data);
+				//pr($data);die;
+				/*
+				if (isset($data['InstitutionSiteFeeType'])) {
+					$types = $data['InstitutionSiteFeeType'];
+					foreach ($types as $i => $obj) {
+						if (empty($obj['InstitutionSiteFeeType']['amount'])) {
+							unset($data['InstitutionSiteFeeType'][$i]);
+						}
+					}
+					if (empty($data['InstitutionSiteFeeType'])) {
+						//unset($this->data['InstitutionSiteFeeType']);
+					}
+				}
+				*/
+				if ($this->saveAll($data)) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => get_class($this)));
+				} else {
+					$this->log($this->validationErrors, 'debug');
+					$this->Message->alert('general.add.failed');
+				}
+			}
+		}
+		
+		$this->fields['school_year_id']['default'] = $selectedYear;
+		$this->fields['school_year_id']['attr'] = array('onchange' => "$('#reload').click()");
+		$this->fields['education_grade_id']['type'] = 'select';
+		
+		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear);
+		$this->fields['education_grade_id']['options'] = $gradeOptions;
+		
+		$this->render = 'auto';
 	}
 
 	public function feeView($controller, $params) {

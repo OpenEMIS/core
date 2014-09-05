@@ -78,7 +78,9 @@ class LabelHelper extends AppHelper {
 			'international_code' => 'International Code',
 			'national_code' => 'National Code',
 			'current' => 'Current',
-			'past' => 'Past'
+			'past' => 'Past',
+			'noData' => 'No Data',
+			'amount' => 'Amount'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -350,6 +352,13 @@ class LabelHelper extends AppHelper {
 		'SecurityUser' => array(
 			'name' => 'User'
 		),
+		
+		'InstitutionSiteFee' => array(
+			'school_year_id' => 'School Year',
+			'education_grade_id' => 'Grade',
+			'InstitutionSiteFeeType' => 'Fee Types'
+		),
+		
 		'FinanceFee' => array(
 			'fee' => 'Fee',
 			'total' => 'Total',
