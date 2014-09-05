@@ -38,7 +38,7 @@ SET `institution_site_students`.`institution_site_id` = `institution_site_progra
 SELECT `order` + 1 into @ordering FROM `navigations` WHERE `controller` = 'Students' AND `action` = 'guardians';
 UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @ordering;
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(NULL, 'Student', 'Students', 'Students', 'DETAILS', 'Programmes', 'Programme', 'Programme', NULL, 62, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'Student', 'Students', 'Students', 'Details', 'Programmes', 'Programme', 'Programme', NULL, 62, 0, @ordering, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 -- Staff
 UPDATE `navigations` SET `pattern` = 'index$|advanced|InstitutionSiteStaff.index' WHERE `controller` = 'Staff' AND `action` = 'index';
