@@ -24,7 +24,6 @@ class DashboardsController extends DashboardsAppController {
         'InstitutionQA' => 'Dashboards.DashboardInstitutionQA',
     );
 
-
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->set('modelName', 'Dashboards');
@@ -62,6 +61,7 @@ class DashboardsController extends DashboardsAppController {
 		$header = __('Dashboards');
 		$this->set('enabled', true);
 		$reportType = 'dashboard';
+
         $reportData = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'Report.module'=>'Dashboard'), 'order' => array('Report.order')));
   
         $checkFileExist = array();
