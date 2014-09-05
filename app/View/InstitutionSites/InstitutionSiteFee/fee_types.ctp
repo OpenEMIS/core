@@ -12,7 +12,7 @@ if ($action == 'add' || $action == 'edit') :
 				<thead>
 					<tr>
 						<th><?php echo $this->Label->get('general.type') ?></th>
-						<th><?php echo $this->Label->get('general.amount') ?></th>
+						<th><?php echo sprintf('%s (%s)', $this->Label->get('general.amount'), $currency) ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -26,9 +26,9 @@ if ($action == 'add' || $action == 'edit') :
 							if ($this->action == 'edit') {
 								echo $this->Form->hidden("InstitutionSiteFeeType.$i.institution_site_fee_id", array('value' => $this->data[$model]['id']));
 							}
+							echo $this->Form->hidden("InstitutionSiteFeeType.$i.id", array('value' => $obj['id']));
 							echo $this->Form->hidden("InstitutionSiteFeeType.$i.fee_type_id", array('value' => $obj['fee_type_id']));
-							echo $this->Form->hidden("InstitutionSiteFeeType.$i.name", array('value' => $obj['name']));
-							echo $obj['name'];
+							echo $feeTypes[$obj['fee_type_id']];
 							?>
 						</td>
 						<td>
@@ -41,7 +41,6 @@ if ($action == 'add' || $action == 'edit') :
 				?>
 				</tbody>
 			</table>
-			<!--a class="void icon_plus" onclick="$('#reload').val('InstitutionSiteFeeType').click()"><?php echo $this->Label->get('general.add') ?></a-->
 		</div>
 	</div>
 </div>
@@ -52,21 +51,34 @@ if ($action == 'add' || $action == 'edit') :
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo $this->Label->get('general.name') ?></th>
+				<th><?php echo $this->Label->get('general.type') ?></th>
+				<th><?php echo sprintf('%s (%s)', $this->Label->get('general.amount'), $currency) ?></th>
 			</tr>
 		</thead>
 		<tbody>
 		<?php 
-		if (!empty($data['CensusGridYCategory'])) :
-			foreach ($data['CensusGridYCategory'] as $i => $obj) : ?>
+		if (!empty($data['InstitutionSiteFeeType'])) :
+			foreach ($data['InstitutionSiteFeeType'] as $i => $obj) : ?>
 			<tr>
-				<td><?php echo $obj['name'] ?></td>
+				<td><?php echo $feeTypes[$obj['fee_type_id']] ?></td>
+				<td class="cell-number"><?php echo $obj['amount'] ?></td>
 			</tr>
 		<?php
 			endforeach;
 		endif;
 		?>
 		</tbody>
+		
+		<?php if (!empty($data['InstitutionSiteFeeType'])) : ?>
+		
+		<tfoot>
+			<td class="cell-number bold"><?php echo $this->Label->get('general.total') ?></td>
+			<td class="cell-number bold"><?php echo $data[$model]['total'] ?></td>
+		</tfoot>
+		
+		<?php
+		endif;
+		?>
 	</table>
 </div>
 

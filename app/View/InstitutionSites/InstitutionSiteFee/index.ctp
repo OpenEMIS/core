@@ -18,14 +18,14 @@ $this->start('contentBody');
 				<tr>
 					<th><?php echo $this->Label->get('EducationProgramme.name') ?></th>
 					<th><?php echo $this->Label->get('EducationGrade.name') ?></th>
-					<th><?php echo sprintf('%s (%s)',$this->Label->get('FinanceFee.fee'), $currency) ?></th>
+					<th><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.fee'), $currency) ?></th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $programmeOptions[$obj['EducationGrade']['education_programme_id']] ?></td>
-					<td><?php echo $this->Html->link($obj['EducationGrade']['name'], array('action' => $model, 'view', $obj[$model]['id'])) ?></td>
+					<td><?php echo $this->Html->link($obj['EducationGrade']['name'], array('action' => $model, 'view', $obj[$model]['id'], $selectedYear)) ?></td>
 					<td class="cell-number"><?php echo $obj[$model]['total'] ?></td>
 				</tr>
 				<?php endforeach ?>
