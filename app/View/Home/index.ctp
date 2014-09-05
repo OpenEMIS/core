@@ -29,7 +29,6 @@
 		</div>
 		<?php } ?>
 	</div>
-	<?php echo $this->Html->image('demoBanner.jpg') ?>
 </div><!-- end banner -->
 
 <div id="highlight">
