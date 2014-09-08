@@ -100,10 +100,12 @@ class InstitutionSiteFee extends AppModel {
 		}
 		
 		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(true);
-		$ConfigItem = ClassRegistry::init('ConfigItem');
-	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 		$this->setVar('feeTypes', $feeTypes);
+		
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 		$this->setVar('currency', $currency);
+		
 		$this->setVar('contentHeader', __($contentHeader));
 	}
 	
@@ -187,9 +189,9 @@ class InstitutionSiteFee extends AppModel {
 		
 		$this->fields['school_year_id']['default'] = $selectedYear;
 		$this->fields['school_year_id']['attr'] = array('onchange' => "$('#reload').click()");
-		$this->fields['education_grade_id']['type'] = 'select';
 		
 		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear);
+		$this->fields['education_grade_id']['type'] = 'select';
 		$this->fields['education_grade_id']['options'] = $gradeOptions;
 		
 		$this->render = 'auto';
