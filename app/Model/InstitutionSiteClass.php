@@ -63,7 +63,15 @@ class InstitutionSiteClass extends AppModel {
 			'numeric' => array(
 				'rule' => 'numeric',
 				'message' => 'Please enter a numeric value'
-			)
+			),
+			'maxValue' => array(
+                'rule'    => array('comparison', '<=', 100),
+                'message' => 'Please enter a value between 0 and 100'
+            ),
+			'minValue' => array(
+                'rule'    => array('comparison', '>=', 0),
+                'message' => 'Please enter a value between 0 and 100'
+            )
 		),
 		'institution_site_shift_id' => array(
 			'ruleRequired' => array(
@@ -237,18 +245,20 @@ class InstitutionSiteClass extends AppModel {
 
 		if (!empty($data)) {
 			if($controller->request->is('post') || $controller->request->is('put')) {
-				//pr($controller->request->data);die;
-				if($this->saveAll($controller->request->data)) {
+				$postData = $controller->request->data;
+				//pr($postData);die;
+				if ($this->saveAll($postData)) {
 					$controller->Message->alert('general.edit.success');
-				} else {
-					$controller->Message->alert('general.edit.failed');
+					$controller->redirect(array('action' => $this->_action . 'View', $id));
 				}
-				$controller->redirect(array('action' => $this->_action . 'View', $id));
+				
+				$controller->request->data['SchoolYear']['name'] = $data['SchoolYear']['name'];
 			} else {
 				$controller->request->data = $data;
-				$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
-				$controller->set('grades', $grades);
 			}
+			
+			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
+			$controller->set('grades', $grades);
 			
 			$name = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($name);
