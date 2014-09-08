@@ -173,9 +173,9 @@ echo $this->element('census/year_options');
                                                 }
                                                 echo '<option value="'.$arrDropDownVal['id'].'" '.($defaults == $arrDropDownVal['id']?'selected="selected"':"").'>'.$arrDropDownVal['value'].'</option>';
                                             }
-                                            echo '</select></div>';
+                                            echo '</select>';
                                         }
-                              echo '</div>
+                              echo '</div></div>
                             </div>';
                     
                     
