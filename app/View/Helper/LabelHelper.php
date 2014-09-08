@@ -81,7 +81,8 @@ class LabelHelper extends AppHelper {
 			'past' => 'Past',
 			'noData' => 'No Data',
 			'amount' => 'Amount',
-			'total' => 'Total'
+			'total' => 'Total',
+			'fee' => 'Fee'
 		),
 		'date' => array(
 			'start' => 'Start Date',

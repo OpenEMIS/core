@@ -7,7 +7,7 @@ UPDATE `navigations` SET `order` = `order` + 2 WHERE `order` >= @ordering;
 
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) VALUES
 (NULL, 'Institution', null, 'InstitutionSites', 'Finance', 'Fees', 'InstitutionSiteFee', 'InstitutionSiteFee', 3, 0, @ordering, 1, 1, '0000-00-00 00:00:00'),
-(NULL, 'Institution', null, 'InstitutionSites', 'Finance', 'Students', 'studentFee', '^studentFee', 3, 0, @ordering+1, 1, 1, '0000-00-00 00:00:00');
+(NULL, 'Institution', null, 'InstitutionSites', 'Finance', 'Students', 'InstitutionSiteStudentFee', 'InstitutionSiteStudentFee', 3, 0, @ordering+1, 1, 1, '0000-00-00 00:00:00');
 
 -- Insert Finance Report navigations
 SELECT `order` + 1 into @ordering FROM `navigations` WHERE `module` = 'Institution' AND `header` = 'Reports' AND `title` = 'Dashboards';
