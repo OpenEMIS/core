@@ -88,10 +88,13 @@ class ControllerAction2Behavior extends ModelBehavior {
 			$model->create();
 			if ($model->saveAll($model->request->data)) {
 				$model->Message->alert('general.add.success');
-				$params = $model->controller->params->pass;
-				unset($params[0]);
-				$action = array('action' => get_class($model), 'index');
-				$action = array_merge($action, $params);
+				$pass = $model->controller->params->pass;
+				unset($pass[0]);
+				
+				$action = array('action' => get_class($model));
+				$params = isset($model->controller->viewVars['params']) ? $model->controller->viewVars['params'] : array();
+				$action[] = isset($params['back']) ? $params['back'] : 'index';
+				$action = array_merge($action, $pass);
 				return $model->redirect($action);
 			} else {
 				$this->log($model->validationErrors, 'debug');
@@ -108,10 +111,10 @@ class ControllerAction2Behavior extends ModelBehavior {
 			if ($model->request->is(array('post', 'put'))) {
 				if ($model->saveAll($model->request->data)) {
 					$model->Message->alert('general.edit.success');
-					$params = $model->controller->params->pass;
-					unset($params[0]);
+					$pass = $model->controller->params->pass;
+					unset($pass[0]);
 					$action = array('action' => get_class($model), 'view');
-					$action = array_merge($action, $params);
+					$action = array_merge($action, $pass);
 					return $model->redirect($action);
 				} else {
 					$this->log($model->validationErrors, 'debug');
@@ -136,10 +139,12 @@ class ControllerAction2Behavior extends ModelBehavior {
 				$model->Message->alert('general.delete.failed');
 			}
 			$model->Session->delete($model->alias . '.id');
-			$params = $model->controller->params->pass;
-			unset($params[0]);
-			$action = array('action' => get_class($model), 'index');
-			$action = array_merge($action, $params);
+			$pass = $model->controller->params->pass;
+			unset($pass[0]);
+			$action = array('action' => get_class($model));
+			$params = isset($model->controller->viewVars['params']) ? $model->controller->viewVars['params'] : array();
+			$action[] = isset($params['back']) ? $params['back'] : 'index';
+			$action = array_merge($action, $pass);
 			return $model->redirect($action);
 		}
 	}
