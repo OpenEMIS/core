@@ -45,7 +45,7 @@ class InstitutionSiteStudentFee extends AppModel {
 	);
 	
 	public $SchoolYear;
-
+	
 	public $validate = array(
 		'amount' => array(
 			'ruleRequired' => array(
@@ -98,7 +98,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			$selectedYear = key($yearOptions);
 		}
 		
-		$gradeOptions = $this->InstitutionSiteFee->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear);
+		$gradeOptions = $this->InstitutionSiteFee->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear, true);
 		if (empty($gradeOptions)) {
 			$gradeOptions = array('0' => __('No Data'));
 		}
@@ -106,23 +106,44 @@ class InstitutionSiteStudentFee extends AppModel {
 			$selectedGrade = key($gradeOptions);
 		}
 		
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('InstitutionSiteFee.*', 'SUM(InstitutionSiteStudentFee.amount) AS paid'),
+		$Student = ClassRegistry::init('InstitutionSiteClassStudent');
+		$data = $Student->find('all', array(
+			'fields' => array(
+				'InstitutionSiteFee.id',
+				'InstitutionSiteFee.total',
+				'SUM(StudentFee.amount) AS paid'
+			),
 			'contain' => array(
-				'InstitutionSiteFee' => array('fields' => array('total')),
-				'Student' => array(
-					'fields' => array('identification_no', 'first_name', 'last_name'),
-					'order' => array('first_name', 'last_name')
+				'InstitutionSiteClass',
+				'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'last_name'))
+			),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_fees', 'alias' => 'InstitutionSiteFee',
+					'conditions' => array(
+						'InstitutionSiteFee.school_year_id = ' . $selectedYear,
+						'InstitutionSiteFee.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteFee.education_grade_id = InstitutionSiteClassStudent.education_grade_id'
+					)
+				),
+				array(
+					'table' => 'student_fees', 'alias' => 'StudentFee',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'StudentFee.institution_site_fee_id = InstitutionSiteFee.id',
+						'StudentFee.student_id = InstitutionSiteClassStudent.student_id'
+					)
 				)
 			),
 			'conditions' => array(
-				'InstitutionSiteFee.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteFee.school_year_id' => $selectedYear,
-				'InstitutionSiteFee.education_grade_id' => $selectedGrade,
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteClass.school_year_id' => $selectedYear,
+				'InstitutionSiteClassStudent.education_grade_id' => $selectedGrade
 			),
-			'group' => array('student_id', 'institution_site_fee_id')
+			'group' => array('InstitutionSiteClassStudent.student_id', 'InstitutionSiteClassStudent.education_grade_id'),
+			'order' => array('Student.first_name')
 		));
+		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}

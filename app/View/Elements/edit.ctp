@@ -27,18 +27,19 @@ foreach($fields as $key => $field) {
 			case 'select':
 				if (isset($field['options'])) {
 					if (empty($field['options'])) {
-						$field['options'][''] = $this->Label->get('general.noData');
-					}
-					$options['options'] = $field['options'];
-				}
-				if (isset($field['default'])) {
-					$options['default'] = $field['default'];
-				} else {
-					if (!empty($this->request->data)) {
-						if(!empty($this->request->data[$fieldModel][$key])) {
-							$options['default'] = $this->request->data[$fieldModel][$key];
+						$options['empty'] = isset($field['empty'] ? $field['empty'] : $this->Label->get('general.noData');
+					} else {
+						if (isset($field['default'])) {
+							$options['default'] = $field['default'];
+						} else {
+							if (!empty($this->request->data)) {
+								if(!empty($this->request->data[$fieldModel][$key])) {
+									$options['default'] = $this->request->data[$fieldModel][$key];
+								}
+							}
 						}
 					}
+					$options['options'] = $field['options'];
 				}
 				break;
 				
