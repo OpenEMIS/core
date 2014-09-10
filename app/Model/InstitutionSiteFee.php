@@ -43,7 +43,8 @@ class InstitutionSiteFee extends AppModel {
 	);
 	
 	public $hasMany = array(
-		'InstitutionSiteFeeType' => array('dependent' => true)
+		'InstitutionSiteFeeType' => array('dependent' => true),
+		'InstitutionSiteStudentFee'
 	);
 	
 	private function cleanFeeTypes(&$data) {
@@ -118,6 +119,7 @@ class InstitutionSiteFee extends AppModel {
 			$selectedYear = key($yearOptions);
 		}
 		
+		// need to order by programmes, grades
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('InstitutionSiteFee.*', 'EducationGrade.name', 'EducationGrade.education_programme_id'),

@@ -14,9 +14,13 @@
 		if (!empty($data[$model]['payments'])) :
 			foreach ($data[$model]['payments'] as $i => $obj) : 
 				$paid += $obj[$model]['amount'];
+				$date = $obj[$model]['payment_date'];
+				if ($this->params['controller'] == 'InstitutionSites') {
+					$date = $this->Html->link($obj[$model]['payment_date'], array('action' => $model, 'view', $obj[$model]['id']));
+				}
 		?>
 			<tr>
-				<td><?php echo $this->Html->link($obj[$model]['payment_date'], array('action' => $model, 'view', $obj[$model]['id'])) ?></td>
+				<td><?php echo $date ?></td>
 				<td><?php echo trim($obj['CreatedUser']['first_name'] . ' - ' . $obj['CreatedUser']['last_name']) ?></td>
 				<td><?php echo $obj[$model]['comments'] ?></td>
 				<td class="cell-number"><?php echo $obj[$model]['amount'] ?></td>

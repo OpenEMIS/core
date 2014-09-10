@@ -18,7 +18,7 @@ $this->start('contentBody');
 				<tr>
 					<th><?php echo $this->Label->get('EducationProgramme.name') ?></th>
 					<th><?php echo $this->Label->get('EducationGrade.name') ?></th>
-					<th><?php echo sprintf('%s (%s)', $this->Label->get('FinanceFee.fee'), $currency) ?></th>
+					<th><?php echo sprintf('%s (%s)', $this->Label->get('StudentFee.fee'), $currency) ?></th>
 				</tr>
 			</thead>
 			<tbody>
