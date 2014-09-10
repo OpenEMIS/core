@@ -361,19 +361,13 @@ class LabelHelper extends AppHelper {
 			'InstitutionSiteFeeType' => 'Fee Types'
 		),
 		
-		'FinanceFee' => array(
-			'fee' => 'Fee',
-			'total' => 'Total',
-			'total_fee' => 'Total Fee',
+		'StudentFee' => array(
+			'title' => 'Fees',
+			'programme' => 'Programme',
+			'grade' => 'Grade',
 			'fees' => 'Fees',
-			'amount' => 'Amount',
-			'amount_currency' => 'Amount (%s)',
 			'paid' => 'Paid',
-			'outstanding' => 'Outstanding',
-			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
-			'no_payment' => 'No Payment Records.',
-			'no_fees' => 'No Fee Records.',
-			'created' => 'Created'
+			'outstanding' => 'Outstanding'
 		),
 
 		'CensusGrid' => array(
