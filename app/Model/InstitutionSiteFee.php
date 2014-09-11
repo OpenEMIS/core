@@ -44,7 +44,7 @@ class InstitutionSiteFee extends AppModel {
 	
 	public $hasMany = array(
 		'InstitutionSiteFeeType' => array('dependent' => true),
-		'InstitutionSiteStudentFee'
+		'InstitutionSiteStudentFee' => array('dependent' => true)
 	);
 	
 	private function cleanFeeTypes(&$data) {
@@ -193,6 +193,16 @@ class InstitutionSiteFee extends AppModel {
 		$this->fields['school_year_id']['attr'] = array('onchange' => "$('#reload').click()");
 		
 		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear);
+		// find the grades that already has fees
+		$existedGrades = $this->find('list', array(
+			'fields' => array('InstitutionSiteFee.education_grade_id', 'InstitutionSiteFee.education_grade_id'),
+			'conditions' => array(
+				'InstitutionSiteFee.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteFee.school_year_id' => $selectedYear
+			)
+		));
+		// remove the existed grades from the options
+		$gradeOptions = array_diff_key($gradeOptions, $existedGrades);
 		$this->fields['education_grade_id']['type'] = 'select';
 		$this->fields['education_grade_id']['options'] = $gradeOptions;
 		
@@ -259,10 +269,10 @@ class InstitutionSiteFee extends AppModel {
 			__('Education Grade')
 		);
 
-		$financeFeeTypeOptions = array_map('__', $this->InstitutionSiteFeeType->FeeType->getList());
+		$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList();
 
-		foreach($financeFeeTypeOptions as $ft){
-			$header[] = $ft;
+		foreach($feeTypeOptions as $id => $type){
+			$header[] = __($type);
 		}
 
 		$header[] = __('Total Fee') . ' ('.$currency.')';
@@ -275,81 +285,44 @@ class InstitutionSiteFee extends AppModel {
 		$index = $args[1];
 
 		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = array(
-				'SchoolYear.name', 
-				'SchoolYear.id', 
-				'EducationProgramme.name', 
-				'EducationGrade.id',
-				'EducationGrade.name',
-			);
-
-			$options['order'] = array('InstitutionSiteProgramme.school_year_id', 'EducationProgramme.id', 'EducationGrade.id');
-			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'EducationGrade.visible'=>1);
-			$options['joins'] = array(
-					array(
-						'table' => 'education_programmes',
-						'alias' => 'EducationProgramme',
-						'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+			$data = $this->find('all', array(
+				'fields' => array('InstitutionSiteFee.total', 'InstitutionSiteFee.education_grade_id'),
+				'contain' => array(
+					'SchoolYear' => array('fields' => array('name')),
+					'EducationGrade' => array(
+						'fields' => array('name'),
+						'EducationProgramme' => array('fields' => array('name'))
 					),
-					array(
-						'table' => 'institution_site_programmes',
-						'alias' => 'InstitutionSiteProgramme',
-						'conditions' => array(
-							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
-						)
-					),
-					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteProgramme.school_year_id')
-					),
-				);
-			$data = $this->EducationGrade->find('all', $options);
-
-			$fees = $this->find('all', array('conditions'=>array('InstitutionSiteFee.institution_site_id'=>$institutionSiteId), 'order'=>array('InstitutionSiteFee.school_year_id', 'InstitutionSiteFee.education_grade_id')));
-	
-			$financeFeeTypeOptions = array_map('__', $this->InstitutionSiteFeeType->FeeType->getList());
-
-			$newData = array();
-			foreach($data AS $row){
-				$tempRow = array();
+					'InstitutionSiteFeeType' => array('fields' => array('amount', 'fee_type_id'))
+				),
+				'conditions' => array('InstitutionSiteFee.institution_site_id' => $institutionSiteId),
+				'order' => array('SchoolYear.name', 'EducationGrade.order')
+			));
+			$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList();
+			
+			$csvData = array();
+			foreach ($data as $obj) {
+				$row = array();
+				$row[] = $obj['SchoolYear']['name'];
+				$row[] = $obj['EducationGrade']['EducationProgramme']['name'];
+				$row[] = $obj['EducationGrade']['name'];
 				
-				$schoolYear = $row['SchoolYear'];
-				$educationProgramme = $row['EducationProgramme'];
-				$educationGrade = $row['EducationGrade'];
-				
-				$tempRow[] = $schoolYear['name'];
-				$tempRow[] = $educationProgramme['name'];
-				$tempRow[] = $educationGrade['name'];
-				
-				$totalFee = 0;
-				if(!empty($financeFeeTypeOptions)){
-					$tempFT = array();
-					foreach($financeFeeTypeOptions as $key=>$ft){
-						$tempFT[$key] = number_format(0, 2);
-					}
-					foreach($fees as $fee){
-						if($fee['EducationGrade']['id']==$educationGrade['id'] && $fee['SchoolYear']['id']==$schoolYear['id']){
-							if(isset($fee['InstitutionSiteFeeType'])){
-								foreach($fee['InstitutionSiteFeeType'] as $key=>$val){
-									$tempFT[$val['fee_type_id']] = $val['fee'];
-									$totalFee += $val['fee'];
-								}
-							}
+				foreach ($feeTypeOptions as $typeId => $type) {
+					$amount = '';
+					foreach ($obj['InstitutionSiteFeeType'] as $fees) {
+						if ($typeId == $fees['fee_type_id']) {
+							$amount = number_format($fees['amount'], 2);
 							break;
 						}
 					}
-					foreach($tempFT as $val){
-						$tempRow[] = $val;
-					}
+					$row[] = $amount;
 				}
-				$tempRow[] = number_format($totalFee, 2);
-				$newData[] = $tempRow;
+				
+				$row[] = $obj['InstitutionSiteFee']['total'];
+				$csvData[] = $row;
 			}
 
-			return $newData;
+			return $csvData;
 		}
 	}
 
