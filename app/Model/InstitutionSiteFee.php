@@ -192,7 +192,7 @@ class InstitutionSiteFee extends AppModel {
 		$this->fields['school_year_id']['default'] = $selectedYear;
 		$this->fields['school_year_id']['attr'] = array('onchange' => "$('#reload').click()");
 		
-		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear);
+		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear, true);
 		// find the grades that already has fees
 		$existedGrades = $this->find('list', array(
 			'fields' => array('InstitutionSiteFee.education_grade_id', 'InstitutionSiteFee.education_grade_id'),
