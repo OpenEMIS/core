@@ -116,8 +116,8 @@ class InstitutionSitesController extends AppController {
 		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
 		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
 		'assessments' => 'AssessmentItemResult',
-		'fee' => 'InstitutionSiteFee',
-		'studentFee' => 'InstitutionSiteStudentFee',
+		'InstitutionSiteStudentFee',
+		'InstitutionSiteFee',
 		'InstitutionSitePosition'
 	);
 	
@@ -400,7 +400,7 @@ class InstitutionSitesController extends AppController {
 	}
 
 	public function add() {
-		$this->Navigation->addCrumb('Add new Institution');
+        $this->Navigation->addCrumb('Add new Institution');
 
 		$areaId = false;
 		$areaEducationId = false;
