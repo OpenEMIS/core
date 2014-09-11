@@ -27,7 +27,7 @@ foreach($fields as $key => $field) {
 			case 'select':
 				if (isset($field['options'])) {
 					if (empty($field['options'])) {
-						$options['empty'] = isset($field['empty'] ? $field['empty'] : $this->Label->get('general.noData');
+						$options['empty'] = isset($field['empty']) ? $field['empty'] : $this->Label->get('general.noData');
 					} else {
 						if (isset($field['default'])) {
 							$options['default'] = $field['default'];

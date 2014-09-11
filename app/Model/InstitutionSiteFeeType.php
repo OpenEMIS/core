@@ -22,6 +22,6 @@ class InstitutionSiteFeeType extends AppModel {
 		'FeeType' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'fee_type_id'
-		),
+		)
 	);
 }

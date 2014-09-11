@@ -151,6 +151,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$this->setVar(compact('data', 'selectedYear', 'yearOptions', 'selectedGrade', 'gradeOptions'));
 	}
 	
+	// Also used by Students.StudentFee.view
 	public function viewPayments($studentId, $institutionSiteFeeId) {
 		$alias = $this->alias;
 		$this->Student->contain();
@@ -232,9 +233,8 @@ class InstitutionSiteStudentFee extends AppModel {
 			__('Education Grade'),
 			__('OpenEMIS ID'),
 			__('First Name'),
-			__('Middle Name'),
 			__('Last Name'),
-			__('Preferred Name'),
+			__('Total Fees') . ' ('.$currency.')',
 			__('Total Paid') . ' ('.$currency.')',
 			__('Total Outstanding') . ' ('.$currency.')'
 		);
@@ -247,102 +247,73 @@ class InstitutionSiteStudentFee extends AppModel {
 		$index = $args[1];
 
 		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = array(
-				'SchoolYear.name', 
-				'EducationProgramme.name', 
-				'EducationGrade.name', 
-				'Student.identification_no', 
-				'Student.first_name',
-				'Student.middle_name',
-				'Student.last_name',
-				'Student.preferred_name',
-				'InstitutionSiteStudentFee.total_paid',
-				'InstitutionSiteStudentFee.total_outstanding',
-				'InstitutionSiteFee.total_fee'
-			);
-
-			$options['order'] = array('InstitutionSiteProgramme.school_year_id', 'EducationGrade.education_programme_id', 'EducationGrade.id', 'Student.first_name', 'Student.last_name');
-			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'EducationGrade.visible'=>1);
-			$options['joins'] = array(
-					array(
-						'table' => 'education_grades',
-						'alias' => 'EducationGrade',
-						'conditions' => array('EducationGrade.id = InstitutionSiteFee.education_grade_id')
+			$Student = ClassRegistry::init('InstitutionSiteClassStudent');
+			$data = $Student->find('all', array(
+				'fields' => array(
+					'SchoolYear.name',
+					'InstitutionSiteClassStudent.education_grade_id',
+					'InstitutionSiteFee.id',
+					'InstitutionSiteFee.total',
+					'SUM(StudentFee.amount) AS paid'
+				),
+				'contain' => array(
+					'EducationGrade' => array(
+						'fields' => array('EducationGrade.name'),
+						'EducationProgramme' => array('fields' => array('EducationProgramme.name'))
 					),
+					'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'last_name'))
+				),
+				'joins' => array(
 					array(
-						'table' => 'education_programmes',
-						'alias' => 'EducationProgramme',
-						'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
-					),
-					array(
-						'table' => 'institution_site_programmes',
-						'alias' => 'InstitutionSiteProgramme',
+						'table' => 'institution_site_classes', 'alias' => 'InstitutionSiteClass',
 						'conditions' => array(
-							'InstitutionSiteProgramme.institution_site_id = InstitutionSiteFee.institution_site_id',
-							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
-							'InstitutionSiteProgramme.school_year_id = InstitutionSiteFee.school_year_id',
+							'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
+							'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
 						)
 					),
 					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
+						'table' => 'institution_site_fees', 'alias' => 'InstitutionSiteFee',
 						'conditions' => array(
-							'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
+							'InstitutionSiteFee.school_year_id = InstitutionSiteClass.school_year_id',
+							'InstitutionSiteFee.institution_site_id = InstitutionSiteClass.institution_site_id',
+							'InstitutionSiteFee.education_grade_id = InstitutionSiteClassStudent.education_grade_id'
 						)
 					),
 					array(
-						'table' => 'institution_site_students',
-						'alias' => 'InstitutionSiteStudent',
-						'conditions' => array('InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id')
+						'table' => 'school_years', 'alias' => 'SchoolYear',
+						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
 					),
 					array(
-						'table' => 'students',
-						'alias' => 'Student',
-						'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
-					),
-					array(
+						'table' => 'student_fees', 'alias' => 'StudentFee',
 						'type' => 'LEFT',
-						'table' => 'institution_site_student_fees',
-						'alias' => 'InstitutionSiteStudentFee',
 						'conditions' => array(
-							'InstitutionSiteStudentFee.student_id = Student.id', 
-							'InstitutionSiteStudentFee.institution_site_fee_id = InstitutionSiteFee.id'
+							'StudentFee.institution_site_fee_id = InstitutionSiteFee.id',
+							'StudentFee.student_id = InstitutionSiteClassStudent.student_id'
 						)
 					)
-				);
-
-			$data = $this->InstitutionSiteFee->find('all', $options);
+				),
+				'group' => array('InstitutionSiteClassStudent.student_id', 'InstitutionSiteClassStudent.education_grade_id'),
+				'order' => array('SchoolYear.name', 'EducationGrade.order', 'Student.first_name', 'Student.last_name')
+			));
 			
-			$newData = array();
-			foreach($data AS $row){
-				$tempRow = array();
+			$csvData = array();
+			foreach ($data as $obj) {
+				$row = array();
 				
-				$schoolYear = $row['SchoolYear'];
-				$educationProgramme = $row['EducationProgramme'];
-				$educationGrade = $row['EducationGrade'];
-				$student = $row['Student'];
-
-				$institutionSiteStudentFee = (isset($row['InstitutionSiteStudentFee']) ? $row['InstitutionSiteStudentFee'] : null);
-			
-				$tempRow[] = $schoolYear['name'];
-				$tempRow[] = $educationProgramme['name'];
-				$tempRow[] = $educationGrade['name'];
-
-				$tempRow[] = $student['identification_no'];
-				$tempRow[] = $student['first_name'];
-				$tempRow[] = $student['middle_name'];
-				$tempRow[] = $student['last_name'];
-				$tempRow[] = $student['preferred_name'];
+				$row[] = $obj['SchoolYear']['name'];
+				$row[] = $obj['EducationGrade']['EducationProgramme']['name'];
+				$row[] = $obj['EducationGrade']['name'];
+				$row[] = $obj['Student']['identification_no'];
+				$row[] = $obj['Student']['first_name'];
+				$row[] = $obj['Student']['last_name'];
+				$row[] = number_format($obj['InstitutionSiteFee']['total'], 2);
+				$row[] = number_format($obj[0]['paid'], 2);
+				$row[] = number_format($obj['InstitutionSiteFee']['total'] - $obj[0]['paid'], 2);
 				
-				$tempRow[] = isset($institutionSiteStudentFee['total_paid']) ? number_format($institutionSiteStudentFee['total_paid'], 2) : number_format(0, 2);
-				$tempRow[] = isset($institutionSiteStudentFee['total_outstanding']) ? number_format($institutionSiteStudentFee['total_outstanding'], 2) : number_format($row['InstitutionSiteFee']['total_fee'], 2);
-
-				$newData[] = $tempRow;
+				$csvData[] = $row;
 			}
-
-			return $newData;
+			
+			return $csvData;
 		}
 	}
 
@@ -350,6 +321,4 @@ class InstitutionSiteStudentFee extends AppModel {
 		$index = $args[1];
 		return 'Report_Finance_Student';
 	}
-	
-
 }
