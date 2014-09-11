@@ -21,7 +21,7 @@
 		?>
 			<tr>
 				<td><?php echo $date ?></td>
-				<td><?php echo trim($obj['CreatedUser']['first_name'] . ' - ' . $obj['CreatedUser']['last_name']) ?></td>
+				<td><?php echo trim($obj['CreatedUser']['first_name'] . ' ' . $obj['CreatedUser']['last_name']) ?></td>
 				<td><?php echo $obj[$model]['comments'] ?></td>
 				<td class="cell-number"><?php echo $obj[$model]['amount'] ?></td>
 			</tr>
