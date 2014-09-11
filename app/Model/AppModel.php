@@ -43,6 +43,8 @@ class AppModel extends Model {
 	public $action;
 	public $fields;
 	
+	public $actsAs = array('Containable');
+	
 	public function setField($field, $obj, $order=0) {
 		$fields = $this->fields;
 		if (empty($fields)) {

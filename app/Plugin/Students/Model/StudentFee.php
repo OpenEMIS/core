@@ -15,80 +15,57 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentFee extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
-
-	public $useTable = 'institution_site_student_fees';
-
+	public $actsAs = array('ControllerAction2');
+	
 	public $belongsTo = array(
 		'InstitutionSiteFee',
-		'Students.Student',
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
+		'Students.Student'
 	);
-
-	public $hasMany = array(
-		'InstitutionSiteStudentFeeTransaction' => array(
-			'dependent' => true
-		)
-	);
-
-	public $headerDefault = 'Fees';
-
-	public $_action = 'fee';
 	
-	public function beforeAction($controller, $action) {
-		parent::beforeAction($controller, $action);
-		$controller->set('_action', $this->_action);
-		$controller->set('selectedAction', $this->_action . 'View');
-	}
-
-	public function fee($controller, $params) {
-		$controller->Navigation->addCrumb($this->headerDefault);
-
-		$studentId = $controller->Session->read('Student.id');
-		$data = $this->InstitutionSiteFee->find('all', array('recursive'=>2,'conditions'=>array('InstitutionSiteStudentFee.student_id'=>$studentId)));
+	public function beforeAction() {
+		parent::beforeAction();
+		$this->Navigation->addCrumb('Fees');
 		
-		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
-
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set(compact('data', 'currency'));
-	}
-
-	public function feeView($controller, $params) {
-		$studentId =$controller->Session->read('Student.id');
-		$studentFeeId = empty($params['pass'][0])? 0:$params['pass'][0];
-
-		
-		$data = $this->InstitutionSiteFee->find('first', array('recursive'=>2, 'conditions'=>array('InstitutionSiteStudentFee.id'=>$studentFeeId, 'InstitutionSiteStudentFee.student_id'=>$studentId)));
-		
-		if(empty($data)){
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action'=>'fee'));
-		}	
-		
-		$InstitutionSiteStudentFee = ClassRegistry::init('InstitutionSiteStudentFee');
-		$institutionSiteStudentFeeTransactions = $InstitutionSiteStudentFee->getListOfTransactions($controller, $studentFeeId);
-
-		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
-
-		$controller->set('subheader', $this->headerDefault . ' Details');
-		$controller->set(compact('data', 'studentFeeData', 'institutionSiteFeeTypes', 'institutionSiteStudentFeeTransactions', 'currency'));
+		$this->setVar('currency', $currency);
 	}
-
-
-
+	
+	public function index() {
+		$studentId = $this->Session->read('Student.id');
+		$alias = $this->alias;
+		$this->contain(array(
+			'InstitutionSiteFee' => array(
+				'SchoolYear' => array('fields' => array('name')),
+				'EducationGrade' => array(
+					'fields' => array('name'),
+					'EducationProgramme' => array('fields' => array('name'))
+				)
+			)
+		));
+		
+		$data = $this->find('all', array(
+			'fields' => array(
+				"$alias.student_id",
+				"$alias.institution_site_fee_id",
+				'InstitutionSiteFee.total',
+				'InstitutionSiteFee.school_year_id',
+				'InstitutionSiteFee.education_grade_id',
+				'SUM(StudentFee.amount) AS paid'
+			),
+			'conditions' => array("$alias.student_id" => $studentId),
+			'group' => array("$alias.student_id", "$alias.institution_site_fee_id")
+		));
+		
+		$this->setVar(compact('data'));
+	}
+	
+	public function view($studentId, $institutionSiteFeeId) {
+		$InstitutionSiteStudentFee = $this->InstitutionSiteFee->InstitutionSiteStudentFee;
+		$InstitutionSiteStudentFee->controller = $this->controller;
+		$InstitutionSiteStudentFee->viewPayments($studentId, $institutionSiteFeeId);
+		$this->render = 'view';
+		$this->setVar('model', 'InstitutionSiteStudentFee');
+		$this->fields = $InstitutionSiteStudentFee->fields;
+	}
 }
