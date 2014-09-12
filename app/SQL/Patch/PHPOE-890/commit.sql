@@ -11,7 +11,7 @@ INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `ti
 (NULL, 'Institution', null, 'InstitutionSites', 'Finance', 'Students', 'InstitutionSiteStudentFee', 'InstitutionSiteStudentFee', 3, 0, @ordering+1, 1, 1, '0000-00-00 00:00:00');
 
 -- Insert Finance Report navigations
-SELECT `order` + 1 into @ordering FROM `navigations` WHERE `module` = 'Institution' AND `header` = 'Reports' AND `title` = 'Dashboards';
+SELECT `order` + 1 into @ordering FROM `navigations` WHERE `module` = 'Institution' AND `header` = 'Reports' AND `title` = 'Details';
 UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @ordering;
 
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) VALUES
@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `student_fees` (
   KEY `institution_site_fee_id` (`institution_site_fee_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
+-- Insert InstitutionSite Fees
 SELECT `order` + 1, `parent_id` INTO @ordering, @parentId FROM `security_functions` WHERE `controller` = 'InstitutionSites' AND `category` = 'Finance' AND `name` = 'Bank Accounts';
 UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= @ordering;
 
@@ -97,8 +98,16 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (NULL, 'Fees', 'InstitutionSites', 'Institutions', 'Finance', @parentId, 'InstitutionSiteFee|InstitutionSiteFee.index|InstitutionSiteFee.view', '_view:InstitutionSiteFee.edit', '_view:InstitutionSiteFee.add', '_view:InstitutionSiteFee.remove', NULL, @ordering, 1, 1, '0000-00-00 00:00:00'),
 (NULL, 'Students', 'InstitutionSites', 'Institutions', 'Finance', @parentId, 'InstitutionSiteStudentFee|InstitutionSiteStudentFee.index|InstitutionSiteStudentFee.view|InstitutionSiteStudentFee.viewPayments', '_view:InstitutionSiteStudentFee.edit', '_view:InstitutionSiteStudentFee.add', '_view:InstitutionSiteStudentFee.remove', NULL, @ordering+1, 1, 1, '0000-00-00 00:00:00');
 
+-- Insert Student Fees
 SELECT `order` + 1, `parent_id` INTO @ordering, @parentId FROM `security_functions` WHERE `controller` = 'Students' AND `category` = 'Finance' AND `name` = 'Bank Accounts';
 UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= @ordering;
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
 (NULL, 'Fees', 'Students', 'Students', 'Finance', @parentId, 'StudentFee|StudentFee.index|StudentFee.view', NULL, NULL, NULL, NULL, @ordering, 1, 1, '0000-00-00 00:00:00');
+
+-- Insert InstitutionReports Fees
+SELECT `order` + 1, `parent_id` INTO @ordering, @parentId FROM `security_functions` WHERE `controller` = 'InstitutionReports' AND `category` = 'Reports' AND `name` = 'Details';
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= @ordering;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(NULL, 'Finance', 'InstitutionReports', 'Institutions', 'Reports', @parentId, 'finance', NULL, NULL, NULL, 'generate', @ordering, 1, 1, '0000-00-00 00:00:00');

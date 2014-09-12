@@ -29,13 +29,20 @@ UPDATE `security_functions` SET `name` = 'Students' WHERE `controller` = 'Instit
 UPDATE `security_functions` SET `name` = 'Finance' WHERE `controller` = 'Students' AND `category` = 'Details' AND `name` IN ('Fee', 'Fees');
 UPDATE `security_functions` SET `name` = 'Fees' WHERE `controller` = 'Students' AND `category` = 'Finance' AND `name` = 'Fee';
 
+-- Update order and delete permissions for InstitutionSite Fees
 SELECT `order` into @ordering FROM `security_functions` WHERE `controller` = 'InstitutionSites' AND `category` = 'Finance' AND `name` = 'Fees';
 UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` > @ordering;
 DELETE FROM `security_functions` WHERE `controller` = 'InstitutionSites' AND `category` = 'Finance' AND `name` IN ('Fees', 'Students');
 
+-- Update order and delete permissions for Student Fees
 SELECT `order` into @ordering FROM `security_functions` WHERE `controller` = 'Students' AND `category` = 'Finance' AND `name` = 'Fees';
 UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @ordering;
 DELETE FROM `security_functions` WHERE `controller` = 'Students' AND `category` = 'Finance' AND `name` = 'Fees';
+
+-- Update order and delete permissions for InstitutionReport Fees
+SELECT `order` into @ordering FROM `security_functions` WHERE `controller` = 'InstitutionReports' AND `category` = 'Reports' AND `name` = 'Finance';
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @ordering;
+DELETE FROM `security_functions` WHERE `controller` = 'InstitutionReports' AND `category` = 'Reports' AND `name` = 'Finance';
 
 DROP TABLE IF EXISTS `student_fees`;
 DROP TABLE IF EXISTS `institution_site_fees`;
