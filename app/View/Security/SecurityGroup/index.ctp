@@ -14,7 +14,7 @@ $this->assign('contentClass', 'search');
 
 $this->start('contentBody');
 echo $this->Form->create($model, array(
-	'url' => array('controller' => 'Security', 'action' => 'groups'),
+	'url' => array('controller' => 'Security', 'action' => 'SecurityGroup'),
 	'inputDefaults' => array('label' => false, 'div' => false)
 ));
 
@@ -59,7 +59,7 @@ echo $this->Form->create($model, array(
 				$name = $this->Utility->highlight($searchField, $obj['name']);
 			?>
 			<tr>
-				<td><?php echo $this->Html->link($name, array('action' => $model, 'view', $obj['id'])); ?></td>
+				<td><?php echo $this->Html->link($name, array('action' => $model, 'view', $obj['id']), array('escape' => false)); ?></td>
 				<td><?php echo $obj['count']; ?></td>
 			</tr>
 			<?php endforeach ?>
