@@ -1,6 +1,6 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
+$this->assign('contentHeader', $contentHeader);
 
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'parent' => $parentId), array('class' => 'divider'));
