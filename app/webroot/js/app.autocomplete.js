@@ -46,7 +46,7 @@ var Autocomplete = {
 	},
 
 	attachAutoComplete: function(element, callback) {
-		var url = $(element).attr('url');
+		var url = getRootURL() + $(element).attr('url');
 		$(element).autocomplete({
 			source: url,
 			minLength: 2,

@@ -91,13 +91,13 @@ class CensusController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 
-		if ($this->Session->check('InstitutionSiteId')) {
-			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
-			$institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
+		if ($this->Session->check('InstitutionSite.id')) {
+			$this->institutionSiteId = $this->Session->read('InstitutionSite.id');
+			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
 
-			$this->bodyTitle = $institutionSiteName;
+			$this->bodyTitle = $name;
 			$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-			$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
 		} else {
 			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 		}
@@ -127,7 +127,7 @@ class CensusController extends AppController {
 	
 	public function verifications() {
 		$this->Navigation->addCrumb('Verifications');
-		$institutionSiteId = $this->Session->read('InstitutionSiteId');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$data = $this->CensusVerification->getVerifications($institutionSiteId);
 		$verifiedYears = $this->SchoolYear->getYearListForVerification($institutionSiteId);
 		$unverifiedYears = $this->SchoolYear->getYearListForVerification($institutionSiteId, false);
@@ -138,7 +138,7 @@ class CensusController extends AppController {
 	
 	public function verifies() {
 		if($this->request->is('ajax')) {
-			$institutionSiteId = $this->Session->read('InstitutionSiteId');
+			$institutionSiteId = $this->Session->read('InstitutionSite.id');
 			if($this->request->is('get')) {
 				$this->layout = 'ajax';
 				$status = $this->params['pass'][0];

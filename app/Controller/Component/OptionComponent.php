@@ -23,7 +23,9 @@ class OptionComponent extends Component {
 			'enableOptions' => array(0 => __('Disabled'),1 => __('Enabled')),
 			'teachOptions' => array(0 => __('Non-Teaching'), 1 => __('Teaching')),
 			'dateStatusOptions' => array(0 => __('Date Disabled'), 1 => __('Date Enabled')),
-			'gender' => array('M' => __('Male'), 'F' => __('Female'))
+			'gender' => array('M' => __('Male'), 'F' => __('Female')),
+			'status' => array( 1 => __('Active'), 0 => __('Inactive')),
+			'staffTypes' => array(1 => __('Teaching'), 0 => __('Non-Teaching'))
 		);
 		
 		$index = explode('.', $code);
