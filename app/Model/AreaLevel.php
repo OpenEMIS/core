@@ -17,68 +17,50 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AreaLevel extends AppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction2');
+	
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	
 	public $hasMany = array('Area');
 	
-	public function beforeAction($controller, $action) {
-        parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb('Area Levels');
-		$controller->set('header', __('Area Levels'));
-    }
+	public $validate = array(
+		'name' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				 'message' => 'Please enter the name.'
+			)
+		)
+	);
 	
-	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'name', 'labelKey' => ''),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-	
-	public function levels($controller, $params) {
-		$data = $this->find('all', array('order' => array('level')));
-		$controller->set(compact('data'));
-	}
-	
-	public function levelsAdd($controller, $params) {
-		if($controller->request->is('post') || $controller->request->is('put')) {
-			$controller->request->data[$this->alias]['level'] = $this->field('level', array(), 'level DESC') + 1;
-			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'levels'));
-			}
-		}
-	}
-	
-	public function levelsView($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$data = $this->findById($id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('data', 'fields'));
-	}
-	
-	public function levelsEdit($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$data = $this->findById($id);
+	public function beforeAction() {
+        parent::beforeAction();
 		
-		if(!empty($data)) {
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.edit.success');
-					return $controller->redirect(array('action' => 'levelsView', $id));
-				}
-			} else {
-				$controller->request->data = $data;
-			}
-		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'levels'));
+		if ($this->action == 'add') {
+			$maxLevel = $this->find('first', array('fields' => ('MAX(AreaLevel.level) AS maxLevel')));
+			$this->fields['level']['type'] = 'hidden';
+			$this->fields['level']['value'] = $maxLevel[0]['maxLevel']+1;
+		} else if ($this->action == 'edit') {
+			$this->fields['level']['visible'] = false;
 		}
+		
+		$this->Navigation->addCrumb('Area Levels');
+		$this->setVar('contentHeader', __('Area Levels'));
+    }
+	
+	public function index() {
+		$data = $this->find('all', array('order' => array('level')));
+		$this->setVar(compact('data'));
 	}
 }

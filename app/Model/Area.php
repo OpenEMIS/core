@@ -24,7 +24,19 @@ class Area extends AppModel {
 		'ControllerAction2'
 	);
 	
-	public $belongsTo = array('AreaLevel');
+	public $belongsTo = array(
+		'AreaLevel',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	
 	public $hasMany = array(
 		'TrainingSession' => array(
@@ -62,30 +74,17 @@ class Area extends AppModel {
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 		$this->fields['order']['visible'] = false;
+		$this->fields['visible']['type'] = 'select';
+		$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
+		
+		if ($this->action == 'view') {
+			$this->fields['area_level_id']['dataModel'] = 'AreaLevel';
+			$this->fields['area_level_id']['dataField'] = 'name';
+		}
 		
 		$this->Navigation->addCrumb('Areas');
-		$this->setVar('header', __('Areas'));
+		$this->setVar('contentHeader', __('Areas'));
     }
-	/*
-	public function getDisplayFields($controller) {
-		$yesnoOptions = $controller->Option->get('yesno');
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'name'),
-                array('field' => 'code'),
-				array('field' => 'name', 'model' => 'AreaLevel'),
-				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-	*/
 	
 	public function index() {
 		$params = $this->controller->params;
@@ -104,7 +103,7 @@ class Area extends AppModel {
 		$this->setVar(compact('paths', 'data', 'parentId', 'maxLevel'));
 	}
 	
-	public function areasReorder($controller, $params) {
+	public function reorder() {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
@@ -120,13 +119,17 @@ class Area extends AppModel {
 		$this->setVar(compact('paths', 'data', 'parentId'));
 	}
 	
-	public function areasMove($controller, $params) {
+	public function move() {
 		if ($this->request->is(array('post', 'put'))) {
+			$params = $this->controller->params;
 			$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 			$data = $this->request->data;
+			if ($parentId == 0) {
+				$parentId = 1;
+			}
 			$conditions = array('parent_id' => $parentId);
 			$this->moveOrder($data, $conditions);
-			$redirect = array('action' => 'areasReorder', 'parent' => $parentId);
+			$redirect = array('action' => get_class($this), 'reorder', 'parent' => $parentId);
 			return $this->redirect($redirect);
 		}
 	}
@@ -152,7 +155,7 @@ class Area extends AppModel {
 			$this->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
 			if ($this->save($this->request->data)) {
 				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => 'areasView', 'parent' => $parentId, $this->id));
+				return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $this->id));
 			}
 		}
 		$this->setVar(compact('data', 'fields', 'parentId', 'pathToString', 'areaLevelOptions'));
@@ -170,8 +173,8 @@ class Area extends AppModel {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$data = $this->findById($id);
-		//$fields = $this->getDisplayFields($controller);
-		$yesnoOptions = $controller->Option->get('yesno');
+		
+		$yesnoOptions = $this->controller->Option->get('yesno');
 		
 		if(!empty($data)) {
 			$this->setVar(compact('yesnoOptions', 'parentId'));
