@@ -25,11 +25,6 @@ var InstitutionSiteStudents = {
 	init: function() {
 		$('.btn_save').click(InstitutionSiteStudents.saveStudentList);
 		this.attachSortOrder();
-		
-		if($("#studentNameAutoComplete").length === 1){
-			var autoCompleteUrl = getRootURL() + $('#AddStudentForm').attr('autocompleteURL');
-			InstitutionSiteStudents.attachAutoComplete("#studentNameAutoComplete", autoCompleteUrl , InstitutionSiteStudents.selectAutocomplateField);
-		}
 	},
 	
 	navigate: function() {
@@ -58,12 +53,12 @@ var InstitutionSiteStudents = {
 		var ajaxSuccess = function(data, textStatus) {
 			$('#InstitutionSiteProgrammeId').html(data);
 			$.ajax({
-					type: 'GET',
-					dataType: 'json',
-					url: yearURL,
-					data: ajaxParams,
-					success: ajaxYearSuccess
-				});
+				type: 'GET',
+				dataType: 'json',
+				url: yearURL,
+				data: ajaxParams,
+				success: ajaxYearSuccess
+			});
 		//	$.unmask({id: maskId, callback: callback});
 		};
 		
@@ -150,38 +145,21 @@ var InstitutionSiteStudents = {
 		var id = row.attr('row-id');
 		var idNo = row.attr('id-no');
 		var fName = row.attr('first-name');
-                var mName = row.attr('middle-name');
+		var mName = row.attr('middle-name');
 		var lName = row.attr('last-name');
-                var pName = row.attr('preferred-name');
+		var pName = row.attr('preferred-name');
 		var gender = row.attr('gender');
 		
 		$('#StudentId').val(id);
 		$('#IdentificationNo').html(idNo);
 		$('#FirstName').html(fName);
-                $('#MiddleName').html(mName);
+		$('#MiddleName').html(mName);
 		$('#LastName').html(lName);
-                $('#PreferredName').html(pName);
+		$('#PreferredName').html(pName);
 		$('#Gender').html(gender);
 	},
 	
 	validateStudentAdd: function() {
 		return $('#StudentId').val()!=0 && $('#InstitutionSiteProgrammeId').val()>0;
-	},
-	
-	attachAutoComplete: function(element, url, callback) {
-		$(element).autocomplete({
-			source: url,
-			minLength: 3,
-			select: callback,
-			focus: function() {
-// prevent value inserted on focus
-				return false;
-			}
-		});
-	},
-	selectAutocomplateField: function(event, ui) {
-		$('#studentNameAutoComplete').val(ui.item.label);
-		$('#StudentId').val(ui.item.value);
-		return false;
 	}
 }

@@ -48,7 +48,9 @@ class StudentsController extends StudentsAppController {
 		'AccessControl',
 		'Wizard'
 	);
+	
 	public $modules = array(
+		// old ControllerAction
 		'healthHistory' => 'Students.StudentHealthHistory',
 		'healthFamily' => 'Students.StudentHealthFamily',
 		'healthImmunization' => 'Students.StudentHealthImmunization',
@@ -70,7 +72,10 @@ class StudentsController extends StudentsAppController {
 		'guardians' => 'Students.StudentGuardian',
 		'behaviour' => 'Students.StudentBehaviour',
 		'additional' => 'Students.StudentCustomField',
-		'fee' => 'Students.StudentFee'
+		'fee' => 'Students.studentFee',
+		// new ControllerAction
+		'InstitutionSiteStudent',
+		'Programme' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {
@@ -87,7 +92,7 @@ class StudentsController extends StudentsAppController {
 		} else if ($this->Session->check('Student.data.name')) {
 			$name = $this->Session->read('Student.data.name');
 			$this->studentId = $this->Session->read('Student.id'); // for backward compatibility
-			if ($this->action != 'view') {
+			if ($this->action != 'view' && $this->action != 'InstitutionSiteStudent') {
 				$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 			}
 			$this->bodyTitle = $name;
@@ -95,6 +100,12 @@ class StudentsController extends StudentsAppController {
 	}
 
 	public function index() {
+		// redirect to InstitutionSiteStudent index page if institution is selected
+		if ($this->Session->check('InstitutionSite.id')) {
+			return $this->redirect(array('action' => 'InstitutionSiteStudent'));
+		}
+		// end redirect
+		
 		$this->Navigation->addCrumb('List of Students');
 		//$this->Session->delete('Student');
 		
@@ -245,7 +256,7 @@ class StudentsController extends StudentsAppController {
 		$this->Wizard->start();
 		return $this->redirect(array('action' => 'edit'));
 	}
-
+	
 	public function edit() {
 		$model = 'Student';
 		$id = null;
