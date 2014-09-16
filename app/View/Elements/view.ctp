@@ -25,7 +25,14 @@ foreach ($fields as $key => $field) {
 		}
 		
 		if (array_key_exists($key, $data[$fieldModel]) || $fieldType == 'element') {
-			$value = isset($data[$fieldModel][$key]) ? $data[$fieldModel][$key] : '';
+			$value = '';
+			if (array_key_exists('dataModel', $field) && array_key_exists('dataField', $field)) {
+				$dataModel = $field['dataModel'];
+				$dataField = $field['dataField'];
+				$value = $data[$dataModel][$dataField];
+			} else if (isset($data[$fieldModel][$key])) {
+				$value = $data[$fieldModel][$key];
+			}
 			
 			switch ($fieldType) {
 				case 'select':
@@ -53,6 +60,10 @@ foreach ($fields as $key => $field) {
 					}
 					$value = $this->element($element);
 					break;
+					
+				case 'date':
+					$value = $this->Utility->formatDate($value, null, false);
+					break;
 
 				case 'modified_user_id':
 				case 'created_user_id':
@@ -72,7 +83,7 @@ foreach ($fields as $key => $field) {
 			if (!array_key_exists('override', $field)) {
 				$html .= sprintf($row, $label, $class, $value);
 			} else {
-				echo $value;
+				$html .= '<div class="row">' . $value . '</div>';
 			}
 		} else {
 			pr(sprintf('Field [%s] does not exist in Model [%s]', $key, $fieldModel));

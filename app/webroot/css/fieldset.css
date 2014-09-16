@@ -126,3 +126,5 @@ fieldset.section_group .form-control {
 	padding: 4px 6px;
 	height: 25px;
 }
+
+fieldset .table { margin-bottom: 0; }
