@@ -194,6 +194,7 @@ class WizardComponent extends Component {
 	
 	public function start() {
 		$links = $this->getLinks($this->module);
+		$this->Session->delete($this->module);
 		$this->Session->write($this->module . '.wizard.links', $links);
 		$this->Session->write($this->module . '.wizard.mode', true);
 		$this->setCurrent(0);
