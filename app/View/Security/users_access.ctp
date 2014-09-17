@@ -39,67 +39,70 @@ echo $this->Form->hidden('table_id', array('id' => 'TableId', 'value' => 0));
 		));
 		?>
 	</div>
-	
+
 	<div class="row">
 		<div class="search_wrapper">
-			<?php 
-				echo $this->Form->input('SearchField', array(
-					'id' => 'SearchField',
-					'label' => false,
-					'div' => false,
-					'class' => 'default',
-					'placeholder' => __('Identification No, First Name or Last Name')
-				));
+			<?php
+			echo $this->Form->input('SearchField', array(
+				'id' => 'SearchField',
+				'label' => false,
+				'div' => false,
+				'class' => 'default',
+				'placeholder' => __('Identification No, First Name or Last Name')
+			));
 			?>
 			<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
 		</div>
 		<span class="left icon_search" url="Security/usersSearch/2" onClick="Security.usersSearch(this)"></span>
 	</div>
-	
+
 	<div class="table_scrollable">
-		<div class="table table_header">
-			<div class="table_head">
-				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
-				<div class="table_cell"><?php echo __('First Name'); ?></div>
-				<div class="table_cell"><?php echo __('Last Name'); ?></div>
-				<div class="table_cell cell_icon_action"></div>
-			</div>
-		</div>
 		<div class="list_wrapper hidden" limit="4" style="height: 109px;">
-			<div class="table" url="Security/usersAddAccess/<?php echo $data['id']; ?>">
-				<div class="table_body"></div>
+		<table class="table table-striped table-hover table-bordered">
+			<thead>
+				<tr>
+				<th class="cell_id_no"><?php echo __('Identification No'); ?></th>
+				<th><?php echo __('First Name'); ?></th>
+				<th><?php echo __('Last Name'); ?></th>
+				<th class="cell_icon_action"></th>
+				</tr>
+			</thead>
+		
+			<tbody class="table_body"></tbody>
+		
+		</table>
 			</div>
-		</div>
 	</div>
 </fieldset>
 
-<div class="table full_width">
-	<div class="table_head">
-		<div class="table_cell" style="width: 200px;"><?php echo __('OpenEMIS ID'); ?></div>
-		<div class="table_cell"><?php echo __('Name'); ?></div>
-		<div class="table_cell cell_module"><?php echo __('Module'); ?></div>
-		<div class="table_cell cell_icon_action"></div>
-	</div>
-	
-	<div class="table_body">
-		<?php 
-			foreach($data['access'] as $row) {
-				$obj = $row['SecurityUserAccess'];
-				$userId = $obj['security_user_id'];
-				$id = $obj['table_id'];
-				$name = $obj['table_name'];
-				$params = sprintf('%s/%s/%s/', $userId, $id, $name);
-		?>
-			<div class="table_row">
-				<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-				<div class="table_cell"><?php echo $obj['name']; ?></div>
-				<div class="table_cell"><?php echo $obj['table_name']; ?></div>
-				<div class="table_cell">
+<table class="table table-striped table-hover table-bordered">
+	<thead>
+		<tr>
+			<th style="width: 200px;"><?php echo __('OpenEMIS ID'); ?></th>
+			<th><?php echo __('Name'); ?></th>
+			<th class="cell_module"><?php echo __('Module'); ?></th>
+			<th class="cell_icon_action"></th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php
+		foreach ($data['access'] as $row) {
+			$obj = $row['SecurityUserAccess'];
+			$userId = $obj['security_user_id'];
+			$id = $obj['table_id'];
+			$name = $obj['table_name'];
+			$params = sprintf('%s/%s/%s/', $userId, $id, $name);
+			?>
+			<tr>
+				<td><?php echo $obj['identification_no']; ?></td>
+				<td><?php echo $obj['name']; ?></td>
+				<td><?php echo $obj['table_name']; ?></td>
+				<td>
 					<span class="icon_delete" url="Security/usersDeleteAccess/<?php echo $params; ?>" onclick="Security.removeAccessUser(this)"></span>
-				</div>
-			</div>
+				</td>
+			</tr>
 		<?php } ?>
-	</div>
-</div>
+	</tbody>
+</table>
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>
