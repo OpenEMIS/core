@@ -20,16 +20,16 @@ class EducationController extends AppController {
 	public $uses = array('EducationSystem', 'EducationLevel', 'EducationProgramme', 'EducationProgrammeOrientation', 'EducationGrade', 'EducationGradeSubject');
 	
 	public $modules = array(
-		'systems' => 'EducationSystem',
-		'levels' => 'EducationLevel',
-		'cycles' => 'EducationCycle',
-		'programmes' => 'EducationProgramme',
-		'gradeSubjects' => 'EducationGradeSubject',
-		'grades' => 'EducationGrade',
-		'subjects' => 'EducationSubject',
-		'certifications' => 'EducationCertification',
-		'orientations' => 'EducationProgrammeOrientation',
-		'fields' => 'EducationFieldOfStudy'
+		'EducationSystem',
+		'EducationLevel',
+		'EducationCycle',
+		'EducationProgramme',
+		'EducationGrade',
+		'EducationGradeSubject',
+		'EducationSubject',
+		'EducationCertification',
+		'EducationProgrammeOrientation',
+		'EducationFieldOfStudy'
 	);
 	
 	public function beforeFilter() {
@@ -40,17 +40,17 @@ class EducationController extends AppController {
 		
 		$actionOptions = array(
 			//'index' => __('Education Structure'),
-			'systems' => __('Education Systems'),
-			'subjects' => __('Education Subjects'),
-			'certifications' => __('Certifications'),
-			'fields' => __('Field of Study'),
-			'orientations' => __('Programme Orientation')
+			'EducationSystem' => __('Education Systems'),
+			'EducationSubject' => __('Education Subjects'),
+			'EducationCertification' => __('Certifications'),
+			'EducationFieldOfStudy' => __('Field of Study'),
+			'EducationProgrammeOrientation' => __('Programme Orientations')
 		);
 		$this->set('actionOptions', $actionOptions);
 	}
 	
 	public function index() {
-		return $this->redirect(array('action' => 'systems'));
+		return $this->redirect(array('action' => 'EducationSystem'));
 		//$this->Navigation->addCrumb('Education Structure');
 	}
 	
