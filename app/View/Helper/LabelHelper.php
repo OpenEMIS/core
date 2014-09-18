@@ -170,6 +170,9 @@ class LabelHelper extends AppHelper {
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
 		),
+		'InstitutionSiteProgramme' => array(
+			'title' => 'Programmes'
+		),
 		'InstitutionSiteClass' => array(
 			'no_of_seats' => 'Seats',
 			'no_of_shifts' => 'Shifts',
