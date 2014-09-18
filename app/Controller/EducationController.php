@@ -17,19 +17,17 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class EducationController extends AppController {
-	public $uses = array('EducationSystem', 'EducationLevel', 'EducationProgramme', 'EducationProgrammeOrientation', 'EducationGrade', 'EducationGradeSubject');
-	
 	public $modules = array(
-		'systems' => 'EducationSystem',
-		'levels' => 'EducationLevel',
-		'cycles' => 'EducationCycle',
-		'programmes' => 'EducationProgramme',
-		'gradeSubjects' => 'EducationGradeSubject',
-		'grades' => 'EducationGrade',
-		'subjects' => 'EducationSubject',
-		'certifications' => 'EducationCertification',
-		'orientations' => 'EducationProgrammeOrientation',
-		'fields' => 'EducationFieldOfStudy'
+		'EducationSystem',
+		'EducationLevel',
+		'EducationCycle',
+		'EducationProgramme',
+		'EducationGrade',
+		'EducationGradeSubject',
+		'EducationSubject',
+		'EducationCertification',
+		'EducationProgrammeOrientation',
+		'EducationFieldOfStudy'
 	);
 	
 	public function beforeFilter() {
@@ -40,48 +38,41 @@ class EducationController extends AppController {
 		
 		$actionOptions = array(
 			//'index' => __('Education Structure'),
-			'systems' => __('Education Systems'),
-			'subjects' => __('Education Subjects'),
-			'certifications' => __('Certifications'),
-			'fields' => __('Field of Study'),
-			'orientations' => __('Programme Orientation')
+			'EducationSystem' => __('Education Systems'),
+			'EducationSubject' => __('Education Subjects'),
+			'EducationCertification' => __('Certifications'),
+			'EducationFieldOfStudy' => __('Field of Study'),
+			'EducationProgrammeOrientation' => __('Programme Orientations')
 		);
 		$this->set('actionOptions', $actionOptions);
 	}
 	
 	public function index() {
-		return $this->redirect(array('action' => 'systems'));
+		return $this->redirect(array('action' => 'EducationSystem'));
 		//$this->Navigation->addCrumb('Education Structure');
 	}
 	
-	public function reorder() {
-		$moduleKey = isset($this->params->pass[0]) ? $this->params->pass[0] : null;
-		
-		if(!is_null($moduleKey) && array_key_exists($moduleKey, $this->modules)) {
-			$model = $this->modules[$moduleKey];
+	public function reorder($moduleKey=null) {
+		if(!is_null($moduleKey) && in_array($moduleKey, $this->modules)) {
+			$model = $moduleKey;
 			$modelObj = ClassRegistry::init($model);
-			$header = __($modelObj->_header);
-			$_action = $modelObj->_action;
 			$conditions = $this->params->named;
 			$data = $modelObj->find('all', array(
 				'conditions' => $conditions,
 				'order' => array($model.'.order')
 			));
 			
-			$this->set(compact('data', 'model', 'header', '_action', 'conditions'));
-			$this->Navigation->addCrumb($modelObj->_header);
+			$this->set(compact('data', 'model', 'conditions'));
+			$this->Navigation->addCrumb('Reorder');
 		} else {
 			return $this->redirect(array('action' => 'index'));
 		}
 	}
 	
-	public function move() {
-		$moduleKey = isset($this->params->pass[0]) ? $this->params->pass[0] : null;
+	public function move($moduleKey=null) {
 		if ($this->request->is('post') || $this->request->is('put')) {
 			$data = $this->request->data;
-			$model = $this->modules[$moduleKey];
-			$modelObj = ClassRegistry::init($model);
-			
+			$modelObj = ClassRegistry::init($moduleKey);
 			$conditions = $this->params->named;
 			$modelObj->moveOrder($data, $conditions);
 			$redirect = array('action' => 'reorder', $moduleKey);
