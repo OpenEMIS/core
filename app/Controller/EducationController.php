@@ -17,8 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class EducationController extends AppController {
-	public $uses = array('EducationSystem', 'EducationLevel', 'EducationProgramme', 'EducationProgrammeOrientation', 'EducationGrade', 'EducationGradeSubject');
-	
 	public $modules = array(
 		'EducationSystem',
 		'EducationLevel',
@@ -54,34 +52,27 @@ class EducationController extends AppController {
 		//$this->Navigation->addCrumb('Education Structure');
 	}
 	
-	public function reorder() {
-		$moduleKey = isset($this->params->pass[0]) ? $this->params->pass[0] : null;
-		
-		if(!is_null($moduleKey) && array_key_exists($moduleKey, $this->modules)) {
-			$model = $this->modules[$moduleKey];
+	public function reorder($moduleKey=null) {
+		if(!is_null($moduleKey) && in_array($moduleKey, $this->modules)) {
+			$model = $moduleKey;
 			$modelObj = ClassRegistry::init($model);
-			$header = __($modelObj->_header);
-			$_action = $modelObj->_action;
 			$conditions = $this->params->named;
 			$data = $modelObj->find('all', array(
 				'conditions' => $conditions,
 				'order' => array($model.'.order')
 			));
 			
-			$this->set(compact('data', 'model', 'header', '_action', 'conditions'));
-			$this->Navigation->addCrumb($modelObj->_header);
+			$this->set(compact('data', 'model', 'conditions'));
+			$this->Navigation->addCrumb('Reorder');
 		} else {
 			return $this->redirect(array('action' => 'index'));
 		}
 	}
 	
-	public function move() {
-		$moduleKey = isset($this->params->pass[0]) ? $this->params->pass[0] : null;
+	public function move($moduleKey=null) {
 		if ($this->request->is('post') || $this->request->is('put')) {
 			$data = $this->request->data;
-			$model = $this->modules[$moduleKey];
-			$modelObj = ClassRegistry::init($model);
-			
+			$modelObj = ClassRegistry::init($moduleKey);
 			$conditions = $this->params->named;
 			$modelObj->moveOrder($data, $conditions);
 			$redirect = array('action' => 'reorder', $moduleKey);
