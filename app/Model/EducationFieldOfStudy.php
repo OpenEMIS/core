@@ -17,8 +17,20 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationFieldOfStudy extends AppModel {
-	public $actsAs = array('ControllerAction', 'Reorder');
-	public $belongsTo = array('EducationProgrammeOrientation');
+	public $actsAs = array('ControllerAction2', 'Reorder');
+	public $belongsTo = array(
+		'EducationProgrammeOrientation',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	public $hasMany = array('EducationProgramme');
 	
 	public $validate = array(
@@ -42,77 +54,30 @@ class EducationFieldOfStudy extends AppModel {
 		'fullname' => "CONCAT((SELECT name FROM `education_programme_orientations` WHERE id = EducationFieldOfStudy.education_programme_orientation_id), ' - ', EducationFieldOfStudy.name)"
 	);
 	
-	public $_action = 'fields';
-	public $_header = 'Field of Study';
-	
-	public function beforeAction($controller, $action) {
-		parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb($this->_header);
-		$controller->set('header', __($this->_header));
-		$controller->set('_action', $this->_action);
-		$controller->set('selectedAction', $this->_action);
-	}
-	
-	public function getDisplayFields($controller) {
-		$yesnoOptions = $controller->Option->get('yesno');
-		$orientationOptions = $this->EducationProgrammeOrientation->find('list', array('order' => 'order'));
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name'),
-				array('field' => 'education_programme_orientation_id', 'type' => 'select', 'options' => $orientationOptions),
-				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-	
-	public function fields($controller, $params) {
-		$data = $this->find('all', array('order' => $this->alias.'.order'));
-		$controller->set(compact('data'));
-	}
-	
-	public function fieldsAdd($controller, $params) {
-		if($controller->request->is('post') || $controller->request->is('put')) {
-			$controller->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
-			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => $this->_action));
-			}
-		}
-	}
-	
-	public function fieldsView($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$data = $this->findById($id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('data', 'fields'));
-	}
-	
-	public function fieldsEdit($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$data = $this->findById($id);
+	public function beforeAction() {
+		parent::beforeAction();
+		$this->Navigation->addCrumb('Field of Study');
 		
-		if(!empty($data)) {
-			$fields = $this->getDisplayFields($controller);
-			$controller->set(compact('fields'));
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.edit.success');
-					return $controller->redirect(array('action' => $this->_action.'View', $id));
-				}
-			} else {
-				$controller->request->data = $data;
-			}
+		$this->fields['order']['visible'] = false;
+		$this->fields['education_programme_orientation_id']['type'] = 'select';
+		$this->fields['education_programme_orientation_id']['options'] = $this->EducationProgrammeOrientation->find('list', array('order' => 'order'));
+		if ($this->action == 'add') {
+			$this->fields['order']['type'] = 'hidden';
+			$this->fields['order']['visible'] = true;
+			$this->fields['order']['value'] = 0;
+			$this->fields['visible']['type'] = 'hidden';
+			$this->fields['visible']['value'] = 1;
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => $this->_action));
+			$this->fields['visible']['type'] = 'select';
+			$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
 		}
+		
+		$this->setVar('selectedAction', $this->alias);
+	}
+	
+	public function index() {
+		$data = $this->find('all', array('order' => $this->alias.'.order'));
+		$this->setVar(compact('data'));
 	}
 	
 	public function getList($visible=NULL) {

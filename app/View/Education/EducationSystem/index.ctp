@@ -1,14 +1,12 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
+$this->assign('contentHeader', $this->Label->get("$model.title"));
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action.'Add'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 }
 if ($_edit && count($data) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', $_action), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', $model), array('class' => 'divider'));
 }
 $this->end();
 
@@ -22,7 +20,7 @@ echo $this->element('../Education/controls');
 			<tr>
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th><?php echo $this->Label->get('general.code'); ?></th>
+				<th class="cell-action"><?php echo $this->Label->get('general.action'); ?></th>
 			</tr>
 		</thead>
 
@@ -30,8 +28,8 @@ echo $this->element('../Education/controls');
 			<?php foreach($data as $obj) { ?>
 			<tr>
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
-				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => $_action.'View', $obj[$model]['id'])); ?></td>
-				<td><?php echo $obj[$model]['code']; ?></td>
+				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'EducationLevel', Inflector::underscore($model.'Id') => $obj[$model]['id'])); ?></td>
+				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>
