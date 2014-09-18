@@ -380,6 +380,9 @@ class LabelHelper extends AppHelper {
 			'spa' => 'Spanish',
 			'fre' => 'French',
 			'ara' => 'Arabic'
+		),
+		'Autocomplete' => array(
+			'no_result' => 'No records matched.'
 		)
 	);
 	

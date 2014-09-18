@@ -441,3 +441,30 @@ h3.reportHtmlTitle{
 td.input .col-md-4{
 	width: 100%;
 }
+.ui-menu.ui-autocomplete .ui-menu-item a{
+	font-size: 11px;
+}
+.loadingWrapper{
+	float: left;
+	line-height: 25px;
+	height: 25px;
+	font-size: 11px;
+	display: none;
+}
+.loadingWrapper .img{
+	height: 16px;
+	width: 16px;
+	float: left;
+	margin-right: 5px;
+	margin-top: 4px;
+	display: none;
+}
+.loadingWrapper .msg{
+	display: none;
+}
+.ui-autocomplete {
+	max-height: 450px;
+	overflow-y: auto;
+	/* prevent horizontal scrollbar */
+	overflow-x: hidden;
+}
