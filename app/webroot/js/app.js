@@ -173,6 +173,8 @@ var jsForm = {
 			$(this).fadeOut(300, function() { $(this).remove(); });
 		});
         //this.datepickerUpdateSelector();
+		
+		this.prentMultiSubmit();
 	},
 	
 	goto: function(obj) {
@@ -580,6 +582,24 @@ var jsForm = {
 		url += '/' + fieldMonth.val();
 		
 		window.location.href = url;
+	},
+			
+	prentMultiSubmit: function(obj){
+		$('form').each(function(){
+			$(this).addClass('activeForSubmit');
+			$(this).submit(function(){
+				if($(this).hasClass('activeForSubmit')){
+					$(this).removeClass('activeForSubmit');
+					setTimeout(function(){
+						if(!$(this).hasClass('activeForSubmit')){
+							$(this).addClass('activeForSubmit');
+						} 
+					}, 2000);
+				}else{
+					return false;
+				}
+			});
+		});
 	}
 };
 
@@ -684,7 +704,7 @@ var jsList = {
 			$(this).find('#order').val(i+1);
 		});
 	},
-	
+
 };
 
 var utils = {
