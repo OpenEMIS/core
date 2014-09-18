@@ -1,31 +1,32 @@
- <?php
+<?php
+
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-OpenEMIS
-Open Education Management Information System
+  OpenEMIS
+  Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
-it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
-that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
-<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
-*/
+  Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by the Free Software Foundation
+  , either version 3 of the License, or any later version.  This program is distributed in the hope
+  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+  have received a copy of the GNU General Public License along with this program.  If not, see
+  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+ */
 
-App::uses('AppController', 'Controller'); 
+App::uses('AppController', 'Controller');
 
 class FieldOptionController extends AppController {
+
 	public $uses = Array(
 		'FieldOption',
 		'FieldOptionValue'
 	);
-	
 	public $optionList = array();
 	public $options = array();
 	public $model = null;
-	
+
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
@@ -37,14 +38,14 @@ class FieldOptionController extends AppController {
 		unset($this->optionList[0]);
 		$this->options = $this->buildOptions($this->optionList);
 	}
-	
+
 	private function buildOptions($list) {
 		$options = array();
-		foreach($list as $key => $values) {
+		foreach ($list as $key => $values) {
 			$key = $key;
-			if(!empty($values['parent'])) {
+			if (!empty($values['parent'])) {
 				$parent = __($values['parent']);
-				if(!array_key_exists($parent, $options)) {
+				if (!array_key_exists($parent, $options)) {
 					$options[$parent] = array();
 				}
 				$options[$parent][$key] = __($values['name']);
@@ -54,18 +55,18 @@ class FieldOptionController extends AppController {
 		}
 		return $options;
 	}
-	
+
 	public function doRender() {
 		$views = $this->model->getRender($this);
-		
+
 		if (in_array($this->action, $views)) {
 			$this->autoRender = false;
 			$this->render($this->model->alias . '/' . $this->action);
 		}
 	}
-	
-	public function index($selectedOption=1) {
-		if(!array_key_exists($selectedOption, $this->optionList)) {
+
+	public function index($selectedOption = 1) {
+		if (!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
 		$options = $this->options;
@@ -76,10 +77,10 @@ class FieldOptionController extends AppController {
 		$header = $this->FieldOptionValue->getHeader();
 		$subOptions = $this->FieldOptionValue->getSubOptions();
 		$conditions = array();
-		if(!empty($subOptions)) {
+		if (!empty($subOptions)) {
 			$conditionId = $this->FieldOptionValue->getModel()->getConditionId();
 			$selectedSubOption = $this->FieldOptionValue->getFirstSubOptionKey($subOptions);
-			if(isset($this->request->params['named'][$conditionId])) {
+			if (isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
 			$conditions[$conditionId] = $selectedSubOption;
@@ -87,14 +88,14 @@ class FieldOptionController extends AppController {
 		}
 		$data = $this->FieldOptionValue->getAllValues($conditions);
 		$fields = $this->FieldOptionValue->getValueFields();
-		
+
 		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model', 'fields'));
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
-	
-	public function indexEdit($selectedOption=1) {
-		if(!array_key_exists($selectedOption, $this->optionList)) {
+
+	public function indexEdit($selectedOption = 1) {
+		if (!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
 		$options = $this->options;
@@ -105,25 +106,25 @@ class FieldOptionController extends AppController {
 		$header = $this->FieldOptionValue->getHeader();
 		$subOptions = $this->FieldOptionValue->getSubOptions();
 		$conditions = array();
-		if(!empty($subOptions)) {
+		if (!empty($subOptions)) {
 			$conditionId = $this->FieldOptionValue->getModel()->getConditionId();
 			$selectedSubOption = $this->FieldOptionValue->getFirstSubOptionKey($subOptions);
-			if(isset($this->request->params['named'][$conditionId])) {
+			if (isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
 			$conditions[$conditionId] = $selectedSubOption;
 			$this->set(compact('selectedSubOption', 'conditionId'));
 		}
 		$data = $this->FieldOptionValue->getAllValues($conditions);
-		if($model === 'FieldOptionValue') {
+		if ($model === 'FieldOptionValue') {
 			$conditions['field_option_id'] = $obj['id'];
 		}
 		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model', 'conditions'));
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
-	
-	public function reorder($selectedOption=1) {
+
+	public function reorder($selectedOption = 1) {
 		if ($this->request->is('post') || $this->request->is('put')) {
 			$obj = $this->optionList[$selectedOption];
 			$this->FieldOptionValue->setParent($obj);
@@ -131,24 +132,24 @@ class FieldOptionController extends AppController {
 			$model = $this->FieldOptionValue->getModel();
 			$conditions = array();
 			$redirect = array('action' => 'indexEdit', $selectedOption);
-			
-			if(!empty($this->request->params['named'])) {
+
+			if (!empty($this->request->params['named'])) {
 				$conditionId = key($this->request->params['named']);
 				$selectedSubOption = current($this->request->params['named']);
 				$conditions[$conditionId] = $selectedSubOption;
 				$redirect = array_merge($redirect, $conditions);
 			}
-			
+
 			$model->reorder($data, $conditions);
 			return $this->redirect($redirect);
 		}
 	}
-	
-	public function add($selectedOption=1) {
-		if(!array_key_exists($selectedOption, $this->optionList)) {
+
+	public function add($selectedOption = 1) {
+		if (!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
-		
+
 		$obj = $this->optionList[$selectedOption];
 		$this->FieldOptionValue->setParent($obj);
 		$header = $this->FieldOptionValue->getHeader();
@@ -157,19 +158,19 @@ class FieldOptionController extends AppController {
 		$this->model = $model;
 		$selectedSubOption = false;
 		$conditionId = false;
-		
+
 		// get suboption value from index page and set it as the default option
-		if(!empty($this->request->params['named'])) {
+		if (!empty($this->request->params['named'])) {
 			$conditionId = key($this->request->params['named']);
 			$selectedSubOption = current($this->request->params['named']);
 			$this->set(compact('conditionId', 'selectedSubOption'));
 		}
-		
-		if($this->request->is(array('post', 'put'))) {
+
+		if ($this->request->is(array('post', 'put'))) {
 			if ($model->postAdd($this) === false) {
-				if($this->FieldOptionValue->saveValue($this->request->data)) {
+				if ($this->FieldOptionValue->saveValue($this->request->data)) {
 					$redirect = array('action' => 'index', $selectedOption);
-					if($conditionId !== false) {
+					if ($conditionId !== false) {
 						$redirect = array_merge($redirect, array($conditionId => $this->request->data[$model->alias][$conditionId]));
 					}
 					$this->Message->alert('general.add.success');
@@ -184,9 +185,9 @@ class FieldOptionController extends AppController {
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
-	
-	public function view($selectedOption=1, $selectedValue=0) {
-		if(!array_key_exists($selectedOption, $this->optionList)) {
+
+	public function view($selectedOption = 1, $selectedValue = 0) {
+		if (!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
 		$obj = $this->optionList[$selectedOption];
@@ -195,14 +196,14 @@ class FieldOptionController extends AppController {
 		$data = $this->FieldOptionValue->getValue($selectedValue);
 		$selectedSubOption = false;
 		$conditionId = false;
-		
-		if(!empty($this->request->params['named'])) {
+
+		if (!empty($this->request->params['named'])) {
 			$conditionId = key($this->request->params['named']);
 			$selectedSubOption = current($this->request->params['named']);
 			$this->set(compact('conditionId', 'selectedSubOption'));
 		}
-		
-		if(empty($data)) {
+
+		if (empty($data)) {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index', $selectedOption));
 		}
@@ -213,13 +214,13 @@ class FieldOptionController extends AppController {
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
-	
-	public function edit($selectedOption=1, $selectedValue=0) {
-		if($selectedValue == 0) {
+
+	public function edit($selectedOption = 1, $selectedValue = 0) {
+		if ($selectedValue == 0) {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index', $selectedOption));
 		}
-		if(!array_key_exists($selectedOption, $this->optionList)) {
+		if (!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
 		$obj = $this->optionList[$selectedOption];
@@ -228,18 +229,18 @@ class FieldOptionController extends AppController {
 		$this->model = $model;
 		$selectedSubOption = false;
 		$conditionId = false;
-		
-		if(!empty($this->request->params['named'])) {
+
+		if (!empty($this->request->params['named'])) {
 			$conditionId = key($this->request->params['named']);
 			$selectedSubOption = current($this->request->params['named']);
 			$this->set(compact('conditionId', 'selectedSubOption'));
 		}
-		
-		if($this->request->is(array('post', 'put'))) {
+
+		if ($this->request->is(array('post', 'put'))) {
 			if ($model->postEdit($this) === false) {
-				if($this->FieldOptionValue->saveValue($this->request->data)) {
+				if ($this->FieldOptionValue->saveValue($this->request->data)) {
 					$redirect = array('action' => 'view', $selectedOption, $selectedValue);
-					if($conditionId !== false) {
+					if ($conditionId !== false) {
 						$redirect = array_merge($redirect, array($conditionId => $this->request->data[$model->alias][$conditionId]));
 					}
 					$this->Message->alert('general.edit.success');
@@ -258,4 +259,6 @@ class FieldOptionController extends AppController {
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
-} 
+
+}
+
