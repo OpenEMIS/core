@@ -18,23 +18,38 @@ App::uses('AppModel', 'Model');
 
 class EducationGradeSubject extends AppModel {
 	public $useTable = 'education_grades_subjects';
-	public $actsAs = array('ControllerAction', 'Reorder');
-	public $belongsTo = array('EducationGrade', 'EducationSubject');
+	public $actsAs = array('ControllerAction2', 'Reorder');
+	public $belongsTo = array(
+		'EducationGrade',
+		'EducationSubject',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	
-	public $_action = 'gradeSubjects';
-	public $_header = 'Education Grades - Subjects';
 	public $_condition = 'education_grade_id';
 	
-	public function beforeAction($controller, $action) {
-		parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb($this->_header);
-		$controller->set('header', __($this->_header));
-		$controller->set('_action', $this->_action);
-		$controller->set('selectedAction', $this->_action);
-		$controller->set('_condition', $this->_condition);
+	public function beforeAction() {
+		parent::beforeAction();
+		$params = $this->controller->params;
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		$this->setVar('conditionId', $conditionId);
+		
+		$this->Navigation->addCrumb('Education Grades - Subjects');
+		
+		$this->setVar('selectedAction', 'EducationSystem');
+		$this->setVar('_condition', $this->_condition);
 	}
 	
-	public function gradeSubjects($controller, $params) {
+	public function index() {
+		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		if($this->EducationGrade->exists($conditionId)) {
 			$data = $this->findAllByEducationGradeIdAndVisible($conditionId, 1, array(), array('EducationSubject.order' => 'ASC'));
@@ -44,38 +59,39 @@ class EducationGradeSubject extends AppModel {
 			$paths = array();
 			$paths[] = array(
 				'name' => $systemObj['EducationSystem']['name'],
-				'url' => array('action' => 'systems')
+				'url' => array('action' => 'EducationSystem')
 			);
 			$paths[] = array(
 				'name' => $cycleObj['EducationLevel']['name'],
-				'url' => array('action' => 'levels', 'education_system_id' => $systemObj['EducationSystem']['id'])
+				'url' => array('action' => 'EducationLevel', 'education_system_id' => $systemObj['EducationSystem']['id'])
 			);
 			$paths[] = array(
 				'name' => $cycleObj['EducationCycle']['name'],
-				'url' => array('action' => 'cycles', 'education_level_id' => $cycleObj['EducationLevel']['id'])
+				'url' => array('action' => 'EducationCycle', 'education_level_id' => $cycleObj['EducationLevel']['id'])
 			);
 			$paths[] = array(
 				'name' => $gradeObj['EducationProgramme']['name'],
-				'url' => array('action' => 'programmes', 'education_cycle_id' => $cycleObj['EducationCycle']['id'])
+				'url' => array('action' => 'EducationProgramme', 'education_cycle_id' => $cycleObj['EducationCycle']['id'])
 			);
 			$paths[] = array(
 				'name' => $gradeObj['EducationGrade']['name'],
-				'url' => array('action' => 'grades', 'education_programme_id' => $gradeObj['EducationProgramme']['id'])
+				'url' => array('action' => 'EducationGrade', 'education_programme_id' => $gradeObj['EducationProgramme']['id'])
 			);
 			$paths[] = array(
 				'name' => '(' . __('Education Subjects') . ')'
 			);
-			$controller->set(compact('data', 'paths', 'conditionId'));
+			$this->setVar(compact('data', 'paths'));
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'systems'));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'EducationSystem'));
 		}
 	}
 	
-	public function gradeSubjectsEdit($controller, $params) {
+	public function edit() {
+		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		if($this->EducationGrade->exists($conditionId)) {
-			if($controller->request->is('get')) {
+			if($this->request->is('get')) {
 				$data = $this->EducationSubject->find('all', array(
 					'recursive' => 0,
 					'fields' => array(
@@ -95,9 +111,9 @@ class EducationGradeSubject extends AppModel {
 					),
 					'order' => array('EducationGradeSubject.visible DESC', 'EducationSubject.order')
 				));
-				$controller->set(compact('data', 'conditionId'));
+				$this->setVar(compact('data', 'conditionId'));
 			} else {
-				$data = $controller->request->data;
+				$data = $this->request->data;
 				
 				if(isset($data[$this->alias])) {
 					foreach($data[$this->alias] as $i => $obj) {
@@ -113,12 +129,12 @@ class EducationGradeSubject extends AppModel {
 						$this->saveAll($data[$this->alias]);
 					}
 				}
-				$controller->Message->alert('general.edit.success');
-				return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
+				$this->Message->alert('general.edit.success');
+				return $this->redirect(array('action' => get_class($this), $this->_condition => $conditionId));
 			}
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'systems'));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'EducationSystem'));
 		}
 	}
 	
