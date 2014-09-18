@@ -153,6 +153,11 @@ class MessageComponent extends Component {
 			'finance' => array(
 				'gnpEmpty' => array('type' => 'error', 'msg' => 'GNP value is required.')
 			)
+		),
+		'UserAccess' => array(
+			'add' => array(
+				'accessExists' => array('type' => 'error', 'msg' => 'This account is already linked to the user.')
+			)
 		)
 	);
 	

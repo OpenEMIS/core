@@ -346,5 +346,19 @@ var Security = {
 				checkboxInstitutionSiteView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
 			});
 		}
+	},
+			
+	updateModelForSearch: function(obj){
+		var model = $(obj).val();
+		var autocompleteField = $('.ui-autocomplete-input');
+		var newUrl = getRootURL() + 'Security/autocomplete?model=' + model;
+		var hiddenIdField = $('input#hiddenAutocompleteId');
+		
+		if(autocompleteField.length === 1){
+			autocompleteField.autocomplete('option', 'source', newUrl);
+			
+			autocompleteField.val('');
+			hiddenIdField.val('');
+		}
 	}
 };
