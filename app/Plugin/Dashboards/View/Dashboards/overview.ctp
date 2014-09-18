@@ -72,7 +72,9 @@ $tableHeaders = $QATableData['tableHeaders'];
 $tableData = $QATableData['tableData'];
 
 //echo $this->Html->div('clear_both', '');
+if (!empty($QATableData)) :
 ?>
+
 <div class="form-group">
 	<h5><?php echo $tableTitle; ?></h5>
 
@@ -81,4 +83,8 @@ $tableData = $QATableData['tableData'];
 		<?php echo $this->Html->link(__('Download CSV'), array('action' => 'genCSV', $areaId, $yearId), array('class' => 'btn_save')); ?>
 	</div>
 </div>
-<?php $this->end();?>
+
+<?php 
+endif;
+$this->end();
+?>
