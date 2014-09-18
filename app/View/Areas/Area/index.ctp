@@ -1,14 +1,12 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
+$this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 if ($_add) {
 	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', 'parent' => $parentId), array('class' => 'divider'));
 }
 if ($_edit && count($data) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'areasReorder', 'parent' => $parentId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => $model, 'reorder', 'parent' => $parentId), array('class' => 'divider'));
 }
 $this->end();
 

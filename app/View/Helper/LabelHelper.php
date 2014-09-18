@@ -111,10 +111,14 @@ class LabelHelper extends AppHelper {
 		),
 		'Area' => array(
 			'name' => 'Area',
+			'area_level_id' => 'Area Level',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
 			'name' => 'Area Level'
+		),
+		'AreaEducation' => array(
+			'area_education_level_id' => 'Area Education Level'
 		),
 		'AreaEducationLevel' => array(
 			'name' => 'Area Level'

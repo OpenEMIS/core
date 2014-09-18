@@ -1,14 +1,12 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
+$this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'areasEducationAdd', 'parent' => $parentId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', 'parent' => $parentId), array('class' => 'divider'));
 }
 if ($_edit && count($data) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'areasEducationReorder', 'parent' => $parentId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => $model, 'reorder', 'parent' => $parentId), array('class' => 'divider'));
 }
 $this->end();
 
@@ -38,13 +36,13 @@ echo $this->element('../Areas/breadcrumbs');
 					if($obj['AreaEducationLevel']['level'] == $maxLevel) {
 						echo $obj[$model]['name'];
 					} else {
-						echo $this->Html->link($obj[$model]['name'], array('action' => $this->action, 'parent' => $obj[$model]['id']));
+						echo $this->Html->link($obj[$model]['name'], array('action' => $model, 'parent' => $obj[$model]['id']));
 					}
 					?>
 				</td>
 				<td><?php echo $obj[$model]['code']; ?></td>
 				<td><?php echo $obj['AreaEducationLevel']['name']; ?></td>
-				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => 'areasEducationView', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>
