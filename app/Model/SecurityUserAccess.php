@@ -19,6 +19,18 @@ App::uses('AppModel', 'Model');
 class SecurityUserAccess extends AppModel {
 	public $useTable = 'security_user_access';
 	
+	public $actsAs = array('ControllerAction2');
+	
+	public $validate = array(
+		'table_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			)
+		)
+	);
+	
 	public function isAccessExists($conditions) {
 		$data = $this->find('first', array(
 			'conditions' => $conditions
@@ -52,5 +64,21 @@ class SecurityUserAccess extends AppModel {
 			}
 		}
 		return $data;
+	}
+	
+	public function beforeAction() {
+		parent::beforeAction();
+	}
+	
+	public function view() {
+		
+	}
+	
+	public function add() {
+		
+	}
+	
+	public function remove() {
+		
 	}
 }

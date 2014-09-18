@@ -10,7 +10,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('User Details'));
 $this->start('contentActions');
 echo $this->Html->link(__('View'), array('action' => 'usersView', $data['id']), array('class' => 'divider'));
-echo $this->Html->link(__('Access'), array('action' => 'usersAccess'), array('class' => 'divider'));
+echo $this->Html->link(__('Access'), array('action' => 'SecurityUserAccess', 'edit'), array('class' => 'divider'));
 $this->end();
 $this->assign('contentId', 'users');
 $this->assign('contentClass', 'edit details');

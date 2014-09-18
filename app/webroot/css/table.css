@@ -35,3 +35,7 @@ td.cell_order { width: 63px; margin-left: -1px; }
 .report .table td {
 	vertical-align: middle;
 }
+.cell_icon_action{
+	width: 20px;
+	max-width: 20px;
+}
