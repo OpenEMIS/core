@@ -17,8 +17,21 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationLevel extends AppModel {
-	public $actsAs = array('ControllerAction', 'Reorder');
-	public $belongsTo = array('EducationSystem', 'EducationLevelIsced');
+	public $actsAs = array('ControllerAction2', 'Reorder');
+	public $belongsTo = array(
+		'EducationSystem',
+		'EducationLevelIsced',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	public $hasMany = array('EducationCycle');
 	
 	public $validate = array(
@@ -31,121 +44,122 @@ class EducationLevel extends AppModel {
 		)
 	);
 	
-	public $_action = 'levels';
-	public $_header = 'Education Levels';
 	public $_condition = 'education_system_id';
 	
-	public function beforeAction($controller, $action) {
-		parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb($this->_header);
-		$controller->set('header', __($this->_header));
-		$controller->set('_action', $this->_action);
-		$controller->set('selectedAction', $this->_action);
-		$controller->set('_condition', $this->_condition);
+	public function beforeAction() {
+		parent::beforeAction();
+		$params = $this->controller->params;
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		$this->setVar('conditionId', $conditionId);
+		
+		$this->fields['order']['visible'] = false;
+		$this->fields['education_level_isced_id']['type'] = 'select';
+		$this->fields['education_level_isced_id']['options'] = $this->EducationLevelIsced->find('list', array('order' => 'order'));
+		$this->fields['education_system_id']['type'] = 'disabled';
+		
+		if ($this->action == 'add') {
+			$this->fields['order']['type'] = 'hidden';
+			$this->fields['order']['visible'] = true;
+			$this->fields['order']['value'] = 0;
+			$this->fields['visible']['type'] = 'hidden';
+			$this->fields['visible']['value'] = 1;
+			$this->fields['education_system_id']['type'] = 'hidden';
+			$this->fields['education_system_id']['value'] = $conditionId;
+			$this->fields['education_system'] = array(
+				'visible' => true,
+				'type' => 'disabled',
+				'value' => $this->EducationSystem->field('name', array('EducationSystem.id' => $conditionId))
+			);
+		} else {
+			$this->fields['visible']['type'] = 'select';
+			$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
+			$this->fields['education_system_id']['dataModel'] = 'EducationSystem';
+			$this->fields['education_system_id']['dataField'] = 'name';
+		}
+		$this->Navigation->addCrumb('Education Levels');
+		
+		$this->setVar('_condition', $this->_condition);
+		$this->setVar('selectedAction', 'EducationSystem');
 	}
 	
-	public function getDisplayFields($controller) {
-		$yesnoOptions = $controller->Option->get('yesno');
-		$iscedOptions = $this->EducationLevelIsced->find('list', array('order' => 'order'));
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name'),
-				array('field' => 'education_level_isced_id', 'type' => 'select', 'options' => $iscedOptions),
-				array('field' => 'name', 'model' => 'EducationSystem', 'edit' => false),
-				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-	
-	public function levels($controller, $params) {
+	public function index() {
+		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		if($this->EducationSystem->exists($conditionId)) {
 			$data = $this->findAllByEducationSystemId($conditionId, array(), array($this->alias.'.order' => 'ASC'));
 			$paths = array();
 			$paths[] = array(
 				'name' => $this->EducationSystem->field('name', array('EducationSystem.id' => $conditionId)),
-				'url' => array('action' => 'systems')
+				'url' => array('action' => 'EducationSystem')
 			);
 			$paths[] = array(
-				'name' => '(' . __($this->_header) . ')'
+				'name' => '(' . __('Education Levels') . ')'
 			);
-			$controller->set(compact('data', 'paths', 'conditionId'));
+			$this->setVar(compact('data', 'paths', 'conditionId'));
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'systems'));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'EducationSystem'));
 		}
 	}
 	
-	public function levelsAdd($controller, $params) {
+	public function view($id=0) {
+		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		
 		if($this->EducationSystem->exists($conditionId)) {
-			$systemName = $this->EducationSystem->field('name', array('EducationSystem.id' => $conditionId));
-			$systemOptions = array($conditionId => $systemName);
+			$data = $this->findById($id);
+			$this->setVar(compact('data'));
+			$this->render = '../template/view';
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'EducationSystem'));
+		}
+	}
+	
+	public function add() {
+		$params = $this->controller->params;
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		$this->render = '../template/add';
+		if($this->EducationSystem->exists($conditionId)) {
 			$iscedOptions = $this->EducationLevelIsced->find('list', array('order' => 'order'));
-			$controller->set(compact('systemOptions', 'iscedOptions', 'conditionId'));
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				$controller->request->data[$this->alias]['education_level_id'] = $conditionId;
-				$controller->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
-				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.add.success');
-					return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
+			$this->setVar(compact('iscedOptions'));
+			if ($this->request->is(array('post', 'put'))) {
+				$this->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
+				if ($this->save($this->request->data)) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => get_class($this), $this->_condition => $conditionId));
 				}
 			}
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'systems'));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'EducationSystem'));
 		}
 	}
 	
-	public function levelsView($controller, $params) {
+	public function edit($id) {
+		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		
 		if($this->EducationSystem->exists($conditionId)) {
-			$id = isset($params->pass[0]) ? $params->pass[0] : 0;
-			$data = $this->findById($id);
-			$fields = $this->getDisplayFields($controller);
-			$controller->set(compact('data', 'fields', 'conditionId'));
-			$this->render = '../template/view';
-		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'systems'));
-		}
-	}
-	
-	public function levelsEdit($controller, $params) {
-		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
-		
-		if($this->EducationSystem->exists($conditionId)) {
-			$id = isset($params->pass[0]) ? $params->pass[0] : 0;
 			$data = $this->findById($id);
 			
 			if(!empty($data)) {
-				$fields = $this->getDisplayFields($controller);
-				$controller->set(compact('fields', 'conditionId'));
-				if($controller->request->is('post') || $controller->request->is('put')) {
-					if ($this->save($controller->request->data)) {
-						$controller->Message->alert('general.edit.success');
-						return $controller->redirect(array('action' => $this->_action.'View', $this->_condition => $conditionId, $id));
+				if ($this->request->is(array('post', 'put'))) {
+					if ($this->save($this->request->data)) {
+						$this->Message->alert('general.edit.success');
+						return $this->redirect(array('action' => get_class($this), 'view', $this->_condition => $conditionId, $id));
 					}
 				} else {
-					$controller->request->data = $data;
+					$this->request->data = $data;
 				}
 				$this->render = '../template/edit';
 			} else {
-				$controller->Message->alert('general.notExists');
-				return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
+				$this->Message->alert('general.notExists');
+				return $this->redirect(array('action' => get_class($this), $this->_condition => $conditionId));
 			}
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'systems'));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'EducationSystem'));
 		}
 	}
 }
