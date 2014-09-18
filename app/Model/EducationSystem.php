@@ -61,6 +61,8 @@ class EducationSystem extends AppModel {
 			$this->fields['visible']['type'] = 'select';
 			$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
 		}
+		$this->Navigation->addCrumb('Education Systems');
+		
 		$this->setVar('selectedAction', $this->alias);
 	}
 	
