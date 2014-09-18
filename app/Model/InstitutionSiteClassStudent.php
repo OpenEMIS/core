@@ -170,7 +170,8 @@ class InstitutionSiteClassStudent extends AppModel {
 						'type' => 'LEFT',
 						'conditions' => array(
 							$this->alias . '.student_id = InstitutionSiteStudent.student_id',
-							$this->alias . '.institution_site_class_id = InstitutionSiteClass.id'
+							$this->alias . '.institution_site_class_id = InstitutionSiteClass.id',
+							$this->alias . '.education_grade_id' => $selectedGrade
 						)
 					)
 				),
