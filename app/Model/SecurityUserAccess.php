@@ -21,15 +21,13 @@ class SecurityUserAccess extends AppModel {
 	
 	public $actsAs = array('ControllerAction2');
 	
-	public $validate = array(
-		'table_id' => array(
-			'notEmpty' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a name'
-			)
-		)
+	public $belongsTo = array(
+		'SecurityUser'
 	);
+	
+	public function beforeAction() {
+		parent::beforeAction();
+	}
 	
 	public function isAccessExists($conditions) {
 		$data = $this->find('first', array(
@@ -66,19 +64,98 @@ class SecurityUserAccess extends AppModel {
 		return $data;
 	}
 	
-	public function beforeAction() {
-		parent::beforeAction();
-	}
-	
 	public function view() {
-		
+		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
+		if($this->Session->check('SecurityUserId')) {
+			$userId = $this->Session->read('SecurityUserId');
+			$this->SecurityUser->formatResult = true;
+			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
+			$data['access'] = $this->getAccess($userId);
+			$name = $data['first_name'] . ' ' . $data['last_name'];
+			$moduleOptions = array('Student' => __('Student'), /*'Teacher' => __('Teacher'), */'Staff' => __('Staff'));
+			$this->setVar('data', $data);
+			$this->setVar('moduleOptions', $moduleOptions);
+			$this->Navigation->addCrumb($name);
+		} else {
+			$this->redirect(array('action' => 'users'));
+		}
 	}
 	
 	public function add() {
-		
+		$this->render = false;
+		if ($this->request->is(array('post', 'put'))) {
+			$postData = $this->request->data['SecurityUserAccess'];
+			
+			unset($postData['search']);
+			//pr($postData);die;
+			
+			if(empty($postData['table_name']) || empty($postData['table_id'])){
+				$this->Message->alert('general.add.failed');
+				return $this->redirect(array('action' => 'SecurityUserAccess', 'view'));
+			}
+			
+			if (!$this->isAccessExists($postData)) {
+				$this->save($postData);
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => 'SecurityUserAccess', 'view'));
+			} else {
+				$this->Message->alert('UserAccess.add.accessExists');
+				return $this->redirect(array('action' => 'SecurityUserAccess', 'view'));
+			}
+
+		}else{
+			return $this->redirect(array('action' => 'SecurityUserAccess', 'view'));
+		}
 	}
 	
-	public function remove() {
-		
+	public function delete($userId=0, $tableId=0, $tableName='') {
+		$this->render = false;
+
+		if (!empty($userId) && !empty($tableId) && !empty($tableName)) {
+			$conditions = array(
+				'security_user_id' => $userId,
+				'table_id' => $tableId,
+				'table_name' => $tableName
+			);
+			$this->deleteAll($conditions, false);
+			$this->Message->alert('general.delete.success');
+			return $this->redirect(array('action' => 'SecurityUserAccess', 'view'));
+		}
+	}
+
+	public function autocomplete() {
+		if ($this->request->is('ajax')) {
+			$this->render = false;
+			
+			$defaultModel = 'Student';
+			$model = $this->controller->params->query['model'];
+			if(empty($model)){
+				$model = $defaultModel;
+			}
+			$search = $this->controller->params->query['term'];
+			
+			$data = array();
+			if($model == 'Student'){
+				$list = $this->controller->Student->autocomplete($search);
+				foreach ($list as $obj) {
+					$info = $obj['Student'];
+					$data[] = array(
+						'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+						'value' => array('table_id' => $info['id']) 
+					);
+				}
+			}else{
+				$list = $this->controller->Staff->autocomplete($search);
+				foreach ($list as $obj) {
+					$info = $obj['Staff'];
+					$data[] = array(
+						'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+						'value' => array('table_id' => $info['id']) 
+					);
+				}
+			}
+			
+			return json_encode($data);
+		}
 	}
 }
