@@ -27,6 +27,7 @@ textarea { resize: none; }
 .hidden { visibility: hidden; }
 .no_input { color: #333333; }
 .none { display: none !important; }
+.bold { font-weight: bold; }
 
 .orange { color: orange !important; }
 .green { color: green !important; }
