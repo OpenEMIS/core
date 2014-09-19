@@ -135,24 +135,14 @@ class SecurityUserAccess extends AppModel {
 			$search = $this->controller->params->query['term'];
 			
 			$data = array();
-			if($model == 'Student'){
-				$list = $this->controller->Student->autocomplete($search);
-				foreach ($list as $obj) {
-					$info = $obj['Student'];
-					$data[] = array(
-						'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
-						'value' => array('table_id' => $info['id']) 
-					);
-				}
-			}else{
-				$list = $this->controller->Staff->autocomplete($search);
-				foreach ($list as $obj) {
-					$info = $obj['Staff'];
-					$data[] = array(
-						'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
-						'value' => array('table_id' => $info['id']) 
-					);
-				}
+			$list = $this->controller->{$model}->autocomplete($search);
+			
+			foreach ($list as $obj) {
+				$info = $obj[$model];
+				$data[] = array(
+					'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+					'value' => array('table_id' => $info['id']) 
+				);
 			}
 			
 			return json_encode($data);
