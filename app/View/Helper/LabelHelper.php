@@ -78,7 +78,8 @@ class LabelHelper extends AppHelper {
 			'international_code' => 'International Code',
 			'national_code' => 'National Code',
 			'current' => 'Current',
-			'past' => 'Past'
+			'past' => 'Past',
+			'model' => 'Model'
 		),
 		'date' => array(
 			'start' => 'Start Date',

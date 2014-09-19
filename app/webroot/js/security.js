@@ -351,7 +351,7 @@ var Security = {
 	updateModelForSearch: function(obj){
 		var model = $(obj).val();
 		var autocompleteField = $('.ui-autocomplete-input');
-		var newUrl = getRootURL() + 'Security/autocomplete?model=' + model;
+		var newUrl = getRootURL() + 'Security/SecurityUserAccess/autocomplete?model=' + model;
 		var hiddenIdField = $('input#hiddenAutocompleteId');
 		
 		if(autocompleteField.length === 1){
