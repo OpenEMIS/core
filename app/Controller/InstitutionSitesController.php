@@ -102,7 +102,6 @@ class InstitutionSitesController extends AppController {
 	
 	public $modules = array(
 		'bankAccounts' => 'InstitutionSiteBankAccount',
-		'programmes' => 'InstitutionSiteProgramme',
 		'behaviourStudent' => 'Students.StudentBehaviour',
 		'classesSubject' => 'InstitutionSiteClassSubject',
 		'classesStudent' => 'InstitutionSiteClassStudent',
@@ -118,7 +117,8 @@ class InstitutionSitesController extends AppController {
 		'assessments' => 'AssessmentItemResult',
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
-		'InstitutionSitePosition'
+		'InstitutionSitePosition',
+		'InstitutionSiteProgramme'
 	);
 	
 	public function beforeFilter() {
