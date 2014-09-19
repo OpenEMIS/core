@@ -15,24 +15,23 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('AppController', 'Controller');
-App::uses('Sanitize', 'Utility');
 
 class InstitutionReportsController extends AppController {
 	public $options = array();
 	public $institutionSiteId;
+	public $uses = array('InstitutionSite');
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 		
-		if ($this->Session->check('InstitutionSiteId')) {
-			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
+		if ($this->Session->check('InstitutionSite.id')) {
+			$this->institutionSiteId = $this->Session->read('InstitutionSite.id');
 			
-			$InstitutionSiteModel = ClassRegistry::init('InstitutionSite');
-			$institutionSiteName = $InstitutionSiteModel->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
-			$this->bodyTitle = $institutionSiteName;
+			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
+			$this->bodyTitle = $name;
 			
-			$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
 			$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
 		} else {
 			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
@@ -145,7 +144,7 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		$data = array(
 			array('name' => 'QA Report', 'model' => 'Quality.QualityInstitutionRubric', 'params' => array('csv' => array(1))),
-			array('name' => 'Visit Report', 'model' => 'Quality.QualityInstitutionVisit', 'params' => array('csv' => array(1))),
+			array('name' => 'Visit Report', 'model' => 'Quality.QualityInstitutionVisit', 'params' => array('csv' => array(1)))
 		);
 		
 		foreach($data as $i => $obj) {
@@ -163,7 +162,7 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		$data = array(
 			array('name' => 'Fees', 'model' => 'InstitutionSiteFee', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Student', 'model' => 'InstitutionSiteStudentFee', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Student', 'model' => 'InstitutionSiteStudentFee', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
 		);
 		
 		foreach($data as $i => $obj) {

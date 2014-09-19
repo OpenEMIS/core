@@ -8,7 +8,7 @@ foreach($fields as $key => $field) {
 	if ($visible) {
 		$fieldModel = array_key_exists('model', $field) ? $field['model'] : $model;
 		$fieldName = $fieldModel . '.' . $key;
-		$options = array();
+		$options = isset($field['attr']) ? $field['attr'] : array();
 		$label = $this->Label->getLabel2($fieldModel, $key, $field);
 		if(!empty($label)) {
 			$options['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
@@ -21,20 +21,25 @@ foreach($fields as $key => $field) {
 				if (isset($field['options'])) {
 					$options['value'] = $field['options'][$this->request->data[$fieldModel][$key]];
 				}
-				echo $this->Form->hidden($fieldName);
+				//echo $this->Form->hidden($fieldName);
 				break;
 				
 			case 'select':
 				if (isset($field['options'])) {
-					$options['options'] = $field['options'];
-				}
-				if (isset($field['default'])) {
-					$options['default'] = $field['default'];
-				}
-				if (!empty($this->request->data)) {
-					if(!empty($this->request->data[$fieldModel][$key])) {
-						$options['default'] = $this->request->data[$fieldModel][$key];
+					if (empty($field['options'])) {
+						$options['empty'] = isset($field['empty']) ? $field['empty'] : $this->Label->get('general.noData');
+					} else {
+						if (isset($field['default'])) {
+							$options['default'] = $field['default'];
+						} else {
+							if (!empty($this->request->data)) {
+								if(!empty($this->request->data[$fieldModel][$key])) {
+									$options['default'] = $this->request->data[$fieldModel][$key];
+								}
+							}
+						}
 					}
+					$options['options'] = $field['options'];
 				}
 				break;
 				
@@ -95,7 +100,11 @@ foreach($fields as $key => $field) {
 				break;
 			
 		}
-		if (isset($field['value'])) {
+		if (array_key_exists('dataModel', $field) && array_key_exists('dataField', $field)) {
+			$dataModel = $field['dataModel'];
+			$dataField = $field['dataField'];
+			$options['value'] = $this->request->data[$dataModel][$dataField];
+		} else if (isset($field['value'])) {
 			$options['value'] = $field['value'];
 		}
 		if (!in_array($fieldType, array('image', 'date', 'time', 'file', 'file_upload', 'element'))) {

@@ -87,9 +87,16 @@ class NavigationComponent extends Component {
 						$pattern = $attr['pattern'];
 						
 						// Checking access control
-						$check = $this->AccessControl->newCheck($_controller, $attr['action']);
-						//pr($_controller . ' : ' . $attr['action'] . ' : ' . ($check ? 'true' : 'false'));
-						//pr($attr);
+						$attrAction = str_replace('/', '.', $attr['action']);
+						$check = $this->AccessControl->newCheck($_controller, $attrAction);
+						
+						// debug mode
+						if ($_controller == 'Students' && $attr['action'] == 'InstitutionSiteStudent/add') {
+							//pr($_controller . ' : ' . $attr['action'] . ' : ' . ($check ? 'true' : 'false'));
+							//pr($attr);
+						}
+						// end debug
+						
 						if($check || $_controller === 'Home') {
 							$linkList['display'] = true;
 							$attr['display'] = true;
@@ -111,14 +118,32 @@ class NavigationComponent extends Component {
 							}
 						}
 						// End access control
-						
 						// To check which link is selected
-						if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $pattern), $action)) {//pr($attr);
-							$found = true;
-							$attr['selected'] = true;
-							$this->topNavigations[$module]['selected'] = true;
-						}
-												
+						// eg. InstitutionSiteStudent.add
+						$patternList = explode('|', $pattern);
+						foreach ($patternList as $p) {
+							$map = explode('.', $p);
+							
+							if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $map[0]), $action)) {
+								if (count($map) == 1) {
+									$found = true;
+									$attr['selected'] = true;
+									$this->topNavigations[$module]['selected'] = true;
+								} else {
+									$pass = isset($this->controller->params->pass[0]) ? $this->controller->params->pass[0] : '';
+									
+									if ($map[1] == $pass) {
+										$found = true;
+										$attr['selected'] = true;
+										$this->topNavigations[$module]['selected'] = true;
+									} else if ($map[1] == 'index' && $pass == '') {
+										$found = true;
+										$attr['selected'] = true;
+										$this->topNavigations[$module]['selected'] = true;
+									}
+								}
+							}
+						}				
 					}
 				}
 				if($found) {
@@ -126,7 +151,7 @@ class NavigationComponent extends Component {
 						$this->leftNavigations = $links;
 					}
 				}
-								//pr($this->leftNavigations);
+				//pr($this->leftNavigations);
 			}
 		}//pr($this->navigations);
 	}
