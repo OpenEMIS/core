@@ -98,6 +98,11 @@ class InstitutionSiteClassStudent extends AppModel {
 		if(!empty($studentActionOptions)) {
 			$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
 			$data = $this->find('all', array(
+				'recursive' => 0,
+				'fields' => array(
+					'DISTINCT Student.identification_no',
+					'Student.first_name', 'Student.last_name', 'StudentCategory.name'
+				),
 				'conditions' => array(
 					'institution_site_class_id' => $id,
 					'education_grade_id' => $selectedGrade,
@@ -241,7 +246,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
 			)
 		);
-		$conditions = array($this->alias . '.student_id' => $studentId);
+		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
 
 		if ($institutionSiteId == 0) {
 			$fields[] = 'InstitutionSite.name';

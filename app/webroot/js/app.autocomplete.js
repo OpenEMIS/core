@@ -4,7 +4,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -18,8 +18,14 @@ $(document).ready(function() {
 });
 
 var Autocomplete = {
+	loadingWrapper: '',
+	loadingImg: '',
+	noDataMsg: '',
 	init: function() {
 		this.attachAutoComplete('.autocomplete', Autocomplete.select);
+		loadingWrapper = $('.loadingWrapper');
+		loadingImg = loadingWrapper.find('.img');
+		noDataMsg = loadingWrapper.find('.msg');
 	},
 
 	select: function(event, ui) {
@@ -44,14 +50,45 @@ var Autocomplete = {
 		this.value = ui.item.label;
 		event.preventDefault();
 	},
+			
+	searchComplete: function( event, ui){
+		if(loadingImg.length === 1){
+			loadingImg.hide();
+			var recordsCount = ui.content.length;
+			if(recordsCount === 0){
+				noDataMsg.show();
+			}
+		}
+	},
+			
+	beforeSearch: function( event, ui ) {
+		if(loadingImg.length === 1){
+			var errorMessage = loadingWrapper.closest('.form-group').children('.error-message');
+			if(errorMessage.length > 0){
+				errorMessage.remove();
+			}
+			
+			noDataMsg.hide();
+			loadingWrapper.show();
+			loadingImg.show();
+		}
+	},
 
 	attachAutoComplete: function(element, callback) {
-		var url = $(element).attr('url');
+		var url = getRootURL() + $(element).attr('url');
+		var length = $(element).attr('length');
+		
+		if (length === undefined) {
+			length = 2;
+		}
+		
 		$(element).autocomplete({
 			source: url,
-			minLength: 2,
+			minLength: length,
 			select: callback,
-			focus: Autocomplete.focus
+			focus: Autocomplete.focus,
+			response: Autocomplete.searchComplete,
+			search: Autocomplete.beforeSearch
 		});
 	}
 }

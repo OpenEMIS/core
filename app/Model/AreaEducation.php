@@ -20,7 +20,21 @@ class AreaEducation extends AppModel {
 	public $actsAs = array(
 		'Tree',
 		'Reorder',
-		'ControllerAction'
+		'ControllerAction2'
+	);
+	
+	public $belongsTo = array(
+		'AreaEducationLevel',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
 	
 	public $validate = array(
@@ -44,34 +58,27 @@ class AreaEducation extends AppModel {
 		)
 	);
 	
-	public $belongsTo = array('AreaEducationLevel');
-	
-	public function beforeAction($controller, $action) {
-        parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb('Areas (Education)');
-		$controller->set('header', __('Areas (Education)'));
+	public function beforeAction() {
+        parent::beforeAction();
+		
+		$this->fields['parent_id']['type'] = 'hidden';
+		$this->fields['lft']['visible'] = false;
+		$this->fields['rght']['visible'] = false;
+		$this->fields['order']['visible'] = false;
+		$this->fields['visible']['type'] = 'select';
+		$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
+		
+		if ($this->action == 'view') {
+			$this->fields['area_level_id']['dataModel'] = 'AreaEducationLevel';
+			$this->fields['area_level_id']['dataField'] = 'name';
+		}
+		
+		$this->Navigation->addCrumb('Areas (Education)');
+		$this->setVar('contentHeader', __('Areas (Education)'));
     }
 	
-	public function getDisplayFields($controller) {
-		$yesnoOptions = $controller->Option->get('yesno');
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'name'),
-                array('field' => 'code'),
-				array('field' => 'name', 'model' => 'AreaEducationLevel'),
-				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-	
-	public function areasEducation($controller, $params) {
+	public function index() {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
@@ -84,10 +91,11 @@ class AreaEducation extends AppModel {
 				'order' => array('order')
 			));
 		}
-		$controller->set(compact('paths', 'data', 'parentId', 'maxLevel'));
+		$this->setVar(compact('paths', 'data', 'parentId', 'maxLevel'));
 	}
 	
-	public function areasEducationReorder($controller, $params) {
+	public function reorder() {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
@@ -99,21 +107,27 @@ class AreaEducation extends AppModel {
 				'order' => array('order')
 			));
 		}
-		$controller->set(compact('paths', 'data', 'parentId'));
+		$this->setVar(compact('paths', 'data', 'parentId'));
 	}
 	
-	public function areaEducationMove($controller, $params) {
-		if ($controller->request->is('post') || $controller->request->is('put')) {
+	public function move() {
+		if ($this->request->is(array('post', 'put'))) {
+			$params = $this->controller->params;
 			$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
-			$data = $controller->request->data;
+			$data = $this->request->data;
+			if ($parentId == 0) {
+				$parentId = 1;
+			}
 			$conditions = array('parent_id' => $parentId);
 			$this->moveOrder($data, $conditions);
-			$redirect = array('action' => 'areasReorder', 'parent' => $parentId);
-			return $controller->redirect($redirect);
+			$redirect = array('action' => get_class($this), 'reorder', 'parent' => $parentId);
+			return $this->redirect($redirect);
 		}
 	}
 	
-	public function areasEducationAdd($controller, $params) {
+	public function add() {
+		$this->fields['visible']['visible'] = false;
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
@@ -127,46 +141,45 @@ class AreaEducation extends AppModel {
 		$level = $this->AreaEducationLevel->field('level', array('id' => $area[$this->alias]['area_education_level_id']));
 		$areaLevelOptions = $this->AreaEducationLevel->find('list', array('conditions' => array('level >' => $level)));
 		
-		if($controller->request->is('post') || $controller->request->is('put')) {
-			$controller->request->data[$this->alias]['parent_id'] = $parentId;
-			$controller->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
-			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'areasEducationView', 'parent' => $parentId, $this->id));
+		if($this->request->is(array('post', 'put'))) {
+			$this->request->data[$this->alias]['parent_id'] = $parentId;
+			$this->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
+			if ($this->save($this->request->data)) {
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $this->id));
 			}
 		}
-		$controller->set(compact('data', 'fields', 'parentId', 'pathToString', 'areaLevelOptions'));
+		$this->setVar(compact('data', 'fields', 'parentId', 'pathToString', 'areaLevelOptions'));
 	}
 	
-	public function areasEducationView($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+	public function view($id=0) {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$data = $this->findById($id);
 		
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('data', 'fields', 'parentId'));
+		$this->setVar(compact('data', 'parentId'));
 	}
 	
-	public function areasEducationEdit($controller, $params) {
-		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+	public function edit($id=0) {
+		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$data = $this->findById($id);
-		$fields = $this->getDisplayFields($controller);
-		$yesnoOptions = $controller->Option->get('yesno');
+		
+		$yesnoOptions = $this->controller->Option->get('yesno');
 		
 		if(!empty($data)) {
-			$controller->set(compact('fields', 'yesnoOptions', 'parentId'));
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.edit.success');
-					return $controller->redirect(array('action' => 'areasEducationView', 'parent' => $parentId, $id));
+			$this->setVar(compact('yesnoOptions', 'parentId'));
+			if($this->request->is(array('post', 'put'))) {
+				if ($this->save($this->request->data)) {
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $id));
 				}
 			} else {
-				$controller->request->data = $data;
+				$this->request->data = $data;
 			}
 		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'areasEducation', 'parent' => $parentId));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => get_class($this), 'parent' => $parentId));
 		}
 	}
 
