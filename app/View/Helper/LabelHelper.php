@@ -78,7 +78,11 @@ class LabelHelper extends AppHelper {
 			'international_code' => 'International Code',
 			'national_code' => 'National Code',
 			'current' => 'Current',
-			'past' => 'Past'
+			'past' => 'Past',
+			'noData' => 'No Data',
+			'amount' => 'Amount',
+			'total' => 'Total',
+			'fee' => 'Fee'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -107,10 +111,14 @@ class LabelHelper extends AppHelper {
 		),
 		'Area' => array(
 			'name' => 'Area',
+			'area_level_id' => 'Area Level',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
 			'name' => 'Area Level'
+		),
+		'AreaEducation' => array(
+			'area_education_level_id' => 'Area Education Level'
 		),
 		'AreaEducationLevel' => array(
 			'name' => 'Area Level'
@@ -369,13 +377,18 @@ class LabelHelper extends AppHelper {
 		'SecurityUser' => array(
 			'name' => 'User'
 		),
-		'FinanceFee' => array(
-			'fee' => 'Fee',
-			'total' => 'Total',
-			'total_fee' => 'Total Fee',
+		
+		'InstitutionSiteFee' => array(
+			'school_year_id' => 'School Year',
+			'education_grade_id' => 'Grade',
+			'InstitutionSiteFeeType' => 'Fee Types'
+		),
+		
+		'StudentFee' => array(
+			'title' => 'Fees',
+			'programme' => 'Programme',
+			'grade' => 'Grade',
 			'fees' => 'Fees',
-			'amount' => 'Amount',
-			'amount_currency' => 'Amount (%s)',
 			'paid' => 'Paid',
 			'outstanding' => 'Outstanding',
 			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
@@ -383,7 +396,6 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
-		
 		'CensusGrid' => array(
 			'x_title' => 'Table Header',
 			'x_categories' => 'Columns',
@@ -400,6 +412,13 @@ class LabelHelper extends AppHelper {
 		),
 		'Autocomplete' => array(
 			'no_result' => 'No records matched.'
+		),
+		'Datawarehouse' => array(
+			'indicator' => 'Indicator',
+			'unit' => 'Unit',
+			'module' => 'Module',
+			'function' => 'Function',
+			'dimensions' => 'Dimensions'
 		)
 	);
 	

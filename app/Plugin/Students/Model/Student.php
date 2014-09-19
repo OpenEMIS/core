@@ -38,6 +38,8 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
+	public $hasMany = array('InstitutionSiteStudentFee');
+	
 	public $validate = array(
 		'first_name' => array(
 			'ruleRequired' => array(

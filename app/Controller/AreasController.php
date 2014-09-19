@@ -21,9 +21,9 @@ class AreasController extends AppController {
 	
 	public $modules = array(
 		'Area',
-		'areasEducation' => 'AreaEducation',
-		'levelsEducation' => 'AreaEducationLevel',
-		'levels' => 'AreaLevel'
+		'AreaLevel',
+		'AreaEducation',
+		'AreaEducationLevel'
 	);
 	
 	public function beforeFilter() {
@@ -34,9 +34,9 @@ class AreasController extends AppController {
 		
 		$areaOptions = array(
 			'Area' => __('Areas'),
-			'levels' => __('Area Levels'),
-			'areasEducation' => __('Areas (Education)'),
-			'levelsEducation' => __('Area Levels (Education)')
+			'AreaLevel' => __('Area Levels'),
+			'AreaEducation' => __('Areas (Education)'),
+			'AreaEducationLevel' => __('Area Levels (Education)')
 		);
 		
 		if(array_key_exists($this->action, $areaOptions)) {
