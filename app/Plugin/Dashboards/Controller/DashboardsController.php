@@ -157,27 +157,33 @@ class DashboardsController extends DashboardsAppController {
 		$yearsOptions = $this->QADashboard->getYears();
 		$yearId = (empty($yearId))? key($yearsOptions): $yearId;
 
-		$tableTitle = $areaLvlOptions[$selectedAreaId];
-		$tableTitle .= " ".__('Year')." ".$yearsOptions[$yearId];	
-		$QATableData = $this->setupQATableData($selectedAreaId,$yearId);
-		
-		$displayChartData = array(
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $yearId)),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $yearId, $yearsOptions[$yearId])),
-		//	'break',
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AdminBreakdownJSON', $selectedAreaId, $yearId)),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TechBreakdownJSON', $selectedAreaId, $yearId)),
-		//	'break',
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDBothBreakdownJSON', $selectedAreaId, $yearId)),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDTechAdminBreakdownJSON', $selectedAreaId, $yearId)),
-		//	'break',
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AppointmentJSON', $selectedAreaId, $yearId)),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'OwnershipJSON', $selectedAreaId, $yearId)),
-		//	'break',
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId)),
-		//	'break',
-		);
-		
+		$tableTitle = '';
+		$QATableData = array();
+		$displayChartData = array();
+		if (!empty($areaLvlOptions)) {
+			$tableTitle = $areaLvlOptions[$selectedAreaId];
+			$tableTitle .= " ".__('Year')." ".$yearsOptions[$yearId];	
+			$QATableData = $this->setupQATableData($selectedAreaId,$yearId);
+			
+			$displayChartData = array(
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $yearId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $yearId, $yearsOptions[$yearId])),
+			//	'break',
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AdminBreakdownJSON', $selectedAreaId, $yearId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TechBreakdownJSON', $selectedAreaId, $yearId)),
+			//	'break',
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDBothBreakdownJSON', $selectedAreaId, $yearId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDTechAdminBreakdownJSON', $selectedAreaId, $yearId)),
+			//	'break',
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AppointmentJSON', $selectedAreaId, $yearId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'OwnershipJSON', $selectedAreaId, $yearId)),
+			//	'break',
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId)),
+			//	'break',
+			);
+		} else {
+			$this->Message->alert('general.noData');
+		}
 		
 		$this->set(compact('header', 'geoLvlId', 'areaId', /*'FDId',*/'yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
 		
