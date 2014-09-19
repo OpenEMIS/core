@@ -1,14 +1,12 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
+$this->assign('contentHeader', $this->Label->get("$model.title"));
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action.'Add', $_condition => $conditionId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $_condition => $conditionId), array('class' => 'divider'));
 }
 if ($_edit && count($data) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', $_action, $_condition => $conditionId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', $model, $_condition => $conditionId), array('class' => 'divider'));
 }
 $this->end();
 
@@ -32,9 +30,9 @@ echo $this->element('../Education/breadcrumbs');
 			<?php foreach($data as $obj) { ?>
 			<tr>
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
-				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'programmes', Inflector::underscore($model.'Id') => $obj[$model]['id'])); ?></td>
+				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'EducationProgramme', Inflector::underscore($model.'Id') => $obj[$model]['id'])); ?></td>
 				<td><?php echo $obj[$model]['admission_age']; ?></td>
-				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $_action.'View', $_condition => $conditionId, $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', $_condition => $conditionId, $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>

@@ -116,35 +116,49 @@ class LabelHelper extends AppHelper {
 			'name' => 'Area Level'
 		),
 		'EducationSystem' => array(
+			'title' => 'Education Systems',
 			'name' => 'Education System'
 		),
 		'EducationLevel' => array(
-			'education_level_isced_id' => 'ISCED'
+			'title' => 'Education Levels',
+			'education_level_isced_id' => 'ISCED',
+			'education_system_id' => 'Education System'
 		),
 		'EducationCycle' => array(
+			'title' => 'Education Cycles',
 			'admission_age' => 'Admission Age',
 			'education_level_id' => 'Education Level'
 		),
 		'EducationProgramme' => array(
+			'title' => 'Education Programmes',
+			'name' => 'Education Programme',
 			'education_cycle_id' => 'Education Cycle',
 			'education_field_of_study_id' => 'Field of Study',
 			'education_certification_id' => 'Certification'
 		),
-		'EducationProgramme' => array(
-			'name' => 'Education Programme'
-		),
 		'EducationGrade' => array(
-			'name' => 'Education Grade'
+			'title' => 'Education Grades',
+			'name' => 'Education Grade',
+			'education_programme_id' => 'Education Programme'
 		),
 		'EducationSubject' => array(
+			'title' => 'Education Subjects',
 			'name' => 'Subject',
 			'code' => 'Subject Code'
 		),
 		'EducationGradeSubject' => array(
+			'title' => 'Education Grades - Subjects',
 			'hours_required' => 'Hours Required'
 		),
+		'EducationCertification' => array(
+			'title' => 'Education Certifications'
+		),
 		'EducationFieldOfStudy' => array(
+			'title' => 'Field of Study',
 			'education_programme_orientation_id' => 'Programme Orientation'
+		),
+		'EducationProgrammeOrientation' => array(
+			'title' => 'Programme Orientations'
 		),
 		'Institution' => array(
 			'name' => 'Institution'
@@ -161,6 +175,9 @@ class LabelHelper extends AppHelper {
 			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
+		),
+		'InstitutionSiteProgramme' => array(
+			'title' => 'Programmes'
 		),
 		'InstitutionSiteClass' => array(
 			'no_of_seats' => 'Seats',
