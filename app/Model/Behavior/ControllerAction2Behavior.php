@@ -54,9 +54,9 @@ class ControllerAction2Behavior extends ModelBehavior {
 		
 		if ($model->render === 'auto') {
 			if ($action == 'add' || $action == 'edit') {
-				//$controller->render('../Elements/templates/edit');
+				$controller->render('../Elements/templates/edit');
 			} else if ($action == 'view') {
-				//$controller->render('../Elements/templates/view');
+				$controller->render('../Elements/templates/view');
 			}
 		} else if ($model->render === true) {
 			$controller->render($module . '/' . $action);
@@ -73,7 +73,6 @@ class ControllerAction2Behavior extends ModelBehavior {
 	public function view(Model $model, $id=0) {
 		$model->render = 'auto';
 		if ($model->exists($id)) {
-			$model->recursive = 0;
 			$data = $model->findById($id);
 			$model->Session->write($model->alias.'.id', $id);
 			$model->setVar(compact('data'));
@@ -87,10 +86,18 @@ class ControllerAction2Behavior extends ModelBehavior {
 		$model->render = 'auto';
 		if ($model->request->is(array('post', 'put'))) {
 			$model->create();
-			if ($model->save($model->request->data)) {
+			if ($model->saveAll($model->request->data)) {
 				$model->Message->alert('general.add.success');
-				return $model->redirect(array('action' => get_class($model)));
+				$pass = $model->controller->params->pass;
+				unset($pass[0]);
+				
+				$action = array('action' => get_class($model));
+				$params = isset($model->controller->viewVars['params']) ? $model->controller->viewVars['params'] : array();
+				$action[] = isset($params['back']) ? $params['back'] : 'index';
+				$action = array_merge($action, $pass);
+				return $model->redirect($action);
 			} else {
+				$this->log($model->validationErrors, 'debug');
 				$model->Message->alert('general.add.failed');
 			}
 		}
@@ -99,14 +106,18 @@ class ControllerAction2Behavior extends ModelBehavior {
 	public function edit(Model $model, $id=0) {
 		$model->render = 'auto';
 		if ($model->exists($id)) {
-			$this->recursive = 0;
 			$data = $model->findById($id);
 			
 			if ($model->request->is(array('post', 'put'))) {
-				if ($model->save($model->request->data)) {
+				if ($model->saveAll($model->request->data)) {
 					$model->Message->alert('general.edit.success');
-					return $model->redirect(array('action' => get_class($model), 'view', $id));
+					$pass = $model->controller->params->pass;
+					unset($pass[0]);
+					$action = array('action' => get_class($model), 'view');
+					$action = array_merge($action, $pass);
+					return $model->redirect($action);
 				} else {
+					$this->log($model->validationErrors, 'debug');
 					$model->Message->alert('general.edit.failed');
 				}
 			} else {
@@ -124,14 +135,24 @@ class ControllerAction2Behavior extends ModelBehavior {
 			if($model->delete($id)) {
 				$model->Message->alert('general.delete.success');
 			} else {
+				$this->log($model->validationErrors, 'debug');
 				$model->Message->alert('general.delete.failed');
 			}
 			$model->Session->delete($model->alias . '.id');
-			return $model->redirect(array('action' => get_class($model)));
+			$pass = $model->controller->params->pass;
+			unset($pass[0]);
+			$action = array('action' => get_class($model));
+			$params = isset($model->controller->viewVars['params']) ? $model->controller->viewVars['params'] : array();
+			$action[] = isset($params['back']) ? $params['back'] : 'index';
+			$action = array_merge($action, $pass);
+			return $model->redirect($action);
 		}
 	}
 	
 	public function redirect(Model $model, $url) {
+		if (!array_key_exists('plugin', $url)) {
+			$url['plugin'] = false;
+		}
 		return $model->controller->redirect($url);
 	}
 	
