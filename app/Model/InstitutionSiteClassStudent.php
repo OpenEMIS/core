@@ -98,6 +98,11 @@ class InstitutionSiteClassStudent extends AppModel {
 		if(!empty($studentActionOptions)) {
 			$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
 			$data = $this->find('all', array(
+				'recursive' => 0,
+				'fields' => array(
+					'DISTINCT Student.identification_no',
+					'Student.first_name', 'Student.last_name', 'StudentCategory.name'
+				),
 				'conditions' => array(
 					'institution_site_class_id' => $id,
 					'education_grade_id' => $selectedGrade,
