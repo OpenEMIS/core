@@ -37,4 +37,14 @@ class StudentBehaviourCategory extends AppModel {
 									'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
 		return $list;
 	}
+	
+	public function getCategoryList(){
+		$list = $this->find('list' , array(
+					'recursive' => '-1',
+					'fields' => array('StudentBehaviourCategory.id', 'StudentBehaviourCategory.name'),
+					'conditions' => array('StudentBehaviourCategory.visible' => 1),
+					'order' => array('StudentBehaviourCategory.order')
+				));
+		return $list;
+	}
 }

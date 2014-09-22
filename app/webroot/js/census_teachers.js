@@ -78,5 +78,11 @@ var CensusTeachers = {
             total = total.toFixed(1);
         }
         table.siblings('tfoot').find('.' + type).html(total);
-    }
+    }, 
+	updateHiddenGradeId: function(obj){
+		var newGradeId = $(obj).val();
+		var parent = $(obj).parent();
+		var gradeElement = parent.find('input.hiddenGradeId');
+		gradeElement.val(newGradeId);
+	}
 };

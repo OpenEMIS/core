@@ -14,111 +14,98 @@ $this->end();
 $this->start('contentBody');
 
 echo $this->Form->create('CensusGraduate', array(
-    'inputDefaults' => array('label' => false, 'div' => false),
-    'url' => array('controller' => 'Census', 'action' => 'graduatesEdit')
+	'inputDefaults' => array('label' => false, 'div' => false),
+	'url' => array('controller' => 'Census', 'action' => 'graduatesEdit')
 ));
 echo $this->element('census/year_options');
 ?>
-
 <div class="table-responsive">
+	<?php
+	$index = 0;
+	foreach ($programmeData as $cycleName => $programmes):
+		$total = 0;
+		?>
+		<fieldset class="section_group">
+			<legend><?php echo $cycleName ?></legend>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+						<th class="cell_programme"><?php echo __('Programme'); ?></th>
+						<th class="cell_certificate"><?php echo __('Certification'); ?></th>
+						<th class=""><?php echo __('Male'); ?></th>
+						<th class=""><?php echo __('Female'); ?></th>
+						<th class=""><?php echo __('Total'); ?></th>
+					</tr>
+				</thead>
 
-    <?php
-    $index = 0;
-    $total = 0;
-    foreach ($data as $key => $val) {
-        ?>
-        <fieldset class="section_group">
-            <legend><?php echo $key ?></legend>
+				<tbody>
+					<?php
+					foreach ($programmes as $programmeId => $programme):
+						$subTotal = 0;
+						?>
+						<tr>
+							<td class=""><?php echo $programme['programmeName']; ?></td>
+							<td class=""><?php echo $programme['certificationName']; ?></td>
+							<?php
+							foreach ($genderOptions AS $genderId => $genderName):
+								?>
+								<td class="">
+									<div class="input_wrapper">
+										<?php
+										echo $this->Form->hidden($index . '.id', array('value' => !empty($censusData[$programmeId][$genderId]['census_id']) ? $censusData[$programmeId][$genderId]['census_id'] : 0));
+										echo $this->Form->hidden($index . '.education_programme_id', array('value' => $programmeId));
+										echo $this->Form->hidden($index . '.gender_id', array('value' => $genderId));
 
-            <table class="table table-striped table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th class="table_cell cell_programme"><?php echo __('Programme'); ?></th>
-                        <th class="table_cell cell_certificate"><?php echo __('Certification'); ?></th>
-                        <th class="table_cell"><?php echo __('Male'); ?></th>
-                        <th class="table_cell"><?php echo __('Female'); ?></th>
-                        <th class="table_cell"><?php echo __('Total'); ?></th>
-                    </tr>
-                </thead>
+										$record_tag = "";
+										foreach ($source_type as $k => $v):
+											if (isset($censusData[$programmeId][$genderId]['source']) && $censusData[$programmeId][$genderId]['source'] == $v):
+												$record_tag = "row_" . $k;
+											endif;
+										endforeach;
 
-                <tbody>
-                    <?php
-                    foreach ($val as $record) {
-                        $total += $record['male'] + $record['female'];
-                        $record_tag = "";
-                        foreach ($source_type as $k => $v) {
-                            if ($record['source'] == $v) {
-                                $record_tag = "row_" . $k;
-                            }
-                        }
-                        ?>
-                        <tr>
-                            <?php
-                            echo $this->Form->hidden($index . '.id', array('value' => $record['id']));
-                            echo $this->Form->hidden($index . '.education_programme_id', array('value' => $record['education_programme_id']));
-                            echo $this->Form->hidden($index . '.institution_site_id', array('value' => $record['institution_site_id']));
-                            ?>
-                            <td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_programme_name']; ?></td>
-                            <td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_certification_name']; ?></td>
-                            <td class="table_cell">
-                                <div class="input_wrapper">
-                                    <?php
-                                    echo $this->Form->input($index . '.male', array(
-                                        'id' => 'CensusGraduateMale',
-                                        'class' => 'computeTotal ' . $record_tag,
-                                        'type' => 'text',
-                                        'value' => is_null($record['male']) ? 0 : $record['male'],
-                                        'maxlength' => 9,
-                                        'onkeypress' => 'return utility.integerCheck(event)',
-                                        'onkeyup' => 'Census.computeTotal(this)'
-                                    ));
-                                    ?>
-                                </div>
-                            </td>
-                            <td class="table_cell">
-                                <div class="input_wrapper">
-                                    <?php
-                                    echo $this->Form->input($index . '.female', array(
-                                        'id' => 'CensusGraduateFemale',
-                                        'class' => 'computeTotal ' . $record_tag,
-                                        'type' => 'text',
-                                        'value' => is_null($record['female']) ? 0 : $record['female'],
-                                        'maxlength' => 9,
-                                        'onkeypress' => 'return utility.integerCheck(event)',
-                                        'onkeyup' => 'Census.computeTotal(this)'
-                                    ));
-                                    ?>
-                                </div>
-                            </td>
-                            <td class="table_cell cell_total cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></td>
-                        </tr>
-                        <?php
-                        $index++;
-                    }
-                    ?>
-                </tbody>
+										if (!empty($censusData[$programmeId][$genderId]['value'])):
+											$value = $censusData[$programmeId][$genderId]['value'];
+										else:
+											$value = 0;
+										endif;
 
-                <tfoot>
-                    <tr>
+										echo $this->Form->input($index . '.value', array(
+											'class' => 'computeTotal ' . $record_tag,
+											'type' => 'text',
+											'maxlength' => 9,
+											'value' => $value,
+											'onkeypress' => 'return utility.integerCheck(event)',
+											'onkeyup' => 'Census.computeTotal(this)'
+										));
 
-                        <td class="table_cell"></td>
-                        <td class="table_cell"></td>
-                        <td class="table_cell"></td>
-                        <td class="table_cell cell_label">Total</td>
-                        <td class="table_cell cell_value cell_number"><?php echo $total; ?></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </fieldset>
-    <?php } ?>
-
-    <?php if (!empty($data)) { ?>
-        <div class="controls">
-            <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-            <?php echo $this->Html->link(__('Cancel'), array('action' => 'graduates', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
-        </div>
-    <?php } ?>
-
-    <?php echo $this->Form->end(); ?>
+										$subTotal += $value;
+										?>
+									</div>
+								</td>
+								<?php
+								$index++;
+							endforeach;
+							?>
+							<td class="cell-total cell-number"><?php echo $subTotal; ?></td>
+						</tr>
+						<?php
+						$total += $subTotal;
+					endforeach;
+					?>
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colspan="3"></td>
+						<td class="cell-label">Total</td>
+						<td class="cell-value cell-number"><?php echo $total; ?></td>
+					</tr>
+				</tfoot>
+			</table>
+		</fieldset>
+	<?php endforeach; ?>
+	<?php 
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'graduates', $selectedYear)));
+	echo $this->Form->end();
+	?>
 </div>
 <?php $this->end(); ?>
