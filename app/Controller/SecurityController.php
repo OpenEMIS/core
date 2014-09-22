@@ -45,7 +45,8 @@ class SecurityController extends AppController {
 	public $modules = array(
 		'SecurityGroup',
 		'permissions' => 'SecurityRoleFunction',
-		'roles' => 'SecurityRole'
+		'roles' => 'SecurityRole',
+		'SecurityUserAccess'
 	);
 	
 	public function beforeFilter() {
@@ -442,46 +443,4 @@ class SecurityController extends AppController {
 		$this->set('type', $searchType);
 	}
 	
-	public function usersAccess() {
-		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
-		if($this->Session->check('SecurityUserId')) {
-			if($this->request->is('post') || $this->request->is('put')) {
-				$postData = $this->data['SecurityUserAccess'];
-				unset($postData['SearchField']);
-				if($postData['table_id'] != 0) {
-					if(!$this->SecurityUserAccess->isAccessExists($postData)) {
-						$this->SecurityUserAccess->save($postData);
-						$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_LINKED'));
-					} else {
-						$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_EXISTS'), array('type' => 'error'));
-					}
-				}
-			}
-			$userId = $this->Session->read('SecurityUserId');
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
-			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$moduleOptions = array('Student' => __('Student'), /*'Teacher' => __('Teacher'), */'Staff' => __('Staff'));
-			$this->set('data', $data);
-			$this->set('moduleOptions', $moduleOptions);
-			$this->Navigation->addCrumb($name);
-		} else {
-			$this->redirect(array('action' => 'users'));
-		}
-	}
-	
-	public function usersDeleteAccess() {
-		if($this->request->is('ajax')) {
-			$this->autoRender = false;
-			if(count($this->params['pass']) == 3) {
-				$conditions = array(
-					'security_user_id' => $this->params['pass'][0],
-					'table_id' => $this->params['pass'][1],
-					'table_name' => $this->params['pass'][2]
-				);
-				$this->SecurityUserAccess->deleteAll($conditions, false);
-			}
-		}
-	}
 }
