@@ -97,7 +97,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 				$action = array_merge($action, $pass);
 				return $model->redirect($action);
 			} else {
-				$this->log($model->validationErrors, 'debug');
+				$this->log($model->validationErrors, 'error');
 				$model->Message->alert('general.add.failed');
 			}
 		}
@@ -117,7 +117,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 					$action = array_merge($action, $pass);
 					return $model->redirect($action);
 				} else {
-					$this->log($model->validationErrors, 'debug');
+					$this->log($model->validationErrors, 'error');
 					$model->Message->alert('general.edit.failed');
 				}
 			} else {

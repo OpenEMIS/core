@@ -145,4 +145,134 @@ class CustomFieldBehavior extends ModelBehavior {
 		$controller->set('data', $data);
 		$controller->set('dataValues', $tmp);
 	}
+	
+	public function getRender(Model $model, $controller) {
+		$views = array();
+		$parentId = Inflector::underscore($model->alias) . '_id';
+		$modelOption = $model->alias . 'Option';
+		if ($controller->action == 'view') {
+			$data = $controller->viewVars['data'];
+			$id = $data[$model->alias]['id'];
+			$options = $model->{$modelOption}->find('all', array(
+				'conditions' => array($parentId => $id),
+				'order' => array("$modelOption.visible" => 'DESC', "$modelOption.order")
+			));
+			foreach ($options as $obj) {
+				$data[$modelOption][] = $obj[$modelOption];
+			}
+			$controller->set('data', $data);
+		} else if ($controller->action == 'edit') {
+			if ($controller->request->is('get')) {
+				$data = $controller->request->data;
+				$id = $data[$model->alias]['id'];
+				
+				$options = $model->{$modelOption}->find('all', array(
+					'conditions' => array($parentId => $id),
+					'order' => array("$modelOption.visible" => 'DESC', "$modelOption.order")
+				));
+				foreach ($options as $obj) {
+					$controller->request->data[$modelOption][] = $obj[$modelOption];
+				}
+			}
+		}
+		
+		return $views;
+	}
+	
+	public function postAdd(Model $model, $controller) {
+		$selectedOption = $controller->params->pass[0];
+		$modelOption = $model->alias . 'Option';
+		if (isset($controller->request->data['submit'])) {
+			$submit = $controller->request->data['submit'];
+			
+			switch ($submit) {
+				case $modelOption:
+					$obj = array('value' => '');
+					if (!isset($controller->request->data[$submit])) {
+						$controller->request->data[$submit] = array();
+					}
+					
+					$obj['order'] = count($controller->request->data[$submit]);
+					$controller->request->data[$submit][] = $obj;
+					break;
+					
+				case 'Save':
+					$data = $controller->request->data;
+					
+					$models = array($modelOption);
+					// remove all records that doesn't have values
+					foreach ($models as $m) {
+						if (isset($data[$m])) {
+							$x = $data[$m];
+							foreach ($x as $i => $obj) {
+								if (empty($obj['value'])) {
+									unset($controller->request->data[$m][$i]);
+								} else {
+									$controller->request->data[$m][$i]['visible'] = 1;
+								}
+							}
+						}
+					}
+					if ($model->saveAll($controller->request->data)) {
+						$controller->Message->alert('general.add.success');
+						return $controller->redirect(array('controller' => $controller->name, 'action' => 'view', $selectedOption, $model->getLastInsertID()));
+					} else {
+						$this->log($model->validationErrors, 'error');
+						$controller->Message->alert('general.add.failed');
+					}
+					break;
+				
+				default:
+					break;
+			}
+		}
+		return true;
+	}
+	
+	public function postEdit(Model $model, $controller) {
+		$selectedOption = $controller->params->pass[0];
+		$modelOption = $model->alias . 'Option';
+		if (isset($controller->request->data['submit'])) {
+			$submit = $controller->request->data['submit'];
+			
+			switch ($submit) {
+				case $modelOption:
+					$obj = array('value' => '', 'visible' => 1);
+					if (!isset($controller->request->data[$submit])) {
+						$controller->request->data[$submit] = array();
+					}
+					$obj['order'] = count($controller->request->data[$submit]);
+					$controller->request->data[$submit][] = $obj;
+					break;
+					
+				case 'Save':
+					$data = $controller->request->data;
+					$id = $data[$model->alias]['id'];
+					$models = array($modelOption);
+					foreach ($models as $m) {
+						if (isset($data[$m])) {
+							$x = $data[$m];
+							foreach ($x as $i => $obj) {
+								if (empty($obj['value'])) {
+									unset($controller->request->data[$m][$i]);
+								}
+							}
+						}
+					}
+					
+					if ($model->saveAll($controller->request->data)) {
+						$controller->Message->alert('general.edit.success');
+						return $controller->redirect(array('controller' => $controller->name, 'action' => 'view', $selectedOption, $id));
+					} else {
+						$this->log($model->validationErrors, 'error');
+						$controller->Message->alert('general.edit.failed');
+					}
+					break;
+				
+				default:
+					break;
+			}
+		}
+		return true;
+	}
 }
