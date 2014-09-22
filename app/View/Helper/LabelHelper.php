@@ -84,7 +84,8 @@ class LabelHelper extends AppHelper {
 			'total' => 'Total',
 			'fee' => 'Fee',
 			'options' => 'Options',
-			'noOptions' => 'There are no options.'
+			'noOptions' => 'There are no options.',
+			'model' => 'Model'
 		),
 		'date' => array(
 			'start' => 'Start Date',
