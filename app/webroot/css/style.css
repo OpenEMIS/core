@@ -442,6 +442,7 @@ h3.reportHtmlTitle{
 td.input .col-md-4{
 	width: 100%;
 }
+
 .ui-menu.ui-autocomplete .ui-menu-item a{
 	font-size: 11px;
 }
@@ -468,4 +469,9 @@ td.input .col-md-4{
 	overflow-y: auto;
 	/* prevent horizontal scrollbar */
 	overflow-x: hidden;
+}
+
+select.topSelectControl{
+	margin-bottom: 10px;
+	margin-right: 10px;
 }

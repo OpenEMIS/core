@@ -14,134 +14,95 @@ $this->end();
 $this->start('contentBody');
 
 echo $this->Form->create('CensusAttendance', array(
-		'inputDefaults' => array('label' => false, 'div' => false),
-		'url' => array('controller' => 'Census', 'action' => 'attendanceEdit')
-	));
+	'inputDefaults' => array('label' => false, 'div' => false),
+	'url' => array('controller' => 'Census', 'action' => 'attendanceEdit')
+));
 
 echo $this->element('census/year_options');
 ?>
-
 <div id="attendance" class="dataDisplay edit">
 
 	<div class="row school_days">
 		<div class="label"><?php echo __('School Days'); ?></div>
 		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
-
 	<?php $index = 0; ?>
-	<?php foreach ($data as $obj) { ?>
+	<?php foreach ($data['programmeData'] as $programmeId => $programmeData) : ?>
 		<fieldset class="section_group">
-			<legend><?php echo $obj['name']; ?></legend>
-
+			<legend><?php echo $programmeData['programmeName']; ?></legend>
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
 					<tr>
 						<th class="table_cell cell_grade"><?php echo __('Grade'); ?></th>
-						<th class="table_cell"><?php echo __('Days Attended') . '<br>' . __('(Male)'); ?></th>
-						<th class="table_cell"><?php echo __('Days Attended') . '<br>' . __('(Female)'); ?></th>
 						<th class="table_cell"><?php echo __('Days Absent') . '<br>' . __('(Male)'); ?></th>
 						<th class="table_cell"><?php echo __('Days Absent') . '<br>' . __('(Female)'); ?></th>
-						<th class="table_cell"><?php echo __('Total'); ?></th>
+						<th class="table_cell"><?php echo __('Days Attended') . '<br>' . __('(Male)'); ?></th>
+						<th class="table_cell"><?php echo __('Days Attended') . '<br>' . __('(Female)'); ?></th>
 					</tr>
 				</thead>
-
 				<tbody>
 					<?php
-					$total = 0;
-
-					foreach ($obj['data'] as $record) {
-						$subtotal = $record['attended_male'] + $record['attended_female'] + $record['absent_male'] + $record['absent_female'];
-						$total += $subtotal;
-						$record_tag = "";
-						switch ($record['source']) {
-							case 1:
-								$record_tag.="row_external";
-								break;
-							case 2:
-								$record_tag.="row_estimate";
-								break;
-						}
+					foreach ($programmeData['grades'] as $gradeId => $gradeName):
 						?>
 						<tr>
-							<?php echo $this->Form->hidden($index . '.id', array('value' => $record['id'])); ?>
-							<?php echo $this->Form->hidden($index . '.education_grade_id', array('value' => $record['education_grade_id'])); ?>
-							<td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_grade_name']; ?></td>
-							<td class="table_cell">
+							<td><?php echo $gradeName; ?></td>
+							<?php 
+							$recordTag = "";
+							$value = 0;
+							$maleValue = 0;
+							$femaleValue = 0;
+							foreach ($genderOptions AS $genderId => $genderName):
+								if (isset($data['censusData'][$programmeId][$gradeId][$genderId])):
+									$value = $data['censusData'][$programmeId][$gradeId][$genderId]['value'];
+									
+									foreach ($source_type as $k => $v):
+										if ($data['censusData'][$programmeId][$gradeId][$genderId]['source'] == $v):
+											$recordTag = "row_" . $k;
+										endif;
+									endforeach;
+									
+									if($genderName == 'Male'):
+										$maleValue = $value;
+									else:
+										$femaleValue = $value;
+									endif;
+								endif;
+							?>
+							<td>
 								<div class="input_wrapper">
-									<?php
-									echo $this->Form->input($index . '.attended_male', array(
+									<?php 
+									echo $this->Form->hidden($index . '.id', array('value' => isset($data['censusData'][$programmeId][$gradeId][$genderId]['id']) ? $data['censusData'][$programmeId][$gradeId][$genderId]['id'] : 0));
+									echo $this->Form->hidden($index . '.education_grade_id', array('value' => $gradeId));
+									echo $this->Form->hidden($index . '.gender_id', array('value' => $genderId));
+									
+									echo $this->Form->input($index . '.value', array(
 										'type' => 'text',
-										'class' => 'computeTotal ' . $record_tag,
-										'value' => is_null($record['attended_male']) ? 0 : $record['attended_male'],
+										'class' => $recordTag,
+										'value' => $value,
 										'maxlength' => 10,
 										'onkeypress' => 'return utility.integerCheck(event)',
-										'onkeyup' => 'Census.computeTotal(this)'
+										'onkeyup' => $genderName == "Male" ? "Census.computeAttendance(this, 'male', $schoolDays)" : "Census.computeAttendance(this, 'female', $schoolDays)"
 									));
 									?>
 								</div>
 							</td>
-							<td class="table_cell">
-								<div class="input_wrapper">
-									<?php
-									echo $this->Form->input($index . '.attended_female', array(
-										'type' => 'text',
-										'class' => 'computeTotal ' . $record_tag,
-										'value' => is_null($record['attended_female']) ? 0 : $record['attended_female'],
-										'maxlength' => 10,
-										'onkeypress' => 'return utility.integerCheck(event)',
-										'onkeyup' => 'Census.computeTotal(this)'
-									));
-									?>
-								</div>
-							</td>
-							<td class="table_cell">
-								<div class="input_wrapper">
-									<?php
-									echo $this->Form->input($index . '.absent_male', array(
-										'type' => 'text',
-										'class' => 'computeTotal ' . $record_tag,
-										'value' => is_null($record['absent_male']) ? 0 : $record['absent_male'],
-										'maxlength' => 10,
-										'onkeypress' => 'return utility.integerCheck(event)',
-										'onkeyup' => 'Census.computeTotal(this)'
-									));
-									?>
-								</div>
-							</td>
-							<td class="table_cell">
-								<div class="input_wrapper">
-									<?php
-									echo $this->Form->input($index . '.absent_female', array(
-										'type' => 'text',
-										'class' => 'computeTotal ' . $record_tag,
-										'value' => is_null($record['absent_female']) ? 0 : $record['absent_female'],
-										'maxlength' => 10,
-										'onkeypress' => 'return utility.integerCheck(event)',
-										'onkeyup' => 'Census.computeTotal(this)'
-									));
-									?>
-								</div>
-							</td>
-							<td class="table_cell cell_total cell_number <?php echo $record_tag; ?>"><?php echo $subtotal; ?></td>
+							<?php 
+							$index++;
+							endforeach;
+							
+							$maleAttended = ($schoolDays - $maleValue) >= 0 ? ($schoolDays - $maleValue) : 0;
+							$femaleAttended = ($schoolDays - $femaleValue) >= 0 ? ($schoolDays - $femaleValue) : 0;
+							?>
+							<td class="cell-number maleAttendance"><?php echo $maleAttended; ?></td>
+							<td class="cell-number femaleAttendance"><?php echo $femaleAttended; ?></td>
 						</tr>
 						<?php
-						$index++;
-					} // end for
+						endforeach; // end for
 					?>
 				</tbody>
-				<tfoot>
-					<tr>
-						<td class="table_cell"></td>
-						<td class="table_cell"></td>
-						<td class="table_cell"></td>
-						<td class="table_cell"></td>
-						<td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-						<td class="table_cell cell_value cell_number"><?php echo $total; ?></td>
-					</tr>
-				</tfoot>
 			</table>
 		</fieldset>
-	<?php } ?>
+	<?php endforeach; ?>
 
 	<?php if (!empty($data)) { ?>
 		<div class="controls">

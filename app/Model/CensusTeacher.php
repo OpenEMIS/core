@@ -26,7 +26,11 @@ class CensusTeacher extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'InstitutionSite'
+		'InstitutionSite',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getTeacherId($institutionSiteId, $yearId) {
@@ -38,23 +42,46 @@ class CensusTeacher extends AppModel {
 	}
 	
 	public function mergeSingleGradeData(&$class, $data) {
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		$genderOptions = array(
+			$maleGenderId => 'Male', 
+			$femaleGenderId => 'Female'
+		);
+		//pr($genderOptions);die;
+		//pr($class);
+		//pr($data);
 		foreach($class as $key => &$obj) {
 			foreach($obj['education_grades'] as $gradeId => &$grade) {
-				$male = 0;
-				$female = 0;
-				$source = 0;
+				$maleChecked = 0;
+				$femaleChecked = 0;
 				foreach($data as $value) {
-					if($value['education_grade_id'] == $gradeId 
-					&& $value['education_programme_id'] == $obj['education_programme_id']) {
-						$male = $value['male'];
-						$female = $value['female'];
+					if($value['education_grade_id'] == $gradeId && $value['education_programme_id'] == $obj['education_programme_id']) {
+						$genderId = $value['gender_id'];
+						$genderName = $genderOptions[$genderId];
+						$recordValue = $value['value'];
 						$source = $value['source'];
-						break;
+						
+						$grade[$genderId] = array(
+							'genderName' => $genderName,
+							'value' => $recordValue,
+							'source' => $source
+						);
+						
+						if($genderName == 'Male'){
+							$maleChecked = 1;
+						}else{
+							$femaleChecked = 1;
+						}
+						
+						if($maleChecked == 1 && $femaleChecked == 1){
+							break;
+						}
 					}
 				}
-				$grade = array('name' => $grade, 'male' => $male, 'female' => $female,'source' => $source);
 			}
 		}
+		//pr($class);
 	}
 	
 	public function getSingleGradeData($institutionSiteId, $yearId) {
@@ -63,8 +90,8 @@ class CensusTeacher extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'CensusTeacher.id',
-				'CensusTeacher.male',
-				'CensusTeacher.female',
+				'CensusTeacher.gender_id',
+				'CensusTeacher.value',
 				'CensusTeacher.source',
 				'EducationProgramme.id AS education_programme_id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
@@ -113,7 +140,7 @@ class CensusTeacher extends AppModel {
 				'CensusTeacher.school_year_id' => $yearId,
 				'CensusTeacher.institution_site_id' => $institutionSiteId
 			),
-			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) <= 1'),
+			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) = 1'),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		
@@ -121,9 +148,9 @@ class CensusTeacher extends AppModel {
 	}
 	
 	public function getMultiGradeData($institutionSiteId, $yearId) {
-		$list = $this->find('list' , array(
+		$dataGradeStr = $this->find('all' , array(
 			'recursive' => -1,
-			'fields' => array('CensusTeacher.id'),
+			'fields' => array('CensusTeacher.id', 'GROUP_CONCAT(CensusTeacherGrade.education_grade_id ORDER BY CensusTeacherGrade.education_grade_id SEPARATOR "-") AS gradeStr'),
 			'joins' => array(
 				array(
 					'table' => 'census_teacher_grades',
@@ -138,12 +165,24 @@ class CensusTeacher extends AppModel {
 			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) > 1')
 		));
 		
+		$censusTeacherIds = array();
+		$baseGradeIds = array();
+		foreach($dataGradeStr AS $rowGradeStr){
+			$censusTeacherId = $rowGradeStr['CensusTeacher']['id'];
+			$gradeStr = $rowGradeStr[0]['gradeStr'];
+			
+			if(!empty($gradeStr)){
+				$censusTeacherIds[] = $censusTeacherId;
+				$baseGradeIds[$censusTeacherId] = $gradeStr;
+			}
+		}
+		
 		$gradeList = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
 				'CensusTeacher.id',
-				'CensusTeacher.male',
-				'CensusTeacher.female',
+				'CensusTeacher.gender_id',
+				'CensusTeacher.value',
 				'CensusTeacher.source',
 				'EducationProgramme.id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
@@ -177,32 +216,52 @@ class CensusTeacher extends AppModel {
 					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				)
 			),
-			'conditions' => array('CensusTeacher.id' => $list),
+			'conditions' => array('CensusTeacher.id' => $censusTeacherIds),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		$genderOptions = array(
+			$maleGenderId => 'Male',
+			$femaleGenderId => 'Female'
+		);
+		
 		$data = array();
 		foreach($gradeList as $obj) {
-			$programme = $obj['EducationProgramme'];
 			$grade = $obj['EducationGrade'];
 			$teacher = $obj['CensusTeacher'];
+			$programmeId = $obj['EducationProgramme']['id'];
+			$censusTeacherId = $teacher['id'];
+			$genderId = $teacher['gender_id'];
 			
-			if(!isset($data[$teacher['id']])) {
-				$data[$teacher['id']] = array(
-					'male' => $teacher['male'],
-					'female' => $teacher['female'],
-					'source' => $teacher['source'],
-					'programmes' => array(),
-					'grades' => array()
-				);
+			$tempGradeStr = $baseGradeIds[$censusTeacherId];
+			
+			if ($genderOptions[$genderId] == 'Male') {
+				if(!isset($data[$tempGradeStr]['genders'][$genderId])){
+					$data[$tempGradeStr]['genders'][$genderId] = array(
+						'source' => $teacher['source'],
+						'value' => $teacher['value']
+					);
+				}
+			} else {
+				if(!isset($data[$tempGradeStr]['genders'][$genderId])){
+					$data[$tempGradeStr]['genders'][$genderId] = array(
+						'source' => $teacher['source'],
+						'value' => $teacher['value']
+					);
+				}
 			}
-			$data[$teacher['id']]['programmes'][] = $obj[0]['education_programme_name'];
-			$data[$teacher['id']]['grades'][$grade['id']] = $grade['name'];
+			
+			$data[$tempGradeStr]['programmes'][$programmeId] = $obj[0]['education_programme_name'];
+			$data[$tempGradeStr]['grades'][$grade['id']] = $grade['name'];
 		}
+
 		return $data;
 	}
 	
 	public function clean($data, $yearId, $institutionSiteId, &$duplicate) {
+		//pr($data);die;
 		$clean = array();
 		$gradeList = array();
 		// get the current list of census teacher record ids from the database
@@ -210,31 +269,38 @@ class CensusTeacher extends AppModel {
 		foreach($data as $obj) {
 			// remove duplicate grades per record
 			$grades = array_unique($obj['CensusTeacherGrade']);
-			if(array_search($grades, $gradeList, true) === false) { // the multi grade combination must not exists
-				$gradeList[] = $grades;
-				// reuse the current census class record ids
-				$id = current($ids);
-				if($id === false) {
-					$id = null;
-				} else {
-					next($ids);
+			$genderId = $obj['gender_id'];
+			$gradesForSearch= array(
+				'genderId' => $genderId,
+				'grades' => $grades
+			);
+			
+			if(array_search($gradesForSearch, $gradeList, true) === false) { // the multi grade combination must not exists
+				if(!empty($obj['value'])){
+					$gradeList[] = $gradesForSearch;
+					// reuse the current census class record ids
+					$id = current($ids);
+					if($id === false) {
+						$id = null;
+					} else {
+						next($ids);
+					}
+					// build census grades records
+					foreach($grades as &$grade) {
+						$grade = array('census_teacher_id' => $id, 'education_grade_id' => $grade);
+					}
+
+					if ((int)$obj['value'] < 0){ $obj['value'] =0; }
+
+					$clean[] = array(
+						'id' => $id,
+						'gender_id' => $obj['gender_id'],
+						'value' => $obj['value'],
+						'institution_site_id' => $institutionSiteId,
+						'school_year_id' => $yearId,
+						'CensusTeacherGrade' => $grades
+					);
 				}
-				// build census grades records
-				foreach($grades as &$grade) {
-					$grade = array('census_teacher_id' => $id, 'education_grade_id' => $grade);
-				}
-				
-				if ((int)$obj['male'] < 0){ $obj['male'] =0; }
-				if ((int)$obj['female'] < 0){ $obj['female'] =0; }
-				
-				$clean[] = array(
-					'id' => $id,
-					'male' => $obj['male'],
-					'female' => $obj['female'],
-					'institution_site_id' => $institutionSiteId,
-					'school_year_id' => $yearId,
-					'CensusTeacherGrade' => $grades
-				);
 			} else {
 				if(!$duplicate) $duplicate = true;
 			}
@@ -242,7 +308,7 @@ class CensusTeacher extends AppModel {
 		// Reset all values of male and female for the existing ids
 		$this->unbindModel(array('belongsTo' => array_keys($this->belongsTo)), true);
 		$this->updateAll(
-			array('CensusTeacher.male' => 0, 'CensusTeacher.female' => 0),
+			array('CensusTeacher.gender_id' => 0, 'CensusTeacher.value' => 0),
 			array('CensusTeacher.id' => $ids)
 		);
 		// Finally, delete all existing census grades records and re-insert them upon saving
@@ -271,7 +337,19 @@ class CensusTeacher extends AppModel {
 	//Used by Yearbook
 	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
 		$this->formatResult = true;
-		$options = array('recursive' => -1, 'fields' => array('SUM(CensusTeacher.male) AS M', 'SUM(CensusTeacher.female) AS F'));
+		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$optionsMale = array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusTeacher.value) AS M')
+		);
+		
+		$optionsFemale = array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusTeacher.value) AS F')
+		);
 		
 		$joins = array(
 			array(
@@ -324,50 +402,93 @@ class CensusTeacher extends AppModel {
 					'InstitutionSite.institution_site_provider_id' => $extras['providerId']
 				)
 			);
-//			$joins[] = array(
-//				'table' => 'institutions',
-//				'alias' => 'Institution',
-//				'conditions' => array(
-//					'Institution.id = InstitutionSite.institution_id',
-//					'Institution.institution_provider_id = ' . $extras['providerId']
-//				)
-//			);
 		}
-		$options['joins'] = $joins;
-		$options['conditions'] = array('CensusTeacher.school_year_id' => $yearId);
+		
+		$optionsMale['joins'] = $joins;
+		$optionsFemale['joins'] = $joins;
+		
+		$optionsMale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $maleGenderId
+		);
+		$optionsFemale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $femaleGenderId
+		);
+		
 		$options['group'] = array('EducationProgramme.education_cycle_id');
-		$data = $this->find('first', $options);
+		$optionsMale['group'] = $options['group'];
+		$optionsFemale['group'] = $options['group'];
+		
+		$dataMale = $this->find('first', $optionsMale);
+		$dataFemale = $this->find('first', $optionsFemale);
+		
+		$data = array(
+			'M' => $dataMale['M'],
+			'F' => $dataFemale['F']
+		);
+		
 		return $data;
 	}
 	
 	public function getCountByAreaId($yearId, $areaId) {
 		$this->formatResult = true;
-		$data = $this->find('first', array(
+		
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$optionsMale = array(
 			'recursive' => -1,
-			'fields' => array('SUM(CensusTeacher.male) AS M', 'SUM(CensusTeacher.female) AS F'),
-			'joins' => array(
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array('InstitutionSite.id = CensusTeacher.institution_site_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'AreaSite',
-					'conditions' => array('AreaSite.id = InstitutionSite.area_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'Area',
-					'conditions' => array(
-						'Area.id = ' . $areaId,
-						'Area.lft <= AreaSite.lft',
-						'Area.rght >= AreaSite.rght'
-					)
-				)
+			'fields' => array('SUM(CensusTeacher.value) AS M')
+		);
+		
+		$optionsFemale = array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusTeacher.value) AS F')
+		);
+		
+		$joins = array(
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.id = CensusTeacher.institution_site_id')
 			),
-			'conditions' => array('CensusTeacher.school_year_id' => $yearId)
-		));
+			array(
+				'table' => 'areas',
+				'alias' => 'AreaSite',
+				'conditions' => array('AreaSite.id = InstitutionSite.area_id')
+			),
+			array(
+				'table' => 'areas',
+				'alias' => 'Area',
+				'conditions' => array(
+					'Area.id = ' . $areaId,
+					'Area.lft <= AreaSite.lft',
+					'Area.rght >= AreaSite.rght'
+				)
+			)
+		);
+		
+		$optionsMale['joins'] = $joins;
+		$optionsFemale['joins'] = $joins;
+		
+		$optionsMale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $maleGenderId
+		);
+		$optionsFemale['conditions'] = array(
+			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.gender_id' => $femaleGenderId
+		);
+		
+		$dataMale = $this->find('first', $optionsMale);
+		$dataFemale = $this->find('first', $optionsFemale);
+		
+		$data = array(
+			'M' => $dataMale['M'],
+			'F' => $dataFemale['F']
+		);
+		
 		return $data;
 	}
 	// End Yearbook
@@ -387,14 +508,26 @@ class CensusTeacher extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
+			$maleGenderId = $this->Gender->getIdByName('Male');
+			$femaleGenderId = $this->Gender->getIdByName('Female');
+			$genderOptions = array(
+				$maleGenderId => 'Male', 
+				$femaleGenderId => 'Female'
+			);
+			//pr($genderOptions);die;
+			
+			$EducationLevel = ClassRegistry::init('EducationLevel');
+			$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
+			
 			$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
 			$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
 			$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
-			$multiGradeData = array();// $this->getMultiGradeData($institutionSiteId, $selectedYear);
+			$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedYear);
 			$singleGradeData = $programmeGrades;
+			
 			$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 			
-			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData'));
+			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData', 'genderOptions', 'eduLevelOptions'));
 		}
 		
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
@@ -421,6 +554,17 @@ class CensusTeacher extends AppModel {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 					$displayContent = false;
 				} else {
+					$maleGenderId = $this->Gender->getIdByName('Male');
+					$femaleGenderId = $this->Gender->getIdByName('Female');
+					$genderOptions = array(
+						$maleGenderId => 'Male', 
+						$femaleGenderId => 'Female'
+					);
+					//pr($genderOptions);die;
+
+					$EducationLevel = ClassRegistry::init('EducationLevel');
+					$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
+					
 					$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear, false);
 					$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
 					$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
@@ -429,7 +573,7 @@ class CensusTeacher extends AppModel {
 					$singleGradeData = $programmeGrades;
 					$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 					
-					$controller->set(compact('programmes', 'programmeGrades', 'fte', 'training', 'singleGradeData', 'multiGradeData'));
+					$controller->set(compact('programmes', 'programmeGrades', 'fte', 'training', 'singleGradeData', 'multiGradeData', 'genderOptions', 'eduLevelOptions'));
 				}
 				
 				$controller->set(compact('displayContent', 'selectedYear', 'yearList'));
@@ -445,7 +589,7 @@ class CensusTeacher extends AppModel {
 			$duplicate = false;
 			$data = $this->clean($teachers, $yearId, $institutionSiteId, $duplicate);
 			if ($duplicate) {
-				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
+				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn'));
 			}
 			$this->saveCensusData($data);
 			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
@@ -464,7 +608,10 @@ class CensusTeacher extends AppModel {
 		$i = $controller->params->query['index'];
 		$body = $controller->params->query['tableBody'];
 		
-		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId'));
+		$maleGenderId = $this->Gender->getIdByName('Male');
+		$femaleGenderId = $this->Gender->getIdByName('Female');
+		
+		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId', 'maleGenderId', 'femaleGenderId'));
 	}
 
 	public function teachersAddMultiGrade($controller, $params) {
@@ -478,17 +625,25 @@ class CensusTeacher extends AppModel {
 		$grades = $programmeGrades[current($programmes)]['education_grades'];
 
 		$option = '<option value="%d">%s</option>';
-		$programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
+		$programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="Census.loadGradeList(this)">', $index);
 		foreach ($programmes as $id => $value) {
 			$programmesHtml .= sprintf($option, $id, $value);
 		}
 		$programmesHtml .= '</select></div>';
 
-		$gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
+		$gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]" onchange="CensusTeachers.updateHiddenGradeId(this)">', $index, $row, $index);
+		
 		foreach ($grades as $id => $value) {
-			$gradesHtml .= sprintf($option, $id, $value);
+			$gradesHtml .= sprintf($option, $id, $value['gradeName']);
+			
+			if(!isset($defaultGradeId)){
+				$defaultGradeId = $id;
+			}
 		}
-		$gradesHtml .= '</select></div>';
+		
+		$gradesHtml .= '</select>';
+		$gradesHtml .= sprintf('<input type="hidden" id="education_grade_id" value="%d" class="hiddenGradeId" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $defaultGradeId, $row+1, $index);
+		$gradesHtml .= '</div>';
 
 		$data = array('programmes' => $programmesHtml, 'grades' => $gradesHtml);
 		return json_encode($data);
@@ -505,6 +660,14 @@ class CensusTeacher extends AppModel {
 		$index = $args[1];
 
 		if ($index == 1) {
+			$maleGenderId = $this->Gender->getIdByName('Male');
+			$femaleGenderId = $this->Gender->getIdByName('Female');
+			$genderOptions = array(
+				$maleGenderId => 'Male', 
+				$femaleGenderId => 'Female'
+			);
+			//pr($genderOptions);die;
+			
 			$data = array();
 
 			$headerFTE = array(__('Year'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
@@ -518,6 +681,9 @@ class CensusTeacher extends AppModel {
 			foreach ($dataYears AS $rowYear) {
 				$yearId = $rowYear['SchoolYear']['id'];
 				$yearName = $rowYear['SchoolYear']['name'];
+				
+				$EducationLevel = ClassRegistry::init('EducationLevel');
+				$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $yearId);
 
 				// FTE teachers data start
 				$CensusTeacherFteModel = ClassRegistry::init('CensusTeacherFte');
@@ -525,14 +691,24 @@ class CensusTeacher extends AppModel {
 				if (count($dataFTE) > 0) {
 					$data[] = $headerFTE;
 					$totalFTE = 0;
-					foreach ($dataFTE AS $rowFTE) {
-						$maleFTE = empty($rowFTE['male']) ? 0 : $rowFTE['male'];
-						$femaleFTE = empty($rowFTE['female']) ? 0 : $rowFTE['female'];
+					foreach ($eduLevelOptions as $eduLevelId => $eduLevelName) {
+						$maleFTE = 0;
+						$femaleFTE = 0;
+						
+						foreach ($genderOptions AS $genderId => $genderName) {
+							if (!empty($dataFTE[$eduLevelId][$genderId])) {
+								if ($genderName == 'Male') {
+									$maleFTE = $dataFTE[$eduLevelId][$genderId]['value'];
+								} else {
+									$femaleFTE = $dataFTE[$eduLevelId][$genderId]['value'];
+								}
+							}
+						}
 
 						$data[] = array(
 							$yearName,
 							'Full Time Equivalent Teachers',
-							$rowFTE['education_level_name'],
+							$eduLevelName,
 							$maleFTE,
 							$femaleFTE,
 							$maleFTE + $femaleFTE
@@ -552,14 +728,24 @@ class CensusTeacher extends AppModel {
 				if (count($dataTraining) > 0) {
 					$data[] = $headerTraining;
 					$totalTraining = 0;
-					foreach ($dataTraining AS $rowTraining) {
-						$maleTraining = empty($rowTraining['male']) ? 0 : $rowTraining['male'];
-						$femaleTraining = empty($rowTraining['female']) ? 0 : $rowTraining['female'];
+					foreach ($eduLevelOptions as $eduLevelId => $eduLevelName) {
+						$maleTraining = 0;
+						$femaleTraining = 0;
+						
+						foreach ($genderOptions AS $genderId => $genderName) {
+							if (!empty($dataTraining[$eduLevelId][$genderId])) {
+								if ($genderName == 'Male') {
+									$maleTraining = $dataTraining[$eduLevelId][$genderId]['value'];
+								} else {
+									$femaleTraining = $dataTraining[$eduLevelId][$genderId]['value'];
+								}
+							}
+						}
 
 						$data[] = array(
 							$yearName,
 							'Trained Teachers',
-							$rowTraining['education_level_name'],
+							$eduLevelName,
 							$maleTraining,
 							$femaleTraining,
 							$maleTraining + $femaleTraining
@@ -583,18 +769,28 @@ class CensusTeacher extends AppModel {
 					$data[] = $headerSingleGrade;
 					$totalMaleSingleGrade = 0;
 					$totalFemaleSingleGrade = 0;
-					foreach ($singleGradeData AS $programmeName => $programmeData) {
-						foreach ($programmeData['education_grades'] AS $gradeId => $gradeData) {
-							$maleSingleGrade = empty($gradeData['male']) ? 0 : $gradeData['male'];
-							$femaleSingleGrade = empty($gradeData['female']) ? 0 : $gradeData['female'];
+					foreach ($singleGradeData as $programmeName => $programmeData) {
+						foreach ($programmeData['education_grades'] as $gradeId => $gradeData) {
+							$maleSingleGrade = 0;
+							$femaleSingleGrade = 0;
+							
+							foreach ($genderOptions AS $genderId => $genderName) {
+								if(!empty($gradeData[$genderId])){
+									if ($genderName == 'Male') {
+										$maleSingleGrade = $gradeData[$genderId]['value'];
+									} else {
+										$femaleSingleGrade = $gradeData[$genderId]['value'];
+									}
+								}
+							}
 
 							$data[] = array(
 								$yearName,
 								'Single Grade Teachers Only',
 								$programmeName,
-								$gradeData['name'],
-								$gradeData['male'],
-								$gradeData['female']
+								$gradeData['gradeName'],
+								$maleSingleGrade,
+								$femaleSingleGrade
 							);
 
 							$totalMaleSingleGrade += $maleSingleGrade;
@@ -607,18 +803,18 @@ class CensusTeacher extends AppModel {
 				}
 				// single grade teachers data end
 				// multi grades teachers data start
-				$multiGradesData = $this->getMultiGradeData($institutionSiteId, $yearId);
+				$multiGradeData = $this->getMultiGradeData($institutionSiteId, $yearId);
 
-				if (count($multiGradesData) > 0) {
+				if (count($multiGradeData) > 0) {
 					$data[] = $headerMultiGrade;
 					$totalMaleMultiGrades = 0;
 					$totalFemaleMultiGrades = 0;
-					foreach ($multiGradesData AS $rowMultiGrades) {
-						$maleMultiGrades = empty($rowMultiGrades['male']) ? 0 : $rowMultiGrades['male'];
-						$femaleMultiGrades = empty($rowMultiGrades['female']) ? 0 : $rowMultiGrades['female'];
+					foreach ($multiGradeData as $obj){
+						$maleMultiGrades = 0;
+						$femaleMultiGrades = 0;
 						$multiProgrammes = '';
 						$multiProgrammeCount = 0;
-						foreach ($rowMultiGrades['programmes'] AS $multiProgramme) {
+						foreach ($obj['programmes'] AS $multiProgramme) {
 							if ($multiProgrammeCount > 0) {
 								$multiProgrammes .= "\n\r";
 								$multiProgrammes .= $multiProgramme;
@@ -630,7 +826,7 @@ class CensusTeacher extends AppModel {
 
 						$multiGrades = '';
 						$multiGradeCount = 0;
-						foreach ($rowMultiGrades['grades'] AS $multiGrade) {
+						foreach ($obj['grades'] AS $multiGrade) {
 							if ($multiGradeCount > 0) {
 								$multiGrades .= "\n\r";
 								$multiGrades .= $multiGrade;
@@ -638,6 +834,16 @@ class CensusTeacher extends AppModel {
 								$multiGrades .= $multiGrade;
 							}
 							$multiGradeCount++;
+						}
+						
+						foreach ($genderOptions AS $genderId => $genderName) {
+							if (!empty($obj['genders'][$genderId])) {
+								if ($genderName == 'Male') {
+									$maleMultiGrades = $obj['genders'][$genderId]['value'];
+								} else {
+									$femaleMultiGrades = $obj['genders'][$genderId]['value'];
+								}
+							}
 						}
 
 						$data[] = array(
