@@ -8,6 +8,11 @@ if(isset($conditionId)) {
 	$params = array_merge($params, array($conditionId => $selectedSubOption));
 }
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
+
+if (array_key_exists('editable', $data[$model])) {
+	$_edit = $_edit && $data[$model]['editable'] == 1;
+}
+
 if($_edit) {
 	$params = array('action' => 'edit', $selectedOption, $selectedValue);
 	if(isset($conditionId)) {
