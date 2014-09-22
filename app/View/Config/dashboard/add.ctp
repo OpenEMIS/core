@@ -39,7 +39,7 @@ echo $this->Form->create(null, $formOptions);
 <?php //echo $this->Form->input('ConfigAttachment.0.visible', array('options'=>array('0'=>'No', '1'=>'Yes'))); ?>
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'dashboard'), array('class' => 'btn_cancel btn_left')); ?>
+	<?php echo $this->Html->link(__('Cancel'), array('action' => 'index', 'Dashboard'), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>
