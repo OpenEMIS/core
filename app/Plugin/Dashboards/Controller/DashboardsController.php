@@ -128,11 +128,9 @@ class DashboardsController extends DashboardsAppController {
 		}
 		
 		$countryData = $this->QADashboard->getCountry();
-		$countryId = $countryData['DIArea']['Area_NId'];
-		//$countryName = $countryData['DIArea']['Area_Name'];
+		$countryId = !empty($countryData) ? $countryData['DIArea']['Area_NId'] : 0;
 		
 		$this->Session->write('Dashboard.Overview.CountryId', $countryId);
-		//$this->Session->write('Dashboard.Overview.CountryName', $countryName);
 		
 		$geoLvlId = empty($this->params['pass'][1])? 0: $this->params['pass'][1]; //Country ID/Geo Level Id
 		$areaId = empty($this->params['pass'][2])? 0: $this->params['pass'][2]; //Area Id 
@@ -160,33 +158,31 @@ class DashboardsController extends DashboardsAppController {
 		$tableTitle = '';
 		$QATableData = array();
 		$displayChartData = array();
-		if (!empty($areaLvlOptions)) {
+		if (!empty($areaLvlOptions) && !empty($yearsOptions)) {
 			$tableTitle = $areaLvlOptions[$selectedAreaId];
-			$tableTitle .= " ".__('Year')." ".$yearsOptions[$yearId];	
+			$tableTitle .= " ".__('Year')." ".$yearsOptions[$yearId];
 			$QATableData = $this->setupQATableData($selectedAreaId,$yearId);
 			
 			$displayChartData = array(
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $yearId)),
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $yearId, $yearsOptions[$yearId])),
-			//	'break',
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AdminBreakdownJSON', $selectedAreaId, $yearId)),
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TechBreakdownJSON', $selectedAreaId, $yearId)),
-			//	'break',
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDBothBreakdownJSON', $selectedAreaId, $yearId)),
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDTechAdminBreakdownJSON', $selectedAreaId, $yearId)),
-			//	'break',
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AppointmentJSON', $selectedAreaId, $yearId)),
 				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'OwnershipJSON', $selectedAreaId, $yearId)),
-			//	'break',
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId)),
-			//	'break',
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId))
 			);
+			
+			if (empty($QATableData['tableData'])) {
+				$this->Message->alert('general.noData');
+			}
 		} else {
 			$this->Message->alert('general.noData');
 		}
 		
-		$this->set(compact('header', 'geoLvlId', 'areaId', /*'FDId',*/'yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
-		
+		$this->set(compact('header', 'geoLvlId', 'areaId', 'yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', 'displayChartData', 'QATableData', 'tableTitle'));
     }
 	
 	public function dashboardsAjaxGetArea($firstBlank = false){
