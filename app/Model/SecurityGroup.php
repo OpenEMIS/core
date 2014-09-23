@@ -144,7 +144,7 @@ class SecurityGroup extends AppModel {
 			'user_id' => $this->controller->Auth->user('id')
 		);
 		
-		$this->controller->paginate = array('order' => sprintf('%s %s', $orderBy, $order));
+		$this->controller->paginate = array('order' => sprintf('%s %s', $orderBy, $order), 'limit' => 15, 'maxLimit' => 15);
 		$data = $this->controller->paginate('SecurityGroup', $conditions);
 		
 		foreach($data as &$group) {
