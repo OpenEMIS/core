@@ -9,8 +9,8 @@ $this->assign('contentHeader', $this->Label->get('DataProcessing.generate'));
 
 $this->start('contentActions');
 if($_execute) { ?>
-	<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('on')"><?php echo __('Select All'); ?></a>
-	<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
+	<a class="void divider" href="javascript: void(0);" onclick="jsTable.turncheckboxes('on')"><?php echo __('Select All'); ?></a>
+	<a class="void divider" href="javascript: void(0);" onclick="jsTable.turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
 <?php } 
 $this->end();
 
@@ -19,20 +19,6 @@ $this->start('contentBody');
 ?>
 
 <script type="text/javascript">
-	function turncheckboxes(what){
-		var  c = $('input[type="checkbox"]');
-		if(what == 'on'){
-			c.each(function(){
-				  this.checked = true;         
-			 });
-		}else{
-			c.each(function(){
-				 this.checked = false;
-			});
-		}
-		toggleGenerate();
-
-	}
 	function toggleSelect(obj) {
 		var table = $(obj).closest('.table');
 
