@@ -117,7 +117,7 @@ class InstitutionSitesController extends AppController {
 		'assessments' => 'AssessmentItemResult',
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
-		'InstitutionSitePosition'
+		'InstitutionSitePosition',
 		'InstitutionSiteProgramme'
 	);
 	

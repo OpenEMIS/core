@@ -393,9 +393,12 @@ class LabelHelper extends AppHelper {
 			'grade' => 'Grade',
 			'fees' => 'Fees',
 			'paid' => 'Paid',
-			'outstanding' => 'Outstanding'
+			'outstanding' => 'Outstanding',
+			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
+			'no_payment' => 'No Payment Records.',
+			'no_fees' => 'No Fee Records.',
+			'created' => 'Created'
 		),
-		
 		'CensusGrid' => array(
 			'x_title' => 'Table Header',
 			'x_categories' => 'Columns',
