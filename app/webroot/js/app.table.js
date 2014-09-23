@@ -218,5 +218,14 @@ var jsTable = {
 		} else {
 			$(p + ' tfoot .cell_value').html(0);
 		}
+	},
+			
+	turncheckboxes: function(what){
+		var  c = $('input.icheck-input');
+		if(what == 'on'){
+			c.iCheck('check');
+		}else{
+			c.iCheck('uncheck');
+		}
 	}
 };
