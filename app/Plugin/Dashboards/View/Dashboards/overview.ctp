@@ -17,7 +17,7 @@ $this->start('contentBody');
 $formOptions = array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Dashboards');
 $formOptions = array_merge($formOptions, $this->params['pass']);
 
-if (!empty($QATableData)) {
+if (!empty($QATableData['tableData'])) {
 	
 	echo $this->Form->create($modelName, array('url' => $formOptions, 'novalidate' => 1, 'class' => 'form-horizontal', 'inputDefaults' => array('class' => 'form-control','div' => 'row left_control','after' => '</div>')));
 	echo $this->Form->input('geo_level_id', array(
