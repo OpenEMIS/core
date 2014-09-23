@@ -9,8 +9,8 @@ $this->assign('contentHeader', $this->Label->get('DataProcessing.generate'));
 
 $this->start('contentActions');
 if($_execute) { ?>
-	<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('on')"><?php echo __('Select All'); ?></a>
-	<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
+	<a class="void divider" href="javascript: void(0);" onclick="jsTable.turncheckboxes('on')"><?php echo __('Select All'); ?></a>
+	<a class="void divider" href="javascript: void(0);" onclick="jsTable.turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
 <?php } 
 $this->end();
 
@@ -23,34 +23,6 @@ $arrLabel = array(
     'Population'=>'Generate Estimates for Population'
 );
 ?>
-
-<script type="text/javascript">
-	function turncheckboxes(what){
-		var  c = $('input[type="checkbox"]');
-		if(what == 'on'){
-			c.each(function(){
-					if( $(this).attr('disabled') == undefined){
-						$(this).attr('checked','checked');
-					}
-			 })
-		}else{
-			c.removeAttr('checked','checked');
-		}
-
-	}
-	function toggleSelect(obj) {
-		var table = $(obj).closest('.table');
-		table.find('.table_body input[type="checkbox"]').each(function() {
-				if(obj.checked) {
-					if( $(this).attr('disabled') == undefined){
-						$(this).attr('checked','checked');
-					}
-				} else {
-					$(this).removeAttr('checked');
-				}
-		});
-	}
-</script>
 
 <?php
 echo $this->Form->create('DataProcessing', array(
