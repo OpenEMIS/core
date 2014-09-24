@@ -16,7 +16,7 @@ $this->start('contentBody');
 
 ?>
 	
-	<?php echo $this->Form->create('Survey',array('url'=>array('plugin'=>'Survey','controller'=>'Survey','action'=>'index')));?>
+	<?php echo $this->Form->create('Survey',array('url'=>array('controller'=>'Survey','action'=>'index')));?>
     <div class="row">
 			<div>
                 <div class="left" style="width:300px; padding-left:3px;">
@@ -66,7 +66,7 @@ $this->start('contentBody');
 				<td class="table_cell"><?php echo __('Name'); ?></td>
 				<td class="table_cell"><?php echo __('Date'); ?></td>
 				<td class="table_cell" style="width:60px;"><?php echo __('Filesize'); ?></td>
-				<td class="table_cell" style="width:60px;"><?php echo __('Action'); ?></td>
+				<td class="table_cell" style="width:80px;"><?php echo __('Action'); ?></td>
 			</tr>
 		</thead>
 		<?php

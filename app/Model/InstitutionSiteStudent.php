@@ -121,8 +121,6 @@ class InstitutionSiteStudent extends AppModel {
 					'fax' => 'Fax',
 					'email' => 'Email',
 					'website' => 'Website'
-				),
-				'InstitutionSiteCustomField' => array(
 				)
 			),
 			'fileName' => 'Report_Student_List'
@@ -566,31 +564,6 @@ class InstitutionSiteStudent extends AppModel {
 
 			$siteCustomFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
 
-			$institutionSiteCustomFields = $siteCustomFieldModel->find('all', array(
-				'recursive' => -1,
-				'fields' => array('InstitutionSiteCustomField.name as FieldName'),
-				'joins' => array(
-					array(
-						'table' => 'institution_sites',
-						'alias' => 'InstitutionSite',
-						'conditions' => array(
-							'OR' => array(
-								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
-								'InstitutionSiteCustomField.institution_site_type_id' => 0
-							)
-						)
-					)
-				),
-				'conditions' => array(
-					'InstitutionSiteCustomField.visible' => 1,
-					'InstitutionSiteCustomField.type != 1',
-					'InstitutionSite.id' => $institutionSiteId
-				),
-				'order' => array('InstitutionSiteCustomField.order')
-					)
-			);
-
-
 			$reportFields = $this->reportMapping[$index]['fields'];
 
 			$studentCustomFieldModel = ClassRegistry::init('StudentCustomField');
@@ -609,60 +582,11 @@ class InstitutionSiteStudent extends AppModel {
 				}
 			}
 
-			foreach ($institutionSiteCustomFields as $val) {
-				if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
-					$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
-				}
-			}
 
 			$this->reportMapping[$index]['fields'] = $reportFields;
 
 			$newData = array();
 
-			$institutionSiteCustomFields2 = $siteCustomFieldModel->find('all', array(
-				'recursive' => -1,
-				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
-				'joins' => array(
-					array(
-						'table' => 'institution_sites',
-						'alias' => 'InstitutionSite',
-						'conditions' => array(
-							'InstitutionSite.id' => $institutionSiteId,
-							'OR' => array(
-								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
-								'InstitutionSiteCustomField.institution_site_type_id' => 0
-							)
-						)
-					),
-					array(
-						'table' => 'institution_site_custom_values',
-						'alias' => 'InstitutionSiteCustomValue',
-						'type' => 'left',
-						'conditions' => array(
-							'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
-							'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
-						)
-					),
-					array(
-						'table' => 'institution_site_custom_field_options',
-						'alias' => 'InstitutionSiteCustomFieldOption',
-						'type' => 'left',
-						'conditions' => array(
-							'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
-							'InstitutionSiteCustomField.type' => array(3, 4),
-							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
-						)
-					),
-				),
-				'conditions' => array(
-					'InstitutionSiteCustomField.visible' => 1,
-					'InstitutionSiteCustomField.type !=1',
-				),
-				'order' => array('InstitutionSiteCustomField.order'),
-				'group' => array('InstitutionSiteCustomField.id')
-					)
-			);
-			
 			$studentModel = ClassRegistry::init('Student');
 
 			$students = $studentModel->find('list', array(
@@ -699,7 +623,7 @@ class InstitutionSiteStudent extends AppModel {
 							'type' => 'left',
 							'conditions' => array(
 								'StudentCustomField.id = StudentCustomValue.student_custom_field_id',
-								'StudentCustomValue.student_id' => array_shift(array_slice($students, $r, 1))
+								'StudentCustomValue.student_id' => array_slice($students, $r, 1)
 							)
 						),
 						array(
@@ -722,12 +646,6 @@ class InstitutionSiteStudent extends AppModel {
 				foreach ($studentCustomFields as $val) {
 					if (!empty($val['StudentCustomField']['FieldName'])) {
 						$row['StudentCustomField'][$val['StudentCustomField']['FieldName']] = $val[0]['FieldValue'];
-					}
-				}
-
-				foreach ($institutionSiteCustomFields2 as $val) {
-					if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
-						$row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
 					}
 				}
 

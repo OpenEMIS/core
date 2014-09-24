@@ -231,6 +231,20 @@ class SearchBehavior extends ModelBehavior {
 					'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['Search']['area_id'])
 				);
 			}
+			if($advanced['Search']['identity'] > 0 || $advanced['Search']['identity_type_id'] > 0) { // search by area and all its children
+
+				$joinConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
+				$joinConditions[$class.'Identity.number'] = $advanced['Search']['identity'];
+				
+				if($advanced['Search']['identity_type_id'] > 0) { 
+					$joinConditions[$class.'Identity.identity_type_id'] = $advanced['Search']['identity_type_id'];
+				}
+				$joins[] = array(
+					'table' => strtolower($class).'_identities',
+					'alias' => $class.'Identity',
+					'conditions' => $joinConditions
+				);
+			}
 		}
 		return $joins;
 	}

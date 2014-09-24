@@ -331,6 +331,10 @@ class ConfigController extends AppController {
 				}
 			} else {
 				if($this->ConfigItem->save($data)){
+					if(strtolower($data['ConfigItem']['option_type'])=='language' && strtolower($data['ConfigItem']['type'])=='system'){
+						$lang = $data['ConfigItem']['value'];
+						$this->Session->write('configItem.language', $lang);
+					}
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
 				}
@@ -526,8 +530,12 @@ class ConfigController extends AppController {
 			return $this->redirect(array('action'=>'index', 'Dashboard'));
 		}
 
+		$imageData = $this->ConfigAttachment->getResolution($data['ConfigAttachment']['file_name']);
+
 		$image['width'] = $this->ConfigItem->getValue('dashboard_img_width');
 		$image['height'] = $this->ConfigItem->getValue('dashboard_img_height');
+		$image['original_width'] = $imageData['width'];
+		$image['original_height'] = $imageData['height'];
 		$image = array_merge($image, $this->ConfigAttachment->getCoordinates($data['ConfigAttachment']['file_name']));
 
 		$this->Session->write('DashboardId', $id);

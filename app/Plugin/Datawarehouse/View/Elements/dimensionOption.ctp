@@ -1,0 +1,2 @@
+<?php echo $this->Form->input('DatawarehouseField.'.$type.'_datawarehouse_field_id', array('type'=>'select', 'multiple'=>'checkbox', 'label'=>array('text'=> $this->Label->get('Datawarehouse.dimensions'), 'class'=>'col-md-3 control-label'), 'div'=>'form-group form-dimension', 'between'=>'<div class="col-md-4">', 
+	'after'=>'</div>', 'class'=>'col-md-6 filter-dimension', 'options'=>${$type.'DatawarehouseDimensionOptions'})); ?>

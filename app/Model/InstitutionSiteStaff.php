@@ -125,8 +125,6 @@ class InstitutionSiteStaff extends AppModel {
 					'fax' => 'Fax',
 					'email' => 'Email',
 					'website' => 'Website'
-				),
-				'InstitutionSiteCustomField' => array(
 				)
 			),
 			'fileName' => 'Report_Staff_List'
@@ -697,29 +695,6 @@ class InstitutionSiteStaff extends AppModel {
 
 			$siteCustomFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
 
-			$institutionSiteCustomFields = $siteCustomFieldModel->find('all', array(
-				'recursive' => -1,
-				'fields' => array('InstitutionSiteCustomField.name as FieldName', 'InstitutionSiteCustomField.type'),
-				'joins' => array(
-					array(
-						'table' => 'institution_sites',
-						'alias' => 'InstitutionSite',
-						'conditions' => array(
-							'OR' => array(
-								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
-								'InstitutionSiteCustomField.institution_site_type_id' => 0
-							)
-						)
-					)
-				),
-				'conditions' => array(
-					'InstitutionSiteCustomField.visible' => 1,
-					'InstitutionSiteCustomField.type != 1',
-					'InstitutionSite.id' => $institutionSiteId
-				),
-				'order' => array('InstitutionSiteCustomField.order')
-					)
-			);
 
 			$reportFields = $this->reportMapping[$index]['fields'];
 
@@ -732,16 +707,9 @@ class InstitutionSiteStaff extends AppModel {
 					)
 			);
 
-
 			foreach ($staffCustomFields as $val) {
 				if (!empty($val['StaffCustomField']['FieldName'])) {
-					$reportFields['StaffCustomField'][$val['StaffCustomField']['FieldName']] = '';
-				}
-			}
-
-			foreach ($institutionSiteCustomFields as $val) {
-				if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
-					$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+					$reportFields['StaffCustomField']['Staff '.$val['StaffCustomField']['FieldName']] = '';
 				}
 			}
 
@@ -749,49 +717,6 @@ class InstitutionSiteStaff extends AppModel {
 
 			$newData = array();
 
-			$institutionSiteCustomFields2 = $siteCustomFieldModel->find('all', array(
-				'recursive' => -1,
-				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
-				'joins' => array(
-					array(
-						'table' => 'institution_sites',
-						'alias' => 'InstitutionSite',
-						'conditions' => array(
-							'InstitutionSite.id' => $institutionSiteId,
-							'OR' => array(
-								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
-								'InstitutionSiteCustomField.institution_site_type_id' => 0
-							)
-						)
-					),
-					array(
-						'table' => 'institution_site_custom_values',
-						'alias' => 'InstitutionSiteCustomValue',
-						'type' => 'left',
-						'conditions' => array(
-							'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
-							'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
-						)
-					),
-					array(
-						'table' => 'institution_site_custom_field_options',
-						'alias' => 'InstitutionSiteCustomFieldOption',
-						'type' => 'left',
-						'conditions' => array(
-							'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
-							'InstitutionSiteCustomField.type' => array(3, 4),
-							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
-						)
-					),
-				),
-				'conditions' => array(
-					'InstitutionSiteCustomField.visible' => 1,
-					'InstitutionSiteCustomField.type !=1',
-				),
-				'order' => array('InstitutionSiteCustomField.order'),
-				'group' => array('InstitutionSiteCustomField.id')
-					)
-			);
 
 			$StaffModel = ClassRegistry::init('Staff');
 			$staff = $StaffModel->find('list', array(
@@ -809,6 +734,7 @@ class InstitutionSiteStaff extends AppModel {
 					)
 			);
 
+
 			$r = 0;
 			foreach ($data AS $row) {
 				$row['Staff']['gender'] = $this->formatGender($row['Staff']['gender']);
@@ -825,7 +751,7 @@ class InstitutionSiteStaff extends AppModel {
 							'type' => 'left',
 							'conditions' => array(
 								'StaffCustomField.id = StaffCustomValue.staff_custom_field_id',
-								'StaffCustomValue.staff_id' => array_shift(array_slice($staff, $r, 1))
+								'StaffCustomValue.staff_id' => array_slice($staff, $r, 1)
 							)
 						),
 						array(
@@ -849,12 +775,6 @@ class InstitutionSiteStaff extends AppModel {
 				foreach ($staffCustomFields as $val) {
 					if (!empty($val['StaffCustomField']['FieldName'])) {
 						$row['StaffCustomField'][$val['StaffCustomField']['FieldName']] = $val[0]['FieldValue'];
-					}
-				}
-
-				foreach ($institutionSiteCustomFields2 as $val) {
-					if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
-						$row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
 					}
 				}
 

@@ -34,7 +34,7 @@
   margin: 0;
   padding:5px;
   border: 1px solid #CCC; 
-  font: normal 12px Verdana, Arial, Helvetica, sans-serif; 
+  font: normal Verdana, Arial, Helvetica, sans-serif; 
   color:#5A5655;   
   background-color:#F8F8F8;
   text-align:left;
@@ -42,7 +42,8 @@
   z-index:88; 
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
-  width: 98%;
+/*  width: 98%;*/
+  width: 100%;
   clear:both;
 }
 

@@ -113,7 +113,7 @@ class MessageComponent extends Component {
 			)
 		),
 		'Census' => array(
-			'noSubjects' => array('type' => 'warn', 'msg' => 'There are no subjects configured in the system')
+			'noSubjects' => array('type' => 'warn', 'msg' => 'There are no subjects configured in the system.')
 		),
 		'CensusGraduate' => array(
 			'notRequired' => array('type' => 'info', 'msg' => 'Graduates not required.')
@@ -153,6 +153,9 @@ class MessageComponent extends Component {
 			'finance' => array(
 				'gnpEmpty' => array('type' => 'error', 'msg' => 'GNP value is required.')
 			)
+		),
+		'EducationGrade' => array(
+			'noData' => array('type' => 'warn', 'msg' => 'There are no grades.')
 		)
 	);
 	

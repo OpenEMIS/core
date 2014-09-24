@@ -66,7 +66,9 @@ echo $this->Html->script('Dashboards.dashboards', false);
 <?php
 echo $this->Html->css('Dashboards.dashboard', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/Dashboards/js/Charts/FusionCharts', false);
+echo $this->Html->script('/HighCharts/js/highcharts', false);
+echo $this->Html->script('/HighCharts/js/modules/exporting', false);
+echo $this->Html->script('/HighCharts/js/modules/no-data-to-display', false);
 echo $this->Html->script('Dashboards.dashboards', false);
 
 $this->extend('/Elements/layout/container_blank');
@@ -105,7 +107,7 @@ echo $this->Form->input('Update', array(
 echo $this->Html->div('clear_both underline', '', array('style' => "margin-bottom:10px;"));
 
 echo $this->Form->end();
-foreach ($displayChartData as $key => $item) {
+/*foreach ($displayChartData as $key => $item) {
 	$setupData['chartContainerId'] = 'dashboardChartContainer' . $key;
 	$setupData['chartVarId'] = 'dashboardChartVar' . $key;
 	$setupData['chartId'] = 'dashboardChartId-' . $key;
@@ -113,7 +115,12 @@ foreach ($displayChartData as $key => $item) {
 	$setupData = array_merge($setupData, $item);
 
 	echo $this->element('chartTemplate', $setupData, array('plugin' => 'Dashboards'));
+}*/
+$allGraph = '';
+foreach ($displayChartData as $key => $item) {
+	$allGraph .= $this->Html->div('hc_graph_wrapper row', '', array('id' => 'highchart-container-'.$key, 'url' => $this->Html->url($item['chartURLdata'])));
 }
+echo $this->Html->div(NULL, $allGraph, array('id' => 'hc_graph_container'));
 }
 $this->end();
 ?>

@@ -1,0 +1,1 @@
+UPDATE `navigations` SET `header` = UPPER(`header`);

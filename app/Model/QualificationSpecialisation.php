@@ -16,14 +16,20 @@ have received a copy of the GNU General Public License along with this program. 
 
 class QualificationSpecialisation extends AppModel {
 	public $useTable = "qualification_specialisations";
-	public $hasMany = array('TeacherQualification', 'StaffQualification');
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Qualification Specialisations' => array('model' => 'QualificationSpecialisation')
-		);
-		return $lookup;
-	}
+	public $actsAs = array('FieldOption');
+	public $hasMany = array('StaffQualification');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('QualificationSpecialisation.order')));

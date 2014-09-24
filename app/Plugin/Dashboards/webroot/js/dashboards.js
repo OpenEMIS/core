@@ -3,7 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
+$(document).ready(function() {
+	if($('#hc_graph_container').children().length > 0){
+		$('#hc_graph_container').children().each(function (){
+			//alert($(this).attr('id'));
+			var graphWrapper = $(this);
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				url:  graphWrapper.attr('url'),
+				//data: {searchStr: $(this).val(), areaLvl: $('#areaLevel').val()},
+				success: function(data) {
+					graphWrapper.highcharts(data);
+				}
+			});
+			
+		});
+	}
+});
 
 var Dashboards = {
 	areaChange : function(obj){
