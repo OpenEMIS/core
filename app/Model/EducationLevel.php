@@ -162,4 +162,52 @@ class EducationLevel extends AppModel {
 			return $this->redirect(array('action' => 'EducationSystem'));
 		}
 	}
+	
+	public function getInstitutionLevelsBySchoolYear($institutionSiteId, $schoolYearId){
+		$list = $this->find('all' , array(
+			'recursive' => -1,
+			'fields' => array(
+				'EducationLevel.id AS education_level_id',
+				'EducationLevel.name AS education_level_name'
+			),
+			'joins' => array(	
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id',
+						'EducationCycle.visible = 1'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationCycle.id = EducationProgramme.education_cycle_id',
+						'EducationProgramme.visible = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+						'InstitutionSiteProgramme.school_year_id' => $schoolYearId
+					)
+				)
+			),
+			'conditions' => array('EducationLevel.visible' => 1),
+			'order' => array('EducationLevel.order')
+		));
+
+		$data = array();
+		foreach($list AS $row){
+			$levelId = $row['EducationLevel']['education_level_id'];
+			$levelName = $row['EducationLevel']['education_level_name'];
+			$data[$levelId] = $levelName;
+		}
+		
+		return $data;
+	}
 }

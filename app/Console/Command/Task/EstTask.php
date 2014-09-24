@@ -265,85 +265,44 @@ class EstTask extends AppTask {
 		$year = (int)$arr[0]['school_years']['id'];
 		return $year;
 	}
+	
+	/*  following sql statement is for testing:
+
+		SELECT FLOOR( DATEDIFF( CURDATE( ) , s.date_of_birth ) / 365.25 ) AS age, iscs.student_category_id,  iscs.education_grade_id,  isc.institution_site_id 
+		FROM institution_site_class_students AS iscs, institution_site_classes AS isc, students AS s 
+		WHERE iscs.institution_site_class_id = isc.id AND iscs.student_id = s.id AND s.gender LIKE 'M' AND isc.institution_site_id = 16113 AND isc.school_year_id = 9;
+	*/
+	
 	public function censusAggregateFromStudentRegisters($current_year,$options=array()){
+		$CensusStudent = ClassRegistry::init('CensusStudent');
+		
+		$maleGenderId = $CensusStudent->Gender->getIdByName('Male');
+		$femaleGenderId = $CensusStudent->Gender->getIdByName('Female');
 		
 		$sql = <<<EOD
 				DELETE FROM census_students WHERE source = 3 AND school_year_id = {curr_year};
 				INSERT INTO census_students
 				(
-					SELECT null, A1.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), A1.student_category_id,  A1.education_grade_id,  A1.institution_site_id, {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00'  
-					FROM (
-							SELECT count(a.student_id) as Male, 
-									a.student_category_id, 
-									a.education_grade_id,
-									c.institution_site_id, 
-									c.school_year_id, 
-									d.gender, 
-									FLOOR( DATEDIFF( CURDATE( ) , d.date_of_birth ) / 365.25 ) AS age
-							FROM institution_site_class_students a
-							JOIN institution_site_classes c ON c.id = a.institution_site_class_id AND c.school_year_id ={curr_year}
-							JOIN students d ON d.id = a.student_id
-							WHERE d.gender = 'M'
-							GROUP BY a.education_grade_id, age, gender, student_category_id
-						) A1
-					LEFT JOIN 
-						( 
-							SELECT count(a.student_id) as Female, 
-									a.student_category_id, 
-									a.education_grade_id, 
-									c.institution_site_id, 
-									c.school_year_id, 
-									d.gender, 
-									FLOOR( DATEDIFF( CURDATE( ) , d.date_of_birth ) / 365.25 ) AS age
-							FROM institution_site_class_students a
-							JOIN institution_site_classes c ON c.id = a.institution_site_class_id AND c.school_year_id ={curr_year}
-							JOIN students d ON d.id = a.student_id
-							WHERE d.gender = 'F'
-							GROUP BY a.education_grade_id, age, gender, student_category_id
-						) A2
-					ON 
-						A1.age = A2.age AND A1.education_grade_id = A2.education_grade_id AND A1.student_category_id = A2.student_category_id 
-				)
-				UNION
+					SELECT null, FLOOR( DATEDIFF( CURDATE( ) , d.date_of_birth ) / 365.25 ) AS age, {male_gender_id}, count(a.student_id), a.student_category_id,  a.education_grade_id,  c.institution_site_id, {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
+					FROM institution_site_class_students AS a 
+					JOIN institution_site_classes c ON c.id = a.institution_site_class_id AND c.school_year_id ={curr_year} 
+					JOIN students d ON d.id = a.student_id 
+					WHERE d.gender = 'M' 
+					GROUP BY a.education_grade_id, age, a.student_category_id, c.institution_site_id 
+				);
+				INSERT INTO census_students
 				(
-					SELECT null,A2.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), A2.student_category_id,  A2.education_grade_id,  A2.institution_site_id,  {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
-					FROM (
-							SELECT count(a.student_id) as Male, 
-									a.student_category_id, 
-									a.education_grade_id, 
-									c.institution_site_id, 
-									c.school_year_id, 
-									d.gender, 
-									FLOOR( DATEDIFF( CURDATE( ) , d.date_of_birth ) / 365.25 ) AS age
-							FROM institution_site_class_students a
-							JOIN institution_site_classes c ON c.id = a.institution_site_class_id AND c.school_year_id ={curr_year}
-							JOIN students d ON d.id = a.student_id
-							WHERE d.gender = 'M'
-							GROUP BY a.education_grade_id, age, gender, student_category_id
-						) A1
-					RIGHT JOIN
-						(
-							SELECT count(a.student_id) as Female, 
-									a.student_category_id, 
-									a.education_grade_id, 
-									c.institution_site_id, 
-									c.school_year_id, 
-									d.gender, 
-									FLOOR( DATEDIFF( CURDATE( ) , d.date_of_birth ) / 365.25 ) AS age
-							FROM institution_site_class_students a
-							JOIN institution_site_classes c ON c.id = a.institution_site_class_id
-							AND c.school_year_id ={curr_year}
-							JOIN students d ON d.id = a.student_id
-							WHERE d.gender = 'F'
-							GROUP BY a.education_grade_id, age, gender, student_category_id
-						) A2
-
-					ON 
-						A1.age = A2.age AND A1.education_grade_id = A2.education_grade_id AND A1.student_category_id = A2.student_category_id 
-				)
-
+					SELECT null, FLOOR( DATEDIFF( CURDATE( ) , d.date_of_birth ) / 365.25 ) AS age, {female_gender_id}, count(a.student_id), a.student_category_id,  a.education_grade_id,  c.institution_site_id, {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
+					FROM institution_site_class_students AS a 
+					JOIN institution_site_classes c ON c.id = a.institution_site_class_id AND c.school_year_id ={curr_year} 
+					JOIN students d ON d.id = a.student_id 
+					WHERE d.gender = 'F' 
+					GROUP BY a.education_grade_id, age, a.student_category_id, c.institution_site_id 
+				);
 EOD;
 				$sql = str_replace("{curr_year}", $current_year, $sql);
+				$sql = str_replace("{male_gender_id}", $maleGenderId, $sql);
+				$sql = str_replace("{female_gender_id}", $femaleGenderId, $sql);
 				$db = ConnectionManager::getDataSource('default');
 				$db->rawQuery($sql);
 	}

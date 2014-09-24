@@ -9,7 +9,7 @@ $this->assign('contentHeader', __('Behaviour'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-    echo $this->Html->link(__('Edit'), array('action' => 'behaviourEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'behaviourEdit', $selectedYear), array('class' => 'divider'));
 }
 $this->end();
 
@@ -21,45 +21,61 @@ echo $this->element('census/year_options');
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
-                <th class="table_cell cell_category"><?php echo __('Category'); ?></th>
-                <th class="table_cell"><?php echo __('Male'); ?></th>
-                <th class="table_cell"><?php echo __('Female'); ?></th>
-                <th class="table_cell"><?php echo __('Total'); ?></th>
+                <th class="cell_category"><?php echo __('Category'); ?></th>
+                <th><?php echo __('Male'); ?></th>
+                <th><?php echo __('Female'); ?></th>
+                <th><?php echo __('Total'); ?></th>
             </tr>
         </thead>
-
         <tbody>
-            <?php
-            $total = 0;
-            foreach ($data as $record) {
-                $total += $record['male'] + $record['female'];
-                $record_tag = "";
-                switch ($record['source']) {
-                    case 1:
-                        $record_tag.="row_external";
-                        break;
-                    case 2:
-                        $record_tag.="row_estimate";
-                        break;
-                }
-                ?>
-                <tr>
-                    <td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['name']; ?></td>
-                    <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></td>
-                    <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></td>
-                    <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></td>
-                </tr>
-                <?php
-            } // end for
-            ?>
+			<?php
+			$total = 0;
+			foreach ($behaviourCategories AS $catId => $catName):
+				$maleValue = 0;
+				$femaleValue = 0;
+
+				$recordTagMale = "";
+				$recordTagFemale = "";
+				foreach ($genderOptions AS $genderId => $genderName):
+					if (!empty($data[$catId][$genderId])):
+						foreach ($source_type AS $k => $v):
+							if ($data[$catId][$genderId]['source'] == $v):
+								if ($genderName == 'Male'):
+									$recordTagMale = "row_" . $k;
+								else:
+									$recordTagFemale = "row_" . $k;
+								endif;
+							endif;
+						endforeach;
+
+						if ($genderName == 'Male'):
+							$maleValue = $data[$catId][$genderId]['value'];
+						else:
+							$femaleValue = $data[$catId][$genderId]['value'];
+						endif;
+					endif;
+				endforeach;
+
+				$rowTotal = $maleValue + $femaleValue;
+				$total += $rowTotal;
+				?>
+				<tr>
+					<td><?php echo $catName; ?></td>
+					<td class="cell-number <?php echo $recordTagMale; ?>"><?php echo $maleValue; ?></td>
+					<td class="cell-number <?php echo $recordTagFemale; ?>"><?php echo $femaleValue; ?></td>
+					<td class="cell-numbe"><?php echo $rowTotal; ?></td>
+				</tr>
+				<?php
+			endforeach;
+			?>
         </tbody>
 
         <tfoot>
             <tr>
-                <td class="table_cell"></td>
-                <td class="table_cell"></td>
-                <td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-                <td class="table_cell cell_value cell_number"><?php echo $total; ?></td>
+                <td></td>
+                <td></td>
+                <td class="cell-label"><?php echo __('Total'); ?></td>
+                <td class="cell-value cell-number"><?php echo $total; ?></td>
             </tr>
         </tfoot>
     </table>

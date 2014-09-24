@@ -34,7 +34,7 @@ echo $this->element('census/year_options');
 
 			<?php if (count(@$data[$infraname]['materials']) > 0) { ?>
 				<?php if ($infraname === 'Buildings' || $infraname === 'Sanitation') { ?>
-					<select name="data[Census<?php echo $infraname; ?>][material]" id="<?php echo $infraname; ?>category" class="form-control" style="margin-bottom: 10px;">
+					<select name="data[Census<?php echo $infraname; ?>][material]" id="<?php echo $infraname; ?>category" class="form-control topSelectControl">
 						<?php foreach ($arrval['materials'] as $key => $value) { ?>
 							<option value="<?php echo $key; ?>"><?php echo $value; ?></option>
 						<?php } ?>
@@ -43,14 +43,17 @@ echo $this->element('census/year_options');
 				}
 			}
 			?>
-			<?php if ($infraname === 'Sanitation') { ?>
-				<select name="data[Census<?php echo $infranameSing; ?>][gender]" id="SanitationGender" class="form-control" style="margin: 0 0 10px 10px;">
-					<option value="male">Male</option>
-					<option value="female">Female</option>
-					<option value="unisex" >Unisex</option>
-
-				</select>
-			<?php } ?>
+			<?php if ($infraname === 'Sanitation') { 
+				echo $this->Form->input('gender_id', array(
+					'id' => 'SanitationGender',
+					'name' => 'data[CensusSanitation][gender]',
+					'label' => false,
+					'div' => false,
+					'class' => 'form-control topSelectControl',
+					'options' => $genderOptions,
+					'autocomplete' => 'off'
+				));
+			} ?>
 
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
@@ -85,8 +88,8 @@ echo $this->element('census/year_options');
 									$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '');
 								} elseif ($infraname === 'Sanitation') {
 									//echo $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id'];
-									$val = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male'] : '');
-									$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '');
+									$val = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value'] : '');
+									$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source'] : '');
 								} else {
 									$val = (isset($data[$infraname]['data'][$typeid][$statids]['value']) ? $data[$infraname]['data'][$typeid][$statids]['value'] : '');
 									$source = (isset($data[$infraname]['data'][$typeid][$statids]['source']) ? $data[$infraname]['data'][$typeid][$statids]['source'] : '');
