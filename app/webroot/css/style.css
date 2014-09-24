@@ -469,3 +469,7 @@ td.input .col-md-4{
 	/* prevent horizontal scrollbar */
 	overflow-x: hidden;
 }
+select.topSelectControl{
+	margin-bottom: 10px;
+	margin-right: 10px;
+}
