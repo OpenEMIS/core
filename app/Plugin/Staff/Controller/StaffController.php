@@ -92,7 +92,7 @@ class StaffController extends StaffAppController {
 		$actions = array('index', 'advanced');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Staff');
-			$this->Session->delete('Staff');
+			//$this->Session->delete('Staff');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Staff');
 		} else if ($this->Session->check('Staff.data.name')) {
@@ -169,6 +169,10 @@ class StaffController extends StaffAppController {
 	public function advanced() {
 		$key = 'Staff.AdvancedSearch';
 		$this->set('header', __('Advanced Search'));
+
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$identityTypeOptions = $IdentityType->findList();
+
 		if ($this->request->is('get')) {
 			if ($this->request->is('ajax')) {
 				$this->autoRender = false;
@@ -192,6 +196,7 @@ class StaffController extends StaffAppController {
 			}
 			$this->redirect(array('action' => 'index'));
 		}
+		$this->set(compact('identityTypeOptions'));
 	}
 
 	public function getCustomFieldsSearch($sitetype = 0, $customfields = 'Staff') {

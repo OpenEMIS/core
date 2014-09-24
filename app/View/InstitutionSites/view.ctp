@@ -18,11 +18,11 @@ $obj = $data['InstitutionSite'];
 <fieldset class="section_break">
 	<legend><?php echo __('Information'); ?></legend>
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Site Name'); ?></div>
+		<div class="col-md-3"><?php echo __('Name'); ?></div>
 		<div class="col-md-6" style="width: 400px;"><?php echo $obj['name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Site Code'); ?></div>
+		<div class="col-md-3"><?php echo __('Code'); ?></div>
 		<div class="col-md-6"><?php echo $obj['code']; ?></div>
 	</div>
 	<div class="row">

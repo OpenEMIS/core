@@ -1,17 +1,16 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('field.option', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
+$this->assign('contentHeader', $this->Label->get("$model.title"));
 
 $this->start('contentActions');
-$params = array_merge(array('action' => $_action), $conditions);
+$params = array_merge(array('action' => $model), $conditions);
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
-$formParams = array('controller' => $this->params['controller'], 'action' => 'move', $_action);
+$formParams = array('controller' => $this->params['controller'], 'action' => 'move', $model);
 $formParams = array_merge($formParams, $conditions);
 echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formParams));
 echo $this->Form->hidden('id', array('class' => 'option-id'));

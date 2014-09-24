@@ -2,7 +2,7 @@
 	<td class="table_cell cell_description" style="width:90%">
 		<div class="input_wrapper">
 	 	<div class="training-course-title-<?php echo $index;?>">
-			<?php echo $this->Form->input('TrainingCoursePrerequisite.' . $index . '.training_course_title', array('id' => 'searchCoursePrerequisite'.$index, 'div' => false, 'maxlength'=>50, 'label' => false, 'placeholder' => __('Course Code, Course Name'))); ?>	
+			<?php echo $this->Form->input('TrainingCoursePrerequisite.' . $index . '.training_course_title', array('id' => 'searchCoursePrerequisite'.$index, 'div' => false, 'maxlength'=>50, 'label' => false, 'placeholder' => __('Course Code') . ', ' . __('Course Title'))); ?>	
 		</div>
 		<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $index . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$index . ' validate-course-prerequisite')); ?>
 		<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $index . '.code', array('class' => 'course-code-'.$index)); ?>

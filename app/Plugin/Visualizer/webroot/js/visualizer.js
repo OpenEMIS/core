@@ -49,33 +49,52 @@ $(document).ready(function() {
 				url: getRootURL() + $(this).attr('url'),
 				data: {searchStr: $(this).val(), areaLvl: $('#areaLevel').val()},
 				success: function(data) {
+				//	alert(data);
 					$('#visualizer tbody').html(data['rows']);
+					$('#pagination').html(data['pages']);
 					$('#visualizer tbody td.checkbox-column input[type="checkbox"]').iCheck({
 						checkboxClass: 'icheckbox_minimal-blue'
-					}).on ('ifChanged', function (e) {
-				$(e.currentTarget).trigger ('change');
-			});;
-					
+					}).on('ifChanged', function(e) {
+						$(e.currentTarget).trigger('change');
+					});
+
 					if (data['pages'] == '' || typeof data['pages'] === "undefined") {
-						$('#pagination').empty();
-					}
+					 $('#pagination').empty();
+					 }
 				}
 			});
 		} else {
+			if (searchStr.length <= 1) {
+				xhr = $.ajax({
+					type: "POST",
+					url: getRootURL() + $(this).attr('reseturl'),
+					data: {searchStr: $(this).val()}
+				});
+			}
 			if (startSearch) {
 				window.location.href = getRootURL() + $('#areaLevel').attr('url') + '/' + $('#areaLevel').val();
 			}
 		}
 	});
 
-});
+	});
 
 var Visualizer = {
 	formSubmit: function() {
 		$('#visualizer form').submit();
 	},
-	areaLevelChange: function(obj) {
+	dropdownChange: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
+	},
+	radioChange: function(obj){
+		$.ajax({
+			type: "POST",
+			url: getRootURL() + $(obj).attr('url'),
+			data: {sectionType: $(obj).attr('sectionType'), value: $(obj).val()},
+			success : function (data){
+				location.reload();
+			}
+		});
 	},
 	checkboxChange: function(obj) {
 		var checked = $(obj).parent().hasClass('checked') ? 'unchecked' : 'checked';
@@ -83,7 +102,10 @@ var Visualizer = {
 		$.ajax({
 			type: "POST",
 			url: getRootURL() + $(obj).attr('url'),
-			data: {sectionType: $(obj).attr('sectionType'), value: $(obj).val(), checked: checked}
+			data: {sectionType: $(obj).attr('sectionType'), value: $(obj).val(), checked: checked},
+			success : function (data){
+				//location.reload();
+			}
 		});
 	},
 	checkboxChangeAll: function(obj) {
@@ -98,12 +120,44 @@ var Visualizer = {
 				$.ajax({
 					type: "POST",
 					url: getRootURL() + singleCheckbox.attr('url'),
-					data: {sectionType: singleCheckbox.attr('sectionType'), value: singleCheckbox.val(), checked: checkAll}
+					data: {sectionType: singleCheckbox.attr('sectionType'), value: singleCheckbox.val(), checked: checkAll},
+					success : function (data){
+						//location.reload();
+					}
 				});
 			}
 		});
 	},
 	visualizeData: function(obj) {
 		window.open(getRootURL() + $(obj).attr('url') + '/' + new Date().getTime(), '_blank');
+	},
+	sortData: function(obj){
+		var direction = 'up';
+		
+		if($(obj).attr('class') == 'icon_sort_up'){
+			direction = 'down';
+		}
+		$.ajax({
+			type: "POST",
+			url: getRootURL() + $('.table-responsive').attr('sorturl'),
+			data: {col: $(obj).attr('col'), direction: direction},
+			success: function(data) {
+				location.reload();
+			}
+		});
+	},
+	legendShowHide: function(obj){
+		//alert($(obj).next( "div" ).attr('id'));
+	
+		$($(obj).next( "div" )).on('shown.bs.collapse', function() {
+			$(obj).children( "i" ).addClass('fa-minus').removeClass('fa-plus');
+		  //  $(".servicedrop").addClass('glyphicon-chevron-up').removeClass('glyphicon-chevron-down');
+		  });
+
+		$($(obj).next( "div" )).on('hidden.bs.collapse', function() {
+			$(obj).children( "i" ).addClass('fa-plus').removeClass('fa-minus');
+		  //  $(".servicedrop").addClass('glyphicon-chevron-down').removeClass('glyphicon-chevron-up');
+		  });
+	
 	}
 }

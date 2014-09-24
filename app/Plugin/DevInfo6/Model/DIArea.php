@@ -34,6 +34,9 @@ class DIArea extends DevInfo6AppModel {
 					'Area_Name' => $area['name'],
 					'Area_GId' => String::uuid(),
 					'Area_Level' => $levelMap[$area['area_level_id']],
+					'id' => $area['id'],
+					'lft' => $area['lft'],
+					'rght' => $area['rght'],
 					'Area_Map' => '',
 					'Area_Block' => '',
 					'Area_Global' => 0
