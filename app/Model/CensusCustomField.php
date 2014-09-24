@@ -260,6 +260,11 @@ class CensusCustomField extends AppModel {
 			$site = $controller->InstitutionSite->findById($institutionSiteId);
 			//$data = $controller->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
 			//$datafields = $controller->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+			$controller->CensusCustomField->contain(array(
+				'CensusCustomFieldOption' => array(
+					'conditions' => array('CensusCustomFieldOption.visible' => 1)
+				)
+			));
 			$datafields = $controller->CensusCustomField->find('all', array('conditions' => array('CensusCustomField.institution_site_type_id' => array($site['InstitutionSite']['institution_site_type_id'], 0)), 'order' => array('CensusCustomField.institution_site_type_id', 'CensusCustomField.order')));
 			//pr($datafields); echo "d2";
 			$controller->CensusCustomValue->unbindModel(
