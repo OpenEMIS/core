@@ -156,6 +156,11 @@ class MessageComponent extends Component {
 		),
 		'EducationGrade' => array(
 			'noData' => array('type' => 'warn', 'msg' => 'There are no grades.')
+		),
+		'UserAccess' => array(
+			'add' => array(
+				'accessExists' => array('type' => 'error', 'msg' => 'This account is already linked to the user.')
+			)
 		)
 	);
 	
