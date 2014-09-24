@@ -5,6 +5,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -15,7 +16,7 @@ echo $this->Html->link($this->Label->get('general.reset'), array('action' => 're
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Visualizer'));
-$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label';
+$formOptions['inputDefaults']['label']['class'] = 'col-md-1 control-label left';
 
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($this->action, $formOptions);
@@ -31,7 +32,13 @@ echo $this->Form->input('search', array('id' => 'search'));
 		'url' => 'Visualizer/ajaxUpdateUserCBSelection'
 		));
 	
-	$tableHeaders = array($headerfirstCol,__('Source'));
+	$colArr = array(
+		array('name' => 'Source', 'col' => 'IndicatorClassification.IC_Name'),
+	);
+
+	$tableHeaders = $this->Visualizer->getTableHeader($colArr, $sortCol, $sortDirection);
+	array_unshift($tableHeaders, $headerfirstCol); 
+	//$tableHeaders = array($headerfirstCol,__('Source'));
 
 	$tableData = array();
 	if (!empty($tableRowData)) {
@@ -63,7 +70,7 @@ echo $this->Form->input('search', array('id' => 'search'));
 			$i++;
 		}
 	}
-	echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+	echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass'));
 	?>
 </div>
 <?php

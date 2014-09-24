@@ -29,12 +29,14 @@
                                     	<!-- This portion can be simplified -->
                                     	<?php if($arrSecVal['type']=='Grid_Multi'){ ?> 
                                         	<!-- Question Heading -->
-                                            <div class="table" style=" <?php if($arrSecVal['type']=='Grid_Fix' || $arrSecVal['type']=='Grid_Unlimited'){ echo 'display:none'; } ?>; margin-top:10px;">
-                                                <div class="table_head">
-                                                    <div class="table_cell cell_checkbox">
+                                            <table style=" <?php if($arrSecVal['type']=='Grid_Fix' || $arrSecVal['type']=='Grid_Unlimited'){ echo 'display:none'; } ?>;" class="table table-striped table-hover table-bordered">
+                                                <thead class="table_head">
+                                                    <tr>
+                                                     <th style="width:80px;">
 													<?php
-                                                        echo $this->Form->input($topic.'.'.$section.'.checked', array('label'=>false, 'type' => 'checkbox',
-                                                                                                                      'onchange'=>'Survey.activate(this, \'.table_row\')'));
+                                                        echo $this->Form->input($topic.'.'.$section.'.checked', array(
+                                                            'div'=>false, 'label'=>false, 'between'=>false, 'after'=>false, 'class'=>'form-control',
+                                                            'type' => 'checkbox','onchange'=>'Survey.activate(this, \'.table_row\')'));
                                                         echo $this->Form->input($topic.'.'.$section.'.order', array( 'value' => $arrSecVal['order'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.type', array( 'value' => $arrSecVal['type'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.label', array( 'value' => __($arrSecVal['label']), 'type' => 'hidden'));
@@ -43,9 +45,10 @@
                                                         echo $this->Form->input($topic.'.'.$section.'.value', array( 'value' => __($arrSecVal['value']), 'type' => 'hidden'));
                                                         }
                                                     ?>
-                                                    </div>
-                                                    <div class="table_cell" style="text-align:left;"><?php echo __('Options'); ?></div>
-                                                </div>
+                                                    </th>
+                                                    <th style="vertical-align:middle;"><?php echo __('Options'); ?></th>
+                                                    </tr>
+                                                </thead>
                                                 <!-- Sorting Javascript -->
                                                 <script language="javascript">
                                                     $(function() {
@@ -54,14 +57,15 @@
                                                                 });
                                                 </script>
                                                 <!-- End Sorting Javascript -->
-                                                <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
+                                                <tbody id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row">
-                                                        <div class="table_cell cell_checkbox">
+                                                    <tr>
+                                                        <td>
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
-                                                                                array('label'=>false, 'type' => 'checkbox','onchange'=>'Survey.activateQuestion(this, \'.table_row\')'));
+                                                            array('label'=>false, 'div'=>false, 'between'=>false, 'after'=>false, 'class'=>'form-control',
+                                                                'type' => 'checkbox','onchange'=>'Survey.activateQuestion(this, \'.table_row\')'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.order', 
                                                                                 array( 'value' => $arrQuestionVal['order'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.type', 
@@ -128,22 +132,25 @@
                                                         }
                                                         ?>
                                                         <!-- End Mapping here -->
-                                                        </div>
-                                                        <div class="table_cell cell_section_name"><?php echo $arrQuestionVal['label']; ?></div>
-                                                    </div>
+                                                        </td>
+                                                        <td><?php echo $arrQuestionVal['label']; ?></td>
+                                                    </tr>
                                                 <?php $qCnt++; ?>
                                                 <?php } ?>
-                                                </ul>
-                                            </div>
+                                                </tbody>
+                                            </table>
                                             <!-- End Question Heading -->
                                         <?php }else{ ?>
                                             <!-- Question Heading -->
-                                            <div class="table" style=" <?php if($arrSecVal['type']=='Grid_Fix' || $arrSecVal['type']=='Grid_Unlimited'){ echo ''; } ?>; margin-top:10px;">
-                                                <div class="table_head">
-                                                    <div class="table_cell cell_checkbox">
+                                            <table style=" <?php if($arrSecVal['type']=='Grid_Fix' || $arrSecVal['type']=='Grid_Unlimited'){ echo ''; } ?>;" 
+                                                class="table table-striped table-hover table-bordered">
+                                                <thead class="table_head">
+                                                    <tr>
+                                                    <th style="width:80px;">
 													<?php
-                                                        echo $this->Form->input($topic.'.'.$section.'.checked', array('label'=>false, 'type' => 'checkbox',
-                                                                                                                      'onchange'=>'Survey.activate(this, \'.table_row\')'));
+                                                        echo $this->Form->input($topic.'.'.$section.'.checked', 
+                                                            array('label'=>false, 'div'=>false, 'between'=>false, 'after'=>false, 'class'=>'form-control', 
+                                                                'type' => 'checkbox', 'onchange'=>'Survey.activate(this, \'.table_row\')'));
                                                         echo $this->Form->input($topic.'.'.$section.'.order', array( 'value' => $arrSecVal['order'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.type', array( 'value' => $arrSecVal['type'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.label', array( 'value' => __($arrSecVal['label']), 'type' => 'hidden'));
@@ -152,9 +159,10 @@
                                                         echo $this->Form->input($topic.'.'.$section.'.value', array( 'value' => __($arrSecVal['value']), 'type' => 'hidden'));
                                                         }
                                                     ?>
-                                                    </div>
-                                                    <div class="table_cell" style="text-align:left;"><?php echo __('Options'); ?></div>
-                                                </div>
+                                                    </th>
+                                                    <th style="vertical-align:middle;"><?php echo __('Options'); ?></th>
+                                                    </tr>
+                                                </thead>
                                                 <!-- Sorting Javascript -->
                                                 <script language="javascript">
                                                     $(function() {
@@ -163,14 +171,15 @@
                                                                 });
                                                 </script>
                                                 <!-- End Sorting Javascript -->
-                                                <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
+                                                <tbody id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row">
-                                                        <div class="table_cell cell_checkbox">
+                                                    <tr>
+                                                        <td>
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
-                                                                                array('label'=>false, 'type' => 'checkbox','onchange'=>'Survey.activateQuestion(this, \'.table_row\')'));
+                                                            array('label'=>false, 'div'=>false, 'between'=>false, 'after'=>false, 'class'=>'form-control', 
+                                                                'type' => 'checkbox','onchange'=>'Survey.activateQuestion(this, \'.table_row\')'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.order', 
                                                                                 array( 'value' => $arrQuestionVal['order'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.type', 
@@ -196,9 +205,9 @@
                                                                 }
                                                             }
                                                         ?>
-                                                        </div>
-                                                        <div class="table_cell cell_section_name"><?php echo $arrQuestionVal['label']; ?></div>
-                                                    </div>
+                                                        </td>
+                                                        <td><?php echo $arrQuestionVal['label']; ?></td>
+                                                    </tr>
                                                 <?php $qCnt++; ?>
                                                 <?php } ?>
                                                 
@@ -231,8 +240,8 @@
                                                 }
                                                 ?>
                                                 <!-- End Mapping here -->
-                                                </ul>
-                                            </div>
+                                                </tbody>
+                                            </table>
                                             <!-- End Question Heading -->
                                         <?php } ?>
                              <?php $sectionCnt++; ?>

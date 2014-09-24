@@ -1,9 +1,8 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Generated Files'));
+$this->assign('contentHeader', __($reportNameCrumb));
 $this->start('contentActions');
+echo $this->Html->link(__('Back'), array('action' => $this->action), array('class' => 'divider'));
 $this->end();
 $this->assign('contentId', 'report-list');
 $this->start('contentBody');
@@ -12,43 +11,45 @@ $this->start('contentBody');
 <?php if(count($files) > 0) {?>
 <div class="table-responsive">
 <table class="table table-striped table-hover table-bordered">
-	<thead class="table_head">
+	<thead>
 		<tr>
-			<td class="table_cell col_name"><?php echo __('Name'); ?></td>
-			<td class="table_cell col_name"><?php echo __('File size'); ?></td>
-			<td class="table_cell col_lastgen"><?php echo __('File Type'); ?></td>
-			<td class="table_cell col_name"><?php echo __('Generated'); ?></td>
+			<th class="col_name"><?php echo __('Name'); ?></th>
+			<th class="col_name"><?php echo __('File size'); ?></th>
+			<th class="col_lastgen"><?php echo __('File Type'); ?></th>
+			<th class="col_name"><?php echo __('Generated'); ?></th>
 		</tr>
 	</thead>
-	<?php foreach($files as $fileType => $arrV){ ?>
+	<?php foreach($files as $fileType => $arrV): ?>
 	
-	<tbody class="table_body">
-	<?php foreach($arrV as $time => $arrFileInfo){	?>
+	<tbody>
+	<?php foreach($arrV as $time => $arrFileInfo):	?>
 	
-		<tr row-id="<?php echo $arrFileInfo['basename'];?>" class="table_row">
-			<td class="table_cell col_name"><?php echo __($arrFileInfo['name']); ?></td>
-			<td class="table_cell col_name center"><?php echo $arrFileInfo['size'];?></td>
+		<tr row-id="<?php echo $arrFileInfo['basename'];?>">
+			<td class="col_name"><?php echo __($arrFileInfo['name']); ?></td>
+			<td class="col_name center"><?php echo $arrFileInfo['size'];?></td>
 			<?php  
-			if($fileType === 'csv'){
+			if($fileType === 'csv'):
 			?>
-				<td class="table_cell col_lastgen center">
+				<td class="col_lastgen center">
 					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>, 
 					<?php echo $this->Html->link('HTML', array('action' => $this->action.'ViewHtml', $arrFileInfo['basename']), array('escape' => false, 'target' => '_blank')); ?>
 				</td>
 			<?php 
-			}else{
+			else:
 			?>
-				<td class="table_cell col_lastgen center"><?php echo $fileType;?></td>
+				<td class="col_lastgen center">
+					<?php echo $this->Html->link(strtoupper($fileType), array('action' => $this->action.'Download', $arrFileInfo['basename']), array('escape' => false)); ?>
+				</td>
 			<?php 
-			}
+			endif;
 			?>
-			<td class="table_cell col_name center"><?php echo $arrFileInfo['time'];?></td>  
+			<td class="col_name"><?php echo $arrFileInfo['time'];?></td>  
 		</tr>
 	
-	<?php } ?>
+	<?php endforeach; ?>
 	</tbody>
 	
-	<?php } ?>
+	<?php endforeach; ?>
 </table>
 </div>
 <?php } ?>

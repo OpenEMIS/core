@@ -8,7 +8,7 @@ echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', a
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Add New Institution'));
+$this->assign('contentHeader', __('Add new Institution'));
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'add'));

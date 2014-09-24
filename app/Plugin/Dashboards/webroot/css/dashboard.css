@@ -22,3 +22,15 @@
 	width: 280px;
 	padding-right: 20px;
 }
+
+.hc_graph_wrapper{
+	width: 470px;
+	height: 353px;
+	display: inline-block;
+	border: 1px solid grey;
+	margin-right: 0px !important;
+}
+
+.hc_graph_wrapper:nth-child(odd){
+	margin-right: 10px !important;
+}

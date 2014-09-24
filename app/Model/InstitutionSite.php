@@ -96,6 +96,11 @@ class InstitutionSite extends AppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Address'
+			),
+			'ruleMaximum' => array(
+				'rule' => array('maxLength', 255),
+				'required' => true,
+				'message' => 'Please eneter an address within 255 characters'
 			)
 		),
 		'postal_code' => array(
@@ -573,6 +578,24 @@ class InstitutionSite extends AppModel {
                         'type' => 'LEFT',
 			'conditions' => array('InstitutionSite.area_id = Area.id')
 		);
+
+		if(!is_null($params['AdvancedSearch'])) {
+			$advanced = $params['AdvancedSearch'];
+			if($advanced['Search']['area_id'] > 0) { // search by area and all its children
+				$joins[] = array(
+					'table' => 'areas',
+					'alias' => 'AreaAll',
+					'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['Search']['area_id'])
+				);
+			}
+			if($advanced['Search']['education_programme_id'] > 0) { 
+				$joins[] = array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array('InstitutionSiteProgramme.institution_site_id = InstitutionSite.id', 'InstitutionSiteProgramme.education_programme_id = ' . $advanced['Search']['education_programme_id'])
+				);
+			}
+		}
                 
 		return $joins;
 	}
@@ -594,44 +617,7 @@ class InstitutionSite extends AppModel {
 			if(count($arrAdvanced) > 0 ){
                             foreach($arrAdvanced as $key => $advanced){
                                //echo $key;
-                                if($key == 'Search'){
-                                    if($advanced['area_id'] > 0) { // search by area and all its children
-                                            $joins = array(
-                                                    array(
-                                                            'table' => 'areas',
-                                                            'alias' => 'Area',
-                                                            'conditions' => array('Area.id = InstitutionSite.area_id')
-                                                    ),
-                                                    array(
-                                                            'table' => 'areas',
-                                                            'alias' => 'AreaAll',
-                                                            'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['area_id'])
-                                                    )
-                                            );
-                                            $dbo = $this->getDataSource();
-                                            $query = $dbo->buildStatement(array(
-                                                    'fields' => array('InstitutionSite.id'),
-                                                    'table' => 'institution_sites',
-                                                    'alias' => 'InstitutionSite',
-                                                    'limit' => null, 
-                                                    'offset' => null,
-                                                    'joins' => $joins,
-                                                    //'conditions' => array('InstitutionSite.institution_id = Institution.id'),
-                                                    'group' => array('InstitutionSite.id'),
-                                                    'order' => null
-                                            ), $this);
-                                            //pr($query);
-                                            $conditions[] = 'InstitutionSite.id IN (' . $query . ')';
-                                    }
-                                }
-                                /*
-                                 * 
-                                 * 
-                                 `Institution`.id in (SELECT institution_id FROM institution_custom_values WHERE id = 10) 
-
-AND 
-`Institution`.id in (SELECT institution_id FROM institution_sites WHERE institution_sites.id in (SELECT institution_site_id FROM  institution_site_custom_values WHERE id = 10)) 
-                                 */
+                               
                                 if(strpos($key,'CustomValue') > 0){
                                    //pr($advanced);
                                    
@@ -683,45 +669,6 @@ AND
                                    }
                                    
                                 }
-                            
-                                /*
-                                 * 
-                                 * if($key == 'InstitutionCustomValue'){
-                                   
-                                    if($advanced > 0) { 
-                                       
-                                        
-                                            $joins = array(
-                                                    array(
-                                                            'table' => Inflector::tableize($key),
-                                                            'alias' => $key,
-                                                            'conditions' => array($key.'.institution_site_id = InstitutionSite.id')
-                                                    )
-                                            );
-                                            
-                                             foreach($advanced as $type => $arrTypeVals){
-                                            
-                                                    echo $this->inputsMapping[$type];
-                                                    pr($arrTypeVals);
-                                                }
-
-                                       
-                                            $dbo = $this->getDataSource();
-                                            $query = $dbo->buildStatement(array(
-                                                    'fields' => array('InstitutionSite.institution_id'),
-                                                    'table' => 'institution_sites',
-                                                    'alias' => 'InstitutionSite',
-                                                    'limit' => null, 
-                                                    'offset' => null,
-                                                    'joins' => $joins,
-                                                    'conditions' => array('InstitutionSite.institution_id = Institution.id'),
-                                                    'group' => array('InstitutionSite.institution_id'),
-                                                    'order' => null
-                                            ), $this);
-                                            $conditions[] = 'EXISTS (' . $query . ')';
-                                    }
-                                }
-                                 */
                             }
                             
                             

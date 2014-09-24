@@ -5,6 +5,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Visualizer.visualizer', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Visualizer.font-awesome.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('Visualizer.visualizer', false);
 
 $this->extend('Elements/layout/container_visualizer_wizard');
@@ -15,11 +16,13 @@ echo $this->Html->link($this->Label->get('general.reset'), array('action' => 're
 $this->end();
 $this->start('contentBody');
 $tableClass = 'table-checkable table-input';
+$tableWrapperClass = 'collapse';
 ?>
 
 <fieldset>
-    <legend><?php echo __('Indicators')?></legend>
+    <legend class="reviewTitle" data-toggle="collapse" data-target="#collapseIndicator" onclick='Visualizer.legendShowHide(this)'><?php echo __('Indicators')?> <i class='fa fa-plus'></i></legend>
 	<?php 
+		$tableWrapperId = 'collapseIndicator';
 		$tableHeaders = array(__('Indicator'),__('Unit'),__('Dimension'));
 		$tableData = array();
 		foreach ($reviewData['indicator'] as $obj) {
@@ -30,30 +33,34 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 
 <fieldset>
-    <legend><?php echo __('Areas')?></legend>
+    <legend class="reviewTitle" data-toggle="collapse" data-target="#collapseArea" onclick='Visualizer.legendShowHide(this)'><?php echo __('Areas')?> <i class='fa fa-plus'></i></legend>
 	<?php 
+		$tableWrapperId = 'collapseArea';
 		$tableHeaders = $areaLevelOptions;
+		array_unshift($tableHeaders, __('Area ID'));
 		$tableData = array();
 		foreach ($reviewData['area'] as $obj) {
 			$row = array();
-			for ($i = 1; $i <= count($tableHeaders); $i++) {
-				$row[] = $obj['level_' . $i . '_name'];
+			$row[] = array($obj['Area_ID'], array('class' => 'data-list'));
+			for ($i = 2; $i <= count($tableHeaders); $i++) {
+				$row[] = $obj['level_' . ($i-1) . '_name'];
 			}
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 
 <fieldset>
-    <legend><?php echo __('Time Periods')?></legend>
+    <legend class="reviewTitle" data-toggle="collapse" data-target="#collapseTime" onclick='Visualizer.legendShowHide(this)'><?php echo __('Time Periods')?> <i class='fa fa-plus'></i></legend>
 	<?php 
+		$tableWrapperId = 'collapseTime';
 		$tableHeaders = array(__('Time Period'));
 		$tableData = array();
 		foreach ($reviewData['timeperiod'] as $obj) {
@@ -62,13 +69,14 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 
 <fieldset>
-    <legend><?php echo __('Sources')?></legend>
+    <legend class="reviewTitle" data-toggle="collapse" data-target="#collapseSource" onclick='Visualizer.legendShowHide(this)'><?php echo __('Sources')?> <i class='fa fa-plus'></i></legend>
 	<?php 
+		$tableWrapperId = 'collapseSource';
 		$tableHeaders = array(__('Source'));
 		$tableData = array();
 		foreach ($reviewData['source'] as $obj) {
@@ -77,7 +85,7 @@ $tableClass = 'table-checkable table-input';
 			$tableData[] = $row;
 		}
 		
-		echo $this->element('/templates/table', compact('tableHeaders', 'tableData', 'tableClass'));
+		echo $this->element('/layout/table', compact('tableHeaders', 'tableData', 'tableClass', 'tableWrapperId', 'tableWrapperClass'));
 	?>
 </fieldset>
 <?php

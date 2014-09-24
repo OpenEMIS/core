@@ -80,7 +80,11 @@ class LabelHelper extends AppHelper {
 			'current' => 'Current',
 			'past' => 'Past',
 			'options' => 'Options',
-			'noOptions' => 'There are no options.'
+			'noOptions' => 'There are no options.',
+			'noData' => 'No Data',
+			'amount' => 'Amount',
+			'total' => 'Total',
+			'fee' => 'Fee'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -109,44 +113,62 @@ class LabelHelper extends AppHelper {
 		),
 		'Area' => array(
 			'name' => 'Area',
+			'area_level_id' => 'Area Level',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
 			'name' => 'Area Level'
 		),
+		'AreaEducation' => array(
+			'area_education_level_id' => 'Area Education Level'
+		),
 		'AreaEducationLevel' => array(
 			'name' => 'Area Level'
 		),
 		'EducationSystem' => array(
+			'title' => 'Education Systems',
 			'name' => 'Education System'
 		),
 		'EducationLevel' => array(
-			'education_level_isced_id' => 'ISCED'
+			'title' => 'Education Levels',
+			'education_level_isced_id' => 'ISCED',
+			'education_system_id' => 'Education System'
 		),
 		'EducationCycle' => array(
+			'title' => 'Education Cycles',
 			'admission_age' => 'Admission Age',
 			'education_level_id' => 'Education Level'
 		),
 		'EducationProgramme' => array(
+			'title' => 'Education Programmes',
+			'name' => 'Education Programme',
 			'education_cycle_id' => 'Education Cycle',
 			'education_field_of_study_id' => 'Field of Study',
 			'education_certification_id' => 'Certification'
 		),
-		'EducationProgramme' => array(
-			'name' => 'Education Programme'
-		),
 		'EducationGrade' => array(
-			'name' => 'Education Grade'
+			'title' => 'Education Grades',
+			'name' => 'Education Grade',
+			'education_programme_id' => 'Education Programme'
 		),
 		'EducationSubject' => array(
+			'title' => 'Education Subjects',
 			'name' => 'Subject',
 			'code' => 'Subject Code'
 		),
 		'EducationGradeSubject' => array(
+			'title' => 'Education Grades - Subjects',
 			'hours_required' => 'Hours Required'
 		),
+		'EducationCertification' => array(
+			'title' => 'Education Certifications'
+		),
 		'EducationFieldOfStudy' => array(
+			'title' => 'Field of Study',
 			'education_programme_orientation_id' => 'Programme Orientation'
+		),
+		'EducationProgrammeOrientation' => array(
+			'title' => 'Programme Orientations'
 		),
 		'Institution' => array(
 			'name' => 'Institution'
@@ -163,6 +185,9 @@ class LabelHelper extends AppHelper {
 			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
+		),
+		'InstitutionSiteProgramme' => array(
+			'title' => 'Programmes'
 		),
 		'InstitutionSiteClass' => array(
 			'no_of_seats' => 'Seats',
@@ -234,7 +259,8 @@ class LabelHelper extends AppHelper {
 			'uploaded_on' => 'Uploaded On'
 		),
 		'Identities' => array(
-			'issue_location' => 'Issuer'
+			'issue_location' => 'Issuer',
+			'identity' => 'Identity'
 		),
 		'QualificationLevel' => array(
 			'name' => 'Level'
@@ -258,7 +284,8 @@ class LabelHelper extends AppHelper {
 			'process' => 'Processes',
 			'export' => 'Export',
 			'generate' => 'Generate',
-			'custom_indicators' => 'Custom Indicators'
+			'custom_indicators' => 'Custom Indicators',
+			'processing' => 'Processing'
 		),
 		'Student' => array(
 			'add_existing' => 'Add existing Student'
@@ -352,13 +379,18 @@ class LabelHelper extends AppHelper {
 		'SecurityUser' => array(
 			'name' => 'User'
 		),
-		'FinanceFee' => array(
-			'fee' => 'Fee',
-			'total' => 'Total',
-			'total_fee' => 'Total Fee',
+		
+		'InstitutionSiteFee' => array(
+			'school_year_id' => 'School Year',
+			'education_grade_id' => 'Grade',
+			'InstitutionSiteFeeType' => 'Fee Types'
+		),
+		
+		'StudentFee' => array(
+			'title' => 'Fees',
+			'programme' => 'Programme',
+			'grade' => 'Grade',
 			'fees' => 'Fees',
-			'amount' => 'Amount',
-			'amount_currency' => 'Amount (%s)',
 			'paid' => 'Paid',
 			'outstanding' => 'Outstanding',
 			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
@@ -366,7 +398,6 @@ class LabelHelper extends AppHelper {
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
 		),
-		
 		'CensusGrid' => array(
 			'x_title' => 'Table Header',
 			'x_categories' => 'Columns',
@@ -380,6 +411,16 @@ class LabelHelper extends AppHelper {
 			'spa' => 'Spanish',
 			'fre' => 'French',
 			'ara' => 'Arabic'
+		),
+		'Autocomplete' => array(
+			'no_result' => 'No records matched.'
+		),
+		'Datawarehouse' => array(
+			'indicator' => 'Indicator',
+			'unit' => 'Unit',
+			'module' => 'Module',
+			'function' => 'Function',
+			'dimensions' => 'Dimensions'
 		)
 	);
 	

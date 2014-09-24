@@ -630,7 +630,11 @@ class QualityBatchReport extends QualityAppModel {
 					if ($key != 'Maximum' && $key != 'Minimum' && $key != 'Average') {
 						$tempArray[$num][$key] = $value;
 					} else {
-						$tempArray[$num][$key] = round(($value / $rubricTemplateWeightingInfo[$rubricId]['TotalWeighting']) * 100, 2);
+						if(!empty($rubricTemplateWeightingInfo[$rubricId]['TotalWeighting'])){
+							$tempArray[$num][$key] = round(($value / $rubricTemplateWeightingInfo[$rubricId]['TotalWeighting']) * 100, 2);
+						}else{
+							$tempArray[$num][$key] = 0;
+						}
 
 						if ($key == 'Average') {
 							$passFail = 'Fail';

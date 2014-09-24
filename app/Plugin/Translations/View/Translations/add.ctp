@@ -10,7 +10,6 @@ if (!empty($this->data['Translation']['id'])) {
 } else {
 	$action['action'] = 'index';
 }
-
 echo $this->Html->link(__('Back'), $action, array('class' => 'divider'));
 $this->end();
 
