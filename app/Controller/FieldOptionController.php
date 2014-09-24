@@ -18,7 +18,6 @@
 App::uses('AppController', 'Controller');
 
 class FieldOptionController extends AppController {
-
 	public $uses = array(
 		'FieldOption',
 		'FieldOptionValue'
