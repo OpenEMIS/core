@@ -26,6 +26,7 @@ if (!empty($tableRowData)) {
 
 		$row = array();
 		$row[] = array($input, array('class' => $additionalClass));
+		$row[] = array($obj['Area_ID'], array('class' => 'data-list'));
 		for ($i = 1; $i <= count($areaLevelOptions); $i++) {
 			$row[] = $obj['level_' . $i . '_name'];
 			//	pr($obj['level_' . $i . '_name']);
