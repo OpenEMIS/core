@@ -18,8 +18,7 @@
 App::uses('AppController', 'Controller');
 
 class FieldOptionController extends AppController {
-
-	public $uses = Array(
+	public $uses = array(
 		'FieldOption',
 		'FieldOptionValue'
 	);
@@ -83,7 +82,9 @@ class FieldOptionController extends AppController {
 			if (isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
-			$conditions[$conditionId] = $selectedSubOption;
+			if ($selectedSubOption != 0) {
+				$conditions[$conditionId] = $selectedSubOption;
+			}
 			$this->set(compact('subOptions', 'selectedSubOption', 'conditionId'));
 		}
 		$data = $this->FieldOptionValue->getAllValues($conditions);
