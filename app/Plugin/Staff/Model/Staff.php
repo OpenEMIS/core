@@ -60,7 +60,8 @@ class Staff extends StaffAppModel {
 			'className' => 'StaffTrainingSelfStudy',
 			'foreignKey' => 'staff_id',
 			'dependent' => true
-		)
+		),
+		'InstitutionSiteStaff'
 	);
 
 	public $validate = array(
