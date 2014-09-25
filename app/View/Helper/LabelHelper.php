@@ -312,8 +312,11 @@ class LabelHelper extends AppHelper {
 			'name' => 'Shift Name'
 		),
 		'Position' => array(
+			'title' => 'Positions',
+			'name' => 'Position',
 			'teaching' => 'Teaching',
-			'number' => 'Number'
+			'number' => 'Number',
+			'institution_site_position_id' => 'Title'
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
