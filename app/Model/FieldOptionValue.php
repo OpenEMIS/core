@@ -160,15 +160,5 @@ class FieldOptionValue extends AppModel {
 		
 		return !empty($result) ? $result[$alias]['id'] : NULL;
 	}
-	
-	public function getIdByName($name) {
-		$alias = $this->alias;
-		
-		$result = $this->find('first', array(
-			'conditions' => array($alias.'.name' => $name, 'FieldOption.code' => $alias)
-		));
-		
-		return !empty($result) ? $result[$alias]['id'] : NULL;
-	}
 }
 ?>
