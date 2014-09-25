@@ -82,6 +82,7 @@ class StaffController extends StaffAppController {
 		'additional' => 'Staff.StaffCustomField',
 		// new ControllerAction
 		'InstitutionSiteStaff',
+		'Position' => array('plugin' => 'Staff')
 	);
 
 	public function beforeFilter() {
@@ -311,36 +312,6 @@ class StaffController extends StaffAppController {
 		$this->set('model', $model);
 		$this->set('addressAreaId', $addressAreaId);
 		$this->set('birthplaceAreaId', $birthplaceAreaId);
-	}
-
-	public function positions() {
-		$this->Navigation->addCrumb(ucfirst($this->action));
-		$this->set('header', 'Positions');
-		$staffId = $this->Session->read('Staff.id');
-		$data = array();
-
-		$list = $this->InstitutionSiteStaff->getPositions($staffId);
-		foreach ($list as $row) {
-			$result = array();
-			$dataKey = '';
-			foreach ($row as $key => $element) { // compact array
-				/*if (array_key_exists('institution', $element)) {
-					$dataKey .= $element['institution'];
-					continue;
-				}*/
-				if (array_key_exists('institution_site', $element)) {
-					$dataKey .= /*' - ' .*/ $element['institution_site'];
-					continue;
-				}
-
-				$result = array_merge($result, array($key => $element));
-			}
-			$data[$dataKey][] = $result;
-		}
-		if (empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_POSITION'), array('type' => 'info', 'dismissOnClick' => false));
-		}
-		$this->set('data', $data);
 	}
 
 	public function delete() {
