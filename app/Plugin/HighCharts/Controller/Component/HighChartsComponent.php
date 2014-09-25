@@ -423,7 +423,7 @@ class HighChartsComponent extends Component {
 			$year = $this->getYearSubcaption();
 		}
 		$year = isset($year)? $year : $this->getYearSubcaption();
-		$caption = sprintf('Year : %s  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unit : %s', $year, $this->selectedUnits[0]);
+		$caption = sprintf('<b>Year</b> : %s | <b>Unit</b> : %s', $year, $this->selectedUnits[0]);
 		return $caption;
 	}
 	
