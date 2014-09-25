@@ -79,6 +79,8 @@ class LabelHelper extends AppHelper {
 			'national_code' => 'National Code',
 			'current' => 'Current',
 			'past' => 'Past',
+			'options' => 'Options',
+			'noOptions' => 'There are no options.',
 			'noData' => 'No Data',
 			'amount' => 'Amount',
 			'total' => 'Total',
