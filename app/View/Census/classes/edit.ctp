@@ -60,7 +60,7 @@ echo $this->element('census/year_options');
 							));
 							?>
 							<td class="<?php echo $record_tag; ?>"><?php echo $name; ?></td>
-							<td class="<?php echo $record_tag; ?>"><?php echo $grade['name']; ?></td>
+							<td class="<?php echo $record_tag; ?>"><?php echo $grade['name']['gradeName']; ?></td>
 							<td>
 								<div class="input_wrapper">
 									<?php
