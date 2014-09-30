@@ -293,7 +293,7 @@ class InstitutionSiteProgramme extends AppModel {
 						'education_grades' => array()
 					);
 				}
-				$data[$name]['education_grades'][$grade['id']] = $grade['name'];
+				$data[$name]['education_grades'][$grade['id']] = array('gradeName' => $grade['name']);
 			} else {
 				if(!isset($data[$programme['id']])) {
 					$data[$programme['id']] = $name;

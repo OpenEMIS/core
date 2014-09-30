@@ -22,7 +22,11 @@ class CensusTeacherFte extends AppModel {
 	public $belongsTo = array(
 		'EducationLevel',
 		'InstitutionSite',
-		'SchoolYear'
+		'SchoolYear',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
 	public function getCensusData($institutionSiteId, $yearId) {
@@ -62,8 +66,8 @@ class CensusTeacherFte extends AppModel {
 				'EducationLevel.name AS education_level_name',
 				'CensusTeacherFte.id',
 				'CensusTeacherFte.source',
-				'CensusTeacherFte.male',
-				'CensusTeacherFte.female'
+				'CensusTeacherFte.gender_id',
+				'CensusTeacherFte.value'
 			),
 			'joins' => array(
 				array(
@@ -102,11 +106,25 @@ class CensusTeacherFte extends AppModel {
 				)
 			),
 			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
-			'group' => array('EducationLevel.id'),
 			'order' => array('EducationLevel.order')
 		));
+
+		$data = array();
+		foreach($list AS $row){
+			$censusId = $row['id'];
+			$eduLevelId = $row['education_level_id'];
+			$genderId = $row['gender_id'];
+			
+			if(!empty($censusId) && !empty($genderId)){
+				$data[$eduLevelId][$genderId] = array(
+					'censusId' => $censusId,
+					'value' => $row['value'],
+					'source' => $row['source']
+				);
+			}
+		}
 		
-		return $list;
+		return $data;
 	}
 	
 	public function saveCensusData($data, $yearId, $institutionSiteId) {
@@ -114,7 +132,7 @@ class CensusTeacherFte extends AppModel {
 			$obj['school_year_id'] = $yearId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			if(empty($obj['id'])) {
-				if($obj['male'] > 0 || $obj['female'] > 0) {
+				if($obj['value'] > 0) {
 					$this->create();
 					$this->save($obj);
 				}

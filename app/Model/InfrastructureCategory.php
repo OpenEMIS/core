@@ -96,6 +96,9 @@ class InfrastructureCategory extends AppModel {
 					$dataInfraStatuses = $InfrastructureStatusModel->find('list', array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $categoryId, 'InfrastructureStatus.visible' => 1)));
 					$countStatuses = count($dataInfraStatuses);
 					if ($categoryName == 'Sanitation') {
+						$CensusSanitation = ClassRegistry::init('CensusSanitation');
+						$genderOptions = $CensusSanitation->SanitationGender->getList();
+						
 						$dataInfraTypes = $InfrastructureSanitationModel->find('list', array('conditions' => array('InfrastructureSanitation.visible' => 1)));
 						$dataSanitationMaterials = $CensusSanitationModel->find('all', array(
 							'recursive' => -1,
@@ -139,19 +142,18 @@ class InfrastructureCategory extends AppModel {
 								foreach ($dataSanitationMaterialsById AS $rowSanitationMaterialsById) {
 									$infrastructure_sanitation_id = $rowSanitationMaterialsById['CensusSanitation']['infrastructure_sanitation_id'];
 									$infrastructure_status_id = $rowSanitationMaterialsById['CensusSanitation']['infrastructure_status_id'];
-									$cellValueCheckSource[$infrastructure_sanitation_id][$infrastructure_status_id] = $rowSanitationMaterialsById['CensusSanitation'];
+									$censusGenderId = $rowSanitationMaterialsById['CensusSanitation']['gender_id'];
+									$cellValueCheckSource[$infrastructure_sanitation_id][$infrastructure_status_id][$censusGenderId] = $rowSanitationMaterialsById['CensusSanitation'];
 								}
 								//pr($cellValueCheckSource);
 
-								$arrayGender = array('Male', 'Female', 'Unisex');
-								foreach ($arrayGender AS $gender) {
-									$genderLowerCase = strtolower($gender);
+								foreach ($genderOptions AS $genderId => $genderName) {
 									$countByGender = $CensusSanitationModel->find('count', array(
 										'conditions' => array(
 											'CensusSanitation.institution_site_id' => $institutionSiteId,
 											'CensusSanitation.school_year_id' => $yearId,
 											'CensusSanitation.infrastructure_material_id' => $sanitationMaterialId,
-											'CensusSanitation.' . $genderLowerCase . ' > ' => 0
+											'CensusSanitation.gender_id' => $genderId
 										)
 											)
 									);
@@ -166,11 +168,11 @@ class InfrastructureCategory extends AppModel {
 
 										$totalAll = 0;
 										foreach ($dataInfraTypes AS $infraTypeId => $infraTypeName) {
-											$csvRow = array(__($yearName), __($categoryName), __($sanitationMaterialName), __($gender), __($infraTypeName));
+											$csvRow = array(__($yearName), __($categoryName), __($sanitationMaterialName), __($genderName), __($infraTypeName));
 											$totalRow = 0;
 											foreach ($dataInfraStatuses AS $infraStatusId => $infraStatusName) {
-												if (isset($cellValueCheckSource[$infraTypeId][$infraStatusId][$genderLowerCase])) {
-													$cellValue = !empty($cellValueCheckSource[$infraTypeId][$infraStatusId][$genderLowerCase]) ? $cellValueCheckSource[$infraTypeId][$infraStatusId][$genderLowerCase] : 0;
+												if (isset($cellValueCheckSource[$infraTypeId][$infraStatusId][$censusGenderId])) {
+													$cellValue = $cellValueCheckSource[$infraTypeId][$infraStatusId][$censusGenderId]['value'];
 												} else {
 													$cellValue = 0;
 												}
