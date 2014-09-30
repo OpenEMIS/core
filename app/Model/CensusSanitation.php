@@ -17,5 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusSanitation extends AppModel {
-    public $belongsTo = array('InfrastructureSanitation', 'InfrastructureMaterial');
+    public $belongsTo = array(
+		'InfrastructureSanitation', 
+		'InfrastructureMaterial',
+		'SanitationGender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
+	);
 }
