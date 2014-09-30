@@ -912,10 +912,19 @@ class InstitutionSitesController extends AppController {
 		
 		$currentDate = date("Y-m-d");
 		
-		$yearName = $this->SchoolYear->getSchoolYearById($yearId);
-		$stampFirstDayOfYear = mktime(0, 0, 0, 1, 1, $yearName);
+		//$yearName = $this->SchoolYear->getSchoolYearById($yearId);
+		$schoolYearObject = $this->SchoolYear->getSchoolYearObjectById($yearId);
+		//pr($schoolYearObject);
+		$yearName = $schoolYearObject['name'];
+		$startDateOfSchoolYear = $schoolYearObject['start_date'];
+		$endDateOfSchoolYear = $schoolYearObject['end_date'];
+		$stampFirstDayOfYear = strtotime($startDateOfSchoolYear);
+		//pr($stampFirstDayOfYear);
+		$stampEndDateOfSchoolYear = strtotime($endDateOfSchoolYear);
+		//$stampFirstDayOfYear = mktime(0, 0, 0, 1, 1, $yearName);
 		
 		$stampFirstWeekDay = strtotime($settingFirstWeekDay, $stampFirstDayOfYear);
+		//pr($stampFirstWeekDay);
 		$stampLastWeekDay = strtotime($lastWeekDay, $stampFirstWeekDay);
 		
 		//$dateFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampFirstWeekDay));
@@ -933,7 +942,8 @@ class InstitutionSitesController extends AppController {
 			$datePrevFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampPrevFirstWeekDay));
 			$datePrevLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampPrevLastWeekDay));
 			
-			if(date('Y', $stampPrevLastWeekDay) === $yearName){
+			//if(date('Y', $stampPrevLastWeekDay) === $yearName){
+			if($stampPrevLastWeekDay >= $stampFirstDayOfYear){
 				$startingIndexWeek = 2;
 				if($forOptions){
 					if($currentDate >= date("Y-m-d", $stampPrevFirstWeekDay) && $currentDate <= date("Y-m-d", $stampPrevLastWeekDay)){
@@ -950,8 +960,11 @@ class InstitutionSitesController extends AppController {
 				$startingIndexWeek = 1;
 			}
 		}
-		
-		while(date('Y', $stampNextFirstWeekDay) == $yearName){
+		//pr($startingIndexWeek);
+		//while(date('Y', $stampNextFirstWeekDay) == $yearName){
+		//pr($stampNextFirstWeekDay);
+		//pr($stampEndDateOfSchoolYear);
+		while($stampNextFirstWeekDay <= $stampEndDateOfSchoolYear){
 			$dateNextFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampNextFirstWeekDay));
 			$dateNextLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampNextLastWeekDay));
 			
@@ -977,7 +990,12 @@ class InstitutionSitesController extends AppController {
 	
 	public function getStartEndDateByYearWeek($yearId, $weekId){
 		$weekList = $this->getWeekListByYearId($yearId, false);
-		return $weekList[$weekId];
+		if(isset($weekList[$weekId])){
+			return $weekList[$weekId];
+		}else{
+			return NULL;
+		}
+		
 	}
 	
 	public function getCurrentWeekId($yearId){
