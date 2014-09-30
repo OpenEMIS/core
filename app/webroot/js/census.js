@@ -30,13 +30,13 @@ var Census = {
 				subtotal += $(this).val().toInt();
 			}
 		});
-		row.find('.cell_total').html(subtotal);
+		row.find('.cell-total').html(subtotal);
 		table = row.closest('table');
 		var total = 0;
 		table.find('tbody tr').each(function() {
-			total += $(this).find('.cell_total').html().toInt();
+			total += $(this).find('.cell-total').html().toInt();
 		});
-		table.find('tfoot .cell_value').html(total);
+		table.find('tfoot .cell-value').html(total);
 	},
 	
 	loadGradeList: function(obj) {
@@ -50,7 +50,10 @@ var Census = {
 				for(var i in data) {
 					html += '<option value="' + i + '">' + data[i] + '</option>';
 				}
-				$(obj).closest('.table_cell').siblings('.grade_list').find('select[index="' + index + '"]').html(html);
+				var gradeSelect  = $(obj).closest('.table_cell').siblings('.grade_list').find('select[index="' + index + '"]');
+				gradeSelect.html(html);
+				
+				gradeSelect.parent().find('input.hiddenGradeId').val(gradeSelect.val());
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
@@ -65,7 +68,7 @@ var Census = {
 	},
 	
 	addMultiGradeRow: function() {
-		var index = $('tr').length;
+		var index = ($('tr').length) * 2;
 		var tableBody = $('.multi tbody').length;
 		var maskId;
 		var ajaxParams = {index: index, tableBody: tableBody};
@@ -163,5 +166,19 @@ var Census = {
 				success: ajaxSuccess
 			});
 		}
+	},
+	
+	computeAttendance: function(obj, gender, totalSchoolDays){
+		var targetTd = '';
+		var value = $(obj).val();
+		var resultValue = (totalSchoolDays - value) >= 0 ? (totalSchoolDays - value) : 0;
+		
+		if(gender === 'male'){
+			targetTd = $(obj).closest('tr').find('td.maleAttendance');
+		}else{
+			targetTd = $(obj).closest('tr').find('td.femaleAttendance');
+		}
+		
+		targetTd.html(resultValue);
 	}
 }
