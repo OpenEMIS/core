@@ -77,7 +77,8 @@ class CensusClass extends AppModel {
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
 						'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = CensusClass.school_year_id'
+						'InstitutionSiteProgramme.school_year_id = CensusClass.school_year_id',
+						'InstitutionSiteProgramme.status' => 1
 					)
 				),
 				array(
@@ -267,7 +268,7 @@ class CensusClass extends AppModel {
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('Classes');
 
-		$yearList = $this->SchoolYear->getAvailableYears();
+		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
