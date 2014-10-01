@@ -20,7 +20,7 @@ $gradesCount = count($gradeList);
 
         <?php foreach ($dataRowsArr AS $row) { ?>
             <?php if ($row['type'] == 'input') { ?>
-                <tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>" type="input">
+                <tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>" type="input" gender_id="<?php echo $row['genderId']; ?>">
                 <?php } else { ?>
                 <tr>
                 <?php } ?>

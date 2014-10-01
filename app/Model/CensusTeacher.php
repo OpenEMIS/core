@@ -496,7 +496,7 @@ class CensusTeacher extends AppModel {
 	public function teachers($controller, $params) {
 		$controller->Navigation->addCrumb('Teachers');
 
-		$yearList = $this->SchoolYear->getAvailableYears();
+		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
