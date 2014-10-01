@@ -112,13 +112,13 @@ class InstitutionSitesController extends AppController {
 		'shifts' => 'InstitutionSiteShift',
 		'behaviourStaff' => 'Staff.StaffBehaviour',
 		'staff' => 'InstitutionSiteStaff',
-		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
 		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
 		'assessments' => 'AssessmentItemResult',
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
 		'InstitutionSitePosition',
-		'InstitutionSiteProgramme'
+		'InstitutionSiteProgramme',
+		'InstitutionSiteStudentAbsence'
 	);
 	
 	public function beforeFilter() {

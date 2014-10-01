@@ -163,6 +163,9 @@ class FieldOptionBehavior extends ModelBehavior {
 			$fields['national_code']['labelKey'] = 'general';
 			$fields['national_code']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
 		}
+		if (array_key_exists('old_id', $fields)) {
+			$fields['old_id']['visible'] = false;
+		}
 		$model->fields = $fields;
 		return $fields;
 	}
