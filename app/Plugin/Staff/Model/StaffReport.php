@@ -130,7 +130,7 @@ class StaffReport extends StaffAppModel {
 
             $whereKey = ($this->reportMapping[$name]['Model'] == 'Staff') ? 'id' : 'staff_id';
             $cond = array($this->reportMapping[$name]['Model'] . "." . $whereKey => $this->staffId);
-            $options = array('fields' => $this->getFields($name)/* , 'conditions' => $cond */);
+            $options = array('fields' => $this->getFieldNames($name)/* , 'conditions' => $cond */);
 
             if ($this->reportMapping[$name]['Model'] == 'QualityInstitutionVisit') {
 
@@ -375,7 +375,7 @@ class StaffReport extends StaffAppModel {
         fputcsv($csv_file, $footer, ',', '"');
     }
     
-    private function getFields($name) {
+    private function getFieldNames($name) {
         if (array_key_exists($name, $this->reportMapping)) {
             $header = $this->reportMapping[$name]['fields'];
         }
