@@ -51,7 +51,7 @@ echo $this->element('census/year_options');
 							?>
 							<tr>
 								<td class="<?php echo $record_tag; ?>"><?php echo $name; ?></td>
-								<td class="<?php echo $record_tag; ?>"><?php echo $grade['name']; ?></td>
+								<td class="<?php echo $record_tag; ?>"><?php echo $grade['name']['gradeName']; ?></td>
 								<td class="cell-number <?php echo $record_tag; ?>"><?php echo $grade['classes']; ?></td>
 								<td class="cell-number <?php echo $record_tag; ?>"><?php echo $grade['seats']; ?></td>
 							</tr>
