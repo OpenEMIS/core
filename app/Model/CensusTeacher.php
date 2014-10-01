@@ -105,6 +105,7 @@ class CensusTeacher extends AppModel {
 					'conditions' => array(
 						'InstitutionSiteProgramme.institution_site_id = CensusTeacher.institution_site_id',
 						'InstitutionSiteProgramme.school_year_id = CensusTeacher.school_year_id',
+						'InstitutionSiteProgramme.status' => 1
 					)
 				),
 				array(
