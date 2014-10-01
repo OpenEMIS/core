@@ -347,7 +347,8 @@ class InstitutionSiteProgramme extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId
+				'InstitutionSiteProgramme.school_year_id' => $yearId,
+				'InstitutionSiteProgramme.status' => 1
 			),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
@@ -525,7 +526,10 @@ class InstitutionSiteProgramme extends AppModel {
 			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
 			$options['order'] = array('SchoolYear.name', 'EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order');
-			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
+			$options['conditions'] = array(
+				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteProgramme.status' => 1
+			);
 
 			$options['joins'] = array(
 					array(
