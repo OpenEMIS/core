@@ -336,12 +336,12 @@ class LabelHelper extends AppHelper {
 			'staff_position_grade_id' => 'Grade'
 		),
 		'InstitutionSiteStudentAbsence' => array(
-			'reason' => 'Reason',
-			'first_date_absent' => 'First Date Absent',
-			'full_day_absent' => 'Full Day Absent',
-			'last_date_absent' => 'Last Date Absent',
-			'start_time_absent' => 'Start Time Absent',
-			'end_time_absent' => 'End Time Absent'
+			'title' => 'Absence - Students',
+			'school_year_id' => 'School Year',
+			'institution_site_class_id' => 'Class',
+			'student_id' => 'Student',
+			'absence_type' => 'Type',
+			'student_absence_reason_id' => 'Reason'
 		),
 		'InstitutionSiteStaffAbsence' => array(
 			'reason' => 'Reason',

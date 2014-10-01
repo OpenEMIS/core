@@ -174,22 +174,23 @@ class FormUtilityHelper extends AppHelper {
 			'after' => $icon . $defaults['after']
 		);
 
-		if(isset($options['class'])){
-			$inputOptions['class'] = $options['class'];
-		}
-		if(isset($options['label'])){
-			$inputOptions['label'] = $options['label'];
-		}
-		if(isset($options['default'])){
-			$inputOptions['default'] = $options['default'];
-		}
+		$inputOptions = array_merge($inputOptions, $options);
 		$html = $this->Form->input($field, $inputOptions);
+		
+		$fields = array('id' => 'id', 'value' => 'defaultTime');
+		$_timepickerOptions = array();
+		foreach ($fields as $key => $field) {
+			if (isset($inputOptions[$key])) {
+				$_timepickerOptions[$field] = $inputOptions[$key];
+			}
+		}
+		
 		if(!is_null($this->_View->get('timepicker'))) {
 			$timepickers = $this->_View->get('timepicker');
-			$timepickers[] = $options['id'];
+			$timepickers[] = $_timepickerOptions;
 			$this->_View->set('timepicker', $timepickers);
 		} else {
-			$this->_View->set('timepicker', array($options['id']));
+			$this->_View->set('timepicker', array($_timepickerOptions));
 		}
 		return $html;
 	}
