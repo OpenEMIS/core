@@ -94,7 +94,8 @@ class CensusAttendance extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $siteId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId
+				'InstitutionSiteProgramme.school_year_id' => $yearId,
+				'InstitutionSiteProgramme.status' => 1
 			),
 			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
