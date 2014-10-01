@@ -103,7 +103,10 @@ class CensusTeacherTraining extends AppModel {
 					)
 				)
 			),
-			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
+			'conditions' => array(
+				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteProgramme.status' => 1
+			),
 			'order' => array('EducationLevel.order')
 		));
 		
