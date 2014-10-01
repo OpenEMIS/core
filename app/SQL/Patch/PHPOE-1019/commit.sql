@@ -1,0 +1,1 @@
+UPDATE `navigations` SET `action` = 'InstitutionSiteStudentAbsence', `pattern` = 'InstitutionSiteStudentAbsence' WHERE `controller` = 'InstitutionSites' AND `header` = 'Attendance' AND `title` = 'Students';

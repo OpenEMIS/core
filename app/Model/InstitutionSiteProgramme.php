@@ -21,7 +21,8 @@ class InstitutionSiteProgramme extends AppModel {
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
-		)
+		),
+		'SchoolYear'
 	);
 	
 	public $belongsTo = array(
