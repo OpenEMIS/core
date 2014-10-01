@@ -1,12 +1,17 @@
 <?php
 $displayDefault = array();
 foreach ($programmeGrades as $obj) {
+	$tempGradeOptions = array();
+	foreach($obj['education_grades'] AS $gradeId => $gradeArr){
+		$gradeName = $gradeArr['gradeName'];
+		$tempGradeOptions[$gradeId] = $gradeName;
+	}
     foreach ($obj['education_grades'] as $gradeId => $grade) {
         if (sizeof($displayDefault) < 2) {
             $displayDefault[] = array(
                 'programme' => $obj['education_programme_id'],
                 'selectedGrade' => $gradeId,
-                'grades' => $obj['education_grades']
+                'grades' => $tempGradeOptions
             );
         } else {
             break;
