@@ -166,7 +166,7 @@ class InstitutionSiteProgramme extends AppModel {
 				'InstitutionSiteProgramme.id',
 				'EducationSystem.name AS education_system_name',
 				'EducationCycle.name AS education_cycle_name',
-								'EducationCycle.admission_age AS admission_age',
+				'EducationCycle.admission_age AS admission_age',
 				'EducationProgramme.id AS education_programme_id',
 				'EducationProgramme.name AS education_programme_name'
 			),
@@ -194,7 +194,8 @@ class InstitutionSiteProgramme extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId
+				'InstitutionSiteProgramme.school_year_id' => $yearId,
+				'InstitutionSiteProgramme.status' => 1
 			),
 			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
@@ -268,7 +269,8 @@ class InstitutionSiteProgramme extends AppModel {
 				),
 				'conditions' => array(
 					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-					'InstitutionSiteProgramme.school_year_id' => $yearId
+					'InstitutionSiteProgramme.school_year_id' => $yearId,
+					'InstitutionSiteProgramme.status' => 1
 				),
 				'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 			));
@@ -348,7 +350,8 @@ class InstitutionSiteProgramme extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId
+				'InstitutionSiteProgramme.school_year_id' => $yearId,
+				'InstitutionSiteProgramme.status' => 1
 			),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
@@ -526,48 +529,51 @@ class InstitutionSiteProgramme extends AppModel {
 			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
 			$options['order'] = array('SchoolYear.name', 'EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order');
-			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
+			$options['conditions'] = array(
+				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteProgramme.status' => 1
+			);
 
 			$options['joins'] = array(
-					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array(
-							'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
-						)
-					),
-					array(
-						'table' => 'education_programmes',
-						'alias' => 'EducationProgramme',
-						'conditions' => array(
-							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
-						)
-					),
-					array(
-						'table' => 'education_cycles',
-						'alias' => 'EducationCycle',
-						'conditions' => array(
-							'EducationProgramme.education_cycle_id = EducationCycle.id'
-						)
-					),
-					array(
-						'table' => 'education_levels',
-						'alias' => 'EducationLevel',
-						'conditions' => array(
-							'EducationCycle.education_level_id = EducationLevel.id'
-						)
-					),
-					array(
-						'table' => 'education_systems',
-						'alias' => 'EducationSystem',
-						'conditions' => array(
-							'EducationLevel.education_system_id = EducationSystem.id'
-						)
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array(
+						'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
 					)
-				);
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
+					)
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationProgramme.education_cycle_id = EducationCycle.id'
+					)
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array(
+						'EducationCycle.education_level_id = EducationLevel.id'
+					)
+				),
+				array(
+					'table' => 'education_systems',
+					'alias' => 'EducationSystem',
+					'conditions' => array(
+						'EducationLevel.education_system_id = EducationSystem.id'
+					)
+				)
+			);
 			
 			$this->virtualFields = array(
-					'system_cycle' => 'CONCAT(EducationSystem.name, " - ", EducationCycle.name)'
+				'system_cycle' => 'CONCAT(EducationSystem.name, " - ", EducationCycle.name)'
 			);
 
 			$data = $this->find('all', $options);
