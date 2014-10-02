@@ -418,7 +418,8 @@ class LabelHelper extends AppHelper {
 			'unit' => 'Unit',
 			'module' => 'Module',
 			'function' => 'Function',
-			'dimensions' => 'Dimensions'
+			'dimensions' => 'Dimensions',
+			'classification' => 'Classification'
 		)
 	);
 	
