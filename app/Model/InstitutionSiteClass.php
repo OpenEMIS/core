@@ -92,7 +92,8 @@ class InstitutionSiteClass extends AppModel {
 		'ControllerAction',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
-		)
+		),
+		'SchoolYear'
 	);
 	
 	public $reportMapping = array(
@@ -180,8 +181,8 @@ class InstitutionSiteClass extends AppModel {
 	
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('List of Classes');
-		//$yearOptions = $this->SchoolYear->getYearList();
-		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions(array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId));
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 		$data = $this->getListOfClasses($selectedYear, $controller->institutionSiteId);
 		
@@ -192,8 +193,8 @@ class InstitutionSiteClass extends AppModel {
 		$controller->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		//$yearOptions = $this->SchoolYear->getAvailableYears();
-		$yearOptions = $this->SchoolYear->institutionProgrammeYearList($controller->institutionSiteId);
+		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.available' => 1);
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
@@ -342,15 +343,17 @@ class InstitutionSiteClass extends AppModel {
 		return $data;
 	}
 		
-	public function getClassListByInstitution($institutionSiteId){
-		$data = $this->find('list', array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-			'conditions' => array(
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
-		));
+	public function getClassListByInstitution($institutionSiteId, $yearId=0) {
+		$options = array();
+		$options['fields'] = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name');
+		$options['order'] = array('InstitutionSiteClass.name');
+		$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
 		
+		if (!empty($yearId)) {
+			$options['conditions']['InstitutionSiteClass.school_year_id'] = $yearId;
+		}
+		
+		$data = $this->find('list', $options);
 		return $data;
 	}
 	
