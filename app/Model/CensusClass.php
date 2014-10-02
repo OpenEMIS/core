@@ -272,9 +272,9 @@ class CensusClass extends AppModel {
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
-		$programmeGrades = array();
-		if (empty($programmes)) {
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+		//$programmeGrades = array();
+		if (empty($programmeGrades)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
@@ -365,7 +365,7 @@ class CensusClass extends AppModel {
 
 		$gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusClass][%d][CensusClassGrade][%d]">', $index, $row, $index);
 		foreach ($grades as $id => $value) {
-			$gradesHtml .= sprintf($option, $id, $value);
+			$gradesHtml .= sprintf($option, $id, $value['gradeName']);
 		}
 		$gradesHtml .= '</select></div>';
 
