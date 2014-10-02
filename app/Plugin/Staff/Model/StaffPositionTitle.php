@@ -22,4 +22,26 @@ class StaffPositionTitle extends StaffAppModel {
 		);
 		return $lookup;
 	}
+	
+	public function getInstitutionPositionTitles($institutionId){
+		$list = $this->find('list' , array(
+			'fields' => array('DISTINCT StaffPositionTitle.id', 'StaffPositionTitle.name'),
+			'recursive' => '-1',
+			'joins' => array(
+				array(
+					'table' => 'institution_site_positions',
+					'alias' => 'InstitutionSitePosition',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'InstitutionSitePosition.staff_position_title_id = StaffPositionTitle.id',
+						'InstitutionSitePosition.institution_site_id = ' . $institutionId
+					)
+				)
+			),
+			'conditions' => array('StaffPositionTitle.visible' => 1),
+			'order' => array('StaffPositionTitle.order')
+		));
+		
+		return $list;
+	}
 }

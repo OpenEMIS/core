@@ -6,7 +6,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Staff'));
 $this->start('contentActions');
 if($_edit && $isEditable) {
-	echo $this->Html->link(__('Edit'), array('action' => 'staffEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'CensusStaff', 'edit', $selectedYear), array('class' => 'divider'));
 }
 $this->end();
 
@@ -24,7 +24,7 @@ echo $this->element('census/year_options');
 			$tableData = array();
 			$total = 0;
 
-			foreach($staffCategories AS $staffCatId => $staffCatName){
+			foreach($positionTitles AS $titleId => $titleName){
 				$maleValue = 0;
 				$femaleValue = 0;
 				
@@ -32,9 +32,9 @@ echo $this->element('census/year_options');
 				$recordTagFemale = "";
 				
 				foreach($genderOptions AS $genderId => $genderName){	
-					if(!empty($data[$staffCatId][$genderId])){
+					if(!empty($data[$titleId][$genderId])){
 						foreach ($source_type as $k => $v) {
-							if ($data[$staffCatId][$genderId]['source'] == $v) {
+							if ($data[$titleId][$genderId]['source'] == $v) {
 								if($genderOptions[$genderId] == 'Male'){
 									$recordTagMale = "row_" . $k;
 								}else{
@@ -44,9 +44,9 @@ echo $this->element('census/year_options');
 						}
 						
 						if($genderName == 'Male'){
-							$maleValue = $data[$staffCatId][$genderId]['value'];
+							$maleValue = $data[$titleId][$genderId]['value'];
 						}else{
-							$femaleValue = $data[$staffCatId][$genderId]['value'];
+							$femaleValue = $data[$titleId][$genderId]['value'];
 						}
 					}
 				}
@@ -55,7 +55,7 @@ echo $this->element('census/year_options');
 				$total += $subTotal;
 	
 				$tableData[] = array(
-					$staffCatName,
+					$titleName,
 					array($maleValue, array('class' => 'cell-number ' . $recordTagMale)),
 					array($femaleValue, array('class' => 'cell-number ' . $recordTagFemale)),
 					array($subTotal, array('class' => 'cell-number'))
