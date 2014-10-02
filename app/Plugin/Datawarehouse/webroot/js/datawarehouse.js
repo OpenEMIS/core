@@ -15,6 +15,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
     objDatawarehouse.init();
+
+     $('#drpClassification li').click(function(){
+        $('#searchClassification').val($(this).text());
+    });
+
 });
 
 var objDatawarehouse = {
@@ -50,6 +55,9 @@ var objDatawarehouse = {
 
         //objDatawarehouse.getUnitType($("#DatawarehouseIndicatorDatawarehouseUnitId"));
         objDatawarehouse.setSelectedTab();
+
+        var elementClassification = '#searchClassification';
+        objDatawarehouse.attachAutoComplete(elementClassification, getRootURL() + $(elementClassification).attr('url'), objDatawarehouse.selectClassification);
     },
 
     generateSubgroup: function(objType){
@@ -142,6 +150,39 @@ var objDatawarehouse = {
             operatorID.val($(obj).find('option:selected').text());
         }
     },
+
+    populateClassification: function(obj){
+        console.log($(obj).text());
+        //$('#searchClassification').val(obj.val());
+    },
+
+    selectClassification: function(event, ui) {
+        var val = ui.item.value;
+        var element;
+        for(var i in val) {
+            element = $('.' + i);
+
+            if(element.get(0).tagName.toUpperCase() === 'INPUT' && element.get(0).id == 'searchClassification') {
+                element.val(val[i]);
+            } else {
+                element.html(val[i]);
+            }
+        }
+        return false;
+    },
+
+
+    attachAutoComplete: function(element, url, callback) {
+        $(element).autocomplete({
+            source: url,
+            minLength: 2,
+            select: callback,
+            focus: function() {
+                return false;
+            }
+        });
+    },
+  
 
 
 }
