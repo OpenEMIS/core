@@ -302,42 +302,6 @@ class EducationProgramme extends AppModel {
 		return $options;
 	}
 	
-	// used by InstitutionSiteStudent
-	public function getProgrammeOptionsByInstitution($institutionSiteId, $yearId, $visible = false) {
-		$conditions = array(
-			'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
-			'InstitutionSiteProgramme.school_year_id = ' . $yearId,
-			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		);
-		
-		if ($visible !== false) {
-			$conditions[] = 'InstitutionSiteProgramme.status = ' . $visible;
-		}
-		
-		$data = $this->find('all', array(
-			'fields' => array('EducationProgramme.id', 'EducationCycle.name', 'EducationCycle.id', 'EducationProgramme.name'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => $conditions
-				)
-			),
-			'order' => array('EducationCycle.order', 'EducationProgramme.order')
-		));
-		
-		$list = array();
-		foreach($data as $obj) {
-			if (!empty($obj['EducationCycle']['id'])) {
-				$id = $obj['EducationProgramme']['id'];
-				$cycle = $obj['EducationCycle']['name'];
-				$programme = $obj['EducationProgramme']['name'];
-				$list[$id] = $cycle . ' - ' . $programme;
-			}
-		}
-		return $list;
-	}
-	
 	// Used by Yearbook
 	public function getEducationStructure() {
 		$list = $this->find('all', array(
