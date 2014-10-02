@@ -34,6 +34,8 @@ if(isset($datepicker) && !empty($datepicker)) {
 	echo $this->element('layout/datepicker');
 }
 if(isset($timepicker) && !empty($timepicker)) {
+	echo $this->Html->css('../js/plugins/timepicker/bootstrap-timepicker', 'stylesheet', array('inline' => false));
+	echo $this->Html->script('plugins/timepicker/bootstrap-timepicker', array('inline' => false));
 	echo $this->element('layout/timepicker');
 }
 ?>

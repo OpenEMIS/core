@@ -85,7 +85,7 @@ foreach($fields as $key => $field) {
 				$attr = array('id' => $fieldModel . '_' . $key);
 				
 				if (array_key_exists('attr', $field)) {
-					$attr = array_merge($dateOptions, $field['attr']);
+					$attr = array_merge($attr, $field['attr']);
 				}
 				echo $this->FormUtility->timepicker($fieldName, $attr);
 				break;

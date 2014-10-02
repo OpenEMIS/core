@@ -1,0 +1,1 @@
+UPDATE `navigations` SET `action` = 'attendanceStudent', `pattern` = 'attendanceStudent' WHERE `controller` = 'InstitutionSites' AND `header` = 'Attendance' AND `title` = 'Students';
