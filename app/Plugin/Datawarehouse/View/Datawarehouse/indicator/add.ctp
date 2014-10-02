@@ -1,7 +1,8 @@
 <?php
 echo $this->Html->css('/Datawarehouse/css/style', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Datawarehouse/js/datawarehouse', false);
-
+echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
+echo $this->Html->script('jquery-ui.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
@@ -15,6 +16,37 @@ if(!empty($this->data[$model]['id'])){
 $this->end();
 $this->start('contentBody');
 ?>
+<style>
+.input-append .btn.dropdown-toggle {
+    float: none;
+}
+
+.btn-group {
+	display: block;
+	height: 20px;
+}
+
+.input-append > .btn-group > .btn-primary {
+height: 25px;
+}
+
+.input-append > .btn-group > .form-control {
+	width: 82%;
+	float: left;
+}
+
+.dropdown-menu > li {
+	font-size: 11px;
+	/*padding: 0px;*/
+}
+
+.scrollable-menu {
+    height: auto;
+    max-height: 115px;
+    overflow-x: hidden;
+}
+
+</style>
 <div class="navbar">
 	<div class="navbar-inner">
 		<div class="container-wizard">

@@ -102,6 +102,32 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		return true;
 	}
 
+	public function autocompleteClassification($search) {
+		$field = 'classification';
+		$search = sprintf('%%%s%%', $search);
+		
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT DatawarehouseIndicator.' . $field),
+			'conditions' => array('DatawarehouseIndicator.' . $field . ' LIKE' => $search
+			),
+			'order' => array('DatawarehouseIndicator.' . $field)
+		));
+		
+		$data = array();
+		
+		foreach($list as $obj) {
+			$searchField = $obj[$this->alias][$field];
+			
+			$data[] = array(
+				'label' => trim($searchField),
+				'value' => array($field => $searchField)
+			);
+		}
+
+		return $data;
+	}
+
 	public function indicator($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -220,6 +246,13 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 		$tabStep = array('indicator', 'numerator', 'denominator', 'review');
 		$currentTab = $tabStep[key($tabStep)];
 
+
+
+		$datawarehouseClassifications = $this->find('all', array('recursive'=>-1, 'fields'=> array('DISTINCT classification', 'classification')));
+		$datawarehouseClassificationOptions = array();
+		if(!empty($datawarehouseClassifications) && isset($datawarehouseClassifications[0]['DatawarehouseIndicator'])){
+			$datawarehouseClassificationOptions = $datawarehouseClassifications[0]['DatawarehouseIndicator'];
+		}
 
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -408,7 +441,7 @@ class DatawarehouseIndicator extends DatawarehouseAppModel {
 			$controller->set($type.'SelectedSubgroup', $selectedSubgroup);
 		}
 
-		$controller->set(compact('datawarehouseUnitOptions', 'datawarehouseModuleOptions', 'operatorOptions', 'editable', 'tabStep', 'currentStep', 'currentTab'));
+		$controller->set(compact('datawarehouseClassificationOptions', 'datawarehouseUnitOptions', 'datawarehouseModuleOptions', 'operatorOptions', 'editable', 'tabStep', 'currentStep', 'currentTab'));
 		
 	}
 
