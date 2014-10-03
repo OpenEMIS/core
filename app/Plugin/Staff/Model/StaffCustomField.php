@@ -16,13 +16,26 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StaffCustomField extends StaffAppModel {
 	public $actsAs = array(
+		'CustomField' => array('module' => 'Staff'),
 		'FieldOption',
-		'ControllerAction',
-		'CustomField' => array('module' => 'Staff')
+		'ControllerAction'
+	);
+	
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
 	
 	public $hasMany = array(
-		'Staff.StaffCustomFieldOption',
+		'StaffCustomFieldOption',
 		'Staff.StaffCustomValue'
 	);
 	
@@ -37,6 +50,15 @@ class StaffCustomField extends StaffAppModel {
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
+		
+		$this->fields['options'] = array(
+			'type' => 'element',
+			'element' => '../FieldOption/CustomField/options',
+			'visible' => true
+		);
+		$this->setFieldOrder('options', 5);
 
 		return $this->fields;
 	}
