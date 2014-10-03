@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class CensusCustomField extends AppModel {
 	public $actsAs = array(
+		'CustomField' => array('module' => 'Census'),
 		'FieldOption', 
 		'ControllerAction',
 		'ReportFormat' => array(
@@ -50,9 +51,18 @@ class CensusCustomField extends AppModel {
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
 		$this->fields['institution_site_type_id']['type'] = 'select';
 		$this->fields['institution_site_type_id']['options'] = $this->getSubOptions();
 		$this->setFieldOrder('institution_site_type_id', 4);
+		
+		$this->fields['options'] = array(
+			'type' => 'element',
+			'element' => '../FieldOption/CustomField/options',
+			'visible' => true
+		);
+		$this->setFieldOrder('options', 7);
 
 		return $this->fields;
 	}
@@ -250,6 +260,11 @@ class CensusCustomField extends AppModel {
 			$site = $controller->InstitutionSite->findById($institutionSiteId);
 			//$data = $controller->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
 			//$datafields = $controller->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+			$controller->CensusCustomField->contain(array(
+				'CensusCustomFieldOption' => array(
+					'conditions' => array('CensusCustomFieldOption.visible' => 1)
+				)
+			));
 			$datafields = $controller->CensusCustomField->find('all', array('conditions' => array('CensusCustomField.institution_site_type_id' => array($site['InstitutionSite']['institution_site_type_id'], 0)), 'order' => array('CensusCustomField.institution_site_type_id', 'CensusCustomField.order')));
 			//pr($datafields); echo "d2";
 			$controller->CensusCustomValue->unbindModel(

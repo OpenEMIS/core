@@ -79,10 +79,13 @@ class LabelHelper extends AppHelper {
 			'national_code' => 'National Code',
 			'current' => 'Current',
 			'past' => 'Past',
+			'options' => 'Options',
+			'noOptions' => 'There are no options.',
 			'noData' => 'No Data',
 			'amount' => 'Amount',
 			'total' => 'Total',
-			'fee' => 'Fee'
+			'fee' => 'Fee',
+			'model' => 'Model'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -312,8 +315,11 @@ class LabelHelper extends AppHelper {
 			'name' => 'Shift Name'
 		),
 		'Position' => array(
+			'title' => 'Positions',
+			'name' => 'Position',
 			'teaching' => 'Teaching',
-			'number' => 'Number'
+			'number' => 'Number',
+			'institution_site_position_id' => 'Title'
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',

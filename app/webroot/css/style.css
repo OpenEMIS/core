@@ -191,6 +191,8 @@ input.default { width: 240px; }
 	color: #666666;
 }
 
+.custom_field .field_value > div { padding-left: 0 }
+
 .custom_field .field_value textarea { width: 98.5%; }
 
 .field_option {
@@ -471,5 +473,5 @@ td.input .col-md-4{
 }
 select.topSelectControl{
 	margin-bottom: 10px;
-	margin-right: 10px
+	margin-right: 10px;
 }
