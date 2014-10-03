@@ -77,7 +77,8 @@ class CensusClass extends AppModel {
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
 						'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = CensusClass.school_year_id'
+						'InstitutionSiteProgramme.school_year_id = CensusClass.school_year_id',
+						'InstitutionSiteProgramme.status' => 1
 					)
 				),
 				array(
@@ -267,13 +268,13 @@ class CensusClass extends AppModel {
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('Classes');
 
-		$yearList = $this->SchoolYear->getAvailableYears();
+		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
-		$programmeGrades = array();
-		if (empty($programmes)) {
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+		//$programmeGrades = array();
+		if (empty($programmeGrades)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
@@ -364,7 +365,7 @@ class CensusClass extends AppModel {
 
 		$gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusClass][%d][CensusClassGrade][%d]">', $index, $row, $index);
 		foreach ($grades as $id => $value) {
-			$gradesHtml .= sprintf($option, $id, $value);
+			$gradesHtml .= sprintf($option, $id, $value['gradeName']);
 		}
 		$gradesHtml .= '</select></div>';
 
