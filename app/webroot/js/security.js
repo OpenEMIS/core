@@ -76,14 +76,16 @@ var Security = {
 								$(obj).closest('.table_row').find('#UserId').val(data.id);
 							}
 						} else {
-							if(!$(data).hasClass('alert')) {
+							var nodesArr = $.parseHTML(data);
+							var secondNode = nodesArr[1];
+							if(!$(secondNode).hasClass('alert')) {
 								var parent = '#search';
 								$(parent).find('.table_body').empty();
 								jsTable.tableScrollableAdd(parent, data);
 							} else {
 								alertOpt['parent'] = '#search';
 								//alertOpt['type'] = $(data).attr('type');
-								alertOpt['text'] = $(data).html();
+								alertOpt['text'] = $(secondNode).html();
 
 								console.log(alertOpt);
 								$.alert(alertOpt);
@@ -343,6 +345,20 @@ var Security = {
 				checkboxInstitutionSiteView.attr('checked', 'checked');// check Institution Site View
 				checkboxInstitutionSiteView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
 			});
+		}
+	},
+			
+	updateModelForSearch: function(obj){
+		var model = $(obj).val();
+		var autocompleteField = $('.ui-autocomplete-input');
+		var newUrl = getRootURL() + 'Security/SecurityUserAccess/autocomplete?model=' + model;
+		var hiddenIdField = $('input#hiddenAutocompleteId');
+		
+		if(autocompleteField.length === 1){
+			autocompleteField.autocomplete('option', 'source', newUrl);
+			
+			autocompleteField.val('');
+			hiddenIdField.val('');
 		}
 	}
 };

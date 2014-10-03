@@ -225,6 +225,7 @@ class FormUtilityHelper extends AppHelper {
 				
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
+					$inputOptions['value'] = $obj[$model]['id'];
 				}
 				$inputOptions['options'] = $options;
 				$label = $inputDefaults['label'];

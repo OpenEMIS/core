@@ -16,13 +16,26 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StudentCustomField extends StudentsAppModel {
 	public $actsAs = array(
+		'CustomField' => array('module' => 'Student'),
 		'FieldOption',
-		'ControllerAction',
-		'CustomField' => array('module' => 'Student')
+		'ControllerAction'
+	);
+	
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
 	
 	public $hasMany = array(
-		'Students.StudentCustomFieldOption',
+		'StudentCustomFieldOption',
 		'Students.StudentCustomValue'
 	);
 	
@@ -37,6 +50,15 @@ class StudentCustomField extends StudentsAppModel {
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
+		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
+		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
+		
+		$this->fields['options'] = array(
+			'type' => 'element',
+			'element' => '../FieldOption/CustomField/options',
+			'visible' => true
+		);
+		$this->setFieldOrder('options', 5);
 
 		return $this->fields;
 	}
