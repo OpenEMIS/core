@@ -11,7 +11,7 @@ $this->end();
 $this->start('contentBody');
 echo $this->Form->create('CensusStaff', array(
 	'inputDefaults' => array('label' => false, 'div' => false),
-	'url' => array('controller' => 'Census', 'action' => 'CensusStaff')
+	'url' => array('controller' => 'Census', 'action' => 'CensusStaff', 'edit')
 ));
 echo $this->element('census/year_options');
 ?>
@@ -41,7 +41,7 @@ echo $this->element('census/year_options');
 							<div class="input_wrapper">
 								<?php
 								echo $this->Form->hidden($index . '.id', array('value' => !empty($data[$titleId][$genderId]['censusId']) ? $data[$titleId][$genderId]['censusId'] : 0));
-								echo $this->Form->hidden($index . '.staff_category_id', array('value' => $titleId));
+								echo $this->Form->hidden($index . '.staff_position_title_id', array('value' => $titleId));
 								echo $this->Form->hidden($index . '.gender_id', array('value' => $genderId));
 
 								$record_tag = '';

@@ -48,19 +48,11 @@ class CensusStaff extends AppModel {
 			),
 			'joins' => array(
 				array(
-					'table' => 'institution_site_positions',
-					'alias' => 'InstitutionSitePosition',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'CensusStaff.institution_site_id = InstitutionSitePosition.institution_site_id'
-					)
-				),
-				array(
 					'table' => 'staff_position_titles',
 					'alias' => 'StaffPositionTitle',
 					'type' => 'LEFT',
 					'conditions' => array(
-						'InstitutionSitePosition.staff_position_title_id = StaffPositionTitle.id'
+						'CensusStaff.staff_position_title_id = StaffPositionTitle.id'
 					)
 				)
 			),
@@ -69,7 +61,7 @@ class CensusStaff extends AppModel {
 				'CensusStaff.school_year_id' => $yearId
 			)
 		));
-		//pr($list);die;
+		//pr($list);
 		
 		$data = array();
 		foreach($list AS $row){
@@ -77,7 +69,7 @@ class CensusStaff extends AppModel {
 			$positionTitleId = $row['positionTitleId'];
 			$genderId = $row['gender_id'];
 			
-			if(!empty($censusId) && !empty($genderId)){
+			if(!empty($positionTitleId) && !empty($genderId)){
 				$data[$positionTitleId][$genderId] = array(
 					'censusId' => $censusId,
 					'value' => $row['value'],
@@ -93,12 +85,11 @@ class CensusStaff extends AppModel {
 	public function saveCensusData($data, $institutionSiteId) {
 		$yearId = $data['school_year_id'];
 		unset($data['school_year_id']);
-		
 		foreach($data as $obj) {
 			$obj['school_year_id'] = $yearId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			
-			if($obj['value'] > 0) {
+			if($obj['value'] > 0 && $obj['staff_position_title_id'] > 0 && $obj['gender_id'] > 0) {
 				if($obj['id'] == 0) {
 					$this->create();
 				}
@@ -213,8 +204,8 @@ class CensusStaff extends AppModel {
 		$optionsMale['joins'] = $joins;
 		$optionsFemale['joins'] = $joins;
 		
-		$optionsMale['conditions'] = array('
-			CensusStaff.school_year_id' => $yearId,
+		$optionsMale['conditions'] = array(
+			'CensusStaff.school_year_id' => $yearId,
 			'CensusStaff.gender_id' => $maleGenderId
 		);
 		
@@ -272,7 +263,7 @@ class CensusStaff extends AppModel {
 		
 		$StaffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
 		$positionTitles = $StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
-		//pr($positionTitles);die;
+		//pr($positionTitles);
 		
 		$maleGenderId = $this->Gender->getIdByName('Male');
 		$femaleGenderId = $this->Gender->getIdByName('Female');
@@ -292,17 +283,16 @@ class CensusStaff extends AppModel {
 		if ($this->request->is('get')) {
 			$this->Navigation->addCrumb('Edit Staff');
 			
-			$yearList = $this->SchoolYear->getAvailableYears();
+			$yearList = $this->SchoolYear->getYearList();
 			//$selectedYear = $this->controller->getAvailableYearId($yearList);
 			if(empty($selectedYear)){
 				$selectedYear = key($yearList);
 			}
 			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 			if (!$editable) {
-				$this->redirect(array('action' => 'staff', $selectedYear));
+				$this->redirect(array('model' => 'CensusStaff', 'index', $selectedYear));
 			} else {
 				$data = $this->getCensusData($institutionSiteId, $selectedYear);
-				
 				
 				$StaffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
 				$positionTitles = $StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);			
@@ -318,12 +308,11 @@ class CensusStaff extends AppModel {
 				$this->setVar(compact('selectedYear', 'yearList', 'data', 'positionTitles', 'genderOptions'));
 			}
 		} else {
-			$data = $this->data['CensusStaff'];
-			//pr($data);die;
+			$data = $this->request->data['CensusStaff'];
 			$yearId = $data['school_year_id'];
 			$this->saveCensusData($data, $institutionSiteId);
 			$this->Message->alert('general.edit.success');
-			$this->redirect(array('controller' => 'Census', 'action' => 'staff', $yearId));
+			$this->redirect(array('controller' => 'Census', 'action' => 'CensusStaff', 'index', $yearId));
 		}
 	}
 	
@@ -340,7 +329,7 @@ class CensusStaff extends AppModel {
 		if ($index == 1) {
 			$data = array();
 
-			$header = array(__('Year'), __('Position Type'), __('Male'), __('Female'), __('Total'));
+			$header = array(__('Year'), __('Position'), __('Male'), __('Female'), __('Total'));
 
 			$dataYears = $this->getYearsHaveData($institutionSiteId);
 
@@ -350,12 +339,8 @@ class CensusStaff extends AppModel {
 
 				$censusData = $this->getCensusData($institutionSiteId, $yearId);
 
-				$StaffCategory = ClassRegistry::init('Staff.StaffCategory');
-				$staffCategories = $StaffCategory->find('list', array(
-					'recursive' => '-1',
-					'conditions' => array('StaffCategory.visible' => 1),
-					'order' => array('StaffCategory.order')
-				));
+				$StaffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
+				$positionTitles = $StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
 
 				$maleGenderId = $this->Gender->getIdByName('Male');
 				$femaleGenderId = $this->Gender->getIdByName('Female');
@@ -367,17 +352,17 @@ class CensusStaff extends AppModel {
 				if (count($censusData) > 0) {
 					$data[] = $header;
 					$total = 0;
-					foreach ($staffCategories AS $staffCatId => $staffCatName) {
+					foreach ($positionTitles AS $positionId => $positionName) {
 						$maleValue = 0;
 						$femaleValue = 0;
 
 						foreach ($genderOptions AS $genderId => $genderName) {
-							if (!empty($censusData[$staffCatId][$genderId])) {
+							if (!empty($censusData[$positionId][$genderId])) {
 								
 								if ($genderName == 'Male') {
-									$maleValue = $censusData[$staffCatId][$genderId]['value'];
+									$maleValue = $censusData[$positionId][$genderId]['value'];
 								} else {
-									$femaleValue = $censusData[$staffCatId][$genderId]['value'];
+									$femaleValue = $censusData[$positionId][$genderId]['value'];
 								}
 							}
 						}
@@ -387,7 +372,7 @@ class CensusStaff extends AppModel {
 
 						$data[] = array(
 							$yearName,
-							$staffCatName,
+							$positionName,
 							$maleValue,
 							$femaleValue,
 							$subTotal

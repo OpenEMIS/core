@@ -25,13 +25,12 @@ class StaffPositionTitle extends StaffAppModel {
 	
 	public function getInstitutionPositionTitles($institutionId){
 		$list = $this->find('list' , array(
-			'fields' => array('DISTINCT StaffPositionTitle.id', 'StaffPositionTitle.name'),
-			'recursive' => '-1',
+			'fields' => array('StaffPositionTitle.id', 'StaffPositionTitle.name'),
+			'recursive' => -1,
 			'joins' => array(
 				array(
 					'table' => 'institution_site_positions',
 					'alias' => 'InstitutionSitePosition',
-					'type' => 'LEFT',
 					'conditions' => array(
 						'InstitutionSitePosition.staff_position_title_id = StaffPositionTitle.id',
 						'InstitutionSitePosition.institution_site_id = ' . $institutionId
@@ -41,7 +40,7 @@ class StaffPositionTitle extends StaffAppModel {
 			'conditions' => array('StaffPositionTitle.visible' => 1),
 			'order' => array('StaffPositionTitle.order')
 		));
-		
+
 		return $list;
 	}
 }
