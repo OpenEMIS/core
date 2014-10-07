@@ -176,7 +176,7 @@ class InstitutionSiteStudent extends AppModel {
 					'startDate' => $date->format('d-m-Y'),
 					'data-date' => $date->format('d-m-Y')
 				);
-				$programmeOptions = $this->EducationProgramme->getProgrammeOptionsByInstitution($institutionSiteId, $yearId, true);
+				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $yearId, true);
 				$this->fields['education_programme_id']['options'] = $programmeOptions;
 			}
 		}
@@ -285,7 +285,7 @@ class InstitutionSiteStudent extends AppModel {
 				'startDate' => $date->format('d-m-Y'),
 				'data-date' => $date->format('d-m-Y')
 			);
-			$programmeOptions = $this->EducationProgramme->getProgrammeOptionsByInstitution($institutionSiteId, $yearId);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $yearId, true);
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			
 			$submit = $this->request->data['submit'];
