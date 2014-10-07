@@ -344,13 +344,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$selectedYear = $data[$this->alias]['school_year_id'];
 			$selectedClass = $data[$this->alias]['institution_site_class_id'];
 			
-			$this->create();
-			if ($this->saveAll($data)) {
-				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => get_class($this), 'absence', $selectedYear));
-			} else {
-				$this->log($this->validationErrors, 'debug');
-				$this->Message->alert('general.add.failed');
+			if ($data['submit'] != 'reload') {
+				$this->create();
+				if ($this->saveAll($data)) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => get_class($this), 'absence', $selectedYear));
+				} else {
+					$this->log($this->validationErrors, 'debug');
+					$this->Message->alert('general.add.failed');
+				}
 			}
 		} else {
 			
