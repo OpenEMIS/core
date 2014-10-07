@@ -31,7 +31,9 @@ class CensusStaff extends AppModel {
 		'Gender' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'gender_id'
-		)
+		),
+		'InstitutionSite',
+		'StaffPositionTitle'
 	);
 	
 	public function getCensusData($siteId, $yearId) {

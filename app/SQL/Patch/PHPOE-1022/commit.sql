@@ -25,7 +25,7 @@ CREATE TABLE `census_staff` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
--- Updarte `navigtions` and `security_functions`
+-- Update `navigtions` and `security_functions`
 --
 
 UPDATE `_openemis_`.`navigations` SET `action` = 'CensusStaff', `pattern` = 'CensusStaff' 
@@ -35,10 +35,15 @@ WHERE `module` LIKE 'Institution' AND `controller` LIKE 'Census' AND `title` LIK
 UPDATE `_openemis_`.`security_functions` SET `_view` = 'CensusStaff.index', `_edit` = '_view:CensusStaff.edit' 
 WHERE `name` LIKE 'Staff' AND `controller` LIKE 'Census' AND `module` LIKE 'Institutions';
 
+--
+-- Update reports record
+--
+
+SET @staffReportId := 0;
+SELECT `id` INTO @staffReportId FROM `reports` WHERE `reports`.`name` LIKE 'Staff' AND `reports`.`category` LIKE 'Institution Totals Reports';
 
 
-
-
-
+UPDATE `_openemis_`.`batch_reports` SET `query` = '$this->CensusStaff->formatResult = true; $data = $this->CensusStaff->find(\'all\',array( \'recursive\' => 0, \'fields\'=>array(\'SchoolYear.name AS AcademicYear\',\'InstitutionSite.name AS InstitutionName\',\'StaffPositionTitle.name AS positionTitleName\',\'Gender.name AS Gender\',\'CensusStaff.value AS Staff\'), \'order\' => array(\'SchoolYear.name\', \'InstitutionSite.id\', \'StaffPositionTitle.id\', \'Gender.id\'), {cond} ));',
+`template` = 'AcademicYear,InstitutionName,positionTitleName,Gender,Staff' WHERE `batch_reports`.`report_id` = @staffReportId;
 
 
