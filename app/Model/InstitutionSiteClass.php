@@ -184,7 +184,7 @@ class InstitutionSiteClass extends AppModel {
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions(array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId));
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-		$data = $this->getListOfClasses($selectedYear, $controller->institutionSiteId);
+		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
 		
 		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
 	}
@@ -399,7 +399,7 @@ class InstitutionSiteClass extends AppModel {
 		
 		return $result;
 	}
-		
+	
 	public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
 		if(empty($yearId)){
 			$conditions = array(
