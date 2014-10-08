@@ -70,12 +70,12 @@ class StudentsController extends StudentsAppController {
 		'nationalities' => 'Students.StudentNationality',
 		'attachments' =>'Students.StudentAttachment',
 		'guardians' => 'Students.StudentGuardian',
-		'behaviour' => 'Students.StudentBehaviour',
 		'additional' => 'Students.StudentCustomField',
 		// new ControllerAction
 		'InstitutionSiteStudent',
 		'Programme' => array('plugin' => 'Students'),
-		'StudentFee' => array('plugin' => 'Students')
+		'StudentFee' => array('plugin' => 'Students'),
+		'StudentBehaviour' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {

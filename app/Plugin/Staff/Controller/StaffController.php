@@ -76,12 +76,12 @@ class StaffController extends StaffAppController {
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
 		'salaries' => 'Staff.StaffSalary',
-		'behaviour' =>'Staff.StaffBehaviour',
 		'training' => 'Staff.StaffTraining',
 		'report' => 'Staff.StaffReport',
 		'additional' => 'Staff.StaffCustomField',
 		// new ControllerAction
 		'InstitutionSiteStaff',
+		'StaffBehaviour' => array('plugin' => 'Staff')
 	);
 
 	public function beforeFilter() {
