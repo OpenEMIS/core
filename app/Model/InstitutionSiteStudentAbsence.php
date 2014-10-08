@@ -221,7 +221,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = key($yearList);
 		}
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitutionSchoolYear($institutionSiteId, $yearId);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
 		if ($classId != 0) {
 			if (!array_key_exists($classId, $classOptions)) {
 				$classId = key($classOptions);
@@ -295,7 +295,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = key($yearList);
 		}
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitutionSchoolYear($institutionSiteId, $yearId);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
 		if ($classId != 0) {
 			if (!array_key_exists($classId, $classOptions)) {
 				$classId = key($classOptions);

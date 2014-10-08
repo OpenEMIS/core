@@ -167,6 +167,9 @@ class FormUtilityHelper extends AppHelper {
 		$wrapper = '<div class="input-group bootstrap-timepicker">';
 		$icon = '<span class="input-group-addon"><i class="fa fa-clock-o"></i></span></div>';
 		$defaults = $this->Form->inputDefaults();
+		if(!empty($options['label'])) {
+			$options['label'] = array('text' => $options['label'], 'class' => $defaults['label']['class']);
+		}
 		$inputOptions = array(
 			'id' => $id,
 			'type' => 'text',
