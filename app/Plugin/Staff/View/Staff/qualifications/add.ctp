@@ -23,7 +23,7 @@ $formOptions['searchQualificationUrl']=$this->params['controller']."/qualificati
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->input('qualification_level_id', array('options'=>$levelOptions,'label'=>array('text'=> $this->Label->get('QualificationLevel.name'),'class'=>'col-md-3 control-label')));
-echo $this->Form->input('QualificationInstitution.name', array('id' => 'search', 'class' => 'form-control qualification-institution-name', 'label'=>array('text'=> $this->Label->get('QualificationInstitution.name'),'class'=>'col-md-3 control-label'), 'placeholder' => __('Institution Name')));
+echo $this->Form->input('qualification_institution_name', array('id' => 'search', 'class' => 'form-control qualification-institution-name', 'label'=>array('text'=> $this->Label->get('QualificationInstitution.name'),'class'=>'col-md-3 control-label'), 'placeholder' => __('Institution Name')));
 echo $this->Form->hidden('qualification_institution_id', array('class' => 'qualification-institution-id'));
 echo $this->Form->input('qualification_institution_country', array('label'=>array('text'=> $this->Label->get('StaffQualification.qualification_institution_country'),'class'=>'col-md-3 control-label')));
 echo $this->Form->input('qualification_title');
