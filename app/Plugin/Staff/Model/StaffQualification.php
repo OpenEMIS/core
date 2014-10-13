@@ -17,7 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffQualification extends StaffAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'QualificationLevel',
+		'QualificationLevel' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'qualification_level_id'
+		),
 		'QualificationInstitution',
 		'QualificationSpecialisation',
 		'ModifiedUser' => array(
@@ -59,6 +62,12 @@ class StaffQualification extends StaffAppModel {
 				'message' => 'Please enter a valid Major/Specialisation'
 			)
 		),
+		'qualification_institution_name' => array(
+			'validHiddenId' => array(
+				'rule' => array('checkQualificationInstitutionId'),
+				'message' => 'Please enter a valid Institution'
+			)
+		)
 	);
 
 	public function beforeAction($controller, $action) {
@@ -67,12 +76,20 @@ class StaffQualification extends StaffAppModel {
 		$controller->FileUploader->additionalFileType();
 	}
 	
+	public function checkQualificationInstitutionId($qualificationInstitutionName){
+		if(!empty($this->data['StaffQualification']['qualification_institution_name']) || !empty($this->data['StaffQualification']['qualification_institution_id'])){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
 	public function getDisplayFields($controller) {
 		$fields = array(
 			'model' => $this->alias,
 			'fields' => array(
 				array('field' => 'name', 'model' => 'QualificationLevel'),
-				array('field' => 'name', 'model' => 'QualificationInstitution'),
+				array('field' => 'qualification_institution_name'),
 				array('field' => 'qualification_institution_country'),
 				array('field' => 'qualification_title'),
 				array('field' => 'name', 'model' => 'QualificationSpecialisation'),
@@ -143,6 +160,7 @@ class StaffQualification extends StaffAppModel {
 			$staffQualificationObj = $this->findById($id);
 
 			if (!empty($staffQualificationObj)) {
+				$staffQualificationObj['StaffQualification']['qualification_institution_name'] = $staffQualificationObj['QualificationInstitution']['name'];
 				$controller->request->data = $staffQualificationObj;
 			} else {
 				//$this->redirect(array('action' => 'studentsBehaviour'));
@@ -160,7 +178,7 @@ class StaffQualification extends StaffAppModel {
 					$data = array(
 						'QualificationInstitution' =>
 						array(
-							'name' => $staffQualificationData['qualification_institution'],
+							'name' => $staffQualificationData['qualification_institution_name'],
 							'order' => 0,
 							'visible' => 1,
 							'created_user_id' => $controller->Auth->user('id'),
@@ -177,8 +195,7 @@ class StaffQualification extends StaffAppModel {
 						if ($controller->FileUploader->success) {
 							$controller->Message->alert('general.' . $type . '.success');
 						}
-					}
-					else{
+					}else{
 						$updateFileData = array('id' => $id, 'file_name' => null, 'file_content' => null);
 						$this->id = $id;
 						$this->saveField('file_name', NULL);
@@ -190,7 +207,7 @@ class StaffQualification extends StaffAppModel {
 			}
 		}
 		
-		$levelOptions = $this->QualificationLevel->getOptions();
+		$levelOptions = $this->QualificationLevel->getList();
 		$specializationOptions = $this->QualificationSpecialisation->getOptions();
 
 		$controller->set(compact('levelOptions', 'specializationOptions', 'id'));
