@@ -19,6 +19,10 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $data['QualificationLevel']['name']; ?></div>
 </div>
 <div class="row">
+	<div class="col-md-3"><?php echo __('Institution'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['qualification_institution_name']; ?></div>
+</div>
+<div class="row">
 	<div class="col-md-3"><?php echo __('Institution') . '/' . __('Country'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['qualification_institution_country']; ?></div>
 </div>
