@@ -24,7 +24,7 @@ foreach ($fields as $key => $field) {
 			$options['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
 		
-		if (array_key_exists($key, $data[$fieldModel]) || $fieldType == 'element') {
+		if (array_key_exists($key, $data[$fieldModel]) || $fieldType == 'element' || $fieldType == 'disabled') {
 			$value = '';
 			if (array_key_exists('dataModel', $field) && array_key_exists('dataField', $field)) {
 				$dataModel = $field['dataModel'];
@@ -35,6 +35,10 @@ foreach ($fields as $key => $field) {
 			}
 			
 			switch ($fieldType) {
+				case 'disabled':
+					$value = $field['value'];
+					break;
+					
 				case 'select':
 					if (array_key_exists($value, $field['options'])) {
 						$value = $field['options'][$value];
