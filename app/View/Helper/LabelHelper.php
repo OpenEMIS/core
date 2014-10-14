@@ -426,6 +426,19 @@ class LabelHelper extends AppHelper {
 			'function' => 'Function',
 			'dimensions' => 'Dimensions',
 			'classification' => 'Classification'
+		),
+		'StudentBehaviour' => array(
+			'title' => 'Behaviour - Students',
+			'name' => 'Title',
+			'student_behaviour_category_id' => 'Category',
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time'
+		),
+		'StaffBehaviour' => array(
+			'title' => 'Behaviour - Staff',
+			'staff_behaviour_category_id' => 'Category',
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time'
 		)
 	);
 	
