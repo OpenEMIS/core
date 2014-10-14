@@ -31,8 +31,19 @@ echo $this->Form->input('qualification_specialisation_id', array('options'=>$spe
 echo $this->Form->input('graduate_year');
 echo $this->Form->input('document_no');
 echo $this->Form->input('gpa', array('label'=>array('text'=> $this->Label->get('StaffQualification.gpa'),'class'=>'col-md-3 control-label')));
+
+if (!empty($staffQualificationObj[$model]['id']) && !empty($staffQualificationObj[$model]['file_name'])) {
+?>
+<div class="form-group">
+	<div class="col-md-3 control-label"></div>
+	<div class="col-md-7"><?php echo $this->Html->link($staffQualificationObj[$model]['file_name'], array('action' => 'qualificationsAttachmentsDownloads', $staffQualificationObj[$model]['id'])); ?></div>
+</div>
+<?php
+}
+
 echo $this->Form->hidden('maxFileSize', array('name'=> 'MAX_FILE_SIZE','value'=>(2*1024*1024)));
 echo $this->element('templates/file_upload');
+
 echo $this->FormUtility->getFormButtons(array('cancelURL' =>$redirectAction));
 echo $this->Form->end();
 $this->end();

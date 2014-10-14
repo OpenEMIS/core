@@ -77,7 +77,8 @@ class StaffQualification extends StaffAppModel {
 	}
 	
 	public function checkQualificationInstitutionId($qualificationInstitutionName){
-		if(!empty($this->data['StaffQualification']['qualification_institution_name']) || !empty($this->data['StaffQualification']['qualification_institution_id'])){
+		//if(!empty($this->data['StaffQualification']['qualification_institution_name']) || !empty($this->data['StaffQualification']['qualification_institution_id'])){
+		if(!empty($this->data['StaffQualification']['qualification_institution_name']) ){
 			return true;
 		}else{
 			return false;
@@ -135,6 +136,7 @@ class StaffQualification extends StaffAppModel {
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		$data = $this->findById($id);
+		$data['StaffQualification']['qualification_institution_name'] = $data['QualificationInstitution']['name'];
 		
 		if(empty($data)){
 			$controller->Message->alert('general.noData');
@@ -155,9 +157,9 @@ class StaffQualification extends StaffAppModel {
 	
 	function setup_add_edit_form($controller, $params, $type){
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
+		$staffQualificationObj = $this->findById($id);
+		
 		if ($controller->request->is('get')) {
-			
-			$staffQualificationObj = $this->findById($id);
 
 			if (!empty($staffQualificationObj)) {
 				$staffQualificationObj['StaffQualification']['qualification_institution_name'] = $staffQualificationObj['QualificationInstitution']['name'];
@@ -174,7 +176,13 @@ class StaffQualification extends StaffAppModel {
 			$this->set($staffQualificationData);
 
 			if ($this->validates()) {
-				if (empty($staffQualificationData['qualification_institution_id'])) {
+				$exixtingQuaInstName = '';
+				if(!empty($staffQualificationData['qualification_institution_id'])){
+					$exixtingQuaInstObj = $this->QualificationInstitution->findById($staffQualificationData['qualification_institution_id']);
+					$exixtingQuaInstName = $exixtingQuaInstObj['QualificationInstitution']['name'];
+				}
+				
+				if (empty($staffQualificationData['qualification_institution_id']) || $staffQualificationData['qualification_institution_name'] != $exixtingQuaInstName) {
 					$data = array(
 						'QualificationInstitution' =>
 						array(
@@ -189,20 +197,32 @@ class StaffQualification extends StaffAppModel {
 					$qualificationInstitutionId = $this->QualificationInstitution->getInsertID();
 					$staffQualificationData['qualification_institution_id'] = $qualificationInstitutionId;
 				}
-				if($this->save($staffQualificationData)){
-					if(!empty($postFileData['tmp_name'])){ 
-						$controller->FileUploader->uploadFile();
-						if ($controller->FileUploader->success) {
-							$controller->Message->alert('general.' . $type . '.success');
+				unset($staffQualificationData['qualification_institution_name']);
+				
+				if(empty($postFileData['tmp_name'])){
+					if($this->save($staffQualificationData)){
+						$controller->Message->alert('general.' . $type . '.success');
+						if(!empty($id)){
+							return $controller->redirect(array('action' => 'qualificationsView', $id));
+						}else{
+							return $controller->redirect(array('action' => 'qualifications'));
 						}
 					}else{
-						$updateFileData = array('id' => $id, 'file_name' => null, 'file_content' => null);
-						$this->id = $id;
-						$this->saveField('file_name', NULL);
-						$this->saveField('file_content', NULL);
-						$controller->Message->alert('general.' . $type . '.success');
+						$controller->Message->alert('general.' . $type . '.failed');
 					}
-					return $controller->redirect(array('action' => 'qualificationsView', $id));
+				}else{
+					$controller->FileUploader->additionData = $staffQualificationData;
+					$controller->FileUploader->uploadFile();
+					if ($controller->FileUploader->success) {
+						$controller->Message->alert('general.' . $type . '.success');
+						if(!empty($id)){
+							return $controller->redirect(array('action' => 'qualificationsView', $id));
+						}else{
+							return $controller->redirect(array('action' => 'qualifications'));
+						}
+					}else{
+						$controller->Message->alert('general.' . $type . '.failed');
+					}
 				}
 			}
 		}
@@ -210,7 +230,7 @@ class StaffQualification extends StaffAppModel {
 		$levelOptions = $this->QualificationLevel->getList();
 		$specializationOptions = $this->QualificationSpecialisation->getOptions();
 
-		$controller->set(compact('levelOptions', 'specializationOptions', 'id'));
+		$controller->set(compact('levelOptions', 'specializationOptions', 'id', 'staffQualificationObj'));
 	}
 
 	public function qualificationsDelete($controller, $params) {
