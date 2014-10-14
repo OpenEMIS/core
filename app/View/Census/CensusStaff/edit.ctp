@@ -5,13 +5,13 @@ echo $this->Html->script('census', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Staff'));
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'staff', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'CensusStaff', 'index', $selectedYear), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 echo $this->Form->create('CensusStaff', array(
 	'inputDefaults' => array('label' => false, 'div' => false),
-	'url' => array('controller' => 'Census', 'action' => 'staffEdit')
+	'url' => array('controller' => 'Census', 'action' => 'CensusStaff', 'edit')
 ));
 echo $this->element('census/year_options');
 ?>
@@ -21,35 +21,38 @@ echo $this->element('census/year_options');
 		<thead>
 			<?php echo $this->Html->tableHeaders(array(__('Position'), __('Male'), __('Female'), __('Total'))); ?>
 		</thead>
-		<tbody>
+		<?php if (!empty($positionTitles)) { ?>
+			<tbody>
+			<?php } ?>
+
 			<?php
 			$total = 0;
 			$index = 0;
 
-			foreach ($staffCategories AS $staffCatId => $staffCatName):
+			foreach ($positionTitles AS $titleId => $titleName):
 				$subTotal = 0;
 				?>
 				<tr>
-					<td><?php echo $staffCatName; ?></td>
+					<td><?php echo $titleName; ?></td>
 					<?php
 					foreach ($genderOptions AS $genderId => $genderName):
 						?>
 						<td class="cell-number">
 							<div class="input_wrapper">
 								<?php
-								echo $this->Form->hidden($index . '.id', array('value' => !empty($data[$staffCatId][$genderId]['censusId']) ? $data[$staffCatId][$genderId]['censusId'] : 0));
-								echo $this->Form->hidden($index . '.staff_category_id', array('value' => $staffCatId));
+								echo $this->Form->hidden($index . '.id', array('value' => !empty($data[$titleId][$genderId]['censusId']) ? $data[$titleId][$genderId]['censusId'] : 0));
+								echo $this->Form->hidden($index . '.staff_position_title_id', array('value' => $titleId));
 								echo $this->Form->hidden($index . '.gender_id', array('value' => $genderId));
 
 								$record_tag = '';
 								foreach ($source_type as $k => $v):
-									if (isset($data[$staffCatId][$genderId]['source']) && $data[$staffCatId][$genderId]['source'] == $v) {
+									if (isset($data[$titleId][$genderId]['source']) && $data[$titleId][$genderId]['source'] == $v) {
 										$record_tag = "row_" . $k;
 									}
 								endforeach;
 
-								if (!empty($data[$staffCatId][$genderId]['value'])) {
-									$value = $data[$staffCatId][$genderId]['value'];
+								if (!empty($data[$titleId][$genderId]['value'])) {
+									$value = $data[$titleId][$genderId]['value'];
 									$subTotal += $value;
 								} else {
 									$value = 0;
@@ -67,17 +70,20 @@ echo $this->element('census/year_options');
 								?>
 							</div>
 						</td>
-						<?php 
+						<?php
 						$index++;
 					endforeach;
 					?>
 					<td class="cell-total cell-number"><?php echo $subTotal; ?></td>
 				</tr>
-				<?php 
+				<?php
 				$total += $subTotal;
 			endforeach;
 			?>
-		</tbody>
+			<?php if (!empty($positionTitles)) { ?>
+			</tbody>
+		<?php } ?>
+
 		<tfoot>
 			<tr>
 				<td colspan="3" class="cell-number"><?php echo __('Total'); ?></td>
@@ -86,9 +92,9 @@ echo $this->element('census/year_options');
 		</tfoot>
 	</table>
 </div>
-<?php 
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'staff', $selectedYear)));
-echo $this->Form->end(); 
+<?php
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'CensusStaff', 'index', $selectedYear)));
+echo $this->Form->end();
 ?>
 
 <?php $this->end(); ?>
