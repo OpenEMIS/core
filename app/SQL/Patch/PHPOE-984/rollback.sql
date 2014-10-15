@@ -1,0 +1,11 @@
+DELETE FROM `config_items` WHERE `name` LIKE 'alert_frequency' AND `type` LIKE 'Alerts';
+DELETE FROM `config_items` WHERE `name` LIKE 'alert_retry' AND `type` LIKE 'Alerts';
+
+UPDATE `navigations` SET `header` = 'SMS' WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms' AND `header` LIKE 'Communications';
+UPDATE `navigations` SET `title` = 'Messages' WHERE `module` LIKE 'Administration' AND `header` LIKE 'SMS' AND `title` LIKE 'Questions';
+
+--
+-- Table structure for table `alerts`
+--
+
+DROP TABLE IF EXISTS `alerts`;
