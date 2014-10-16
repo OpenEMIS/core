@@ -24,5 +24,15 @@ CREATE TABLE `alerts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_estonian_ci AUTO_INCREMENT=1 ;
 
+--
+-- new menu item Alerts to navigations
+--
 
+SET @commuQuestionsOrderId := 0;
+SELECT `order` INTO @commuQuestionsOrderId FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Communications' AND `title` LIKE 'Questions';
+
+UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @commuQuestionsOrderId;
+
+INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(NULL, 'Administration', 'Alerts', 'Alerts', 'Communications', 'Alerts', 'Alert', 'Alert|Alert.add|Alert.view|Alert.edit', NULL, 33, 0, @commuQuestionsOrderId, 1, 1, '0000-00-00 00:00:00');
 
