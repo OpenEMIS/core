@@ -23,6 +23,9 @@ class AlertsController extends AlertsAppController {
 	public $modules = array(
 		'Alert' => array('plugin' => 'Alerts')
 	);
+	public $components = array(
+		'Option'
+	);
 
     public function beforeFilter() {
         parent::beforeFilter();

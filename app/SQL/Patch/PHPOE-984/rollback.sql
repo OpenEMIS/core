@@ -9,3 +9,14 @@ UPDATE `navigations` SET `title` = 'Messages' WHERE `module` LIKE 'Administratio
 --
 
 DROP TABLE IF EXISTS `alerts`;
+
+--
+-- new menu item Alerts to navigations
+--
+
+DELETE FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Communications' AND `title` LIKE 'Alerts';
+
+SET @commuQuestionsOrderId := 0;
+SELECT `order` INTO @commuQuestionsOrderId FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Communications' AND `title` LIKE 'Questions';
+
+UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` >= @commuQuestionsOrderId;
