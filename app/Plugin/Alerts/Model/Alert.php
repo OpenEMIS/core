@@ -13,11 +13,24 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-App::uses('AppModel', 'Model');
+
 class Alert extends AlertsAppModel {
 	public $actsAs = array(
 		'ControllerAction2'
 	);
+	
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	
+	public $hasMany = array('Alerts.AlertRole');
 	
 	public $validate = array(
 		'name' => array(
@@ -87,6 +100,7 @@ class Alert extends AlertsAppModel {
 	
 	public function add(){
 		$alias = $this->alias;
+		//pr(String::uuid());die;
 		
 		$statusOptions = $this->controller->Option->get('enableOptions');
 		$methodOptions = $this->controller->Option->get('alertMethod');
@@ -100,14 +114,84 @@ class Alert extends AlertsAppModel {
 			unset($alertData['roles']);
 			
 			if ($this->save($alertData)) {
-				pr($rolesData);die;
+				$alertId = $this->getLastInsertId();
+				$alertRoleData = array();
+				foreach($rolesData AS $roleId){
+					$alertRoleData[] = array(
+						'id' => String::uuid(),
+						'alert_id' => $alertId,
+						'security_role_id' => $roleId
+					);
+				}
+				
+				$this->AlertRole->saveMany($alertRoleData);
+				
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => get_class($this)));
+			}else{
+				$this->Message->alert('general.add.failed');
 			}
 		}
 		
 		$this->setVar(compact('statusOptions', 'methodOptions', 'roleOptions'));
 	}
 	
-	public function edit(){
+	public function edit($id=0){
+		$alias = $this->alias;
+		$data = $this->findById($id);
 		
+		$statusOptions = $this->controller->Option->get('enableOptions');
+		$methodOptions = $this->controller->Option->get('alertMethod');
+		
+		$SecurityRole = ClassRegistry::init('SecurityRole');
+		$roleOptions = $SecurityRole->getAllRoleOptions();
+		
+		if($this->request->is(array('post', 'put'))){
+			$alertData = $this->request->data[$alias];
+			$rolesData = $alertData['roles'];
+			unset($alertData['roles']);
+			
+			if ($this->save($alertData)) {
+				$alertRoleData = array();
+				foreach($rolesData AS $roleId){
+					$alertRoleData[] = array(
+						'id' => String::uuid(),
+						'alert_id' => $id,
+						'security_role_id' => $roleId
+					);
+				}
+				
+				$this->AlertRole->deleteAll(array('alert_id' => $id), false);
+				$this->AlertRole->saveMany($alertRoleData);
+				
+				$this->Message->alert('general.edit.success');
+				return $this->redirect(array('action' => get_class($this), 'view', $id));
+			}else{
+				$this->Message->alert('general.edit.failed');
+			}
+		}else{
+			$this->request->data = $data;
+			
+			$roleIds = array();
+			$roleData = $this->AlertRole->find('list', array(
+				'recursive' => -1,
+				'fields' => array('security_role_id'),
+				'conditions' => array('alert_id' => $id)
+			));
+			
+			foreach($roleData AS $existingRoldId){
+				$roleIds[] = $existingRoldId;
+			}
+		}
+		
+		$this->setVar(compact('id', 'statusOptions', 'methodOptions', 'roleOptions', 'roleIds'));
+	}
+	
+	public function view($id=0){
+		$data = $this->findById($id);
+
+		$roles = $this->AlertRole->getRolesByAlertId($id);
+		
+		$this->setVar(compact('id', 'data', 'roles'));
 	}
 }
