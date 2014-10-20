@@ -20,3 +20,15 @@ SET @commuQuestionsOrderId := 0;
 SELECT `order` INTO @commuQuestionsOrderId FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Communications' AND `title` LIKE 'Questions';
 
 UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` >= @commuQuestionsOrderId;
+
+--
+-- Table structure for table `alert_roles`
+--
+
+DROP TABLE IF EXISTS `alert_roles`;
+
+--
+-- Table structure for table `alert_logs`
+--
+
+DROP TABLE IF EXISTS `alert_logs`;
