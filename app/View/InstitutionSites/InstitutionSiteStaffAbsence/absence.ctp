@@ -8,9 +8,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Attendance'), array('action' => 'attendanceStaff'), array('class' => 'divider'));
+echo $this->Html->link(__('Attendance'), array('action' => $model), array('class' => 'divider'));
 if ($_add) {
-	echo $this->Html->link(__('Add'), array('action' => 'attendanceStaffAbsenceAdd'), array('class' => 'divider'));
+	echo $this->Html->link(__('Add'), array('action' => $model, 'add'), array('class' => 'divider'));
 }
 $this->end();
 
@@ -23,34 +23,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 ?>
 
 <div id="classes" class=" institutionAttendance">
-	<div class="row page-controls">
-		<div class="col-md-4">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'label' => false,
-				'div' => false,
-				'options' => $yearList,
-				'value' => $yearId,
-				'class' => 'form-control',
-				'onchange' => 'jsForm.change(this)',
-				'url' => $this->params['controller'] . '/' . $this->action
-			));
-			?>
-		</div>
-		<div class="col-md-4">
-			<?php
-			echo $this->Form->input('week_id', array(
-				'label' => false,
-				'div' => false,
-				'options' => $weekList,
-				'value' => $weekId,
-				'class' => 'form-control',
-				'onchange' => 'jsForm.change(this)',
-				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId
-			));
-			?>
-		</div>
-	</div>
+	<?php echo $this->element("../InstitutionSites/$model/controls"); ?>
 	<div id="mainlist">
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered">
@@ -90,7 +63,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						?>
 						<tr>
 							<td><?php echo $dateStr; ?></td>
-							<td><?php echo $this->Html->link($arrItems['Staff']['identification_no'], array('action' => 'attendanceStaffAbsenceView', $id), array('escape' => false)); ?></td>
+							<td><?php echo $this->Html->link($arrItems['Staff']['identification_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
 
 							<td><?php echo $staffName; ?></td>
 							<td><?php echo $arrItems['InstitutionSiteStaffAbsence']['absence_type']; ?></td>
