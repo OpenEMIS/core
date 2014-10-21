@@ -344,12 +344,17 @@ class LabelHelper extends AppHelper {
 			'student_absence_reason_id' => 'Reason'
 		),
 		'InstitutionSiteStaffAbsence' => array(
+			'title' => 'Absence - Staff',
 			'reason' => 'Reason',
 			'first_date_absent' => 'First Date Absent',
 			'full_day_absent' => 'Full Day Absent',
 			'last_date_absent' => 'Last Date Absent',
 			'start_time_absent' => 'Start Time Absent',
-			'end_time_absent' => 'End Time Absent'
+			'end_time_absent' => 'End Time Absent',
+			'school_year_id' => 'School Year',
+			'staff_id' => 'Staff',
+			'absence_type' => 'Type',
+			'staff_absence_reason_id' => 'Reason'
 		),
 		'Quality' => array(
 			'add_section_header' => 'Add Section Header',
