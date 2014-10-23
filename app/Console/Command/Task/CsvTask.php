@@ -88,7 +88,11 @@ class CsvTask extends AppTask {
             foreach ($data as $k => $arrv) {
                 $line = '';
                 foreach ($arrTpl as $column) {
-                    $line .= $this->Common->cleanContent($arrv[$column], array('preclean' => $preclean)) . ',';
+					if(isset($arrv[$column])){
+						$line .= $this->Common->cleanContent($arrv[$column], array('preclean' => $preclean)) . ',';
+					}else{
+						$line .= $this->Common->cleanContent('', array('preclean' => $preclean)) . ',';
+					}
                 }
 
                 $line .= "\n";
