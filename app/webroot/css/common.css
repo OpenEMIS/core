@@ -8,7 +8,7 @@ body{
 	margin:0;
 	padding:0;
 	min-width:1000px;
-	background-image:url(../img/body_bg.png);
+	/*background-image:url(../img/body_bg.png);*/
 	word-wrap:break-word;
 }
 a{
