@@ -59,7 +59,7 @@ class InstitutionSiteProgramme extends AppModel {
 	
 	public function index($selectedYear=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('SchoolYear.available' => 1), 'order' => array('SchoolYear.order')));
+		$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
 		
 		if ($selectedYear == 0) {
 			$selectedYear = key($yearOptions);
@@ -84,7 +84,7 @@ class InstitutionSiteProgramme extends AppModel {
 	public function edit($selectedYear=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		if ($this->request->is('get')) {
-			$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('SchoolYear.available' => 1), 'order' => array('SchoolYear.order')));
+			$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
 			if ($selectedYear == 0) {
 				$selectedYear = key($yearOptions);
 			}
