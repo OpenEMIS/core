@@ -196,7 +196,8 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 /*body cotent*/
 .container{
-	width:980px;
+	/*width:980px;*/
+	min-width:100%;
 	margin:0 auto;
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
