@@ -284,7 +284,7 @@ class StaffController extends StaffAppController {
 			if ($this->Staff->validates() && $this->Staff->save()) {
 				if ($this->Wizard->isActive()) {
 					if (is_null($id)) {
-						$this->Message->alert($model . '.add.success');
+						$this->Message->alert('general.add.success');
 						$id = $this->Staff->getLastInsertId();
 						$this->Session->write($model . '.id', $id);
 					}
