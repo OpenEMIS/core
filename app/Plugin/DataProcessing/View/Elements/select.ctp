@@ -1,9 +1,9 @@
 <?php
 $arrMap = array(
+	'genEstimates'=>'Aggregated Totals',
 	'genReports'=>'Reports',
-	'genIndicators'=>'Indicators',
-	'genEstimates'=>'Estimates',
-	'genCustoms'=>'Custom'
+	'genIndicators'=>'Standard Indicators',
+	'genCustoms'=>'Custom Indicators'
 );
 ?>
 <div class="row page-controls">
