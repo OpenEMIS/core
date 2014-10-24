@@ -34,12 +34,12 @@ class SchoolYear extends AppModel {
 		if($list) {
 			$result = $this->find('list', array(
 				'fields' => array('SchoolYear.id', 'SchoolYear.name'),
-				'conditions' => array('SchoolYear.available' => 1),
+				'conditions' => array('SchoolYear.visible' => 1),
 				'order' => array('SchoolYear.name ' . $order)
 			));
 		} else {
 			$result = $this->find('all', array(
-				'conditions' => array('SchoolYear.available' => 1),
+				'conditions' => array('SchoolYear.visible' => 1),
 				'order' => array('SchoolYear.name ' . $order)
 			));
 		}
@@ -69,7 +69,7 @@ class SchoolYear extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'SchoolYear.available' => 1
+				'SchoolYear.visible' => 1
 			),
 			'order' => array('SchoolYear.name DESC')
 		));
@@ -90,7 +90,7 @@ class SchoolYear extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'SchoolYear.available' => 1
+				'SchoolYear.visible' => 1
 			),
 			'order' => array('SchoolYear.name DESC')
 		));
@@ -178,5 +178,26 @@ class SchoolYear extends AppModel {
 	public function getSchoolYearObjectById($yearId) {
 		$data = $this->findById($yearId);	
 		return $data['SchoolYear'];
+	}
+	
+	public function getSchoolYearIdByDate($date) {
+		if(empty($date)){
+			return '';
+		}
+		
+		$result = $this->find('first', array(
+			'fields' => array('SchoolYear.id'),
+			'conditions' => array(
+				'SchoolYear.visible' => 1,
+				'SchoolYear.start_date <=' => $date,
+				'SchoolYear.end_date >=' => $date
+			)
+		));
+		
+		if(!empty($result['SchoolYear']['id'])){
+			return $result['SchoolYear']['id'];
+		}else{
+			return '';
+		}
 	}
 }

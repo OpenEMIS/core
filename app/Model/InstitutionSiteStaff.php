@@ -541,6 +541,48 @@ class InstitutionSiteStaff extends AppModel {
 
 		return $data;
 	}
+	
+	public function getStaffByYear($institutionSiteId, $schoolYearId) {
+		$yearObj = ClassRegistry::init('SchoolYear')->findById($schoolYearId);
+		$startDate = $yearObj['SchoolYear']['start_date'];
+		$endDate = $yearObj['SchoolYear']['end_date'];
+		
+		$options['conditions'] = array(
+			'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
+			'OR' => array(
+				array(
+					'InstitutionSiteStaff.end_date IS NULL',
+					'InstitutionSiteStaff.start_date <=' => $endDate
+				),
+				array(
+					'InstitutionSiteStaff.end_date IS NOT NULL',
+					'InstitutionSiteStaff.start_date <=' => $startDate,
+					'InstitutionSiteStaff.end_date >=' => $startDate
+				),
+				array(
+					'InstitutionSiteStaff.end_date IS NOT NULL',
+					'InstitutionSiteStaff.start_date >' => $startDate,
+					'InstitutionSiteStaff.start_date <=' => $endDate
+				)
+			)
+		);
+		
+		//$options['recursive'] =-1;
+		$options['fields'] = array(
+				'DISTINCT Staff.id',
+				'Staff.identification_no',
+				'Staff.first_name',
+				'Staff.middle_name',
+				'Staff.last_name',
+				'Staff.preferred_name'
+		);
+		
+		$options['recursive'] = 0;
+		
+		$data = $this->find('all', $options);
+		
+		return $data;
+	}
 
 	public function getStaffSelectList($year, $institutionSiteId, $classId) {
 		// Filtering section

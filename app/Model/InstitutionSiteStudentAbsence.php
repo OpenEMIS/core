@@ -212,7 +212,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.available' => 1), 'order' => array('SchoolYear.order')));
+		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
 		if ($yearId != 0) {
 			if (!array_key_exists($yearId, $yearList)) {
 				$yearId = key($yearList);
@@ -286,7 +286,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->Navigation->addCrumb('Absence - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.available' => 1), 'order' => array('SchoolYear.order')));
+		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
 		if ($yearId != 0) {
 			if (!array_key_exists($yearId, $yearList)) {
 				$yearId = key($yearList);
