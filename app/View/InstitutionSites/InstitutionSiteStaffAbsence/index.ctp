@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Absence'), array('action' => 'attendanceStaffAbsence'), array('class' => 'divider'));
+echo $this->Html->link(__('Absence'), array('action' => $model, 'absence'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -20,34 +20,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 ?>
 
 <div id="institutionStaffAttendance" class=" institutionAttendance">
-	<div class="row page-controls">
-		<div class="col-md-4">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'label' => false,
-				'div' => false,
-				'options' => $yearList,
-				'value' => $yearId,
-				'class' => 'form-control',
-				'onchange' => 'jsForm.change(this)',
-				'url' => $this->params['controller'] . '/' . $this->action
-			));
-			?>
-		</div>
-		<div class="col-md-4">
-			<?php
-			echo $this->Form->input('week_id', array(
-				'label' => false,
-				'div' => false,
-				'options' => $weekList,
-				'value' => $weekId,
-				'class' => 'form-control',
-				'onchange' => 'jsForm.change(this)',
-				'url' => $this->params['controller'] . '/' . $this->action . '/' . $yearId
-			));
-			?>
-		</div>
-	</div>
+	<?php echo $this->element("../InstitutionSites/$model/controls"); ?>
 	<div id="mainlist">
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered">
@@ -78,11 +51,11 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 										$endTimeAbsent = $absenceObj['end_time_absent'];
 										$timeStr = sprintf(__('absent') . ' (%s - %s)', $startTimeAbsent, $endTimeAbsent);
 										?>
-											<td><?php echo $this->Html->link($timeStr, array('action' => 'attendanceStaffAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
+											<td><?php echo $this->Html->link($timeStr, array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
 										<?php 
 									}else{
 										?>
-											<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => 'attendanceStaffAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
+											<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
 										<?php 
 									}
 								}else{

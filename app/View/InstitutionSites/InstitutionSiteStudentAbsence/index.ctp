@@ -40,11 +40,11 @@ echo $this->element("../InstitutionSites/$model/controls");
 								$endTimeAbsent = $absenceObj['end_time_absent'];
 								$timeStr = sprintf(__('absent') . ' (%s - %s)', $startTimeAbsent, $endTimeAbsent);
 								?>
-								<td><?php echo $this->Html->link($timeStr, array('action' => 'attendanceStudentAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
+								<td><?php echo $this->Html->link($timeStr, array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
 								<?php
 							} else {
 								?>
-								<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => 'attendanceStudentAbsenceView', $absenceObj['id']), array('escape' => false)); ?></td>
+								<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
 								<?php
 							}
 						} else {
