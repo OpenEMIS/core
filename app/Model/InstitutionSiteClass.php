@@ -193,7 +193,7 @@ class InstitutionSiteClass extends AppModel {
 		$controller->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.available' => 1);
+		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.visible' => 1);
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);

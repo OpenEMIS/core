@@ -105,7 +105,7 @@ class InstitutionSitesController extends AppController {
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
-		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
+		'staff' => 'InstitutionSiteStaff',
 		'assessments' => 'AssessmentItemResult',
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
@@ -113,7 +113,8 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteProgramme',
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
-		'StaffBehaviour' => array('plugin' => 'Staff')
+		'StaffBehaviour' => array('plugin' => 'Staff'),
+		'InstitutionSiteStaffAbsence'
 	);
 	
 	public function beforeFilter() {
