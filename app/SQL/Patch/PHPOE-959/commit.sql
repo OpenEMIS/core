@@ -9,7 +9,6 @@ UPDATE `batch_reports` SET `query` =
 `template` = "InstitutionName,SchoolYear,EducationProgrammeName" 
 WHERE `name` LIKE "Institution Site Programmes" AND `report_id` = @programmesReportId;
 
--------
 
 SET @customFieldsReportId := 0;
 
@@ -45,3 +44,43 @@ if ($value['Type'] != 2 && $value['Type'] != 5 && $value['Type'] != 1) {
 $value['Value'] = $value['Option']; }}" 
 WHERE `report_id` = @customFieldsReportId;
 
+
+SET @studentReportId := 0;
+
+SELECT `id` INTO @studentReportId FROM `reports` WHERE `module` LIKE 'Institution Totals' AND `category` LIKE 'Institution Totals Reports' AND `name` LIKE 'Student';
+
+UPDATE `batch_reports` SET `query` = "$this->CensusStudent->formatResult = true; 
+$data = $this->CensusStudent->find('all',array(
+'recursive' => -1, 
+'fields'=>array('SchoolYear.name AS AcademicYear','InstitutionSite.name AS InstitutionName','EducationGrade.name AS EducationGradeName','StudentCategory.name AS Category','Gender.name AS Gender','CensusStudent.value AS Student'),
+'joins'=>array(
+	array(
+		'table' => 'school_years',
+		'alias' => 'SchoolYear',
+		'conditions' => array('CensusStudent.school_year_id = SchoolYear.id')
+	),
+	array(
+		'table' => 'institution_sites',
+		'alias' => 'InstitutionSite',
+		'conditions' => array('CensusStudent.institution_site_id = InstitutionSite.id')
+	),
+	array(
+		'table' => 'education_grades',
+		'alias' => 'EducationGrade',
+		'conditions' => array('CensusStudent.education_grade_id = EducationGrade.id')
+	),
+	array(
+		'table' => 'student_categories',
+		'alias' => 'StudentCategory',
+		'conditions' => array('CensusStudent.student_category_id = StudentCategory.id')
+	),
+	array(
+		'table' => 'field_option_values',
+		'alias' => 'Gender',
+		'conditions' => array('CensusStudent.gender_id = Gender.id')
+	)
+),
+'order' => array('SchoolYear.name', 'InstitutionSite.id', 'EducationGrade.order', 'StudentCategory.order', 'Gender.id'),
+{cond}));",
+`template` = "AcademicYear,InstitutionName,EducationGradeName,Category,Gender,Student" 
+WHERE `report_id` = @studentReportId;
