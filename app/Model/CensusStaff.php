@@ -33,13 +33,13 @@ class CensusStaff extends AppModel {
 			'foreignKey' => 'gender_id'
 		),
 		'InstitutionSite',
-		'StaffPositionTitle'
+		'Staff.StaffPositionTitle'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
 		$this->formatResult = true;
 		$list = $this->find('all' , array(
-			'recursive' => 0,
+			'recursive' => -1,
 			'fields' => array(
 				'StaffPositionTitle.id AS positionTitleId',
 				'StaffPositionTitle.name AS positionTitleName',
@@ -263,8 +263,7 @@ class CensusStaff extends AppModel {
 		$data = $this->getCensusData($institutionSiteId, $selectedYear);
 		//pr($data);
 		
-		$StaffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
-		$positionTitles = $StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
+		$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
 		//pr($positionTitles);
 		
 		$maleGenderId = $this->Gender->getIdByName('Male');
@@ -296,8 +295,7 @@ class CensusStaff extends AppModel {
 			} else {
 				$data = $this->getCensusData($institutionSiteId, $selectedYear);
 				
-				$StaffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
-				$positionTitles = $StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);			
+				$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);			
 
 				$maleGenderId = $this->Gender->getIdByName('Male');
 				$femaleGenderId = $this->Gender->getIdByName('Female');
@@ -341,8 +339,7 @@ class CensusStaff extends AppModel {
 
 				$censusData = $this->getCensusData($institutionSiteId, $yearId);
 
-				$StaffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
-				$positionTitles = $StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
+				$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
 
 				$maleGenderId = $this->Gender->getIdByName('Male');
 				$femaleGenderId = $this->Gender->getIdByName('Female');
