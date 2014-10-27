@@ -31,8 +31,26 @@ class InstitutionSiteClassGrade extends AppModel {
 	// used by InstitutionSiteClass.edit
 	public function getAvailableGradesForClass($id) {
 		$data = $this->EducationGrade->find('all', array(
-			'fields' => array('EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClassGrade.id', 'InstitutionSiteClassGrade.status'),
+			'recursive' => -1,
+			'fields' => array('EducationGrade.name', 'InstitutionSiteClassGrade.id', 'InstitutionSiteClassGrade.status'),
 			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+						'InstitutionSiteProgramme.status = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteClass.institution_site_id',
+						'InstitutionSiteProgramme.school_year_id = InstitutionSiteClass.school_year_id',
+						'InstitutionSiteClass.id = ' . $id
+					)
+				),
 				array(
 					'table' => 'institution_site_class_grades',
 					'alias' => 'InstitutionSiteClassGrade',
@@ -41,24 +59,11 @@ class InstitutionSiteClassGrade extends AppModel {
 						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id',
 						'InstitutionSiteClassGrade.institution_site_class_id = ' . $id
 					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array('InstitutionSiteClass.id = ' . $id)
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteClass.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = InstitutionSiteClass.school_year_id',
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id'
-					)
 				)
 			),
-			'order' => array('InstitutionSiteClassGrade.id DESC', 'EducationProgramme.order', 'EducationGrade.order')
+			'order' => array('InstitutionSiteClassGrade.id DESC', 'EducationGrade.order')
 		));
+		//pr($data);
 		return $data;
 	}
 	
@@ -70,9 +75,10 @@ class InstitutionSiteClassGrade extends AppModel {
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
 						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
 						'InstitutionSiteProgramme.school_year_id = ' . $schoolYearId,
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id'
+						'InstitutionSiteProgramme.status = 1'
 					)
 				)
 			),
