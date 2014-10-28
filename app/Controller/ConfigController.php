@@ -53,8 +53,8 @@ class ConfigController extends AppController {
 		$this->autoLayout = false;
 		$this->RequestHandler->respondAs('text/javascript');
 		
-		$protocol = ($_SERVER['SERVER_PORT'] == '443'?'https://':'http://');
-				$host = $_SERVER['HTTP_HOST'];
+		$protocol = $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://';
+		$host = $_SERVER['HTTP_HOST'];
 		
 		$url = $protocol . $host . $this->webroot;
 		
