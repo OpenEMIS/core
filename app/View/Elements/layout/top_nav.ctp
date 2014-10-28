@@ -13,3 +13,5 @@
 	echo implode($divider, $navigationBar);
 	?>
 </div>
+
+<?php echo $this->element('layout/product_list') ?>
