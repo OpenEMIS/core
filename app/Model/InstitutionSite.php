@@ -841,6 +841,163 @@ class InstitutionSite extends AppModel {
 			);
 
 			$data = $this->find('all', $options);
+			//pr($data);
+
+			$reportFields = $this->reportMapping[$index]['fields'];
+			
+			$customFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
+			$institutionSiteCustomFields = $customFieldModel->find('all', array(
+				'recursive' => -1,
+				'fields' => array('InstitutionSiteCustomField.name as FieldName'),
+				'joins' => array(
+					array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+							'OR' => array(
+								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+								'InstitutionSiteCustomField.institution_site_type_id' => 0
+							)
+						)
+					)
+				),
+				'conditions' => array(
+					'InstitutionSiteCustomField.visible' => 1,
+					'InstitutionSiteCustomField.type != 1',
+					'InstitutionSite.id' => $institutionSiteId
+				),
+				'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')
+					)
+			);
+			//pr($institutionSiteCustomFields);die;
+
+			foreach ($institutionSiteCustomFields as $val) {
+				if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
+					$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+				}
+			}
+
+			$this->reportMapping[$index]['fields'] = $reportFields;
+
+			$newData = array();
+			$dateFormat = 'd F, Y';
+			
+			$institutionSiteCustomFields2 = $customFieldModel->find('all', array(
+				'recursive' => -1,
+				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+				'joins' => array(
+					array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+							'InstitutionSite.id' => $institutionSiteId,
+							'OR' => array(
+								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+								'InstitutionSiteCustomField.institution_site_type_id' => 0
+							)
+						)
+					),
+					array(
+						'table' => 'institution_site_custom_values',
+						'alias' => 'InstitutionSiteCustomValue',
+						'type' => 'left',
+						'conditions' => array(
+							'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+							'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+						)
+					),
+					array(
+						'table' => 'institution_site_custom_field_options',
+						'alias' => 'InstitutionSiteCustomFieldOption',
+						'type' => 'left',
+						'conditions' => array(
+							'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+							'InstitutionSiteCustomField.type' => array(3, 4),
+							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+						)
+					),
+				),
+				'conditions' => array(
+					'InstitutionSiteCustomField.visible' => 1,
+					'InstitutionSiteCustomField.type !=1',
+				),
+				'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order'),
+				'group' => array('InstitutionSiteCustomField.id')
+					)
+			);
+			
+			
+
+			foreach ($data AS $row) {
+				if ($row['InstitutionSite2']['date_opened'] == '0000-00-00') {
+					$row['InstitutionSite2']['date_opened'] = '';
+				} else {
+					$originalDate = new DateTime($row['InstitutionSite2']['date_opened']);
+					$row['InstitutionSite2']['date_opened'] = $originalDate->format($dateFormat);
+				}
+
+				if ($row['InstitutionSite2']['date_closed'] == '0000-00-00') {
+					$row['InstitutionSite2']['date_closed'] = '';
+				} else {
+					$originalDate = new DateTime($row['InstitutionSite2']['date_closed']);
+					$row['InstitutionSite2']['date_closed'] = $originalDate->format($dateFormat);
+				}
+				foreach ($institutionSiteCustomFields2 as $val) {
+					if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
+						$row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
+					}
+				}
+
+				$sortRow = array();
+				foreach ($this->reportMapping[$index]['fields'] as $key => $value) {
+					if (isset($row[$key])) {
+						$sortRow[$key] = $row[$key];
+					} else {
+						$sortRow[0] = $row[0];
+					}
+				}
+
+				$newData[] = $sortRow;
+			}
+			
+			return $newData;
+		}
+	}
+	
+	public function reportsGetDataBak($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		// General > Overview and More
+		if ($index == 1) {
+			$options = array();
+			//$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['group'] = array('InstitutionSite.id');
+			$options['conditions'] = array('InstitutionSite.id' => $institutionSiteId);
+
+			$options['joins'] = array(
+				array(
+					'table' => 'area_educations',
+					'alias' => 'AreaEducation',
+					'type' => 'left',
+					'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite2',
+					'type' => 'inner',
+					'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite3',
+					'type' => 'inner',
+					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+				)
+			);
+
+			$data = $this->find('all', $options);
 
 			$reportFields = $this->reportMapping[$index]['fields'];
 			
