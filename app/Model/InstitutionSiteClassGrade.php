@@ -32,8 +32,18 @@ class InstitutionSiteClassGrade extends AppModel {
 	public function getAvailableGradesForClass($id) {
 		$data = $this->EducationGrade->find('all', array(
 			'recursive' => -1,
-			'fields' => array('EducationGrade.name', 'InstitutionSiteClassGrade.id', 'InstitutionSiteClassGrade.status'),
+			'fields' => array(
+				'EducationProgramme.name', 'EducationGrade.name', 'EducationGrade.id', 
+				'InstitutionSiteClassGrade.id', 'InstitutionSiteClassGrade.status'
+			),
 			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationGrade.education_programme_id = EducationProgramme.id'
+					)
+				),
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
@@ -61,7 +71,7 @@ class InstitutionSiteClassGrade extends AppModel {
 					)
 				)
 			),
-			'order' => array('InstitutionSiteClassGrade.id DESC', 'EducationGrade.order')
+			'order' => array('InstitutionSiteClassGrade.id DESC', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		//pr($data);
 		return $data;
