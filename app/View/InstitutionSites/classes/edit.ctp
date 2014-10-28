@@ -46,7 +46,7 @@ echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOp
 					<?php 
 					$i = 0;
 					foreach($grades as $obj) :
-						$checked = $obj['InstitutionSiteClassGrade']['status'];
+						$checked = empty($obj['InstitutionSiteClassGrade']['status']) ? '' : 'checked';
 					?>
 					<tr>
 						<td class="checkbox-column">
