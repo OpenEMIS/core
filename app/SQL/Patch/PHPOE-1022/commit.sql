@@ -43,7 +43,16 @@ SET @staffReportId := 0;
 SELECT `id` INTO @staffReportId FROM `reports` WHERE `reports`.`name` LIKE 'Staff' AND `reports`.`category` LIKE 'Institution Totals Reports';
 
 
-UPDATE `batch_reports` SET `query` = '$this->CensusStaff->formatResult = true; $data = $this->CensusStaff->find(\'all\',array( \'recursive\' => 0, \'fields\'=>array(\'SchoolYear.name AS AcademicYear\',\'InstitutionSite.name AS InstitutionName\',\'StaffPositionTitle.name AS positionTitleName\',\'Gender.name AS Gender\',\'CensusStaff.value AS Staff\'), \'order\' => array(\'SchoolYear.name\', \'InstitutionSite.id\', \'StaffPositionTitle.id\', \'Gender.id\'), {cond} ));',
-`template` = 'AcademicYear,InstitutionName,positionTitleName,Gender,Staff' WHERE `batch_reports`.`report_id` = @staffReportId;
-
-
+UPDATE `batch_reports` SET `query` = "
+$this->CensusStaff->formatResult = true;
+$data = $this->CensusStaff->find('all',array(
+'recursive'=>-1,
+'fields'=>array('SchoolYear.name AS AcademicYear','InstitutionSite.name AS InstitutionName','StaffPositionTitle.name AS Position','Gender.name AS Gender','CensusStaff.value AS Staff'),
+'joins' => array(
+array('table' => 'staff_position_titles','alias' => 'StaffPositionTitle','conditions' => array('CensusStaff.staff_position_title_id = StaffPositionTitle.id')),
+array('table' => 'field_option_values','alias' => 'Gender','conditions' => array('CensusStaff.gender_id = Gender.id')),
+array('table' => 'institution_sites','alias' => 'InstitutionSite','conditions' => array('CensusStaff.institution_site_id = InstitutionSite.id')),
+array('table' => 'school_years','alias' => 'SchoolYear','conditions' => array('CensusStaff.school_year_id = SchoolYear.id'))
+),
+'order' => array('SchoolYear.name', 'InstitutionSite.id', 'StaffPositionTitle.id', 'Gender.id'), {cond} ));",
+`template` = 'AcademicYear,InstitutionName,Position,Gender,Staff' WHERE `batch_reports`.`report_id` = @staffReportId;
