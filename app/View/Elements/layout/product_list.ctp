@@ -12,11 +12,11 @@ $products = array(
 	</a>
 
 	<ul aria-labelledby="dropdownMenu" role="menu" class="dropdown-menu" style="right: 0; left: auto;">
-	<?php foreach ($products as $item) : ?>
+	<?php foreach ($products as $name => $item) : ?>
 		<li>
 			<a href="<?php echo $server . $item['name'] . (in_array($env, array('tst')) ? DS.$env : '') ?>" target="_blank">
 				<?php echo $this->Html->image($item['logo'], array('height' => 20)) ?>
-				<span style="margin-left: 5px;">Visualizer</span>
+				<span style="margin-left: 5px;"><?php echo $name ?></span>
 			</a>
 		</li>
 	<?php endforeach ?>
