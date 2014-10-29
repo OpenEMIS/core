@@ -19,6 +19,9 @@ if (!$WizardMode) {
         $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
     }
     echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+}else{
+	$issueDate = array('id' => 'IssueDate');
+    $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
 }
 $this->end();
 $this->start('contentBody');
