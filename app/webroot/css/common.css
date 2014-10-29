@@ -133,7 +133,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 .header_nav{
 	float: left;
-	margin:29px 0 0 82px;
+	margin:0px 0 0 82px;
 	padding:0;
 }
 .ie7 .header_nav{
@@ -149,7 +149,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .header_nav_function_divi{
 	float:left;
 	width:1px;
-	height:16px;
+	height:35px;
 	background-color:#cccccc;
 	margin:5px 0 0 0;
 }
@@ -162,8 +162,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	line-height:14px;
 	font-weight:bold;
 }
-.header_nav_function span{
+.header_nav_function .title {
 	padding:0 28px;
+	margin-top: 5px;
 }
 .ie7 .header_nav_function{
 /*	width:146px;*/
