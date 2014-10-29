@@ -840,70 +840,26 @@ class InstitutionSite extends AppModel {
 				)
 			);
 
-			$data = $this->find('all', $options);
+			$commonFielsData = $this->find('all', $options);
 			//pr($data);
-
-			$reportFields = $this->reportMapping[$index]['fields'];
-			
-			$customFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
-			$institutionSiteCustomFields = $customFieldModel->find('all', array(
-				'recursive' => -1,
-				'fields' => array('InstitutionSiteCustomField.name as FieldName'),
-				'joins' => array(
-					array(
-						'table' => 'institution_sites',
-						'alias' => 'InstitutionSite',
-						'conditions' => array(
-							'OR' => array(
-								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
-								'InstitutionSiteCustomField.institution_site_type_id' => 0
-							)
-						)
-					)
-				),
-				'conditions' => array(
-					'InstitutionSiteCustomField.visible' => 1,
-					'InstitutionSiteCustomField.type != 1',
-					'InstitutionSite.id' => $institutionSiteId
-				),
-				'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')
-					)
-			);
-			//pr($institutionSiteCustomFields);die;
-
-			foreach ($institutionSiteCustomFields as $val) {
-				if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
-					$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
-				}
-			}
-
-			$this->reportMapping[$index]['fields'] = $reportFields;
+			$institutionObj = $this->findById($institutionSiteId);
+			$institutionSiteTypeId = $institutionObj['InstitutionSite']['institution_site_type_id'];
 
 			$newData = array();
 			$dateFormat = 'd F, Y';
 			
-			$institutionSiteCustomFields2 = $customFieldModel->find('all', array(
+			$customFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
+			$customFielsData = $customFieldModel->find('all', array(
 				'recursive' => -1,
-				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.type', 'InstitutionSiteCustomField.name as FieldName', 'GROUP_CONCAT(InstitutionSiteCustomFieldOption.value) AS ValueFromOptions', 'InstitutionSiteCustomValue.value'),
 				'joins' => array(
-					array(
-						'table' => 'institution_sites',
-						'alias' => 'InstitutionSite',
-						'conditions' => array(
-							'InstitutionSite.id' => $institutionSiteId,
-							'OR' => array(
-								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
-								'InstitutionSiteCustomField.institution_site_type_id' => 0
-							)
-						)
-					),
 					array(
 						'table' => 'institution_site_custom_values',
 						'alias' => 'InstitutionSiteCustomValue',
 						'type' => 'left',
 						'conditions' => array(
 							'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
-							'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+							'InstitutionSiteCustomValue.institution_site_id = ' . $institutionSiteId
 						)
 					),
 					array(
@@ -912,21 +868,27 @@ class InstitutionSite extends AppModel {
 						'type' => 'left',
 						'conditions' => array(
 							'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
-							'InstitutionSiteCustomField.type' => array(3, 4),
 							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
 						)
 					),
 				),
 				'conditions' => array(
-					'InstitutionSiteCustomField.visible' => 1,
+					'InstitutionSiteCustomField.visible = 1',
 					'InstitutionSiteCustomField.type !=1',
+					'OR' => array(
+						'InstitutionSiteCustomField.institution_site_type_id = ' . $institutionSiteTypeId,
+						'InstitutionSiteCustomField.institution_site_type_id = 0'
+					)
 				),
 				'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order'),
 				'group' => array('InstitutionSiteCustomField.id')
-					)
-			);
+			));
+			pr($customFielsData);die;
 			
 			
+			foreach($customFielsData AS $key => $arr){
+				
+			}
 
 			foreach ($data AS $row) {
 				if ($row['InstitutionSite2']['date_opened'] == '0000-00-00') {
