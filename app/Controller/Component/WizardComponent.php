@@ -149,6 +149,11 @@ class WizardComponent extends Component {
 		$this->module = $module;
 	}
 	
+	public function unsetModule($module){
+		$this->module = '';
+		$this->Session->delete($module);
+	}
+	
 	public function getLinks($module=null) {
 		$data = array();
 		if (is_null($module)) {
