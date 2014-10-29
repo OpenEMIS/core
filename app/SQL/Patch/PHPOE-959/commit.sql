@@ -5,6 +5,7 @@ SELECT `id` INTO @programmesReportId FROM `reports` WHERE `module` LIKE 'Institu
 UPDATE `batch_reports` SET `query` = 
 "$this->InstitutionSiteProgramme->formatResult = true;$data = $this->InstitutionSiteProgramme->find('all',array('recursive'=>-1,'fields'=>array('InstitutionSite.name AS InstitutionName','SchoolYear.name AS SchoolYear','EducationProgramme.name AS EducationProgrammeName'),
 'joins'=>array(array('table' => 'school_years','alias' => 'SchoolYear','conditions' => array('InstitutionSiteProgramme.school_year_id = SchoolYear.id')),array('table' => 'education_programmes','alias' => 'EducationProgramme','conditions' => array('InstitutionSiteProgramme.education_programme_id = EducationProgramme.id')),array('table' => 'institution_sites','alias' => 'InstitutionSite','conditions' => array('InstitutionSiteProgramme.institution_site_id = InstitutionSite.id'))),
+'conditions'=>array('InstitutionSiteProgramme.status = 1'),
 {cond}));", 
 `template` = "InstitutionName,SchoolYear,EducationProgrammeName" 
 WHERE `name` LIKE "Institution Site Programmes" AND `report_id` = @programmesReportId;
