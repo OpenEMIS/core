@@ -60,8 +60,8 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:980px;
 }
 .header_content{
-	width:980px;
-	margin:0 auto;
+	/*width:980px;*/
+	margin-left:20px;
 }
 .header_logo{
 	border-radius:12px;
