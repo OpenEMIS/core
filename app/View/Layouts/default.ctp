@@ -27,6 +27,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->meta('favicon', 'favicon.ico?v=2', array('type' => 'icon'));
 		echo $this->fetch('meta');
 		
+		echo $this->Html->css('kordit-fonts/style'); // kordit font pack
 		echo $this->Html->css('default/bootstrap.min');
 		echo $this->Html->css('default/font-awesome.min');
 		echo $this->Html->css('style');
