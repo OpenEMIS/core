@@ -66,7 +66,7 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		
 		$data = array(
-			array('name' => 'Overview and More', 'model' => 'InstitutionSite', 'params' => array('csv' => array(1))),
+			array('name' => 'Overview and More', 'model' => 'InstitutionSite', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
 			array('name' => 'Bank Accounts', 'model' => 'InstitutionSiteBankAccount')
 		);
 		
