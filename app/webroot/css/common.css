@@ -8,7 +8,7 @@ body{
 	margin:0;
 	padding:0;
 	min-width:1000px;
-	background-image:url(../img/body_bg.png);
+	/*background-image:url(../img/body_bg.png);*/
 	word-wrap:break-word;
 }
 a{
@@ -60,8 +60,8 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:980px;
 }
 .header_content{
-	width:980px;
-	margin:0 auto;
+	/*width:980px;*/
+	margin-left:20px;
 }
 .header_logo{
 	border-radius:12px;
@@ -133,7 +133,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 .header_nav{
 	float: left;
-	margin:29px 0 0 82px;
+	margin:0px 0 0 82px;
 	padding:0;
 }
 .ie7 .header_nav{
@@ -149,7 +149,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .header_nav_function_divi{
 	float:left;
 	width:1px;
-	height:16px;
+	height:35px;
 	background-color:#cccccc;
 	margin:5px 0 0 0;
 }
@@ -162,8 +162,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	line-height:14px;
 	font-weight:bold;
 }
-.header_nav_function span{
+.header_nav_function .title {
 	padding:0 28px;
+	margin-top: 5px;
 }
 .ie7 .header_nav_function{
 /*	width:146px;*/
@@ -196,7 +197,8 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 /*body cotent*/
 .container{
-	width:980px;
+	/*width:980px;*/
+	min-width:100%;
 	margin:0 auto;
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
