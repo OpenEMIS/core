@@ -229,6 +229,7 @@ class StudentsController extends StudentsAppController {
 			if ($this->Student->exists($id)) {
 				$this->DateTime->getConfigDateFormat();
 				$this->Session->write('Student.id', $id);
+				$this->Wizard->unsetModule('Student');
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
