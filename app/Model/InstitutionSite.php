@@ -239,8 +239,6 @@ class InstitutionSite extends AppModel {
 					'fax' => 'Fax',
 					'email' => 'Email',
 					'website' => 'Website'
-				),
-				'InstitutionSiteCustomField' => array(
 				)
 			),
 			'fileName' => 'Report_General_Overview'
@@ -814,12 +812,29 @@ class InstitutionSite extends AppModel {
 		// General > Overview and More
 		if ($index == 1) {
 			$options = array();
-			//$options['recursive'] = -1;
+			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			pr($options['fields']);
 			$options['group'] = array('InstitutionSite.id');
 			$options['conditions'] = array('InstitutionSite.id' => $institutionSiteId);
 
 			$options['joins'] = array(
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite2',
+					'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite3',
+					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+				),
+				array(
+					'table' => 'areas',
+					'alias' => 'Area',
+					'type' => 'left',
+					'conditions' => array('InstitutionSite.area_id = Area.id')
+				),
 				array(
 					'table' => 'area_educations',
 					'alias' => 'AreaEducation',
@@ -827,21 +842,27 @@ class InstitutionSite extends AppModel {
 					'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
 				),
 				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite2',
-					'type' => 'inner',
-					'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+					'table' => 'areas',
+					'alias' => 'InstitutionSiteType',
+					'type' => 'left',
+					'conditions' => array('InstitutionSite.area_id = InstitutionSiteType.id')
 				),
 				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite3',
-					'type' => 'inner',
-					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+					'table' => 'area_educations',
+					'alias' => 'InstitutionSiteOwnership',
+					'type' => 'left',
+					'conditions' => array('InstitutionSite.area_education_id = InstitutionSiteOwnership.id')
+				),
+				array(
+					'table' => 'institution_site_types',
+					'alias' => 'InstitutionSiteStatus',
+					'type' => 'left',
+					'conditions' => array('InstitutionSite.institution_site_type_id = InstitutionSiteStatus.id')
 				)
 			);
 
 			$commonFielsData = $this->find('all', $options);
-			//pr($data);
+			pr($commonFielsData);die;
 			$institutionObj = $this->findById($institutionSiteId);
 			$institutionSiteTypeId = $institutionObj['InstitutionSite']['institution_site_type_id'];
 
