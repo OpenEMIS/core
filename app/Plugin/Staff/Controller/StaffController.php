@@ -232,7 +232,7 @@ class StaffController extends StaffAppController {
 			if ($this->Staff->exists($id)) {
 				$this->DateTime->getConfigDateFormat();
 				$this->Session->write('Staff.id', $id);
-				$this->Wizard->unsetModule('Staff');
+				$this->Session->delete('Staff.wizard');
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
