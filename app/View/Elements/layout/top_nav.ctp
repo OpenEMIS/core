@@ -5,8 +5,7 @@
 		'Students' => 'kd-Students',
 		'Staff' => 'kd-Staff',
 		'Reports' => 'kd-Reports',
-		'Administration' => 'kd-Administration',
-		'Visualizer' => 'kd-Administration'
+		'Administration' => 'kd-Administration'
 	);
 	$navigationBar = array();
 	$linkHTML = '
