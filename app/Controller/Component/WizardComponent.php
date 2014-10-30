@@ -149,6 +149,11 @@ class WizardComponent extends Component {
 		$this->module = $module;
 	}
 	
+	public function unsetModule($module){
+		$this->module = '';
+		$this->Session->delete($module);
+	}
+	
 	public function getLinks($module=null) {
 		$data = array();
 		if (is_null($module)) {
@@ -271,7 +276,11 @@ class WizardComponent extends Component {
 		} else if ($index == -1) {
 			$url['action'] = $navigation['action'];
 		} else {
-			$url['action'] = $navigation['action'] . ucfirst($action);
+			if($navigation['action'] != 'additional'){
+				$url['action'] = $navigation['action'] . ucfirst($action);
+			}else{
+				$url['action'] = $navigation['action'] . 'Edit';
+			}	
 		}
 		return $url;
 	}
