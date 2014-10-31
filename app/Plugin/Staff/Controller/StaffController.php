@@ -496,7 +496,11 @@ class StaffController extends StaffAppController {
 		$prefix = explode(",", $prefix['ConfigItem']['value']);
 
 		if ($prefix[1] > 0) {
-			$id = $str['Staff']['id'] + 1;
+            $id = 0;
+            if (!empty($str)) {
+                $id = $str['Staff']['id'];
+            }
+            $id = $id + 1;
 			if (strlen($id) < 6) {
 				$str = str_pad($id, 6, "0", STR_PAD_LEFT);
 			}else{
