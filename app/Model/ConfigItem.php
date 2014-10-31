@@ -180,7 +180,7 @@ class ConfigItem extends AppModel {
 	
 	public function getWebFooter(){
 		$systemYear = str_replace('year', date('Y'), $this->getValue('footer'));
-		return $systemYear.' | '.$this->getValue('version');
+		return $systemYear.' | ';
 	}
 
 	public function getTypes() {
