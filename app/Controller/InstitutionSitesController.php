@@ -105,7 +105,6 @@ class InstitutionSitesController extends AppController {
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
-		'staff' => 'InstitutionSiteStaff',
 		'assessments' => 'AssessmentItemResult',
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
