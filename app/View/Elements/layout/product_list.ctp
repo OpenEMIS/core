@@ -6,15 +6,15 @@ $products = array(
 );
 ?>
 
-<div class="btn-group" style="margin-top: 29px; float: right;">
+<div class="btn-group product-list">
 	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="color: #FFFFFF">
-		<i class="fa fa-list bigger-120"></i>
+		<i class="fa fa-list fa-2x"></i>
 	</a>
 
-	<ul aria-labelledby="dropdownMenu" role="menu" class="dropdown-menu" style="right: 0; left: auto;">
+	<ul aria-labelledby="dropdownMenu" role="menu" class="dropdown-menu">
 	<?php foreach ($products as $name => $item) : ?>
 		<li>
-			<a href="<?php echo $server . $item['name'] . (in_array($env, array('tst')) ? DS.$env : '') ?>" target="_blank">
+			<a href="<?php echo $server . $item['name'] . (in_array($env, array('tst')) ? DS.$env : '') . ('/?lang=' . $lang) ?>" target="_blank">
 				<?php echo $this->Html->image($item['logo'], array('height' => 20)) ?>
 				<span style="margin-left: 5px;"><?php echo $name ?></span>
 			</a>
