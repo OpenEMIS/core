@@ -80,6 +80,22 @@ class AppController extends Controller {
 				return $this->redirect(array('controller'=>'Security', 'action'=>'logout'));
 			}
 		}
+		$this->set('SystemVersion', $this->getCodeVersion());
+	}
+	
+	public function getCodeVersion() {
+		$path = 'webroot/version';
+		
+		$version = '';
+		if ($this->Session->check('System.version')) {
+			$version = $this->Session->read('System.version');
+		} else {
+			if(file_exists(APP.$path)) {
+				$version = file_get_contents(APP.$path);
+				$this->Session->write('System.version', $version);
+			}
+		}
+		return $version;
 	}
 	 
 	public function beforeRender() {
