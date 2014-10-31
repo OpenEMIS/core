@@ -141,7 +141,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			<div class="version">
             <?php 
 				if($this->Session->check('footer')){
-					echo $this->Session->read('footer');
+					echo $this->Session->read('footer') . __('Version') . ' ' . $SystemVersion;
 				} else {
 					echo "&copy; ".date("Y")." openemis.org";
 				}
