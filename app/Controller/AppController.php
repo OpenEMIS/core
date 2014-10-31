@@ -64,12 +64,13 @@ class AppController extends Controller {
 		}
 		$locale = $l10n->map($lang);
 		$catalog = $l10n->catalog($locale);
- 		$this->set('lang_locale', $locale);
+		$this->set('lang_locale', $locale);
 		$this->set('lang_dir', $catalog['direction']);
+		$this->set('lang', $lang);
 
 		Configure::write('Config.language', $lang);
 	
-		if($this->Auth->loggedIn()){
+		if($this->Auth->loggedIn()) {
 			$token = null;
 			if($this->Session->check('login.token')){
 				$token = $this->Session->read('login.token');
