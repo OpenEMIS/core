@@ -31,12 +31,15 @@
 }
 .header_nav{
 	float:right;
-	margin:29px 98px 0 0;
+	margin:0 98px 0 0;
 }
 .header_logo{
 	margin-right:16px;
 	margin-left:0;
 }
+
+.product-list { float: left; margin-left: 0 }
+.product-list .dropdown-menu { right: auto; left: 0; }
 
 /*banner*/
 #banner_box{

@@ -133,7 +133,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 .header_nav{
 	float: left;
-	margin:0px 0 0 82px;
+	margin:0 0 0 82px;
 	padding:0;
 }
 .ie7 .header_nav{
@@ -194,6 +194,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	display:block;
 	background-color:#ffffff;
 }
+
+.product-list { margin: 15px 15px 0; float: right; }
+.product-list .dropdown-menu { right: 0; left: auto; }
 
 /*body cotent*/
 .container{
