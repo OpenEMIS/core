@@ -166,9 +166,9 @@ class InstitutionSiteStaff extends AppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if ($this->request->is('post')) {
-			$selectedYear = $this->request->data[$model]['school_year'];
-			$orderBy = $this->request->data[$model]['orderBy'];
-			$order = $this->request->data[$model]['order'];
+			$selectedYear = $this->request->data[$this->alias]['school_year'];
+			$orderBy = $this->request->data[$this->alias]['orderBy'];
+			$order = $this->request->data[$this->alias]['order'];
 
 			$this->Session->write(sprintf($prefix, 'order'), $order);
 			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
