@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -85,7 +85,8 @@ class Position extends AppModel {
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
 			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
-			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
+			$this->InstitutionSitePosition->StaffPositionTitle->id = $titleId;
+			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name');
 			
 			$this->controller->viewVars['data']['Position']['institution_site_position_id'] = $name;
 			$this->fields['institution_site_position_id']['value'] = $name;
