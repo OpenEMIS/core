@@ -726,7 +726,7 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('IdentityType.id = StaffIdentity.identity_type_id')
 				),
 				array(
-					'table' => 'staff_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'StaffStatus',
 					'type' => 'left',
 					'conditions' => array('InstitutionSiteStaff.staff_status_id = StaffStatus.id')
