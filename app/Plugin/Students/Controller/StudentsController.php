@@ -89,6 +89,13 @@ class StudentsController extends StudentsAppController {
 			//$this->Session->delete('Student');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
+			$studentId = $this->Session->read('Student.id');
+			if (empty($studentId)) {
+				$wizardActions = $this->Wizard->getAllActions('Student');
+				if($this->action != 'InstitutionSiteStudent' && $this->action != 'edit' && !in_array($this->action, $wizardActions)){
+					return $this->redirect(array('action' => 'edit'));
+				}
+			}
 		} else if ($this->Session->check('Student.data.name')) {
 			$name = $this->Session->read('Student.data.name');
 			$this->studentId = $this->Session->read('Student.id'); // for backward compatibility
@@ -222,7 +229,10 @@ class StudentsController extends StudentsAppController {
 
 	public function view($id=0) {
 		if ($id == 0 && $this->Wizard->isActive()) {
-			return $this->redirect(array('action' => 'add'));
+			$studentIdSession = $this->Session->read('Student.id');
+			if(empty($studentIdSession)){
+				return $this->redirect(array('action' => 'add'));
+			}
 		}
 		
 		if ($id > 0) {
@@ -263,7 +273,8 @@ class StudentsController extends StudentsAppController {
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check($model . '.id')) {
+		$studentIdSession = $this->Session->read('Student.id');
+		if (!empty($studentIdSession)) {
 			$id = $this->Session->read($model . '.id');
 			$this->Student->id = $id;
 			$this->Navigation->addCrumb('Edit');
