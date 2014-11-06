@@ -196,7 +196,7 @@ class CustomFieldBehavior extends ModelBehavior {
 					$controller->request->data[$submit][] = $obj;
 					break;
 					
-				case 'Save':
+				case __('Save'):
 					$data = $controller->request->data;
 					
 					$models = array($modelOption);
@@ -245,7 +245,7 @@ class CustomFieldBehavior extends ModelBehavior {
 					$controller->request->data[$submit][] = $obj;
 					break;
 					
-				case 'Save':
+				case __('Save'):
 					$data = $controller->request->data;
 					$id = $data[$model->alias]['id'];
 					$models = array($modelOption);
