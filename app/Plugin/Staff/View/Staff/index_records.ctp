@@ -11,32 +11,32 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 </div>
 
 <table class="table table-striped table-hover table-bordered" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
-    <thead>
+    <thead url="Staff/index">
 		<tr>
-        <td class="cell_code">
+        <th class="cell_code">
                 <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
                 <span class="icon_sort_<?php echo ($sortedcol =='Staff.identification_no')?$sorteddir:'up'; ?>"  order="Staff.identification_no"></span>
-        </div>
-        <td class="cell_code">
+        </th>
+        <th class="cell_code">
             <span class="left"><?php echo __('Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.first_name')?$sorteddir:'up'; ?>" order="Staff.first_name"></span>
-        </td>
-        <?php /*<td class="table_cell cell_code">
+        </th>
+        <?php /*<th class="table_cell cell_code">
             <span class="left"><?php echo __('Middle Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.middle_name')?$sorteddir:'up'; ?>" order="Staff.middle_name"></span>
-        </td>
-        <td class="table_cell cell_code">
+        </th>
+        <th class="table_cell cell_code">
             <span class="left"><?php echo __('Last Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.last_name')?$sorteddir:'up'; ?>" order="Staff.last_name"></span>
-        </td>*/ ?>
-        <td class="cell_code">
+        </th>*/ ?>
+        <th class="cell_code">
             <span class="left"><?php echo __('Gender'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.gender')?$sorteddir:'up'; ?>" order="Staff.gender"></span>
-        </td>
-        <td class="cell_code">
+        </th>
+        <th class="cell_code">
             <span class="left"><?php echo __('Date of Birth'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.date_of_birth')?$sorteddir:'up'; ?>" order="Staff.date_of_birth"></span>
-        </td>
+        </th>
 </tr> 
     </thead>
 
