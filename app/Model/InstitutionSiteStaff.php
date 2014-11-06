@@ -290,15 +290,29 @@ class InstitutionSiteStaff extends AppModel {
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 
 				'InstitutionSitePosition.position_no', 'InstitutionSitePosition.staff_position_title_id',
-				'StaffStatus.name'
+				'StaffStatus.name', 'InstitutionSiteStaff.start_date'
 			),
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
-			'group' => array('Staff.id'),
 			'order' => $order
 		));
-		return $data;
+		
+		$newData = array();
+		foreach($data AS $record){
+			$staffId = $record['Staff']['id'];
+			if(isset($newData[$staffId])){
+				$existingStartDate = $newData[$staffId]['InstitutionSiteStaff']['start_date'];
+				$newStartDate = $record['InstitutionSiteStaff']['start_date'];
+				if($newStartDate > $existingStartDate){
+					$newData[$staffId] = $record;
+				}
+			}else{
+				$newData[$staffId] = $record;
+			}
+		}
+		
+		return $newData;
 	}
 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
