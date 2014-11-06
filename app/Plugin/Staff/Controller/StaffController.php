@@ -96,6 +96,14 @@ class StaffController extends StaffAppController {
 			//$this->Session->delete('Staff');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Staff');
+			$staffId = $this->Session->read('Staff.id');
+			if (empty($staffId)) {
+				$skipActions = array('InstitutionSiteStaff', 'edit', 'view', 'add');
+				$wizardActions = $this->Wizard->getAllActions('Staff');
+				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
+					return $this->redirect(array('action' => 'edit'));
+				}
+			}
 		} else if ($this->Session->check('Staff.data.name')) {
 			$name = $this->Session->read('Staff.data.name');
 			$this->staffId = $this->Session->read('Staff.id'); // for backward compatibility
@@ -225,7 +233,10 @@ class StaffController extends StaffAppController {
 
 	public function view($id=0) {
 		if ($id == 0 && $this->Wizard->isActive()) {
-			return $this->redirect(array('action' => 'add'));
+			$staffIdSession = $this->Session->read('Staff.id');
+			if(empty($staffIdSession)){
+				return $this->redirect(array('action' => 'add'));
+			}
 		}
 		
 		if ($id > 0) {
@@ -267,7 +278,8 @@ class StaffController extends StaffAppController {
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check($model . '.id')) {
+		$staffIdSession = $this->Session->read('Staff.id');
+		if (!empty($staffIdSession)) {
 			$id = $this->Session->read($model . '.id');
 			$this->Staff->id = $id;
 			$this->Navigation->addCrumb('Edit');
