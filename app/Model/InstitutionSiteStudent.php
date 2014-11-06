@@ -553,7 +553,7 @@ class InstitutionSiteStudent extends AppModel {
 					'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')
 				),
 				array(
-					'table' => 'student_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'StudentStatus',
 					'type' => 'left',
 					'conditions' => array('InstitutionSiteStudent.student_status_id = StudentStatus.id')
