@@ -17,7 +17,6 @@ $this->start('contentBody');
 
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
 <input type="hidden" id="pageType" value="import">
 
     <div style="display:none;">
@@ -146,7 +145,7 @@ $this->start('contentBody');
 	</div>
 	<?php echo $this->element('alert'); ?>
 	<div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered">
+		<table class="table table-striped table-hover table-bordered">
 		<thead class="table_head">
 			<tr>
 				<td class="table_cell cell_visible"><?php 
@@ -176,24 +175,23 @@ $this->start('contentBody');
         <div class="row center" style="color: red;"><?php echo __('No Survey found.'); ?></div>
     <?php } ?>
 	<div class="Row">
-			<div class="action_pullright">
-				<?php 
-				
-					if(count($data) > 0 ){
-						if($firstPage > -1){ echo $this->Html->link(__('First'), array('action' => 'import',0,$pattern), array('class' => 'boxpaginate')); } 
-						if($prevPage  > -1){ echo $this->Html->link(__('Prev'), array('action' => 'import',$prevPage,$pattern), array('class' => 'boxpaginate')); } 
-						if($nextPage){ echo $this->Html->link(__('Next'), array('action' => 'import',$nextPage,$pattern), array('class' => 'boxpaginate')); } 
-						if($lastPage){ echo $this->Html->link(__('Last'), array('action' => 'import',$lastPage,$pattern), array('class' => 'boxpaginate')); } 
-					}
-				?>
-			</div>
+		<div class="action_pullright">
+			<?php 
+			
+				if(count($data) > 0 ){
+					if($firstPage > -1){ echo $this->Html->link(__('First'), array('action' => 'import',0,$pattern), array('class' => 'boxpaginate')); } 
+					if($prevPage  > -1){ echo $this->Html->link(__('Prev'), array('action' => 'import',$prevPage,$pattern), array('class' => 'boxpaginate')); } 
+					if($nextPage){ echo $this->Html->link(__('Next'), array('action' => 'import',$nextPage,$pattern), array('class' => 'boxpaginate')); } 
+					if($lastPage){ echo $this->Html->link(__('Last'), array('action' => 'import',$lastPage,$pattern), array('class' => 'boxpaginate')); } 
+				}
+			?>
 		</div>
+	</div>
 	
-
 <script>
     $("#fileupload").change(function() {
         $(this).closest('form').submit();
     });
 </script>
-  <?php echo $this->end(); ?> 
+<?php echo $this->end(); ?> 
 
