@@ -136,7 +136,7 @@ class CensusGrid extends AppModel {
 					$controller->request->data[$submit][] = $obj;
 					break;
 					
-				case 'Save':
+				case __('Save'):
 					$data = $controller->request->data;
 					
 					$models = array('CensusGridXCategory', 'CensusGridYCategory');
@@ -183,7 +183,7 @@ class CensusGrid extends AppModel {
 					$controller->request->data[$submit][] = $obj;
 					break;
 					
-				case 'Save':
+				case __('Save'):
 					$data = $controller->request->data;
 					$id = $data[$this->alias]['id'];
 					$models = array('CensusGridXCategory', 'CensusGridYCategory');
