@@ -216,7 +216,7 @@ class InstitutionSiteStaff extends AppModel {
 					$startDate = $data[$this->alias]['start_date'];
 				}
 				
-				if ($submit == 'Save') {
+				if ($submit == __('Save')) {
 					$this->set($data[$this->alias]);
 					if ($this->validates()) {
 						$data[$this->alias]['FTE'] = !empty($data[$this->alias]['FTE']) ? ($data[$this->alias]['FTE'] / 100) : NULL;
