@@ -137,6 +137,15 @@ class InstitutionSiteStaff extends AppModel {
 			'fileName' => 'Report_Staff_List'
 		)
 	);
+	
+	public function beforeSave($options = array()) {
+		$alias = $this->alias;
+		
+		//pr($this->data);die;
+		$this->data[$alias]['FTE'] = $this->data[$alias]['FTE'] / 100;
+		
+		return parent::beforeSave($options);
+	}
 
 	public function compareDate($field = array(), $compareField = null) {
 		$startDate = new DateTime(current($field));
