@@ -67,17 +67,24 @@ class SecurityUser extends AppModel {
 	
 	public function doValidate($data) {
 		$validate = true;
-		if(isset($data['new_password']) && !empty($data['new_password'])) {
+		if(isset($data['new_password'])) {
 			$newPassword = $data['new_password'];
 			$retypePassword = $data['retype_password'];
-			if(strcmp($newPassword, $retypePassword) != 0) {
-				$this->invalidate('password', __('Your passwords do not match.'));
+			if(strlen($newPassword) < 1) {
+				$this->invalidate('new_password', __('Please enter a valid password.'));
 				unset($data['password']);
-			} else {
+				$validate = false;
+			}else if(strlen($newPassword) < 6) {
+				$this->invalidate('new_password', __('Password must be at least 6 characters.'));
+				unset($data['password']);
+				$validate = false;
+			}else if((strlen($newPassword) != strlen($retypePassword)) || $newPassword != $retypePassword){
+				$this->invalidate('retype_password', __('Your passwords do not match.'));
+				unset($data['password']);
+				$validate = false;
+			}else{
 				$data['password'] = $newPassword;
 			}
-		} else {
-			unset($data['password']);
 		}
 		if($validate) {
 			$this->set($data);
