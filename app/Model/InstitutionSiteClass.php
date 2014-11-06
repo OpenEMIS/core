@@ -482,29 +482,27 @@ class InstitutionSiteClass extends AppModel {
 
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-				),
-				array(
-					'table' => 'institution_site_class_grade_students',
-					'alias' => 'InstitutionSiteClassGradeStudent',
-					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					'table' => 'institution_site_class_students',
+					'alias' => 'InstitutionSiteClassStudent',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClassStudent.status = 1'
+					)
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = EducationGrade.id')
 				),
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
-					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
 				),
 				array(
 					'table' => 'student_categories',
 					'alias' => 'StudentCategory',
-					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
 				),
 				array(
 					'table' => 'school_years',
