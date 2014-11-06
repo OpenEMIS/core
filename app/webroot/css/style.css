@@ -476,3 +476,8 @@ select.topSelectControl{
 	margin-bottom: 10px;
 	margin-right: 10px;
 }
+gmap-align{
+	float:left;
+	padding-left:30px;
+	padding-right:30px;
+}

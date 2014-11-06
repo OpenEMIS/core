@@ -327,3 +327,9 @@ fieldset.section_break > .profile-image {
 #visualizer .navbar ul li{
 	float:right !important;
 }
+
+gmap-align{
+	float:right;
+	padding-left:30px;
+	padding-right:30px;
+	}

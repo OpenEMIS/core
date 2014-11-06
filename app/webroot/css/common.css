@@ -295,3 +295,8 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
   height: auto;
 }
 
+gmap-align{
+	float:left;
+	padding-left:30px;
+	padding-right:30px;
+}
