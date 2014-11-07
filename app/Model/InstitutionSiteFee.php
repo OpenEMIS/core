@@ -175,7 +175,7 @@ class InstitutionSiteFee extends AppModel {
 			$submit = $data['submit'];
 			$selectedYear = $data[$this->alias]['school_year_id'];
 			
-			if ($submit == 'Save') {
+			if ($submit == __('Save')) {
 				$this->cleanFeeTypes($data);
 				
 				if ($this->saveAll($data)) {
