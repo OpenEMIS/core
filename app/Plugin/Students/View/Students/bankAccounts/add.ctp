@@ -24,11 +24,7 @@ echo $this->Form->input('account_number');
 echo $this->Form->input('active', array('options' => $yesnoOptions));
 echo $this->Form->input('remarks', array('type'=>'textarea'));
 
-if (!$WizardMode) {
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'bankAccounts')));
-} else {
-	echo $this->FormUtility->getWizardButtons($WizardButtons);
-}
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'bankAccounts')));
 
 echo $this->Form->end();
 
