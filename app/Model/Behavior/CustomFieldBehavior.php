@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -48,17 +48,16 @@ class CustomFieldBehavior extends ModelBehavior {
 		$fieldModel = $module . 'CustomField';
 		$optionModel = $module . 'CustomFieldOption';
 		$valueModel = $module . 'CustomValue';
-		$key = Inflector::underscore($module.'Id');
-		$keyValue = $controller->Session->read($module . '.id');
+		$key = Inflector::underscore($module.'Id');//staff_id
+		$keyValue = $controller->Session->read($module . '.id');//staff_id value
 		$fieldKey = Inflector::underscore($fieldModel.'Id');
-		
 		if ($controller->request->is('post')) { 
 			$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
 			
 			// Note to Preserve the Primary Key to avoid exhausting the max PK limit
 			foreach ($arrFields as $fieldVal) {
 				if (!isset($controller->request->data[$valueModel][$fieldVal])) continue;
-				
+				//pr($controller->request->data);
 				foreach ($controller->request->data[$valueModel][$fieldVal] as $id => $val) {
 
 					if ($fieldVal == "checkbox") {
@@ -75,30 +74,27 @@ class CustomFieldBehavior extends ModelBehavior {
 								$valueModel . '.' . $fieldKey => $id
 							)
 						));
+						
+						// remove existing records
+						foreach ($arrCustomValues as $pk => $intVal) {
+							$model->{$valueModel}->delete($pk);
+						}
+						// insert new values
+						//pr($val['value']);
+						foreach ($val['value'] as $intVal) {
+							if(!empty($intVal)){
+								$model->{$valueModel}->create();
+								$arrV['id'] = NULL;
+								$arrV['value'] = $intVal;
+								$arrV[$fieldKey] = $id;
+								$arrV[$key] = $keyValue;
+								//pr($arrV);
+								$model->{$valueModel}->save($arrV);
+							}
+						}
 
-						$tmp = array();
-						if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-							foreach ($arrCustomValues as $pk => $intVal) {
-								if (!in_array($intVal, $val['value'])) {
-									//echo "not in db so remove \n";
-									$model->{$valueModel}->delete($pk);
-								}
-							}
-						$ctr = 0;
-						if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-							foreach ($val['value'] as $intVal) {
-								if (!in_array($intVal, $arrCustomValues)) {
-									$model->{$valueModel}->create();
-									$arrV['value'] = $val['value'][$ctr];
-									$arrV[$fieldKey] = $id;
-									$arrV[$key] = $keyValue;
-									$model->{$valueModel}->save($arrV);
-									unset($arrCustomValues[$ctr]);
-								}
-								$ctr++;
-							}
 					} else { // if editing reuse the Primary KEY; so just update the record
-						$datafields = $model->{$valueModel}->find('first', array(
+						$datafields = $model->{$valueModel}->find('list', array(
 							'fields' => array('id', 'value'), 
 							'conditions' => array(
 								$valueModel . '.' . $key => $keyValue, 
@@ -106,24 +102,32 @@ class CustomFieldBehavior extends ModelBehavior {
 							)
 						));
 						
-						if ($datafields) {
-							$arrV['id'] = $datafields[$valueModel]['id'];
-						} else {
+						//pr($datafields);die;
+						if(count($datafields) == 1){
+							$arrV['id'] = key($datafields);
+							$arrV['value'] = $val['value'];
+							$arrV[$fieldKey] = $id;
+							$arrV[$key] = $keyValue;
+						}else{
+							if(count($datafields) > 1){
+								foreach($datafields AS $recordId => $recordValue){
+									$model->{$valueModel}->delete($recordId);
+								}
+							}
 							$model->{$valueModel}->create();
+							$arrV['id'] = NULL;
+							$arrV['value'] = $val['value'];
+							$arrV[$fieldKey] = $id;
+							$arrV[$key] = $keyValue;
 						}
 						
-						$arrV['value'] = $val['value'];
-						$arrV[$fieldKey] = $id;
-						$arrV[$key] = $keyValue;
-						
-						if ($model->{$valueModel}->save($arrV)) {
-							$controller->Message->alert('general.edit.success');
-						} else {
-							$controller->Message->alert('general.error');
-						}
+						$model->{$valueModel}->save($arrV);
 					}
 				}
 			}
+			
+			$controller->Message->alert('general.edit.success');
+			return $controller->redirect(array('controller' => $controller->name, 'action' => 'additional'));
 		}
 
 		$model->bindModel(array(
@@ -196,7 +200,7 @@ class CustomFieldBehavior extends ModelBehavior {
 					$controller->request->data[$submit][] = $obj;
 					break;
 					
-				case 'Save':
+				case __('Save'):
 					$data = $controller->request->data;
 					
 					$models = array($modelOption);
@@ -245,7 +249,7 @@ class CustomFieldBehavior extends ModelBehavior {
 					$controller->request->data[$submit][] = $obj;
 					break;
 					
-				case 'Save':
+				case __('Save'):
 					$data = $controller->request->data;
 					$id = $data[$model->alias]['id'];
 					$models = array($modelOption);
@@ -259,8 +263,15 @@ class CustomFieldBehavior extends ModelBehavior {
 							}
 						}
 					}
-					
+					//pr($controller->request->data);die;
 					if ($model->saveAll($controller->request->data)) {
+						$newFieldType = $controller->request->data[$model->alias]['type'];
+						$fieldId = $controller->request->data[$model->alias]['id'];
+						$fieldForeignKey = Inflector::underscore($model->alias.'Id');
+						//pr($fieldForeignKey);die;
+						if($newFieldType != 4){
+							ClassRegistry::init($modelOption)->deleteAll(array($fieldForeignKey => $fieldId), false);
+						}
 						$controller->Message->alert('general.edit.success');
 						return $controller->redirect(array('controller' => $controller->name, 'action' => 'view', $selectedOption, $id));
 					} else {
