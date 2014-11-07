@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -47,6 +47,15 @@ class Position extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+	
+	public function beforeSave($options = array()) {
+		$alias = $this->alias;
+		
+		//pr($this->data);die;
+		$this->data['Position']['FTE'] = $this->data['Position']['FTE'] / 100;
+		
+		return parent::beforeSave($options);
+	}
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -95,11 +104,15 @@ class Position extends AppModel {
 			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
 			$this->fields['institution_site_position_id']['type'] = 'disabled';
 			$this->fields['institution_site_position_id']['value'] = $name;
-			
-			$positionId = $this->request->data['Position']['id'];
+
+			$positionId = $this->request->data['InstitutionSitePosition']['id'];
 			$startDate = $this->request->data['Position']['start_date'];
+			$currentFTE = $this->request->data['Position']['FTE'] * 100;
 			$this->fields['FTE']['type'] = 'select';
-			$this->fields['FTE']['options'] = $this->Staff->InstitutionSiteStaff->getFTEOptions($positionId, array('startDate' => $startDate));
+			$this->fields['FTE']['value'] = $currentFTE;
+
+			$this->fields['FTE']['options'] = $this->Staff->InstitutionSiteStaff->getFTEOptions($positionId, array('startDate' => $startDate, 'currentFTE' => $currentFTE));
+			
 		}
 		parent::afterAction();
 	}
