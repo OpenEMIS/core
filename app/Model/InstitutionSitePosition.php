@@ -20,7 +20,7 @@ class InstitutionSitePosition extends AppModel {
 	public $actsAs = array('ControllerAction2');
    
 	public $belongsTo = array(
-		'StaffPositionTitle',
+		'Staff.StaffPositionTitle',
 		'StaffPositionGrade',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
