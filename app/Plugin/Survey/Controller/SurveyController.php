@@ -743,6 +743,7 @@ class SurveyController extends SurveyAppController {
 //					debug($objTable->validationErrors); 
 //					die;
 				}
+			//	sleep(10);
 				break;
 		}
 	}
@@ -779,15 +780,22 @@ class SurveyController extends SurveyAppController {
 								} else {
 									//Skip Infrastructure first
 									if ($secName != 'Infrastructure') {
+										
 										// Census Table save
 										$objTable = ClassRegistry::init($secName);
 										$schema = $objTable->schema();
-										$institution_site_id = Set::flatten($this->{'InstitutionSite'}->query('SELECT `id` FROM `institution_sites` where `code`=\'' . $code . '\''));
+										
+										$institionSiteObjTable = ClassRegistry::init('InstitutionSite');
+										//$institution_site_id = Set::flatten($institionSiteObjTable->query('SELECT `id` FROM `institution_sites` where `code`=\'' . $code . '\''));
+										//$institution_site_id = Set::flatten($institionSiteObjTable->query('SELECT `id` FROM `institution_sites` where `code`=\'' . $code . '\''));
+										
+										$institution_site_id = Set::flatten($institionSiteObjTable->findByCode($code));
+										
 										if (sizeof($institution_site_id) > 0) {
 											$institution_site_id = $institution_site_id[key($institution_site_id)];
 										}
 										$arr = '';
-
+										
 										switch ($secName) {
 											case 'CensusStudent':
 												// Declare my foreign/association tables
@@ -839,6 +847,7 @@ class SurveyController extends SurveyAppController {
 														$female_value = $arr[$secName]['female'];
 														unset($arr[$secName]['male']);
 														unset($arr[$secName]['female']);
+													//	pr($arr[$secName]);die;
 														foreach ($genderList as $genderid => $gender) {
 															$arr[$secName]['gender_id'] = $genderid;
 															$arr[$secName]['value'] = (strtolower($gender) == 'male')? $male_value : $female_value;
