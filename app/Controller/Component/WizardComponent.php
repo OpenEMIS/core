@@ -172,6 +172,21 @@ class WizardComponent extends Component {
 		return $data;
 	}
 	
+	public function getAllActions($module=null){
+		$data = $this->getLinks($module);
+		
+		$actions = array();
+		foreach($data AS $arr){
+			if($arr['Navigation']['action'] != 'additional'){
+				$actions[] = $arr['Navigation']['action'] . 'Add';
+			}else{
+				$actions[] = $arr['Navigation']['action'] . 'Edit';
+			}
+		}
+		
+		return $actions;
+	}
+	
 	public function getLink() {
 		$controllerName = $this->controller->name;
 		$action = $this->controller->action;
