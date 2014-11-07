@@ -94,7 +94,8 @@ class Position extends AppModel {
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
 			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
-			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
+			$this->InstitutionSitePosition->StaffPositionTitle->id = $titleId;
+			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name');
 			
 			$this->controller->viewVars['data']['Position']['institution_site_position_id'] = $name;
 			$this->fields['institution_site_position_id']['value'] = $name;
