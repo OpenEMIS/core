@@ -599,7 +599,7 @@ class InstitutionSiteStaff extends AppModel {
 			'OR' => array(
 				array(
 					'InstitutionSiteStaff.end_date IS NULL',
-					'InstitutionSiteStaff.start_date <=' => $endDate
+					'InstitutionSiteStaff.start_date >=' => $endDate
 				),
 				array(
 					'InstitutionSiteStaff.end_date IS NOT NULL',
