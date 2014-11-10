@@ -242,28 +242,30 @@ class CensusController extends AppController {
 				 $InfraCategory = Inflector::singularize($InfraCategory);
 				//echo $InfraCategory.'<br>';
 				foreach($this->request->data['Census'.$InfraCategory] as  $k => &$arrVal){
-					if(trim($arrVal['value']) == '' && @trim($arrVal['id']) == ''){ 
-						unset($this->request->data['Census'.$InfraCategory][$k]);
-					}elseif($arrVal['value'] == '' && $arrVal['id'] != ''){//if there's an ID but value was set to blank == delete the record
-						$this->{'Census'.$InfraCategory}->delete($arrVal['id']);
-						unset($this->request->data['Census'.$InfraCategory][$k]);
-					}else{
-						if(isset($this->request->data['Census'.$InfraCategory]['material'])){
-							$arrVal['infrastructure_material_id'] = $this->request->data['Census'.$InfraCategory]['material'];
+					if(is_array($arrVal)){
+						if(trim($arrVal['value']) == '' && @trim($arrVal['id']) == ''){ 
+							unset($this->request->data['Census'.$InfraCategory][$k]);
+						}elseif($arrVal['value'] == '' && $arrVal['id'] != ''){//if there's an ID but value was set to blank == delete the record
+							$this->{'Census'.$InfraCategory}->delete($arrVal['id']);
+							unset($this->request->data['Census'.$InfraCategory][$k]);
+						}else{
+							if(isset($this->request->data['Census'.$InfraCategory]['material'])){
+								$arrVal['infrastructure_material_id'] = $this->request->data['Census'.$InfraCategory]['material'];
+								
+							}
+							if($InfraCategory == 'Sanitation') {
+								//$arrVal['value'] = $arrVal['value'];  
+								$arrVal['gender_id'] = $sanitationGender;  
+								
+							}
+							unset($this->request->data['Census'.$InfraCategory]['gender']);
+							unset($this->request->data['Census'.$InfraCategory]['material']);
 							
-						}
-						if($InfraCategory == 'Sanitation') {
-							//$arrVal['value'] = $arrVal['value'];  
-							$arrVal['gender_id'] = $sanitationGender;  
+							$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
 							
+							$arrVal['school_year_id'] = $yearId;
+							$arrVal['institution_site_id'] = $this->institutionSiteId;
 						}
-						unset($this->request->data['Census'.$InfraCategory]['gender']);
-						unset($this->request->data['Census'.$InfraCategory]['material']);
-						
-						$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
-						
-						$arrVal['school_year_id'] = $yearId;
-						$arrVal['institution_site_id'] = $this->institutionSiteId;
 					}
 				}
 			   
