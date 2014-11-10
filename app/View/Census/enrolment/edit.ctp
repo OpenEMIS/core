@@ -4,7 +4,7 @@ echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 echo $this->Html->css('report', 'stylesheet', array('inline' => false));
 echo $this->Html->script('census_enrolment', false);
 $this->extend('/Elements/layout/container');
-//$this->assign('contentId', 'enrolment');
+$this->assign('contentId', 'enrolment');
 $this->assign('contentHeader', __('Students'));
 
 $this->start('contentActions');
@@ -18,9 +18,8 @@ echo $this->Form->create('CensusStudent', array(
 ));
 echo $this->element('census/year_options');
 ?>
-<div id="enrolment" class=" edit">
-<?php foreach($data as $key => $obj) : ?>
 
+<?php foreach($data as $key => $obj) : ?>
 <fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
 	<legend><?php echo $obj['name']; ?></legend>
 	
@@ -46,11 +45,11 @@ echo $this->element('census/year_options');
 		<table class="table table-bordered">
 			 <tbody>
 				<tr class="th_bg">
-					<td rowspan="2"><?php echo __('Age'); ?></td>
-					<td rowspan="2"><?php echo __('Gender'); ?></td>
-					<td colspan="<?php echo $gradesCount; ?>"><?php echo __('Grades'); ?></td>
-					<td colspan="2"><?php echo __('Totals'); ?></td>
-					<td rowspan="2" class="cell_delete"></td>
+					<td class="col-md-1" rowspan="2"><?php echo __('Age'); ?></td>
+					<td class="col-md-1" rowspan="2"><?php echo __('Gender'); ?></td>
+					<td class="col-md-7" colspan="<?php echo $gradesCount; ?>"><?php echo __('Grades'); ?></td>
+					<td class="col-md-2" colspan="2"><?php echo __('Totals'); ?></td>
+					<td class="col-md-1" rowspan="2" class="cell_delete"></td>
 				 </tr>
 				 <tr class="th_bg">
 					<?php 
@@ -58,8 +57,8 @@ echo $this->element('census/year_options');
 						echo '<td>' . $gradeName . '</td>';
 					}
 					?>
-					<td></td>
-					<td><?php echo __('Both'); ?></td>
+					<td class="col-md-1"></td>
+					<td class="col-md-1"><?php echo __('Both'); ?></td>
 				</tr>
 				
 				<?php foreach($obj['dataRowsArr'] AS $row){?>
@@ -178,7 +177,7 @@ echo $this->element('census/year_options');
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'enrolment', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 <?php endif; ?>
-</div>
+
 <?php echo $this->Form->end(); ?>
 	
 <?php $this->end(); ?>
