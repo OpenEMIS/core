@@ -302,7 +302,7 @@ class InstitutionSiteShift extends AppModel {
 
 			$defaultShift = array();
 			$defaultShift['InstitutionSiteShift'] = array(
-				'name' => __('Default') . ' ' . __('Shift') . ' (' . $schoolYear . ')',
+				'name' => __('Default') . ' ' . __('Shift') . ' ' . $schoolYear,
 				'school_year_id' => $schoolYearId,
 				'start_time' => $settingStartTime,
 				'end_time' => $endTime,
