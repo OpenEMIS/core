@@ -1,5 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
@@ -20,7 +19,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['name']; ?></span>
 			<?php if(@sizeof($data2['InstitutionSiteHistory_name'])>0){ // && ( sizeof($data2['InstitutionSiteHistory_name']) != 1 && array_key_exists($data['InstitutionSite']['name'], $data2['InstitutionSiteHistory_name']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['InstitutionSiteHistory_name'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['name'] == $val) continue; ?>
@@ -39,7 +38,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['code']; ?></span>
 			<?php if(@sizeof($data2['InstitutionSiteHistory_code'])>0){ // && ( sizeof($data2['InstitutionSiteHistory_code']) != 1 && array_key_exists($data['InstitutionSite']['name'], $data2['InstitutionSiteHistory_code']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['InstitutionSiteHistory_code'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['code'] == $val) continue; ?>
@@ -59,7 +58,7 @@ $this->start('contentBody');
 		<div class="value"><?php //pr($data);?>
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteType']['name']; ?></span>
 			<?php if(@sizeof($data2['InstitutionSiteType_name'])>0){ // && ( sizeof($data2['InstitutionSiteType_name']) != 1 && array_key_exists($data['InstitutionSiteType']['name'], $data2['InstitutionSiteType_name']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['InstitutionSiteType_name'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSiteType']['name'] == $val) continue; ?>
@@ -78,7 +77,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteOwnership']['name']; ?></span>
 			<?php if(@sizeof($data2['InstitutionSiteOwnership_name'])>0){ // && ( sizeof($data2['InstitutionSiteOwnership_name']) != 1 && array_key_exists($data['InstitutionSiteOwnership']['name'], $data2['InstitutionSiteOwnership_name']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['InstitutionSiteOwnership_name'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSiteOwnership']['name'] == $val) continue; ?>
@@ -97,7 +96,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteStatus']['name']; ?></span>
 			<?php if(@sizeof($data2['InstitutionSiteStatus_name'])>0){ // && ( sizeof($data2['InstitutionSiteStatus_name']) != 1 && array_key_exists($data['InstitutionSiteStatus']['name'], $data2['InstitutionSiteStatus_name']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['InstitutionSiteStatus_name'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSiteStatus']['name'] == $val) continue; ?>
@@ -117,7 +116,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $this->Utility->formatDate($data['InstitutionSite']['date_opened']); ?></span>
 			<?php if(@sizeof($data2['date_opened'])>0){ // && ( sizeof($data2['date_opened']) != 1 && array_key_exists($data['InstitutionSite']['date_opened'], $data2['date_opened']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['date_opened'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['date_opened'] == $val) continue; ?>
@@ -136,7 +135,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $this->Utility->formatDate($data['InstitutionSite']['date_closed']); ?></span>
 			<?php if(@sizeof($data2['date_opened'])>0){ // && ( sizeof($data2['date_opened']) != 1 && array_key_exists($data['Institution']['date_opened'], $data2['date_opened']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['date_closed'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['date_closed'] == $val) continue; ?>
@@ -173,7 +172,7 @@ $this->start('contentBody');
 		<div class="value" style="width:400px;">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['address']; ?></span>
 			<?php if(@sizeof($data2['address'])>0){ // && ( sizeof($data2['address']) != 1 && array_key_exists($data['InstitutionSite']['address'], $data2['address']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['address'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['address'] == $val) continue; ?>
@@ -192,7 +191,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['postal_code']; ?></span>
 			<?php if(@sizeof($data2['postal_code'])>0){ // && ( sizeof($data2['postal_code']) != 1 && array_key_exists($data['InstitutionSite']['postal_code'], $data2['postal_code']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['postal_code'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['postal_code'] == $val) continue; ?>
@@ -212,7 +211,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteLocality']['name']; ?></span>
 			 <?php if(@sizeof($data2['InstitutionSiteLocality_name'])>0){ // && ( sizeof($data2['InstitutionSiteLocality_name']) != 1 && array_key_exists($data['InstitutionSiteLocality']['name'], $data2['InstitutionSiteLocality_name']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['InstitutionSiteLocality_name'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSiteLocality']['name'] == $val) continue; ?>
@@ -231,7 +230,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['longitude']; ?></span>
 			<?php if(@sizeof($data2['longitude'])>0){ // && ( sizeof($data2['longitude']) != 1 && array_key_exists($data['InstitutionSite']['longitude'], $data2['longitude']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['longitude'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['longitude'] == $val) continue; ?>
@@ -250,7 +249,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['latitude']; ?></span>
 			<?php if(@sizeof($data2['latitude'])>0){ // && ( sizeof($data2['latitude']) != 1 && array_key_exists($data['InstitutionSite']['latitude'], $data2['latitude']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['latitude'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['latitude'] == $val) continue; ?>
@@ -274,7 +273,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['contact_person']; ?></span>
 			<?php if(@sizeof($data2['contact_person'])>0){ // && ( sizeof($data2['contact_person']) != 1 && array_key_exists($data['InstitutionSite']['contact_person'], $data2['contact_person']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['contact_person'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['contact_person'] == $val) continue; ?>
@@ -294,7 +293,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['telephone']; ?></span>
 			<?php if(@sizeof($data2['telephone'])>0){ // && ( sizeof($data2['fax']) != 1 && array_key_exists($data['InstitutionSite']['telephone'], $data2['telephone']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['telephone'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['telephone'] == $val) continue; ?>
@@ -314,7 +313,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['fax']; ?></span>
 			<?php if(@sizeof($data2['fax'])>0){ // && ( sizeof($data2['fax']) != 1 && array_key_exists($data['InstitutionSite']['fax'], $data2['fax']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['fax'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['fax'] == $val) continue; ?>
@@ -334,7 +333,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['email']; ?></span>
 			<?php if(@sizeof($data2['email'])>0){ // && ( sizeof($data2['email']) != 1 && array_key_exists($data['InstitutionSite']['email'], $data2['email']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['email'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['email'] == $val) continue; ?>
@@ -354,7 +353,7 @@ $this->start('contentBody');
 		<div class="value">
 			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['website']; ?></span>
 			 <?php if(@sizeof($data2['website'])>0){ // && ( sizeof($data2['website']) != 1 && array_key_exists($data['InstitutionSite']['website'], $data2['website']) ) ) { ?>
-			<table class="table" style="margin-top: 10px;">
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 				<tbody>
 					<?php $ctr = 1; foreach($data2['website'] as $val => $time):?>
 					<?php if($ctr == 1 && $data['InstitutionSite']['website'] == $val) continue; ?>
