@@ -116,7 +116,10 @@ class EducationGradeSubject extends AppModel {
 				$data = $this->request->data;
 
 				$id = $this->request->params['named']['education_grade_id'];
-				$this->deleteAll(array('education_grade_id' => $id ),false);
+				$this->updateAll(
+				    array('visible' => 0),
+				    array('education_grade_id' => $id)
+				);
 				
 				if(isset($data[$this->alias])) {
 					foreach($data[$this->alias] as $i => $obj) {
