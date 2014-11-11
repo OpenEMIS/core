@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteHistory extends AppModel {
-	var $useTable = 'institution_site_history';
+	public $useTable = 'institution_site_history';
         public $belongsTo = array(
-		'Institution',
+		// 'Institution',
 		'InstitutionSiteStatus',
 		'InstitutionSiteLocality',
 		'Area',
 		'InstitutionSiteOwnership',
-                'InstitutionSiteType'
+        'InstitutionSiteType'
 	);
 }

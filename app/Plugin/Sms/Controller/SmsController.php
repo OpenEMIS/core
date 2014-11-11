@@ -152,7 +152,8 @@ class SmsController extends SmsAppController {
         $HttpSocket = new HttpSocket();
         $data = array();
         $logData = array();
-		$this->log(array_merge($providerURL, $param), 'sms');
+        $this->log($providerUrl, 'sms');
+        $this->log($param, 'sms');
 		$responseOK = false;
         switch ($provider) {
             case "smsdome":
