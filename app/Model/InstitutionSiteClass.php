@@ -198,6 +198,8 @@ class InstitutionSiteClass extends AppModel {
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$InstitutionSiteShiftModel->createInstitutionDefaultShift($controller->institutionSiteId, $selectedYear);
 			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($controller->institutionSiteId, $selectedYear);
 			
 			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
