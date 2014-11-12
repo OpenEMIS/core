@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('HttpSocket', 'Network/Http');
+App::uses('CakeEmail', 'Network/Email');
 class AlertsController extends AlertsAppController {
     public $uses = array(
         'Alerts.Alert'
@@ -33,5 +34,29 @@ class AlertsController extends AlertsAppController {
         $this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Alerts', array('controller' => $this->name, 'action' => 'messages'));
     }
+	
+	public function sendEmailByAlert($alertId){
+		$this->autoRender = false;
+		$data = $this->Alert->getAlertWithRoles($alertId);
+		foreach($data AS $record){
+			$alert = $record['Alert'];
+			$roleId = $record['AlertRole']['security_role_id'];
+			
+			if($alert['method']  == 'Email'){
+				$SecurityRole = ClassRegistry::init('SecurityRole');
+				$securityUsers = $SecurityRole->getUsersByRole($roleId);
+				
+				foreach($securityUsers AS $user){
+					
+				}
+			}
+		}
+		
+		$Email = new CakeEmail('smtp');
+		$Email->from(array('kord.testing@gmail.com' => 'OpemEMIS SYSTEM'));
+		$Email->to('dzhu@kordit.com');
+		$Email->subject('About');
+		$Email->send('My message');
+	}
 }
 ?>
