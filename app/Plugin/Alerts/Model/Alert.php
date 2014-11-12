@@ -194,4 +194,21 @@ class Alert extends AlertsAppModel {
 		
 		$this->setVar(compact('id', 'data', 'roles'));
 	}
+	
+	public function getAlertWithRoles($alertId){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('Alert.*', 'AlertRole.security_role_id'),
+			'joins' => array(
+				array(
+					'table' => 'alert_roles',
+					'alias' => 'AlertRole',
+					'conditions' => array('Alert.id = AlertRole.alert_id')
+				)
+			),
+			'conditions' => array('Alert.id' => $alertId)
+		));
+		
+		return $data;
+	}
 }
