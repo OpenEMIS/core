@@ -15,17 +15,18 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('HttpSocket', 'Network/Http');
-App::uses('CakeEmail', 'Network/Email');
 class AlertsController extends AlertsAppController {
     public $uses = array(
-        'Alerts.Alert'
+        'Alerts.Alert',
+		'Alerts.AlertLog'
     );
 	
 	public $modules = array(
 		'Alert' => array('plugin' => 'Alerts')
 	);
 	public $components = array(
-		'Option'
+		'Option',
+		'Email'
 	);
 
     public function beforeFilter() {
@@ -35,28 +36,63 @@ class AlertsController extends AlertsAppController {
 		$this->Navigation->addCrumb('Alerts', array('controller' => $this->name, 'action' => 'messages'));
     }
 	
-	public function sendEmailByAlert($alertId){
+	public function sendEmailByAlert(){
+		$this->Email->setConfig(array(
+			'from' => array('kord.testing@gmail.com' => 'OpemEMIS SYSTEM')
+		));
+		//$Email->from(array('kord.testing@gmail.com' => 'OpemEMIS SYSTEM'));
+		//pr($this->Email->showConfigs());die;
+		$alertId = 2;
 		$this->autoRender = false;
 		$data = $this->Alert->getAlertWithRoles($alertId);
 		foreach($data AS $record){
 			$alert = $record['Alert'];
 			$roleId = $record['AlertRole']['security_role_id'];
-			
+			//pr($alert);
+			$subject = $alert['subject'];
+			$message = $alert['message'];
+			//pr($roleId);
 			if($alert['method']  == 'Email'){
 				$SecurityRole = ClassRegistry::init('SecurityRole');
 				$securityUsers = $SecurityRole->getUsersByRole($roleId);
-				
+				//pr($securityUsers);
 				foreach($securityUsers AS $user){
+					$userEmail = $user['SecurityUser']['email'];
+					$userId = $user['SecurityUser']['id'];
+					
+					$this->Email->setConfig(array(
+						'subject' => $subject,
+						'to' => $userEmail
+					));
+					
+					//$Email->subject($subject);
+					//$Email->to($userEmail);
+					$this->Email->viewVars(array('message' => $message));
+					//pr($this->Email->showConfigs());die;
+					try{
+						$success = $Email->send();
+						if($success){
+							$this->AlertLog->create();
+							
+							$newLog = array(
+								'method' => 'Email',
+								'destination' => $userEmail,
+								'type' => 'Alert',
+								'status' => 'Success',
+								'subject' => $subject,
+								'message' => $message,
+								'security_user_id' => $userId
+							);
+							
+							$this->AlertLog->save($newLog);
+						}
+					}catch(SocketException $e){
+						 debug($e->getMessage());
+					}
 					
 				}
 			}
 		}
-		
-		$Email = new CakeEmail('smtp');
-		$Email->from(array('kord.testing@gmail.com' => 'OpemEMIS SYSTEM'));
-		$Email->to('dzhu@kordit.com');
-		$Email->subject('About');
-		$Email->send('My message');
 	}
 }
 ?>

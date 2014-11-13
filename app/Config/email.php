@@ -58,6 +58,9 @@ class EmailConfig {
 		'password' => 'kordit2013',
 		'client' => null,
 		'log' => false,
+		'emailFormat' => 'html',
+		'template' => 'default',
+		'layout' => 'default',
 		'charset' => 'utf-8',
 		'headerCharset' => 'utf-8',
 	);

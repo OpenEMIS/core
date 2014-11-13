@@ -17,9 +17,9 @@
  */
 ?>
 <?php
-$content = explode("\n", $content);
+$msgArr = explode("\n", $message);
 
-foreach ($content as $line):
+foreach ($msgArr as $line):
 	echo '<p> ' . $line . "</p>\n";
 endforeach;
 ?>
