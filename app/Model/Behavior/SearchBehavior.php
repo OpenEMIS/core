@@ -403,6 +403,118 @@ class SearchBehavior extends ModelBehavior {
 		}
 		return $count;
 	}
+
+	public function getAdvancedSearchConditionsWithSite(Model $model, $institutionSiteId, $params){
+		if(count($params) > 0 ){
+			$conditions = array();
+			$class = $model->alias;
+			$arrAdvanced = $params;
+			$mainClass = str_replace("InstitutionSite","",$class);
+
+			if($arrAdvanced['Search']['area_id'] > 0) { // search by area and all its children
+				$joins = array();
+
+				$dbo = $model->getDataSource();
+				$rawTableName = $mainClass == 'Staff' ? 'staff' : Inflector::tableize($mainClass);
+				$mainTable = $mainClass;
+				$field = $mainTable . '.id';
+
+				$joins[] = array(
+					'table' => 'areas',
+					'alias' => 'Area',
+					'conditions' => array('Area.id = ' . $mainTable . '.address_area_id')
+				);
+				$joins[] = array(
+					'table' => 'areas',
+					'alias' => 'AreaAll',
+					'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $arrAdvanced['Search']['area_id'])
+				);
+
+				$query = $dbo->buildStatement(array(
+	                    'fields' => array($field),
+	                    'table' => $rawTableName,
+	                    'alias' => $mainClass,
+	                    'limit' => null, 
+	                    'offset' => null,
+	                    'joins' => $joins,
+	                    //'conditions' => $conditions,
+	                    'group' => array($field),
+	                    'order' => null
+	            ), $model);
+				$conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
+			}
+
+			if($arrAdvanced['Search']['identity'] > 0 || $arrAdvanced['Search']['identity_type_id'] > 0) {
+				$joins = array();
+
+				$dbo = $model->getDataSource();
+				$rawTableName = $mainClass == 'Staff' ? 'staff': Inflector::tableize($mainClass);
+				$mainTable = $mainClass;
+				$field = $mainTable . '.id';
+
+				$joinConditions[] = $mainClass.'Identity.'.strtolower($mainClass).'_id = '.$mainClass.'.id';
+				$joinConditions[$mainClass.'Identity.number'] = $arrAdvanced['Search']['identity'];
+				
+				if($params['Search']['identity_type_id'] > 0) { 
+					$joinConditions[$mainClass.'Identity.identity_type_id'] = $arrAdvanced['Search']['identity_type_id'];
+				}
+				$joins[] = array(
+					'table' => strtolower($mainClass).'_identities',
+					'alias' => $mainClass.'Identity',
+					'conditions' => $joinConditions
+				);
+
+				$query = $dbo->buildStatement(array(
+	                    'fields' => array($field),
+	                    'table' => $rawTableName,
+	                    'alias' => $mainClass,
+	                    'limit' => null, 
+	                    'offset' => null,
+	                    'joins' => $joins,
+	                    //'conditions' => $conditions,
+	                    'group' => array($field),
+	                    'order' => null
+	            ), $model);
+	            $conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
+			}
+
+            foreach($arrAdvanced as $key => $advanced){
+                if(strpos($key,'CustomValue') > 0){
+                        $dbo = $model->getDataSource();
+                        $rawTableName = Inflector::tableize($key);
+                        $mainTable = str_replace("CustomValue","",$key);
+                        $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
+                        $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
+                        $field = $key.'.'.$fkey;
+                        
+                        foreach($advanced as $arrIdVal){
+                            foreach ($arrIdVal as $id => $val) {
+                                if(!empty($val['value']))
+                                $arrCond[] = array($key.'.'.$fkey2=>$id,$key.'.value'=>$val['value']);
+                            }
+                        }
+                        if(!empty($arrCond)){
+                            $query = $dbo->buildStatement(array(
+                                    'fields' => array($field),
+                                    'table' => $rawTableName,
+                                    'alias' => $key,
+                                    'limit' => null, 
+                                    'offset' => null,
+                                    //'joins' => $joins,
+                                    'conditions' => array('OR'=>$arrCond),
+                                    'group' => array($field),
+                                    'order' => null
+                            ), $model);
+                            $conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
+                        }
+                }
+            }
+        }
+
+		$conditions['AND'] = array('InstitutionSite'.$mainClass.'.institution_site_id' => $institutionSiteId);
+
+		return $conditions;
+	}
 	
 	public function searchStart(Model $model, $userId) {
 		$table = 'students_search_' . $userId;
