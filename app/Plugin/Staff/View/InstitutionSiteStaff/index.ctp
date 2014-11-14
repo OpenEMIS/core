@@ -1,8 +1,12 @@
 <?php
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
+echo $this->Html->css('search', 'stylesheet', array('inline' => false));
+echo $this->Html->script('search', false);
 echo $this->Html->script('institution_site_staff', false);
 
 $this->extend('/Elements/layout/container');
+$this->assign('contentId', 'staffs_search');
+$this->assign('contentClass', 'search');
 $this->assign('contentHeader', __('List of Staff'));
 
 $this->start('contentBody');
@@ -11,6 +15,22 @@ $formOptions = $this->FormUtility->getFormOptions(array('action' => $model));
 $formOptions['inputDefaults'] = array('label' => false, 'div' => false);
 echo $this->Form->create($model, $formOptions);
 ?>
+<div class="row">
+	<div class="search_wrapper">
+		<?php 
+			echo $this->Form->input('SearchField', array(
+				'id' => 'SearchField',
+				'value' => $searchField,
+				'class' => 'default',
+				'placeholder' => __('Student OpenEMIS ID or Staff Name')
+			));
+		?>
+		<span class="icon_clear">X</span>
+	</div>
+	<span class="left icon_search" onclick="$('form').submit()"></span>
+	<span class="advanced"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'link_back')); ?></span>
+</div>
+
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
@@ -21,7 +41,7 @@ echo $this->Form->create($model, $formOptions);
 			'empty' => __('All Years'),
 			'default' => $selectedYear,
 			'url' => $this->params['controller'] . '/' . $model . '/index',
-			'onchange' => 'jsForm.change(this)'
+			//'onchange' => 'jsForm.change(this)'
 		));
 		?>
 	</div>
