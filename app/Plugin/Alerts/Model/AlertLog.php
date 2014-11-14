@@ -19,5 +19,23 @@ class AlertLog extends AlertsAppModel {
 		'SecurityUser'
 	);
 	
-	
+	public function getLogs($status=NULL){
+		$conditions = array();
+		if(!empty($status)){
+			$conditions = array('AlertLog.status' => $status);
+		}
+		
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'conditions' => $conditions
+		));
+		
+		$data = array();
+		foreach($list AS $arr){
+			$arr['AlertLog']['channel'] = 'Sent';
+			$data[] = $arr;
+		}
+		
+		return $data;
+	}
 }
