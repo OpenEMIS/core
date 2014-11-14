@@ -20,7 +20,9 @@ class SmsController extends SmsAppController {
         'Sms.SmsMessage',
         'Sms.SmsLog',
         'Sms.SmsResponse',
-        'ConfigItem'
+        'ConfigItem',
+		'Option',
+		'Alerts.AlertLog'
     );
 
 
@@ -299,20 +301,46 @@ class SmsController extends SmsAppController {
         }
     }
 
-     public function logs($selectedType=null) {
+     public function logs() {
         $this->Navigation->addCrumb(__('Logs'));
 
-        $conditions = array();
-        if(!empty($selectedType)){
-            $conditions['send_receive'] = $selectedType;
-        }
-
-        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
+		if ($this->request->is(array('post', 'put'))) {
+			$formData = $this->request->data;
+			if ($formData['submit'] == 'reload') {
+				$criterials = $formData['Log'];
+				$type = $criterials['type'];
+				$method = $criterials['method'];
+				$channel = $criterials['channel'];
+				$status = $criterials['status'];
+				
+				$data = array();
+				if($method == 'Email'){
+					$data = $this->AlertLog->getLogs($status);
+				}else if($method == 'SMS'){
+					
+				}
+			}
+		}
+		
+//        $conditions = array();
+//        if(!empty($selectedType)){
+//            $conditions['send_receive'] = $selectedType;
+//        }
+//
+//        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
+		//$data = array();
         $this->set('data', $data);
 
-        $typeOptions = array('1'=>__('Sent'), '2'=>__('Received'));
-        $this->set('typeOptions', $typeOptions);
-        $this->set('selectedType', $selectedType);
+        //$typeOptions = array('1'=>__('Sent'), '2'=>__('Received'));
+		
+		$typeOptions = $this->Option->get('alertType');
+		$methodOptions = $this->Option->get('alertMethod');
+		$channelOptions = $this->Option->get('alertChannel');
+		$statusOptions = $this->Option->get('alertStatus');
+		
+        //$this->set('typeOptions', $typeOptions);
+        //$this->set('selectedType', $selectedType);
+		$this->set(compact('typeOptions', 'channelOptions', 'selectedType', 'statusOptions', 'methodOptions'));
     }
 
     

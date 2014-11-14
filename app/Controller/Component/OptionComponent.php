@@ -26,7 +26,10 @@ class OptionComponent extends Component {
 			'gender' => array('M' => __('Male'), 'F' => __('Female')),
 			'status' => array( 1 => __('Active'), 0 => __('Inactive')),
 			'staffTypes' => array(1 => __('Teaching'), 0 => __('Non-Teaching')),
-			'alertMethod' => array('Email' => __('Email'), 'SMS' => __('SMS'))
+			'alertMethod' => array('Email' => __('Email'), 'SMS' => __('SMS')),
+			'alertStatus' => array('Success' => __('Success'), 'Failed' => __('Failed'), 'Pending' => __('Pending')),
+			'alertType' => array('Alert' => __('Alert')),
+			'alertChannel' => array('Sent' => __('Sent'), 'Received' => __('Received'))
 		);
 		
 		$index = explode('.', $code);
