@@ -31,20 +31,18 @@ echo $this->Form->create($model, $formOptions);
 	<span class="advanced"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'link_back')); ?></span>
 </div>
 
-<div class="row page-controls">
-	<div class="col-md-3">
-		<?php
-		echo $this->Form->input('school_year', array(
-			'id' => 'SchoolYearId',
-			'options' => $yearOptions,
-			'class' => 'form-control',
-			'empty' => __('All Years'),
-			'default' => $selectedYear,
-			'url' => $this->params['controller'] . '/' . $model . '/index',
-			//'onchange' => 'jsForm.change(this)'
-		));
-		?>
-	</div>
+<div class="row">
+	<?php
+	echo $this->Form->input('school_year', array(
+		'id' => 'SchoolYearId',
+		'options' => $yearOptions,
+		'class' => 'search_select form-control',
+		'empty' => __('All Years'),
+		'default' => $selectedYear,
+		'url' => $this->params['controller'] . '/' . $model . '/index',
+		//'onchange' => 'jsForm.change(this)'
+	));
+	?>
 </div>
 
 <?php
@@ -55,12 +53,13 @@ echo $this->Form->hidden('page', array('class' => 'page', 'value' => $page));
 echo $this->Form->end();
 ?>
 <div id="mainlist">
-	<ul id="pagination">
-		<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-		<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-		<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-	</ul>
-
+	<div class="row">
+		<ul id="pagination">
+			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
+			<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
+			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
+		</ul>
+	</div>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
