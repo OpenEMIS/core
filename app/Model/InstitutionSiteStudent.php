@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
+		'Search',
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -250,6 +251,11 @@ class InstitutionSiteStudent extends AppModel {
 
 		if (!empty($selectedStatus)) {
 			$conditions['InstitutionSiteStudent.student_status_id'] = $selectedStatus;
+		}
+
+		if($this->Session->check('Student.AdvancedSearch')){
+			$params = $this->Session->read('Student.AdvancedSearch');
+			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
 		}
 		
 		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
