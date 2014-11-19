@@ -155,10 +155,19 @@
 .row .col-md-3, .form-group .col-md-3 {
 	float:right;
 	margin-right:0;
-	margin-left:10px;
+	/* margin-left:10px; */
 }
-.row .col-md-6, .form-group .col-md-4, .form-group .col-md-5, .form-group .col-md-6, .form-group .col-md-7 {
+.row .col-md-4, .row .col-md-6, .row .col-md-8, .form-group .col-md-4, .form-group .col-md-5, .form-group .col-md-6, .form-group .col-md-7, .field_value .col-md-4 {
 	float:right;
+}
+.col-md-offset-3 {
+	margin-right:25%;
+}
+.col-md-offset-4 {
+	margin-right:33.33333333333333%;
+}
+.col-md-offset-5 {
+	margin-right:41.66666666666666%;
 }
 .form-horizontal .control-label { text-align: left; }
 fieldset.section_break > legend{
@@ -264,6 +273,9 @@ fieldset#general.section_break > .row{
 .datepicker{
 	float:right;
 }
+.action_pullright {
+	float:left;
+}
 
 /*popup box*/
 .dialog-box .dialog-controls{
@@ -316,8 +328,6 @@ fieldset.section_break > .profile-image {
 .panel-title .accordion-toggle:hover { background-position: 12px 14px; }
 .language { float: left; }
 .version { text-align: left; }
-.col-md-offset-4 { margin-right:33.33333333333333%; }
-
 
 /* Visualizer */ 
 
