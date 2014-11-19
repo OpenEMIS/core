@@ -154,7 +154,7 @@ class StudentsController extends StudentsAppController {
 		$data = $this->paginate('Student', $conditions);
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
-				$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+				$this->redirect(array('action' => 'view', $data[0]['Student']['id']));
 			}
 		}
 		if (empty($data) && !$this->request->is('ajax')) {
