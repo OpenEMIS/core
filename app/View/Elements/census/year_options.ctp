@@ -17,5 +17,7 @@
 		));
 		?>
 	</div>
-	<?php echo $this->element('census/legend'); ?>
+	<div class="col-md-9">
+		<?php echo $this->element('census/legend'); ?>
+	</div>
 </div>
