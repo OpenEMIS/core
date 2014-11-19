@@ -2,7 +2,7 @@
 	<div class="col-md-3">
 		<?php
 		if (empty($yearOptions)) {
-			array_push($yearOptions, '-'.$this->Label->get('general.noData').'-');
+			array_push($yearOptions, $this->Label->get('general.noData'));
 		}
 		echo $this->Form->input('school_year_id', array(
 			'label' => false,
@@ -19,7 +19,7 @@
 	<div class="col-md-3">
 		<?php
 		if (empty($classOptions)) {
-			array_push($classOptions, '-'.$this->Label->get('general.noData').'-');
+			array_push($classOptions, $this->Label->get('general.noData'));
 		}
 		echo $this->Form->input('institution_site_class_id', array(
 			'label' => false,
