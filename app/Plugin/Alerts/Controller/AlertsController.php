@@ -119,8 +119,8 @@ class AlertsController extends AlertsAppController {
 			$shellCmd = sprintf($nohup, $cmd, APP);
 			$this->log($shellCmd, 'debug');
 			pr($shellCmd);
-			exec($shellCmd, $output);
-			//pr($output);
+			$pid = exec($shellCmd);
+			pr($pid);
 			
 			//$cmd = 'php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
 			//exec($cmd, $output);
