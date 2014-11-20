@@ -89,6 +89,7 @@ class Alert extends AlertsAppModel {
 	
 	public function index(){
 		$alias = $this->alias;
+		$this->Navigation->addCrumb('Alerts');
 		
 		$this->recursive = 0;
 		$data = $this->find('all', array(
@@ -100,6 +101,8 @@ class Alert extends AlertsAppModel {
 	
 	public function add(){
 		$alias = $this->alias;
+		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
+		$this->Navigation->addCrumb('Add');
 		//pr(String::uuid());die;
 		
 		$statusOptions = $this->controller->Option->get('enableOptions');
@@ -138,6 +141,8 @@ class Alert extends AlertsAppModel {
 	
 	public function edit($id=0){
 		$alias = $this->alias;
+		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
+		$this->Navigation->addCrumb('Edit');
 		$data = $this->findById($id);
 		
 		$statusOptions = $this->controller->Option->get('enableOptions');
@@ -189,6 +194,8 @@ class Alert extends AlertsAppModel {
 	
 	public function view($id=0){
 		$data = $this->findById($id);
+		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
+		$this->Navigation->addCrumb('Alert Details');
 
 		$roles = $this->AlertRole->getRolesByAlertId($id);
 		
@@ -211,4 +218,5 @@ class Alert extends AlertsAppModel {
 		
 		return $data;
 	}
+	
 }
