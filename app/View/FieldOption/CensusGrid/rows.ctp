@@ -40,7 +40,7 @@ if ($this->action == 'add' || $this->action == 'edit') :
 				?>
 				</tbody>
 			</table>
-			<a class="void icon_plus" onclick="$('#CensusGridYCategory').click()"><?php echo $this->Label->get('general.add') ?></a>
+			<a class="void icon_plus" onclick="onAddFieldClick('CensusGridYCategory');"><?php echo $this->Label->get('general.add') ?></a>
 		</div>
 	</div>
 </div>
