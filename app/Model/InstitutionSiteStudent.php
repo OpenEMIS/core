@@ -289,7 +289,7 @@ class InstitutionSiteStudent extends AppModel {
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			
 			$submit = $this->request->data['submit'];
-			if ($submit == 'Save') {
+			if ($submit == __('Save')) {
 				$studentId = $data[$this->alias]['student_id'];
 				$data[$this->alias]['institution_site_programme_id'] = 0;
 				
@@ -553,7 +553,7 @@ class InstitutionSiteStudent extends AppModel {
 					'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')
 				),
 				array(
-					'table' => 'student_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'StudentStatus',
 					'type' => 'left',
 					'conditions' => array('InstitutionSiteStudent.student_status_id = StudentStatus.id')

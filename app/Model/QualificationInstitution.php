@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class QualificationInstitution extends AppModel {
 	public $useTable = "qualification_institutions";
-	public $hasMany = array('TeacherQualification', 'StaffQualification');
+	public $hasMany = array('StaffQualification');
 	
 	public function getLookupVariables() {
 		$lookup = array(

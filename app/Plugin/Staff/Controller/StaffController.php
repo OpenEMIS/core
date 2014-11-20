@@ -76,13 +76,13 @@ class StaffController extends StaffAppController {
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
 		'salaries' => 'Staff.StaffSalary',
-		'behaviour' =>'Staff.StaffBehaviour',
 		'training' => 'Staff.StaffTraining',
 		'report' => 'Staff.StaffReport',
 		'additional' => 'Staff.StaffCustomField',
 		// new ControllerAction
 		'InstitutionSiteStaff',
-		'Position' => array('plugin' => 'Staff')
+		'Position' => array('plugin' => 'Staff'),
+		'StaffBehaviour' => array('plugin' => 'Staff')
 	);
 
 	public function beforeFilter() {
@@ -96,6 +96,14 @@ class StaffController extends StaffAppController {
 			//$this->Session->delete('Staff');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Staff');
+			$staffId = $this->Session->read('Staff.id');
+			if (empty($staffId)) {
+				$skipActions = array('InstitutionSiteStaff', 'edit', 'view', 'add');
+				$wizardActions = $this->Wizard->getAllActions('Staff');
+				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
+					return $this->redirect(array('action' => 'edit'));
+				}
+			}
 		} else if ($this->Session->check('Staff.data.name')) {
 			$name = $this->Session->read('Staff.data.name');
 			$this->staffId = $this->Session->read('Staff.id'); // for backward compatibility
@@ -225,13 +233,17 @@ class StaffController extends StaffAppController {
 
 	public function view($id=0) {
 		if ($id == 0 && $this->Wizard->isActive()) {
-			return $this->redirect(array('action' => 'add'));
+			$staffIdSession = $this->Session->read('Staff.id');
+			if(empty($staffIdSession)){
+				return $this->redirect(array('action' => 'add'));
+			}
 		}
 		
 		if ($id > 0) {
 			if ($this->Staff->exists($id)) {
 				$this->DateTime->getConfigDateFormat();
 				$this->Session->write('Staff.id', $id);
+				$this->Session->delete('Staff.wizard');
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
@@ -266,7 +278,8 @@ class StaffController extends StaffAppController {
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check($model . '.id')) {
+		$staffIdSession = $this->Session->read('Staff.id');
+		if (!empty($staffIdSession)) {
 			$id = $this->Session->read($model . '.id');
 			$this->Staff->id = $id;
 			$this->Navigation->addCrumb('Edit');
@@ -284,7 +297,7 @@ class StaffController extends StaffAppController {
 			if ($this->Staff->validates() && $this->Staff->save()) {
 				if ($this->Wizard->isActive()) {
 					if (is_null($id)) {
-						$this->Message->alert($model . '.add.success');
+						$this->Message->alert('general.add.success');
 						$id = $this->Staff->getLastInsertId();
 						$this->Session->write($model . '.id', $id);
 					}
@@ -495,7 +508,11 @@ class StaffController extends StaffAppController {
 		$prefix = explode(",", $prefix['ConfigItem']['value']);
 
 		if ($prefix[1] > 0) {
-			$id = $str['Staff']['id'] + 1;
+            $id = 0;
+            if (!empty($str)) {
+                $id = $str['Staff']['id'];
+            }
+            $id = $id + 1;
 			if (strlen($id) < 6) {
 				$str = str_pad($id, 6, "0", STR_PAD_LEFT);
 			}else{
