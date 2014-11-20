@@ -23,27 +23,27 @@ class AlertShell extends AppShell {
 
 	public function main() {
 		
-//		$i=0;
-//		while (true) {
-//			
-//			$continue = $this->ConfigItem->getValue('alert_retry');
-//			
-//			if ($continue == 0) {
-//				break;
-//			}
-//			
-//			// execute logic
-//			pr($i++);
-//			
-//			sleep(3);
-//		}
+		$i=0;
+		while (true) {
+			
+			$continue = $this->ConfigItem->getValue('alert_retry');
+			
+			if ($continue == 0) {
+				break;
+			}
+			
+			// execute logic
+			pr($i++);
+			
+			sleep(3);
+		}
 		//pr($this->ConfigItem->getValue('alert_retry'));
 		//$this->Attendance->execute();
 		//$this->out($this->Common->getReportWebRootPath());
 		//$this->Common->createLog($this->Common->getLogPath().'alert.log', 'log me');
 		//sleep(5000); // 5 seconds
 		
-		$this->Attendance->execute();
+		//$this->Attendance->execute();
 	}
 	
 	public function hey_there() {
