@@ -433,7 +433,9 @@ class LabelHelper extends AppHelper {
 		'Alert' => array(
 			'title' => 'Alerts',
 			'threshold' => 'Threshold',
-			'roles' => 'Destination Roles'
+			'roles' => 'Destination Roles',
+			'start_time' => 'Start Time',
+			'inteval' => 'Inteval'
 		)
 	);
 	

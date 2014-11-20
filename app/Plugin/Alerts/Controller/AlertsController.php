@@ -33,10 +33,15 @@ class AlertsController extends AlertsAppController {
         parent::beforeFilter();
         $this->bodyTitle = 'Administration';
         $this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Alerts', array('controller' => $this->name, 'action' => 'messages'));
     }
 	
 	public function sendEmailByAlert(){
+		//$cmd = 'nohup /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
+		$cmd = 'sudo php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ batch run eng > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
+		exec($cmd, $output);
+		pr($output);
+		die;
+		
 		$this->Email->setConfig(array(
 			'from' => array('kord.testing@gmail.com' => 'OpemEMIS SYSTEM')
 		));
@@ -70,7 +75,7 @@ class AlertsController extends AlertsAppController {
 					$this->Email->viewVars(array('message' => $message));
 					//pr($this->Email->showConfigs());die;
 					try{
-						$success = $Email->send();
+						$success = $this->Email->send();
 						if($success){
 							$this->AlertLog->create();
 							
@@ -94,5 +99,36 @@ class AlertsController extends AlertsAppController {
 			}
 		}
 	}
+	
+	public function process(){
+		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
+		$this->Navigation->addCrumb('Alert Process');
+		
+		if ($this->request->is(array('post', 'put'))) {
+			$formData = $this->request->data;
+			$action = $formData['submit_button'];
+			if($action == 'Start'){
+				
+			}else if($action == 'Stop'){
+				
+			}
+			
+			$params = array('Alert');
+			$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
+			$nohup = 'nohup %s > %stmp/logs/alert.log & echo $!';
+			$shellCmd = sprintf($nohup, $cmd, APP);
+			$this->log($shellCmd, 'debug');
+			pr($shellCmd);
+			exec($shellCmd, $output);
+			//pr($output);
+			
+			//$cmd = 'php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
+			//exec($cmd, $output);
+		}
+		
+		$status = 'running';
+		$this->set(compact('status'));
+	}
+
 }
 ?>
