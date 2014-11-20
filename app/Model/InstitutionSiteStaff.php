@@ -36,6 +36,13 @@ class InstitutionSiteStaff extends AppModel {
 				'message' => 'Please enter a OpenEMIS ID or name.'
 			)
 		),
+		'staff_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a staff.'
+			)
+		),
 		'institution_site_position_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -268,7 +275,7 @@ class InstitutionSiteStaff extends AppModel {
 			$this->fields['institution_site_id']['type'] = 'disabled';
 			$this->fields['institution_site_id']['value'] = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
 			$this->fields['end_date']['visible'] = false;
-			$this->fields['staff_id']['attr'] = array('class' => 'staff_id');
+			$this->fields['staff_id']['attr'] = array('autocomplete' => 'staff_id');
 			$this->fields['staff_status_id']['type'] = 'hidden';
 			$this->fields['staff_status_id']['value'] = $this->StaffStatus->getDefaultValue();
 			$this->fields['institution_site_position_id']['type'] = 'select';
