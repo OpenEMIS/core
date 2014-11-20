@@ -63,6 +63,8 @@ class EmailConfig {
 		'layout' => 'default',
 		'charset' => 'utf-8',
 		'headerCharset' => 'utf-8',
+		'from' => array('kord.testing@gmail.com' => 'OpemEMIS SYSTEM'),
+		'replyTo' => 'abc@kordit.com'
 	);
 
 	public $fast = array(
