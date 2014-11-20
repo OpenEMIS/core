@@ -64,12 +64,13 @@ class AppController extends Controller {
 		}
 		$locale = $l10n->map($lang);
 		$catalog = $l10n->catalog($locale);
- 		$this->set('lang_locale', $locale);
+		$this->set('lang_locale', $locale);
 		$this->set('lang_dir', $catalog['direction']);
+		$this->set('lang', $lang);
 
 		Configure::write('Config.language', $lang);
 	
-		if($this->Auth->loggedIn()){
+		if($this->Auth->loggedIn()) {
 			$token = null;
 			if($this->Session->check('login.token')){
 				$token = $this->Session->read('login.token');
@@ -79,6 +80,22 @@ class AppController extends Controller {
 				return $this->redirect(array('controller'=>'Security', 'action'=>'logout'));
 			}
 		}
+		$this->set('SystemVersion', $this->getCodeVersion());
+	}
+	
+	public function getCodeVersion() {
+		$path = 'webroot/version';
+		
+		$version = '';
+		if ($this->Session->check('System.version')) {
+			$version = $this->Session->read('System.version');
+		} else {
+			if(file_exists(APP.$path)) {
+				$version = file_get_contents(APP.$path);
+				$this->Session->write('System.version', $version);
+			}
+		}
+		return $version;
 	}
 	 
 	public function beforeRender() {

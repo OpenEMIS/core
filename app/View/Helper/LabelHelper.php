@@ -322,7 +322,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Position',
 			'teaching' => 'Teaching',
 			'number' => 'Number',
-			'institution_site_position_id' => 'Title'
+			'institution_site_position_id' => 'Position'
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
@@ -347,12 +347,17 @@ class LabelHelper extends AppHelper {
 			'student_absence_reason_id' => 'Reason'
 		),
 		'InstitutionSiteStaffAbsence' => array(
+			'title' => 'Absence - Staff',
 			'reason' => 'Reason',
 			'first_date_absent' => 'First Date Absent',
 			'full_day_absent' => 'Full Day Absent',
 			'last_date_absent' => 'Last Date Absent',
 			'start_time_absent' => 'Start Time Absent',
-			'end_time_absent' => 'End Time Absent'
+			'end_time_absent' => 'End Time Absent',
+			'school_year_id' => 'School Year',
+			'staff_id' => 'Staff',
+			'absence_type' => 'Type',
+			'staff_absence_reason_id' => 'Reason'
 		),
 		'Quality' => array(
 			'add_section_header' => 'Add Section Header',
@@ -435,7 +440,20 @@ class LabelHelper extends AppHelper {
 			'threshold' => 'Threshold',
 			'roles' => 'Destination Roles',
 			'start_time' => 'Start Time',
-			'inteval' => 'Inteval'
+			'interval' => 'Interval'
+		),
+		'StudentBehaviour' => array(
+			'title' => 'Behaviour - Students',
+			'name' => 'Title',
+			'student_behaviour_category_id' => 'Category',
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time'
+		),
+		'StaffBehaviour' => array(
+			'title' => 'Behaviour - Staff',
+			'staff_behaviour_category_id' => 'Category',
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time'
 		)
 	);
 	

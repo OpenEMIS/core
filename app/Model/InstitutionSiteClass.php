@@ -184,7 +184,7 @@ class InstitutionSiteClass extends AppModel {
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions(array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId));
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-		$data = $this->getListOfClasses($selectedYear, $controller->institutionSiteId);
+		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
 		
 		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
 	}
@@ -193,7 +193,7 @@ class InstitutionSiteClass extends AppModel {
 		$controller->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.available' => 1);
+		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.visible' => 1);
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
@@ -399,7 +399,7 @@ class InstitutionSiteClass extends AppModel {
 		
 		return $result;
 	}
-		
+	
 	public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
 		if(empty($yearId)){
 			$conditions = array(
@@ -482,29 +482,27 @@ class InstitutionSiteClass extends AppModel {
 
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-				),
-				array(
-					'table' => 'institution_site_class_grade_students',
-					'alias' => 'InstitutionSiteClassGradeStudent',
-					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					'table' => 'institution_site_class_students',
+					'alias' => 'InstitutionSiteClassStudent',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClassStudent.status = 1'
+					)
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = EducationGrade.id')
 				),
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
-					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
 				),
 				array(
 					'table' => 'student_categories',
 					'alias' => 'StudentCategory',
-					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
 				),
 				array(
 					'table' => 'school_years',

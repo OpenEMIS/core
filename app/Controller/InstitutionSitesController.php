@@ -58,8 +58,6 @@ class InstitutionSitesController extends AppController {
 		'SchoolYear',
 		'Students.Student',
 		'Students.StudentCategory',
-		'Students.StudentBehaviour',
-		'Students.StudentBehaviourCategory',
 		'Students.StudentAttendance',
 		'Students.StudentCustomField',
 		'Students.StudentCustomFieldOption',
@@ -73,8 +71,6 @@ class InstitutionSitesController extends AppController {
 		'Staff.StaffPositionTitle',
 		'Staff.StaffPositionGrade',
 		'Staff.StaffPositionStep',
-		'Staff.StaffBehaviour',
-		'Staff.StaffBehaviourCategory',
 		'Staff.StaffCustomField',
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffDetailsCustomField',
@@ -102,7 +98,6 @@ class InstitutionSitesController extends AppController {
 	
 	public $modules = array(
 		'bankAccounts' => 'InstitutionSiteBankAccount',
-		'behaviourStudent' => 'Students.StudentBehaviour',
 		'classesSubject' => 'InstitutionSiteClassSubject',
 		'classesStudent' => 'InstitutionSiteClassStudent',
 		'classesStaff' => 'InstitutionSiteClassStaff',
@@ -110,15 +105,15 @@ class InstitutionSitesController extends AppController {
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
-		'behaviourStaff' => 'Staff.StaffBehaviour',
-		'staff' => 'InstitutionSiteStaff',
-		'attendanceStaff' => 'InstitutionSiteStaffAbsence',
 		'assessments' => 'AssessmentItemResult',
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
 		'InstitutionSitePosition',
 		'InstitutionSiteProgramme',
-		'InstitutionSiteStudentAbsence'
+		'InstitutionSiteStudentAbsence',
+		'StudentBehaviour' => array('plugin' => 'Students'),
+		'StaffBehaviour' => array('plugin' => 'Staff'),
+		'InstitutionSiteStaffAbsence'
 	);
 	
 	public function beforeFilter() {

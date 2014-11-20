@@ -32,7 +32,6 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 		<div class="col-md-4 vcenter"><?php echo $data['username']; ?></div>
 	</div>
 	<?php echo $this->Form->input('new_password', array('type' => 'password', 'autocomplete' => 'off')); ?>
-	<?php echo $this->Form->input('password'); ?>
 	<?php echo $this->Form->input('retype_password', array('type' => 'password')); ?>
 
 	<?php if($data['super_admin'] == 0) { ?>

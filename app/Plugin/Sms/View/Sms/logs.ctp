@@ -1,6 +1,5 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('setup_variables', false);
 $this->extend('/Elements/layout/container');

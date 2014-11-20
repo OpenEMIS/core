@@ -70,12 +70,12 @@ class StudentsController extends StudentsAppController {
 		'nationalities' => 'Students.StudentNationality',
 		'attachments' =>'Students.StudentAttachment',
 		'guardians' => 'Students.StudentGuardian',
-		'behaviour' => 'Students.StudentBehaviour',
 		'additional' => 'Students.StudentCustomField',
 		// new ControllerAction
 		'InstitutionSiteStudent',
 		'Programme' => array('plugin' => 'Students'),
-		'StudentFee' => array('plugin' => 'Students')
+		'StudentFee' => array('plugin' => 'Students'),
+		'StudentBehaviour' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {
@@ -89,6 +89,13 @@ class StudentsController extends StudentsAppController {
 			//$this->Session->delete('Student');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
+			$studentId = $this->Session->read('Student.id');
+			if (empty($studentId)) {
+				$wizardActions = $this->Wizard->getAllActions('Student');
+				if($this->action != 'InstitutionSiteStudent' && $this->action != 'edit' && !in_array($this->action, $wizardActions)){
+					return $this->redirect(array('action' => 'edit'));
+				}
+			}
 		} else if ($this->Session->check('Student.data.name')) {
 			$name = $this->Session->read('Student.data.name');
 			$this->studentId = $this->Session->read('Student.id'); // for backward compatibility
@@ -222,13 +229,17 @@ class StudentsController extends StudentsAppController {
 
 	public function view($id=0) {
 		if ($id == 0 && $this->Wizard->isActive()) {
-			return $this->redirect(array('action' => 'add'));
+			$studentIdSession = $this->Session->read('Student.id');
+			if(empty($studentIdSession)){
+				return $this->redirect(array('action' => 'add'));
+			}
 		}
 		
 		if ($id > 0) {
 			if ($this->Student->exists($id)) {
 				$this->DateTime->getConfigDateFormat();
 				$this->Session->write('Student.id', $id);
+				$this->Session->delete('Student.wizard');
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
@@ -262,7 +273,8 @@ class StudentsController extends StudentsAppController {
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check($model . '.id')) {
+		$studentIdSession = $this->Session->read('Student.id');
+		if (!empty($studentIdSession)) {
 			$id = $this->Session->read($model . '.id');
 			$this->Student->id = $id;
 			$this->Navigation->addCrumb('Edit');
@@ -524,7 +536,11 @@ class StudentsController extends StudentsAppController {
 		$prefix = explode(",", $prefix['ConfigItem']['value']);
 
 		if ($prefix[1] > 0) {
-			$id = $str['Student']['id'] + 1;
+            $id = 0;
+            if (!empty($str)) {
+                $id = $str['Student']['id'];
+            }
+            $id = $id + 1;
 			if (strlen($id) < 6) {
 				$str = str_pad($id, 6, "0", STR_PAD_LEFT);
 			} else {

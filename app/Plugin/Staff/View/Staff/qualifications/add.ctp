@@ -23,7 +23,7 @@ $formOptions['searchQualificationUrl']=$this->params['controller']."/qualificati
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->input('qualification_level_id', array('options'=>$levelOptions,'label'=>array('text'=> $this->Label->get('QualificationLevel.name'),'class'=>'col-md-3 control-label')));
-echo $this->Form->input('QualificationInstitution.name', array('id' => 'search', 'class' => 'form-control qualification-institution-name', 'label'=>array('text'=> $this->Label->get('QualificationInstitution.name'),'class'=>'col-md-3 control-label'), 'placeholder' => __('Institution Name')));
+echo $this->Form->input('qualification_institution_name', array('id' => 'search', 'class' => 'form-control qualification-institution-name', 'label'=>array('text'=> $this->Label->get('QualificationInstitution.name'),'class'=>'col-md-3 control-label'), 'placeholder' => __('Institution Name')));
 echo $this->Form->hidden('qualification_institution_id', array('class' => 'qualification-institution-id'));
 echo $this->Form->input('qualification_institution_country', array('label'=>array('text'=> $this->Label->get('StaffQualification.qualification_institution_country'),'class'=>'col-md-3 control-label')));
 echo $this->Form->input('qualification_title');
@@ -31,8 +31,19 @@ echo $this->Form->input('qualification_specialisation_id', array('options'=>$spe
 echo $this->Form->input('graduate_year');
 echo $this->Form->input('document_no');
 echo $this->Form->input('gpa', array('label'=>array('text'=> $this->Label->get('StaffQualification.gpa'),'class'=>'col-md-3 control-label')));
+
+if (!empty($staffQualificationObj[$model]['id']) && !empty($staffQualificationObj[$model]['file_name'])) {
+?>
+<div class="form-group">
+	<div class="col-md-3 control-label"></div>
+	<div class="col-md-7"><?php echo $this->Html->link($staffQualificationObj[$model]['file_name'], array('action' => 'qualificationsAttachmentsDownloads', $staffQualificationObj[$model]['id'])); ?></div>
+</div>
+<?php
+}
+
 echo $this->Form->hidden('maxFileSize', array('name'=> 'MAX_FILE_SIZE','value'=>(2*1024*1024)));
 echo $this->element('templates/file_upload');
+
 echo $this->FormUtility->getFormButtons(array('cancelURL' =>$redirectAction));
 echo $this->Form->end();
 $this->end();
