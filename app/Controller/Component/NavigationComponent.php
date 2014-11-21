@@ -97,7 +97,7 @@ class NavigationComponent extends Component {
 						}
 						// end debug
 						
-						if($check || $_controller === 'Home') {
+						if($check || $_controller === 'Home' || $_controller === 'Preferences') {
 							$linkList['display'] = true;
 							$attr['display'] = true;
 							
@@ -159,6 +159,7 @@ class NavigationComponent extends Component {
 	public function getLinks() {
 		$nav = array();
 		$nav['Home'] = array('controller' => 'Home', 'links' => $this->getHomeLinks());
+		$nav['Preferences'] = array('controller' => 'Preferences', 'links' => $this->getPreferencesLinks());
 		$nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
 		
 		// Initialise navigations from plugins
@@ -181,8 +182,14 @@ class NavigationComponent extends Component {
 		$links = $navigation->getByModule('Home', true);
 		return $links;
 	}
+
+	public function getPreferencesLinks() {
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule('Preferences', true);
+		return $links;
+	}
 		
-		public function getInstitutionsLinks() {
+	public function getInstitutionsLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Institution', true);
 		return $links;
