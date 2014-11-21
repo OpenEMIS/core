@@ -27,7 +27,7 @@ class AttendanceTask extends AppTask {
 	public $tasks = array('Common');
 
 	public function execute() {
-		$CakeMail = new CakeEmail('smtp');
+		$CakeMail = new CakeEmail('Mail');
 		//pr($CakeMail->showConfigs());die;
 		$alertId = 2;
 		$data = $this->Alert->getAlertWithRoles($alertId);
