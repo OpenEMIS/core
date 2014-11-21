@@ -46,6 +46,13 @@ class InstitutionSiteStudent extends AppModel {
 				'message' => 'Please enter a OpenEMIS ID or name.'
 			)
 		),
+		'student_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a student.'
+			)
+		),
 		'institution_site_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -151,7 +158,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['student_id']['type'] = 'hidden';
-		$this->fields['student_id']['attr'] = array('class' => 'student_id');
+		$this->fields['student_id']['attr'] = array('autocomplete' => 'student_id');
 		$this->fields['student_status_id']['type'] = 'select';
 		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
 		$this->fields['institution_site_id']['type'] = 'hidden';
