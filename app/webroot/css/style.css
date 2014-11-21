@@ -24,6 +24,7 @@
 	position: fixed;
 	bottom: 50px;
 	right: 0;
+	z-index: 1;
 }
 
 .partners img {
