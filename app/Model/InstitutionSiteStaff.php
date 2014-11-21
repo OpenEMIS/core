@@ -343,17 +343,21 @@ class InstitutionSiteStaff extends AppModel {
 		));
 		
 		$newData = array();
-		foreach($data AS $record){
-			$staffId = $record['Staff']['id'];
-			if(isset($newData[$staffId])){
-				$existingStartDate = $newData[$staffId]['InstitutionSiteStaff']['start_date'];
-				$newStartDate = $record['InstitutionSiteStaff']['start_date'];
-				if($newStartDate > $existingStartDate){
+		if(!isset($conditions['InstitutionSiteStaff.start_year <='])) {
+			foreach($data AS $record){
+				$staffId = $record['Staff']['id'];
+				if(isset($newData[$staffId])){
+					$existingStartDate = $newData[$staffId]['InstitutionSiteStaff']['start_date'];
+					$newStartDate = $record['InstitutionSiteStaff']['start_date'];
+					if($newStartDate > $existingStartDate){
+						$newData[$staffId] = $record;
+					}
+				}else{
 					$newData[$staffId] = $record;
 				}
-			}else{
-				$newData[$staffId] = $record;
 			}
+		} else{
+			$newData = $data;
 		}
 		
 		return $newData;
