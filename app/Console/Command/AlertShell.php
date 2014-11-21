@@ -24,6 +24,18 @@ class AlertShell extends AppShell {
 	public function main() {
 		$statusDone = 0;
 		$interval = 1;
+		
+		$alertProcess = $this->SystemProcess->getAlertProcess();
+		if ($alertProcess) {
+			$saveData = array(
+				'SystemProcess' => array(
+					'id' => $alertProcess['SystemProcess']['id'],
+					'status' => 'Active'
+				)
+			);
+			$this->SystemProcess->save($saveData);
+		}
+		
 		while (true) {
 			$timeNow = date('H:i:s');
 			$this->Common->createLog($this->Common->getLogPath().'alert.log', 'start time: ' . $timeNow);
