@@ -26,7 +26,7 @@ class AlertShell extends AppShell {
 		$interval = 1;
 		while (true) {
 			$timeNow = date('H:i:s');
-			if($timeNow == '14:30:59'){
+			if($timeNow == '15:15:59'){
 				if($statusDone == 0){
 					$alertProcess = $this->SystemProcess->getAlertProcess();
 					if($alertProcess){
