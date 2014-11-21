@@ -20,21 +20,25 @@ echo $this->Form->create('Alert', $formOptions);
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo $this->Label->get('Alert.start_time'); ?></th>
-				<th><?php echo $this->Label->get('Alert.inteval'); ?></th>
 				<th><?php echo $this->Label->get('general.status'); ?></th>
+				<th><?php echo $this->Label->get('Alert.start_date'); ?></th>
+				<th><?php echo $this->Label->get('Alert.end_date'); ?></th>
+				<th><?php echo $this->Label->get('Alert.interval'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
-					<td><?php echo '23:59:59'; ?></td>
+			<?php if (!empty($process)): ?>
+				<tr>
+					<td><?php echo $process['status'] == 'Active' ? __($process['status']) : 'Inactive'; ?></td>
+					<td><?php echo $process['status'] == 'Active' ?  $this->Utility->formatDate($process['start_date']) : ''; ?></td>
+					<td><?php echo $process['status'] == 'Active' ?  $this->Utility->formatDate($process['end_date']) : ''; ?></td>
 					<td><?php echo '24 ' . __(' hours'); ?></td>
-					<td><?php echo __($status); ?></td>
 				</tr>
+			<?php endif; ?>
 		</tbody>
 	</table>
 	<div class="controls">
-		<input name="submit_button" type="submit" value="<?php echo $status == 'running' ? __('Stop') : __('Start'); ?>" class="btn_save btn_right" />
+		<input name="submit_button" type="submit" value="<?php echo $process['status'] == 'Active' ? __('Stop') : __('Start'); ?>" class="btn_save btn_right" />
 	</div>
 </div>
 <?php

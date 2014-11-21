@@ -18,7 +18,8 @@ App::uses('HttpSocket', 'Network/Http');
 class AlertsController extends AlertsAppController {
     public $uses = array(
         'Alerts.Alert',
-		'Alerts.AlertLog'
+		'Alerts.AlertLog',
+		'SystemProcess'
     );
 	
 	public $modules = array(
@@ -26,7 +27,8 @@ class AlertsController extends AlertsAppController {
 	);
 	public $components = array(
 		'Option',
-		'Email'
+		'Email',
+		'Auth'
 	);
 
     public function beforeFilter() {
@@ -103,32 +105,67 @@ class AlertsController extends AlertsAppController {
 	public function process(){
 		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
 		$this->Navigation->addCrumb('Alert Process');
+		$userId = $this->Auth->user('id');
+		$alertProcess = $this->SystemProcess->getAlertProcess();
 		
+		$process = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$formData = $this->request->data;
 			$action = $formData['submit_button'];
 			if($action == 'Start'){
+				if($alertProcess){
+					$params = array('Alert', 'main');
+					$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
+					$nohup = 'nohup %s > %stmp/logs/alert.log & echo $!';
+					$shellCmd = sprintf($nohup, $cmd, APP);
+					$this->log($shellCmd, 'debug');
+					//pr($shellCmd);
+					$output = array();
+					exec($shellCmd, $output);
+					$processId = $output[0];
+					//pr($output);
+					
+					$saveData = array(
+						'id' => $alertProcess['id'],
+						'process_id' => $processId,
+						'start_date' => date('Y-m-d') . ' 23:59:59'
+					);
+					$this->SystemProcess->save($saveData);
+					
+					$newProcess = $this->SystemProcess->getAlertProcess();
+					$process = $newProcess['SystemProcess'];
+				}else{
+					$this->Message->alert('Alert.noProcess');
+				}
 				
 			}else if($action == 'Stop'){
 				
 			}
-			
-			$params = array('Alert', 'main');
-			$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
-			$nohup = 'nohup %s > %stmp/logs/alert.log & echo $!';
-			$shellCmd = sprintf($nohup, $cmd, APP);
-			$this->log($shellCmd, 'debug');
-			//pr($shellCmd);
-			$output = array();
-			exec($shellCmd, $output);
-			pr($output);
-			
 			//$cmd = 'php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
 			//exec($cmd, $output);
+		}else{
+			if($alertProcess){
+
+			}else{
+				$this->SystemProcess->create();
+				$newProcessArr = array(
+					'name' => 'Alert Process',
+					'created_user_id' => $userId
+				);
+
+				$this->SystemProcess->save($newProcessArr);
+				$alertProcess = $this->SystemProcess->getAlertProcess();
+			}
+
+			if($alertProcess){
+				//pr($alertProcess);
+				$process = $alertProcess['SystemProcess'];
+			}else{
+				$this->Message->alert('Alert.noProcess');
+			}
 		}
 		
-		$status = 'running';
-		$this->set(compact('status'));
+		$this->set(compact('process'));
 	}
 
 }

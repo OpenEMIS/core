@@ -65,3 +65,23 @@ CREATE TABLE `alert_logs` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+
+--
+-- Table structure for table `system_processes`
+--
+
+CREATE TABLE `system_processes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `process_id` int(11) NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `ended_user_id` int(11) DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `name` (`name`,`process_id`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+

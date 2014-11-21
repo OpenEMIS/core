@@ -161,7 +161,10 @@ class MessageComponent extends Component {
 			'add' => array(
 				'accessExists' => array('type' => 'error', 'msg' => 'This account is already linked to the user.')
 			)
-		)
+		),
+		'Alert' => array(
+			'noProcess' => array('type' => 'warn', 'msg' => 'There is no process currently.')
+		),
 	);
 	
 	public function get($code) {
