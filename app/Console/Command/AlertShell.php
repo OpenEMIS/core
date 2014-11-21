@@ -37,43 +37,36 @@ class AlertShell extends AppShell {
 		}
 		$this->Attendance->execute();
 		
-		while (true) {
-			$timeNow = date('H:i:s');
-			$this->Common->createLog($this->Common->getLogPath().'alert.log', 'start time: ' . $timeNow);
-			if($timeNow == '16:15:59'){
-				if($statusDone == 0){
-					$alertProcess = $this->SystemProcess->getAlertProcess();
-					if($alertProcess){
-						$saveData = array(
-							'SystemProcess' => array(
-								'id' => $alertProcess['SystemProcess']['id'],
-								'status' => 'Active'
-							)
-						);
-						$this->SystemProcess->save($saveData);
-						$this->Common->createLog($this->Common->getLogPath().'alert.log', 'update status + process id: ' . $alertProcess['SystemProcess']['id']);
-
-						//$interval = 24*60*60;
-						$interval = 60;
-						$statusDone = 1;
-					}
-				}
-				
-				$this->Attendance->execute();
-				$this->Common->createLog($this->Common->getLogPath().'alert.log', 'send email once');
-			}
-			
-			//$continue = $this->ConfigItem->getValue('alert_retry');
-			
-//			if ($continue == 0) {
-//				break;
+		$this->out('hello');
+		
+//		while (true) {
+//			$timeNow = date('H:i:s');
+//			$this->Common->createLog($this->Common->getLogPath().'alert.log', 'start time: ' . $timeNow);
+//			if($timeNow == '16:15:59'){
+//				if($statusDone == 0){
+//					$alertProcess = $this->SystemProcess->getAlertProcess();
+//					if($alertProcess){
+//						$saveData = array(
+//							'SystemProcess' => array(
+//								'id' => $alertProcess['SystemProcess']['id'],
+//								'status' => 'Active'
+//							)
+//						);
+//						$this->SystemProcess->save($saveData);
+//						$this->Common->createLog($this->Common->getLogPath().'alert.log', 'update status + process id: ' . $alertProcess['SystemProcess']['id']);
+//
+//						//$interval = 24*60*60;
+//						$interval = 60;
+//						$statusDone = 1;
+//					}
+//				}
+//				
+//				$this->Attendance->execute();
+//				$this->Common->createLog($this->Common->getLogPath().'alert.log', 'send email once');
 //			}
-			
-			// execute logic
-			//pr($i++);
-			
-			sleep($interval);
-		}
+//			
+//			sleep($interval);
+//		}
 		//pr($this->ConfigItem->getValue('alert_retry'));
 		//$this->Attendance->execute();
 		//$this->out($this->Common->getReportWebRootPath());
