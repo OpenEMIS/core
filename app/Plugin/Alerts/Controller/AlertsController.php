@@ -113,14 +113,15 @@ class AlertsController extends AlertsAppController {
 				
 			}
 			
-			$params = array('Alert');
+			$params = array('Alert', 'main');
 			$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
 			$nohup = 'nohup %s > %stmp/logs/alert.log & echo $!';
 			$shellCmd = sprintf($nohup, $cmd, APP);
 			$this->log($shellCmd, 'debug');
-			pr($shellCmd);
-			$pid = exec($shellCmd);
-			pr($pid);
+			//pr($shellCmd);
+			$output = array();
+			exec($shellCmd, $output);
+			pr($output);
 			
 			//$cmd = 'php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
 			//exec($cmd, $output);
