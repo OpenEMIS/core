@@ -8,7 +8,7 @@ $products = array(
 
 <div class="btn-group product-list">
 	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="color: #FFFFFF">
-		<i class="fa fa-list fa-2x"></i>
+		<i class="fa fa-list fa-lg"></i>
 	</a>
 
 	<ul aria-labelledby="dropdownMenu" role="menu" class="dropdown-menu">
