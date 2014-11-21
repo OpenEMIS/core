@@ -126,9 +126,11 @@ class AlertsController extends AlertsAppController {
 					//pr($output);
 					
 					$saveData = array(
-						'id' => $alertProcess['SystemProcess']['id'],
-						'process_id' => $processId,
-						'start_date' => date('Y-m-d') . ' 23:59:59'
+						'SystemProcess' => array(
+							'id' => $alertProcess['SystemProcess']['id'],
+							'process_id' => $processId,
+							'start_date' => date('Y-m-d') . ' 23:59:59'
+						)
 					);
 					$this->SystemProcess->save($saveData);
 					
@@ -149,8 +151,10 @@ class AlertsController extends AlertsAppController {
 			}else{
 				$this->SystemProcess->create();
 				$newProcessArr = array(
-					'name' => 'Alert Process',
-					'created_user_id' => $userId
+					'SystemProcess' => array(
+						'name' => 'Alert Process',
+						'created_user_id' => $userId
+					)
 				);
 
 				$this->SystemProcess->save($newProcessArr);

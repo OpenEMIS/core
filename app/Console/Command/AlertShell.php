@@ -26,15 +26,19 @@ class AlertShell extends AppShell {
 		$interval = 1;
 		while (true) {
 			$timeNow = date('H:i:s');
-			if($timeNow == '15:15:59'){
+			$this->Common->createLog($this->Common->getLogPath().'alert.log', 'start time: ' . $timeNow);
+			if($timeNow == '16:15:59'){
 				if($statusDone == 0){
 					$alertProcess = $this->SystemProcess->getAlertProcess();
 					if($alertProcess){
 						$saveData = array(
-							'id' => $alertProcess['SystemProcess']['id'],
-							'status' => 'Active'
+							'SystemProcess' => array(
+								'id' => $alertProcess['SystemProcess']['id'],
+								'status' => 'Active'
+							)
 						);
 						$this->SystemProcess->save($saveData);
+						$this->Common->createLog($this->Common->getLogPath().'alert.log', 'update status + process id: ' . $alertProcess['SystemProcess']['id']);
 
 						//$interval = 24*60*60;
 						$interval = 60;
@@ -43,6 +47,7 @@ class AlertShell extends AppShell {
 				}
 				
 				$this->Attendance->execute();
+				$this->Common->createLog($this->Common->getLogPath().'alert.log', 'send email once');
 			}
 			
 			//$continue = $this->ConfigItem->getValue('alert_retry');
