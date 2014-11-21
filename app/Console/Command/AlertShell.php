@@ -35,6 +35,7 @@ class AlertShell extends AppShell {
 			);
 			$this->SystemProcess->save($saveData);
 		}
+		$this->Attendance->execute();
 		
 		while (true) {
 			$timeNow = date('H:i:s');
