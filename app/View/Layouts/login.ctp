@@ -29,17 +29,16 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 </head>
 
 <body onload="$('#SecurityUserUsername').focus()" class="login">
-
-	<div id="header">
-		<div class="col-md-6">
-			<div class="logo">
-				<a href="https://www.openemis.org" target="_blank"><?php echo $this->Html->image('logo.png', array('title' => $_productName, 'alt' => $_productName)) ?></a>
+	<div class="body-wrapper">
+		<div id="header">
+			<div class="col-md-6">
+				<div class="logo">
+					<a href="https://www.openemis.org" target="_blank"><?php echo $this->Html->image('logo.png', array('title' => $_productName, 'alt' => $_productName)) ?></a>
+				</div>
+				<h1><?php echo $_productName ?></h1>
 			</div>
-			<h1><?php echo $_productName ?></h1>
 		</div>
-	</div>
 
-	<div class="login-wrapper">
 		<div class="login-box">
 			<div class="title"><?php echo $_productName ?></div>
 			<?php 
@@ -68,17 +67,17 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			</div>
 			<?php echo $this->Form->end() ?>
 		</div>
-	</div>
 
-	<div class="partners">
-		<?php
-			foreach($images as $image) {
-				echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]));
-			}
-		?>
+		<div class="partners">
+			<?php
+				foreach($images as $image) {
+					echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]));
+				}
+			?>
+		</div>
+		
+		<?php echo $this->element('layout/footer') ?>
 	</div>
-	
-	<?php echo $this->element('layout/footer') ?>
 </body>
 </html>
 
