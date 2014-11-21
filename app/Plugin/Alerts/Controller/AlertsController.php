@@ -165,7 +165,7 @@ class AlertsController extends AlertsAppController {
 			}
 		}
 		
-		pr($process);
+		//pr($process);
 		$this->set(compact('process'));
 	}
 
