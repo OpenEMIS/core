@@ -26,7 +26,7 @@ class PreferencesController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Preferences';
-		$this->Navigation->addCrumb('Preferences', array('controller' => 'Home'));
+		$this->Navigation->addCrumb('Preferences', array('controller' => 'Preferences'));
 	}
 	
 	public function index() {
