@@ -30,8 +30,8 @@ echo $this->Form->create('Alert', $formOptions);
 			<?php if (!empty($process)): ?>
 				<tr>
 					<td><?php echo $process['status'] == 'Active' ? __($process['status']) : 'Inactive'; ?></td>
-					<td><?php echo $process['status'] == 'Active' ?  $this->Utility->formatDate($process['start_date']) : ''; ?></td>
-					<td><?php echo $process['status'] == 'Active' ?  $this->Utility->formatDate($process['end_date']) : ''; ?></td>
+					<td><?php echo !empty($process['start_date']) ?  $this->Utility->formatDate($process['start_date']) : ''; ?></td>
+					<td><?php echo $process['status'] == 'Inactive' ?  $this->Utility->formatDate($process['end_date']) : ''; ?></td>
 					<td><?php echo '24 ' . __(' hours'); ?></td>
 				</tr>
 			<?php endif; ?>
