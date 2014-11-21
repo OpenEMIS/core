@@ -126,7 +126,7 @@ class AlertsController extends AlertsAppController {
 					//pr($output);
 					
 					$saveData = array(
-						'id' => $alertProcess['id'],
+						'id' => $alertProcess['SystemProcess']['id'],
 						'process_id' => $processId,
 						'start_date' => date('Y-m-d') . ' 23:59:59'
 					);
