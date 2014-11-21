@@ -28,9 +28,9 @@ class AlertShell extends AppShell {
 			
 			$continue = $this->ConfigItem->getValue('alert_retry');
 			
-			/*if ($continue == 0) {
+			if ($continue == 0) {
 				break;
-			}*/
+			}
 			
 			// execute logic
 			pr($i++);
