@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?fok21h');
-	src:url('fonts/kordit-fonts.eot?#iefixfok21h') format('embedded-opentype'),
-		url('fonts/kordit-fonts.woff?fok21h') format('woff'),
-		url('fonts/kordit-fonts.ttf?fok21h') format('truetype'),
-		url('fonts/kordit-fonts.svg?fok21h#kordit-fonts') format('svg');
+	src:url('fonts/kordit-fonts.eot?ifrmdv');
+	src:url('fonts/kordit-fonts.eot?#iefixifrmdv') format('embedded-opentype'),
+		url('fonts/kordit-fonts.woff?ifrmdv') format('woff'),
+		url('fonts/kordit-fonts.ttf?ifrmdv') format('truetype'),
+		url('fonts/kordit-fonts.svg?ifrmdv#kordit-fonts') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,6 +23,9 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.kd-Openemis:before {
+	content: "\e605";
+}
 .kd-Reports:before {
 	content: "\e600";
 }
@@ -38,3 +41,7 @@
 .kd-Institutions:before {
 	content: "\e604";
 }
+
+.kd-visualizer { color: #91161A; }
+.kd-school { color: #305F19; }
+.kd-refugees { color: #D66B12; }
