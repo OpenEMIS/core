@@ -439,7 +439,8 @@ class LabelHelper extends AppHelper {
 			'title' => 'Alerts',
 			'threshold' => 'Threshold',
 			'roles' => 'Destination Roles',
-			'start_time' => 'Start Time',
+			'start_date' => 'Start Date',
+			'end_date' => 'End Date',
 			'interval' => 'Interval'
 		),
 		'StudentBehaviour' => array(
