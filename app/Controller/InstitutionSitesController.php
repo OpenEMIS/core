@@ -210,7 +210,7 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		// for resetting institution site id
-		if (count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
+		if (!$this->AccessControl->check($this->params['controller'], 'add') && count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
 			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));
 		} else {
 			$this->Session->delete('InstitutionSite.id');
