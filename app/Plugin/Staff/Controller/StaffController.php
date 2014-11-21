@@ -197,6 +197,8 @@ class StaffController extends StaffAppController {
 						$this->redirect(array('action' => 'index'));
 					}
 				}
+
+				$this->Session->delete('Staff.wizard');
 			}
 		} else {
 			$search = $this->data;
