@@ -18,24 +18,43 @@
 
 class AlertShell extends AppShell {
 
-	public $uses = array('ConfigItem');
+	public $uses = array('ConfigItem', 'SystemProcess');
 	public $tasks = array('Attendance', 'Common');
 
 	public function main() {
-		
-		$i=0;
+		$statusDone = 0;
+		$interval = 1;
 		while (true) {
-			
-			$continue = $this->ConfigItem->getValue('alert_retry');
-			
-			if ($continue == 0) {
-				break;
+			$timeNow = date('H:i:s');
+			if($timeNow == '14:30:59'){
+				if($statusDone == 0){
+					$alertProcess = $this->SystemProcess->getAlertProcess();
+					if($alertProcess){
+						$saveData = array(
+							'id' => $alertProcess['SystemProcess']['id'],
+							'status' => 'Active'
+						);
+						$this->SystemProcess->save($saveData);
+
+						//$interval = 24*60*60;
+						$interval = 60;
+						$statusDone = 1;
+					}
+				}
+				
+				$this->Attendance->execute();
 			}
 			
-			// execute logic
-			pr($i++);
+			//$continue = $this->ConfigItem->getValue('alert_retry');
 			
-			sleep(3);
+//			if ($continue == 0) {
+//				break;
+//			}
+			
+			// execute logic
+			//pr($i++);
+			
+			sleep($interval);
 		}
 		//pr($this->ConfigItem->getValue('alert_retry'));
 		//$this->Attendance->execute();
@@ -43,7 +62,7 @@ class AlertShell extends AppShell {
 		//$this->Common->createLog($this->Common->getLogPath().'alert.log', 'log me');
 		//sleep(5000); // 5 seconds
 		
-		//$this->Attendance->execute();
+		//
 	}
 	
 	public function hey_there() {
