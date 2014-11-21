@@ -755,6 +755,7 @@ class ConfigController extends AppController {
 
 		foreach ($images['files']['tmp_name'] as $key => $value) {
 			if($images['files']['error'][$key] == UPLOAD_ERR_NO_FILE){
+				$msg[$key] = __("No File Chosen");
 				continue;
 			}
 
