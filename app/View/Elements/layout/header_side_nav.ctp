@@ -13,7 +13,7 @@ $dropdown = array(
 <div class="header-side-nav">
 	<span><i><?php echo sprintf('%s %s', $firstName, $lastName) ?></i></span>
 	
-	<a href="<?php echo $this->Html->url(array('controller' => 'Home', 'action' => 'index')) ?>">
+	<a href="<?php echo $this->Html->url(array('plugin' => false, 'controller' => 'Home', 'action' => 'index')) ?>">
 		<i class="fa fa-home fa-lg"></i>
 	</a>
 
