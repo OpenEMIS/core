@@ -19,11 +19,12 @@
 #header .logo img { width: 82px; padding: 5px; }
 #header h1 { margin: 0px; padding: 35px 0 0 20px; font-size: 28px; display: inline-block; }
 
-#header .fa-lg { font-size: 18px; }
+#header .fa-lg { font-size: 1.4em; }
 #header .fa-home { margin: 0 7px 0 15px; }
 
 .header-side-nav {
 	position: absolute;
+	top: 0;
 	right: 5px;
 	margin-top: 5px;
 }
