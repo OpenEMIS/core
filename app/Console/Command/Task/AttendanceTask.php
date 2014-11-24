@@ -28,57 +28,49 @@ class AttendanceTask extends AppTask {
 
 	public function execute() {
 		$CakeMail = new CakeEmail('default');
-		//pr($CakeMail->showConfigs());die;
-		$alertId = 2;
-		$data = $this->Alert->getAlertWithRoles($alertId);
-		foreach ($data AS $record) {
-			$alert = $record['Alert'];
-			$roleId = $record['AlertRole']['security_role_id'];
-			//pr($alert);
-			$subject = $alert['subject'];
-			$message = $alert['message'];
-			//pr($roleId);
-			if ($alert['method'] == 'Email') {
-				$securityUsers = $this->SecurityRole->getUsersByRole($roleId);
-				//pr($securityUsers);
-				foreach ($securityUsers AS $user) {
-					$userEmail = $user['SecurityUser']['email'];
-					$userId = $user['SecurityUser']['id'];
-					
-					$CakeMail->subject($subject);
-					$CakeMail->to($userEmail);
-
-					//$Email->subject($subject);
-					//$Email->to($userEmail);
-					$CakeMail->viewVars(array('message' => $message));
-					//pr($this->Email->showConfigs());die;
-					try {
-						$success = $CakeMail->send();
-						if ($success) {
-							$this->AlertLog->create();
-
-							$newLog = array(
-								'method' => 'Email',
-								'destination' => $userEmail,
-								'type' => 'Alert',
-								'status' => 'Success',
-								'subject' => $subject,
-								'message' => $message,
-								'security_user_id' => $userId
-							);
-
-							$this->AlertLog->save($newLog);
-						}
-					} catch (SocketException $e) {
-						debug($e->getMessage());
-					}
-				}
-			}
-		}
-
-		//exec('sudo php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ batch run eng', $output);
-		//exec("kill -KILL 33807", $output);
-		//pr($output);
+		$CakeMail->subject('Test Alone');
+		$CakeMail->to('dzhu@kordit.com');
+		$CakeMail->send();
+//		$alertId = 2;
+//		$data = $this->Alert->getAlertWithRoles($alertId);
+//		foreach ($data AS $record) {
+//			$alert = $record['Alert'];
+//			$roleId = $record['AlertRole']['security_role_id'];
+//			$subject = $alert['subject'];
+//			$message = $alert['message'];
+//			if ($alert['method'] == 'Email') {
+//				$securityUsers = $this->SecurityRole->getUsersByRole($roleId);
+//				foreach ($securityUsers AS $user) {
+//					$userEmail = $user['SecurityUser']['email'];
+//					$userId = $user['SecurityUser']['id'];
+//					
+//					$CakeMail->subject($subject);
+//					$CakeMail->to($userEmail);
+//					
+//					$CakeMail->viewVars(array('message' => $message));
+//					try {
+//						$success = $CakeMail->send();
+//						if ($success) {
+//							$this->AlertLog->create();
+//
+//							$newLog = array(
+//								'method' => 'Email',
+//								'destination' => $userEmail,
+//								'type' => 'Alert',
+//								'status' => 'Success',
+//								'subject' => $subject,
+//								'message' => $message,
+//								'security_user_id' => $userId
+//							);
+//
+//							$this->AlertLog->save($newLog);
+//						}
+//					} catch (SocketException $e) {
+//						debug($e->getMessage());
+//					}
+//				}
+//			}
+//		}
 	}
 
 }
