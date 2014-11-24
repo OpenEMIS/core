@@ -139,7 +139,7 @@ class AlertsController extends AlertsAppController {
 				if($alertProcess){
 					$systemProcessId = $alertProcess['SystemProcess']['id'];
 					if($this->is_running($systemProcessId)){
-						$this->kill($systemProcessId);
+						//$this->kill($systemProcessId);
 						
 						$updateData = array(
 							'SystemProcess' => array(
@@ -172,8 +172,6 @@ class AlertsController extends AlertsAppController {
 					$this->SystemProcess->save($newProcessArr);
 				}
 			}
-			//$cmd = 'php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
-			//exec($cmd, $output);
 		}
 		
 		$checkProcess = $this->SystemProcess->getAlertProcess();
@@ -190,8 +188,8 @@ class AlertsController extends AlertsAppController {
 		}
 
 		$newProcess = $this->SystemProcess->getAlertProcess();
+		//pr($newProcess);
 		if($newProcess){
-			//pr($alertProcess);
 			$process = $newProcess['SystemProcess'];
 		}else{
 			$this->Message->alert('Alert.noProcess');
@@ -199,6 +197,8 @@ class AlertsController extends AlertsAppController {
 		
 		//pr($process);
 		$this->set(compact('process'));
+		$this->render('process');
+		
 	}
 	
 	private function is_running($PID){
