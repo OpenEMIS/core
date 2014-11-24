@@ -45,8 +45,12 @@ class EmailConfig {
 	public $default = array(
 		'transport' => 'Mail',
 		'from' => array('support@openemis.org' => 'OpenEmis Core'),
-		//'charset' => 'utf-8',
-		//'headerCharset' => 'utf-8',
+		'replyTo' => 'abc@kordit.com',
+		'emailFormat' => 'html',
+		'template' => 'default',
+		'layout' => 'default',
+		'charset' => 'utf-8',
+		'headerCharset' => 'utf-8'
 	);
 
 	public $smtp = array(
