@@ -139,7 +139,7 @@ class AlertsController extends AlertsAppController {
 				if($alertProcess){
 					$systemProcessId = $alertProcess['SystemProcess']['id'];
 					if($this->is_running($systemProcessId)){
-						//$this->kill($systemProcessId);
+						$this->kill($systemProcessId);
 						
 						$updateData = array(
 							'SystemProcess' => array(
