@@ -177,7 +177,7 @@ class AlertsController extends AlertsAppController {
 		}
 		
 		$checkProcess = $this->SystemProcess->getAlertProcess();
-		if(!empty($checkProcess)){
+		if(empty($checkProcess)){
 			$this->SystemProcess->create();
 			$newProcessArr = array(
 				'SystemProcess' => array(
