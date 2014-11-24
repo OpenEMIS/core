@@ -25,6 +25,10 @@ class AlertShell extends AppShell {
 		$statusDone = 0;
 		$interval = 1;
 		
+		while (true) {
+			sleep(60);
+		}
+		
 //		$alertProcess = $this->SystemProcess->getAlertProcess();
 //		if ($alertProcess) {
 //			$saveData = array(
@@ -35,9 +39,9 @@ class AlertShell extends AppShell {
 //			);
 //			$this->SystemProcess->save($saveData);
 //		}
-		$this->Attendance->execute();
+		//$this->Attendance->execute();
 		
-		$this->out('hello');
+		//$this->out('hello');
 		
 //		while (true) {
 //			$timeNow = date('H:i:s');

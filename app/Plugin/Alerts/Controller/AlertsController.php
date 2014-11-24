@@ -134,44 +134,93 @@ class AlertsController extends AlertsAppController {
 						)
 					);
 					$this->SystemProcess->save($saveData);
-					
-					$newProcess = $this->SystemProcess->getAlertProcess();
-					$process = $newProcess['SystemProcess'];
-				}else{
-					$this->Message->alert('Alert.noProcess');
 				}
-				
 			}else if($action == 'Stop'){
-				
+				if($alertProcess){
+					$systemProcessId = $alertProcess['SystemProcess']['id'];
+					if($this->is_running($systemProcessId)){
+						$this->kill($systemProcessId);
+						
+						$updateData = array(
+							'SystemProcess' => array(
+								'id' => $alertProcess['SystemProcess']['id'],
+								'end_date' => date('Y-m-d H:i:s'),
+								'status' => 'Inactive',
+								'ended_user_id' => $userId
+							)
+						);
+						$this->SystemProcess->save($updateData);
+					}else{
+						$updateData = array(
+							'SystemProcess' => array(
+								'id' => $alertProcess['SystemProcess']['id'],
+								'status' => 'Inactive',
+								'ended_user_id' => $userId
+							)
+						);
+						$this->SystemProcess->save($updateData);
+					}
+				}else{
+					$this->SystemProcess->create();
+					$newProcessArr = array(
+						'SystemProcess' => array(
+							'name' => 'Alert Process',
+							'created_user_id' => $userId
+						)
+					);
+
+					$this->SystemProcess->save($newProcessArr);
+				}
 			}
 			//$cmd = 'php -dmemory_limit=1G /Applications/MAMP/htdocs/openemis/app/Console/cake.php -app /Applications/MAMP/htdocs/openemis/app/ alert > /Applications/MAMP/htdocs/openemis/app/tmp/logs/processes.log & echo $!';
 			//exec($cmd, $output);
+		}
+		
+		$checkProcess = $this->SystemProcess->getAlertProcess();
+		if(!empty($checkProcess)){
+			$this->SystemProcess->create();
+			$newProcessArr = array(
+				'SystemProcess' => array(
+					'name' => 'Alert Process',
+					'created_user_id' => $userId
+				)
+			);
+
+			$this->SystemProcess->save($newProcessArr);
+		}
+
+		$newProcess = $this->SystemProcess->getAlertProcess();
+		if($newProcess){
+			//pr($alertProcess);
+			$process = $newProcess['SystemProcess'];
 		}else{
-			if($alertProcess){
-
-			}else{
-				$this->SystemProcess->create();
-				$newProcessArr = array(
-					'SystemProcess' => array(
-						'name' => 'Alert Process',
-						'created_user_id' => $userId
-					)
-				);
-
-				$this->SystemProcess->save($newProcessArr);
-				$alertProcess = $this->SystemProcess->getAlertProcess();
-			}
-
-			if($alertProcess){
-				//pr($alertProcess);
-				$process = $alertProcess['SystemProcess'];
-			}else{
-				$this->Message->alert('Alert.noProcess');
-			}
+			$this->Message->alert('Alert.noProcess');
 		}
 		
 		//pr($process);
 		$this->set(compact('process'));
+	}
+	
+	private function is_running($PID){
+		$this->autoRender =false;
+		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+
+		}else{
+			exec("ps $PID", $ProcessState);
+			return(count($ProcessState) >= 2);
+		}
+	}
+	
+	private function kill($PID){
+		$this->autoRender =false;
+		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+			exec("Taskkill /PID $PID /F");
+		}else{
+			if($this->is_running($PID)){
+				exec("kill -KILL $PID");
+				return true;
+			}else return false;
+	   }
 	}
 
 }
