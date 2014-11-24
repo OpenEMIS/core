@@ -137,7 +137,7 @@ class AlertsController extends AlertsAppController {
 				}
 			}else if($action == 'Stop'){
 				if($alertProcess){
-					$systemProcessId = $alertProcess['SystemProcess']['id'];
+					$systemProcessId = $alertProcess['SystemProcess']['process_id'];
 					if($this->is_running($systemProcessId)){
 						pr('is running');
 						pr($systemProcessId);
