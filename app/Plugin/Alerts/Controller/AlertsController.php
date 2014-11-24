@@ -211,7 +211,7 @@ class AlertsController extends AlertsAppController {
 	
 	private function kill($PID){
 		$this->autoRender =false;
-		exec("kill -KILL " . $systemProcessId);
+		exec("kill -KILL " . $PID);
 		return true;
 	}
 
