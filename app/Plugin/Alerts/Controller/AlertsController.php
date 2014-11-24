@@ -68,7 +68,8 @@ class AlertsController extends AlertsAppController {
 							'process_id' => $processId,
 							'start_date' => date('Y-m-d') . ' 23:59:59',
 							'status' => 'Active',
-							'end_date' => ''
+							'end_date' => NULL,
+							'ended_user_id' => NULL
 						)
 					);
 					$this->SystemProcess->save($updateData);
