@@ -25,16 +25,16 @@ class AlertShell extends AppShell {
 		$statusDone = 0;
 		$interval = 1;
 		
-		$alertProcess = $this->SystemProcess->getAlertProcess();
-		if ($alertProcess) {
-			$saveData = array(
-				'SystemProcess' => array(
-					'id' => $alertProcess['SystemProcess']['id'],
-					'status' => 'Active'
-				)
-			);
-			$this->SystemProcess->save($saveData);
-		}
+//		$alertProcess = $this->SystemProcess->getAlertProcess();
+//		if ($alertProcess) {
+//			$saveData = array(
+//				'SystemProcess' => array(
+//					'id' => $alertProcess['SystemProcess']['id'],
+//					'status' => 'Active'
+//				)
+//			);
+//			$this->SystemProcess->save($saveData);
+//		}
 		$this->Attendance->execute();
 		
 		$this->out('hello');
