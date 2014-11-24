@@ -139,6 +139,7 @@ class AlertsController extends AlertsAppController {
 				if($alertProcess){
 					$systemProcessId = $alertProcess['SystemProcess']['id'];
 					if($this->is_running($systemProcessId)){
+						pr('is running');
 						$this->kill($systemProcessId);
 						
 						$updateData = array(
@@ -213,14 +214,8 @@ class AlertsController extends AlertsAppController {
 	
 	private function kill($PID){
 		$this->autoRender =false;
-		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-			exec("Taskkill /PID $PID /F");
-		}else{
-			if($this->is_running($PID)){
-				exec("kill -KILL $PID");
-				return true;
-			}else return false;
-	   }
+		exec("kill -KILL $PID");
+		return true;
 	}
 
 }
