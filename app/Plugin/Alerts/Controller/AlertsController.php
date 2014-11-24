@@ -129,7 +129,8 @@ class AlertsController extends AlertsAppController {
 						'SystemProcess' => array(
 							'id' => $alertProcess['SystemProcess']['id'],
 							'process_id' => $processId,
-							'start_date' => date('Y-m-d') . ' 23:59:59'
+							'start_date' => date('Y-m-d') . ' 23:59:59',
+							'status' => 'Active'
 						)
 					);
 					$this->SystemProcess->save($saveData);
