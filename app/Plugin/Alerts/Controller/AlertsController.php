@@ -41,19 +41,20 @@ class AlertsController extends AlertsAppController {
 
 	public function process() {
 		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
-		$this->Navigation->addCrumb('Alert Process');
+		$this->Navigation->addCrumb('Processes');
 		$userId = $this->Auth->user('id');
 		$alertProcess = $this->SystemProcess->getAlertProcess();
 
 		$process = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$formData = $this->request->data;
-			$action = $formData['submit_button'];
+			$action = $formData['submit'];
+			
 			if ($action == 'Start') {
 				if ($alertProcess) {
 					$params = array('Alert', 'main');
 					$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
-					$nohup = 'nohup %s > %stmp/logs/alert.log & echo $!';
+					$nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
 					$shellCmd = sprintf($nohup, $cmd, APP);
 					$this->log($shellCmd, 'debug');
 					//pr($shellCmd);
@@ -68,8 +69,7 @@ class AlertsController extends AlertsAppController {
 							'process_id' => $processId,
 							'start_date' => date('Y-m-d') . ' 23:59:59',
 							'status' => 'Active',
-							'end_date' => NULL,
-							'ended_user_id' => NULL
+							'end_date' => NULL
 						)
 					);
 					$this->SystemProcess->save($updateData);
@@ -84,8 +84,7 @@ class AlertsController extends AlertsAppController {
 							'SystemProcess' => array(
 								'id' => $alertProcess['SystemProcess']['id'],
 								'end_date' => date('Y-m-d H:i:s'),
-								'status' => 'Inactive',
-								'ended_user_id' => $userId
+								'status' => 'Inactive'
 							)
 						);
 						$this->SystemProcess->save($updateData);
@@ -93,8 +92,7 @@ class AlertsController extends AlertsAppController {
 						$updateData = array(
 							'SystemProcess' => array(
 								'id' => $alertProcess['SystemProcess']['id'],
-								'status' => 'Inactive',
-								'ended_user_id' => $userId
+								'status' => 'Inactive'
 							)
 						);
 						$this->SystemProcess->save($updateData);
@@ -103,8 +101,7 @@ class AlertsController extends AlertsAppController {
 					$this->SystemProcess->create();
 					$newProcessArr = array(
 						'SystemProcess' => array(
-							'name' => 'Alert Process',
-							'created_user_id' => $userId
+							'name' => 'Alert Process'
 						)
 					);
 
@@ -118,8 +115,7 @@ class AlertsController extends AlertsAppController {
 			$this->SystemProcess->create();
 			$newProcessArr = array(
 				'SystemProcess' => array(
-					'name' => 'Alert Process',
-					'created_user_id' => $userId
+					'name' => 'Alert Process'
 				)
 			);
 
