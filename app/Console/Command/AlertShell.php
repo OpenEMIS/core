@@ -15,75 +15,67 @@
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
 
-
+App::uses('CakeEmail', 'Network/Email');
 class AlertShell extends AppShell {
 
-	public $uses = array('ConfigItem', 'SystemProcess');
-	public $tasks = array('Attendance', 'Common');
+	public $uses = array('ConfigItem', 'SystemProcess', 'Alerts.Alert');
+	public $tasks = array('AlertAttendance');
 
 	public function main() {
 		$statusDone = 0;
-		$interval = 1;
+		$interval = 24*60*60;
+		$CakeMail = new CakeEmail('default');
 		
 		while (true) {
-			sleep(60);
+			$strTimeNow = time();
+			$strToday = strtotime(date('Y-m-d') . ' 23:59:59');
+			$timeDifference = $strToday - $strTimeNow;
+			$this->log($timeDifference, 'alert_processes');
+			$interval = $timeDifference;
+			
+			sleep($interval);
+			
+			// execute tasks here
+			// Attendance alert start
+			$alertAttendance = $this->Alert->getAlertByName('Student Absent');
+			if($alertAttendance){
+				$resultAttendance = $this->AlertAttendance->execute();
+				foreach($resultAttendance AS $row){
+					$CakeMail->subject($subject);
+					$CakeMail->to($userEmail);
+					$CakeMail->viewVars(array('message' => $message));
+					try {
+						$success = $CakeMail->send();
+						if ($success) {
+							$this->AlertLog->create();
+
+							$newLog = array(
+								'method' => 'Email',
+								'destination' => $userEmail,
+								'type' => 'Alert',
+								'status' => 1,
+								'subject' => $subject,
+								'message' => $message,
+								'security_user_id' => $userId
+							);
+
+							$this->AlertLog->save($newLog);
+						}
+					} catch (SocketException $e) {
+						debug($e->getMessage());
+						$this->log($e->getMessage(), 'alert_processes');
+					}
+				}
+			}
+			// Attendance alert end
+			
+			$timeAfterExec = time();
+			$timeNewDay = strtotime(date('Y-m-d') . ' 23:59:59');
+			$newDifference = $timeNewDay - $timeAfterExec;
+			$interval = $newDifference;
 		}
-		
-//		$alertProcess = $this->SystemProcess->getAlertProcess();
-//		if ($alertProcess) {
-//			$saveData = array(
-//				'SystemProcess' => array(
-//					'id' => $alertProcess['SystemProcess']['id'],
-//					'status' => 'Active'
-//				)
-//			);
-//			$this->SystemProcess->save($saveData);
-//		}
-		//$this->Attendance->execute();
-		
-		//$this->out('hello');
-		
-//		while (true) {
-//			$timeNow = date('H:i:s');
-//			$this->Common->createLog($this->Common->getLogPath().'alert.log', 'start time: ' . $timeNow);
-//			if($timeNow == '16:15:59'){
-//				if($statusDone == 0){
-//					$alertProcess = $this->SystemProcess->getAlertProcess();
-//					if($alertProcess){
-//						$saveData = array(
-//							'SystemProcess' => array(
-//								'id' => $alertProcess['SystemProcess']['id'],
-//								'status' => 'Active'
-//							)
-//						);
-//						$this->SystemProcess->save($saveData);
-//						$this->Common->createLog($this->Common->getLogPath().'alert.log', 'update status + process id: ' . $alertProcess['SystemProcess']['id']);
-//
-//						//$interval = 24*60*60;
-//						$interval = 60;
-//						$statusDone = 1;
-//					}
-//				}
-//				
-//				$this->Attendance->execute();
-//				$this->Common->createLog($this->Common->getLogPath().'alert.log', 'send email once');
-//			}
-//			
-//			sleep($interval);
-//		}
-		//pr($this->ConfigItem->getValue('alert_retry'));
-		//$this->Attendance->execute();
-		//$this->out($this->Common->getReportWebRootPath());
-		//$this->Common->createLog($this->Common->getLogPath().'alert.log', 'log me');
-		//sleep(5000); // 5 seconds
-		
-		//
 	}
 	
-	public function hey_there() {
-        $this->out('Hey there ' . $this->args[0]);
-    }
-
 }
 
 ?>

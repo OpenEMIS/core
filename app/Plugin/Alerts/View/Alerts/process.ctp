@@ -4,7 +4,7 @@ echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Alert Process'));
+$this->assign('contentHeader', __('Processes'));
 
 $this->start('contentActions');
 
@@ -20,26 +20,27 @@ echo $this->Form->create('Alert', $formOptions);
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
+				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('general.status'); ?></th>
 				<th><?php echo $this->Label->get('Alert.start_date'); ?></th>
 				<th><?php echo $this->Label->get('Alert.end_date'); ?></th>
-				<th><?php echo $this->Label->get('Alert.interval'); ?></th>
+				<th><?php echo $this->Label->get('general.action'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php if (!empty($process)): ?>
 				<tr>
+					<td><?php echo __('Alert Process'); ?></td>
 					<td><?php echo $process['status'] == 'Active' ? __($process['status']) : 'Inactive'; ?></td>
 					<td><?php echo !empty($process['start_date']) ?  $this->Utility->formatDate($process['start_date']) : ''; ?></td>
 					<td><?php echo $process['status'] == 'Inactive' ?  $this->Utility->formatDate($process['end_date']) : ''; ?></td>
-					<td><?php echo '24 ' . __(' hours'); ?></td>
+					<td class="text-center">
+						<button name="submit" type="submit" value="<?php echo $process['status'] == 'Active' ? 'Stop' : 'Start'; ?>" class="btn_save btn_right"><?php echo $process['status'] == 'Active' ? __('Stop') : __('Start'); ?></button>
+					</td>
 				</tr>
 			<?php endif; ?>
 		</tbody>
 	</table>
-	<div class="controls">
-		<input name="submit_button" type="submit" value="<?php echo $process['status'] == 'Active' ? __('Stop') : __('Start'); ?>" class="btn_save btn_right" />
-	</div>
 </div>
 <?php
 echo $this->Form->end();

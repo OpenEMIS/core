@@ -219,4 +219,15 @@ class Alert extends AlertsAppModel {
 		return $data;
 	}
 	
+	public function getAlertByName($name){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'Alert.name' => $name,
+				'Alert.status' => 1
+			)
+		));
+		
+		return $data;
+	}
 }
