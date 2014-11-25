@@ -334,7 +334,9 @@ class PhpExcelHelper extends AppHelper {
      */
     public function output($filename = 'export.xlsx', $writer = 'Excel2007') {
         // remove all output
-        ob_end_clean();
+        if (ob_get_contents()){
+            ob_end_clean();
+        }
 
         // headers
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -427,9 +429,5 @@ class PhpExcelHelper extends AppHelper {
         $chart2->setTopLeftPosition('G2');
         $chart2->setBottomRightPosition('L12');
         $this->_xls->getActiveSheet()->addChart($chart2);
-        
-
-
-        return $objWriter;
     }
 }
