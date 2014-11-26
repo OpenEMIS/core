@@ -1091,4 +1091,16 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		return 'Report_Student_Attendance';
 	}
 	
+	public function getStudentListForAlert() {
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$currentSchoolYear = $SchoolYear->getCurrentSchoolYear();
+		$currentYearId = $currentSchoolYear['id'];
+		
+		$data = $this->find('all', array(
+			
+		));
+		
+		return $data;
+	}
+	
 }
