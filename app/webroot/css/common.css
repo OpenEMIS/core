@@ -111,6 +111,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
 }
+.container.layout{
+	padding-bottom: 20px;
+}
 .ie7 .container{
 	margin:0;
 }
