@@ -24,6 +24,18 @@ class SystemProcess extends AppModel {
 
 		return $data;
 	}
+	
+	public function is_running($PID) {
+		$this->autoRender = false;
+		exec("ps $PID", $ProcessState);
+		return(count($ProcessState) >= 2);
+	}
+
+	public function kill($PID) {
+		$this->autoRender = false;
+		exec("kill -KILL " . $PID);
+		return true;
+	}
 
 }
 

@@ -39,6 +39,9 @@ class AlertShell extends AppShell {
 			// Attendance alert start
 			$alertAttendance = $this->Alert->getAlertByName('Student Absent');
 			if($alertAttendance){
+				$subject = $alertAttendance['Alert']['subject'];
+				$message = $alertAttendance['Alert']['message'];
+				
 				$resultAttendance = $this->AlertAttendance->execute();
 				foreach($resultAttendance AS $row){
 					$CakeMail->subject($subject);
@@ -50,13 +53,13 @@ class AlertShell extends AppShell {
 							$this->AlertLog->create();
 
 							$newLog = array(
+								'id' => NULL,
 								'method' => 'Email',
 								'destination' => $userEmail,
 								'type' => 'Alert',
 								'status' => 1,
 								'subject' => $subject,
-								'message' => $message,
-								'security_user_id' => $userId
+								'message' => $message
 							);
 
 							$this->AlertLog->save($newLog);

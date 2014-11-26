@@ -140,6 +140,77 @@ class AlertsController extends AlertsAppController {
 		$this->set(compact('process'));
 		$this->render('process');
 	}
+	
+	public function processActions() {
+		$this->autoRender = false;
+		$alertProcess = $this->SystemProcess->getAlertProcess();
+		
+		if ($this->request->is(array('post', 'put'))) {
+			$formData = $this->request->data;
+			$action = $formData['submit'];
+			
+			if ($action == 'Start') {
+				if ($alertProcess) {
+					$params = array('Alert', 'main');
+					$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
+					$nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
+					$shellCmd = sprintf($nohup, $cmd, APP);
+					$this->log($shellCmd, 'debug');
+					//pr($shellCmd);
+					$output = array();
+					exec($shellCmd, $output);
+					$processId = $output[0];
+					//pr($output);
+
+					$updateData = array(
+						'SystemProcess' => array(
+							'id' => $alertProcess['SystemProcess']['id'],
+							'process_id' => $processId,
+							'start_date' => date('Y-m-d') . ' 23:59:59',
+							'status' => 'Active',
+							'end_date' => NULL
+						)
+					);
+					$this->SystemProcess->save($updateData);
+				}
+			} else if ($action == 'Stop') {
+				if ($alertProcess) {
+					$systemProcessId = $alertProcess['SystemProcess']['process_id'];
+					if ($this->SystemProcess->is_running($systemProcessId)) {
+						$this->SystemProcess->kill($systemProcessId);
+
+						$updateData = array(
+							'SystemProcess' => array(
+								'id' => $alertProcess['SystemProcess']['id'],
+								'end_date' => date('Y-m-d H:i:s'),
+								'status' => 'Inactive'
+							)
+						);
+						$this->SystemProcess->save($updateData);
+					} else {
+						$updateData = array(
+							'SystemProcess' => array(
+								'id' => $alertProcess['SystemProcess']['id'],
+								'status' => 'Inactive'
+							)
+						);
+						$this->SystemProcess->save($updateData);
+					}
+				} else {
+					$this->SystemProcess->create();
+					$newProcessArr = array(
+						'SystemProcess' => array(
+							'name' => 'Alert Process'
+						)
+					);
+
+					$this->SystemProcess->save($newProcessArr);
+				}
+			}
+		}
+		
+		$this->redirect(array('plugin' => null, 'controller'=>'Config', 'action'=>'index', 'system_processes'));
+	}
 
 	private function is_running($PID) {
 		$this->autoRender = false;
