@@ -415,11 +415,7 @@ class ConfigController extends AppController {
 
 							$this->ConfigItem->updateAll(
 							    array('ConfigItem.value' => $innerElement['value']),
-							    array(
-							    	'ConfigItem.type' => 'Year Book Report',
-							    	'ConfigItem.visible' => 1,
-							    	'ConfigItem.name' => $id
-							    )
+							    array('ConfigItem.visible' => 1, 'ConfigItem.name' => $id)
 							);
 						}
 					}
