@@ -96,6 +96,73 @@ class Alert extends AlertsAppModel {
 			'fields' => array($alias . '.*')
 		));
 		
+//		pr($this->getAlertByName('Student Absent'));
+//		$alertAttendance = $this->getAlertWithRolesByName('Student Absent');
+//		$roleIds = array();
+//		foreach($alertAttendance AS $row){
+//			$roleIds[] = $row['AlertRole']['security_role_id'];
+//		}
+//		
+//		$InstitutionSiteStudentAbsence = ClassRegistry::init('InstitutionSiteStudentAbsence');
+//		$studentIds = $InstitutionSiteStudentAbsence->getStudentListForAlert(1);
+//		//pr($studentIds);
+//		//pr($roleIds);
+//		
+//		$SecurityRole = ClassRegistry::init('SecurityRole');
+//		$users = $SecurityRole->find('all', array(
+//				'recursive' => -1,
+//				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'Student.first_name', 'Student.last_name'),
+//				'joins' => array(
+//					array(
+//						'table' => 'security_groups',
+//						'alias' => 'SecurityGroup',
+//						'conditions' => array(
+//							'SecurityRole.security_group_id = SecurityGroup.id'
+//						)
+//					),
+//					array(
+//						'table' => 'security_group_users',
+//						'alias' => 'SecurityGroupUser',
+//						'conditions' => array(
+//							'SecurityGroup.id = SecurityGroupUser.security_group_id'
+//						)
+//					),
+//					array(
+//						'table' => 'security_users',
+//						'alias' => 'SecurityUser',
+//						'conditions' => array(
+//							'SecurityGroupUser.security_user_id = SecurityUser.id'
+//						)
+//					),
+//					array(
+//						'table' => 'security_group_institution_sites',
+//						'alias' => 'SecurityGroupInstitutionSite',
+//						'conditions' => array(
+//							'SecurityGroup.id = SecurityGroupInstitutionSite.security_group_id'
+//						)
+//					),
+//					array(
+//						'table' => 'institution_site_students',
+//						'alias' => 'InstitutionSiteStudent',
+//						'conditions' => array(
+//							'InstitutionSiteStudent.institution_site_id = SecurityGroupInstitutionSite.institution_site_id'
+//						)
+//					),
+//					array(
+//						'table' => 'students',
+//						'alias' => 'Student',
+//						'conditions' => array(
+//							'InstitutionSiteStudent.student_id = Student.id',
+//							'Student.id' => $studentIds
+//						)
+//					)
+//				),
+//				'conditions' => array('SecurityRole.id' => $roleIds),
+//				'group' => array('SecurityUser.id', 'Student.id')
+//		));
+//		
+//		//pr($users);
+//		
 		$this->setVar(compact('data'));
 	}
 	
@@ -202,7 +269,7 @@ class Alert extends AlertsAppModel {
 		$this->setVar(compact('id', 'data', 'roles'));
 	}
 	
-	public function getAlertWithRoles($alertId){
+	public function getAlertWithRolesByName($name){
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('Alert.*', 'AlertRole.security_role_id'),
@@ -213,14 +280,14 @@ class Alert extends AlertsAppModel {
 					'conditions' => array('Alert.id = AlertRole.alert_id')
 				)
 			),
-			'conditions' => array('Alert.id' => $alertId)
+			'conditions' => array('Alert.name' => $name)
 		));
 		
 		return $data;
 	}
 	
 	public function getAlertByName($name){
-		$data = $this->find('all', array(
+		$data = $this->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'Alert.name' => $name,
