@@ -21,7 +21,6 @@
  */
 
 App::uses('Controller', 'Controller');
-App::uses('L10n', 'I18n');
 
 /**
  * Application Controller
@@ -34,6 +33,7 @@ App::uses('L10n', 'I18n');
  */
 
 class AppController extends Controller {
+	public $_productName = 'OpenEMIS Core';
 	public $bodyTitle = '';
 	public $modules = array();
 	public $uses = array('ConfigItem', 'SecurityUser');
@@ -41,35 +41,24 @@ class AppController extends Controller {
 	public $components = array(
 		'RequestHandler',
 		'Session',
-		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports', 'Visualizer')), 
-		'AccessControl',
-		'Utility',
 		'DateTime',
 		'Auth' => array(
 			'loginAction' => array('controller' => 'Security', 'action' => 'login', 'plugin' => false),
 			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login', 'plugin' => false),
 			'authenticate' => array('Form' => array('userModel' => 'SecurityUser'))
 		),
+
+		// Custom Components
+		'Localization',
+		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports', 'Visualizer')), 
+		'AccessControl',
+		'Utility',		
 		'Workflow',
 		'Message',
 		'Option'
 	);
 	
 	public function beforeFilter() {
-		$l10n = new L10n();
-		
-		$lang = $this->Session->check('configItem.language') ? $this->Session->read('configItem.language') : $this->ConfigItem->getValue('language');
-		if(empty($lang)) {
-			$lang = 'eng';
-		}
-		$locale = $l10n->map($lang);
-		$catalog = $l10n->catalog($locale);
-		$this->set('lang_locale', $locale);
-		$this->set('lang_dir', $catalog['direction']);
-		$this->set('lang', $lang);
-
-		Configure::write('Config.language', $lang);
-	
 		if($this->Auth->loggedIn()) {
 			$token = null;
 			if($this->Session->check('login.token')){
@@ -77,10 +66,11 @@ class AppController extends Controller {
 			}
 			if(!isset($token) || !$this->SecurityUser->validateToken($token)){
 				$this->Auth->logout();
-				return $this->redirect(array('controller'=>'Security', 'action'=>'logout'));
+				return $this->redirect(array('plugin' => false, 'controller' => 'Security', 'action' => 'logout'));
 			}
 		}
 		$this->set('SystemVersion', $this->getCodeVersion());
+		$this->set('_productName', $this->_productName);
 	}
 	
 	public function getCodeVersion() {
