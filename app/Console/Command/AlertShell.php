@@ -18,7 +18,7 @@
 App::uses('CakeEmail', 'Network/Email');
 class AlertShell extends AppShell {
 
-	public $uses = array('ConfigItem', 'SystemProcess', 'Alerts.Alert');
+	public $uses = array('ConfigItem', 'SystemProcess', 'Alerts.Alert', 'Alerts.AlertLog');
 	public $tasks = array('AlertAttendance');
 
 	public function main() {
@@ -26,14 +26,14 @@ class AlertShell extends AppShell {
 		$interval = 24*60*60;
 		$CakeMail = new CakeEmail('default');
 		
-		while (true) {
+		//while (true) {
 			$strTimeNow = time();
-			$strToday = strtotime(date('Y-m-d') . ' 23:59:59');
+			$strToday = strtotime(date('Y-m-d') . ' 16:40:40');
 			$timeDifference = $strToday - $strTimeNow;
 			$this->log($timeDifference, 'alert_processes');
 			$interval = $timeDifference;
 			
-			sleep($interval);
+			//sleep($interval);
 			
 			// execute tasks here
 			// Attendance alert start
@@ -44,6 +44,9 @@ class AlertShell extends AppShell {
 				
 				$resultAttendance = $this->AlertAttendance->execute();
 				foreach($resultAttendance AS $row){
+					$securityUser = $row['SecurityUser'];
+					$userEmail = $securityUser['email'];
+					
 					$CakeMail->subject($subject);
 					$CakeMail->to($userEmail);
 					$CakeMail->viewVars(array('message' => $message));
@@ -76,7 +79,7 @@ class AlertShell extends AppShell {
 			$timeNewDay = strtotime(date('Y-m-d') . ' 23:59:59');
 			$newDifference = $timeNewDay - $timeAfterExec;
 			$interval = $newDifference;
-		}
+		//}
 	}
 	
 }
