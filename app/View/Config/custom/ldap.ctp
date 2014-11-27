@@ -89,7 +89,7 @@ $this->start('contentBody'); ?>
 <?php if($action == 'edit') { ?>
 <?php
 $this->start('contentActions');
-echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view'));
+echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'view', $type) , array('class' => 'divider link_view'));
 $this->end();
 
 $this->start('contentBody'); ?>
@@ -103,7 +103,7 @@ $this->start('contentBody'); ?>
 	echo $this->Form->input('portId', array('type' => 'hidden'));
 	echo $this->Form->input('versionId', array('type' => 'hidden'));
 	echo $this->Form->input('base_dnId', array('type' => 'hidden'));
-	echo $this->Form->input('typeId', array('value'=> $this->request->data['ConfigItem']['type'],'type' => 'hidden'));
+	echo $this->Form->input('type', array('value'=> $this->request->data['ConfigItem']['type'],'type' => 'hidden'));
 
 	echo $this->Form->input('host');
 	echo $this->Form->input('port');
