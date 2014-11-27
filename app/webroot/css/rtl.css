@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @charset "UTF-8";
 /* CSS Document */
 
@@ -330,6 +331,5 @@ fieldset.section_break > .profile-image {
 
 .gmap-align{
 	float:right;
-	padding-left:30px;
-	padding-right:30px;
+	padding: 0 15px;
 	}
