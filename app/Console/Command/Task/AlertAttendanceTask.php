@@ -28,19 +28,69 @@ class AlertAttendanceTask extends AppTask {
 	public $tasks = array('Common');
 
 	public function execute() {
-		$alertId = 2;
-		$data = $this->Alert->getAlertWithRoles($alertId);
-		foreach ($data AS $record) {
-			$alert = $record['Alert'];
-			$roleId = $record['AlertRole']['security_role_id'];
-			$subject = $alert['subject'];
-			$message = $alert['message'];
-			if ($alert['method'] == 'Email') {
-				$securityUsers = $this->SecurityRole->getUsersByRole($roleId);
-				foreach ($securityUsers AS $user) {
-					
-				}
-			}
+		$alert = $this->Alert->getAlertByName('Student Absent');
+		$threshold = $alert['Alert']['threshold'];
+		
+		$alertRoles = $this->Alert->getAlertWithRolesByName('Student Absent');
+		$roleIds = array();
+		foreach($alertRoles AS $row){
+			$roleIds[] = $row['AlertRole']['security_role_id'];
+		}
+		
+		$studentIds = $this->InstitutionSiteStudentAbsence->getStudentListForAlert($threshold);
+		$data = array();
+		if(!empty($roleIds) && !empty($studentIds)){
+			$data = $this->SecurityRole->find('all', array(
+				'recursive' => -1,
+				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'Student.identification_no', 'Student.first_name', 'Student.last_name'),
+				'joins' => array(
+					array(
+						'table' => 'security_groups',
+						'alias' => 'SecurityGroup',
+						'conditions' => array(
+							'SecurityRole.security_group_id = SecurityGroup.id'
+						)
+					),
+					array(
+						'table' => 'security_group_users',
+						'alias' => 'SecurityGroupUser',
+						'conditions' => array(
+							'SecurityGroup.id = SecurityGroupUser.security_group_id'
+						)
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array(
+							'SecurityGroupUser.security_user_id = SecurityUser.id'
+						)
+					),
+					array(
+						'table' => 'security_group_institution_sites',
+						'alias' => 'SecurityGroupInstitutionSite',
+						'conditions' => array(
+							'SecurityGroup.id = SecurityGroupInstitutionSite.security_group_id'
+						)
+					),
+					array(
+						'table' => 'institution_site_students',
+						'alias' => 'InstitutionSiteStudent',
+						'conditions' => array(
+							'InstitutionSiteStudent.institution_site_id = SecurityGroupInstitutionSite.institution_site_id'
+						)
+					),
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array(
+							'InstitutionSiteStudent.student_id = Student.id',
+							'Student.id' => $studentIds
+						)
+					)
+				),
+				'conditions' => array('SecurityRole.id' => $roleIds),
+				'group' => array('SecurityUser.id', 'Student.id')
+			));
 		}
 		
 		return $data;
