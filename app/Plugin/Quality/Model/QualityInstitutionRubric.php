@@ -376,6 +376,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$index = $args[1];
 
 		$this->unbindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass','Staff')));
+		unset($this->virtualFields['full_name']);
 		$data = $this->find('first', array(
 			//'fields' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
 			'order' => array('SchoolYear.name DESC', ),

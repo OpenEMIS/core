@@ -319,7 +319,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Position',
 			'teaching' => 'Teaching',
 			'number' => 'Number',
-			'institution_site_position_id' => 'Title'
+			'institution_site_position_id' => 'Position'
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
