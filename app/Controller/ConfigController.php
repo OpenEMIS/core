@@ -373,60 +373,79 @@ class ConfigController extends AppController {
 			
 		}else{
 			$requestData = $this->data['ConfigItem'];
-			$imgValidate = new ImageValidate(800,800);
+			$imgValidate = new ImageValidate();
 			$data = array();
 			$reset_image = $requestData['reset_yearbook_logo'];
 
-			if (isset($requestData['file_value']) && $requestData['file_value']['error'] != UPLOAD_ERR_NO_FILE) {
-			
-				if (empty($requestData['reset_yearbook_logo'])) {
-					if (!empty($requestData['file_value'])) {
-						$img = new ImageMeta($requestData['file_value']);
+			$errors = array();
 
-						if($reset_image == 0){
+			if (isset($requestData['file_value'])) {
+				if($requestData['file_value']['error'] == UPLOAD_ERR_NO_FILE) {
+					$errors[] = __("No File Chosen");
+				} else {
+					$img = new ImageMeta($requestData['file_value']);
+					$validated = $imgValidate->validateImage($img);
 
-							$validated = $imgValidate->validateImage($img);
-
-							if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
-								$yearbookLogo = $this->ConfigAttachment->find('first', array(
-									'conditions' => array('ConfigAttachment.type' => 'Year Book Report')
-								));
-								if($yearbookLogo) {
-									$data['id'] = $yearbookLogo['ConfigAttachment']['id'];
-								}
-								$data['file_content'] = $img->getContent();
-								$img->setName('yearbook_logo');
-								$data['file_name'] = $img->getFilename();
-								$data['type'] = 'Year Book Report';
-								$data['name'] = $requestData['file_value']['name'];
-								$data['description']="";
-								$data['order']="0";
-							}
-
-							$rec = $this->ConfigAttachment->save($data);
-
-							// check if yearbook logo is stored in attachment, and stored the id to config Item
-							$innerElement['value'] = "";
-							if (!empty($rec) && $rec['ConfigAttachment']['id'] > 0) {
-								$innerElement['value'] = $rec['ConfigAttachment']['id'];
-							}
-						}else{
-
-							$data['ConfigAttachment']['file_content'] = '';
-							$data['ConfigAttachment']['file_name'] = '';
+					if($validated['error'] > 0) {
+						$errors = array_merge($errors,$validated['message']);
+					} else {
+						$yearbookLogo = $this->ConfigAttachment->find('first', array(
+							'conditions' => array(
+								'ConfigAttachment.type' => 'Year Book Report',
+								'NOT' => array( 'ConfigAttachment.id' => $requestData['default_value'] )
+							)
+						));
+						if($yearbookLogo) {
+							$data['id'] = $yearbookLogo['ConfigAttachment']['id'];
 						}
-					}				            
-				}
-				
-			} else {
-				if ($reset_image == 1) {				            	
-					if ($requestData['value'] > 0 && $requestData['value'] != "" && !is_null($requestData['value'])) {
-						$data['id'] = $requestData['value'];
-						$data['file_content'] = "";
-						$data['file_name'] = "";					                    
-						$data['name'] = "";
+						$data['file_content'] = $img->getContent();
+						$img->setName('yearbook_logo');
+						$data['file_name'] = $img->getFilename();
+						$data['type'] = 'Year Book Report';
+						$data['name'] = $requestData['file_value']['name'];
+						$data['description']="";
+						$data['order']="0";
+
+						$rec = $this->ConfigAttachment->save($data);
+
+						// check if yearbook logo is stored in attachment, and stored the id to config Item
+						$innerElement['value'] = "";
+						if (!empty($rec) && $rec['ConfigAttachment']['id'] > 0) {
+							$innerElement['value'] = $rec['ConfigAttachment']['id'];
+
+							$this->ConfigItem->updateAll(
+							    array('ConfigItem.value' => $innerElement['value']),
+							    array('ConfigItem.visible' => 1, 'ConfigItem.name' => $id)
+							);
+						}
 					}
-					$rec = $this->ConfigAttachment->save($data);
+				}
+
+				if(sizeof($errors) == 0) {
+					$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+				} else {
+					foreach ($errors as $key => $value) {
+						$this->Utility->alert($value, array('type' => 'error'));
+					}
+					return $this->redirect(array('action'=>'edit', 'yearbook_logo'));
+				}
+			} else {
+				if ($reset_image == 1) {
+					$data['id'] = $requestData['value'];
+					$data['file_content'] = "";
+					$data['file_name'] = "";				                    
+					$data['name'] = "";
+
+					if($data['id'] != $requestData['default_value']) {
+						$rec = $this->ConfigAttachment->save($data);
+					}
+
+					$this->ConfigItem->updateAll(
+					    array('ConfigItem.value' => $requestData['default_value']),
+					    array('ConfigItem.visible' => 1, 'ConfigItem.name' => $id)
+					);
+
+					$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
 				}
 			}
 
