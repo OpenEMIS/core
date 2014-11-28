@@ -306,3 +306,20 @@ fieldset.section_break > .profile-image {
 
 .panel-title .accordion-toggle { background-position: 12px 14px; }
 .panel-title .accordion-toggle:hover { background-position: 12px 14px; }
+
+.language { float: left; }
+.version { text-align: left; }
+
+/* Visualizer */ 
+
+#visualizer .navbar ul{
+	padding-right: 0px !important;
+}
+#visualizer .navbar ul li{
+	float:right !important;
+}
+
+.gmap-align{
+	float:right;
+	padding: 0 15px;
+}

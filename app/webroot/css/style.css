@@ -490,6 +490,5 @@ select.topSelectControl{
 }
 .gmap-align{
 	float:left;
-	padding-left:30px;
-	padding-right:30px;
+	padding: 0 30px;
 }
