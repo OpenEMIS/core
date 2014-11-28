@@ -2,6 +2,7 @@
 echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
 echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
+echo $this->Html->script('education_grade_subject', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
@@ -64,7 +65,7 @@ echo $this->Form->create($model, $formOptions);
 </div>
 
 <div class="controls">
-	<input type="submit" value="<?php echo $this->Label->get('general.save'); ?>" class="btn_save btn_right" />
+	<input type="submit" value="<?php echo $this->Label->get('general.save'); ?>" class="btn_save btn_right" onclick="objEducationGradeSubject.formSubmit(<?php echo count($data);?>);"/>
 	<?php echo $this->Html->link($this->Label->get('general.cancel'), array('action' => $model, $_condition => $conditionId), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
