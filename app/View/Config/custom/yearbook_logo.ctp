@@ -68,20 +68,20 @@ $this->start('contentBody'); ?>
 	echo $this->Form->input('label', array('disabled' => 'disabled'));
 
 	echo $this->Form->input('ConfigItem.file_value', array('type' => 'file', 'class' => 'form-error'));
-	echo $this->Form->hidden('ConfigItem.value', array('value'=> (empty($this->request->data['ConfigItem']['value']))?$this->request->data['ConfigItem']['default_value']:$this->request->data['ConfigItem']['value'] ));
+	echo $this->Form->hidden('ConfigItem.value', array('value' => (empty($this->request->data['ConfigItem']['value']))?0:$this->request->data['ConfigItem']['value'] ));
+	echo $this->Form->hidden('ConfigItem.default_value', array('value' => $this->request->data['ConfigItem']['default_value'] ));
     echo "<div class='form-group'>";
     echo "<label class='col-md-3 control-label'></label>";
     echo "<div class='col-md-4' id=\"image_upload_info\">";
     echo '<p>';
 
-	echo $this->Form->hidden('ConfigItem.reset_yearbook_logo', array('value'=>'0'));
-	echo "<span id=\"resetDefault\" class=\"icon_delete\"></span>";
-    echo '<div id="divPhoto">';
+	echo $this->Form->hidden('ConfigItem.reset_yearbook_logo', array('value'=>'0'));   
 	if (!empty($attachment['ConfigAttachment']['file_content'])) {
-		echo $this->Html->image("/Config/fetchYearbookImage/{$this->data['ConfigItem']['value']}", array('class' => 'profile_image', 'alt' => '90x115')); 
+		echo "<span id=\"resetDefault\" class=\"icon_delete\"></span>";
+		echo '<div id="divPhoto">';
+		echo $this->Html->image("/Config/fetchYearbookImage/{$this->data['ConfigItem']['value']}", array('class' => 'profile_image', 'alt' => '90x115'));
+		echo '</div>';
 	}
-	echo '</div>';
-
     echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : '';
     echo '</p>';
     echo "<em>";
