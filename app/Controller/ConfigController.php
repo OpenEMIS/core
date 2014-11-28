@@ -554,7 +554,7 @@ class ConfigController extends AppController {
 		if($this->request->is('post')) { // save
 			$requestData = $this->data;
 			$isEdited = false;
-			pr($requestData);
+
 			if($this->ConfigAttachment->save($requestData)){
 				$isEdited = $this->ConfigAttachment->updateAttachmentCoord($requestData['ConfigItem']['id'],$requestData['ConfigItem']['x'], $requestData['ConfigItem']['y']);
 			}
@@ -618,7 +618,9 @@ class ConfigController extends AppController {
 				$this->Utility->alert(__('Files have been saved successfully.'));
 				$this->redirect(array('action' => 'index', 'Dashboard'));
 			} else {
-				$this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+				foreach ($errors as $key => $value) {
+					$this->Utility->alert($value, array('type' => 'error'));
+				}
 			}
 			
 		}
@@ -753,6 +755,7 @@ class ConfigController extends AppController {
 
 		foreach ($images['files']['tmp_name'] as $key => $value) {
 			if($images['files']['error'][$key] == UPLOAD_ERR_NO_FILE){
+				$msg[$key] = __("No File Chosen");
 				continue;
 			}
 
