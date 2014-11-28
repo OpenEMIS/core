@@ -16,11 +16,13 @@
 		));
 		?>
 	</div>
-	<div class="col-md-7 right">
-		<ul class="legend">
-			<li title="Population entries that are manually entered/verified by data entry"><span class="dataentry"  ></span><?php echo __('Data Entry'); ?></li>
-			<li title="Population entries that are generated from estimates "><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
+	<div class="col-md-9">
+		<div class="row_item_legend">
+			<ul class="legend">
+				<li title="Population entries that are manually entered/verified by data entry"><span class="dataentry"  ></span><?php echo __('Data Entry'); ?></li>
+				<li title="Population entries that are generated from estimates "><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+			</ul>
+		</div>
 	</div>
 </div>
 <script>
