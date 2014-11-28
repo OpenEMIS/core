@@ -20,6 +20,7 @@ class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
 	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	public $actsAs = array(
+		'Search',
 		'ControllerAction2', 
 		'DatePicker' => array('start_date', 'end_date'),
 		'ReportFormat' => array(
@@ -178,24 +179,34 @@ class InstitutionSiteStaff extends AppModel {
 		return $this->fields;
 	}
 	
-	public function index($selectedYear = '') {
+	public function index() {
 		$this->Navigation->addCrumb('List of Staff');
 		$params = $this->controller->params;
 		$page = isset($params->named['page']) ? $params->named['page'] : 1;
+
+		$selectedYear = "";
 		$model = 'Staff';
+		$searchField = "";
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if ($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['SearchField']));
 			$selectedYear = $this->request->data[$this->alias]['school_year'];
 			$orderBy = $this->request->data[$this->alias]['orderBy'];
 			$order = $this->request->data[$this->alias]['order'];
 
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
 			$this->Session->write(sprintf($prefix, 'order'), $order);
 			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
 		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
+
 			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
 				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
 			}
@@ -204,6 +215,17 @@ class InstitutionSiteStaff extends AppModel {
 			}
 		}
 		$conditions = array('InstitutionSiteStaff.institution_site_id' => $institutionSiteId);
+
+		if (!empty($searchField)) {
+			$search = '%' . $searchField . '%';
+			$conditions['OR'] = array(
+				'Staff.identification_no LIKE' => $search,
+				'Staff.first_name LIKE' => $search,
+				'Staff.middle_name LIKE' => $search,
+				'Staff.last_name LIKE' => $search,
+				'Staff.preferred_name LIKE' => $search
+			);
+		}
 		
 		if (!empty($selectedYear)) {
 			$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
@@ -213,13 +235,19 @@ class InstitutionSiteStaff extends AppModel {
 			);
 		}
 
+		if($this->Session->check('Staff.AdvancedSearch')){
+			$params = $this->Session->read('Staff.AdvancedSearch');
+			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
+		}
+
 		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
 		$data = $this->controller->paginate($this->alias, $conditions);
+
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
-		$this->setVar(compact('page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
+		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
 	}
 	
 	public function add() {
