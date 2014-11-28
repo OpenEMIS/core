@@ -116,6 +116,32 @@ class CensusController extends AppController {
 		}
 		return $yearId;
 	}
+
+	public function getAvailableprogrammeId($programmeOptions) {
+		$programmeId = 0;
+		if(isset($this->params['pass'][1])) {
+			$programmeId = $this->params['pass'][1];
+			if(!array_key_exists($programmeId, $programmeOptions)) {
+				$programmeId = key($programmeOptions);
+			}
+		} else {
+			$programmeId = key($programmeOptions);
+		}
+		return $programmeId;
+	}
+
+	public function getAvailableGradeId($gradeOptions) {
+		$gradeId = 0;
+		if(isset($this->params['pass'][2])) {
+			$gradeId = $this->params['pass'][2];
+			if(!array_key_exists($gradeId, $gradeOptions)) {
+				$gradeId = key($gradeOptions);
+			}
+		} else {
+			$gradeId = key($gradeOptions);
+		}
+		return $gradeId;
+	}
 	
 	public function loadGradeList() {
 		$this->autoRender = false;
