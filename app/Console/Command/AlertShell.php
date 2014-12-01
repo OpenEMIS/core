@@ -22,16 +22,19 @@ class AlertShell extends AppShell {
 	public $tasks = array('AlertAttendance');
 
 	public function main() {
-		$statusDone = 0;
+		$firstExec = true;
 		$interval = 24*60*60;
 		$CakeMail = new CakeEmail('default');
 		
 		//while (true) {
-			$strTimeNow = time();
-			$strToday = strtotime(date('Y-m-d') . ' 16:40:40');
-			$timeDifference = $strToday - $strTimeNow;
-			$this->log($timeDifference, 'alert_processes');
-			$interval = $timeDifference;
+			if($firstExec){
+				$strTimeNow = time();
+				$strToday = strtotime(date('Y-m-d') . ' 23:59:59');
+				$timeDifference = $strToday - $strTimeNow;
+				//$this->log('First execution at ' . $strToday, 'alert_processes');
+				$interval = $timeDifference;
+				$firstExec = false;
+			}
 			
 			//sleep($interval);
 			
@@ -43,6 +46,7 @@ class AlertShell extends AppShell {
 				$message = $alertAttendance['Alert']['message'];
 				
 				$resultAttendance = $this->AlertAttendance->execute();
+				pr($resultAttendance);
 				foreach($resultAttendance AS $row){
 					$securityUser = $row['SecurityUser'];
 					$userEmail = $securityUser['email'];
@@ -74,6 +78,9 @@ class AlertShell extends AppShell {
 				}
 			}
 			// Attendance alert end
+			
+			// sleep to make sure next execution is on next date
+			sleep(10);
 			
 			$timeAfterExec = time();
 			$timeNewDay = strtotime(date('Y-m-d') . ' 23:59:59');
