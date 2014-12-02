@@ -30,7 +30,6 @@ class AlertAttendanceTask extends AppTask {
 	public function execute() {
 		$alert = $this->Alert->getAlertByName('Student Absent');
 		$threshold = $alert['Alert']['threshold'];
-		pr($threshold);
 		
 		$alertRoles = $this->Alert->getAlertWithRolesByName('Student Absent');
 		$roleIds = array();
@@ -93,7 +92,6 @@ class AlertAttendanceTask extends AppTask {
 				'group' => array('SecurityUser.id', 'Student.id')
 			));
 		}
-		pr($data);
 		return $data;
 	}
 
