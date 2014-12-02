@@ -21,7 +21,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	<?php
 	echo $this->Form->input('name');
 
-	echo $this->Form->input('english_name');
+	echo $this->Form->input('alternative_name');
 
 	echo $this->Form->input('code', array(
 		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_code")'
