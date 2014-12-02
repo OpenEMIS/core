@@ -209,8 +209,6 @@ class InstitutionSitesController extends AppController {
 			$this->render('index_records', 'ajax');
 		}
 		
-		pr(date('Y-m-d'));
-		
 		// for resetting institution site id
 		if (count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
 			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));
