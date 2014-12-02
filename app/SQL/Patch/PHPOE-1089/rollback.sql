@@ -1,1 +1,1 @@
-ALTER TABLE `institution_sites` DROP `english_name`;
+ALTER TABLE `institution_sites` DROP `alternative_name`;
