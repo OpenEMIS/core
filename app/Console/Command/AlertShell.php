@@ -46,7 +46,7 @@ class AlertShell extends AppShell {
 				$message = $alertAttendance['Alert']['message'];
 				
 				$resultAttendance = $this->AlertAttendance->execute();
-				pr($resultAttendance);
+				//pr($resultAttendance);
 				foreach($resultAttendance AS $row){
 					$securityUser = $row['SecurityUser'];
 					$userEmail = $securityUser['email'];

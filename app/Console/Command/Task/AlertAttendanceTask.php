@@ -36,6 +36,7 @@ class AlertAttendanceTask extends AppTask {
 		foreach($alertRoles AS $row){
 			$roleIds[] = $row['AlertRole']['security_role_id'];
 		}
+		pr($roleIds);
 		
 		$studentIds = $this->InstitutionSiteStudentAbsence->getStudentListForAlert($threshold);
 		$data = array();
