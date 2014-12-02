@@ -289,6 +289,7 @@ class Alert extends AlertsAppModel {
 	public function getAlertByName($name){
 		$data = $this->find('first', array(
 			'recursive' => -1,
+			'fields' => array('Alert.*'),
 			'conditions' => array(
 				'Alert.name' => $name,
 				'Alert.status' => 1
