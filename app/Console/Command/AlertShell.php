@@ -26,7 +26,7 @@ class AlertShell extends AppShell {
 		$interval = 24*60*60;
 		$CakeMail = new CakeEmail('default');
 		
-		//while (true) {
+		while (true) {
 			if($firstExec){
 				$strTimeNow = time();
 				$strToday = strtotime(date('Y-m-d') . ' 23:59:59');
@@ -36,7 +36,7 @@ class AlertShell extends AppShell {
 				$firstExec = false;
 			}
 			
-			//sleep($interval);
+			sleep($interval);
 			
 			// execute tasks here
 			// Attendance alert start
@@ -86,7 +86,7 @@ class AlertShell extends AppShell {
 			$timeNewDay = strtotime(date('Y-m-d') . ' 23:59:59');
 			$newDifference = $timeNewDay - $timeAfterExec;
 			$interval = $newDifference;
-		//}
+		}
 	}
 	
 }
