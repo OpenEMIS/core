@@ -8,9 +8,6 @@ echo $this->Html->script('/Alerts/js/alerts', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Alerts'));
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link(__('Add'), array('action' => 'Alert', 'add'), array('class' => 'divider', 'id' => 'add'));
-}
 $this->end();
 
 $this->start('contentBody');
