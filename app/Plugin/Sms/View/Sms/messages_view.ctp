@@ -4,7 +4,7 @@ echo $this->Html->script('search', false);
 
 echo $this->Html->script('/Sms/js/sms', false);
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Messages'));
+$this->assign('contentHeader', __('Questions'));
 $this->start('contentActions');
 $data = $obj[0]['SmsMessage'];
 echo $this->Html->link(__('List'), array('action' => 'messages'), array('class' => 'divider'));
