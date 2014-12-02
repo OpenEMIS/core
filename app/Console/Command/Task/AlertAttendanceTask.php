@@ -38,7 +38,6 @@ class AlertAttendanceTask extends AppTask {
 		}
 		
 		$studentIds = $this->InstitutionSiteStudentAbsence->getStudentListForAlert($threshold);
-		pr($studentIds);
 		$data = array();
 		if(!empty($roleIds) && !empty($studentIds)){
 			$data = $this->SecurityRole->find('all', array(
@@ -93,7 +92,7 @@ class AlertAttendanceTask extends AppTask {
 				'group' => array('SecurityUser.id', 'Student.id')
 			));
 		}
-		
+		pr($data);
 		return $data;
 	}
 
