@@ -32,3 +32,9 @@ DROP TABLE IF EXISTS `alert_roles`;
 --
 
 DROP TABLE IF EXISTS `alert_logs`;
+
+--
+-- Table structure for table `system_processes`
+--
+
+DROP TABLE IF EXISTS `system_processes`;

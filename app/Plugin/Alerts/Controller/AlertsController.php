@@ -37,6 +37,7 @@ class AlertsController extends AlertsAppController {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
+		$this->Navigation->addCrumb('Communications', array('plugin' => 'Alerts', 'controller' => 'Alerts', 'action' => 'Alert'));
 	}
 	
 	public function processActions() {

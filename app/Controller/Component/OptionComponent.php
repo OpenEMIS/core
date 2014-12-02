@@ -28,7 +28,7 @@ class OptionComponent extends Component {
 			'staffTypes' => array(1 => __('Teaching'), 0 => __('Non-Teaching')),
 			'alertMethod' => array('Email' => __('Email'), 'SMS' => __('SMS')),
 			'alertStatus' => array('Success' => __('Success'), 'Failed' => __('Failed'), 'Pending' => __('Pending')),
-			'alertType' => array('Alert' => __('Alert')),
+			'alertType' => array('Alert' => __('Alert'), 'Survey' => __('Survey')),
 			'alertChannel' => array('Sent' => __('Sent'), 'Received' => __('Received'))
 		);
 		

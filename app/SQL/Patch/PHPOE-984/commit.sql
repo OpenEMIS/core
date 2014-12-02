@@ -22,7 +22,15 @@ CREATE TABLE `alerts` (
   `created_user_id` int(5) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_estonian_ci AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_estonian_ci AUTO_INCREMENT=2 ;
+
+--
+-- Dumping data for table `alerts`
+--
+
+INSERT INTO `alerts` (`id`, `name`, `threshold`, `status`, `method`, `subject`, `message`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'Student Absent', 2, 1, 'Email', 'Student Absent Test Alert', 'Student Absent Test Alert Message', NULL, NULL, 1, '0000-00-00 00:00:00');
+
 
 --
 -- new menu item Alerts to navigations
@@ -44,6 +52,8 @@ CREATE TABLE `alert_roles` (
   `id` char(36) NOT NULL,
   `alert_id` int(11) NOT NULL,
   `security_role_id` int(11) NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `alert_id` (`alert_id`),
   KEY `security_role_id` (`security_role_id`)
@@ -59,12 +69,16 @@ CREATE TABLE `alert_logs` (
   `method` varchar(20) NOT NULL,
   `destination` varchar(100) NOT NULL,
   `type` varchar(20) NOT NULL,
-  `status` varchar(20) NOT NULL,
+  `status` varchar(20) NOT NULL COMMENT '-1 -> Failed, 0 -> Pending, 1 -> Success',
   `subject` varchar(255) NOT NULL,
   `message` text NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `type` (`type`),
+  KEY `security_user_id` (`created_user_id`),
+  KEY `method` (`method`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 
 --

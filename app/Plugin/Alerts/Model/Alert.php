@@ -168,8 +168,7 @@ class Alert extends AlertsAppModel {
 	
 	public function add(){
 		$alias = $this->alias;
-		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
-		$this->Navigation->addCrumb('Add');
+		$this->Navigation->addCrumb('Add Alert');
 		//pr(String::uuid());die;
 		
 		$statusOptions = $this->controller->Option->get('enableOptions');
@@ -208,8 +207,7 @@ class Alert extends AlertsAppModel {
 	
 	public function edit($id=0){
 		$alias = $this->alias;
-		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
-		$this->Navigation->addCrumb('Edit');
+		$this->Navigation->addCrumb('Edit Alert');
 		$data = $this->findById($id);
 		
 		$statusOptions = $this->controller->Option->get('enableOptions');
@@ -222,6 +220,8 @@ class Alert extends AlertsAppModel {
 			$alertData = $this->request->data[$alias];
 			$rolesData = $alertData['roles'];
 			unset($alertData['roles']);
+			$alertData['name'] = $data['Alert']['name'];
+			$alertData['method'] = $data['Alert']['method'];
 			
 			if ($this->save($alertData)) {
 				$alertRoleData = array();
@@ -240,6 +240,8 @@ class Alert extends AlertsAppModel {
 				return $this->redirect(array('action' => get_class($this), 'view', $id));
 			}else{
 				$this->Message->alert('general.edit.failed');
+				$roleIds = $rolesData;
+				$this->request->data['Alert'] = $alertData;
 			}
 		}else{
 			$this->request->data = $data;
@@ -261,7 +263,6 @@ class Alert extends AlertsAppModel {
 	
 	public function view($id=0){
 		$data = $this->findById($id);
-		$this->Navigation->addCrumb('Alerts', array('action' => 'Alert'));
 		$this->Navigation->addCrumb('Alert Details');
 
 		$roles = $this->AlertRole->getRolesByAlertId($id);

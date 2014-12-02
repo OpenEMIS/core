@@ -5,10 +5,12 @@ echo $this->Html->script('setup_variables', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Logs'));
 $this->start('contentActions');
-echo $this->Html->link(__('Download'), array('action' => 'logsDownload', ''), array('class' => 'divider'));
+if($type == 'Survey'){
+	echo $this->Html->link(__('Download'), array('action' => 'logsDownload', ''), array('class' => 'divider'));
 
-if ($_delete) {
-	echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmClearAll(this)'));
+	if ($_delete) {
+		echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmClearAll(this)'));
+	}
 }
 $this->end();
 
@@ -40,6 +42,7 @@ echo $this->Form->end();?>
 			<?php
 			if (count($data) > 0) {
 				foreach ($data as $arrVal) {
+					if($type == 'Alert'){
 					?>
 					<tr class="table_row">
 						<td><?php echo $arrVal['AlertLog']['created']; ?></td>
@@ -48,6 +51,20 @@ echo $this->Form->end();?>
 						<td><?php echo $arrVal['AlertLog']['channel']; ?></td>
 						<td><?php echo $arrVal['AlertLog']['status']; ?></td>
 					</tr>
+					<?php
+					}else if($type == 'Survey'){
+					?>
+					<tr class="table_row">
+						<td><?php echo $arrVal['SmsLog']['created']; ?></td>
+						<td><?php echo $arrVal['SmsLog']['number']; ?></td>
+						<td><?php echo __('SMS'); ?></td>
+						<td><?php echo $arrVal['SmsLog']['send_receive'] == 1 ? 'Sent' : 'Received'; ?></td>
+						<td><?php echo __('Success'); ?></td>
+					</tr>
+					<?php
+					}
+					?>
+					
 				<?php
 				}
 			}
