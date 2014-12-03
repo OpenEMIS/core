@@ -18,7 +18,7 @@
 		</a>';
 	$divider = '<div class="header_nav_function_divi"></div>';
 	foreach($_topNavigations as $title => $attr) {
-		if($title !== 'Home' && isset($attr['controller'])) {
+		if($title !== 'Home' && $title !== 'Preferences' && isset($attr['controller'])) {
 			$url = $this->webroot . $attr['controller'] . '/' . $attr['action'];
 			$selected = $attr['selected'] ? 'header_nav_function_selected' : '';
 			$navigationBar[] = sprintf($linkHTML, $url, $icons[$title], __($title), $selected);
@@ -27,5 +27,3 @@
 	echo implode($divider, $navigationBar);
 	?>
 </div>
-
-<?php echo $this->element('layout/product_list') ?>
