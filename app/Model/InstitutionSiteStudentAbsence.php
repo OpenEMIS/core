@@ -287,12 +287,19 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
 		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
+		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
+		if($currentYearId){
+			$defaultYearId = $currentYearId;
+		}else{
+			$defaultYearId = key($yearList);
+		}
+		
 		if ($yearId != 0) {
 			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+				$yearId = $defaultYearId;
 			}
 		} else {
-			$yearId = key($yearList);
+			$yearId = $defaultYearId;
 		}
 		
 		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
