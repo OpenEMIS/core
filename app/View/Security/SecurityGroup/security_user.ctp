@@ -41,6 +41,7 @@
 					<tr>
 						<td>
 							<?php
+							echo $this->Form->hidden("SecurityGroupUser.$i.security_group_id", array('value' => $obj['SecurityGroupUser']['security_group_id']));
 							echo $this->Form->hidden("SecurityGroupUser.$i.security_user_id", array('class' => 'value-id', 'value' => $obj['SecurityGroupUser']['security_user_id']));
 							echo $this->Form->hidden("SecurityGroupUser.$i.security_role_id", array('value' => $obj['SecurityGroupUser']['security_role_id']));
 							echo $this->Form->hidden('index', array('name' => 'index', 'class' => 'index', 'value' => $i));
