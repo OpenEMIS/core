@@ -1,13 +1,9 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('security', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'users');
 $this->assign('contentHeader', $header);
 $this->start('contentBody');
 if ($allowChangePassword) {
-	$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'Home', 'action' => 'password'));
+	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'password'));
 	echo $this->Form->create('SecurityUser', $formOptions);
 	echo $this->Form->input('oldPassword', array('id' => 'oldPassword', 'type' => 'password', 'label'=>array('text'=> $this->Label->get('password.oldPassword'),'class'=>'col-md-3 control-label')));
 	echo $this->Form->input('newPassword', array('id' => 'passwordInput', 'type' => 'password'));

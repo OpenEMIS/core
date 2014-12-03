@@ -21,7 +21,6 @@ class SecurityController extends AppController {
 		'ConfigItem',
 		'Area',
 		'AreaLevel',
-		'Institution',
 		'InstitutionSite',
 		'SecurityUser',
 		'SecurityRole',
@@ -32,7 +31,6 @@ class SecurityController extends AppController {
 		'SecurityGroupArea',
 		'SecurityGroupInstitutionSite',
 		'SecurityUserAccess',
-		//'Teachers.Teacher',
 		'Staff.Staff',
 		'Students.Student',
 		'ConfigAttachment'
@@ -54,7 +52,6 @@ class SecurityController extends AppController {
 		$this->renderFooter();
 		$this->Auth->allow('login');
 		$this->Auth->allow('login_remote');
-		$this->Auth->allow('switchLanguage');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
 			$this->bodyTitle = 'Administration';
@@ -68,54 +65,16 @@ class SecurityController extends AppController {
 			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 		}
 	}
-
-	public function switchLanguage(){
-	  	$this->autoRender = false;
-		$lang = $this->ConfigItem->getValue('language');
-		$showLanguage = $this->ConfigItem->getValue('language_menu');
-
-		if (!$this->Auth->loggedIn()) {
-			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
-			if(isset($this->request->query['lang']) && in_array($this->request->query['lang'], $languageList)) {
-				$lang = $this->request->query['lang'];
-				setcookie('language', $lang, time()+(60*60*24*7), '/');
-			} else if($showLanguage && isset($_COOKIE['language'])) {
-				$lang = $_COOKIE['language'];
-			}
-
-
-			$userName = '';
-			$userPassword = '';
-
-			if(isset($this->request->query['username'])){
-				$userName = $this->request->query['username'];
-			}
-			if(isset($this->request->query['userpassword'])){
-				$userPassword = $this->request->query['userpassword'];
-			}
-			$this->Session->write('login.username', $userName);
-		 	$this->Session->write('login.password', $userPassword);
-
-			// Assign the language to session and configuration
-			$this->Session->write('configItem.language', $lang);
-		}
-	}
 	
     public function login() {
-		$this->autoLayout = false;
-		$lang = $this->ConfigItem->getValue('language');
-		$showLanguage = $this->ConfigItem->getValue('language_menu');
-		$lang = 'eng';
-		if($this->Session->check('configItem.language')){
-			$lang = $this->Session->read('configItem.language');
-		}else{
-			$this->Session->write('configItem.language', $lang);
-		}
+		$this->layout = 'login';
+		
+		$username = '';
+		$password = '';
 
-		$this->set('showLanguage', $showLanguage);
-		// Assign the language to session and configuration
-		if($this->request->is('post')) {
+		if($this->request->is('post') && $this->request->data['submit'] == 'login') {
 			$username = $this->data['SecurityUser']['username'];
+			
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
 			if(!$this->RequestHandler->isAjax()) {
 			
@@ -130,31 +89,28 @@ class SecurityController extends AppController {
 						a. Fetch Username from OpenEMIS and force Login them
 				*/
 				
-				
-				if($this->ConfigItem->getValue('authentication_type') == 'LDAP'){
+				if($this->ConfigItem->getValue('authentication_type') == 'LDAP') {
 					
 					$arrLdapConfig = $this->ConfigItem->getAllLDAPConfig();
 					$settings = array_merge($this->data['SecurityUser'],$arrLdapConfig);
 					$ldapverify = $this->LDAP->verifyUser($settings);
-					if($ldapverify === true){
+					if ($ldapverify === true) {
 						$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.username' => $this->data['SecurityUser']['username'])));
-						if(count($data['SecurityUser'])>0)
+						if (count($data['SecurityUser'])>0) {
 							$result = $this->Auth->login($data['SecurityUser']);
-						else{
+						} else {
 							$result = false;
-							$errMsg = __("LDAP user is not a valid openemis user");
+							$this->Message->alert('security.ldap.fail');
 						}	
-					}else{
+					} else {
 						$result = false;
 						$errMsg = $ldapverify;
 					}
-				}else{
+				} else {
 					$result = $this->Auth->login();
-					//Error Message to be used if login false;
-					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
 				}
-				if($result) {
-					if($this->Auth->user('status') == 1) {
+				if ($result) {
+					if ($this->Auth->user('status') == 1) {
 						$this->log('[' . $username . '] Login successfully.', 'security');
 						$userId = AuthComponent::user('id');
 						$this->SecurityUser->updateLastLogin($userId);
@@ -163,12 +119,10 @@ class SecurityController extends AppController {
 						$this->redirect($this->Auth->redirect(array('controller' => 'Home')));
 					} else if ($this->Auth->user('status') == 0) {
 						$this->log('[' . $username . '] Account is not active.', 'security');
-						$this->Session->setFlash($this->Utility->getMessage("LOGIN_USER_INACTIVE"));
+						$this->Message->alert('security.login.inactive');
 					}
 				} else {
-					//$this->Session->setFlash($errMsg);
-					//Use Standard Message regardless Ldap or Local Auth accdg to Umai
-					$this->Session->setFlash($this->Utility->getMessage("LOGIN_INVALID"));
+					$this->Message->alert('security.login.fail');
 				}
 			} else {
 				$this->autoRender = false;
@@ -190,11 +144,10 @@ class SecurityController extends AppController {
 						$ajaxLoginResult = false;
 					}
 					
-				}else{
+				} else {
 					$ajaxLoginResult = $this->Auth->login();
 					
 				}
-				//$ajaxLoginResult = $this->Auth->login();
 				if($ajaxLoginResult) {
 					$userId = AuthComponent::user('id');
 					$this->SecurityUser->updateLastLogin($userId);
@@ -205,6 +158,14 @@ class SecurityController extends AppController {
 			}
 		} else {
 			if(!$this->RequestHandler->isAjax()) { // normal login
+
+				// login credential sent from website
+				if ($this->Session->check('login.username')) {
+					$username = $this->Session->read('login.username');
+				}
+				if ($this->Session->check('login.password')) {
+					$password = $this->Session->read('login.password');
+				}
 				if($this->Auth->user()) { // user already login
 					return $this->redirect(array('controller' => 'Home'));
 				}
@@ -212,20 +173,15 @@ class SecurityController extends AppController {
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
 				$this->render('login_ajax');
 			}
-			// added cause need to overwrite AppController pre-assigned Session value
-			$l10n = new L10n();
-			$locale = $l10n->map($this->Session->read('configItem.language'));
-			$catalog = $l10n->catalog($locale);
-			$this->set('lang_locale', $locale);
-			$this->set('lang_dir', $catalog['direction']);
-					
-			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
-		$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
-		$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
+
+		if($this->request->is('post') && $this->request->data['submit'] == 'reload') {
+			$username = $this->request->data['SecurityUser']['username'];
+			$password = $this->request->data['SecurityUser']['password'];
+		}
+		
 		$this->set('username', $username);
 		$this->set('password', $password);
-		$this->set('selectedLang', $lang);
 	
 		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.type'=> array('login','partner'), 'ConfigAttachment.active' => 1), 'order'=>array('order')));
 		$imageData = array();
@@ -248,11 +204,7 @@ class SecurityController extends AppController {
 
 	public function logout() {
 		$redirect = $this->Auth->logout();
-		if ($this->Session->check('configItem.language')) {
-			$lang = $this->ConfigItem->getValue('language');
-		}
 		$this->Session->destroy();
-		$this->Session->write('configItem.language', $lang);
 		$this->redirect($redirect);
 	}
 	
@@ -260,12 +212,7 @@ class SecurityController extends AppController {
 		$this->redirect(array('action' => 'users'));
 	}
 	
-	public function registerSession(){
-		// temp modified for translation
-		if (!$this->Session->check('configItem.language')) {
-			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
-		}
-
+	public function registerSession() {
 		$this->Session->write('login.token', $this->SecurityUser->createToken());
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
 		$this->Session->write('footer', $this->ConfigItem->getWebFooter());

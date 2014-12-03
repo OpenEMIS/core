@@ -1,28 +1,9 @@
 @charset "UTF-8";
 /* CSS Document */
 
-/*login*/
-.header_logo{
-	margin-right:16px;
-}
-
 /*app#############################################*/
 
 /*header*/
-.header_side_nav{
-	float:left;
-}
-#header_side_nav_container { float: left; }
-#header_side_nav_container a{
-	float:right;
-}
-#user_name{
-	float:left;
-	margin:0 6px;
-}
-.header_side_nav_function_divi{
-	float:right;
-}
 .header_nav_function{
 	float:right;
 }
@@ -31,15 +12,10 @@
 }
 .header_nav{
 	float:right;
-	margin:0 98px 0 0;
-}
-.header_logo{
-	margin-right:16px;
-	margin-left:0;
 }
 
-.product-list { float: left; margin-left: 0 }
-.product-list .dropdown-menu { right: auto; left: 0; }
+/* Footer */
+.partners { left: 0; right: auto; }
 
 /*banner*/
 #banner_box{
@@ -314,16 +290,5 @@ fieldset.section_break > .profile-image {
 
 .panel-title .accordion-toggle { background-position: 12px 14px; }
 .panel-title .accordion-toggle:hover { background-position: 12px 14px; }
-.language { float: left; }
-.version { text-align: left; }
 .col-md-offset-4 { margin-right:33.33333333333333%; }
 
-
-/* Visualizer */ 
-
-#visualizer .navbar ul{
-	padding-right: 0px !important;
-}
-#visualizer .navbar ul li{
-	float:right !important;
-}
