@@ -347,7 +347,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $data;
 	}
 	
-	public function getClassSutdentsByDates($classId, $startDate, $endDate){
+	public function getClassSutdents($classId, $startDate, $endDate){
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
@@ -362,19 +362,45 @@ class InstitutionSiteClassStudent extends AppModel {
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+					'conditions' => array(
+						'InstitutionSiteClassStudent.student_id = Student.id'
+					)
 				),
 				array(
 					'table' => 'institution_site_classes',
 					'alias' => 'InstitutionSiteClass',
-					'conditions' => array('InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id')
+					'conditions' => array(
+						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id'
+					)
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.education_grade_id = EducationGrade.id',
+					)
 				),
 				array(
 					'table' => 'institution_site_students',
 					'alias' => 'InstitutionSiteStudent',
 					'conditions' => array(
 						'InstitutionSiteClassStudent.student_id = InstitutionSiteStudent.student_id',
-						'InstitutionSiteClass.institution_site_id = InstitutionSiteStudent.institution_site_id'
+						'InstitutionSiteClass.institution_site_id = InstitutionSiteStudent.institution_site_id',
+						'EducationGrade.education_programme_id = InstitutionSiteStudent.education_programme_id',
+						'OR' => array(
+							array(
+								'InstitutionSiteStudent.start_date <= "' . $startDate . '"',
+								'InstitutionSiteStudent.end_date >= "' . $startDate . '"'
+							),
+							array(
+								'InstitutionSiteStudent.start_date <= "' . $endDate . '"',
+								'InstitutionSiteStudent.end_date >= "' . $endDate . '"'
+							),
+							array(
+								'InstitutionSiteStudent.start_date >= "' . $startDate . '"',
+								'InstitutionSiteStudent.end_date <= "' . $endDate . '"'
+							)
+						)
 					)
 				)
 			),

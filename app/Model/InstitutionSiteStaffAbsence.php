@@ -139,6 +139,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$startDate = '';
 			$endDate = '';
 			$todayDate = date('Y-m-d');
+			$todayDateFormatted = date('d-m-Y');
 					
 			if($this->action == 'add'){
 				$yearId = $this->controller->viewVars['selectedYear'];
@@ -146,18 +147,17 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				$startDate = $yearObj['SchoolYear']['start_date'];
 				$endDate = $yearObj['SchoolYear']['end_date'];
 				
-				if($todayDate >= $yearObj['SchoolYear']['start_date'] && $todayDate >= $yearObj['SchoolYear']['end_date']){
-					$dataDate = $todayDate;
+				if($todayDate >= $yearObj['SchoolYear']['start_date'] && $todayDate <= $yearObj['SchoolYear']['end_date']){
+					$dataStartDate = $todayDateFormatted;
+					$dataEndDate = $todayDateFormatted;
 				}else{
-					$dataDate = $startDate;
+					$dataStartDate = $startDate;
+					$dataEndDate = $startDate;
 				}
 			}
 			
 			if ($this->action == 'add') {
-				if ($this->request->is('get')) {
-					$dataStartDate = $startDate;
-					$dataEndDate = $dataStartDate;
-				} else {
+				if (!$this->request->is('get')) {
 					$dataStartDate = $this->request->data[$this->alias]['first_date_absent'];
 					$dataEndDate = $this->request->data[$this->alias]['last_date_absent'];
 				}
@@ -212,12 +212,18 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->Navigation->addCrumb('Attendance - Staff');
 
 		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
+		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
+		if($currentYearId){
+			$defaultYearId = $currentYearId;
+		}else{
+			$defaultYearId = key($yearList);
+		}
 		if ($yearId != 0) {
 			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+				$yearId = $defaultYearId;
 			}
 		} else {
-			$yearId = key($yearList);
+			$yearId = $defaultYearId;
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
