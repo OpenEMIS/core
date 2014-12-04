@@ -1,20 +1,20 @@
 <?php 
 $alertTypes = array();
-$alertTypes['ok'] = 'alert_ok';
-$alertTypes['error'] = 'alert_error';
-$alertTypes['info'] = 'alert_info';
-$alertTypes['warn'] = 'alert_warn';
+$alertTypes['ok'] = 'alert-success';
+$alertTypes['error'] = 'alert-danger';
+$alertTypes['info'] = 'alert-info';
+$alertTypes['warn'] = 'alert-warning';
 
 if($this->Session->check('_alert')) {
 	$_alert = $this->Session->read('_alert');
-	$class = 'alert alert_view ' . $alertTypes[$_alert['type']];
-	$dismiss = $_alert['dismissOnClick'] ? sprintf('title="%s"', __('Click to dismiss')) : '';
+	$class = 'alert ' . $alertTypes[$_alert['type']];
+
+	if ($_alert['dismissOnClick']) {
+		$class = 'alert-dismissible ' . $class;
+	}
 	unset($_SESSION['_alert']);
 ?>
 
-	<div class="<?php echo $class; ?>" <?php echo $dismiss; ?>>
-		<div class="alert_icon"></div>
-		<div class="alert_content"><?php echo __($_alert['message']); ?></div>
-	</div>
+	<div class="<?php echo $class ?>"><?php echo __($_alert['message']) ?></div>
 
 <?php } ?>
