@@ -32,7 +32,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	<legend><?php echo __('Information'); ?></legend>
 	<?php
 	echo $this->Form->input('name', array('value' => $obj['name']));
-	echo $this->Form->input('english_name', array('value' => $obj['english_name']));
+	echo $this->Form->input('alternative_name', array('value' => $obj['alternative_name']));
 	echo $this->Form->input('code', array('onkeyup' => 'updateHiddenField(this, "validate_institution_site_code")'));
 	echo $this->Form->input('validate_institution_site_code', array('type' => 'hidden', 'id' => 'validate_institution_site_code', 'value' => $obj['code']));
 	
