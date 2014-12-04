@@ -22,8 +22,8 @@ $obj = $data['InstitutionSite'];
 		<div class="col-md-6" style="width: 400px;"><?php echo $obj['name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo __('English Name'); ?></div>
-		<div class="col-md-6" style="width: 400px;"><?php echo $obj['english_name']; ?></div>
+		<div class="col-md-3"><?php echo __('Alternative Name'); ?></div>
+		<div class="col-md-6" style="width: 400px;"><?php echo $obj['alternative_name']; ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Code'); ?></div>
