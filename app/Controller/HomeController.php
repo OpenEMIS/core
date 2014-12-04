@@ -40,10 +40,7 @@ class HomeController extends AppController {
 		'Staff.Staff',
 		'InstitutionSiteHistory',
 		'Students.StudentHistory',
-		'Staff.StaffHistory',
-		'SecurityUser',
-		'SecurityRoleFunction',
-		'SecurityGroupUser'
+		'Staff.StaffHistory'
 	);
 	
 	private function logtimer($str=''){
@@ -77,119 +74,12 @@ class HomeController extends AppController {
 		$this->logtimer('Start Adaptation');
 		$this->set('adaptation', $this->ConfigItem->getAdaptation());
 		$this->logtimer('End Adaptation');
-		
-	}
-	
-	public function details() {
-		$this->bodyTitle = 'Account';
-		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
-		$this->Navigation->addCrumb('My Details');
-		$header = __('My Details');
-		$userId = $this->Auth->user('id');
-		$this->SecurityUser->id = $userId;
-		$obj = $this->SecurityUser->read();
-
-		$obj['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-		$this->set(compact('obj','header'));
-	}
-	public function detailsEdit() {
-		$this->bodyTitle = 'Account';
-		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
-		$this->Navigation->addCrumb('Edit My Details');
-		$header = __('Edit My Details');
-		$userId = $this->Auth->user('id');
-		$this->SecurityUser->formatResult = true;
-		$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-		
-		$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-		if($this->request->is('post') || $this->request->is('put')) {
-			$postData = $this->data['SecurityUser'];
-			if($this->SecurityUser->doValidate($postData)) {
-				$name = $postData['first_name'] . ' ' . $postData['last_name'];
-				$this->Utility->alert($name . ' '.__('has been updated successfully.'));
-				$this->Session->write('Auth.User', array_merge($this->Auth->user(), $postData));
-				$this->redirect(array('action' => 'details'));
-			} else {
-				$data = array_merge($data, $postData);
-			}
-		}
-		$this->set(compact('data', 'header'));
-		$this->set('statusOptions', $this->SecurityUser->status);
-	}
-	
-	public function password() {
-		$this->bodyTitle = 'Account';
-		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
-		$this->Navigation->addCrumb('Change Password');
-		$header = __('Change Password');
-		$allowChangePassword = (bool) $this->ConfigItem->getValue('change_password');
-		
-		if(!$allowChangePassword) {
-			$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));
-		}
-		$this->set('allowChangePassword', $allowChangePassword);
-		
-		if($this->request->is('post')) {
-			$data = $this->data;
-			$data['SecurityUser']['id'] = $this->Auth->user('id');
-			$status = array('status' => 'ok', 'msg' => __('Password has been changed.'));
-			$error = $this->validateChangePassword($data['SecurityUser']['oldPassword'], $data['SecurityUser']['newPassword'], $data['SecurityUser']['retypePassword']);
-			if(!empty($error)){
-				$status = array('status' => 'error', 'msg' => __($error));
-				//return array('statuts' => 0, 'msg' => $error);
-			}else{
-				$oldPasswordHash = $this->Auth->password($data['SecurityUser']['oldPassword'], null, true);
-				$newPasswordHash = $this->Auth->password($data['SecurityUser']['newPassword'], null, true);
-				unset($data['SecurityUser']['oldPassword']);
-				unset($data['SecurityUser']['retypePassword']);
-				$data['SecurityUser']['password'] = $data['SecurityUser']['newPassword'];
-				unset($data['SecurityUser']['newPassword']);
-				
-				if(!$this->SecurityUser->save($data)){
-					$status = array('status' => 'error', 'msg' => __('Please try again later.'));
-				} else {
-					$username = $this->Auth->user('username');
-					$this->log('[' . $username . '] Changing password from ' . $oldPasswordHash . ' to ' . $newPasswordHash, 'security');
-					$status = array('status' => 'ok', 'msg' => __('Password has been changed.'));
-				}
-			}
-			//Changed by Adrian
-			//$this->Utility->alert($status['status'], $status['msg']);
-			$this->Utility->alert($status['msg'],array('type'=>$status['status']));
-		}
-		
-		$this->set(compact('header'));
-	}
-
-	private function validateChangePassword($currentPassword, $newPassword, $retypePassword) {
-		$error = '';
-		$this->SecurityUser->id = $this->Auth->user('id');
-		$user = $this->SecurityUser->read();
-			if(empty($currentPassword)){
-				$error = __('Please enter your current password.');
-			}elseif(strcmp(trim($user['SecurityUser']['password']), trim($this->Auth->password($currentPassword))) != 0){
-				$error = __('Current password does not match.');
-			}
-			// pr(preg_match('/^[A-Za-z0-9_]+$/',$newPassword));
-			if(empty($error)){
-				if(strlen($newPassword) < 1) {
-					$error = __('New password required.');
-				}else if(strlen($newPassword) < 6) {
-					$error = __('Please enter a min of 6 alpha numeric characters.');
-				}else if(preg_match('/^[A-Za-z0-9_]+$/',$newPassword) == 0 || preg_match('/^[A-Za-z0-9_]+$/',$newPassword) ==  false) {
-					$error = __('Please enter alpha numeric characters.');
-				}else if((strlen($newPassword) != strlen($retypePassword)) || $newPassword != $retypePassword){
-					$error = __('Passwords do not match.');
-				}
-			}
-		// pr($error);
-		return $error;
 	}
 	
 	public function support() {
-		$this->bodyTitle = 'Support';
+		$this->bodyTitle = 'About';
 		$title = 'Contact';
-		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
+		$this->Navigation->addCrumb('About', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($title);
 		$support = $this->ConfigItem->getSupport();
 		$this->set('supportInformation', $support);
@@ -198,9 +88,9 @@ class HomeController extends AppController {
 	}
 	
 	public function systemInfo() {
-		$this->bodyTitle = 'Support';
+		$this->bodyTitle = 'About';
 		$subTitle = 'System Information';
-		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
+		$this->Navigation->addCrumb('About', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($subTitle);
 		
 		$dbo = ConnectionManager::getDataSource('default');
@@ -213,16 +103,16 @@ class HomeController extends AppController {
 	}
 	
 	public function license() {
-		$this->bodyTitle = 'Support';
-		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
+		$this->bodyTitle = 'About';
+		$this->Navigation->addCrumb('About', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb('License');
 		$this->render('Help/'.$this->action);
 	}
 
 	public function partners() {
-		$this->bodyTitle = 'Support';
+		$this->bodyTitle = 'About';
 		$title = 'Partners';
-		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
+		$this->Navigation->addCrumb('About', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($title);
 		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'partner'), 'order'=>array('order')));
 
