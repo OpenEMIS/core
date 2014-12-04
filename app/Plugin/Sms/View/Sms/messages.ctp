@@ -3,7 +3,7 @@ echo $this->Html->script('setup_variables', false);
 echo $this->Html->script('/Sms/js/sms', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Messages'));
+$this->assign('contentHeader', __('Questions'));
 $this->start('contentActions');
 if($_add) {
     echo $this->Html->link(__('Add'), array('action' => 'messagesAdd'), array('class' => 'divider', 'id'=>'add'));
