@@ -1,5 +1,5 @@
 <?php
-$description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
+$description = __d('open_emis', 'OpenEMIS Core');
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
