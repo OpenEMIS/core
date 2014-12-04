@@ -1091,4 +1091,49 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		return 'Report_Student_Attendance';
 	}
 	
+	public function getStudentListForAlert($threshold) {
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$currentSchoolYear = $SchoolYear->getCurrentSchoolYear();
+		$currentYearId = $currentSchoolYear['id'];
+
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('Student.id', 'COUNT(Student.id) AS total'),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array(
+						'InstitutionSiteStudentAbsence.student_id = Student.id'
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteStudentAbsence.institution_site_class_id = InstitutionSiteClass.id'
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'InstitutionSiteClass.school_year_id = SchoolYear.id',
+						'SchoolYear.id = ' . $currentYearId
+					)
+				)
+			),
+			'group' => array('Student.id HAVING total >= ' . $threshold)
+		));
+		
+		$data = array();
+		foreach($list AS $row){
+			$studentId = $row['Student']['id'];
+			$data[] = $studentId;
+		}
+
+		return $data;
+	}
+	
 }
