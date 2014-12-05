@@ -532,7 +532,9 @@ class SmsController extends SmsAppController {
 
     function array2csv($results=NULL, $fieldName=NULL)
     {
-       ob_end_clean();
+       if (ob_get_contents()){
+            ob_end_clean();
+       }
        ob_start();
        $df = fopen("php://output", 'w');
        //fputs($df,$fieldName);
