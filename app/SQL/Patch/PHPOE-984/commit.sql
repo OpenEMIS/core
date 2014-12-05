@@ -102,3 +102,19 @@ CREATE TABLE `system_processes` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 
+--
+-- part 2
+--
+
+UPDATE `security_functions` SET `name` = 'Questions' WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms'  AND `name` LIKE 'Messages';
+
+UPDATE `security_functions` SET `category` = 'Communications' WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms' AND `category` LIKE 'SMS';
+
+SET @firstItemOrder := 0;
+SELECT `order` INTO @firstItemOrder FROM `security_functions` WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms'  AND `name` LIKE 'Questions';
+
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= @firstItemOrder;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(NULL, 'Alerts', 'Alerts', 'Administration', 'Communications', 129, 'Alert|Alert.view', '_view:Alert.edit', NULL, NULL, NULL, @firstItemOrder, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+

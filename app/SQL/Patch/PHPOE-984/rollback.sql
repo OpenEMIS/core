@@ -38,3 +38,18 @@ DROP TABLE IF EXISTS `alert_logs`;
 --
 
 DROP TABLE IF EXISTS `system_processes`;
+
+--
+-- part 2
+--
+
+UPDATE `security_functions` SET `name` = 'Messages' WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms'  AND `name` LIKE 'Questions';
+
+UPDATE `security_functions` SET `category` = 'SMS' WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms' AND `category` LIKE 'Communications';
+
+SET @firstItemOrder := 0;
+SELECT `order` INTO @firstItemOrder FROM `security_functions` WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Alerts'  AND `name` LIKE 'Alerts';
+
+DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Alerts'  AND `name` LIKE 'Alerts';
+
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @firstItemOrder;
