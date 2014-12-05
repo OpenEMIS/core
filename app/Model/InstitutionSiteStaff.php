@@ -626,7 +626,32 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('InstitutionSiteStaff.Staff_id = Staff.id')
 				)
 			),
-			'conditions' => $conditions
+			'conditions' => array(
+				'InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId,
+				'OR' => array(
+					'OR' => array(
+						array(
+							'InstitutionSiteStaff.end_date IS NOT NULL',
+							'InstitutionSiteStaff.start_date <= "' . $startDate . '"',
+							'InstitutionSiteStaff.end_date >= "' . $startDate . '"'
+						),
+						array(
+							'InstitutionSiteStaff.end_date IS NOT NULL',
+							'InstitutionSiteStaff.start_date <= "' . $endDate . '"',
+							'InstitutionSiteStaff.end_date >= "' . $endDate . '"'
+						),
+						array(
+							'InstitutionSiteStaff.end_date IS NOT NULL',
+							'InstitutionSiteStaff.start_date >= "' . $startDate . '"',
+							'InstitutionSiteStaff.end_date <= "' . $endDate . '"'
+						)
+					),
+					array(
+						'InstitutionSiteStaff.end_date IS NULL',
+						'InstitutionSiteStaff.start_date <= "' . $endDate . '"'
+					)
+				)
+			)
 		));
 
 		return $data;
