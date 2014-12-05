@@ -3,6 +3,7 @@ echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', a
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
 echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
+echo $this->Html->script('plugins/inputmask/bootstrap-inputmask', false);
 echo $this->Html->script('holder', false);
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('app.area', false);
@@ -35,11 +36,8 @@ echo $this->Form->create($model, $formOptions);
 		$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
 		
 		if ($autoid=='') {
-			echo $this->Form->input('identification_no', array(
-				'label' => $openEmisIdLabel,
-				'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');"));
-			$tempIdNo = isset($this->data[$model]['identification_no'])?$this->data[$model]['identification_no'] : '';
-			echo $this->Form->hidden(null, array('id'=>'validate_student_identification', 'name' => 'validate_student_identification', 'value'=>$tempIdNo));
+			$arrIdNo = array_merge(array('label' => $openEmisIdLabel),$arrIdNo);
+			echo $this->Form->input('identification_no', $arrIdNo);
 		} else {
 			if ($this->Session->check('Student.id')) {
 				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
