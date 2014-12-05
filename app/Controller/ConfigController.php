@@ -202,7 +202,9 @@ class ConfigController extends AppController {
 			$dataVal = $this->ConfigItem->find('all',array(
 				'conditions' => array('ConfigItem.visible' => 1, 'ConfigItem.type' =>$id)
 			));
+			$dataName = array();
 			foreach($dataVal as $key=>$value){
+				$dataName[] = $value['ConfigItem']['name'];
 				$data['ConfigItem'][$value['ConfigItem']['name']] = $value['ConfigItem']['value'];
 				$data['ConfigItem']['editable'] = $value['ConfigItem']['editable'];
 				$data['ConfigItem']['type'] = $value['ConfigItem']['type'];
@@ -217,6 +219,7 @@ class ConfigController extends AppController {
 				$data['CreatedUser']['first_name'] = $value['CreatedUser']['first_name'];
 				$data['CreatedUser']['last_name'] = $value['CreatedUser']['last_name'];
 			}
+			$data['ConfigItem']['name'] = $dataName;
 		}else if($id == 'Dashboard'){
 			$fileExtensions = $this->Utility->getFileExtensionList(); 
 			$imageFileExts = array();
@@ -322,6 +325,8 @@ class ConfigController extends AppController {
 				$i = 0;
 				foreach($fields as $value){
 					$saveData[$i]['id'] = $data['ConfigItem'][$value.'Id'];
+					$saveData[$i]['type'] = $id;
+					$saveData[$i]['name'] = $value;
 					$saveData[$i]['value'] = $data['ConfigItem'][$value];
 					$i++;
 				}
