@@ -60,6 +60,9 @@
 #activity{
 	margin:0 250px 70px 10px;
 }
+.activity_date{
+	float:left;
+}
 
 /*pages layout*/
 .left_nav{
