@@ -218,7 +218,7 @@ class Alert extends AlertsAppModel {
 		
 		if($this->request->is(array('post', 'put'))){
 			$alertData = $this->request->data[$alias];
-			$rolesData = $alertData['roles'];
+			$rolesData = !empty($alertData['roles']) ? $alertData['roles'] : array();
 			unset($alertData['roles']);
 			$alertData['name'] = $data['Alert']['name'];
 			$alertData['method'] = $data['Alert']['method'];
