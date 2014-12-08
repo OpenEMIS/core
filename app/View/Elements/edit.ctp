@@ -82,10 +82,7 @@ foreach($fields as $key => $field) {
 				if (array_key_exists('attr', $field)) {
 					$attr = array_merge($attr, $field['attr']);
 				}
-				if ($attr['data-date'] == '') {
-					// default it to today's date
-					$attr['data-date'] = date('d-m-Y');
-				}
+
 				$attr['label'] = $label;
 				echo $this->FormUtility->datepicker($fieldName, $attr);
 				break;
