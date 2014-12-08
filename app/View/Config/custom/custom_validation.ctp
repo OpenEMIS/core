@@ -97,16 +97,18 @@ if($action == 'view') {
 <?php 
 if($action == 'edit') {
 	$this->start('contentActions');
-	echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view'));
+	echo $this->Html->link(__('View'),array('action'=>'view', $id) , array('class' => 'divider link_view'));
 	$this->end();
 
-	$this->start('contentBody'); 
+	$this->start('contentBody');
 ?>
 
 	<div class="row">
-		<div class="left"><b>N</b> </div>
-		<div class="left">(<?php echo __('Numbers') ?>)&nbsp;|&nbsp;</div>
-		<div class="left"><b>A</b> </div><div class="left">(<?php echo __('Alphabets') ?>)&nbsp;|&nbsp;</div><div class="left">(Special Chars)</div>
+		<div class="left"><b>9</b>&nbsp;(<?php echo __('Numbers') ?>)</div>
+		<div class="left">&nbsp;|&nbsp;<b>a</b>&nbsp;(<?php echo __('Letter') ?>)</div>
+		<div class="left">&nbsp;|&nbsp;<b>w</b>&nbsp;(<?php echo __('Alphanumeric') ?>)</div>
+		<div class="left">&nbsp;|&nbsp;<b>*</b>&nbsp;(<?php echo __('Any Character') ?>)</div>
+		<div class="left">&nbsp;|&nbsp;<b>?</b>&nbsp;(<?php echo __('Optional - any characters following will become optional') ?>)</div>
 	</div>
 
 <?php
@@ -121,7 +123,7 @@ if($action == 'edit') {
 	
 	echo $this->Form->input('type', array('value'=> $type, 'readonly' => 'readonly'));
 	echo $this->Form->input('label', array('readonly' => 'readonly', 'disabled'));
-	echo $this->Form->input('value', array('class'=>'form-control custom_validation'));
+	echo $this->Form->input('value', array('class' => 'form-control', 'onkeypress' => 'return Config.inputMaskCheck(event)'));
 	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view', $id)));
 	echo $this->Form->end();
 	echo '</div>';
