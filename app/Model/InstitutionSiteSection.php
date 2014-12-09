@@ -33,10 +33,9 @@ class InstitutionSiteSection extends AppModel {
 		)
 	);
 	public $hasMany = array(
-		'InstitutionSiteClassGrade',
-		'InstitutionSiteClassStaff',
-		'InstitutionSiteClassStudent',
-		'InstitutionSiteClassSubject'
+		//'InstitutionSiteSectionStaff',
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteSectionGrade'
 	);
 	
 	public $validate = array(
@@ -53,99 +52,24 @@ class InstitutionSiteSection extends AppModel {
 				'required' => true,
 				'message' => 'Please enter a valid school year'
 			)
-		),
-		'no_of_seats' => array(
-			'notEmpty' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter the number of seats'
-			),
-			'numeric' => array(
-				'rule' => 'numeric',
-				'message' => 'Please enter a numeric value'
-			),
-			'maxValue' => array(
-                'rule'    => array('comparison', '<=', 100),
-                'message' => 'Please enter a value between 0 and 100'
-            ),
-			'minValue' => array(
-                'rule'    => array('comparison', '>=', 0),
-                'message' => 'Please enter a value between 0 and 100'
-            )
-		),
-		'institution_site_shift_id' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid shift'
-			)
 		)
 	);
 	
 	public $actsAs = array(
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'InstitutionSiteClassGrade',
-				'InstitutionSiteClassStaff'
-			)
-		),
+//		'CascadeDelete' => array(
+//			'cascade' => array(
+//				'InstitutionSiteClassGrade',
+//				'InstitutionSiteClassStaff'
+//			)
+//		),
 		'ControllerAction2',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		),
 		'SchoolYear'
 	);
 	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class Name',
-					'no_of_seats' => 'Seats'
-				),
-				'InstitutionSiteShift' => array(
-					'name' => 'Shift'
-				)
-			),
-			'fileName' => 'Report_Class_List'
-		),
-		2 => array(
-			'fields' => array(
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class Name'
-				),
-				'EducationGrade' => array(
-					'name' => 'Grade'
-				),
-				'Student' => array(
-					'identification_no' => 'OpenEMIS ID',
-					'first_name' => 'First Name',
-					'middle_name' => 'Middle Name',
-					'last_name' => 'Last Name'
-				),
-				'StudentCategory' => array(
-					'name' => 'Category'
-				)
-			),
-			'fileName' => 'Report_Details_Classes_Students'
-		)
-	);
-	
-	public $_action = 'classes';
-	
 	public function beforeAction() {
 		parent::beforeAction();
-		//$controller->set('_action', $this->_action);
-		//$controller->set('selectedAction', $this->_action . 'View');
+		//$this->setVar('_action', $this->_action);
+		//$this->setVar('selectedAction', $this->_action . 'View');
 	}
 	
 	public function getDisplayFields($controller) {
@@ -166,13 +90,14 @@ class InstitutionSiteSection extends AppModel {
 		return $fields;
 	}
 	
-	public function getClassActions($controller, $id=0) {
+	public function getSectionActions($id=0) {
 		if($id==0) {
-			$id = $controller->Session->read($this->alias.'.id');
+			$id = $this->Session->read($this->alias.'.id');
 		}
+		
 		$options = array(
-			'classesView/'.$id => __('Class Details'),
-			'classesStudent' => __('Students'),
+			'InstitutionSiteSection/view/'.$id => __('Section Details'),
+			'InstitutionSiteSectionStudent/index' => __('Students'),
 			'classesStaff' => __('Staff'),
 			'classesSubject' => __('Subjects')
 		);
@@ -191,105 +116,105 @@ class InstitutionSiteSection extends AppModel {
 			$selectedYear = key($yearOptions);
 		}
 //		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-//		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
-		$data = array();
+		$data = $this->getListOfSections($selectedYear, $institutionSiteId);
 		
 		$this->setVar(compact('yearOptions', 'selectedYear', 'data'));
 	}
 	
-	public function classesAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add Class');
+	public function add($selectedYear=0) {
+		$this->Navigation->addCrumb('Add Section');
 		
-		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.visible' => 1);
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
-			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
-			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$InstitutionSiteShiftModel->createInstitutionDefaultShift($controller->institutionSiteId, $selectedYear);
-			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($controller->institutionSiteId, $selectedYear);
-			
-			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
-			
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				$data = $controller->request->data;
-				if(isset($data['InstitutionSiteClassGrade'])) {
-					foreach($data['InstitutionSiteClassGrade'] as $i => $obj) {
-						if(empty($obj['status'])) {
-							unset($data['InstitutionSiteClassGrade'][$i]);
-						}
-					}
+			if ($selectedYear != 0) {
+				if (!array_key_exists($selectedYear, $yearOptions)) {
+					$selectedYear = key($yearOptions);
 				}
+			} else {
+				$selectedYear = key($yearOptions);
+			}
+			
+			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedYear);
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedYear);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedYear);
+			
+			$this->setVar(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			
+			if($this->request->is('post') || $this->request->is('put')) {
+				$data = $this->request->data;
 				$result = $this->saveAll($data);
 				if ($result) {
-					$controller->Message->alert('general.add.success');
-					return $controller->redirect(array('action' => $this->_action, $selectedYear));
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedYear));
 				}
 			}
 		} else {
-			$controller->Message->alert('SchoolYear.noAvailableYear');
-			return $controller->redirect(array('action' => $this->_action));
+			$this->Message->alert('SchoolYear.noAvailableYear');
+			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
 		}
 	}
 	
-	public function classesView($controller, $params) {
-		$id = $controller->params['pass'][0];
-		$controller->Session->write($this->alias.'.id', $id);
+	public function view($id=0) {
+		$this->Session->write($this->alias.'.id', $id);
 		$data = $this->findById($id);
 		
 		if (!empty($data)) {
-			$className = $data[$this->alias]['name'];
-			$controller->Navigation->addCrumb($className);
-			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
-			$controller->set(compact('data', 'grades'));
-			$controller->set('actionOptions', $this->getClassActions($controller, $id));
+			$sectionName = $data[$this->alias]['name'];
+			$this->Navigation->addCrumb($sectionName);
+			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
+			$selectedAction = $this->alias . '/view/' . $id;
+			$this->setVar(compact('data', 'grades', 'selectedAction'));
+			$this->setVar('actionOptions', $this->getSectionActions());
 		} else {
-			$controller->Message->alert('general.notExists');
-			$controller->redirect(array('action' => $this->_action));
+			$this->Message->alert('general.notExists');
+			$this->redirect(array('action' => $this->_action));
 		}
 	}
 
-	public function classesEdit($controller, $params) {
-		$id = $params->pass[0];
+	public function edit($id=0) {
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$data = $this->findById($id);
 
 		if (!empty($data)) {
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				$postData = $controller->request->data;
+			if($this->request->is('post') || $this->request->is('put')) {
+				$postData = $this->request->data;
 				//pr($postData);die;
 				if ($this->saveAll($postData)) {
-					$controller->Message->alert('general.edit.success');
-					$controller->redirect(array('action' => $this->_action . 'View', $id));
+					$this->Message->alert('general.edit.success');
+					$this->redirect(array('action' => $this->alias, 'view', $id));
 				}
 				
-				$controller->request->data['SchoolYear']['name'] = $data['SchoolYear']['name'];
+				$this->request->data['SchoolYear']['name'] = $data['SchoolYear']['name'];
 			} else {
-				$controller->request->data = $data;
+				$this->request->data = $data;
 			}
 			
-			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
-			$controller->set('grades', $grades);
+			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForSection($id);
 			
 			$name = $data[$this->alias]['name'];
-			$controller->Navigation->addCrumb($name);
+			$this->Navigation->addCrumb($name);
 			
 			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($controller->institutionSiteId, $data['InstitutionSiteClass']['school_year_id']);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $data['InstitutionSiteSection']['school_year_id']);
 			
-			$controller->set(compact('shiftOptions'));
+			$this->setVar(compact('grades', 'shiftOptions'));
 		} else {
-			$controller->Message->alert('general.notExists');
-			$controller->redirect(array('action' => $this->_action));
+			$this->Message->alert('general.notExists');
+			$this->redirect(array('action' => $this->alias));
 		}
 	}
 
-	public function classesDelete($controller, $params) {
-		$id = $params->pass[0];
+	public function remove() {
+		$this->autoRender = false;
+		$id = $this->Session->read($this->alias.'.id');
 		$obj = $this->findById($id);
+
 		$this->delete($id);
-		$controller->Message->alert('general.delete.success');
-		$controller->redirect(array('action' => $this->_action, $obj[$this->alias]['school_year_id']));
+		$this->Message->alert('general.delete.success');
+		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['school_year_id']));
 	}
 	
 	public function getClass($classId, $institutionSiteId=0) {
@@ -303,22 +228,22 @@ class InstitutionSiteSection extends AppModel {
 		return $obj;
 	}
 	
-	public function getListOfClasses($yearId, $institutionSiteId) {
+	public function getListOfSections($yearId, $institutionSiteId) {
 		$classes = $this->find('list', array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name'),
 			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+				'InstitutionSiteSection.school_year_id' => $yearId,
+				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 			),
-			'order' => array('InstitutionSiteClass.name')
+			'order' => array('InstitutionSiteSection.name')
 		));
 		
 		$data = array();
 		foreach($classes as $id => $name) {
 			$data[$id] = array(
 				'name' => $name,
-				'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
-				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
+				//'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
+				//'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
 			);
 		}
 		return $data;
@@ -441,94 +366,5 @@ class InstitutionSiteSection extends AppModel {
 		));
 		
 		return $data;
-	}
-	
-	public function reportsGetHeader($args) {
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-
-		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name');
-			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
-					)
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-				),
-				array(
-					'table' => 'institution_site_shifts',
-					'alias' => 'InstitutionSiteShift',
-					'type' => 'LEFT',
-					'conditions' => array('InstitutionSiteClass.institution_site_shift_id = InstitutionSiteShift.id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		} else if ($index == 2) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
-			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_students',
-					'alias' => 'InstitutionSiteClassStudent',
-					'conditions' => array(
-						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassStudent.status = 1'
-					)
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = EducationGrade.id')
-				),
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'student_categories',
-					'alias' => 'StudentCategory',
-					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		}
-	}
-
-	public function reportsGetFileName($args) {
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }
