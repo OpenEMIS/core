@@ -85,7 +85,8 @@ class LabelHelper extends AppHelper {
 			'amount' => 'Amount',
 			'total' => 'Total',
 			'fee' => 'Fee',
-			'model' => 'Model'
+			'model' => 'Model',
+			'section' => 'Section'
 		),
 		'date' => array(
 			'start' => 'Start Date',
