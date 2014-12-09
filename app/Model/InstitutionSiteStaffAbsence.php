@@ -138,19 +138,26 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		if ($this->action == 'add' || $this->action == 'edit') {
 			$startDate = '';
 			$endDate = '';
+			$todayDate = date('Y-m-d');
+			$todayDateFormatted = date('d-m-Y');
 					
 			if($this->action == 'add'){
 				$yearId = $this->controller->viewVars['selectedYear'];
 				$yearObj = ClassRegistry::init('SchoolYear')->findById($yearId);
 				$startDate = $yearObj['SchoolYear']['start_date'];
 				$endDate = $yearObj['SchoolYear']['end_date'];
+				
+				if($todayDate >= $yearObj['SchoolYear']['start_date'] && $todayDate <= $yearObj['SchoolYear']['end_date']){
+					$dataStartDate = $todayDateFormatted;
+					$dataEndDate = $todayDateFormatted;
+				}else{
+					$dataStartDate = $startDate;
+					$dataEndDate = $startDate;
+				}
 			}
 			
 			if ($this->action == 'add') {
-				if ($this->request->is('get')) {
-					$dataStartDate = $startDate;
-					$dataEndDate = $dataStartDate;
-				} else {
+				if (!$this->request->is('get')) {
 					$dataStartDate = $this->request->data[$this->alias]['first_date_absent'];
 					$dataEndDate = $this->request->data[$this->alias]['last_date_absent'];
 				}
@@ -205,12 +212,18 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->Navigation->addCrumb('Attendance - Staff');
 
 		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
+		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
+		if($currentYearId){
+			$defaultYearId = $currentYearId;
+		}else{
+			$defaultYearId = key($yearList);
+		}
 		if ($yearId != 0) {
 			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+				$yearId = $defaultYearId;
 			}
 		} else {
-			$yearId = key($yearList);
+			$yearId = $defaultYearId;
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -268,12 +281,19 @@ class InstitutionSiteStaffAbsence extends AppModel {
 	public function absence($yearId=0, $classId=0, $weekId=null){
 		$this->Navigation->addCrumb('Absence - Staff');
 		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
+		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
+		if($currentYearId){
+			$defaultYearId = $currentYearId;
+		}else{
+			$defaultYearId = key($yearList);
+		}
+		
 		if ($yearId != 0) {
 			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+				$yearId = $defaultYearId;
 			}
 		} else {
-			$yearId = key($yearList);
+			$yearId = $defaultYearId;
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
