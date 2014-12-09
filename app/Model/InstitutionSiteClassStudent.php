@@ -347,6 +347,71 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $data;
 	}
 	
+	public function getClassSutdents($classId, $startDate, $endDate){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.student_id = Student.id'
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id'
+					)
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.education_grade_id = EducationGrade.id',
+					)
+				),
+				array(
+					'table' => 'institution_site_students',
+					'alias' => 'InstitutionSiteStudent',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.student_id = InstitutionSiteStudent.student_id',
+						'InstitutionSiteClass.institution_site_id = InstitutionSiteStudent.institution_site_id',
+						'EducationGrade.education_programme_id = InstitutionSiteStudent.education_programme_id',
+						'OR' => array(
+							array(
+								'InstitutionSiteStudent.start_date <= "' . $startDate . '"',
+								'InstitutionSiteStudent.end_date >= "' . $startDate . '"'
+							),
+							array(
+								'InstitutionSiteStudent.start_date <= "' . $endDate . '"',
+								'InstitutionSiteStudent.end_date >= "' . $endDate . '"'
+							),
+							array(
+								'InstitutionSiteStudent.start_date >= "' . $startDate . '"',
+								'InstitutionSiteStudent.end_date <= "' . $endDate . '"'
+							)
+						)
+					)
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+			)
+		));
+		
+		return $data;
+	}
+	
 	// used by InstitutionSiteStudent
 	public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
 		$data = $this->find('list', array(
