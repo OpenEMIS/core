@@ -42,6 +42,10 @@ foreach($fields as $key => $field) {
 					$options['options'] = $field['options'];
 				}
 				break;
+
+			case 'string':
+				$options['type'] = 'string';
+				break;
 				
 			case 'text':
 				$options['type'] = 'textarea';
