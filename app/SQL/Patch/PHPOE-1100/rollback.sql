@@ -1,0 +1,1 @@
+UPDATE `config_items` SET `value` = 'OpenEMIS: Open Education Management Information System', `default_value` = 'OpenEMIS: Open Education Management Information System' WHERE `config_items`.`id` = 2;
