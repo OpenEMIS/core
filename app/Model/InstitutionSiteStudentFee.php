@@ -68,6 +68,10 @@ class InstitutionSiteStudentFee extends AppModel {
 		
 		$this->fields['student_id']['type'] = 'hidden';
 		$this->fields['institution_site_fee_id']['type'] = 'hidden';
+		$this->fields['amount']['type'] = 'string';
+		$this->fields['amount']['attr']['onblur'] = 'return utility.checkDecimal(this, 2)';
+		$this->fields['amount']['attr']['onkeyup'] = 'return utility.checkDecimal(this, 2)';
+		$this->fields['amount']['attr']['onkeypress'] = 'return utility.floatCheck(event)';
 		$this->setFieldOrder('amount', 3);
 		
 		if ($this->action == 'add' || $this->action == 'remove') {
