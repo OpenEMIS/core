@@ -52,6 +52,13 @@ class InstitutionSiteSection extends AppModel {
 				'required' => true,
 				'message' => 'Please enter a valid school year'
 			)
+		),
+		'institution_site_shift_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid shift'
+			)
 		)
 	);
 	
@@ -98,8 +105,7 @@ class InstitutionSiteSection extends AppModel {
 		$options = array(
 			'InstitutionSiteSection/view/'.$id => __('Section Details'),
 			'InstitutionSiteSectionStudent/index' => __('Students'),
-			'InstitutionSiteSectionStaff/index' => __('Staff'),
-			'classesSubject' => __('Subjects')
+			'InstitutionSiteSectionStaff/index' => __('Staff')
 		);
 		return $options;
 	}
@@ -242,8 +248,8 @@ class InstitutionSiteSection extends AppModel {
 		foreach($classes as $id => $name) {
 			$data[$id] = array(
 				'name' => $name,
-				//'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
-				//'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
+				'grades' => $this->InstitutionSiteSectionGrade->getGradesBySection($id),
+				'gender' => $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id)
 			);
 		}
 		return $data;

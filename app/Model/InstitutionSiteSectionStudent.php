@@ -251,27 +251,34 @@ class InstitutionSiteSectionStudent extends AppModel {
 	}
 	
 	// used by InstitutionSiteClass.classes
-	public function getGenderTotalByClass($classId) {
+	public function getGenderTotalBySection($sectionId) {
 		$joins = array(
 			array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
 				'conditions' => array(
-					'InstitutionSiteClassGrade.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
-					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id',
-					'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId
+					'InstitutionSiteSectionGrade.education_grade_id = InstitutionSiteSectionStudent.education_grade_id',
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+					'InstitutionSiteSectionGrade.institution_site_section_id = ' . $sectionId
 				)
 			),
-			array('table' => 'students', 'alias' => 'Student')
+			array(
+				'table' => 'students', 
+				'alias' => 'Student'
+			)
 		);
 
 		$gender = array('M' => 0, 'F' => 0);
-		$studentConditions = array('Student.id = InstitutionSiteClassStudent.student_id');
+		$studentConditions = array('Student.id = InstitutionSiteSectionStudent.student_id');
 		
 		foreach ($gender as $i => $val) {
 			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
 			$joins[1]['conditions'] = $studentConditions;
-			$gender[$i] = $this->find('count', array('recursive' => -1, 'joins' => $joins));
+			$gender[$i] = $this->find('count', array(
+				'recursive' => -1, 
+				'joins' => $joins,
+				'group' => array('Student.id')
+			));
 		}
 		return $gender;
 	}
