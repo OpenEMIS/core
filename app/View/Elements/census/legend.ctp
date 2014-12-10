@@ -1,6 +1,6 @@
 <!--?php echo $this->Html->script('jquery.tools', false); ?-->
 
-<div class="col-md-7 right">
+<div class="row_item_legend">
 	<ul class="legend">
 		<li title="Census entries that are manually entered/verified by data entry"><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
 		<li title="Census entries that are entered from external sources ie: online/offline questionnaires"><span class="external"></span><?php echo __('External'); ?></li>

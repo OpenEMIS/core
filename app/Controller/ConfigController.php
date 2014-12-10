@@ -202,7 +202,9 @@ class ConfigController extends AppController {
 			$dataVal = $this->ConfigItem->find('all',array(
 				'conditions' => array('ConfigItem.visible' => 1, 'ConfigItem.type' =>$id)
 			));
+			$dataName = array();
 			foreach($dataVal as $key=>$value){
+				$dataName[] = $value['ConfigItem']['name'];
 				$data['ConfigItem'][$value['ConfigItem']['name']] = $value['ConfigItem']['value'];
 				$data['ConfigItem']['editable'] = $value['ConfigItem']['editable'];
 				$data['ConfigItem']['type'] = $value['ConfigItem']['type'];
@@ -217,6 +219,7 @@ class ConfigController extends AppController {
 				$data['CreatedUser']['first_name'] = $value['CreatedUser']['first_name'];
 				$data['CreatedUser']['last_name'] = $value['CreatedUser']['last_name'];
 			}
+			$data['ConfigItem']['name'] = $dataName;
 		}else if($id == 'Dashboard'){
 			$fileExtensions = $this->Utility->getFileExtensionList(); 
 			$imageFileExts = array();
@@ -322,6 +325,8 @@ class ConfigController extends AppController {
 				$i = 0;
 				foreach($fields as $value){
 					$saveData[$i]['id'] = $data['ConfigItem'][$value.'Id'];
+					$saveData[$i]['type'] = $id;
+					$saveData[$i]['name'] = $value;
 					$saveData[$i]['value'] = $data['ConfigItem'][$value];
 					$i++;
 				}
@@ -554,7 +559,7 @@ class ConfigController extends AppController {
 		if($this->request->is('post')) { // save
 			$requestData = $this->data;
 			$isEdited = false;
-			pr($requestData);
+
 			if($this->ConfigAttachment->save($requestData)){
 				$isEdited = $this->ConfigAttachment->updateAttachmentCoord($requestData['ConfigItem']['id'],$requestData['ConfigItem']['x'], $requestData['ConfigItem']['y']);
 			}
@@ -618,7 +623,9 @@ class ConfigController extends AppController {
 				$this->Utility->alert(__('Files have been saved successfully.'));
 				$this->redirect(array('action' => 'index', 'Dashboard'));
 			} else {
-				$this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+				foreach ($errors as $key => $value) {
+					$this->Utility->alert($value, array('type' => 'error'));
+				}
 			}
 			
 		}
@@ -753,6 +760,7 @@ class ConfigController extends AppController {
 
 		foreach ($images['files']['tmp_name'] as $key => $value) {
 			if($images['files']['error'][$key] == UPLOAD_ERR_NO_FILE){
+				$msg[$key] = __("No File Chosen");
 				continue;
 			}
 
