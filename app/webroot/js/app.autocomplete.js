@@ -32,7 +32,7 @@ var Autocomplete = {
 		var val = ui.item.value;
 		var element;
 		for(var i in val) {
-			element = $('.' + i);
+			element = $("input[autocomplete='"+i+"']");
 			
 			if (element.length > 0) {
 				if(element.get(0).tagName.toUpperCase() === 'INPUT') {
@@ -68,6 +68,7 @@ var Autocomplete = {
 				errorMessage.remove();
 			}
 			
+			$("input[autocomplete]").val('');
 			noDataMsg.hide();
 			loadingWrapper.show();
 			loadingImg.show();
