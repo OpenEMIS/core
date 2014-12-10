@@ -22,9 +22,6 @@ echo $this->Form->hidden('school_year_id');
 echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled'));
 echo $this->Form->input('name');
 
-$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
-echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
-
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 

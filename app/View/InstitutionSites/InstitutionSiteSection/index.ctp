@@ -33,12 +33,12 @@ echo $this->element('templates/year_options', array('url' => 'InstitutionSiteSec
 				<tr>
 					<td><?php echo $this->Html->link($obj['name'], array('action' => 'InstitutionSiteSection', 'view', $id), array('escape' => false)); ?></td>
 					<td>
-						<?php //foreach ($obj['grades'] as $gradeId => $name) : ?>
-							<div class="table_cell_row <?php //echo ++$i == sizeof($obj['grades']) ? 'last' : ''; ?>"><?php //echo $name; ?></div>
-						<?php //endforeach ?>
+						<?php foreach ($obj['grades'] as $gradeId => $name) : ?>
+							<div class="table_cell_row <?php echo ++$i == sizeof($obj['grades']) ? 'last' : ''; ?>"><?php echo $name; ?></div>
+						<?php endforeach ?>
 					</td>
-					<td class="cell-number"><?php //echo $obj['gender']['M']; ?></td>
-					<td class="cell-number"><?php //echo $obj['gender']['F']; ?></td>
+					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
+					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
 				</tr>
 			<?php } // end for (multigrade)    ?>
 		</tbody>
