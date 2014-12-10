@@ -115,7 +115,8 @@ class InstitutionSitesController extends AppController {
 		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'InstitutionSiteStaffAbsence',
 		'InstitutionSiteSection',
-		'InstitutionSiteSectionStudent'
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteSectionStaff'
 	);
 	
 	public function beforeFilter() {
