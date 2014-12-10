@@ -50,6 +50,7 @@ echo $this->Form->create($model, $formOptions);
 		
 		echo $this->Form->input('first_name');
 		echo $this->Form->input('middle_name');
+		echo $this->Form->input('third_name');
 		echo $this->Form->input('last_name');
 		echo $this->Form->input('preferred_name');
 		echo $this->Form->input('gender', array('options' => $genderOptions));
