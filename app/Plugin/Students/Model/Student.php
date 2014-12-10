@@ -91,6 +91,10 @@ class Student extends StudentsAppModel {
 				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
 				'required' => true,
 				'message' => 'Please select a Date of Birth'
+			),
+			'ruleCompare' => array(
+				'rule' => 'compareBirthDate',
+				'message' => 'Date of Birth cannot be future date'
 			)
 		),
 		'email' => array(
@@ -101,6 +105,18 @@ class Student extends StudentsAppModel {
 			)
 		)
 	);
+
+	public function compareBirthDate() {
+		if(!empty($this->data[$this->alias]['date_of_birth'])) {
+			$birthDate = $this->data[$this->alias]['date_of_birth'];
+			$birthTimestamp = strtotime($birthDate);
+			$todayDate=date("Y-m-d");
+			$todayTimestamp = strtotime($todayDate);
+
+			return $todayTimestamp >= $birthTimestamp;
+		}
+		return true;
+	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		return $this->getPaginate($conditions, $fields, $order, $limit, $page, $recursive, $extra);
