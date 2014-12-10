@@ -135,11 +135,11 @@ class InstitutionSiteSectionGrade extends AppModel {
 		return $list;
 	}
 	
-	public function getGradeOptions($classId=null, $status=null) {
+	public function getGradeOptions($sectionId=null, $status=null) {
 		$conditions = array();
 		
-		if(!is_null($classId)){
-			$conditions['InstitutionSiteSectionGrade.institution_site_class_id'] = $classId;
+		if(!is_null($sectionId)){
+			$conditions['InstitutionSiteSectionGrade.institution_site_section_id'] = $sectionId;
 		}
 		if(!is_null($status)) {
 			$conditions['InstitutionSiteSectionGrade.status'] = $status;

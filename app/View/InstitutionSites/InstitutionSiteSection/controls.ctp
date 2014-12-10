@@ -17,14 +17,14 @@
 	<?php if(isset($studentActionOptions) && !empty($studentActionOptions)) : ?>
 		<div class="col-md-6">
 			<?php
-				echo $this->Form->input('institution_site_class_id', array(
+				echo $this->Form->input('education_grade_id', array(
 					'class' => 'form-control',
 					'label' => false,
 					'div' => false,
 					'options' => $studentActionOptions,
-					'default' => $selectedClass,
+					'default' => $selectedGrade,
 					'onchange' => 'jsForm.change(this)',
-					'url' => $this->params['controller'] . '/' . $model . '/index/',
+					'url' => $this->params['controller'] . '/' . $model . '/index',
 					'autocomplete' => 'off'
 				));
 			?>
