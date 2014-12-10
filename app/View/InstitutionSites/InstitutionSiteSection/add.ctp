@@ -26,7 +26,49 @@ echo $this->Form->input('school_year_id', array(
 ));
 echo $this->Form->input('name');
 
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
+echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
+echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
+
 ?>
+
+<div class="form-group">
+	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
+	<div class="col-md-8">
+		<div class="table-responsive">
+			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+				<thead>
+					<tr>
+						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+						<th><?php echo $this->Label->get('EducationProgramme.name'); ?></th>
+						<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?php 
+					$i = 0;
+					foreach($grades as $obj) :
+					?>
+					<tr>
+						<td class="checkbox-column">
+							<?php
+							echo $this->Form->hidden('InstitutionSiteSectionGrade.' . $i . '.education_grade_id', array('value' => $obj['EducationGrade']['id']));
+							echo $this->Form->checkbox('InstitutionSiteSectionGrade.' . $i++ . '.status', array('class' => 'icheck-input'));
+							?>
+						</td>
+						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+						<td><?php echo $obj['EducationGrade']['name']; ?></td>
+					</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
+
+	</div>
+</div>
 
 <?php
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $selectedYear)));

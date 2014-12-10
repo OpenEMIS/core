@@ -42,40 +42,44 @@ class InstitutionSiteSectionStudent extends AppModel {
 		} else {
 			if($action != 'getStudentAssessmentResults'){
 				$this->Message->alert('general.notExists');
-				return $this->redirect(array('action' => $this->_action));
+				return $this->redirect(array('action' => $this->alias, 'index'));
 			}
 		}
 	}
 	
-	public function index($selectedClass=0) {
+	public function index($selectedGrade=0) {
 		$id = $this->Session->read('InstitutionSiteSection.id');
-		$studentActionOptions = array(
-			0 => 'All'
-		);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionGrade')->getGradeOptions($id, true);
 		
-		if ($selectedClass != 0) {
-			if (!array_key_exists($selectedClass, $studentActionOptions)) {
-				$selectedClass = key($studentActionOptions);
+		if ($selectedGrade != 0) {
+			if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+				$selectedGrade = key($studentActionOptions);
 			}
 		} else {
-			$selectedClass = key($studentActionOptions);
+			$selectedGrade = key($studentActionOptions);
 		}
 		
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				'DISTINCT Student.identification_no',
-				'Student.first_name', 'Student.last_name'
+				'Student.first_name', 'Student.last_name', 'StudentCategory.name'
 			),
 			'joins' => array(
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
 					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'student_categories',
+					'alias' => 'StudentCategory',
+					'conditions' => array('InstitutionSiteSectionStudent.student_category_id = StudentCategory.id')
 				)
 			),
 			'conditions' => array(
 				'InstitutionSiteSectionStudent.institution_site_section_id' => $id,
+				'InstitutionSiteSectionStudent.education_grade_id' => $selectedGrade,
 				'InstitutionSiteSectionStudent.status' => 1
 			),
 			'order' => array('Student.first_name ASC')
@@ -83,27 +87,34 @@ class InstitutionSiteSectionStudent extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('data', 'studentActionOptions', 'selectedClass'));
+		$this->setVar(compact('data', 'studentActionOptions', 'selectedGrade'));
 	}
 	
-	public function edit($classId=0) {
+	public function edit($selectedGrade=0) {
 		$id = $this->Session->read('InstitutionSiteSection.id');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionGrade')->getGradeOptions($id, true);
+		
+		if ($selectedGrade != 0) {
+			if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+				$selectedGrade = key($studentActionOptions);
+			}
+		} else {
+			$selectedGrade = key($studentActionOptions);
+		}
 		if($this->request->is('get')) {
+			$categoryOptions = $this->StudentCategory->findList(true);
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
 					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
-					'InstitutionSiteSectionStudent.id', 'InstitutionSiteSectionStudent.status', 'InstitutionSiteSection.id'
+					'InstitutionSiteSectionStudent.id', 'InstitutionSiteSectionStudent.student_category_id', 'InstitutionSiteSectionStudent.status', 'InstitutionSiteSection.id'
 				),
 				'joins' => array(
 					array(
 						'table' => 'institution_site_students',
 						'alias' => 'InstitutionSiteStudent',
-						'conditions' => array(
-							'InstitutionSiteStudent.student_id = Student.id',
-							'InstitutionSiteStudent.institution_site_id = ' . $institutionSiteId
-						)
+						'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
 					),
 					array(
 						'table' => 'institution_site_programmes',
@@ -111,11 +122,25 @@ class InstitutionSiteSectionStudent extends AppModel {
 						'conditions' => array('InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id')
 					),
 					array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array('EducationGrade.education_programme_id = InstitutionSiteProgramme.education_programme_id')
+					),
+					array(
 						'table' => 'institution_site_sections',
 						'alias' => 'InstitutionSiteSection',
 						'conditions' => array(
 							'InstitutionSiteSection.institution_site_id = InstitutionSiteProgramme.institution_site_id',
 							'InstitutionSiteSection.id = ' . $id,
+						)
+					),
+					array(
+						'table' => 'institution_site_section_grades',
+						'alias' => 'InstitutionSiteSectionGrade',
+						'conditions' => array(
+							'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+							'InstitutionSiteSectionGrade.education_grade_id = EducationGrade.id',
+							'InstitutionSiteSectionGrade.education_grade_id' => $selectedGrade
 						)
 					),
 					array(
@@ -129,7 +154,8 @@ class InstitutionSiteSectionStudent extends AppModel {
 						'type' => 'LEFT',
 						'conditions' => array(
 							$this->alias . '.student_id = InstitutionSiteStudent.student_id',
-							$this->alias . '.institution_site_section_id = InstitutionSiteSection.id'
+							$this->alias . '.institution_site_section_id = InstitutionSiteSection.id',
+							$this->alias . '.education_grade_id = ' . $selectedGrade
 						)
 					)
 				),
@@ -149,12 +175,14 @@ class InstitutionSiteSectionStudent extends AppModel {
 			if(empty($data)) {
 				$this->Message->alert('general.noData');
 			}
-			$this->setVar(compact('data'));
+			$this->setVar(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedGrade'));
 		} else {
 			$data = $this->request->data;
+			$selectedGrade = null;
 			//pr($data);die;
  			if(isset($data[$this->alias])) {
 				foreach($data[$this->alias] as $i => $obj) {
+					$selectedGrade = $obj['education_grade_id'];
 					if(empty($obj['id']) && $obj['status'] == 0) {
 						unset($data[$this->alias][$i]);
 					}

@@ -12,7 +12,7 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edit'));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'edit'));
 echo $this->Form->create($model, $formOptions);
 ?>
 
@@ -23,40 +23,25 @@ echo $this->Form->create($model, $formOptions);
 				<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 				<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th><?php echo $this->Label->get('general.category'); ?></th>
 			</tr>
 		</thead>
 		
 		<tbody>
 			<?php 
 			foreach($data as $i => $obj) :
-				$checked = !empty($obj[$model]['status']) ? true : false;
+				$checked = $obj[$model]['status'];
 			?>
 			<tr>
 				<td class="checkbox-column">
 					<?php
 					echo $this->Form->hidden($i . '.id', array('value' => $obj[$model]['id']));
-					echo $this->Form->hidden($i . '.student_id', array('value' => $obj['Student']['id']));
+					echo $this->Form->hidden($i . '.staff_id', array('value' => $obj['Staff']['id']));
 					echo $this->Form->hidden($i . '.institution_site_section_id', array('value' => $obj['InstitutionSiteSection']['id']));
-					echo $this->Form->hidden($i . '.education_grade_id', array('value' => $selectedGrade));
 					echo $this->Form->checkbox($i . '.status', array('class' => 'icheck-input', 'checked' => $checked));
 					?>
 				</td>
-				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
-				<td>
-					<?php
-					echo $this->Form->input($i . '.student_category_id', array(
-						'label' => false,
-						'div' => false,
-						'before' => false,
-						'between' => false,
-						'after' => false,
-						'options' => $categoryOptions,
-						'value' => $obj[$model]['student_category_id']
-					));
-					?>
-				</td>
+				<td><?php echo $obj['Staff']['identification_no']; ?></td>
+				<td><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
 			</tr>
 			<?php endforeach; ?>
 		</tbody>

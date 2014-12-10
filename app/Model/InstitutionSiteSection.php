@@ -98,7 +98,7 @@ class InstitutionSiteSection extends AppModel {
 		$options = array(
 			'InstitutionSiteSection/view/'.$id => __('Section Details'),
 			'InstitutionSiteSectionStudent/index' => __('Students'),
-			'classesStaff' => __('Staff'),
+			'InstitutionSiteSectionStaff/index' => __('Staff'),
 			'classesSubject' => __('Subjects')
 		);
 		return $options;
