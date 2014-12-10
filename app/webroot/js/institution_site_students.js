@@ -36,9 +36,9 @@ var InstitutionSiteStudents = {
 		$('#students_search [orderby]').click(function(){
 			var order = $(this).attr('orderby');
 			var sort = $(this).hasClass('icon_sort_up') ? 'desc' : 'asc';
-			$('#StudentOrderBy').val(order);
-			$('#StudentOrder').val(sort);
-			var action = $('#students_search form').attr('action')+'/page:'+$('#StudentPage').val();
+			$('#InstitutionSiteStudentOrderBy').val(order);
+			$('#InstitutionSiteStudentOrder').val(sort);
+			var action = $('#students_search form').attr('action')+'/page:'+$('#InstitutionSiteStudentPage').val();
 			$('#students_search form').attr('action', action);
 			$('#students_search form').submit();
 		});

@@ -42,8 +42,8 @@ WHERE `reports`.`id` =83;
 SET @maleGenderId = 0;
 SET @femaleGenderId = 0;
 
-SELECT `id` INTO @maleGenderId FROM `field_option_values` WHERE `name` LIKE 'Male';
-SELECT `id` INTO @femaleGenderId FROM `field_option_values` WHERE `name` LIKE 'Female';
+SELECT `field_option_values`.`id` INTO @maleGenderId FROM `field_option_values`, `field_options` WHERE `field_option_values`.`name` LIKE 'Male' AND `field_option_values`.`field_option_id` = `field_options`.`id` AND `field_options`.`code` LIKE 'Gender';
+SELECT `field_option_values`.`id` INTO @femaleGenderId FROM `field_option_values`, `field_options` WHERE `field_option_values`.`name` LIKE 'Female' AND `field_option_values`.`field_option_id` = `field_options`.`id` AND `field_options`.`code` LIKE 'Gender';
 
 RENAME TABLE `census_staff` TO `census_staff_bak` ;
 

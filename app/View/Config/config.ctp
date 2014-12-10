@@ -71,6 +71,10 @@ $(document).ready(function() {
         
 });
 
+function onAddFieldClick(id){
+	window.onbeforeunload = unconfirmLoading;
+	$('#'+id).click();
+}
 
 function getRootURL() {
 	return '<?php echo $rootURL ?>';
