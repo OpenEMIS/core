@@ -317,7 +317,11 @@ class StudentsController extends StudentsAppController {
 			}
 		}
 		$genderOptions = $this->Option->get('gender');
+		$dataMask = $this->ConfigItem->getValue('student_identification');
+		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+
 		$this->set('autoid', $this->getUniqueID());
+		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);
