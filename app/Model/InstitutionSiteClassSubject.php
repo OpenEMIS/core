@@ -80,8 +80,8 @@ class InstitutionSiteClassSubject extends AppModel {
 	
 	public function classesSubjectEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		$maxSubjects = $controller->ConfigItem->getDefaultValue('max_subjects_per_class');
-		pr($maxSubjects);
+		$maxSubjects = $controller->ConfigItem->getValue('max_subjects_per_class');
+
 		if($controller->request->is('get')) {
 			$data = ClassRegistry::init('EducationSubject')->find('all', array(
 				'recursive' => 0,
