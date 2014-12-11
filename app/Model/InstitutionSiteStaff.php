@@ -205,7 +205,7 @@ class InstitutionSiteStaff extends AppModel {
 			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
 		} else {
 			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
+			$selectedYear = isset($params['pass'][1]) ? $params['pass'][1] : '';
 
 			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
 				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
@@ -218,20 +218,24 @@ class InstitutionSiteStaff extends AppModel {
 
 		if (!empty($searchField)) {
 			$search = '%' . $searchField . '%';
-			$conditions['OR'] = array(
-				'Staff.identification_no LIKE' => $search,
-				'Staff.first_name LIKE' => $search,
-				'Staff.middle_name LIKE' => $search,
-				'Staff.last_name LIKE' => $search,
-				'Staff.preferred_name LIKE' => $search
+			$conditions[] = array(
+				'OR' => array(
+					'Staff.identification_no LIKE' => $search,
+					'Staff.first_name LIKE' => $search,
+					'Staff.middle_name LIKE' => $search,
+					'Staff.last_name LIKE' => $search,
+					'Staff.preferred_name LIKE' => $search
+				)
 			);
 		}
 		
 		if (!empty($selectedYear)) {
 			$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
-			$conditions['OR'] = array(
-				'InstitutionSiteStaff.end_year >=' => $selectedYear,
-				'InstitutionSiteStaff.end_year IS NULL'
+			$conditions[] = array(
+				'OR' => array(
+					'InstitutionSiteStaff.end_year >=' => $selectedYear,
+					'InstitutionSiteStaff.end_year IS NULL'
+				)
 			);
 		}
 
@@ -350,17 +354,21 @@ class InstitutionSiteStaff extends AppModel {
 		));
 		
 		$newData = array();
-		foreach($data AS $record){
-			$staffId = $record['Staff']['id'];
-			if(isset($newData[$staffId])){
-				$existingStartDate = $newData[$staffId]['InstitutionSiteStaff']['start_date'];
-				$newStartDate = $record['InstitutionSiteStaff']['start_date'];
-				if($newStartDate > $existingStartDate){
+		if(!isset($conditions['InstitutionSiteStaff.start_year <='])) {
+			foreach($data AS $record){
+				$staffId = $record['Staff']['id'];
+				if(isset($newData[$staffId])){
+					$existingStartDate = $newData[$staffId]['InstitutionSiteStaff']['start_date'];
+					$newStartDate = $record['InstitutionSiteStaff']['start_date'];
+					if(date("Y-m-d",strtotime($newStartDate)) > date("Y-m-d",strtotime($existingStartDate))){
+						$newData[$staffId] = $record;
+					}
+				}else{
 					$newData[$staffId] = $record;
 				}
-			}else{
-				$newData[$staffId] = $record;
 			}
+		} else{
+			$newData = $data;
 		}
 		
 		return $newData;
