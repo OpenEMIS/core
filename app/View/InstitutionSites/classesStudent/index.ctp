@@ -4,8 +4,8 @@ $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit) {
 	$params = array('action' => $_action.'Edit');
-	if(isset($selectedGrade)) {
-		$params[] = $selectedGrade;
+	if(isset($selectedSection)) {
+		$params[] = $selectedSection;
 	}
 	echo $this->Html->link($this->Label->get('general.edit'), $params, array('class' => 'divider'));
 }
@@ -22,7 +22,6 @@ if(!empty($data)) :
 			<tr>
 				<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th><?php echo $this->Label->get('general.category'); ?></th>
 			</tr>
 		</thead>
 
@@ -31,7 +30,6 @@ if(!empty($data)) :
 			<tr>
 				<td><?php echo $obj['Student']['identification_no']; ?></td>
 				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
-				<td><?php echo $obj['StudentCategory']['name']; ?></td>
 			</tr>
 			<?php endforeach ?>
 		</tbody>

@@ -168,6 +168,39 @@ class InstitutionSiteSectionClass extends AppModel {
 		return $list;
 	}
 	
+	public function getSectionOptions($classId=null, $status=null) {
+		$conditions = array();
+		
+		if(!is_null($classId)){
+			$conditions['InstitutionSiteSectionClass.institution_site_class_id'] = $classId;
+		}
+		if(!is_null($status)) {
+			$conditions['InstitutionSiteSectionClass.status'] = $status;
+		}
+
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array('InstitutionSiteSectionClass.institution_site_section_id = InstitutionSiteSection.id')
+				)
+			),
+			'conditions' => $conditions,
+			'order' => array('InstitutionSiteSection.id')
+		));
+
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['InstitutionSiteSection']['id'];
+			$sectionName = $obj['InstitutionSiteSection']['name'];
+			$list[$id] = $sectionName;
+		}
+		return $list;
+	}
+	
 	public function getGradeOptions($sectionId=null, $status=null) {
 		$conditions = array();
 		
