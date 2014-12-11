@@ -91,8 +91,9 @@ class StudentsController extends StudentsAppController {
 			$this->bodyTitle = __('New Student');
 			$studentId = $this->Session->read('Student.id');
 			if (empty($studentId)) {
+				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add');
 				$wizardActions = $this->Wizard->getAllActions('Student');
-				if($this->action != 'InstitutionSiteStudent' && $this->action != 'edit' && !in_array($this->action, $wizardActions)){
+				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
 					return $this->redirect(array('action' => 'edit'));
 				}
 			}
@@ -154,7 +155,7 @@ class StudentsController extends StudentsAppController {
 		$data = $this->paginate('Student', $conditions);
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
-				$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+				$this->redirect(array('action' => 'view', $data[0]['Student']['id']));
 			}
 		}
 		if (empty($data) && !$this->request->is('ajax')) {
@@ -191,6 +192,8 @@ class StudentsController extends StudentsAppController {
 						$this->redirect(array('action' => 'index'));
 					}
 				}
+
+				$this->Session->delete('Student.wizard');
 			}
 		} else {
 			$search = $this->request->data;

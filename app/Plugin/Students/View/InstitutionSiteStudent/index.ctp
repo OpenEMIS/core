@@ -28,6 +28,7 @@ echo $this->Form->create($model, $formOptions);
 		<span class="icon_clear">X</span>
 	</div>
 	<span class="left icon_search" onclick="$('form').submit()"></span>
+	<span class="advanced"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'link_back')); ?></span>
 </div>
 
 <div class="row">
