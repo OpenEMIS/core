@@ -21,6 +21,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	<legend><?php echo $this->Label->get('general.general'); ?></legend>
 	<?php
 	echo $this->Form->input('name');
+	echo $this->Form->input('alternative_name');
 	echo $this->Form->input('code', $arrCode);
 
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_provider_id');
