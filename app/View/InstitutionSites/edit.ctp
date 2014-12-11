@@ -33,6 +33,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	<legend><?php echo __('Information'); ?></legend>
 	<?php
 	echo $this->Form->input('name', array('value' => $obj['name']));
+	echo $this->Form->input('alternative_name', array('value' => $obj['alternative_name']));
 	echo $this->Form->input('code', $arrCode);
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_provider_id');
