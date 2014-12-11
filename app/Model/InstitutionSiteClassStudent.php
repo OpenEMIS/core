@@ -591,10 +591,19 @@ class InstitutionSiteClassStudent extends AppModel {
 		if (!empty($assessmentId)) {
 			$join_to_assessment_item_types = array(
 				array(
+					'table' => 'institution_site_section_students',
+					'alias' => 'InstitutionSiteSectionStudent',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
+						'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+						'InstitutionSiteSectionStudent.status = 1'
+					)
+				),
+				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
 					'conditions' => array(
-						'AssessmentItemType.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
+						'AssessmentItemType.education_grade_id = InstitutionSiteSectionStudent.education_grade_id',
 						'AssessmentItemType.id = ' . $assessmentId
 					)
 				)
@@ -606,6 +615,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		}
 
 		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name');
+		$options['conditions'] = array('InstitutionSiteClassStudent.status = 1');
 
 		$data = $this->find('all', $options);
 
