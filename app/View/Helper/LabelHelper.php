@@ -341,6 +341,7 @@ class LabelHelper extends AppHelper {
 			'title' => 'Absence - Students',
 			'school_year_id' => 'School Year',
 			'institution_site_class_id' => 'Class',
+			'institution_site_section_id' => 'Section',
 			'student_id' => 'Student',
 			'absence_type' => 'Type',
 			'student_absence_reason_id' => 'Reason'

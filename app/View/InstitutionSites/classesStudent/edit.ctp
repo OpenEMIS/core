@@ -7,7 +7,7 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => $_action), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => $_action, $selectedSection), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -51,7 +51,7 @@ echo $this->Form->create($model, $formOptions);
 
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => $_action), array('class' => 'btn_cancel btn_left')); ?>
+	<?php echo $this->Html->link(__('Cancel'), array('action' => $_action, $selectedSection), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
 <?php echo $this->Form->end(); ?>

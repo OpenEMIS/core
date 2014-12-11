@@ -109,12 +109,21 @@ class InstitutionSiteClassStudent extends AppModel {
 						'table' => 'students',
 						'alias' => 'Student',
 						'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+					),
+					array(
+						'table' => 'institution_site_section_students',
+						'alias' => 'InstitutionSiteSectionStudent',
+						'conditions' => array(
+							'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+							'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
+							'InstitutionSiteSectionStudent.status' => 1
+						)
 					)
 				),
 				'conditions' => array(
 					'InstitutionSiteClassStudent.institution_site_class_id' => $id,
 					'InstitutionSiteClassStudent.institution_site_section_id' => $selectedSection,
-					'status' => 1
+					'InstitutionSiteClassStudent.status' => 1
 				),
 				'order' => array('Student.first_name ASC')
 			));
@@ -248,11 +257,21 @@ class InstitutionSiteClassStudent extends AppModel {
 	// used by InstitutionSiteClass.classes
 	public function getGenderTotalByClass($classId) {
 		$joins = array(
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.status' => 1
+				)
+			),
 			array('table' => 'students', 'alias' => 'Student')
 		);
 		
 		$conditions = array(
-			'InstitutionSiteClassStudent.institution_site_class_id = ' . $classId
+			'InstitutionSiteClassStudent.institution_site_class_id = ' . $classId,
+			'InstitutionSiteClassStudent.status = 1' 
 		);
 
 		$gender = array('M' => 0, 'F' => 0);
@@ -260,7 +279,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		
 		foreach ($gender as $i => $val) {
 			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
-			$joins[0]['conditions'] = $studentConditions;
+			$joins[1]['conditions'] = $studentConditions;
 			$gender[$i] = $this->find('count', array(
 				'recursive' => -1, 
 				'joins' => $joins, 
@@ -273,7 +292,8 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function getStudentsByClass($classId, $showGrade = false) {
 		$options['conditions'] = array(
-			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+			'InstitutionSiteClassStudent.institution_site_class_id' => $classId,
+			'InstitutionSiteClassStudent.status = 1'
 		);
 		
 		//$options['recursive'] =-1;
