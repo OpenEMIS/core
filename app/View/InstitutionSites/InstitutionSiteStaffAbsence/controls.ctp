@@ -25,4 +25,23 @@
 		));
 		?>
 	</div>
+	<div class="col-md-4">
+		<?php
+		if (empty($weekDayList)) {
+			array_push($weekDayList, $this->Label->get('general.noData'));
+		}
+		if (!isset($dayId)) {
+			$dayId=0;
+		}
+		echo $this->Form->input('day_id', array(
+			'label' => false,
+			'div' => false,
+			'options' => $weekDayList,
+			'value' => $dayId, 
+			'class' => 'form-control',
+			'onchange' => 'jsForm.change(this)',
+			'url' => $this->params['controller'] . "/$model/$action/$yearId/$weekId"
+		));
+		?>
+	</div>
 </div>
