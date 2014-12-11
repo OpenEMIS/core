@@ -37,6 +37,10 @@ $obj = $data['Student'];
 		<div class="col-md-6"><?php echo $obj['middle_name']; ?></div>
 	</div>
 	<div class="row">
+		<div class="col-md-3"><?php echo __('Third Name'); ?></div>
+		<div class="col-md-6"><?php echo $obj['third_name']; ?></div>
+	</div>
+	<div class="row">
 		<div class="col-md-3"><?php echo __('Last Name'); ?></div>
 		<div class="col-md-6"><?php echo $obj['last_name']; ?></div>
 	</div>
