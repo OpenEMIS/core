@@ -60,6 +60,7 @@ foreach($data as $infraname => $arrval){
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_material_id]" value="'.$material_id.'">';
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_sanitation_id]" value="'.$typeid.'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[genderId]" value="'.$genderId.'">';
 					$cell_html.= $this->Form->input('value', array(
 							'class'=>@$record_tag,
 							'type' => 'text',
