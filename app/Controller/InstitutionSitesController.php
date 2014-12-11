@@ -385,6 +385,8 @@ class InstitutionSitesController extends AppController {
             $this->request->data['InstitutionSite']['area_education_id_select'] = $data['InstitutionSite']['area_education_id'];
 		}
 		$visible = true;
+		$dataMask = $this->ConfigItem->getValue('institution_site_code');
+		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 		$typeOptions = $this->InstitutionSiteType->findList($visible);
 		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
 		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
@@ -393,7 +395,7 @@ class InstitutionSitesController extends AppController {
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 
-		$this->set(compact('data', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
+		$this->set(compact('data', 'arrCode', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
 	}
 
 	public function add() {
@@ -426,6 +428,8 @@ class InstitutionSitesController extends AppController {
 		//$filterArea = $this->SecurityGroupArea->getAreas($groupId);
 
 		$visible = true;
+		$dataMask = $this->ConfigItem->getValue('institution_site_code');
+		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 		$typeOptions = $this->InstitutionSiteType->findList($visible);
 		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
 		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
@@ -435,6 +439,7 @@ class InstitutionSitesController extends AppController {
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 		
 		//$this->set('filterArea', $filterArea);
+		$this->set('arrCode', $arrCode);
 		$this->set('areaId', $areaId);
 		$this->set('areaEducationId', $areaEducationId);
 		$this->set('typeOptions', $typeOptions);
