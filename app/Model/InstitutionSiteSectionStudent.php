@@ -277,7 +277,10 @@ class InstitutionSiteSectionStudent extends AppModel {
 			$gender[$i] = $this->find('count', array(
 				'recursive' => -1, 
 				'joins' => $joins,
-				'group' => array('Student.id')
+				'group' => array('Student.id'),
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.status = 1'
+				)
 			));
 		}
 		return $gender;
@@ -285,7 +288,8 @@ class InstitutionSiteSectionStudent extends AppModel {
 	
 	public function getStudentsBySection($sectionId, $showGrade = false) {
 		$options['conditions'] = array(
-			'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
+			'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+			'InstitutionSiteSectionStudent.status = 1'
 		);
 		
 		//$options['recursive'] =-1;
