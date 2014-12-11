@@ -425,13 +425,13 @@ class InstitutionSiteSectionStudent extends AppModel {
 		}
 	}
 	
-	public function getStudentAssessmentResults($classId, $itemId, $assessmentId = null) {
+	public function getStudentAssessmentResults($sectionId, $itemId, $assessmentId = null) {
 		$options['recursive'] = -1;
 		
 		$options['fields'] = array(
 			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
-			'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
+			'AssessmentResultType.name', 'InstitutionSiteSection.school_year_id',
 			'AssessmentItem.min', 'AssessmentItem.max'
 		);
 
@@ -439,14 +439,14 @@ class InstitutionSiteSectionStudent extends AppModel {
 			array(
 				'table' => 'students',
 				'alias' => 'Student',
-				'conditions' => array('Student.id = InstitutionSiteClassStudent.student_id')
+				'conditions' => array('Student.id = InstitutionSiteSectionStudent.student_id')
 			),
 			array(
-				'table' => 'institution_site_classes',
-				'alias' => 'InstitutionSiteClass',
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
 				'conditions' => array(
-					'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
-					'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+					'InstitutionSiteSection.id = InstitutionSiteSectionStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
 				)
 			),
 			array(
@@ -455,8 +455,8 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'type' => 'LEFT',
 				'conditions' => array(
 					'AssessmentItemResult.student_id = Student.id',
-					'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
-					'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
+					'AssessmentItemResult.institution_site_id = InstitutionSiteSection.institution_site_id',
+					'AssessmentItemResult.school_year_id = InstitutionSiteSection.school_year_id',
 					'AssessmentItemResult.assessment_item_id = ' . $itemId
 				)
 			),
@@ -480,7 +480,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
 					'conditions' => array(
-						'AssessmentItemType.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
+						'AssessmentItemType.education_grade_id = InstitutionSiteSectionStudent.education_grade_id',
 						'AssessmentItemType.id = ' . $assessmentId
 					)
 				)
