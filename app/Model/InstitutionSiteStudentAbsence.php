@@ -808,7 +808,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					$this->save($foundValue);
 				} else {
 					if (!array_key_exists('selectedDate', $options)) {
-					continue;
+						continue;
 					}
 					$value['first_date_absent'] = $options['selectedDate'];
 					$value['last_date_absent'] = $options['selectedDate'];
@@ -829,7 +829,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 							$this->delete($currAbsence['id']);
 						} else if (strtotime($currAbsence['first_date_absent']) < strtotime($options['selectedDate'])) {
 							$currAbsence['last_date_absent'] = date('d-m-Y', strtotime('-1 day', strtotime($options['selectedDate'])));
-							$currAbsence['start_time_absent'] = '00:00 AM';
 							$currAbsence['end_time_absent'] = '23:59 PM';
 							$this->save(array('InstitutionSiteStudentAbsence'=>$currAbsence));
 						}
