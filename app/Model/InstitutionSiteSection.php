@@ -298,44 +298,44 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getClassListWithYear($institutionSiteId, $schoolYearId, $assessmentId){
+	public function getSectionListWithYear($institutionSiteId, $schoolYearId, $assessmentId){
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'SchoolYear.name'),
+			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name', 'SchoolYear.name'),
 			'joins' => array(
 				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
 				),
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id'
+						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id'
 					)
 				),
 				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
 					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id',
+						'InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id',
 						'AssessmentItemType.id' => $assessmentId
 					)
 				)
 			),
 			'conditions' => array(
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $schoolYearId
+				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteSection.school_year_id' => $schoolYearId
 			),
-			'order' => array('SchoolYear.name, InstitutionSiteClass.name')
+			'order' => array('SchoolYear.name, InstitutionSiteSection.name')
 		));
 		
 		$result = array();
 		foreach($data AS $row){
-			$class = $row['InstitutionSiteClass'];
+			$section = $row['InstitutionSiteSection'];
 			$schoolYear = $row['SchoolYear'];
-			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
+			$result[$section['id']] = $schoolYear['name'] . ' - ' . $section['name'];
 		}
 		
 		return $result;
