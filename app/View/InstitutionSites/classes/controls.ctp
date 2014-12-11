@@ -22,7 +22,7 @@
 					'label' => false,
 					'div' => false,
 					'options' => $studentActionOptions,
-					'default' => $selectedGrade,
+					'default' => $selectedSection,
 					'onchange' => 'jsForm.change(this)',
 					'url' => $this->params['controller'] . '/' . $selectedAction,
 					'autocomplete' => 'off'
