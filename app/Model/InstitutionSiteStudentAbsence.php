@@ -203,7 +203,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$this->fields['student']['order'] = 1;
 			$this->fields['student']['visible'] = true;
 			$this->fields['institution_site_section_id']['type'] = 'hidden';
-			$this->fields['institution_site_class_id']['type'] = 'hidden';
 			$this->request->data = $data;
 		}
 		$this->setFieldOrder('full_day_absent', 2);
@@ -362,7 +361,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedYear);
 		$this->fields['institution_site_section_id']['type'] = 'select';
-		$this->fields['institution_site_class_id']['type'] = 'hidden';
 		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
 		$this->setFieldOrder('institution_site_section_id', 2);
 		if (!empty($sectionOptions)) {
