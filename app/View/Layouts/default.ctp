@@ -18,8 +18,8 @@
 
 $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="<?php echo $lang_locale; ?>" dir="<?php echo $lang_dir; ?>" class="<?php echo $lang_dir == 'rtl' ? 'rtl' : '' ?>">
+<!DOCTYPE html>
+<html lang="<?php echo $lang_locale; ?>" dir="<?php echo $lang_dir; ?>" class="<?php echo $lang_dir == 'rtl' ? 'rtl' : '' ?>">
 <head>
 	<?php echo $this->Html->charset(); ?>
 	<title><?php echo $description ?></title>
