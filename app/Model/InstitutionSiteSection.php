@@ -33,7 +33,7 @@ class InstitutionSiteSection extends AppModel {
 		)
 	);
 	public $hasMany = array(
-		//'InstitutionSiteSectionStaff',
+		'InstitutionSiteSectionStaff',
 		'InstitutionSiteSectionStudent',
 		'InstitutionSiteSectionGrade'
 	);
@@ -284,14 +284,14 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 		
-	public function getClassListByInstitution($institutionSiteId, $yearId=0) {
+	public function getSectionListByInstitution($institutionSiteId, $yearId=0) {
 		$options = array();
-		$options['fields'] = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name');
-		$options['order'] = array('InstitutionSiteClass.name');
-		$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
+		$options['fields'] = array('InstitutionSiteSection.id', 'InstitutionSiteSection.name');
+		$options['order'] = array('InstitutionSiteSection.name');
+		$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
 		
 		if (!empty($yearId)) {
-			$options['conditions']['InstitutionSiteClass.school_year_id'] = $yearId;
+			$options['conditions']['InstitutionSiteSection.school_year_id'] = $yearId;
 		}
 		
 		$data = $this->find('list', $options);

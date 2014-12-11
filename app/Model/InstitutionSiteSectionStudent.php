@@ -283,9 +283,9 @@ class InstitutionSiteSectionStudent extends AppModel {
 		return $gender;
 	}
 	
-	public function getStudentsByClass($classId, $showGrade = false) {
+	public function getStudentsBySection($sectionId, $showGrade = false) {
 		$options['conditions'] = array(
-			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+			'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
 		);
 		
 		//$options['recursive'] =-1;
@@ -299,17 +299,17 @@ class InstitutionSiteSectionStudent extends AppModel {
 			);
 		
 		if($showGrade){
-			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteClass')));
+			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteSection')));
 			$options['fields'][] = 'EducationGrade.name';
 		}
 		else{
-			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteClass','EducationGrade')));
+			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteSection','EducationGrade')));
 		}
 		
 		$data = $this->find('all', $options);
 		
 		/*$conditions = array(
-			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+			'InstitutionSiteClassStudent.institution_site_class_id' => $sectionId
 		);
 
 		$data = $this->find('all', array(
