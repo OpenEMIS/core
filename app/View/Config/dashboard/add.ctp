@@ -23,7 +23,6 @@ echo $this->Form->create(null, $formOptions);
 ?>
 <?php echo $this->Form->input('ConfigAttachment.0.name'); ?>
 <div class="form-group">
-
 	<label class="col-md-3 control-label"><?php echo $this->Label->get('Config.file');?></label>
 	<div class="col-md-4">
 		<div class="file_input">
@@ -33,6 +32,12 @@ echo $this->Form->create(null, $formOptions);
 				<input type="button" class="btn" value="<?php echo __('Select File'); ?>" onclick="dashboard.selectFile(this)" />
 			</div>
 		</div>
+	</div>
+</div>
+<div class="form-group">
+	<label class="col-md-3 control-label"></label>
+	<div class="col-md-4">
+		<em><?php echo $this->Label->get('fileUpload.single');?></em>
 	</div>
 </div>
 

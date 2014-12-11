@@ -86,6 +86,33 @@ class InstitutionSiteShift extends AppModel {
 		return $result;
 	}
 	
+	public function getInstitutionShiftsByYear($institutionSiteId, $schoolYearId) {
+		$result = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteShift.*', 'InstitutionSite.*', 'SchoolYear.*'),
+			'joins' => array(
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'type' => 'LEFT',
+					'conditions' => array('InstitutionSiteShift.school_year_id = SchoolYear.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'type' => 'LEFT',
+					'conditions' => array('InstitutionSiteShift.location_institution_site_id = InstitutionSite.id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteShift.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteShift.school_year_id' => $schoolYearId
+			)
+		));
+
+		return $result;
+	}
+	
 	public function getShiftOptions($institutionSiteId, $schoolYearId) {
 		$result = $this->find('list', array(
 			'recursive' => -1,
@@ -251,6 +278,40 @@ class InstitutionSiteShift extends AppModel {
 			$controller->redirect(array('action' => 'shifts'));
 		} else {
 			$controller->redirect(array('action' => 'shifts'));
+		}
+	}
+	
+	public function createInstitutionDefaultShift($institutionSiteId, $schoolYearId){
+		$data = $this->getInstitutionShiftsByYear($institutionSiteId, $schoolYearId);
+
+		if (empty($data)) {
+			$this->create();
+			
+			$schoolYear = ClassRegistry::init('SchoolYear')->getSchoolYearById($schoolYearId);
+
+			$ConfigItem = ClassRegistry::init('ConfigItem');
+			$settingStartTime = $ConfigItem->getValue('start_time');
+			$hoursPerDay = intval($ConfigItem->getValue('hours_per_day'));
+			if ($hoursPerDay > 1) {
+				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
+			} else {
+				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
+			}
+
+			$endTime = date('h:i A', $endTimeStamp);
+
+			$defaultShift = array();
+			$defaultShift['InstitutionSiteShift'] = array(
+				'name' => __('Default') . ' ' . __('Shift') . ' ' . $schoolYear,
+				'school_year_id' => $schoolYearId,
+				'start_time' => $settingStartTime,
+				'end_time' => $endTime,
+				'institution_site_id' => $institutionSiteId,
+				'location_institution_site_id' => $institutionSiteId,
+				'location_institution_site_name' => 'Institution Site Name (Shift Location)'
+			);
+
+			$this->save($defaultShift);
 		}
 	}
 

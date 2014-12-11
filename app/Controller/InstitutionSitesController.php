@@ -210,7 +210,7 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		// for resetting institution site id
-		if (count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
+		if (!$this->AccessControl->check($this->params['controller'], 'add') && count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
 			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));
 		} else {
 			$this->Session->delete('InstitutionSite.id');
@@ -336,9 +336,6 @@ class InstitutionSitesController extends AppController {
         $this->Navigation->addCrumb('Overview');
 
 		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
-		
-		// create default shift if this institution site has no any shift yet
-		$this->createDefaultShift();
 		
 		$this->set('data', $data);
 	}
@@ -1037,41 +1034,4 @@ class InstitutionSitesController extends AppController {
 		return $index;
 	}
 	
-	private function createDefaultShift() {
-		$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-		
-		$data = $InstitutionSiteShiftModel->getAllShiftsByInstitutionSite($this->institutionSiteId);
-
-		if (empty($data)) {
-			$InstitutionSiteShiftModel->create();
-
-			$SchoolYearModel = ClassRegistry::init('SchoolYear');
-			//$currentYearId = $SchoolYearModel->getSchoolYearId(date('Y'));
-			$yearOptions = $SchoolYearModel->getYearList();
-			$schoolYearId = key($yearOptions);
-
-			$settingStartTime = $this->ConfigItem->getValue('start_time');
-			$hoursPerDay = intval($this->ConfigItem->getValue('hours_per_day'));
-			if ($hoursPerDay > 1) {
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
-			} else {
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
-			}
-
-			$endTime = date('h:i A', $endTimeStamp);
-
-			$defaultShift = array();
-			$defaultShift['InstitutionSiteShift'] = array(
-				'name' => 'Default Shift',
-				'school_year_id' => $schoolYearId,
-				'start_time' => $settingStartTime,
-				'end_time' => $endTime,
-				'institution_site_id' => $this->institutionSiteId,
-				'location_institution_site_id' => $this->institutionSiteId,
-				'location_institution_site_name' => 'Institution Site Name'
-			);
-
-			$InstitutionSiteShiftModel->save($defaultShift);
-		}
-	}
 }

@@ -22,14 +22,14 @@ var InstitutionSiteStaff = {
 		this.attachSortOrder();
 	},
 	attachSortOrder: function() {
-		$('[orderby]').click(function() {
+		$('#staffs_search [orderby]').click(function() {
 			var order = $(this).attr('orderby');
 			var sort = $(this).hasClass('icon_sort_up') ? 'desc' : 'asc';
-			$('.orderBy').val(order);
-			$('.order').val(sort);
-			var action = $('form').attr('action') + '/page:' + $('.page').val();
-			$('form').attr('action', action);
-			$('form').submit();
+			$('#InstitutionSiteStaffOrderBy').val(order);
+			$('#InstitutionSiteStaffOrder').val(sort);
+			var action = $('#staffs_search form').attr('action') + '/page:' + $('#InstitutionSiteStaffPage').val();
+			$('#staffs_search form').attr('action', action);
+			$('#staffs_search form').submit();
 		});
 	}
 }

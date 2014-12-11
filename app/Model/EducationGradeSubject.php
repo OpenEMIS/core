@@ -114,6 +114,12 @@ class EducationGradeSubject extends AppModel {
 				$this->setVar(compact('data', 'conditionId'));
 			} else {
 				$data = $this->request->data;
+
+				$id = $this->request->params['named']['education_grade_id'];
+				$this->updateAll(
+				    array('visible' => 0),
+				    array('education_grade_id' => $id)
+				);
 				
 				if(isset($data[$this->alias])) {
 					foreach($data[$this->alias] as $i => $obj) {
