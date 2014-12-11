@@ -103,7 +103,7 @@ class SecurityGroup extends AppModel {
 			$this->setVar('roleOptions', $roleOptions);
 		}
 		
-		$this->setVar(compact('attr', 'index', 'type'));
+		$this->setVar(compact('attr', 'index', 'type', 'id'));
 	}
 	
 	public function autocomplete($model) {
@@ -204,8 +204,9 @@ class SecurityGroup extends AppModel {
 					$data[$model] = $this->request->data[$model];
 				}
 			}
-			
-			if ($this->saveAll($data)) {
+
+			//must set validate to true in order for checkUnique to work
+			if ($this->saveAll($data, array('validate' => true))) {
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => get_class($this), 'view', $this->getLastInsertID()));
 			} else {
@@ -221,6 +222,7 @@ class SecurityGroup extends AppModel {
 			$data[$this->alias]['SecurityGroupArea'] = $this->SecurityGroupArea->findAllBySecurityGroupId($id, null, array('Area.order'));
 			$data[$this->alias]['SecurityGroupInstitutionSite'] = $this->SecurityGroupInstitutionSite->findAllBySecurityGroupId($id, null, array('InstitutionSite.name'));
 			$data[$this->alias]['SecurityGroupUser'] = $this->SecurityGroupUser->findAllBySecurityGroupId($id, null, array('SecurityUser.first_name'));
+			$existingData = $data;
 			
 			if ($this->request->is(array('post', 'put'))) {
 				$models = array(
@@ -239,7 +241,7 @@ class SecurityGroup extends AppModel {
 						}
 					}
 				}
-				
+
 				$data = array();
 				$models[$this->alias] = 'id';
 				foreach ($models as $model => $attr) {
@@ -247,19 +249,26 @@ class SecurityGroup extends AppModel {
 						$data[$model] = $this->request->data[$model];
 					}
 				}
-				
+
+				$dataSource = $this->getDataSource();
+				$dataSource->begin();
+
 				// remove all related records from groups and re-insert
 				foreach ($models as $model => $attr) {
 					if ($this->alias == $model) continue;
 					$this->{$model}->recursive = -1;
 					$this->{$model}->deleteAll(array("$model.security_group_id" => $id), false);
 				}
-				if ($this->saveAll($data)) {
+				//must set validate to true in order for checkUnique to work
+				if ($this->saveAll($data, array('validate' => true))) {
+					$dataSource->commit();
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => get_class($this), 'view', $id));
 				} else {
+					$dataSource->rollback();
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.edit.failed');
+					$this->request->data = $existingData;
 				}
 			} else {
 				$this->request->data = $data;
