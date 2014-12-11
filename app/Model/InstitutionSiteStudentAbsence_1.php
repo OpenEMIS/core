@@ -31,8 +31,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		//'InstitutionSiteClass',
-		'InstitutionSiteSection',
+		'InstitutionSiteClass',
 		'StudentAbsenceReason' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'student_absence_reason_id'
@@ -52,11 +51,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	);
 	
 	public $validate = array(
-		'institution_site_section_id' => array(
+		'institution_site_class_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select a Section'
+				'message' => 'Please select a Class'
 			)
 		),
 		'student_id' => array(
@@ -107,7 +106,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->controller->FileUploader->additionalFileType();
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->InstitutionSiteSection->getYearOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
+		$yearOptions = $this->InstitutionSiteClass->getYearOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
 		
 		if ($this->action == 'add') {
 			$this->fields['school_year_id'] = array(
@@ -120,7 +119,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$this->setFieldOrder('school_year_id', 1);
 		}
 		
-		$this->fields['institution_site_section_id']['attr'] = array('onchange' => "$('#reload').click()");
+		$this->fields['institution_site_class_id']['attr'] = array('onchange' => "$('#reload').click()");
 		$this->fields['full_day_absent']['type'] = 'select';
 		$this->fields['full_day_absent']['options'] = array('Yes' => __('Yes'), 'No' => __('No'));
 		$this->setFieldOrder('full_day_absent', 2);
@@ -147,7 +146,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	
 	public function afterAction() {
 		if ($this->action == 'add' || $this->action == 'edit') {
-			$yearId = $this->action == 'add' ? $this->controller->viewVars['selectedYear'] : $this->request->data['InstitutionSiteSection']['school_year_id'];
+			$yearId = $this->action == 'add' ? $this->controller->viewVars['selectedYear'] : $this->request->data['InstitutionSiteClass']['school_year_id'];
 			
 			$yearObj = ClassRegistry::init('SchoolYear')->findById($yearId);
 			$startDate = $yearObj['SchoolYear']['start_date'];
@@ -182,27 +181,26 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
-			$sectionId = $data[$this->alias]['institution_site_section_id'];
+			$classId = $data[$this->alias]['institution_site_class_id'];
 			$data[$this->alias]['student_id'] = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-			$data[$this->alias]['institution_site_section_id'] = $this->InstitutionSiteSection->field('InstitutionSiteSection.name', array('InstitutionSiteSection.id' => $sectionId));
+			$data[$this->alias]['institution_site_class_id'] = $this->InstitutionSiteClass->field('InstitutionSiteClass.name', array('InstitutionSiteClass.id' => $classId));
 			$this->controller->viewVars['data'] = $data;
-			$this->setFieldOrder('institution_site_section_id', 0);
+			$this->setFieldOrder('institution_site_class_id', 0);
 			$this->setFieldOrder('student_id', 1);
 			$this->setVar('params', array('back' => 'absence'));
 		} else if ($this->action == 'edit') {
 			$data = $this->request->data;
-			$sectionId = $data[$this->alias]['institution_site_section_id'];
-			$this->fields['section']['type'] = 'disabled';
-			$this->fields['section']['value'] = $this->InstitutionSiteSection->field('InstitutionSiteSection.name', array('InstitutionSiteSection.id' => $sectionId));
-			$this->fields['section']['order'] = 0;
-			$this->fields['section']['visible'] = true;
-			$this->setFieldOrder('section', 0);
+			$classId = $data[$this->alias]['institution_site_class_id'];
+			$this->fields['class']['type'] = 'disabled';
+			$this->fields['class']['value'] = $this->InstitutionSiteClass->field('InstitutionSiteClass.name', array('InstitutionSiteClass.id' => $classId));
+			$this->fields['class']['order'] = 0;
+			$this->fields['class']['visible'] = true;
+			$this->setFieldOrder('class', 0);
 			$this->fields['student_id']['type'] = 'hidden';
 			$this->fields['student']['type'] = 'disabled';
 			$this->fields['student']['value'] = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
 			$this->fields['student']['order'] = 1;
 			$this->fields['student']['visible'] = true;
-			$this->fields['institution_site_section_id']['type'] = 'hidden';
 			$this->fields['institution_site_class_id']['type'] = 'hidden';
 			$this->request->data = $data;
 		}
@@ -210,7 +208,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		parent::afterAction();
 	}
 	
-	public function index($yearId=0, $sectionId=0, $weekId=null) {
+	public function index($yearId=0, $classId=0, $weekId=null) {
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
@@ -223,13 +221,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = key($yearList);
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
-		if ($sectionId != 0) {
-			if (!array_key_exists($sectionId, $sectionOptions)) {
-				$sectionId = key($sectionOptions);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
+		if ($classId != 0) {
+			if (!array_key_exists($classId, $classOptions)) {
+				$classId = key($classOptions);
 			}
 		} else {
-			$sectionId = key($sectionOptions);
+			$classId = key($classOptions);
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -249,7 +247,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$header = $this->controller->generateAttendanceHeader($startDate, $endDate);
 		$weekDayIndex = $this->controller->generateAttendanceWeekDayIndex($startDate, $endDate);
 		
-		$absenceData = $this->getAbsenceData($institutionSiteId, $yearId, $sectionId, $startDate, $endDate);
+		$absenceData = $this->getAbsenceData($institutionSiteId, $yearId, $classId, $startDate, $endDate);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStudent = $absenceUnit['Student'];
@@ -274,17 +272,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$InstitutionSiteSectionStudentModel = ClassRegistry::init('InstitutionSiteSectionStudent');
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
 		
-		$studentList = $InstitutionSiteSectionStudentModel->getStudentsBySection($sectionId);
+		$studentList = $InstitutionSiteClassStudentModel->getStudentsByClass($classId);
 		if(empty($studentList)){
 			$this->Message->alert('general.noData');
 		}
 		
-		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'studentList', 'absenceCheckList'));
+		$this->setVar(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'studentList', 'absenceCheckList'));
 	}
 	
-	public function absence($yearId=0, $sectionId=0, $weekId=null) {
+	public function absence($yearId=0, $classId=0, $weekId=null) {
 		$this->Navigation->addCrumb('Absence - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
@@ -297,13 +295,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = key($yearList);
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
-		if ($sectionId != 0) {
-			if (!array_key_exists($sectionId, $sectionOptions)) {
-				$sectionId = key($sectionOptions);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
+		if ($classId != 0) {
+			if (!array_key_exists($classId, $classOptions)) {
+				$classId = key($classOptions);
 			}
 		} else {
-			$sectionId = key($sectionOptions);
+			$classId = key($classOptions);
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -320,21 +318,21 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		
-		$data = $this->getAbsenceData($institutionSiteId, $yearId, $sectionId, $startDate, $endDate);
+		$data = $this->getAbsenceData($institutionSiteId, $yearId, $classId, $startDate, $endDate);
 		if(empty($data)){
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'data'));
+		$this->setVar(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'data'));
 	}
 	
 	public function add() {
 		$this->render = 'auto';
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$InstitutionSiteSectionStudentModel = ClassRegistry::init('InstitutionSiteSectionStudent');
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
 		
 		$yearOptions = $this->fields['school_year_id']['options'];
 		$selectedYear = 0;
-		$selectedSection = 0;
+		$selectedClass = 0;
 		if (!empty($yearOptions)) {
 			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
 				$selectedYear = key($yearOptions);
@@ -344,7 +342,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
 			$selectedYear = $data[$this->alias]['school_year_id'];
-			$selectedSection = $data[$this->alias]['institution_site_section_id'];
+			$selectedClass = $data[$this->alias]['institution_site_class_id'];
 			
 			if ($data['submit'] != 'reload') {
 				$this->create();
@@ -360,18 +358,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedYear);
-		$this->fields['institution_site_section_id']['type'] = 'select';
-		$this->fields['institution_site_class_id']['type'] = 'hidden';
-		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
-		$this->setFieldOrder('institution_site_section_id', 2);
-		if (!empty($sectionOptions)) {
-			if (empty($selectedSection) || (!empty($selectedSection) && !array_key_exists($selectedSection, $sectionOptions))) {
-				$selectedSection = key($sectionOptions);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedYear);
+		$this->fields['institution_site_class_id']['type'] = 'select';
+		$this->fields['institution_site_class_id']['options'] = $classOptions;
+		$this->setFieldOrder('institution_site_class_id', 2);
+		if (!empty($classOptions)) {
+			if (empty($selectedClass) || (!empty($selectedClass) && !array_key_exists($selectedClass, $classOptions))) {
+				$selectedClass = key($classOptions);
 			}
 		}
 		
-		$list = $this->InstitutionSiteSection->InstitutionSiteSectionStudent->getStudentsBySection($selectedSection);
+		$list = $this->InstitutionSiteClass->InstitutionSiteClassStudent->getStudentsByClass($selectedClass);
 		$studentOptions = array();
 		foreach ($list as $obj) {
 			$student = $obj['Student'];
@@ -444,15 +441,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		*/
 		$this->setVar('params', array('back' => 'absence'));
-		$this->setVar(compact('yearOptions', 'selectedYear', 'sectionOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'classId'));
+		$this->setVar(compact('yearOptions', 'selectedYear', 'classOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'classId'));
 	}
 	
-	public function getAbsenceData($institutionSiteId, $schoolYearId, $sectionId, $startDate='', $endDate='') {
+	public function getAbsenceData($institutionSiteId, $schoolYearId, $classId, $startDate='', $endDate='') {
 		$conditions = array();
 		
-		// if $sectionId is not present, then $institutionSiteId and $schoolYearId are necessary for data filter
-		if (!empty($sectionId)) {
-			$conditions[] = 'InstitutionSiteStudentAbsence.institution_site_section_id = ' . $sectionId;
+		// if $classId is not present, then $institutionSiteId and $schoolYearId are necessary for data filter
+		if (!empty($classId)) {
+			$conditions[] = 'InstitutionSiteStudentAbsence.institution_site_class_id = ' . $classId;
 		}
 		
 		$conditions['InstitutionSiteStudentAbsence.first_date_absent >='] = $startDate;
@@ -976,7 +973,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$header = array(
 			__('School Year'),
 			
-			__('Section'),
+			__('Class'),
 			
 			__('First Date Absent'),
 			__('Last Date Absent'),
@@ -1003,14 +1000,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$index = $args[1];
 
 		if ($index == 1) {
-			$this->unbindModel(array('belongsTo' => array('InstitutionSiteSection', 'ModifiedUser', 'CreatedUser')));
+			$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass', 'ModifiedUser', 'CreatedUser')));
 			
 			$options = array();
 			//$options['recursive'] = -1;
 			$options['fields'] = array(
 				'SchoolYear.name', 
 				
-				'InstitutionSiteSection.name', 
+				'InstitutionSiteClass.name', 
 				
 				'InstitutionSiteStudentAbsence.first_date_absent', 
 				'InstitutionSiteStudentAbsence.last_date_absent', 
@@ -1029,22 +1026,22 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				'InstitutionSiteStudentAbsence.comment'
 			);
 			$options['order'] = array('SchoolYear.name', 'InstitutionSiteStudentAbsence.first_date_absent', 'Student.first_name', 'Student.middle_name', 'Student.last_name');
-			//$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
+			//$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
 			
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteStudentAbsence.institution_site_section_id = InstitutionSiteSection.id',
-						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId
+						'InstitutionSiteStudentAbsence.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
 					)
 				),
 				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
 					'type' => 'LEFT',
-					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
+					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
 				)
 			);
 			
@@ -1057,13 +1054,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				$tempRow = array();
 				
 				$schoolYear = $row['SchoolYear'];
-				$section = $row['InstitutionSiteSection'];
+				$class = $row['InstitutionSiteClass'];
 				$absence = $row['InstitutionSiteStudentAbsence'];
 				$student = $row['Student'];
 				$reason = $row['StudentAbsenceReason'];
 				
 				$tempRow[] = $schoolYear['name'];
-				$tempRow[] = $section['name'];
+				$tempRow[] = $class['name'];
 				
 				$tempRow[] = $this->formatDateByConfig($absence['first_date_absent']);
 				$tempRow[] = $this->formatDateByConfig($absence['last_date_absent']);
