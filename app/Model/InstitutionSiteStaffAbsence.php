@@ -645,33 +645,14 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		foreach ($data['InstitutionSiteStaffAbsence'] as $key => $value) {
 			$staff_attendance_type = $value['staff_attendance_type'];
 			unset($value['staff_attendance_type']);
-			if ($staff_attendance_type!='0') {
-				// Absent
-				if (!array_key_exists('selectedDate', $options)) {
-					continue;
-				}
-				$value['first_date_absent'] = $options['selectedDate'];
-				$value['last_date_absent'] = $options['selectedDate'];
-				$value['full_day_absent'] = 'Yes';
-				$value['start_time_absent'] = '00:00 AM';
-				$value['end_time_absent'] = '23:59 PM';
-				switch ($staff_attendance_type) {
-					case '1': $value['absence_type'] = 'Excused'; break;
-					case '2': $value['absence_type'] = 'Unexcused'; break;
-				}
-				$value['institution_site_id'] = $this->controller->Session->read('InstitutionSite.id');
-				$this->create();
-				$this->save($value);
-			} else {
-				// Present
-				$conditions = array();
-				$conditions['AND'] = array();
-				$conditions['AND']['InstitutionSiteStaffAbsence.first_date_absent <='] = $options['selectedDate'];
-				$conditions['AND']['InstitutionSiteStaffAbsence.last_date_absent >='] = $options['selectedDate'];
-				$conditions['institution_site_id'] = $this->controller->Session->read('InstitutionSite.id');
-				$conditions['staff_id'] = $value['staff_id'];
+			$conditions = array();
+			$conditions['AND'] = array();
+			$conditions['AND']['InstitutionSiteStaffAbsence.first_date_absent <='] = $options['selectedDate'];
+			$conditions['AND']['InstitutionSiteStaffAbsence.last_date_absent >='] = $options['selectedDate'];
+			$conditions['institution_site_id'] = $this->controller->Session->read('InstitutionSite.id');
+			$conditions['staff_id'] = $value['staff_id'];
 
-				$found = $this->find(
+			$found = $this->find(
 					'all',
 					array(
 						'fields' => array('InstitutionSiteStaffAbsence.*'),
@@ -679,6 +660,34 @@ class InstitutionSiteStaffAbsence extends AppModel {
 					)
 				);
 
+			if ($staff_attendance_type!='0') {
+				// Marking Absent
+				switch ($staff_attendance_type) {
+					case '1': $currentAbsenceType = 'Excused'; break;
+					case '2': $currentAbsenceType = 'Unexcused'; break;
+				}
+				if (!empty($found)) {
+					foreach ($found as $foundKey => $foundValue) {
+						$foundValue['InstitutionSiteStaffAbsence']['absence_type'] = $currentAbsenceType;
+						$foundValue['InstitutionSiteStaffAbsence']['staff_absence_reason_id'] = $value['staff_absence_reason_id'];
+					}
+					$this->save($foundValue);
+				} else {
+					if (!array_key_exists('selectedDate', $options)) {
+						continue;
+					}
+					$value['first_date_absent'] = $options['selectedDate'];
+					$value['last_date_absent'] = $options['selectedDate'];
+					$value['full_day_absent'] = 'Yes';
+					$value['start_time_absent'] = '00:00 AM';
+					$value['end_time_absent'] = '23:59 PM';
+					
+					$value['institution_site_id'] = $this->controller->Session->read('InstitutionSite.id');
+					$this->create();
+					$this->save($value);
+				}
+			} else {
+				// Marking present
 				if (!empty($found)) {
 					foreach ($found as $key => $value) {
 						$currAbsence = $found[$key]['InstitutionSiteStaffAbsence'];
@@ -686,7 +695,6 @@ class InstitutionSiteStaffAbsence extends AppModel {
 							$this->delete($currAbsence['id']);
 						} else if (strtotime($currAbsence['first_date_absent']) < strtotime($options['selectedDate'])) {
 							$currAbsence['last_date_absent'] = date('d-m-Y', strtotime('-1 day', strtotime($options['selectedDate'])));
-							$currAbsence['start_time_absent'] = '00:00 AM';
 							$currAbsence['end_time_absent'] = '23:59 PM';
 							$this->save(array('InstitutionSiteStaffAbsence'=>$currAbsence));
 						}
