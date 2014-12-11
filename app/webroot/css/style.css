@@ -19,20 +19,6 @@
 .form-buttons input:first-child { margin-left: 15px; }
 /* end bootstrap */
 
-/* login partners */
-.partners {
-	position: fixed;
-	bottom: 50px;
-	right: 0;
-	z-index: 1;
-}
-
-.partners img {
-	height: 100px;
-	padding: 5px;
-}
-/* end partners */
-
 textarea { resize: none; }
 
 .left { float: left; }
