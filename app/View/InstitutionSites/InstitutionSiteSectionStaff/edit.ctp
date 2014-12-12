@@ -7,12 +7,12 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => $_action, $selectedSection), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => $model, 'index'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action.'Edit'));
+echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'edit'));
 echo $this->Form->create($model, $formOptions);
 ?>
 
@@ -29,20 +29,19 @@ echo $this->Form->create($model, $formOptions);
 		<tbody>
 			<?php 
 			foreach($data as $i => $obj) :
-				$checked = !empty($obj[$model]['status']) ? true : false;
+				$checked = $obj[$model]['status'];
 			?>
 			<tr>
 				<td class="checkbox-column">
 					<?php
 					echo $this->Form->hidden($i . '.id', array('value' => $obj[$model]['id']));
-					echo $this->Form->hidden($i . '.student_id', array('value' => $obj['Student']['id']));
-					echo $this->Form->hidden($i . '.institution_site_class_id', array('value' => $classId));
-					echo $this->Form->hidden($i . '.institution_site_section_id', array('value' => $selectedSection));
+					echo $this->Form->hidden($i . '.staff_id', array('value' => $obj['Staff']['id']));
+					echo $this->Form->hidden($i . '.institution_site_section_id', array('value' => $obj['InstitutionSiteSection']['id']));
 					echo $this->Form->checkbox($i . '.status', array('class' => 'icheck-input', 'checked' => $checked));
 					?>
 				</td>
-				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $obj['Staff']['identification_no']; ?></td>
+				<td><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
 			</tr>
 			<?php endforeach; ?>
 		</tbody>
@@ -51,7 +50,7 @@ echo $this->Form->create($model, $formOptions);
 
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => $_action, $selectedSection), array('class' => 'btn_cancel btn_left')); ?>
+	<?php echo $this->Html->link(__('Cancel'), array('action' => $model, 'index'), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
 <?php echo $this->Form->end(); ?>
