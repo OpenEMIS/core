@@ -373,17 +373,25 @@ class InstitutionSiteClass extends AppModel {
 					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
 				),
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id'
+						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteSectionClass.status = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array(
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id'
 					)
 				),
 				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
 					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id',
+						'AssessmentItemType.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
 						'AssessmentItemType.id' => $assessmentId
 					)
 				)
