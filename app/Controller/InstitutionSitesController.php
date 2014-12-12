@@ -1009,7 +1009,13 @@ class InstitutionSitesController extends AppController {
 	
 	public function generateAttendanceHeader($startDate, $endDate){
 		$header = array(__('ID'), __('Name'));
-		
+		$header = array_merge($header, $this->generateAttendanceHeaderDates($startDate, $endDate));
+		return $header;
+	}
+
+	public function generateAttendanceHeaderDates($startDate, $endDate) {
+		$header = array();
+
 		$firstDate = $startDate;
 		while($firstDate <= $endDate){
 			$stampStartDate = strtotime($firstDate);
@@ -1017,8 +1023,12 @@ class InstitutionSitesController extends AppController {
 			$stampStartDateNew = strtotime('+1 day', $stampStartDate);
 			$firstDate = date("Y-m-d", $stampStartDateNew);
 		}
-		
+
 		return $header;
+	}
+
+	public function generateAttendanceDayHeader() {
+		return array(__('ID'), __('Name'), __('Type'), __('Reason'));
 	}
 	
 	public function generateAttendanceWeekDayIndex($startDate, $endDate){
@@ -1035,4 +1045,7 @@ class InstitutionSitesController extends AppController {
 		return $index;
 	}
 	
+	public function getDayViewAttendanceOptions() {
+		return array(__('Present'), __('Absent').' - '.__('Excused'), __('Absent').' - '.__('Unexcused'));
+	}
 }
