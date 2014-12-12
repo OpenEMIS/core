@@ -38,7 +38,6 @@ $(document).ready(function() {
             });
 
             $('input[type="submit"], button[type="submit"]').click(function(){
-            	alert('click me');
                 window.onbeforeunload = unconfirmLoading;
             });
 
