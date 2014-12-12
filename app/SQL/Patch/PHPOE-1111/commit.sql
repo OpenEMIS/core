@@ -33,6 +33,7 @@ NULL , 'Institution', NULL , 'InstitutionSites', 'Details', 'Sections', 'Institu
 --
 -- 2. security_functions
 --
+ALTER TABLE `security_functions` CHANGE `_view` `_view` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
 
 SET @orderOfClassesSecurity := 0;
 SELECT `order` INTO @orderOfClassesSecurity FROM `security_functions` WHERE `controller` LIKE 'InstitutionSites' AND `category` LIKE 'Details' AND `name` LIKE 'Classes';
@@ -59,7 +60,7 @@ INSERT INTO `security_functions` (
 `created`
 )
 VALUES (
-NULL , 'Sections', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteSection|InstitutionSiteSection.index|InstitutionSiteSection.view', '_view:InstitutionSiteSection.edit', '_view:InstitutionSiteSection.add', '_view:InstitutionSiteSection.delete', NULL , @orderOfClassesSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Sections', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteSectionStudent|InstitutionSiteSectionStudent.index|InstitutionSiteSectionStudent.edit|InstitutionSiteSectionStaff|InstitutionSiteSectionStaff.index|InstitutionSiteSectionStaff.edit|InstitutionSiteSection|InstitutionSiteSection.index|InstitutionSiteSection.view', '_view:InstitutionSiteSection.edit', '_view:InstitutionSiteSection.add', '_view:InstitutionSiteSection.delete', NULL , @orderOfClassesSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
 );
 
 --
