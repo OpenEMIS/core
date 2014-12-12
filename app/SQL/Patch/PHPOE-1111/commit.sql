@@ -59,7 +59,7 @@ INSERT INTO `security_functions` (
 `created`
 )
 VALUES (
-NULL , 'Sections', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteSection|InstitutionSiteSection.view', '_view:InstitutionSiteSection.edit', '_view:InstitutionSiteSection.add', '_view:InstitutionSiteSection.delete', NULL , @orderOfClassesSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Sections', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteSection|InstitutionSiteSection.index|InstitutionSiteSection.view', '_view:InstitutionSiteSection.edit', '_view:InstitutionSiteSection.add', '_view:InstitutionSiteSection.delete', NULL , @orderOfClassesSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
 );
 
 --
