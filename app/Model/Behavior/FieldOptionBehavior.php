@@ -122,6 +122,15 @@ class FieldOptionBehavior extends ModelBehavior {
 		));
 		return $data;
 	}
+
+	public function getOptionList(Model $model, $conditions) {
+		$data = $model->find('list', array(
+			'recursive' => 0,
+			'conditions' => $conditions,
+			'order' => array($model->alias . '.order')
+		));
+		return $data;
+	}
 	
 	public function setOptionFields(Model $model, $fields, $overwrite=false) {
 		if(!$overwrite) {
