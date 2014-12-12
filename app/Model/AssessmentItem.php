@@ -67,4 +67,33 @@ class AssessmentItem extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function getClassItemList($assessmentId, $classId) {
+		$data = $this->find('list', array(
+			'fields' => array('AssessmentItem.id', 'EducationSubject.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades_subjects',
+					'alias' => 'EducationGradeSubject',
+					'conditions' => array('EducationGradeSubject.id = AssessmentItem.education_grade_subject_id')
+				),
+				array(
+					'table' => 'education_subjects',
+					'alias' => 'EducationSubject',
+					'conditions' => array('EducationSubject.id = EducationGradeSubject.education_subject_id')
+				),
+				array(
+					'table' => 'institution_site_class_subjects',
+					'alias' => 'InstitutionSiteClassSubject',
+					'conditions' => array(
+						'InstitutionSiteClassSubject.education_grade_subject_id = EducationGradeSubject.id',
+						'InstitutionSiteClassSubject.institution_site_class_id = ' . $classId
+					)
+				),
+			),
+			'conditions' => array('assessment_item_type_id' => $assessmentId),
+			'order' => array('EducationSubject.order')
+		));
+		return $data;
+	}
 }

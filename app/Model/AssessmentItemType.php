@@ -194,17 +194,41 @@ class AssessmentItemType extends AppModel {
 			'recursive' => -1,
 			'joins' => array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id')
 				),
 				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteClass.school_year_id = ' . $schoolYearId
+						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
+						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteSection.school_year_id = ' . $schoolYearId
+					)
+				),
+				array(
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
+					'conditions' => array(
+						'InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id',
+						'InstitutionSiteSectionClass.status = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_class_subjects',
+					'alias' => 'InstitutionSiteClassSubject',
+					'conditions' => array(
+						'InstitutionSiteClassSubject.institution_site_class_id = InstitutionSiteSectionClass.institution_site_class_id',
+						'InstitutionSiteClassSubject.status = 1'
+					)
+				),
+				array(
+					'table' => 'assessment_items',
+					'alias' => 'AssessmentItem',
+					'conditions' => array(
+						'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+						'AssessmentItem.education_grade_subject_id = InstitutionSiteClassSubject.education_grade_subject_id'
 					)
 				),
 				array(

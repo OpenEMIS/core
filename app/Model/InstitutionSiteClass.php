@@ -36,7 +36,8 @@ class InstitutionSiteClass extends AppModel {
 		'InstitutionSiteClassGrade',
 		'InstitutionSiteClassStaff',
 		'InstitutionSiteClassStudent',
-		'InstitutionSiteClassSubject'
+		'InstitutionSiteClassSubject',
+		'InstitutionSiteSectionClass'
 	);
 	
 	public $validate = array(
@@ -72,13 +73,6 @@ class InstitutionSiteClass extends AppModel {
                 'rule'    => array('comparison', '>=', 0),
                 'message' => 'Please enter a value between 0 and 100'
             )
-		),
-		'institution_site_shift_id' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid shift'
-			)
 		)
 	);
 	
@@ -197,19 +191,22 @@ class InstitutionSiteClass extends AppModel {
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			//$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			//pr($grades);
+			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedYear);
+			//pr($sections);
 			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
 			$InstitutionSiteShiftModel->createInstitutionDefaultShift($controller->institutionSiteId, $selectedYear);
 			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($controller->institutionSiteId, $selectedYear);
 			
-			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				$data = $controller->request->data;
-				if(isset($data['InstitutionSiteClassGrade'])) {
-					foreach($data['InstitutionSiteClassGrade'] as $i => $obj) {
+				if(isset($data['InstitutionSiteSectionClass'])) {
+					foreach($data['InstitutionSiteSectionClass'] as $i => $obj) {
 						if(empty($obj['status'])) {
-							unset($data['InstitutionSiteClassGrade'][$i]);
+							unset($data['InstitutionSiteSectionClass'][$i]);
 						}
 					}
 				}
@@ -233,8 +230,10 @@ class InstitutionSiteClass extends AppModel {
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($className);
-			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
-			$controller->set(compact('data', 'grades'));
+			//$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
+			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
+			//pr($sections);
+			$controller->set(compact('data', 'sections'));
 			$controller->set('actionOptions', $this->getClassActions($controller, $id));
 		} else {
 			$controller->Message->alert('general.notExists');
@@ -260,8 +259,11 @@ class InstitutionSiteClass extends AppModel {
 				$controller->request->data = $data;
 			}
 			
-			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
-			$controller->set('grades', $grades);
+			//$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
+			//$controller->set('grades', $grades);
+			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForClass($id);
+			//pr($sections);
+			$controller->set('sections', $sections);
 			
 			$name = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($name);
@@ -309,7 +311,8 @@ class InstitutionSiteClass extends AppModel {
 		foreach($classes as $id => $name) {
 			$data[$id] = array(
 				'name' => $name,
-				'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
+				//'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
+				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($id),
 				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
 			);
 		}
