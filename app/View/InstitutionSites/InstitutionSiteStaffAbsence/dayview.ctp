@@ -3,6 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
+echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $yearId, $weekId), array('class' => 'divider'));
 echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $yearId, $weekId, $dayId), array('class' => 'divider'));
 $this->end();
 
