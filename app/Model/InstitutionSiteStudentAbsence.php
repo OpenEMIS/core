@@ -242,12 +242,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
-		if ($sectionId != 0) {
-			if (!array_key_exists($sectionId, $sectionOptions)) {
+		if(!empty($sectionOptions)){
+			if ($sectionId != 0) {
+				if (!array_key_exists($sectionId, $sectionOptions)) {
+					$sectionId = key($sectionOptions);
+				}
+			} else {
 				$sectionId = key($sectionOptions);
 			}
-		} else {
-			$sectionId = key($sectionOptions);
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -310,7 +312,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'weekDayList', 'studentList', 'absenceCheckList'));
 	}
 	
-	public function absence($yearId=0, $sectionId=0, $sectionId=null, $dayId=null) {
+	public function absence($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
 		$this->Navigation->addCrumb('Absence - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
@@ -331,12 +333,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
-		if ($sectionId != 0) {
-			if (!array_key_exists($sectionId, $sectionOptions)) {
+		if(!empty($sectionOptions)){
+			if ($sectionId != 0) {
+				if (!array_key_exists($sectionId, $sectionOptions)) {
+					$sectionId = key($sectionOptions);
+				}
+			} else {
 				$sectionId = key($sectionOptions);
 			}
-		} else {
-			$sectionId = key($sectionOptions);
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -517,13 +521,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = $defaultYearId;
 		}
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
-		if ($sectionId != 0) {
-			if (!array_key_exists($sectionId, $classOptions)) {
-				$sectionId = key($classOptions);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
+		if(!empty($sectionOptions)){
+			if ($sectionId != 0) {
+				if (!array_key_exists($sectionId, $sectionOptions)) {
+					$sectionId = key($sectionOptions);
+				}
+			} else {
+				$sectionId = key($sectionOptions);
 			}
-		} else {
-			$sectionId = key($classOptions);
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -596,7 +602,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			array_push($weekDayList, "(".$headerDates[$key].") ".substr($value,0,4)."-".substr($value,4,2)."-".substr($value,6,2));
 		}
 		
-		$this->setVar(compact('yearList', 'yearId', 'classOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList'));
+		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList'));
+
 	}
 
 	public function dayedit($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
@@ -622,13 +629,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = $defaultYearId;
 		}
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
-		if ($sectionId != 0) {
-			if (!array_key_exists($sectionId, $classOptions)) {
-				$sectionId = key($classOptions);
+		$sectionOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
+		if(!empty($sectionOptions)){
+			if ($sectionId != 0) {
+				if (!array_key_exists($sectionId, $sectionOptions)) {
+					$sectionId = key($sectionOptions);
+				}
+			} else {
+				$sectionId = key($sectionOptions);
 			}
-		} else {
-			$sectionId = key($classOptions);
 		}
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
@@ -713,12 +722,12 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
 		$absenceReasonList = $this->StudentAbsenceReason->getOptionList(array('FieldOption.code' => 'StudentAbsenceReason'));
-		
-		$this->setVar(compact('yearList', 'yearId', 'classOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
+
+		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 
 	}
 
-	public function getAbsenceData($institutionSiteId, $schoolYearId, $sectionId, $startDate='', $endDate='') {
+	public function getAbsenceData($institutionSiteId, $schoolYearId, $sectionId=0, $startDate='', $endDate='') {
 		$conditions = array();
 		
 		// if $sectionId is not present, then $institutionSiteId and $schoolYearId are necessary for data filter
