@@ -6,8 +6,8 @@ $products = array(
 );
 ?>
 
-<div class="btn-group product-list">
-	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="color: #FFFFFF">
+<div class="btn-group">
+	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 		<i class="fa fa-list fa-lg"></i>
 	</a>
 
