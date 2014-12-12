@@ -281,22 +281,22 @@ class AssessmentItemType extends AppModel {
 			'recursive' => -1,
 			'joins' => array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id')
 				),
 				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
+						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
+						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId
 					)
 				),
 				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
 				)
 			),
 			'conditions' => array(
