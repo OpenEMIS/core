@@ -22,7 +22,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	public $actsAs = array(
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
-		), 
+		),
+		'TimePicker' => array('start_time_absent' => array('format' => 'h:i a'), 'end_time_absent' => array('format' => 'h:i a')),
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -195,7 +196,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$this->controller->viewVars['data'] = $data;
 			$this->setFieldOrder('institution_site_class_id', 0);
 			$this->setFieldOrder('student_id', 1);
-			$this->setVar('params', array('back' => 'absence'));
+			$this->setVar('params', array('back' => $this->Session->read('InstitutionSiteStudentAbsence.backLink')));
 		} else if ($this->action == 'edit') {
 			$data = $this->request->data;
 			$classId = $data[$this->alias]['institution_site_class_id'];
@@ -306,6 +307,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			array_push($weekDayList, "(".$headerDates[$key].") ".substr($value,0,4)."-".substr($value,4,2)."-".substr($value,6,2));
 		}
 
+		$this->Session->write('InstitutionSiteStudentAbsence.backLink', array('index',$yearId,$classId,$weekId));
 		$this->setVar(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'weekDayList', 'studentList', 'absenceCheckList'));
 	}
 	
@@ -371,7 +373,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		if(empty($data)){
 			$this->Message->alert('general.noData');
 		}
-		
+
+		$this->Session->write('InstitutionSiteStudentAbsence.backLink', array('absence',$yearId,$classId,$weekId));
 		$this->setVar(compact('yearList', 'yearId', 'dayId', 'classOptions', 'classId', 'weekDayList', 'weekList', 'weekId', 'data'));
 	}
 	
@@ -488,7 +491,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$absenceReasonOptions =  $this->StudentAbsenceReason->getList();
 		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		*/
+		
 		$this->setVar('params', array('back' => 'absence'));
+
 		$this->setVar(compact('yearOptions', 'selectedYear', 'classOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'classId'));
 	}
 
@@ -813,8 +818,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					$value['first_date_absent'] = $options['selectedDate'];
 					$value['last_date_absent'] = $options['selectedDate'];
 					$value['full_day_absent'] = 'Yes';
-					$value['start_time_absent'] = '00:00 AM';
-					$value['end_time_absent'] = '23:59 PM';
+					$value['start_time_absent'] = '12:00 AM';
+					$value['end_time_absent'] = '11:59 PM';
 					$value['absence_type'] = $currentAbsenceType;
 					$value['institution_site_class_id'] = $options['classId'];
 					$this->create();
@@ -829,7 +834,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 							$this->delete($currAbsence['id']);
 						} else if (strtotime($currAbsence['first_date_absent']) < strtotime($options['selectedDate'])) {
 							$currAbsence['last_date_absent'] = date('d-m-Y', strtotime('-1 day', strtotime($options['selectedDate'])));
-							$currAbsence['end_time_absent'] = '23:59 PM';
+							$currAbsence['end_time_absent'] = '11:59 PM';
 							$this->save(array('InstitutionSiteStudentAbsence'=>$currAbsence));
 						}
 					}

@@ -673,6 +673,23 @@ class InstitutionSiteStaff extends AppModel {
 				)
 			)
 		);
+
+		// $options['conditions'] = array(
+		// 	'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
+		// 	'OR' => array(
+		// 		array(
+		// 			'InstitutionSiteStaff.end_date IS NULL',
+		// 			'InstitutionSiteStaff.start_date <=' => $endDate
+		// 		),
+		// 		array(
+		// 			'InstitutionSiteStaff.end_date IS NOT NULL',
+		// 			'InstitutionSiteStaff.start_date <=' => $endDate,
+		// 			'InstitutionSiteStaff.end_date >=' => $startDate
+		// 		)
+		// 	)
+		// );
+
+
 		
 		//$options['recursive'] =-1;
 		$options['fields'] = array(

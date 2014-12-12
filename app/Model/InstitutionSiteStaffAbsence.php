@@ -21,6 +21,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		), 
+		'TimePicker' => array('start_time_absent' => array('format' => 'h:i a'), 'end_time_absent' => array('format' => 'h:i a')),
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -185,7 +186,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$data[$this->alias]['staff_id'] = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
 			$this->controller->viewVars['data'] = $data;
 			$this->setFieldOrder('staff_id', 0);
-			$this->setVar('params', array('back' => 'absence'));
+			$this->setVar('params', array('back' => $this->Session->read('InstitutionSiteStaffAbsence.backLink')));
 			
 			$this->setFieldOrder('full_day_absent', 1);
 			$this->setFieldOrder('staff_absence_reason_id', 10);
@@ -286,6 +287,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			array_push($weekDayList, "(".$headerDates[$key].") ".substr($value,0,4)."-".substr($value,4,2)."-".substr($value,6,2));
 		}
 		
+		$this->Session->write('InstitutionSiteStaffAbsence.backLink', array('index',$yearId,$weekId));
 		$this->setVar(compact('yearList', 'yearId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'weekDayList', 'staffList', 'absenceCheckList'));
 	}
 	
@@ -341,6 +343,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$this->Message->alert('institutionSiteAttendance.no_data');
 		}
 		
+		$this->Session->write('InstitutionSiteStaffAbsence.backLink', array('absence',$yearId,$weekId));
 		$this->setVar(compact('yearList', 'yearId', 'dayId', 'weekList', 'weekDayList', 'weekId', 'data'));
 	}
 	
@@ -679,8 +682,8 @@ class InstitutionSiteStaffAbsence extends AppModel {
 					$value['first_date_absent'] = $options['selectedDate'];
 					$value['last_date_absent'] = $options['selectedDate'];
 					$value['full_day_absent'] = 'Yes';
-					$value['start_time_absent'] = '00:00 AM';
-					$value['end_time_absent'] = '23:59 PM';
+					$value['start_time_absent'] = '12:00 AM';
+					$value['end_time_absent'] = '11:59 PM';
 					
 					$value['institution_site_id'] = $this->controller->Session->read('InstitutionSite.id');
 					$this->create();
@@ -695,7 +698,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 							$this->delete($currAbsence['id']);
 						} else if (strtotime($currAbsence['first_date_absent']) < strtotime($options['selectedDate'])) {
 							$currAbsence['last_date_absent'] = date('d-m-Y', strtotime('-1 day', strtotime($options['selectedDate'])));
-							$currAbsence['end_time_absent'] = '23:59 PM';
+							$currAbsence['end_time_absent'] = '11:59 PM';
 							$this->save(array('InstitutionSiteStaffAbsence'=>$currAbsence));
 						}
 					}
