@@ -55,6 +55,20 @@
 .rtl .login-box .alert { float: none; }
 .rtl .login-box .btn-login { float: right; margin-bottom: 15px; }
 
+/* login partners */
+.partners {
+	position: fixed;
+	bottom: 50px;
+	right: 0;
+	z-index: 1;
+}
+
+.partners img {
+	height: 100px;
+	padding: 5px;
+}
+/* end partners */
+
 @media (max-width: 768px) {
 	.login-box {
 		position:relative;
