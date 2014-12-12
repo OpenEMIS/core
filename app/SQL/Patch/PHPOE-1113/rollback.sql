@@ -4,7 +4,7 @@
 -- (29, 'Staff', 'InstitutionSites', 'Institutions', 'Attendance', 8, 'InstitutionSiteStaffAbsence|InstitutionSiteStaffAbsence.index|InstitutionSiteStaffAbsence.absence', 'InstitutionSiteStaffAbsence.edit', 'InstitutionSiteStaffAbsence.add', 'InstitutionSiteStaffAbsence.remove', NULL, 10, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 UPDATE security_functions set _view = replace(_view , '|InstitutionSiteStudentAbsence.dayview','') WHERE category = 'Attendance' AND name = 'students';
-UPDATE security_functions set _edit = replace(_edit , '|InstitutionSiteStudentAbsence.dayedit','') WHERE category = 'Attendance' AND name = 'students';
+UPDATE security_functions set _add = replace(_add , '|InstitutionSiteStudentAbsence.dayedit','') WHERE category = 'Attendance' AND name = 'students';
 
 UPDATE security_functions set _view = replace(_view , '|InstitutionSiteStaffAbsence.dayview','') WHERE category = 'Attendance' AND name = 'staff';
-UPDATE security_functions set _edit = replace(_edit , '|InstitutionSiteStaffAbsence.dayedit','') WHERE category = 'Attendance' AND name = 'staff';
+UPDATE security_functions set _add = replace(_add , '|InstitutionSiteStaffAbsence.dayedit','') WHERE category = 'Attendance' AND name = 'staff';
