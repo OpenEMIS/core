@@ -629,7 +629,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$yearId = $defaultYearId;
 		}
 		
-		$sectionOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $yearId);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
 		if(!empty($sectionOptions)){
 			if ($sectionId != 0) {
 				if (!array_key_exists($sectionId, $sectionOptions)) {
