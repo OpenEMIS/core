@@ -80,65 +80,92 @@ class InstitutionSiteClassSubject extends AppModel {
 	
 	public function classesSubjectEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		if($controller->request->is('get')) {
-			$data = ClassRegistry::init('EducationSubject')->find('all', array(
-				'recursive' => 0,
-				'fields' => array(
-					'EducationGradeSubject.id', 'EducationGrade.name', 'EducationSubject.code', 'EducationSubject.name',
-					'InstitutionSiteClassSubject.id', 'InstitutionSiteClassSubject.status'
+		$maxSubjectsSetting = $controller->ConfigItem->getValue('max_subjects_per_class');
+
+		$data = ClassRegistry::init('EducationSubject')->find('all', array(
+			'recursive' => 0,
+			'fields' => array(
+				'EducationSubject.id', 'EducationGradeSubject.id', 'EducationGrade.name', 'EducationSubject.code', 'EducationSubject.name',
+				'InstitutionSiteClassSubject.id', 'InstitutionSiteClassSubject.status'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_grades_subjects',
+					'alias' => 'EducationGradeSubject',
+					'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
 				),
-				'joins' => array(
-					array(
-						'table' => 'education_grades_subjects',
-						'alias' => 'EducationGradeSubject',
-						'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
-					),
-					array(
-						'table' => 'education_grades',
-						'alias' => 'EducationGrade',
-						'conditions' => array(
-							'EducationGrade.id = EducationGradeSubject.education_grade_id'
-						)
-					),
-					array(
-						'table' => 'institution_site_class_grades',
-						'alias' => 'InstitutionSiteClassGrade',
-						'conditions' => array(
-							'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id',
-							'InstitutionSiteClassGrade.institution_site_class_id = ' . $id
-						)
-					),
-					array(
-						'table' => 'institution_site_class_subjects',
-						'alias' => $this->alias,
-						'type' => 'LEFT',
-						'conditions' => array(
-							$this->alias . '.institution_site_class_id = InstitutionSiteClassGrade.institution_site_class_id',
-							$this->alias . '.education_grade_subject_id = EducationGradeSubject.id'
-						)
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'EducationGrade.id = EducationGradeSubject.education_grade_id'
 					)
 				),
-				'order' => array('EducationSubject.order', 'InstitutionSiteClassSubject.id DESC')
-			));
-			if(empty($data)) {
-				$controller->Message->alert('general.noData');
-			}
-			$controller->set(compact('data', 'id'));
-		} else {
-			$data = $controller->request->data;
-			if(isset($data[$this->alias])) {
-				foreach($data[$this->alias] as $i => $obj) {
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationGrade.education_programme_id = EducationProgramme.id'
+					)
+				),
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
+						'InstitutionSiteProgramme.status = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteClass.institution_site_id',
+						'InstitutionSiteProgramme.school_year_id = InstitutionSiteClass.school_year_id',
+						'InstitutionSiteClass.id = ' . $id
+					)
+				),
+				array(
+					'table' => 'institution_site_class_subjects',
+					'alias' => $this->alias,
+					'type' => 'LEFT',
+					'conditions' => array(
+						$this->alias . '.institution_site_class_id = InstitutionSiteClass.id',
+						$this->alias . '.education_grade_subject_id = EducationGradeSubject.id'
+					)
+				)
+			),
+			'order' => array('EducationSubject.order', 'InstitutionSiteClassSubject.id DESC')
+		));
+
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+		}
+		
+		if($controller->request->is(array('post', 'put'))) {
+			$postData = $controller->request->data;
+			if(isset($postData[$this->alias])) {
+				$subjectsSelected = 0;
+				foreach($postData[$this->alias] as $i => $obj) {
 					if(empty($obj['id']) && $obj['status'] == 0) {
-						unset($data[$this->alias][$i]);
+						unset($postData[$this->alias][$i]);
+					}else if($obj['status'] == 1){
+						$subjectsSelected ++;
+					}
+				}//pr($maxSubjectsSetting);die;
+				
+				if(!empty($postData[$this->alias])) {
+					if($subjectsSelected <= $maxSubjectsSetting){
+						$this->saveAll($postData[$this->alias]);
+						$controller->Message->alert('general.edit.success');
+						return $controller->redirect(array('action' => $this->_action));
+					}else{
+						$controller->Message->alert('InstitutionSiteClass.toManySubjects');
 					}
 				}
-				if(!empty($data[$this->alias])) {
-					$this->saveAll($data[$this->alias]);
-				}
 			}
-			$controller->Message->alert('general.edit.success');
-			return $controller->redirect(array('action' => $this->_action));
 		}
+		$controller->set(compact('data', 'id'));
 	}
 	
 	// used by InstitutionSite.classesEdit/classesView

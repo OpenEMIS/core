@@ -113,7 +113,10 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),
-		'InstitutionSiteStaffAbsence'
+		'InstitutionSiteStaffAbsence',
+		'InstitutionSiteSection',
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteSectionStaff'
 	);
 	
 	public function beforeFilter() {

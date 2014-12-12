@@ -1,18 +1,16 @@
 <?php
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit) {
-	$params = array('action' => $_action.'Edit');
-	if(isset($selectedSection)) {
-		$params[] = $selectedSection;
-	}
-	echo $this->Html->link($this->Label->get('general.edit'), $params, array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit'), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
+echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
 if(!empty($data)) :
 ?>
 
@@ -26,12 +24,12 @@ if(!empty($data)) :
 		</thead>
 
 		<tbody>
-			<?php foreach($data as $obj) : ?>
+			<?php foreach($data as $obj) { ?>
 			<tr>
-				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $obj['Staff']['identification_no']; ?></td>
+				<td><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
 			</tr>
-			<?php endforeach ?>
+			<?php } ?>
 		</tbody>
 	</table>
 </div>

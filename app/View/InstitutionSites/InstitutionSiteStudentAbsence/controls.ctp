@@ -27,7 +27,7 @@
 			'value' => $weekId,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . "/$model/$action/$yearId/$classId"
+			'url' => $this->params['controller'] . "/$model/$action/$yearId/$sectionId"
 		));
 		?>
 	</div>
@@ -46,20 +46,20 @@
 			'value' => $dayId, 
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . "/$model/$action/$yearId/$classId/$weekId"
+			'url' => $this->params['controller'] . "/$model/$action/$yearId/$sectionId/$weekId"
 		));
 		?>
 	</div>
 	<div class="col-md-3">
 		<?php
-		if (empty($classOptions)) {
-			array_push($classOptions, $this->Label->get('general.noData'));
+		if (empty($sectionOptions)) {
+			array_push($sectionOptions, $this->Label->get('general.noData'));
 		}
-		echo $this->Form->input('class_id', array(
+		echo $this->Form->input('section_id', array(
 			'label' => false,
 			'div' => false,
-			'options' => $classOptions,
-			'value' => $classId,
+			'options' => $sectionOptions,
+			'value' => $sectionId,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . "/$model/$action/$yearId"
