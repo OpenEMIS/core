@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Attendance'), array('action' => $model), array('class' => 'divider'));
+echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $yearId, $weekId), array('class' => 'divider'));
 if ($_add) {
 	echo $this->Html->link(__('Add'), array('action' => $model, 'add'), array('class' => 'divider'));
 }

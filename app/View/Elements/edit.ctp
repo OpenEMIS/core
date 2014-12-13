@@ -88,10 +88,17 @@ foreach($fields as $key => $field) {
 				
 			case 'time':
 				$attr = array('id' => $fieldModel . '_' . $key);
-				
+
 				if (array_key_exists('attr', $field)) {
 					$attr = array_merge($attr, $field['attr']);
 				}
+
+				if (array_key_exists($fieldModel, $this->request->data)) {
+					if (array_key_exists($key, $this->request->data[$fieldModel])) {
+						$attr['value'] = $this->request->data[$fieldModel][$key];
+					}
+				}
+
 				$attr['label'] = $label;
 				echo $this->FormUtility->timepicker($fieldName, $attr);
 				break;

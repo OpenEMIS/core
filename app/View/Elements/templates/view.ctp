@@ -16,7 +16,11 @@ $this->start('contentActions');
 	$actionParams = array('action' => $model);
 	if (isset($params)) {
 		if (isset($params['back'])) {
-			$actionParams[] = $params['back'];
+			if (is_array($params['back'])) {
+				$actionParams = array_merge($actionParams, $params['back']);
+			} else {
+				$actionParams[] = $params['back'];
+			}
 		} else {
 			$actionParams[] = 'index';
 		}
