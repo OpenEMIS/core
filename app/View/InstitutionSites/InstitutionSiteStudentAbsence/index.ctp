@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Absence'), array('action' => $model, 'absence'), array('class' => 'divider'));
+echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $yearId, $sectionId, $weekId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -38,13 +38,13 @@ echo $this->element("../InstitutionSites/$model/controls");
 							if ($absenceObj['full_day_absent'] !== 'Yes') {
 								$startTimeAbsent = $absenceObj['start_time_absent'];
 								$endTimeAbsent = $absenceObj['end_time_absent'];
-								$timeStr = sprintf(__('absent') . ' (%s - %s)', $startTimeAbsent, $endTimeAbsent);
+								$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
 								?>
 								<td><?php echo $this->Html->link($timeStr, array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
 								<?php
 							} else {
 								?>
-								<td><?php echo $this->Html->link(__('absent (full day)'), array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
+								<td><?php echo $this->Html->link(__('Absent' . ' - ' . $absenceObj['absence_type'] . ' (full day)'), array('action' => $model, 'view', $absenceObj['id']), array('escape' => false)); ?></td>
 								<?php
 							}
 						} else {
