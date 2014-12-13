@@ -591,7 +591,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
-		$absenceReasonList = $this->StaffAbsenceReason->getOptionList(array('FieldOption.code' => 'StudentAbsenceReason'));
+		$absenceReasonList = $this->StaffAbsenceReason->getOptionList(array('FieldOption.code' => 'StaffAbsenceReason'));
 
 		$this->setVar(compact('yearList', 'yearId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'staffList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 	}
@@ -684,7 +684,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 					$value['full_day_absent'] = 'Yes';
 					$value['start_time_absent'] = '12:00 AM';
 					$value['end_time_absent'] = '11:59 PM';
-					
+					$value['absence_type'] = $currentAbsenceType;
 					$value['institution_site_id'] = $this->controller->Session->read('InstitutionSite.id');
 					$this->create();
 					$this->save($value);
