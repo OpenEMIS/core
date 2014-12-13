@@ -80,11 +80,13 @@ class InstitutionSiteClassSubject extends AppModel {
 	
 	public function classesSubjectEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
+		$maxSubjects = $controller->ConfigItem->getValue('max_subjects_per_class');
+
 		if($controller->request->is('get')) {
 			$data = ClassRegistry::init('EducationSubject')->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'EducationGradeSubject.id', 'EducationGrade.name', 'EducationSubject.code', 'EducationSubject.name',
+					'EducationSubject.id', 'EducationGradeSubject.id', 'EducationGrade.name', 'EducationSubject.code', 'EducationSubject.name',
 					'InstitutionSiteClassSubject.id', 'InstitutionSiteClassSubject.status'
 				),
 				'joins' => array(
@@ -101,11 +103,27 @@ class InstitutionSiteClassSubject extends AppModel {
 						)
 					),
 					array(
-						'table' => 'institution_site_class_grades',
-						'alias' => 'InstitutionSiteClassGrade',
+						'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
 						'conditions' => array(
-							'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id',
-							'InstitutionSiteClassGrade.institution_site_class_id = ' . $id
+							'EducationGrade.education_programme_id = EducationProgramme.id'
+						)
+					),
+					array(
+						'table' => 'institution_site_programmes',
+						'alias' => 'InstitutionSiteProgramme',
+						'conditions' => array(
+							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
+							'InstitutionSiteProgramme.status = 1'
+						)
+					),
+					array(
+						'table' => 'institution_site_classes',
+						'alias' => 'InstitutionSiteClass',
+						'conditions' => array(
+							'InstitutionSiteProgramme.institution_site_id = InstitutionSiteClass.institution_site_id',
+							'InstitutionSiteProgramme.school_year_id = InstitutionSiteClass.school_year_id',
+							'InstitutionSiteClass.id = ' . $id
 						)
 					),
 					array(
@@ -113,13 +131,14 @@ class InstitutionSiteClassSubject extends AppModel {
 						'alias' => $this->alias,
 						'type' => 'LEFT',
 						'conditions' => array(
-							$this->alias . '.institution_site_class_id = InstitutionSiteClassGrade.institution_site_class_id',
+							$this->alias . '.institution_site_class_id = InstitutionSiteClass.id',
 							$this->alias . '.education_grade_subject_id = EducationGradeSubject.id'
 						)
 					)
 				),
 				'order' => array('EducationSubject.order', 'InstitutionSiteClassSubject.id DESC')
 			));
+			
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
 			}

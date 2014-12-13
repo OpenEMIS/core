@@ -31,8 +31,6 @@ class InstitutionSiteClassStudent extends AppModel {
 		'EducationGrade'
 	);
 	
-	public $_action = 'classesStudent';
-	
 	public $reportMapping = array(
 		1 => array(
 			'fields' => array(
@@ -73,6 +71,8 @@ class InstitutionSiteClassStudent extends AppModel {
 		)
 	);
 	
+	public $_action = 'classesStudent';
+	
 	public function beforeAction($controller, $action) {
 		parent::beforeAction($controller, $action);
 		$id = $controller->Session->read('InstitutionSiteClass.id');
@@ -94,26 +94,43 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function classesStudent($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
+		//$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionClass')->getSectionOptions($id, true);
 		if(!empty($studentActionOptions)) {
-			$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
+			$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
 			$data = $this->find('all', array(
-				'recursive' => 0,
+				'recursive' => -1,
 				'fields' => array(
 					'DISTINCT Student.identification_no',
-					'Student.first_name', 'Student.last_name', 'StudentCategory.name'
+					'Student.first_name', 'Student.last_name'
+				),
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+					),
+					array(
+						'table' => 'institution_site_section_students',
+						'alias' => 'InstitutionSiteSectionStudent',
+						'conditions' => array(
+							'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+							'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
+							'InstitutionSiteSectionStudent.status' => 1
+						)
+					)
 				),
 				'conditions' => array(
-					'institution_site_class_id' => $id,
-					'education_grade_id' => $selectedGrade,
-					'status' => 1
+					'InstitutionSiteClassStudent.institution_site_class_id' => $id,
+					'InstitutionSiteClassStudent.institution_site_section_id' => $selectedSection,
+					'InstitutionSiteClassStudent.status' => 1
 				),
 				'order' => array('Student.first_name ASC')
 			));
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
-			$controller->set(compact('data', 'studentActionOptions', 'selectedGrade'));
+			$controller->set(compact('data', 'studentActionOptions', 'selectedSection'));
 		} else {
 			$controller->Message->alert('general.noData');
 		}
@@ -121,70 +138,38 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function classesStudentEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
+		$classId = $id;
+		//$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : 0;
+		//$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionClass')->getSectionOptions($id, true);
+		$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
+		
 		if($controller->request->is('get')) {
 			$categoryOptions = $this->StudentCategory->findList(true);
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
 					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
-					'InstitutionSiteClassStudent.id', 'InstitutionSiteClassStudent.student_category_id', 'InstitutionSiteClassStudent.status', 'InstitutionSiteClass.id'
+					'InstitutionSiteClassStudent.id', 'InstitutionSiteClassStudent.institution_site_section_id', 'InstitutionSiteClassStudent.status'
 				),
 				'joins' => array(
 					array(
-						'table' => 'institution_site_students',
-						'alias' => 'InstitutionSiteStudent',
-						'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-					),
-					array(
-						'table' => 'institution_site_programmes',
-						'alias' => 'InstitutionSiteProgramme',
-						'conditions' => array('InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id')
-					),
-					array(
-						'table' => 'education_grades',
-						'alias' => 'EducationGrade',
-						'conditions' => array('EducationGrade.education_programme_id = InstitutionSiteProgramme.education_programme_id')
-					),
-					array(
-						'table' => 'institution_site_classes',
-						'alias' => 'InstitutionSiteClass',
+						'table' => 'institution_site_section_students',
+						'alias' => 'InstitutionSiteSectionStudent',
 						'conditions' => array(
-							'InstitutionSiteClass.institution_site_id = InstitutionSiteProgramme.institution_site_id',
-							'InstitutionSiteClass.id = ' . $id,
+							'InstitutionSiteSectionStudent.student_id = Student.id',
+							'InstitutionSiteSectionStudent.institution_site_section_id = ' . $selectedSection,
+							'InstitutionSiteSectionStudent.status = 1'
 						)
-					),
-					array(
-						'table' => 'institution_site_class_grades',
-						'alias' => 'InstitutionSiteClassGrade',
-						'conditions' => array(
-							'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-							'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id',
-							'InstitutionSiteClassGrade.education_grade_id' => $selectedGrade
-						)
-					),
-					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
 					),
 					array(
 						'table' => 'institution_site_class_students',
 						'alias' => $this->alias,
 						'type' => 'LEFT',
 						'conditions' => array(
-							$this->alias . '.student_id = InstitutionSiteStudent.student_id',
-							$this->alias . '.institution_site_class_id = InstitutionSiteClass.id'
-						)
-					)
-				),
-				'conditions' => array( // the class school year must be within the staff start and end date
-					'OR' => array(
-						'InstitutionSiteStudent.end_date IS NULL',
-						'AND' => array(
-							'InstitutionSiteStudent.start_year >= ' => 'SchoolYear.start_year',
-							'InstitutionSiteStudent.end_year >= ' => 'SchoolYear.start_year'
+							$this->alias . '.student_id = InstitutionSiteSectionStudent.student_id',
+							$this->alias . '.institution_site_class_id = ' . $id,
+							$this->alias . '.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id'
 						)
 					)
 				),
@@ -195,13 +180,13 @@ class InstitutionSiteClassStudent extends AppModel {
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
-			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedGrade'));
+			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedSection', 'classId'));
 		} else {
 			$data = $controller->request->data;
-			$selectedGrade = null;
+			$selectedSection = null;
  			if(isset($data[$this->alias])) {
 				foreach($data[$this->alias] as $i => $obj) {
-					$selectedGrade = $obj['education_grade_id'];
+					$selectedSection = $obj['institution_site_section_id'];
 					if(empty($obj['id']) && $obj['status'] == 0) {
 						unset($data[$this->alias][$i]);
 					}
@@ -211,7 +196,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				}
 			}
 			$controller->Message->alert('general.edit.success');
-			return $controller->redirect(array('action' => $this->_action, $selectedGrade));
+			return $controller->redirect(array('action' => $this->_action, $selectedSection));
 		}
 	}
 	
@@ -273,15 +258,20 @@ class InstitutionSiteClassStudent extends AppModel {
 	public function getGenderTotalByClass($classId) {
 		$joins = array(
 			array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
 				'conditions' => array(
-					'InstitutionSiteClassGrade.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
-					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id',
-					'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId
+					'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.status' => 1
 				)
 			),
 			array('table' => 'students', 'alias' => 'Student')
+		);
+		
+		$conditions = array(
+			'InstitutionSiteClassStudent.institution_site_class_id = ' . $classId,
+			'InstitutionSiteClassStudent.status = 1' 
 		);
 
 		$gender = array('M' => 0, 'F' => 0);
@@ -290,14 +280,20 @@ class InstitutionSiteClassStudent extends AppModel {
 		foreach ($gender as $i => $val) {
 			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
 			$joins[1]['conditions'] = $studentConditions;
-			$gender[$i] = $this->find('count', array('recursive' => -1, 'joins' => $joins));
+			$gender[$i] = $this->find('count', array(
+				'recursive' => -1, 
+				'joins' => $joins, 
+				'conditions' => $conditions,
+				'group' => array('Student.id')
+			));
 		}
 		return $gender;
 	}
 	
 	public function getStudentsByClass($classId, $showGrade = false) {
 		$options['conditions'] = array(
-			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+			'InstitutionSiteClassStudent.institution_site_class_id' => $classId,
+			'InstitutionSiteClassStudent.status = 1'
 		);
 		
 		//$options['recursive'] =-1;
