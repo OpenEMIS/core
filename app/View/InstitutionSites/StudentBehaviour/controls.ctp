@@ -18,15 +18,15 @@
 
 	<div class="col-md-3">
 		<?php
-		if (empty($classOptions)) {
-			array_push($classOptions, $this->Label->get('general.noData'));
+		if (empty($sectionOptions)) {
+			array_push($sectionOptions, $this->Label->get('general.noData'));
 		}
-		echo $this->Form->input('institution_site_class_id', array(
+		echo $this->Form->input('institution_site_section_id', array(
 			'label' => false,
 			'div' => false,
 			'class' => ' form-control',
-			'default' => $selectedClass,
-			'options' => $classOptions,
+			'default' => $selectedSection,
+			'options' => $sectionOptions,
 			'onchange' => 'jsForm.change(this)',
 			'url' => "InstitutionSites/$model/show/" . $selectedYear
 		));

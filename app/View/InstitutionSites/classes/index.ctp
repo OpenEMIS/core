@@ -19,7 +19,7 @@ echo $this->element('templates/year_options', array('url' => $_action));
 		<thead>
 			<tr>
 				<th><?php echo $this->Label->get('general.class') ?></th>
-				<th><?php echo $this->Label->get('general.grade'); ?></th>
+				<th><?php echo $this->Label->get('general.section'); ?></th>
 				<th><?php echo $this->Label->get('gender.m'); ?></th>
 				<th><?php echo $this->Label->get('gender.f'); ?></th>
 			</tr>
@@ -33,8 +33,8 @@ echo $this->element('templates/year_options', array('url' => $_action));
 				<tr>
 					<td><?php echo $this->Html->link($obj['name'], array('action' => $_action . 'View', $id), array('escape' => false)); ?></td>
 					<td class="table_cell">
-						<?php foreach ($obj['grades'] as $gradeId => $name) : ?>
-							<div class="table_cell_row <?php echo ++$i == sizeof($obj['grades']) ? 'last' : ''; ?>"><?php echo $name; ?></div>
+						<?php foreach ($obj['sections'] as $sectionId => $name) : ?>
+							<div class="table_cell_row <?php echo ++$i == sizeof($obj['sections']) ? 'last' : ''; ?>"><?php echo $name; ?></div>
 						<?php endforeach ?>
 					</td>
 					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
