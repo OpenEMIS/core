@@ -130,7 +130,7 @@ class InstitutionSiteSection extends AppModel {
 		}
 		
 		if(empty($yearOptions)){
-			$this->Message->alert('InstitutionSiteProgramme.noData');
+			$this->Message->alert('InstitutionSite.noProgramme');
 		}
 		
 		$data = $this->getListOfSections($selectedYear, $institutionSiteId);
@@ -173,7 +173,7 @@ class InstitutionSiteSection extends AppModel {
 				}
 			}
 		} else {
-			$this->Message->alert('InstitutionSiteProgramme.noData');
+			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
 		}
 	}
