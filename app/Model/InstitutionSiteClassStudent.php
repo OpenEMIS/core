@@ -132,7 +132,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			}
 			$controller->set(compact('data', 'studentActionOptions', 'selectedSection'));
 		} else {
-			$controller->Message->alert('general.noData');
+			$controller->Message->alert('InstitutionSiteClass.noSections');
 		}
 	}
 	
@@ -180,6 +180,11 @@ class InstitutionSiteClassStudent extends AppModel {
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
+			
+			if(empty($studentActionOptions)) {
+				$controller->Message->alert('InstitutionSiteClass.noSections');
+			}
+			
 			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedSection', 'classId'));
 		} else {
 			$data = $controller->request->data;
