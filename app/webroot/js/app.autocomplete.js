@@ -91,5 +91,11 @@ var Autocomplete = {
 			response: Autocomplete.searchComplete,
 			search: Autocomplete.beforeSearch
 		});
+	},
+			
+	submitForm: function(obj){
+		if($(obj).closest('form').length > 0){
+			$(obj).closest('form').submit();
+		}
 	}
 }
