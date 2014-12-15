@@ -188,7 +188,8 @@ if (strpos($scriptname, '/core/www/') !== false) {
  *
  */
 	Configure::write('Session', array(
-		'defaults' => 'php'
+		'defaults' => 'php',
+		'cookie' => 'OPENEMIS_CORE'
 	));
 
 /**

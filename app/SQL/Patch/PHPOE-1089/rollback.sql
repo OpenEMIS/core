@@ -1,0 +1,1 @@
+ALTER TABLE `institution_sites` DROP `alternative_name`;

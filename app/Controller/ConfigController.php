@@ -607,17 +607,23 @@ class ConfigController extends AppController {
 			$requestData = $this->data;
 			//$active = $requestData[$model][0]['default'];
 
-			foreach ($requestData['ConfigAttachment'] as $key => $value) {
-				$requestData['ConfigAttachment'][$key]['active'] = 0;	
-				$requestData['ConfigAttachment'][$key]['type'] = 'dashboard';
-				$requestData['ConfigAttachment'][$key]['visible'] = '1';
-				$requestData['ConfigAttachment'][$key]['order'] = '0';
-				$requestData['ConfigAttachment'][$key]['description'] = '';
+			if (isset($_SERVER["CONTENT_LENGTH"])) {
+				if($_SERVER["CONTENT_LENGTH"] > ((int)ini_get('post_max_size')*1024*1024)) {
+					$errors[] = __('Image has exceeded the allow file size of').' '.CakeNumber::toReadableSize($this->imageConfig['dashboard_img_size_limit']).'. '.__('Please reduce file size.');
+				} else {
+					foreach ($requestData['ConfigAttachment'] as $key => $value) {
+						$requestData['ConfigAttachment'][$key]['active'] = 0;	
+						$requestData['ConfigAttachment'][$key]['type'] = 'dashboard';
+						$requestData['ConfigAttachment'][$key]['visible'] = '1';
+						$requestData['ConfigAttachment'][$key]['order'] = '0';
+						$requestData['ConfigAttachment'][$key]['description'] = '';
+					}
+
+					$errors = (isset($_FILES['files']))?$this->vaildateImage($_FILES):array();
+
+					if(sizeof($errors) == 0) $errors = array_merge($errors,$this->FileAttachment->saveAll($requestData, $_FILES, null));
+				}
 			}
-
-			$errors = (isset($_FILES['files']))?$this->vaildateImage($_FILES):array();
-
-			if(sizeof($errors) == 0) $errors = array_merge($errors,$this->FileAttachment->saveAll($requestData, $_FILES, null));
 
 			if(sizeof($errors) == 0) {
 				$this->Utility->alert(__('Files have been saved successfully.'));
