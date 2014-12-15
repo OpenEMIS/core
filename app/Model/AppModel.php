@@ -44,6 +44,10 @@ class AppModel extends Model {
 	public $fields;
 	
 	public $actsAs = array('Containable');
+
+	public function checkUnique($ignoredData, $fields, $or = true) {
+        return $this->isUnique($fields, $or);
+    }
 	
 	public function setField($field, $obj, $order=0) {
 		$fields = $this->fields;
