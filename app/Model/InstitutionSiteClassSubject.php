@@ -97,32 +97,30 @@ class InstitutionSiteClassSubject extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGradeSubject.education_grade_id = EducationGrade.id')
+				),
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
 					'conditions' => array(
-						'EducationGrade.id = EducationGradeSubject.education_grade_id'
+						'EducationGradeSubject.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
+						'InstitutionSiteSectionGrade.status = 1'
 					)
 				),
 				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id'
-					)
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
-						'InstitutionSiteProgramme.status = 1'
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id',
+						'InstitutionSiteSectionClass.status = 1'
 					)
 				),
 				array(
 					'table' => 'institution_site_classes',
 					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteClass.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = InstitutionSiteClass.school_year_id',
-						'InstitutionSiteClass.id = ' . $id
+						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.id' => $id
 					)
 				),
 				array(

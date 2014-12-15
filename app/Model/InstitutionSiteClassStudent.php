@@ -132,75 +132,68 @@ class InstitutionSiteClassStudent extends AppModel {
 			}
 			$controller->set(compact('data', 'studentActionOptions', 'selectedSection'));
 		} else {
-			$controller->Message->alert('general.noData');
+			$controller->Message->alert('InstitutionSiteClass.noSections');
 		}
 	}
 	
 	public function classesStudentEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
 		$classId = $id;
-		//$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : 0;
-		//$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionClass')->getSectionOptions($id, true);
-		
-		if($controller->request->is('get')) {
-			$categoryOptions = $this->StudentCategory->findList(true);
-			$data = array();
-			$selectedSection = 0;
-			
-			if(!empty($studentActionOptions)){
-				$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
-				
-				$data = $this->Student->find('all', array(
-					'recursive' => 0,
-					'fields' => array(
-						'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
-						'InstitutionSiteClassStudent.id', 'InstitutionSiteClassStudent.institution_site_section_id', 'InstitutionSiteClassStudent.status'
-					),
-					'joins' => array(
-						array(
-							'table' => 'institution_site_section_students',
-							'alias' => 'InstitutionSiteSectionStudent',
-							'conditions' => array(
-								'InstitutionSiteSectionStudent.student_id = Student.id',
-								'InstitutionSiteSectionStudent.institution_site_section_id = ' . $selectedSection,
-								'InstitutionSiteSectionStudent.status = 1'
-							)
-						),
-						array(
-							'table' => 'institution_site_class_students',
-							'alias' => $this->alias,
-							'type' => 'LEFT',
-							'conditions' => array(
-								$this->alias . '.student_id = InstitutionSiteSectionStudent.student_id',
-								$this->alias . '.institution_site_class_id = ' . $id,
-								$this->alias . '.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id'
-							)
+
+		if ($controller->request->is('get')) {
+			$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
+			$data = $this->Student->find('all', array(
+				'recursive' => 0,
+				'fields' => array(
+					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
+					'InstitutionSiteClassStudent.id', 'InstitutionSiteClassStudent.institution_site_section_id', 'InstitutionSiteClassStudent.status'
+				),
+				'joins' => array(
+					array(
+						'table' => 'institution_site_section_students',
+						'alias' => 'InstitutionSiteSectionStudent',
+						'conditions' => array(
+							'InstitutionSiteSectionStudent.student_id = Student.id',
+							'InstitutionSiteSectionStudent.institution_site_section_id' => $selectedSection,
+							'InstitutionSiteSectionStudent.status = 1'
 						)
 					),
-					'group' => array('Student.id'),
-					'order' => array($this->alias.'.status DESC')
-				));
-				
-				if(empty($data)) {
-					$controller->Message->alert('general.noData');
-				}
-			}else{
+					array(
+						'table' => 'institution_site_class_students',
+						'alias' => $this->alias,
+						'type' => 'LEFT',
+						'conditions' => array(
+							$this->alias . '.student_id = InstitutionSiteSectionStudent.student_id',
+							$this->alias . '.institution_site_class_id = ' . $id,
+							$this->alias . '.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id'
+						)
+					)
+				),
+				'group' => array('Student.id'),
+				'order' => array($this->alias . '.status DESC')
+			));
+
+			if (empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
 			
-			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedSection', 'classId'));
+			if (empty($studentActionOptions)) {
+				$controller->Message->alert('InstitutionSiteClass.noSections');
+			}
+
+			$controller->set(compact('data', 'studentActionOptions', 'selectedSection', 'classId'));
 		} else {
 			$data = $controller->request->data;
 			$selectedSection = null;
- 			if(isset($data[$this->alias])) {
-				foreach($data[$this->alias] as $i => $obj) {
+			if (isset($data[$this->alias])) {
+				foreach ($data[$this->alias] as $i => $obj) {
 					$selectedSection = $obj['institution_site_section_id'];
-					if(empty($obj['id']) && $obj['status'] == 0) {
+					if (empty($obj['id']) && $obj['status'] == 0) {
 						unset($data[$this->alias][$i]);
 					}
 				}
-				if(!empty($data[$this->alias])) {
+				if (!empty($data[$this->alias])) {
 					$this->saveAll($data[$this->alias]);
 				}
 			}
@@ -211,9 +204,25 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
-		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
+		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'InstitutionSiteSection.name');
 		
 		$joins = array(
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'conditions' => array(
+					'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
+					'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.status = 1'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteSection.id'
+				)
+			),
 			array(
 				'table' => 'institution_site_classes',
 				'alias' => 'InstitutionSiteClass',
@@ -222,7 +231,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			array(
 				'table' => 'education_grades',
 				'alias' => 'EducationGrade',
-				'conditions' => array('EducationGrade.id = InstitutionSiteClassStudent.education_grade_id')
+				'conditions' => array('InstitutionSiteSectionStudent.education_grade_id = EducationGrade.id')
 			),
 			array(
 				'table' => 'education_programmes',
