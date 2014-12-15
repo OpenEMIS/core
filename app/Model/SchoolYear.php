@@ -29,6 +29,25 @@ class SchoolYear extends AppModel {
 		parent::beforeSave($options);
 		return true;
 	}
+
+	public function getOptionFields() {
+		parent::getOptionFields();
+
+		$this->fields['start_year']['type'] = 'hidden';
+		$this->fields['end_year']['type'] = 'hidden';
+
+		$this->fields['current']['labelKey'] = 'FieldOption';
+		$this->fields['current']['type'] = 'select';
+		$this->fields['current']['default'] = 1;
+		$this->fields['current']['options'] = array(1 => __('Yes'), 0 => __('No'));
+
+		$this->fields['available']['labelKey'] = 'FieldOption';
+		$this->fields['available']['type'] = 'select';
+		$this->fields['available']['default'] = 1;
+		$this->fields['available']['options'] = array(1 => __('Yes'), 0 => __('No'));
+
+		return $this->fields;
+	}
 	
 	public function getAvailableYears($list = true, $order='ASC') {
 		if($list) {
