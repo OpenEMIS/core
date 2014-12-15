@@ -313,6 +313,12 @@ class InstitutionSiteStudent extends AppModel {
 				$data[$this->alias]['institution_site_programme_id'] = 0;
 				
 				$this->set($data[$this->alias]);
+				
+				if(isset($data['new'])){
+					$this->validator()->remove('search');
+					$this->validator()->remove('student_id');
+				}
+				
 				if ($this->validates()) {
 					$count = $this->find('count', array(
 						'conditions' => array(
@@ -331,11 +337,16 @@ class InstitutionSiteStudent extends AppModel {
 							'school_year_id' => $yearId
 						));
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
-						if ($this->save($data)) {
-							$this->Message->alert('general.add.success');
-							return $this->redirect(array('action' => get_class($this)));
-						} else {
-							$this->Message->alert('general.add.failed');
+						
+						if(isset($data['new'])){
+							$this->Session->write('InstitutionSiteStudent.addNew', $data[$this->alias]);
+						}else{
+							if ($this->save($data)) {
+								$this->Message->alert('general.add.success');
+								return $this->redirect(array('action' => get_class($this)));
+							} else {
+								$this->Message->alert('general.add.failed');
+							}
 						}
 					}
 				} else {
