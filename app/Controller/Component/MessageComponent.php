@@ -108,7 +108,8 @@ class MessageComponent extends Component {
 			'student' => array(
 				'student_already_exists_in_other_site' => array('type' => 'info', 'msg' => 'This student is already exists in other institution site.'),
 				'notExist' => array('type' => 'error', 'msg' => 'The Student Record does not exist.')
-			)
+			),
+			'noProgramme' => array('type' => 'warn', 'msg' => 'There are no programmes associated with this institution site')
 		),
 		'Student' => array(
 			'add' => array(
@@ -126,7 +127,8 @@ class MessageComponent extends Component {
 		),
 		'InstitutionSiteClass' => array(
 			'noData' => array('type' => 'warn', 'msg' => 'There are no classes associated with this institution site for the selected year.'),
-			'toManySubjects' => array('type' => 'error', 'msg' => 'The number of subjects selected has exceeded the limit setting')
+			'toManySubjects' => array('type' => 'error', 'msg' => 'The number of subjects selected has exceeded the limit setting'),
+			'noSections' => array('type' => 'warn', 'msg' => 'There are no sections linked to this class.')
 		),
 		'Training' => array(
 			'activate' => array(
@@ -168,6 +170,9 @@ class MessageComponent extends Component {
 		),
 		'Alert' => array(
 			'noProcess' => array('type' => 'warn', 'msg' => 'There is no process currently.')
+		),
+		'InstitutionSiteSection' => array(
+			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.')
 		),
 	);
 	
