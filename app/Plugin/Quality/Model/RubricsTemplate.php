@@ -216,10 +216,11 @@ class RubricsTemplate extends QualityAppModel {
 					$RubricsTemplateColumnInfo->saveAll($columnData);
 
 					$rediectAction = array('action' => 'rubricsTemplates', 'plugin' => 'Quality');
+					$controller->Message->alert('general.add.success');
 				} else {
 					$rediectAction = array('action' => 'rubricsTemplatesView', $this->id, 'plugin' => 'Quality');
+					$controller->Message->alert('general.edit.success');
 				}
-				$controller->Message->alert('general.delete.success');
 				return $controller->redirect($rediectAction);
 			}
 		}
