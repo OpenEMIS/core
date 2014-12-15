@@ -186,7 +186,7 @@ class InstitutionSiteClass extends AppModel {
 		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
 		
 		if(empty($yearOptions)){
-			$controller->Message->alert('InstitutionSiteProgramme.noData');
+			$controller->Message->alert('InstitutionSite.noProgramme');
 		}
 		
 		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
@@ -230,7 +230,7 @@ class InstitutionSiteClass extends AppModel {
 				}
 			}
 		} else {
-			$controller->Message->alert('InstitutionSiteProgramme.noData');
+			$controller->Message->alert('InstitutionSite.noProgramme');
 			return $controller->redirect(array('action' => $this->_action));
 		}
 	}

@@ -51,12 +51,14 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$id = $this->Session->read('InstitutionSiteSection.id');
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionGrade')->getGradeOptions($id, true);
 		
-		if ($selectedGrade != 0) {
-			if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+		if(!empty($studentActionOptions)){
+			if ($selectedGrade != 0) {
+				if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+					$selectedGrade = key($studentActionOptions);
+				}
+			} else {
 				$selectedGrade = key($studentActionOptions);
 			}
-		} else {
-			$selectedGrade = key($studentActionOptions);
 		}
 		
 		$data = $this->find('all', array(
@@ -84,9 +86,15 @@ class InstitutionSiteSectionStudent extends AppModel {
 			),
 			'order' => array('Student.first_name ASC')
 		));
+		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
+		
+		if (empty($studentActionOptions)) {
+			$this->Message->alert('InstitutionSiteSection.noGrades');
+		}
+		
 		$this->setVar(compact('data', 'studentActionOptions', 'selectedGrade'));
 	}
 	
@@ -95,13 +103,16 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionGrade')->getGradeOptions($id, true);
 		
-		if ($selectedGrade != 0) {
-			if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+		if(!empty($studentActionOptions)){
+			if ($selectedGrade != 0) {
+				if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+					$selectedGrade = key($studentActionOptions);
+				}
+			} else {
 				$selectedGrade = key($studentActionOptions);
 			}
-		} else {
-			$selectedGrade = key($studentActionOptions);
 		}
+		
 		if($this->request->is('get')) {
 			$categoryOptions = $this->StudentCategory->findList(true);
 			$data = $this->Student->find('all', array(
@@ -131,7 +142,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 						'alias' => 'InstitutionSiteSection',
 						'conditions' => array(
 							'InstitutionSiteSection.institution_site_id = InstitutionSiteProgramme.institution_site_id',
-							'InstitutionSiteSection.id = ' . $id,
+							'InstitutionSiteSection.id' => $id,
 						)
 					),
 					array(
@@ -155,7 +166,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 						'conditions' => array(
 							$this->alias . '.student_id = InstitutionSiteStudent.student_id',
 							$this->alias . '.institution_site_section_id = InstitutionSiteSection.id',
-							$this->alias . '.education_grade_id = ' . $selectedGrade
+							$this->alias . '.education_grade_id' => $selectedGrade
 						)
 					)
 				),
@@ -175,6 +186,11 @@ class InstitutionSiteSectionStudent extends AppModel {
 			if(empty($data)) {
 				$this->Message->alert('general.noData');
 			}
+			
+			if(empty($studentActionOptions)) {
+				$this->Message->alert('InstitutionSiteSection.noGrades');
+			}
+			
 			$this->setVar(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedGrade'));
 		} else {
 			$data = $this->request->data;
