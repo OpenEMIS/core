@@ -95,13 +95,16 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionGrade')->getGradeOptions($id, true);
 		
-		if ($selectedGrade != 0) {
-			if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+		if(!empty($studentActionOptions)){
+			if ($selectedGrade != 0) {
+				if (!array_key_exists($selectedGrade, $studentActionOptions)) {
+					$selectedGrade = key($studentActionOptions);
+				}
+			} else {
 				$selectedGrade = key($studentActionOptions);
 			}
-		} else {
-			$selectedGrade = key($studentActionOptions);
 		}
+		
 		if($this->request->is('get')) {
 			$categoryOptions = $this->StudentCategory->findList(true);
 			$data = $this->Student->find('all', array(
@@ -131,7 +134,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 						'alias' => 'InstitutionSiteSection',
 						'conditions' => array(
 							'InstitutionSiteSection.institution_site_id = InstitutionSiteProgramme.institution_site_id',
-							'InstitutionSiteSection.id = ' . $id,
+							'InstitutionSiteSection.id' => $id,
 						)
 					),
 					array(
@@ -155,7 +158,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 						'conditions' => array(
 							$this->alias . '.student_id = InstitutionSiteStudent.student_id',
 							$this->alias . '.institution_site_section_id = InstitutionSiteSection.id',
-							$this->alias . '.education_grade_id = ' . $selectedGrade
+							$this->alias . '.education_grade_id' => $selectedGrade
 						)
 					)
 				),
