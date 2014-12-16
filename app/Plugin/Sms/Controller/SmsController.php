@@ -388,7 +388,8 @@ class SmsController extends SmsAppController {
                     if(isset($value['number'])){
                         $result[$i][] = $value['number'];
                     }
-                   $result[$i][] = '"' . str_replace(',', ' ',array_pop(array_values($value))) . '"';
+                    $tmpValue = array_values($value);
+                    $result[$i][] = '"' . str_replace(',', ' ',array_pop($tmpValue)) . '"';
                 }
                 $i++;
             }

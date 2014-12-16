@@ -16,6 +16,10 @@ var Config = {
 	}
 	,err : []
 	,validationRule : {}
+	,inputMaskCheck: function(evt) {
+		var keynum = utility.getKeyPressed(evt);
+		return (keynum == 57 || keynum == 97 || keynum == 119 || keynum == 42 || keynum == 63 || keynum == 45 || keynum == 40 || keynum == 41 || keynum < 32 || keynum==undefined);
+	}
 	,getAllowedChars : function(){
 		
 		$.get(getRootURL()+'Config/getAllowedChar', function(data) {
