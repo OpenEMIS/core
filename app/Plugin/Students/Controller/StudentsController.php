@@ -293,17 +293,28 @@ class StudentsController extends StudentsAppController {
 			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			
 			if ($this->Student->validates() && $this->Student->save()) {
+				$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
+				$InstitutionSiteStudentModel->validator()->remove('search');
+				$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
+				
 				if ($this->Wizard->isActive()) {
 					if (is_null($id)) {
 						$this->Message->alert($model . '.add.success');
 						$id = $this->Student->getLastInsertId();
 						$this->Session->write($model . '.id', $id);
 					}
+					
+					$dataToSite['student_id'] = $id;
+					$InstitutionSiteStudentModel->save($dataToSite);
+					
 					$this->Session->write($model . '.data', $this->Student->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 					$this->Wizard->next();
 				} else {
+					$dataToSite['student_id'] = $id;
+					$InstitutionSiteStudentModel->save($dataToSite);
+					
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}

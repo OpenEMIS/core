@@ -269,6 +269,12 @@ class InstitutionSiteStaff extends AppModel {
 				
 				if ($submit == __('Save')) {
 					$this->set($data[$this->alias]);
+					
+					if(isset($data['new'])){
+						$this->validator()->remove('search');
+						$this->validator()->remove('staff_id');
+					}
+					
 					if ($this->validates()) {
 						$data[$this->alias]['FTE'] = !empty($data[$this->alias]['FTE']) ? $data[$this->alias]['FTE'] : NULL;
 						$data[$this->alias]['institution_site_id'] = $institutionSiteId;
@@ -288,11 +294,16 @@ class InstitutionSiteStaff extends AppModel {
 						if ($count > 0) {
 							$this->Message->alert('general.exists');
 						} else {
-							if ($this->save($data)) {
-								$this->Message->alert('general.add.success');
-								return $this->redirect(array('action' => get_class($this)));
-							} else {
-								$this->Message->alert('general.add.failed');
+							if(isset($data['new'])){
+								$this->Session->write('InstitutionSiteStaff.addNew', $data[$this->alias]);
+								return $this->redirect(array('controller' => 'Staff', 'action' => 'add'));
+							}else{
+								if ($this->save($data)) {
+									$this->Message->alert('general.add.success');
+									return $this->redirect(array('action' => get_class($this)));
+								} else {
+									$this->Message->alert('general.add.failed');
+								}
 							}
 						}
 					} else {
@@ -312,6 +323,13 @@ class InstitutionSiteStaff extends AppModel {
 			$this->fields['start_date']['attr']['dateOptions'] = array('changeDate' => "function(ev) { $('#reload').click(); }");
 			$this->fields['FTE']['type'] = 'select';
 			$this->fields['FTE']['options'] = $this->getFTEOptions($positionId, array('startDate' => $startDate));
+			
+			$this->setFieldOrder('institution_site_id', 0);
+			$this->setFieldOrder('institution_site_position_id', 1);
+			$this->setFieldOrder('start_date', 2);
+			$this->setFieldOrder('FTE', 3);
+			$this->setFieldOrder('staff_type_id', 4);
+			
 		} else {
 			return $this->redirect(array('plugin' => false, 'controller' => 'Staff', 'action' => 'index'));
 		}

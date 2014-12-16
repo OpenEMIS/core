@@ -339,7 +339,18 @@ class InstitutionSiteStudent extends AppModel {
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
 						
 						if(isset($data['new'])){
+							$statusOptions = $this->StudentStatus->getList();
+							$student_status_id = key($statusOptions);
+							foreach($statusOptions AS $id => $status){
+								if($status == 'Current Student'){
+									$student_status_id = $id;
+									break;
+								}
+							}
+							$data[$this->alias]['student_status_id'] = $student_status_id;
+							
 							$this->Session->write('InstitutionSiteStudent.addNew', $data[$this->alias]);
+							return $this->redirect(array('controller' => 'Students', 'action' => 'add'));
 						}else{
 							if ($this->save($data)) {
 								$this->Message->alert('general.add.success');
