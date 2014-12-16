@@ -394,7 +394,7 @@ class InstitutionSitesController extends AppController {
 		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
 		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
 		$statusOptions = $this->InstitutionSiteStatus->findList($visible);
-		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
+		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList($visible, array('forceOptionsAppear' => array($data['InstitutionSite']['institution_site_provider_id'])));
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 
@@ -437,7 +437,7 @@ class InstitutionSitesController extends AppController {
 		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
 		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
 		$statusOptions = $this->InstitutionSiteStatus->findList($visible);
-		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
+		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList($visible);
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 		
