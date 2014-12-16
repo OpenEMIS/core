@@ -26,7 +26,8 @@ $pageNumberOptions = array('modulus' => 5, 'first' => 2, 'last' => 2, 'tag' => '
                 //$area = (strlen($arrItems['Area']['name'])>14?substr($arrItems['Area']['name'], 0, 14).'...':$arrItems['Area']['name']);
                 $id = $arrItems['InstitutionSite']['id'];
                 $code = $this->Utility->highlight($searchField, $arrItems['InstitutionSite']['code']);
-                $name = $this->Utility->highlight($searchField, '<b>' . $arrItems['InstitutionSite']['name'] . '</b>' . ((isset($arrItems['InstitutionSiteHistory']['name'])) ? '<br>' . $arrItems['InstitutionSiteHistory']['name'] : ''));
+                $formatedName = !empty($searchField) ? '<b>' .$arrItems['InstitutionSite']['name']. '</b>' : $arrItems['InstitutionSite']['name'];
+                $name = $this->Utility->highlight($searchField, $formatedName . ((isset($arrItems['InstitutionSiteHistory']['name'])) ? '<br>' . $arrItems['InstitutionSiteHistory']['name'] : ''));
                 ?>
                 <tr row-id="<?php echo $id ?>" class="table_row_selection <?php echo ((($ctr++ % 2) != 0) ? 'odd' : 'even'); ?>">
                     <td class="table_cell"><?php echo $code; ?></td>
