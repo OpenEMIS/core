@@ -21,11 +21,11 @@ $inputOptions['length'] = 3;
 
 $loadingImg = $this->Html->image('icons/loader.gif', array());
 $noDataMsg = $this->Label->get('Autocomplete.no_result');
-$loadingHtml = '<div class="loadingWrapper"><span class="img">' . $loadingImg . '</span><span class="msg">' . $noDataMsg . '</span> ';
+$loadingHtml = '<div class="loadingWrapper"><span class="img">' . $loadingImg . '</span><span class="msg">' . $noDataMsg;
 if(isset($linkWhenNoRecords)){
 	$loadingHtml .= $linkWhenNoRecords;
 }
-$loadingHtml .= '</div>';
+$loadingHtml .= '</span></div>';
 
 $after = $inputDefaults['after'] . $loadingHtml;
 $inputOptions['after'] = $after;
