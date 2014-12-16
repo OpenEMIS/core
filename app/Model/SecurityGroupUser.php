@@ -22,6 +22,15 @@ class SecurityGroupUser extends AppModel {
 		'SecurityRole',
 		'SecurityUser'
 	);
+
+	public $validate = array(
+	    'security_role_id' => array(
+	        'unique' => array(
+	            'rule' => array('checkUnique', array('security_group_id', 'security_user_id', 'security_role_id'), false),
+	            'message' => 'Duplicate User and Role.'
+	        )
+	    )
+	);
 	
 	public function autocomplete($search, $exclude) {
 		$list = $this->SecurityUser->find('all', array(
@@ -30,8 +39,7 @@ class SecurityGroupUser extends AppModel {
 				'OR' => array(
 					'SecurityUser.first_name LIKE' => $search,
 					'SecurityUser.last_name LIKE' => $search
-				),
-				'SecurityUser.id NOT' => $exclude
+				)
 			),
 			'order' => array('SecurityUser.first_name', 'SecurityUser.last_name')
 		));

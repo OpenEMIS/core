@@ -40,7 +40,7 @@ echo $this->Form->create($model, $formOptions);
 		'empty' => __('All Years'),
 		'default' => $selectedYear,
 		'url' => $this->params['controller'] . '/' . $model . '/index',
-		//'onchange' => 'jsForm.change(this)'
+		'onchange' => 'jsForm.change(this)'
 	));
 	?>
 </div>

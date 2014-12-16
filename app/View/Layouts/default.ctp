@@ -16,7 +16,7 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-$description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
+$description = __d('open_emis', 'OpenEMIS Core');
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang_locale; ?>" dir="<?php echo $lang_dir; ?>" class="<?php echo $lang_dir == 'rtl' ? 'rtl' : '' ?>">

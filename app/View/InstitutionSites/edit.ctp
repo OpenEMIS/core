@@ -4,6 +4,7 @@ echo $this->Html->script('app.area', false);
 echo $this->Html->script('config', false);
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
+echo $this->Html->script('plugins/inputmask/bootstrap-inputmask', false);
 $this->extend('/Elements/layout/container');
 
 $this->assign('contentId', 'site');
@@ -32,8 +33,8 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	<legend><?php echo __('Information'); ?></legend>
 	<?php
 	echo $this->Form->input('name', array('value' => $obj['name']));
-	echo $this->Form->input('code', array('onkeyup' => 'updateHiddenField(this, "validate_institution_site_code")'));
-	echo $this->Form->input('validate_institution_site_code', array('type' => 'hidden', 'id' => 'validate_institution_site_code', 'value' => $obj['code']));
+	echo $this->Form->input('alternative_name', array('value' => $obj['alternative_name']));
+	echo $this->Form->input('code', $arrCode);
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_provider_id');
 	echo $this->Form->input('institution_site_provider_id', array('options' => $providerOptions, 'label' => $labelOptions));
