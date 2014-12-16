@@ -37,7 +37,7 @@ $(document).ready(function() {
                 window.onbeforeunload = confirmloading;
             });
 
-            $('input[type=submit]').click(function(){
+            $('input[type="submit"], button[type="submit"]').click(function(){
                 window.onbeforeunload = unconfirmLoading;
             });
 
