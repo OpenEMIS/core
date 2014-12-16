@@ -14,7 +14,7 @@ $autocompleteArr = array(
 	'labelOptions' => $labelOptions, 
 	'placeholder' => 'OpenEMIS ID or Name', 
 	'url' => $this->params['controller'] . '/' . $model . '/autocomplete',
-	'linkWhenNoRecords' => '<span><a href="#" onclick="Autocomplete.submitForm(this);">Create New</a></span>'
+	'linkWhenNoRecords' => '<span><a href="#" onclick="Autocomplete.submitForm(this);"> ' . __('Create') . ' ' . __('New') . '</a></span>'
 );
 
 echo $this->element('edit');
