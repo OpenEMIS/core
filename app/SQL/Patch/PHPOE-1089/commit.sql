@@ -1,0 +1,1 @@
+ALTER TABLE `institution_sites` ADD `alternative_name` VARCHAR(150) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `name`;
