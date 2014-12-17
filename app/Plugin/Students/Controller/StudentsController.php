@@ -318,6 +318,8 @@ class StudentsController extends StudentsAppController {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}
+				
+				$this->Session->delete('InstitutionSiteStudent.addNew');
 			}
 		} else {
 			if (!empty($id)) {
