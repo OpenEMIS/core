@@ -91,5 +91,15 @@ var Autocomplete = {
 			response: Autocomplete.searchComplete,
 			search: Autocomplete.beforeSearch
 		});
+	},
+			
+	submitForm: function(obj){
+		var parentForm = $(obj).closest('form');
+		if(parentForm.length > 0){
+			var indicatorField = '<input type="hidden" name="data[new]" value="" />';
+			parentForm.append(indicatorField);
+			parentForm.find('input.btn_save').click();
+			return false;
+		}
 	}
 }
