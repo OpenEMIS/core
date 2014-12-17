@@ -128,9 +128,12 @@ class FieldOptionValue extends AppModel {
 		return $key;
 	}
         
-	public function getList($status = false) {
+	public function getList($status = false, $customOptions=array()) {
 		$alias = $this->alias;
-		
+
+		if (array_key_exists('forceOptionsAppear', $customOptions)) {
+			$forceOptionsAppearArray = $customOptions['forceOptionsAppear'];
+		}
 		$options = array(
 			'joins' => array(
 				array(
@@ -144,9 +147,12 @@ class FieldOptionValue extends AppModel {
 			),
 			'order' => array($alias.'.order')
 		);
-		
+		$options['conditions'] = array();
 		if ($status !== false) {
-			$options['conditions'] = array("$alias.visible" => $status);
+			$options['conditions']['OR'][$alias.'.visible'] = $status;
+		}
+		if (isset($forceOptionsAppearArray)) {
+			$options['conditions']['OR'][$alias.'.id'] = $forceOptionsAppearArray;
 		}
 		return $this->find('list', $options);
 	}
