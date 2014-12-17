@@ -502,6 +502,21 @@ class InstitutionSiteProgramme extends AppModel {
 		}
 		return $data;
 	}
+
+	// used by CensusTextbook
+	public function getSiteProgrammeGrades($institutionSiteId, $yearId, $programmeId) {
+		$data = array();
+		$list = $this->getProgrammeList($institutionSiteId, $yearId);
+		foreach($list as &$obj) {
+			if($obj['institution_site_programme_id'] == $programmeId) {
+				foreach($obj['education_grades'] as $key => $value) {
+					$data[$key] = $value['gradeName'];
+				}
+				break;
+			}
+		}
+		return $data;
+	}
 	
 	public function programmesOptions($controller, $params) {
 		$controller->layout = 'ajax';
