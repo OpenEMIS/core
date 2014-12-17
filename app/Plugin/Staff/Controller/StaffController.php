@@ -297,20 +297,33 @@ class StaffController extends StaffAppController {
 			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			
 			if ($this->Staff->validates() && $this->Staff->save()) {
+				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
+				$InstitutionSiteStaffModel->validator()->remove('search');
+				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
+				
 				if ($this->Wizard->isActive()) {
 					if (is_null($id)) {
 						$this->Message->alert('general.add.success');
 						$id = $this->Staff->getLastInsertId();
 						$this->Session->write($model . '.id', $id);
 					}
+					
+					$dataToSite['staff_id'] = $id;
+					$InstitutionSiteStaffModel->save($dataToSite);
+					
 					$this->Session->write($model . '.data', $this->Staff->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 					$this->Wizard->next();
 				} else {
+					$dataToSite['staff_id'] = $id;
+					$InstitutionSiteStaffModel->save($dataToSite);
+					
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}
+				
+				$this->Session->delete('InstitutionSiteStaff.addNew');
 			}
 		} else {
 			if (!empty($id)) {

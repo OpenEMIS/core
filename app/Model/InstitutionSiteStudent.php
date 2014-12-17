@@ -143,7 +143,7 @@ class InstitutionSiteStudent extends AppModel {
 			'value' => $this->Session->read('InstitutionSite.data.InstitutionSite.name'),
 			'visible' => true
 		);
-		$this->setFieldOrder('institution', 1);
+		$this->setFieldOrder('institution', 0);
 		
 		$SchoolYear = ClassRegistry::init('SchoolYear');
 		
@@ -154,7 +154,7 @@ class InstitutionSiteStudent extends AppModel {
 			'visible' => true,
 			'attr' => array('onchange' => "$('#reload').click()")
 		);
-		$this->setFieldOrder('year', 2);
+		$this->setFieldOrder('year', 1);
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['student_id']['type'] = 'hidden';
@@ -165,6 +165,11 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
 		$this->fields['education_programme_id']['type'] = 'select';
 		$this->fields['institution_site_programme_id']['visible'] = false;
+		$this->fields['student_status_id']['visible'] = false;
+		
+		$this->setFieldOrder('education_programme_id', 2);
+		$this->setFieldOrder('start_date', 3);
+		$this->setFieldOrder('end_date', 4);
 		
 		if ($this->action == 'add') {
 			if ($this->request->is('get')) {
@@ -184,6 +189,7 @@ class InstitutionSiteStudent extends AppModel {
 					'startDate' => $date->format('d-m-Y'),
 					'data-date' => $date->format('d-m-Y')
 				);
+		
 				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $yearId, true);
 				$this->fields['education_programme_id']['options'] = $programmeOptions;
 			}
@@ -307,6 +313,12 @@ class InstitutionSiteStudent extends AppModel {
 				$data[$this->alias]['institution_site_programme_id'] = 0;
 				
 				$this->set($data[$this->alias]);
+				
+				if(isset($data['new'])){
+					$this->validator()->remove('search');
+					$this->validator()->remove('student_id');
+				}
+				
 				if ($this->validates()) {
 					$count = $this->find('count', array(
 						'conditions' => array(
@@ -325,11 +337,27 @@ class InstitutionSiteStudent extends AppModel {
 							'school_year_id' => $yearId
 						));
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
-						if ($this->save($data)) {
-							$this->Message->alert('general.add.success');
-							return $this->redirect(array('action' => get_class($this)));
-						} else {
-							$this->Message->alert('general.add.failed');
+						
+						$statusOptions = $this->StudentStatus->getList();
+						$student_status_id = key($statusOptions);
+						foreach($statusOptions AS $id => $status){
+							if($status == 'Current Student'){
+								$student_status_id = $id;
+								break;
+							}
+						}
+						$data[$this->alias]['student_status_id'] = $student_status_id;
+						
+						if(isset($data['new'])){
+							$this->Session->write('InstitutionSiteStudent.addNew', $data[$this->alias]);
+							return $this->redirect(array('controller' => 'Students', 'action' => 'add'));
+						}else{
+							if ($this->save($data)) {
+								$this->Message->alert('general.add.success');
+								return $this->redirect(array('action' => get_class($this)));
+							} else {
+								$this->Message->alert('general.add.failed');
+							}
 						}
 					}
 				} else {
