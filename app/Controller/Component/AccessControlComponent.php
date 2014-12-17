@@ -162,7 +162,7 @@ class AccessControlComponent extends Component {
 							foreach($actionList as $a) {
 								$explode = explode('.', $a);
 								if (count($explode) > 1) {
-									$a = $explode[1];
+									//$a = $explode[1];
 								}
 								if(!isset($apply[$controller][$a])) {
 									$apply[$controller][$a] = array();
@@ -198,8 +198,8 @@ class AccessControlComponent extends Component {
 	public function apply() {
 		$controller = strtoupper($this->controller->params['controller']);
 		$action = $this->getAction();
-		$action = explode('.', $action);
-		$action = count($action) == 1 ? $action[0] : $action[1];
+		//$action = explode('.', $action);
+		//$action = count($action) == 1 ? $action[0] : $action[1];
 		
 		$permissions = $this->Session->read('permissions');
 		$apply = $permissions['apply'];
