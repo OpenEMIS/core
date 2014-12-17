@@ -131,7 +131,22 @@ class AssessmentItemResult extends AppModel {
 		$controller->Navigation->addCrumb('Assessments');
 
 		$yearOptions = $controller->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+		$defaultYearId = 0;
+		if(!empty($yearOptions)){
+			$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(Date('Y-m-d'));
+			if(!empty($currentYearId) && array_key_exists($currentYearId, $yearOptions)){
+				$defaultYearId = $currentYearId;
+			}else{
+				$latestYearId = ClassRegistry::init('SchoolYear')->getLatestSchoolYearIdByDate(Date('Y-m-d'), $yearOptions);
+				if(!empty($latestYearId) && array_key_exists($latestYearId, $yearOptions)){
+					$defaultYearId = $latestYearId;
+				}else{
+					$defaultYearId = key($yearOptions);
+				}
+			}
+		}
+		
+		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : $defaultYearId;
 		$data = array();
 		if (empty($yearOptions)) {
 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
