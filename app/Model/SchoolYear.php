@@ -201,24 +201,13 @@ class SchoolYear extends AppModel {
 		}
 	}
 	
-	public function getLatestSchoolYearIdByDate($date, $yearOptions) {
-		if(empty($date) || empty($yearOptions)){
-			return '';
-		}
-		
-		$yearIds = array();
-		foreach($yearOptions AS $id => $year){
-			$yearIds[] = $id;
-		}
-		
+	public function getCurrentSchoolYearId() {
 		$result = $this->find('first', array(
 			'fields' => array('SchoolYear.id'),
 			'conditions' => array(
-				'SchoolYear.visible' => 1,
-				'SchoolYear.end_date <' => $date,
-				'SchoolYear.id' => $yearIds
-			),
-			'order' => array('SchoolYear.start_date DESC')
+				'SchoolYear.visible = 1',
+				'SchoolYear.current = 1'
+			)
 		));
 		
 		if(!empty($result['SchoolYear']['id'])){
@@ -227,4 +216,5 @@ class SchoolYear extends AppModel {
 			return '';
 		}
 	}
+	
 }

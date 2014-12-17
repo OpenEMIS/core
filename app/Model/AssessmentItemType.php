@@ -346,7 +346,7 @@ class AssessmentItemType extends AppModel {
 				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId),
 				'AssessmentItemType.visible = 1'
 			),
-			'order' => array('SchoolYear.start_date DESC')
+			'order' => array('SchoolYear.order')
 		));
 
 		return $data;
