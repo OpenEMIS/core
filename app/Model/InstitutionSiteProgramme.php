@@ -88,7 +88,8 @@ class InstitutionSiteProgramme extends AppModel {
 			if ($selectedYear == 0) {
 				$selectedYear = key($yearOptions);
 			}
-			
+
+			$programKeys = array_keys($this->EducationProgramme->getProgrammeOptions());
 			$this->EducationProgramme->contain(array(
 				'EducationCycle' => array('fields' => array('EducationCycle.name')),
 				'InstitutionSiteProgramme' => array(
@@ -99,10 +100,31 @@ class InstitutionSiteProgramme extends AppModel {
 					)
 				)
 			));
+			// grabbing all records first...then filtering by status = 1 and if parent is visible
 			$data = $this->EducationProgramme->find('all', array(
 				'conditions' => array('EducationProgramme.visible' => 1),
 				'order' => array('EducationProgramme.order')
 			));
+			$processedData = array();
+			foreach ($data as $key => $value) {
+				$InstitutionSiteProgrammeData = $value['InstitutionSiteProgramme'];
+				$found = false;
+				foreach ($InstitutionSiteProgrammeData as $programDataKey => $programDataVal) {
+						if ($programDataVal['status']!='0') {
+							$found = true;
+						}
+				}
+				if ($found) {
+					array_push($processedData, $value);
+					continue;
+				}
+				if (in_array($value['EducationProgramme']['id'], $programKeys)) {
+					array_push($processedData, $value);
+					continue;
+				}
+			}
+			$data = $processedData;
+
 			$this->setVar(compact('yearOptions', 'selectedYear', 'data'));
 		} else {
 			$data = $this->request->data[$this->alias];
