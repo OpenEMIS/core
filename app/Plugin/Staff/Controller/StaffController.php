@@ -322,6 +322,8 @@ class StaffController extends StaffAppController {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}
+				
+				$this->Session->delete('InstitutionSiteStaff.addNew');
 			}
 		} else {
 			if (!empty($id)) {
