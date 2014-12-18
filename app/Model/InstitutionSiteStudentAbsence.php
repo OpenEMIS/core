@@ -151,8 +151,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$todayDate = date('Y-m-d');
 			$todayDateFormatted = date('d-m-Y');
 			
-			$yearId = $this->action == 'add' ? $this->controller->viewVars['selectedYear'] : $this->request->data['InstitutionSiteSection']['school_year_id'];
-			
+			$yearId = 0;
+
+			if ($this->action == 'add') {
+				$yearId = $this->controller->viewVars['selectedYear'];
+			} else {
+				$sectionId = $this->request->data['InstitutionSiteStudentAbsence']['institution_site_section_id'];
+				$yearId = $this->InstitutionSiteSection->field('InstitutionSiteSection.school_year_id', array('InstitutionSiteSection.id' => $sectionId));
+			}
+			//pr($this->request->data);die;
 			$yearObj = ClassRegistry::init('SchoolYear')->findById($yearId);
 			$startDate = $yearObj['SchoolYear']['start_date'];
 			$endDate = $yearObj['SchoolYear']['end_date'];
@@ -199,6 +206,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$this->setFieldOrder('student_id', 1);
 			$this->setVar('params', array('back' => $this->Session->read('InstitutionSiteStudentAbsence.backLink')));
 		} else if ($this->action == 'edit') {
+			//pr($this->request->data);die;
+
 			$data = $this->request->data;
 			$sectionId = $data[$this->alias]['institution_site_section_id'];
 			$this->fields['section']['type'] = 'disabled';
@@ -208,9 +217,19 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$this->setFieldOrder('section', 0);
 			$this->fields['student_id']['type'] = 'hidden';
 			$this->fields['student']['type'] = 'disabled';
-			$this->fields['student']['value'] = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
 			$this->fields['student']['order'] = 1;
 			$this->fields['student']['visible'] = true;
+
+			if ($this->request->is('get')) {
+				$this->fields['student']['value'] = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+			} else {
+				$this->fields['student']['value'] = $this->request->data[$this->alias]['studentName'];
+			}
+			$this->fields['studentName'] = array(
+				'type' => 'hidden',
+				'value' => $this->fields['student']['value'],
+				'visible' => true
+			);
 			$this->fields['institution_site_section_id']['type'] = 'hidden';
 			$this->request->data = $data;
 		}

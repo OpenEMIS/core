@@ -41,6 +41,21 @@ foreach($fields as $key => $field) {
 					}
 					$options['options'] = $field['options'];
 				}
+
+				// get rid of options that obsolete and not the default
+				if (!empty($field['options'])) {
+					reset($field['options']);
+					$first_key = key($field['options']);
+					if (is_array($field['options'][$first_key])) {
+						foreach ($options['options'] as $okey => $ovalue) {
+							if ($ovalue['obsolete'] == '1') {
+								if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
+									unset($options['options'][$okey]);
+								}
+							}
+						}
+					}
+				}
 				break;
 
 			case 'string':
