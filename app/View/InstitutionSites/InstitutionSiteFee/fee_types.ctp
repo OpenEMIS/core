@@ -1,4 +1,4 @@
-<?php 
+<?php
 $defaults = $this->FormUtility->getFormDefaults();
 if ($action == 'add' || $action == 'edit') : 
 
@@ -32,7 +32,7 @@ if ($action == 'add' || $action == 'edit') :
 							?>
 						</td>
 						<td>
-							<?php echo $this->Form->input("InstitutionSiteFeeType.$i.amount", array('value' => $obj['amount'], 'label' => false, 'div' => false, 'between' => false, 'after' => false)) ?>
+							<?php echo $this->Form->input("InstitutionSiteFeeType.$i.amount", array('type' => 'text', 'value' => $obj['amount'], 'onblur' => 'return utility.checkDecimal(this, 2)', 'onkeyup' => 'return utility.checkDecimal(this, 2)', 'onkeypress' => 'return utility.floatCheck(event)', 'label' => false, 'div' => false, 'between' => false, 'after' => false)) ?>
 						</td>
 					</tr>
 				<?php

@@ -1,6 +1,7 @@
 <tr>
 	<td>
 		<?php
+		echo $this->Form->hidden("$attr[0].$index.security_group_id", array('value' => $id));
 		echo $this->Form->hidden("$attr[0].$index.$attr[1]", array('class' => 'value-id'));
 		echo $this->Form->hidden('index', array('class' => 'index', 'value' => $index));
 		echo $this->Form->input('search', array(

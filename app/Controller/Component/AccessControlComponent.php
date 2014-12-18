@@ -27,7 +27,8 @@ class AccessControlComponent extends Component {
 	private $userId;
 	
 	public $ignoreList = array(
-		'HOME' => array('index', 'details', 'detailsEdit', 'password', 'support', 'systemInfo', 'license', 'partners'),
+		'HOME' => array('index', 'support', 'systemInfo', 'license', 'partners'),
+		'PREFERENCES' => array('index', 'account', 'accountEdit', 'password'),
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
 		'STUDENTS' => array('viewStudent'),
@@ -300,7 +301,7 @@ class AccessControlComponent extends Component {
 						}
 						
 					}else{
-						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add')){
+						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add' || $action == 'advanced')){
 							$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
 							
 						}else{
