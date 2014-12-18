@@ -232,7 +232,7 @@ fieldset#general.section_break > .row{
 	margin:0 0 0 8px;
 }
 .alert{
-	float:right;
+	float:none;
 }
 .alert .alert_icon{
 	float:right;
