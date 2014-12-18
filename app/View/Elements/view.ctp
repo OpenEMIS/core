@@ -40,8 +40,20 @@ foreach ($fields as $key => $field) {
 					break;
 					
 				case 'select':
-					if (array_key_exists($value, $field['options'])) {
-						$value = $field['options'][$value];
+					if (!empty($field['options'])) {
+						reset($field['options']);
+						$first_key = key($field['options']);
+						if (is_array($field['options'][$first_key])) {
+							foreach ($field['options'] as $fkey => $fvalue) {
+								if ($fvalue['value']==$value) {
+									$value = $fvalue['name'];
+								}
+							}
+						} else {
+							if (array_key_exists($value, $field['options'])) {
+								$value = $field['options'][$value];
+							}
+						}
 					}
 					break;
 
