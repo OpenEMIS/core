@@ -113,7 +113,10 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),
-		'InstitutionSiteStaffAbsence'
+		'InstitutionSiteStaffAbsence',
+		'InstitutionSiteSection',
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteSectionStaff'
 	);
 	
 	public function beforeFilter() {
@@ -210,7 +213,7 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		// for resetting institution site id
-		if (count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
+		if (!$this->AccessControl->check($this->params['controller'], 'add') && count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
 			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));
 		} else {
 			$this->Session->delete('InstitutionSite.id');
@@ -337,9 +340,6 @@ class InstitutionSitesController extends AppController {
 
 		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
 		
-		// create default shift if this institution site has no any shift yet
-		$this->createDefaultShift();
-		
 		$this->set('data', $data);
 	}
 
@@ -388,6 +388,8 @@ class InstitutionSitesController extends AppController {
             $this->request->data['InstitutionSite']['area_education_id_select'] = $data['InstitutionSite']['area_education_id'];
 		}
 		$visible = true;
+		$dataMask = $this->ConfigItem->getValue('institution_site_code');
+		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 		$typeOptions = $this->InstitutionSiteType->findList($visible);
 		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
 		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
@@ -396,7 +398,7 @@ class InstitutionSitesController extends AppController {
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 
-		$this->set(compact('data', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
+		$this->set(compact('data', 'arrCode', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
 	}
 
 	public function add() {
@@ -429,6 +431,8 @@ class InstitutionSitesController extends AppController {
 		//$filterArea = $this->SecurityGroupArea->getAreas($groupId);
 
 		$visible = true;
+		$dataMask = $this->ConfigItem->getValue('institution_site_code');
+		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 		$typeOptions = $this->InstitutionSiteType->findList($visible);
 		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
 		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
@@ -438,6 +442,7 @@ class InstitutionSitesController extends AppController {
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 		
 		//$this->set('filterArea', $filterArea);
+		$this->set('arrCode', $arrCode);
 		$this->set('areaId', $areaId);
 		$this->set('areaEducationId', $areaEducationId);
 		$this->set('typeOptions', $typeOptions);
@@ -1011,7 +1016,13 @@ class InstitutionSitesController extends AppController {
 	
 	public function generateAttendanceHeader($startDate, $endDate){
 		$header = array(__('ID'), __('Name'));
-		
+		$header = array_merge($header, $this->generateAttendanceHeaderDates($startDate, $endDate));
+		return $header;
+	}
+
+	public function generateAttendanceHeaderDates($startDate, $endDate) {
+		$header = array();
+
 		$firstDate = $startDate;
 		while($firstDate <= $endDate){
 			$stampStartDate = strtotime($firstDate);
@@ -1019,8 +1030,12 @@ class InstitutionSitesController extends AppController {
 			$stampStartDateNew = strtotime('+1 day', $stampStartDate);
 			$firstDate = date("Y-m-d", $stampStartDateNew);
 		}
-		
+
 		return $header;
+	}
+
+	public function generateAttendanceDayHeader() {
+		return array(__('ID'), __('Name'), __('Type'), __('Reason'));
 	}
 	
 	public function generateAttendanceWeekDayIndex($startDate, $endDate){
@@ -1037,41 +1052,7 @@ class InstitutionSitesController extends AppController {
 		return $index;
 	}
 	
-	private function createDefaultShift() {
-		$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-		
-		$data = $InstitutionSiteShiftModel->getAllShiftsByInstitutionSite($this->institutionSiteId);
-
-		if (empty($data)) {
-			$InstitutionSiteShiftModel->create();
-
-			$SchoolYearModel = ClassRegistry::init('SchoolYear');
-			//$currentYearId = $SchoolYearModel->getSchoolYearId(date('Y'));
-			$yearOptions = $SchoolYearModel->getYearList();
-			$schoolYearId = key($yearOptions);
-
-			$settingStartTime = $this->ConfigItem->getValue('start_time');
-			$hoursPerDay = intval($this->ConfigItem->getValue('hours_per_day'));
-			if ($hoursPerDay > 1) {
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
-			} else {
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
-			}
-
-			$endTime = date('h:i A', $endTimeStamp);
-
-			$defaultShift = array();
-			$defaultShift['InstitutionSiteShift'] = array(
-				'name' => 'Default Shift',
-				'school_year_id' => $schoolYearId,
-				'start_time' => $settingStartTime,
-				'end_time' => $endTime,
-				'institution_site_id' => $this->institutionSiteId,
-				'location_institution_site_id' => $this->institutionSiteId,
-				'location_institution_site_name' => 'Institution Site Name'
-			);
-
-			$InstitutionSiteShiftModel->save($defaultShift);
-		}
+	public function getDayViewAttendanceOptions() {
+		return array(__('Present'), __('Absent').' - '.__('Excused'), __('Absent').' - '.__('Unexcused'));
 	}
 }

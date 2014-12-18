@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
+		'Search',
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -43,6 +44,13 @@ class InstitutionSiteStudent extends AppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a OpenEMIS ID or name.'
+			)
+		),
+		'student_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a student.'
 			)
 		),
 		'institution_site_id' => array(
@@ -150,7 +158,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['student_id']['type'] = 'hidden';
-		$this->fields['student_id']['attr'] = array('class' => 'student_id');
+		$this->fields['student_id']['attr'] = array('autocomplete' => 'student_id');
 		$this->fields['student_status_id']['type'] = 'select';
 		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
 		$this->fields['institution_site_id']['type'] = 'hidden';
@@ -251,6 +259,11 @@ class InstitutionSiteStudent extends AppModel {
 		if (!empty($selectedStatus)) {
 			$conditions['InstitutionSiteStudent.student_status_id'] = $selectedStatus;
 		}
+
+		if($this->Session->check('Student.AdvancedSearch')){
+			$params = $this->Session->read('Student.AdvancedSearch');
+			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
+		}
 		
 		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
 		$data = $this->controller->paginate($this->alias, $conditions);
@@ -289,7 +302,7 @@ class InstitutionSiteStudent extends AppModel {
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			
 			$submit = $this->request->data['submit'];
-			if ($submit == 'Save') {
+			if ($submit == __('Save')) {
 				$studentId = $data[$this->alias]['student_id'];
 				$data[$this->alias]['institution_site_programme_id'] = 0;
 				
@@ -553,7 +566,7 @@ class InstitutionSiteStudent extends AppModel {
 					'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')
 				),
 				array(
-					'table' => 'student_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'StudentStatus',
 					'type' => 'left',
 					'conditions' => array('InstitutionSiteStudent.student_status_id = StudentStatus.id')

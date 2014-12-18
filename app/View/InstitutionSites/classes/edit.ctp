@@ -30,35 +30,33 @@ echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOp
 ?>
 
 <div class="form-group">
-	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
+	<label class="col-md-3 control-label"><?php echo $this->Label->get('general.sections'); ?></label>
 	<div class="col-md-8">
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
 						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-						<th><?php echo $this->Label->get('EducationProgramme.name'); ?></th>
-						<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
+						<th><?php echo $this->Label->get('general.section'); ?></th>
 					</tr>
 				</thead>
 				
 				<tbody>
 					<?php 
 					$i = 0;
-					foreach($grades as $obj) :
-						$checked = empty($obj['InstitutionSiteClassGrade']['status']) ? '' : 'checked';
+					foreach($sections as $obj) :
+						$checked = empty($obj['InstitutionSiteSectionClass']['status']) ? '' : 'checked';
 					?>
 					<tr>
 						<td class="checkbox-column">
 							<?php
-							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.id', array('value' => $obj['InstitutionSiteClassGrade']['id']));
-							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.institution_site_class_id', array('value' => $this->data[$model]['id']));
-							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.education_grade_id', array('value' => $obj['EducationGrade']['id']));
-							echo $this->Form->checkbox('InstitutionSiteClassGrade.' . $i++ . '.status', array('class' => 'icheck-input', 'checked' => $checked));
+							echo $this->Form->hidden('InstitutionSiteSectionClass.' . $i . '.id', array('value' => $obj['InstitutionSiteSectionClass']['id']));
+							echo $this->Form->hidden('InstitutionSiteSectionClass.' . $i . '.institution_site_class_id', array('value' => $this->data[$model]['id']));
+							echo $this->Form->hidden('InstitutionSiteSectionClass.' . $i . '.institution_site_section_id', array('value' => $obj['InstitutionSiteSection']['id']));
+							echo $this->Form->checkbox('InstitutionSiteSectionClass.' . $i++ . '.status', array('class' => 'icheck-input', 'checked' => $checked));
 							?>
 						</td>
-						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
-						<td><?php echo $obj['EducationGrade']['name']; ?></td>
+						<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
 					</tr>
 					<?php endforeach; ?>
 				</tbody>

@@ -20,7 +20,7 @@ class StudentBehaviour extends StudentsAppModel {
 	public $actsAs = array(
 		'ControllerAction2',
 		'DatePicker' => array('date_of_behaviour'),
-		'TimePicker' => array('time_of_behaviour' => array('format' => 'H:i a')),
+		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a')),
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		)
@@ -89,6 +89,7 @@ class StudentBehaviour extends StudentsAppModel {
 		parent::beforeAction();
 		
 		$this->InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
+		$this->InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 		
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $this->Session->read('InstitutionSite.id');
@@ -132,28 +133,52 @@ class StudentBehaviour extends StudentsAppModel {
 		$this->Navigation->addCrumb('Behaviour - Students');
 	}
 	
-	public function show($selectedYear=0, $selectedClass=0) {
+//	public function show($selectedYear=0, $selectedClass=0) {
+//		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+//		$yearOptions = $this->InstitutionSiteClass->getYearOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
+//		if (!empty($yearOptions)) {
+//			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
+//				$selectedYear = key($yearOptions);
+//			}
+//		}
+//		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedYear);
+//		if (!empty($classOptions)) {
+//			if (empty($selectedClass) || (!empty($selectedClass) && !array_key_exists($selectedClass, $classOptions))) {
+//				$selectedClass = key($classOptions);
+//			}
+//		}
+//		$data = $this->InstitutionSiteClass->InstitutionSiteClassStudent->getStudentsByClass($selectedClass, true);
+//		
+//		if (empty($data)) {
+//			$this->Message->alert('general.noData');
+//		}
+//		$this->Session->write($this->alias.'.selectedYear', $selectedYear);
+//		$this->Session->write($this->alias.'.selectedClass', $selectedClass);
+//		$this->setVar(compact('data', 'yearOptions', 'classOptions', 'selectedYear', 'selectedClass'));
+//	}
+	
+	public function show($selectedYear=0, $selectedSection=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->InstitutionSiteClass->getYearOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
+		$yearOptions = $this->InstitutionSiteSection->getYearOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
 		if (!empty($yearOptions)) {
 			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
 				$selectedYear = key($yearOptions);
 			}
 		}
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedYear);
-		if (!empty($classOptions)) {
-			if (empty($selectedClass) || (!empty($selectedClass) && !array_key_exists($selectedClass, $classOptions))) {
-				$selectedClass = key($classOptions);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedYear);
+		if (!empty($sectionOptions)) {
+			if (empty($selectedSection) || (!empty($selectedSection) && !array_key_exists($selectedSection, $sectionOptions))) {
+				$selectedSection = key($sectionOptions);
 			}
 		}
-		$data = $this->InstitutionSiteClass->InstitutionSiteClassStudent->getStudentsByClass($selectedClass, true);
+		$data = $this->InstitutionSiteSection->InstitutionSiteSectionStudent->getStudentsBySection($selectedSection, true);
 		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
 		$this->Session->write($this->alias.'.selectedYear', $selectedYear);
-		$this->Session->write($this->alias.'.selectedClass', $selectedClass);
-		$this->setVar(compact('data', 'yearOptions', 'classOptions', 'selectedYear', 'selectedClass'));
+		$this->Session->write($this->alias.'.selectedSection', $selectedSection);
+		$this->setVar(compact('data', 'yearOptions', 'sectionOptions', 'selectedYear', 'selectedSection'));
 	}
 	
 	public function index($studentId = 0) {

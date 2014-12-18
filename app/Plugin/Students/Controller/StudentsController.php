@@ -89,6 +89,14 @@ class StudentsController extends StudentsAppController {
 			//$this->Session->delete('Student');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
+			$studentId = $this->Session->read('Student.id');
+			if (empty($studentId)) {
+				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add');
+				$wizardActions = $this->Wizard->getAllActions('Student');
+				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
+					return $this->redirect(array('action' => 'edit'));
+				}
+			}
 		} else if ($this->Session->check('Student.data.name')) {
 			$name = $this->Session->read('Student.data.name');
 			$this->studentId = $this->Session->read('Student.id'); // for backward compatibility
@@ -147,7 +155,7 @@ class StudentsController extends StudentsAppController {
 		$data = $this->paginate('Student', $conditions);
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
-				$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+				$this->redirect(array('action' => 'view', $data[0]['Student']['id']));
 			}
 		}
 		if (empty($data) && !$this->request->is('ajax')) {
@@ -184,6 +192,8 @@ class StudentsController extends StudentsAppController {
 						$this->redirect(array('action' => 'index'));
 					}
 				}
+
+				$this->Session->delete('Student.wizard');
 			}
 		} else {
 			$search = $this->request->data;
@@ -222,7 +232,10 @@ class StudentsController extends StudentsAppController {
 
 	public function view($id=0) {
 		if ($id == 0 && $this->Wizard->isActive()) {
-			return $this->redirect(array('action' => 'add'));
+			$studentIdSession = $this->Session->read('Student.id');
+			if(empty($studentIdSession)){
+				return $this->redirect(array('action' => 'add'));
+			}
 		}
 		
 		if ($id > 0) {
@@ -263,7 +276,8 @@ class StudentsController extends StudentsAppController {
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check($model . '.id')) {
+		$studentIdSession = $this->Session->read('Student.id');
+		if (!empty($studentIdSession)) {
 			$id = $this->Session->read($model . '.id');
 			$this->Student->id = $id;
 			$this->Navigation->addCrumb('Edit');
@@ -303,7 +317,11 @@ class StudentsController extends StudentsAppController {
 			}
 		}
 		$genderOptions = $this->Option->get('gender');
+		$dataMask = $this->ConfigItem->getValue('student_identification');
+		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+
 		$this->set('autoid', $this->getUniqueID());
+		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);

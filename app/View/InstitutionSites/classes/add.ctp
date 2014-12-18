@@ -29,37 +29,35 @@ echo $this->Form->input('name');
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
 echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
 
-$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
-echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
+//$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
+//echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 ?>
 
 <div class="form-group">
-	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
+	<label class="col-md-3 control-label"><?php echo $this->Label->get('general.sections'); ?></label>
 	<div class="col-md-8">
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
 						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-						<th><?php echo $this->Label->get('EducationProgramme.name'); ?></th>
-						<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
+						<th><?php echo $this->Label->get('general.section'); ?></th>
 					</tr>
 				</thead>
 				
 				<tbody>
 					<?php 
 					$i = 0;
-					foreach($grades as $obj) :
+					foreach($sections as $obj) :
 					?>
 					<tr>
 						<td class="checkbox-column">
 							<?php
-							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.education_grade_id', array('value' => $obj['EducationGrade']['id']));
-							echo $this->Form->checkbox('InstitutionSiteClassGrade.' . $i++ . '.status', array('class' => 'icheck-input'));
+							echo $this->Form->hidden('InstitutionSiteSectionClass.' . $i . '.institution_site_section_id', array('value' => $obj['InstitutionSiteSection']['id']));
+							echo $this->Form->checkbox('InstitutionSiteSectionClass.' . $i++ . '.status', array('class' => 'icheck-input'));
 							?>
 						</td>
-						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
-						<td><?php echo $obj['EducationGrade']['name']; ?></td>
+						<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
 					</tr>
 					<?php endforeach; ?>
 				</tbody>

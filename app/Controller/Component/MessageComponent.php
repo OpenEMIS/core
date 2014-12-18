@@ -56,6 +56,9 @@ class MessageComponent extends Component {
 				'timeout' => array('type' => 'info', 'msg' => 'Your session has timed out. Please login again.'),
 				'fail' => array('type' => 'error', 'msg' => 'You have entered an invalid username or password.'),
 				'inactive' => array('type' => 'error', 'msg' => 'You are not an authorized user.')
+			),
+			'ldap' => array(
+				'fail' => array('type' => 'error', 'msg' => 'LDAP user is not a valid openemis user')
 			)
 		),
 		'search' => array(
@@ -122,7 +125,8 @@ class MessageComponent extends Component {
 			'mismatch' => array('type' => 'warn', 'msg' => 'The total number of shift does not match the total number of classes.')
 		),
 		'InstitutionSiteClass' => array(
-			'noData' => array('type' => 'warn', 'msg' => 'There are no classes associated with this institution site for the selected year.')
+			'noData' => array('type' => 'warn', 'msg' => 'There are no classes associated with this institution site for the selected year.'),
+			'toManySubjects' => array('type' => 'error', 'msg' => 'The number of subjects selected has exceeded the limit setting')
 		),
 		'Training' => array(
 			'activate' => array(

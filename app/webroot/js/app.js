@@ -52,6 +52,22 @@ var utility = {
 		var keynum = utility.getKeyPressed(evt);
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==undefined);
 	},
+
+	checkDecimal: function(obj, dec) {
+		var regexStr = '[0-9]*';
+		if(dec > 0) {
+			regexStr += '\\.?[0-9]{0,' + dec + '}';
+		} else if(dec < 0) {
+			regexStr += '\\.?[0-9]*';
+		}
+		regexStr = '^' + regexStr;
+		regexStr += '$';
+
+		var regex = new RegExp(regexStr);
+		if(regex.test(obj.value) == false) {
+			obj.value = obj.value.substring(0, obj.value.length - 1);
+		}
+	},
         
         FTECheck: function(evt) {
 		var keynum = utility.getKeyPressed(evt);

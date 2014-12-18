@@ -32,7 +32,7 @@ $autocompleteArr = array(
 );
 echo $this->element('autocomplete_field', $autocompleteArr);
 echo $this->Form->hidden('table_id', array(
-	'class' => 'table_id',
+	'autocomplete' => 'table_id',
 	'id' => 'hiddenAutocompleteId'
 ));
 echo $this->Form->hidden('security_user_id', array('value' => $data['id']));

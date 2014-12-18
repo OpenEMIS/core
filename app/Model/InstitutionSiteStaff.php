@@ -18,8 +18,9 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
-	public $fteOptions = array(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
+	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	public $actsAs = array(
+		'Search',
 		'ControllerAction2', 
 		'DatePicker' => array('start_date', 'end_date'),
 		'ReportFormat' => array(
@@ -36,6 +37,13 @@ class InstitutionSiteStaff extends AppModel {
 				'message' => 'Please enter a OpenEMIS ID or name.'
 			)
 		),
+		'staff_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a staff.'
+			)
+		),
 		'institution_site_position_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -48,6 +56,13 @@ class InstitutionSiteStaff extends AppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please select a Type.'
+			)
+		),
+		'FTE' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a FTE.'
 			)
 		)
 	);
@@ -130,6 +145,15 @@ class InstitutionSiteStaff extends AppModel {
 			'fileName' => 'Report_Staff_List'
 		)
 	);
+	
+	public function beforeSave($options = array()) {
+		$alias = $this->alias;
+		
+		//pr($this->data);die;
+		$this->data[$alias]['FTE'] = $this->data[$alias]['FTE'] / 100;
+		
+		return parent::beforeSave($options);
+	}
 
 	public function compareDate($field = array(), $compareField = null) {
 		$startDate = new DateTime(current($field));
@@ -155,24 +179,34 @@ class InstitutionSiteStaff extends AppModel {
 		return $this->fields;
 	}
 	
-	public function index($selectedYear = '') {
+	public function index() {
 		$this->Navigation->addCrumb('List of Staff');
 		$params = $this->controller->params;
 		$page = isset($params->named['page']) ? $params->named['page'] : 1;
+
+		$selectedYear = "";
 		$model = 'Staff';
+		$searchField = "";
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if ($this->request->is('post')) {
-			$selectedYear = $this->request->data[$model]['school_year'];
-			$orderBy = $this->request->data[$model]['orderBy'];
-			$order = $this->request->data[$model]['order'];
+			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['SearchField']));
+			$selectedYear = $this->request->data[$this->alias]['school_year'];
+			$orderBy = $this->request->data[$this->alias]['orderBy'];
+			$order = $this->request->data[$this->alias]['order'];
 
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
 			$this->Session->write(sprintf($prefix, 'order'), $order);
 			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
 		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			$selectedYear = isset($params['pass'][1]) ? $params['pass'][1] : '';
+
 			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
 				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
 			}
@@ -181,22 +215,43 @@ class InstitutionSiteStaff extends AppModel {
 			}
 		}
 		$conditions = array('InstitutionSiteStaff.institution_site_id' => $institutionSiteId);
+
+		if (!empty($searchField)) {
+			$search = '%' . $searchField . '%';
+			$conditions[] = array(
+				'OR' => array(
+					'Staff.identification_no LIKE' => $search,
+					'Staff.first_name LIKE' => $search,
+					'Staff.middle_name LIKE' => $search,
+					'Staff.last_name LIKE' => $search,
+					'Staff.preferred_name LIKE' => $search
+				)
+			);
+		}
 		
 		if (!empty($selectedYear)) {
 			$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
-			$conditions['OR'] = array(
-				'InstitutionSiteStaff.end_year >=' => $selectedYear,
-				'InstitutionSiteStaff.end_year IS NULL'
+			$conditions[] = array(
+				'OR' => array(
+					'InstitutionSiteStaff.end_year >=' => $selectedYear,
+					'InstitutionSiteStaff.end_year IS NULL'
+				)
 			);
+		}
+
+		if($this->Session->check('Staff.AdvancedSearch')){
+			$params = $this->Session->read('Staff.AdvancedSearch');
+			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
 		}
 
 		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
 		$data = $this->controller->paginate($this->alias, $conditions);
+
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
-		$this->setVar(compact('page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
+		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
 	}
 	
 	public function add() {
@@ -216,10 +271,10 @@ class InstitutionSiteStaff extends AppModel {
 					$startDate = $data[$this->alias]['start_date'];
 				}
 				
-				if ($submit == 'Save') {
+				if ($submit == __('Save')) {
 					$this->set($data[$this->alias]);
 					if ($this->validates()) {
-						$data[$this->alias]['FTE'] = !empty($data[$this->alias]['FTE']) ? ($data[$this->alias]['FTE'] / 100) : NULL;
+						$data[$this->alias]['FTE'] = !empty($data[$this->alias]['FTE']) ? $data[$this->alias]['FTE'] : NULL;
 						$data[$this->alias]['institution_site_id'] = $institutionSiteId;
 						$selectedDate = date('Y-m-d', strtotime($startDate));
 						$count = $this->find('count', array(
@@ -252,7 +307,7 @@ class InstitutionSiteStaff extends AppModel {
 			$this->fields['institution_site_id']['type'] = 'disabled';
 			$this->fields['institution_site_id']['value'] = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
 			$this->fields['end_date']['visible'] = false;
-			$this->fields['staff_id']['attr'] = array('class' => 'staff_id');
+			$this->fields['staff_id']['attr'] = array('autocomplete' => 'staff_id');
 			$this->fields['staff_status_id']['type'] = 'hidden';
 			$this->fields['staff_status_id']['value'] = $this->StaffStatus->getDefaultValue();
 			$this->fields['institution_site_position_id']['type'] = 'select';
@@ -290,15 +345,33 @@ class InstitutionSiteStaff extends AppModel {
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 
 				'InstitutionSitePosition.position_no', 'InstitutionSitePosition.staff_position_title_id',
-				'StaffStatus.name'
+				'StaffStatus.name', 'InstitutionSiteStaff.start_date'
 			),
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
-			'group' => array('Staff.id'),
 			'order' => $order
 		));
-		return $data;
+		
+		$newData = array();
+		if(!isset($conditions['InstitutionSiteStaff.start_year <='])) {
+			foreach($data AS $record){
+				$staffId = $record['Staff']['id'];
+				if(isset($newData[$staffId])){
+					$existingStartDate = $newData[$staffId]['InstitutionSiteStaff']['start_date'];
+					$newStartDate = $record['InstitutionSiteStaff']['start_date'];
+					if(date("Y-m-d",strtotime($newStartDate)) > date("Y-m-d",strtotime($existingStartDate))){
+						$newData[$staffId] = $record;
+					}
+				}else{
+					$newData[$staffId] = $record;
+				}
+			}
+		} else{
+			$newData = $data;
+		}
+		
+		return $newData;
 	}
 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
@@ -407,6 +480,7 @@ class InstitutionSiteStaff extends AppModel {
 		$options['FTE_value'] = !empty($options['FTE_value']) ? $options['FTE_value'] : 0;
 		$options['startDate'] = !empty($options['startDate']) ? date('Y-m-d', strtotime($options['startDate'])) : null;
 		$options['endDate'] = !empty($options['endDate']) ? date('Y-m-d', strtotime($options['endDate'])) : null;
+		$currentFTE = !empty($options['currentFTE']) ? $options['currentFTE'] : 0;
 
 		if ($options['showAllFTE']) {
 			foreach ($this->fteOptions as $obj) {
@@ -445,7 +519,23 @@ class InstitutionSiteStaff extends AppModel {
 
 			foreach ($this->fteOptions as $obj) {
 				if ($highestFTE >= $obj) {
-					$filterFTEOptions[$obj] = $obj;
+					$objLabel = number_format($obj / 100, 2);
+					$filterFTEOptions[$obj] = $objLabel;
+				}
+			}
+			
+			if(!empty($currentFTE) && !in_array($currentFTE, $filterFTEOptions)){
+				if($remainingFTE > 0){
+					$newMaxFTE = $currentFTE + $remainingFTE;
+				}else{
+					$newMaxFTE = $currentFTE;
+				}
+				
+				foreach ($this->fteOptions as $obj) {
+					if ($obj <= $newMaxFTE) {
+						$objLabel = number_format($obj / 100, 2);
+						$filterFTEOptions[$obj] = $objLabel;
+					}
 				}
 			}
 
@@ -536,7 +626,32 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('InstitutionSiteStaff.Staff_id = Staff.id')
 				)
 			),
-			'conditions' => $conditions
+			'conditions' => array(
+				'InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId,
+				'OR' => array(
+					'OR' => array(
+						array(
+							'InstitutionSiteStaff.end_date IS NOT NULL',
+							'InstitutionSiteStaff.start_date <= "' . $startDate . '"',
+							'InstitutionSiteStaff.end_date >= "' . $startDate . '"'
+						),
+						array(
+							'InstitutionSiteStaff.end_date IS NOT NULL',
+							'InstitutionSiteStaff.start_date <= "' . $endDate . '"',
+							'InstitutionSiteStaff.end_date >= "' . $endDate . '"'
+						),
+						array(
+							'InstitutionSiteStaff.end_date IS NOT NULL',
+							'InstitutionSiteStaff.start_date >= "' . $startDate . '"',
+							'InstitutionSiteStaff.end_date <= "' . $endDate . '"'
+						)
+					),
+					array(
+						'InstitutionSiteStaff.end_date IS NULL',
+						'InstitutionSiteStaff.start_date <= "' . $endDate . '"'
+					)
+				)
+			)
 		));
 
 		return $data;
@@ -552,7 +667,7 @@ class InstitutionSiteStaff extends AppModel {
 			'OR' => array(
 				array(
 					'InstitutionSiteStaff.end_date IS NULL',
-					'InstitutionSiteStaff.start_date <=' => $endDate
+					'InstitutionSiteStaff.start_date >=' => $endDate
 				),
 				array(
 					'InstitutionSiteStaff.end_date IS NOT NULL',
@@ -566,6 +681,23 @@ class InstitutionSiteStaff extends AppModel {
 				)
 			)
 		);
+
+		// $options['conditions'] = array(
+		// 	'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
+		// 	'OR' => array(
+		// 		array(
+		// 			'InstitutionSiteStaff.end_date IS NULL',
+		// 			'InstitutionSiteStaff.start_date <=' => $endDate
+		// 		),
+		// 		array(
+		// 			'InstitutionSiteStaff.end_date IS NOT NULL',
+		// 			'InstitutionSiteStaff.start_date <=' => $endDate,
+		// 			'InstitutionSiteStaff.end_date >=' => $startDate
+		// 		)
+		// 	)
+		// );
+
+
 		
 		//$options['recursive'] =-1;
 		$options['fields'] = array(
@@ -726,7 +858,7 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('IdentityType.id = StaffIdentity.identity_type_id')
 				),
 				array(
-					'table' => 'staff_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'StaffStatus',
 					'type' => 'left',
 					'conditions' => array('InstitutionSiteStaff.staff_status_id = StaffStatus.id')

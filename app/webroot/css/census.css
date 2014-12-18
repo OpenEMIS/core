@@ -60,6 +60,3 @@
 #enrolment .table-responsive{
 	overflow-x: auto;
 }
-#enrolment.edit .table-responsive{
-	width: 655px;
-}

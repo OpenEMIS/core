@@ -19,6 +19,10 @@ if ($_edit) {
         $endDate = array('id' => 'expiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
     }
     echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+}else{
+	$redirectAction = array('action' => 'membership');
+    $startDate = array('id' => 'issueDate');
+    $endDate = array('id' => 'expiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
 }
 $this->end();
 $this->start('contentBody');
@@ -32,7 +36,12 @@ echo $this->FormUtility->datepicker('issue_date', $startDate);
 echo $this->Form->input('membership', array('id' => 'searchMembership', 'class' => 'form-control membership', 'label'=>array('text'=> $this->Label->get('general.name'),'class'=>$labelOptions['class'])));
 echo $this->FormUtility->datepicker('expiry_date', $endDate);
 echo $this->Form->input('comment');
-echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
+}else{
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
+
 echo $this->Form->end();
 $this->end();
 ?>

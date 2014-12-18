@@ -16,21 +16,22 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-$description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
+$description = __d('open_emis', 'OpenEMIS Core');
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="<?php echo $lang_locale; ?>" dir="<?php echo $lang_dir; ?>">
+<!DOCTYPE html>
+<html lang="<?php echo $lang_locale; ?>" dir="<?php echo $lang_dir; ?>" class="<?php echo $lang_dir == 'rtl' ? 'rtl' : '' ?>">
 <head>
 	<?php echo $this->Html->charset(); ?>
 	<title><?php echo $description ?></title>
 	<?php
-		echo $this->Html->meta('favicon', 'favicon.ico?v=2', array('type' => 'icon'));
+		echo $this->Html->meta('favicon', 'favicon.ico', array('type' => 'icon'));
 		echo $this->fetch('meta');
 		
 		echo $this->Html->css('kordit-fonts/style'); // kordit font pack
 		echo $this->Html->css('default/bootstrap.min');
 		echo $this->Html->css('default/font-awesome.min');
 		echo $this->Html->css('style');
+		echo $this->Html->css('layout');
 		echo $this->Html->css('icons');
 		echo $this->Html->css('fieldset');
 		echo $this->Html->css('common');
@@ -38,7 +39,6 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->css('table'); // for tables
 		echo $this->Html->css('mask'); // for masking
 		echo $this->Html->css('dialog'); // for dialogs
-		echo $this->Html->css('alert'); // for alerts
 		echo $this->fetch('css');
 		if($lang_dir=='rtl') {
 			echo $this->Html->css('rtl');
@@ -64,10 +64,10 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 
 <body>
 	<?php echo $this->element('layout/header'); ?>
-	<div class="container">
+	<div class="container layout">
 		<?php echo $this->fetch('content'); ?>
-		<?php echo $this->element('layout/footer'); ?>
 	</div>
+	<?php echo $this->element('layout/footer'); ?>
 	<?php echo $this->element('debug/sql'); ?>
 	<?php echo $this->fetch('scriptBottom'); ?>
 </body>

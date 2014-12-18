@@ -94,16 +94,16 @@ $pageNumberOptions = array('modulus' => 5, 'first' => 2, 'last' => 2, 'tag' => '
 </div>
 
 <table class="table table-striped table-hover table-bordered" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
-    <thead>
+    <thead url="Students/index">
 		<tr>
-			<td class="cell_code">
+			<th class="cell_code">
                 <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
                 <span class="icon_sort_<?php echo ($sortedcol == 'Student.identification_no') ? $sorteddir : 'up'; ?>"  order="Student.identification_no"></span>
-				</div>
-			<td class="cell_code">
+				</th>
+			<th class="cell_code">
 				<span class="left"><?php echo __('Name'); ?></span>
 				<span class="icon_sort_<?php echo ($sortedcol == 'Student.first_name') ? $sorteddir : 'up'; ?>" order="Student.first_name"></span>
-			</td>
+			</th>
 			<?php /* <td class="table_cell cell_code">
 			  <span class="left"><?php echo __('Middle Name'); ?></span>
 			  <span class="icon_sort_<?php echo ($sortedcol =='Student.middle_name')?$sorteddir:'up'; ?>" order="Student.middle_name"></span>
@@ -112,14 +112,14 @@ $pageNumberOptions = array('modulus' => 5, 'first' => 2, 'last' => 2, 'tag' => '
 			  <span class="left"><?php echo __('Last Name'); ?></span>
 			  <span class="icon_sort_<?php echo ($sortedcol =='Student.last_name')?$sorteddir:'up'; ?>" order="Student.last_name"></span>
 			  </td> */ ?>
-			<td class="cell_code">
+			<th class="cell_code">
 				<span class="left"><?php echo __('Gender'); ?></span>
 				<span class="icon_sort_<?php echo ($sortedcol == 'Student.gender') ? $sorteddir : 'up'; ?>" order="Student.gender"></span>
-			</td>
-			<td class="cell_code">
+			</th>
+			<th class="cell_code">
 				<span class="left"><?php echo __('Date of Birth'); ?></span>
 				<span class="icon_sort_<?php echo ($sortedcol == 'Student.date_of_birth') ? $sorteddir : 'up'; ?>" order="Student.date_of_birth"></span>
-			</td>
+			</th>
 		</tr> 
     </thead>
 
