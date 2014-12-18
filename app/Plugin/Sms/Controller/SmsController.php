@@ -152,7 +152,8 @@ class SmsController extends SmsAppController {
         $HttpSocket = new HttpSocket();
         $data = array();
         $logData = array();
-		$this->log(array_merge($providerURL, $param), 'sms');
+        $this->log($providerUrl, 'sms');
+        $this->log($param, 'sms');
 		$responseOK = false;
         switch ($provider) {
             case "smsdome":
@@ -387,7 +388,8 @@ class SmsController extends SmsAppController {
                     if(isset($value['number'])){
                         $result[$i][] = $value['number'];
                     }
-                   $result[$i][] = '"' . str_replace(',', ' ',array_pop(array_values($value))) . '"';
+                    $tmpValue = array_values($value);
+                    $result[$i][] = '"' . str_replace(',', ' ',array_pop($tmpValue)) . '"';
                 }
                 $i++;
             }
@@ -531,7 +533,9 @@ class SmsController extends SmsAppController {
 
     function array2csv($results=NULL, $fieldName=NULL)
     {
-       ob_end_clean();
+       if (ob_get_contents()){
+            ob_end_clean();
+       }
        ob_start();
        $df = fopen("php://output", 'w');
        //fputs($df,$fieldName);

@@ -58,7 +58,7 @@ $this->start('contentBody');
 				<?php } ?>
 			</div>
 		</div>
-                <div class="row">
+        <div class="row">
 			<div class="col-md-2"><?php echo __('Middle Name'); ?></div>
 			<div class="col-md-6"><?php //pr($data); ?>
 				<span><?php echo $data['Student']['middle_name']; ?></span>
@@ -68,6 +68,26 @@ $this->start('contentBody');
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['middle_name'] as $val => $time):?>
 						<?php if($ctr == 1 && $data['Student']['middle_name'] == $val) continue; ?>
+						<div class="table_row">
+							<div class="table_cell cell_value"><?php echo $val; ?></div>
+							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
+						</div>
+						<?php $ctr++; endforeach;?>
+					</div>
+				</div>
+				<?php } ?>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2"><?php echo __('Third Name'); ?></div>
+			<div class="col-md-6"><?php //pr($data); ?>
+				<span><?php echo $data['Student']['third_name']; ?></span>
+				<?php //pr($data2['first_name']);?>
+				<?php if(@sizeof($data2['third_name'])>0){ //) { ?>
+				<div class="table">
+					<div class="table_body">
+						<?php $ctr = 1; foreach($data2['third_name'] as $val => $time):?>
+						<?php if($ctr == 1 && $data['Student']['third_name'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>

@@ -28,14 +28,10 @@ echo $this->element('../InstitutionSites/classes/controls');
 	<div class="col-md-6"><?php echo $data[$model]['no_of_seats']; ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.shift'); ?></div>
-	<div class="col-md-6"><?php echo $data['InstitutionSiteShift']['name']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('EducationGrade.name'); ?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('general.sections'); ?></div>
 	<div class="col-md-6">
 		<?php
-		foreach($grades as $g) {
+		foreach($sections as $g) {
 			echo $g . '<br />';
 		}
 		?>

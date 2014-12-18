@@ -85,7 +85,9 @@ class LabelHelper extends AppHelper {
 			'amount' => 'Amount',
 			'total' => 'Total',
 			'fee' => 'Fee',
-			'model' => 'Model'
+			'model' => 'Model',
+			'section' => 'Section',
+			'sections' => 'Sections'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -319,7 +321,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Position',
 			'teaching' => 'Teaching',
 			'number' => 'Number',
-			'institution_site_position_id' => 'Title'
+			'institution_site_position_id' => 'Position'
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
@@ -339,6 +341,7 @@ class LabelHelper extends AppHelper {
 			'title' => 'Absence - Students',
 			'school_year_id' => 'School Year',
 			'institution_site_class_id' => 'Class',
+			'institution_site_section_id' => 'Section',
 			'student_id' => 'Student',
 			'absence_type' => 'Type',
 			'student_absence_reason_id' => 'Reason'

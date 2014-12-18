@@ -1,17 +1,46 @@
 .tab-content>.tab-pane {
-display: none;
+	display: none;
 }
 .tab-content>.active {
-display: block;
+	display: block;
 }
 .filter-option {
 	width: 200px;
 	display:block; 
- 	word-wrap: break-word;
- 	white-space: nowrap;
+	word-wrap: break-word;
+	white-space: nowrap;
 }
 
 .filter-option input[type="checkbox"] { 
 	margin-right: 3px; 
 	margin-left: 3px; 
+}
+
+.input-append .btn.dropdown-toggle {
+    float: none;
+}
+
+.input-append .btn-group {
+	display: block;
+	height: 20px;
+}
+
+.input-append > .btn-group > .btn-primary {
+	height: 25px;
+}
+
+.input-append > .btn-group > .form-control {
+	width: 82%;
+	float: left;
+}
+
+.dropdown-menu > li {
+	font-size: 11px;
+	/*padding: 0px;*/
+}
+
+.scrollable-menu {
+    height: auto;
+    max-height: 115px;
+    overflow-x: hidden;
 }

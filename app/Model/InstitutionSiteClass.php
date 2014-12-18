@@ -36,7 +36,8 @@ class InstitutionSiteClass extends AppModel {
 		'InstitutionSiteClassGrade',
 		'InstitutionSiteClassStaff',
 		'InstitutionSiteClassStudent',
-		'InstitutionSiteClassSubject'
+		'InstitutionSiteClassSubject',
+		'InstitutionSiteSectionClass'
 	);
 	
 	public $validate = array(
@@ -72,13 +73,6 @@ class InstitutionSiteClass extends AppModel {
                 'rule'    => array('comparison', '>=', 0),
                 'message' => 'Please enter a value between 0 and 100'
             )
-		),
-		'institution_site_shift_id' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid shift'
-			)
 		)
 	);
 	
@@ -197,17 +191,22 @@ class InstitutionSiteClass extends AppModel {
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			//$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			//pr($grades);
+			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedYear);
+			//pr($sections);
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$InstitutionSiteShiftModel->createInstitutionDefaultShift($controller->institutionSiteId, $selectedYear);
 			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($controller->institutionSiteId, $selectedYear);
 			
-			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				$data = $controller->request->data;
-				if(isset($data['InstitutionSiteClassGrade'])) {
-					foreach($data['InstitutionSiteClassGrade'] as $i => $obj) {
+				if(isset($data['InstitutionSiteSectionClass'])) {
+					foreach($data['InstitutionSiteSectionClass'] as $i => $obj) {
 						if(empty($obj['status'])) {
-							unset($data['InstitutionSiteClassGrade'][$i]);
+							unset($data['InstitutionSiteSectionClass'][$i]);
 						}
 					}
 				}
@@ -231,8 +230,10 @@ class InstitutionSiteClass extends AppModel {
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($className);
-			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
-			$controller->set(compact('data', 'grades'));
+			//$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
+			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
+			//pr($sections);
+			$controller->set(compact('data', 'sections'));
 			$controller->set('actionOptions', $this->getClassActions($controller, $id));
 		} else {
 			$controller->Message->alert('general.notExists');
@@ -258,8 +259,11 @@ class InstitutionSiteClass extends AppModel {
 				$controller->request->data = $data;
 			}
 			
-			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
-			$controller->set('grades', $grades);
+			//$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
+			//$controller->set('grades', $grades);
+			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForClass($id);
+			//pr($sections);
+			$controller->set('sections', $sections);
 			
 			$name = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($name);
@@ -307,7 +311,8 @@ class InstitutionSiteClass extends AppModel {
 		foreach($classes as $id => $name) {
 			$data[$id] = array(
 				'name' => $name,
-				'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
+				//'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
+				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($id),
 				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
 			);
 		}
@@ -368,17 +373,25 @@ class InstitutionSiteClass extends AppModel {
 					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
 				),
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id'
+						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteSectionClass.status = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array(
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id'
 					)
 				),
 				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
 					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id',
+						'AssessmentItemType.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
 						'AssessmentItemType.id' => $assessmentId
 					)
 				)
@@ -482,29 +495,27 @@ class InstitutionSiteClass extends AppModel {
 
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-				),
-				array(
-					'table' => 'institution_site_class_grade_students',
-					'alias' => 'InstitutionSiteClassGradeStudent',
-					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					'table' => 'institution_site_class_students',
+					'alias' => 'InstitutionSiteClassStudent',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClassStudent.status = 1'
+					)
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = EducationGrade.id')
 				),
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
-					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
 				),
 				array(
 					'table' => 'student_categories',
 					'alias' => 'StudentCategory',
-					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
 				),
 				array(
 					'table' => 'school_years',

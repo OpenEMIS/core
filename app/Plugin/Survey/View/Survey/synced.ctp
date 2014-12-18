@@ -5,22 +5,20 @@ echo $this->Html->script('/Survey/js/survey', false);
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 
 
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Completed Surveys'));
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link(__('Unsynchronized'), array('action' => 'import'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
 
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
 <input type="hidden" id="pageType" value="import">
-<div id="users" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Completed Surveys'); ?></span>
-		<?php
-		if($_add) {
-			echo $this->Html->link(__('Unsynchronized'), array('action' => 'import'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	
-	
+
     <div style="display:none;">
 	<?php
 	
@@ -30,7 +28,6 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 	?>
     </div>
     <?php echo $this->Form->create('Survey',array('url'=>array('plugin'=>'Survey','controller'=>'Survey','action'=>'synced')));?>
-	<?php echo $this->element('alert'); ?>
 	<!--div class="row">
 		
 		<div class="label">Search</div>
@@ -136,52 +133,49 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
             </div>
 		</div>
 	</div>
-	
-	<div class="table full_width allow_hover" >
-		<div class="table_head">
-			<div class="table_cell cell_visible">
-            <?php 
-			echo $this->Form->input('checked', array('label'=>false, 'type' => 'checkbox','onchange'=>'Survey.activateSync(this)'));
-			?>
-            </div>
-			<div class="table_cell"><?php echo __('Name'); ?></div>
-			<div class="table_cell cell_time"><?php echo __('Date'); ?></div>
-			<div class="table_cell cell_filesize"><?php echo __('Filesize'); ?></div>
-			<!--div class="table_cell cell_status"><?php echo __('Status'); ?></div-->
-		</div>
-                <?php if(@$data){ ?>
-		<div class="table_body" id="results" cat="archive">
-			<?php foreach($data as $obj) { ?>
-			<div class="table_row <?php //echo $obj['status']==0 ? 'inactive' : ''; ?>" >
-				<div class="table_cell cell_visible"><?php echo $this->Form->input('choices',array('type'=>'checkbox','label'=>false,'value'=>$obj['basename']));?></div>
-				<div class="table_cell"><?php echo str_replace('.json', '',  $obj['basename']); ?></div>
-				<div class="table_cell cell_time center"><?php echo $obj['time'] ; ?></div>
-				<div class="table_cell cell_filesize center"><?php echo $obj['size'] ; ?></div>
-			</div>
-			<?php } ?>
-		</div> 
-                <?php } ?>
-        <?php if(sizeof($data)==0) { ?>
-        <div class="row center" style="color: red; width:700px;"><?php echo __('No Survey found.'); ?></div>
-        <?php } ?>
+	<?php echo $this->element('alert'); ?>
+	<div class="table-responsive">
+		<table class="table table-striped table-hover table-bordered" border="1">
+			<thead class="table_head">
+				<tr>
+					<td class="table_cell cell_visible"><?php 
+					echo $this->Form->input('checked', array('label'=>false, 'type' => 'checkbox','onchange'=>'Survey.activateSync(this)'));
+					?></td>
+					<td class="table_cell"><?php echo __('Name'); ?></td>
+					<td class="table_cell cell_time"><?php echo __('Date'); ?></td>
+					<td class="table_cell cell_filesize"><?php echo __('Filesize'); ?></td>
+					<!--div class="table_cell cell_status"><?php echo __('Status'); ?></div-->
+				</tr>
+			</thead>
+		    <?php if(@$data){ ?>
+			<tbody class="table_body" id="results" cat="archive">
+				<?php foreach($data as $obj) { ?>
+				<tr class="table_row" >
+					<td class="table_cell cell_visible"><?php echo $this->Form->input('choices',array('type'=>'checkbox','label'=>false,'value'=>$obj['basename']));?></td>
+					<td class="table_cell"><?php echo str_replace('.json', '',  $obj['basename']); ?></td>
+					<td class="table_cell cell_time center"><?php echo $obj['time'] ; ?></td>
+					<td class="table_cell cell_filesize center"><?php echo $obj['size'] ; ?></td>
+				</tr>
+				<?php } ?>
+			</tbody>
+		    <?php } ?>
+	   </table>
 	</div>
+	<?php if(sizeof($data)==0) { ?>
+        <div class="row center" style="color: red;"><?php echo __('No Survey found.'); ?></div>
+    <?php } ?>
         
 	<div class="Row">
-                <div class="action_pullright">
-                        <?php 
-
-                                if(count($data) > 0 ){
-                                        if($firstPage > -1){ echo $this->Html->link(__('First'), array('action' => 'import',0,$pattern), array('class' => 'boxpaginate')); } 
-                                        if($prevPage  > -1){ echo $this->Html->link(__('Prev'), array('action' => 'import',$prevPage,$pattern), array('class' => 'boxpaginate')); } 
-                                        if($nextPage){ echo $this->Html->link(__('Next'), array('action' => 'import',$nextPage,$pattern), array('class' => 'boxpaginate')); } 
-                                        if($lastPage){ echo $this->Html->link(__('Last'), array('action' => 'import',$lastPage,$pattern), array('class' => 'boxpaginate')); } 
-                                }
-                        ?>
-                </div>
+        <div class="action_pullright">
+                <?php
+                        if(count($data) > 0 ){
+                                if($firstPage > -1){ echo $this->Html->link(__('First'), array('action' => 'import',0,$pattern), array('class' => 'boxpaginate')); } 
+                                if($prevPage  > -1){ echo $this->Html->link(__('Prev'), array('action' => 'import',$prevPage,$pattern), array('class' => 'boxpaginate')); } 
+                                if($nextPage){ echo $this->Html->link(__('Next'), array('action' => 'import',$nextPage,$pattern), array('class' => 'boxpaginate')); } 
+                                if($lastPage){ echo $this->Html->link(__('Last'), array('action' => 'import',$lastPage,$pattern), array('class' => 'boxpaginate')); } 
+                        }
+                ?>
         </div>
-	
+    </div>
 
-</div>
-
-
-
+<?php echo $this->end(); ?>

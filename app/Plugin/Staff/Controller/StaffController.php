@@ -96,6 +96,14 @@ class StaffController extends StaffAppController {
 			//$this->Session->delete('Staff');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Staff');
+			$staffId = $this->Session->read('Staff.id');
+			if (empty($staffId)) {
+				$skipActions = array('InstitutionSiteStaff', 'edit', 'view', 'add');
+				$wizardActions = $this->Wizard->getAllActions('Staff');
+				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
+					return $this->redirect(array('action' => 'edit'));
+				}
+			}
 		} else if ($this->Session->check('Staff.data.name')) {
 			$name = $this->Session->read('Staff.data.name');
 			$this->staffId = $this->Session->read('Staff.id'); // for backward compatibility
@@ -152,7 +160,7 @@ class StaffController extends StaffAppController {
 		$data = $this->paginate('Staff', $conditions);
 		if (empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
-				$this->redirect(array('action' => 'viewStaff', $data[0]['Staff']['id']));
+				$this->redirect(array('action' => 'view', $data[0]['Staff']['id']));
 			}
 		}
 		if (empty($data) && !$this->request->is('ajax')) {
@@ -189,6 +197,8 @@ class StaffController extends StaffAppController {
 						$this->redirect(array('action' => 'index'));
 					}
 				}
+
+				$this->Session->delete('Staff.wizard');
 			}
 		} else {
 			$search = $this->data;
@@ -225,7 +235,10 @@ class StaffController extends StaffAppController {
 
 	public function view($id=0) {
 		if ($id == 0 && $this->Wizard->isActive()) {
-			return $this->redirect(array('action' => 'add'));
+			$staffIdSession = $this->Session->read('Staff.id');
+			if(empty($staffIdSession)){
+				return $this->redirect(array('action' => 'add'));
+			}
 		}
 		
 		if ($id > 0) {
@@ -267,7 +280,8 @@ class StaffController extends StaffAppController {
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check($model . '.id')) {
+		$staffIdSession = $this->Session->read('Staff.id');
+		if (!empty($staffIdSession)) {
 			$id = $this->Session->read($model . '.id');
 			$this->Staff->id = $id;
 			$this->Navigation->addCrumb('Edit');
@@ -307,7 +321,11 @@ class StaffController extends StaffAppController {
 			}
 		}
 		$genderOptions = $this->Option->get('gender');
+		$dataMask = $this->ConfigItem->getValue('staff_identification');
+		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+
 		$this->set('autoid', $this->getUniqueID());
+		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);

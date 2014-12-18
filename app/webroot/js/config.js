@@ -16,6 +16,10 @@ var Config = {
 	}
 	,err : []
 	,validationRule : {}
+	,inputMaskCheck: function(evt) {
+		var keynum = utility.getKeyPressed(evt);
+		return (keynum == 57 || keynum == 97 || keynum == 119 || keynum == 42 || keynum == 63 || keynum == 45 || keynum == 40 || keynum == 41 || keynum < 32 || keynum==undefined);
+	}
 	,getAllowedChars : function(){
 		
 		$.get(getRootURL()+'Config/getAllowedChar', function(data) {
@@ -50,21 +54,21 @@ var Config = {
 		// Unmask this if need to use this format    
 		var bool = true;
 		
-		for(k in Config.validationRule){
+		for(k in Config.validationRule) {
 			if(k == 'special_charaters') continue;
-			try{
-				if($("input:[id*=validate_"+k+"]").val().length > 0){
-					$("input:[id*=validate_"+k+"]").each(function(){
+			try{	
+				if($("input[id*=validate_"+k+"]").val().length > 0){
+					$("input[id*=validate_"+k+"]").each(function(){
 						var p = Config.validationRule[k];
 						var regexObj = new RegExp("^"+p+"$");
 						console.log(this.value);
 						if (!regexObj.test(this.value)) {
 							var myStr = k.replace(/_/g, ' ');
-							var element = $("input:[id*=validate_"+k+"]").parent().parent().find(".error-message");
+							var element = $("input[id*=validate_"+k+"]").parent().parent().find(".error-message");
 							if(element.length > 0){
 								element.html('Please enter a valid ' + myStr);
 							}else{
-								$("input:[id*=validate_"+k+"]").parent().parent().append("<div class='error-message'>Please enter a valid " + myStr + "</div>");
+								$("input[id*=validate_"+k+"]").closest('.form-horizontal').prepend("<div class='error-message' style='float: none;'>Please enter a valid " + myStr + "</div>");
 							}
 							bool = false
 						}
@@ -74,7 +78,8 @@ var Config = {
 				
 			}
 		}
-		
+
+		//return false;
 		return bool;
 	},
 	

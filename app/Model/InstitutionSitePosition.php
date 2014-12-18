@@ -20,7 +20,7 @@ class InstitutionSitePosition extends AppModel {
 	public $actsAs = array('ControllerAction2');
    
 	public $belongsTo = array(
-		'StaffPositionTitle',
+		'Staff.StaffPositionTitle',
 		'StaffPositionGrade',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -183,10 +183,7 @@ class InstitutionSitePosition extends AppModel {
 			$staffFields['start_date']['value'] = $startDate;
 			$staffFields['staff_status_id']['type'] = 'select';
 			$staffFields['staff_status_id']['options'] = $this->InstitutionSiteStaff->StaffStatus->getList();
-			$staffFields['FTE']['type'] = 'select';
-			$staffFields['FTE']['options'] = $this->InstitutionSiteStaff->getFTEOptions($id, array('startDate' => $startDate));
-			$staffFields['FTE']['default'] = $staff['InstitutionSiteStaff']['FTE'] * 100;
-			$staffFields['FTE']['value'] = $staffFields['FTE']['default'];
+			$staffFields['FTE']['visible'] = false;
 			
 			$date = new DateTime($startDate);
 			$date->add(new DateInterval('P1D')); // plus 1 day
@@ -197,14 +194,17 @@ class InstitutionSitePosition extends AppModel {
 			
 			if ($this->request->is(array('post', 'put'))) {
 				$data = $this->request->data;
-				$data['InstitutionSiteStaff']['FTE'] = !empty($data['InstitutionSiteStaff']['FTE']) ? ($data['InstitutionSiteStaff']['FTE'] / 100) : NULL;
+				//$data['InstitutionSiteStaff']['FTE'] = !empty($data['InstitutionSiteStaff']['FTE']) ? ($data['InstitutionSiteStaff']['FTE'] / 100) : NULL;
 				$data['InstitutionSiteStaff']['institution_site_position_id'] = $id;
 				
 				$this->InstitutionSiteStaff->validator()->remove('search');
+				$this->InstitutionSiteStaff->validator()->remove('FTE');
+				//pr($data);
 				if ($this->InstitutionSiteStaff->save($data)) {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => $this->alias, 'view', $id));
 				} else {
+					$this->log($this->InstitutionSiteStaff->validationErrors, 'debug');
 					$this->Message->alert('general.edit.failed');
 				}
 			} else {

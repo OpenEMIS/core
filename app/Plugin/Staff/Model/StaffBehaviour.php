@@ -20,7 +20,7 @@ class StaffBehaviour extends StaffAppModel {
 	public $actsAs = array(
 		'ControllerAction2', 
 		'DatePicker' => array('date_of_behaviour'),
-		'TimePicker' => array('time_of_behaviour' => array('format' => 'H:i a')),
+		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a')),
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		)
