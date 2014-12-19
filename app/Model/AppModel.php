@@ -46,8 +46,8 @@ class AppModel extends Model {
 	public $actsAs = array('Containable');
 
 	public function checkUnique($ignoredData, $fields, $or = true) {
-        return $this->isUnique($fields, $or);
-    }
+		return $this->isUnique($fields, $or);
+	}
 	
 	public function setField($field, $obj, $order=0) {
 		$fields = $this->fields;
@@ -155,16 +155,45 @@ class AppModel extends Model {
 			$options = array();
 			$options['conditions'] = array($class.'.visible' => 1);
 		}
+
 		$conditions = !isset($options['conditions']) ? array() : $options['conditions'];
 		$fields = !isset($options['fields']) ? array($class . '.id', $class . '.name') : $options['fields'];
 		$orderBy = !isset($options['orderBy']) ? 'order' : $options['orderBy'];
 		$order = !isset($options['order']) ? 'ASC' : $options['order'];
-		$list = $this->find('list', array(
-				'fields' => $fields,
-				'conditions' => $conditions,
-				'order' => array($class . '.' . $orderBy)
-			)
-		);
+
+		$behaveLikeFieldOptions = false;
+		if(is_array($options)) {
+			if(array_key_exists('behaveLikeFieldOptions', $options)) {
+				$behaveLikeFieldOptions = $options['behaveLikeFieldOptions'];
+			}
+		}
+		if(!$behaveLikeFieldOptions) {
+			$list = $this->find('list', array(
+					'fields' => $fields,
+					'conditions' => $conditions,
+					'order' => array($class . '.' . $orderBy)
+				)
+			);
+		} else {
+			$result = $this->find('all', array(
+					'recursive' => -1,
+					'fields' => array($class . '.id', $class . '.name', $class . '.visible'),
+					'conditions' => $conditions,
+					'order' => array($class . '.' . $orderBy)
+				)
+			);
+			$list = array();
+			foreach ($result as $key => $value) {
+				array_push($list, 
+					array(
+						'name' => $value[$class]['name'],
+						'value' => $value[$class]['id'],
+						'obsolete' => ($value[$class]['visible']!='0')?false:true
+						)
+				);
+			}
+		}
+
 		return $list;
 	}
 	
@@ -254,11 +283,11 @@ class AppModel extends Model {
 		return $result;
 	}
 	
-    public function getLastQueries()
-    {
-        $dbo = $this->getDatasource();
-        $logs = $dbo->getLog();
+	public function getLastQueries()
+	{
+		$dbo = $this->getDatasource();
+		$logs = $dbo->getLog();
 
-        return $logs;
-    }
+		return $logs;
+	}
 }

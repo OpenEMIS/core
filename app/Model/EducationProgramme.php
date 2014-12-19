@@ -255,6 +255,21 @@ class EducationProgramme extends AppModel {
 	
 	// Used by Assessment
 	public function getProgrammeOptions($visible = true, $cycleName = true) {
+		$data = $this->getProgrammeOptionsData($visible, $cycleName);
+		$options = array();
+		foreach($data as $obj) {
+			$programme = $obj['EducationProgramme'];
+			$cycle = $obj['EducationCycle'];
+			if($cycleName) {
+				$options[$programme['id']] = $cycle['name'] . ' - ' . $programme['name'];
+			} else {
+				$options[$programme['id']] = $programme['name'];
+			}
+		}
+		return $options;
+	}
+	
+	public function getProgrammeOptionsData($visible = true, $cycleName = true) {
 		$conditions = array();
 		$cycleConditions = array('EducationCycle.id = EducationProgramme.education_cycle_id');
 		$levelConditions = array('EducationLevel.id = EducationCycle.education_level_id');
@@ -288,20 +303,10 @@ class EducationProgramme extends AppModel {
 			'conditions' => $conditions,
 			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationLevel.order')
 		));
-		
-		$options = array();
-		foreach($data as $obj) {
-			$programme = $obj['EducationProgramme'];
-			$cycle = $obj['EducationCycle'];
-			if($cycleName) {
-				$options[$programme['id']] = $cycle['name'] . ' - ' . $programme['name'];
-			} else {
-				$options[$programme['id']] = $programme['name'];
-			}
-		}
-		return $options;
-	}
-	
+		return $data;
+	} 
+
+
 	// Used by Yearbook
 	public function getEducationStructure() {
 		$list = $this->find('all', array(
