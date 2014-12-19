@@ -128,10 +128,11 @@ class FieldOptionValue extends AppModel {
 		return $key;
 	}
         
-	public function getList($status = false) {
+	public function getList($status = false, $customOptions=array()) {
 		$alias = $this->alias;
-		
+
 		$options = array(
+			'recursive' => -1,
 			'joins' => array(
 				array(
 					'table' => 'field_options',
@@ -144,11 +145,25 @@ class FieldOptionValue extends AppModel {
 			),
 			'order' => array($alias.'.order')
 		);
-		
+		$options['conditions'] = array();
 		if ($status !== false) {
-			$options['conditions'] = array("$alias.visible" => $status);
+			$options['conditions'][$alias.'.visible'] = $status;
 		}
-		return $this->find('list', $options);
+		$optionData = $this->find('all',$options);
+		$result = array();
+		foreach ($optionData as $key => $value) {
+			$name = __($value[$alias]['name']);
+			
+			array_push($result, 
+				array(
+					'name' => $name, 
+	                'value' => $value[$alias]['id'],
+	                'obsolete' => ($value[$alias]['visible']!='0')?false:true
+					)
+			);
+		}
+
+		return $result;
 	}
 	
 	public function getIdByName($name) {
