@@ -66,7 +66,7 @@ class AssessmentController extends AppController {
 	}
 	
 	public function index() {
-		$programmeOptions = $this->EducationProgramme->getProgrammeOptions(false);
+		$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
 		$selectedProgramme = 0;
 		$data = array();
 		$type = $this->AssessmentItemType->type['OFFICIAL'];
