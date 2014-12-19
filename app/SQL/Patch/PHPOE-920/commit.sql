@@ -185,3 +185,9 @@ INSERT INTO `datawarehouse_dimensions` (`id`, `name`, `field`, `model`, `datawar
 UPDATE `datawarehouse_dimensions` SET `joins`='array(  \'type\' => \'INNER\',   \'table\' => \'institution_sites\', \'alias\' => \'InstitutionSite\',      \'conditions\' => array(\'InstitutionSite.id = CensusStudent.institution_site_id\')  ), array(     \'type\' => \'INNER\',      \'table\' => \'institution_site_localities\',     \'alias\' => \'InstitutionSiteLocality\',      \'conditions\' => array(\'InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id\')  )', `datawarehouse_module_id`='1' WHERE `id`='3';
 UPDATE `datawarehouse_dimensions` SET `joins`='array(  \'type\' => \'INNER\',   \'table\' => \'education_grades\',  \'alias\' => \'EducationGrade\',   \'conditions\' => array(\'EducationGrade.id = CensusStudent.education_grade_id\') )' WHERE `id`='5';
 UPDATE `datawarehouse_dimensions` SET `joins`='array(  \'type\' => \'INNER\',   \'table\' => \'student_categories\',  \'alias\' => \'StudentCategory\',   \'conditions\' => array(\'StudentCategory.id = CensusStudent.student_category_id\') )' WHERE `id`='4';
+
+--
+-- part 2
+--
+
+ALTER TABLE `datawarehouse_indicators` ADD `classification` VARCHAR( 100 ) NULL ;
