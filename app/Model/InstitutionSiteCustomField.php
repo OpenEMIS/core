@@ -46,17 +46,20 @@ class InstitutionSiteCustomField extends AppModel {
 		return $options;
 	}
 	
-	public function getOptionFields() {
-		parent::getOptionFields();
+	public function getOptionFields($controller) {
+		parent::getOptionFields($controller);
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
 		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
 		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
+		if(!empty($controller) && $controller->action == 'edit'){
+			$this->fields['type']['attr']['disabled'] = 'disabled';
+		}
 		$this->fields['institution_site_type_id']['type'] = 'select';
 		$this->fields['institution_site_type_id']['options'] = $this->getSubOptions();
 		$this->setFieldOrder('institution_site_type_id', 4);
-		
+
 		$this->fields['options'] = array(
 			'type' => 'element',
 			'element' => '../FieldOption/CustomField/options',
