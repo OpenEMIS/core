@@ -254,7 +254,7 @@ class FieldOptionController extends AppController {
 			$this->request->data = $this->FieldOptionValue->getValue($selectedValue);
 		}
 		$header = $this->FieldOptionValue->getHeader();
-		$fields = $this->FieldOptionValue->getValueFields();
+		$fields = $this->FieldOptionValue->getValueFields($this);
 		$this->set('model', $model->alias);
 		$this->set(compact('header', 'fields', 'selectedOption', 'selectedValue'));
 		$this->Navigation->addCrumb($header);

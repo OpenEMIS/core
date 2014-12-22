@@ -265,13 +265,13 @@ class CustomFieldBehavior extends ModelBehavior {
 					}
 					//pr($controller->request->data);die;
 					if ($model->saveAll($controller->request->data)) {
-						$newFieldType = $controller->request->data[$model->alias]['type'];
+						//$newFieldType = $controller->request->data[$model->alias]['type'];
 						$fieldId = $controller->request->data[$model->alias]['id'];
 						$fieldForeignKey = Inflector::underscore($model->alias.'Id');
 						//pr($fieldForeignKey);die;
-						if($newFieldType != 4){
-							ClassRegistry::init($modelOption)->deleteAll(array($fieldForeignKey => $fieldId), false);
-						}
+//						if($newFieldType != 4){
+//							ClassRegistry::init($modelOption)->deleteAll(array($fieldForeignKey => $fieldId), false);
+//						}
 						$controller->Message->alert('general.edit.success');
 						return $controller->redirect(array('controller' => $controller->name, 'action' => 'view', $selectedOption, $id));
 					} else {
