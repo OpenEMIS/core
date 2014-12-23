@@ -113,15 +113,26 @@ class InstitutionSiteSection extends AppModel {
 	public function index($selectedYear=0) {
 		$this->Navigation->addCrumb('List of Sections');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions(array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId));
-		if ($selectedYear != 0) {
-			if (!array_key_exists($selectedYear, $yearOptions)) {
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
+		if(!empty($yearOptions)){
+			if ($selectedYear != 0) {
+				if (!array_key_exists($selectedYear, $yearOptions)) {
+					$selectedYear = key($yearOptions);
+				}
+			} else {
 				$selectedYear = key($yearOptions);
 			}
-		} else {
-			$selectedYear = key($yearOptions);
 		}
-//		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+		
+		if(empty($yearOptions)){
+			$this->Message->alert('InstitutionSite.noProgramme');
+		}
+		
 		$data = $this->getListOfSections($selectedYear, $institutionSiteId);
 		
 		$this->setVar(compact('yearOptions', 'selectedYear', 'data'));
@@ -131,7 +142,11 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.visible' => 1);
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			if ($selectedYear != 0) {
@@ -158,7 +173,7 @@ class InstitutionSiteSection extends AppModel {
 				}
 			}
 		} else {
-			$this->Message->alert('SchoolYear.noAvailableYear');
+			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
 		}
 	}
