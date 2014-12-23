@@ -132,7 +132,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			}
 			$controller->set(compact('data', 'studentActionOptions', 'selectedSection'));
 		} else {
-			$controller->Message->alert('general.noData');
+			$controller->Message->alert('InstitutionSiteClass.noSections');
 		}
 	}
 	
@@ -158,7 +158,7 @@ class InstitutionSiteClassStudent extends AppModel {
 						'alias' => 'InstitutionSiteSectionStudent',
 						'conditions' => array(
 							'InstitutionSiteSectionStudent.student_id = Student.id',
-							'InstitutionSiteSectionStudent.institution_site_section_id = ' . $selectedSection,
+							'InstitutionSiteSectionStudent.institution_site_section_id' => $selectedSection,
 							'InstitutionSiteSectionStudent.status = 1'
 						)
 					),
@@ -180,6 +180,11 @@ class InstitutionSiteClassStudent extends AppModel {
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
+			
+			if(empty($studentActionOptions)) {
+				$controller->Message->alert('InstitutionSiteClass.noSections');
+			}
+			
 			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedSection', 'classId'));
 		} else {
 			$data = $controller->request->data;
@@ -202,9 +207,25 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
-		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
+		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'InstitutionSiteSection.name');
 		
 		$joins = array(
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'conditions' => array(
+					'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
+					'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.status = 1'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteSection.id'
+				)
+			),
 			array(
 				'table' => 'institution_site_classes',
 				'alias' => 'InstitutionSiteClass',
@@ -213,7 +234,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			array(
 				'table' => 'education_grades',
 				'alias' => 'EducationGrade',
-				'conditions' => array('EducationGrade.id = InstitutionSiteClassStudent.education_grade_id')
+				'conditions' => array('InstitutionSiteSectionStudent.education_grade_id = EducationGrade.id')
 			),
 			array(
 				'table' => 'education_programmes',
