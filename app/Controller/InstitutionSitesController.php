@@ -93,7 +93,8 @@ class InstitutionSitesController extends AppController {
 			'foreignKey' => 'institution_site_id'
 		),
 		'FileUploader',
-		'AreaHandler'
+		'AreaHandler',
+		'Alert'
 	);
 	
 	public $modules = array(
