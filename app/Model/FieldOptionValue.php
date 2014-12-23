@@ -97,9 +97,9 @@ class FieldOptionValue extends AppModel {
 		return $model->save($data);
 	}
 	
-	public function getValueFields() {
+	public function getValueFields($controller=null) {
 		$model = $this->getModel();
-		$data = $model->getOptionFields();
+		$data = $model->getOptionFields($controller);
 		return $data;
 	}
 	
