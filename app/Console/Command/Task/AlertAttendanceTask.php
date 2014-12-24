@@ -108,7 +108,7 @@ class AlertAttendanceTask extends AlertTask {
 					$this->AlertLog->create();
 					
 					$message .= '<p>';
-					$message .= $student['first_name'] . ' ' . $student['first_name'] . ' (' . $student['identification_no'] . ')';
+					$message .= $student['first_name'] . ' ' . $student['last_name'] . ' (' . $student['identification_no'] . ')';
 					$message .= '</p>';
 
 					$newLog = array(
