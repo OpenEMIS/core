@@ -176,9 +176,18 @@ class InstitutionSiteClass extends AppModel {
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('List of Classes');
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions(array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId));
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
+		
+		if(empty($yearOptions)){
+			$controller->Message->alert('InstitutionSite.noProgramme');
+		}
 		
 		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
 	}
@@ -187,7 +196,11 @@ class InstitutionSiteClass extends AppModel {
 		$controller->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.visible' => 1);
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
@@ -217,7 +230,7 @@ class InstitutionSiteClass extends AppModel {
 				}
 			}
 		} else {
-			$controller->Message->alert('SchoolYear.noAvailableYear');
+			$controller->Message->alert('InstitutionSite.noProgramme');
 			return $controller->redirect(array('action' => $this->_action));
 		}
 	}
