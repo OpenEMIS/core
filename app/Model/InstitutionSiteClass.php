@@ -33,7 +33,6 @@ class InstitutionSiteClass extends AppModel {
 		)
 	);
 	public $hasMany = array(
-		'InstitutionSiteClassGrade',
 		'InstitutionSiteClassStaff',
 		'InstitutionSiteClassStudent',
 		'InstitutionSiteClassSubject',
@@ -79,7 +78,6 @@ class InstitutionSiteClass extends AppModel {
 	public $actsAs = array(
 		'CascadeDelete' => array(
 			'cascade' => array(
-				'InstitutionSiteClassGrade',
 				'InstitutionSiteClassStaff'
 			)
 		),
@@ -204,8 +202,7 @@ class InstitutionSiteClass extends AppModel {
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-			//$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
-			//pr($grades);
+			
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedYear);
 			//pr($sections);
 			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
@@ -243,7 +240,6 @@ class InstitutionSiteClass extends AppModel {
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($className);
-			//$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
 			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
 			//pr($sections);
 			$controller->set(compact('data', 'sections'));
@@ -272,8 +268,6 @@ class InstitutionSiteClass extends AppModel {
 				$controller->request->data = $data;
 			}
 			
-			//$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
-			//$controller->set('grades', $grades);
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForClass($id);
 			//pr($sections);
 			$controller->set('sections', $sections);
@@ -324,7 +318,6 @@ class InstitutionSiteClass extends AppModel {
 		foreach($classes as $id => $name) {
 			$data[$id] = array(
 				'name' => $name,
-				//'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
 				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($id),
 				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
 			);
@@ -345,12 +338,12 @@ class InstitutionSiteClass extends AppModel {
 		if($gradeId!==false) {
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
 					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
-						'InstitutionSiteClassGrade.status = 1'
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+						'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteSectionGrade.status = 1'
 					)
 				)
 			);
