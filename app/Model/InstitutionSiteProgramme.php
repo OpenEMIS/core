@@ -515,7 +515,7 @@ class InstitutionSiteProgramme extends AppModel {
 		$controller->set(compact('gradeOptions'));
 		$controller->render('/Elements/programmes/grade_options');
 	}
-
+	
 	public function getSiteProgrammeForSelection($institutionSiteId, $yearId) {
 		$data = array();
 		$list = $this->getSiteProgrammes($institutionSiteId, $yearId);

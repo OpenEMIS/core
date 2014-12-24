@@ -25,7 +25,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'add', $classId));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'add', $sectionId));
 $formOptions['type'] = 'file';
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('InstitutionSiteStudentAbsence', $formOptions);
@@ -37,8 +37,8 @@ echo $this->Form->input('school_year_id', array(
 	'url' => $this->params['controller'] . "/$model/index"
 ));
 	
-$labelOptions['text'] = $this->Label->get('general.class');
-echo $this->Form->input('institution_site_class_id', array('empty' => __('--Select--'), 'options' => $classOptions, 'value' => $classId, 'label' => $labelOptions, 'id' => 'classId'));
+$labelOptions['text'] = $this->Label->get('general.section');
+echo $this->Form->input('institution_site_section_id', array('empty' => __('--Select--'), 'options' => $sectionOptions, 'value' => $sectionId, 'label' => $labelOptions, 'id' => 'sectionId'));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSite.id_name');
 //echo $this->Form->hidden('hidden_student_id', array('label' => false, 'div' => false, 'id' => 'hiddenStudentId'));

@@ -4,7 +4,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 echo $this->Html->script('bankaccounts', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Messages'));
+$this->assign('contentHeader', __('Questions'));
 $this->start('contentActions');
 if($_add) {
     echo $this->Html->link(__('Back'), array('action' => 'messages'), array('class' => 'divider', 'id'=>'add'));
