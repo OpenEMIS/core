@@ -1,5 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
 echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
@@ -24,9 +23,6 @@ echo $this->Form->input('name');
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
 echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
-
-$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
-echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 ?>
 
 <div class="form-group">
