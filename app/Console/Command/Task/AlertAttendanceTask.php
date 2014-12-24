@@ -165,6 +165,7 @@ class AlertAttendanceTask extends AlertTask {
 						
 						if($lastDay > $firstDay){
 							$days = floor(($lastDay - $firstDay) / (60*60*24));
+							$days += 1;
 						}else if($lastDay == $firstDay){
 							$days = 1;
 						}else{
