@@ -70,3 +70,12 @@ ALTER TABLE `institution_site_class_students` DROP `education_grade_id` ;
 
 ALTER TABLE `institution_site_student_absences` ADD INDEX ( `institution_site_section_id` ) ;
 
+--
+-- 10. Update quality_institution_rubrics institution_site_class_grade_id to institution_site_section_grade_id
+--
+
+ALTER TABLE `quality_institution_rubrics` DROP INDEX institution_site_class_grade_id;
+ALTER TABLE `quality_institution_rubrics` CHANGE `institution_site_class_grade_id` `institution_site_section_grade_id` INT( 11 ) NOT NULL ;
+ALTER TABLE `quality_institution_rubrics` ADD INDEX ( `institution_site_section_grade_id` ) ;
+
+
