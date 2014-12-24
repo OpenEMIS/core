@@ -45,7 +45,7 @@ echo $this->Form->end();?>
 					if($type == 'Alert'){
 					?>
 					<tr class="table_row">
-						<td><?php echo $arrVal['AlertLog']['created']; ?></td>
+						<td><?php echo $this->Html->link($arrVal['AlertLog']['created'], array('action' => 'view', $arrVal['AlertLog']['id']), array('class' => '')); ?></td>
 						<td><?php echo $arrVal['AlertLog']['destination']; ?></td>
 						<td><?php echo $arrVal['AlertLog']['method']; ?></td>
 						<td><?php echo $arrVal['AlertLog']['channel']; ?></td>

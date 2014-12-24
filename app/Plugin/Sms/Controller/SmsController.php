@@ -347,7 +347,7 @@ class SmsController extends SmsAppController {
 			$this->request->data['Log']['channel'] = 'Sent';
 			$this->request->data['Log']['status'] = 'Success';
 			
-			$data = $this->AlertLog->getLogs('Success');
+			$data = $this->AlertLog->getLogs(1);
 			$type = 'Alert';
 		}
 		
@@ -370,6 +370,15 @@ class SmsController extends SmsAppController {
         //$this->set('typeOptions', $typeOptions);
         //$this->set('selectedType', $selectedType);
 		$this->set(compact('typeOptions', 'channelOptions', 'selectedType', 'statusOptions', 'methodOptions', 'type'));
+    }
+	
+	public function logsView() {
+        $this->Navigation->addCrumb(__('Logs'));
+
+		$data = $this->AlertLog->findById($id);
+		
+        $this->set('data', $data);
+		$this->set(compact('id', 'data'));
     }
 
     
