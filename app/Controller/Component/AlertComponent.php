@@ -16,10 +16,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 class AlertComponent extends Component {
 	private $controller;
-	public $Area;
-	public $AreaLevel;
-    public $AreaEducation;
-    public $AreaEducationLevel;
 	
 	//public $components = array('Auth', 'Session');
 	public function __construct(ComponentCollection $collection, $settings = array()) {

@@ -29,7 +29,8 @@ class AlertShell extends AppShell {
 
 		$newLogIds = $this->{$taskName}->execute($args);
 		
-		$alertLogs = $this->AlertLog->find('all', array('recursive' => -1, 'conditions' => array('AlertLog.id' => $newLogIds)));
+		$alertLogs = $this->AlertLog->find('all', array('recursive' => -1, 'conditions' => array('AlertLog.id' => $newLogIds))); 
+		//$alertLogs = $this->AlertLog->findAllById($newLogIds);
 		
 		foreach($alertLogs as $row) {
 			$alertLog = $row['AlertLog'];
@@ -43,6 +44,15 @@ class AlertShell extends AppShell {
 			
 			try {
 				$success = $CakeMail->send();
+				if($success){
+					$status = 1; // success
+				}else{
+					$status = -1; // failed
+				}
+				
+				$this->AlertLog->id = $alertLog['id'];
+				$this->AlertLog->saveField('status', $status);
+				
 			} catch (SocketException $e) {
 				debug($e->getMessage());
 				$this->log($e->getMessage(), 'alert_processes');
