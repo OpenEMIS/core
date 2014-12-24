@@ -27,7 +27,7 @@ class OptionComponent extends Component {
 			'status' => array( 1 => __('Active'), 0 => __('Inactive')),
 			'staffTypes' => array(1 => __('Teaching'), 0 => __('Non-Teaching')),
 			'alertMethod' => array('Email' => __('Email'), 'SMS' => __('SMS')),
-			'alertStatus' => array('Success' => __('Success'), 'Failed' => __('Failed'), 'Pending' => __('Pending')),
+			'alertStatus' => array(1 => __('Success'), -1 => __('Failed'), 0 => __('Pending')),
 			'alertType' => array('Alert' => __('Alert'), 'Survey' => __('Survey')),
 			'alertChannel' => array('Sent' => __('Sent'), 'Received' => __('Received'))
 		);
