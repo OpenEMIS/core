@@ -94,7 +94,6 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function classesStudent($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		//$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionClass')->getSectionOptions($id, true);
 		if(!empty($studentActionOptions)) {
 			$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
@@ -426,32 +425,6 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $data;
 	}
 	
-	// used by InstitutionSiteStudent
-	public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
-		$data = $this->find('list', array(
-			'fields' => array('InstitutionSiteClassStudent.id'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id'
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
-						'InstitutionSiteClass.institution_site_id = ' . $InstitutionSiteId
-					)
-				)
-			),
-			'conditions' => array('InstitutionSiteClassStudent.student_id = ' . $studentId)
-		));
-		return $data;
-	}
-	
 	public function getAutoCompleteList($search, $classId) {
 		$search = sprintf('%%%s%%', $search);
 
@@ -535,22 +508,27 @@ class InstitutionSiteClassStudent extends AppModel {
 
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = InstitutionSiteClassGrade.education_grade_id')
+					'table' => 'institution_site_section_students',
+					'alias' => 'InstitutionSiteSectionStudent',
+					'conditions' => array('InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id')
+				),
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = InstitutionSiteSectionStudent.education_grade_id')
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
 					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
+						'InstitutionSiteSectionGrade.education_grade_id = EducationGrade.id'
 					)
 				),
 				array(
 					'table' => 'institution_site_classes',
 					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
 						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
 					)
 				),
@@ -574,7 +552,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
-					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+					'conditions' => array('AssessmentItemType.education_grade_id = EducationGrade.education_grade_id')
 				),
 				array(
 					'table' => 'assessment_items',
@@ -677,8 +655,8 @@ class InstitutionSiteClassStudent extends AppModel {
 					'table' => 'institution_site_section_students',
 					'alias' => 'InstitutionSiteSectionStudent',
 					'conditions' => array(
-						'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
-						'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+						'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+						'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
 						'InstitutionSiteSectionStudent.status = 1'
 					)
 				),
