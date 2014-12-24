@@ -30,7 +30,7 @@ CREATE TABLE `alerts` (
 --
 
 INSERT INTO `alerts` (`id`, `code`, `name`, `threshold`, `status`, `method`, `subject`, `message`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1, 'Attendance', 'Student Absent', 2, 1, 'Email', 'Student Absent Test Alert', 'Student Absent Test Alert Message', NULL, NULL, 1, '0000-00-00 00:00:00');
+(1, 'Attendance', 'Student Absent', 14, 1, 'Email', 'OpenEMIS Alert', 'Student absent 14 days.', NULL, NULL, 1, '0000-00-00 00:00:00');
 
 
 --
