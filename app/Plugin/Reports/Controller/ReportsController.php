@@ -18,7 +18,6 @@ App::uses('Folder', 'Utility');
 App::uses('File', 'Utility');
 App::uses('Sanitize', 'Utility');
 class ReportsController extends ReportsAppController {
-
 	public $bodyTitle = 'Reports';
 	public $headerSelected = 'Reports';
 	public $limit = 1000;
@@ -300,7 +299,7 @@ class ReportsController extends ReportsAppController {
 			array_push($school_years, $value);
 
 		}
-
+  
 		$this->set('hideTableColumnsLabel', $this->hideOlapTableColumnsLabel);
 
 		$this->set('data', $data);
@@ -1085,6 +1084,12 @@ class ReportsController extends ReportsAppController {
 			$info['time'] = date($this->DateTime->getConfigDateFormat()." H:i:s",$time);
 			$info['size'] = $this->convFileSize($info['filesize']);
 			//pr($info);
+			$info['lock'] = false;
+			$fp = fopen($file->path, "r");
+
+			if (!flock($fp, LOCK_SH | LOCK_NB)) { // acquire an exclusive lock
+			    $info['lock'] = true;
+			}
 			
 			$this->parseFilename($info);
 			

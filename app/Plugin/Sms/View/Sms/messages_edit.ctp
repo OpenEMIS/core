@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Messages'));
+$this->assign('contentHeader', __('Questions'));
 $this->start('contentActions');
 if ($_edit) {
     echo $this->Html->link(__('Back'), array('action' => 'messagesView', $id), array('class' => 'divider'));

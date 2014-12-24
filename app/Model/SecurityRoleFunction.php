@@ -46,7 +46,7 @@ class SecurityRoleFunction extends AppModel {
 				
 				$allowEdit = true;
 				$isSuperUser = $controller->Auth->user('super_admin')==1;
-				$userId = $isSuperUser ? false : $this->Auth->user('id');
+				$userId = $isSuperUser ? false : $controller->Auth->user('id');
 				if(!$isSuperUser) {
 					$userRoles = ClassRegistry::init('SecurityGroupUser')->getRolesByUserId($userId);
 					foreach($userRoles as $obj) {

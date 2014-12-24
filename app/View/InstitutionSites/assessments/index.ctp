@@ -6,8 +6,8 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-if(!empty($data)):
 echo $this->element('templates/year_options', array('url' => 'assessments'));
+if(!empty($data)):
 ?>
 <?php foreach ($data as $obj) : ?>
 	<fieldset class="section_group">

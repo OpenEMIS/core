@@ -20,7 +20,9 @@ class SmsController extends SmsAppController {
         'Sms.SmsMessage',
         'Sms.SmsLog',
         'Sms.SmsResponse',
-        'ConfigItem'
+        'ConfigItem',
+		'Option',
+		'Alerts.AlertLog'
     );
 
 
@@ -29,7 +31,7 @@ class SmsController extends SmsAppController {
         $this->Auth->allow('receive');
         $this->bodyTitle = 'Administration';
         $this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('SMS', array('controller' => $this->name, 'action' => 'messages'));
+		$this->Navigation->addCrumb('Communications', array('plugin' => 'Alerts', 'controller' => 'Alerts', 'action' => 'Alert'));
     }
 
     public function receive(){
@@ -200,14 +202,14 @@ class SmsController extends SmsAppController {
         return $this->redirect(array('action'=>'messages'));
     }
     public function messages() {
-        $this->Navigation->addCrumb(__('Messages'));
+        $this->Navigation->addCrumb(__('Questions'));
 
         $data = $this->SmsMessage->find('all', array('order'=>array('SmsMessage.order ASC')));
         $this->set('data', $data);
     }
 
     public function messagesAdd(){
-        $this->Navigation->addCrumb(__('Add Message'));
+        $this->Navigation->addCrumb(__('Add Question'));
         if($this->request->is('post')) { // save
            $data = $this->data['SmsMessage'];
             $this->SmsMessage->create();
@@ -240,7 +242,7 @@ class SmsController extends SmsAppController {
         $obj = $this->SmsMessage->find('all',array('conditions'=>array('SmsMessage.id' => $id)));
         
         if(!empty($obj)) {
-            $this->Navigation->addCrumb(__('Message Details'));
+            $this->Navigation->addCrumb(__('Question Details'));
             
             $this->Session->write('SmsMessageId', $id);
             $this->set('obj', $obj);
@@ -253,7 +255,7 @@ class SmsController extends SmsAppController {
             $obj = $this->SmsMessage->find('first',array('conditions'=>array('SmsMessage.id' => $id)));
   
             if(!empty($obj)) {
-                $this->Navigation->addCrumb(__('Edit Message Details'));
+                $this->Navigation->addCrumb(__('Edit Question Details'));
                 $this->request->data = $obj;
                
             }
@@ -300,20 +302,74 @@ class SmsController extends SmsAppController {
         }
     }
 
-     public function logs($selectedType=null) {
+     public function logs() {
         $this->Navigation->addCrumb(__('Logs'));
 
-        $conditions = array();
-        if(!empty($selectedType)){
-            $conditions['send_receive'] = $selectedType;
-        }
+		if ($this->request->is(array('post', 'put'))) {
+			$formData = $this->request->data;
+			if ($formData['submit'] == 'reload') {
+				$criterials = $formData['Log'];
+				$type = $criterials['type'];
+				$method = $criterials['method'];
+				$channel = $criterials['channel'];
+				$status = $criterials['status'];
+				
+//				if($type == 'Alert'){
+//					$this->request->data['Log']['method'] = 'Email';
+//					$method = 'Email';
+//					$this->request->data['Log']['channel'] = 'Sent';
+//					$channel = 'Sent';
+//				}else if($type == 'Survey'){
+//					$this->request->data['Log']['method'] = 'SMS';
+//					$method = 'SMS';
+//				}
 
-        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
+				$data = array();
+				if($type == 'Alert' && $method == 'Email'){
+					$data = $this->AlertLog->getLogs($status);
+					$type = 'Alert';
+				}else if($type == 'Survey' && $method == 'SMS'){
+					if($channel == 'Sent'){
+						$conditions['send_receive'] = 1;
+					}else{
+						$conditions['send_receive'] = 2;
+					}
+					
+					$data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
+					$type = 'Survey';
+					//pr($data);
+				}
+				//pr($this->request->data);
+			}
+		}else{
+			$this->request->data['Log']['type'] = 'Alert';
+			$this->request->data['Log']['method'] = 'Email';
+			$this->request->data['Log']['channel'] = 'Sent';
+			$this->request->data['Log']['status'] = 'Success';
+			
+			$data = $this->AlertLog->getLogs('Success');
+			$type = 'Alert';
+		}
+		
+//        $conditions = array();
+//        if(!empty($selectedType)){
+//            $conditions['send_receive'] = $selectedType;
+//        }
+//
+//        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
+		//$data = array();
         $this->set('data', $data);
 
-        $typeOptions = array('1'=>__('Sent'), '2'=>__('Received'));
-        $this->set('typeOptions', $typeOptions);
-        $this->set('selectedType', $selectedType);
+        //$typeOptions = array('1'=>__('Sent'), '2'=>__('Received'));
+		
+		$typeOptions = $this->Option->get('alertType');
+		$methodOptions = $this->Option->get('alertMethod');
+		$channelOptions = $this->Option->get('alertChannel');
+		$statusOptions = $this->Option->get('alertStatus');
+		
+        //$this->set('typeOptions', $typeOptions);
+        //$this->set('selectedType', $selectedType);
+		$this->set(compact('typeOptions', 'channelOptions', 'selectedType', 'statusOptions', 'methodOptions', 'type'));
     }
 
     
