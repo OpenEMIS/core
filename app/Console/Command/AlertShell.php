@@ -29,8 +29,8 @@ class AlertShell extends AppShell {
 
 		$newLogIds = $this->{$taskName}->execute($args);
 		
-		$alertLogs = $this->AlertLog->find('all', array('recursive' => -1, 'conditions' => array('AlertLog.id' => $newLogIds))); 
-		//$alertLogs = $this->AlertLog->findAllById($newLogIds);
+		//$alertLogs = $this->AlertLog->find('all', array('recursive' => -1, 'conditions' => array('AlertLog.id' => $newLogIds))); 
+		$alertLogs = $this->AlertLog->findAllById($newLogIds);
 		
 		foreach($alertLogs as $row) {
 			$alertLog = $row['AlertLog'];

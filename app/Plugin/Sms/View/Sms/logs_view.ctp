@@ -20,7 +20,7 @@ $this->start('contentBody');
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Channel'); ?></div>
-	<div class="col-md-6"><?php echo $data['AlertLog']['channel']; ?></div>
+	<div class="col-md-6"><?php echo __('Sent'); ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Method'); ?></div>
@@ -28,7 +28,7 @@ $this->start('contentBody');
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Status'); ?></div>
-	<div class="col-md-6"><?php echo $data['AlertLog']['status']; ?></div>
+	<div class="col-md-6"><?php echo isset($statusOptions[$data['AlertLog']['status']]) ? $statusOptions[$data['AlertLog']['status']] : ''; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Subject'); ?></div>
@@ -38,3 +38,4 @@ $this->start('contentBody');
 	<div class="col-md-3"><?php echo __('Message'); ?></div>
 	<div class="col-md-6"><?php echo $data['AlertLog']['message']; ?></div>
 </div>
+<?php $this->end(); ?>  

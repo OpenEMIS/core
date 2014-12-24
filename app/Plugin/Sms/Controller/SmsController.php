@@ -313,16 +313,6 @@ class SmsController extends SmsAppController {
 				$method = $criterials['method'];
 				$channel = $criterials['channel'];
 				$status = $criterials['status'];
-				
-//				if($type == 'Alert'){
-//					$this->request->data['Log']['method'] = 'Email';
-//					$method = 'Email';
-//					$this->request->data['Log']['channel'] = 'Sent';
-//					$channel = 'Sent';
-//				}else if($type == 'Survey'){
-//					$this->request->data['Log']['method'] = 'SMS';
-//					$method = 'SMS';
-//				}
 
 				$data = array();
 				if($type == 'Alert' && $method == 'Email'){
@@ -351,16 +341,7 @@ class SmsController extends SmsAppController {
 			$type = 'Alert';
 		}
 		
-//        $conditions = array();
-//        if(!empty($selectedType)){
-//            $conditions['send_receive'] = $selectedType;
-//        }
-//
-//        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
-		//$data = array();
         $this->set('data', $data);
-
-        //$typeOptions = array('1'=>__('Sent'), '2'=>__('Received'));
 		
 		$typeOptions = $this->Option->get('alertType');
 		$methodOptions = $this->Option->get('alertMethod');
@@ -375,10 +356,14 @@ class SmsController extends SmsAppController {
 	public function logsView() {
         $this->Navigation->addCrumb(__('Logs'));
 
+		$id = isset($this->params['pass'][0]) ? isset($this->params['pass'][0]) : 0;
+		if(empty($id)){
+			$this->redirect(array('action' => 'logs'));
+		}
 		$data = $this->AlertLog->findById($id);
-		
-        $this->set('data', $data);
-		$this->set(compact('id', 'data'));
+		$statusOptions = $this->Option->get('alertStatus');
+
+		$this->set(compact('id', 'data', 'statusOptions'));
     }
 
     

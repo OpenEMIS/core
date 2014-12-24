@@ -45,11 +45,11 @@ echo $this->Form->end();?>
 					if($type == 'Alert'){
 					?>
 					<tr class="table_row">
-						<td><?php echo $this->Html->link($arrVal['AlertLog']['created'], array('action' => 'view', $arrVal['AlertLog']['id']), array('class' => '')); ?></td>
+						<td><?php echo $this->Html->link($arrVal['AlertLog']['created'], array('action' => 'logsView', $arrVal['AlertLog']['id']), array('class' => '')); ?></td>
 						<td><?php echo $arrVal['AlertLog']['destination']; ?></td>
 						<td><?php echo $arrVal['AlertLog']['method']; ?></td>
 						<td><?php echo $arrVal['AlertLog']['channel']; ?></td>
-						<td><?php echo $arrVal['AlertLog']['status']; ?></td>
+						<td><?php echo isset($statusOptions[$arrVal['AlertLog']['status']]) ? $statusOptions[$arrVal['AlertLog']['status']] : ''; ?></td>
 					</tr>
 					<?php
 					}else if($type == 'Survey'){
