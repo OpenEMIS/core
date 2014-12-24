@@ -134,15 +134,20 @@ class AssessmentItemType extends AppModel {
 			'recursive' => -1,
 			'joins' => array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id')
+				),
+				array(
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
+					'conditions' => array('InstitutionSiteSectionClass.institution_site_section_id = InstitutionSiteSectionGrade.institution_site_section_id')
 				),
 				array(
 					'table' => 'institution_site_classes',
 					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
+						'InstitutionSiteClass.id = institution_site_section_classes.institution_site_class_id',
 						'InstitutionSiteClass.id = ' . $classId
 					)
 				),

@@ -218,17 +218,23 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('InstitutionSiteClass.institution_site_id = InstitutionSite.id')
 			),
 			array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				//	'type' => 'LEFT',
+				'conditions' => array('InstitutionSiteSectionClass.institution_site_id = InstitutionSite.id')
+			),
+			array(
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
 				'conditions' => array(
-					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-					'InstitutionSiteClassGrade.status = 1'
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id',
+					'InstitutionSiteSectionGrade.status = 1'
 				)
 			),
 			array(
 				'table' => 'education_grades',
 				'alias' => 'EducationGrade',
-				'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
 			),
 			array(
 				'table' => 'school_years',
@@ -389,15 +395,17 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('InstitutionSiteClass.institution_site_id = InstitutionSite.id')
 			),
 			array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
-				'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-					'InstitutionSiteClassGrade.status = 1')
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
+				'conditions' => array(
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+					'InstitutionSiteSectionGrade = 1'
+				)
 			),
 			array(
 				'table' => 'education_grades',
 				'alias' => 'EducationGrade',
-				'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
 			),
 			array(
 				'table' => 'school_years',
@@ -486,15 +494,17 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('InstitutionSiteClass.institution_site_id = InstitutionSite.id')
 			),
 			array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
-				'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-					'InstitutionSiteClassGrade.status = 1')
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
+				'conditions' => array(
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+					'InstitutionSiteSectionGrade.status = 1'
+				)
 			),
 			array(
 				'table' => 'education_grades',
 				'alias' => 'EducationGrade',
-				'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
 			),
 			array(
 				'table' => 'school_years',
@@ -1003,11 +1013,10 @@ class QualityBatchReport extends QualityAppModel {
 				)
 			),
 			array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
 				'conditions' => array(
-					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-				//	'InstitutionSiteClassGrade.education_grade_id = '.$gradeId
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
 				)
 			),
 			array(
@@ -1019,7 +1028,7 @@ class QualityBatchReport extends QualityAppModel {
 					'QualityStatus.rubric_template_id = RubricsTemplate.id')
 			),
 		);
-		$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId, 'InstitutionSiteClassGrade.education_grade_id' => $gradeId, 'QualityStatus.year' => $year);
+		$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId, 'InstitutionSiteSectionGrade.education_grade_id' => $gradeId, 'QualityStatus.year' => $year);
 		$data = $RubricsTemplate->find('list', $options);
 
 		return $data;
