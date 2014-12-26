@@ -17,6 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AssessmentItem extends AppModel {
+	public $belongsTo = array(
+		'AssessmentItemType'
+	);
+
 	public function getItem($id) {
 		$data = $this->find('first', array(
 			'fields' => array(
