@@ -299,8 +299,8 @@ class QualityInstitutionVisit extends QualityAppModel {
         $selectedYearId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedYearId;
 
 		
-		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-		$gradesOptions = $InstitutionSiteClassGrade->getGradesByInstitutionSiteId($institutionSiteId,$selectedYearId);
+		$InstitutionSiteSectionGrade = ClassRegistry::init('InstitutionSiteSectionGrade');
+		$gradesOptions = $InstitutionSiteSectionGrade->getGradesByInstitutionSiteId($institutionSiteId,$selectedYearId);
 	
         /*$gradesOptions = array();
         $InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');

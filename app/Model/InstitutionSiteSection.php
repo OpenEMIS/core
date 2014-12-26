@@ -63,20 +63,12 @@ class InstitutionSiteSection extends AppModel {
 	);
 	
 	public $actsAs = array(
-//		'CascadeDelete' => array(
-//			'cascade' => array(
-//				'InstitutionSiteClassGrade',
-//				'InstitutionSiteClassStaff'
-//			)
-//		),
 		'ControllerAction2',
 		'SchoolYear'
 	);
 	
 	public function beforeAction() {
 		parent::beforeAction();
-		//$this->setVar('_action', $this->_action);
-		//$this->setVar('selectedAction', $this->_action . 'View');
 	}
 	
 	public function getDisplayFields($controller) {
@@ -113,15 +105,26 @@ class InstitutionSiteSection extends AppModel {
 	public function index($selectedYear=0) {
 		$this->Navigation->addCrumb('List of Sections');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions(array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId));
-		if ($selectedYear != 0) {
-			if (!array_key_exists($selectedYear, $yearOptions)) {
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
+		if(!empty($yearOptions)){
+			if ($selectedYear != 0) {
+				if (!array_key_exists($selectedYear, $yearOptions)) {
+					$selectedYear = key($yearOptions);
+				}
+			} else {
 				$selectedYear = key($yearOptions);
 			}
-		} else {
-			$selectedYear = key($yearOptions);
 		}
-//		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+		
+		if(empty($yearOptions)){
+			$this->Message->alert('InstitutionSite.noProgramme');
+		}
+		
 		$data = $this->getListOfSections($selectedYear, $institutionSiteId);
 		
 		$this->setVar(compact('yearOptions', 'selectedYear', 'data'));
@@ -131,7 +134,11 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearConditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId, 'SchoolYear.visible' => 1);
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
 		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
 		if(!empty($yearOptions)) {
 			if ($selectedYear != 0) {
@@ -158,7 +165,7 @@ class InstitutionSiteSection extends AppModel {
 				}
 			}
 		} else {
-			$this->Message->alert('SchoolYear.noAvailableYear');
+			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
 		}
 	}
@@ -255,35 +262,6 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getClassOptions($yearId, $institutionSiteId, $gradeId=false) {
-		$options = array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
-		);
-		
-		if($gradeId!==false) {
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
-						'InstitutionSiteClassGrade.status = 1'
-					)
-				)
-			);
-			$options['group'] = array('InstitutionSiteClass.id');
-		}
-		
-		$data = $this->find('list', $options);
-		return $data;
-	}
-		
 	public function getSectionListByInstitution($institutionSiteId, $yearId=0) {
 		$options = array();
 		$options['fields'] = array('InstitutionSiteSection.id', 'InstitutionSiteSection.name');
