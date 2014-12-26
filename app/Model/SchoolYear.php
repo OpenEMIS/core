@@ -220,7 +220,7 @@ class SchoolYear extends AppModel {
 		}
 	}
 
-	public function getCurrentSchoolYearId() {
+	public function getCurrent() {
 		$result = $this->find('first', array(
 			'fields' => array('SchoolYear.id'),
 			'conditions' => array(

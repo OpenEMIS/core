@@ -34,18 +34,13 @@ class AlertTask extends Shell {
 			$code = str_replace('Task', '', $code);
 		}
 		
-		$data = $this->Alert->find('all', array(
-			'recursive' => -1,
-			'fields' => array('AlertRole.security_role_id'),
-			'joins' => array(
-				array(
-					'table' => 'alert_roles',
-					'alias' => 'AlertRole',
-					'conditions' => array('Alert.id = AlertRole.alert_id')
-				)
-			),
-			'conditions' => array('Alert.code' => $code)
+		$this->Alert->contain(array(
+			'AlertRole' => array(
+				'fields' => array('AlertRole.security_role_id')
+			)
 		));
+		
+		$data = $this->Alert->findByCode($code);
 		
 		return $data;
 	}
