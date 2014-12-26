@@ -17,19 +17,9 @@ have received a copy of the GNU General Public License along with this program. 
 class AlertComponent extends Component {
 	private $controller;
 	
-	//public $components = array('Auth', 'Session');
-	public function __construct(ComponentCollection $collection, $settings = array()) {
-		parent::__construct($collection, $settings);
-		$this->init();
-	}
-	
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
-	}
-	
-	public function init() {
-		
 	}
 	
 	//called after Controller::beforeFilter()

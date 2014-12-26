@@ -32,7 +32,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		//'InstitutionSiteClass',
 		'InstitutionSiteSection',
 		'StudentAbsenceReason' => array(
 			'className' => 'FieldOptionValue',
@@ -422,8 +421,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				if ($this->saveAll($data)) {
 					// trigger alert
 					$studentId = $data['InstitutionSiteStudentAbsence']['student_id'];
-					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrentSchoolYearId();
-					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId));
+					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
+					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
 					
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => get_class($this), 'absence', $selectedYear));

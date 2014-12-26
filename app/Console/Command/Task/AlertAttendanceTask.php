@@ -24,91 +24,79 @@ class AlertAttendanceTask extends AlertTask {
 		'Alerts.AlertLog',
 		'SecurityRole',
 		'InstitutionSiteStudentAbsence',
-		'SchoolYear'
+		'SchoolYear',
+		'SecurityUser',
+		'Students.Student'
 	);
-	public $tasks = array();
 	
 	public function execute($args) {
 		$studentId = $args[0];
 		$schoolYearId = $args[1];
+		$institutionSiteId = $args[2];
+		
 		$alert = $this->getObject();
 		$threshold = $alert['Alert']['threshold'];
 		
-		$alertRoles = $this->getRoleIds();
+		$roleData = $this->getRoleIds();
 		$roleIds = array();
-		foreach($alertRoles AS $row){
-			$roleIds[] = $row['AlertRole']['security_role_id'];
+		foreach($roleData['AlertRole'] AS $row){
+			$roleIds[] = $row['security_role_id'];
 		}
 		
-		$triggered = $this->checkStudentAbsenceAlert($studentId, $schoolYearId, $threshold);
+		$triggered = $this->checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold);
 		
 		$alertLogIds = array();
-		if(!empty($roleIds) && !empty($studentId) && $triggered){
-			$data = $this->SecurityRole->find('all', array(
-				'recursive' => -1,
-				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'Student.identification_no', 'Student.first_name', 'Student.last_name'),
+		if($triggered){
+			// fetch list of recipients based on institution_site_id, and alert_roles
+			$data = $this->SecurityUser->find('all', array(
+				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'InstitutionSite.code', 'InstitutionSite.name'),
 				'joins' => array(
-					array(
-						'table' => 'security_groups',
-						'alias' => 'SecurityGroup',
-						'conditions' => array(
-							'SecurityRole.security_group_id = SecurityGroup.id'
-						)
-					),
 					array(
 						'table' => 'security_group_users',
 						'alias' => 'SecurityGroupUser',
 						'conditions' => array(
-							'SecurityGroup.id = SecurityGroupUser.security_group_id'
-						)
-					),
-					array(
-						'table' => 'security_users',
-						'alias' => 'SecurityUser',
-						'conditions' => array(
-							'SecurityGroupUser.security_user_id = SecurityUser.id'
+							'SecurityGroupUser.security_user_id = SecurityUser.id',
+							'SecurityGroupUser.security_role_id' => $roleIds
 						)
 					),
 					array(
 						'table' => 'security_group_institution_sites',
 						'alias' => 'SecurityGroupInstitutionSite',
 						'conditions' => array(
-							'SecurityGroup.id = SecurityGroupInstitutionSite.security_group_id'
+							'SecurityGroupInstitutionSite.security_group_id = SecurityGroupUser.security_group_id',
+							'SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId
 						)
 					),
 					array(
-						'table' => 'institution_site_students',
-						'alias' => 'InstitutionSiteStudent',
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
 						'conditions' => array(
-							'InstitutionSiteStudent.institution_site_id = SecurityGroupInstitutionSite.institution_site_id'
-						)
-					),
-					array(
-						'table' => 'students',
-						'alias' => 'Student',
-						'conditions' => array(
-							'InstitutionSiteStudent.student_id = Student.id',
-							'Student.id' => $studentId
+							'InstitutionSite.id = SecurityGroupInstitutionSite.institution_site_id'
 						)
 					)
 				),
-				'conditions' => array('SecurityRole.id' => $roleIds),
-				'group' => array('SecurityUser.id', 'Student.id')
+				//'conditions' => array('SecurityGroupUser.security_role_id' => $roleIds),
+				'group' => array('SecurityUser.id')
 			));
 			
-			if($alert && !empty($data)){
+			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.last_name'));
+			
+			if($alert && !empty($data) && !empty($studentData)){
 				$subject = $alert['Alert']['subject'];
 				$message = $alert['Alert']['message'];
+				$student = $studentData['Student'];
 				
 				foreach($data AS $row){
 					$securityUser = $row['SecurityUser'];
+					$InstitutionSite = $row['InstitutionSite'];
 					$userEmail = $securityUser['email'];
-					$student = $row['Student'];
 					
 					$this->AlertLog->create();
 					
-					$message .= '<p>';
+					$message .= '<p>' . __('Student') . ': ';
 					$message .= $student['first_name'] . ' ' . $student['last_name'] . ' (' . $student['identification_no'] . ')';
+					$message .= '<br/>' . __('Institution') . ': ';
+					$message .= $InstitutionSite['name'] . ' (' . $InstitutionSite['code'] . ')';
 					$message .= '</p>';
 
 					$newLog = array(
@@ -131,9 +119,7 @@ class AlertAttendanceTask extends AlertTask {
 		return $alertLogIds;
 	}
 	
-	public function checkStudentAbsenceAlert($studentId, $schoolYearId, $threshold){
-		//$currentYearId = $this->SchoolYear->getCurrentSchoolYearId();
-
+	public function checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold){
 		$list = $this->InstitutionSiteStudentAbsence->find('all', array(
 			'recursive' => -1,
 			'fields' => array('InstitutionSiteStudentAbsence.*'),
@@ -142,8 +128,9 @@ class AlertAttendanceTask extends AlertTask {
 					'table' => 'institution_site_sections',
 					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteStudentAbsence.institution_site_section_id = InstitutionSiteSection.id',
-						'InstitutionSiteSection.school_year_id' => $schoolYearId
+						'InstitutionSiteSection.id = InstitutionSiteStudentAbsence.institution_site_section_id',
+						'InstitutionSiteSection.school_year_id' => $schoolYearId, 
+						'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 					)
 				)
 			),
