@@ -42,8 +42,13 @@ class AlertAttendanceTask extends AlertTask {
 		foreach($roleData['AlertRole'] AS $row){
 			$roleIds[] = $row['security_role_id'];
 		}
+		$this->log('roleIds:', 'alert_processes');
+		$this->log($roleIds, 'alert_processes');
 		
 		$triggered = $this->checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold);
+		
+		$this->log('triggered:', 'alert_processes');
+		$this->log($triggered, 'alert_processes');
 		
 		$alertLogIds = array();
 		if($triggered){
@@ -79,7 +84,13 @@ class AlertAttendanceTask extends AlertTask {
 				'group' => array('SecurityUser.id')
 			));
 			
+			$this->log('data:', 'alert_processes');
+			$this->log($data, 'alert_processes');
+			
 			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.last_name'));
+			
+			$this->log('studentData:', 'alert_processes');
+			$this->log($studentData, 'alert_processes');
 			
 			if($alert && !empty($data) && !empty($studentData)){
 				$subject = $alert['Alert']['subject'];
@@ -168,8 +179,8 @@ class AlertAttendanceTask extends AlertTask {
 				$totalDaysAbsence += 0.5;
 			}
 		}
-		//$this->log('days of absence: ' . $totalDaysAbsence, 'alert_processes');
-		//$this->log('threshold: ' . $threshold, 'alert_processes');
+		$this->log('days of absence: ' . $totalDaysAbsence, 'alert_processes');
+		$this->log('threshold: ' . $threshold, 'alert_processes');
 
 		if($totalDaysAbsence >= $threshold){
 			return true;
