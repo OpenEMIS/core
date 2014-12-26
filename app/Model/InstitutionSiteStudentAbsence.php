@@ -423,7 +423,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					$studentId = $data['InstitutionSiteStudentAbsence']['student_id'];
 					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
 					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
-					pr(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
 					
 					$this->Message->alert('general.add.success');
 					//return $this->redirect(array('action' => get_class($this), 'absence', $selectedYear));
