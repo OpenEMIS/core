@@ -168,6 +168,8 @@ class AlertAttendanceTask extends AlertTask {
 				$totalDaysAbsence += 0.5;
 			}
 		}
+		pr('days of absence: ' . $totalDaysAbsence);
+		pr('threshold: ' . $threshold);
 
 		if($totalDaysAbsence >= $threshold){
 			return true;
