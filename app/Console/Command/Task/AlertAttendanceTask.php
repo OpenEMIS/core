@@ -108,10 +108,12 @@ class AlertAttendanceTask extends AlertTask {
 						'subject' => $subject,
 						'message' => $message
 					);
-
-					$this->AlertLog->save($newLog);
-					$newId = $this->AlertLog->getLastInsertID();
-					$alertLogIds[] = $newId;
+					
+					if(!empty($userEmail)){
+						$this->AlertLog->save($newLog);
+						$newId = $this->AlertLog->getLastInsertID();
+						$alertLogIds[] = $newId;
+					}
 				}
 			}
 		}
