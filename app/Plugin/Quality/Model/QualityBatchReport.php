@@ -83,7 +83,7 @@ class QualityBatchReport extends QualityAppModel {
 			'joins' => $joins,
 			'conditions' => null,
 			'group' => array('InstitutionSiteClass.id', 'RubricTemplate.id'),
-			'order' => array(/* 'Institution.name', */ 'InstitutionSite.name', 'SchoolYear.name DESC', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id')
+			'order' => array('InstitutionSite.name', 'SchoolYear.name DESC', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id')
 				), $InstitutionSite);
 
 		$query = '(' . $query . ')';

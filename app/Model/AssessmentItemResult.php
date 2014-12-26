@@ -78,13 +78,8 @@ class AssessmentItemResult extends AppModel {
 				'alias' => 'InstitutionSite',
 				'conditions' => array('InstitutionSite.id = AssessmentItemResult.institution_site_id')
 			);
-			$joins[] = array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
-				'conditions' => array('Institution.id = InstitutionSite.institution_id')
-			);
+			
 			$fields[] = 'InstitutionSite.name';
-			$fields[] = 'Institution.name';
 		} else {
 			$conditions['AssessmentItemResult.institution_site_id'] = $institutionSiteId;
 		}
