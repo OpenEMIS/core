@@ -162,7 +162,6 @@ CakePlugin::load(array('Training' => array('routes' => true)));
 CakePlugin::load(array('OlapCube' => array('routes' => true)));
 CakePlugin::load(array('Dashboards' => array('routes' => true)));
 CakePlugin::load(array('Translations' => array('routes' => true)));
-CakePlugin::load(array('Visualizer' => array('routes' => true)));
 CakePlugin::load(array('HighCharts' => array('routes' => true)));
 CakePlugin::load('DevInfo6');
 CakePlugin::load(array('Datawarehouse' => array('routes' => true)));
