@@ -168,8 +168,8 @@ class AlertAttendanceTask extends AlertTask {
 				$totalDaysAbsence += 0.5;
 			}
 		}
-		pr('days of absence: ' . $totalDaysAbsence);
-		pr('threshold: ' . $threshold);
+		$this->log('days of absence: ' . $totalDaysAbsence, 'alert_processes');
+		$this->log('threshold: ' . $threshold, 'alert_processes');
 
 		if($totalDaysAbsence >= $threshold){
 			return true;
