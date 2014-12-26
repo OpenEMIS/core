@@ -291,8 +291,6 @@ class ReportsController extends ReportsAppController {
 		);
 		$this->humanizeFields($selectedFields);
 		$data = $selectedFields;
-//		$data[get_class($this->Institution)] = $this->getTableCloumn($this->Institution, array_key_exists(get_class($this->Institution),$selectedFields)? $selectedFields[get_class($this->Institution)]: array());
-//		$data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(g0et_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
 		$raw_school_years = $this->SchoolYear->find('list', array('order'=>'SchoolYear.name asc'));
 		$school_years = array();
 		foreach($raw_school_years as $value){
@@ -381,44 +379,12 @@ class ReportsController extends ReportsAppController {
 					'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id'
 				)
 			),
-			'institutions' => array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
-				'type' => 'LEFT',
-				'conditions' => array(
-					'Institution.id = InstitutionSite.institution_id'
-				)
-			),
 			'areas' => array(
 				'table' => 'areas',
 				'alias' => 'Area',
 				'type' => 'LEFT',
 				'conditions' => array(
 					'Area.id = InstitutionSite.area_id'
-				)
-			),
-			'institution_sectors' => array(
-				'table' => 'institution_sectors',
-				'alias' => 'InstitutionSector',
-				'type' => 'LEFT',
-				'conditions' => array(
-					'InstitutionSector.id = Institution.institution_sector_id'
-				)
-			),
-			'institution_providers' => array(
-				'table' => 'institution_providers',
-				'alias' => 'InstitutionProvider',
-				'type' => 'LEFT',
-				'conditions' => array(
-					'InstitutionProvider.id = Institution.institution_provider_id'
-				)
-			),
-			'institution_statuses' => array(
-				'table' => 'institution_statuses',
-				'alias' => 'InstitutionStatus',
-				'type' => 'LEFT',
-				'conditions' => array(
-					'InstitutionStatus.id = Institution.institution_status_id'
 				)
 			),
 			'institution_site_localities' => array(

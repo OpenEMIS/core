@@ -1,2 +1,0 @@
-ALTER TABLE `institution_site_staff` ADD `institution_site_position_id` INT( 11 ) NOT NULL AFTER `institution_site_id` ;
-ALTER TABLE `institution_site_staff` ADD `staff_type_id` INT( 5 ) NOT NULL AFTER `institution_site_position_id` ;
