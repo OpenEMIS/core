@@ -417,8 +417,6 @@ class InstitutionSiteProgramme extends AppModel {
 		$startDate = mktime(0,0,0,1,1,$year);
 		$endDate = mktime(0,0,0,12,31,$year);
 
-		$this->unbindModel(array('belongsTo' => array('Institution')));
-
 		$options['fields'] = array(
 			'EducationProgramme.education_cycle_id',
 			'COUNT(InstitutionSite.id) as TotalInstitutionSites'
@@ -445,13 +443,13 @@ class InstitutionSiteProgramme extends AppModel {
 		$startDate = mktime(0,0,0,1,1,$year);
 		$endDate = mktime(0,0,0,12,31,$year);
 		$this->bindModel(array('hasOne' => array(
-			'InstitutionProvider' =>
+			'InstitutionSiteProvider' =>
 			array(
-				'className'			  => 'InstitutionProvider',
-				'joinTable'			  => 'institution_providers',
+				'className'			  => 'InstitutionSiteProvider',
+				'joinTable'			  => 'institution_site_providers',
 				'foreignKey' => false,
 				'dependent'	=> false,
-				'conditions' => array(' Institution.institution_provider_id = InstitutionProvider.id '),
+				'conditions' => array('InstitutionSite.institution_site_provider_id = InstitutionSiteProvider.id '),
 			),
 			'EducationCycle' =>
 			array(
@@ -464,8 +462,8 @@ class InstitutionSiteProgramme extends AppModel {
 		)));
 
 		$options['fields'] = array(
-			'InstitutionProvider.id as ProviderId',
-			'InstitutionProvider.name as ProviderName',
+			'InstitutionSiteProvider.id as ProviderId',
+			'InstitutionSiteProvider.name as ProviderName',
 			'EducationCycle.id as CycleId',
 			'EducationCycle.name as CycleName',
 			'COUNT(InstitutionSite.id) as TotalInstitutionSites'
