@@ -16,7 +16,8 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Alert extends AlertsAppModel {
 	public $actsAs = array(
-		'ControllerAction2'
+		'ControllerAction2',
+		'Containable'
 	);
 	
 	public $belongsTo = array(
