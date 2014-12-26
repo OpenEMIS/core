@@ -50,7 +50,7 @@ class AppController extends Controller {
 
 		// Custom Components
 		'Localization',
-		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports', 'Visualizer')), 
+		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports')), 
 		'AccessControl',
 		'Utility',		
 		'Workflow',
