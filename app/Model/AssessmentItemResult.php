@@ -133,7 +133,7 @@ class AssessmentItemResult extends AppModel {
 		$yearOptions = $this->AssessmentItem->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
 		$defaultYearId = 0;
 		if(!empty($yearOptions)){
-			$currentYearId = ClassRegistry::init('SchoolYear')->getCurrentSchoolYearId();
+			$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
 			if(!empty($currentYearId) && array_key_exists($currentYearId, $yearOptions)){
 				$defaultYearId = $currentYearId;
 			}else{
