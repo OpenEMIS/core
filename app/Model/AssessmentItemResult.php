@@ -20,6 +20,11 @@ class AssessmentItemResult extends AppModel {
 	public $actsAs = array(
 		'ControllerAction'
 	);
+
+	public $belongsTo = array(
+		'AssessmentItem',
+		'AssessmentResultType'
+	);
 	
 	public function getResultsByStudent($studentId, $institutionSiteId=0) {
 		$fields = array(
@@ -130,7 +135,7 @@ class AssessmentItemResult extends AppModel {
 	public function assessments($controller, $params) {
 		$controller->Navigation->addCrumb('Assessments');
 
-		$yearOptions = $controller->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
+		$yearOptions = $this->AssessmentItem->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
 		$defaultYearId = 0;
 		if(!empty($yearOptions)){
 			$currentYearId = ClassRegistry::init('SchoolYear')->getCurrentSchoolYearId();
