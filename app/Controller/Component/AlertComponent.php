@@ -47,6 +47,7 @@ class AlertComponent extends Component {
 		$this->log($shellCmd, 'debug');
 		//pr($shellCmd);
 		$output = array();
+		pr($shellCmd);
 		exec($shellCmd, $output);
 	}
 	
