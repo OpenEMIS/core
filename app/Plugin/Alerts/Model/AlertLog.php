@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class AlertLog extends AlertsAppModel {
 	public $belongsTo = array(
-		'SecurityUser'
+		
 	);
 	
 	public function getLogs($status=NULL){

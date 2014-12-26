@@ -14,20 +14,168 @@
   have received a copy of the GNU General Public License along with this program.  If not, see
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
-App::uses('AppTask', 'Console/Command/Task');
-App::uses('CakeEmail', 'Network/Email');
 
-class AlertAttendanceTask extends AppTask {
+App::uses('AlertTask', 'Console/Command/Task');
+
+class AlertAttendanceTask extends AlertTask {
 
 	public $uses = array(
 		'Alerts.Alert', 
 		'Alerts.AlertLog',
 		'SecurityRole',
-		'InstitutionSiteStudentAbsence'
+		'InstitutionSiteStudentAbsence',
+		'SchoolYear',
+		'SecurityUser',
+		'Students.Student'
 	);
-	public $tasks = array('Common');
+	
+	public function execute($args) {
+		$studentId = $args[0];
+		$schoolYearId = $args[1];
+		$institutionSiteId = $args[2];
+		
+		$alert = $this->getObject();
+		$threshold = $alert['Alert']['threshold'];
+		
+		$roleData = $this->getRoleIds();
+		$roleIds = array();
+		foreach($roleData['AlertRole'] AS $row){
+			$roleIds[] = $row['security_role_id'];
+		}
+		
+		$triggered = $this->checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold);
+		
+		$alertLogIds = array();
+		if($triggered){
+			// fetch list of recipients based on institution_site_id, and alert_roles
+			$data = $this->SecurityUser->find('all', array(
+				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'InstitutionSite.code', 'InstitutionSite.name'),
+				'joins' => array(
+					array(
+						'table' => 'security_group_users',
+						'alias' => 'SecurityGroupUser',
+						'conditions' => array(
+							'SecurityGroupUser.security_user_id = SecurityUser.id',
+							'SecurityGroupUser.security_role_id' => $roleIds
+						)
+					),
+					array(
+						'table' => 'security_group_institution_sites',
+						'alias' => 'SecurityGroupInstitutionSite',
+						'conditions' => array(
+							'SecurityGroupInstitutionSite.security_group_id = SecurityGroupUser.security_group_id',
+							'SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId
+						)
+					),
+					array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+							'InstitutionSite.id = SecurityGroupInstitutionSite.institution_site_id'
+						)
+					)
+				),
+				//'conditions' => array('SecurityGroupUser.security_role_id' => $roleIds),
+				'group' => array('SecurityUser.id')
+			));
+			
+			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.last_name'));
+			
+			if($alert && !empty($data) && !empty($studentData)){
+				$subject = $alert['Alert']['subject'];
+				$message = $alert['Alert']['message'];
+				$student = $studentData['Student'];
+				
+				foreach($data AS $row){
+					$securityUser = $row['SecurityUser'];
+					$InstitutionSite = $row['InstitutionSite'];
+					$userEmail = $securityUser['email'];
+					
+					$this->AlertLog->create();
+					
+					$message .= '<p>' . __('Student') . ': ';
+					$message .= $student['first_name'] . ' ' . $student['last_name'] . ' (' . $student['identification_no'] . ')';
+					$message .= '<br/>' . __('Institution') . ': ';
+					$message .= $InstitutionSite['name'] . ' (' . $InstitutionSite['code'] . ')';
+					$message .= '</p>';
 
-	public function execute() {
+					$newLog = array(
+						'id' => NULL,
+						'method' => 'Email',
+						'destination' => $userEmail,
+						'type' => 'Alert',
+						'status' => 0,
+						'subject' => $subject,
+						'message' => $message
+					);
+
+					$this->AlertLog->save($newLog);
+					$newId = $this->AlertLog->getLastInsertID();
+					$alertLogIds[] = $newId;
+				}
+			}
+		}
+		
+		return $alertLogIds;
+	}
+	
+	public function checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold){
+		$list = $this->InstitutionSiteStudentAbsence->find('all', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteStudentAbsence.*'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array(
+						'InstitutionSiteSection.id = InstitutionSiteStudentAbsence.institution_site_section_id',
+						'InstitutionSiteSection.school_year_id' => $schoolYearId, 
+						'InstitutionSiteSection.institution_site_id' => $institutionSiteId
+					)
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteStudentAbsence.student_id' => $studentId
+			)
+		));
+		
+		$totalDaysAbsence = 0;
+		foreach($list AS $row){
+			$absence = $row['InstitutionSiteStudentAbsence'];
+			
+			if($absence['full_day_absent'] == 'Yes'){
+				$days = 1;
+				if(!empty($absence['first_date_absent'])){
+					if(!empty($absence['last_date_absent'])){
+						$lastDay = strtotime($absence['last_date_absent']);
+						$firstDay = strtotime($absence['first_date_absent']);
+						
+						if($lastDay > $firstDay){
+							$days = floor(($lastDay - $firstDay) / (60*60*24));
+							$days += 1;
+						}else if($lastDay == $firstDay){
+							$days = 1;
+						}else{
+							$days = 0;
+						}
+					}
+				}
+				
+				$totalDaysAbsence += $days;
+			}else{
+				$totalDaysAbsence += 0.5;
+			}
+		}
+
+		if($totalDaysAbsence >= $threshold){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	// backup, used for the 'main' method in the AlertShell
+	/*public function execute() {
 		$alert = $this->Alert->getAlertByName('Student Absent');
 		$threshold = $alert['Alert']['threshold'];
 		
@@ -93,7 +241,7 @@ class AlertAttendanceTask extends AppTask {
 			));
 		}
 		return $data;
-	}
+	}*/
 
 }
 
