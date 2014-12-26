@@ -3,13 +3,13 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Alerts'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.list'), array('action' => $model), array('class' => 'divider'));
+$model = 'Alert';
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index'), array('class' => 'divider'));
 if ($_edit) {
-	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $id), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
 $this->end();
 $this->start('contentBody');
-//echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
 ?>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Name'); ?></div>
@@ -38,11 +38,12 @@ $this->start('contentBody');
 <div class="row">
 	<div class="col-md-3"><?php echo __('Destination') . ' ' . __('Roles'); ?></div>
 	<div class="col-md-6">
-		<?php foreach ($roles AS $role):
-			?>
-			<p><?php echo $role; ?></p>
-			<?php
-		endforeach;
+		<?php
+		if (isset($data['SecurityRole'])) {
+			foreach ($data['SecurityRole'] as $role) {
+				echo '<p>' . $role['name'] . '</p>';
+			}
+		}
 		?>
 	</div>
 </div>

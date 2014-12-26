@@ -16,29 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class AlertRole extends AlertsAppModel {
 	public $belongsTo = array(
-		'Alert',
+		'Alerts.Alert',
 		'SecurityRole'
 	);
-	
-	public function getRolesByAlertId($alertId){
-		$this->formatResult = true;
-		$list = $this->find('all', array(
-			'recursive' => 0,
-			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.security_group_id'),
-			'conditions' => array('AlertRole.alert_id' => $alertId),
-			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
-		));
-		
-		$data = array();
-		foreach($list AS $row){
-			$id = $row['id'];
-			if($row['security_group_id'] == -1){
-				$data[$id] = __('System') . ' - ' . $row['name'];
-			}else{
-				$data[$id] = $row['name'];
-			}
-		}
-		
-		return $data;
-	}
 }
