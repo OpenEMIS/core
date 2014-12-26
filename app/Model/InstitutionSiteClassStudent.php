@@ -94,7 +94,6 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function classesStudent($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		//$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionClass')->getSectionOptions($id, true);
 		if(!empty($studentActionOptions)) {
 			$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
@@ -132,20 +131,17 @@ class InstitutionSiteClassStudent extends AppModel {
 			}
 			$controller->set(compact('data', 'studentActionOptions', 'selectedSection'));
 		} else {
-			$controller->Message->alert('general.noData');
+			$controller->Message->alert('InstitutionSiteClass.noSections');
 		}
 	}
 	
 	public function classesStudentEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
 		$classId = $id;
-		//$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : 0;
-		//$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		$studentActionOptions = ClassRegistry::init('InstitutionSiteSectionClass')->getSectionOptions($id, true);
-		$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
-		
-		if($controller->request->is('get')) {
-			$categoryOptions = $this->StudentCategory->findList(true);
+
+		if ($controller->request->is('get')) {
+			$selectedSection = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
@@ -158,7 +154,7 @@ class InstitutionSiteClassStudent extends AppModel {
 						'alias' => 'InstitutionSiteSectionStudent',
 						'conditions' => array(
 							'InstitutionSiteSectionStudent.student_id = Student.id',
-							'InstitutionSiteSectionStudent.institution_site_section_id = ' . $selectedSection,
+							'InstitutionSiteSectionStudent.institution_site_section_id' => $selectedSection,
 							'InstitutionSiteSectionStudent.status = 1'
 						)
 					),
@@ -174,24 +170,29 @@ class InstitutionSiteClassStudent extends AppModel {
 					)
 				),
 				'group' => array('Student.id'),
-				'order' => array($this->alias.'.status DESC')
+				'order' => array($this->alias . '.status DESC')
 			));
 
-			if(empty($data)) {
+			if (empty($data)) {
 				$controller->Message->alert('general.noData');
 			}
-			$controller->set(compact('data', 'categoryOptions', 'studentActionOptions', 'selectedSection', 'classId'));
+			
+			if (empty($studentActionOptions)) {
+				$controller->Message->alert('InstitutionSiteClass.noSections');
+			}
+
+			$controller->set(compact('data', 'studentActionOptions', 'selectedSection', 'classId'));
 		} else {
 			$data = $controller->request->data;
 			$selectedSection = null;
- 			if(isset($data[$this->alias])) {
-				foreach($data[$this->alias] as $i => $obj) {
+			if (isset($data[$this->alias])) {
+				foreach ($data[$this->alias] as $i => $obj) {
 					$selectedSection = $obj['institution_site_section_id'];
-					if(empty($obj['id']) && $obj['status'] == 0) {
+					if (empty($obj['id']) && $obj['status'] == 0) {
 						unset($data[$this->alias][$i]);
 					}
 				}
-				if(!empty($data[$this->alias])) {
+				if (!empty($data[$this->alias])) {
 					$this->saveAll($data[$this->alias]);
 				}
 			}
@@ -202,9 +203,25 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
-		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
+		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'InstitutionSiteSection.name');
 		
 		$joins = array(
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'conditions' => array(
+					'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
+					'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.status = 1'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteSection.id'
+				)
+			),
 			array(
 				'table' => 'institution_site_classes',
 				'alias' => 'InstitutionSiteClass',
@@ -213,7 +230,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			array(
 				'table' => 'education_grades',
 				'alias' => 'EducationGrade',
-				'conditions' => array('EducationGrade.id = InstitutionSiteClassStudent.education_grade_id')
+				'conditions' => array('InstitutionSiteSectionStudent.education_grade_id = EducationGrade.id')
 			),
 			array(
 				'table' => 'education_programmes',
@@ -408,32 +425,6 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $data;
 	}
 	
-	// used by InstitutionSiteStudent
-	public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
-		$data = $this->find('list', array(
-			'fields' => array('InstitutionSiteClassStudent.id'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id'
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
-						'InstitutionSiteClass.institution_site_id = ' . $InstitutionSiteId
-					)
-				)
-			),
-			'conditions' => array('InstitutionSiteClassStudent.student_id = ' . $studentId)
-		));
-		return $data;
-	}
-	
 	public function getAutoCompleteList($search, $classId) {
 		$search = sprintf('%%%s%%', $search);
 
@@ -517,22 +508,27 @@ class InstitutionSiteClassStudent extends AppModel {
 
 			$options['joins'] = array(
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = InstitutionSiteClassGrade.education_grade_id')
+					'table' => 'institution_site_section_students',
+					'alias' => 'InstitutionSiteSectionStudent',
+					'conditions' => array('InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id')
+				),
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = InstitutionSiteSectionStudent.education_grade_id')
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
 					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
+						'InstitutionSiteSectionGrade.education_grade_id = EducationGrade.id'
 					)
 				),
 				array(
 					'table' => 'institution_site_classes',
 					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
 						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
 					)
 				),
@@ -556,7 +552,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
-					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+					'conditions' => array('AssessmentItemType.education_grade_id = EducationGrade.education_grade_id')
 				),
 				array(
 					'table' => 'assessment_items',
@@ -659,8 +655,8 @@ class InstitutionSiteClassStudent extends AppModel {
 					'table' => 'institution_site_section_students',
 					'alias' => 'InstitutionSiteSectionStudent',
 					'conditions' => array(
-						'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
-						'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
+						'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+						'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
 						'InstitutionSiteSectionStudent.status = 1'
 					)
 				),

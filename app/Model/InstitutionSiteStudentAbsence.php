@@ -621,6 +621,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		
 		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList'));
+
 	}
 
 	public function dayedit($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
@@ -739,7 +740,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
 		$absenceReasonList = $this->StudentAbsenceReason->getOptionList(array('FieldOption.code' => 'StudentAbsenceReason'));
-		
+
 		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 
 	}
@@ -1491,5 +1492,4 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		return $data;
 	}
-	
 }
