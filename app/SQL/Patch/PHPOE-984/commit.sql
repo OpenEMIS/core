@@ -43,7 +43,7 @@ SELECT `order` INTO @commuQuestionsOrderId FROM `navigations` WHERE `module` LIK
 UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @commuQuestionsOrderId;
 
 INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) VALUES
-(NULL, 'Administration', 'Alerts', 'Alerts', 'Communications', 'Alerts', 'Alert', 'Alert|Alert.add|Alert.view|Alert.edit', NULL, 33, 0, @commuQuestionsOrderId, 1, 1, '0000-00-00 00:00:00');
+(NULL, 'Administration', 'Alerts', 'Alerts', 'Communications', 'Alerts', 'index', 'index|view|edit', NULL, 33, 0, @commuQuestionsOrderId, 1, 1, '0000-00-00 00:00:00');
 
 --
 -- Table structure for table `alert_roles`
