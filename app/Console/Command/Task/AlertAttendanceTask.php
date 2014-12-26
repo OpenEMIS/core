@@ -36,11 +36,9 @@ class AlertAttendanceTask extends AlertTask {
 		
 		$alert = $this->getObject();
 		$threshold = $alert['Alert']['threshold'];
-		
-		$roleData = $this->getRoleIds();
 		$roleIds = array();
-		foreach($roleData['AlertRole'] AS $row){
-			$roleIds[] = $row['security_role_id'];
+		foreach($alert['SecurityRole'] AS $row){
+			$roleIds[] = $row['id'];
 		}
 		$this->log('roleIds:', 'alert_processes');
 		$this->log($roleIds, 'alert_processes');
