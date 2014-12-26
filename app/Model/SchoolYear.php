@@ -220,24 +220,7 @@ class SchoolYear extends AppModel {
 		}
 	}
 
-	public function getCurrentSchoolYear() {
-		$currentDate = date('Y-m-d', time());
-		$data = $this->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'start_date <= ' => $currentDate,
-				'end_date >= ' => $currentDate
-			)
-		));
-		
-		if(!empty($data)){
-			return $data['SchoolYear'];
-		}else{
-			return NULL;
-		}
-	}
-
-	public function getCurrentSchoolYearId() {
+	public function getCurrent() {
 		$result = $this->find('first', array(
 			'fields' => array('SchoolYear.id'),
 			'conditions' => array(

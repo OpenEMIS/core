@@ -45,7 +45,7 @@ class EmailConfig {
 	public $default = array(
 		'transport' => 'Mail',
 		'from' => array('support@openemis.org' => 'OpenEmis Core'),
-		'replyTo' => 'abc@kordit.com',
+		'replyTo' => 'support@openemis.org',
 		'emailFormat' => 'html',
 		'template' => 'default',
 		'layout' => 'default',

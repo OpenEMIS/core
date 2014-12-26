@@ -1,6 +1,6 @@
 INSERT INTO `config_items` (`id`, `name`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES
-(NULL, 'alert_frequency', 'Alerts', 'Frequency', 1, 1, 1, 1, '', '', 1, '0000-00-00 00:00:00'),
-(NULL, 'alert_retry', 'Alerts', 'Retry', 0, 0, 1, 1, '', '', 1, '0000-00-00 00:00:00');
+(NULL, 'alert_frequency', 'Alerts', 'Frequency', 1, 1, 1, 0, '', '', 1, '0000-00-00 00:00:00'),
+(NULL, 'alert_retry', 'Alerts', 'Retry', 0, 0, 1, 0, '', '', 1, '0000-00-00 00:00:00');
 
 UPDATE `navigations` SET `title` = 'Questions' WHERE `module` LIKE 'Administration' AND `header` LIKE 'SMS' AND `title` LIKE 'Messages';
 UPDATE `navigations` SET `header` = 'Communications' WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Sms' AND `header` LIKE 'SMS';
@@ -11,6 +11,7 @@ UPDATE `navigations` SET `header` = 'Communications' WHERE `module` LIKE 'Admini
 
 CREATE TABLE `alerts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) COLLATE utf8_estonian_ci NOT NULL,
   `name` varchar(100) COLLATE utf8_estonian_ci NOT NULL,
   `threshold` int(5) NOT NULL,
   `status` int(1) NOT NULL DEFAULT '1',
@@ -28,8 +29,8 @@ CREATE TABLE `alerts` (
 -- Dumping data for table `alerts`
 --
 
-INSERT INTO `alerts` (`id`, `name`, `threshold`, `status`, `method`, `subject`, `message`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1, 'Student Absent', 2, 1, 'Email', 'Student Absent Test Alert', 'Student Absent Test Alert Message', NULL, NULL, 1, '0000-00-00 00:00:00');
+INSERT INTO `alerts` (`id`, `code`, `name`, `threshold`, `status`, `method`, `subject`, `message`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'Attendance', 'Student Absent', 14, 1, 'Email', 'OpenEMIS Alert', 'Student absent 14 days.', NULL, NULL, 1, '0000-00-00 00:00:00');
 
 
 --

@@ -87,7 +87,8 @@ class ConfigController extends AppController {
 			$typeOptions['Dashboard'] = 'Dashboard';
 		}
 		
-		$typeOptions['system_processes'] = 'System Processes';
+		// backup for system process
+		//$typeOptions['system_processes'] = 'System Processes';
 
 		$selectedType = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($typeOptions);
 		
@@ -104,7 +105,8 @@ class ConfigController extends AppController {
 			$this->set('arrFileExtensions', $imageFileExts);
 			$this->set('items', $items);
 		}else if($selectedType == 'system_processes'){
-			$checkProcess = $this->SystemProcess->getAlertProcess();
+			// backup for system process
+			/*$checkProcess = $this->SystemProcess->getAlertProcess();
 			if (empty($checkProcess)) {
 				$this->SystemProcess->create();
 				$newProcessArr = array(
@@ -131,7 +133,7 @@ class ConfigController extends AppController {
 			$alertProcess = $newProcess['SystemProcess'];
 
 			//pr($process);
-			$this->set(compact('alertProcess'));
+			$this->set(compact('alertProcess'));*/
 		}else{
 			$items = $this->ConfigItem->find('all',array(
 				'recursive' => -1,
@@ -181,8 +183,8 @@ class ConfigController extends AppController {
 			'Dashboard' => 'dashboard',
 			'Year Book Report' => 'yearbook_logo',
 			'Custom Validation' => 'custom_validation',
-			'Auto Generated OpenEMIS ID' => 'auto_generated',
-			'system_processes' => 'system_processes'
+			'Auto Generated OpenEMIS ID' => 'auto_generated'/*,
+			'system_processes' => 'system_processes'*/
 		);
 		if (array_key_exists($selectedType, $views)) {
 			$view = $views[$selectedType];
