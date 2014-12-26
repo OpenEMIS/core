@@ -32,7 +32,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		//'InstitutionSiteClass',
 		'InstitutionSiteSection',
 		'StudentAbsenceReason' => array(
 			'className' => 'FieldOptionValue',
@@ -420,6 +419,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			if ($data['submit'] != 'reload') {
 				$this->create();
 				if ($this->saveAll($data)) {
+					// trigger alert
+					$studentId = $data['InstitutionSiteStudentAbsence']['student_id'];
+					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
+					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
+					
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => get_class($this), 'absence', $selectedYear));
 				} else {
@@ -1447,49 +1451,5 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		//$index = $args[1];
 		return 'Report_Student_Attendance';
 	}
-	
-	public function getStudentListForAlert($threshold) {
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$currentSchoolYear = $SchoolYear->getCurrentSchoolYear();
-		$currentYearId = $currentSchoolYear['id'];
 
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('Student.id', 'COUNT(Student.id) AS total'),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array(
-						'InstitutionSiteStudentAbsence.student_id = Student.id'
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteStudentAbsence.institution_site_class_id = InstitutionSiteClass.id'
-					)
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'InstitutionSiteClass.school_year_id = SchoolYear.id',
-						'SchoolYear.id = ' . $currentYearId
-					)
-				)
-			),
-			'group' => array('Student.id HAVING total >= ' . $threshold)
-		));
-		
-		$data = array();
-		foreach($list AS $row){
-			$studentId = $row['Student']['id'];
-			$data[] = $studentId;
-		}
-
-		return $data;
-	}
 }

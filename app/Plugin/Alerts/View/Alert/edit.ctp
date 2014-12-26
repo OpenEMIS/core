@@ -7,7 +7,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Alerts'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => $model), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => $model, 'view', $id), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
