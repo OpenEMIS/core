@@ -117,5 +117,5 @@ SELECT `order` INTO @firstItemOrder FROM `security_functions` WHERE `module` LIK
 UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= @firstItemOrder;
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(NULL, 'Alerts', 'Alerts', 'Administration', 'Communications', 129, 'Alert|Alert.view', '_view:Alert.edit', NULL, NULL, NULL, @firstItemOrder, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(NULL, 'Alerts', 'Alerts', 'Administration', 'Communications', 129, 'index|view', '_view:edit', NULL, NULL, NULL, @firstItemOrder, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
