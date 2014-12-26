@@ -852,11 +852,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					$value['institution_site_section_id'] = $options['sectionId'];
 					$this->create();
 					$this->save($value);
+					$institutionSiteId = $this->Session->read('InstitutionSite.id');
+					$studentId = $value['student_id'];
+					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
+					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
 				}
-				$institutionSiteId = $this->Session->read('InstitutionSite.id');
-				$studentId = $value['student_id'];
-				$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
-				$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
 			} else {
 				// Marking present
 				if (!empty($found)) {
