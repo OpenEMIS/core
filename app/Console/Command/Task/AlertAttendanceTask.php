@@ -42,11 +42,8 @@ class AlertAttendanceTask extends AlertTask {
 		foreach($roleData['AlertRole'] AS $row){
 			$roleIds[] = $row['security_role_id'];
 		}
-		$this->out(pr($roleIds));
 		
 		$triggered = $this->checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold);
-		
-		$this->out(pr($triggered));
 		
 		$alertLogIds = array();
 		if($triggered){
@@ -82,11 +79,7 @@ class AlertAttendanceTask extends AlertTask {
 				'group' => array('SecurityUser.id')
 			));
 			
-			$this->out(pr($data));
-			
 			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.last_name'));
-			
-			$this->out(pr($studentData));
 			
 			if($alert && !empty($data) && !empty($studentData)){
 				$subject = $alert['Alert']['subject'];
