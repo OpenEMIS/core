@@ -15,29 +15,73 @@
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
 
-App::uses('HttpSocket', 'Network/Http');
-
 class AlertsController extends AlertsAppController {
-
 	public $uses = array(
 		'Alerts.Alert',
 		'Alerts.AlertLog',
+		'SecurityRole',
 		'SystemProcess'
-	);
-	public $modules = array(
-		'Alert' => array('plugin' => 'Alerts')
-	);
-	public $components = array(
-		'Option',
-		'Email',
-		'Auth'
 	);
 
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Communications', array('plugin' => 'Alerts', 'controller' => 'Alerts', 'action' => 'Alert'));
+		$this->Navigation->addCrumb('Communications', array('plugin' => 'Alerts', 'controller' => 'Alerts'));
+	}
+
+	public function index(){
+		$alias = $this->Alert->alias;
+		$this->Navigation->addCrumb('Alerts');
+		
+		$data = $this->Alert->find('all');
+		
+		$this->set(compact('data'));
+	}
+
+	public function view($id=0) {
+		$this->Navigation->addCrumb('Alert Details');
+		$this->Alert->contain(array('ModifiedUser', 'CreatedUser', 'SecurityRole'));
+
+		if ($this->Alert->exists($id)) {
+			$data = $this->Alert->findById($id);
+			$this->Session->write($this->Alert->alias.'.id', $id);
+			$this->set(compact('data'));
+		} else {
+			$this->Message->alert('general.view.notExists');
+			return $this->redirect(array('action' => 'index'));
+		}
+	}
+
+	public function edit($id=0) {
+		$this->Navigation->addCrumb('Edit Alert');
+		$this->Alert->contain(array('ModifiedUser', 'CreatedUser', 'SecurityRole'));
+		$data = $this->Alert->findById($id);
+		
+		$statusOptions = $this->Option->get('enableOptions');
+		$methodOptions = $this->Option->get('alertMethod');
+		$roleOptions = $this->SecurityRole->find('list', array(
+			'conditions' => array(
+				'SecurityRole.visible' => 1,
+				'SecurityRole.security_group_id' => array('0', '-1')),
+			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
+		));
+
+		if ($this->request->is(array('post', 'put'))) {
+			$alertData = $this->request->data;
+			
+			if ($this->Alert->save($alertData)) {
+				$this->Message->alert('general.edit.success');
+				return $this->redirect(array('action' => 'view', $id));
+			} else {
+				$this->request->data = $alertData;
+				$this->Message->alert('general.edit.failed');
+			}
+		} else {
+			$this->request->data = $data;
+		}
+		
+		$this->set(compact('id', 'statusOptions', 'methodOptions', 'roleOptions'));
 	}
 	
 	public function processActions() {
