@@ -1,6 +1,4 @@
 <?php
-//echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-//2echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
 echo $this->Html->script('Quality.quality.rubric', false);
@@ -59,10 +57,10 @@ if (!empty($this->data[$model]['id'])) {
 	<div class="col-md-4">
 		<?php
 		if ($type == 'add') {
-			echo $this->Form->input('institution_site_class_grade_id', array('id' => 'institutionSiteClassGradeId', 'options' => $gradeOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
+			echo $this->Form->input('institution_site_section_grade_id', array('id' => 'institutionSiteSectionGradeId', 'options' => $gradeOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
 		} else {
-			if (isset($gradeOptions[$this->data['QualityInstitutionRubric']['institution_site_class_grade_id']])) {
-				echo $gradeOptions[$this->data['QualityInstitutionRubric']['institution_site_class_grade_id']];
+			if (isset($gradeOptions[$this->data['QualityInstitutionRubric']['institution_site_section_grade_id']])) {
+				echo $gradeOptions[$this->data['QualityInstitutionRubric']['institution_site_section_grade_id']];
 			} else {
 				echo $gradeOptions[0];
 			}
@@ -71,14 +69,14 @@ if (!empty($this->data[$model]['id'])) {
 	</div>
 </div>
 <div class="form-group">
-	<label class="col-md-3 control-label"><?php echo __('Class'); ?></label>
+	<label class="col-md-3 control-label"><?php echo __('Section'); ?></label>
 	<div class="col-md-4">
 		<?php
 		if ($type == 'add') {
-			echo $this->Form->input('institution_site_class_id', array('id' => 'institutionSiteClassId', 'options' => $classOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
+			echo $this->Form->input('institution_site_section_id', array('id' => 'institutionSiteSectionId', 'options' => $sectionOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
 		} else {
-			if (isset($classOptions[$this->data['QualityInstitutionRubric']['institution_site_class_id']])) {
-				echo $classOptions[$this->data['QualityInstitutionRubric']['institution_site_class_id']];
+			if (isset($classOptions[$this->data['QualityInstitutionRubric']['institution_site_section_id']])) {
+				echo $classOptions[$this->data['QualityInstitutionRubric']['institution_site_section_id']];
 			} else {
 				echo $classOptions[0];
 			}
