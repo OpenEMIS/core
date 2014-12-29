@@ -128,24 +128,6 @@ class HomeController extends AppController {
 		$this->set('subTitle', $title);
 		$this->render('Help/'.$this->action);
 	}
-
-	private function getInstitutionByInstitutionSite( $record=NULL){
-		$data = '';
-		if(is_null($record)){
-			return '';
-		}
-		$rawData = $this->{$record['table']}->find('all',
-			array(
-				// 'fields' => array('name'),
-				'limit' => 1,
-				'conditions' => array($record['table'].'.id' => $record['id'])
-			)
-		);
-		if(count($rawData)<1){
-			return '';
-		}
-		return $rawData[0]['Institution']['name'];
-	}
 		
 	public function getLatestStatistics(){
 		$this->autoLayout = false;

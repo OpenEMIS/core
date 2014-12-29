@@ -146,55 +146,6 @@ class InstitutionSiteClassStaff extends AppModel {
 		}
 	}
 
-	// used by InstitutionSite.staffView/teachersEdit
-	public function getClasses($teacherId, $institutionSiteId) {
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'EducationLevel.name', 'InstitutionSiteClass.name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteClass.id = InstitutionSiteClassStaff.institution_site_class_id'
-					)
-				),
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
-				),
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
-				),
-				array(
-					'table' => 'education_cycles',
-					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
-				),
-				array(
-					'table' => 'education_levels',
-					'alias' => 'EducationLevel',
-					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
-				)
-			),
-			'conditions' => array('InstitutionSiteClassStaff.staff_id' => $teacherId),
-			'group' => array('EducationLevel.id', 'InstitutionSiteClass.id'),
-			'order' => array('EducationLevel.order')
-		));
-		return $data;
-	}
-
 	public function getStaffsByInstitutionSiteId($institutionSiteId) {
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -226,29 +177,8 @@ class InstitutionSiteClassStaff extends AppModel {
 		}
 		return $list;
 	}
-/*
-	public function getStaff($teacherId) {
-		$data = $this->find('first', array(
-			'recursive' => -1,
-			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name',
-			),
-			'joins' => array(
-				array(
-					'table' => 'staff',
-					'alias' => 'Staff',
-					'conditions' => array('Staff.id = InstitutionSiteClassStaff.staff_id')
-				)
-			),
-			'conditions' => array('Staff.id' => $teacherId),
-			'order' => array('Staff.first_name')
-		));
 
-
-		return $data;
-	}*/
-
- public function getStaffsInClassYear($classId, $yearId, $mode = 'all') {
+	public function getStaffsInClassYear($classId, $yearId, $mode = 'all') {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
 		$data = $this->find('all', array(
 			'fields' => array(

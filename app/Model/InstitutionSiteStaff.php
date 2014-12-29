@@ -408,28 +408,11 @@ class InstitutionSiteStaff extends AppModel {
 		}
 		$date = sprintf('%d-%d-%d', $yr, $mth, $day);
 		$data = $this->find('first', array(
+			'recursive' => -1,
 			'fields' => array(
 				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.last_name AS last_name',
-				/* 'Institution.name AS institution_name', */ 'InstitutionSite.name AS institution_site_name'
+				'InstitutionSite.name AS institution_site_name'
 			),
-			'recursive' => -1,
-			/* 'joins' => array(
-			  array(
-			  'table' => 'staff',
-			  'alias' => 'Staff',
-			  'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
-			  ),
-			  array(
-			  'table' => 'institution_sites',
-			  'alias' => 'InstitutionSite',
-			  'conditions' => array('InstitutionSite.id = InstitutionSiteStaff.institution_site_id')
-			  ),
-			  array(
-			  'table' => 'institutions',
-			  'alias' => 'Institution',
-			  'conditions' => array('Institution.id = InstitutionSite.institution_id')
-			  )
-			  ), */
 			'conditions' => array(
 				'InstitutionSiteStaff.position_no LIKE' => $positionNo,
 				'OR' => array(
@@ -485,11 +468,6 @@ class InstitutionSiteStaff extends AppModel {
 			'order' => array('InstitutionSiteStaff.start_date DESC', 'InstitutionSiteStaff.end_date')
 		));
 		return $data;
-	}
-
-	public function getInstitutionSelectionValues($list) {
-		$InstitutionSite = ClassRegistry::init('InstitutionSite');
-		return $data = $InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'Institution.name', 'InstitutionSite.name'), 'conditions' => array('InstitutionSite.id  ' => $list)));
 	}
 
 	public function getFTEOptions($positionId, $options = array()) {// $FTE_value = 0, $date = null, $includeSelfNum = false, $showAllFTE = false) {
