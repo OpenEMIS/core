@@ -70,6 +70,7 @@ $description = __d('open_emis', 'OpenEMIS Core');
 	<?php echo $this->element('layout/footer'); ?>
 	<?php echo $this->element('debug/sql'); ?>
 	<?php echo $this->fetch('scriptBottom'); ?>
+	<?php echo $this->element('scriptBottom'); ?>
 </body>
 
 </html>

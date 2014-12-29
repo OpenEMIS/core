@@ -1,1 +1,0 @@
-ALTER TABLE `education_grades_subjects` DROP `order` ;

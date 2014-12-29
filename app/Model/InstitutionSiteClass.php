@@ -20,7 +20,6 @@ class InstitutionSiteClass extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
 		'InstitutionSite',
-		'InstitutionSiteShift',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -76,11 +75,6 @@ class InstitutionSiteClass extends AppModel {
 	);
 	
 	public $actsAs = array(
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'InstitutionSiteClassStaff'
-			)
-		),
 		'ControllerAction',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -100,9 +94,6 @@ class InstitutionSiteClass extends AppModel {
 				'InstitutionSiteClass' => array(
 					'name' => 'Class Name',
 					'no_of_seats' => 'Seats'
-				),
-				'InstitutionSiteShift' => array(
-					'name' => 'Shift'
 				)
 			),
 			'fileName' => 'Report_Class_List'
@@ -148,7 +139,6 @@ class InstitutionSiteClass extends AppModel {
 				array('field' => 'name', 'model' => 'SchoolYear'),
 				array('field' => 'name'),
 				array('field' => 'no_of_seats'),
-				array('field' => 'no_of_shifts'),
 				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
 				array('field' => 'modified', 'edit' => false),
 				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
@@ -204,12 +194,7 @@ class InstitutionSiteClass extends AppModel {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedYear);
-			//pr($sections);
-			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$InstitutionSiteShiftModel->createInstitutionDefaultShift($controller->institutionSiteId, $selectedYear);
-			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($controller->institutionSiteId, $selectedYear);
-			
-			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'institutionSiteId'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				$data = $controller->request->data;
@@ -274,11 +259,6 @@ class InstitutionSiteClass extends AppModel {
 			
 			$name = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($name);
-			
-			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($controller->institutionSiteId, $data['InstitutionSiteClass']['school_year_id']);
-			
-			$controller->set(compact('shiftOptions'));
 		} else {
 			$controller->Message->alert('general.notExists');
 			$controller->redirect(array('action' => $this->_action));
@@ -480,12 +460,6 @@ class InstitutionSiteClass extends AppModel {
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
 					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-				),
-				array(
-					'table' => 'institution_site_shifts',
-					'alias' => 'InstitutionSiteShift',
-					'type' => 'LEFT',
-					'conditions' => array('InstitutionSiteClass.institution_site_shift_id = InstitutionSiteShift.id')
 				)
 			);
 
