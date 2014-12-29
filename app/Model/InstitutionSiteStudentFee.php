@@ -110,7 +110,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			$selectedGrade = key($gradeOptions);
 		}
 		
-		$Student = ClassRegistry::init('InstitutionSiteClassStudent');
+		$Student = ClassRegistry::init('InstitutionSiteSectionStudent');
 		$data = $Student->find('all', array(
 			'fields' => array(
 				'InstitutionSiteFee.id',
@@ -118,7 +118,7 @@ class InstitutionSiteStudentFee extends AppModel {
 				'SUM(StudentFee.amount) AS paid'
 			),
 			'contain' => array(
-				'InstitutionSiteClass',
+				'InstitutionSiteSection',
 				'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'last_name'))
 			),
 			'joins' => array(
@@ -127,7 +127,7 @@ class InstitutionSiteStudentFee extends AppModel {
 					'conditions' => array(
 						'InstitutionSiteFee.school_year_id = ' . $selectedYear,
 						'InstitutionSiteFee.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteFee.education_grade_id = InstitutionSiteClassStudent.education_grade_id'
+						'InstitutionSiteFee.education_grade_id = InstitutionSiteSectionStudent.education_grade_id'
 					)
 				),
 				array(
@@ -135,16 +135,16 @@ class InstitutionSiteStudentFee extends AppModel {
 					'type' => 'LEFT',
 					'conditions' => array(
 						'StudentFee.institution_site_fee_id = InstitutionSiteFee.id',
-						'StudentFee.student_id = InstitutionSiteClassStudent.student_id'
+						'StudentFee.student_id = InstitutionSiteSectionStudent.student_id'
 					)
 				)
 			),
 			'conditions' => array(
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $selectedYear,
-				'InstitutionSiteClassStudent.education_grade_id' => $selectedGrade
+				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteSection.school_year_id' => $selectedYear,
+				'InstitutionSiteSectionStudent.education_grade_id' => $selectedGrade
 			),
-			'group' => array('InstitutionSiteClassStudent.student_id', 'InstitutionSiteClassStudent.education_grade_id'),
+			'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
 			'order' => array('Student.first_name')
 		));
 		
@@ -251,11 +251,11 @@ class InstitutionSiteStudentFee extends AppModel {
 		$index = $args[1];
 
 		if ($index == 1) {
-			$Student = ClassRegistry::init('InstitutionSiteClassStudent');
+			$Student = ClassRegistry::init('InstitutionSiteSectionStudent');
 			$data = $Student->find('all', array(
 				'fields' => array(
 					'SchoolYear.name',
-					'InstitutionSiteClassStudent.education_grade_id',
+					'InstitutionSiteSectionStudent.education_grade_id',
 					'InstitutionSiteFee.id',
 					'InstitutionSiteFee.total',
 					'SUM(StudentFee.amount) AS paid'
@@ -269,34 +269,34 @@ class InstitutionSiteStudentFee extends AppModel {
 				),
 				'joins' => array(
 					array(
-						'table' => 'institution_site_classes', 'alias' => 'InstitutionSiteClass',
+						'table' => 'institution_site_sections', 'alias' => 'InstitutionSiteSection',
 						'conditions' => array(
-							'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
-							'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
+							'InstitutionSiteSection.id = InstitutionSiteSectionStudent.institution_site_section_id',
+							'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId
 						)
 					),
 					array(
 						'table' => 'institution_site_fees', 'alias' => 'InstitutionSiteFee',
 						'conditions' => array(
-							'InstitutionSiteFee.school_year_id = InstitutionSiteClass.school_year_id',
-							'InstitutionSiteFee.institution_site_id = InstitutionSiteClass.institution_site_id',
-							'InstitutionSiteFee.education_grade_id = InstitutionSiteClassStudent.education_grade_id'
+							'InstitutionSiteFee.school_year_id = InstitutionSiteSection.school_year_id',
+							'InstitutionSiteFee.institution_site_id = InstitutionSiteSection.institution_site_id',
+							'InstitutionSiteFee.education_grade_id = InstitutionSiteSectionStudent.education_grade_id'
 						)
 					),
 					array(
 						'table' => 'school_years', 'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+						'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
 					),
 					array(
 						'table' => 'student_fees', 'alias' => 'StudentFee',
 						'type' => 'LEFT',
 						'conditions' => array(
 							'StudentFee.institution_site_fee_id = InstitutionSiteFee.id',
-							'StudentFee.student_id = InstitutionSiteClassStudent.student_id'
+							'StudentFee.student_id = InstitutionSiteSectionStudent.student_id'
 						)
 					)
 				),
-				'group' => array('InstitutionSiteClassStudent.student_id', 'InstitutionSiteClassStudent.education_grade_id'),
+				'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
 				'order' => array('SchoolYear.name', 'EducationGrade.order', 'Student.first_name', 'Student.last_name')
 			));
 			

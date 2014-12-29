@@ -78,4 +78,12 @@ ALTER TABLE `quality_institution_rubrics` DROP INDEX institution_site_class_grad
 ALTER TABLE `quality_institution_rubrics` CHANGE `institution_site_class_grade_id` `institution_site_section_grade_id` INT( 11 ) NOT NULL ;
 ALTER TABLE `quality_institution_rubrics` ADD INDEX ( `institution_site_section_grade_id` ) ;
 
+ALTER TABLE `quality_institution_rubrics` DROP INDEX institution_site_class_id;
+ALTER TABLE `quality_institution_rubrics` CHANGE `institution_site_class_id` `institution_site_section_id` INT( 11 ) NOT NULL ;
+ALTER TABLE `quality_institution_rubrics` ADD INDEX ( `institution_site_section_id` ) ;
+
+ALTER TABLE `quality_institution_visits` DROP INDEX institution_site_class_id;
+ALTER TABLE `quality_institution_visits` CHANGE `institution_site_class_id` `institution_site_section_id` INT( 11 ) NOT NULL ;
+ALTER TABLE `quality_institution_visits` ADD INDEX ( `institution_site_section_id` ) ;
+
 
