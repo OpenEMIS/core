@@ -89,8 +89,8 @@ class RubricsTemplate extends QualityAppModel {
 		$SecurityRole = ClassRegistry::init('SecurityRole');
 		$roleOptions = $SecurityRole->getRubricRoleOptions();
 
-		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-		$gradeOptions = $InstitutionSiteClassGrade->getGradeOptions();
+		$InstitutionSiteSectionGrade = ClassRegistry::init('InstitutionSiteSectionGrade');
+		$gradeOptions = $InstitutionSiteSectionGrade->getGradeOptions();
 
 		$RubricsTemplateGrade = ClassRegistry::init('Quality.RubricsTemplateGrade');
 		$rubricGradesList = $RubricsTemplateGrade->getSelectedGradeOptions($id);
@@ -138,8 +138,8 @@ class RubricsTemplate extends QualityAppModel {
 		$SecurityRole = ClassRegistry::init('SecurityRole');
 		$roleOptions = $SecurityRole->getRubricRoleOptions();
 
-		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-		$gradeOptions = $InstitutionSiteClassGrade->getGradeOptions();
+		$InstitutionSiteSectionGrade = ClassRegistry::init('InstitutionSiteSectionGrade');
+		$gradeOptions = $InstitutionSiteSectionGrade->getGradeOptions();
 
 		$RubricsTemplateGrade = ClassRegistry::init('Quality.RubricsTemplateGrade');
 		$rubricGradesList = $RubricsTemplateGrade->getSelectedGradeOptions($id);
@@ -292,11 +292,11 @@ class RubricsTemplate extends QualityAppModel {
 		
 		/*if (!is_null($gradeId)) {
 			$options['joins'][] = array(
-				'table' => 'institution_site_class_grades',
-				'alias' => 'InstitutionSiteClassGrade',
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
 				'conditions' => array(
-					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-					'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+					'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId
 				)
 			);
 
@@ -305,10 +305,10 @@ class RubricsTemplate extends QualityAppModel {
 
 			$options['group'][] = 'InstitutionSiteClass.id';
 		}*/
-//pr($options);
+
 		//$options['conditions'] = array('RubricTemplate.id' => 'QualityStatus.rubric_template_id');
 		$data = $this->find('all', $options);
-//pr($data);die;
+
 		return $data;
 	}
 
@@ -384,8 +384,8 @@ class RubricsTemplate extends QualityAppModel {
 	public function rubricsTemplatesAjaxAddGrade($controller, $params) {
 		//  $this->render = false;
 		if ($controller->request->is('ajax')) {
-			$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-			$gradeOptions = $InstitutionSiteClassGrade->getGradeOptions();
+			$InstitutionSiteSectionGrade = ClassRegistry::init('InstitutionSiteSectionGrade');
+			$gradeOptions = $InstitutionSiteSectionGrade->getGradeOptions();
 
 			$controller->set('index', $params->query['index'] + 1);
 			$controller->set('gradeOptions', $gradeOptions);

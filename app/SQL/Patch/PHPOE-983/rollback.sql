@@ -1,1 +1,0 @@
-UPDATE `navigations` SET `header` = 'Accounts and Security' WHERE `header` = 'Security';

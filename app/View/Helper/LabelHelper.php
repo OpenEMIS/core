@@ -86,6 +86,9 @@ class LabelHelper extends AppHelper {
 			'total' => 'Total',
 			'fee' => 'Fee',
 			'model' => 'Model',
+			'event' => 'Event',
+			'system' => 'System',
+			'method' => 'Method',
 			'section' => 'Section',
 			'sections' => 'Sections'
 		),
@@ -434,6 +437,14 @@ class LabelHelper extends AppHelper {
 			'function' => 'Function',
 			'dimensions' => 'Dimensions',
 			'classification' => 'Classification'
+		),
+		'Alert' => array(
+			'title' => 'Alerts',
+			'threshold' => 'Threshold',
+			'roles' => 'Destination Roles',
+			'start_date' => 'Start Date',
+			'end_date' => 'End Date',
+			'interval' => 'Interval'
 		),
 		'StudentBehaviour' => array(
 			'title' => 'Behaviour - Students',

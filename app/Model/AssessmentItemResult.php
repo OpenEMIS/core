@@ -20,6 +20,11 @@ class AssessmentItemResult extends AppModel {
 	public $actsAs = array(
 		'ControllerAction'
 	);
+
+	public $belongsTo = array(
+		'AssessmentItem',
+		'AssessmentResultType'
+	);
 	
 	public function getResultsByStudent($studentId, $institutionSiteId=0) {
 		$fields = array(
@@ -73,13 +78,8 @@ class AssessmentItemResult extends AppModel {
 				'alias' => 'InstitutionSite',
 				'conditions' => array('InstitutionSite.id = AssessmentItemResult.institution_site_id')
 			);
-			$joins[] = array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
-				'conditions' => array('Institution.id = InstitutionSite.institution_id')
-			);
+			
 			$fields[] = 'InstitutionSite.name';
-			$fields[] = 'Institution.name';
 		} else {
 			$conditions['AssessmentItemResult.institution_site_id'] = $institutionSiteId;
 		}
@@ -130,13 +130,23 @@ class AssessmentItemResult extends AppModel {
 	public function assessments($controller, $params) {
 		$controller->Navigation->addCrumb('Assessments');
 
-		$yearOptions = $controller->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+		$yearOptions = $this->AssessmentItem->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
+		$defaultYearId = 0;
+		if(!empty($yearOptions)){
+			$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
+			if(!empty($currentYearId) && array_key_exists($currentYearId, $yearOptions)){
+				$defaultYearId = $currentYearId;
+			}else{
+				$defaultYearId = key($yearOptions);
+			}
+		}
+		
+		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : $defaultYearId;
 		$data = array();
 		if (empty($yearOptions)) {
 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 		} else {
-			$data = $controller->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
+			$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
 
 			if (empty($data)) {
 				$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
@@ -164,13 +174,13 @@ class AssessmentItemResult extends AppModel {
 			$controller->Navigation->addCrumb('Results');
 			
             if ($selectedYear != 0 && $assessmentId != 0) {
-				$classOptions = $controller->InstitutionSiteClass->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
 
                 if(empty($classOptions)){
 					$controller->Message->alert('Assessment.result.noClass');
 				}else {
 					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($classOptions);
-					$itemOptions = $controller->AssessmentItem->getClassItemList($assessmentId, $selectedClass);
+					$itemOptions = $this->AssessmentItem->getClassItemList($assessmentId, $selectedClass);
 					if (empty($itemOptions)) {
 						$controller->Message->alert('Assessment.result.noAssessmentItem');
 					}else{
@@ -213,13 +223,13 @@ class AssessmentItemResult extends AppModel {
 			$controller->Navigation->addCrumb('Results');
 
 			if ($selectedYear != 0 && $assessmentId != 0) {
-				$classOptions = $controller->InstitutionSiteClass->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
 
 				if (empty($classOptions)) {
 					$controller->Message->alert('Assessment.result.noClass');
 				} else {
 					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($classOptions);
-					$itemOptions = $controller->AssessmentItem->getClassItemList($assessmentId, $selectedClass);
+					$itemOptions = $this->AssessmentItem->getClassItemList($assessmentId, $selectedClass);
 					
 					if (empty($itemOptions)) {
 						$controller->Message->alert('Assessment.result.noAssessmentItem');
@@ -235,7 +245,7 @@ class AssessmentItemResult extends AppModel {
 					if (empty($data)) {
 						$controller->Message->alert('Assessment.result.noStudent');
 					}
-					$gradingOptions = $controller->AssessmentResultType->findList(true);
+					$gradingOptions = $this->AssessmentResultType->findList(true);
 
 					$controller->set(compact('data', 'gradingOptions'));
 				} else {
@@ -257,7 +267,7 @@ class AssessmentItemResult extends AppModel {
 						}
 
 						if (!empty($result)) {
-							$controller->AssessmentItemResult->saveMany($result);
+							$this->AssessmentItemResult->saveMany($result);
 							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 						}
 					}
