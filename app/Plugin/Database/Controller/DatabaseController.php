@@ -21,7 +21,6 @@ class DatabaseController extends DatabaseAppController {
 	public $uses = array(
 		'Reports.Report',
 		'Reports.BatchReport',
-		'Institution',
 		'InstitutionSite',
 		'InstitutionSiteCustomValue',
 		'BatchIndicator',

@@ -238,7 +238,7 @@ class CensusController extends AppController {
 		
 		$CensusSanitation = ClassRegistry::init('CensusSanitation');
 		$genderOptions = $CensusSanitation->SanitationGender->getList();
-		$genderId = key($genderOptions);
+		$genderId = $genderOptions[key($genderOptions)]['value'];
 		
 		$this->set('data',$arrCensusInfra);
 		$this->set('selectedYear', $selectedYear);
@@ -255,6 +255,7 @@ class CensusController extends AppController {
 				
 		if($this->request->is('post')) {
 			//pr($this->request->data);die;
+			$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
 			$sanitationGender = $this->request->data['CensusSanitation']['gender'];
 			foreach($data as $InfraCategory){
 				
@@ -278,8 +279,6 @@ class CensusController extends AppController {
 							}
 							unset($this->request->data['Census'.$InfraCategory]['gender']);
 							unset($this->request->data['Census'.$InfraCategory]['material']);
-							
-							$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
 							
 							$arrVal['school_year_id'] = $yearId;
 							$arrVal['institution_site_id'] = $this->institutionSiteId;
@@ -322,7 +321,7 @@ class CensusController extends AppController {
 			
 			$CensusSanitation = ClassRegistry::init('CensusSanitation');
 			$genderOptions = $CensusSanitation->SanitationGender->getList();
-			$genderId = key($genderOptions);
+			$genderId = $genderOptions[key($genderOptions)]['value'];
 			
 			//pr($arrCensusInfra);
 			$this->set('data',$arrCensusInfra);

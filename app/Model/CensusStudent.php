@@ -255,14 +255,6 @@ class CensusStudent extends AppModel {
 					'InstitutionSite.institution_site_provider_id' => $extras['providerId']
 				)
 			);
-//			$joins[] = array(
-//				'table' => 'institutions',
-//				'alias' => 'Institution',
-//				'conditions' => array(
-//					'Institution.id = InstitutionSite.institution_id',
-//					'Institution.institution_provider_id = ' . $extras['providerId']
-//				)
-//			);
 		}
 		
 		$optionsMale['joins'] = $joins;
