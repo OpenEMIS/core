@@ -19,6 +19,10 @@
 .form-buttons input:first-child { margin-left: 15px; }
 /* end bootstrap */
 
+/* jquery chosen */
+.chosen-container { font-size: 11px !important; }
+/* end jquery chosen */
+
 textarea { resize: none; }
 
 .left { float: left; }

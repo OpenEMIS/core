@@ -203,23 +203,16 @@ class CensusController extends AppController {
 			
 			$arrCensusInfra[$cat] = $this->{$method}($yr,$id);
 			
-			$status =  $this->InfrastructureStatus->find('list',array('conditions'=>array('InfrastructureStatus.infrastructure_category_id'=>$key,'InfrastructureStatus.visible'=>1)));
+			$status =  $this->InfrastructureStatus->find('list',array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $key, 'InfrastructureStatus.visible' => 1), 'order' => array('InfrastructureStatus.order')));
 			//pr($arrCensusInfra[$val]);die;
 			$arrCensusInfra[$cat]['status'] = $status;
 
 		}
 		
-		$CensusSanitation = ClassRegistry::init('CensusSanitation');
-		$maleGenderId = $CensusSanitation->SanitationGender->getIdByName('Male');
-		$femaleGenderId = $CensusSanitation->SanitationGender->getIdByName('Female');
-		$unisexGenderId = $CensusSanitation->SanitationGender->getIdByName('Unisex');
-		
 		$this->set('data',$arrCensusInfra);
 		$this->set('is_edit',$is_edit);
 		$this->set('material_id',$id);
 		$this->set('genderId',$genderId);
-		
-		$this->set(compact('maleGenderId', 'femaleGenderId', 'unisexGenderId'));
 	}
 	
 	public function infrastructure() {
@@ -236,7 +229,7 @@ class CensusController extends AppController {
 			if(method_exists($this, $val)){
 
 				$arrCensusInfra[$val] = $this->$val($selectedYear);
-				$status =  $this->InfrastructureStatus->find('list',array('conditions'=>array('InfrastructureStatus.infrastructure_category_id'=>$key,'InfrastructureStatus.visible'=>1)));
+				$status =  $this->InfrastructureStatus->find('list',array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $key, 'InfrastructureStatus.visible' => 1), 'order' => array('InfrastructureStatus.order')));
 				//pr($arrCensusInfra[$val]);die;
 				$arrCensusInfra[$val]['status'] = $status;
 			}
@@ -245,7 +238,7 @@ class CensusController extends AppController {
 		
 		$CensusSanitation = ClassRegistry::init('CensusSanitation');
 		$genderOptions = $CensusSanitation->SanitationGender->getList();
-		$maleGenderId = $CensusSanitation->SanitationGender->getIdByName('Male');
+		$genderId = $genderOptions[key($genderOptions)]['value'];
 		
 		$this->set('data',$arrCensusInfra);
 		$this->set('selectedYear', $selectedYear);
@@ -253,7 +246,7 @@ class CensusController extends AppController {
 		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 		
 		$this->set('genderOptions',$genderOptions);
-		$this->set('maleGenderId',$maleGenderId);
+		$this->set('genderId',$genderId);
 	}
 		
 	public function infrastructureEdit() {
@@ -262,6 +255,7 @@ class CensusController extends AppController {
 				
 		if($this->request->is('post')) {
 			//pr($this->request->data);die;
+			$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
 			$sanitationGender = $this->request->data['CensusSanitation']['gender'];
 			foreach($data as $InfraCategory){
 				
@@ -280,22 +274,18 @@ class CensusController extends AppController {
 								
 							}
 							if($InfraCategory == 'Sanitation') {
-								//$arrVal['value'] = $arrVal['value'];  
-								$arrVal['gender_id'] = $sanitationGender;  
-								
+								//$arrVal['value'] = $arrVal['value'];
+								$arrVal['gender_id'] = $sanitationGender;
 							}
 							unset($this->request->data['Census'.$InfraCategory]['gender']);
 							unset($this->request->data['Census'.$InfraCategory]['material']);
-							
-							$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
 							
 							$arrVal['school_year_id'] = $yearId;
 							$arrVal['institution_site_id'] = $this->institutionSiteId;
 						}
 					}
 				}
-			   
-			   
+
 				if(count($this->request->data['Census'.$InfraCategory])>0){
 					/*foreach($this->request->data['Census'.$InfraCategory] as $arrVal){
 						$this->{'Census'.$InfraCategory}->create();
@@ -323,11 +313,7 @@ class CensusController extends AppController {
 				if(method_exists($this, $val)){
 					
 					$arrCensusInfra[$val] = $this->$val($selectedYear);
-					$status =  $this->InfrastructureStatus->find('list',array(
-						'conditions'=>array(
-							'InfrastructureStatus.infrastructure_category_id'=>$key,
-							'InfrastructureStatus.visible'=>1)
-					));
+					$status =  $this->InfrastructureStatus->find('list',array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $key, 'InfrastructureStatus.visible' => 1), 'order' => array('InfrastructureStatus.order')));
 					//pr($arrCensusInfra[$val]);die;
 					$arrCensusInfra[$val]['status'] = $status;
 				}
@@ -335,7 +321,7 @@ class CensusController extends AppController {
 			
 			$CensusSanitation = ClassRegistry::init('CensusSanitation');
 			$genderOptions = $CensusSanitation->SanitationGender->getList();
-			$maleGenderId = $CensusSanitation->SanitationGender->getIdByName('Male');
+			$genderId = $genderOptions[key($genderOptions)]['value'];
 			
 			//pr($arrCensusInfra);
 			$this->set('data',$arrCensusInfra);
@@ -343,7 +329,7 @@ class CensusController extends AppController {
 			$this->set('yearList', $yearList);
 			
 			$this->set('genderOptions',$genderOptions);
-			$this->set('maleGenderId',$maleGenderId);
+			$this->set('genderId',$genderId);
 		}
 	}
 	

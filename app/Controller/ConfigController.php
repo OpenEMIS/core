@@ -27,7 +27,8 @@ class ConfigController extends AppController {
 		'ConfigItemOption',
 		'ConfigAttachment',
 		'SchoolYear',
-		'Country'
+		'Country',
+		'SystemProcess'
 	);
 	public $helpers = array('Number', 'Js' => array('Jquery'), 'Paginator');
 	public $components = array(
@@ -85,6 +86,9 @@ class ConfigController extends AppController {
 		if($this->AccessControl->newCheck($this->params['controller'], 'dashboard')) {
 			$typeOptions['Dashboard'] = 'Dashboard';
 		}
+		
+		// backup for system process
+		//$typeOptions['system_processes'] = 'System Processes';
 
 		$selectedType = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($typeOptions);
 		
@@ -100,6 +104,36 @@ class ConfigController extends AppController {
 			$items = $this->ConfigAttachment->find('all', array('conditions' => array('ConfigAttachment.type' => 'dashboard')));
 			$this->set('arrFileExtensions', $imageFileExts);
 			$this->set('items', $items);
+		}else if($selectedType == 'system_processes'){
+			// backup for system process
+			/*$checkProcess = $this->SystemProcess->getAlertProcess();
+			if (empty($checkProcess)) {
+				$this->SystemProcess->create();
+				$newProcessArr = array(
+					'SystemProcess' => array(
+						'name' => 'Alert Process'
+					)
+				);
+
+				$this->SystemProcess->save($newProcessArr);
+			}else{
+				$processRunning = $this->SystemProcess->is_running($checkProcess['SystemProcess']['process_id']);
+				if($checkProcess['SystemProcess']['status'] == 'Active' && !$processRunning){
+					$updateData = array(
+						'SystemProcess' => array(
+							'id' => $checkProcess['SystemProcess']['id'],
+							'status' => 'Inactive'
+						)
+					);
+					$this->SystemProcess->save($updateData);
+				}
+			}
+
+			$newProcess = $this->SystemProcess->getAlertProcess();
+			$alertProcess = $newProcess['SystemProcess'];
+
+			//pr($process);
+			$this->set(compact('alertProcess'));*/
 		}else{
 			$items = $this->ConfigItem->find('all',array(
 				'recursive' => -1,
@@ -149,7 +183,8 @@ class ConfigController extends AppController {
 			'Dashboard' => 'dashboard',
 			'Year Book Report' => 'yearbook_logo',
 			'Custom Validation' => 'custom_validation',
-			'Auto Generated OpenEMIS ID' => 'auto_generated'
+			'Auto Generated OpenEMIS ID' => 'auto_generated'/*,
+			'system_processes' => 'system_processes'*/
 		);
 		if (array_key_exists($selectedType, $views)) {
 			$view = $views[$selectedType];

@@ -63,20 +63,12 @@ class InstitutionSiteSection extends AppModel {
 	);
 	
 	public $actsAs = array(
-//		'CascadeDelete' => array(
-//			'cascade' => array(
-//				'InstitutionSiteClassGrade',
-//				'InstitutionSiteClassStaff'
-//			)
-//		),
 		'ControllerAction2',
 		'SchoolYear'
 	);
 	
 	public function beforeAction() {
 		parent::beforeAction();
-		//$this->setVar('_action', $this->_action);
-		//$this->setVar('selectedAction', $this->_action . 'View');
 	}
 	
 	public function getDisplayFields($controller) {
@@ -270,35 +262,6 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getClassOptions($yearId, $institutionSiteId, $gradeId=false) {
-		$options = array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
-		);
-		
-		if($gradeId!==false) {
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
-						'InstitutionSiteClassGrade.status = 1'
-					)
-				)
-			);
-			$options['group'] = array('InstitutionSiteClass.id');
-		}
-		
-		$data = $this->find('list', $options);
-		return $data;
-	}
-		
 	public function getSectionListByInstitution($institutionSiteId, $yearId=0) {
 		$options = array();
 		$options['fields'] = array('InstitutionSiteSection.id', 'InstitutionSiteSection.name');
