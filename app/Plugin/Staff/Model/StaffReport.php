@@ -155,17 +155,17 @@ class StaffReport extends StaffAppModel {
                         )
                     ),
                     array(
-                        'table' => 'institution_site_class_grades',
-                        'alias' => 'InstitutionSiteClassGrade',
+                        'table' => 'institution_site_section_grades',
+                        'alias' => 'InstitutionSiteSectionGrade',
                         'conditions' => array(
-                            'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-							'InstitutionSiteClassGrade.status = 1'
+                            'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+							'InstitutionSiteSectionGrade.status = 1'
                         )
                     ),
                     array(
                         'table' => 'education_grades',
                         'alias' => 'EducationGrade',
-                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+                        'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
                     ),
                     array(
                         'table' => 'staff',
@@ -214,12 +214,11 @@ class StaffReport extends StaffAppModel {
                         'conditions' => array('QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',)
                     ),
                     array(
-                        'table' => 'institution_site_class_grades',
-                        'alias' => 'InstitutionSiteClassGrade',
+                        'table' => 'institution_site_section_grades',
+                        'alias' => 'InstitutionSiteSectionGrade',
                         'conditions' => array(
-                            'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-							'InstitutionSiteClassGrade.status = 1'
-                        //    'QualityInstitutionRubric.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+                            'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+							'InstitutionSiteSectionGrade.status = 1'
                         )
                     ),
                     array(
@@ -234,7 +233,7 @@ class StaffReport extends StaffAppModel {
                      array(
                         'table' => 'education_grades',
                         'alias' => 'EducationGrade',
-                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+                        'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
                     ),
                     
                     array(
@@ -432,8 +431,8 @@ class StaffReport extends StaffAppModel {
 		$data = $QualityInstitutionRubric->find('first', array(
 			//'fields' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
 			'order' => array('SchoolYear.name DESC', ),
-			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteClassGrade.*'),
-			'group' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'/*, 'InstitutionSiteClassGrade.education_grade_id'*/),
+			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteSectionGrade.*'),
+			'group' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
 			'conditions' => array('QualityInstitutionRubric.institution_site_id' => $institutionSiteId, 'Staff.id' => $this->staffId),
 			'joins' => array(
 				array(
@@ -442,15 +441,18 @@ class StaffReport extends StaffAppModel {
 					'conditions' => array('InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id')
 				),
 				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array(
+                        'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+                        'InstitutionSiteSectionGrade.status = 1'
+                    )
 				)
 			)
 		));
 
 		$year = !empty($data['SchoolYear']['name'])?$data['SchoolYear']['name'] : NULL;
-		$gradeId = !empty($data['InstitutionSiteClassGrade']['education_grade_id'])?$data['InstitutionSiteClassGrade']['education_grade_id'] : NULL;
+		$gradeId = !empty($data['InstitutionSiteSectionGrade']['education_grade_id'])?$data['InstitutionSiteSectionGrade']['education_grade_id'] : NULL;
 
 		$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
 		$headerOptions = array('year' => $year, 'gradeId' => $gradeId, 'header' => $this->reportDefaultHeader);

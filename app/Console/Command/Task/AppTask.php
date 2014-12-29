@@ -5,20 +5,16 @@ class AppTask extends Shell {
     public $uses = array(
         'Area',
         'AreaLevel',
-        'Institution',
-        'InstitutionCustomField',
-        'InstitutionCustomFieldOption',
-        'InstitutionCustomValue',
         'InstitutionSite',
         'InstitutionSiteBankAccount',
         'InstitutionSiteCustomField',
         'InstitutionSiteCustomFieldOption',
         'InstitutionSiteCustomValue',
+        'InstitutionSiteProgramme',
         'BatchProcess',
         'BatchIndicator',
         'Reports.Report',
         'Reports.BatchReport',
-        'InstitutionSiteProgramme',
         'CensusCustomValue',
         'CensusCustomField',
         'CensusGridValue',
@@ -37,24 +33,16 @@ class AppTask extends Shell {
         'CensusEnergy',
         'CensusWater',
         'Students.Student',
-        'Student',
         'StudentCustomField',
         'StudentCustomFieldOption',
         'StudentCustomValue',
-        'TeacherCustomField',
-        'TeacherCustomFieldOption',
-        'TeacherCustomValue',
         'Staff.Staff',
         'StaffCustomField',
         'StaffCustomFieldOption',
         'StaffCustomValue',
         'Quality.QualityInstitutionVisit',
-        'Quality.RubricsTemplate',
-        
+        'Quality.RubricsTemplate'
     );
-
-    
-
 }
 
 ?>

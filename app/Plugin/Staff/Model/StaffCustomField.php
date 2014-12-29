@@ -45,13 +45,16 @@ class StaffCustomField extends StaffAppModel {
 		$controller->set('header', __('More'));
 	}
 	
-	public function getOptionFields() {
-		parent::getOptionFields();
+	public function getOptionFields($controller) {
+		parent::getOptionFields($controller);
 		
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $this->getCustomFieldTypes();
 		$this->fields['type']['visible'] = array('index' => true, 'view' => true, 'edit' => true);
 		$this->fields['type']['attr'] = array('onchange' => "$('#reload').click()");
+		if(!empty($controller) && $controller->action == 'edit'){
+			$this->fields['type']['attr']['disabled'] = 'disabled';
+		}
 		
 		$this->fields['options'] = array(
 			'type' => 'element',

@@ -268,4 +268,57 @@ class SecurityRole extends AppModel {
 		
 		return $data;
 	}
+	
+	public function getAllRoleOptions(){
+		$this->formatResult = true;
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('id', 'name', 'security_group_id'),
+			'conditions' => array(
+				'visible' => 1
+			),
+			'order' => array('security_group_id', 'order')
+		));
+		
+		$data = array();
+		foreach($list AS $row){
+			$id = $row['id'];
+			if($row['security_group_id'] == -1){
+				$data[$id] = __('System') . ' - ' . $row['name'];
+			}else{
+				$data[$id] = $row['name'];
+			}
+		}
+		
+		return $data;
+	}
+	
+	public function getUsersByRole($roleId){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email'),
+			'joins' => array(
+				array(
+					'table' => 'security_groups',
+					'alias' => 'SecurityGroup',
+					'conditions' => array('SecurityRole.security_group_id = SecurityGroup.id')
+				),
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser',
+					'conditions' => array('SecurityGroup.id = SecurityGroupUser.security_group_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityGroupUser.security_user_id = SecurityUser.id')
+				)
+			),
+			'conditions' => array(
+				'SecurityRole.id' => $roleId
+			)
+		));
+		
+		return $data;
+	}
 }
