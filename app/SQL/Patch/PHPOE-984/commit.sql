@@ -55,8 +55,6 @@ CREATE TABLE `alert_roles` (
   `id` char(36) NOT NULL,
   `alert_id` int(11) NOT NULL,
   `security_role_id` int(11) NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
-  `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `alert_id` (`alert_id`),
   KEY `security_role_id` (`security_role_id`)
