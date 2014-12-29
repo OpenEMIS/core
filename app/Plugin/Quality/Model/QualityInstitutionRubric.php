@@ -37,7 +37,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 				//	'code AS InstitutionSiteCode' => 'Institution Code',
 					'id AS InstitutionSiteId' => ''
 				),
-				'InstitutionSiteClass' => array(
+				'InstitutionSiteSection' => array(
 					'name AS Class' => '',
 					'id AS ClassId' => ''
 				),
@@ -75,7 +75,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 		'RubricsTemplate' => array(
 			'foreignKey' => 'rubric_template_id'
 		),
-		'InstitutionSiteClass',
+		'InstitutionSiteSection',
 		'Staff.Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -89,11 +89,11 @@ class QualityInstitutionRubric extends QualityAppModel {
 	//public $hasMany = array('RubricsTemplateColumnInfo');
 
 	public $validate = array(
-		'institution_site_class_id' => array(
+		'institution_site_section_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'checkDropdownData',
 				//  'required' => true,
-				'message' => 'Please select a valid Class.'
+				'message' => 'Please select a valid Section.'
 			)
 		),
 		'institution_site_section_grade_id' => array(
@@ -158,7 +158,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 				array('field' => 'name', 'model' => 'SchoolYear'),
 				array('field' => 'name', 'model' => 'RubricsTemplate'),
 				array('field' => 'institution_site_section_grade_id', 'type' => 'select', 'options' => $gradeOptions , 'labelKey' => 'general.grade'),
-				array('field' => 'name', 'model' => 'InstitutionSiteClass', 'labelKey' => 'general.class'),
+				array('field' => 'name', 'model' => 'InstitutionSiteSection', 'labelKey' => 'general.class'),
 				array('field' => 'staff', 'model' => 'Staff', 'format' => 'name'),
 				array('field' => 'Evaluator', 'model' => 'CreatedUser', 'format' => 'name'),
 				array('field' => 'comment'),
@@ -211,15 +211,15 @@ class QualityInstitutionRubric extends QualityAppModel {
 		} else {
 			if (!empty($params['pass'][0])) {
 				$selectedId = $params['pass'][0];
-				$this->unbindModel(array('belongsTo' => array('SchoolYear', 'RubricsTemplate', 'InstitutionSiteClass', 'Staff.Staff', 'ModifiedUser')));
+				$this->unbindModel(array('belongsTo' => array('SchoolYear', 'RubricsTemplate', 'InstitutionSiteSection', 'Staff.Staff', 'ModifiedUser')));
 				$data = $this->find('first', array('conditions' => array('QualityInstitutionRubric.id' => $selectedId)));
 				if (!empty($data)) {
 					$evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
 					$selectedstaffId = $data[$this->name]['staff_id'];
 					$selectedRubricId = $data[$this->name]['rubric_template_id'];
 					$selectedYearId = $data[$this->name]['school_year_id'];
-					$selectedClassId = $data[$this->name]['institution_site_class_id'];
-					$selectedGradeId = $data[$this->name]['institution_site_class_grade_id'];
+					$selectedSectionId = $data[$this->name]['institution_site_section_id'];
+					$selectedGradeId = $data[$this->name]['institution_site_section_grade_id'];
 					$institutionSiteId = $data[$this->name]['institution_site_id'];
 				}
 			}
@@ -239,8 +239,8 @@ class QualityInstitutionRubric extends QualityAppModel {
 					'QualityInstitutionRubric.institution_site_id' => $controller->request->data['QualityInstitutionRubric']['institution_site_id'],
 					'QualityInstitutionRubric.rubric_template_id' => $controller->request->data['QualityInstitutionRubric']['rubric_template_id'],
 					'QualityInstitutionRubric.school_year_id' => $controller->request->data['QualityInstitutionRubric']['school_year_id'],
-					'QualityInstitutionRubric.institution_site_class_grade_id' => $controller->request->data['QualityInstitutionRubric']['institution_site_class_grade_id'],
-					'QualityInstitutionRubric.institution_site_class_id' => $controller->request->data['QualityInstitutionRubric']['institution_site_class_id'],
+					'QualityInstitutionRubric.institution_site_section_grade_id' => $controller->request->data['QualityInstitutionRubric']['institution_site_section_grade_id'],
+					'QualityInstitutionRubric.institution_site_section_id' => $controller->request->data['QualityInstitutionRubric']['institution_site_section_id'],
 					'QualityInstitutionRubric.staff_id' => $controller->request->data['QualityInstitutionRubric']['staff_id']
 				);
 
@@ -283,10 +283,10 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedGradeId = empty($selectedGradeId) ? 0 : $selectedGradeId;
 
 		//Process Class
-		$InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
-		$classOptions = $InstitutionSiteClass->getClassOptions($selectedYearId, $institutionSiteId, $selectedGradeId);
-		$selectedClassId = !empty($selectedClassId) ? $selectedClassId : key($classOptions);
-		$selectedClassId = !empty($params['pass'][2 + $paramsLocateCounter]) ? $params['pass'][2 + $paramsLocateCounter] : $selectedClassId;
+		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedYearId, $institutionSiteId, $selectedGradeId);
+		$selectedSectionId = !empty($selectedSectionId) ? $selectedSectionId : key($sectionOptions);
+		$selectedSectionId = !empty($params['pass'][2 + $paramsLocateCounter]) ? $params['pass'][2 + $paramsLocateCounter] : $selectedSectionId;
 
 		//Process Rubric
 		$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
@@ -296,14 +296,14 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedRubricId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedRubricId;
 
 		//Process staff
-		$InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
-		$staffOptions = $InstitutionSiteClassStaff->getStaffsInClassYear($selectedClassId, $selectedYearId, 'list');
+		$InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
+		$staffOptions = $InstitutionSiteSectionStaff->getStaffsInClassYear($selectedSectionId, $selectedYearId, 'list');
 		$selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
 		$selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
 
 		$controller->set('schoolYearOptions', $this->checkArrayEmpty($schoolYearOptions));
 		$controller->set('rubricOptions', $this->checkArrayEmpty($rubricOptions));
-		$controller->set('classOptions', $this->checkArrayEmpty($classOptions));
+		$controller->set('sectionOptions', $this->checkArrayEmpty($sectionOptions));
 		$controller->set('gradeOptions', $this->checkArrayEmpty($gradeOptions));
 		$controller->set('staffOptions', $this->checkArrayEmpty($staffOptions));
 		$controller->set('type', $type);
@@ -312,8 +312,8 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$controller->request->data[$this->name]['school_year_id'] = $selectedYearId;
 		$controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
 		$controller->request->data[$this->name]['rubric_template_id'] = empty($selectedRubricId) ? 0 : $selectedRubricId;
-		$controller->request->data[$this->name]['institution_site_class_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
-		$controller->request->data[$this->name]['institution_site_class_grade_id'] = $selectedGradeId;
+		$controller->request->data[$this->name]['institution_site_section_id'] = empty($selectedSectionId) ? 0 : $selectedSectionId;
+		$controller->request->data[$this->name]['institution_site_section_grade_id'] = $selectedGradeId;
 		$controller->request->data[$this->name]['staff_id'] = empty($selectedstaffId) ? 0 : $selectedstaffId;
 	}
 
@@ -370,30 +370,30 @@ class QualityInstitutionRubric extends QualityAppModel {
 	 * For Report Generation at InstitutionSites Only
 	 * 
 	 * ================================================= */
-	public $reportDefaultHeader = array(array('Year'), array('Class'), array('Grade'), array('Staff Name'), array('Staff Type'));
+	public $reportDefaultHeader = array(array('Year'), array('Section'), array('Grade'), array('Staff Name'), array('Staff Type'));
 	public function reportsGetHeader($args) {
 		$institutionSiteId = $args[0];
 		$index = $args[1];
 
-		$this->unbindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass','Staff')));
+		$this->unbindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteSection','Staff')));
 		unset($this->virtualFields['full_name']);
 		$data = $this->find('first', array(
 			//'fields' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
 			'order' => array('SchoolYear.name DESC', ),
-			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteSectionGrade.*'),
+			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteSection.*','InstitutionSiteSectionGrade.*'),
 			'group' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
 			'conditions' => array('QualityInstitutionRubric.institution_site_id' => $institutionSiteId),
 			'joins' => array(
 				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array('InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id')
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array('InstitutionSiteSection.id = QualityInstitutionRubric.institution_site_section_id')
 				),
 				array(
 					'table' => 'institution_site_section_grades',
 					'alias' => 'InstitutionSiteSectionGrade',
 					'conditions' => array(
-						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteClass.institution_site_section_id',
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.institution_site_section_id',
 						'InstitutionSiteSectionGrade.status = 1'
 					)
 				)
@@ -403,7 +403,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$year = !empty($data['SchoolYear']['name'])?$data['SchoolYear']['name'] : NULL;
 		$gradeId = !empty($data['InstitutionSiteSectionGrade']['education_grade_id'])?$data['InstitutionSiteSectionGrade']['education_grade_id'] : NULL;
 
-		$this->bindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass','Staff.Staff')));
+		$this->bindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteSection','Staff.Staff')));
 		
 		$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
 		$headerOptions = array('year' => $year, 'gradeId' => $gradeId, 'header' => $this->reportDefaultHeader);
@@ -432,9 +432,9 @@ class QualityInstitutionRubric extends QualityAppModel {
 					'conditions' => array('InstitutionSite.id = QualityInstitutionRubric.institution_site_id')
 				),
 				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array('InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id')
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array('InstitutionSiteSection.id = QualityInstitutionRubric.institution_site_section_id')
 				),
 				array(
 					'table' => 'institution_site_section_grades',
@@ -506,7 +506,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 				  'alias' => 'QualityInstitutionRubric',
 				  'type' => 'LEFT',
 				  'conditions' => array(
-				  'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
+				  'QualityInstitutionRubric.institution_site_section_id = InstitutionSiteSection.id',
 				  'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
 				  'SchoolYear.id = QualityInstitutionRubric.school_year_id'
 				  )
@@ -563,9 +563,9 @@ class QualityInstitutionRubric extends QualityAppModel {
 			);
 
 
-			$options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
-			//$options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
-			$options['group'] = array('SchoolYear.name', 'InstitutionSite.id', 'InstitutionSiteClass.id', 'EducationGrade.id','RubricTemplate.id', 'RubricTemplateHeader.id');
+			$options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteSection.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
+			//$options['group'] = array('InstitutionSiteSection.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
+			$options['group'] = array('SchoolYear.name', 'InstitutionSite.id', 'InstitutionSiteSection.id', 'EducationGrade.id','RubricTemplate.id', 'RubricTemplateHeader.id');
 			
 			//$options['contain'] = array('QualityInstitutionRubric' => array('full_name'));
 			
