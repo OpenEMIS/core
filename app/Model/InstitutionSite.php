@@ -355,15 +355,6 @@ class InstitutionSite extends AppModel {
 			)
 		);
 		if(isset($extras['providerId'])) {
-//			$joins[] = array(
-//				'table' => 'institutions',
-//				'alias' => 'Institution',
-//				'conditions' => array(
-//					'Institution.id = InstitutionSite.institution_id',
-//					'Institution.institution_provider_id = ' . $extras['providerId']
-//				)
-//			);
-			
 			$conditions[] = 'InstitutionSite.institution_site_provider_id = ' . $extras['providerId'];
 		}
 		if(isset($extras['areaId'])) {
@@ -424,49 +415,6 @@ class InstitutionSite extends AppModel {
 		return $data;
 	}
 	// End Yearbook
-    
-	/*
-	public function getQueryFromInstitutionsWithoutSites($params) {
-		$joins = array(
-			array(
-				'table' => 'security_group_users',
-				'alias' => 'CreatorGroup',
-				'conditions' => array('CreatorGroup.security_user_id = Institution.created_user_id')
-			),
-			array(
-				'table' => 'security_group_users',
-				'alias' => 'UserGroup',
-				'conditions' => array(
-					'UserGroup.security_group_id = CreatorGroup.security_group_id',
-					'UserGroup.security_user_id = ' . $params['userId']
-				)
-			)
-		);
-		$conditions = array(
-			'NOT EXISTS (SELECT id FROM institution_sites WHERE institution_id = Institution.id)',
-			'OR' => array(
-				'CreatorGroup.security_group_id IS NULL',
-				'AND' => array(
-					'CreatorGroup.security_group_id IS NOT NULL',
-					'UserGroup.security_group_id IS NOT NULL'
-				)
-			)
-		);
-		$dbo = $this->getDataSource();
-		$query = $dbo->buildStatement(array(
-			'fields' => array('Institution.id'),
-			'table' => $dbo->fullTableName($this),
-			'alias' => get_class($this),
-			'limit' => null, 
-			'offset' => null,
-			'joins' => $joins,
-			'conditions' => $conditions,
-			'group' => array('Institution.id'),
-			'order' => null
-		), $this);
-		return $query;
-	}
-	*/
 	
 	// To get the list of institutions based on the security settings on areas
 	public function getQueryFromSecurityAreas($params) {

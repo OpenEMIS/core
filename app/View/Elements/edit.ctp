@@ -97,6 +97,7 @@ foreach($fields as $key => $field) {
 				if (array_key_exists('attr', $field)) {
 					$attr = array_merge($attr, $field['attr']);
 				}
+
 				$attr['label'] = $label;
 				echo $this->FormUtility->datepicker($fieldName, $attr);
 				break;

@@ -219,4 +219,20 @@ class SchoolYear extends AppModel {
 			return '';
 		}
 	}
+
+	public function getCurrent() {
+		$result = $this->find('first', array(
+			'fields' => array('SchoolYear.id'),
+			'conditions' => array(
+				'SchoolYear.visible = 1',
+				'SchoolYear.current = 1'
+			)
+		));
+		
+		if(!empty($result['SchoolYear']['id'])){
+			return $result['SchoolYear']['id'];
+		}else{
+			return '';
+		}
+	}
 }
