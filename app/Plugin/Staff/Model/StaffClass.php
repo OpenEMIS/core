@@ -27,94 +27,47 @@ class StaffClass extends AppModel {
 		'InstitutionSiteClass'
 	);
 	
-	public function beforeAction() {
-		parent::beforeAction();
-//		$staffId = $this->Session->read('Staff.id');
-//		if (!is_null($staffId)) {
-//			$this->Navigation->addCrumb('Positions');
-//			$institutionSiteId = $this->Session->read('InstitutionSite.id');
-//			
-//			$this->fields['institution_site_id']['labelKey'] = 'InstitutionSite';
-//			$this->fields['institution_site_id']['dataModel'] = 'InstitutionSite';
-//			$this->fields['institution_site_id']['dataField'] = 'name';
-//			$this->setFieldOrder('institution_site_id', 1);
-//			$this->setFieldOrder('institution_site_position_id', 2);
-//			$this->fields['staff_id']['type'] = 'hidden';
-//			$this->fields['staff_status_id']['type'] = 'select';
-//			$this->fields['staff_status_id']['options'] = $this->StaffStatus->getList();
-//			$this->fields['staff_status_id']['labelKey'] = 'InstitutionSiteStaff';
-//			
-//			$this->fields['staff_type_id']['type'] = 'select';
-//			$this->fields['staff_type_id']['options'] = $this->StaffType->getList();
-//			$this->fields['staff_type_id']['labelKey'] = 'InstitutionSiteStaff';
-//			
-//			$this->fields['start_year']['visible'] = false;
-//			$this->fields['end_year']['visible'] = false;
-//			
-//			if ($this->action == 'edit') {
-//				$this->fields['institution_site_id']['type'] = 'disabled';
-//			}
-//			
-//		} else {
-//			return $this->redirect(array('plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index'));
-//		}
-	}
-	
-	public function afterAction() {
-//		if ($this->action == 'view') {
-//			$data = $this->controller->viewVars['data'];
-//			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
-//			$this->InstitutionSitePosition->StaffPositionTitle->id = $titleId;
-//			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name');
-//			
-//			$this->controller->viewVars['data']['Position']['institution_site_position_id'] = $name;
-//			$this->fields['institution_site_position_id']['value'] = $name;
-//		} else if ($this->action == 'edit') {
-//			$data = $this->request->data;
-//			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
-//			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
-//			$this->fields['institution_site_position_id']['type'] = 'disabled';
-//			$this->fields['institution_site_position_id']['value'] = $name;
-//
-//			$positionId = $this->request->data['InstitutionSitePosition']['id'];
-//			$startDate = $this->request->data['Position']['start_date'];
-//			$currentFTE = $this->request->data['Position']['FTE'] * 100;
-//			$this->fields['FTE']['type'] = 'select';
-//			$this->fields['FTE']['value'] = $currentFTE;
-//
-//			$this->fields['FTE']['options'] = $this->Staff->InstitutionSiteStaff->getFTEOptions($positionId, array('startDate' => $startDate, 'currentFTE' => $currentFTE));
-//			
-//		}
-//		parent::afterAction();
-	}
-	
 	public function index() {
+		$this->Navigation->addCrumb('Classes');
 		$alias = $this->alias;
 		$staffId = $this->Session->read('Staff.id');
-		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$conditions = array("$alias.staff_id" => $staffId);
-		
-		if (!is_null($institutionSiteId)) {
-			$conditions["$alias.institution_site_id"] = $institutionSiteId;
-		}
-		
-		$this->contain(array(
-			'InstitutionSite',
-			'StaffStatus',
-			'InstitutionSitePosition' => array(
-				'fields' => array('InstitutionSitePosition.staff_position_title_id'),
-				'StaffPositionTitle' => array('fields' => array('StaffPositionTitle.name'))
-			)
-		));
-		
+
 		$data = $this->find('all', array(
+			'recursive' => -1,
 			'fields' => array(
-				'Position.id', 'Position.start_date', 'Position.end_date', 
-				'InstitutionSite.name', 'StaffStatus.name', 'Position.institution_site_position_id'
+				'InstitutionSite.name', 'InstitutionSiteClass.name', 'SchoolYear.name'
 			),
-			'conditions' => $conditions,
-			'order' => array("$alias.start_date DESC")
+			'joins' => array(
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						"InstitutionSiteClass.id = $alias.institution_site_class_id"
+					)
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+						"InstitutionSite.id = InstitutionSiteClass.institution_site_id"
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array(
+						"SchoolYear.id = InstitutionSiteClass.school_year_id",
+						"SchoolYear.visible = 1"
+					)
+				)
+			),
+			'conditions' => array(
+				"$alias.staff_id" => $staffId,
+				"$alias.status = 1"
+			),
+			'order' => array("SchoolYear.order")
 		));
+		
 		$this->setVar('data', $data);
 	}
 }
