@@ -141,13 +141,13 @@ class InstitutionSiteSectionStaff extends AppModel {
 	}
 	
 	// used by InstitutionSite.classesEdit/classesView
-	public function getStaffs($classId, $mode = 'all') {
+	public function getStaffs($sectionId, $mode = 'all') {
 		$data = $this->find('all', array(
 			'recursive' => 0,
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
 			),
-			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId),
+			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId),
 			'order' => array('Staff.first_name')
 		));
 
@@ -171,17 +171,17 @@ class InstitutionSiteSectionStaff extends AppModel {
 			),
 			'joins' => array(
 				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteClass.id = InstitutionSiteClassStaff.institution_site_class_id'
+						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteSection.id = InstitutionSiteSectionStaff.institution_site_section_id'
 					)
 				),
 				array(
 					'table' => 'staff',
 					'alias' => 'Staff',
-					'conditions' => array('Staff.id = InstitutionSiteClassStaff.staff_id')
+					'conditions' => array('Staff.id = InstitutionSiteSectionStaff.staff_id')
 				),
 			),
 			'order' => array('Staff.first_name')
