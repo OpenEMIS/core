@@ -20,6 +20,43 @@ class AlertShell extends AppShell {
 
 	public $uses = array('ConfigItem', 'SystemProcess', 'Alerts.Alert', 'Alerts.AlertLog');
 	public $tasks = array('AlertAttendance');
+	
+	public function run() {
+		$CakeMail = new CakeEmail('default');
+		
+		$args = $this->args;
+		$taskName = 'Alert' . array_shift($args);
+
+		$newLogIds = $this->{$taskName}->execute($args);
+		$alertLogs = $this->AlertLog->findAllById($newLogIds);
+		
+		foreach($alertLogs as $row) {
+			$alertLog = $row['AlertLog'];
+			$destination = $alertLog['destination'];
+			$subject = $alertLog['subject'];
+			$message = $alertLog['message'];
+			
+			$CakeMail->subject($subject);
+			$CakeMail->to($destination);
+			$CakeMail->viewVars(array('message' => $message));
+			
+			try {
+				$success = $CakeMail->send();
+				if($success){
+					$status = 1; // success
+				}else{
+					$status = -1; // failed
+				}
+				
+				$this->AlertLog->id = $alertLog['id'];
+				$this->AlertLog->saveField('status', $status);
+				
+			} catch (SocketException $e) {
+				debug($e->getMessage());
+				$this->log($e->getMessage(), 'alert_processes');
+			}
+		}
+	}
 
 	public function main() {
 		$firstExec = true;

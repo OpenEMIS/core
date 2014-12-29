@@ -147,14 +147,6 @@ class MessageComponent extends Component {
 				'noStudent' => array('type' => 'warn', 'msg' => 'There are no students.')
 			)
 		),
-		'visualizer' => array(
-			'setting' => array(
-				'minScatterDimension' => array('type' => 'info', 'msg' => '2 dimensions must be selected in order to view this chart.')
-			),
-			'failed' => array(
-				'minSelection' => array('type' => 'error', 'msg' => 'Minimum 1 selection must be made in order to proceed.')
-			)
-		),
 		'NationalDenominators' => array(
 			'finance' => array(
 				'gnpEmpty' => array('type' => 'error', 'msg' => 'GNP value is required.')
