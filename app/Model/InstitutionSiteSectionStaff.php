@@ -196,29 +196,29 @@ class InstitutionSiteSectionStaff extends AppModel {
 	}
 
 	public function getStaffsInClassYear($classId, $yearId, $mode = 'all') {
-		$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
+		$this->unbindModel(array('belongsTo' => array('InstitutionSiteSection')));
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
 			),
-			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId, 'SchoolYear.id' => $yearId),
+			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $classId, 'SchoolYear.id' => $yearId),
 			'joins' => array(
 				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteClassStaff.institution_site_class_id'
+						'InstitutionSiteSection.id = InstitutionSiteSectionStaff.institution_site_section_id'
 					)
 				),
 				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+					'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
 				),
 				array(
 					'table' => 'institution_site_staff',
 					'alias' => 'InstitutionSiteStaff',
-					'conditions' => array('InstitutionSiteStaff.staff_id = InstitutionSiteClassStaff.staff_id',
+					'conditions' => array('InstitutionSiteStaff.staff_id = InstitutionSiteSectionStaff.staff_id',
 						'OR' => array(
 							'InstitutionSiteStaff.end_year >= SchoolYear.end_year', 'InstitutionSiteStaff.end_year is null'
 						)
@@ -227,7 +227,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			),
 			'order' => array('Staff.first_name')
 		));
-		$this->bindModel(array('belongsTo' => array('InstitutionSiteClass')));
+		$this->bindModel(array('belongsTo' => array('InstitutionSiteSection')));
 		if ($mode == 'list') {
 			$list = array();
 			foreach ($data as $obj) {
