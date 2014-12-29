@@ -437,56 +437,6 @@ class StudentsController extends StudentsAppController {
 		$this->set('header',$header);
 	}
 
-	private function custFieldYrInits() {
-		$this->Navigation->addCrumb('Annual Info');
-		$action = $this->action;
-		$siteid = @$this->request->params['pass'][2];
-		$id = $this->Session->read('Student.id');
-		$schoolYear = ClassRegistry::init('SchoolYear');
-		$years = $schoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
-		$condParam = array('student_id' => $id, 'institution_site_id' => $siteid, 'school_year_id' => $selectedYear);
-
-		$arrMap = array('CustomField' => 'StudentDetailsCustomField',
-			'CustomFieldOption' => 'StudentDetailsCustomFieldOption',
-			'CustomValue' => 'StudentDetailsCustomValue',
-			'Year' => 'SchoolYear');
-		return compact('action', 'siteid', 'id', 'years', 'selectedYear', 'condParam', 'arrMap');
-	}
-
-	private function custFieldSY($school_yr_ids) {
-		return $this->InstitutionSite->find('list', array('conditions' => array('InstitutionSite.id' => $school_yr_ids)));
-	}
-
-	private function custFieldSites($institution_sites) {
-		$institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name'/*, 'Institution.name'*/), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
-		$tmp = array('0' => '--');
-		foreach ($institution_sites as $arrVal) {
-			$tmp[$arrVal['InstitutionSite']['id']] = /*$arrVal['Institution']['name'] . ' - ' . */$arrVal['InstitutionSite']['name'];
-		}
-		return $tmp;
-	}
-
-	public function custFieldYrView() {
-		$this->Navigation->addCrumb("More", array('controller' => 'Students', 'action' => 'additional'));
-		extract($this->custFieldYrInits());
-		$customfield = $this->Components->load('CustomField', $arrMap);
-
-		$data = array();
-		if ($id && $selectedYear && $siteid)
-			$data = $customfield->getCustomFieldView($condParam);
-
-		$institution_sites = $customfield->getCustomValuebyCond('list', array('fields' => array('institution_site_id', 'school_year_id'), 'conditions' => array('school_year_id' => $selectedYear, 'student_id' => $id)));
-		$institution_sites = $this->custFieldSites(array_keys($institution_sites));
-		if (count($institution_sites) < 2)
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
-		$displayEdit = false;
-		$this->set(compact('arrMap', 'selectedYear', 'siteid', 'years', 'action', 'id', 'institution_sites', 'displayEdit'));
-		$this->set($data);
-		$this->set('myview', 'additional');
-		$this->render('/Elements/customfields/view');
-	}
-
 	// STUDENT ATTENDANCE PART
 	public function absence() {
 		if (!$this->Session->check('Student.id')) {

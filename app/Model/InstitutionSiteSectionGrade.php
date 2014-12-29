@@ -178,51 +178,6 @@ class InstitutionSiteSectionGrade extends AppModel {
 		}
 		return $list;
 	}
-	
-	public function getStudentIdsByProgramme($gradeId) {
-		$this->formatResult = true;
-		$obj = $this->find('first', array(
-			'fields' => array(
-				'InstitutionSiteSectionGrade.education_grade_id', 
-				'InstitutionSiteSectionGrade.institution_site_class_id',
-				'EducationGrade.education_programme_id'
-			),
-			'joins' => array(
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
-				)
-			),
-			'conditions' => array('InstitutionSiteSectionGrade.id' => $gradeId)
-		));
-		
-		$classId = $obj['institution_site_class_id'];
-		$programmeId = $obj['education_programme_id'];
-		
-		$data = $this->find('list', array(
-			'fields' => array('InstitutionSiteSectionGradeStudent.student_id', 'InstitutionSiteSectionGradeStudent.id'),
-			'joins' => array(
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id',
-						'EducationGrade.education_programme_id = ' . $programmeId
-					)
-				),
-				array(
-					'table' => 'institution_site_class_grade_students',
-					'alias' => 'InstitutionSiteSectionGradeStudent',
-					'conditions' => array('InstitutionSiteSectionGradeStudent.institution_site_class_grade_id = InstitutionSiteSectionGrade.id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteSectionGrade.institution_site_class_id' => $classId
-			)
-		));
-		return $data;
-	}
         
 	public function getGradesByInstitutionSiteId($institutionSiteId, $year = null) {
 		$conditions = array('InstitutionSiteClass.id = InstitutionSiteSectionGrade.institution_site_class_id', 'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId); 

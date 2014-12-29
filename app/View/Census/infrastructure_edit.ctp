@@ -107,9 +107,9 @@ echo $this->element('census/year_options');
 										<?php
 									} elseif ($infraname === 'Sanitation') {
 
-										$infraId = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['id']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['id'] : '';
-										$infraVal = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['value'] : '';
-										$infraSource = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$maleGenderId]['source'] : '';
+										$infraId = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$genderId]['id']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$genderId]['id'] : '';
+										$infraVal = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$genderId]['value']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$genderId]['value'] : '';
+										$infraSource = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$genderId]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])][$genderId]['source'] : '';
 										?>	
 										<input type="hidden" name="<?php echo $inputName . '[infrastructure_material_id]'; ?>" value="<?php echo key($data[$infraname]['materials']); ?>">
 										<input type="hidden" name="<?php echo $inputName . '[infrastructure_' . rtrim(strtolower($infraname), "s") . '_id]'; ?>" value="<?php echo $typeid; ?>">
