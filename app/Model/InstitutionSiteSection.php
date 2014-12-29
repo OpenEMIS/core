@@ -240,6 +240,35 @@ class InstitutionSiteSection extends AppModel {
 		$obj = $this->find('first', array('conditions' => $conditions));
 		return $obj;
 	}
+
+	public function getSectionOptions($yearId, $institutionSiteId, $gradeId=false) {
+		$options = array(
+			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name'),
+			'conditions' => array(
+				'InstitutionSiteSection.school_year_id' => $yearId,
+				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
+			),
+			'order' => array('InstitutionSiteSection.name')
+		);
+		
+		if($gradeId!==false) {
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array(
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+						'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteSectionGrade.status = 1'
+					)
+				)
+			);
+			$options['group'] = array('InstitutionSiteSection.id');
+		}
+		
+		$data = $this->find('list', $options);
+		return $data;
+	}
 	
 	public function getListOfSections($yearId, $institutionSiteId) {
 		$classes = $this->find('list', array(
