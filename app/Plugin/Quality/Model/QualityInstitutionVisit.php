@@ -32,8 +32,8 @@ class QualityInstitutionVisit extends QualityAppModel {
                 'SchoolYear' => array(
                     'name' => 'Year'
                 ),
-                'InstitutionSiteClass' => array(
-                    'name' => 'Class',
+                'InstitutionSiteSection' => array(
+                    'name' => 'Section',
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
@@ -59,7 +59,7 @@ class QualityInstitutionVisit extends QualityAppModel {
 		'Staff.Staff',
 		'SchoolYear',
 		'EducationGrade',
-		'InstitutionSiteClass',
+		'InstitutionSiteSection',
 		'QualityVisitType' => array(
             'foreignKey' => 'quality_type_id'
 		),
@@ -81,7 +81,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                 'message' => 'Please select a valid Grade.'
             )
         ),
-        'institution_site_class_id' => array(
+        'institution_site_section_id' => array(
             'ruleRequired' => array(
                 'rule' => 'checkDropdownData',
                 //  'required' => true,
@@ -133,7 +133,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                 array('field' => 'date'),
                 array('field' => 'name', 'model' => 'SchoolYear'),
 				array('field' => 'name', 'model' => 'EducationGrade', 'labelKey' => 'general.grade'),
-                array('field' => 'name', 'model' => 'InstitutionSiteClass', 'labelKey' => 'general.class'),
+                array('field' => 'name', 'model' => 'InstitutionSiteSection', 'labelKey' => 'general.section'),
                 array('field' => 'staff', 'model' => 'Staff', 'format'=>'name'),
                 array('field' => 'evaluator', 'model' => 'CreatedUser', 'format'=>'name'),
 				array('field' => 'name', 'model' => 'QualityVisitType', 'labelKey' => 'general.type'),
@@ -162,10 +162,10 @@ class QualityInstitutionVisit extends QualityAppModel {
 			'Staff.middle_name',
 			'Staff.last_name',
 			'EducationGrade.name',
-			'InstitutionSiteClass.name',
+			'InstitutionSiteSection.name',
 			
 		);
-		$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
+		$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
 		$options['order'] = array('QualityInstitutionVisit.date');
         $data = $this->find('all', $options);
 
@@ -235,7 +235,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                         $selectedstaffId = $data[$this->name]['staff_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];
                         $selectedGradeId = $data[$this->name]['education_grade_id'];
-                        $selectedClassId = $data[$this->name]['institution_site_class_id'];
+                        $selectedClassId = $data[$this->name]['institution_site_section_id'];
                         $selectedVisitTypeId = $data[$this->name]['quality_type_id'];
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
@@ -317,20 +317,20 @@ class QualityInstitutionVisit extends QualityAppModel {
                 //$gradesOptions = array_merge($gradesOptions, $itemData['education_grades']);
             }
         }*/
-        $classOptions = array();
+        $sectionOptions = array();
         if (!empty($gradesOptions)) {
             $selectedGradeId = !empty($selectedGradeId) ? $selectedGradeId : key($gradesOptions);
             $selectedGradeId = !empty($params['pass'][2 + $paramsLocateCounter]) ? $params['pass'][2 + $paramsLocateCounter] : $selectedGradeId;
-            $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
-            $classOptions = $InstitutionSiteClass->getClassOptions($selectedYearId, $institutionSiteId, $selectedGradeId);
+            $InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+            $sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedYearId, $institutionSiteId, $selectedGradeId);
         }
-        $selectedClassId = !empty($selectedClassId) ? $selectedClassId : key($classOptions);
-        $selectedClassId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedClassId;
+        $selectedSectionId = !empty($selectedSectionId) ? $selectedSectionId : key($sectionOptions);
+        $selectedSectionId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedSectionId;
 
         $staffOptions = array();
-        if (!empty($classOptions)) {
-            $InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
-            $staffOptions = $InstitutionSiteClassStaff->getstaffs($selectedClassId, 'list');
+        if (!empty($sectionOptions)) {
+            $InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
+            $staffOptions = $InstitutionSiteSectionStaff->getstaffs($selectedSectionId, 'list');
             $selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
             $selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
         }
@@ -342,7 +342,7 @@ class QualityInstitutionVisit extends QualityAppModel {
 
         $controller->set('schoolYearOptions', $schoolYearOptions);
         $controller->set('gradesOptions', $this->checkArrayEmpty($gradesOptions));
-        $controller->set('classOptions', $this->checkArrayEmpty($classOptions));
+        $controller->set('sectionOptions', $this->checkArrayEmpty($sectionOptions));
         $controller->set('staffOptions', $this->checkArrayEmpty($staffOptions));
         $controller->set('visitOptions', $this->checkArrayEmpty($visitOptions));
         $controller->set('type', $type);
@@ -355,7 +355,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $controller->request->data[$this->name]['school_year_id'] = $selectedYearId;
         $controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
         $controller->request->data[$this->name]['education_grade_id'] = empty($selectedGradeId) ? 0 : $selectedGradeId;
-        $controller->request->data[$this->name]['institution_site_class_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
+        $controller->request->data[$this->name]['institution_site_section_id'] = empty($selectedSectionId) ? 0 : $selectedSectionId;
         $controller->request->data[$this->name]['staff_id'] = empty($selectedstaffId) ? 0 : $selectedstaffId;
         $controller->request->data[$this->name]['quality_type_id'] = empty($selectedVisitTypeId) ? 0 : $selectedVisitTypeId;
         $controller->request->data[$this->name]['evaluator'] = $evaluatorName;
