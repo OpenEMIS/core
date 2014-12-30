@@ -199,47 +199,56 @@ class InstitutionSiteStudent extends AppModel {
 	public function index() {
 		$this->Navigation->addCrumb('List of Students');
 		$params = $this->controller->params;
-		$page = isset($params->named['page']) ? $params->named['page'] : 1;
 
-		$selectedYear = "";
-		$selectedProgramme = "";
-		$searchField = "";
-		$orderBy = 'Student.first_name';
-		$order = 'asc';
+		$prefix = 'InstitutionSiteStudent.search.';
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
 		$statusOptions = $this->StudentStatus->getList();
-		
-		$prefix = 'InstitutionSiteStudent.Search.%s';
+		$conditions = array();
+
+		if ($this->Session->check($prefix . 'conditions')) {
+			$conditions = $this->Session->read($prefix . 'conditions');
+		}
+		$conditions['InstitutionSiteStudent.institution_site_id'] = $institutionSiteId;
+
 		if ($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['SearchField']));
-			$selectedYear = $this->request->data[$this->alias]['school_year'];
+			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
+			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
 			$selectedProgramme = $this->request->data[$this->alias]['education_programme_id'];
 			$selectedStatus = $this->request->data[$this->alias]['student_status_id'];
-			$orderBy = $this->request->data[$this->alias]['orderBy'];
-			$order = $this->request->data[$this->alias]['order'];
 
-			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
-			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
-			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
-			$this->Session->write(sprintf($prefix, 'StudentStatusId'), $selectedStatus);
-			$this->Session->write(sprintf($prefix, 'order'), $order);
-			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
-		} else {
-			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
-			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
-			$selectedStatus = $this->Session->read(sprintf($prefix, 'StudentStatusId'));
-
-			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
-				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			if (strlen($selectedYear) != '') {
+				// if the year falls between the start and end date
+				$conditions['InstitutionSiteStudent.start_year <='] = $selectedYear;
+				$conditions['InstitutionSiteStudent.end_year >='] = $selectedYear;
+			} else {
+				unset($conditions['InstitutionSiteStudent.start_year <=']);
+				unset($conditions['InstitutionSiteStudent.end_year >=']);
 			}
-			if ($this->Session->check(sprintf($prefix, 'order'))) {
-				$order = $this->Session->read(sprintf($prefix, 'order'));
+
+			if (strlen($selectedProgramme) != '') {
+				$conditions['EducationProgramme.id'] = $selectedProgramme;
+			} else {
+				unset($conditions['EducationProgramme.id']);
+			}
+
+			if (strlen($selectedStatus) != '') {
+				$conditions['InstitutionSiteStudent.student_status_id'] = $selectedStatus;
+			} else {
+				unset($conditions['InstitutionSiteStudent.student_status_id']);
+			}
+		} else {
+			if (array_key_exists('InstitutionSiteStudent.start_year <=', $conditions)) {
+				$this->request->data[$this->alias]['school_year_id'] = $conditions['InstitutionSiteStudent.start_year <='];
+			}
+			if (array_key_exists('EducationProgramme.id', $conditions)) {
+				$this->request->data[$this->alias]['education_programme_id'] = $conditions['EducationProgramme.id'];
+			}
+			if (array_key_exists('InstitutionSiteStudent.student_status_id', $conditions)) {
+				$this->request->data[$this->alias]['student_status_id'] = $conditions['InstitutionSiteStudent.student_status_id'];
 			}
 		}
-		$conditions = array('InstitutionSiteStudent.institution_site_id' => $institutionSiteId);
 		
 		if (!empty($searchField)) {
 			$search = '%' . $searchField . '%';
@@ -250,34 +259,22 @@ class InstitutionSiteStudent extends AppModel {
 				'Student.last_name LIKE' => $search,
 				'Student.preferred_name LIKE' => $search
 			);
+		} else {
+			unset($conditions['OR']);
 		}
 		
-		if (!empty($selectedYear)) {
-			// if the year falls between the start and end date
-			$conditions['InstitutionSiteStudent.start_year <='] = $selectedYear;
-			$conditions['InstitutionSiteStudent.end_year >='] = $selectedYear;
-		}
-
-		if (!empty($selectedProgramme)) {
-			$conditions['EducationProgramme.id'] = $selectedProgramme;
-		}
-
-		if (!empty($selectedStatus)) {
-			$conditions['InstitutionSiteStudent.student_status_id'] = $selectedStatus;
-		}
-
-		if($this->Session->check('Student.AdvancedSearch')){
+		if ($this->Session->check('Student.AdvancedSearch')) {
 			$params = $this->Session->read('Student.AdvancedSearch');
 			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
 		}
-		
-		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
-		$data = $this->controller->paginate($this->alias, $conditions);
+
+		$this->Session->write($prefix . 'conditions', $conditions);
+		$data = $this->controller->Search->search($this, $conditions);
 
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data', 'statusOptions'));
+		$this->setVar(compact('data', 'yearOptions', 'programmeOptions', 'statusOptions'));
 	}
 	
 	public function add() {
