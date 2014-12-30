@@ -52,6 +52,7 @@ class AppController extends Controller {
 		'Localization',
 		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports')), 
 		'AccessControl',
+		'Search',
 		'Utility',		
 		'Workflow',
 		'Message',
