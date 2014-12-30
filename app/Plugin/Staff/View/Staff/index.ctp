@@ -1,118 +1,53 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
-echo $this->Html->script('search', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'staff-list');
-$this->assign('contentClass', 'search');
 $this->assign('contentHeader', __('List of Staff'));
 $this->start('contentActions');
-$total = 0;
-if (strlen($this->Paginator->counter('{:count}')) > 0) {
-	$total = $this->Paginator->counter('{:count}');
-}
-?>
-<span class="divider"></span>
-<span class="total"><span><?php echo $total; ?></span> <?php echo __('Staff'); ?></span>
-<?php
+	echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
+$model = 'Staff';
 ?>
-<div class="row">
-	<?php echo $this->Form->create('Staff', array('action' => 'search', 'id' => false)); ?>
-	<div class="search_wrapper">
-		<?php
-		echo $this->Form->input('SearchField', array(
-			'id' => 'SearchField',
-			'value' => $searchField,
-			'placeholder' => __("Staff OpenEMIS ID, First Name or Last Name"),
-			'class' => 'default',
-			'label' => false,
-			'div' => false));
+
+<?php echo $this->element('layout/search', array('model' => $model, 'placeholder' => 'OpenEMIS ID, First Name or Last Name')) ?>
+
+<?php if (!empty($data)) : ?>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered table-sortable">
+		<thead>
+			<tr>
+				<th><?php echo $this->Paginator->sort('identification_no', __('OpenEMIS ID')) ?></th>
+				<th><?php echo $this->Paginator->sort('first_name', __('Name')) ?></th>
+				<th><?php echo $this->Paginator->sort('gender') ?></th>
+				<th><?php echo $this->Paginator->sort('date_of_birth') ?></th>
+			</tr>
+		</thead>
+		
+		<tbody>
+		<?php 
+			foreach ($data as $obj):
+				$id = $obj[$model]['id'];
+				$identificationNo = $this->Utility->highlight($search, $obj[$model]['identification_no']);
+				$firstName = $this->Utility->highlight($search, $obj[$model]['first_name'].((isset($obj[$model]['history_first_name']))?'<br>'.$obj[$model]['history_first_name']:''));
+				$middleName = $this->Utility->highlight($search, $obj[$model]['middle_name'].((isset($obj[$model]['history_middle_name']))?'<br>'.$obj[$model]['history_middle_name']:''));
+				$lastName = $this->Utility->highlight($search, $obj[$model]['last_name'].((isset($obj[$model]['history_last_name']))?'<br>'.$obj[$model]['history_last_name']:''));
+				$name = $this->Html->link($firstName.' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+				$gender = $obj[$model]['gender'];
+				$birthday = $obj[$model]['date_of_birth'];
 		?>
-		<span class="icon_clear">X</span>
-	</div>
-	<?php
-	echo $this->Js->submit('', array(
-		'id' => 'searchbutton',
-		'class' => 'icon_search',
-		'url' => $this->Html->url(array('action' => 'index', 'full_base' => true)),
-		'before' => "maskId = $.mask({parent: '.search', text:'" . __("Searching...") . "'});",
-		'success' => '$.unmask({id: maskId, callback: function() { objSearch.callback(data); }});'));
-	?>
-	<span class="advanced"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'link_back')); ?></span>
-<?php echo $this->Form->end(); ?>
+			<tr>
+				<td><?php echo $identificationNo; ?></td>
+				<td><?php echo $name; ?></td>
+				<td><?php echo $gender; ?></td>
+				<td><?php $this->Utility->formatDate($birthday); ?></td>
+			</tr>
+		<?php endforeach ?>
+		</tbody>
+	</table>
 </div>
 
-<div id="mainlist">
-	<?php if ($this->Paginator->counter('{:pages}') > 1) : ?>
-	<div class="row">
-		<ul id="pagination">
-			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-			<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-		</ul>
-	</div>
-	<?php endif; ?>
-	
-	<?php if ($total > 0) { ?>
-		<div class="table-responsive">
-			<table class="table table-striped table-hover table-bordered">
-				<thead url="Staff/index">
-					<tr>
-						<th>
-							<span class="left"><?php echo __('OpenEMIS ID'); ?></span>
-							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.identification_no') ? $sorteddir : 'up'; ?>"  order="Staff.identification_no"></span>
-						</th>
-						<th>
-							<span class="left"><?php echo __('Name'); ?></span>
-							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.first_name') ? $sorteddir : 'up'; ?>" order="Staff.first_name"></span>
-						</th>
-						<th>
-							<span class="left"><?php echo __('Gender'); ?></span>
-							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.gender') ? $sorteddir : 'up'; ?>" order="Staff.gender"></span>
-						</th>
-						<th>
-							<span class="left"><?php echo __('Date Of Birth'); ?></span>
-							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.date_of_birth') ? $sorteddir : 'up'; ?>" order="Staff.date_of_birth"></span>
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-					foreach ($staff as $arrItems):
-						$id = $arrItems['Staff']['id'];
-						$identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
-						$firstName = $this->Utility->highlight($searchField,  $arrItems['Staff']['first_name']  . ((isset($arrItems['Staff']['history_first_name'])) ? '<br>' . $arrItems['Staff']['history_first_name'] : ''));
-						$middleName = $this->Utility->highlight($searchField, $arrItems['Staff']['middle_name'] . ((isset($arrItems['Staff']['history_middle_name'])) ? '<br>' . $arrItems['Staff']['history_middle_name'] : ''));
-						$lastName = $this->Utility->highlight($searchField,  $arrItems['Staff']['last_name'] . ((isset($arrItems['Staff']['history_last_name'])) ? '<br>' . $arrItems['Staff']['history_last_name'] : ''));
-						$gender = $arrItems['Staff']['gender'];
-						$birthday = $arrItems['Staff']['date_of_birth'];
-						?>
-						<tr row-id="<?php echo $id ?>">
-							<td><?php echo $identificationNo; ?></td>
-							<td><?php echo $this->Html->link($firstName.' '.$lastName, array('action' => 'view', $id), array('escape' => false)); ?></td>
-							<td><?php echo $gender; ?></td>
-							<td><?php echo $this->Utility->formatDate($birthday); ?></td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-		</div>
-	<?php } // end if total ?>
-
-	<div class="row">
-		<ul id="pagination">
-			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-			<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-		</ul>
-	</div>
-</div> <!-- mainlist end-->
-
-<?php echo $this->Js->writeBuffer(); ?>
+<?php endif ?>
+<?php echo $this->element('layout/pagination', array('displayCount' => false)) ?>
 <?php $this->end(); ?>
