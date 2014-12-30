@@ -41,6 +41,15 @@ class SearchComponent extends Component {
 				$limit = $request->data[$alias]['limit'];
 				$this->Session->write($alias.'.search.limit', $limit);
 			}
+		} else {
+			if (method_exists($model, 'getSearchConditions')) {
+				$conditions = array_merge($conditions, $model->getSearchConditions($search));
+			} else {
+				$schema = $model->schema();
+				if (array_key_exists('name', $schema)) {
+					$conditions[$alias.'.name LIKE'] = '%' . $search . '%';
+				}
+			}
 		}
 		$this->controller->request->data[$alias]['search'] = $search;
 		$this->controller->request->data[$alias]['limit'] = $limit;
@@ -51,6 +60,7 @@ class SearchComponent extends Component {
 		try {
 			$data = $this->controller->paginate($alias, $conditions);
 		} catch (NotFoundException $e) {
+			$this->log($e->getMessage(), 'debug');
 			return $this->controller->redirect(array('action' => $this->controller->action));
 		}
 		return $data;

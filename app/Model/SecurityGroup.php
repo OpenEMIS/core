@@ -129,7 +129,6 @@ class SecurityGroup extends AppModel {
 				'SecurityGroupUser.security_user_id' => $userId
 			);
 		}
-		
 		$data = $this->controller->Search->search($this, $conditions);
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
@@ -319,6 +318,7 @@ class SecurityGroup extends AppModel {
 		$joins[] = array(
 			'table' => 'security_group_users',
 			'alias' => 'SecurityGroupUser',
+			'type' => 'LEFT',
 			'conditions' => array('SecurityGroupUser.security_group_id = SecurityGroup.id')
 		);
 		return $joins;
