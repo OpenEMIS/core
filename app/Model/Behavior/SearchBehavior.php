@@ -391,12 +391,14 @@ class SearchBehavior extends ModelBehavior {
 		$isSuperAdmin = $conditions['isSuperAdmin'];
 		$joins = array();
 		$count = 0;
+		$class = $model->alias;
 		
 		if($isSuperAdmin) {
 			$count = $model->find('count', array(
 				'recursive' => -1,
 				'joins' => $this->paginateJoins($model, $joins, $conditions),
-				'conditions' => $this->paginateConditions($model, $conditions)
+				'conditions' => $this->paginateConditions($model, $conditions),
+				'group' => array($class.'.id'),
 			));
 		} else {
 			$data = $this->paginateQuery($model, $conditions);
