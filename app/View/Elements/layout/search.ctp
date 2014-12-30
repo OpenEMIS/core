@@ -1,8 +1,10 @@
 <?php 
-if (!isset($formOptions)) {
-	$formOptions = array();
+$formOptions = !isset($formOptions) ? array() : $formOptions;
+$form = !isset($form) ? true : $form;
+$pagination = !isset($pagination) ? true : $pagination;
+if ($form) {
+	echo $this->Form->create($model, $formOptions);
 }
-echo $this->Form->create($model, $formOptions);
 ?>
 <div class="row search">
 	<div class="col-md-5">
@@ -23,5 +25,11 @@ echo $this->Form->create($model, $formOptions);
 	</div>
 </div>
 
-<?php echo $this->element('layout/pagination') ?>
-<?php echo $this->Form->end() ?>
+<?php 
+if ($pagination) {
+	echo $this->element('layout/pagination');
+}
+if ($form) {
+	echo $this->Form->end();
+}
+?>
