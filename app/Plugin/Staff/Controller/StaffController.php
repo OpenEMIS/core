@@ -122,7 +122,7 @@ class StaffController extends StaffAppController {
 		
 		$this->Navigation->addCrumb('List of Staff');
 
-		$searchKey = '';
+		$searchKey = $this->Session->check('Staff.search.key') ? $this->Session->read('Staff.search.key') : '';
 		if ($this->request->is(array('post', 'put'))) {
 			$searchKey = Sanitize::escape($this->request->data['Staff']['search']);
 		}

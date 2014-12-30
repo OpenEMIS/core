@@ -116,7 +116,7 @@ class StudentsController extends StudentsAppController {
 		
 		$this->Navigation->addCrumb('List of Students');
 
-		$searchKey = '';
+		$searchKey = $this->Session->check('Student.search.key') ? $this->Session->read('Student.search.key') : '';
 		if ($this->request->is(array('post', 'put'))) {
 			$searchKey = Sanitize::escape($this->request->data['Student']['search']);
 		}
