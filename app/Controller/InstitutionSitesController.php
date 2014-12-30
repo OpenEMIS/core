@@ -127,65 +127,32 @@ class InstitutionSitesController extends AppController {
 	
 	public function index() {
 		$this->AccessControl->init($this->Auth->user('id'));
-
 		$this->Navigation->addCrumb('List of Institutions');
-		if ($this->request->is('post')) {
-			if (isset($this->request->data['InstitutionSite']['SearchField'])) {
-				$this->request->data['InstitutionSite']['SearchField'] = Sanitize::escape(trim($this->request->data['InstitutionSite']['SearchField']));
 
-				if ($this->request->data['InstitutionSite']['SearchField'] != $this->Session->read('InstitutionSite.search')) {
-					$this->Session->delete('InstitutionSite.search');
-					$this->Session->write('InstitutionSite.search', $this->request->data['InstitutionSite']['SearchField']);
-				}
-			}
-
-			if (isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
-				if ($this->request->data['sortdir'] != $this->Session->read('Search.sortdir')) {
-					$this->Session->delete('Search.sortdir');
-					$this->Session->write('Search.sortdir', $this->request->data['sortdir']);
-				}
-				if ($this->request->data['order'] != $this->Session->read('Search.order')) {
-					$this->Session->delete('Search.order');
-					$this->Session->write('Search.order', $this->request->data['order']);
-				}
-			}
+		$searchKey = '';
+		if ($this->request->is(array('post', 'put'))) {
+			$searchKey = Sanitize::escape($this->request->data['InstitutionSite']['search']);
 		}
-
-		$fieldordername = ($this->Session->read('Search.order')) ? $this->Session->read('Search.order') : 'InstitutionSite.name';
-		$fieldorderdir = ($this->Session->read('Search.sortdir')) ? $this->Session->read('Search.sortdir') : 'asc';
-
-		$searchKey = stripslashes($this->Session->read('InstitutionSite.search'));
 
 		$conditions = array(
 			'SearchKey' => $searchKey,
 			'AdvancedSearch' => $this->Session->check('InstitutionSite.AdvancedSearch') ? $this->Session->read('InstitutionSite.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id'),
-			'order' => array($fieldordername => $fieldorderdir)
+			'userId' => $this->Auth->user('id')
 		);
 
-		$order = array('order' => array($fieldordername => $fieldorderdir));
-		$limit = ($this->Session->read('Search.perpage')) ? $this->Session->read('Search.perpage') : 30;
-		$this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
-
-		$data = $this->paginate('InstitutionSite', $conditions);
+		$data = $this->Search->search($this->InstitutionSite, $conditions);
 
 		$configItem = ClassRegistry::init('ConfigItem');
 		$areaLevelID = $configItem->getValue('institution_site_area_level_id');
 
 		$data = $this->InstitutionSite->displayByAreaLevel($data, 'Area', $areaLevelID);
 
-		if (empty($data) && !$this->request->is('ajax')) {
+		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->set('institutions', $data);
-		$this->set('sortedcol', $fieldordername);
-		$this->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
-		$this->set('searchField', stripslashes($this->Session->read('InstitutionSite.search')));
-		if ($this->request->is('post')) {
-			$this->render('index_records', 'ajax');
-		}
-		
+		$this->set('data', $data);
+
 		// for resetting institution site id
 		if (!$this->AccessControl->check($this->params['controller'], 'add') && count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
 			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));

@@ -5,7 +5,8 @@
 .page-controls > div {
 	padding-left: 0;
 }
-.form-control {
+
+.form-horizontal .form-control {
 	font-size: 11px;
     height: 25px;
     padding: 5px 6px;
