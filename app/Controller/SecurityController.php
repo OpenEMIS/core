@@ -37,6 +37,7 @@ class SecurityController extends AppController {
 	);
 	
 	public $components = array(
+		'Paginator',
 		'LDAP'
 	);
 	
@@ -219,48 +220,14 @@ class SecurityController extends AppController {
 	}
 	
 	public function users() {
-		App::uses('Sanitize', 'Utility');
 		$this->Navigation->addCrumb('Users');
+
+		$conditions = array('SecurityUser.super_admin' => 0);
+		$data = $this->Search->search($this->SecurityUser, $conditions);
 		
-		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
-		
-		$selectedYear = "";
-		$selectedProgramme = "";
-		$searchField = "";
-		$orderBy = 'SecurityUser.first_name';
-		$order = 'asc';
-		$prefix = 'SecurityUser.Search.%s';
-		if($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->data['SecurityUser']['SearchField']));
-			if(isset($this->data['SecurityUser']['orderBy'])) {
-				$orderBy = $this->data['SecurityUser']['orderBy'];
-			}
-			if(isset($this->data['SecurityUser']['order'])) {
-				$order = $this->data['SecurityUser']['order'];
-			}
-			
-			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
-			$this->Session->write(sprintf($prefix, 'order'), $order);
-			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
-		} else {
-			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			
-			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
-				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
-			}
-			if($this->Session->check(sprintf($prefix, 'order'))) {
-				$order = $this->Session->read(sprintf($prefix, 'order'));
-			}
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
 		}
-		$conditions = array('search' => $searchField, 'SecurityUser.super_admin' => 0);
-		
-		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
-		$data = $this->paginate('SecurityUser', $conditions);
-		
-		$this->set('searchField', $searchField);
-		$this->set('page', $page);
-		$this->set('orderBy', $orderBy);
-		$this->set('order', $order);
 		$this->set('data', $data);
 	}
 	

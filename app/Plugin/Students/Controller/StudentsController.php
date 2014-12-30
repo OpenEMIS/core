@@ -115,59 +115,30 @@ class StudentsController extends StudentsAppController {
 		// end redirect
 		
 		$this->Navigation->addCrumb('List of Students');
-		//$this->Session->delete('Student');
-		
-		if ($this->request->is('post')) {
-			if (isset($this->request->data['Student']['SearchField'])) {
-				$this->request->data['Student']['SearchField'] = Sanitize::escape($this->request->data['Student']['SearchField']);
-				if ($this->request->data['Student']['SearchField'] != $this->Session->read('Search.SearchFieldStudent')) {
-					$this->Session->delete('Search.SearchFieldStudent');
-					$this->Session->write('Search.SearchFieldStudent', $this->request->data['Student']['SearchField']);
-				}
-			}
 
-			if (isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
-				if ($this->request->data['sortdir'] != $this->Session->read('Search.sortdirStudent')) {
-					$this->Session->delete('Search.sortdirStudent');
-					$this->Session->write('Search.sortdirStudent', $this->request->data['sortdir']);
-				}
-				if ($this->request->data['order'] != $this->Session->read('Search.orderStudent')) {
-					$this->Session->delete('Search.orderStudent');
-					$this->Session->write('Search.orderStudent', $this->request->data['order']);
-				}
-			}
+		$searchKey = '';
+		if ($this->request->is(array('post', 'put'))) {
+			$searchKey = Sanitize::escape($this->request->data['Student']['search']);
 		}
 
-		$fieldordername = ($this->Session->read('Search.orderStudent')) ? $this->Session->read('Search.orderStudent') : 'Student.first_name';
-		$fieldorderdir = ($this->Session->read('Search.sortdirStudent')) ? $this->Session->read('Search.sortdirStudent') : 'asc';
-
-		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
 		$conditions = array(
 			'SearchKey' => $searchKey,
 			'AdvancedSearch' => $this->Session->check('Student.AdvancedSearch') ? $this->Session->read('Student.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
 			'userId' => $this->Auth->user('id')
 		);
-		$order = array('order' => array($fieldordername => $fieldorderdir));
-		$limit = ($this->Session->read('Search.perpageStudent')) ? $this->Session->read('Search.perpageStudent') : 30;
-		$this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 
-		$data = $this->paginate('Student', $conditions);
+		$data = $this->Search->search($this->Student, $conditions);
+		
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'view', $data[0]['Student']['id']));
 			}
 		}
-		if (empty($data) && !$this->request->is('ajax')) {
+		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->set('students', $data);
-		$this->set('sortedcol', $fieldordername);
-		$this->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
-		$this->set('searchField', $searchKey);
-		if ($this->request->is('post')) {
-			$this->render('index_records', 'ajax');
-		}
+		$this->set('data', $data);
 	}
 
 	public function advanced() {
