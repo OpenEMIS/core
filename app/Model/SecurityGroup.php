@@ -340,7 +340,8 @@ class SecurityGroup extends AppModel {
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
 		$count = $this->find('count', array(
 			'joins' => $this->paginateJoins(),
-			'conditions' => $conditions
+			'conditions' => $conditions,
+			'group' => array('SecurityGroup.id')
 		));
 		return $count;
 	}
