@@ -129,7 +129,7 @@ class InstitutionSitesController extends AppController {
 		$this->AccessControl->init($this->Auth->user('id'));
 		$this->Navigation->addCrumb('List of Institutions');
 
-		$searchKey = '';
+		$searchKey = $this->Session->check('InstitutionSite.search.key') ? $this->Session->read('InstitutionSite.search.key') : '';
 		if ($this->request->is(array('post', 'put'))) {
 			$searchKey = Sanitize::escape($this->request->data['InstitutionSite']['search']);
 		}
