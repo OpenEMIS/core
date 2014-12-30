@@ -173,55 +173,15 @@ class SecurityUser extends AppModel {
 		}
 		return $data;
 	}
-	
-	public function paginateJoins(&$conditions) {
-		
+
+	// used by SearchComponent
+	public function getSearchConditions($search) {
+		$search = '%' . $search . '%';
+		$conditions['OR'] = array(
+			'SecurityUser.username LIKE' => $search,
+			'SecurityUser.first_name LIKE' => $search,
+			'SecurityUser.last_name LIKE' => $search
+		);
+		return $conditions;
 	}
-	
-	public function paginateConditions(&$conditions) {
-		if(isset($conditions['search']) && !empty($conditions['search'])) {
-			$search = $conditions['search'];
-			$search = '%' . $search . '%';
-			$conditions['OR'] = array(
-				'SecurityUser.username LIKE' => $search,
-				'SecurityUser.first_name LIKE' => $search,
-				'SecurityUser.last_name LIKE' => $search
-			);
-		}
-		unset($conditions['search']);
-	}
-	
-	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$this->paginateConditions($conditions);
-		$data = $this->find('all', array(
-			'fields' => array('SecurityUser.id', 'SecurityUser.username', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.status'),
-			//'joins' => $this->paginateJoins($conditions),
-			'conditions' => $conditions,
-			'limit' => $limit,
-			'offset' => (($page-1)*$limit),
-			'order' => $order
-		));
-		return $data;
-	}
-	 
-	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		$this->paginateConditions($conditions);
-		$count = $this->find('count', array(
-			//'joins' => $this->paginateJoins($conditions), 
-			'conditions' => $conditions
-		));
-		return $count;
-	}
-        
-        public function isUserCreatedByCurrentLoggedUser($currentLoggedUser, $user){
-            $data = $this->find('first', array(
-			'recursive' => -1,
-                        'conditions' => array(
-                            'SecurityUser.id' => $user,
-                            'SecurityUser.created_user_id' => $currentLoggedUser
-                        )
-                )
-            );
-            return $data;
-        }
 }
