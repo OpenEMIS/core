@@ -1,9 +1,9 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Categories'));
+$this->assign('contentHeader', __('Types'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', 'parent_id' => $data[$model]['parent_id']), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', 'category_id' => $data[$model]['infrastructure_category_id']), array('class' => 'divider'));
 if ($_edit) {
 	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
@@ -17,6 +17,10 @@ echo $this->element('breadcrumbs');
 <div class="row">
 	<div class="col-md-3"><?php echo __('Name'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo __('Category'); ?></div>
+	<div class="col-md-6"><?php echo $category['InfrastructureCategory']['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Visible'); ?></div>

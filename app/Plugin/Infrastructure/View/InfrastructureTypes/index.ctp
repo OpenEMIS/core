@@ -1,10 +1,10 @@
 <?php 
 echo $this->Html->css('/Infrastructure/css/infrastructure', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Categories'));
+$this->assign('contentHeader', __('Types'));
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'parent_id' => $parentId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'category_id' => $categoryId), array('class' => 'divider'));
 }
 $this->end();
 
@@ -13,8 +13,8 @@ echo $this->element('nav_tabs');
 
 $breadcrumbOptions = array(
 	'breadcrumbs' => $breadcrumbs,
-	'rootName' => __('All'),
-	'rootUrl' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false)
+	'rootName' => __('All') . ' ' . __('Categories'),
+	'rootUrl' => array('controller' => 'InfrastructureTypes', 'action' => 'categories', 'plugin' => false)
 );
 echo $this->element('breadcrumbs', $breadcrumbOptions);
 ?>
@@ -25,7 +25,6 @@ echo $this->element('breadcrumbs', $breadcrumbOptions);
 				<tr>
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th class="cell-action"><?php echo $this->Label->get('general.action'); ?></th>
 			</tr>
 			</tr>
 		</thead>
@@ -33,8 +32,7 @@ echo $this->element('breadcrumbs', $breadcrumbOptions);
 			<?php foreach ($data as $obj) : ?>
 			<tr>
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
-				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'index', 'parent_id' => $obj[$model]['id'])); ?></td>
-				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => 'view', $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'view', $obj[$model]['id'])); ?></td>
 			</tr>
 			<?php endforeach ?>
 		</tbody>

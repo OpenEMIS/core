@@ -34,32 +34,61 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		$this->Navigation->addCrumb('Categories');
 		
 		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
-		
-		$conditions = array();
-		if(!empty($parentId)){
-			$conditions = array('InfrastructureCategory.parent_id' => $parentId);
-		}
+		$conditions = array('InfrastructureCategory.parent_id' => $parentId);
 		
 		$data = $this->InfrastructureCategory->find('all', array(
 			'conditions' => $conditions, 
 			'order' => array('InfrastructureCategory.order')
 		));
 		
-		$this->set(compact('data'));
+		$breadcrumbs = array();
+		$this->generatebreadcrumbs($parentId, $breadcrumbs);
+		$breadcrumbs = array_reverse($breadcrumbs);
+		
+		$currentTab = 'Categories';
+		
+		$this->set(compact('data', 'parentId', 'breadcrumbs', 'currentTab'));
 	}
 
 	public function view() {
 		$this->Navigation->addCrumb('Category Details');
 
 		$id = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
+		
 		if ($this->InfrastructureCategory->exists($id)) {
 			$data = $this->InfrastructureCategory->findById($id);
 			$this->Session->write($this->InfrastructureCategory->alias.'.id', $id);
+			
 			$this->set(compact('data'));
 		} else {
 			$this->Message->alert('general.view.notExists');
 			return $this->redirect(array('action' => 'index'));
 		}
+	}
+	
+	public function add($id=0) {
+		$this->Navigation->addCrumb('Add Category');
+		
+		$visibleOptions = $this->Option->get('yesno');
+		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
+		$parentCategory = $this->InfrastructureCategory->findById($parentId);
+
+		$parentName = !empty($parentCategory) ? $parentCategory['InfrastructureCategory']['name'] : '';
+		
+		if ($this->request->is(array('post', 'put'))) {
+			$postData = $this->request->data;
+			$this->InfrastructureCategory->create();
+			
+			if ($this->InfrastructureCategory->save($postData)) {
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => 'index'));
+			} else {
+				$this->request->data = $postData;
+				$this->Message->alert('general.add.failed');
+			}
+		}
+		
+		$this->set(compact('visibleOptions','parentId' , 'parentName'));
 	}
 
 	public function edit($id=0) {
@@ -87,7 +116,33 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		$this->set(compact('id', 'visibleOptions'));
 	}
 	
+	public function delete() {
+		if ($this->Session->check($this->InfrastructureCategory->alias.'.id')) {
+			$id = $this->Session->read($this->InfrastructureCategory->alias.'.id');
+
+			$this->InfrastructureCategory->deleteAll(array('InfrastructureCategory.id' => $id));
+			$this->Message->alert('general.delete.success');
+			$this->redirect(array('action' => 'index'));
+		} else {
+			$this->redirect(array('action' => 'index'));
+		}
+	}
 	
+	private function generatebreadcrumbs($categoryId, &$arr){
+		$category = $this->InfrastructureCategory->findById($categoryId);
+
+		if(!empty($category)){
+			$arr[] = array(
+				'id' => $category['InfrastructureCategory']['id'],
+				'name' => $category['InfrastructureCategory']['name']
+			);
+			
+			$parentId = $category['InfrastructureCategory']['parent_id'];
+			if(!empty($parentId)){
+				$this->generatebreadcrumbs($parentId, $arr);
+			}
+		}
+	}
 
 }
 
