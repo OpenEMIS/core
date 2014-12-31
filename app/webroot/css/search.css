@@ -1,3 +1,4 @@
+.search .search-input { height: 34px; padding: 6px 12px; }
 .search .btn-default { color: #666; }
 .search .input-group input { font-size: 12px; }
 .search > .col-md-5 { padding-left: 0; }
