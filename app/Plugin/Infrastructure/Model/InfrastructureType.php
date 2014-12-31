@@ -16,7 +16,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 class InfrastructureType extends InfrastructureAppModel {
 	public $actsAs = array(
-		'Containable'
 	);
 	
 	public $belongsTo = array(
@@ -32,14 +31,6 @@ class InfrastructureType extends InfrastructureAppModel {
 		)
 	);
 	
-	public $hasAndBelongsToMany = array(
-		'SecurityRole' => array(
-			'joinTable' => 'alert_roles',
-			'fields' => array('SecurityRole.id', 'SecurityRole.name'),
-			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
-		)
-	);
-	
 	public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
@@ -48,27 +39,7 @@ class InfrastructureType extends InfrastructureAppModel {
 				'message' => 'Please enter a valid Name',
 				'on' => 'create'
 			)
-		),
-		'threshold' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Threshold'
-			)
-		),
-		'subject' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Subject'
-			)
-		),
-		'message' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Message'
-			)
 		)
 	);
+	
 }

@@ -1,11 +1,11 @@
 <?php
 $options = array(
-	'Categories' => array('action' => 'index'),
-	'Types' => '#',
+	'Categories' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false),
+	'Types' => array('controller' => 'InfrastructureTypes', 'action' => 'categories', 'plugin' => false),
 	'Custom Fields' => '#'
 );
 
-$currentPage = isset($currentPage) ? $currentPage : 'Categories';
+$currentPage = isset($currentTab) ? $currentTab : 'Categories';
 
 ?>
 <ul class="nav nav-tabs">
