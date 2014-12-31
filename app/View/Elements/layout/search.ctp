@@ -2,6 +2,7 @@
 $formOptions = !isset($formOptions) ? array() : $formOptions;
 $form = !isset($form) ? true : $form;
 $pagination = !isset($pagination) ? true : $pagination;
+$placeholder = !isset($placeholder) ? 'Search' : $placeholder;
 if ($form) {
 	echo $this->Form->create($model, $formOptions);
 }
