@@ -34,3 +34,21 @@ VALUES (NULL , 'Administration', 'Infrastructure' , 'InfrastructureCategories', 
 
 ALTER TABLE `infrastructure_categories` ADD `parent_id` INT NOT NULL AFTER `national_code` ;
 
+--
+-- 3. Table structure for table `infrastructure_types`
+--
+
+CREATE TABLE `infrastructure_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL,
+  `infrastructure_category_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `infrastructure_category_id` (`infrastructure_category_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+

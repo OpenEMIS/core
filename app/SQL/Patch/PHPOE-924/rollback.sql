@@ -13,3 +13,9 @@ UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @orderEduStructur
 --
 
 ALTER TABLE `infrastructure_categories` DROP `parent_id` ;
+
+--
+-- 3. `infrastructure_types`
+--
+
+DROP TABLE IF EXISTS `infrastructure_types`;
