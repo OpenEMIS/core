@@ -14,9 +14,7 @@
  */
 
 var Translation = {
-	
 	compileFile: function(obj) {
-		
 		
 		var compileBtn = {
 			value: i18n.Translation.textCompile,
@@ -25,6 +23,7 @@ var Translation = {
 				var maskId;
 				var url = getRootURL() + $(obj).attr('url');
 				var lang = $("#language").val();
+				
 				$.ajax({
 					type: 'POST',
 					url: url,
@@ -34,8 +33,8 @@ var Translation = {
 					},
 					success: function(data, textStatus) {
 						var callback = function() {
-							$.closeDialog({id:'compile-dialog',onClose:function(){
-                                    location.reload();
+							$.closeDialog({id:'compile-dialog',onClose:function() {
+								window.location.href = getRootURL() + 'Translations';
 
                             }});
                            
@@ -54,6 +53,4 @@ var Translation = {
 		};
 		$.dialog(dlgOpt);
 	}
-
-
 };

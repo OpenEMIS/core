@@ -45,4 +45,12 @@ class Translation extends AppModel {
 			)
 		)
 	);
+
+	// used by SearchComponent
+	public function getSearchConditions($search) {
+		$search = '%' . $search . '%';
+		$conditions = array('Translation.eng LIKE' => $search);
+
+		return $conditions;
+	}
 }
