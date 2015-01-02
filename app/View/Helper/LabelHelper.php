@@ -458,6 +458,9 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'Infrastructure' => array(
+			'parent_category' => 'Parent Category'
 		)
 	);
 	

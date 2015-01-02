@@ -17,8 +17,8 @@
 
 class InfrastructureTypesController extends InfrastructureAppController {
 	public $uses = array(
-		'InfrastructureCategory',
-		'InfrastructureType'
+		'Infrastructure.InfrastructureCategory',
+		'Infrastructure.InfrastructureType'
 	);
 
 	public function beforeFilter() {
@@ -73,30 +73,13 @@ class InfrastructureTypesController extends InfrastructureAppController {
 		$id = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
 		
 		if ($this->InfrastructureType->exists($id)) {
-			//$data = $this->InfrastructureType->findById($id);
-			$data = $this->InfrastructureType->find('first', array(
-				'fields' => array('InfrastructureType.*', 'CreatedUser.*', 'ModifiedUser.*'),
-				'recursive' => -1,
-				'joins' => array(
-					array(
-						'table' => 'security_users',
-						'alias' => 'CreatedUser',
-						'conditions' => array('CreatedUser.id = InfrastructureType.created_user_id')
-					),
-					array(
-						'table' => 'security_users',
-						'alias' => 'ModifiedUser',
-						'type' => 'LEFT',
-						'conditions' => array('ModifiedUser.id = InfrastructureType.modified_user_id')
-					)
-				),
-				'conditions' => array(
-					'InfrastructureType.id' => $id
-				)
-			));
-			$this->Session->write($this->InfrastructureType->alias.'.id', $id);
+			$data = $this->InfrastructureType->findById($id);
+
+			$this->Session->write('InfrastructureType.id', $id);
 			
-			$category = $this->InfrastructureCategory->findById($data['InfrastructureType']['infrastructure_category_id']);
+			if(!empty($data)){
+				$category = $this->InfrastructureCategory->findById($data['InfrastructureType']['infrastructure_category_id']);
+			}
 			
 			$this->set(compact('data', 'category'));
 		} else {
@@ -105,7 +88,7 @@ class InfrastructureTypesController extends InfrastructureAppController {
 		}
 	}
 	
-	public function add($id=0) {
+	public function add() {
 		$this->Navigation->addCrumb('Add Type');
 		
 		$visibleOptions = $this->Option->get('yesno');
@@ -129,13 +112,17 @@ class InfrastructureTypesController extends InfrastructureAppController {
 		$this->set(compact('visibleOptions','categoryId' , 'categoryName'));
 	}
 
-	public function edit($id=0) {
+	public function edit() {
 		$this->Navigation->addCrumb('Edit Type');
 		
 		$id = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
 		
 		$data = $this->InfrastructureType->findById($id);
 		$visibleOptions = $this->Option->get('yesno');
+		
+		if(!empty($data)){
+			$category = $this->InfrastructureCategory->findById($data['InfrastructureType']['infrastructure_category_id']);
+		}
 
 		if ($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
@@ -151,18 +138,61 @@ class InfrastructureTypesController extends InfrastructureAppController {
 			$this->request->data = $data;
 		}
 		
-		$this->set(compact('id', 'visibleOptions'));
+		$this->set(compact('id', 'visibleOptions', 'category'));
 	}
 	
 	public function delete() {
-		if ($this->Session->check($this->InfrastructureType->alias.'.id')) {
-			$id = $this->Session->read($this->InfrastructureType->alias.'.id');
+		if ($this->Session->check('InfrastructureType.id')) {
+			$id = $this->Session->read('InfrastructureType.id');
+			
+			if(!empty($id)){
+				$type = $this->InfrastructureType->findById($id);
+				$categoryId = $type['InfrastructureType']['infrastructure_category_id'];
+			}
 
 			$this->InfrastructureType->deleteAll(array('InfrastructureType.id' => $id));
 			$this->Message->alert('general.delete.success');
-			$this->redirect(array('action' => 'index'));
+			$this->redirect(array('action' => 'index', 'category_id' => !empty($categoryId) ? $categoryId : 0));
 		} else {
-			$this->redirect(array('action' => 'index'));
+			$this->redirect(array('action' => 'index', 'category_id' => !empty($categoryId) ? $categoryId : 0));
+		}
+	}
+	
+	public function reorder() {
+		$this->Navigation->addCrumb('Types');
+		
+		$categoryId = isset($this->params->named['category_id']) ? $this->params->named['category_id'] : 0;
+		$conditions = array('InfrastructureType.infrastructure_category_id' => $categoryId);
+		
+		$data = $this->InfrastructureType->find('all', array(
+			'conditions' => $conditions, 
+			'order' => array('InfrastructureType.order')
+		));
+		
+		$category = $this->InfrastructureCategory->findById($categoryId);
+		
+		if(!empty($category)){
+			$breadcrumbs = array(
+				0 => array(
+					'id' => $category['InfrastructureCategory']['id'],
+					'name' => $category['InfrastructureCategory']['name']
+				)
+			);
+		}
+		
+		$currentTab = 'Categories';
+		
+		$this->set(compact('data', 'categoryId', 'breadcrumbs', 'currentTab'));
+	}
+	
+	public function move() {
+		$this->autoRender = false;
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			$conditions = array('InfrastructureType.infrastructure_category_id' => $this->params->named['category_id']);
+			$this->InfrastructureType->moveOrder($data, $conditions);
+			$redirect = array('action' => 'reorder', 'category_id' => $this->params->named['category_id']);
+			return $this->redirect($redirect);
 		}
 	}
 

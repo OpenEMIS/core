@@ -7,7 +7,7 @@ echo $this->Html->link($this->Label->get('general.list'), array('action' => 'ind
 if ($_edit) {
 	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
-if($_delete) {
+if ($_delete) {
 	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
@@ -22,7 +22,12 @@ echo $this->element('breadcrumbs');
 	<div class="col-md-3"><?php echo __('Visible'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['visible'] == 1 ? __('Yes') : __('No'); ?></div>
 </div>
-
+<?php if (!empty($parentCategory)) { ?>
+	<div class="row">
+		<div class="col-md-3"><?php echo __('Category'); ?></div>
+		<div class="col-md-6"><?php echo $parentCategory['InfrastructureCategory']['name']; ?></div>
+	</div>
+<?php } ?>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Modified by'); ?></div>
 	<div class="col-md-6"><?php echo trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']); ?></div>
