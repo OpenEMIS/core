@@ -15,8 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class InfrastructureType extends InfrastructureAppModel {
-	public $actsAs = array(
-	);
+	public $actsAs = array('Reorder');
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
