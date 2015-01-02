@@ -90,7 +90,8 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStaffAbsence',
 		'InstitutionSiteSection',
 		'InstitutionSiteSectionStudent',
-		'InstitutionSiteSectionStaff'
+		'InstitutionSiteSectionStaff',
+		'InstitutionSiteInfrastructure'
 	);
 	
 	public function beforeFilter() {

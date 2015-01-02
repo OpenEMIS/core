@@ -18,10 +18,13 @@ echo $this->element('breadcrumbs');
 	<div class="col-md-3"><?php echo __('Name'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
 </div>
-<div class="row">
-	<div class="col-md-3"><?php echo __('Category'); ?></div>
-	<div class="col-md-6"><?php echo $category['InfrastructureCategory']['name']; ?></div>
-</div>
+<?php if (!empty($category)) { ?>
+	<div class="row">
+		<div class="col-md-3"><?php echo __('Category'); ?></div>
+		<div class="col-md-6"><?php echo $category['InfrastructureCategory']['name']; ?></div>
+	</div>
+<?php } ?>
+
 <div class="row">
 	<div class="col-md-3"><?php echo __('Visible'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['visible'] == 1 ? __('Yes') : __('No'); ?></div>

@@ -1,14 +1,10 @@
 <?php 
+echo $this->Html->script('field.option', false);
 echo $this->Html->css('/Infrastructure/css/infrastructure', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Categories'));
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'parent_id' => $parentId, 'plugin' => false), array('class' => 'divider'));
-}
-if ($_edit && count($data) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', 'parent_id' => $parentId, 'plugin' => false), array('class' => 'divider'));
-}
+echo $this->Html->link(__('Back'), array('action' => 'index', 'parent_id' => $parentId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -20,6 +16,13 @@ $breadcrumbOptions = array(
 	'rootUrl' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false)
 );
 echo $this->element('breadcrumbs', $breadcrumbOptions);
+
+$formOptions = array('controller' => 'InfrastructureCategories', 'action' => 'move', 'parent_id' => $parentId, 'plugin' => false);
+
+echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formOptions));
+echo $this->Form->hidden('id', array('class' => 'option-id'));
+echo $this->Form->hidden('move', array('class' => 'option-move'));
+echo $this->Form->end();
 ?>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
@@ -28,16 +31,25 @@ echo $this->element('breadcrumbs', $breadcrumbOptions);
 				<tr>
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th class="cell-action"><?php echo $this->Label->get('general.action'); ?></th>
+				<th class="cell-order"><?php echo $this->Label->get('general.order'); ?></th>
 			</tr>
 			</tr>
 		</thead>
 		<tbody>
-			<?php foreach ($data as $obj) : ?>
-			<tr>
+			<?php 
+			$index = 1;
+			foreach ($data as $obj) : 
+			?>
+			<tr row-id="<?php echo $obj[$model]['id']; ?>">
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
-				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'index', 'parent_id' => $obj[$model]['id'])); ?></td>
-				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => 'view', $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td><?php echo $obj[$model]['name']; ?></td>
+				<td class="action">
+					<?php
+					$size = count($data);
+					echo $this->element('layout/reorder', compact('index', 'size'));
+					$index++;
+					?>
+				</td>
 			</tr>
 			<?php endforeach ?>
 		</tbody>

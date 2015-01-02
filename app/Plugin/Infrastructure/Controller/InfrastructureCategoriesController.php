@@ -17,7 +17,7 @@
 
 class InfrastructureCategoriesController extends InfrastructureAppController {
 	public $uses = array(
-		'InfrastructureCategory'
+		'Infrastructure.InfrastructureCategory'
 	);
 
 	public function beforeFilter() {
@@ -57,16 +57,20 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		
 		if ($this->InfrastructureCategory->exists($id)) {
 			$data = $this->InfrastructureCategory->findById($id);
-			$this->Session->write($this->InfrastructureCategory->alias.'.id', $id);
+			$this->Session->write('InfrastructureCategory.id', $id);
 			
-			$this->set(compact('data'));
+			if(!empty($data)){
+				$parentCategory = $this->InfrastructureCategory->findById($data['InfrastructureCategory']['parent_id']);
+			}
+			
+			$this->set(compact('data', 'parentCategory'));
 		} else {
 			$this->Message->alert('general.view.notExists');
 			return $this->redirect(array('action' => 'index'));
 		}
 	}
 	
-	public function add($id=0) {
+	public function add() {
 		$this->Navigation->addCrumb('Add Category');
 		
 		$visibleOptions = $this->Option->get('yesno');
@@ -81,7 +85,7 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 			
 			if ($this->InfrastructureCategory->save($postData)) {
 				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => 'index'));
+				return $this->redirect(array('action' => 'index', 'parent_id' => $parentId));
 			} else {
 				$this->request->data = $postData;
 				$this->Message->alert('general.add.failed');
@@ -91,13 +95,17 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		$this->set(compact('visibleOptions','parentId' , 'parentName'));
 	}
 
-	public function edit($id=0) {
+	public function edit() {
 		$this->Navigation->addCrumb('Edit Category');
 		
 		$id = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
 		
 		$data = $this->InfrastructureCategory->findById($id);
 		$visibleOptions = $this->Option->get('yesno');
+		
+		if(!empty($data)){
+			$category = $this->InfrastructureCategory->findById($data['InfrastructureCategory']['parent_id']);
+		}
 
 		if ($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
@@ -113,18 +121,22 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 			$this->request->data = $data;
 		}
 		
-		$this->set(compact('id', 'visibleOptions'));
+		$this->set(compact('id', 'visibleOptions', 'category'));
 	}
 	
 	public function delete() {
-		if ($this->Session->check($this->InfrastructureCategory->alias.'.id')) {
-			$id = $this->Session->read($this->InfrastructureCategory->alias.'.id');
+		if ($this->Session->check('InfrastructureCategory.id')) {
+			$id = $this->Session->read('InfrastructureCategory.id');
+			if(!empty($id)){
+				$category = $this->InfrastructureCategory->findById($id);
+				$parentId = $category['InfrastructureCategory']['parent_id'];
+			}
 
 			$this->InfrastructureCategory->deleteAll(array('InfrastructureCategory.id' => $id));
 			$this->Message->alert('general.delete.success');
-			$this->redirect(array('action' => 'index'));
+			$this->redirect(array('action' => 'index', 'parent_id' => !empty($parentId) ? $parentId : 0));
 		} else {
-			$this->redirect(array('action' => 'index'));
+			$this->redirect(array('action' => 'index', 'parent_id' => !empty($parentId) ? $parentId : 0));
 		}
 	}
 	
@@ -141,6 +153,37 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 			if(!empty($parentId)){
 				$this->generatebreadcrumbs($parentId, $arr);
 			}
+		}
+	}
+	
+	public function reorder() {
+		$this->Navigation->addCrumb('Categories');
+		
+		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
+		$conditions = array('InfrastructureCategory.parent_id' => $parentId);
+		
+		$data = $this->InfrastructureCategory->find('all', array(
+			'conditions' => $conditions, 
+			'order' => array('InfrastructureCategory.order')
+		));
+		
+		$breadcrumbs = array();
+		$this->generatebreadcrumbs($parentId, $breadcrumbs);
+		$breadcrumbs = array_reverse($breadcrumbs);
+		
+		$currentTab = 'Categories';
+		
+		$this->set(compact('data', 'parentId', 'breadcrumbs', 'currentTab'));
+	}
+	
+	public function move() {
+		$this->autoRender = false;
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			$conditions = array('InfrastructureCategory.parent_id' => $this->params->named['parent_id']);
+			$this->InfrastructureCategory->moveOrder($data, $conditions);
+			$redirect = array('action' => 'reorder', 'parent_id' => $this->params->named['parent_id']);
+			return $this->redirect($redirect);
 		}
 	}
 

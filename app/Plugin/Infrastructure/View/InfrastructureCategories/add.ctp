@@ -9,7 +9,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => 'add'));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'add', 'parent_id' => $parentId));
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($model, $formOptions);
 
@@ -17,7 +17,8 @@ echo $this->Form->hidden('id');
 echo $this->Form->input('name', array('type' => 'text'));
 if (!empty($parentName)) {
 	echo $this->Form->hidden('parent_id', array('value' => $parentId));
-	echo $this->Form->input('parent_name', array('value' => $parentName, 'disabled' => 'disabled'));
+	$labelOptions['text'] = $this->Label->get('Infrastructure.parent_category');
+	echo $this->Form->input('parent_category', array('value' => $parentName, 'disabled' => 'disabled', 'label' => $labelOptions));
 }
 echo $this->Form->input('visible', array('options' => $visibleOptions));
 
