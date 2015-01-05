@@ -4,8 +4,6 @@ INSERT field_options SELECT * FROM 1136_field_options;
 TRUNCATE TABLE field_option_values;
 INSERT field_option_values SELECT * FROM 1136_field_option_values;
 
-
-
 RENAME TABLE 1136_institution_site_types TO institution_site_types;
 RENAME TABLE 1136_institution_site_ownership TO institution_site_ownership;
 RENAME TABLE 1136_institution_site_localities TO institution_site_localities;
@@ -40,3 +38,7 @@ RENAME TABLE 1136_staff_position_titles TO staff_position_titles;
 RENAME TABLE 1136_staff_position_grades TO staff_position_grades;
 RENAME TABLE 1136_staff_position_steps TO staff_position_steps;
 RENAME TABLE 1136_qualification_specialisations TO qualification_specialisations;
+
+-- replacing country from config options
+INSERT INTO `config_items` (`id`, `name`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(null, 'country_id', 'Nationality', 'Default Country', '171', '1', 1, 1, 'Dropdown', 'database:Country', 108, '2014-04-02 16:48:25', 1, '0000-00-00 00:00:00');
