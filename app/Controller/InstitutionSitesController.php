@@ -261,7 +261,7 @@ class InstitutionSitesController extends AppController {
 
 				$instituionSiteCustField = $this->Components->load('CustomField', $arrCustFields[$customfields]);
 				$dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
-				$types = $this->InstitutionSiteType->findList(1);
+				$types = $this->InstitutionSiteType->getList(1);
 				//pr(array($customfields));
 				$this->set("customfields", array($customfields));
 				$this->set('types', $types);
@@ -283,7 +283,7 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('educationProgrammeOptions'));
 	}
-        
+
 	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution') {
 		$this->layout = false;
 		$arrSettings = array(
@@ -298,7 +298,7 @@ class InstitutionSitesController extends AppController {
 		$arrCustFields = array($customfields => $arrSettings);
 		$instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
 		$dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
-		$types = $this->InstitutionSiteType->findList(1);
+		$types = $this->InstitutionSiteType->getList(1);
 		//pr(array($customfields));
 		$this->set("customfields",array($customfields));
 		$this->set('types',  $types);		
@@ -382,21 +382,17 @@ class InstitutionSitesController extends AppController {
             $this->request->data['InstitutionSite']['area_id_select'] = $data['InstitutionSite']['area_id'];
             $this->request->data['InstitutionSite']['area_education_id_select'] = $data['InstitutionSite']['area_education_id'];
 		}
-		$visible = false;
+		$visible = 1;
 		$dataMask = $this->ConfigItem->getValue('institution_site_code');
 		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-
-		// findlist
-		$typeOptions = $this->InstitutionSiteType->findList(array('behaveLikeFieldOptions'=>true));
-		if (array_key_exists('institution_site_type_id', $data['InstitutionSite'])) $typeOptions = $this->filterOptions($typeOptions,$data['InstitutionSite']['institution_site_type_id']);
-		$ownershipOptions = $this->InstitutionSiteOwnership->findList(array('behaveLikeFieldOptions'=>true));
-		if (array_key_exists('institution_site_ownership_id', $data['InstitutionSite'])) $ownershipOptions = $this->filterOptions($ownershipOptions,$data['InstitutionSite']['institution_site_ownership_id']);
-		$localityOptions = $this->InstitutionSiteLocality->findList(array('behaveLikeFieldOptions'=>true));
-		if (array_key_exists('institution_site_locality_id', $data['InstitutionSite'])) $localityOptions = $this->filterOptions($localityOptions,$data['InstitutionSite']['institution_site_locality_id']);
-		$statusOptions = $this->InstitutionSiteStatus->findList(array('behaveLikeFieldOptions'=>true));
-		if (array_key_exists('institution_site_status_id', $data['InstitutionSite'])) $statusOptions = $this->filterOptions($statusOptions,$data['InstitutionSite']['institution_site_status_id']);
-
-		// getlist
+		
+		$statusOptions = $this->InstitutionSite->InstitutionSiteStatus->getList($visible);
+		if (array_key_exists('institution_site_status_id', $data['InstitutionSite']))$statusOptions = $this->filterOptions($statusOptions,$data['InstitutionSite']['institution_site_status_id']);$localityOptions = $this->InstitutionSite->InstitutionSiteLocality->getList($visible);
+		if (array_key_exists('institution_site_locality_id', $data['InstitutionSite']))$localityOptions = $this->filterOptions($localityOptions,$data['InstitutionSite']['institution_site_locality_id']);
+		$ownershipOptions = $this->InstitutionSite->InstitutionSiteOwnership->getList($visible);
+		if (array_key_exists('institution_site_ownership_id', $data['InstitutionSite']))$ownershipOptions = $this->filterOptions($ownershipOptions,$data['InstitutionSite']['institution_site_ownership_id']);
+		$typeOptions = $this->InstitutionSite->InstitutionSiteType->getList($visible);
+		if (array_key_exists('institution_site_type_id', $data['InstitutionSite']))$typeOptions = $this->filterOptions($typeOptions,$data['InstitutionSite']['institution_site_type_id']);
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList($visible);
 		if (array_key_exists('institution_site_provider_id', $data['InstitutionSite']))$providerOptions = $this->filterOptions($providerOptions,$data['InstitutionSite']['institution_site_provider_id']);
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList($visible);
@@ -446,13 +442,13 @@ class InstitutionSitesController extends AppController {
 		//$groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
 		//$filterArea = $this->SecurityGroupArea->getAreas($groupId);
 
-		$visible = true;
+		$visible = 1;
 		$dataMask = $this->ConfigItem->getValue('institution_site_code');
 		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-		$typeOptions = $this->InstitutionSiteType->findList($visible);
-		$ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
-		$localityOptions = $this->InstitutionSiteLocality->findList($visible);
-		$statusOptions = $this->InstitutionSiteStatus->findList($visible);
+		$typeOptions = $this->InstitutionSiteType->getList($visible);
+		$ownershipOptions = $this->InstitutionSiteOwnership->getList($visible);
+		$localityOptions = $this->InstitutionSiteLocality->getList($visible);
+		$statusOptions = $this->InstitutionSiteStatus->getList($visible);
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList($visible);
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList($visible);
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList($visible);
@@ -635,7 +631,7 @@ class InstitutionSitesController extends AppController {
 						if (empty($data)) {
 							$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
 						}
-						$gradingOptions = $this->AssessmentResultType->findList(true);
+						$gradingOptions = $this->AssessmentResultType->getList(true);
 						$this->set('classId', $classId);
 						$this->set('assessmentId', $assessmentId);
 						$this->set('selectedItem', $selectedItem);

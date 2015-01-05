@@ -137,7 +137,7 @@ class StudentHealthImmunization extends StudentsAppModel {
 			}
 		}
 		
-		$healthImmunizationsOptions = $this->HealthImmunization->find('list', array('fields' => array('id', 'name')));
+		$healthImmunizationsOptions = $this->HealthImmunization->getList(1);
 
 		$controller->set(compact('healthImmunizationsOptions'));
 	}

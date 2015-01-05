@@ -17,14 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffLeave extends StaffAppModel {
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('date_from', 'date_to'));
 	public $belongsTo = array(
-		'StaffLeaveType' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_leave_type_id'
-		),
-		'LeaveStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'leave_status_id'
-		),
+		'Staff.StaffLeaveType',
+		'Staff.LeaveStatus',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -116,8 +110,8 @@ class StaffLeave extends StaffAppModel {
 	public function leavesAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add Leaves');
 		$header = __('Add Leaves');
-		$typeOptions = $this->StaffLeaveType->getList();
-		$statusOptions = $this->LeaveStatus->getList();
+		$typeOptions = $this->StaffLeaveType->getList(1);
+		$statusOptions = $this->LeaveStatus->getList(1);
 
 		if ($controller->request->is('post')) {
 			
@@ -177,8 +171,8 @@ class StaffLeave extends StaffAppModel {
 		$header = __('Edit Leaves');
 		
 		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$typeOptions = $this->StaffLeaveType->getList();
-		$statusOptions = $this->LeaveStatus->getList();
+		$typeOptions = $this->StaffLeaveType->getList(1);
+		$statusOptions = $this->LeaveStatus->getList(1);
 		
 		$data = $this->findById($id);
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffLeaveAttachment.staff_leave_id'=>$id)));

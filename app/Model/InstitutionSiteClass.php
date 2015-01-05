@@ -526,7 +526,7 @@ class InstitutionSiteClass extends AppModel {
 					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
 				),
 				array(
-					'table' => 'student_categories',
+					'table' => 'field_option_values',
 					'alias' => 'StudentCategory',
 					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
 				),

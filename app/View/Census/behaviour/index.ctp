@@ -60,7 +60,7 @@ echo $this->element('census/year_options');
 				$total += $rowTotal;
 				?>
 				<tr>
-					<td><?php echo $catName; ?></td>
+					<td><?php echo $catName['name']; ?></td>
 					<td class="cell-number <?php echo $recordTagMale; ?>"><?php echo $maleValue; ?></td>
 					<td class="cell-number <?php echo $recordTagFemale; ?>"><?php echo $femaleValue; ?></td>
 					<td class="cell-numbe"><?php echo $rowTotal; ?></td>

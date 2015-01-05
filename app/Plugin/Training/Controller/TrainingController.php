@@ -12,7 +12,7 @@ class TrainingController extends TrainingAppController {
         'TrainingProvider',
         'Training.TrainingCourseProvider',
         'Training.TrainingCourseResultType',
-        'QualificationSpecialisation',
+        'Training.QualificationSpecialisation',
         'Staff.Staff'
      );
 
@@ -136,14 +136,14 @@ class TrainingController extends TrainingAppController {
     public function ajax_add_result_type() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->TrainingResultType->getList());
+        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->getList(1));
         $this->render('/Elements/result_type');
     }
 
     public function ajax_add_specialisation() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getOptions());
+        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getList(1));
         $this->render('/Elements/specialisation');
     }
 
@@ -341,10 +341,8 @@ class TrainingController extends TrainingAppController {
      public function ajax_add_provider() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-
-        $trainingProviderOptions = $this->TrainingProvider->find('list', array('fields'=> array('id', 'name')));
+        $trainingProviderOptions = $this->TrainingProvider->getList(1);
         $this->set('trainingProviderOptions', $trainingProviderOptions);
-
         $this->render('/Elements/provider');
     }
 
@@ -362,7 +360,7 @@ class TrainingController extends TrainingAppController {
                     'joins' => array(
                         array(
                             'type' => 'INNER',
-                            'table' => 'training_providers',
+                            'table' => 'field_option_values',
                             'alias' => 'TrainingProvider',
                             'conditions' => array('TrainingProvider.id = TrainingCourseProvider.training_provider_id')
                         )

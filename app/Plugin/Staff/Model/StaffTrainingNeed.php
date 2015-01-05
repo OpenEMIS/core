@@ -127,7 +127,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
-		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
+		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList(1));
 		$trainingNeedTypes = array_map('__', $this->trainingNeedTypes);
 		$controller->Session->write('StaffTrainingNeedId', $id);
         $controller->set(compact('header', 'data', 'id', 'trainingNeedTypes', 'trainingNeedCategoryOptions'));
@@ -235,7 +235,8 @@ class StaffTrainingNeed extends StaffAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingPriorityOptions = $this->TrainingPriority->find('list', array('fields'=> array('id', 'name')));
+		$trainingPriorityOptions = $this->TrainingPriority->getList(1);
+
 		$trainingCourseOptions = array();
 		if($controller->Session->check('Staff.id')){
 		 	$staffId = $controller->Session->read('Staff.id');
@@ -298,7 +299,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			);
 		}
 
-		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
+		$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(1);
 		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 
 		if($controller->request->is('get')){
