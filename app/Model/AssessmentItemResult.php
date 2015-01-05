@@ -240,14 +240,26 @@ class AssessmentItemResult extends AppModel {
 
 				$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
 				$data = $InstitutionSiteClassStudent->getStudentAssessmentResults($selectedClass, $selectedItem, $assessmentId);
+				
+				$itemId = !empty($selectedItem) ? $selectedItem : 0;
+				$assessmentItemResult = $this->AssessmentItem->findById($itemId);
+				if(!empty($assessmentItemResult)){
+					$assessmentItem = $assessmentItemResult['AssessmentItem'];
+					$minMarks = $assessmentItem['min'];
+					$maxMarks = $assessmentItem['max'];
+				}else{
+					$minMarks = 0;
+					$maxMarks = 0;
+				}
+				
+				$gradingOptions = $this->AssessmentResultType->findList(true);
+
+				$controller->set(compact('data', 'gradingOptions'));
 
 				if ($controller->request->is('get')) {
 					if (empty($data)) {
 						$controller->Message->alert('Assessment.result.noStudent');
 					}
-					$gradingOptions = $this->AssessmentResultType->findList(true);
-
-					$controller->set(compact('data', 'gradingOptions'));
 				} else {
 					if (isset($controller->data['AssessmentItemResult'])) {
 
@@ -260,21 +272,31 @@ class AssessmentItemResult extends AppModel {
 							$obj['institution_site_id'] = $controller->institutionSiteId;
 						}
 
+						$dataAllValid = true;
 						foreach ($result AS $key => $record) {
 							if (empty($record['marks']) || empty($record['assessment_result_type_id'])) {
 								unset($result[$key]);
+							}else{
+								if($record['marks'] < $minMarks || $record['marks'] > $maxMarks){
+									$dataAllValid = false;
+								}
 							}
 						}
-
-						if (!empty($result)) {
-							$this->AssessmentItemResult->saveMany($result);
-							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+						
+						if(!$dataAllValid){
+							$controller->Message->alert('Assessment.result.marksNotValid');
+							$controller->request->data = $data;
+						}else{
+							if (!empty($result)) {
+								$this->saveMany($result);
+								$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+								$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
+							}
 						}
 					}
-					$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
 				}
 
-				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName'));
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName', 'minMarks', 'maxMarks'));
 			} else {
 				$controller->redirect(array('action' => 'assessments'));
 			}
