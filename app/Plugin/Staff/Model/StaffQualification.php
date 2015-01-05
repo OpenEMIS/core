@@ -17,12 +17,9 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffQualification extends StaffAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'QualificationLevel' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'qualification_level_id'
-		),
+		'Staff.QualificationLevel',
 		'QualificationInstitution',
-		'QualificationSpecialisation',
+		'Training.QualificationSpecialisation',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -227,8 +224,8 @@ class StaffQualification extends StaffAppModel {
 			}
 		}
 		
-		$levelOptions = $this->QualificationLevel->getList();
-		$specializationOptions = $this->QualificationSpecialisation->getOptions();
+		$levelOptions = $this->QualificationLevel->getList(1);
+		$specializationOptions = $this->QualificationSpecialisation->getList(1);
 
 		$controller->set(compact('levelOptions', 'specializationOptions', 'id', 'staffQualificationObj'));
 	}

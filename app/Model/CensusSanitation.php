@@ -20,9 +20,6 @@ class CensusSanitation extends AppModel {
     public $belongsTo = array(
 		'InfrastructureSanitation', 
 		'InfrastructureMaterial',
-		'SanitationGender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'SanitationGender'
 	);
 }

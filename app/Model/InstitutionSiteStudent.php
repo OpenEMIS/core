@@ -29,10 +29,7 @@ class InstitutionSiteStudent extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		'StudentStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'student_status_id'
-		),
+		'Students.StudentStatus',
 		'InstitutionSiteProgramme',
 		'EducationProgramme',
 		'InstitutionSite'
@@ -160,7 +157,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['student_id']['type'] = 'hidden';
 		$this->fields['student_id']['attr'] = array('autocomplete' => 'student_id');
 		$this->fields['student_status_id']['type'] = 'select';
-		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
+		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList(1);
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
 		$this->fields['education_programme_id']['type'] = 'select';
@@ -209,7 +206,7 @@ class InstitutionSiteStudent extends AppModel {
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
-		$statusOptions = $this->StudentStatus->getList();
+		$statusOptions = $this->StudentStatus->getList(1);
 		
 		$prefix = 'InstitutionSiteStudent.Search.%s';
 		if ($this->request->is('post')) {
@@ -338,7 +335,7 @@ class InstitutionSiteStudent extends AppModel {
 						));
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
 						
-						$statusOptions = $this->StudentStatus->getList();
+						$statusOptions = $this->StudentStatus->getList(1);
 						$student_status_id = key($statusOptions);
 						foreach($statusOptions AS $id => $status){
 							if($status == 'Current Student'){
@@ -532,17 +529,17 @@ class InstitutionSiteStudent extends AppModel {
 					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
 				),
 				array(
-					'table' => 'institution_site_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'InstitutionSiteStatus',
 					'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
 				),
 				array(
-					'table' => 'institution_site_types',
+					'table' => 'field_option_values',
 					'alias' => 'InstitutionSiteType',
 					'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
 				),
 				array(
-					'table' => 'institution_site_ownership',
+					'table' => 'field_option_values',
 					'alias' => 'InstitutionSiteOwnership',
 					'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
 				),
@@ -588,7 +585,7 @@ class InstitutionSiteStudent extends AppModel {
 					'conditions' => array('ContactType.id = StudentContact.contact_type_id')
 				),
 				array(
-					'table' => 'identity_types',
+					'table' => 'field_option_values',
 					'alias' => 'IdentityType',
 					'type' => 'left',
 					'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')

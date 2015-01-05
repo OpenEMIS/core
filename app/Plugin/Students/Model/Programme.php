@@ -26,10 +26,7 @@ class Programme extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		'StudentStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'student_status_id'
-		),
+		'Students.StudentStatus',
 		'InstitutionSiteProgramme',
 		'EducationProgramme',
 		'InstitutionSite',
@@ -64,7 +61,7 @@ class Programme extends AppModel {
 			
 			$this->fields['student_id']['type'] = 'hidden';
 			$this->fields['student_status_id']['type'] = 'select';
-			$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
+			$this->fields['student_status_id']['options'] = $this->StudentStatus->getList(1);
 			$this->fields['student_status_id']['labelKey'] = 'InstitutionSiteStudent';
 			$this->fields['start_year']['visible'] = false;
 			$this->fields['end_year']['visible'] = false;

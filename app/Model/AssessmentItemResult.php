@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AssessmentItemResult extends AppModel {
+	public $belongsTo = array('AssessmentResultType');
+
 	public $actsAs = array(
 		'ControllerAction'
 	);
@@ -39,7 +41,7 @@ class AssessmentItemResult extends AppModel {
 				'conditions' => array('AssessmentItemType.id = AssessmentItem.assessment_item_type_id')
 			),
 			array(
-				'table' => 'assessment_result_types',
+				'table' => 'field_option_values',
 				'alias' => 'AssessmentResultType',
 				'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
 			),
@@ -245,7 +247,7 @@ class AssessmentItemResult extends AppModel {
 					if (empty($data)) {
 						$controller->Message->alert('Assessment.result.noStudent');
 					}
-					$gradingOptions = $controller->AssessmentResultType->findList(true);
+					$gradingOptions = $controller->AssessmentResultType->getList(true);
 
 					$controller->set(compact('data', 'gradingOptions'));
 				} else {

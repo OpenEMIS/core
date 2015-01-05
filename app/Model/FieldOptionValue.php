@@ -145,24 +145,36 @@ class FieldOptionValue extends AppModel {
 			),
 			'order' => array($alias.'.order')
 		);
+
 		$options['conditions'] = array();
 		if ($status !== false) {
 			$options['conditions'][$alias.'.visible'] = $status;
 		}
-		$optionData = $this->find('all',$options);
-		$result = array();
-		foreach ($optionData as $key => $value) {
-			$name = __($value[$alias]['name']);
-			
-			array_push($result, 
-				array(
-					'name' => $name, 
-	                'value' => $value[$alias]['id'],
-	                'obsolete' => ($value[$alias]['visible']!='0')?false:true
-					)
-			);
+		if (array_key_exists('conditions', $customOptions)) {
+			$options['conditions'] = array_merge($options['conditions'], $customOptions['conditions']);
 		}
+		
+		$optionData = $this->find('all',$options);
 
+		$result = array();
+		if (array_key_exists('listOnly', $customOptions) && $customOptions['listOnly']) {
+			foreach ($optionData as $key => $value) {
+				$name = __($value[$alias]['name']);
+				$result[$value[$alias]['id']] = $name;
+			}
+		} else {
+			foreach ($optionData as $key => $value) {
+				$name = __($value[$alias]['name']);
+				array_push($result, 
+					array(
+						'name' => $name, 
+						'value' => $value[$alias]['id'],
+						'obsolete' => ($value[$alias]['visible']!='0')?false:true
+					)
+				);
+			}
+		}
+	
 		return $result;
 	}
 	

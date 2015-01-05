@@ -71,14 +71,8 @@ class InstitutionSiteStaff extends AppModel {
 		'Staff.Staff',
 		'InstitutionSite',
 		'InstitutionSitePosition',
-		'StaffType' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_type_id'
-		),
-		'StaffStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_status_id'
-		)
+		'Staff.StaffType',
+		'Staff.StaffStatus'
 	);
 	
 	public $reportMapping = array(
@@ -170,7 +164,7 @@ class InstitutionSiteStaff extends AppModel {
 		
 		$this->fields['staff_id']['type'] = 'hidden';
 		$this->fields['staff_type_id']['type'] = 'select';
-		$this->fields['staff_type_id']['options'] = $this->StaffType->getList(true);
+		$this->fields['staff_type_id']['options'] = $this->StaffType->getList(1);
 		
 		$this->setFieldOrder('institution_site_id', 1);
 		$this->setFieldOrder('institution_site_position_id', 2);
@@ -250,7 +244,7 @@ class InstitutionSiteStaff extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
+		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->getList(1, array('listOnly'=>true));
 		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
 	}
 	
@@ -457,13 +451,13 @@ class InstitutionSiteStaff extends AppModel {
 				'conditions' => array('InstitutionSitePosition.id = InstitutionSiteStaff.institution_site_position_id')
 			),
 			array(
-				'table' => 'staff_position_titles',
+				'table' => 'field_option_values',
 				'alias' => 'StaffPositionTitle',
 				'type' => 'LEFT',
 				'conditions' => array('StaffPositionTitle.id = InstitutionSitePosition.staff_position_title_id')
 			),
 			array(
-				'table' => 'staff_position_grades',
+				'table' => 'field_option_values',
 				'alias' => 'StaffPositionGrade',
 				'type' => 'LEFT',
 				'conditions' => array('StaffPositionGrade.id = InstitutionSitePosition.staff_position_grade_id')
@@ -814,17 +808,17 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
 				),
 				array(
-					'table' => 'institution_site_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'InstitutionSiteStatus',
 					'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
 				),
 				array(
-					'table' => 'institution_site_types',
+					'table' => 'field_option_values',
 					'alias' => 'InstitutionSiteType',
 					'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
 				),
 				array(
-					'table' => 'institution_site_ownership',
+					'table' => 'field_option_values',
 					'alias' => 'InstitutionSiteOwnership',
 					'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
 				),
@@ -870,7 +864,7 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('ContactType.id = StaffContact.contact_type_id')
 				),
 				array(
-					'table' => 'identity_types',
+					'table' => 'field_option_values',
 					'alias' => 'IdentityType',
 					'type' => 'left',
 					'conditions' => array('IdentityType.id = StaffIdentity.identity_type_id')

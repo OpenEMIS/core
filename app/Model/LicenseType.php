@@ -14,27 +14,24 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class LicenseType extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array( 'TeacherLicense', 'StaffLicense');
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'License Types' => array('model' => 'LicenseType')
-		);
-		return $lookup;
-	}
+class LicenseType extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Staff.StaffLicense');
 
-
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('LicenseType.order')));
-		$list = array();
-		foreach($data as $obj){
-			$list[$obj['LicenseType']['id']] = $obj['LicenseType']['name'];
-		}
-
-		return $list;
-	}
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 }

@@ -147,7 +147,7 @@ class StudentExtracurricular extends StudentsAppModel {
 		}
 		$yearOptions = $this->SchoolYear->getYearList();
 		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
+		$typeOptions = $this->ExtracurricularType->getList(1);
 
 		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
 	}
@@ -178,7 +178,7 @@ class StudentExtracurricular extends StudentsAppModel {
 		}
 		$yearOptions = $this->SchoolYear->getYearList();
 		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
+		$typeOptions = $this->ExtracurricularType->getList(1);
 
 		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
 	}

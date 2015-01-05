@@ -336,7 +336,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         }
 
         $QualityVisitType = ClassRegistry::init('QualityVisitType');
-        $visitOptions = $QualityVisitType->find('list');
+        $visitOptions = $QualityVisitType->getList(1);
         $selectedVisitTypeId = !empty($selectedVisitTypeId) ? $selectedVisitTypeId : key($visitOptions);
         $selectedVisitTypeId = !empty($params['pass'][5 + $paramsLocateCounter]) ? $params['pass'][5 + $paramsLocateCounter] : $selectedVisitTypeId;
 
