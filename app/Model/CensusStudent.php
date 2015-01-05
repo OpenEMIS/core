@@ -764,9 +764,17 @@ class CensusStudent extends AppModel {
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 		
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-	
+		$maleFemaleOptions = $this->Gender->getList(1);
+
+		foreach ($maleFemaleOptions as $key => $value) {
+			if ($value['name'] == 'Male') {
+				$maleGenderId = $value['value'];
+			}
+			if ($value['name'] == 'Female') {
+				$femaleGenderId = $value['value'];
+			}
+		}
+
 		$admission_age = $age;
 		$agePlus = $ConfigItem->getValue('admission_age_plus');
 		$ageMinus = $ConfigItem->getValue('admission_age_minus');
