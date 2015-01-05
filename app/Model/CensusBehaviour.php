@@ -27,10 +27,7 @@ class CensusBehaviour extends AppModel {
 		'SchoolYear',
 		'Students.StudentBehaviourCategory',
 		'InstitutionSite',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -127,7 +124,7 @@ class CensusBehaviour extends AppModel {
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
-		$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+		$behaviourCategories = $this->StudentBehaviourCategory->getList(1);
 		//pr($staffCategories);die;
 
 		$maleGenderId = $this->Gender->getIdByName('Male');
@@ -154,7 +151,7 @@ class CensusBehaviour extends AppModel {
 			if (!$editable) {
 				$controller->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
-				$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+				$behaviourCategories = $this->StudentBehaviourCategory->getList(1);
 				//pr($staffCategories);die;
 
 				$maleGenderId = $this->Gender->getIdByName('Male');
@@ -189,7 +186,7 @@ class CensusBehaviour extends AppModel {
 		if ($index == 1) {
 			$data = array();
 			
-			$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+			$behaviourCategories = $this->StudentBehaviourCategory->getList(1,array('listOnly'=>true));
 			
 			$maleGenderId = $this->Gender->getIdByName('Male');
 			$femaleGenderId = $this->Gender->getIdByName('Female');

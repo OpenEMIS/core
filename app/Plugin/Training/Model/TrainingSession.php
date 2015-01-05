@@ -153,7 +153,7 @@ class TrainingSession extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
+		$statusOptions = $trainingStatus->getList(1);
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
 
@@ -197,7 +197,7 @@ class TrainingSession extends TrainingAppModel {
 				),
 				array(
 					'type' => 'INNER',
-					'table' => 'training_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'TrainingStatus',
 					'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
 				)

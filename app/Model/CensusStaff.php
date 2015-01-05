@@ -28,10 +28,7 @@ class CensusStaff extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		),
+		'Gender',
 		'InstitutionSite',
 		'Staff.StaffPositionTitle'
 	);
@@ -50,7 +47,7 @@ class CensusStaff extends AppModel {
 			),
 			'joins' => array(
 				array(
-					'table' => 'staff_position_titles',
+					'table' => 'field_option_values',
 					'alias' => 'StaffPositionTitle',
 					'type' => 'LEFT',
 					'conditions' => array(

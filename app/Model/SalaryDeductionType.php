@@ -14,10 +14,11 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class SalaryDeductionType extends AppModel {
-	public $actsAs = array('FieldOption');
+class SalaryDeductionType extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Staff.StaffSalaryDeduction');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -32,15 +33,4 @@ class SalaryDeductionType extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-	public $hasMany = array('TeacherSalaryDeduction', 'StaffSalaryDeduction');
-
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('SalaryDeductionType.order')));
-		$list = array();
-		foreach($data as $obj){
-			$list[$obj['SalaryDeductionType']['id']] = $obj['SalaryDeductionType']['name'];
-		}
-
-		return $list;
-	}
 }

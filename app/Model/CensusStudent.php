@@ -31,12 +31,9 @@ class CensusStudent extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
 		'EducationGrade',
-		'StudentCategory',
+		'Students.StudentCategory',
 		'InstitutionSite',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -356,7 +353,7 @@ class CensusStudent extends AppModel {
 							)
 						),
 						array(
-							'table' => 'student_categories',
+							'table' => 'field_option_values',
 							'alias' => 'StudentCategory',
 							'conditions' => array(
 								'CensusStudent.student_category_id = StudentCategory.id'
@@ -405,7 +402,7 @@ class CensusStudent extends AppModel {
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-		$categoryList = $controller->StudentCategory->findList();
+		$categoryList = $controller->StudentCategory->getList(1);
 		$selectedCategory = sizeof($categoryList) > 0 ? key($categoryList) : 0;
 		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
 		
@@ -441,7 +438,7 @@ class CensusStudent extends AppModel {
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$yearList = $this->SchoolYear->getAvailableYears(); // check for empty year list
 		$selectedYear = $controller->getAvailableYearId($yearList);
-		$categoryList = $this->StudentCategory->findList();
+		$categoryList = $this->StudentCategory->getList(1);
 		$selectedCategory = !empty($categoryList) ? key($categoryList) : 0;
 		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
 		//pr($programmes);

@@ -26,10 +26,7 @@ class CensusGraduate extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 	
 	public function getCensusData($siteId, $yearId) {

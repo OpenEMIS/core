@@ -13,9 +13,12 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-App::uses('AppModel', 'Model');
-class HealthRelationship extends AppModel {
-	public $actsAs = array('FieldOption');
+
+App::uses('FieldOptionValue', 'Model');
+
+class HealthRelationship extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Staff.StaffHealthFamily','Students.StudentHealthFamily');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
