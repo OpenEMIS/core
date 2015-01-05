@@ -330,3 +330,40 @@ INSERT INTO field_option_values (name, field_option_id) VALUES ('No Education','
 INSERT INTO field_option_values (name, field_option_id) VALUES ('Primary','87');
 INSERT INTO field_option_values (name, field_option_id) VALUES ('Secondary','87');
 INSERT INTO field_option_values (name, field_option_id) VALUES ('Graduate','87');
+
+
+-- renaming old tables
+RENAME TABLE institution_site_types to 1136_institution_site_types;
+RENAME TABLE institution_site_ownership to 1136_institution_site_ownership;
+RENAME TABLE institution_site_localities to 1136_institution_site_localities;
+RENAME TABLE institution_site_statuses to 1136_institution_site_statuses;
+RENAME TABLE assessment_result_types to 1136_assessment_result_types;
+RENAME TABLE employment_types to 1136_employment_types;
+RENAME TABLE extracurricular_types to 1136_extracurricular_types;
+RENAME TABLE languages to 1136_languages;
+RENAME TABLE identity_types to 1136_identity_types;
+RENAME TABLE license_types to 1136_license_types;
+RENAME TABLE special_need_types to 1136_special_need_types;
+RENAME TABLE quality_visit_types to 1136_quality_visit_types;
+RENAME TABLE health_relationships to 1136_health_relationships;
+RENAME TABLE health_conditions to 1136_health_conditions;
+RENAME TABLE health_immunizations to 1136_health_immunizations;
+RENAME TABLE health_allergy_types to 1136_health_allergy_types;
+RENAME TABLE health_test_types to 1136_health_test_types;
+RENAME TABLE health_consultation_types to 1136_health_consultation_types;
+RENAME TABLE salary_addition_types to 1136_salary_addition_types;
+RENAME TABLE salary_deduction_types to 1136_salary_deduction_types;
+RENAME TABLE training_course_types to 1136_training_course_types;
+RENAME TABLE training_field_studies to 1136_training_field_studies;
+RENAME TABLE training_levels to 1136_training_levels;
+RENAME TABLE training_mode_deliveries to 1136_training_mode_deliveries;
+RENAME TABLE training_priorities to 1136_training_priorities;
+RENAME TABLE training_providers to 1136_training_providers;
+RENAME TABLE training_requirements to 1136_training_requirements;
+RENAME TABLE training_statuses to 1136_training_statuses;
+RENAME TABLE student_categories to 1136_student_categories;
+RENAME TABLE student_behaviour_categories to 1136_student_behaviour_categories;
+RENAME TABLE staff_position_titles to 1136_staff_position_titles;
+RENAME TABLE staff_position_grades to 1136_staff_position_grades;
+RENAME TABLE staff_position_steps to 1136_staff_position_steps;
+RENAME TABLE qualification_specialisations to 1136_qualification_specialisations;
