@@ -127,12 +127,7 @@ class CensusBehaviour extends AppModel {
 		$behaviourCategories = $this->StudentBehaviourCategory->getList(1);
 		//pr($staffCategories);die;
 
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male', 
-			$femaleGenderId => 'Female'
-		);
+		$genderOptions = $this->Gender->getList(1);
 		//pr($genderOptions);die;
 		
 		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
@@ -154,12 +149,7 @@ class CensusBehaviour extends AppModel {
 				$behaviourCategories = $this->StudentBehaviourCategory->getList(1);
 				//pr($staffCategories);die;
 
-				$maleGenderId = $this->Gender->getIdByName('Male');
-				$femaleGenderId = $this->Gender->getIdByName('Female');
-				$genderOptions = array(
-					$maleGenderId => 'Male', 
-					$femaleGenderId => 'Female'
-				);
+				$genderOptions = $this->Gender->getList(1);
 				//pr($genderOptions);die;
 				
 				$controller->set(compact('selectedYear', 'yearList', 'data', 'genderOptions', 'behaviourCategories'));

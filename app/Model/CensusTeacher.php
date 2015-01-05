@@ -39,12 +39,7 @@ class CensusTeacher extends AppModel {
 	}
 	
 	public function mergeSingleGradeData(&$class, $data) {
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male', 
-			$femaleGenderId => 'Female'
-		);
+		$genderOptions = $this->Gender->getList(1);
 		//pr($genderOptions);die;
 		//pr($class);
 		//pr($data);
@@ -217,13 +212,8 @@ class CensusTeacher extends AppModel {
 			'conditions' => array('CensusTeacher.id' => $censusTeacherIds),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
-		
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male',
-			$femaleGenderId => 'Female'
-		);
+
+		$genderOptions = $this->Gender->getList(1);
 		
 		$data = array();
 		foreach($gradeList as $obj) {
@@ -234,7 +224,7 @@ class CensusTeacher extends AppModel {
 			$genderId = $teacher['gender_id'];
 			
 			$tempGradeStr = $baseGradeIds[$censusTeacherId];
-			
+
 			if ($genderOptions[$genderId] == 'Male') {
 				if(!isset($data[$tempGradeStr]['genders'][$genderId])){
 					$data[$tempGradeStr]['genders'][$genderId] = array(
@@ -506,14 +496,8 @@ class CensusTeacher extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
-			$maleGenderId = $this->Gender->getIdByName('Male');
-			$femaleGenderId = $this->Gender->getIdByName('Female');
-			$genderOptions = array(
-				$maleGenderId => 'Male', 
-				$femaleGenderId => 'Female'
-			);
-			//pr($genderOptions);die;
-			
+			$genderOptions = $this->Gender->getList(1);
+
 			$EducationLevel = ClassRegistry::init('EducationLevel');
 			$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
 			
@@ -552,12 +536,7 @@ class CensusTeacher extends AppModel {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 					$displayContent = false;
 				} else {
-					$maleGenderId = $this->Gender->getIdByName('Male');
-					$femaleGenderId = $this->Gender->getIdByName('Female');
-					$genderOptions = array(
-						$maleGenderId => 'Male', 
-						$femaleGenderId => 'Female'
-					);
+					$genderOptions = $this->Gender->getList(1);
 					//pr($genderOptions);die;
 
 					$EducationLevel = ClassRegistry::init('EducationLevel');
