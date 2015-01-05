@@ -36,6 +36,12 @@ echo $this->Form->create($model, $formOptions);
 			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId . '/' . $selectedClass
 		));
 		?>
+		<?php if(!empty($selectedItem)): ?>
+		<ul class="legend">
+			<li>Min Marks: <?php echo $minMarks; ?></li>
+			<li>Max Marks: <?php echo $maxMarks; ?></li>
+		</ul>
+		<?php endif; ?>
 </div>
 
 <table class="table table-striped table-hover table-bordered">

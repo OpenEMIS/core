@@ -483,3 +483,15 @@ select.topSelectControl{
 	float:left;
 	padding: 0 30px;
 }
+.page-controls .legend{
+	float: right;
+	margin-top: 0;
+	margin-bottom: 0;
+	line-height: 22px;
+}
+.page-controls .legend li{
+	display: inline-block;
+    float: left;
+    margin-right: 10px;
+	font-size: 11px;
+}
