@@ -32,7 +32,7 @@ class TrainingPriority extends FieldOptionValue {
 			'type' => 'LEFT'
 		)
 	);
-	public $hasMany = array('TrainingNeed','Staff.StaffTrainingNeed');
+	public $hasMany = array('Staff.StaffTrainingNeed');
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingPriority.order')));

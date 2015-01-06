@@ -1,374 +1,580 @@
--- Need to update field_options and field_option_values
+-- start field options
+ALTER TABLE `field_options` ADD `old_id` INT NOT NULL AFTER `id`;
+
+-- Need to backup field_options and field_option_values
 CREATE TABLE IF NOT EXISTS 1136_field_options LIKE field_options;
 INSERT 1136_field_options SELECT * FROM field_options WHERE NOT EXISTS (SELECT * FROM 1136_field_options);
 CREATE TABLE IF NOT EXISTS 1136_field_option_values LIKE field_option_values;
 INSERT 1136_field_option_values SELECT * FROM field_option_values WHERE NOT EXISTS (SELECT * FROM 1136_field_option_values);
 
+-- Need to edit id of field options
+CREATE TABLE IF NOT EXISTS 1136edit_field_options LIKE field_options;
+TRUNCATE TABLE 1136edit_field_options;
+INSERT 1136edit_field_options SELECT * FROM 1136_field_options;
 
+DELETE FROM `1136edit_field_options` WHERE `1136edit_field_options`.`code` = 'Country';
 
 -- Updating wrong model names
-UPDATE `field_options` SET `code` = 'StaffPositionTitle' WHERE `field_options`.`code` = 'PositionTitle';
+UPDATE `1136edit_field_options` SET `code` = 'StaffPositionTitle' WHERE `1136edit_field_options`.`code` = 'PositionTitle';
 
-UPDATE `field_options` SET `code` = 'TrainingCourseResultType' WHERE `field_options`.`code` = 'TrainingResultType';
+UPDATE `1136edit_field_options` SET `code` = 'TrainingCourseResultType' WHERE `1136edit_field_options`.`code` = 'TrainingResultType';
 
-UPDATE `field_options` SET `code` = 'StaffPositionGrade' WHERE `field_options`.`code` = 'PositionGrade';
+UPDATE `1136edit_field_options` SET `code` = 'StaffPositionGrade' WHERE `1136edit_field_options`.`code` = 'PositionGrade';
 
-UPDATE `field_options` SET `code` = 'StaffPositionStep' WHERE `field_options`.`code` = 'PositionStep';
+UPDATE `1136edit_field_options` SET `code` = 'StaffPositionStep' WHERE `1136edit_field_options`.`code` = 'PositionStep';
 
-UPDATE `field_options` SET `code` = 'StaffPositionTitle' WHERE `field_options`.`code` = 'PositionTitle';
-
-
--- Removing nationality from config_item
-DELETE FROM config_items WHERE config_items.type = 'Nationality' limit 1;
-
+UPDATE `1136edit_field_options` SET `code` = 'StaffPositionTitle' WHERE `1136edit_field_options`.`code` = 'PositionTitle';
 
 -- FIELD OPTIONS
 -- https://docs.google.com/a/kordit.com/spreadsheets/d/1X0zyO6eOwu5wccNWMgKhi34HJyIMDJ_45oLYMe9hEN8/edit#gid=548941468
-UPDATE field_options SET params = NULL WHERE code = 'InstitutionSiteType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'InstitutionSiteOwnership' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'InstitutionSiteLocality' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'InstitutionSiteStatus' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'AssessmentResultType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'EmploymentType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'ExtracurricularType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'Language' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'IdentityType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'LicenseType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'SpecialNeedType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'QualityVisitType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'HealthRelationship' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'HealthCondition' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'HealthImmunization' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'HealthAllergyType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'HealthTestType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'HealthConsultationType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'SalaryAdditionType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'SalaryDeductionType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingCourseType' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingFieldStudy' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingLevel' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingModeDelivery' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingPriority' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingProvider' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingRequirement' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'TrainingStatus' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'StudentCategory' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'StudentBehaviourCategory' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'StaffPositionTitle' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'StaffPositionGrade' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'StaffPositionStep' LIMIT 1;
-UPDATE field_options SET params = NULL WHERE code = 'QualificationSpecialisation' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'InstitutionSiteType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'InstitutionSiteOwnership' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'InstitutionSiteLocality' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'InstitutionSiteStatus' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'AssessmentResultType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'EmploymentType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'ExtracurricularType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'Language' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'IdentityType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'LicenseType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'SpecialNeedType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'QualityVisitType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'HealthRelationship' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'HealthCondition' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'HealthImmunization' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'HealthAllergyType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'HealthTestType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'HealthConsultationType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'SalaryAdditionType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'SalaryDeductionType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingCourseType' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingFieldStudy' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingLevel' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingModeDelivery' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingPriority' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingProvider' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingRequirement' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'TrainingStatus' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'StudentCategory' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'StudentBehaviourCategory' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'StaffPositionTitle' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'StaffPositionGrade' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'StaffPositionStep' LIMIT 1;
+UPDATE 1136edit_field_options SET params = NULL WHERE code = 'QualificationSpecialisation' LIMIT 1;
+
+-- rename field option names and parents
+UPDATE 1136edit_field_options SET parent = 'Finance' WHERE code = 'Bank';	
+UPDATE 1136edit_field_options SET parent = 'Finance' WHERE code = 'BankBranch';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'ContactType';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'EmploymentType';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'ExtracurricularType';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'IdentityType';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'Language';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'LicenseType';	
+UPDATE 1136edit_field_options SET parent = 'Others' WHERE code = 'SpecialNeedType';
+-- Rename field option Name SQL
+UPDATE 1136edit_field_options SET name = 'Bank Branches' WHERE code = 'BankBranch';
+UPDATE 1136edit_field_options SET name = 'Contact Types' WHERE code = 'ContactType';
+UPDATE 1136edit_field_options SET name = 'Employment Types' WHERE code = 'EmploymentType';
+UPDATE 1136edit_field_options SET name = 'Extracurricular Types' WHERE code = 'ExtracurricularType';	
+	
+-- drop create insert field_options
+DROP TABLE field_options;
+CREATE TABLE `field_options` (
+  `id` int(5) NOT NULL AUTO_INCREMENT,
+  `old_id` int(11) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `parent` varchar(50) DEFAULT NULL,
+  `params` text,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+
+-- reinserting in order
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteGender';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteLocality';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteOwnership';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteProvider';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteSector';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteStatus';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteCustomFieldOption';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteCustomField';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusCustomFieldOption';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusCustomField';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusGrid';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentAbsenceReason';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentBehaviourCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Gender';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentStatus';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCustomField';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCustomFieldOption';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffAbsenceReason';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffBehaviourCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'LeaveStatus';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffLeaveType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffStatus';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffTrainingCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffCustomField';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffCustomFieldOption';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'AssessmentResultType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Bank';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'BankBranch';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceNature';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceSource';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FeeType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'GuardianEducationLevel';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'GuardianRelation';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthAllergyType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthCondition';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthConsultationType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthImmunization';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthRelationship';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthTestType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureBuilding';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureEnergy';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureFurniture';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureMaterial';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureResource';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureRoom';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureSanitation';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SanitationGender';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureStatus';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureWater';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionGrade';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionStep';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionTitle';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualificationLevel';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualificationSpecialisation';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualityVisitType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SalaryAdditionType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SalaryDeductionType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingAchievementType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingFieldStudy';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingLevel';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingModeDelivery';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingNeedCategory';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingPriority';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingProvider';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingRequirement';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseResultType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingStatus';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ContactType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'EmploymentType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ExtracurricularType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'IdentityType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Language';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'LicenseType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SpecialNeedType';
+UPDATE field_options SET field_options.old_id = field_options.id;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SchoolYear';
+UPDATE field_options SET field_options.old_id = field_options.id;
+
+
+SET @count = 0; UPDATE field_options SET id = id+1000;
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteGender';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteLocality';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteOwnership';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteProvider';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteSector';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteStatus';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteCustomFieldOption';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InstitutionSiteCustomField';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'CensusCustomFieldOption';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'CensusCustomField';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'CensusGrid';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StudentAbsenceReason';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StudentBehaviourCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StudentCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'Gender';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StudentStatus';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StudentCustomField';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StudentCustomFieldOption';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffAbsenceReason';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffBehaviourCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'LeaveStatus';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffLeaveType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffStatus';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffTrainingCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffCustomField';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffCustomFieldOption';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'AssessmentResultType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'Bank';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'BankBranch';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'FinanceNature';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'FinanceType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'FinanceCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'FinanceSource';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'FeeType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'GuardianEducationLevel';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'GuardianRelation';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'HealthAllergyType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'HealthCondition';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'HealthConsultationType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'HealthImmunization';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'HealthRelationship';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'HealthTestType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureBuilding';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureEnergy';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureFurniture';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureMaterial';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureResource';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureRoom';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureSanitation';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'SanitationGender';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureStatus';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'InfrastructureWater';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffPositionGrade';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffPositionStep';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'StaffPositionTitle';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'QualificationLevel';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'QualificationSpecialisation';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'QualityVisitType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'SalaryAdditionType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'SalaryDeductionType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingAchievementType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingCourseType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingFieldStudy';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingLevel';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingModeDelivery';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingNeedCategory';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingPriority';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingProvider';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingRequirement';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingCourseResultType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingStatus';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'ContactType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'EmploymentType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'ExtracurricularType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'IdentityType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'Language';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'LicenseType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'SpecialNeedType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'SchoolYear';
+
+UPDATE field_options SET field_options.order = field_options.id;
+-- end field options
 
 
 
 
 -- https://docs.google.com/a/kordit.com/spreadsheets/d/1X0zyO6eOwu5wccNWMgKhi34HJyIMDJ_45oLYMe9hEN8/edit#gid=1574144139
-UPDATE field_option_values SET name='Government' WHERE 'id'='1';
+-- firstly... must change existing old IDs to new IDs
+ALTER TABLE `quality_institution_visits` CHANGE `quality_type_id` `quality_visit_type_id` INT(11) NOT NULL;
 
-UPDATE field_option_values SET name='Private' WHERE 'id'='28';
-
-UPDATE field_option_values SET name='Public' WHERE 'id'='2';
-UPDATE field_option_values SET name='Private' WHERE 'id'='30';
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Early Childhood', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Primary', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Secondary', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteOwnership';INSERT INTO field_option_values (name, field_option_id) VALUES ('Leasehold (State)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteOwnership';INSERT INTO field_option_values (name, field_option_id) VALUES ('Freehold', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteOwnership';INSERT INTO field_option_values (name, field_option_id) VALUES ('Customary (Non Disputed)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteOwnership';INSERT INTO field_option_values (name, field_option_id) VALUES ('Customary (Disputed)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteLocality';INSERT INTO field_option_values (name, field_option_id) VALUES ('Urban', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteLocality';INSERT INTO field_option_values (name, field_option_id) VALUES ('Rural', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteLocality';INSERT INTO field_option_values (name, field_option_id) VALUES ('Semi-Rural', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteLocality';INSERT INTO field_option_values (name, field_option_id) VALUES ('Semi-Urban', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Operating', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Suspended', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InstitutionSiteStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Closed', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceNature';INSERT INTO field_option_values (name, field_option_id) VALUES ('Capital Income', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceNature';INSERT INTO field_option_values (name, field_option_id) VALUES ('Capital Expenditure', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceNature';INSERT INTO field_option_values (name, field_option_id) VALUES ('Recurrent Income', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceNature';INSERT INTO field_option_values (name, field_option_id) VALUES ('Recurrent Expenditure', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceNature';INSERT INTO field_option_values (name, field_option_id) VALUES ('Other', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Instructional', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Support Services', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Facilities', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Other', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Donations', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Fund Raising', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Subsidies', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('School Fees', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Scholarship', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Salaries', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceSource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Government (National)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceSource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Government (Sub National)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceSource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Politician', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceSource';INSERT INTO field_option_values (name, field_option_id) VALUES ('NGO', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FinanceSource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Others', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'AssessmentResultType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Distinction', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'AssessmentResultType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Pass', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'AssessmentResultType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Fail', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ContactType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Mobile - Personal', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ContactType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Phone - Personal', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ContactType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Phone - Office', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ContactType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Email - Personal', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ContactType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Email - Work', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Appointment', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Probation', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Extension', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Increment', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Termination', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Resignation', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Retirement', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'EmploymentType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Contract End', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ExtracurricularType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Academic Club', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ExtracurricularType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Chess Club', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ExtracurricularType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Boys Brigade', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'ExtracurricularType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Scouts', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SchoolYear';INSERT INTO field_option_values (name, field_option_id) VALUES ('2014 - From 01/01/2014 to 31/12/2014', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SchoolYear';INSERT INTO field_option_values (name, field_option_id) VALUES ('2013 - From 01/01/2013 to 31/12/2013', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SchoolYear';INSERT INTO field_option_values (name, field_option_id) VALUES ('2012 - From 01/01/2012 to 31/12/2012', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'Language';INSERT INTO field_option_values (name, field_option_id) VALUES ('English', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'Language';INSERT INTO field_option_values (name, field_option_id) VALUES ('Chinese', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'Language';INSERT INTO field_option_values (name, field_option_id) VALUES ('Arabic', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'Language';INSERT INTO field_option_values (name, field_option_id) VALUES ('French', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'Language';INSERT INTO field_option_values (name, field_option_id) VALUES ('Spanish', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'Language';INSERT INTO field_option_values (name, field_option_id) VALUES ('Russian', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'IdentityType';INSERT INTO field_option_values (name, field_option_id) VALUES ('National', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'IdentityType';INSERT INTO field_option_values (name, field_option_id) VALUES ('School', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'IdentityType';INSERT INTO field_option_values (name, field_option_id) VALUES ('UNHCR', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'IdentityType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Passport', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'LicenseType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Car License', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'LicenseType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Motorcycle License', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SpecialNeedType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Visual', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SpecialNeedType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Intellectual', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SpecialNeedType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Autism', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SpecialNeedType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Hearing', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SpecialNeedType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Multiple', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualityVisitType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Inspection', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualityVisitType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Termly Quality Assuarance', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthRelationship';INSERT INTO field_option_values (name, field_option_id) VALUES ('Mother', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthRelationship';INSERT INTO field_option_values (name, field_option_id) VALUES ('Father', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthRelationship';INSERT INTO field_option_values (name, field_option_id) VALUES ('Grandmother', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthRelationship';INSERT INTO field_option_values (name, field_option_id) VALUES ('Grandfather', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthRelationship';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sister', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthRelationship';INSERT INTO field_option_values (name, field_option_id) VALUES ('Brother', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthCondition';INSERT INTO field_option_values (name, field_option_id) VALUES ('Asthma Attack', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthCondition';INSERT INTO field_option_values (name, field_option_id) VALUES ('Diabetes', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthCondition';INSERT INTO field_option_values (name, field_option_id) VALUES ('Tubercolosis', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthCondition';INSERT INTO field_option_values (name, field_option_id) VALUES ('Epilepsy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthCondition';INSERT INTO field_option_values (name, field_option_id) VALUES ('Stroke', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthCondition';INSERT INTO field_option_values (name, field_option_id) VALUES ('Blood Disorder', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthImmunization';INSERT INTO field_option_values (name, field_option_id) VALUES ('Hepatitis B vaccine', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthImmunization';INSERT INTO field_option_values (name, field_option_id) VALUES ('Diptheria vaccine', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthImmunization';INSERT INTO field_option_values (name, field_option_id) VALUES ('Pneumococcal vaccine', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthImmunization';INSERT INTO field_option_values (name, field_option_id) VALUES ('Tetanus vaccine', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Milk Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Egg Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Peanut Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Shellfish Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Casein Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sulfite Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthAllergyType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Pollen Allergy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthTestType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Vision Screening', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthTestType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Growth & Development Assessment', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthTestType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Hearing Screening', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthTestType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Spinal Screening', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'HealthConsultationType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Normal Consultation', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buildings', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Resources', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Furniture', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Energy', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Rooms', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Water', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureBuilding';INSERT INTO field_option_values (name, field_option_id) VALUES ('Classrooms', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureBuilding';INSERT INTO field_option_values (name, field_option_id) VALUES ('Library', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureBuilding';INSERT INTO field_option_values (name, field_option_id) VALUES ('Workshop', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureBuilding';INSERT INTO field_option_values (name, field_option_id) VALUES ('Toilet Block', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureBuilding';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff House', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureEnergy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Mains', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureEnergy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Solar', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureEnergy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Generator', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureEnergy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Hydro', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureEnergy';INSERT INTO field_option_values (name, field_option_id) VALUES ('No Power', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureEnergy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Other', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureFurniture';INSERT INTO field_option_values (name, field_option_id) VALUES ('Student Desks', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureFurniture';INSERT INTO field_option_values (name, field_option_id) VALUES ('Student Chairs', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureFurniture';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff Desks', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureFurniture';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff Chairs', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureResource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Vehicles', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureResource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Generators', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureResource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Library Books', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureResource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Projectors', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureResource';INSERT INTO field_option_values (name, field_option_id) VALUES ('Photocopiers', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Multipurpose', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Classroom', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Science Lab', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Computer Lab', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff Room', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff Office', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Storeroom', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureRoom';INSERT INTO field_option_values (name, field_option_id) VALUES ('Kitchen', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureSanitation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Flush - Mains', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureSanitation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Flush - Septic', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureSanitation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Pit', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureSanitation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Shore', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureSanitation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Other', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('Main', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('Rainwater Tanks', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('River', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('Well', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('Bore', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('Other', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureWater';INSERT INTO field_option_values (name, field_option_id) VALUES ('No Water', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureMaterial';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buildings - Permanent', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureMaterial';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buildings - Semi Permant', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureMaterial';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buldings - Traditional', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureMaterial';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation - Permanent', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureMaterial';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation - Semi Permant', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureMaterial';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation - Traditional', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buildings - Good', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buildings - Fair', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Buldings - Poor', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation - Good', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation - Fair', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'InfrastructureStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Sanitation - Poor', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SalaryAdditionType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Bonus', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SalaryAdditionType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Transport Fare', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SalaryDeductionType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Central Provident Fund Contribution (Base)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SalaryDeductionType';INSERT INTO field_option_values (name, field_option_id) VALUES ('MBMF', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'SalaryDeductionType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Tax', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingCourseType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Accredited', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingCourseType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Approved', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingFieldStudy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Administrative', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingFieldStudy';INSERT INTO field_option_values (name, field_option_id) VALUES ('Technical', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Basic', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Intermediate', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Advance', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingModeDelivery';INSERT INTO field_option_values (name, field_option_id) VALUES ('Online', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingModeDelivery';INSERT INTO field_option_values (name, field_option_id) VALUES ('Face', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingModeDelivery';INSERT INTO field_option_values (name, field_option_id) VALUES ('Practical', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingModeDelivery';INSERT INTO field_option_values (name, field_option_id) VALUES ('Mix', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingPriority';INSERT INTO field_option_values (name, field_option_id) VALUES ('Low', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingPriority';INSERT INTO field_option_values (name, field_option_id) VALUES ('Medium', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingPriority';INSERT INTO field_option_values (name, field_option_id) VALUES ('High', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingProvider';INSERT INTO field_option_values (name, field_option_id) VALUES ('Ministry of Education', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingProvider';INSERT INTO field_option_values (name, field_option_id) VALUES ('Ministry of Manpower', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingProvider';INSERT INTO field_option_values (name, field_option_id) VALUES ('Others', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingRequirement';INSERT INTO field_option_values (name, field_option_id) VALUES ('Mandatory', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingRequirement';INSERT INTO field_option_values (name, field_option_id) VALUES ('Elective', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('New', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Pending for Approval', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Active', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingStatus';INSERT INTO field_option_values (name, field_option_id) VALUES ('Inactive', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Promoted or New Enrolment', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Promoted (Transferred in)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Repeated', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Repeated (Transferred in)', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentBehaviourCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Outstanding', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentBehaviourCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Average', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StudentBehaviourCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Poor', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff I', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff II', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff III', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff IV', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Staff V', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Head Staff', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionTitle';INSERT INTO field_option_values (name, field_option_id) VALUES ('Principal', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionGrade';INSERT INTO field_option_values (name, field_option_id) VALUES ('A', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionGrade';INSERT INTO field_option_values (name, field_option_id) VALUES ('B', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionGrade';INSERT INTO field_option_values (name, field_option_id) VALUES ('C', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionGrade';INSERT INTO field_option_values (name, field_option_id) VALUES ('D', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionGrade';INSERT INTO field_option_values (name, field_option_id) VALUES ('E', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionStep';INSERT INTO field_option_values (name, field_option_id) VALUES ('1', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionStep';INSERT INTO field_option_values (name, field_option_id) VALUES ('2', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionStep';INSERT INTO field_option_values (name, field_option_id) VALUES ('3', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionStep';INSERT INTO field_option_values (name, field_option_id) VALUES ('4', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'PositionStep';INSERT INTO field_option_values (name, field_option_id) VALUES ('5', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StaffTrainingCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Permanent', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StaffTrainingCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Contract', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StaffTrainingCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Part time', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StaffTrainingCategory';INSERT INTO field_option_values (name, field_option_id) VALUES ('Internship', @fieldOptionId);
-UPDATE field_option_values SET name='Sick' WHERE 'id'='24';
-UPDATE field_option_values SET name='Sick' WHERE 'id'='33';
-UPDATE field_option_values SET name='Permanent' WHERE 'id'='3';
-UPDATE field_option_values SET name='Contract' WHERE 'id'='5';
-UPDATE field_option_values SET name='Part time' WHERE 'id'='4';
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StaffType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Internship', @fieldOptionId);
-UPDATE field_option_values SET name='Mixed' WHERE 'id'='8';
-UPDATE field_option_values SET name='Male' WHERE 'id'='6';
-UPDATE field_option_values SET name='Female' WHERE 'id'='7';
-UPDATE field_option_values SET name='Math' WHERE 'id'='9';
-UPDATE field_option_values SET name='Science' WHERE 'id'='10';
-UPDATE field_option_values SET name='Arts' WHERE 'id'='11';
-UPDATE field_option_values SET name='Practical' WHERE 'id'='13';
-UPDATE field_option_values SET name='Attendance' WHERE 'id'='14';
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingResultType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Project', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'TrainingResultType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Visit', @fieldOptionId);
-UPDATE field_option_values SET name='Final Exam' WHERE 'id'='12';
-UPDATE field_option_values SET name='School Study' WHERE 'id'='17';
-UPDATE field_option_values SET name='Self Study' WHERE 'id'='18';
-UPDATE field_option_values SET name='Registration Fee' WHERE 'id'='53';
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FeeType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Course Fee', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'FeeType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Course Material Fee', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'StaffLeaveType';INSERT INTO field_option_values (name, field_option_id) VALUES ('Annual Leave', @fieldOptionId);
-UPDATE field_option_values SET name='Sick Leave' WHERE 'id'='19';
-UPDATE field_option_values SET name='Pending' WHERE 'id'='36';
-UPDATE field_option_values SET name='Approved' WHERE 'id'='37';
-UPDATE field_option_values SET name='Rejected' WHERE 'id'='38';
-UPDATE field_option_values SET name='Cancelled' WHERE 'id'='40';
-UPDATE field_option_values SET name='Male' WHERE 'id'='Male';
-UPDATE field_option_values SET name='Female' WHERE 'id'='Female';
-UPDATE field_option_values SET name='Mother' WHERE 'id'='35';
-UPDATE field_option_values SET name='Father' WHERE 'id'='36';
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianRelation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Grandmother', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianRelation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Grandfather', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianRelation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Uncle', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianRelation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Aunt', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianEducationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('No Education', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianEducationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Primary', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianEducationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Secondary', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'GuardianEducationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Graduate', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationSpecialisation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Literature', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationSpecialisation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Science', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationSpecialisation';INSERT INTO field_option_values (name, field_option_id) VALUES ('Mathematics', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('No Education', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Primary', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Secondary', @fieldOptionId);
-SELECT id INTO @fieldOptionId FROM `field_options` WHERE code = 'QualificationLevel';INSERT INTO field_option_values (name, field_option_id) VALUES ('Graduate', @fieldOptionId);
+UPDATE field_option_values INNER JOIN field_options ON field_option_values.field_option_id = field_options.old_id SET field_option_values.field_option_id = field_options.id;
 
 
 -- renaming old tables
-RENAME TABLE institution_site_types to 1136_institution_site_types;
-RENAME TABLE institution_site_ownership to 1136_institution_site_ownership;
-RENAME TABLE institution_site_localities to 1136_institution_site_localities;
-RENAME TABLE institution_site_statuses to 1136_institution_site_statuses;
-RENAME TABLE assessment_result_types to 1136_assessment_result_types;
-RENAME TABLE employment_types to 1136_employment_types;
-RENAME TABLE extracurricular_types to 1136_extracurricular_types;
-RENAME TABLE languages to 1136_languages;
-RENAME TABLE identity_types to 1136_identity_types;
-RENAME TABLE license_types to 1136_license_types;
-RENAME TABLE special_need_types to 1136_special_need_types;
-RENAME TABLE quality_visit_types to 1136_quality_visit_types;
-RENAME TABLE health_relationships to 1136_health_relationships;
-RENAME TABLE health_conditions to 1136_health_conditions;
-RENAME TABLE health_immunizations to 1136_health_immunizations;
-RENAME TABLE health_allergy_types to 1136_health_allergy_types;
-RENAME TABLE health_test_types to 1136_health_test_types;
-RENAME TABLE health_consultation_types to 1136_health_consultation_types;
-RENAME TABLE salary_addition_types to 1136_salary_addition_types;
-RENAME TABLE salary_deduction_types to 1136_salary_deduction_types;
-RENAME TABLE training_course_types to 1136_training_course_types;
-RENAME TABLE training_field_studies to 1136_training_field_studies;
-RENAME TABLE training_levels to 1136_training_levels;
-RENAME TABLE training_mode_deliveries to 1136_training_mode_deliveries;
-RENAME TABLE training_priorities to 1136_training_priorities;
-RENAME TABLE training_providers to 1136_training_providers;
-RENAME TABLE training_requirements to 1136_training_requirements;
-RENAME TABLE training_statuses to 1136_training_statuses;
-RENAME TABLE student_categories to 1136_student_categories;
-RENAME TABLE student_behaviour_categories to 1136_student_behaviour_categories;
-RENAME TABLE staff_position_titles to 1136_staff_position_titles;
-RENAME TABLE staff_position_grades to 1136_staff_position_grades;
-RENAME TABLE staff_position_steps to 1136_staff_position_steps;
-RENAME TABLE qualification_specialisations to 1136_qualification_specialisations;
+ -- need to move these tables over
+-- field_option_values.field_option_id, 
+
+RENAME TABLE institution_site_types to 1136_institution_site_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'InstitutionSiteType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_institution_site_types.id, 1136_institution_site_types.name, 1136_institution_site_types.order, 1136_institution_site_types.visible, 1136_institution_site_types.international_code, 1136_institution_site_types.national_code, 1136_institution_site_types.modified_user_id, 1136_institution_site_types.modified, 1136_institution_site_types.created_user_id, 1136_institution_site_types.created, @fieldOptionId FROM 1136_institution_site_types;
+
+RENAME TABLE institution_site_ownership to 1136_institution_site_ownership;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'InstitutionSiteOwnership'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_institution_site_ownership.id, 1136_institution_site_ownership.name, 1136_institution_site_ownership.order, 1136_institution_site_ownership.visible, 1136_institution_site_ownership.international_code, 1136_institution_site_ownership.national_code, 1136_institution_site_ownership.modified_user_id, 1136_institution_site_ownership.modified, 1136_institution_site_ownership.created_user_id, 1136_institution_site_ownership.created, @fieldOptionId FROM 1136_institution_site_ownership;
+
+RENAME TABLE institution_site_localities to 1136_institution_site_localities;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'InstitutionSiteLocality'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_institution_site_localities.id, 1136_institution_site_localities.name, 1136_institution_site_localities.order, 1136_institution_site_localities.visible, 1136_institution_site_localities.international_code, 1136_institution_site_localities.national_code, 1136_institution_site_localities.modified_user_id, 1136_institution_site_localities.modified, 1136_institution_site_localities.created_user_id, 1136_institution_site_localities.created, @fieldOptionId FROM 1136_institution_site_localities;
+
+RENAME TABLE institution_site_statuses to 1136_institution_site_statuses;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'InstitutionSiteStatus'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_institution_site_statuses.id, 1136_institution_site_statuses.name, 1136_institution_site_statuses.order, 1136_institution_site_statuses.visible, 1136_institution_site_statuses.international_code, 1136_institution_site_statuses.national_code, 1136_institution_site_statuses.modified_user_id, 1136_institution_site_statuses.modified, 1136_institution_site_statuses.created_user_id, 1136_institution_site_statuses.created, @fieldOptionId FROM 1136_institution_site_statuses;
+
+RENAME TABLE assessment_result_types to 1136_assessment_result_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'AssessmentResultType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_assessment_result_types.id, 1136_assessment_result_types.name, 1136_assessment_result_types.order, 1136_assessment_result_types.visible, 1136_assessment_result_types.international_code, 1136_assessment_result_types.national_code, 1136_assessment_result_types.modified_user_id, 1136_assessment_result_types.modified, 1136_assessment_result_types.created_user_id, 1136_assessment_result_types.created, @fieldOptionId FROM 1136_assessment_result_types;
+
+RENAME TABLE employment_types to 1136_employment_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'EmploymentType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_employment_types.id, 1136_employment_types.name, 1136_employment_types.order, 1136_employment_types.visible, 1136_employment_types.international_code, 1136_employment_types.national_code, 1136_employment_types.modified_user_id, 1136_employment_types.modified, 1136_employment_types.created_user_id, 1136_employment_types.created, @fieldOptionId FROM 1136_employment_types;
+
+RENAME TABLE extracurricular_types to 1136_extracurricular_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'ExtracurricularType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_extracurricular_types.id, 1136_extracurricular_types.name, 1136_extracurricular_types.order, 1136_extracurricular_types.visible, 1136_extracurricular_types.international_code, 1136_extracurricular_types.national_code, 1136_extracurricular_types.modified_user_id, 1136_extracurricular_types.modified, 1136_extracurricular_types.created_user_id, 1136_extracurricular_types.created, @fieldOptionId FROM 1136_extracurricular_types;
+
+RENAME TABLE languages to 1136_languages;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'Language'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_languages.id, 1136_languages.name, 1136_languages.order, 1136_languages.visible, 1136_languages.international_code, 1136_languages.national_code, 1136_languages.modified_user_id, 1136_languages.modified, 1136_languages.created_user_id, 1136_languages.created, @fieldOptionId FROM 1136_languages;
+
+RENAME TABLE identity_types to 1136_identity_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'IdentityType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_identity_types.id, 1136_identity_types.name, 1136_identity_types.order, 1136_identity_types.visible, 1136_identity_types.international_code, 1136_identity_types.national_code, 1136_identity_types.modified_user_id, 1136_identity_types.modified, 1136_identity_types.created_user_id, 1136_identity_types.created, @fieldOptionId FROM 1136_identity_types;
+
+RENAME TABLE license_types to 1136_license_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'LicenseType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_license_types.id, 1136_license_types.name, 1136_license_types.order, 1136_license_types.visible, 1136_license_types.international_code, 1136_license_types.national_code, 1136_license_types.modified_user_id, 1136_license_types.modified, 1136_license_types.created_user_id, 1136_license_types.created, @fieldOptionId FROM 1136_license_types;
+
+RENAME TABLE special_need_types to 1136_special_need_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'SpecialNeedType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_special_need_types.id, 1136_special_need_types.name, 1136_special_need_types.order, 1136_special_need_types.visible, 1136_special_need_types.international_code, 1136_special_need_types.national_code, 1136_special_need_types.modified_user_id, 1136_special_need_types.modified, 1136_special_need_types.created_user_id, 1136_special_need_types.created, @fieldOptionId FROM 1136_special_need_types;
+
+RENAME TABLE quality_visit_types to 1136_quality_visit_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'QualityVisitType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_quality_visit_types.id, 1136_quality_visit_types.name, 1136_quality_visit_types.order, 1136_quality_visit_types.visible, 1136_quality_visit_types.international_code, 1136_quality_visit_types.national_code, 1136_quality_visit_types.modified_user_id, 1136_quality_visit_types.modified, 1136_quality_visit_types.created_user_id, 1136_quality_visit_types.created, @fieldOptionId FROM 1136_quality_visit_types;
+
+RENAME TABLE health_relationships to 1136_health_relationships;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'HealthRelationship'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_health_relationships.id, 1136_health_relationships.name, 1136_health_relationships.order, 1136_health_relationships.visible, 1136_health_relationships.international_code, 1136_health_relationships.national_code, 1136_health_relationships.modified_user_id, 1136_health_relationships.modified, 1136_health_relationships.created_user_id, 1136_health_relationships.created, @fieldOptionId FROM 1136_health_relationships;
+
+RENAME TABLE health_conditions to 1136_health_conditions;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'HealthCondition'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_health_conditions.id, 1136_health_conditions.name, 1136_health_conditions.order, 1136_health_conditions.visible, 1136_health_conditions.international_code, 1136_health_conditions.national_code, 1136_health_conditions.modified_user_id, 1136_health_conditions.modified, 1136_health_conditions.created_user_id, 1136_health_conditions.created, @fieldOptionId FROM 1136_health_conditions;
+
+RENAME TABLE health_immunizations to 1136_health_immunizations;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'HealthImmunization'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_health_immunizations.id, 1136_health_immunizations.name, 1136_health_immunizations.order, 1136_health_immunizations.visible, 1136_health_immunizations.international_code, 1136_health_immunizations.national_code, 1136_health_immunizations.modified_user_id, 1136_health_immunizations.modified, 1136_health_immunizations.created_user_id, 1136_health_immunizations.created, @fieldOptionId FROM 1136_health_immunizations;
+
+RENAME TABLE health_allergy_types to 1136_health_allergy_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'HealthAllergyType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_health_allergy_types.id, 1136_health_allergy_types.name, 1136_health_allergy_types.order, 1136_health_allergy_types.visible, 1136_health_allergy_types.international_code, 1136_health_allergy_types.national_code, 1136_health_allergy_types.modified_user_id, 1136_health_allergy_types.modified, 1136_health_allergy_types.created_user_id, 1136_health_allergy_types.created, @fieldOptionId FROM 1136_health_allergy_types;
+
+RENAME TABLE health_test_types to 1136_health_test_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'HealthTestType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_health_test_types.id, 1136_health_test_types.name, 1136_health_test_types.order, 1136_health_test_types.visible, 1136_health_test_types.international_code, 1136_health_test_types.national_code, 1136_health_test_types.modified_user_id, 1136_health_test_types.modified, 1136_health_test_types.created_user_id, 1136_health_test_types.created, @fieldOptionId FROM 1136_health_test_types;
+
+RENAME TABLE health_consultation_types to 1136_health_consultation_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'HealthConsultationType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_health_consultation_types.id, 1136_health_consultation_types.name, 1136_health_consultation_types.order, 1136_health_consultation_types.visible, 1136_health_consultation_types.international_code, 1136_health_consultation_types.national_code, 1136_health_consultation_types.modified_user_id, 1136_health_consultation_types.modified, 1136_health_consultation_types.created_user_id, 1136_health_consultation_types.created, @fieldOptionId FROM 1136_health_consultation_types;
+
+RENAME TABLE salary_addition_types to 1136_salary_addition_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'SalaryAdditionType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_salary_addition_types.id, 1136_salary_addition_types.name, 1136_salary_addition_types.order, 1136_salary_addition_types.visible, 1136_salary_addition_types.international_code, 1136_salary_addition_types.national_code, 1136_salary_addition_types.modified_user_id, 1136_salary_addition_types.modified, 1136_salary_addition_types.created_user_id, 1136_salary_addition_types.created, @fieldOptionId FROM 1136_salary_addition_types;
+
+RENAME TABLE salary_deduction_types to 1136_salary_deduction_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'SalaryDeductionType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_salary_deduction_types.id, 1136_salary_deduction_types.name, 1136_salary_deduction_types.order, 1136_salary_deduction_types.visible, 1136_salary_deduction_types.international_code, 1136_salary_deduction_types.national_code, 1136_salary_deduction_types.modified_user_id, 1136_salary_deduction_types.modified, 1136_salary_deduction_types.created_user_id, 1136_salary_deduction_types.created, @fieldOptionId FROM 1136_salary_deduction_types;
+
+RENAME TABLE training_course_types to 1136_training_course_types;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingCourseType'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_course_types.id, 1136_training_course_types.name, 1136_training_course_types.order, 1136_training_course_types.visible, 1136_training_course_types.international_code, 1136_training_course_types.national_code, 1136_training_course_types.modified_user_id, 1136_training_course_types.modified, 1136_training_course_types.created_user_id, 1136_training_course_types.created, @fieldOptionId FROM 1136_training_course_types;
+
+RENAME TABLE training_field_studies to 1136_training_field_studies;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingFieldStudy'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_field_studies.id, 1136_training_field_studies.name, 1136_training_field_studies.order, 1136_training_field_studies.visible, 1136_training_field_studies.international_code, 1136_training_field_studies.national_code, 1136_training_field_studies.modified_user_id, 1136_training_field_studies.modified, 1136_training_field_studies.created_user_id, 1136_training_field_studies.created, @fieldOptionId FROM 1136_training_field_studies;
+
+RENAME TABLE training_levels to 1136_training_levels;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingLevel'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_levels.id, 1136_training_levels.name, 1136_training_levels.order, 1136_training_levels.visible, 1136_training_levels.international_code, 1136_training_levels.national_code, 1136_training_levels.modified_user_id, 1136_training_levels.modified, 1136_training_levels.created_user_id, 1136_training_levels.created, @fieldOptionId FROM 1136_training_levels;
+
+RENAME TABLE training_mode_deliveries to 1136_training_mode_deliveries;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingModeDelivery'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_mode_deliveries.id, 1136_training_mode_deliveries.name, 1136_training_mode_deliveries.order, 1136_training_mode_deliveries.visible, 1136_training_mode_deliveries.international_code, 1136_training_mode_deliveries.national_code, 1136_training_mode_deliveries.modified_user_id, 1136_training_mode_deliveries.modified, 1136_training_mode_deliveries.created_user_id, 1136_training_mode_deliveries.created, @fieldOptionId FROM 1136_training_mode_deliveries;
+
+RENAME TABLE training_priorities to 1136_training_priorities;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingPriority'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_priorities.id, 1136_training_priorities.name, 1136_training_priorities.order, 1136_training_priorities.visible, 1136_training_priorities.international_code, 1136_training_priorities.national_code, 1136_training_priorities.modified_user_id, 1136_training_priorities.modified, 1136_training_priorities.created_user_id, 1136_training_priorities.created, @fieldOptionId FROM 1136_training_priorities;
+
+RENAME TABLE training_providers to 1136_training_providers;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingProvider'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_providers.id, 1136_training_providers.name, 1136_training_providers.order, 1136_training_providers.visible, 1136_training_providers.international_code, 1136_training_providers.national_code, 1136_training_providers.modified_user_id, 1136_training_providers.modified, 1136_training_providers.created_user_id, 1136_training_providers.created, @fieldOptionId FROM 1136_training_providers;
+
+RENAME TABLE training_requirements to 1136_training_requirements;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingRequirement'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_requirements.id, 1136_training_requirements.name, 1136_training_requirements.order, 1136_training_requirements.visible, 1136_training_requirements.international_code, 1136_training_requirements.national_code, 1136_training_requirements.modified_user_id, 1136_training_requirements.modified, 1136_training_requirements.created_user_id, 1136_training_requirements.created, @fieldOptionId FROM 1136_training_requirements;
+
+RENAME TABLE training_statuses to 1136_training_statuses;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'TrainingStatus'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_training_statuses.id, 1136_training_statuses.name, 1136_training_statuses.order, 1136_training_statuses.visible, 1136_training_statuses.international_code, 1136_training_statuses.national_code, 1136_training_statuses.modified_user_id, 1136_training_statuses.modified, 1136_training_statuses.created_user_id, 1136_training_statuses.created, @fieldOptionId FROM 1136_training_statuses;
+
+RENAME TABLE student_categories to 1136_student_categories;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'StudentCategory'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_student_categories.id, 1136_student_categories.name, 1136_student_categories.order, 1136_student_categories.visible, 1136_student_categories.international_code, 1136_student_categories.national_code, 1136_student_categories.modified_user_id, 1136_student_categories.modified, 1136_student_categories.created_user_id, 1136_student_categories.created, @fieldOptionId FROM 1136_student_categories;
+
+RENAME TABLE student_behaviour_categories to 1136_student_behaviour_categories;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'StudentBehaviourCategory'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_student_behaviour_categories.id, 1136_student_behaviour_categories.name, 1136_student_behaviour_categories.order, 1136_student_behaviour_categories.visible, 1136_student_behaviour_categories.international_code, 1136_student_behaviour_categories.national_code, 1136_student_behaviour_categories.modified_user_id, 1136_student_behaviour_categories.modified, 1136_student_behaviour_categories.created_user_id, 1136_student_behaviour_categories.created, @fieldOptionId FROM 1136_student_behaviour_categories;
+
+RENAME TABLE staff_position_titles to 1136_staff_position_titles;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'StaffPositionTitle'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_staff_position_titles.id, 1136_staff_position_titles.name, 1136_staff_position_titles.order, 1136_staff_position_titles.visible, 1136_staff_position_titles.international_code, 1136_staff_position_titles.national_code, 1136_staff_position_titles.modified_user_id, 1136_staff_position_titles.modified, 1136_staff_position_titles.created_user_id, 1136_staff_position_titles.created, @fieldOptionId FROM 1136_staff_position_titles;
+
+RENAME TABLE staff_position_grades to 1136_staff_position_grades;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'StaffPositionGrade'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_staff_position_grades.id, 1136_staff_position_grades.name, 1136_staff_position_grades.order, 1136_staff_position_grades.visible, 1136_staff_position_grades.international_code, 1136_staff_position_grades.national_code, 1136_staff_position_grades.modified_user_id, 1136_staff_position_grades.modified, 1136_staff_position_grades.created_user_id, 1136_staff_position_grades.created, @fieldOptionId FROM 1136_staff_position_grades;
+
+RENAME TABLE staff_position_steps to 1136_staff_position_steps;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'StaffPositionStep'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_staff_position_steps.id, 1136_staff_position_steps.name, 1136_staff_position_steps.order, 1136_staff_position_steps.visible, 1136_staff_position_steps.international_code, 1136_staff_position_steps.national_code, 1136_staff_position_steps.modified_user_id, 1136_staff_position_steps.modified, 1136_staff_position_steps.created_user_id, 1136_staff_position_steps.created, @fieldOptionId FROM 1136_staff_position_steps;
+
+RENAME TABLE qualification_specialisations to 1136_qualification_specialisations;	
+SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'QualificationSpecialisation'; 
+INSERT INTO field_option_values (field_option_values.old_id, field_option_values.name, field_option_values.order, field_option_values.visible, field_option_values.international_code, field_option_values.national_code, field_option_values.modified_user_id, field_option_values.modified, field_option_values.created_user_id, field_option_values.created, field_option_values.field_option_id ) SELECT 1136_qualification_specialisations.id, 1136_qualification_specialisations.name, 1136_qualification_specialisations.order, 1136_qualification_specialisations.visible, 1136_qualification_specialisations.international_code, 1136_qualification_specialisations.national_code, 1136_qualification_specialisations.modified_user_id, 1136_qualification_specialisations.modified, 1136_qualification_specialisations.created_user_id, 1136_qualification_specialisations.created, @fieldOptionId FROM 1136_qualification_specialisations;
+
+
+
+-- correct field option values
+UPDATE institution_sites LEFT JOIN field_option_values ON institution_sites.institution_site_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_sites.institution_site_type_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteType';
+UPDATE institution_site_custom_fields LEFT JOIN field_option_values ON institution_site_custom_fields.institution_site_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_custom_fields.institution_site_type_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteType';
+UPDATE institution_site_history LEFT JOIN field_option_values ON institution_site_history.institution_site_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_history.institution_site_type_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteType';
+UPDATE census_grids LEFT JOIN field_option_values ON census_grids.institution_site_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET census_grids.institution_site_type_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteType';
+UPDATE census_custom_fields LEFT JOIN field_option_values ON census_custom_fields.institution_site_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET census_custom_fields.institution_site_type_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteType';
+UPDATE institution_sites LEFT JOIN field_option_values ON institution_sites.institution_site_ownership_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_sites.institution_site_ownership_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteOwnership';
+UPDATE institution_site_history LEFT JOIN field_option_values ON institution_site_history.institution_site_ownership_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_history.institution_site_ownership_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteOwnership';
+UPDATE institution_sites LEFT JOIN field_option_values ON institution_sites.institution_site_locality_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_sites.institution_site_locality_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteLocality';
+UPDATE institution_site_history LEFT JOIN field_option_values ON institution_site_history.institution_site_locality_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_history.institution_site_locality_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteLocality';
+UPDATE institution_sites LEFT JOIN field_option_values ON institution_sites.institution_site_status_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_sites.institution_site_status_id = field_option_values.id WHERE field_options.code = 'InstitutionSiteStatus';
+UPDATE assessment_item_results LEFT JOIN field_option_values ON assessment_item_results.assessment_result_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET assessment_item_results.assessment_result_type_id = field_option_values.id WHERE field_options.code = 'AssessmentResultType';
+UPDATE staff_employments LEFT JOIN field_option_values ON staff_employments.employment_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_employments.employment_type_id = field_option_values.id WHERE field_options.code = 'EmploymentType';
+UPDATE student_extracurriculars LEFT JOIN field_option_values ON student_extracurriculars.extracurricular_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_extracurriculars.extracurricular_type_id = field_option_values.id WHERE field_options.code = 'ExtracurricularType';
+UPDATE staff_extracurriculars LEFT JOIN field_option_values ON staff_extracurriculars.extracurricular_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_extracurriculars.extracurricular_type_id = field_option_values.id WHERE field_options.code = 'ExtracurricularType';
+UPDATE student_languages LEFT JOIN field_option_values ON student_languages.language_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_languages.language_id = field_option_values.id WHERE field_options.code = 'Language';
+UPDATE staff_languages LEFT JOIN field_option_values ON staff_languages.language_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_languages.language_id = field_option_values.id WHERE field_options.code = 'Language';
+UPDATE student_identities LEFT JOIN field_option_values ON student_identities.identity_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_identities.identity_type_id = field_option_values.id WHERE field_options.code = 'IdentityType';
+UPDATE staff_identities LEFT JOIN field_option_values ON staff_identities.identity_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_identities.identity_type_id = field_option_values.id WHERE field_options.code = 'IdentityType';
+UPDATE staff_licenses LEFT JOIN field_option_values ON staff_licenses.license_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_licenses.license_type_id = field_option_values.id WHERE field_options.code = 'LicenseType';
+UPDATE student_special_needs LEFT JOIN field_option_values ON student_special_needs.special_need_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_special_needs.special_need_type_id = field_option_values.id WHERE field_options.code = 'SpecialNeedType';
+UPDATE staff_special_needs LEFT JOIN field_option_values ON staff_special_needs.special_need_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_special_needs.special_need_type_id = field_option_values.id WHERE field_options.code = 'SpecialNeedType';
+UPDATE quality_institution_visits LEFT JOIN field_option_values ON quality_institution_visits.quality_visit_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET quality_institution_visits.quality_visit_type_id = field_option_values.id WHERE field_options.code = 'QualityVisitType';
+UPDATE student_health_families LEFT JOIN field_option_values ON student_health_families.health_relationship_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_families.health_relationship_id = field_option_values.id WHERE field_options.code = 'HealthRelationship';
+UPDATE staff_health_families LEFT JOIN field_option_values ON staff_health_families.health_relationship_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_families.health_relationship_id = field_option_values.id WHERE field_options.code = 'HealthRelationship';
+UPDATE student_health_histories LEFT JOIN field_option_values ON student_health_histories.health_condition_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_histories.health_condition_id = field_option_values.id WHERE field_options.code = 'HealthCondition';
+UPDATE staff_health_histories LEFT JOIN field_option_values ON staff_health_histories.health_condition_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_histories.health_condition_id = field_option_values.id WHERE field_options.code = 'HealthCondition';
+UPDATE staff_health_families LEFT JOIN field_option_values ON staff_health_families.health_condition_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_families.health_condition_id = field_option_values.id WHERE field_options.code = 'HealthCondition';
+UPDATE student_health_families LEFT JOIN field_option_values ON student_health_families.health_condition_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_families.health_condition_id = field_option_values.id WHERE field_options.code = 'HealthCondition';
+UPDATE student_health_immunizations LEFT JOIN field_option_values ON student_health_immunizations.health_immunization_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_immunizations.health_immunization_id = field_option_values.id WHERE field_options.code = 'HealthImmunization';
+UPDATE staff_health_immunizations LEFT JOIN field_option_values ON staff_health_immunizations.health_immunization_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_immunizations.health_immunization_id = field_option_values.id WHERE field_options.code = 'HealthImmunization';
+UPDATE student_health_allergies LEFT JOIN field_option_values ON student_health_allergies.health_allergy_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_allergies.health_allergy_type_id = field_option_values.id WHERE field_options.code = 'HealthAllergyType';
+UPDATE staff_health_allergies LEFT JOIN field_option_values ON staff_health_allergies.health_allergy_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_allergies.health_allergy_type_id = field_option_values.id WHERE field_options.code = 'HealthAllergyType';
+UPDATE student_health_tests LEFT JOIN field_option_values ON student_health_tests.health_test_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_tests.health_test_type_id = field_option_values.id WHERE field_options.code = 'HealthTestType';
+UPDATE staff_health_tests LEFT JOIN field_option_values ON staff_health_tests.health_test_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_tests.health_test_type_id = field_option_values.id WHERE field_options.code = 'HealthTestType';
+UPDATE student_health_consultations LEFT JOIN field_option_values ON student_health_consultations.health_consultation_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_health_consultations.health_consultation_type_id = field_option_values.id WHERE field_options.code = 'HealthConsultationType';
+UPDATE staff_health_consultations LEFT JOIN field_option_values ON staff_health_consultations.health_consultation_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_health_consultations.health_consultation_type_id = field_option_values.id WHERE field_options.code = 'HealthConsultationType';
+UPDATE staff_salary_additions LEFT JOIN field_option_values ON staff_salary_additions.salary_addition_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_salary_additions.salary_addition_type_id = field_option_values.id WHERE field_options.code = 'SalaryAdditionType';
+UPDATE staff_salary_deductions LEFT JOIN field_option_values ON staff_salary_deductions.salary_deduction_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_salary_deductions.salary_deduction_type_id = field_option_values.id WHERE field_options.code = 'SalaryDeductionType';
+UPDATE training_courses LEFT JOIN field_option_values ON training_courses.training_course_type_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_courses.training_course_type_id = field_option_values.id WHERE field_options.code = 'TrainingCourseType';
+UPDATE training_courses LEFT JOIN field_option_values ON training_courses.training_field_study_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_courses.training_field_study_id = field_option_values.id WHERE field_options.code = 'TrainingFieldStudy';
+UPDATE training_courses LEFT JOIN field_option_values ON training_courses.training_level_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_courses.training_level_id = field_option_values.id WHERE field_options.code = 'TrainingLevel';
+UPDATE training_courses LEFT JOIN field_option_values ON training_courses.training_mode_delivery_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_courses.training_mode_delivery_id = field_option_values.id WHERE field_options.code = 'TrainingModeDelivery';
+UPDATE staff_training_needs LEFT JOIN field_option_values ON staff_training_needs.training_priority_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_training_needs.training_priority_id = field_option_values.id WHERE field_options.code = 'TrainingPriority';
+UPDATE training_sessions LEFT JOIN field_option_values ON training_sessions.training_provider_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_sessions.training_provider_id = field_option_values.id WHERE field_options.code = 'TrainingProvider';
+UPDATE training_course_providers LEFT JOIN field_option_values ON training_course_providers.training_provider_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_course_providers.training_provider_id = field_option_values.id WHERE field_options.code = 'TrainingProvider';
+UPDATE staff_training_needs LEFT JOIN field_option_values ON staff_training_needs.ref_course_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_training_needs.ref_course_id = field_option_values.id WHERE field_options.code = 'TrainingRequirement';
+UPDATE training_courses LEFT JOIN field_option_values ON training_courses.training_requirement_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_courses.training_requirement_id = field_option_values.id WHERE field_options.code = 'TrainingRequirement';
+UPDATE training_courses LEFT JOIN field_option_values ON training_courses.training_status_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_courses.training_status_id = field_option_values.id WHERE field_options.code = 'TrainingStatus';
+UPDATE training_sessions LEFT JOIN field_option_values ON training_sessions.training_status_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_sessions.training_status_id = field_option_values.id WHERE field_options.code = 'TrainingStatus';
+UPDATE training_session_results LEFT JOIN field_option_values ON training_session_results.training_status_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET training_session_results.training_status_id = field_option_values.id WHERE field_options.code = 'TrainingStatus';
+UPDATE staff_training_self_study_results LEFT JOIN field_option_values ON staff_training_self_study_results.training_status_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_training_self_study_results.training_status_id = field_option_values.id WHERE field_options.code = 'TrainingStatus';
+UPDATE institution_site_class_students LEFT JOIN field_option_values ON institution_site_class_students.student_category_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_class_students.student_category_id = field_option_values.id WHERE field_options.code = 'StudentCategory';
+UPDATE institution_site_section_students LEFT JOIN field_option_values ON institution_site_section_students.student_category_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_section_students.student_category_id = field_option_values.id WHERE field_options.code = 'StudentCategory';
+UPDATE census_students LEFT JOIN field_option_values ON census_students.student_category_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET census_students.student_category_id = field_option_values.id WHERE field_options.code = 'StudentCategory';
+UPDATE student_behaviours LEFT JOIN field_option_values ON student_behaviours.student_behaviour_category_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET student_behaviours.student_behaviour_category_id = field_option_values.id WHERE field_options.code = 'StudentBehaviourCategory';
+UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_title_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_title_id = field_option_values.id WHERE field_options.code = 'StaffPositionTitle';
+UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_grade_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_grade_id = field_option_values.id WHERE field_options.code = 'StaffPositionGrade';
+UPDATE staff_qualifications LEFT JOIN field_option_values ON staff_qualifications.qualification_specialisation_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_qualifications.qualification_specialisation_id = field_option_values.id WHERE field_options.code = 'QualificationSpecialisation';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
