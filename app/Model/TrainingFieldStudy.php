@@ -32,5 +32,5 @@ class TrainingFieldStudy extends FieldOptionValue {
 			'type' => 'LEFT'
 		)
 	);
-	public $hasMany = array('TrainingCourse');
+	public $hasMany = array('Training.TrainingCourse');
 }

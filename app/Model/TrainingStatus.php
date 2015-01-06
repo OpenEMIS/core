@@ -32,5 +32,5 @@ class TrainingStatus extends FieldOptionValue {
 			'type' => 'LEFT'
 		)
 	);
-	public $hasMany = array('Training.TrainingCourse', 'Training.TrainingSession', 'Training.TrainingNeed', 'Training.TrainingSessionResult','Staff.StaffTrainingSelfStudyResult');
+	public $hasMany = array('Training.TrainingCourse', 'Training.TrainingSession', 'Training.TrainingSessionResult','Staff.StaffTrainingSelfStudyResult');
 }

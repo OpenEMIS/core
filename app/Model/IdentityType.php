@@ -18,7 +18,7 @@ App::uses('FieldOptionValue', 'Model');
 
 class IdentityType extends FieldOptionValue {
 	public $useTable = 'field_option_values';
-	public $hasMany = array('Staff.StaffIdentity', 'Students.StudentIdentity', 'TeacherIdentity');
+	public $hasMany = array('Staff.StaffIdentity', 'Students.StudentIdentity');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
