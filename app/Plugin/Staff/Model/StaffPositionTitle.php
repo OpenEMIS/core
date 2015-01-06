@@ -18,6 +18,7 @@ App::uses('FieldOptionValue', 'Model');
 
 class StaffPositionTitle extends FieldOptionValue {
 	public $useTable = 'field_option_values';
+	public $hasMany = array('InstitutionSitePosition');
 	public function getLookupVariables() {
 		$lookup = array(
 			'Categories' => array('model' => 'Staff.StaffPositionTitle')
