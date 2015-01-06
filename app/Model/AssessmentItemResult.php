@@ -274,7 +274,7 @@ class AssessmentItemResult extends AppModel {
 
 						$dataAllValid = true;
 						foreach ($result AS $key => $record) {
-							if (empty($record['marks']) || empty($record['assessment_result_type_id'])) {
+							if (empty($record['marks']) && empty($record['assessment_result_type_id'])) {
 								unset($result[$key]);
 							}else{
 								if($record['marks'] < $minMarks || $record['marks'] > $maxMarks){
@@ -289,9 +289,10 @@ class AssessmentItemResult extends AppModel {
 						}else{
 							if (!empty($result)) {
 								$this->saveMany($result);
-								$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-								$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
 							}
+							
+							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+							$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
 						}
 					}
 				}

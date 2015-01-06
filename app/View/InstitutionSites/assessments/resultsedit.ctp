@@ -38,8 +38,8 @@ echo $this->Form->create($model, $formOptions);
 		?>
 		<?php if(!empty($selectedItem)): ?>
 		<ul class="legend">
-			<li>Min Marks: <?php echo $minMarks; ?></li>
-			<li>Max Marks: <?php echo $maxMarks; ?></li>
+			<li><?php echo __('Minimum') . ' ' . __('Marks') ?>: <?php echo $minMarks; ?></li>
+			<li><?php echo __('Maximum') . ' ' . __('Marks') ?>: <?php echo $maxMarks; ?></li>
 		</ul>
 		<?php endif; ?>
 </div>
