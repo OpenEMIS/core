@@ -40,4 +40,23 @@ class InfrastructureCategory extends InfrastructureAppModel {
 			)
 		)
 	);
+	
+	public function getCategoryOptions(){
+		$data = $this->find('list', array(
+			'conditions' => array('InfrastructureCategory.visible' => 1),
+			'order' => array('InfrastructureCategory.name')
+		));
+		
+		return $data;
+	}
+	
+	public function getParentCategory($categoryId=0){
+		$category = $this->findById($categoryId);
+		if(!empty($category)){
+			$parentCategory = $this->findById($category['InfrastructureCategory']['parent_id']);
+			return $parentCategory;
+		}else{
+			return null;
+		}
+	}
 }

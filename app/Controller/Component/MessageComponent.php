@@ -166,6 +166,9 @@ class MessageComponent extends Component {
 		'InstitutionSiteSection' => array(
 			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.')
 		),
+		'InstitutionSiteInfrastructure' => array(
+			'noCategory' => array('type' => 'warn', 'msg' => 'There are no category created.')
+		)
 	);
 	
 	public function get($code) {

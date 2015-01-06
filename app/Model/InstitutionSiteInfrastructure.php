@@ -21,6 +21,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 		'InstitutionSite',
 		'Infrastructure.InfrastructureCategory',
 		'Infrastructure.InfrastructureType',
+		'Infrastructure.InfrastructureOwnership',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -34,11 +35,32 @@ class InstitutionSiteInfrastructure extends AppModel {
 	);
 	
 	public $validate = array(
+		'code' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Code'
+			)
+		),
 		'name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid name'
+				'message' => 'Please enter a valid Name'
+			)
+		),
+		'infrastructure_type_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Type'
+			)
+		),
+		'infrastructure_ownership_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Ownership'
 			)
 		)
 	);
@@ -51,71 +73,107 @@ class InstitutionSiteInfrastructure extends AppModel {
 		parent::beforeAction();
 	}
 	
-	public function index($selectedYear=0) {
-		$this->Navigation->addCrumb('List of Sections');
+	public function index($categoryId=0) {
+		$this->Navigation->addCrumb('Infrastructure');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearConditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'SchoolYear.visible' => 1
-		);
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
-		if(!empty($yearOptions)){
-			if ($selectedYear != 0) {
-				if (!array_key_exists($selectedYear, $yearOptions)) {
-					$selectedYear = key($yearOptions);
+		$categoryOptions = $this->InfrastructureCategory->getCategoryOptions();
+		
+		if(!empty($categoryOptions)){
+			if ($categoryId != 0) {
+				if (!array_key_exists($categoryId, $categoryOptions)) {
+					$categoryId = key($categoryOptions);
 				}
 			} else {
-				$selectedYear = key($yearOptions);
+				$categoryId = key($categoryOptions);
 			}
 		}
 		
-		if(empty($yearOptions)){
-			$this->Message->alert('InstitutionSite.noProgramme');
+		$parentCategory = $this->InfrastructureCategory->getParentCategory($categoryId);
+		
+		if(empty($categoryOptions)){
+			$this->Message->alert('InstitutionSiteInfrastructure.noCategory');
 		}
 		
-		$data = $this->getListOfSections($selectedYear, $institutionSiteId);
+		$data = $this->getInfrastructureData($categoryId, $institutionSiteId);
 		
-		$this->setVar(compact('yearOptions', 'selectedYear', 'data'));
+		$this->setVar(compact('categoryOptions', 'categoryId', 'data', 'parentCategory'));
 	}
 	
-	public function add($selectedYear=0) {
-		$this->Navigation->addCrumb('Add Section');
+	public function getInfrastructureData($categoryId, $institutionSiteId){
+		$parentCategory = $this->InfrastructureCategory->getParentCategory($categoryId);
+		if(!empty($parentCategory)){
+			$fields = array('InstitutionSiteInfrastructure.*', 'InfrastructureType.*', 'Parent.name');
+			
+			$joins = array(
+				array(
+					'table' => 'institution_site_infrastructures',
+					'alias' => 'Parent',
+					'conditions' => array(
+						'Parent.id = InstitutionSiteInfrastructure.parent_id'
+					)
+				)
+			);
+		}else{
+			$fields = array('InstitutionSiteInfrastructure.*', 'InfrastructureType.*');
+			$joins = array();
+		}
+		
+		$data = $this->find('all', array(
+			'fields' => $fields,
+			'joins' => $joins,
+			'conditions' => array(
+				'InstitutionSiteInfrastructure.infrastructure_category_id' => $categoryId,
+				'InstitutionSiteInfrastructure.institution_site_id' => $institutionSiteId
+			)
+		));
+		
+		return $data;
+	}
+	
+	public function infrastructureOptionsByCategory($categoryId, $institutionSiteId){
+		$data = $this->find('list', array(
+			'conditions' => array(
+				'InstitutionSiteInfrastructure.infrastructure_category_id' => $categoryId,
+				'InstitutionSiteInfrastructure.institution_site_id' => $institutionSiteId
+			)
+		));
+		
+		return $data;
+	}
+	
+	public function add($categoryId=0) {
+		$this->Navigation->addCrumb('Add Infrastructure');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearConditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'SchoolYear.visible' => 1
-		);
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
-		if(!empty($yearOptions)) {
-			if ($selectedYear != 0) {
-				if (!array_key_exists($selectedYear, $yearOptions)) {
-					$selectedYear = key($yearOptions);
-				}
-			} else {
-				$selectedYear = key($yearOptions);
+		$category = $this->InfrastructureCategory->findById($categoryId);
+		
+		if(empty($category)){
+			return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index'));
+		}
+		
+		$parentCategory = $this->InfrastructureCategory->getParentCategory($categoryId);
+		if(!empty($parentCategory)){
+			$parentInfraOptions = $this->infrastructureOptionsByCategory($parentCategory['InfrastructureCategory']['id'], $institutionSiteId);
+		}else{
+			$parentInfraOptions = array();
+		}
+		
+		$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($categoryId);
+		$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
+		$currentYear = Date('Y');
+		$ownershipOptions = $this->InfrastructureOwnership->getList();
+		
+		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions'));
+		
+		if($this->request->is(array('post', 'put'))) {
+			$postData = $this->request->data['InstitutionSiteInfrastructure'];
+			$postData['institution_site_id'] = $institutionSiteId;
+			$postData['infrastructure_category_id'] = $categoryId;
+			
+			if ($this->saveAll($postData)) {
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId));
 			}
-			
-			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedYear);
-			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedYear);
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedYear);
-			
-			$this->setVar(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
-			
-			if($this->request->is('post') || $this->request->is('put')) {
-				$data = $this->request->data;
-				$result = $this->saveAll($data);
-				if ($result) {
-					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedYear));
-				}
-			}
-		} else {
-			$this->Message->alert('InstitutionSite.noProgramme');
-			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
 		}
 	}
 	
