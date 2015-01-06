@@ -13,9 +13,13 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-
-class InfrastructureType extends InfrastructureAppModel {
-	public $actsAs = array('Reorder');
+App::uses('FieldOptionValue', 'Model');
+class InfrastructureOwnership extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	
+	public $hasMany = array(
+		'InstitutionSiteInfrastructure'
+	);
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -29,28 +33,5 @@ class InfrastructureType extends InfrastructureAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Name',
-				'on' => 'create'
-			)
-		)
-	);
-	
-	public function getTypeOptionsByCategory($categoryId=0){
-		$data = $this->find('list', array(
-			'conditions' => array(
-				'InfrastructureType.visible' => 1,
-				'InfrastructureType.infrastructure_category_id' => $categoryId
-			),
-			'order' => array('InfrastructureType.order')
-		));
-		
-		return $data;
-	}
 	
 }
