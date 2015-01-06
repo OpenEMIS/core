@@ -81,7 +81,8 @@ class StaffController extends StaffAppController {
 		// new ControllerAction
 		'InstitutionSiteStaff',
 		'Position' => array('plugin' => 'Staff'),
-		'StaffBehaviour' => array('plugin' => 'Staff')
+		'StaffBehaviour' => array('plugin' => 'Staff'),
+		'StaffClass' => array('plugin' => 'Staff')
 	);
 
 	public function beforeFilter() {
