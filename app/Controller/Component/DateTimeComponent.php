@@ -128,4 +128,17 @@ class DateTimeComponent extends Component {
         return $date->format($sqlDateTimeFormat);
     }
 	
+	public function yearOptionsByConfig(){
+		$configItem = ClassRegistry::init('ConfigItem');
+		$lowestYear = $configItem->getValue('lowest_year');
+		$currentYear = date("Y");
+		
+		$options = array();
+		for($i=$lowestYear; $i <= $currentYear; $i++){
+			$options[$i] = $i;
+		}
+		
+		return $options;
+	}
+	
 }

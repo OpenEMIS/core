@@ -90,7 +90,9 @@ class LabelHelper extends AppHelper {
 			'system' => 'System',
 			'method' => 'Method',
 			'section' => 'Section',
-			'sections' => 'Sections'
+			'sections' => 'Sections',
+			'code' => 'Code',
+			'type' => 'Type'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -461,6 +463,12 @@ class LabelHelper extends AppHelper {
 		),
 		'Infrastructure' => array(
 			'parent_category' => 'Parent Category'
+		),
+		'InstitutionSiteInfrastructure' => array(
+			'infrastructure_type_id' => 'Type',
+			'year_acquired' => 'Year Acquire',
+			'year_disposed' => 'Year Disposed',
+			'infrastructure_ownership_id' => 'Ownership'
 		)
 	);
 	
