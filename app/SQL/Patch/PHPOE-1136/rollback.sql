@@ -102,3 +102,4 @@ RENAME TABLE 1136_field_options TO field_options;
 DROP TABLE field_option_values;
 RENAME TABLE 1136_field_option_values TO field_option_values;
 
+ALTER TABLE `field_options` DROP `old_id`;
