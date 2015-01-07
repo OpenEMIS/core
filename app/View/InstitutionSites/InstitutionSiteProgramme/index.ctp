@@ -2,9 +2,12 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 $this->start('contentActions');
-if($_edit) {
-	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $selectedYear), array('class' => 'divider'));
-}
+	if($_edit) {
+		echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $selectedYear), array('class' => 'divider'));
+	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'export'), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');

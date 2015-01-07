@@ -75,12 +75,21 @@ class InstitutionSiteClass extends AppModel {
 	);
 	
 	public $actsAs = array(
+		'Export',
 		'ControllerAction',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		),
 		'SchoolYear'
 	);
+
+	/* Export Behaviour */
+	public function exportGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSite.id' => $id);
+		return $conditions;
+	}
+	/* End Export Behaviour */
 	
 	public $reportMapping = array(
 		1 => array(
@@ -271,6 +280,10 @@ class InstitutionSiteClass extends AppModel {
 		$this->delete($id);
 		$controller->Message->alert('general.delete.success');
 		$controller->redirect(array('action' => $this->_action, $obj[$this->alias]['school_year_id']));
+	}
+
+	public function classesExport($controller, $params) {
+		$this->export();
 	}
 	
 	public function getClass($classId, $institutionSiteId=0) {

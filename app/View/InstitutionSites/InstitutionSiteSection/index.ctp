@@ -5,9 +5,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('List of Sections'));
 
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedYear), array('class' => 'divider'));
-}
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedYear), array('class' => 'divider'));
+	}
+	if ($_execute) {
+        echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteSection', 'export'), array('class' => 'divider'));
+    }
 $this->end();
 
 $this->start('contentBody');
