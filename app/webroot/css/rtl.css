@@ -323,3 +323,46 @@ fieldset.section_break > .profile-image {
 	float:right;
 	padding: 0 15px;
 }
+
+/* #search */
+.rtl .input-group-addon:first-child { border-right: 1px solid #ccc; }
+
+.rtl .input-group .form-control:first-child, 
+.rtl .input-group-addon:first-child, 
+.rtl .input-group-btn:first-child > .btn, 
+.rtl .input-group-btn:first-child > .btn-group > .btn, 
+.rtl .input-group-btn:first-child > .dropdown-toggle, 
+.rtl .input-group-btn:last-child > .btn:not(:last-child):not(.dropdown-toggle), 
+.rtl .input-group-btn:last-child > .btn-group:not(:last-child) > .btn {
+	border-bottom-right-radius: 4px;
+	border-top-right-radius: 4px;
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0;
+	border-left: 0;
+}
+
+.rtl .input-group-btn:last-child > .btn, 
+.rtl .input-group-btn:last-child > .btn-group {
+    margin-right: -1px;
+    margin-left: 0;
+}
+
+.rtl .input-group .form-control:last-child, 
+.rtl .input-group-addon:last-child, 
+.rtl .input-group-btn:last-child > .btn, 
+.rtl .input-group-btn:last-child > .btn-group > .btn, 
+.rtl .input-group-btn:last-child > .dropdown-toggle, 
+.rtl .input-group-btn:first-child > .btn:not(:first-child), 
+.rtl .input-group-btn:first-child > .btn-group:not(:first-child) > .btn {
+	border-bottom-left-radius: 4px;
+	border-top-left-radius: 4px;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.rtl .search .col-md-5 { float: right; padding-right: 0; }
+.rtl .pagination-wrapper .pagination { float: right; padding-right: 0 }
+.rtl .pagination-wrapper .counter { float: right; margin-right: 10px; }
+.rtl .pagination-wrapper .col-left { padding-right: 0; }
+.rtl .pagination-wrapper .displayLimit { text-align: left; }
+/* end search */
