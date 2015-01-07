@@ -110,8 +110,8 @@ class StaffLeave extends StaffAppModel {
 	public function leavesAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add Leaves');
 		$header = __('Add Leaves');
-		$typeOptions = $this->StaffLeaveType->getList(1);
-		$statusOptions = $this->LeaveStatus->getList(1);
+		$typeOptions = $this->StaffLeaveType->getList();
+		$statusOptions = $this->LeaveStatus->getList();
 
 		if ($controller->request->is('post')) {
 			
@@ -171,8 +171,8 @@ class StaffLeave extends StaffAppModel {
 		$header = __('Edit Leaves');
 		
 		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$typeOptions = $this->StaffLeaveType->getList(1);
-		$statusOptions = $this->LeaveStatus->getList(1);
+		$typeOptions = $this->StaffLeaveType->getList();
+		$statusOptions = $this->LeaveStatus->getList();
 		
 		$data = $this->findById($id);
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffLeaveAttachment.staff_leave_id'=>$id)));

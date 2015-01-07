@@ -137,7 +137,7 @@ class StudentHealthAllergy extends StudentsAppModel {
 			}
 		}
 
-		$healthAllergiesOptions = $this->HealthAllergyType->getList(1);
+		$healthAllergiesOptions = $this->HealthAllergyType->getList();
 		$yesnoOptions = $controller->Option->get('yesno');
 
 		$controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));

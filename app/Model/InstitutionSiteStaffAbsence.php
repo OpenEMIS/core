@@ -125,7 +125,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->fields['absence_type']['options'] = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		
 		$this->fields['staff_absence_reason_id']['type'] = 'select';
-		$this->fields['staff_absence_reason_id']['options'] = $this->StaffAbsenceReason->getList(1);
+		$this->fields['staff_absence_reason_id']['options'] = $this->StaffAbsenceReason->getList();
 		
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
@@ -588,7 +588,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
-		$absenceReasonList = $this->StaffAbsenceReason->getList(1);
+		$absenceReasonList = $this->StaffAbsenceReason->getList();
 
 		$this->setVar(compact('yearList', 'yearId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'staffList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 	}

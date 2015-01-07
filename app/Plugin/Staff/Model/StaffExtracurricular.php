@@ -141,7 +141,7 @@ class StaffExtracurricular extends StaffAppModel {
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-		$typeOptions = $this->ExtracurricularType->getList(1);
+		$typeOptions = $this->ExtracurricularType->getList();
 
 		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
 	}
@@ -173,7 +173,7 @@ class StaffExtracurricular extends StaffAppModel {
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-		$typeOptions = $this->ExtracurricularType->getList(1);
+		$typeOptions = $this->ExtracurricularType->getList();
 		
 		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
 	}

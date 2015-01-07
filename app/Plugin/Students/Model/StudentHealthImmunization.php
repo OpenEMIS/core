@@ -137,7 +137,7 @@ class StudentHealthImmunization extends StudentsAppModel {
 			}
 		}
 		
-		$healthImmunizationsOptions = $this->HealthImmunization->getList(1);
+		$healthImmunizationsOptions = $this->HealthImmunization->getList();
 
 		$controller->set(compact('healthImmunizationsOptions'));
 	}

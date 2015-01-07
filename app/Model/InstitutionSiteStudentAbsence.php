@@ -131,7 +131,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->fields['absence_type']['type'] = 'select';
 		$this->fields['absence_type']['options'] = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		$this->fields['student_absence_reason_id']['type'] = 'select';
-		$this->fields['student_absence_reason_id']['options'] = $this->StudentAbsenceReason->getList(1);
+		$this->fields['student_absence_reason_id']['options'] = $this->StudentAbsenceReason->getList();
 		$this->setFieldOrder('student_absence_reason_id', 9);
 		
 		/*
@@ -736,7 +736,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
-		$absenceReasonList = $this->StudentAbsenceReason->getList(1);
+		$absenceReasonList = $this->StudentAbsenceReason->getList();
 
 		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 

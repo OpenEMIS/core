@@ -131,7 +131,7 @@ class StaffHealthTest extends StaffAppModel {
             }
         }
 
-        $healthTestsOptions = $this->HealthTestType->getList(1);
+        $healthTestsOptions = $this->HealthTestType->getList();
         $controller->set(compact('healthTestsOptions'));
     }
 }

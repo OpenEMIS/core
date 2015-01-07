@@ -328,9 +328,9 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		}
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->getList(1);
+		$trainingProviderOptions = $trainingProvider->getList();
 
-		$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList(1);
+		$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList();
 		$controller->set('trainingAchievementTypeOptions', $trainingAchievementTypeOptions);
 
 		$passfailOptions = $controller->Option->get('passfail');

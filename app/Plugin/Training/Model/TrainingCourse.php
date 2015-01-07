@@ -210,7 +210,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->getList(1);
+		$statusOptions = $trainingStatus->getList();
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 		
 		if ($controller->request->is('post')) {
@@ -294,7 +294,7 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
 		$staffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
-		$staffPositionTitles = $staffPositionTitle->getList(1);
+		$staffPositionTitles = $staffPositionTitle->getList();
 
 		$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
@@ -314,7 +314,7 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingCourseProviders = $this->TrainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviders = $trainingProvider->getList(1);
+		$trainingProviders = $trainingProvider->getList();
 
 		$this->TrainingCourseResultType->bindModel(
 	        array('belongsTo' => array(
@@ -457,21 +457,21 @@ class TrainingCourse extends TrainingAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingFieldStudyOptions = $this->TrainingFieldStudy->getList(1);
+		$trainingFieldStudyOptions = $this->TrainingFieldStudy->getList();
 
-		$trainingModeDeliveryOptions = $this->TrainingModeDelivery->getList(1);
+		$trainingModeDeliveryOptions = $this->TrainingModeDelivery->getList();
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->getList(1);
+		$trainingProviderOptions = $trainingProvider->getList();
 
-		$trainingRequirementOptions = $this->TrainingRequirement->getList(1);
+		$trainingRequirementOptions = $this->TrainingRequirement->getList();
 
-		$trainingLevelOptions = $this->TrainingLevel->getList(1);
+		$trainingLevelOptions = $this->TrainingLevel->getList();
 
 		$staffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
-		$staffPositionTitles = $staffPositionTitle->getList(1);
+		$staffPositionTitles = $staffPositionTitle->getList();
 
-		$trainingCourseTypeOptions = $this->TrainingCourseType->getList(1);
+		$trainingCourseTypeOptions = $this->TrainingCourseType->getList();
 	
 		$configItem = ClassRegistry::init('ConfigItem');
 	 	$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
@@ -490,10 +490,10 @@ class TrainingCourse extends TrainingAppModel {
 	            )
 	        )
 	    );
- 		$trainingResultTypeOptions = $this->TrainingCourseResultType->TrainingResultType->getList(1);
+ 		$trainingResultTypeOptions = $this->TrainingCourseResultType->TrainingResultType->getList();
 
  		$qualificationSpecialisation = ClassRegistry::init('Training.QualificationSpecialisation');
-		$qualificationSpecialisationOptions = $qualificationSpecialisation->getList(1);
+		$qualificationSpecialisationOptions = $qualificationSpecialisation->getList();
 
 		$controller->set(compact('trainingFieldStudyOptions', 'trainingModeDeliveryOptions', 'trainingProviderOptions', 
 		'trainingRequirementOptions', 'trainingLevelOptions', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions', 'trainingResultTypeOptions', 'qualificationSpecialisationOptions'));

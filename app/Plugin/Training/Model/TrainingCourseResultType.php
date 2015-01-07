@@ -13,35 +13,17 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-
-App::uses('FieldOptionValue', 'Model');
-
-class TrainingCourseResultType extends FieldOptionValue {
-	public $useTable = 'field_option_values';
+class TrainingCourseResultType extends TrainingAppModel {
 	public $belongsTo = array(
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
+		'TrainingResultType' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'training_result_type_id'
 		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
+		'TrainingCourse' => array(
+			'className' => 'TrainingCourse',
+		  	'foreignKey' => 'training_course_id'
 		)
 	);
-	
-	// public $belongsTo = array(
-	// 	'TrainingResultType' => array(
-	// 		'className' => 'FieldOptionValue',
-	// 		'foreignKey' => 'training_result_type_id'
-	// 	),
-	// 	'TrainingCourse' => array(
-	// 		'className' => 'TrainingCourse',
-	// 	  	'foreignKey' => 'training_course_id'
-	// 	)
-	// );
 
 }
+?>

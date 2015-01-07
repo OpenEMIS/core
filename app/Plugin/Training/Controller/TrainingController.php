@@ -341,7 +341,7 @@ class TrainingController extends TrainingAppController {
      public function ajax_add_provider() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $trainingProviderOptions = $this->TrainingProvider->getList(1);
+        $trainingProviderOptions = $this->TrainingProvider->getList();
         $this->set('trainingProviderOptions', $trainingProviderOptions);
         $this->render('/Elements/provider');
     }

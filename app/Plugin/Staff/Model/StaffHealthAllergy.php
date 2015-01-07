@@ -124,7 +124,7 @@ class StaffHealthAllergy extends StaffAppModel {
 			}
 		}
 
-		$healthAllergiesOptions = $this->HealthAllergyType->getList(1);
+		$healthAllergiesOptions = $this->HealthAllergyType->getList();
 		$yesnoOptions = $controller->Option->get('yesno');
 
 		$controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));
