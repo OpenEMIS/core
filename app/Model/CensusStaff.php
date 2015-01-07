@@ -263,7 +263,7 @@ class CensusStaff extends AppModel {
 		$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
 		//pr($positionTitles);
 		
-		$genderOptions = $this->Gender->getList(1);
+		$genderOptions = $this->Gender->getList();
 		//pr($genderOptions);die;
 		
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
@@ -289,7 +289,7 @@ class CensusStaff extends AppModel {
 				
 				$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);			
 
-				$genderOptions = $this->Gender->getList(1);
+				$genderOptions = $this->Gender->getList();
 				//pr($genderOptions);die;
 
 				$this->setVar(compact('selectedYear', 'yearList', 'data', 'positionTitles', 'genderOptions'));

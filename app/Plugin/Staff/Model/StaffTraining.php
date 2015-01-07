@@ -121,7 +121,7 @@ class StaffTraining extends StaffAppModel {
             }
         }
 		
-		$categoryOptions = $this->StaffTrainingCategory->getList(1);
+		$categoryOptions = $this->StaffTrainingCategory->getList();
 		$controller->set(compact('categoryOptions'));
 	}
 	

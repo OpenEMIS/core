@@ -164,7 +164,7 @@ class InstitutionSiteStaff extends AppModel {
 		
 		$this->fields['staff_id']['type'] = 'hidden';
 		$this->fields['staff_type_id']['type'] = 'select';
-		$this->fields['staff_type_id']['options'] = $this->StaffType->getList(1);
+		$this->fields['staff_type_id']['options'] = $this->StaffType->getList();
 		
 		$this->setFieldOrder('institution_site_id', 1);
 		$this->setFieldOrder('institution_site_position_id', 2);

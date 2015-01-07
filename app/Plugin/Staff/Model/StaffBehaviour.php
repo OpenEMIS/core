@@ -119,9 +119,9 @@ class StaffBehaviour extends StaffAppModel {
 		
 		$categoryOptions = array();
 		if ($this->action = 'add' || $this->action = 'edit') {
-			$categoryOptions = $this->StaffBehaviourCategory->getList(1);
+			$categoryOptions = $this->StaffBehaviourCategory->getList();
 		} else {
-			$categoryOptions = $this->StaffBehaviourCategory->getList(1);
+			$categoryOptions = $this->StaffBehaviourCategory->getList();
 		}
 		$this->fields['staff_behaviour_category_id']['options'] = $categoryOptions;
 		$this->setFieldOrder('staff_behaviour_category_id', 1);

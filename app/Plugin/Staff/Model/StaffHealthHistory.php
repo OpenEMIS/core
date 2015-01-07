@@ -132,7 +132,7 @@ class StaffHealthHistory extends StaffAppModel {
             }
         }
 
-        $healthConditionsOptions = $this->HealthCondition->getList(1);
+        $healthConditionsOptions = $this->HealthCondition->getList();
         $yesnoOptions = $controller->Option->get('yesno');
 
         $controller->set(compact('healthConditionsOptions', 'yesnoOptions'));

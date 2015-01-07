@@ -33,11 +33,4 @@ class StaffPositionGrade extends FieldOptionValue {
 			'type' => 'LEFT'
 		)
 	);
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Categories' => array('model' => 'Staff.StaffPositionGrade')
-		);
-		return $lookup;
-	}
 }

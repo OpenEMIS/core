@@ -69,7 +69,7 @@ class Position extends AppModel {
 			$this->fields['staff_status_id']['labelKey'] = 'InstitutionSiteStaff';
 			
 			$this->fields['staff_type_id']['type'] = 'select';
-			$this->fields['staff_type_id']['options'] = $this->StaffType->getList(1);
+			$this->fields['staff_type_id']['options'] = $this->StaffType->getList();
 			$this->fields['staff_type_id']['labelKey'] = 'InstitutionSiteStaff';
 			
 			$this->fields['start_year']['visible'] = false;

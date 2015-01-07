@@ -130,7 +130,7 @@ class StudentHealthTest extends StudentsAppModel {
 			}
 		}
 
-		$healthTestsOptions = $this->HealthTestType->getList(1);
+		$healthTestsOptions = $this->HealthTestType->getList();
 		$controller->set(compact('healthTestsOptions'));
 	}
 

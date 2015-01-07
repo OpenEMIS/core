@@ -125,7 +125,7 @@ class StudentHealthConsultation extends StudentsAppModel {
 			}
 		}
 		
-		$healthConsultationsOptions = $this->HealthConsultationType->getList(1);
+		$healthConsultationsOptions = $this->HealthConsultationType->getList();
 		$controller->set(compact('healthConsultationsOptions'));
 	}
 

@@ -32,11 +32,4 @@ class StaffPositionStep extends FieldOptionValue {
 			'type' => 'LEFT'
 		)
 	);
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Categories' => array('model' => 'Staff.StaffPositionStep')
-		);
-		return $lookup;
-	}
 }

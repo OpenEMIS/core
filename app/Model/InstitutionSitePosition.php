@@ -78,7 +78,7 @@ class InstitutionSitePosition extends AppModel {
 		$data = $this->find('all', $options);
 		$list = array();
 		if (!empty($data)) {
-			$staffOptions = $this->StaffPositionTitle->getList(1);
+			$staffOptions = $this->StaffPositionTitle->getList();
 			foreach ($data as $obj) {
 				$posInfo = $obj['InstitutionSitePosition'];
 				$list[$posInfo['id']] = sprintf('%s - %s', $posInfo['position_no'], $staffOptions[$posInfo['staff_position_title_id']]);
@@ -103,11 +103,11 @@ class InstitutionSitePosition extends AppModel {
 		$this->fields['status']['options'] = $this->controller->Option->get('status');
 		
 		if ($this->action == 'add') {
-			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->getList(1);
-			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->getList(1);
+			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->getList();
+			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->getList();
 		} else {
-			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->getList(1);
-			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->getList(1);
+			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->getList();
+			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->getList();
 		}
 		
 		if ($this->action == 'view') {
@@ -182,7 +182,7 @@ class InstitutionSitePosition extends AppModel {
 			$staffFields['start_date']['type'] = 'disabled';
 			$staffFields['start_date']['value'] = $startDate;
 			$staffFields['staff_status_id']['type'] = 'select';
-			$staffFields['staff_status_id']['options'] = $this->InstitutionSiteStaff->StaffStatus->getList(1);
+			$staffFields['staff_status_id']['options'] = $this->InstitutionSiteStaff->StaffStatus->getList();
 			$staffFields['FTE']['visible'] = false;
 			
 			$date = new DateTime($startDate);

@@ -140,8 +140,8 @@ class StudentHealthFamily extends StudentsAppModel {
 			}
 		}
 		
-		$healthConditionsOptions = $this->HealthCondition->getList(1);
-		$healthRelationshipsOptions = $this->HealthRelationship->getList(1);
+		$healthConditionsOptions = $this->HealthCondition->getList();
+		$healthRelationshipsOptions = $this->HealthRelationship->getList();
 		$yesnoOptions = $controller->Option->get('yesno');
 		
 		$controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));

@@ -235,7 +235,7 @@ class StaffTrainingNeed extends StaffAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingPriorityOptions = $this->TrainingPriority->getList(1);
+		$trainingPriorityOptions = $this->TrainingPriority->getList();
 
 		$trainingCourseOptions = array();
 		if($controller->Session->check('Staff.id')){
@@ -299,7 +299,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			);
 		}
 
-		$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(1);
+		$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList();
 		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 
 		if($controller->request->is('get')){

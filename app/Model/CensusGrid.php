@@ -45,7 +45,7 @@ class CensusGrid extends AppModel {
 	
 	public function getRender($controller) {
 		$views = array('index', 'add', 'view', 'edit');
-		$list = $this->InstitutionSiteType->getList(1);
+		$list = $this->InstitutionSiteType->getList();
 		$typeOptions = $this->prepend($list, __('All'));
 		
 		$yesnoOptions = $controller->Option->get('yesno');
@@ -85,7 +85,7 @@ class CensusGrid extends AppModel {
 	
 	public function getOptionFields() {
 		parent::getOptionFields();
-		$list = $this->InstitutionSiteType->getList(1);
+		$list = $this->InstitutionSiteType->getList();
 		$typeOptions = $this->prepend($list, __('All'));
 		
 		$this->fields['y_title']['visible'] = false; // not in use atm
