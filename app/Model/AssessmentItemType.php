@@ -319,7 +319,7 @@ class AssessmentItemType extends AppModel {
 			'conditions' => array(
 				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId)
 			),
-			'order' => array('SchoolYear.name')
+			'order' => array('SchoolYear.order')
 		));
 
 		return $data;
