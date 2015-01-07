@@ -96,15 +96,9 @@ UPDATE staff_qualifications LEFT JOIN field_option_values ON staff_qualification
 ALTER TABLE `quality_institution_visits` CHANGE `quality_visit_type_id` `quality_type_id` INT(11) NOT NULL;
 
 
-
-TRUNCATE TABLE field_options;
-INSERT field_options SELECT * FROM 1136_field_options;
-ALTER TABLE `field_options` DROP `old_id`;
-DROP TABLE 1136_field_options;
-
-
-TRUNCATE TABLE field_option_values;
-INSERT field_option_values SELECT * FROM 1136_field_option_values;
+DROP TABLE 1136edit_field_options;
+DROP TABLE field_options;
+RENAME TABLE 1136_field_options TO field_options;
 DROP TABLE 1136_field_option_values;
-
+RENAME TABLE 1136_field_option_values TO field_option_values;
 
