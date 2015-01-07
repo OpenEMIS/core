@@ -1,11 +1,3 @@
-TRUNCATE TABLE field_options;
-INSERT field_options SELECT * FROM 1136_field_options;
-
-TRUNCATE TABLE field_option_values;
-INSERT field_option_values SELECT * FROM 1136_field_option_values;
-
-ALTER TABLE `quality_institution_visits` CHANGE `quality_visit_type_id` `quality_type_id` INT(11) NOT NULL;
-
 RENAME TABLE 1136_institution_site_types TO institution_site_types;
 RENAME TABLE 1136_institution_site_ownership TO institution_site_ownership;
 RENAME TABLE 1136_institution_site_localities TO institution_site_localities;
@@ -100,3 +92,14 @@ UPDATE student_behaviours LEFT JOIN field_option_values ON student_behaviours.st
 UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_title_id = field_option_values.id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_title_id = field_option_values.old_id WHERE field_options.code = 'StaffPositionTitle';
 UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_grade_id = field_option_values.id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_grade_id = field_option_values.old_id WHERE field_options.code = 'StaffPositionGrade';
 UPDATE staff_qualifications LEFT JOIN field_option_values ON staff_qualifications.qualification_specialisation_id = field_option_values.id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_qualifications.qualification_specialisation_id = field_option_values.old_id WHERE field_options.code = 'QualificationSpecialisation';
+
+ALTER TABLE `quality_institution_visits` CHANGE `quality_visit_type_id` `quality_type_id` INT(11) NOT NULL;
+
+
+
+TRUNCATE TABLE field_options;
+INSERT field_options SELECT * FROM 1136_field_options;
+ALTER TABLE `field_options` DROP `old_id`;
+
+TRUNCATE TABLE field_option_values;
+INSERT field_option_values SELECT * FROM 1136_field_option_values;

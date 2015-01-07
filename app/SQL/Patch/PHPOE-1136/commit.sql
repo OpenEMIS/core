@@ -1,5 +1,6 @@
 -- start field options
 ALTER TABLE `field_options` ADD `old_id` INT NOT NULL AFTER `id`;
+ALTER TABLE `1136_field_options` CHANGE `old_id` `old_id` INT(11) NULL DEFAULT NULL;
 
 -- Need to backup field_options and field_option_values
 CREATE TABLE IF NOT EXISTS 1136_field_options LIKE field_options;
@@ -358,6 +359,8 @@ UPDATE field_options SET field_options.order = field_options.id;
 -- https://docs.google.com/a/kordit.com/spreadsheets/d/1X0zyO6eOwu5wccNWMgKhi34HJyIMDJ_45oLYMe9hEN8/edit#gid=1574144139
 -- firstly... must change existing old IDs to new IDs
 ALTER TABLE `quality_institution_visits` CHANGE `quality_type_id` `quality_visit_type_id` INT(11) NOT NULL;
+
+UPDATE field_option_values SET old_id = null WHERE 1;
 
 UPDATE field_option_values INNER JOIN field_options ON field_option_values.field_option_id = field_options.old_id SET field_option_values.field_option_id = field_options.id;
 
