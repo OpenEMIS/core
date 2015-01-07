@@ -466,7 +466,7 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteInfrastructure' => array(
 			'infrastructure_type_id' => 'Type',
-			'year_acquired' => 'Year Acquire',
+			'year_acquired' => 'Year Acquired',
 			'year_disposed' => 'Year Disposed',
 			'infrastructure_ownership_id' => 'Ownership'
 		)

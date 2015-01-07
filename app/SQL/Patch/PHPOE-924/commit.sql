@@ -105,3 +105,14 @@ CREATE TABLE `institution_site_infrastructures` (
   KEY `infrastructure_type_id` (`infrastructure_type_id`),
   KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+--
+-- 5. new field option `InfrastructureOwnership`
+--
+
+SET @maxFieldOptionOrder := 0;
+
+SELECT MAX(`order`) INTO @maxFieldOptionOrder FROM `field_options`;
+
+INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+(NULL, 'InfrastructureOwnership', 'Ownership', 'Infrastructure', NULL, @maxFieldOptionOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
