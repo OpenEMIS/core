@@ -189,7 +189,7 @@ class TrainingCourse extends TrainingAppModel {
 
 		$staffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
 
-		$list = $staffPositionTitle->getList(1,array('conditions'=>array('StaffPositionTitle.name LIKE' => $search)));
+		$list = $staffPositionTitle->getList(array('conditions'=>array('StaffPositionTitle.name LIKE' => $search)));
 		$data = array();
 		foreach($list as $obj) {
 			$positionTitleId = $obj['value'];

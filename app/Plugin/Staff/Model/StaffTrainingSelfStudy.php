@@ -109,7 +109,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             'model' => $this->alias,
             'fields' => array(
                 array('field' => 'id', 'type' => 'hidden'),
-             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(1), 'labelKey' => 'general.type'),
+             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(), 'labelKey' => 'general.type'),
                 array('field' => 'title',  'labelKey' => 'StaffTraining.course_title'),
 				array('field' => 'start_date'),
 				array('field' => 'end_date'),

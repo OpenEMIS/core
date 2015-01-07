@@ -97,7 +97,7 @@ class InfrastructureCategory extends AppModel {
 					$countStatuses = count($dataInfraStatuses);
 					if ($categoryName == 'Sanitation') {
 						$CensusSanitation = ClassRegistry::init('CensusSanitation');
-						$genderOptions = $CensusSanitation->SanitationGender->getList(1,array('listOnly'=>true));
+						$genderOptions = $CensusSanitation->SanitationGender->getList(array('listOnly'=>true));
 						
 						$dataInfraTypes = $InfrastructureSanitationModel->find('list', array('conditions' => array('InfrastructureSanitation.visible' => 1)));
 						$dataSanitationMaterials = $CensusSanitationModel->find('all', array(

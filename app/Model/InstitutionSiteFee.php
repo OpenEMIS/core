@@ -100,7 +100,7 @@ class InstitutionSiteFee extends AppModel {
 			$this->setVar('params', array($selectedYear));
 		}
 		
-		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(1,array('listOnly'=>true));
+		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(array('listOnly'=>true));
 		$this->setVar('feeTypes', $feeTypes);
 		
 		$ConfigItem = ClassRegistry::init('ConfigItem');
@@ -154,7 +154,7 @@ class InstitutionSiteFee extends AppModel {
 	public function add($selectedYear=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(1,array('listOnly'=>true));
+		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(array('listOnly'=>true));
 		
 		if ($this->request->is('get')) {
 			$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
@@ -269,7 +269,7 @@ class InstitutionSiteFee extends AppModel {
 			__('Education Grade')
 		);
 
-		$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList(1,array('listOnly'=>true));;
+		$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList(array('listOnly'=>true));;
 
 		foreach($feeTypeOptions as $id => $type){
 			$header[] = __($type);
@@ -298,7 +298,7 @@ class InstitutionSiteFee extends AppModel {
 				'conditions' => array('InstitutionSiteFee.institution_site_id' => $institutionSiteId),
 				'order' => array('SchoolYear.name', 'EducationGrade.order')
 			));
-			$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList(1,array('listOnly'=>true));
+			$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList(array('listOnly'=>true));
 			
 			$csvData = array();
 			foreach ($data as $obj) {

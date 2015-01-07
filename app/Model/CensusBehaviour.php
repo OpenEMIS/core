@@ -176,7 +176,7 @@ class CensusBehaviour extends AppModel {
 		if ($index == 1) {
 			$data = array();
 			
-			$behaviourCategories = $this->StudentBehaviourCategory->getList(1,array('listOnly'=>true));
+			$behaviourCategories = $this->StudentBehaviourCategory->getList(array('listOnly'=>true));
 			
 			$maleGenderId = $this->Gender->getIdByName('Male');
 			$femaleGenderId = $this->Gender->getIdByName('Female');
