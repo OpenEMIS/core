@@ -1,17 +1,14 @@
--- start field options
-ALTER TABLE `field_options` ADD `old_id` INT NOT NULL AFTER `id`;
-
-
 -- Need to backup field_options and field_option_values
 CREATE TABLE IF NOT EXISTS 1136_field_options LIKE field_options;
 INSERT 1136_field_options SELECT * FROM field_options WHERE NOT EXISTS (SELECT * FROM 1136_field_options);
+ALTER TABLE `1136_field_options` ADD `old_id` INT NOT NULL AFTER `id`;
 ALTER TABLE `1136_field_options` CHANGE `old_id` `old_id` INT(11) NULL DEFAULT NULL;
 
 CREATE TABLE IF NOT EXISTS 1136_field_option_values LIKE field_option_values;
 INSERT 1136_field_option_values SELECT * FROM field_option_values WHERE NOT EXISTS (SELECT * FROM 1136_field_option_values);
 
 -- Need to edit id of field options
-CREATE TABLE IF NOT EXISTS 1136edit_field_options LIKE field_options;
+CREATE TABLE IF NOT EXISTS 1136edit_field_options LIKE 1136_field_options;
 TRUNCATE TABLE 1136edit_field_options;
 INSERT 1136edit_field_options SELECT * FROM 1136_field_options;
 
