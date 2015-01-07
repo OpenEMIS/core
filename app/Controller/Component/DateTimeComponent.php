@@ -134,7 +134,7 @@ class DateTimeComponent extends Component {
 		$currentYear = date("Y");
 		
 		$options = array();
-		for($i=$lowestYear; $i <= $currentYear; $i++){
+		for($i=$currentYear; $i >= $lowestYear; $i--){
 			$options[$i] = $i;
 		}
 		
