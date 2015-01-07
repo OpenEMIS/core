@@ -42,6 +42,7 @@ app/Config/database.php
 app/Backups/*
 app/webroot/reports/logs/*
 app/webroot/custom_indicators/*
+app/webroot/export/*
 app/tmp/logs/*
 app/tmp/cache/*
 app/tmp/sessions/*
