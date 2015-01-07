@@ -1,13 +1,14 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('List of Classes'));
 
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action . 'Add', $selectedYear), array('class' => 'divider'));
-}
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action . 'Add', $selectedYear), array('class' => 'divider'));
+	}
+	if ($_execute) {
+        echo $this->Html->link($this->Label->get('general.export'), array('action' => $_action . 'Export'), array('class' => 'divider'));
+    }
 $this->end();
 
 $this->start('contentBody');

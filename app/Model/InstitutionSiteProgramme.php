@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
+		'Export',
 		'ControllerAction2',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -34,6 +35,22 @@ class InstitutionSiteProgramme extends AppModel {
 	public $virtualFields = array(
 		'name' => "SELECT `education_programmes`.`name` from `education_programmes` WHERE `education_programmes`.`id` = InstitutionSiteProgramme.education_programme_id"
 	);
+
+	/* Export Behaviour */
+	public function exportGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSite.id' => $id);
+		return $conditions;
+	}
+
+	public function exportGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.status" => array(0 => 'Inactive', 1 => 'Active')
+		);
+		return $lookup;
+	}
+	/* End Export Behaviour */
 	
 	public $reportMapping = array(
 		1 => array(
