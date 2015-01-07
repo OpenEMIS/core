@@ -247,7 +247,7 @@ class AssessmentItemResult extends AppModel {
 					if (empty($data)) {
 						$controller->Message->alert('Assessment.result.noStudent');
 					}
-					$gradingOptions = $controller->AssessmentResultType->getList(true);
+					$gradingOptions = $controller->AssessmentResultType->getList();
 
 					$controller->set(compact('data', 'gradingOptions'));
 				} else {

@@ -128,7 +128,7 @@ class FieldOptionValue extends AppModel {
 		return $key;
 	}
         
-	public function getList($status = false, $customOptions=array()) {
+	public function getList($customOptions=array()) {
 		$alias = $this->alias;
 
 		$options = array(
@@ -147,9 +147,11 @@ class FieldOptionValue extends AppModel {
 		);
 
 		$options['conditions'] = array();
-		if ($status !== false) {
-			$options['conditions'][$alias.'.visible'] = $status;
+
+		if (array_key_exists('visibleOnly', $customOptions)) {
+			$options['conditions'][$alias.'.visible >'] = 0;
 		}
+
 		if (array_key_exists('conditions', $customOptions)) {
 			$options['conditions'] = array_merge($options['conditions'], $customOptions['conditions']);
 		}
@@ -173,8 +175,15 @@ class FieldOptionValue extends AppModel {
 					)
 				);
 			}
+			if (array_key_exists('value', $customOptions)) {
+				$value = $customOptions['value'];
+				foreach ($result as $okey => $ovalue) {
+					if ($ovalue['obsolete'] == '1' && $ovalue['value']!=$value) {
+						unset($result[$okey]);
+					}
+				}
+			}
 		}
-	
 		return $result;
 	}
 	

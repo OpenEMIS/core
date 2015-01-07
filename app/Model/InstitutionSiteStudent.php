@@ -157,7 +157,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['student_id']['type'] = 'hidden';
 		$this->fields['student_id']['attr'] = array('autocomplete' => 'student_id');
 		$this->fields['student_status_id']['type'] = 'select';
-		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList(1);
+		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
 		$this->fields['education_programme_id']['type'] = 'select';
@@ -206,7 +206,7 @@ class InstitutionSiteStudent extends AppModel {
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
-		$statusOptions = $this->StudentStatus->getList(1);
+		$statusOptions = $this->StudentStatus->getList();
 		
 		$prefix = 'InstitutionSiteStudent.Search.%s';
 		if ($this->request->is('post')) {
@@ -335,7 +335,7 @@ class InstitutionSiteStudent extends AppModel {
 						));
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
 						
-						$statusOptions = $this->StudentStatus->getList(1);
+						$statusOptions = $this->StudentStatus->getList();
 						$student_status_id = key($statusOptions);
 						foreach($statusOptions AS $id => $status){
 							if($status == 'Current Student'){

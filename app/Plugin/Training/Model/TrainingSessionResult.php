@@ -26,7 +26,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->getList(1);
+		$statusOptions = $trainingStatus->getList();
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 		
 
@@ -502,7 +502,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
 	
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->getList(1);
+		$trainingProviderOptions = $trainingProvider->getList();
 
 		
 		$controller->set('trainingCourseCodeOptions', $trainingCourseCodeOptions);

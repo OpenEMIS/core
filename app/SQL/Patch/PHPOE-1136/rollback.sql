@@ -99,6 +99,6 @@ ALTER TABLE `quality_institution_visits` CHANGE `quality_visit_type_id` `quality
 DROP TABLE 1136edit_field_options;
 DROP TABLE field_options;
 RENAME TABLE 1136_field_options TO field_options;
-DROP TABLE 1136_field_option_values;
+DROP TABLE field_option_values;
 RENAME TABLE 1136_field_option_values TO field_option_values;
 

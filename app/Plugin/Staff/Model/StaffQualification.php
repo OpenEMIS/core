@@ -224,8 +224,8 @@ class StaffQualification extends StaffAppModel {
 			}
 		}
 		
-		$levelOptions = $this->QualificationLevel->getList(1);
-		$specializationOptions = $this->QualificationSpecialisation->getList(1);
+		$levelOptions = $this->QualificationLevel->getList();
+		$specializationOptions = $this->QualificationSpecialisation->getList();
 
 		$controller->set(compact('levelOptions', 'specializationOptions', 'id', 'staffQualificationObj'));
 	}

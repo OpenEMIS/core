@@ -120,9 +120,9 @@ class StudentBehaviour extends StudentsAppModel {
 		}
 		$categoryOptions = array();
 		if ($this->action = 'add' || $this->action = 'edit') {
-			$categoryOptions = $this->StudentBehaviourCategory->getList(1);
+			$categoryOptions = $this->StudentBehaviourCategory->getList();
 		} else {
-			$categoryOptions = $this->StudentBehaviourCategory->getList(1);
+			$categoryOptions = $this->StudentBehaviourCategory->getList();
 		}
 
 		$this->fields['student_behaviour_category_id']['options'] = $categoryOptions;

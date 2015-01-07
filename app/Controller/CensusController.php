@@ -237,7 +237,7 @@ class CensusController extends AppController {
 		//pr($arrCensusInfra);
 		
 		$CensusSanitation = ClassRegistry::init('CensusSanitation');
-		$genderOptions = $CensusSanitation->SanitationGender->getList(1);
+		$genderOptions = $CensusSanitation->SanitationGender->getList();
 		$genderId = key($genderOptions);
 		
 		$this->set('data',$arrCensusInfra);
@@ -321,7 +321,7 @@ class CensusController extends AppController {
 			}
 			
 			$CensusSanitation = ClassRegistry::init('CensusSanitation');
-			$genderOptions = $CensusSanitation->SanitationGender->getList(1);
+			$genderOptions = $CensusSanitation->SanitationGender->getList();
 			$genderId = key($genderOptions);
 			
 			//pr($arrCensusInfra);

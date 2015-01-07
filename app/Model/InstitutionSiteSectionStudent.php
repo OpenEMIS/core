@@ -114,7 +114,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 		}
 		
 		if($this->request->is('get')) {
-			$categoryOptions = $this->StudentCategory->getList(1);
+			$categoryOptions = $this->StudentCategory->getList();
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(

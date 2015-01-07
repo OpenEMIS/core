@@ -145,9 +145,9 @@ class StudentGuardian extends StudentsAppModel {
 		}
 		
 		$genderOptions = array('M' => __('Male'), 'F' => __('Female'));
-		$relationshipOptions = $this->GuardianRelation->getList(1);
+		$relationshipOptions = $this->GuardianRelation->getList();
 		//$GuardianEducationLevel = ClassRegistry::init('Students.GuardianEducationLevel');
-		$educationOptions = $this->Guardian->GuardianEducationLevel->getList(1);
+		$educationOptions = $this->Guardian->GuardianEducationLevel->getList();
 
 		$controller->set(compact('header', 'genderOptions', 'relationshipOptions', 'educationOptions'));
 	}
@@ -174,8 +174,8 @@ class StudentGuardian extends StudentsAppModel {
 		}
 
 		$genderOptions = array('M' => __('Male'), 'F' => __('Female'));
-		$relationshipOptions = $this->GuardianRelation->getList(1);
-		$educationOptions = $this->Guardian->GuardianEducationLevel->getList(1);
+		$relationshipOptions = $this->GuardianRelation->getList();
+		$educationOptions = $this->Guardian->GuardianEducationLevel->getList();
 
 		$controller->set('genderOptions', $genderOptions);
 		$controller->set('relationshipOptions', $relationshipOptions);

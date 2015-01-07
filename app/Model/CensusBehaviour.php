@@ -124,10 +124,10 @@ class CensusBehaviour extends AppModel {
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
-		$behaviourCategories = $this->StudentBehaviourCategory->getList(1);
+		$behaviourCategories = $this->StudentBehaviourCategory->getList();
 		//pr($staffCategories);die;
 
-		$genderOptions = $this->Gender->getList(1);
+		$genderOptions = $this->Gender->getList();
 		//pr($genderOptions);die;
 		
 		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
@@ -146,10 +146,10 @@ class CensusBehaviour extends AppModel {
 			if (!$editable) {
 				$controller->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
-				$behaviourCategories = $this->StudentBehaviourCategory->getList(1);
+				$behaviourCategories = $this->StudentBehaviourCategory->getList();
 				//pr($staffCategories);die;
 
-				$genderOptions = $this->Gender->getList(1);
+				$genderOptions = $this->Gender->getList();
 				//pr($genderOptions);die;
 				
 				$controller->set(compact('selectedYear', 'yearList', 'data', 'genderOptions', 'behaviourCategories'));
