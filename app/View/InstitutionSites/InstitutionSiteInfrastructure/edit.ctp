@@ -5,7 +5,7 @@ echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
 echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Infrastructure') . ' - ' . $category['InfrastructureCategory']['name']);
+$this->assign('contentHeader', __('Add Infrastructure'));
 
 $this->start('contentActions');
 echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $categoryId), array('class' => 'divider'));

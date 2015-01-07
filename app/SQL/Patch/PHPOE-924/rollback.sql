@@ -36,3 +36,9 @@ DROP TABLE IF EXISTS `infrastructure_types`;
 --
 
 DROP TABLE IF EXISTS `institution_site_infrastructures`;
+
+--
+-- 5. new field option `InfrastructureOwnership`
+--
+
+DELETE FROM `field_options` WHERE `code` LIKE 'InfrastructureOwnership';
