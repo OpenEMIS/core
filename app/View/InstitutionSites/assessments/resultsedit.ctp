@@ -36,12 +36,6 @@ echo $this->Form->create($model, $formOptions);
 			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId . '/' . $selectedClass
 		));
 		?>
-		<?php if(!empty($selectedItem)): ?>
-		<ul class="legend">
-			<li><?php echo __('Minimum') . ' ' . __('Marks') ?>: <?php echo $minMarks; ?></li>
-			<li><?php echo __('Maximum') . ' ' . __('Marks') ?>: <?php echo $maxMarks; ?></li>
-		</ul>
-		<?php endif; ?>
 </div>
 
 <table class="table table-striped table-hover table-bordered">
@@ -49,7 +43,11 @@ echo $this->Form->create($model, $formOptions);
 		<tr>
 			<th class="cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
 			<th class=""><?php echo __('Student Name'); ?></th>
-			<th class="cell_marks"><?php echo __('Marks'); ?></th>
+			<th class="cell_marks">
+				<?php 
+				echo sprintf('%s (%s=%d, %s=%d)', __('Marks'), __('Pass'), $minMarks, __('Max'), $maxMarks); 
+				?>
+			</th>
 			<th class="cell_grading"><?php echo __('Grading'); ?></th>
 		</tr>
 	</thead>
