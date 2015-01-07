@@ -22,6 +22,7 @@ class LabelHelper extends AppHelper {
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
+			'export' => 'Export',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'reorder' => 'Reorder',
