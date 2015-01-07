@@ -244,7 +244,7 @@ class InstitutionSiteStaff extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->getList(1, array('listOnly'=>true));
+		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->getList(array('listOnly'=>true));
 		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
 	}
 	

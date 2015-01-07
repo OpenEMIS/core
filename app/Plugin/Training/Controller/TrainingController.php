@@ -136,14 +136,14 @@ class TrainingController extends TrainingAppController {
     public function ajax_add_result_type() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->getList(1));
+        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->getList());
         $this->render('/Elements/result_type');
     }
 
     public function ajax_add_specialisation() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getList(1));
+        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getList());
         $this->render('/Elements/specialisation');
     }
 
