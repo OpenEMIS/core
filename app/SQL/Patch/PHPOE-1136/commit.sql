@@ -1,10 +1,12 @@
 -- start field options
 ALTER TABLE `field_options` ADD `old_id` INT NOT NULL AFTER `id`;
-ALTER TABLE `1136_field_options` CHANGE `old_id` `old_id` INT(11) NULL DEFAULT NULL;
+
 
 -- Need to backup field_options and field_option_values
 CREATE TABLE IF NOT EXISTS 1136_field_options LIKE field_options;
 INSERT 1136_field_options SELECT * FROM field_options WHERE NOT EXISTS (SELECT * FROM 1136_field_options);
+ALTER TABLE `1136_field_options` CHANGE `old_id` `old_id` INT(11) NULL DEFAULT NULL;
+
 CREATE TABLE IF NOT EXISTS 1136_field_option_values LIKE field_option_values;
 INSERT 1136_field_option_values SELECT * FROM field_option_values WHERE NOT EXISTS (SELECT * FROM 1136_field_option_values);
 
@@ -100,169 +102,169 @@ CREATE TABLE `field_options` (
 
 
 -- reinserting in order
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteGender';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteGender' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteLocality';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteLocality' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteOwnership';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteOwnership' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteProvider';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteProvider' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteSector';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteSector' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteStatus';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteStatus' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteCustomFieldOption';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteCustomFieldOption' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteCustomField';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InstitutionSiteCustomField' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusCustomFieldOption';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusCustomFieldOption' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusCustomField';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusCustomField' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusGrid';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'CensusGrid' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentAbsenceReason';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentAbsenceReason' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentBehaviourCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentBehaviourCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Gender';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Gender' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentStatus';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentStatus' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCustomField';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCustomField' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCustomFieldOption';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StudentCustomFieldOption' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffAbsenceReason';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffAbsenceReason' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffBehaviourCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffBehaviourCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'LeaveStatus';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'LeaveStatus' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffLeaveType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffLeaveType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffStatus';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffStatus' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffTrainingCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffTrainingCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffCustomField';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffCustomField' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffCustomFieldOption';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffCustomFieldOption' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'AssessmentResultType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'AssessmentResultType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Bank';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Bank' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'BankBranch';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'BankBranch' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceNature';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceNature' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceSource';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FinanceSource' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FeeType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'FeeType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'GuardianEducationLevel';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'GuardianEducationLevel' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'GuardianRelation';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'GuardianRelation' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthAllergyType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthAllergyType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthCondition';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthCondition' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthConsultationType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthConsultationType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthImmunization';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthImmunization' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthRelationship';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthRelationship' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthTestType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'HealthTestType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureBuilding';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureBuilding' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureEnergy';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureEnergy' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureFurniture';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureFurniture' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureMaterial';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureMaterial' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureResource';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureResource' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureRoom';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureRoom' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureSanitation';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureSanitation' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SanitationGender';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SanitationGender' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureStatus';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureStatus' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureWater';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'InfrastructureWater' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionGrade';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionGrade' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionStep';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionStep' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionTitle';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'StaffPositionTitle' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualificationLevel';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualificationLevel' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualificationSpecialisation';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualificationSpecialisation' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualityVisitType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'QualityVisitType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SalaryAdditionType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SalaryAdditionType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SalaryDeductionType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SalaryDeductionType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingAchievementType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingAchievementType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingFieldStudy';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingFieldStudy' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingLevel';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingLevel' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingModeDelivery';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingModeDelivery' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingNeedCategory';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingNeedCategory' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingPriority';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingPriority' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingProvider';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingProvider' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingRequirement';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingRequirement' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseResultType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseResultType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingStatus';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingStatus' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ContactType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ContactType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'EmploymentType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'EmploymentType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ExtracurricularType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ExtracurricularType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'IdentityType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'IdentityType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Language';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Language' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'LicenseType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'LicenseType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SpecialNeedType';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SpecialNeedType' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SchoolYear';
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'SchoolYear' ORDER BY id ASC LIMIT 1;
 UPDATE field_options SET field_options.old_id = field_options.id;
 
 
@@ -566,18 +568,4 @@ UPDATE student_behaviours LEFT JOIN field_option_values ON student_behaviours.st
 UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_title_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_title_id = field_option_values.id WHERE field_options.code = 'StaffPositionTitle';
 UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_grade_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_grade_id = field_option_values.id WHERE field_options.code = 'StaffPositionGrade';
 UPDATE staff_qualifications LEFT JOIN field_option_values ON staff_qualifications.qualification_specialisation_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_qualifications.qualification_specialisation_id = field_option_values.id WHERE field_options.code = 'QualificationSpecialisation';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

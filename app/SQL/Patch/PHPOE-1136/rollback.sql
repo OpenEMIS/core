@@ -100,6 +100,11 @@ ALTER TABLE `quality_institution_visits` CHANGE `quality_visit_type_id` `quality
 TRUNCATE TABLE field_options;
 INSERT field_options SELECT * FROM 1136_field_options;
 ALTER TABLE `field_options` DROP `old_id`;
+DROP TABLE 1136_field_options;
+
 
 TRUNCATE TABLE field_option_values;
 INSERT field_option_values SELECT * FROM 1136_field_option_values;
+DROP TABLE 1136_field_option_values;
+
+
