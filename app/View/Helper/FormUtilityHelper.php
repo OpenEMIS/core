@@ -52,6 +52,10 @@ class FormUtilityHelper extends AppHelper {
 		$center = isset($options['center']) ? $options['center'] : false;
 		$html .= '<div class="form-group">';
 		$html .= '<div class="col-md-offset-' . ($center ? '5' : '4') . '">';
+		if(isset($options['submitURL'])) {
+			$submitURL = $options['submitURL'];
+			$html .= $this->Form->submit($this->Label->get('general.submit'), array('name' => 'postFinal', 'class' => 'btn_save btn_right', 'div' => false));
+		}
 		$html .= $this->Form->submit($this->Label->get('general.save'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		$html .= $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
 		$html .= '</div>';

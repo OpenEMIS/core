@@ -153,12 +153,19 @@ var jsTable = {
 	},
 	
 	doRemove: function(obj) {
-                if($(obj).closest('.table_row').length>0) {
-                    $(obj).closest('.table_row').remove();
-                }
-                if($(obj).closest('tr').length>0) {
-                    $(obj).closest('tr').remove();
-                }
+        if($(obj).closest('.table_row').length>0) {
+            $(obj).closest('.table_row').remove();
+        }
+        if($(obj).closest('tr').length>0) {
+            $(obj).closest('tr').remove();
+        }
+		jsTable.fixTable();
+	},
+
+	doRemoveColumn: function(obj) {
+		var colnum = $(obj).closest("th").prevAll("th").length + 1;
+		$(obj).closest("table").find("td:nth-child(" + colnum + "), th:nth-child(" + colnum + ")").remove();
+
 		jsTable.fixTable();
 	},
 	

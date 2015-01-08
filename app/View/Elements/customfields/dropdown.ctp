@@ -4,7 +4,11 @@
 	<?php
 		if(count($obj[$modelOption]) > 0) {
 			$modelId = $obj[$model]['id'];
-			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "";
+			if(isset($dataValues[$modelId][0]['text_value'])) {
+				$value = $dataValues[$modelId][0]['text_value'];
+			} else {
+				$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "";
+			}
 			if($action == 'view') {
 				foreach($obj[$modelOption] as $dropdownValue) {
 					echo ($value == $dropdownValue['id'] ? $dropdownValue['value'] : "");
