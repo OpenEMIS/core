@@ -18,12 +18,10 @@ class StudentBehaviour extends StudentsAppModel {
 	public $useTable = 'student_behaviours';
 	
 	public $actsAs = array(
+		'Export' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('date_of_behaviour'),
-		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a')),
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
+		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
 	);
 
 	public $validate = array(
@@ -57,33 +55,14 @@ class StudentBehaviour extends StudentsAppModel {
 			'foreignKey' => 'created_user_id',
 			'type' => 'LEFT'
 	));
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'Student' => array(
-					'identification_no' => 'Student OpenEMIS ID',
-					'first_name' => '',
-					'middle_name' => '',
-					'last_name' => '',
-					'preferred_name' => ''
-				),
-				'StudentBehaviourCategory' => array(
-					'name' => 'Category'
-				),
-				'StudentBehaviour' => array(
-					'date_of_behaviour' => 'Date',
-					'title' => 'Title',
-					'description' => 'Description',
-					'action' => 'Action'
-				)
-			),
-			'fileName' => 'Report_Student_Behaviour'
-		)
-	);
+
+	/* Export Behaviour */
+	public function exportGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSite.id' => $id);
+		return $conditions;
+	}
+	/* End Export Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -219,47 +198,5 @@ class StudentBehaviour extends StudentsAppModel {
 			$data = $this->findAllByStudentId($studentId, array(), array('StudentBehaviour.date_of_behaviour'));
 			$this->setVar(compact('data'));
 		}
-	}
-	
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-		$options = array();
-		
-		if ($index == 1) {
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Student.identification_no', 'StudentBehaviour.date_of_behaviour', 'StudentBehaviour.id');
-			$options['conditions'] = array('StudentBehaviour.institution_site_id' => $institutionSiteId);
-			
-			$this->contain(array(
-				'Student',
-				'InstitutionSite' => array('fields' => array('InstitutionSite.name')),
-				'StudentBehaviourCategory' => array('fields' => array('StudentBehaviourCategory.name'))
-			));
-		}
-		
-		$list = $this->find('all', $options);
-		$data = array();
-		
-		foreach ($list as $row) {
-			unset($row['InstitutionSite']['id']);
-			unset($row['Student']['id']);
-			unset($row['StudentBehaviourCategory']['id']);
-			$row[$this->alias]['date_of_behaviour'] = $this->formatDateByConfig($row[$this->alias]['date_of_behaviour']);
-			$data[] = $row;
-		}
-		return $data;
-	}
-
-	public function reportsGetFileName($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }
