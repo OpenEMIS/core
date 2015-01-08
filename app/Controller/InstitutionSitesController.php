@@ -84,6 +84,7 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteFee',
 		'InstitutionSitePosition',
 		'InstitutionSiteProgramme',
+		'InstitutionSiteStudentAttendance',
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),

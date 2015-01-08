@@ -7,7 +7,7 @@ $this->start('contentActions');
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action . 'Add', $selectedYear), array('class' => 'divider'));
 	}
 	if ($_execute) {
-        echo $this->Html->link($this->Label->get('general.export'), array('action' => $_action . 'Export'), array('class' => 'divider'));
+        echo $this->Html->link($this->Label->get('general.export'), array('action' => $_action . 'Excel'), array('class' => 'divider'));
     }
 $this->end();
 

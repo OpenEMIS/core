@@ -18,11 +18,8 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
-		'Export',
+		'Excel',
 		'ControllerAction2',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		),
 		'SchoolYear'
 	);
 	
@@ -36,38 +33,21 @@ class InstitutionSiteProgramme extends AppModel {
 		'name' => "SELECT `education_programmes`.`name` from `education_programmes` WHERE `education_programmes`.`id` = InstitutionSiteProgramme.education_programme_id"
 	);
 
-	/* Export Behaviour */
-	public function exportGetConditions() {
+	/* Excel Behaviour */
+	public function excelGetConditions() {
 		$id = CakeSession::read('InstitutionSite.id');
 		$conditions = array('InstitutionSite.id' => $id);
 		return $conditions;
 	}
 
-	public function exportGetFieldLookup() {
+	public function excelGetFieldLookup() {
 		$alias = $this->alias;
 		$lookup = array(
 			"$alias.status" => array(0 => 'Inactive', 1 => 'Active')
 		);
 		return $lookup;
 	}
-	/* End Export Behaviour */
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'EducationProgramme' => array(
-					'name' => 'Programme'
-				),
-				'InstitutionSiteProgramme' => array(
-					'system_cycle' => 'System - Cycle'
-				)
-			),
-			'fileName' => 'Report_Programme_List'
-		)
-	);
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -564,79 +544,5 @@ class InstitutionSiteProgramme extends AppModel {
 		
 		$controller->set(compact('programmeOptions'));
 		$controller->render('/Elements/programmes/programmes_options');
-	}
-	
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-
-		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order');
-			$options['conditions'] = array(
-				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.status' => 1
-			);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array(
-						'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
-					)
-				),
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
-					)
-				),
-				array(
-					'table' => 'education_cycles',
-					'alias' => 'EducationCycle',
-					'conditions' => array(
-						'EducationProgramme.education_cycle_id = EducationCycle.id'
-					)
-				),
-				array(
-					'table' => 'education_levels',
-					'alias' => 'EducationLevel',
-					'conditions' => array(
-						'EducationCycle.education_level_id = EducationLevel.id'
-					)
-				),
-				array(
-					'table' => 'education_systems',
-					'alias' => 'EducationSystem',
-					'conditions' => array(
-						'EducationLevel.education_system_id = EducationSystem.id'
-					)
-				)
-			);
-			
-			$this->virtualFields = array(
-				'system_cycle' => 'CONCAT(EducationSystem.name, " - ", EducationCycle.name)'
-			);
-
-			$data = $this->find('all', $options);
-			
-			return $data;
-		}
-	}
-	
-	public function reportsGetFileName($args){
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }
