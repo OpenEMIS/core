@@ -18,7 +18,7 @@ class StudentBehaviour extends StudentsAppModel {
 	public $useTable = 'student_behaviours';
 	
 	public $actsAs = array(
-		'Export' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('date_of_behaviour'),
 		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
@@ -56,13 +56,13 @@ class StudentBehaviour extends StudentsAppModel {
 			'type' => 'LEFT'
 	));
 
-	/* Export Behaviour */
-	public function exportGetConditions() {
+	/* Excel Behaviour */
+	public function excelGetConditions() {
 		$id = CakeSession::read('InstitutionSite.id');
 		$conditions = array('InstitutionSite.id' => $id);
 		return $conditions;
 	}
-	/* End Export Behaviour */
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();

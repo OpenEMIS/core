@@ -7,7 +7,7 @@ $this->start('contentActions');
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 	}
 	if ($_execute) {
-		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'export'), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
 	}
 $this->end();
 
