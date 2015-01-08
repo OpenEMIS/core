@@ -11,6 +11,7 @@ INSERT 1136_field_option_values SELECT * FROM field_option_values WHERE NOT EXIS
 CREATE TABLE IF NOT EXISTS 1136edit_field_options LIKE 1136_field_options;
 TRUNCATE TABLE 1136edit_field_options;
 INSERT 1136edit_field_options SELECT * FROM 1136_field_options;
+UPDATE 1136edit_field_options SET code = 'TrainingResultType' WHERE code = 'TrainingCourseResultType';
 
 DELETE FROM `1136edit_field_options` WHERE `1136edit_field_options`.`code` = 'Country';
 
@@ -164,7 +165,7 @@ INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'Training
 INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingPriority' ORDER BY id ASC LIMIT 1;
 INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingProvider' ORDER BY id ASC LIMIT 1;
 INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingRequirement' ORDER BY id ASC LIMIT 1;
-INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingCourseResultType' ORDER BY id ASC LIMIT 1;
+INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingResultType' ORDER BY id ASC LIMIT 1;
 INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'TrainingStatus' ORDER BY id ASC LIMIT 1;
 INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'ContactType' ORDER BY id ASC LIMIT 1;
 INSERT field_options SELECT * FROM 1136edit_field_options WHERE code = 'EmploymentType' ORDER BY id ASC LIMIT 1;
@@ -247,7 +248,7 @@ UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'Tr
 UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingPriority';
 UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingProvider';
 UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingRequirement';
-UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingCourseResultType';
+UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingResultType';
 UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'TrainingStatus';
 UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'ContactType';
 UPDATE field_options SET field_options.id = @count:= @count + 1 where code = 'EmploymentType';
