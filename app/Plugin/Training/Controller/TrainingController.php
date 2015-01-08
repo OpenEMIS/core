@@ -136,7 +136,9 @@ class TrainingController extends TrainingAppController {
     public function ajax_add_result_type() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->getList());
+        $TrainingResultType = ClassRegistry::init('Training.TrainingResultType');
+ 		
+        $this->set('trainingResultTypeOptions', $TrainingResultType->getList());
         $this->render('/Elements/result_type');
     }
 

@@ -316,15 +316,12 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviders = $trainingProvider->getList();
 
-		$this->TrainingCourseResultType->bindModel(
-	        array('belongsTo' => array(
-	                'TrainingResultType' => array(
-						'className' => 'FieldOptionValue',
-						'foreignKey' => 'training_result_type_id'
-					)
-	            )
-	        )
-	    );
+		// $this->TrainingCourseResultType->bindModel(
+	 //        array('belongsTo' => array(
+	 //                'TrainingResultType'
+	 //            )
+	 //        )
+	 //    );
 
 		$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)));
 
@@ -481,16 +478,14 @@ class TrainingCourse extends TrainingAppModel {
  			$trainingCreditHourOptions[$i] = $i;
 	 	}
 
-	 	$this->TrainingCourseResultType->bindModel(
-	        array('belongsTo' => array(
-	                'TrainingResultType' => array(
-						'className' => 'FieldOptionValue',
-						'foreignKey' => 'training_result_type_id'
-					)
-	            )
-	        )
-	    );
- 		$trainingResultTypeOptions = $this->TrainingCourseResultType->TrainingResultType->getList();
+	 	// $this->TrainingCourseResultType->bindModel(
+	  //       array('belongsTo' => array(
+	  //               'TrainingResultType'
+	  //           )
+	  //       )
+	  //   );
+	 	$TrainingResultType = ClassRegistry::init('Training.TrainingResultType');
+ 		$trainingResultTypeOptions = $TrainingResultType->getList();
 
  		$qualificationSpecialisation = ClassRegistry::init('Training.QualificationSpecialisation');
 		$qualificationSpecialisationOptions = $qualificationSpecialisation->getList();
@@ -560,15 +555,12 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
-				$this->TrainingCourseResultType->bindModel(
-			        array('belongsTo' => array(
-			                'TrainingResultType' => array(
-								'className' => 'FieldOptionValue',
-								'foreignKey' => 'training_result_type_id'
-							)
-			            )
-			        )
-			    );
+				// $this->TrainingCourseResultType->bindModel(
+			 //        array('belongsTo' => array(
+			 //                'TrainingResultType'
+			 //            )
+			 //        )
+			 //    );
 			   	$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all',  
 					array(
 						'conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)
