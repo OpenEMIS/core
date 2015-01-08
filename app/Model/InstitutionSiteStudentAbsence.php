@@ -20,6 +20,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	//public $hasMany = array('InstitutionSiteStudentAbsenceAttachment');
 	
 	public $actsAs = array(
+		'Export' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		),
@@ -92,6 +93,26 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			)
 		)
 	);
+
+	/* Export Behaviour */
+	public function exportGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSiteSection.institution_site_id' => $id);
+		return $conditions;
+	}
+	public function exportGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.status" => array(0 => 'Inactive', 1 => 'Active'),
+			"$alias.type" => array(0 => 'Non-Teaching', 1 => 'Teaching')
+		);
+		return $lookup;
+	}
+	public function exportGetOrder() {
+		$order = array('SchoolYear.order', 'InstitutionSitePosition.position_no');
+		return $order;
+	}
+	/* End Export Behaviour */
 	
 	public function compareDate($field = array(), $compareField = null) {
 		$startDate = new DateTime(current($field));
