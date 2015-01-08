@@ -2,6 +2,12 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
 
+$this->start('contentActions');
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'export'), array('class' => 'divider'));
+	}
+$this->end();
+
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/StudentBehaviour/controls');
 ?>

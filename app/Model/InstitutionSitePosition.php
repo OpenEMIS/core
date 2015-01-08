@@ -69,6 +69,11 @@ class InstitutionSitePosition extends AppModel {
 	);
 
 	/* Export Behaviour */
+	public function exportGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSite.id' => $id);
+		return $conditions;
+	}
 	public function exportGetFieldLookup() {
 		$alias = $this->alias;
 		$lookup = array(
@@ -76,6 +81,10 @@ class InstitutionSitePosition extends AppModel {
 			"$alias.type" => array(0 => 'Non-Teaching', 1 => 'Teaching')
 		);
 		return $lookup;
+	}
+	public function exportGetOrder() {
+		$order = array('SchoolYear.order', 'InstitutionSitePosition.position_no');
+		return $order;
 	}
 	/* End Export Behaviour */
 	

@@ -30,13 +30,16 @@ class ExportBehavior extends ModelBehavior {
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array) $settings);
 
 		$this->LabelHelper = new LabelHelper(new View());
-		$this->Model = $Model;
 	}
 
 	public function export(Model $model, $format='xlsx') {
-		if (!file_exists(WWW_ROOT . $this->rootFolder)) {
+		$this->Model = $model;
+		$folder = WWW_ROOT . $this->rootFolder;
+		if (!file_exists($folder)) {
 			umask(0);
-			mkdir(WWW_ROOT . $this->rootFolder, 0777);
+			mkdir($folder, 0777);
+		} else {
+			$this->deleteOldFiles($folder, $format);
 		}
 
 		switch ($format) {
@@ -46,9 +49,29 @@ class ExportBehavior extends ModelBehavior {
 		}
 	}
 
+	private function deleteOldFiles($folder, $format) {
+		$fileList = array_diff(scandir($folder), array('..', '.'));
+		$now = new DateTime();
+		// delete all old files that are more than one hour old
+		$now->sub(new DateInterval('PT1H'));
+
+		foreach ($fileList as $file) {
+			$path = $folder.DS.$file;
+			$timestamp = filectime($path);
+			$date = new DateTime();
+			$date->setTimestamp($timestamp);
+
+			if ($now > $date) {
+				if (!unlink($path)) {
+					$this->log('Unable to delete ' . $path, 'export');
+				}
+			}
+		}
+	}
+
 	public function generateXLXS(Model $model) {
 		$sheet = 'Sheet1';
-		$header = $model->exportGetHeader($model);
+		$header = $model->exportGetHeader($model);//pr($header);die;
 		$footer = $model->exportGetFooter($model);
 		$data = $model->exportGetData($model);
 
@@ -83,12 +106,31 @@ class ExportBehavior extends ModelBehavior {
 		$header = array();
 		$exclude = array('id', 'modified_user_id', 'modified', 'created_user_id', 'created');
 
+		if (array_key_exists('header', $this->settings[$alias])) {
+			$appendedHeader = $this->settings[$alias]['header'];
+			foreach ($appendedHeader as $module => $fields) {
+				foreach ($fields as $f) {
+					$key = $module.'.'.$f;
+					$label = $this->LabelHelper->get($key);
+					if ($label === false) {
+						$label = $key;
+					}
+					$header[$key] = __($label);
+				}
+			}
+		}
 		foreach ($schema as $field) {
+
 			if (!in_array($field, $exclude)) {
 				$pos = strrpos($field, '_id');
 				if ($pos !== false) {
 					$fieldModel = Inflector::camelize(substr($field, 0, $pos));
-					$key = $fieldModel.'.name';
+					$associatedSchema = $model->{$fieldModel}->schema();
+					if (array_key_exists('name', $associatedSchema)) {
+						$key = $fieldModel.'.name';
+					} else if (array_key_exists('title', $associatedSchema)) {
+						$key = $fieldModel.'.title';
+					}
 				} else {
 					$key = $alias.'.'.$field;
 				}
@@ -104,32 +146,37 @@ class ExportBehavior extends ModelBehavior {
 
 	public function exportGetData(Model $model) {
 		$options = $model->exportGetFindOptions($model);
-		$conditions = $model->exportGetConditions($model);
-
-		if (!empty($conditions)) {
-			$options['conditions'] = $conditions;
-		}
+		
 		$data = $model->find('all', $options);
 		return $data;
 	}
 
 	public function exportGetFindOptions(Model $model) {
 		$fields = array_keys($model->exportGetHeader($model));
+		$conditions = $model->exportGetConditions($model);
 		$contain = $this->getContain($fields);
+		$order = $this->exportGetOrder($model);
 
 		$options = array();
 		$options['recursive'] = 0;
 		$options['fields'] = $fields;
 		$options['contain'] = $contain;
+		$options['conditions'] = $conditions;
+		$options['order'] = $order;
+
 		return $options;
 	}
 
 	public function exportGetConditions(Model $model) {
-
+		return array();
 	}
 
 	public function exportGetFieldLookup(Model $model) {
-		
+		return array();
+	}
+
+	public function exportGetOrder(Model $model) {
+		return array();
 	}
 
 	public function exportGetFooter(Model $model) {

@@ -295,6 +295,9 @@ class LabelHelper extends AppHelper {
 			'processing' => 'Processing'
 		),
 		'Student' => array(
+			'identification_no' => 'OpenEMIS ID',
+			'first_name' => 'First Name',
+			'last_name' => 'Last Name',
 			'add_existing' => 'Add existing Student'
 		),
 		'StaffLeave' => array(
