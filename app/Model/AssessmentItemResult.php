@@ -277,7 +277,7 @@ class AssessmentItemResult extends AppModel {
 							if (empty($record['marks']) && empty($record['assessment_result_type_id'])) {
 								unset($result[$key]);
 							}else{
-								if($record['marks'] < $minMarks || $record['marks'] > $maxMarks){
+								if($record['marks'] < 0 || $record['marks'] > $maxMarks){
 									$dataAllValid = false;
 								}
 							}
