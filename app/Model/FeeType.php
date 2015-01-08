@@ -13,14 +13,24 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-class TrainingCourseResultType extends TrainingAppModel {
+
+App::uses('FieldOptionValue', 'Model');
+
+class FeeType extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('InstitutionSiteFeeType');
 	public $belongsTo = array(
-		'Training.TrainingResultType',
-		'TrainingCourse' => array(
-			'className' => 'TrainingCourse',
-		  	'foreignKey' => 'training_course_id'
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
-
 }
-?>

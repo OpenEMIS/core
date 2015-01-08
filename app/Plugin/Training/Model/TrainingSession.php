@@ -367,15 +367,12 @@ class TrainingSession extends TrainingAppModel {
 
 						$trainingSessions = $this->find('first', array('conditions'=>array('TrainingSession.id'=>$saveData['WorkflowLog']['record_id'])));
 						$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-						$trainingCourseResultType->bindModel(
-					        array('belongsTo' => array(
-					                'TrainingResultType' => array(
-										'className' => 'FieldOptionValue',
-										'foreignKey' => 'training_result_type_id'
-									)
-					            )
-					        )
-					    );
+						// $trainingCourseResultType->bindModel(
+					 //        array('belongsTo' => array(
+					 //                'TrainingResultType'
+					 //            )
+					 //        )
+					 //    );
 
 						$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingSessions['TrainingSession']['training_course_id'])));
 						$trainingSessionTraineeResults = array();
@@ -578,15 +575,12 @@ class TrainingSession extends TrainingAppModel {
 
 					
 					$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-					$trainingCourseResultType->bindModel(
-				        array('belongsTo' => array(
-				                'TrainingResultType' => array(
-									'className' => 'FieldOptionValue',
-									'foreignKey' => 'training_result_type_id'
-								)
-				            )
-				        )
-				    );
+					// $trainingCourseResultType->bindModel(
+				 //        array('belongsTo' => array(
+				 //                'TrainingResultType'
+				 //            )
+				 //        )
+				 //    );
 
 				    $trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingSession']['training_course_id'])));
 						

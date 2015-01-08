@@ -127,7 +127,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
-		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
+		$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(array('listOnly' => true));
 		$trainingNeedTypes = array_map('__', $this->trainingNeedTypes);
 		$controller->Session->write('StaffTrainingNeedId', $id);
         $controller->set(compact('header', 'data', 'id', 'trainingNeedTypes', 'trainingNeedCategoryOptions'));
