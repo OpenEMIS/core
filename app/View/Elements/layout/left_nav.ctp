@@ -27,6 +27,7 @@
 	$groupHtml = '';
 	$itemHtml = '';
 	$in = false;
+	$divider = '|';
 	foreach($_leftNavigations as $module => $obj) {
 		if(!isset($obj['display'])) continue;
 		if(is_string($module)) {
@@ -37,6 +38,9 @@
 		foreach($obj as $link) {
 			if(is_array($link)) {
 				if(!$link['display']) continue;
+
+				$controllerList = explode($divider, $link['controller']);
+				$link['controller'] = $controllerList[0];
 				
 				// hide the add existing student/staff if institution site id is not set
 				if (($link['controller'] == 'Students' && $link['action'] == 'InstitutionSiteStudent/add')
