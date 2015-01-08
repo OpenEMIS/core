@@ -365,4 +365,7 @@ fieldset.section_break > .profile-image {
 .rtl .pagination-wrapper .counter { float: right; margin-right: 10px; }
 .rtl .pagination-wrapper .col-left { padding-right: 0; }
 .rtl .pagination-wrapper .displayLimit { text-align: left; }
+
+.rtl .table-sortable th > a { float: right; }
+.rtl .table-sortable th > a:after { float: left; margin-right: 10px; }
 /* end search */
