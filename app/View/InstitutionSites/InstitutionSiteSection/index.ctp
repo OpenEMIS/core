@@ -9,7 +9,7 @@ $this->start('contentActions');
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedYear), array('class' => 'divider'));
 	}
 	if ($_execute) {
-        echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteSection', 'export'), array('class' => 'divider'));
+        echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteSection', 'excel'), array('class' => 'divider'));
     }
 $this->end();
 

@@ -63,18 +63,18 @@ class InstitutionSiteSection extends AppModel {
 	);
 	
 	public $actsAs = array(
-		'Export',
+		'Excel',
 		'ControllerAction2',
 		'SchoolYear'
 	);
 
-	/* Export Behaviour */
-	public function exportGetConditions() {
+	/* Excel Behaviour */
+	public function excelGetConditions() {
 		$id = CakeSession::read('InstitutionSite.id');
 		$conditions = array('InstitutionSite.id' => $id);
 		return $conditions;
 	}
-	/* End Export Behaviour */
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();

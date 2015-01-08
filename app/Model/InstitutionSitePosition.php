@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSitePosition extends AppModel {
 	public $actsAs = array(
-		'Export',
+		'Excel',
 		'ControllerAction2'
 	);
    
@@ -68,13 +68,13 @@ class InstitutionSitePosition extends AppModel {
 		)
 	);
 
-	/* Export Behaviour */
-	public function exportGetConditions() {
+	/* Excel Behaviour */
+	public function excelGetConditions() {
 		$id = CakeSession::read('InstitutionSite.id');
 		$conditions = array('InstitutionSite.id' => $id);
 		return $conditions;
 	}
-	public function exportGetFieldLookup() {
+	public function excelGetFieldLookup() {
 		$alias = $this->alias;
 		$lookup = array(
 			"$alias.status" => array(0 => 'Inactive', 1 => 'Active'),
@@ -82,11 +82,11 @@ class InstitutionSitePosition extends AppModel {
 		);
 		return $lookup;
 	}
-	public function exportGetOrder() {
+	public function excelGetOrder() {
 		$order = array('SchoolYear.order', 'InstitutionSitePosition.position_no');
 		return $order;
 	}
-	/* End Export Behaviour */
+	/* End Excel Behaviour */
 	
 	// Used by InstitutionSiteStaff.add
 	public function getInstitutionSitePositionList($institutionId = false, $status = false) {

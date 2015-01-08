@@ -341,6 +341,9 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSitePosition' => array(
 			'title' => 'Positions',
+			'position_no' => 'Position No',
+			'status' => 'Status',
+			'type' => 'Type',
 			'staff_position_title_id' => 'Title',
 			'staff_position_grade_id' => 'Grade'
 		),
@@ -462,6 +465,12 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'StaffPositionTitle' => array(
+			'name' => 'Position Title'
+		),
+		'StaffPositionGrade' => array(
+			'name' => 'Position Grade'
 		)
 	);
 	

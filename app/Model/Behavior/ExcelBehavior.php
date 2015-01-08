@@ -18,7 +18,7 @@
 App::import('Vendor', 'XLSXWriter', array('file' => 'XLSXWriter/xlsxwriter.class.php'));
 App::uses('LabelHelper', 'View/Helper');
 
-class ExportBehavior extends ModelBehavior {
+class ExcelBehavior extends ModelBehavior {
 	public $rootFolder = 'export';
 	public $LabelHelper;
 	public $Model;
@@ -32,7 +32,7 @@ class ExportBehavior extends ModelBehavior {
 		$this->LabelHelper = new LabelHelper(new View());
 	}
 
-	public function export(Model $model, $format='xlsx') {
+	public function excel(Model $model, $format='xlsx') {
 		$this->Model = $model;
 		$folder = WWW_ROOT . $this->rootFolder;
 		if (!file_exists($folder)) {
@@ -70,36 +70,42 @@ class ExportBehavior extends ModelBehavior {
 	}
 
 	public function generateXLXS(Model $model) {
-		$sheet = 'Sheet1';
-		$header = $model->exportGetHeader($model);//pr($header);die;
-		$footer = $model->exportGetFooter($model);
-		$data = $model->exportGetData($model);
-
-		$filename = $model->exportGetFileName($model) . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+		$filename = $model->excelGetFileName($model) . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
 		$path = WWW_ROOT . $this->rootFolder . DS . $filename;
 
 		$writer = new XLSXWriter();
+
+		$this->generateSheet($model, $writer);
+
+		$writer->writeToFile($path);
+
+		$this->download($path);
+	}
+
+	public function generateSheet(Model $model, $writer) {
+		$header = $model->excelGetHeader($model);
+		$footer = $model->excelGetFooter($model);
+		$data = $model->excelGetData($model);
+
+		$sheet = 'Sheet1';
 		$writer->writeSheetRow($sheet, array_values($header));
 		foreach ($data as $row) {
 			$sheetRow = array();
 			foreach ($header as $key => $label) {
-				$value = $this->getValue($row, $key);
+				$value = $this->getValue($model, $row, $key);
 				$sheetRow[] = $value;
 			}
 			$writer->writeSheetRow($sheet, $sheetRow);
 		}
 		$writer->writeSheetRow($sheet, array(''));
 		$writer->writeSheetRow($sheet, $footer);
-		$writer->writeToFile($path);
-
-		$this->download($path);
 	}
 
-	public function exportGetFileName(Model $model) {
+	public function excelGetFileName(Model $model) {
 		return $model->name;
 	}
 
-	public function exportGetHeader(Model $model) {
+	public function excelGetHeader(Model $model) {
 		$alias = $model->alias;
 		$schema = array_keys($model->schema());
 
@@ -144,18 +150,18 @@ class ExportBehavior extends ModelBehavior {
 		return $header;
 	}
 
-	public function exportGetData(Model $model) {
-		$options = $model->exportGetFindOptions($model);
+	public function excelGetData(Model $model) {
+		$options = $model->excelGetFindOptions($model);
 		
 		$data = $model->find('all', $options);
 		return $data;
 	}
 
-	public function exportGetFindOptions(Model $model) {
-		$fields = array_keys($model->exportGetHeader($model));
-		$conditions = $model->exportGetConditions($model);
+	public function excelGetFindOptions(Model $model) {
+		$fields = array_keys($model->excelGetHeader($model));
+		$conditions = $model->excelGetConditions($model);
 		$contain = $this->getContain($fields);
-		$order = $this->exportGetOrder($model);
+		$order = $this->excelGetOrder($model);
 
 		$options = array();
 		$options['recursive'] = 0;
@@ -167,35 +173,24 @@ class ExportBehavior extends ModelBehavior {
 		return $options;
 	}
 
-	public function exportGetConditions(Model $model) {
+	public function excelGetConditions(Model $model) {
 		return array();
 	}
 
-	public function exportGetFieldLookup(Model $model) {
+	public function excelGetFieldLookup(Model $model) {
 		return array();
 	}
 
-	public function exportGetOrder(Model $model) {
+	public function excelGetOrder(Model $model) {
 		return array();
 	}
 
-	public function exportGetFooter(Model $model) {
+	public function excelGetFooter(Model $model) {
 		$footer = array(__("Report Generated") . ": "  . date("Y-m-d H:i:s"));
 		return $footer;
 	}
 
-	private function getContain($fields) {
-		$contain = array();
-		foreach ($fields as $field) {
-			$split = explode('.', $field);
-			if ($split[0] !== $this->Model->alias) {
-				$contain[$split[0]] = array('fields' => $field);
-			}
-		}
-		return $contain;
-	}
-
-	private function getValue($row, $key) {
+	public function getValue(Model $model, $row, $key) {
 		$index = explode('.', $key);
 		$value = $row;
 		foreach($index as $i) {
@@ -207,7 +202,7 @@ class ExportBehavior extends ModelBehavior {
 			}
 		}
 
-		$lookup = $this->Model->exportGetFieldLookup();
+		$lookup = $this->Model->excelGetFieldLookup();
 		if (!empty($lookup) && array_key_exists($key, $lookup)) {
 			$values = $lookup[$key];
 			if (strlen($value)>0 && array_key_exists($value, $values)) {
@@ -215,6 +210,17 @@ class ExportBehavior extends ModelBehavior {
 			}
 		}
 		return $value;
+	}
+
+	private function getContain($fields) {
+		$contain = array();
+		foreach ($fields as $field) {
+			$split = explode('.', $field);
+			if ($split[0] !== $this->Model->alias) {
+				$contain[$split[0]] = array('fields' => $field);
+			}
+		}
+		return $contain;
 	}
 
 	private function download($path) {

@@ -5,7 +5,7 @@ $this->assign('contentHeader', __('Attendance') . ' - ' . __('Students'));
 $this->start('contentActions');
 	echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $yearId, $sectionId, $weekId), array('class' => 'divider'));
 	if ($_execute) {
-		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'export'), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteStudentAttendance', 'excel', $yearId, $sectionId), array('class' => 'divider'));
 	}
 $this->end();
 
