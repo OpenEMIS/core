@@ -3,15 +3,14 @@
 	<div class="field_value">
 	<?php
 		$modelId = $obj[$model]['id'];
-		if($action == 'view') {
-			if(isset($dataValues[$modelId][0]['value'])){
-				echo $dataValues[$modelId][0]['value'];
-			}
+		if(isset($dataValues[$modelId][0]['textarea_value'])) {
+			$value = $dataValues[$modelId][0]['textarea_value'];
 		} else {
-			$value = '';
-			if(isset($dataValues[$modelId][0]['value'])){
-				$value = $dataValues[$modelId][0]['value'];
-			}
+			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;
+		}
+		if($action == 'view') {
+			echo $value;
+		} else {
 			echo $this->Form->input("$modelValue.textarea.$modelId.value", array(
 				'type' => 'textarea',
 				'class' => 'form-control',

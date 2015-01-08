@@ -1,4 +1,3 @@
-
 <?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
@@ -17,6 +16,13 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class SchoolPeriodType extends AppModel {
-	
+class AcademicPeriodType extends AppModel {
+	public function getAcademicPeriodTypeList() {
+		$data = $this->find('list', array(
+			'fields' => array('AcademicPeriodType.id', 'AcademicPeriodType.name'),
+			'conditions' => array('AcademicPeriodType.visible' => 1),
+			'order' => array('AcademicPeriodType.order'),
+		));
+		return $data;
+	}
 }

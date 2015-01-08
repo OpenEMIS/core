@@ -3,7 +3,11 @@
 	<div class="field_value">
 	<?php
 		$modelId = $obj[$model]['id'];
-		$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;
+		if(isset($dataValues[$modelId][0]['text_value'])) {
+			$value = $dataValues[$modelId][0]['text_value'];
+		} else {
+			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;
+		}
 		if($action == 'view') {
 			echo $value;
 		} else {

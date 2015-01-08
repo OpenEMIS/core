@@ -458,6 +458,15 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'InstitutionSiteSurveyNew' => array(
+			'title' => 'New'
+		),
+		'InstitutionSiteSurveyDraft' => array(
+			'title' => 'Draft'
+		),
+		'InstitutionSiteSurveyCompleted' => array(
+			'title' => 'Completed'
 		)
 	);
 	
