@@ -13,14 +13,23 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('nav_tabs');
-
-$breadcrumbOptions = array(
-	'breadcrumbs' => $breadcrumbs,
-	'rootName' => __('All') . ' ' . __('Categories'),
-	'rootUrl' => array('controller' => 'InfrastructureTypes', 'action' => 'categories', 'plugin' => false)
-);
-echo $this->element('breadcrumbs', $breadcrumbOptions);
 ?>
+<div class="row page-controls">
+	<div class="col-md-3">
+		<?php
+		echo $this->Form->input('infrastructure_category_id', array(
+			'id' => 'InfrastructureCategoryId',
+			'label' => false,
+			'div' => false,
+			'class' => 'form-control',
+			'options' => $categoryOptions,
+			'default' => $categoryId,
+			'onchange' => 'jsForm.change(this)',
+			'url' => $this->params['controller'] . '/index'
+		));
+		?>
+	</div>
+</div>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>

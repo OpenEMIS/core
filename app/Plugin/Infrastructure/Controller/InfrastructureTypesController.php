@@ -34,14 +34,24 @@ class InfrastructureTypesController extends InfrastructureAppController {
 	public function index(){
 		$this->Navigation->addCrumb('Types');
 		
-		$categoryId = isset($this->params->named['category_id']) ? $this->params->named['category_id'] : 0;
+		$categoryId = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
+		$categoryOptions = $this->InfrastructureCategory->getCategoryOptions();
+		
+		if(!empty($categoryOptions)){
+			if ($categoryId != 0) {
+				if (!array_key_exists($categoryId, $categoryOptions)) {
+					$categoryId = key($categoryOptions);
+				}
+			} else {
+				$categoryId = key($categoryOptions);
+			}
+		}
+		
+		if(empty($categoryOptions)){
+			$this->Message->alert('InstitutionSiteInfrastructure.noCategory');
+		}
+		
 		$category = $this->InfrastructureCategory->findById($categoryId);
-		$breadcrumbs = array(
-			0 => array(
-				'id' => $category['InfrastructureCategory']['id'],
-				'name' => $category['InfrastructureCategory']['name']
-			)
-		);
 		
 		$conditions = array('InfrastructureType.infrastructure_category_id' => $categoryId);
 		
@@ -52,19 +62,7 @@ class InfrastructureTypesController extends InfrastructureAppController {
 		
 		$currentTab = 'Types';
 		
-		$this->set(compact('data', 'categoryId', 'breadcrumbs', 'category', 'currentTab'));
-	}
-	
-	public function categories(){
-		$this->Navigation->addCrumb('Types');
-		
-		$data = $this->InfrastructureCategory->find('all', array(
-			'order' => array('InfrastructureCategory.parent_id', 'InfrastructureCategory.order')
-		));
-		
-		$currentTab = 'Types';
-		
-		$this->set(compact('data', 'currentTab'));
+		$this->set(compact('data', 'categoryId', 'category', 'currentTab', 'categoryOptions'));
 	}
 
 	public function view() {
