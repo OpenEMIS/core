@@ -117,48 +117,23 @@ class SecurityGroup extends AppModel {
 		$data = $this->{$model}->autocomplete($search, $exclude);
 		return json_encode($data);
 	}
-	
+
 	public function index() {
-		App::uses('Sanitize', 'Utility');
-		
-		$page = isset($this->controller->params->named['page']) ? $this->controller->params->named['page'] : 1;
-		
-		$selectedYear = "";
-		$selectedProgramme = "";
-		$searchField = "";
-		$orderBy = 'SecurityGroup.name';
-		$order = 'asc';
-		$prefix = 'SecurityGroup.Search.%s';
-		if($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->request->data['SecurityGroup']['SearchField']));
-			if(isset($this->request->data['SecurityGroup']['orderBy'])) {
-				$orderBy = $this->request->data['SecurityGroup']['orderBy'];
-			}
-			if(isset($this->request->data['SecurityGroup']['order'])) {
-				$order = $this->request->data['SecurityGroup']['order'];
-			}
+		$this->Navigation->addCrumb('Users');
+
+		$conditions = array();
+		if ($this->controller->Auth->user('super_admin')==0) {
+			$userId = $this->controller->Auth->user('id');
+			$conditions['OR'] = array(
+				'SecurityGroup.created_user_id' => $userId,
+				'SecurityGroupUser.security_user_id' => $userId
+			);
 		}
-		$conditions = array(
-			'search' => $searchField, 
-			'super_admin' => $this->controller->Auth->user('super_admin')==1,
-			'user_id' => $this->controller->Auth->user('id')
-		);
-		
-		$this->controller->paginate = array('order' => sprintf('%s %s', $orderBy, $order), 'limit' => 15, 'maxLimit' => 15);
-		$data = $this->controller->paginate('SecurityGroup', $conditions);
-		
-		foreach($data as &$group) {
-			$obj = $group['SecurityGroup'];
-			$count = $this->SecurityGroupUser->find('count', array('conditions' => array('SecurityGroupUser.security_group_id' => $obj['id'])));
-			$group['SecurityGroup']['count'] = $count;
+		$data = $this->controller->Search->search($this, $conditions);
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
 		}
-		
-		$this->setVar('searchField', $searchField);
-		$this->setVar('page', $page);
-		$this->setVar('orderBy', $orderBy);
-		$this->setVar('order', $order);
 		$this->setVar('data', $data);
-		$this->setVar('groupCount', $this->paginateCount($conditions));
 	}
 	
 	public function view($id) {
@@ -338,46 +313,21 @@ class SecurityGroup extends AppModel {
 		));
 		return $data;
 	}
-	
-	public function paginateJoins(&$conditions) {
-		$joins = array();
-		
-		if($conditions['super_admin'] == false) {
-			$joins[] = array(
-				'table' => 'security_group_users',
-				'alias' => 'SecurityGroupUser',
-				'type' => 'LEFT',
-				'conditions' => array('SecurityGroupUser.security_group_id = SecurityGroup.id')
-			);
-		}
-		unset($conditions['super_admin']);
-		unset($conditions['user_id']);
+
+	public function paginateJoins() {
+		$joins[] = array(
+			'table' => 'security_group_users',
+			'alias' => 'SecurityGroupUser',
+			'type' => 'LEFT',
+			'conditions' => array('SecurityGroupUser.security_group_id = SecurityGroup.id')
+		);
 		return $joins;
 	}
-	
-	public function paginateConditions(&$conditions) {
-		$or = array();
-		if(isset($conditions['search'])) {
-			if(!empty($conditions['search'])) {
-				$search = '%' . $conditions['search'] . '%';
-				$or['SecurityGroup.name LIKE'] = $search;
-			}
-			unset($conditions['search']);
-		}
-		if($conditions['super_admin'] == false) {
-			$or['SecurityGroup.created_user_id'] = $conditions['user_id'];
-			$or['SecurityGroupUser.security_user_id'] = $conditions['user_id'];
-		}
-		if(!empty($or)) {
-			$conditions['OR'] = $or;
-		}
-	}
-	
+
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$this->paginateConditions($conditions);
 		$data = $this->find('all', array(
-			'fields' => array('SecurityGroup.id', 'SecurityGroup.name'),
-			'joins' => $this->paginateJoins($conditions),
+			'fields' => array('SecurityGroup.id', 'SecurityGroup.name', 'COUNT(SecurityGroupUser.created) AS no_of_users'),
+			'joins' => $this->paginateJoins(),
 			'conditions' => $conditions,
 			'group' => array('SecurityGroup.id'),
 			'limit' => $limit,
@@ -386,12 +336,12 @@ class SecurityGroup extends AppModel {
 		));
 		return $data;
 	}
-	
+
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		$this->paginateConditions($conditions);
 		$count = $this->find('count', array(
-			'joins' => $this->paginateJoins($conditions),
-			'conditions' => $conditions
+			'joins' => $this->paginateJoins(),
+			'conditions' => $conditions,
+			'group' => array('SecurityGroup.id')
 		));
 		return $count;
 	}
