@@ -300,10 +300,7 @@ class AssessmentItemType extends AppModel {
 				array(
 					'table' => 'institution_site_section_grades',
 					'alias' => 'InstitutionSiteSectionGrade',
-					'conditions' => array(
-						'InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id',
-						'InstitutionSiteSectionGrade.status = 1'
-					)
+					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id')
 				),
 				array(
 					'table' => 'institution_site_sections',
@@ -314,42 +311,13 @@ class AssessmentItemType extends AppModel {
 					)
 				),
 				array(
-					'table' => 'institution_site_section_classes',
-					'alias' => 'InstitutionSiteSectionClass',
-					'conditions' => array(
-						'InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id',
-						'InstitutionSiteSectionClass.status = 1'
-					)
-				),
-				array(
-					'table' => 'institution_site_class_subjects',
-					'alias' => 'InstitutionSiteClassSubject',
-					'conditions' => array(
-						'InstitutionSiteClassSubject.institution_site_class_id = InstitutionSiteSectionClass.institution_site_class_id',
-						'InstitutionSiteClassSubject.status = 1'
-					)
-				),
-				array(
-					'table' => 'assessment_items',
-					'alias' => 'AssessmentItem',
-					'conditions' => array(
-						'AssessmentItemType.id = AssessmentItem.assessment_item_type_id',
-						'AssessmentItem.education_grade_subject_id = InstitutionSiteClassSubject.education_grade_subject_id',
-						'AssessmentItem.visible = 1'
-					)
-				),
-				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
-					'conditions' => array(
-						'InstitutionSiteSection.school_year_id = SchoolYear.id',
-						'SchoolYear.visible = 1'
-					)
+					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
 				)
 			),
 			'conditions' => array(
-				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId),
-				'AssessmentItemType.visible = 1'
+				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId)
 			),
 			'order' => array('SchoolYear.order')
 		));
