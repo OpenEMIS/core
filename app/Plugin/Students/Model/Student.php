@@ -46,6 +46,22 @@ class Student extends StudentsAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid First Name'
+			),
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid First Name'
+			)
+		),
+		'middle_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Middle Name'
+			)
+		),
+		'third_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Third Name'
 			)
 		),
 		'last_name' => array(
@@ -53,6 +69,16 @@ class Student extends StudentsAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Last Name'
+			),
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Last Name'
+			)
+		),
+		'preferred_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Preferred Name'
 			)
 		),
 		'identification_no' => array(
@@ -105,6 +131,12 @@ class Student extends StudentsAppModel {
 			)
 		)
 	);
+
+	public function checkIfStringGotNoNumber($check) {
+		$check = array_values($check);
+		$check = $check[0];
+		return !preg_match('#[0-9]#',$check);
+	}
 
 	public function compareBirthDate() {
 		if(!empty($this->data[$this->alias]['date_of_birth'])) {

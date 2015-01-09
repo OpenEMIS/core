@@ -144,7 +144,8 @@ class MessageComponent extends Component {
 			'result' => array(
 				'noAssessmentItem' => array('type' => 'warn', 'msg' => 'There are no assessment items.'),
 				'noClass' => array('type' => 'warn', 'msg' => 'There are no classes.'),
-				'noStudent' => array('type' => 'warn', 'msg' => 'There are no students.')
+				'noStudent' => array('type' => 'warn', 'msg' => 'There are no students.'),
+				'marksNotValid' => array('type' => 'error', 'msg' => 'The data for Marks is not valid.')
 			)
 		),
 		'NationalDenominators' => array(
