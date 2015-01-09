@@ -22,7 +22,12 @@ class InstitutionSiteStudentAttendance extends AppModel {
 	public $selectedSection;
 
 	public $belongsTo = array(
-		'InstitutionSiteSection'
+		'Students.Student',
+		'InstitutionSiteSection',
+		'StudentAbsenceReason' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'student_absence_reason_id'
+		)
 	);
 
 	public $actsAs = array(
@@ -53,19 +58,29 @@ class InstitutionSiteStudentAttendance extends AppModel {
 	/* End Excel Behaviour */
 
 	public function excel($periodId, $sectionId) {
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$period = $SchoolYear->findById($periodId);
-		$startDate = $period['SchoolYear']['start_date'];
-		$endDate = $period['SchoolYear']['end_date'];
-
+		$this->selectedPeriod = $periodId;
+		$this->selectedSection = $sectionId;
+		/*
 		$Student = $this->InstitutionSiteSection->InstitutionSiteSectionStudent;
 		$Student->contain('Student');
-		pr($Student->findAllByInstitutionSiteSectionId($sectionId, array(), array('Student.first_name')));
-		die;
+		$students = $Student->findAllByInstitutionSiteSectionId($sectionId, array(), array('Student.first_name'));
+		pr($students);
+		*/
+
+		//die;
+
+		parent::excel();
 	}
 
 	public function generateSheet($writer) {
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$period = $SchoolYear->findById($this->selectedPeriod);
+		$startDate = $period['SchoolYear']['start_date'];
+		$endDate = $period['SchoolYear']['end_date'];
 		$header = $this->excelGetHeader();
+		pr($header);die;
+		/*
+		
 		$footer = $this->excelGetFooter();
 
 		$sheet = 'Sheet1';
@@ -80,5 +95,7 @@ class InstitutionSiteStudentAttendance extends AppModel {
 		}
 		$writer->writeSheetRow($sheet, array(''));
 		$writer->writeSheetRow($sheet, $footer);
+		*/
+
 	}
 }
