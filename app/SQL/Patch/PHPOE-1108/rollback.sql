@@ -67,5 +67,90 @@ SELECT `order` INTO @orderOfDashboardsSecurity FROM `security_functions` WHERE `
 UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` >= @orderOfDashboardsSecurity;
 
 --
--- 5.
+-- 5. new table: survey_modules
 --
+
+DROP TABLE IF EXISTS `survey_modules`;
+
+--
+-- 6. new table: survey_questions
+--
+
+DROP TABLE IF EXISTS `survey_questions`;
+
+--
+-- 7. new table: survey_question_choices
+--
+
+DROP TABLE IF EXISTS `survey_question_choices`;
+
+--
+-- 8. new table: survey_statuses
+--
+
+DROP TABLE IF EXISTS `survey_statuses`;
+
+--
+-- 9. new table: survey_status_periods
+--
+
+DROP TABLE IF EXISTS `survey_status_periods`;
+
+--
+-- 10. new table: survey_table_columns
+--
+
+DROP TABLE IF EXISTS `survey_table_columns`;
+
+--
+-- 11. new table: survey_table_rows
+--
+
+DROP TABLE IF EXISTS `survey_table_rows`;
+
+--
+-- 12. new table: survey_templates
+--
+
+DROP TABLE IF EXISTS `survey_templates`;
+
+--
+-- 13. new table: institution_site_surveys
+--
+
+DROP TABLE IF EXISTS `institution_site_surveys`;
+
+--
+-- 14. new table: institution_site_survey_answers
+--
+
+DROP TABLE IF EXISTS `institution_site_survey_answers`;
+
+--
+-- 15. new table: institution_site_survey_table_cells
+--
+
+DROP TABLE IF EXISTS `institution_site_survey_table_cells`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
