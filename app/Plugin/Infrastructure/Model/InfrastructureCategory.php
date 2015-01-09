@@ -44,7 +44,7 @@ class InfrastructureCategory extends InfrastructureAppModel {
 	public function getCategoryOptions(){
 		$data = $this->find('list', array(
 			'conditions' => array('InfrastructureCategory.visible' => 1),
-			'order' => array('InfrastructureCategory.name')
+			'order' => array('InfrastructureCategory.parent_id', 'InfrastructureCategory.order')
 		));
 		
 		return $data;
