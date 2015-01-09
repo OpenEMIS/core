@@ -59,7 +59,7 @@ class InfrastructureTypesController extends InfrastructureAppController {
 		$this->Navigation->addCrumb('Types');
 		
 		$data = $this->InfrastructureCategory->find('all', array(
-			'order' => array('InfrastructureCategory.order')
+			'order' => array('InfrastructureCategory.parent_id', 'InfrastructureCategory.order')
 		));
 		
 		$currentTab = 'Types';

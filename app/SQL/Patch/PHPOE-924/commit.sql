@@ -116,3 +116,14 @@ SELECT MAX(`order`) INTO @maxFieldOptionOrder FROM `field_options`;
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
 (NULL, 'InfrastructureOwnership', 'Ownership', 'Infrastructure', NULL, @maxFieldOptionOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+--
+-- 6. new field option `InfrastructureCondition`
+--
+
+SET @maxFieldOptionOrder := 0;
+
+SELECT MAX(`order`) INTO @maxFieldOptionOrder FROM `field_options`;
+
+INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
+(NULL, 'InfrastructureCondition', 'Condition', 'Infrastructure', NULL, @maxFieldOptionOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
