@@ -1,7 +1,7 @@
 <?php
 $options = array(
-	'Categories' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false),
-	'Types' => array('controller' => 'InfrastructureTypes', 'action' => 'categories', 'plugin' => false),
+	'Categories' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => 'Infrastructure'),
+	'Types' => array('controller' => 'InfrastructureTypes', 'action' => 'index', 'plugin' => 'Infrastructure'),
 	'Custom Fields' => '#'
 );
 
