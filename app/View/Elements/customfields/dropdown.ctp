@@ -18,6 +18,13 @@
 				foreach($obj[$modelOption] as $dropdownValue) {
 					$dropdownOptions[$dropdownValue['id']] = $dropdownValue['value'];
 				}
+				echo $this->Form->hidden("$modelValue.dropdown.$modelId.type", array('value' => $obj[$model]['type']));
+				if(isset($obj[$model]['is_mandatory'])) {
+					echo $this->Form->hidden("$modelValue.dropdown.$modelId.is_mandatory", array('value' => $obj[$model]['is_mandatory']));
+				}
+				if(isset($obj[$model]['is_unique'])) {
+					echo $this->Form->hidden("$modelValue.dropdown.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
+				}
 				echo $this->Form->input("$modelValue.dropdown.$modelId.value", array(
 					'class' => 'form-control',
 					'div' => false,

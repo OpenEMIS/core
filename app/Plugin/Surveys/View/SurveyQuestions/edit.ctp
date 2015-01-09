@@ -24,7 +24,7 @@ $this->start('contentBody');
 		echo $this->Form->input('is_unique', array('options' => $uniqueOptions, 'label' => $labelOptions, 'default' => $data['SurveyQuestion']['is_unique'], 'disabled' => $uniqueDisabled));
 		$labelOptions['text'] = __('Visible');
 		echo $this->Form->input('visible', array('options' => $visibleOptions, 'label' => $labelOptions, 'default' => $data['SurveyQuestion']['visible']));
-		if($data['SurveyQuestion']['type'] == 4 || $data['SurveyQuestion']['type'] == 5) {
+		if($data['SurveyQuestion']['type'] == 3 || $data['SurveyQuestion']['type'] == 4) {
 			echo $this->element('Surveys.question_choices');
 		} else if($data['SurveyQuestion']['type'] == 7) {
 			echo $this->element('Surveys.question_tables');

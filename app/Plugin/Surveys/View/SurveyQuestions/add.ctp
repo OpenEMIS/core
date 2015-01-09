@@ -23,7 +23,7 @@ $this->start('contentBody');
 		echo $this->Form->input('is_unique', array('options' => $uniqueOptions, 'label' => $labelOptions, 'default' => $selectedUnique, 'disabled' => $uniqueDisabled));
 		$labelOptions['text'] = __('Visible');
 		echo $this->Form->input('visible', array('options' => $visibleOptions, 'label' => $labelOptions, 'default' => $selectedVisible));
-		if($selectedFieldType == 4 || $selectedFieldType == 5) {
+		if($selectedFieldType == 3 || $selectedFieldType == 4) {
 			echo $this->element('Surveys.question_choices');
 		} else if($selectedFieldType == 7) {
 			echo $this->element('Surveys.question_tables');

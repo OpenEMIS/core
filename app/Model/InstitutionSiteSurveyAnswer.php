@@ -17,7 +17,15 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteSurveyAnswer extends AppModel {
-	public $actsAs = array('ControllerAction2');
+	public $actsAs = array(
+		'ControllerAction2',
+		'Surveys.SurveyAnswer' => array(
+			'customfields' => array(
+				'modelValue' => 'InstitutionSiteSurveyAnswer',
+				'modelCell' => 'InstitutionSiteSurveyTableCell'
+			)
+		)
+	);
 
 	public $belongsTo = array(
 		'InstitutionSiteSurveyNew',
