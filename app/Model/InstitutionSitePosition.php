@@ -83,7 +83,7 @@ class InstitutionSitePosition extends AppModel {
 		return $lookup;
 	}
 	public function excelGetOrder() {
-		$order = array('SchoolYear.order', 'InstitutionSitePosition.position_no');
+		$order = array('InstitutionSitePosition.position_no');
 		return $order;
 	}
 	/* End Excel Behaviour */

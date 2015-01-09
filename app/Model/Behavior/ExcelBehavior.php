@@ -32,6 +32,10 @@ class ExcelBehavior extends ModelBehavior {
 		$this->LabelHelper = new LabelHelper(new View());
 	}
 
+	public function setModel(Model $model, $newModel) {
+		$this->Model = $newModel;
+	}
+
 	public function excel(Model $model, $format='xlsx') {
 		$this->Model = $model;
 		$folder = WWW_ROOT . $this->rootFolder;
@@ -70,12 +74,12 @@ class ExcelBehavior extends ModelBehavior {
 	}
 
 	public function generateXLXS(Model $model) {
-		$filename = $model->excelGetFileName($model) . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+		$filename = $this->Model->excelGetFileName($model) . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
 		$path = WWW_ROOT . $this->rootFolder . DS . $filename;
 
 		$writer = new XLSXWriter();
 
-		$this->generateSheet($model, $writer);
+		$this->Model->generateSheet($writer);
 
 		$writer->writeToFile($path);
 
@@ -83,34 +87,54 @@ class ExcelBehavior extends ModelBehavior {
 	}
 
 	public function generateSheet(Model $model, $writer) {
-		$header = $model->excelGetHeader($model);
-		$footer = $model->excelGetFooter($model);
-		$data = $model->excelGetData($model);
+		$models = $this->Model->excelGetModels();
 
-		$sheet = 'Sheet1';
-		$writer->writeSheetRow($sheet, array_values($header));
-		foreach ($data as $row) {
-			$sheetRow = array();
-			foreach ($header as $key => $label) {
-				$value = $this->getValue($model, $row, $key);
-				$sheetRow[] = $value;
+		foreach ($models as $sheet) {
+			$sheetModel = is_object($sheet['model']) ? $sheet['model'] : ClassRegistry::init($sheet['model']);
+			$sheetName = array_key_exists('name', $sheet) ? $sheet['name'] : $sheetModel->alias;
+			//pr($sheetModel->alias);
+			$model->setModel($sheetModel);
+			$header = $sheetModel->excelGetHeader();
+			$footer = $sheetModel->excelGetFooter();
+			$data = $sheetModel->excelGetData();
+
+			$writer->writeSheetRow($sheetName, array_values($header));
+			//pr($data);
+			
+			foreach ($data as $row) {
+				$sheetRow = array();
+				foreach ($header as $key => $label) {
+					$value = $sheetModel->getValue($row, $key);
+					$sheetRow[] = $value;
+				}
+				//pr($$sheetRow);
+				$writer->writeSheetRow($sheetName, $sheetRow);
 			}
-			$writer->writeSheetRow($sheet, $sheetRow);
-		}
-		$writer->writeSheetRow($sheet, array(''));
-		$writer->writeSheetRow($sheet, $footer);
+			
+			$writer->writeSheetRow($sheetName, array(''));
+			$writer->writeSheetRow($sheetName, $footer);
+			
+		}//die;
+	}
+
+	public function excelGetModels(Model $model) {
+		$models = array(
+			array('name' => $this->Model->alias, 'model' => $this->Model)
+		);
+		return $models;
 	}
 
 	public function excelGetFileName(Model $model) {
-		return $model->name;
+		return $this->Model->name;
 	}
 
 	public function excelGetHeader(Model $model) {
+		$model = $this->Model;
 		$alias = $model->alias;
-		$schema = array_keys($model->schema());
+		$schema = $model->schema();
 
 		$header = array();
-		$exclude = array('id', 'modified_user_id', 'modified', 'created_user_id', 'created');
+		$exclude = array('id', 'photo_name', 'modified_user_id', 'modified', 'created_user_id', 'created');
 
 		if (array_key_exists('header', $this->settings[$alias])) {
 			$appendedHeader = $this->settings[$alias]['header'];
@@ -125,17 +149,21 @@ class ExcelBehavior extends ModelBehavior {
 				}
 			}
 		}
-		foreach ($schema as $field) {
 
-			if (!in_array($field, $exclude)) {
+		foreach ($schema as $field => $attr) {
+			if (!in_array($field, $exclude) && $attr['type'] != 'binary') {
 				$pos = strrpos($field, '_id');
 				if ($pos !== false) {
 					$fieldModel = Inflector::camelize(substr($field, 0, $pos));
-					$associatedSchema = $model->{$fieldModel}->schema();
-					if (array_key_exists('name', $associatedSchema)) {
-						$key = $fieldModel.'.name';
-					} else if (array_key_exists('title', $associatedSchema)) {
-						$key = $fieldModel.'.title';
+					if (is_object($this->Model->{$fieldModel})) {
+						$associatedSchema = $this->Model->{$fieldModel}->schema();
+						if (array_key_exists('name', $associatedSchema)) {
+							$key = $fieldModel.'.name';
+						} else if (array_key_exists('title', $associatedSchema)) {
+							$key = $fieldModel.'.title';
+						}
+					} else {
+						$this->log($fieldModel . ' not found in ' . $this->Model->alias, 'debug');
 					}
 				} else {
 					$key = $alias.'.'.$field;
@@ -151,17 +179,17 @@ class ExcelBehavior extends ModelBehavior {
 	}
 
 	public function excelGetData(Model $model) {
-		$options = $model->excelGetFindOptions($model);
+		$options = $this->Model->excelGetFindOptions();
 		
-		$data = $model->find('all', $options);
+		$data = $this->Model->find('all', $options);
 		return $data;
 	}
 
 	public function excelGetFindOptions(Model $model) {
-		$fields = array_keys($model->excelGetHeader($model));
-		$conditions = $model->excelGetConditions($model);
+		$fields = array_keys($this->Model->excelGetHeader());
+		$conditions = $this->Model->excelGetConditions();
 		$contain = $this->getContain($fields);
-		$order = $this->excelGetOrder($model);
+		$order = $this->Model->excelGetOrder();
 
 		$options = array();
 		$options['recursive'] = 0;

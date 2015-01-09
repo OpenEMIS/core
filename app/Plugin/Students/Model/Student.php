@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Student extends StudentsAppModel {
 	public $actsAs = array(
+		'Excel',
 		'Search',
 		'TrackHistory' => array('historyTable' => 'Students.StudentHistory'),
 		'CascadeDelete' => array(
@@ -35,6 +36,17 @@ class Student extends StudentsAppModel {
 				'size' => '1MB',
 				'allowEmpty' => true
 			)
+		)
+	);
+
+	public $belongsTo = array(
+		'AddressArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'address_area_id'
+		),
+		'BirthplaceArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'birthplace_area_id'
 		)
 	);
 	
@@ -105,6 +117,27 @@ class Student extends StudentsAppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$id = CakeSession::read('Student.id');
+		$conditions = array('Student.id' => $id);
+		return $conditions;
+	}
+	public function excelGetModels() {
+		$models = array(
+			array('model' => $this),
+			array('model' => 'Students.StudentContact'),
+			array('model' => 'Students.StudentIdentity'),
+			array('model' => 'Students.StudentNationality'),
+			array('model' => 'Students.StudentLanguage'),
+			array('model' => 'Students.StudentComment'),
+			array('model' => 'Students.StudentSpecialNeed'),
+			array('model' => 'Students.StudentAward')
+		);
+		return $models;
+	}
+	/* End Excel Behaviour */
 
 	public function compareBirthDate() {
 		if(!empty($this->data[$this->alias]['date_of_birth'])) {
