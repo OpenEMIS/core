@@ -256,52 +256,53 @@ class SearchBehavior extends ModelBehavior {
 			$search = "%".$params['SearchKey']."%";
 			$conditions['OR'] = array(
 				$class . '.first_name LIKE' => $search,
-                                $class . '.middle_name LIKE' => $search,
+				$class . '.middle_name LIKE' => $search,
 				$class . '.last_name LIKE' => $search,
-                                $class . '.preferred_name LIKE' => $search,
+				$class . '.preferred_name LIKE' => $search,
 				$class . '.identification_no LIKE' => $search,
 				$class . 'History.first_name LIKE' => $search,
 				$class . 'History.last_name LIKE' => $search,
 				$class . 'History.identification_no LIKE' => $search
 			);
 		}
-                if(!is_null($params['AdvancedSearch'])) {
+
+		if(!is_null($params['AdvancedSearch'])) {
 			$arrAdvanced = $params['AdvancedSearch'];
                         
-			if(count($arrAdvanced) > 0 ){
-                            foreach($arrAdvanced as $key => $advanced){
-                              
-                                if(strpos($key,'CustomValue') > 0){
-                                        $dbo = $model->getDataSource();
-                                        $rawTableName = Inflector::tableize($key);
-                                        $mainTable = str_replace("CustomValue","",$key);
-                                        $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
-                                        $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
-                                         $field = $key.'.'.$fkey;
-                                        
-                                        foreach($advanced as $arrIdVal){
-                                            foreach ($arrIdVal as $id => $val) {
-                                                if(!empty($val['value']))
-                                                $arrCond[] = array($key.'.'.$fkey2=>$id,$key.'.value'=>$val['value']);
-                                            }
-                                        }
-                                        if(!empty($arrCond)){
-                                            $query = $dbo->buildStatement(array(
-                                                    'fields' => array($field),
-                                                    'table' => $rawTableName,
-                                                    'alias' => $key,
-                                                    'limit' => null, 
-                                                    'offset' => null,
-                                                    //'joins' => $joins,
-                                                    'conditions' => array('OR'=>$arrCond),
-                                                    'group' => array($field),
-                                                    'order' => null
-                                            ), $model);
-                                            $conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
-                                        }
-                                }
-                            }
-                        }
+			if(count($arrAdvanced) > 0 ) {
+				foreach($arrAdvanced as $key => $advanced) {
+				  
+				    if(strpos($key,'CustomValue') > 0) {
+			            $dbo = $model->getDataSource();
+			            $rawTableName = Inflector::tableize($key);
+			            $mainTable = str_replace("CustomValue","",$key);
+			            $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
+			            $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
+			             $field = $key.'.'.$fkey;
+			            
+			            foreach($advanced as $arrIdVal){
+			                foreach ($arrIdVal as $id => $val) {
+			                    if(!empty($val['value']))
+			                    $arrCond[] = array($key.'.'.$fkey2=>$id,$key.'.value'=>$val['value']);
+			                }
+			            }
+			            if(!empty($arrCond)){
+			                $query = $dbo->buildStatement(array(
+			                        'fields' => array($field),
+			                        'table' => $rawTableName,
+			                        'alias' => $key,
+			                        'limit' => null, 
+			                        'offset' => null,
+			                        //'joins' => $joins,
+			                        'conditions' => array('OR'=>$arrCond),
+			                        'group' => array($field),
+			                        'order' => null
+			                ), $model);
+			                $conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
+			            }
+				    }
+				}
+			}
 		}
 		return $conditions;
 	}
@@ -359,7 +360,7 @@ class SearchBehavior extends ModelBehavior {
 			$class.'.first_name', $class.'.middle_name', $class.'.last_name', $class.'.preferred_name',
 			$class.'.gender', $class.'.date_of_birth'
 		);
-
+		
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = $class.'History.identification_no AS history_identification_no';
 			$fields[] = $class.'History.first_name AS history_first_name';
@@ -390,12 +391,14 @@ class SearchBehavior extends ModelBehavior {
 		$isSuperAdmin = $conditions['isSuperAdmin'];
 		$joins = array();
 		$count = 0;
+		$class = $model->alias;
 		
 		if($isSuperAdmin) {
 			$count = $model->find('count', array(
 				'recursive' => -1,
 				'joins' => $this->paginateJoins($model, $joins, $conditions),
-				'conditions' => $this->paginateConditions($model, $conditions)
+				'conditions' => $this->paginateConditions($model, $conditions),
+				'group' => array($class.'.id'),
 			));
 		} else {
 			$data = $this->paginateQuery($model, $conditions);

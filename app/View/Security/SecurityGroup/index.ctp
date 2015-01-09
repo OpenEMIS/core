@@ -1,75 +1,50 @@
 <?php
-echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Groups'));
 $this->start('contentActions');
-if($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
-}
+	if($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
+	}
 $this->end();
-$this->assign('contentClass', 'search');
 
 $this->start('contentBody');
-echo $this->Form->create($model, array(
-	'url' => array('controller' => 'Security', 'action' => 'SecurityGroup'),
-	'inputDefaults' => array('label' => false, 'div' => false)
-));
-
-
 ?>
-<?php if($groupCount > 15) { ?>
-<div class="row">
-    <div class="search_wrapper">
-    	<?php 
-			echo $this->Form->input('SearchField', array(
-				'id' => 'SearchField',
-				'value' => $searchField,
-				'class' => 'default',
-				'placeholder' => __('Group Name')
-			));
-        ?>
-        <span class="icon_clear" onclick="$('#SearchField').val('')">X</span>
-    </div>
-	<span class="left icon_search" onclick="$('form').submit()"></span>
-</div>
-<?php } ?>
 
-<?php if(!empty($data)) { ?>
-<ul id="pagination">
-	<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-	<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-	<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-</ul>
-<?php } ?>
+<?php
+echo $this->element('layout/search', array(
+	'model' => $model, 
+	'placeholder' => 'Group Name', 
+	'formOptions' => array('url' => array('controller' => 'Security', 'action' => 'SecurityGroup'))
+))
+?>
+<?php if (!empty($data)) : ?>
 <div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered">
+	<table class="table table-striped table-hover table-bordered table-sortable">
 		<thead>
 			<tr>
-				<td><?php echo __('Groups'); ?></td>
-				<td><?php echo __('No of Users'); ?></td>
+				<th><?php echo $this->Paginator->sort('name') ?></th>
+				<th><?php echo __('No of Users') ?></th>
 			</tr>
 		</thead>
 		
 		<tbody>
-			<?php foreach($data as $group) :
-				$obj = $group['SecurityGroup'];
-				$name = $this->Utility->highlight($searchField, $obj['name']);
-			?>
+		<?php 
+			foreach ($data as $obj):
+				$id = $obj[$model]['id'];
+				$name = $this->Utility->highlight($search, $obj[$model]['name']);
+				
+		?>
 			<tr>
-				<td><?php echo $this->Html->link($name, array('action' => $model, 'view', $obj['id']), array('escape' => false)); ?></td>
-				<td><?php echo $obj['count']; ?></td>
+				<td><?php echo $this->Html->link($name, array('action' => $model, 'view', $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td><?php echo $obj[0]['no_of_users'] ?></td>
 			</tr>
-			<?php endforeach ?>
+		<?php endforeach ?>
 		</tbody>
 	</table>
 </div>
 
-<ul id="pagination">
-	<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-	<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-	<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-</ul>
+<?php endif ?>
+<?php echo $this->element('layout/pagination', array('displayCount' => false)) ?>
 <?php $this->end(); ?>

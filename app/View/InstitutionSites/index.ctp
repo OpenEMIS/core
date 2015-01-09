@@ -1,112 +1,48 @@
-<?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
+<?php
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-echo $this->Html->script('search', false); 
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'institution-list');
-$this->assign('contentClass', 'search');
 $this->assign('contentHeader', __('List of Institutions'));
 $this->start('contentActions');
-$total = 0;
-if (strlen($this->Paginator->counter('{:count}')) > 0) {
-	$total = $this->Paginator->counter('{:count}');
-}
-?>
-<span class="divider"></span>
-<span class="total"><span><?php echo $total ?></span> <?php echo __('Institutions'); ?></span>
-<?php
+	echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
+$model = 'InstitutionSite';
 ?>
 
-<div class="row">
-	<?php echo $this->Form->create('InstitutionSite', array('action'=>'search','id'=>false)); ?>
-	<div class="search_wrapper">
-		<?php echo $this->Form->input('SearchField', array(
-			'id' => 'SearchField',
-			'value' => $searchField,
-			'placeholder' => __("Institution Name or Code"),
-			'class' => 'default',
-			'div' => false,
-			'label' => false));
+<?php echo $this->element('layout/search', array('model' => $model, 'placeholder' => 'Institution Name or Code')) ?>
+
+<?php if (!empty($data)) : ?>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered table-sortable">
+		<thead>
+			<tr>
+				<th><?php echo $this->Paginator->sort('code') ?></th>
+				<th><?php echo $this->Paginator->sort('name') ?></th>
+				<th><?php echo $this->Paginator->sort('Area.name', __('Area')) ?></th>
+				<th><?php echo $this->Paginator->sort('InstitutionSiteType.name', __('Type')) ?></th>
+			</tr>
+		</thead>
+		
+		<tbody>
+		<?php 
+			foreach ($data as $obj):
+				$id = $obj['InstitutionSite']['id'];
+				$code = $this->Utility->highlight($search, $obj[$model]['code']);
+				$name = $this->Utility->highlight($search, $obj[$model]['name'].((isset($obj['InstitutionSiteHistory']['name']))?'<br>'.$obj['InstitutionSiteHistory']['name']:''));
 		?>
-		<span class="icon_clear">X</span>
-	</div>
-	<?php echo $this->Js->submit('', array(
-		'id'=>'searchbutton',
-		'class'=>'icon_search',
-		'url'=> $this->Html->url(array('action'=>'index','full_base'=>true)),
-		'before'=> "maskId = $.mask({parent: '.search', text:'".__("Searching...")."'});",
-		'success'=>'$.unmask({id: maskId, callback: function() { objSearch.callback(data); }});'));
-	?>
-	<span class="advanced"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'link_back')); ?></span>
-	<?php echo $this->Form->end(); ?>
+			<tr>
+				<td><?php echo $code; ?></td>
+				<td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
+                <td><?php echo $obj['Area']['name']; ?></td>
+				<td><?php echo $obj['InstitutionSiteType']['name']; ?></td>
+			</tr>
+		<?php endforeach ?>
+		</tbody>
+	</table>
 </div>
 
-<div id="mainlist">
-	<?php if ($this->Paginator->counter('{:pages}') > 1) : ?>
-	<div class="row">
-		<ul id="pagination">
-			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-			<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-		</ul>
-	</div>
-	<?php endif; ?>
-	
-	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
-			<thead url="InstitutionSites/index">
-				<tr>
-					<th>
-						<span class="left"><?php echo __('Code'); ?></span>
-						<span class="icon_sort_<?php echo ($sortedcol =='InstitutionSite.code')?$sorteddir:'up'; ?>" order="InstitutionSite.code"></span>
-					</th>
-					<th>
-						<span class="left"><?php echo __('Institution Name'); ?></span>
-						<span class="icon_sort_<?php echo ($sortedcol =='InstitutionSite.name')?$sorteddir:'up'; ?>" order="InstitutionSite.name"></span>
-					</th>
-                    
-                    <th>
-						<span class="left"><?php echo __('Area'); ?></span>
-						<span class="icon_sort_<?php echo ($sortedcol =='Area.name')?$sorteddir:'up'; ?>" order="Area.name"></span>
-					</th>
-					<th>
-						<span class="left"><?php echo __('Type'); ?></span>
-						<span class="icon_sort_<?php echo ($sortedcol =='InstitutionSiteType.name')?$sorteddir:'up'; ?>" order="InstitutionSiteType.name"></span>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-			<?php
-				foreach ($institutions as $arrItems):
-					$id = $arrItems['InstitutionSite']['id'];
-					$code = $this->Utility->highlight($searchField,$arrItems['InstitutionSite']['code']);
-					$name = $this->Utility->highlight($searchField,$arrItems['InstitutionSite']['name'].((isset($arrItems['InstitutionSiteHistory']['name']))?'<br>'.$arrItems['InstitutionSiteHistory']['name']:''));
-			?>
-				<tr row-id="<?php echo $id ?>">
-					<td><?php echo $code; ?></td>
-					<td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
-                                        
-                    <td><?php echo $arrItems['Area']['name']; ?></td>
-					<td><?php echo $arrItems['InstitutionSiteType']['name']; ?></td>
-				</tr>
-			<?php endforeach; ?>
-			</tbody>
-		</table>
-	</div>
-	
-	<div class="row">
-		<ul id="pagination">
-			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
-			<?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
-			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-		</ul>
-	</div>
-</div> <!-- mainlist end-->
-
-<?php echo $this->Js->writeBuffer(); ?>
+<?php endif ?>
+<?php echo $this->element('layout/pagination', array('displayCount' => false)) ?>
 <?php $this->end(); ?>

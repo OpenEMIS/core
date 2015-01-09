@@ -150,6 +150,7 @@ App::build(array(
  */
 //CakePlugin::load(array('AutoAppBuild' => array('bootstrap' => true)));
 
+CakePlugin::load('DebugKit');
 CakePlugin::load(array('DataProcessing' => array('routes' => true, 'bootstrap'=>array('olap'))));
 CakePlugin::load(array('Students' => array('routes' => true)));
 CakePlugin::load(array('Staff' => array('routes' => true)));
