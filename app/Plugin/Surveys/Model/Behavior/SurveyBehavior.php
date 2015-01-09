@@ -120,16 +120,18 @@ class SurveyBehavior extends ModelBehavior {
 	}
 
 	public function getFormatedSurveyDataValues(Model $model, $id) {
-		$tmp = array();
+		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
+		$modelCell = $this->settings[$model->alias]['customfields']['modelCell'];
 
-		$model->contain(array('InstitutionSiteSurveyAnswer', 'InstitutionSiteSurveyTableCell'));
+		$tmp = array();
+		$model->contain(array($modelValue, $modelCell));
 		$result = $model->findById($id);
 
-		foreach ($result['InstitutionSiteSurveyAnswer'] as $key => $value) {
+		foreach ($result[$modelValue] as $key => $value) {
 			$tmp[$value['survey_question_id']][] = $value;
 		}
 
-		foreach ($result['InstitutionSiteSurveyTableCell'] as $key => $value) {
+		foreach ($result[$modelCell] as $key => $value) {
 			$tmp[$value['survey_question_id']][] = $value;
 		}
 
@@ -137,6 +139,9 @@ class SurveyBehavior extends ModelBehavior {
 	}
 
 	public function prepareSurveyData(Model $model, $requestData) {
+		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
+		$modelCell = $this->settings[$model->alias]['customfields']['modelCell'];
+
 		$institutionSiteId = $model->Session->read('InstitutionSite.id');
 
 		$result[$model->alias] = $requestData[$model->alias];
@@ -147,57 +152,62 @@ class SurveyBehavior extends ModelBehavior {
 
 		$i = 0;
 		foreach ($arrFields as $fieldVal) {
-			if (!isset($requestData['InstitutionSiteSurveyAnswer'][$fieldVal]))
+			if (!isset($requestData[$modelValue][$fieldVal]))
                 continue;
 
-            foreach ($requestData['InstitutionSiteSurveyAnswer'][$fieldVal] as $key => $val) {
+            foreach ($requestData[$modelValue][$fieldVal] as $key => $val) {
             	if ($fieldVal == "checkbox") {
                 	$j = 0;
                 	foreach ($val['value'] as $key2 => $val2) {
-                		$result['InstitutionSiteSurveyAnswer'][$i]['institution_site_id'] = $institutionSiteId;
-                		$result['InstitutionSiteSurveyAnswer'][$i]['survey_question_id'] = $key;
-                		$result['InstitutionSiteSurveyAnswer'][$i]['answer_number'] = ++$j;
-                		$result['InstitutionSiteSurveyAnswer'][$i]['text_value'] = $val2;
+                		$result[$modelValue][$i]['institution_site_id'] = $institutionSiteId;
+                		$result[$modelValue][$i]['survey_question_id'] = $key;
+                		$result[$modelValue][$i]['answer_number'] = ++$j;
+                		$result[$modelValue][$i]['type'] = $val['type'];
+                		$result[$modelValue][$i]['is_mandatory'] = isset($val2['is_mandatory']) ? $val2['is_mandatory'] : 0;
+	                	$result[$modelValue][$i]['is_unique'] = isset($val2['is_unique']) ? $val2['is_unique'] : 0;
+                		$result[$modelValue][$i]['text_value'] = $val2;
                 		$i++;
                 	}
                 } else {
-                	if($val['value']) {
-	                	$result['InstitutionSiteSurveyAnswer'][$i]['institution_site_id'] = $institutionSiteId;
-	                	$result['InstitutionSiteSurveyAnswer'][$i]['survey_question_id'] = $key;
-	                	$result['InstitutionSiteSurveyAnswer'][$i]['answer_number'] = 1;
+                	$result[$modelValue][$i]['institution_site_id'] = $institutionSiteId;
+                	$result[$modelValue][$i]['survey_question_id'] = $key;
+                	$result[$modelValue][$i]['answer_number'] = 1;
+                	$result[$modelValue][$i]['type'] = $val['type'];
+                	$result[$modelValue][$i]['is_mandatory'] = isset($val['is_mandatory']) ? $val['is_mandatory'] : 0;
+                	$result[$modelValue][$i]['is_unique'] = isset($val['is_unique']) ? $val['is_unique'] : 0;
 
-	                	switch($fieldVal) {
-	                		case "number" :
-	                			$result['InstitutionSiteSurveyAnswer'][$i]['int_value'] = $val['value'];
-	                			break;
-	                		case "textarea" :
-								$result['InstitutionSiteSurveyAnswer'][$i]['textarea_value'] = $val['value'];
-	                			break;
-	                		default:
-	                			$result['InstitutionSiteSurveyAnswer'][$i]['text_value'] = $val['value'];
-	                	}
-	                	$i++;
-	                }
+                	switch($fieldVal) {
+                		case "number" :
+                			$result[$modelValue][$i]['int_value'] = $val['value'];
+                			break;
+                		case "textarea" :
+							$result[$modelValue][$i]['textarea_value'] = $val['value'];
+                			break;
+                		default:
+                			$result[$modelValue][$i]['text_value'] = $val['value'];
+                	}
+                	$i++;
                 }
         	}
 		}
 
 		$k = 0;
-		if (isset($requestData['InstitutionSiteSurveyTableCell'])) {
-			foreach ($requestData['InstitutionSiteSurveyTableCell']['table'] as $key => $val) {
+		if (isset($requestData[$modelCell])) {
+			foreach ($requestData[$modelCell]['table'] as $key => $val) {
 				foreach ($val as $key2 => $val2) {
         			if($val2['value']) {
-        				$result['InstitutionSiteSurveyTableCell'][$k]['institution_site_id'] = $institutionSiteId;
-        				$result['InstitutionSiteSurveyTableCell'][$k]['survey_question_id'] = $val2['survey_question_id'];
-        				$result['InstitutionSiteSurveyTableCell'][$k]['survey_table_row_id'] = $val2['survey_table_row_id'];
-        				$result['InstitutionSiteSurveyTableCell'][$k]['survey_table_column_id'] = $val2['survey_table_column_id'];
-        				$result['InstitutionSiteSurveyTableCell'][$k]['value'] = $val2['value'];
+        				$result[$modelCell][$k]['institution_site_id'] = $institutionSiteId;
+        				$result[$modelCell][$k]['survey_question_id'] = $val2['survey_question_id'];
+        				$result[$modelCell][$k]['survey_table_row_id'] = $val2['survey_table_row_id'];
+        				$result[$modelCell][$k]['survey_table_column_id'] = $val2['survey_table_column_id'];
+        				$result[$modelCell][$k]['value'] = $val2['value'];
         				$k++;
         			}
         		}
 			}
 		}
 
+		//pr($result);die;
 		return $result;
 	}
 }

@@ -24,6 +24,10 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		'Surveys.Survey' => array(
 			'module' => 'Institution',
 			'status' => 2,
+			'customfields' => array(
+				'modelValue' => 'InstitutionSiteSurveyAnswer',
+				'modelCell' => 'InstitutionSiteSurveyTableCell'
+			),
 			'conditions' => array(
 				'institution_site_id' => array('sessionKey' => 'InstitutionSite.id')
 			)
