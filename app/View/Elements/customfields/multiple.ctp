@@ -7,6 +7,7 @@
 		if(count($obj[$modelOption]) > 0) {
 			$modelId = $obj[$model]['id'];
 			$counter = 0;
+			echo $this->Form->hidden("$modelValue.checkbox.$modelId.type", array('value' => $obj[$model]['type']));
 			foreach($obj[$modelOption] as $dropdownValue) {
 				if(isset($dataValues[$modelId]) && count($dataValues[$modelId] > 0)){
 					foreach($dataValues[$modelId] as $checkboxValue) {

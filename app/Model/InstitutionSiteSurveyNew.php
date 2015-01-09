@@ -24,6 +24,10 @@ class InstitutionSiteSurveyNew extends AppModel {
 		'Surveys.Survey' => array(
 			'module' => 'Institution',
 			'status' => 0,
+			'customfields' => array(
+				'modelValue' => 'InstitutionSiteSurveyAnswer',
+				'modelCell' => 'InstitutionSiteSurveyTableCell'
+			),
 			'conditions' => array(
 				'institution_site_id' => array('sessionKey' => 'InstitutionSite.id'),
 				'student_id' => array('sessionKey' => 'student.id')
@@ -116,11 +120,10 @@ class InstitutionSiteSurveyNew extends AppModel {
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => $this->alias, 'index'));
 				} else {
+					//do something if validation fail
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
 				}
-			} else {
-				//do something if validation fail
 			}
 
 			$this->setVar(compact('academicPeriodId', 'surveyStatusId', 'templateData', 'data', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
