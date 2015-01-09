@@ -22,6 +22,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 		'Infrastructure.InfrastructureCategory',
 		'Infrastructure.InfrastructureType',
 		'Infrastructure.InfrastructureOwnership',
+		'Infrastructure.InfrastructureCondition',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -172,9 +173,10 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($categoryId);
 		$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
 		$currentYear = Date('Y');
-		$ownershipOptions = $this->InfrastructureOwnership->getList();
+		$ownershipOptions = $this->InfrastructureOwnership->getList(1);
+		$conditionOptions = $this->InfrastructureCondition->getList(1);
 		
-		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions'));
+		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 		
 		if($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data['InstitutionSiteInfrastructure'];
@@ -219,9 +221,10 @@ class InstitutionSiteInfrastructure extends AppModel {
 			$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($data['InfrastructureCategory']['id']);
 			$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
 			$currentYear = Date('Y');
-			$ownershipOptions = $this->InfrastructureOwnership->getList();
+			$ownershipOptions = $this->InfrastructureOwnership->getList(1);
+			$conditionOptions = $this->InfrastructureCondition->getList(1);
 
-			$this->setVar(compact('id', 'data', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions'));
+			$this->setVar(compact('id', 'data', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 			
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data['InstitutionSiteInfrastructure'];

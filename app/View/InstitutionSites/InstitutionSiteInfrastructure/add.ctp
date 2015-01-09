@@ -50,6 +50,12 @@ echo $this->Form->input('year_disposed', array(
 	'value' => $currentYear
 ));
 
+$labelOptions['text'] = $this->Label->get('InstitutionSiteInfrastructure.infrastructure_condition_id');
+echo $this->Form->input('infrastructure_condition_id', array(
+	'options' => $conditionOptions,
+	'label' => $labelOptions
+));
+
 echo $this->Form->input('comment', array('onkeyup' => 'utility.charLimit(this)', 'type' => 'textarea'));
 
 
