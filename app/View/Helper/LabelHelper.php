@@ -468,7 +468,8 @@ class LabelHelper extends AppHelper {
 			'infrastructure_type_id' => 'Type',
 			'year_acquired' => 'Year Acquired',
 			'year_disposed' => 'Year Disposed',
-			'infrastructure_ownership_id' => 'Ownership'
+			'infrastructure_ownership_id' => 'Ownership',
+			'infrastructure_condition_id' => 'Condition'
 		)
 	);
 	
