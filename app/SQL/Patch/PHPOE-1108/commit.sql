@@ -272,6 +272,14 @@ ALTER TABLE `survey_modules`
 ALTER TABLE `survey_modules`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 
+TRUNCATE TABLE `survey_modules`;
+INSERT INTO `survey_modules` (`id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 1, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
+(2, 'Student', 2, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
+(3, 'Staff', 3, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
+(4, 'InstitutionSiteStudent', 4, 0, NULL, NULL, 1, '2014-12-17 18:00:00'),
+(5, 'InstitutionSiteStaff', 5, 0, NULL, NULL, 1, '2014-12-17 18:00:00');
+
 --
 -- 6. new table: survey_questions
 --
@@ -501,132 +509,30 @@ CREATE TABLE IF NOT EXISTS `institution_site_survey_table_cells` (
 ALTER TABLE `institution_site_survey_table_cells`
  ADD PRIMARY KEY (`institution_site_survey_id`,`survey_question_id`,`survey_table_column_id`,`survey_table_row_id`), ADD KEY `institution_site_id` (`institution_site_id`);
 
+--
+-- 16. new table: academic_period_types
+--
 
+CREATE TABLE IF NOT EXISTS `academic_period_types` (
+`id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 
+ALTER TABLE `academic_period_types`
+ ADD PRIMARY KEY (`id`);
 
 
+ALTER TABLE `academic_period_types`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+TRUNCATE TABLE `academic_period_types`;
+INSERT INTO `academic_period_types` (`id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'Yearly', 1, 1, NULL, NULL, 1, '2014-12-17 12:00:00');
