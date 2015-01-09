@@ -337,6 +337,10 @@ class StudentsController extends StudentsAppController {
 		$this->redirect(array('action' => 'index'));
 	}
 
+	public function excel() {
+		$this->Student->excel();
+	}
+
 	public function history() {
 		$this->Navigation->addCrumb('History');
 
