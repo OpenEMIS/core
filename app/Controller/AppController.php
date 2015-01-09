@@ -39,6 +39,7 @@ class AppController extends Controller {
 	public $uses = array('ConfigItem', 'SecurityUser');
 	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility');
 	public $components = array(
+		'DebugKit.Toolbar',
 		'RequestHandler',
 		'Session',
 		'DateTime',
@@ -52,6 +53,7 @@ class AppController extends Controller {
 		'Localization',
 		'Navigation' => array('modules' => array('Students', 'Staff', 'Reports')), 
 		'AccessControl',
+		'Search',
 		'Utility',		
 		'Workflow',
 		'Message',

@@ -14,7 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('Sanitize', 'Utility');
 App::uses('Converter', 'Translations.Lib');
 class TranslationsController extends AppController {
 	public $components = array('Paginator');
@@ -22,16 +21,15 @@ class TranslationsController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('plugin' => false, 'controller' => 'Areas', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('plugin' => false, 'controller' => 'Areas'));
 		$this->Navigation->addCrumb('Translations', array('controller' => 'Translations', 'action' => 'index'));
 	}
 
 	public function index() {
-		$selectedLang = empty($this->params['pass'][0]) ? 'ara' : $this->params['pass'][0];
 		$this->Navigation->addCrumb('List of Translations');
 		$header = __('List of Translations');
+		$model = 'Translation';
 
-		$searchKey = $this->Session->read('Translation.SearchField');
 		$languageOptions = array(
 			'ara' => 'العربية',
 			'chi' => '中文',
@@ -40,29 +38,23 @@ class TranslationsController extends AppController {
 			'spa' => 'español'
 		);
 
-		if ($this->request->is('post', 'put')) {
-			if (isset($this->request->data['Translation']['SearchField'])) {
-				$searchKey = $this->request->data['Translation']['SearchField'];
-
-				$this->Session->delete('Translation.SearchField');
-				$this->Session->write('Translation.SearchField', $searchKey);
+		if ($this->request->is('post')) {
+			$selectedLang = $this->request->data[$model]['language'];
+			$this->Session->write("$model.language", $selectedLang);
+		} else {
+			if ($this->Session->check("$model.language")) {
+				$selectedLang = $this->Session->read("$model.language");
+			} else {
+				$selectedLang = key($languageOptions);
 			}
-		} 
-		
-		if (!empty($searchKey)) {
-			$searchField = Sanitize::escape(trim($searchKey));
-			$options['conditions']['Translation.eng LIKE'] = '%' . $searchField . '%';
 		}
+		$this->request->data[$model]['language'] = $selectedLang;
+		$data = $this->Search->search($this->Translation);
 		
-		$options['order'] = array('Translation.eng' => 'asc');
-		//$conditions = array('order' => array('Translation.eng' => 'asc'), 'conditions' => array('Translation.eng LIKE' => '%home%'));
-		$this->Paginator->settings = array_merge(array('limit' => 30, 'maxLimit' => 100), $options);
-
-		$data = $this->Paginator->paginate('Translation');
 		if (empty($data)){
 			$this->Message->alert('general.notExists');
 		}
-		$this->set(compact('header', 'data', 'languageOptions', 'selectedLang', 'searchKey'));
+		$this->set(compact('header', 'data', 'languageOptions', 'selectedLang'));
 	}
 
 	public function view() {

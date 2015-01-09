@@ -1,6 +1,6 @@
 .section_group .table { width: 100%; }
 
-.table { color: #666666; }
+.table { color: #666666; margin-bottom: 10px; }
 
 .table.full_width { width: 99%; margin-left: 3px; }
 
@@ -18,7 +18,7 @@
 
 /* <table> styles starts here */
 .table thead tr { background-color: #EFEFEF; }
-.table thead th { font-weight: bold; text-align: center; font-size: 11px; }
+.table thead th { font-size: 11px; }
 .table td { font-size: 11px; }
 .table a { color: #007CBE; }
 .action { margin-left: 5px; }

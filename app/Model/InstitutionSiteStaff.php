@@ -182,76 +182,69 @@ class InstitutionSiteStaff extends AppModel {
 	public function index() {
 		$this->Navigation->addCrumb('List of Staff');
 		$params = $this->controller->params;
-		$page = isset($params->named['page']) ? $params->named['page'] : 1;
 
-		$selectedYear = "";
-		$model = 'Staff';
-		$searchField = "";
-		$orderBy = $model . '.first_name';
-		$order = 'asc';
+		$prefix = 'InstitutionSiteStaff.search.';
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$conditions = array();
 
-		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
+		if ($this->Session->check($prefix . 'conditions')) {
+			$conditions = $this->Session->read($prefix . 'conditions');
+		}
+		$conditions['InstitutionSiteStaff.institution_site_id'] = $institutionSiteId;
+
 		if ($this->request->is('post')) {
-			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['SearchField']));
-			$selectedYear = $this->request->data[$this->alias]['school_year'];
-			$orderBy = $this->request->data[$this->alias]['orderBy'];
-			$order = $this->request->data[$this->alias]['order'];
+			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
+			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
 
-			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
-			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
-			$this->Session->write(sprintf($prefix, 'order'), $order);
-			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
-		} else {
-			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			$selectedYear = isset($params['pass'][1]) ? $params['pass'][1] : '';
-
-			if ($this->Session->check(sprintf($prefix, 'orderBy'))) {
-				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
-			}
-			if ($this->Session->check(sprintf($prefix, 'order'))) {
-				$order = $this->Session->read(sprintf($prefix, 'order'));
-			}
-		}
-		$conditions = array('InstitutionSiteStaff.institution_site_id' => $institutionSiteId);
-
-		if (!empty($searchField)) {
-			$search = '%' . $searchField . '%';
-			$conditions[] = array(
-				'OR' => array(
-					'Staff.identification_no LIKE' => $search,
-					'Staff.first_name LIKE' => $search,
-					'Staff.middle_name LIKE' => $search,
-					'Staff.last_name LIKE' => $search,
-					'Staff.preferred_name LIKE' => $search
-				)
-			);
-		}
-		
-		if (!empty($selectedYear)) {
-			$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
-			$conditions[] = array(
-				'OR' => array(
+			if (strlen($selectedYear) != '') {
+				$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
+				$conditions['OR'] = array(
 					'InstitutionSiteStaff.end_year >=' => $selectedYear,
 					'InstitutionSiteStaff.end_year IS NULL'
-				)
-			);
-		}
+				);
+			} else {
+				unset($conditions['InstitutionSiteStaff.start_year <=']);
+				unset($conditions['OR']['InstitutionSiteStaff.end_year >=']);
+				unset($conditions['OR'][0]);
 
+			}
+		} else {
+			if (array_key_exists('InstitutionSiteStaff.start_year <=', $conditions)) {
+				$this->request->data[$this->alias]['school_year_id'] = $conditions['InstitutionSiteStaff.start_year <='];
+			}
+		}
+		
+		if (!empty($searchField)) {
+			$search = '%' . $searchField . '%';
+			$conditions['OR'] = array(
+				'Staff.identification_no LIKE' => $search,
+				'Staff.first_name LIKE' => $search,
+				'Staff.middle_name LIKE' => $search,
+				'Staff.last_name LIKE' => $search,
+				'Staff.preferred_name LIKE' => $search
+			);
+		} else {
+			unset($conditions['OR']['Staff.identification_no LIKE']);
+			unset($conditions['OR']['Staff.first_name LIKE']);
+			unset($conditions['OR']['Staff.middle_name LIKE']);
+			unset($conditions['OR']['Staff.last_name LIKE']);
+			unset($conditions['OR']['Staff.preferred_name LIKE']);
+		}
+		
 		if($this->Session->check('Staff.AdvancedSearch')){
 			$params = $this->Session->read('Staff.AdvancedSearch');
 			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
 		}
 
-		$this->controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => $orderBy. ' ' . $order);
-		$data = $this->controller->paginate($this->alias, $conditions);
+		$this->Session->write($prefix . 'conditions', $conditions);
+		$data = $this->controller->Search->search($this, $conditions);
 
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
-		$this->setVar(compact('searchField', 'page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data', 'positionList'));
+		$this->setVar(compact('data', 'yearOptions', 'positionList'));
 	}
 	
 	public function add() {
