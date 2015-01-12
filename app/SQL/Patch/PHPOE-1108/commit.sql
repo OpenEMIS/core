@@ -4,11 +4,11 @@
 
 UPDATE 	`navigations`
 SET 	`plugin` = 'Surveys',
-		`controller` = 'SurveyTemplates|SurveyQuestions',
+		`controller` = 'SurveyTemplates',
 		`header` = 'Surveys',
 		`title` = 'Templates',
 		`action` = 'index',
-		`pattern` = 'index|view|edit|add|delete|reorder|preview'
+		`pattern` = 'index|view|edit|add|delete'
 WHERE 	`module` = 'Administration'
 		AND `plugin` LIKE 'Survey'
 		AND `controller` LIKE 'Survey'
@@ -28,6 +28,32 @@ WHERE 	`module` = 'Administration'
 		AND `header` LIKE 'Survey'
 		AND `title` LIKE 'Completed';
 
+SET @orderOfStatusNav := 0;
+SELECT `order` INTO @orderOfStatusNav FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Surveys' AND `title` LIKE 'Status';
+
+UPDATE `navigations` SET `order` = `order` + 1 WHERE `order` >= @orderOfStatusNav;
+
+INSERT INTO `navigations` (
+`id` ,
+`module` ,
+`plugin` ,
+`controller` ,
+`header` ,
+`title` ,
+`action` ,
+`pattern` ,
+`attributes` ,
+`parent` ,
+`is_wizard` ,
+`order` ,
+`visible` ,
+`created_user_id` ,
+`created`
+)
+VALUES (
+NULL , 'Administration', 'Surveys', 'SurveyQuestions', 'Surveys', 'Questions', 'index', 'index|view|edit|add|delete|reorder|preview', NULL , '33', '0', @orderOfStatusNav, '1', '1', '0000-00-00 00:00:00'
+);
+
 --
 -- 2. security_functions
 --
@@ -35,7 +61,7 @@ WHERE 	`module` = 'Administration'
 SET @orderOfAlertsSecurity := 0;
 SELECT `order` INTO @orderOfAlertsSecurity FROM `security_functions` WHERE `controller` LIKE 'Alerts' AND `category` LIKE 'Communications' AND `name` LIKE 'Alerts';
 
-UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= @orderOfAlertsSecurity;
+UPDATE `security_functions` SET `order` = `order` + 3 WHERE `order` >= @orderOfAlertsSecurity;
 
 INSERT INTO `security_functions` (
 `id` ,
@@ -51,13 +77,11 @@ INSERT INTO `security_functions` (
 `_execute` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Templates', 'SurveyTemplates', 'Administration', 'Surveys', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Templates', 'SurveyTemplates', 'Administration', 'Surveys', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfAlertsSecurity := @orderOfAlertsSecurity + 1;
@@ -76,13 +100,34 @@ INSERT INTO `security_functions` (
 `_execute` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Status', 'SurveyStatuses', 'Administration', 'Surveys', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Questions', 'SurveyQuestions', 'Administration', 'Surveys', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', '1', '0000-00-00 00:00:00'
+);
+
+SET @orderOfAlertsSecurity := @orderOfAlertsSecurity + 1;
+
+INSERT INTO `security_functions` (
+`id` ,
+`name` ,
+`controller` ,
+`module` ,
+`category` ,
+`parent_id` ,
+`_view` ,
+`_edit` ,
+`_add` ,
+`_delete` ,
+`_execute` ,
+`order` ,
+`visible` ,
+`created_user_id` ,
+`created`
+)
+VALUES (
+NULL , 'Status', 'SurveyStatuses', 'Administration', 'Surveys', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 --
@@ -108,13 +153,11 @@ INSERT INTO `navigations` (
 `is_wizard` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'New', 'InstitutionSiteSurveyNew', 'InstitutionSiteSurveyNew', NULL , '3', '0', @orderOfDashboardsNav, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'New', 'InstitutionSiteSurveyNew', 'InstitutionSiteSurveyNew', NULL , '3', '0', @orderOfDashboardsNav, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfDashboardsNav := @orderOfDashboardsNav + 1;
@@ -133,13 +176,11 @@ INSERT INTO `navigations` (
 `is_wizard` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'Draft', 'InstitutionSiteSurveyDraft', 'InstitutionSiteSurveyDraft', NULL , '3', '0', @orderOfDashboardsNav, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'Draft', 'InstitutionSiteSurveyDraft', 'InstitutionSiteSurveyDraft', NULL , '3', '0', @orderOfDashboardsNav, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfDashboardsNav := @orderOfDashboardsNav + 1;
@@ -158,13 +199,11 @@ INSERT INTO `navigations` (
 `is_wizard` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'Completed', 'InstitutionSiteSurveyCompleted', 'InstitutionSiteSurveyCompleted', NULL , '3', '0', @orderOfDashboardsNav, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'Completed', 'InstitutionSiteSurveyCompleted', 'InstitutionSiteSurveyCompleted', NULL , '3', '0', @orderOfDashboardsNav, '1', '1', '0000-00-00 00:00:00'
 );
 
 --
@@ -190,13 +229,11 @@ INSERT INTO `security_functions` (
 `_execute` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'New', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyNew|InstitutionSiteSurveyNew.index', NULL, '_view:add', NULL, NULL , @orderOfDashboardsSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'New', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyNew|InstitutionSiteSurveyNew.index', NULL, '_view:add', NULL, NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfDashboardsSecurity := @orderOfDashboardsSecurity + 1;
@@ -215,13 +252,11 @@ INSERT INTO `security_functions` (
 `_execute` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Draft', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyDraft|InstitutionSiteSurveyDraft.index', '_view:edit', NULL, '_view:delete', NULL , @orderOfDashboardsSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Draft', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyDraft|InstitutionSiteSurveyDraft.index', '_view:edit', NULL, '_view:delete', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfDashboardsSecurity := @orderOfDashboardsSecurity + 1;
@@ -240,13 +275,11 @@ INSERT INTO `security_functions` (
 `_execute` ,
 `order` ,
 `visible` ,
-`modified_user_id` ,
-`modified` ,
 `created_user_id` ,
 `created`
 )
 VALUES (
-NULL , 'Completed', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyCompleted|InstitutionSiteSurveyCompleted.index', NULL, NULL, '_view:delete', NULL , @orderOfDashboardsSecurity, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Completed', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyCompleted|InstitutionSiteSurveyCompleted.index', NULL, NULL, '_view:delete', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 --

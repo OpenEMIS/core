@@ -32,8 +32,13 @@ class SurveyTemplatesController extends SurveysAppController {
     	$this->set('contentHeader', __('Templates'));
 	}
 
-	public function index() {
-		$data = $this->SurveyTemplate->getSurveyTemplateData();
+	public function index($selectedModule=0) {
+		$moduleOptions = $this->SurveyModule->getModuleList();
+		$selectedModule = $selectedModule==0 ? key($moduleOptions) : $selectedModule;
+    	$data = $this->SurveyTemplate->getSurveyTemplateByModule($selectedModule);
+
+    	$this->set('moduleOptions', $moduleOptions);
+		$this->set('selectedModule', $selectedModule);
 		$this->set('data', $data);
     }
 

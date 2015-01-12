@@ -11,7 +11,7 @@ SET 	`plugin` = 'Survey',
 		`pattern` = 'index$|^add$|^edit$'
 WHERE 	`module` = 'Administration'
 		AND `plugin` LIKE 'Surveys'
-		AND `controller` LIKE 'SurveyTemplates|SurveyQuestions'
+		AND `controller` LIKE 'SurveyTemplates'
 		AND `header` LIKE 'Surveys'
 		AND `title` LIKE 'Templates';
 
@@ -28,17 +28,20 @@ WHERE 	`module` = 'Administration'
 		AND `header` LIKE 'Surveys'
 		AND `title` LIKE 'Status';
 
+DELETE FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Surveys' AND `title` LIKE 'Questions';
+
 --
 -- 2. security_functions
 --
 
 DELETE FROM `security_functions` WHERE `controller` LIKE 'SurveyTemplates' AND `category` LIKE 'Surveys' AND `name` LIKE 'Templates';
-DELETE FROM `security_functions` WHERE `controller` LIKE 'SurveyTemplates' AND `category` LIKE 'Surveys' AND `name` LIKE 'Status';
+DELETE FROM `security_functions` WHERE `controller` LIKE 'SurveyQuestions' AND `category` LIKE 'Surveys' AND `name` LIKE 'Questions';
+DELETE FROM `security_functions` WHERE `controller` LIKE 'SurveyStatuses' AND `category` LIKE 'Surveys' AND `name` LIKE 'Status';
 
 SET @orderOfAlertsSecurity := 0;
 SELECT `order` INTO @orderOfAlertsSecurity FROM `security_functions` WHERE `controller` LIKE 'Alerts' AND `category` LIKE 'Communications' AND `name` LIKE 'Alerts';
 
-UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= @orderOfAlertsSecurity;
+UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` >= @orderOfAlertsSecurity;
 
 --
 -- 3. navigations

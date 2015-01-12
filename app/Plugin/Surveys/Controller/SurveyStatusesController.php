@@ -32,8 +32,8 @@ class SurveyStatusesController extends SurveysAppController {
 		$this->Navigation->addCrumb('Status');
 
 		$moduleOptions = $this->SurveyModule->getModuleList();
-    	$this->set('moduleOptions', $moduleOptions);
-		$templateOptions = $this->SurveyTemplate->getTemplateList();
+    	$selectedModule = key($moduleOptions);
+		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($selectedModule);
 		$academicPeriodTypeOptions = $this->AcademicPeriodType->getAcademicPeriodTypeList();
 		$selectedAcademicPeriodType = key($academicPeriodTypeOptions);
 
