@@ -2,7 +2,7 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-	echo $this->Html->link(__('Back'), array('action' => 'index', $templateData['SurveyTemplate']['id']), array('class' => 'divider'));
+	echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');

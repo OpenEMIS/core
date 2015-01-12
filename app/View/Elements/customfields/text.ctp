@@ -22,8 +22,12 @@
 				'class' => 'form-control',
 				'div' => false,
 				'label' => false,
+				'error' => false,
 				'value' => $value
 			));
+			$customFieldName = "$modelValue.$modelId.text_value";
+			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
+			echo $error;
 		}
 	?>
 	</div>

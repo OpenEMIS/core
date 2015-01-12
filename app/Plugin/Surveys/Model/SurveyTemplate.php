@@ -31,8 +31,7 @@ class SurveyTemplate extends SurveysAppModel {
 
 	public $hasMany = array(
 		'Surveys.SurveyQuestion',
-		'Surveys.SurveyStatus',
-		//'Surveys.Survey'
+		'Surveys.SurveyStatus'
 	);
 
 	public $validate = array(
@@ -55,8 +54,11 @@ class SurveyTemplate extends SurveysAppModel {
 		)
 	);
 
-	public function getSurveyTemplateData() {
+	public function getSurveyTemplateByModule($surveyModuleId) {
 		$data = $this->find('all', array(
+			'conditions' => array(
+				'SurveyTemplate.survey_module_id' => $surveyModuleId
+			),
 			'order' => array(
 				'SurveyModule.order', 
 				'SurveyTemplate.name'
@@ -66,11 +68,14 @@ class SurveyTemplate extends SurveysAppModel {
 		return $data;
 	}
 
-	public function getTemplateList() {
+	public function getTemplateListByModule($surveyModuleId) {
 		$list = $this->find('list', array(
-				'fields' => array(
+				/*'fields' => array(
 					'SurveyTemplate.id',
 					'SurveyTemplate.name'
+				),*/
+				'conditions' => array(
+					'SurveyTemplate.survey_module_id' => $surveyModuleId
 				),
 				'order' => array(
 					'SurveyTemplate.name'

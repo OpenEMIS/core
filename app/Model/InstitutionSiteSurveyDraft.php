@@ -65,13 +65,12 @@ class InstitutionSiteSurveyDraft extends AppModel {
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Surveys', array('action' => $this->alias, $this->action));
-		$this->Navigation->addCrumb('New');
+		$this->Navigation->addCrumb('Draft');
 		$this->setVar(compact('contentHeader'));
 	}
 
 	public function index() {
 		$data = $this->getSurveyDataByStatus();
-
 		$this->setVar(compact('data'));
 	}
 
@@ -103,6 +102,8 @@ class InstitutionSiteSurveyDraft extends AppModel {
 			if ($this->request->is(array('post', 'put'))) {
 				$surveyData = $this->prepareSurveyData($this->request->data);
 
+				$dataSource = $this->getDataSource();
+				$dataSource->begin();
 				$this->InstitutionSiteSurveyAnswer->deleteAll(array(
 					'InstitutionSiteSurveyAnswer.institution_site_survey_id' => $id
 				), false);
@@ -111,10 +112,12 @@ class InstitutionSiteSurveyDraft extends AppModel {
 				), false);
 
 				if ($this->saveAll($surveyData)) {
+					$dataSource->commit();
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => $this->alias, 'index'));
 				} else {
 					//do something if validation fail
+					$dataSource->rollback();
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
 				}

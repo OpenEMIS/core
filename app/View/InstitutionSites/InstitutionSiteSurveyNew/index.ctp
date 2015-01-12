@@ -1,9 +1,12 @@
 <?php
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
+$this->start('contentActions');
+$this->end();
 
 $this->start('contentBody');
 ?>
+<?php echo $this->element('alert'); ?>
 
 <div class="survey panel-group" id="survey_accordion" role="tablist" aria-multiselectable="true">
 	<?php foreach ($data as $i => $obj) : ?>
