@@ -8,6 +8,9 @@ if ($_edit) {
 if ($_delete) {
 	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
+if ($_execute) {
+	echo $this->Html->link($this->Label->get('general.export'), array('action' => 'excel'), array('class' => 'divider'));
+}
 echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 $this->end();
 

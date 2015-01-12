@@ -18,11 +18,9 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))),
 		'Search',
 		'ControllerAction2',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		),
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
@@ -68,72 +66,14 @@ class InstitutionSiteStudent extends AppModel {
 			)
 		)
 	);
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'Student' => array(
-					'identification_no' => 'OpenEMIS ID',
-					'first_name' => 'First Name',
-					'middle_name' => 'Middle Name',
-					'last_name' => 'Last Name',
-					'preferred_name' => 'Preferred Name'
-				),
-				'StudentContact' => array(
-					'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StudentContact.value))' => 'Contacts'
-				),
-				'StudentIdentity' => array(
-					'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", StudentIdentity.number))' => 'Identities'
-				),
-				'StudentNationality' => array(
-					'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
-				),
-				'StudentStatus' => array(
-					'name' => 'Status'
-				),
-				'StudentCustomField' => array(
-				),
-				'EducationProgramme' => array(
-					'name' => 'Programme'
-				),
-				'InstitutionSite' => array(
-					'name' => 'Institution Name',
-					'code' => 'Institution Code',
-				),
-				'InstitutionSiteType' => array(
-					'name' => 'Institution Type'
-				),
-				'InstitutionSiteOwnership' => array(
-					'name' => 'Institution Ownership'
-				),
-				'InstitutionSiteStatus' => array(
-					'name' => 'Institution Status'
-				),
-				'InstitutionSite2' => array(
-					'date_opened' => 'Date Opened',
-					'date_closed' => 'Date Closed',
-				),
-				'Area' => array(
-					'name' => 'Area'
-				),
-				'AreaEducation' => array(
-					'name' => 'Area (Education)'
-				),
-				'InstitutionSite3' => array(
-					'address' => 'Address',
-					'postal_code' => 'Postal Code',
-					'longitude' => 'Longitude',
-					'latitude' => 'Latitude',
-					'contact_person' => 'Contact Person',
-					'telephone' => 'Telephone',
-					'fax' => 'Fax',
-					'email' => 'Email',
-					'website' => 'Website'
-				)
-			),
-			'fileName' => 'Report_Student_List'
-		)
-	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSite.id' => $id);
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -473,13 +413,8 @@ class InstitutionSiteStudent extends AppModel {
 		}
 		return $data;
 	}
-	
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
 
+	/*
 	public function reportsGetData($args) {
 		$institutionSiteId = $args[0];
 		$index = $args[1];
@@ -705,11 +640,5 @@ class InstitutionSiteStudent extends AppModel {
 			return $newData;
 		}
 	}
-	
-	public function reportsGetFileName($args){
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
-	}
-
+	*/
 }

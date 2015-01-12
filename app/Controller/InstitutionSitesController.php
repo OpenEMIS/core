@@ -424,6 +424,10 @@ class InstitutionSitesController extends AppController {
 		
 		$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 	}
+
+	public function excel() {
+		$this->InstitutionSite->excel();
+	}
 	
 	public function shiftLocationAutoComplete() {
 		$this->autoRender = false;

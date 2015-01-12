@@ -63,18 +63,9 @@ class InstitutionSiteSection extends AppModel {
 	);
 	
 	public $actsAs = array(
-		'Excel',
 		'ControllerAction2',
 		'SchoolYear'
 	);
-
-	/* Excel Behaviour */
-	public function excelGetConditions() {
-		$id = CakeSession::read('InstitutionSite.id');
-		$conditions = array('InstitutionSite.id' => $id);
-		return $conditions;
-	}
-	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();

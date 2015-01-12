@@ -22,6 +22,7 @@ class ExcelBehavior extends ModelBehavior {
 	public $rootFolder = 'export';
 	public $LabelHelper;
 	public $Model;
+	public $conditions = array();
 
 	public function setup(Model $Model, $settings = array()) {
 		if (!isset($this->settings[$Model->alias])) {
@@ -92,8 +93,16 @@ class ExcelBehavior extends ModelBehavior {
 		foreach ($models as $sheet) {
 			$sheetModel = is_object($sheet['model']) ? $sheet['model'] : ClassRegistry::init($sheet['model']);
 			$sheetName = array_key_exists('name', $sheet) ? $sheet['name'] : $sheetModel->alias;
-			//pr($sheetModel->alias);
+
+			if ($model->alias == $sheetModel->alias) {
+				$this->conditions = $model->excelGetConditions();
+			}
 			$model->setModel($sheetModel);
+
+			if (!$sheetModel->Behaviors->loaded('Excel')) {
+				$sheetModel->Behaviors->load('Excel');
+			}
+
 			$header = $sheetModel->excelGetHeader();
 			$footer = $sheetModel->excelGetFooter();
 			$data = $sheetModel->excelGetData();
@@ -202,7 +211,7 @@ class ExcelBehavior extends ModelBehavior {
 	}
 
 	public function excelGetConditions(Model $model) {
-		return array();
+		return $this->conditions;
 	}
 
 	public function excelGetFieldLookup(Model $model) {
