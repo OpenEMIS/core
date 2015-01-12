@@ -18,12 +18,12 @@ $this->start('contentBody');
 	<div class="col-md-3"><?php echo $this->Label->get('general.category'); ?></div>
 	<div class="col-md-6"><?php echo $data['InfrastructureCategory']['name']; ?></div>
 </div>
-<?php if(!empty($parentCategoryName) && !empty($data['Parent']['name'])):?>
+<?php foreach($parentsInOrder AS $record): ?>
 	<div class="row">
-		<div class="col-md-3"><?php echo $parentCategoryName; ?></div>
-		<div class="col-md-6"><?php echo $data['Parent']['name']; ?></div>
+		<div class="col-md-3"><?php echo $record['parentCategory']; ?></div>
+		<div class="col-md-6"><?php echo $record['parent']; ?></div>
 	</div>
-<?php endif; ?>
+<?php endforeach; ?>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>

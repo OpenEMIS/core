@@ -19,7 +19,8 @@ $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 
-echo $this->Form->input('category_name', array('value' => $data['InfrastructureCategory']['name'], 'disabled' => 'disabled'));
+$labelOptions['text'] = __('Category');
+echo $this->Form->input('category_name', array('value' => $data['InfrastructureCategory']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
 
 if(!empty($parentCategory)){
 	$labelOptions['text'] = __($parentCategory['InfrastructureCategory']['name']);

@@ -121,32 +121,18 @@ class InstitutionSiteInfrastructure extends AppModel {
 	public function view($id=0) {
 		$this->Navigation->addCrumb('View Infrastructure Details');
 		
-		$data = $this->find('first', array(
-			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureCategory.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'Parent.name', 'ModifiedUser.*', 'CreatedUser.*'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_infrastructures',
-					'alias' => 'Parent',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'Parent.id = InstitutionSiteInfrastructure.parent_id'
-					)
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteInfrastructure.id' => $id
-			)
-		));
+		$data = $this->getInfrastructureWithParent($id);
 		
 		if (!empty($data)) {
 			$this->Session->write($this->alias.'.id', $id);
 			
-			$parentCategory = $this->InfrastructureCategory->getParentCategory($data['InfrastructureCategory']['id']);
-			$parentCategoryName = !empty($parentCategory) ? $parentCategory['InfrastructureCategory']['name'] : '';
+			$parents = array();
+			$this->getParents($id, &$parents);
+			$parentsInOrder = array_reverse($parents);
 			
 			$categoryId = $data['InfrastructureCategory']['id'];
 			
-			$this->setVar(compact('id', 'data', 'parentCategoryName', 'categoryId'));
+			$this->setVar(compact('id', 'data', 'categoryId', 'parentsInOrder'));
 		} else {
 			$this->Message->alert('general.notExists');
 			$this->redirect(array('action' => $this->_action));
@@ -193,22 +179,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 	public function edit($id=0) {
 		$this->Navigation->addCrumb('Edit Infrastructure Details');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$data = $this->find('first', array(
-			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureCategory.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'Parent.name', 'ModifiedUser.*', 'CreatedUser.*'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_infrastructures',
-					'alias' => 'Parent',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'Parent.id = InstitutionSiteInfrastructure.parent_id'
-					)
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteInfrastructure.id' => $id
-			)
-		));
+		$data = $this->getInfrastructureWithParent($id);
 
 		if (!empty($data)) {
 			$parentCategory = $this->InfrastructureCategory->getParentCategory($data['InfrastructureCategory']['id']);
@@ -294,5 +265,48 @@ class InstitutionSiteInfrastructure extends AppModel {
 		));
 		
 		return $data;
+	}
+	
+	public function getInfrastructureWithParent($id){
+		$data = $this->find('first', array(
+			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureCategory.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'Parent.*', 'ModifiedUser.*', 'CreatedUser.*'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_infrastructures',
+					'alias' => 'Parent',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'Parent.id = InstitutionSiteInfrastructure.parent_id'
+					)
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteInfrastructure.id' => $id
+			)
+		));
+		
+		return $data;
+	}
+	
+	private function getParents($infrastructureId, &$arr){
+		$data = $this->getInfrastructureWithParent($infrastructureId);
+		
+		if (!empty($data)) {
+			$parentCategory = $this->InfrastructureCategory->getParentCategory($data['InfrastructureCategory']['id']);
+			
+			if(!empty($data['Parent']['name']) && !empty($parentCategory)){
+				$parentCategoryName = $parentCategory['InfrastructureCategory']['name'];
+				
+				$arr[] = array(
+					'parentCategory' => $parentCategoryName,
+					'parent' => $data['Parent']['name']
+				);
+				
+				if(!empty($data['Parent']['id'])){
+					$this->getParents($data['Parent']['id'], &$arr);
+				}
+			}
+			
+		}
 	}
 }
