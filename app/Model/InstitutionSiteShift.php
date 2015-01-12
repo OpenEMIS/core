@@ -18,7 +18,7 @@
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteShift extends AppModel {
-	public $actsAs = array('Excel', 'ControllerAction');
+	public $actsAs = array('ControllerAction');
 
 	public $belongsTo = array(
 		'SchoolYear',
@@ -76,14 +76,6 @@ class InstitutionSiteShift extends AppModel {
 			)
 		)
 	);
-
-	/* Excel Behaviour */
-	public function excelGetConditions() {
-		$id = CakeSession::read('InstitutionSite.id');
-		$conditions = array('InstitutionSite.id' => $id);
-		return $conditions;
-	}
-	/* End Excel Behaviour */
 
 	public function getAllShiftsByInstitutionSite($institutionSiteId) {
 		$result = $this->find('all', array(
