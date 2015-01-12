@@ -34,8 +34,6 @@ class SurveyModule extends SurveysAppModel {
 
 	public function getModuleList() {
 		$list = $this->find('list' , array(
-			'recursive' => '-1',
-			'fields' => array('SurveyModule.id', 'SurveyModule.name'),
 			'conditions' => array('SurveyModule.visible' => 1),
 			'order' => array('SurveyModule.order')
 		));

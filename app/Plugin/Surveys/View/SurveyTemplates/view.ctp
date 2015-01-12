@@ -9,7 +9,6 @@ $this->start('contentActions');
 	if ($_delete) {
 		echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 	}
-	echo $this->Html->link(__('Details'), array('controller' => 'SurveyQuestions', 'action' => 'index'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');

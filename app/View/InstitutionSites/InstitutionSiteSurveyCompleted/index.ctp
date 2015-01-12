@@ -8,25 +8,28 @@ $this->start('contentBody');
 ?>
 <?php echo $this->element('alert'); ?>
 
-<div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered">
-		<thead>
-			<tr>
-				<th><?php echo __('Name'); ?></th>
-				<th><?php echo __('Academic Period'); ?></th>
-				<th><?php echo __('Date Completed'); ?></th>
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach ($data as $obj) : ?>
-				<tr>
-					<td><?php echo $this->Html->link($obj['SurveyTemplate']['name'], array('action' => $model, 'view', $obj[$model]['id'])) ?></td>
-					<td><?php echo $obj['SurveyStatusPeriod']['AcademicPeriod']['name'] ?></td>
-					<td><?php echo !empty($obj[$model]['modified']) ? $obj[$model]['modified'] : $obj[$model]['created']; ?></td>
-				</tr>
-			<?php endforeach ?>
-		</tbody>
-	</table>
+<div class="survey panel-group" id="survey_accordion" role="tablist" aria-multiselectable="true">
+	<?php foreach ($data as $i => $obj) : ?>
+		<div class="panel panel-default">
+			<div class="panel-heading" role="tab" id="survey_heading<?php echo $i; ?>">
+				<h4 class="panel-title">
+					<a class="collapsed" data-toggle="collapse" data-parent="#survey_accordion" href="#collapse<?php echo $i; ?>" aria-expanded="false" aria-controls="collapse<?php echo $i; ?>">
+						<?php echo $obj['SurveyTemplate']['name']; ?>
+					</a>
+				</h4>
+			</div>
+			<div id="collapse<?php echo $i; ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="survey_heading<?php echo $i; ?>">
+				<ul class="list-group">
+					<?php foreach ($obj['AcademicPeriod'] as $key => $value) : ?>
+						<li class="list-group-item">
+							<?php echo $this->Html->link($value['name'], array('action' => $model, 'view', $value[$model]['id'])) ?>
+							<span><?php echo __('Completed On : '); ?><?php echo !empty($value[$model]['modified']) ? $value[$model]['modified'] : $value[$model]['created']; ?></span>
+						</li>
+					<?php endforeach ?>
+				</ul>
+			</div>
+		</div>
+	<?php endforeach ?>
 </div>
 
 <?php $this->end(); ?>

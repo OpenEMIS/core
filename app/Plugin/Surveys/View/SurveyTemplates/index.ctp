@@ -11,6 +11,20 @@ $this->start('contentBody');
 ?>
 <?php echo $this->element('alert'); ?>
 
+<div class="row page-controls">
+	<?php
+		echo $this->Form->input('survey_module_id', array(
+			'class' => 'form-control',
+			'label' => false,
+			'options' => $moduleOptions,
+			'default' => $selectedModule,
+			'div' => 'col-md-3',
+			'url' => $this->params['controller'] . '/index',
+			'onchange' => 'jsForm.change(this)'
+		));
+	?>
+</div>
+
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>

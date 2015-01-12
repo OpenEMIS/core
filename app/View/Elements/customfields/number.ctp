@@ -22,9 +22,13 @@
 				'class' => 'form-control',
 				'div' => false,
 				'label' => false,
+				'error' => false,
 				'onkeypress' => 'return utility.integerCheck(event)',
 				'value' => $value
 			));
+			$customFieldName = "$modelValue.$modelId.int_value";
+			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
+			echo $error;
 		}
 	?>
 	</div>

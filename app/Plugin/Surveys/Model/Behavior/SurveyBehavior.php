@@ -26,16 +26,65 @@ class SurveyBehavior extends ModelBehavior {
 	public function getSurveyStatusByModule(Model $model) {
 		$moduleName = $this->settings[$model->alias]['module'];
 		$moduleId = ClassRegistry::init('Surveys.SurveyModule')->field('id', array('SurveyModule.name' => $moduleName));
+		$todayDate = date("Y-m-d");
+		$table = $model->useTable;
+		$institutionSiteId = $model->Session->read('InstitutionSite.id');
 
-		$model->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriod'));
-		$result = $model->SurveyStatus->find('all', array(
-			'conditions' => array(
-				'SurveyTemplate.survey_module_id' => $moduleId
-			),
-			'order' => array('SurveyStatus.date_disabled', 'SurveyStatus.date_enabled')
-		));
+		$conditionsSubQuery['`SurveyTemplate`.`survey_module_id`'] = $moduleId;
 
-		return $result;
+		$db = $model->SurveyTemplate->getDataSource();
+		$subQuery = $db->buildStatement(
+		    array(
+		        'fields'     => array('`SurveyTemplate`.`id`'),
+		        'table'      => $db->fullTableName($model->SurveyTemplate),
+		        'alias'      => 'SurveyTemplate',
+		        'limit'      => null,
+		        'offset'     => null,
+		        'joins'      => array(),
+		        'conditions' => $conditionsSubQuery,
+		        'order'      => null,
+		        'group'      => null
+		    ),
+		    $model->SurveyTemplate
+		);
+		$subQuery = '`SurveyStatus`.`survey_template_id` IN (' . $subQuery . ') ';
+		$subQueryExpression = $db->expression($subQuery);
+
+		$conditions[] = $subQueryExpression;
+		$conditions[] = "SurveyStatus.date_disabled >= '$todayDate'";
+		$conditions[] = "NOT EXISTS (SELECT 1 FROM $table 
+							WHERE $table.academic_period_id = SurveyStatusPeriod.academic_period_id
+							AND $table.survey_status_id = SurveyStatus.id
+							AND $table.survey_template_id = SurveyStatus.survey_template_id
+							AND $table.institution_site_id = " . $institutionSiteId . ")";
+
+		$options = array();
+		$options['conditions'] = $conditions;
+
+		$result = $model->SurveyStatusPeriod->find('all', $options);
+
+		$tmp = array();
+		foreach ($result as $key => $obj) {
+			$academicPeriodId = $obj['SurveyStatusPeriod']['academic_period_id'];
+			$surveyStatusId = $obj['SurveyStatusPeriod']['survey_status_id'];
+			$surveyTemplateId = $obj['SurveyStatus']['survey_template_id'];
+			$obj['AcademicPeriod']['SurveyStatusPeriod'] = $obj['SurveyStatusPeriod'];
+
+			if(array_key_exists($surveyStatusId, $tmp)) {
+				$academicPeriodArr = $tmp[$surveyStatusId]['AcademicPeriod'];
+				if(!array_key_exists($academicPeriodId, $academicPeriodArr)) {
+					$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+				}
+			} else {
+				$tmp[$surveyStatusId]['SurveyStatus'] = $obj['SurveyStatus'];
+				$model->SurveyTemplate->recursive = -1;
+				$templateData = $model->SurveyTemplate->findById($surveyTemplateId);
+				$tmp[$surveyStatusId]['SurveyTemplate'] = $templateData['SurveyTemplate'];
+				$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+			}
+		}
+
+		return $tmp;
 	}
 
 	public function getSurveyStatusPeriod(Model $model, $academicPeriodId, $surveyStatusId) {
@@ -65,7 +114,7 @@ class SurveyBehavior extends ModelBehavior {
 	public function getSurveyDataByStatus(Model $model) {
 		$surveyStatus = $this->settings[$model->alias]['status'];
 		$conditions = $this->settings[$model->alias]['conditions'];
-		
+
 		$options = array();
 		$options['conditions'] = array($model->alias.'.status' => $surveyStatus);
 		foreach ($conditions as $field => $attr) {
@@ -75,14 +124,43 @@ class SurveyBehavior extends ModelBehavior {
 					$value = CakeSession::read($attr['sessionKey']);
 				}
 			}
-			$options['conditions'][$field] = $value;
+			if(!empty($value)) {
+				$options['conditions'][$model->alias.".".$field] = $value;
+			}
 		}
 		$options['order'] = array('SurveyStatus.date_disabled', 'SurveyStatus.date_enabled');
 
 		$model->contain(array('SurveyTemplate', 'SurveyStatus', 'SurveyStatusPeriod.AcademicPeriod'));
 		$result = $model->find('all', $options);
 
-		return $result;
+		//pr($result);
+		//return $result;
+
+		$tmp = array();
+		foreach ($result as $key => $obj) {
+			$academicPeriodId = $obj['SurveyStatusPeriod']['academic_period_id'];
+			$surveyStatusId = $obj['SurveyStatusPeriod']['survey_status_id'];
+			$surveyTemplateId = $obj['SurveyStatus']['survey_template_id'];
+			$obj['AcademicPeriod'] = $obj['SurveyStatusPeriod']['AcademicPeriod'];
+			unset($obj['SurveyStatusPeriod']['AcademicPeriod']);
+			$obj['AcademicPeriod']['SurveyStatusPeriod'] = $obj['SurveyStatusPeriod'];
+			$obj['AcademicPeriod'][$model->alias] = $obj[$model->alias];
+
+			if(array_key_exists($surveyStatusId, $tmp)) {
+				$academicPeriodArr = $tmp[$surveyStatusId]['AcademicPeriod'];
+				if(!array_key_exists($academicPeriodId, $academicPeriodArr)) {
+					$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+				}
+			} else {
+				$tmp[$surveyStatusId]['SurveyStatus'] = $obj['SurveyStatus'];
+				$model->SurveyTemplate->recursive = -1;
+				$templateData = $model->SurveyTemplate->findById($surveyTemplateId);
+				$tmp[$surveyStatusId]['SurveyTemplate'] = $templateData['SurveyTemplate'];
+				$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+			}
+		}
+
+		return $tmp;
 	}
 
 	public function getSurveyById(Model $model, $id) {
@@ -148,7 +226,7 @@ class SurveyBehavior extends ModelBehavior {
 		$result[$model->alias]['institution_site_id'] = $institutionSiteId;
 		$result[$model->alias]['status'] = isset($requestData['postFinal']) ? 2 : 1;
 
-		$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea', 'number');
+		$arrFields = array('textbox', 'dropdown', 'textarea', 'number');
 
 		$i = 0;
 		foreach ($arrFields as $fieldVal) {
@@ -156,39 +234,42 @@ class SurveyBehavior extends ModelBehavior {
                 continue;
 
             foreach ($requestData[$modelValue][$fieldVal] as $key => $val) {
-            	if ($fieldVal == "checkbox") {
-                	$j = 0;
-                	foreach ($val['value'] as $key2 => $val2) {
-                		$result[$modelValue][$i]['institution_site_id'] = $institutionSiteId;
-                		$result[$modelValue][$i]['survey_question_id'] = $key;
-                		$result[$modelValue][$i]['answer_number'] = ++$j;
-                		$result[$modelValue][$i]['type'] = $val['type'];
-                		$result[$modelValue][$i]['is_mandatory'] = isset($val2['is_mandatory']) ? $val2['is_mandatory'] : 0;
-	                	$result[$modelValue][$i]['is_unique'] = isset($val2['is_unique']) ? $val2['is_unique'] : 0;
-                		$result[$modelValue][$i]['text_value'] = $val2;
-                		$i++;
-                	}
-                } else {
-                	$result[$modelValue][$i]['institution_site_id'] = $institutionSiteId;
-                	$result[$modelValue][$i]['survey_question_id'] = $key;
-                	$result[$modelValue][$i]['answer_number'] = 1;
-                	$result[$modelValue][$i]['type'] = $val['type'];
-                	$result[$modelValue][$i]['is_mandatory'] = isset($val['is_mandatory']) ? $val['is_mandatory'] : 0;
-                	$result[$modelValue][$i]['is_unique'] = isset($val['is_unique']) ? $val['is_unique'] : 0;
+            	$i = $key > $i ? $key : $i;
+				$result[$modelValue][$key]['institution_site_id'] = $institutionSiteId;
+            	$result[$modelValue][$key]['survey_question_id'] = $key;
+            	$result[$modelValue][$key]['answer_number'] = 1;
+            	$result[$modelValue][$key]['type'] = $val['type'];
+            	$result[$modelValue][$key]['is_mandatory'] = isset($val['is_mandatory']) ? $val['is_mandatory'] : 0;
+            	$result[$modelValue][$key]['is_unique'] = isset($val['is_unique']) ? $val['is_unique'] : 0;
 
-                	switch($fieldVal) {
-                		case "number" :
-                			$result[$modelValue][$i]['int_value'] = $val['value'];
-                			break;
-                		case "textarea" :
-							$result[$modelValue][$i]['textarea_value'] = $val['value'];
-                			break;
-                		default:
-                			$result[$modelValue][$i]['text_value'] = $val['value'];
-                	}
-                	$i++;
-                }
+            	switch($fieldVal) {
+            		case "number" :
+            			$result[$modelValue][$key]['int_value'] = $val['value'];
+            			break;
+            		case "textarea" :
+						$result[$modelValue][$key]['textarea_value'] = $val['value'];
+            			break;
+            		default:
+            			$result[$modelValue][$key]['text_value'] = $val['value'];
+            	}
         	}
+		}
+
+		if(isset($requestData[$modelValue]['checkbox'])) {
+			$i += 1;
+			foreach ($requestData[$modelValue]['checkbox'] as $key => $val) {
+				$j = 0;
+            	foreach ($val['value'] as $key2 => $val2) {
+            		$result[$modelValue][$i]['institution_site_id'] = $institutionSiteId;
+            		$result[$modelValue][$i]['survey_question_id'] = $key;
+            		$result[$modelValue][$i]['answer_number'] = ++$j;
+            		$result[$modelValue][$i]['type'] = $val['type'];
+            		$result[$modelValue][$i]['is_mandatory'] = isset($val2['is_mandatory']) ? $val2['is_mandatory'] : 0;
+                	$result[$modelValue][$i]['is_unique'] = isset($val2['is_unique']) ? $val2['is_unique'] : 0;
+            		$result[$modelValue][$i]['text_value'] = $val2;
+            		$i++;
+            	}
+			}
 		}
 
 		$k = 0;
@@ -207,7 +288,6 @@ class SurveyBehavior extends ModelBehavior {
 			}
 		}
 
-		//pr($result);die;
 		return $result;
 	}
 }

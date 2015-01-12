@@ -65,13 +65,12 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Surveys', array('action' => $this->alias, $this->action));
-		$this->Navigation->addCrumb('New');
+		$this->Navigation->addCrumb('Completed');
 		$this->setVar(compact('contentHeader'));
 	}
 
 	public function index() {
 		$data = $this->getSurveyDataByStatus();
-
 		$this->setVar(compact('data'));
 	}
 

@@ -2,7 +2,7 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-	echo $this->Html->link(__('Back'), array('action' => 'index', $data['SurveyQuestion']['survey_template_id']), array('class' => 'divider'));
+	echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
 	if ($_edit) {
 		echo $this->Html->link(__('Edit'), array('action' => 'edit', $data['SurveyQuestion']['id']), array('class' => 'divider'));
 	}

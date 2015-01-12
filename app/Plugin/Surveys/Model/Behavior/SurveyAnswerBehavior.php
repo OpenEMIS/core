@@ -24,6 +24,9 @@ class SurveyAnswerBehavior extends ModelBehavior {
 
 	public function beforeValidate(Model $model, $options=array()) {
 		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
+		$model->validator()->remove('text_value');
+		$model->validator()->remove('textarea_value');
+		$model->validator()->remove('int_value');
 
 		switch($model->data[$modelValue]['type']) {
 			case 2:
@@ -35,18 +38,22 @@ class SurveyAnswerBehavior extends ModelBehavior {
 			case 6:
 				$fieldName = 'int_value';
 				break;
-			default:
-				$model->validator()->remove('text_value');
-				$model->validator()->remove('textarea_value');
-				$model->validator()->remove('int_value');
 		}
 
 		if($model->data[$modelValue]['is_mandatory'] == 1) {
 			$model->validator()->add($fieldName, 'required', array(
 			    'rule' => 'notEmpty',
 			    'required' => true,
-			    'message' => 'Please enter a value.'
+			    'message' => 'Please enter a value'
 			));
 		}
+
+		if($model->data[$modelValue]['is_unique'] == 1) {
+			$model->validator()->add($fieldName, 'unique', array(
+			    'rule' => array('checkUnique', array('institution_site_id', 'survey_question_id', $fieldName), false),
+			    'message' => 'Please enter a unique value'
+			));
+		}
+
 	}
 }
