@@ -54,16 +54,48 @@ INSERT INTO `navigations` (
 `created_user_id` ,
 `created`
 ) 
-VALUES (NULL , 'Institution', NULL , 'InstitutionSites', 'Infrastructure', 'Infrastructure', 'InstitutionSiteInfrastructure', 'InstitutionSiteInfrastructure|InstitutionSiteInfrastructure.index|InstitutionSiteInfrastructure.view|InstitutionSiteInfrastructure.add|InstitutionSiteInfrastructure.edit|InstitutionSiteInfrastructure.delete', NULL , '3', '0', @orderDetailsClasses + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+VALUES (NULL , 'Institution', NULL , 'InstitutionSites', 'Details', 'Infrastructure', 'InstitutionSiteInfrastructure', 'InstitutionSiteInfrastructure|InstitutionSiteInfrastructure.index|InstitutionSiteInfrastructure.view|InstitutionSiteInfrastructure.add|InstitutionSiteInfrastructure.edit|InstitutionSiteInfrastructure.delete', NULL , '3', '0', @orderDetailsClasses + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 
 --
--- 2. infrastructure_categories
+-- 2. security_functions
+--
+
+SET @orderDetailsClassesSecurity := 0;
+SELECT `order` INTO @orderDetailsClassesSecurity FROM `security_functions` WHERE `module` LIKE 'Institutions' AND `category` LIKE 'Details' AND `name` LIKE 'Classes';
+
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > @orderDetailsClassesSecurity;
+
+INSERT INTO `_openemis_`.`security_functions` (
+`id` ,
+`name` ,
+`controller` ,
+`module` ,
+`category` ,
+`parent_id` ,
+`_view` ,
+`_edit` ,
+`_add` ,
+`_delete` ,
+`_execute` ,
+`order` ,
+`visible` ,
+`modified_user_id` ,
+`modified` ,
+`created_user_id` ,
+`created`
+)
+VALUES (
+NULL , 'Infrastructure', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteInfrastructure|InstitutionSiteInfrastructure.index|InstitutionSiteInfrastructure.view', 'InstitutionSiteInfrastructure.edit', 'InstitutionSiteInfrastructure.add', 'InstitutionSiteInfrastructure.delete', NULL , @orderDetailsClassesSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+);
+
+--
+-- 3. infrastructure_categories
 --
 
 ALTER TABLE `infrastructure_categories` ADD `parent_id` INT NOT NULL AFTER `national_code` ;
 
 --
--- 3. Table structure for table `infrastructure_types`
+-- 4. Table structure for table `infrastructure_types`
 --
 
 CREATE TABLE `infrastructure_types` (
@@ -82,7 +114,7 @@ CREATE TABLE `infrastructure_types` (
 
 
 --
--- 4. Table structure for table `institution_site_infrastructures`
+-- 5. Table structure for table `institution_site_infrastructures`
 --
 
 CREATE TABLE `institution_site_infrastructures` (
@@ -107,7 +139,7 @@ CREATE TABLE `institution_site_infrastructures` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
--- 5. new field option `InfrastructureOwnership`
+-- 6. new field option `InfrastructureOwnership`
 --
 
 SET @maxFieldOptionOrder := 0;
@@ -118,7 +150,7 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (NULL, 'InfrastructureOwnership', 'Ownership', 'Infrastructure', NULL, @maxFieldOptionOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 --
--- 6. new field option `InfrastructureCondition`
+-- 7. new field option `InfrastructureCondition`
 --
 
 SET @maxFieldOptionOrder := 0;
@@ -127,3 +159,6 @@ SELECT MAX(`order`) INTO @maxFieldOptionOrder FROM `field_options`;
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
 (NULL, 'InfrastructureCondition', 'Condition', 'Infrastructure', NULL, @maxFieldOptionOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+
+

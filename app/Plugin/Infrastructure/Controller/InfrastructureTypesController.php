@@ -100,7 +100,7 @@ class InfrastructureTypesController extends InfrastructureAppController {
 			
 			if ($this->InfrastructureType->save($postData)) {
 				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => 'index', 'category_id' => $categoryId));
+				return $this->redirect(array('action' => 'index', $categoryId));
 			} else {
 				$this->request->data = $postData;
 				$this->Message->alert('general.add.failed');
