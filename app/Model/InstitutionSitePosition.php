@@ -69,11 +69,6 @@ class InstitutionSitePosition extends AppModel {
 	);
 
 	/* Excel Behaviour */
-	public function excelGetConditions() {
-		$id = CakeSession::read('InstitutionSite.id');
-		$conditions = array('InstitutionSite.id' => $id);
-		return $conditions;
-	}
 	public function excelGetFieldLookup() {
 		$alias = $this->alias;
 		$lookup = array(
