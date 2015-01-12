@@ -458,6 +458,14 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'AcademicPeriod' => array(
+			'name' => 'Academic Period',
+			'academic_period_level_id' => 'Academic Period Level',
+			'select' => '-- Select Academic Period --'
+		),
+		'AcademicPeriodLevel' => array(
+			'name' => 'Academic Period Level'
 		)
 	);
 	
