@@ -20,7 +20,6 @@ class SurveyBehavior extends ModelBehavior {
 			$this->settings[$Model->alias] = array();
 		}
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
-		//pr($this->settings);
 	}
 
 	public function getSurveyStatusByModule(Model $model) {
@@ -63,12 +62,21 @@ class SurveyBehavior extends ModelBehavior {
 
 		$result = $model->SurveyStatusPeriod->find('all', $options);
 
+		return $model->prepareResultSurveyData($result);
+	}
+
+	public function prepareResultSurveyData(Model $model, $result) {
 		$tmp = array();
+
 		foreach ($result as $key => $obj) {
 			$academicPeriodId = $obj['SurveyStatusPeriod']['academic_period_id'];
 			$surveyStatusId = $obj['SurveyStatusPeriod']['survey_status_id'];
 			$surveyTemplateId = $obj['SurveyStatus']['survey_template_id'];
+
 			$obj['AcademicPeriod']['SurveyStatusPeriod'] = $obj['SurveyStatusPeriod'];
+			if(isset($obj[$model->alias])) {
+				$obj['AcademicPeriod'][$model->alias] = $obj[$model->alias];
+			}
 
 			if(array_key_exists($surveyStatusId, $tmp)) {
 				$academicPeriodArr = $tmp[$surveyStatusId]['AcademicPeriod'];
@@ -84,7 +92,29 @@ class SurveyBehavior extends ModelBehavior {
 			}
 		}
 
+		foreach ($tmp as $key => $row) {
+			uasort($tmp[$key]['AcademicPeriod'], array($model, 'sortAcademicPeriod'));
+		}
+		uasort($tmp, array($model, 'sortSurveyStatus'));
+
 		return $tmp;
+	}
+
+	public function sortSurveyStatus(Model $model, $a, $b) {
+		$aDateDisabledTimestamp = strtotime($a['SurveyStatus']['date_disabled']);
+		$bDateDisabledTimestamp = strtotime($b['SurveyStatus']['date_disabled']);
+
+		if ($aDateDisabledTimestamp == $bDateDisabledTimestamp) {
+	        return 0;
+	    }
+	    return ($aDateDisabledTimestamp < $bDateDisabledTimestamp) ? -1 : 1;
+	}
+
+	public function sortAcademicPeriod(Model $model, $a, $b) {
+		if ($a['name'] == $b['name']) {
+	        return 0;
+	    }
+	    return ($a['name'] < $b['name']) ? -1 : 1;
 	}
 
 	public function getSurveyStatusPeriod(Model $model, $academicPeriodId, $surveyStatusId) {
@@ -130,37 +160,10 @@ class SurveyBehavior extends ModelBehavior {
 		}
 		$options['order'] = array('SurveyStatus.date_disabled', 'SurveyStatus.date_enabled');
 
-		$model->contain(array('SurveyTemplate', 'SurveyStatus', 'SurveyStatusPeriod.AcademicPeriod'));
+		$model->contain(array('SurveyStatus', 'AcademicPeriod', 'SurveyStatusPeriod'));
 		$result = $model->find('all', $options);
 
-		//pr($result);
-		//return $result;
-
-		$tmp = array();
-		foreach ($result as $key => $obj) {
-			$academicPeriodId = $obj['SurveyStatusPeriod']['academic_period_id'];
-			$surveyStatusId = $obj['SurveyStatusPeriod']['survey_status_id'];
-			$surveyTemplateId = $obj['SurveyStatus']['survey_template_id'];
-			$obj['AcademicPeriod'] = $obj['SurveyStatusPeriod']['AcademicPeriod'];
-			unset($obj['SurveyStatusPeriod']['AcademicPeriod']);
-			$obj['AcademicPeriod']['SurveyStatusPeriod'] = $obj['SurveyStatusPeriod'];
-			$obj['AcademicPeriod'][$model->alias] = $obj[$model->alias];
-
-			if(array_key_exists($surveyStatusId, $tmp)) {
-				$academicPeriodArr = $tmp[$surveyStatusId]['AcademicPeriod'];
-				if(!array_key_exists($academicPeriodId, $academicPeriodArr)) {
-					$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
-				}
-			} else {
-				$tmp[$surveyStatusId]['SurveyStatus'] = $obj['SurveyStatus'];
-				$model->SurveyTemplate->recursive = -1;
-				$templateData = $model->SurveyTemplate->findById($surveyTemplateId);
-				$tmp[$surveyStatusId]['SurveyTemplate'] = $templateData['SurveyTemplate'];
-				$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
-			}
-		}
-
-		return $tmp;
+		return $model->prepareResultSurveyData($result);
 	}
 
 	public function getSurveyById(Model $model, $id) {
@@ -216,15 +219,16 @@ class SurveyBehavior extends ModelBehavior {
 		return $tmp;
 	}
 
-	public function prepareSurveyData(Model $model, $requestData) {
+	public function prepareSubmitSurveyData(Model $model, $requestData) {
 		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
 		$modelCell = $this->settings[$model->alias]['customfields']['modelCell'];
 
 		$institutionSiteId = $model->Session->read('InstitutionSite.id');
+		$surveyStatus = isset($requestData['postFinal']) ? 2 : 1;
 
 		$result[$model->alias] = $requestData[$model->alias];
 		$result[$model->alias]['institution_site_id'] = $institutionSiteId;
-		$result[$model->alias]['status'] = isset($requestData['postFinal']) ? 2 : 1;
+		$result[$model->alias]['status'] = $surveyStatus;
 
 		$arrFields = array('textbox', 'dropdown', 'textarea', 'number');
 
@@ -236,6 +240,7 @@ class SurveyBehavior extends ModelBehavior {
             foreach ($requestData[$modelValue][$fieldVal] as $key => $val) {
             	$i = $key > $i ? $key : $i;
 				$result[$modelValue][$key]['institution_site_id'] = $institutionSiteId;
+				$result[$modelValue][$key]['survey_status'] = $surveyStatus;
             	$result[$modelValue][$key]['survey_question_id'] = $key;
             	$result[$modelValue][$key]['answer_number'] = 1;
             	$result[$modelValue][$key]['type'] = $val['type'];
@@ -261,6 +266,7 @@ class SurveyBehavior extends ModelBehavior {
 				$j = 0;
             	foreach ($val['value'] as $key2 => $val2) {
             		$result[$modelValue][$i]['institution_site_id'] = $institutionSiteId;
+            		$result[$modelValue][$i]['survey_status'] = $surveyStatus;
             		$result[$modelValue][$i]['survey_question_id'] = $key;
             		$result[$modelValue][$i]['answer_number'] = ++$j;
             		$result[$modelValue][$i]['type'] = $val['type'];
@@ -278,6 +284,7 @@ class SurveyBehavior extends ModelBehavior {
 				foreach ($val as $key2 => $val2) {
         			if($val2['value']) {
         				$result[$modelCell][$k]['institution_site_id'] = $institutionSiteId;
+        				$result[$modelCell][$k]['survey_status'] = $surveyStatus;
         				$result[$modelCell][$k]['survey_question_id'] = $val2['survey_question_id'];
         				$result[$modelCell][$k]['survey_table_row_id'] = $val2['survey_table_row_id'];
         				$result[$modelCell][$k]['survey_table_column_id'] = $val2['survey_table_column_id'];
@@ -289,5 +296,28 @@ class SurveyBehavior extends ModelBehavior {
 		}
 
 		return $result;
+	}
+
+	public function prepareFormatedDataValues(Model $model, $result) {
+		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
+		$modelCell = $this->settings[$model->alias]['customfields']['modelCell'];
+
+		$tmp = array();
+
+		if(isset($result[$modelValue])) {
+			foreach ($result[$modelValue] as $key => $obj) {
+				$surveyQuestionId = $obj['survey_question_id'];
+				$tmp[$surveyQuestionId][] = $obj;
+			}
+		}
+
+		if(isset($result[$modelCell])) {
+			foreach ($result[$modelCell] as $key => $obj) {
+				$surveyQuestionId = $obj['survey_question_id'];
+				$tmp[$surveyQuestionId][] = $obj;
+			}
+		}
+
+		return $tmp;
 	}
 }

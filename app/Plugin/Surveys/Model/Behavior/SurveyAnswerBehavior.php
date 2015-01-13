@@ -28,32 +28,33 @@ class SurveyAnswerBehavior extends ModelBehavior {
 		$model->validator()->remove('textarea_value');
 		$model->validator()->remove('int_value');
 
-		switch($model->data[$modelValue]['type']) {
-			case 2:
-				$fieldName = 'text_value';
-				break;
-			case 5:
-				$fieldName = 'textarea_value';
-				break;
-			case 6:
-				$fieldName = 'int_value';
-				break;
-		}
+		if($model->data[$modelValue]['survey_status'] == 2) {
+			switch($model->data[$modelValue]['type']) {
+				case 2:
+					$fieldName = 'text_value';
+					break;
+				case 5:
+					$fieldName = 'textarea_value';
+					break;
+				case 6:
+					$fieldName = 'int_value';
+					break;
+			}
 
-		if($model->data[$modelValue]['is_mandatory'] == 1) {
-			$model->validator()->add($fieldName, 'required', array(
-			    'rule' => 'notEmpty',
-			    'required' => true,
-			    'message' => 'Please enter a value'
-			));
-		}
+			if($model->data[$modelValue]['is_mandatory'] == 1) {
+				$model->validator()->add($fieldName, 'required', array(
+				    'rule' => 'notEmpty',
+				    'required' => true,
+				    'message' => 'Please enter a value'
+				));
+			}
 
-		if($model->data[$modelValue]['is_unique'] == 1) {
-			$model->validator()->add($fieldName, 'unique', array(
-			    'rule' => array('checkUnique', array('institution_site_id', 'survey_question_id', $fieldName), false),
-			    'message' => 'Please enter a unique value'
-			));
+			if($model->data[$modelValue]['is_unique'] == 1) {
+				$model->validator()->add($fieldName, 'unique', array(
+				    'rule' => array('checkUnique', array('institution_site_id', 'survey_question_id', $fieldName), false),
+				    'message' => 'Please enter a unique value'
+				));
+			}
 		}
-
 	}
 }
