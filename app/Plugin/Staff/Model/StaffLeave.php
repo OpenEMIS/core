@@ -17,14 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffLeave extends StaffAppModel {
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('date_from', 'date_to'));
 	public $belongsTo = array(
-		'StaffLeaveType' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_leave_type_id'
-		),
-		'LeaveStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'leave_status_id'
-		),
+		'Staff.StaffLeaveType',
+		'Staff.LeaveStatus',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'

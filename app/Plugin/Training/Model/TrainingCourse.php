@@ -152,7 +152,6 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->FileUploader->additionalFileType();
     }
 	
-
 	public function autocomplete($search,$index) {
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
@@ -167,7 +166,6 @@ class TrainingCourse extends TrainingAppModel {
 			),
 			'order' => array('TrainingCourse.code', 'TrainingCourse.title')
 		));
-
 		
 		$data = array();
 		
@@ -189,23 +187,13 @@ class TrainingCourse extends TrainingAppModel {
 	public function autocompletePosition($search, $index) {
 		$search = sprintf('%%%s%%', $search);
 
-		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
+		$staffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
 
-		$list = $staffPositionTitle->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT StaffPositionTitle.name', 'StaffPositionTitle.id'),
-			'conditions' => array(
-				'StaffPositionTitle.name LIKE' => $search,
-				'StaffPositionTitle.visible' => 1
-			),
-			'order' => array('StaffPositionTitle.name')
-		));
-		
+		$list = $staffPositionTitle->getList(array('conditions'=>array('StaffPositionTitle.name LIKE' => $search)));
 		$data = array();
-		
 		foreach($list as $obj) {
-			$positionTitleId = $obj['StaffPositionTitle']['id'];
-			$positionTitleName = $obj['StaffPositionTitle']['name'];
+			$positionTitleId = $obj['value'];
+			$positionTitleName = $obj['name'];
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s', $positionTitleName)),
@@ -222,7 +210,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
+		$statusOptions = $trainingStatus->getList();
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 		
 		if ($controller->request->is('post')) {
@@ -258,7 +246,7 @@ class TrainingCourse extends TrainingAppModel {
 	        'joins' => array(
 		        array(
 		            'alias' => 'TrainingStatus',
-		            'table' => 'training_statuses',
+		            'table' => 'field_option_values',
 		            'type' => 'INNER',
 		            'conditions' => 'TrainingStatus.id = TrainingCourse.training_status_id'
 		        )
@@ -302,10 +290,11 @@ class TrainingCourse extends TrainingAppModel {
 		}
 		
 		$controller->Session->write('TrainingCourseId', $id);
+
 		$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
-		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
-		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name'), 'conditions'=>array('StaffPositionTitle.visible'=>1)));
+		$staffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
+		$staffPositionTitles = $staffPositionTitle->getList();
 
 		$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
@@ -325,29 +314,26 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingCourseProviders = $this->TrainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviders = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
+		$trainingProviders = $trainingProvider->getList();
 
-		$this->TrainingCourseResultType->bindModel(
-	        array('belongsTo' => array(
-	                'TrainingResultType' => array(
-						'className' => 'FieldOptionValue',
-						'foreignKey' => 'training_result_type_id'
-					)
-	            )
-	        )
-	    );
+		// $this->TrainingCourseResultType->bindModel(
+	 //        array('belongsTo' => array(
+	 //                'TrainingResultType'
+	 //            )
+	 //        )
+	 //    );
 
 		$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)));
 
-		$this->TrainingCourseSpecialisation->bindModel(
-	        array('belongsTo' => array(
-	                'QualificationSpecialisation' => array(
-						'className' => 'QualificationSpecialisation',
-						'foreignKey' => 'qualification_specialisation_id'
-					)
-	            )
-	        )
-	    );
+		// $this->TrainingCourseSpecialisation->bindModel(
+	 //        array('belongsTo' => array(
+	 //                'QualificationSpecialisation' => array(
+		// 				'className' => 'QualificationSpecialisation',
+		// 				'foreignKey' => 'qualification_specialisation_id'
+		// 			)
+	 //            )
+	 //        )
+	 //    );
 		$trainingCourseSpecialisations = $this->TrainingCourseSpecialisation->find('all', array('conditions'=>array('TrainingCourseSpecialisation.training_course_id'=>$id)));
 		$trainingCourseExperiences = $this->TrainingCourseExperience->find('all', array('conditions'=>array('TrainingCourseExperience.training_course_id'=>$id)));
 				
@@ -468,21 +454,21 @@ class TrainingCourse extends TrainingAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingFieldStudyOptions = $this->TrainingFieldStudy->find('list', array('fields'=> array('id', 'name')));
-		
-		$trainingModeDeliveryOptions = $this->TrainingModeDelivery->find('list', array('fields'=> array('id', 'name')));
-		
+		$trainingFieldStudyOptions = $this->TrainingFieldStudy->getList();
+
+		$trainingModeDeliveryOptions = $this->TrainingModeDelivery->getList();
+
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=> array('id', 'name')));
-		
-		$trainingRequirementOptions = $this->TrainingRequirement->find('list', array('fields'=> array('id', 'name')));
+		$trainingProviderOptions = $trainingProvider->getList();
 
-		$trainingLevelOptions = $this->TrainingLevel->find('list', array('fields'=> array('id', 'name')));
+		$trainingRequirementOptions = $this->TrainingRequirement->getList();
 
-		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
-		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
+		$trainingLevelOptions = $this->TrainingLevel->getList();
 
-		$trainingCourseTypeOptions = $this->TrainingCourseType->find('list', array('fields'=> array('id', 'name')));
+		$staffPositionTitle = ClassRegistry::init('Staff.StaffPositionTitle');
+		$staffPositionTitles = $staffPositionTitle->getList();
+
+		$trainingCourseTypeOptions = $this->TrainingCourseType->getList();
 	
 		$configItem = ClassRegistry::init('ConfigItem');
 	 	$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
@@ -492,19 +478,17 @@ class TrainingCourse extends TrainingAppModel {
  			$trainingCreditHourOptions[$i] = $i;
 	 	}
 
-	 	$this->TrainingCourseResultType->bindModel(
-	        array('belongsTo' => array(
-	                'TrainingResultType' => array(
-						'className' => 'FieldOptionValue',
-						'foreignKey' => 'training_result_type_id'
-					)
-	            )
-	        )
-	    );
- 		$trainingResultTypeOptions = $this->TrainingCourseResultType->TrainingResultType->getList();
+	 	// $this->TrainingCourseResultType->bindModel(
+	  //       array('belongsTo' => array(
+	  //               'TrainingResultType'
+	  //           )
+	  //       )
+	  //   );
+	 	$TrainingResultType = ClassRegistry::init('Training.TrainingResultType');
+ 		$trainingResultTypeOptions = $TrainingResultType->getList();
 
- 		$qualificationSpecialisation = ClassRegistry::init('QualificationSpecialisation');
-		$qualificationSpecialisationOptions = $qualificationSpecialisation->find('list', array('fields'=>array('id', 'name')));
+ 		$qualificationSpecialisation = ClassRegistry::init('Training.QualificationSpecialisation');
+		$qualificationSpecialisationOptions = $qualificationSpecialisation->getList();
 
 		$controller->set(compact('trainingFieldStudyOptions', 'trainingModeDeliveryOptions', 'trainingProviderOptions', 
 		'trainingRequirementOptions', 'trainingLevelOptions', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions', 'trainingResultTypeOptions', 'qualificationSpecialisationOptions'));
@@ -571,15 +555,12 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
-				$this->TrainingCourseResultType->bindModel(
-			        array('belongsTo' => array(
-			                'TrainingResultType' => array(
-								'className' => 'FieldOptionValue',
-								'foreignKey' => 'training_result_type_id'
-							)
-			            )
-			        )
-			    );
+				// $this->TrainingCourseResultType->bindModel(
+			 //        array('belongsTo' => array(
+			 //                'TrainingResultType'
+			 //            )
+			 //        )
+			 //    );
 			   	$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all',  
 					array(
 						'conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)

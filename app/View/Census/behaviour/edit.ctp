@@ -39,7 +39,7 @@ echo $this->element('census/year_options');
 				$subTotal = 0;
 				?>
 				<tr>
-					<td><?php echo $catName; ?></td>
+					<td><?php echo $catName['name']; ?></td>
 					<?php
 					foreach ($genderOptions AS $genderId => $genderName):
 						?>

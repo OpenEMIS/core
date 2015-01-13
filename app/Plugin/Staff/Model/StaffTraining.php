@@ -20,10 +20,7 @@ class StaffTraining extends StaffAppModel {
 	public $useTable = 'staff_training';
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('completed_date'));
 	public $belongsTo = array(
-		'StaffTrainingCategory' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_training_category_id'
-		),
+		'Staff.StaffTrainingCategory',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -124,7 +121,7 @@ class StaffTraining extends StaffAppModel {
             }
         }
 		
-		$categoryOptions = $this->StaffTrainingCategory->findList(true);
+		$categoryOptions = $this->StaffTrainingCategory->getList();
 		$controller->set(compact('categoryOptions'));
 	}
 	

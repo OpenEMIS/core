@@ -127,7 +127,7 @@ class StaffLicense extends StaffAppModel {
 	
 	function setup_add_edit_form($controller, $params, $type){
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$licenseTypeOptions = $this->LicenseType->find('list', array('fields'=> array('id', 'name')));
+		$licenseTypeOptions = $this->LicenseType->getList();
 		
 		$controller->set('licenseTypeOptions', $licenseTypeOptions);
 		if($controller->request->is('get')) {
