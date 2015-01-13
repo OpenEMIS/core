@@ -51,7 +51,7 @@ foreach ($programmeGrades as $obj) {
                 ?>
             </div>
             <div class="row last">
-                <a class="void icon_plus" url="Census/teachersAddMultiGrade/<?php echo $yearId; ?>" onclick="Census.addMultiGrade(this)"><?php echo __('Add') . ' ' . __('Grade'); ?></a>
+                <a class="void icon_plus" url="Census/teachersAddMultiGrade/<?php echo $academicPeriodId; ?>" onclick="Census.addMultiGrade(this)"><?php echo __('Add') . ' ' . __('Grade'); ?></a>
             </div>
         </td>
 

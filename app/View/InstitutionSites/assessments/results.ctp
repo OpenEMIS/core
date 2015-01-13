@@ -5,7 +5,7 @@ $this->assign('contentHeader', $educationGradeName . ' - ' . $assessmentName);
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'assessments'), array('class' => 'divider'));
 if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsResultsEdit', $selectedYear, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsResultsEdit', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
 }
 $this->end();
 
@@ -22,7 +22,7 @@ $this->start('contentBody');
 			'value' => $selectedClass,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $assessmentId
 		));
 		?>
 	</div>
@@ -35,7 +35,7 @@ $this->start('contentBody');
 			'value' => $selectedItem,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId . '/' . $selectedClass
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $assessmentId . '/' . $selectedClass
 		));
 		?>
 	</div>

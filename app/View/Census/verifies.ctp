@@ -3,11 +3,11 @@
 	<div class="field_name" style="width: 150px;"><?php echo $label; ?></div>
 	<div class="field_value">
 		<?php
-		echo $this->Form->input('school_year_id', array(
-			'id' => 'SchoolYearId',
+		echo $this->Form->input('academic_period_id', array(
+			'id' => 'AcademicPeriodId',
 			'label' => false,
 			'div' => false,
-			'options' => $yearOptions
+			'options' => $academicPeriodOptions
 		));
 		?>
 	</div>

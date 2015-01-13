@@ -6,12 +6,12 @@
 		if (isset($model) && isset($action)) {
 			$url = "Census/$model/" . $action;
 		}
-		echo $this->Form->input('school_year_id', array(
+		echo $this->Form->input('academic_period_id', array(
 			'label' => false,
 			'div' => false,
-			'options' => $yearList,
+			'options' => $academicPeriodList,
 			'class' => 'form-control',
-			'default' => $selectedYear,
+			'default' => $selectedAcademicPeriod,
 			'onchange' => 'jsForm.change(this)',
 			'url' => $url
 		));

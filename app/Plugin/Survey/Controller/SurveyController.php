@@ -57,7 +57,8 @@ class SurveyController extends SurveyAppController {
 		'InfrastructureCategory',
 		'InfrastructureMaterial',
 		'InfrastructureStatus',
-		'SchoolYear',
+		// 'SchoolYear',
+		'AcademicPeriod',
 		'StudentCategory'
 	);
 	public $category = array(//parameter passed to Category Dropdown
@@ -96,13 +97,13 @@ class SurveyController extends SurveyAppController {
 		$this->Navigation->addCrumb('New Surveys');
 
 
-		$year = '';
-		/* if (isset($this->data['Survey']['Category']) && isset($this->data['Survey']['Type']) && isset($this->data['Survey']['Year'])){
+		$academicPeriod = '';
+		/* if (isset($this->data['Survey']['Category']) && isset($this->data['Survey']['Type']) && isset($this->data['Survey']['AcademicPeriod'])){
 
-		  $year = $this->data['Survey']['Year'];
+		  $academicPeriod = $this->data['Survey']['AcademicPeriod'];
 		  $category = $this->data['Survey']['Category'];
 		  $siteType = $this->data['Survey']['Type'];
-		  $files = $this->getSurveys($year.'_'.$category.'_'.$siteType,false);
+		  $files = $this->getSurveys($academicPeriod.'_'.$category.'_'.$siteType,false);
 
 		  } */
 
@@ -126,9 +127,9 @@ class SurveyController extends SurveyAppController {
 		$sitetypes = $this->InstitutionSiteType->getSiteTypesList();
 		$sitetypes = array_combine(array_values($sitetypes), array_values($sitetypes));
 
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearList = array_combine(array_values($yearList), array_values($yearList));
-		$yearId = $this->getAvailableYearId($yearList, $year);
+		$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		$academicPeriodList = array_combine(array_values($academicPeriodList), array_values($academicPeriodList));
+		$academicPeriodId = $this->getAvailableAcademicPeriodId($academicPeriodList, $academicPeriod);
 
 		$nextPage = ($page + 1 == $pages || $totfiles <= $this->listFileLimit ) ? false : $page + 1;
 		$prevPage = ($page == 0) ? false : $page - 1;
@@ -148,8 +149,8 @@ class SurveyController extends SurveyAppController {
 		$this->set('totalfiles', $totfiles);
 		/* $this->set('sitetypes' , $sitetypes);
 		  $this->set('category' , $category);
-		  $this->set('years' , $yearList);
-		  $this->set('selectedYear' , $yearId); */
+		  $this->set('academicPeriods' , $academicPeriodList);
+		  $this->set('selectedAcademicPeriod' , $academicPeriodId); */
 
 		//SURVEY_NO_FILES
 	}
@@ -220,7 +221,7 @@ class SurveyController extends SurveyAppController {
 		// Read the json file
 		$data = $this->parseSurveyOEX($name);
 		$data = json_decode($data, true);
-		$myYear = $data["Year"]["value"];
+		$myAcademicPeriod = $data["AcademicPeriod"]["value"];
 		$myCategory = $data["Category"]["value"];
 		$mySiteID = $data["SiteType"]["value"];
 
@@ -230,15 +231,15 @@ class SurveyController extends SurveyAppController {
 			} else {
 				$details = array_shift($this->request->data);
 				unset($this->request->data['SaveButton']);
-				$myYear = $details['year'];
+				$myAcademicPeriod = $details['academicPeriod'];
 				$myCategory = $details['category'];
 				$mySiteID = $details['siteTypes'];
 				$name = $details['filename'];
 				$this->fixData($this->request->data);
 				$file = $name;
-				// Fill Code,Year,Category,SiteType into Json File
+				// Fill Code,AcademicPeriod,Category,SiteType into Json File
 				$arrCat = array('Code' => array('null' => '', 'type' => 'string', 'label' => $myCategory . ' Code', 'value' => ''),
-					'Year' => array('null' => '', 'type' => 'string', 'label' => 'Year', 'value' => $myYear),
+					'AcademicPeriod' => array('null' => '', 'type' => 'string', 'label' => 'AcademicPeriod', 'value' => $myAcademicPeriod),
 					'Category' => array('null' => '', 'type' => 'string', 'label' => 'Category', 'value' => $myCategory),
 					'SiteType' => array('null' => '', 'type' => 'string', 'label' => 'SiteType', 'value' => $mySiteID)
 				);
@@ -266,7 +267,7 @@ class SurveyController extends SurveyAppController {
 		$this->set('questions', $arrayQuestions);
 		$this->set('data', $data);
 		$this->set('name', $name);
-		$this->set('myYear', $myYear);
+		$this->set('myAcademicPeriod', $myAcademicPeriod);
 		$this->set('myCategory', $myCategory);
 		$this->set('myCatID', $catID);
 		$this->set('mySiteID', $mySiteID);
@@ -406,15 +407,15 @@ class SurveyController extends SurveyAppController {
 					$file = $details['filename'] . '.json';
 				} else { // Otherwise use default filename
 					if ($details['category'] != 0) {
-						$file = $details['year'] . '_' . $this->category[$details['category']] . '.json';
+						$file = $details['academicPeriod'] . '_' . $this->category[$details['category']] . '.json';
 					} else {
-						$file = $details['year'] . '_' . $this->category[$details['category']] . '_' . $arr[$details['siteTypes']] . '.json';
+						$file = $details['academicPeriod'] . '_' . $this->category[$details['category']] . '_' . $arr[$details['siteTypes']] . '.json';
 					}
 				}
 
-				// Fill Code,Year,Category,SiteType into Json File
+				// Fill Code,AcademicPeriod,Category,SiteType into Json File
 				$arrCat = array('Code' => array('null' => '', 'type' => 'string', 'label' => $this->category[$details['category']] . ' Code', 'value' => ''),
-					'Year' => array('null' => '', 'type' => 'string', 'label' => 'Year', 'value' => $details['year']),
+					'AcademicPeriod' => array('null' => '', 'type' => 'string', 'label' => 'AcademicPeriod', 'value' => $details['academicPeriod']),
 					'Category' => array('null' => '', 'type' => 'string', 'label' => 'Category', 'value' => $this->category[$details['category']]),
 					'SiteType' => array('null' => '', 'type' => 'string', 'label' => 'SiteType', 'value' => isset($details['siteTypes']) ? $details['siteTypes'] : '')
 				);
@@ -430,24 +431,24 @@ class SurveyController extends SurveyAppController {
 
 		$sitetypes = $this->InstitutionSiteType->getSiteTypesList();
 
-		$year = $this->SchoolYear->getAvailableYears();
-		$year = array_combine(array_values($year), array_values($year));
+		$academicPeriod = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		$academicPeriod = array_combine(array_values($academicPeriod), array_values($academicPeriod));
 		$this->set('category', $this->category);
 		$this->set('siteTypes', $sitetypes);
-		$this->set('year', $year);
+		$this->set('academicPeriod', $academicPeriod);
 		$this->set('questions', $arrayQuestions);
 	}
 
-	private function getAvailableYearId($yearList, $yearId) {
+	private function getAvailableAcademicPeriodId($academicPeriodList, $academicPeriodId) {
 
-		if (isset($yearId)) {
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+		if (isset($academicPeriodId)) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	//============================================================================================================================================
@@ -456,8 +457,8 @@ class SurveyController extends SurveyAppController {
 	public function filter($import = false) {
 		$this->autoRender = false;
 		$files = array();
-		if (isset($this->params['url']['category']) && isset($this->params['url']['siteType']) && isset($this->params['url']['schoolYear'])) {
-			$files = $this->getSurveys($this->params['url']['schoolYear'] . '_' . $this->params['url']['category'] . '_' . $this->params['url']['siteType'], $import);
+		if (isset($this->params['url']['category']) && isset($this->params['url']['siteType']) && isset($this->params['url']['academicPeriod'])) {
+			$files = $this->getSurveys($this->params['url']['academicPeriod'] . '_' . $this->params['url']['category'] . '_' . $this->params['url']['siteType'], $import);
 		}
 
 		$this->set('data', $files);
@@ -481,7 +482,7 @@ class SurveyController extends SurveyAppController {
 		  }
 		 */
 
-		$year = '';
+		$academicPeriod = '';
 
 		if (isset($this->data['Survey']['Search'])) {
 			$pattern = $this->data['Survey']['Search'];
@@ -505,9 +506,9 @@ class SurveyController extends SurveyAppController {
 		$sitetypes = $this->InstitutionSiteType->getSiteTypesList();
 		$sitetypes = array_combine(array_values($sitetypes), array_values($sitetypes));
 
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearList = array_combine(array_values($yearList), array_values($yearList));
-		$yearId = $this->getAvailableYearId($yearList, $year);
+		$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		$academicPeriodList = array_combine(array_values($academicPeriodList), array_values($academicPeriodList));
+		$academicPeriodId = $this->getAvailableAcademicPeriodId($academicPeriodList, $academicPeriod);
 
 		$nextPage = ($page + 1 == $pages || $totfiles <= $this->listFileLimit ) ? false : $page + 1;
 		$prevPage = ($page == 0) ? false : $page - 1;
@@ -528,14 +529,14 @@ class SurveyController extends SurveyAppController {
 		/*
 
 		  $sitetypes = $this->InstitutionSiteType->getSiteTypesList();
-		  $yearList = $this->SchoolYear->getAvailableYears();
-		  $yearId = $this->getAvailableYearId($yearList);
+		  $academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		  $academicPeriodId = $this->getAvailableAcademicPeriodId($academicPeriodList);
 		  $files = $this->getSurveys('ALL',true);
 		  $this->set('data' , $files);
 		  $this->set('sitetypes' , $sitetypes);
 		  $this->set('category' , $this->category);
-		  $this->set('years' , $yearList);
-		  $this->set('selectedYear' , $yearId); */
+		  $this->set('academicPeriods' , $academicPeriodList);
+		  $this->set('selectedAcademicPeriod' , $academicPeriodId); */
 	}
 
 	public function synced($page = 0, $pattern = '') {
@@ -544,7 +545,7 @@ class SurveyController extends SurveyAppController {
 		$this->Navigation->addCrumb('Synchronized');
 
 
-		$year = '';
+		$academicPeriod = '';
 
 		if (isset($this->data['Survey']['Search'])) {
 			$pattern = $this->data['Survey']['Search'];
@@ -568,9 +569,9 @@ class SurveyController extends SurveyAppController {
 		$sitetypes = $this->InstitutionSiteType->getSiteTypesList();
 		$sitetypes = array_combine(array_values($sitetypes), array_values($sitetypes));
 
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearList = array_combine(array_values($yearList), array_values($yearList));
-		$yearId = $this->getAvailableYearId($yearList, $year);
+		$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		$academicPeriodList = array_combine(array_values($academicPeriodList), array_values($academicPeriodList));
+		$academicPeriodId = $this->getAvailableAcademicPeriodId($academicPeriodList, $academicPeriod);
 
 		$nextPage = ($page + 1 == $pages || $totfiles <= $this->listFileLimit ) ? false : $page + 1;
 		$prevPage = ($page == 0) ? false : $page - 1;
@@ -591,14 +592,14 @@ class SurveyController extends SurveyAppController {
 		/*
 
 		  $sitetypes = $this->InstitutionSiteType->getSiteTypesList();
-		  $yearList = $this->SchoolYear->getAvailableYears();
-		  $yearId = $this->getAvailableYearId($yearList);
+		  $academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		  $academicPeriodId = $this->getAvailableAcademicPeriodId($academicPeriodList);
 		  $files = $this->getSurveys('ALL',true);
 		  $this->set('data' , $files);
 		  $this->set('sitetypes' , $sitetypes);
 		  $this->set('category' , $this->category);
-		  $this->set('years' , $yearList);
-		  $this->set('selectedYear' , $yearId); */
+		  $this->set('academicPeriods' , $academicPeriodList);
+		  $this->set('selectedAcademicPeriod' , $academicPeriodId); */
 	}
 
 	//============================================================================================================================================
@@ -764,7 +765,7 @@ class SurveyController extends SurveyAppController {
 				$arrCond = array();
 
 				foreach ($arrData as $topicName => $topicVal) {
-					if ($topicName == 'Code' || $topicName == 'Year' || $topicName == 'Category' || $topicName == 'SiteType') {
+					if ($topicName == 'Code' || $topicName == 'AcademicPeriod' || $topicName == 'Category' || $topicName == 'SiteType') {
 						continue;
 					}
 					foreach ($topicVal as $secName => $secVal) {
@@ -855,7 +856,7 @@ class SurveyController extends SurveyAppController {
 															$existID = Set::flatten($this->{$secName}->query('SELECT `census_students`.`id` 
 																				FROM  `census_students`
 																				WHERE `census_students`.`institution_site_id`= \'' . $arr[$secName]['institution_site_id'] . '\' 
-																				AND	  `census_students`.`school_year_id`= \'' . $arr[$secName]['school_year_id'] . '\'
+																				AND	  `census_students`.`academic_period_id`= \'' . $arr[$secName]['academic_period_id'] . '\'
 																				AND	  `census_students`.`education_grade_id`= \'' . $arr[$secName]['education_grade_id'] . '\'
 																				AND	  `census_students`.`student_category_id`= \'' . $arr[$secName]['student_category_id'] . '\'
 																				AND	  `census_students`.`age`= \'' . $arr[$secName]['age'] . '\'
@@ -865,7 +866,7 @@ class SurveyController extends SurveyAppController {
 //															$existID = Set::flatten($this->{$secName}->query('SELECT `census_students`.`id` 
 //																				FROM  `census_students`
 //																				WHERE `census_students`.`institution_site_id`= \'' . $arr[$secName]['institution_site_id'] . '\' 
-//																				AND	  `census_students`.`school_year_id`= \'' . $arr[$secName]['school_year_id'] . '\'
+//																				AND	  `census_students`.`academic_period_id`= \'' . $arr[$secName]['academic_period_id'] . '\'
 //																				AND	  `census_students`.`education_grade_id`= \'' . $arr[$secName]['education_grade_id'] . '\'
 //																				AND	  `census_students`.`student_category_id`= \'' . $arr[$secName]['student_category_id'] . '\'
 //																				AND	  `census_students`.`age`= \'' . $arr[$secName]['age'] . '\'
@@ -880,12 +881,12 @@ class SurveyController extends SurveyAppController {
 																				FROM  `institution_site_programmes`
 																				WHERE `institution_site_programmes`.`institution_site_id`= \'' . $arr[$secName]['institution_site_id'] . '\' 
 																				AND	  `institution_site_programmes`.`education_programme_id`= \'' . $arr[$secName]['education_programme_id'] . '\'
-																				AND	  `institution_site_programmes`.`school_year_id`= \'' . $arr[$secName]['school_year_id'] . '\'
+																				AND	  `institution_site_programmes`.`academic_period_id`= \'' . $arr[$secName]['academic_period_id'] . '\'
 																										  '));
 																if (count($existID) < 1) {
 																	$arrLink['InstitutionSiteProgramme']['institution_site_id'] = $arr[$secName]['institution_site_id'];
 																	$arrLink['InstitutionSiteProgramme']['education_programme_id'] = $arr[$secName]['education_programme_id'];
-																	$arrLink['InstitutionSiteProgramme']['school_year_id'] = $arr[$secName]['school_year_id'];
+																	$arrLink['InstitutionSiteProgramme']['academic_period_id'] = $arr[$secName]['academic_period_id'];
 																	$objAssociationTable->saveAll($arrLink);
 																}
 															}
@@ -912,7 +913,7 @@ class SurveyController extends SurveyAppController {
 														$existID = Set::flatten($this->{$secName}->query('SELECT `census_students`.`id` 
 																				FROM  `census_students`
 																				WHERE `census_students`.`institution_site_id`= \'' . $arr[$secName]['institution_site_id'] . '\' 
-																				AND	  `census_students`.`school_year_id`= \'' . $arr[$secName]['school_year_id'] . '\'
+																				AND	  `census_students`.`academic_period_id`= \'' . $arr[$secName]['academic_period_id'] . '\'
 																				AND	  `census_students`.`education_grade_id`= \'' . $arr[$secName]['education_grade_id'] . '\'
 																				AND	  `census_students`.`student_category_id`= \'' . $arr[$secName]['student_category_id'] . '\'
 																				AND	  `census_students`.`age`= \'' . $arr[$secName]['age'] . '\'
@@ -925,12 +926,12 @@ class SurveyController extends SurveyAppController {
 																				FROM  `institution_site_programmes`
 																				WHERE `institution_site_programmes`.`institution_site_id`= \'' . $arr[$secName]['institution_site_id'] . '\' 
 																				AND	  `institution_site_programmes`.`education_programme_id`= \'' . $arr[$secName]['education_programme_id'] . '\'
-																				AND	  `institution_site_programmes`.`school_year_id`= \'' . $arr[$secName]['school_year_id'] . '\'
+																				AND	  `institution_site_programmes`.`academic_period_id`= \'' . $arr[$secName]['academic_period_id'] . '\'
 																										  '));
 															if (count($existID) < 1) {
 																$arrLink['InstitutionSiteProgramme']['institution_site_id'] = $arr[$secName]['institution_site_id'];
 																$arrLink['InstitutionSiteProgramme']['education_programme_id'] = $arr[$secName]['education_programme_id'];
-																$arrLink['InstitutionSiteProgramme']['school_year_id'] = $arr[$secName]['school_year_id'];
+																$arrLink['InstitutionSiteProgramme']['academic_period_id'] = $arr[$secName]['academic_period_id'];
 																$objAssociationTable->saveAll($arrLink);
 															}
 														}
@@ -956,7 +957,7 @@ class SurveyController extends SurveyAppController {
 														$existID = Set::flatten($this->{$secName}->query('SELECT `census_classes`.`id` 
 																				FROM  `census_classes`, `census_class_grades`
 																				WHERE `census_classes`.`institution_site_id`= \'' . $arr[$secName]['institution_site_id'] . '\' 
-																				AND	  `census_classes`.`school_year_id`= \'' . $arr[$secName]['school_year_id'] . '\'
+																				AND	  `census_classes`.`academic_period_id`= \'' . $arr[$secName]['academic_period_id'] . '\'
 																				AND	  `census_classes`.`classes`= \'' . $arr[$secName]['classes'] . '\'
 																				AND	  `census_classes`.`seats`= \'' . $arr[$secName]['seats'] . '\'
 																				AND	  `census_classes`.`seats`= \'' . $arr[$secName]['seats'] . '\'

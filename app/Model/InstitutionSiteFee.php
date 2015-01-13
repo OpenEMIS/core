@@ -26,7 +26,7 @@ class InstitutionSiteFee extends AppModel {
 	
 	public $belongsTo = array(
 		'InstitutionSite',
-		'SchoolYear',
+		'AcademicPeriod',
 		'EducationGrade',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -76,13 +76,13 @@ class InstitutionSiteFee extends AppModel {
 		$this->Navigation->addCrumb($contentHeader);
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$AcademicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
 		
 		$this->fields['total']['visible'] = false;
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
-		$this->fields['school_year_id']['type'] = 'select';
-		$this->fields['school_year_id']['options'] = $yearOptions;
+		$this->fields['academic_period_id']['type'] = 'select';
+		$this->fields['academic_period_id']['options'] = $AcademicPeriodOptions;
 		$this->fields['fee_types'] = array(
 			'type' => 'element',
 			'element' => '../InstitutionSites/InstitutionSiteFee/fee_types',
@@ -96,8 +96,8 @@ class InstitutionSiteFee extends AppModel {
 		}
 		
 		if ($this->action == 'view' || $this->action == 'edit') {
-			$selectedYear = $this->controller->params->pass[2];
-			$this->setVar('params', array($selectedYear));
+			$selectedAcademicPeriod = $this->controller->params->pass[2];
+			$this->setVar('params', array($selectedAcademicPeriod));
 		}
 		
 		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(true);
@@ -110,13 +110,13 @@ class InstitutionSiteFee extends AppModel {
 		$this->setVar('contentHeader', __($contentHeader));
 	}
 	
-	public function index($selectedYear=0) {
+	public function index($selectedAcademicPeriod=0) {
 		$params = $this->controller->params;
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$AcademicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
 		
-		if ($selectedYear == 0) {
-			$selectedYear = key($yearOptions);
+		if ($selectedAcademicPeriod == 0) {
+			$selectedAcademicPeriod = key($AcademicPeriodOptions);
 		}
 		
 		// need to order by programmes, grades
@@ -137,7 +137,7 @@ class InstitutionSiteFee extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteFee.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteFee.school_year_id' => $selectedYear
+				'InstitutionSiteFee.academic_period_id' => $selectedAcademicPeriod
 			),
 			'order' => array('EducationProgramme.order', 'EducationGrade.order')
 		));
@@ -148,19 +148,19 @@ class InstitutionSiteFee extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->setVar(compact('data', 'selectedYear', 'programmeOptions', 'yearOptions'));
+		$this->setVar(compact('data', 'selectedAcademicPeriod', 'programmeOptions', 'academicPeriodOptions'));
 	}
 	
-	public function add($selectedYear=0) {
+	public function add($selectedAcademicPeriod=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
 		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(true);
 		
 		if ($this->request->is('get')) {
-			$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+			$AcademicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
 		
-			if ($selectedYear == 0) {
-				$selectedYear = key($yearOptions);
+			if ($selectedAcademicPeriod == 0) {
+				$selectedAcademicPeriod = key($AcademicPeriodOptions);
 			}
 			
 			foreach ($feeTypes as $key => $val) {
@@ -173,7 +173,7 @@ class InstitutionSiteFee extends AppModel {
 		} else {
 			$data = $this->request->data;
 			$submit = $data['submit'];
-			$selectedYear = $data[$this->alias]['school_year_id'];
+			$selectedAcademicPeriod = $data[$this->alias]['academic_period_id'];
 			
 			if ($submit == __('Save')) {
 				$this->cleanFeeTypes($data);
@@ -181,7 +181,7 @@ class InstitutionSiteFee extends AppModel {
 				if ($this->saveAll($data)) {
 					$this->updateTotal($this->id);
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => get_class($this), 'index', $selectedYear));
+					return $this->redirect(array('action' => get_class($this), 'index', $selectedAcademicPeriod));
 				} else {
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
@@ -189,16 +189,16 @@ class InstitutionSiteFee extends AppModel {
 			}
 		}
 		
-		$this->fields['school_year_id']['default'] = $selectedYear;
-		$this->fields['school_year_id']['attr'] = array('onchange' => "$('#reload').click()");
+		$this->fields['academic_period_id']['default'] = $selectedAcademicPeriod;
+		$this->fields['academic_period_id']['attr'] = array('onchange' => "$('#reload').click()");
 		
-		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear, true);
+		$gradeOptions = $this->EducationGrade->getGradeOptionsByInstitutionAndAcademicPeriod($institutionSiteId, $selectedAcademicPeriod, true);
 		// find the grades that already has fees
 		$existedGrades = $this->find('list', array(
 			'fields' => array('InstitutionSiteFee.education_grade_id', 'InstitutionSiteFee.education_grade_id'),
 			'conditions' => array(
 				'InstitutionSiteFee.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteFee.school_year_id' => $selectedYear
+				'InstitutionSiteFee.academic_period_id' => $selectedAcademicPeriod
 			)
 		));
 		// remove the existed grades from the options
@@ -207,10 +207,10 @@ class InstitutionSiteFee extends AppModel {
 		$this->fields['education_grade_id']['options'] = $gradeOptions;
 		
 		$this->render = 'auto';
-		$this->setVar('params', array($selectedYear));
+		$this->setVar('params', array($selectedAcademicPeriod));
 	}
 	
-	public function edit($id=0, $selectedYear=0) {
+	public function edit($id=0, $selectedAcademicPeriod=0) {
 		$this->render = 'auto';
 		
 		if ($this->exists($id)) {
@@ -222,7 +222,7 @@ class InstitutionSiteFee extends AppModel {
 				if ($this->saveAll($this->request->data)) {
 					$this->updateTotal($id);
 					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => get_class($this), 'view', $id, $selectedYear));
+					return $this->redirect(array('action' => get_class($this), 'view', $id, $selectedAcademicPeriod));
 				} else {
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.edit.failed');
@@ -250,7 +250,7 @@ class InstitutionSiteFee extends AppModel {
 				}
 				$this->request->data = $data;
 			}
-			$this->fields['school_year_id']['type'] = 'disabled';
+			$this->fields['academic_period_id']['type'] = 'disabled';
 			$this->fields['education_grade_id']['type'] = 'disabled';
 			$this->fields['education_grade_id']['value'] = $data['EducationGrade']['name'];
 		} else {
@@ -264,7 +264,7 @@ class InstitutionSiteFee extends AppModel {
    		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 
 		$header = array(
-			__('School Year'),
+			__('Academic Period'),
 			__('Education Programme'),
 			__('Education Grade')
 		);
@@ -288,7 +288,7 @@ class InstitutionSiteFee extends AppModel {
 			$data = $this->find('all', array(
 				'fields' => array('InstitutionSiteFee.total', 'InstitutionSiteFee.education_grade_id'),
 				'contain' => array(
-					'SchoolYear' => array('fields' => array('name')),
+					'AcademicPeriod' => array('fields' => array('name')),
 					'EducationGrade' => array(
 						'fields' => array('name'),
 						'EducationProgramme' => array('fields' => array('name'))
@@ -296,14 +296,14 @@ class InstitutionSiteFee extends AppModel {
 					'InstitutionSiteFeeType' => array('fields' => array('amount', 'fee_type_id'))
 				),
 				'conditions' => array('InstitutionSiteFee.institution_site_id' => $institutionSiteId),
-				'order' => array('SchoolYear.name', 'EducationGrade.order')
+				'order' => array('AcademicPeriod.name', 'EducationGrade.order')
 			));
 			$feeTypeOptions = $this->InstitutionSiteFeeType->FeeType->getList();
 			
 			$csvData = array();
 			foreach ($data as $obj) {
 				$row = array();
-				$row[] = $obj['SchoolYear']['name'];
+				$row[] = $obj['AcademicPeriod']['name'];
 				$row[] = $obj['EducationGrade']['EducationProgramme']['name'];
 				$row[] = $obj['EducationGrade']['name'];
 				

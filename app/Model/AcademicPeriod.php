@@ -174,4 +174,30 @@ class AcademicPeriod extends AppModel {
 		$data = $this->findById($id);	
 		return $data['AcademicPeriod']['name'];
 	}
+
+	public function getAvailableAcademicPeriods($list = true, $order='ASC') {
+		if($list) {
+			$result = $this->find('list', array(
+				'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+				'conditions' => array('AcademicPeriod.visible' => 1),
+				'order' => array('AcademicPeriod.name ' . $order)
+			));
+		} else {
+			$result = $this->find('all', array(
+				'conditions' => array('AcademicPeriod.visible' => 1),
+				'order' => array('AcademicPeriod.name ' . $order)
+			));
+		}
+		return $result;
+	}
+
+	//getYearList
+	public function getAcademicPeriodList($type='name', $order='DESC') {
+		$value = 'AcademicPeriod.' . $type;
+		$result = $this->find('list', array(
+			'fields' => array('AcademicPeriod.id', $value),
+			'order' => array($value . ' ' . $order)
+		));
+		return $result;
+	}
 }
