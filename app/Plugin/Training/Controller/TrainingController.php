@@ -150,7 +150,7 @@ class TrainingController extends TrainingAppController {
     public function ajax_add_experience() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('yearOptions', range(0, 99));
+        $this->set('academicPeriodOptions', range(0, 99));
         $this->set('monthOptions', range(0, 11));
         $this->render('/Elements/experience');
     }

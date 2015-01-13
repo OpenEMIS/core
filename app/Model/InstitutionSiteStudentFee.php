@@ -44,7 +44,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		)
 	);
 	
-	public $SchoolYear;
+	public $AcademicPeriod;
 	
 	public $validate = array(
 		'amount' => array(
@@ -60,7 +60,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		parent::beforeAction();
 		$contentHeader = 'Student Fees';
 		$this->Navigation->addCrumb($contentHeader);
-		$this->SchoolYear = $this->InstitutionSiteFee->SchoolYear;
+		$this->AcademicPeriod = $this->InstitutionSiteFee->AcademicPeriod;
 		
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 	   	$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
@@ -93,16 +93,16 @@ class InstitutionSiteStudentFee extends AppModel {
 		parent::afterAction();
 	}
 	
-	public function index($selectedYear=0, $selectedGrade=0) {
+	public function index($selectedAcademicPeriod=0, $selectedGrade=0) {
 		$params = $this->controller->params;
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->SchoolYear->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$academicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
 		
-		if (empty($selectedYear)) {
-			$selectedYear = key($yearOptions);
+		if (empty($selectedAcademicPeriod)) {
+			$selectedAcademicPeriod = key($academicPeriodOptions);
 		}
 		
-		$gradeOptions = $this->InstitutionSiteFee->EducationGrade->getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $selectedYear, true);
+		$gradeOptions = $this->InstitutionSiteFee->EducationGrade->getGradeOptionsByInstitutionAndAcademicPeriod($institutionSiteId, $selectedAcademicPeriod, true);
 		if (empty($gradeOptions)) {
 			$gradeOptions = array('0' => __('No Data'));
 		}
@@ -125,7 +125,7 @@ class InstitutionSiteStudentFee extends AppModel {
 				array(
 					'table' => 'institution_site_fees', 'alias' => 'InstitutionSiteFee',
 					'conditions' => array(
-						'InstitutionSiteFee.school_year_id = ' . $selectedYear,
+						'InstitutionSiteFee.academic_period_id = ' . $selectedAcademicPeriod,
 						'InstitutionSiteFee.institution_site_id = ' . $institutionSiteId,
 						'InstitutionSiteFee.education_grade_id = InstitutionSiteSectionStudent.education_grade_id'
 					)
@@ -141,7 +141,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteSection.school_year_id' => $selectedYear,
+				'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriod,
 				'InstitutionSiteSectionStudent.education_grade_id' => $selectedGrade
 			),
 			'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
@@ -152,7 +152,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->setVar(compact('data', 'selectedYear', 'yearOptions', 'selectedGrade', 'gradeOptions'));
+		$this->setVar(compact('data', 'selectedAcademicPeriod', 'academicPeriodOptions', 'selectedGrade', 'gradeOptions'));
 	}
 	
 	// Also used by Students.StudentFee.view
@@ -161,7 +161,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$this->Student->contain();
 		$student = $this->Student->findById($studentId);
 		$this->InstitutionSiteFee->contain(array(
-			'SchoolYear' => array('fields' => array('name')),
+			'AcademicPeriod' => array('fields' => array('name')),
 			'EducationGrade' => array(
 				'fields' => array('name'),
 				'EducationProgramme' => array('fields' => array('name'))
@@ -183,7 +183,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		));
 		
 		$fields = array();
-		$fields['year']['visible'] = true;
+		$fields['academicPeriod']['visible'] = true;
 		$fields['programme']['visible'] = true;
 		$fields['grade']['visible'] = true;
 		$fields['openemisId']['labelKey'] = 'general';
@@ -209,7 +209,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		}
 		
 		$data = array();
-		$data[$alias]['year'] = $fees['SchoolYear']['name'];
+		$data[$alias]['academicPeriod'] = $fees['AcademicPeriod']['name'];
 		$data[$alias]['programme'] = $fees['EducationGrade']['EducationProgramme']['name'];
 		$data[$alias]['grade'] = $fees['EducationGrade']['name'];
 		$data[$alias]['student_id'] = $student['Student']['id'];
@@ -221,7 +221,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$data['InstitutionSiteFeeType'] = $fees['InstitutionSiteFeeType'];
 		$data[$alias]['payments'] = $payments;
 		
-		$params = array($fees['InstitutionSiteFee']['school_year_id'], $fees['InstitutionSiteFee']['education_grade_id']);
+		$params = array($fees['InstitutionSiteFee']['academic_period_id'], $fees['InstitutionSiteFee']['education_grade_id']);
 		$this->fields = $fields;
 		
 		$this->setVar(compact('data', 'fees', 'params'));
@@ -232,7 +232,7 @@ class InstitutionSiteStudentFee extends AppModel {
    		$currency = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'currency'));
 
 		$header = array(
-			__('School Year'),
+			__('Academic Period'),
 			__('Education Programme'),
 			__('Education Grade'),
 			__('OpenEMIS ID'),
@@ -254,7 +254,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			$Student = ClassRegistry::init('InstitutionSiteSectionStudent');
 			$data = $Student->find('all', array(
 				'fields' => array(
-					'SchoolYear.name',
+					'AcademicPeriod.name',
 					'InstitutionSiteSectionStudent.education_grade_id',
 					'InstitutionSiteFee.id',
 					'InstitutionSiteFee.total',
@@ -278,14 +278,14 @@ class InstitutionSiteStudentFee extends AppModel {
 					array(
 						'table' => 'institution_site_fees', 'alias' => 'InstitutionSiteFee',
 						'conditions' => array(
-							'InstitutionSiteFee.school_year_id = InstitutionSiteSection.school_year_id',
+							'InstitutionSiteFee.academic_period_id = InstitutionSiteSection.academic_period_id',
 							'InstitutionSiteFee.institution_site_id = InstitutionSiteSection.institution_site_id',
 							'InstitutionSiteFee.education_grade_id = InstitutionSiteSectionStudent.education_grade_id'
 						)
 					),
 					array(
-						'table' => 'school_years', 'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
+						'table' => 'academic_periods', 'alias' => 'AcademicPeriod',
+						'conditions' => array('AcademicPeriod.id = InstitutionSiteSection.academic_period_id')
 					),
 					array(
 						'table' => 'student_fees', 'alias' => 'StudentFee',
@@ -297,14 +297,14 @@ class InstitutionSiteStudentFee extends AppModel {
 					)
 				),
 				'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
-				'order' => array('SchoolYear.name', 'EducationGrade.order', 'Student.first_name', 'Student.last_name')
+				'order' => array('AcademicPeriod.name', 'EducationGrade.order', 'Student.first_name', 'Student.last_name')
 			));
 			
 			$csvData = array();
 			foreach ($data as $obj) {
 				$row = array();
 				
-				$row[] = $obj['SchoolYear']['name'];
+				$row[] = $obj['AcademicPeriod']['name'];
 				$row[] = $obj['EducationGrade']['EducationProgramme']['name'];
 				$row[] = $obj['EducationGrade']['name'];
 				$row[] = $obj['Student']['identification_no'];

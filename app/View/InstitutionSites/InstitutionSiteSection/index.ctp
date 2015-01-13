@@ -6,12 +6,12 @@ $this->assign('contentHeader', __('List of Sections'));
 
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/year_options', array('url' => 'InstitutionSiteSection/index'));
+echo $this->element('templates/academic_period_options', array('url' => 'InstitutionSiteSection/index'));
 ?>
 
 <div class="table-responsive">

@@ -6,12 +6,12 @@ $this->assign('contentHeader', __('List of Classes'));
 
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action . 'Add', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action . 'Add', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/year_options', array('url' => $_action));
+echo $this->element('templates/academic_period_options', array('url' => $_action));
 ?>
 
 <div class="table-responsive">

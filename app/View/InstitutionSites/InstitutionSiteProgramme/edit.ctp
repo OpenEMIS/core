@@ -6,12 +6,12 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/year_options', array('url' => $model . '/edit'));
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edit', $selectedYear));
+echo $this->element('templates/academic_period_options', array('url' => $model . '/edit'));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edit', $selectedAcademicPeriod));
 echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 ?>
 
@@ -53,7 +53,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => $model, 'index', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+	<?php echo $this->Html->link(__('Cancel'), array('action' => $model, 'index', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
 <?php echo $this->Form->end(); ?>
