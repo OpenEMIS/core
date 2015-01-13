@@ -30,6 +30,7 @@ $this->start('contentBody');
 		<thead>
 			<tr>
 				<th><?php echo __('Name'); ?></th>
+				<th><?php echo __('Description'); ?></th>
 				<th><?php echo __('Module'); ?></th>
 			</tr>
 		</thead>
@@ -37,6 +38,7 @@ $this->start('contentBody');
 			<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['SurveyTemplate']['name'], array('action' => 'view', $obj['SurveyTemplate']['id'])) ?></td>
+					<td><?php echo $obj['SurveyTemplate']['description'] ?></td>
 					<td><?php echo $obj['SurveyModule']['name'] ?></td>
 				</tr>
 			<?php endforeach ?>

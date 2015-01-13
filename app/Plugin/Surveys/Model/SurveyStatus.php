@@ -36,7 +36,7 @@ class SurveyStatus extends SurveysAppModel {
 			'className' => 'SchoolYear',
 			'joinTable' => 'survey_status_periods',
 			'associationForeignKey' => 'academic_period_id',
-			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order'),
 			'order' => array('AcademicPeriod.order')
 		)
 	);
@@ -104,7 +104,7 @@ class SurveyStatus extends SurveysAppModel {
 		$this->contain('SurveyTemplate');
 		$data = $this->find('all', array(
 			'conditions' => $conditions,
-			'order' => array('SurveyStatus.date_enabled'))
+			'order' => array('SurveyTemplate.name', 'SurveyStatus.date_enabled'))
 		);
 
 		return $data;

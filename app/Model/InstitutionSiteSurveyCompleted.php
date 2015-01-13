@@ -39,7 +39,7 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		'Surveys.SurveyStatus',
 		'AcademicPeriod' => array(
 			'className' => 'SchoolYear',
-			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name')
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
 		),
 		'SurveyStatusPeriod' => array(
 			'className' => 'Surveys.SurveyStatusPeriod',

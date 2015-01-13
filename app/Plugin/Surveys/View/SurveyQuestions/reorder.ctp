@@ -16,6 +16,11 @@ echo $this->Form->end();
 ?>
 <?php echo $this->element('alert'); ?>
 
+<div class="row form-group">
+	<label class="col-md-3 control-label" for="SurveyQuestionSurveyTemplateName"><?php echo __('Name'); ?></label>
+	<div class="col-md-4"><input type="text" id="SurveyQuestionSurveyTemplateName" value="<?php echo $templateData['SurveyTemplate']['name']; ?>" disabled="disabled" class="form-control" name="data[SurveyQuestion][survey_template_name]"></div>
+</div>
+
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>

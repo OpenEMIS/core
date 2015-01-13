@@ -16,7 +16,6 @@ $this->start('contentBody');
 					<a class="collapsed" data-toggle="collapse" data-parent="#survey_accordion" href="#collapse<?php echo $i; ?>" aria-expanded="false" aria-controls="collapse<?php echo $i; ?>">
 						<?php echo $obj['SurveyTemplate']['name']; ?>
 					</a>
-					<span><?php echo __('To be completed by : '); ?><?php echo $obj['SurveyStatus']['date_disabled']; ?></span>
 				</h4>
 			</div>
 			<div id="collapse<?php echo $i; ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="survey_heading<?php echo $i; ?>">
@@ -24,6 +23,7 @@ $this->start('contentBody');
 					<?php foreach ($obj['AcademicPeriod'] as $key => $value) : ?>
 						<li class="list-group-item">
 							<?php echo $this->Html->link($value['name'], array('action' => $model, 'view', $value['SurveyStatusPeriod']['academic_period_id'], $value['SurveyStatusPeriod']['survey_status_id'])) ?>
+							<span><?php echo __('To be completed by : '); ?><?php echo $value['SurveyStatus']['date_disabled']; ?></span>
 						</li>
 					<?php endforeach ?>
 				</ul>

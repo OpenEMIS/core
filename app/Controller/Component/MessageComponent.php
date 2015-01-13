@@ -166,6 +166,12 @@ class MessageComponent extends Component {
 		'InstitutionSiteSection' => array(
 			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.')
 		),
+		'Survey' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Survey record has been saved in draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Survey record has been submitted successfully.')
+			)
+		)
 	);
 	
 	public function get($code) {
