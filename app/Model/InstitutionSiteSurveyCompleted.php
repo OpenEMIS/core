@@ -37,6 +37,10 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
 		'Surveys.SurveyStatus',
+		'AcademicPeriod' => array(
+			'className' => 'SchoolYear',
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name')
+		),
 		'SurveyStatusPeriod' => array(
 			'className' => 'Surveys.SurveyStatusPeriod',
 			'foreignKey' => false,

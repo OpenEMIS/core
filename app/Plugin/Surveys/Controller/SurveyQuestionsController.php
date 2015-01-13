@@ -324,7 +324,7 @@ class SurveyQuestionsController extends SurveysAppController {
 		$idConditions = array_merge(array($idField => $id), $conditions);
 		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
 		
-		//$this->fixOrder($model, $conditions);
+		$this->fixOrder($conditions);
 		if($move === 'up') {
 			$this->SurveyQuestion->updateAll(array($orderField => $order-1), $idConditions);
 			$updateConditions[$orderField] = $order-1;
@@ -346,6 +346,21 @@ class SurveyQuestionsController extends SurveysAppController {
 
 		return $this->redirect(array('action' => 'reorder', $templateId));
     }
+
+    public function fixOrder($conditions) {
+		$count = $this->SurveyQuestion->find('count', array('conditions' => $conditions));
+		if($count > 0) {
+			$list = $this->SurveyQuestion->find('list', array(
+				'conditions' => $conditions,
+				'order' => array('SurveyQuestion.order')
+			));
+			$order = 1;
+			foreach($list as $id => $name) {
+				$this->SurveyQuestion->id = $id;
+				$this->SurveyQuestion->saveField('order', $order++);
+			}
+		}
+	}
 
     public function preview($id=0) {
     	$templateData = $this->SurveyTemplate->findById($id);

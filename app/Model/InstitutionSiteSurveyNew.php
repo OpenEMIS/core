@@ -38,6 +38,10 @@ class InstitutionSiteSurveyNew extends AppModel {
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
 		'Surveys.SurveyStatus',
+		'AcademicPeriod' => array(
+			'className' => 'SchoolYear',
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name')
+		),
 		'SurveyStatusPeriod' => array(
 			'className' => 'Surveys.SurveyStatusPeriod',
 			'foreignKey' => false,
@@ -103,6 +107,7 @@ class InstitutionSiteSurveyNew extends AppModel {
 
 			$templateData = $this->getSurveyTemplate($academicPeriodId, $surveyStatusId);
 			$data = $this->getFormatedSurveyData($templateData['id']);
+			$dataValues = array();
 
 			$model = 'SurveyQuestion';
 	    	$modelOption = 'SurveyQuestionChoice';
@@ -114,19 +119,19 @@ class InstitutionSiteSurveyNew extends AppModel {
 
 			if ($this->request->is(array('post', 'put'))) {
 
-				$surveyData = $this->prepareSurveyData($this->request->data);
+				$surveyData = $this->prepareSubmitSurveyData($this->request->data);
 
 				if ($this->saveAll($surveyData)) {
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => $this->alias, 'index'));
 				} else {
-					//do something if validation fail
+					$dataValues = $this->prepareFormatedDataValues($surveyData);
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
 				}
 			}
 
-			$this->setVar(compact('academicPeriodId', 'surveyStatusId', 'templateData', 'data', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
+			$this->setVar(compact('academicPeriodId', 'surveyStatusId', 'templateData', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias, 'index'));
