@@ -119,7 +119,7 @@ class StaffIdentity extends StaffAppModel {
 				return $controller->redirect(array('action' => 'identities'));
 			}
 		}
-		$identityTypeOptions = $this->IdentityType->getOptions();
+		$identityTypeOptions = $this->IdentityType->getList();
 		$controller->set('identityTypeOptions', $identityTypeOptions);
 
 		$controller->set(compact('header', 'identityTypeOptions'));
@@ -162,7 +162,7 @@ class StaffIdentity extends StaffAppModel {
 			}
 			$controller->request->data = $data;
 		}
-		$identityTypeOptions = $this->IdentityType->getOptions();
+		$identityTypeOptions = $this->IdentityType->getList();
 		$controller->set(compact('id', 'header', 'identityTypeOptions'));
 	}
 

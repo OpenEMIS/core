@@ -118,7 +118,7 @@ class StaffHealthConsultation extends StaffAppModel {
             }
         }
         
-        $healthConsultationsOptions = $this->HealthConsultationType->find('list', array('fields' => array('id', 'name')));
+        $healthConsultationsOptions = $this->HealthConsultationType->getList();
         $controller->set(compact('healthConsultationsOptions'));
     }
 }

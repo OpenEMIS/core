@@ -8,10 +8,7 @@ class TrainingSessionResult extends TrainingAppModel {
 			'className' => 'TrainingSession',
 			'foreignKey' => 'training_session_id'
 		),
-		'TrainingStatus' => array(
-			'className' => 'TrainingStatus',
-			'foreignKey' => 'training_status_id'
-		),
+		'TrainingStatus',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -29,7 +26,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
+		$statusOptions = $trainingStatus->getList();
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 		
 
@@ -78,7 +75,7 @@ class TrainingSessionResult extends TrainingAppModel {
 				),
 				array(
 					'type' => 'INNER',
-					'table' => 'training_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'TrainingStatus',
 					'conditions' => array('TrainingStatus.id = TrainingSessionResult.training_status_id')
 				)
@@ -169,15 +166,12 @@ class TrainingSessionResult extends TrainingAppModel {
 		);
 
 		$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-		$trainingCourseResultType->bindModel(
-		        array('belongsTo' => array(
-		                'TrainingResultType' => array(
-							'className' => 'FieldOptionValue',
-							'foreignKey' => 'training_result_type_id'
-						)
-		            )
-		        )
-	    );
+		// $trainingCourseResultType->bindModel(
+		//         array('belongsTo' => array(
+		//                 'TrainingResultType'
+		//             )
+		//         )
+	 //    );
 
 		$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingCourses['TrainingCourse']['id'])));	
 		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);
@@ -312,15 +306,12 @@ class TrainingSessionResult extends TrainingAppModel {
 
 
 		$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-		$trainingCourseResultType->bindModel(
-		        array('belongsTo' => array(
-		                'TrainingResultType' => array(
-							'className' => 'FieldOptionValue',
-							'foreignKey' => 'training_result_type_id'
-						)
-		            )
-		        )
-	    );
+		// $trainingCourseResultType->bindModel(
+		//         array('belongsTo' => array(
+		//                 'TrainingResultType'
+		//             )
+		//         )
+	 //    );
 
 		$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingSessions['TrainingSession']['training_course_id'])));	
 		
@@ -505,7 +496,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
 	
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=> array('id', 'name')));
+		$trainingProviderOptions = $trainingProvider->getList();
 
 		
 		$controller->set('trainingCourseCodeOptions', $trainingCourseCodeOptions);
@@ -587,15 +578,12 @@ class TrainingSessionResult extends TrainingAppModel {
 				}
 
 				$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-				$trainingCourseResultType->bindModel(
-				        array('belongsTo' => array(
-				                'TrainingResultType' => array(
-									'className' => 'FieldOptionValue',
-									'foreignKey' => 'training_result_type_id'
-								)
-				            )
-				        )
-			    );
+				// $trainingCourseResultType->bindModel(
+				//         array('belongsTo' => array(
+				//                 'TrainingResultType'
+				//             )
+				//         )
+			 //    );
 
 				$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingCourses['TrainingCourse']['id'])));	
 				$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);

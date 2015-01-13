@@ -44,7 +44,7 @@ class StudentBehaviour extends StudentsAppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'InstitutionSite', 
-		'StudentBehaviourCategory',
+		'Students.StudentBehaviourCategory',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -118,13 +118,13 @@ class StudentBehaviour extends StudentsAppModel {
 				return $this->redirect(array('action' => get_class($this), 'show'));
 			}
 		}
-		
 		$categoryOptions = array();
 		if ($this->action = 'add' || $this->action = 'edit') {
-			$categoryOptions = $this->StudentBehaviourCategory->findList(true);
+			$categoryOptions = $this->StudentBehaviourCategory->getList();
 		} else {
-			$categoryOptions = $this->StudentBehaviourCategory->findList();
+			$categoryOptions = $this->StudentBehaviourCategory->getList();
 		}
+
 		$this->fields['student_behaviour_category_id']['options'] = $categoryOptions;
 		$this->setFieldOrder('student_behaviour_category_id', 1);
 		$this->setFieldOrder('date_of_behaviour', 2);

@@ -26,10 +26,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingAchievementType' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'training_achievement_type_id',
-		),
+		'Staff.TrainingAchievementType',
 		'TrainingStatus',
 	);
 
@@ -331,9 +328,9 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		}
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
+		$trainingProviderOptions = $trainingProvider->getList();
 
-		$trainingAchievementTypeOptions = array_map('__', $this->TrainingAchievementType->getList());
+		$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList();
 		$controller->set('trainingAchievementTypeOptions', $trainingAchievementTypeOptions);
 
 		$passfailOptions = $controller->Option->get('passfail');

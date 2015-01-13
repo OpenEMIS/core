@@ -14,11 +14,11 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class IdentityType extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array('StaffIdentity', 'StudentIdentity', 'TeacherIdentity');
+class IdentityType extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Staff.StaffIdentity', 'Students.StudentIdentity');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
