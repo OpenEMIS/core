@@ -15,10 +15,15 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthFamily extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
+		'Students.Student',
 		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
-		'HealthRelationships' => array('foreignKey' => 'health_relationship_id'),
+		'HealthRelationship' => array('foreignKey' => 'health_relationship_id'),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -45,11 +50,21 @@ class StudentHealthFamily extends StudentsAppModel {
 		)
 	);
 
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.current" => array(0 => 'No', 1 => 'Yes')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
+
 	public function getDisplayFields($controller) {
 		$fields = array(
 			'model' => $this->alias,
 			'fields' => array(
-				array('field' => 'name', 'model' => 'HealthRelationships'),
+				array('field' => 'name', 'model' => 'HealthRelationship'),
 				array('field' => 'name', 'model' => 'HealthCondition'),
 				array('field' => 'current','type' => 'select', 'options' => $controller->Option->get('yesno')),
 				array('field' => 'comment'),
@@ -140,10 +155,10 @@ class StudentHealthFamily extends StudentsAppModel {
 		}
 		
 		$healthConditionsOptions = $this->HealthCondition->find('list', array('fields' => array('id', 'name')));
-		$healthRelationshipsOptions = $this->HealthRelationships->find('list', array('fields' => array('id', 'name')));
+		$healthRelationshipOptions = $this->HealthRelationship->find('list', array('fields' => array('id', 'name')));
 		$yesnoOptions = $controller->Option->get('yesno');
 		
-		$controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));
+		$controller->set(compact('healthConditionsOptions', 'healthRelationshipOptions','yesnoOptions'));
 	}
 
 }

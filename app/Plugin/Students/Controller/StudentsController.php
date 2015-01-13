@@ -75,7 +75,8 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteStudent',
 		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
-		'StudentBehaviour' => array('plugin' => 'Students')
+		'StudentBehaviour' => array('plugin' => 'Students'),
+		'Absence' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {
@@ -128,7 +129,8 @@ class StudentsController extends StudentsAppController {
 			'userId' => $this->Auth->user('id')
 		);
 
-		$data = $this->Search->search($this->Student, $conditions);
+		$order = empty($this->params->named['sort']) ? array('Student.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->Student, $conditions, $order);
 		
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
@@ -410,50 +412,6 @@ class StudentsController extends StudentsAppController {
 		$this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
 		$this->set('data', $data);
 		$this->set('header',$header);
-	}
-
-	// STUDENT ATTENDANCE PART
-	public function absence() {
-		if (!$this->Session->check('Student.id')) {
-			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
-		}
-		$studentId = $this->Session->read('Student.id');
-		//$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-		$this->Navigation->addCrumb('Absence');
-		$header = __('Absence');
-		
-		$yearList = $this->SchoolYear->getYearList();
-		
-		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
-			}
-		} else {
-			$yearId = key($yearList);
-		}
-		
-		$monthOptions = $this->generateMonthOptions();
-		$currentMonthId = $this->getCurrentMonthId();
-		if (isset($this->params['pass'][1])) {
-			$monthId = $this->params['pass'][1];
-			if (!array_key_exists($monthId, $monthOptions)) {
-				$monthId = $currentMonthId;
-			}
-		} else {
-			$monthId = $currentMonthId;
-		}
-		
-		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
-		$data = $absenceData;
-		
-		if (empty($data)) {
-			$this->Message->alert('general.noData');
-		}
-		
-		$settingWeekdays = $this->getWeekdaysBySetting();
-
-		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 
 	private function getAvailableYearId($yearList) {

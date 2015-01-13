@@ -92,7 +92,7 @@ class ExcelBehavior extends ModelBehavior {
 
 		foreach ($models as $sheet) {
 			$sheetModel = is_object($sheet['model']) ? $sheet['model'] : ClassRegistry::init($sheet['model']);
-			$sheetName = array_key_exists('name', $sheet) ? $sheet['name'] : $sheetModel->alias;
+			$sheetName = array_key_exists('name', $sheet) ? __($sheet['name']) : $sheetModel->alias;
 
 			if ($model->alias == $sheetModel->alias) {
 				$this->conditions = $model->excelGetConditions();

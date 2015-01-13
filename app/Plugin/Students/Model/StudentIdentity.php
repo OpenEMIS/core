@@ -15,7 +15,12 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentIdentity extends StudentsAppModel {
-	public $actsAs = array('Excel', 'ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction',
+		'DatePicker' => array('issue_date', 'expiry_date')
+	);
+
 	public $belongsTo = array(
 		'Students.Student',
 		'IdentityType',
@@ -59,14 +64,6 @@ class StudentIdentity extends StudentsAppModel {
 			)
 		)
 	);
-
-	/* Excel Behaviour */
-	public function excelGetConditions() {
-		$id = CakeSession::read('Student.id');
-		$conditions = array($this->alias . '.student_id' => $id);
-		return $conditions;
-	}
-	/* End Excel Behaviour */
 
 	public function compareDate($field = array(), $compareField = null) {
 		$startDate = new DateTime(current($field));

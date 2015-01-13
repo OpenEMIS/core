@@ -19,38 +19,14 @@ class QualityInstitutionVisit extends QualityAppModel {
 
     //public $useTable = 'rubrics';
     public $actsAs = array(
+        'Excel' => array(
+            'header' => array(
+                'Staff' => array('identification_no', 'first_name', 'last_name'),
+                'Evaluator' => array('first_name', 'last_name'),
+            )
+        ),
 		'ControllerAction', 
-		'DatePicker' => array('date'),
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
-	);
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-                'SchoolYear' => array(
-                    'name' => 'Year'
-                ),
-                'InstitutionSiteSection' => array(
-                    'name' => 'Section',
-                ),
-                'EducationGrade' => array(
-                    'name' => 'Grade'
-                ),
-                'QualityVisitType' => array(
-                    'name' => 'Quality Type'
-                ),
-                'QualityInstitutionVisit' => array(
-                    'date' => 'Visit Date',
-                    'comment' => 'Comment',
-					'staff_full_name' => 'Staff Name',
-					'evaluator_full_name' => 'Evaluator Name',
-                ),
-            ),
-            'fileName' => 'Report_Quality_Visit'
-		
-		)
+		'DatePicker' => array('date')
 	);
 	
     public $belongsTo = array(
@@ -59,6 +35,7 @@ class QualityInstitutionVisit extends QualityAppModel {
 		'Staff.Staff',
 		'SchoolYear',
 		'EducationGrade',
+        'InstitutionSite',
 		'InstitutionSiteSection',
 		'QualityVisitType' => array(
             'foreignKey' => 'quality_type_id'
@@ -67,7 +44,7 @@ class QualityInstitutionVisit extends QualityAppModel {
             'className' => 'SecurityUser',
             'foreignKey' => 'modified_user_id'
         ),
-        'CreatedUser' => array(
+        'Evaluator' => array(
             'className' => 'SecurityUser',
             'foreignKey' => 'created_user_id'
         )
@@ -125,6 +102,14 @@ class QualityInstitutionVisit extends QualityAppModel {
         
         return true;
     }
+
+    /* Excel Behaviour */
+    public function excelGetConditions() {
+        $id = CakeSession::read('InstitutionSite.id');
+        $conditions = array('InstitutionSite.id' => $id);
+        return $conditions;
+    }
+    /* End Excel Behaviour */
 
 	public function getDisplayFields($controller) {
         $fields = array(
@@ -390,6 +375,10 @@ class QualityInstitutionVisit extends QualityAppModel {
         }
     }
 
+    public function qualityVisitExcel($controller, $params) {
+        $this->excel();
+    }
+
     private function _checkMultiAttachmentsExist($filesData) {
         $attachmentExisit = false;
 
@@ -409,7 +398,6 @@ class QualityInstitutionVisit extends QualityAppModel {
             
         }
     }
-	
 
     public function qualityVisitAjaxRemoveAttachment($controller, $params) {
 		$this->render = false;
@@ -448,50 +436,4 @@ class QualityInstitutionVisit extends QualityAppModel {
 		$controller->FileUploader->allowEmptyUpload = true;
 		$controller->FileUploader->additionalFileType();
     }
-
-	/* =================================================
-	 * 
-	 * For Report Generation at InstitutionSites Only
-	 * 
-	 * =================================================*/
-	
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-
-		if ($index == 1) {
-			$options = array();
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			
-			$options['conditions'] = array('QualityInstitutionVisit.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-                    array(
-                        'table' => 'security_users',
-                        'alias' => 'SecurityUser',
-                        'conditions' => array('QualityInstitutionVisit.created_user_id = SecurityUser.id')
-                    ),
-                );
-			
-			
-			$this->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.last_name)";
-			$this->virtualFields['evaluator_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.last_name)";
-			
-			$data = $this->find('all', $options);
-			
-			return $data;
-		}
-	}
-	
-	public function reportsGetFileName($args){
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
-	}
 }

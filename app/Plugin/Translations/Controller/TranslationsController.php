@@ -49,7 +49,8 @@ class TranslationsController extends AppController {
 			}
 		}
 		$this->request->data[$model]['language'] = $selectedLang;
-		$data = $this->Search->search($this->Translation);
+		$order = empty($this->params->named['sort']) ? array('Translation.eng' => 'asc') : array();
+		$data = $this->Search->search($this->Translation, array(), $order);
 		
 		if (empty($data)){
 			$this->Message->alert('general.notExists');
