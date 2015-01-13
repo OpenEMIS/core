@@ -37,6 +37,10 @@ class InstitutionSiteSurveyDraft extends AppModel {
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
 		'Surveys.SurveyStatus',
+		'AcademicPeriod' => array(
+			'className' => 'SchoolYear',
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name')
+		),
 		'SurveyStatusPeriod' => array(
 			'className' => 'Surveys.SurveyStatusPeriod',
 			'foreignKey' => false,
@@ -100,7 +104,7 @@ class InstitutionSiteSurveyDraft extends AppModel {
 			$action = 'edit';
 
 			if ($this->request->is(array('post', 'put'))) {
-				$surveyData = $this->prepareSurveyData($this->request->data);
+				$surveyData = $this->prepareSubmitSurveyData($this->request->data);
 
 				$dataSource = $this->getDataSource();
 				$dataSource->begin();
@@ -116,8 +120,8 @@ class InstitutionSiteSurveyDraft extends AppModel {
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => $this->alias, 'index'));
 				} else {
-					//do something if validation fail
 					$dataSource->rollback();
+					$dataValues = $this->prepareFormatedDataValues($surveyData);
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
 				}
