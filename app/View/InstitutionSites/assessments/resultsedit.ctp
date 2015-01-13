@@ -4,12 +4,12 @@ $this->assign('contentHeader', $educationGradeName . ' - ' . $assessmentName);
 
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'assessments'), array('class' => 'divider'));
-echo $this->Html->link(__('View'), array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'assessmentsResults', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => 'assessmentsResultsEdit', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'assessmentsResultsEdit', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem));
 echo $this->Form->create($model, $formOptions);
 ?>
 
@@ -22,7 +22,7 @@ echo $this->Form->create($model, $formOptions);
 			'value' => $selectedClass,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $assessmentId
 		));
 		?>
 		<?php
@@ -33,7 +33,7 @@ echo $this->Form->create($model, $formOptions);
 			'value' => $selectedItem,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId . '/' . $selectedClass
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $assessmentId . '/' . $selectedClass
 		));
 		?>
 </div>
@@ -58,7 +58,7 @@ echo $this->Form->create($model, $formOptions);
 				$result = $obj['AssessmentItemResult'];
 				echo $this->Form->hidden($i . '.id', array('value' => $result['id']));
 				echo $this->Form->hidden($i . '.student_id', array('value' => $obj['Student']['id']));
-				echo $this->Form->hidden($i . '.school_year_id', array('value' => $obj['InstitutionSiteClass']['school_year_id']));
+				echo $this->Form->hidden($i . '.academic_period_id', array('value' => $obj['InstitutionSiteClass']['academic_period_id']));
 				?>
 				<td class="middle"><?php echo $obj['Student']['identification_no']; ?></td>
 				<td class="middle"><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></td>
@@ -90,7 +90,7 @@ echo $this->Form->create($model, $formOptions);
 	</tbody>
 </table>
 
-<?php echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem))); ?>
+<?php echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'assessmentsResults', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem))); ?>
 <?php
 echo $this->Form->end();
 $this->end();

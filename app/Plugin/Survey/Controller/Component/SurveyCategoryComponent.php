@@ -57,7 +57,8 @@ class SurveyCategoryComponent extends Component {
         'InfrastructureCategory',
         'InfrastructureMaterial',
         'InfrastructureStatus',
-        'SchoolYear',
+        // 'SchoolYear',
+        'AcademicPeriod',
         'StudentCategory',
         'StaffCategory',
         'EducationGradeSubject',
@@ -640,7 +641,7 @@ class SurveyCategoryComponent extends Component {
     }
     
     private function removeFields($arrTable){
-        $excludedColumns = array('id','modified','modified_user_id','school_year_id','created_user_id', 'institution_id', 'institution_site_id',
+        $excludedColumns = array('id','modified','modified_user_id','academic_period_id','created_user_id', 'institution_id', 'institution_site_id',
                                  'institution_site_programme_id','photo_name','photo_content','source','created','visible','order');
         $excludeProp  = array('default','collate','charset','key');
         foreach ($excludedColumns as  $value) {

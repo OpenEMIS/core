@@ -210,10 +210,10 @@ var custom = {
 	view : {
 		changeCategory : function(a,b){
 			var site = (b) ? $('#institution_site_id').val() : '' ;
-			location.href = getRootURL()+ $(a).attr('url')+'/'+$('#school_year_id').val()+'/'+ site;
+			location.href = getRootURL()+ $(a).attr('url')+'/'+$('#academic_period_id').val()+'/'+ site;
 		},
 		redirect:function(a){
-            location.href = $(a).attr('href') +'/'+$('#school_year_id').val();
+            location.href = $(a).attr('href') +'/'+$('#academic_period_id').val();
 			return false;
 		}
 	}
