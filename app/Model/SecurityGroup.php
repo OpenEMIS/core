@@ -129,7 +129,8 @@ class SecurityGroup extends AppModel {
 				'SecurityGroupUser.security_user_id' => $userId
 			);
 		}
-		$data = $this->controller->Search->search($this, $conditions);
+		$order = empty($this->controller->params->named['sort']) ? array('SecurityGroup.name' => 'asc') : array();
+		$data = $this->controller->Search->search($this, $conditions, $order);
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}

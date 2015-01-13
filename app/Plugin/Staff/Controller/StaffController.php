@@ -134,7 +134,8 @@ class StaffController extends StaffAppController {
 			'userId' => $this->Auth->user('id')
 		);
 
-		$data = $this->Search->search($this->Staff, $conditions);
+		$order = empty($this->params->named['sort']) ? array('Staff.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->Staff, $conditions, $order);
 		
 		if (empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {

@@ -50,7 +50,23 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
-	public $hasMany = array('InstitutionSiteStudentFee');
+	public $hasMany = array(
+		'Students.StudentContact',
+		'Students.StudentIdentity',
+		'Students.StudentNationality',
+		'Students.StudentLanguage',
+		'Students.StudentComment',
+		'Students.StudentSpecialNeed',
+		'Students.StudentAward',
+		'Students.StudentGuardian',
+		'Students.Programme',
+		'Students.Absence',
+		'Students.StudentBehaviour',
+		'Students.StudentExtracurricular',
+		'Students.StudentBankAccount',
+		'InstitutionSiteClassStudent',
+		'InstitutionSiteStudentFee'
+	);
 	
 	public $validate = array(
 		'first_name' => array(
@@ -127,13 +143,29 @@ class Student extends StudentsAppModel {
 	public function excelGetModels() {
 		$models = array(
 			array('model' => $this),
-			array('model' => 'Students.StudentContact'),
-			array('model' => 'Students.StudentIdentity'),
-			array('model' => 'Students.StudentNationality'),
-			array('model' => 'Students.StudentLanguage'),
-			array('model' => 'Students.StudentComment'),
-			array('model' => 'Students.StudentSpecialNeed'),
-			array('model' => 'Students.StudentAward')
+			array('model' => $this->StudentContact, 'name' => 'Contacts'),
+			array('model' => $this->StudentIdentity, 'name' => 'Identities'),
+			array('model' => $this->StudentNationality, 'name' => 'Nationalities'),
+			array('model' => $this->StudentGuardian, 'name' => 'Guardians'),
+			array('model' => $this->StudentLanguage, 'name' => 'Languages'),
+			array('model' => $this->StudentComment, 'name' => 'Comments'),
+			array('model' => $this->StudentSpecialNeed, 'name' => 'Special Needs'),
+			array('model' => $this->StudentAward, 'name' => 'Awards'),
+			array('model' => $this->Programme, 'name' => 'Programmes'),
+			array('model' => $this->Absence, 'name' => 'Absences'),
+			array('model' => $this->StudentBehaviour, 'name' => 'Behaviour'),
+			array('model' => $this->InstitutionSiteClassStudent, 'name' => 'Classes'),
+			array('model' => $this->StudentExtracurricular, 'name' => 'Extracurricular'),
+			array('model' => $this->StudentBankAccount, 'name' => 'Bank Accounts'),
+			array('model' => 'Students.StudentFee', 'name' => 'Fees'),
+			array('model' => 'Students.StudentHealth', 'name' => 'Health Overview'),
+			array('model' => 'Students.StudentHealthHistory', 'name' => 'Health History'),
+			array('model' => 'Students.StudentHealthFamily', 'name' => 'Health Family'),
+			array('model' => 'Students.StudentHealthImmunization', 'name' => 'Immunizations'),
+			array('model' => 'Students.StudentHealthMedication', 'name' => 'Medications'),
+			array('model' => 'Students.StudentHealthAllergy', 'name' => 'Allergies'),
+			array('model' => 'Students.StudentHealthTest', 'name' => 'Health Tests'),
+			array('model' => 'Students.StudentHealthConsultation', 'name' => 'Health Consulations')
 		);
 		return $models;
 	}

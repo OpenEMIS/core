@@ -142,7 +142,8 @@ class InstitutionSitesController extends AppController {
 			'userId' => $this->Auth->user('id')
 		);
 
-		$data = $this->Search->search($this->InstitutionSite, $conditions);
+		$order = empty($this->params->named['sort']) ? array('InstitutionSite.name' => 'asc') : array();
+		$data = $this->Search->search($this->InstitutionSite, $conditions, $order);
 
 		$configItem = ClassRegistry::init('ConfigItem');
 		$areaLevelID = $configItem->getValue('institution_site_area_level_id');
