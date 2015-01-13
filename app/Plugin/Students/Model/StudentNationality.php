@@ -15,7 +15,11 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentNationality extends StudentsAppModel {
-	public $actsAs = array('Excel', 'ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+	
 	public $belongsTo = array(
 		'Students.Student',
 		'Country',
@@ -37,14 +41,6 @@ class StudentNationality extends StudentsAppModel {
 			)
 		)
 	);
-
-	/* Excel Behaviour */
-	public function excelGetConditions() {
-		$id = CakeSession::read('Student.id');
-		$conditions = array($this->alias . '.student_id' => $id);
-		return $conditions;
-	}
-	/* End Excel Behaviour */
 
 	public function getDisplayFields($controller) {
 		$fields = array(

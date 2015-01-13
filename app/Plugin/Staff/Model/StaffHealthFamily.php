@@ -21,7 +21,7 @@ class StaffHealthFamily extends StaffAppModel {
 	public $belongsTo = array(
 		//'Staff',
 		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
-        'HealthRelationships' => array('foreignKey' => 'health_relationship_id'),
+        'HealthRelationship' => array('foreignKey' => 'health_relationship_id'),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -53,7 +53,7 @@ class StaffHealthFamily extends StaffAppModel {
         $fields = array(
             'model' => $this->alias,
             'fields' => array(
-                array('field' => 'name', 'model' => 'HealthRelationships'),
+                array('field' => 'name', 'model' => 'HealthRelationship'),
                 array('field' => 'name', 'model' => 'HealthCondition'),
                 array('field' => 'current','type' => 'select', 'options' => $controller->Option->get('yesno')),
                 array('field' => 'comment'),
@@ -142,9 +142,9 @@ class StaffHealthFamily extends StaffAppModel {
         }
         
         $healthConditionsOptions = $this->HealthCondition->findList(true);//('list', array('fields' => array('id', 'name')));
-        $healthRelationshipsOptions = $this->HealthRelationships->findList(true);//('list', array('fields' => array('id', 'name')));
+        $healthRelationshipOptions = $this->HealthRelationship->findList(true);//('list', array('fields' => array('id', 'name')));
         $yesnoOptions = $controller->Option->get('yesno');
         
-        $controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));
+        $controller->set(compact('healthConditionsOptions', 'healthRelationshipOptions','yesnoOptions'));
 	}
 }

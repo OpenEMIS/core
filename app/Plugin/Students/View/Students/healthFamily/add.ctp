@@ -16,7 +16,7 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Students'));
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
-echo $this->Form->input('health_relationship_id', array('options' => $healthRelationshipsOptions, 'label' => array('text' => $this->Label->get('HealthRelationships.name'), 'class' => 'col-md-3 control-label')));
+echo $this->Form->input('health_relationship_id', array('options' => $healthRelationshipOptions, 'label' => array('text' => $this->Label->get('HealthRelationship.name'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('health_condition_id', array('options' => $healthConditionsOptions, 'label' => array('text' => $this->Label->get('HealthCondition.name'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('current', array('options' => $yesnoOptions));
 echo $this->Form->input('comment');

@@ -18,7 +18,7 @@ class SearchComponent extends Component {
 		
 	}
 
-	public function search($model, $conditions = array()) {
+	public function search($model, $conditions = array(), $order = array()) {
 		$alias = $model->alias;
 		$request = $this->controller->request;
 		$limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
@@ -55,7 +55,7 @@ class SearchComponent extends Component {
 		$this->controller->request->data[$alias]['limit'] = $limit;
 		$this->controller->set('search', $search);
 		$this->controller->set('pageOptions', $this->pageOptions);
-		$this->controller->Paginator->settings = array('limit' => $this->pageOptions[$limit]);
+		$this->controller->Paginator->settings = array('limit' => $this->pageOptions[$limit], 'order' => $order);
 
 		try {
 			$data = $this->controller->paginate($alias, $conditions);

@@ -19,6 +19,7 @@ class Programme extends AppModel {
 	public $useTable = 'institution_site_students';
 	
 	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
