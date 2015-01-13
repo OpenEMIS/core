@@ -362,26 +362,46 @@ class SurveyQuestionsController extends SurveysAppController {
 		}
 	}
 
-    public function preview($id=0) {
-    	$templateData = $this->SurveyTemplate->findById($id);
-    	$data = $this->SurveyQuestion->getSurveyQuestionData($id);
-		$model = 'SurveyQuestion';
-    	$modelOption = 'SurveyQuestionChoice';
-    	$modelValue = 'InstitutionSiteSurveyAnswer';
-    	$modelRow = 'SurveyTableRow';
-    	$modelColumn = 'SurveyTableColumn';
-    	$modelCell = 'InstitutionSiteSurveyTableCell';
-		$action = 'edit';
+    public function preview($selectedModule=0, $selectedTemplate=0) {
+		$SurveyModule = ClassRegistry::init('SurveyModule');
+		$moduleOptions = $SurveyModule->find('list' , array(
+			'conditions' => array('SurveyModule.visible' => 1),
+			'order' => array('SurveyModule.order')
+		));
+		$selectedModule = $selectedModule == 0 ? key($moduleOptions) : $selectedModule;
+		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($selectedModule);
 
-		$this->set('templateData', $templateData);
-		$this->set('data', $data);
-		$this->set('model', $model);
-		$this->set('modelOption', $modelOption);
-		$this->set('modelValue', $modelValue);
-		$this->set('modelRow', $modelRow);
-		$this->set('modelColumn', $modelColumn);
-		$this->set('modelCell', $modelCell);
-		$this->set('action', $action);
+		if(!empty($templateOptions)) {
+			$selectedTemplate = $selectedTemplate == 0 ? key($templateOptions) : $selectedTemplate;
+			$templateData = $this->SurveyTemplate->findById($selectedTemplate);
+			$data = $this->SurveyQuestion->getSurveyQuestionData($selectedTemplate);
+			$model = 'SurveyQuestion';
+			$modelOption = 'SurveyQuestionChoice';
+			$modelValue = 'InstitutionSiteSurveyAnswer';
+			$modelRow = 'SurveyTableRow';
+			$modelColumn = 'SurveyTableColumn';
+			$modelCell = 'InstitutionSiteSurveyTableCell';
+			$action = 'edit';
+
+			$this->Session->write($this->SurveyTemplate->alias.'.id', $selectedTemplate);
+
+			$this->set('templateOptions', $templateOptions);
+			$this->set('selectedTemplate', $selectedTemplate);
+			$this->set('templateData', $templateData);
+			$this->set('data', $data);
+			$this->set('model', $model);
+			$this->set('modelOption', $modelOption);
+			$this->set('modelValue', $modelValue);
+			$this->set('modelRow', $modelRow);
+			$this->set('modelColumn', $modelColumn);
+			$this->set('modelCell', $modelCell);
+			$this->set('action', $action);
+		} else {
+			$this->Message->alert('general.noData');
+		}
+
+		$this->set('moduleOptions', $moduleOptions);
+		$this->set('selectedModule', $selectedModule);
     }    
 }
 ?>

@@ -1,5 +1,10 @@
 <div class="custom_field">
-	<div class="field_label"><?php echo $obj[$model]['name']; ?></div>
+	<div class="field_label">
+		<?php
+			echo $obj[$model]['name'];
+			echo $this->element('customfields/mandatory', compact('obj'));
+		?>
+	</div>
 	<div class="field_value">
 	<?php
 		$modelId = $obj[$model]['id'];

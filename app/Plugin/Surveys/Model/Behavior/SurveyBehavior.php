@@ -74,47 +74,47 @@ class SurveyBehavior extends ModelBehavior {
 			$surveyTemplateId = $obj['SurveyStatus']['survey_template_id'];
 
 			$obj['AcademicPeriod']['SurveyStatusPeriod'] = $obj['SurveyStatusPeriod'];
+			$obj['AcademicPeriod']['SurveyStatus'] = $obj['SurveyStatus'];
 			if(isset($obj[$model->alias])) {
 				$obj['AcademicPeriod'][$model->alias] = $obj[$model->alias];
 			}
 
-			if(array_key_exists($surveyStatusId, $tmp)) {
-				$academicPeriodArr = $tmp[$surveyStatusId]['AcademicPeriod'];
+			if(array_key_exists($surveyTemplateId, $tmp)) {
+				$academicPeriodArr = $tmp[$surveyTemplateId]['AcademicPeriod'];
 				if(!array_key_exists($academicPeriodId, $academicPeriodArr)) {
-					$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+					$tmp[$surveyTemplateId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
 				}
 			} else {
-				$tmp[$surveyStatusId]['SurveyStatus'] = $obj['SurveyStatus'];
 				$model->SurveyTemplate->recursive = -1;
 				$templateData = $model->SurveyTemplate->findById($surveyTemplateId);
-				$tmp[$surveyStatusId]['SurveyTemplate'] = $templateData['SurveyTemplate'];
-				$tmp[$surveyStatusId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+				$tmp[$surveyTemplateId]['SurveyTemplate'] = $templateData['SurveyTemplate'];
+				$tmp[$surveyTemplateId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
 			}
 		}
 
 		foreach ($tmp as $key => $row) {
 			uasort($tmp[$key]['AcademicPeriod'], array($model, 'sortAcademicPeriod'));
 		}
-		uasort($tmp, array($model, 'sortSurveyStatus'));
+		uasort($tmp, array($model, 'sortSurveyTemplate'));
 
 		return $tmp;
 	}
 
-	public function sortSurveyStatus(Model $model, $a, $b) {
-		$aDateDisabledTimestamp = strtotime($a['SurveyStatus']['date_disabled']);
-		$bDateDisabledTimestamp = strtotime($b['SurveyStatus']['date_disabled']);
-
-		if ($aDateDisabledTimestamp == $bDateDisabledTimestamp) {
+	public function sortSurveyTemplate(Model $model, $a, $b) {
+		if ($a['SurveyTemplate']['name'] == $b['SurveyTemplate']['name']) {
 	        return 0;
 	    }
-	    return ($aDateDisabledTimestamp < $bDateDisabledTimestamp) ? -1 : 1;
+	    return ($a['SurveyTemplate']['name'] < $b['SurveyTemplate']['name']) ? -1 : 1;
 	}
 
 	public function sortAcademicPeriod(Model $model, $a, $b) {
-		if ($a['name'] == $b['name']) {
+		$aDateDisabled = strtotime($a['SurveyStatus']['date_disabled']);
+		$bDateDisabled = strtotime($b['SurveyStatus']['date_disabled']);
+
+		if ($aDateDisabled == $bDateDisabled) {
 	        return 0;
 	    }
-	    return ($a['name'] < $b['name']) ? -1 : 1;
+	    return ($aDateDisabled < $bDateDisabled) ? -1 : 1;
 	}
 
 	public function getSurveyStatusPeriod(Model $model, $academicPeriodId, $surveyStatusId) {

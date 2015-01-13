@@ -40,7 +40,7 @@ class InstitutionSiteSurveyNew extends AppModel {
 		'Surveys.SurveyStatus',
 		'AcademicPeriod' => array(
 			'className' => 'SchoolYear',
-			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name')
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
 		),
 		'SurveyStatusPeriod' => array(
 			'className' => 'Surveys.SurveyStatusPeriod',
@@ -122,8 +122,13 @@ class InstitutionSiteSurveyNew extends AppModel {
 				$surveyData = $this->prepareSubmitSurveyData($this->request->data);
 
 				if ($this->saveAll($surveyData)) {
-					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => $this->alias, 'index'));
+					if($surveyData[$this->alias]['status'] == 2) {
+						$this->Message->alert('Survey.save.final');
+						return $this->redirect(array('action' => $this->alias, 'index'));
+					} else {
+						$this->Message->alert('Survey.save.draft');
+						return $this->redirect(array('action' => 'InstitutionSiteSurveyDraft', 'edit', $this->id));
+					}
 				} else {
 					$dataValues = $this->prepareFormatedDataValues($surveyData);
 					$this->log($this->validationErrors, 'debug');
