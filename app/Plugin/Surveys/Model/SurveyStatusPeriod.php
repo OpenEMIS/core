@@ -20,7 +20,7 @@ class SurveyStatusPeriod extends SurveysAppModel {
 		'AcademicPeriod' => array(
 			//'className' => 'AcademicPeriod',
 			'className' => 'SchoolYear',
-			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
 		)
 	);
 }

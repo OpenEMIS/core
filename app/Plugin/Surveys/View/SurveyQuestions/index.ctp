@@ -8,7 +8,7 @@ $this->start('contentActions');
 		}
 		if ($_edit) {
 		    echo $this->Html->link(__('Reorder'), array('action' => 'reorder', $templateData['SurveyTemplate']['id']), array('class' => 'divider'));
-		    echo $this->Html->link(__('Preview'), array('action' => 'preview', $templateData['SurveyTemplate']['id']), array('class' => 'divider'));
+		    echo $this->Html->link(__('Preview'), array('action' => 'preview'), array('class' => 'divider'));
 		}
 	}
 $this->end();
