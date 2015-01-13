@@ -35,16 +35,8 @@ class StaffSalary extends StaffAppModel {
 	 * @var array
 	 */
 	public $hasMany = array(
-		'StaffSalaryAddition' => array(
-			'className' => 'StaffSalaryAddition',
-			'foreignKey' => 'staff_salary_id',
-			'dependent' => true
-		),
-		'StaffSalaryDeduction' => array(
-			'className' => 'StaffSalaryDeduction',
-			'foreignKey' => 'staff_salary_id',
-			'dependent' => true
-		)
+		'StaffSalaryAddition',
+		'StaffSalaryDeduction'
 	);
 	public $validate = array(
 		'salary_date' => array(
@@ -183,8 +175,8 @@ class StaffSalary extends StaffAppModel {
 		$visible = true;
 		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
 		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
-		$additionOptions = $SalaryAdditionType->findList($visible);
-		$deductionOptions = $SalaryDeductionType->findList($visible);
+		$additionOptions = $SalaryAdditionType->getList();
+		$deductionOptions = $SalaryDeductionType->getList();
 
 		$controller->set(compact('additionOptions', 'deductionOptions'));
 	}
@@ -202,8 +194,8 @@ class StaffSalary extends StaffAppModel {
 		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
 		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
 		$visible = true;
-		$additionOptions = $SalaryAdditionType->findList($visible);
-		$deductionOptions = $SalaryDeductionType->findList($visible);
+		$additionOptions = $SalaryAdditionType->getList();
+		$deductionOptions = $SalaryDeductionType->getList();
 
 		$controller->Session->write('StaffSalaryId', $id);
 		$controller->set(compact('header', 'salaryObj', 'id', 'additionOptions', 'deductionOptions'));
@@ -219,18 +211,17 @@ class StaffSalary extends StaffAppModel {
 	public function salariesAjaxAdditionAdd($controller, $params) {
 		$index = $controller->request->data['index'];
 
-		$visible = true;
 		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
-		$categories = $SalaryAdditionType->findList($visible);
+		$categories = $SalaryAdditionType->getList();
 
 		$controller->set(compact('categories', 'index'));
 	}
 
 	public function salariesAjaxDeductionAdd($controller, $params) {
 		$index = $controller->request->data['index'];
-		$visible = true;
+		
 		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
-		$categories = $SalaryDeductionType->findList($visible);
+		$categories = $SalaryDeductionType->getList();
 		
 		$controller->set(compact('categories', 'index'));
 	}

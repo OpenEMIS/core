@@ -119,7 +119,7 @@ class StudentIdentity extends StudentsAppModel {
 				return $controller->redirect(array('action' => 'identities'));
 			}
 		}
-		$identityTypeOptions = $this->IdentityType->getOptions();
+		$identityTypeOptions = $this->IdentityType->getList();
 		$controller->set('identityTypeOptions', $identityTypeOptions);
 
 		$controller->set(compact('header', 'identityTypeOptions'));

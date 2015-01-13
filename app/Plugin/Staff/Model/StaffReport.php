@@ -181,9 +181,9 @@ class StaffReport extends StaffAppModel {
                         'conditions' => array('SecurityUser.id = QualityInstitutionVisit.created_user_id')
                     ),
                     array(
-                        'table' => 'quality_visit_types',
+                        'table' => 'field_option_values',
                         'alias' => 'QualityVisitTypes',
-                        'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
+                        'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_visit_type_id')
                     )
                 );
 				

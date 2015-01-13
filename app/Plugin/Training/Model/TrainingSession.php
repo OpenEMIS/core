@@ -153,7 +153,7 @@ class TrainingSession extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
+		$statusOptions = $trainingStatus->getList();
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
 
@@ -197,7 +197,7 @@ class TrainingSession extends TrainingAppModel {
 				),
 				array(
 					'type' => 'INNER',
-					'table' => 'training_statuses',
+					'table' => 'field_option_values',
 					'alias' => 'TrainingStatus',
 					'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
 				)
@@ -367,15 +367,12 @@ class TrainingSession extends TrainingAppModel {
 
 						$trainingSessions = $this->find('first', array('conditions'=>array('TrainingSession.id'=>$saveData['WorkflowLog']['record_id'])));
 						$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-						$trainingCourseResultType->bindModel(
-					        array('belongsTo' => array(
-					                'TrainingResultType' => array(
-										'className' => 'FieldOptionValue',
-										'foreignKey' => 'training_result_type_id'
-									)
-					            )
-					        )
-					    );
+						// $trainingCourseResultType->bindModel(
+					 //        array('belongsTo' => array(
+					 //                'TrainingResultType'
+					 //            )
+					 //        )
+					 //    );
 
 						$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingSessions['TrainingSession']['training_course_id'])));
 						$trainingSessionTraineeResults = array();
@@ -578,15 +575,12 @@ class TrainingSession extends TrainingAppModel {
 
 					
 					$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-					$trainingCourseResultType->bindModel(
-				        array('belongsTo' => array(
-				                'TrainingResultType' => array(
-									'className' => 'FieldOptionValue',
-									'foreignKey' => 'training_result_type_id'
-								)
-				            )
-				        )
-				    );
+					// $trainingCourseResultType->bindModel(
+				 //        array('belongsTo' => array(
+				 //                'TrainingResultType'
+				 //            )
+				 //        )
+				 //    );
 
 				    $trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingSession']['training_course_id'])));
 						

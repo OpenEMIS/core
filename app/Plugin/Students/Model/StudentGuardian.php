@@ -17,10 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentGuardian extends StudentsAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'GuardianRelation' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'guardian_relation_id'
-		),
+		'Students.GuardianRelation',
 		'Students.Guardian',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',

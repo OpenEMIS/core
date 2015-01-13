@@ -153,7 +153,7 @@ class StaffController extends StaffAppController {
 		$this->set('header', __('Advanced Search'));
 
 		$IdentityType = ClassRegistry::init('IdentityType');
-		$identityTypeOptions = $IdentityType->findList();
+		$identityTypeOptions = $IdentityType->getList();
 
 		if ($this->request->is('get')) {
 			if ($this->request->is('ajax')) {
@@ -198,7 +198,7 @@ class StaffController extends StaffAppController {
 
 		$instituionSiteCustField = $this->Components->load('CustomField', $arrCustFields[$customfields]);
 		$dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
-		$types = $this->InstitutionSiteType->findList(1);
+		$types = $this->InstitutionSiteType->getList();
 		$this->set("customfields", array($customfields));
 		$this->set('types', $types);
 		$this->set('typeSelected', $sitetype);
@@ -482,7 +482,7 @@ class StaffController extends StaffAppController {
 					'joins' => array(
 						array(
 							'type' => 'LEFT',
-							'table' => 'training_requirements',
+							'table' => 'field_option_values',
 							'alias' => 'TrainingRequirement',
 							'conditions' => array('TrainingRequirement.id = TrainingCourse.training_requirement_id')
 						)

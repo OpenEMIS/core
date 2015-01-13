@@ -26,10 +26,7 @@ class CensusGraduate extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -165,12 +162,7 @@ class CensusGraduate extends AppModel {
 			}
 		}
 
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male',
-			$femaleGenderId => 'Female'
-		);
+		$genderOptions = $this->Gender->getList();
 
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 
@@ -212,12 +204,7 @@ class CensusGraduate extends AppModel {
 			}
 		}
 		
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male',
-			$femaleGenderId => 'Female'
-		);
+		$genderOptions = $this->Gender->getList();
 		
 		$controller->set(compact('selectedYear', 'yearList', 'genderOptions', 'censusData', 'programmeData'));
 	}

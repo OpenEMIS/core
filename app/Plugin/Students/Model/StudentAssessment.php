@@ -117,7 +117,7 @@ class StudentAssessment extends StudentsAppModel {
             ),
             'joins' => array(
                 array(
-                    'table' => 'assessment_result_types',
+                    'table' => 'field_option_values',
                     'alias' => 'AssessmentResultType',
                     'type' => 'INNER',
                     'conditions' => array(
