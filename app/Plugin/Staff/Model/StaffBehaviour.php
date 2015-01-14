@@ -62,8 +62,13 @@ class StaffBehaviour extends StaffAppModel {
 
 	/* Excel Behaviour */
 	public function excelGetConditions() {
-		$id = CakeSession::read('InstitutionSite.id');
-		$conditions = array('InstitutionSite.id' => $id);
+		if (!empty($this->controller)) { // via ControllerAction
+			$id = CakeSession::read('InstitutionSite.id');
+			$conditions = array('InstitutionSite.id' => $id);
+		} else {
+			$id = CakeSession::read('Staff.id');
+			$conditions = array('Staff.id' => $id);
+		}
 		return $conditions;
 	}
 	/* End Excel Behaviour */

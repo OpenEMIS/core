@@ -16,11 +16,14 @@
  */
 
 class StaffHealthImmunization extends StaffAppModel {
+	public $actsAs = array(
+		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction', 
+		'DatePicker' => 'date'
+	);
 
-	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction', 'DatePicker' => 'date');
 	public $belongsTo = array(
-		//'Staff',
+		'Staff.Staff',
 		'HealthImmunization',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
