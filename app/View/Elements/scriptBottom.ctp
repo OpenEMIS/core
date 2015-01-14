@@ -1,6 +1,7 @@
 <script type="text/javascript">
 $(document).ready(function() {
 	Chosen.init();
+	$('[data-toggle="tooltip"]').tooltip();
 });
 
 var Chosen = {
@@ -20,5 +21,4 @@ var Chosen = {
 		}).trigger('resize.chosen');
 	}
 };
-
 </script>

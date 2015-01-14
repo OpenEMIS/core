@@ -7,12 +7,14 @@ $this->end();
 
 $this->start('contentBody');
 
-	$formOptions = $this->FormUtility->getFormOptions(array('plugin' => 'Surveys', 'controller' => $this->params['controller'], 'action' => 'add'));
+	$formOptions = $this->FormUtility->getFormOptions(array('plugin' => $this->params->plugin, 'controller' => $this->params->controller, 'action' => 'add'));
+	$formOptions['url'] = array_merge($formOptions['url'], $this->params->named);
+	
 	$labelOptions = $formOptions['inputDefaults']['label'];
-	echo $this->Form->create('SurveyQuestion', $formOptions);
-		echo $this->Form->hidden('survey_template_id', array('value' => $templateData['SurveyTemplate']['id']));
+	echo $this->Form->create($Custom_Field, $formOptions);
+		echo $this->Form->hidden(Inflector::underscore($Custom_Parent).'_id', array('value' => $Custom_ParentId));
 		$labelOptions['text'] = __('Name');
-		echo $this->Form->input('survey_template_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $templateData['SurveyTemplate']['name']));
+		echo $this->Form->input($Custom_Parent . '_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $parentName));
 		$labelOptions['text'] = __('Field Name');
 		echo $this->Form->input('name', array('label' => $labelOptions, 'onkeyup' => '$("#question_table_name").html(this.value);'));
 		$labelOptions['text'] = __('Field Type');
@@ -24,7 +26,7 @@ $this->start('contentBody');
 		$labelOptions['text'] = __('Visible');
 		echo $this->Form->input('visible', array('options' => $visibleOptions, 'label' => $labelOptions, 'default' => $selectedVisible));
 		if($selectedFieldType == 3 || $selectedFieldType == 4) {
-			echo $this->element('Surveys.question_choices');
+			echo $this->element('/custom_fields/options');
 		} else if($selectedFieldType == 7) {
 			echo $this->element('Surveys.question_tables');
 		}

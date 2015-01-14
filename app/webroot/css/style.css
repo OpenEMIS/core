@@ -206,7 +206,9 @@ input.default { width: 240px; }
 }
 
 .field_option input[type="checkbox"] { margin-left: 0; }
-
+.fa-exclamation-circle[data-toggle="tooltip"] {
+	cursor: pointer;
+}
 /* End Additional Info */
 
 /* use for flash messages */

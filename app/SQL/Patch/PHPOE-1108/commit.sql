@@ -256,7 +256,7 @@ INSERT INTO `security_functions` (
 `created`
 )
 VALUES (
-NULL , 'Completed', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyCompleted|InstitutionSiteSurveyCompleted.index|InstitutionSiteSurveyCompleted.view|InstitutionSiteSurveyCompleted.details', NULL, NULL, '_view:InstitutionSiteSurveyCompleted.remove', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
+NULL , 'Completed', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyCompleted|InstitutionSiteSurveyCompleted.index|InstitutionSiteSurveyCompleted.view', NULL, NULL, '_view:InstitutionSiteSurveyCompleted.remove', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 --

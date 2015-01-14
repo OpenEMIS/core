@@ -6,10 +6,10 @@ $this->end();
 
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
 
 <div class="survey panel-group" id="survey_accordion" role="tablist" aria-multiselectable="true">
 	<?php foreach ($data as $i => $obj) : ?>
+		<?php if (!empty($obj['AcademicPeriod'])) : ?>
 		<div class="panel panel-default">
 			<div class="panel-heading" role="tab" id="survey_heading<?php echo $i; ?>">
 				<h4 class="panel-title">
@@ -20,15 +20,16 @@ $this->start('contentBody');
 			</div>
 			<div id="collapse<?php echo $i; ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="survey_heading<?php echo $i; ?>">
 				<ul class="list-group">
-					<?php foreach ($obj['AcademicPeriod'] as $key => $value) : ?>
+					<?php foreach ($obj['AcademicPeriod'] as $key => $period) : ?>
 						<li class="list-group-item">
-							<?php echo $this->Html->link($value['name'], array('action' => $model, 'view', $value['SurveyStatusPeriod']['academic_period_id'], $value['SurveyStatusPeriod']['survey_status_id'])) ?>
-							<span><?php echo __('To be completed by : '); ?><?php echo $value['SurveyStatus']['date_disabled']; ?></span>
+							<?php echo $this->Html->link($period['AcademicPeriod']['name'], array('action' => $model, 'add', $obj['SurveyTemplate']['id'], $period['AcademicPeriod']['id'])) ?>
+							<span class="pull-right"><?php echo __('To be completed by : '); ?><?php echo $period['SurveyStatus']['date_disabled']; ?></span>
 						</li>
 					<?php endforeach ?>
 				</ul>
 			</div>
 		</div>
+		<?php endif ?>
 	<?php endforeach ?>
 </div>
 
