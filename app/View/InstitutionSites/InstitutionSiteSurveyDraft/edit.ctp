@@ -12,7 +12,7 @@ $this->start('contentBody');
 	echo $this->Form->create('InstitutionSiteSurveyDraft', $formOptions);
 		echo $this->Form->hidden('id', array('value' => $id));
 		$labelOptions['text'] = __('Name');
-		echo $this->Form->input('InstitutionSiteSurvey.survey_template_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $templateData['name']));
+		echo $this->Form->input('InstitutionSiteSurvey.survey_template_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $template['name']));
 		echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 ?>
 

@@ -22,99 +22,122 @@ class SurveyBehavior extends ModelBehavior {
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
 	}
 
-	public function getSurveyStatusByModule(Model $model) {
+	public function getSurveyTemplatesByModule(Model $model) {
 		$moduleName = $this->settings[$model->alias]['module'];
 		$moduleId = ClassRegistry::init('Surveys.SurveyModule')->field('id', array('SurveyModule.name' => $moduleName));
 		$todayDate = date("Y-m-d");
 		$table = $model->useTable;
-		$institutionSiteId = $model->Session->read('InstitutionSite.id');
 
-		$conditionsSubQuery['`SurveyTemplate`.`survey_module_id`'] = $moduleId;
+		$status = $this->settings[$model->alias]['status'];
 
-		$db = $model->SurveyTemplate->getDataSource();
-		$subQuery = $db->buildStatement(
-		    array(
-		        'fields'     => array('`SurveyTemplate`.`id`'),
-		        'table'      => $db->fullTableName($model->SurveyTemplate),
-		        'alias'      => 'SurveyTemplate',
-		        'limit'      => null,
-		        'offset'     => null,
-		        'joins'      => array(),
-		        'conditions' => $conditionsSubQuery,
-		        'order'      => null,
-		        'group'      => null
-		    ),
-		    $model->SurveyTemplate
-		);
-		$subQuery = '`SurveyStatus`.`survey_template_id` IN (' . $subQuery . ') ';
-		$subQueryExpression = $db->expression($subQuery);
+		$model->SurveyTemplate->contain();
+		
+		// Find all templates by module
+		$templates = $model->SurveyTemplate->findAllBySurveyModuleId($moduleId);
 
-		$conditions[] = $subQueryExpression;
-		$conditions[] = "SurveyStatus.date_disabled >= '$todayDate'";
-		$conditions[] = "NOT EXISTS (SELECT 1 FROM $table 
-							WHERE $table.academic_period_id = SurveyStatusPeriod.academic_period_id
-							AND $table.survey_status_id = SurveyStatus.id
-							AND $table.survey_template_id = SurveyStatus.survey_template_id
-							AND $table.institution_site_id = " . $institutionSiteId . ")";
+		$SurveyStatus = $model->SurveyTemplate->SurveyStatus;
+		$SurveyStatus->contain();
 
-		$options = array();
-		$options['conditions'] = $conditions;
+		// for each template, find available survey statuses
+		foreach ($templates as $i => $template) {
+			$options = array();
+			$templateId = $template['SurveyTemplate']['id'];
+			$statuses = $SurveyStatus->find('list', array(
+				'conditions' => array(
+					'SurveyStatus.survey_template_id' => $templateId,
+					'SurveyStatus.date_disabled >=' => $todayDate
+				)
+			));
 
-		$result = $model->SurveyStatusPeriod->find('all', $options);
+			$fields = array('AcademicPeriod.id', 'AcademicPeriod.name', 'SurveyStatus.date_disabled');
 
-		return $model->prepareResultSurveyData($result);
-	}
+			// get all available periods based on status and template
+			$joins = array(
+				array(
+					'table' => 'survey_status_periods',
+					'alias' => 'SurveyStatusPeriod',
+					'conditions' => array(
+						'SurveyStatusPeriod.academic_period_id = AcademicPeriod.id',
+						'SurveyStatusPeriod.survey_status_id' => $statuses,
+					)
+				),
+				array(
+					'table' => 'survey_statuses',
+					'alias' => 'SurveyStatus',
+					'conditions' => array(
+						'SurveyStatus.id = SurveyStatusPeriod.survey_status_id'
+					)
+				)
+			);
+	
+			$existingPeriods = array();
+			$existingPeriodsOptions = array(
+				'fields' => array('AcademicPeriod.id'),
+				'conditions' => $model->surveyGetConditions($model)
+			);
+			$existingPeriodsOptions['conditions'][$model->alias . '.survey_template_id'] = $templateId;
+			
+			$model->contain('AcademicPeriod');
 
-	public function prepareResultSurveyData(Model $model, $result) {
-		$tmp = array();
+			// if it's a new survey, exclude periods from draft or complete
+			if ($status == 0) { // Survey New
+				$existingPeriodsOptions['conditions'][$model->alias . '.status'] = array(1, 2);
+			} else if ($status == 1 || $status == 2) { // Survey Draft / Completed
+				$existingPeriodsOptions['conditions'][$model->alias . '.status'] = $status;
+				$fields[] = $model->alias . '.id';
+				$fields[] = $model->alias . '.modified';
+				$fields[] = $model->alias . '.created';
+				$joinConditions = $model->surveyGetConditions($model);
+				$joinConditions[] = $model->alias . '.academic_period_id = AcademicPeriod.id';
+				$joinConditions[] = $model->alias . '.survey_template_id = ' . $templateId;
+				$joinConditions[] = $model->alias . '.status = ' . $status;
 
-		foreach ($result as $key => $obj) {
-			$academicPeriodId = $obj['SurveyStatusPeriod']['academic_period_id'];
-			$surveyStatusId = $obj['SurveyStatusPeriod']['survey_status_id'];
-			$surveyTemplateId = $obj['SurveyStatus']['survey_template_id'];
-
-			$obj['AcademicPeriod']['SurveyStatusPeriod'] = $obj['SurveyStatusPeriod'];
-			$obj['AcademicPeriod']['SurveyStatus'] = $obj['SurveyStatus'];
-			if(isset($obj[$model->alias])) {
-				$obj['AcademicPeriod'][$model->alias] = $obj[$model->alias];
+				// Joining the main table to get the modified and created date
+				$joins[] = array(
+					'table' => $model->useTable,
+					'alias' => $model->alias,
+					'conditions' => $joinConditions
+				);
 			}
 
-			if(array_key_exists($surveyTemplateId, $tmp)) {
-				$academicPeriodArr = $tmp[$surveyTemplateId]['AcademicPeriod'];
-				if(!array_key_exists($academicPeriodId, $academicPeriodArr)) {
-					$tmp[$surveyTemplateId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
+			$existingPeriods = $model->find('list', $existingPeriodsOptions);
+			$conditions = array();
+			if (!empty($existingPeriods)) {
+				if ($status == 0) {
+					$conditions['NOT']['AcademicPeriod.id'] = $existingPeriods;
+				} else if ($status == 1 || $status == 2) {
+					$conditions['AcademicPeriod.id'] = $existingPeriods;
 				}
-			} else {
-				$model->SurveyTemplate->recursive = -1;
-				$templateData = $model->SurveyTemplate->findById($surveyTemplateId);
-				$tmp[$surveyTemplateId]['SurveyTemplate'] = $templateData['SurveyTemplate'];
-				$tmp[$surveyTemplateId]['AcademicPeriod'][$academicPeriodId] = $obj['AcademicPeriod'];
 			}
-		}
 
-		foreach ($tmp as $key => $row) {
-			uasort($tmp[$key]['AcademicPeriod'], array($model, 'sortAcademicPeriod'));
+			$options['fields'] = $fields;
+			$options['joins'] = $joins;
+			$options['conditions'] = $conditions;
+			$options['group'] = array('AcademicPeriod.id');
+			$options['order'] = array('SurveyStatus.date_disabled');
+			$periods = $SurveyStatus->AcademicPeriod->find('all', $options);
+			$templates[$i]['AcademicPeriod'] = $periods;
 		}
-		uasort($tmp, array($model, 'sortSurveyTemplate'));
-
-		return $tmp;
+		
+		return $templates;
 	}
 
-	public function sortSurveyTemplate(Model $model, $a, $b) {
-		if ($a['SurveyTemplate']['name'] == $b['SurveyTemplate']['name']) {
-	        return 0;
-	    }
-	    return ($a['SurveyTemplate']['name'] < $b['SurveyTemplate']['name']) ? -1 : 1;
-	}
+	public function surveyGetConditions(Model $model) {
+		$conditions = array_key_exists('conditions', $this->settings[$model->alias]) ? $this->settings[$model->alias]['conditions'] : array();
 
-	public function sortAcademicPeriod(Model $model, $a, $b) {
-		$aDateDisabled = strtotime($a['SurveyStatus']['date_disabled']);
-		$bDateDisabled = strtotime($b['SurveyStatus']['date_disabled']);
-
-		if ($aDateDisabled == $bDateDisabled) {
-	        return 0;
-	    }
-	    return ($aDateDisabled < $bDateDisabled) ? -1 : 1;
+		foreach ($conditions as $field => $attr) {
+			$value = '';
+			if (is_array($attr)) {
+				if (array_key_exists('sessionKey', $attr)) {
+					$value = CakeSession::read($attr['sessionKey']);
+				}
+			}
+			if(!empty($value)) {
+				$conditions[$model->alias.".".$field] = $value;
+			}
+			unset($conditions[$field]);
+		}
+		return $conditions;
 	}
 
 	public function getSurveyStatusPeriod(Model $model, $academicPeriodId, $surveyStatusId) {
@@ -141,31 +164,6 @@ class SurveyBehavior extends ModelBehavior {
 		return $result['SurveyStatus']['SurveyTemplate'];
 	}
 
-	public function getSurveyDataByStatus(Model $model) {
-		$surveyStatus = $this->settings[$model->alias]['status'];
-		$conditions = $this->settings[$model->alias]['conditions'];
-
-		$options = array();
-		$options['conditions'] = array($model->alias.'.status' => $surveyStatus);
-		foreach ($conditions as $field => $attr) {
-			$value = '';
-			if (is_array($attr)) {
-				if (array_key_exists('sessionKey', $attr)) {
-					$value = CakeSession::read($attr['sessionKey']);
-				}
-			}
-			if(!empty($value)) {
-				$options['conditions'][$model->alias.".".$field] = $value;
-			}
-		}
-		$options['order'] = array('SurveyStatus.date_disabled', 'SurveyStatus.date_enabled');
-
-		$model->contain(array('SurveyStatus', 'AcademicPeriod', 'SurveyStatusPeriod'));
-		$result = $model->find('all', $options);
-
-		return $model->prepareResultSurveyData($result);
-	}
-
 	public function getSurveyById(Model $model, $id) {
 		$model->contain(array('SurveyStatus', 'SurveyStatus.SurveyTemplate', 'SurveyStatus.AcademicPeriodType', 'SurveyStatusPeriod', 'SurveyStatusPeriod.AcademicPeriod', 'ModifiedUser', 'CreatedUser'));
 		$result = $model->findById($id);
@@ -173,12 +171,14 @@ class SurveyBehavior extends ModelBehavior {
 		return $result;
 	}
 
+	/*
 	public function getSurveyTemplateBySurveyId(Model $model, $id) {
 		$model->contain(array('SurveyTemplate'));
 		$result = $model->findById($id);
 
 		return $result['SurveyTemplate'];
 	}
+	*/
 
 	public function getFormatedSurveyData(Model $model, $id) {
 		$model->SurveyTemplate->contain(array('SurveyQuestion', 'SurveyQuestion.SurveyQuestionChoice', 'SurveyQuestion.SurveyTableRow', 'SurveyQuestion.SurveyTableColumn'));

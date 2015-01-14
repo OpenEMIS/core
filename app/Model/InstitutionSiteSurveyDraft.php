@@ -36,18 +36,9 @@ class InstitutionSiteSurveyDraft extends AppModel {
 
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
-		'Surveys.SurveyStatus',
 		'AcademicPeriod' => array(
 			'className' => 'SchoolYear',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
-		),
-		'SurveyStatusPeriod' => array(
-			'className' => 'Surveys.SurveyStatusPeriod',
-			'foreignKey' => false,
-			'conditions' => array(
-				'InstitutionSiteSurveyDraft.academic_period_id = SurveyStatusPeriod.academic_period_id',
-				'InstitutionSiteSurveyDraft.survey_status_id = SurveyStatusPeriod.survey_status_id'
-			)
 		),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -66,6 +57,12 @@ class InstitutionSiteSurveyDraft extends AppModel {
 		'InstitutionSiteSurveyTableCell'
 	);
 
+	public function beforeSave($options=array()) {
+
+		//pr($this->data);die;
+		return true;
+	}
+
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Surveys', array('action' => $this->alias, $this->action));
@@ -74,15 +71,28 @@ class InstitutionSiteSurveyDraft extends AppModel {
 	}
 
 	public function index() {
-		$data = $this->getSurveyDataByStatus();
+		$data = $this->getSurveyTemplatesByModule();
 		$this->setVar(compact('data'));
 	}
 
 	public function view($id=0) {
 		if ($this->exists($id)) {
-			$data = $this->getSurveyById($id);
+			$this->contain('SurveyTemplate');
+			$template = $this->findById($id);
+			$template = $template['SurveyTemplate'];
+			$data = $this->getFormatedSurveyData($template['id']);
+			$dataValues = $this->getFormatedSurveyDataValues($id);
+
+			$model = 'SurveyQuestion';
+	    	$modelOption = 'SurveyQuestionChoice';
+	    	$modelValue = 'InstitutionSiteSurveyAnswer';
+	    	$modelRow = 'SurveyTableRow';
+	    	$modelColumn = 'SurveyTableColumn';
+			$modelCell = 'InstitutionSiteSurveyTableCell';
+			$action = 'view';
+
 			$this->Session->write($this->alias.'.id', $id);
-			$this->setVar(compact('data'));
+			$this->setVar(compact('id', 'template', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias, 'index'));
@@ -91,8 +101,10 @@ class InstitutionSiteSurveyDraft extends AppModel {
 
 	public function edit($id=0) {
 		if ($this->exists($id)) {
-			$templateData = $this->getSurveyTemplateBySurveyId($id);
-			$data = $this->getFormatedSurveyData($templateData['id']);
+			$this->contain('SurveyTemplate');
+			$template = $this->findById($id);
+			$template = $template['SurveyTemplate'];
+			$data = $this->getFormatedSurveyData($template['id']);
 			$dataValues = $this->getFormatedSurveyDataValues($id);
 
 			$model = 'SurveyQuestion';
@@ -132,7 +144,7 @@ class InstitutionSiteSurveyDraft extends AppModel {
 				}
 			}
 
-			$this->setVar(compact('id', 'templateData', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
+			$this->setVar(compact('id', 'template', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias, 'index'));
@@ -142,15 +154,21 @@ class InstitutionSiteSurveyDraft extends AppModel {
 	public function remove() {
 		if ($this->Session->check($this->alias.'.id')) {
 			$id = $this->Session->read($this->alias.'.id');
+
+			$dataSource = $this->getDataSource();
+			$dataSource->begin();
+			$this->InstitutionSiteSurveyAnswer->deleteAll(array(
+				'InstitutionSiteSurveyAnswer.institution_site_survey_id' => $id
+			), false);
+			$this->InstitutionSiteSurveyTableCell->deleteAll(array(
+				'InstitutionSiteSurveyTableCell.institution_site_survey_id' => $id
+			), false);
+
 			if($this->delete($id)) {
-				$this->InstitutionSiteSurveyAnswer->deleteAll(array(
-					'InstitutionSiteSurveyAnswer.institution_site_survey_id' => $id
-					), false);
-				$this->InstitutionSiteSurveyTableCell->deleteAll(array(
-					'InstitutionSiteSurveyTableCell.institution_site_survey_id' => $id
-				), false);
+				$dataSource->commit();
 				$this->Message->alert('general.delete.success');
 			} else {
+				$dataSource->rollback();
 				$this->log($this->validationErrors, 'debug');
 				$this->Message->alert('general.delete.failed');
 			}
