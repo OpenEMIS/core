@@ -64,8 +64,17 @@ class Student extends StudentsAppModel {
 		'Students.StudentBehaviour',
 		'Students.StudentExtracurricular',
 		'Students.StudentBankAccount',
+		'Students.StudentFee',
 		'InstitutionSiteClassStudent',
-		'InstitutionSiteStudentFee'
+		'InstitutionSiteStudentFee',
+		'Students.StudentHealth',
+		'Students.StudentHealthHistory',
+		'Students.StudentHealthFamily',
+		'Students.StudentHealthImmunization',
+		'Students.StudentHealthMedication',
+		'Students.StudentHealthAllergy',
+		'Students.StudentHealthTest',
+		'Students.StudentHealthConsultation'
 	);
 	
 	public $validate = array(
@@ -183,15 +192,15 @@ class Student extends StudentsAppModel {
 			array('model' => $this->InstitutionSiteClassStudent, 'name' => 'Classes'),
 			array('model' => $this->StudentExtracurricular, 'name' => 'Extracurricular'),
 			array('model' => $this->StudentBankAccount, 'name' => 'Bank Accounts'),
-			array('model' => 'Students.StudentFee', 'name' => 'Fees'),
-			array('model' => 'Students.StudentHealth', 'name' => 'Health Overview'),
-			array('model' => 'Students.StudentHealthHistory', 'name' => 'Health History'),
-			array('model' => 'Students.StudentHealthFamily', 'name' => 'Health Family'),
-			array('model' => 'Students.StudentHealthImmunization', 'name' => 'Immunizations'),
-			array('model' => 'Students.StudentHealthMedication', 'name' => 'Medications'),
-			array('model' => 'Students.StudentHealthAllergy', 'name' => 'Allergies'),
-			array('model' => 'Students.StudentHealthTest', 'name' => 'Health Tests'),
-			array('model' => 'Students.StudentHealthConsultation', 'name' => 'Health Consulations')
+			array('model' => $this->StudentFee, 'name' => 'Fees'),
+			array('model' => $this->StudentHealth, 'name' => 'Health Overview'),
+			array('model' => $this->StudentHealthHistory, 'name' => 'Health History'),
+			array('model' => $this->StudentHealthFamily, 'name' => 'Health Family'),
+			array('model' => $this->StudentHealthImmunization, 'name' => 'Immunizations'),
+			array('model' => $this->StudentHealthMedication, 'name' => 'Medications'),
+			array('model' => $this->StudentHealthAllergy, 'name' => 'Allergies'),
+			array('model' => $this->StudentHealthTest, 'name' => 'Health Tests'),
+			array('model' => $this->StudentHealthConsultation, 'name' => 'Health Consulations')
 		);
 		return $models;
 	}

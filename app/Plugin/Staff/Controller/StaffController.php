@@ -332,6 +332,10 @@ class StaffController extends StaffAppController {
 		$this->redirect(array('action' => 'index'));
 	}
 
+	public function excel() {
+		$this->Staff->excel();
+	}
+
 	public function history() {
 		$this->Navigation->addCrumb('History');
 		$staffId = $this->Session->read('Staff.id');
