@@ -61,13 +61,12 @@ UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` >= @orderOfDashboar
 --
 
 DELETE FROM `security_functions` WHERE `controller` LIKE 'InstitutionSites' AND `category` LIKE 'Surveys' AND `name` LIKE 'New';
-DELETE FROM `security_functions` WHERE `controller` LIKE 'InstitutionSites' AND `category` LIKE 'Surveys' AND `name` LIKE 'Draft';
 DELETE FROM `security_functions` WHERE `controller` LIKE 'InstitutionSites' AND `category` LIKE 'Surveys' AND `name` LIKE 'Completed';
 
 SET @orderOfDashboardsSecurity := 0;
 SELECT `order` INTO @orderOfDashboardsSecurity FROM `security_functions` WHERE `controller` LIKE 'Dashboards' AND `category` LIKE 'Reports' AND `name` LIKE 'Dashboards';
 
-UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` >= @orderOfDashboardsSecurity;
+UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= @orderOfDashboardsSecurity;
 
 --
 -- 5. new table: survey_modules

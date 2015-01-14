@@ -168,7 +168,7 @@ class MessageComponent extends Component {
 		),
 		'Survey' => array(
 			'save' => array(
-				'draft' => array('type' => 'ok', 'msg' => 'Survey record has been saved in draft successfully.'),
+				'draft' => array('type' => 'ok', 'msg' => 'Survey record has been saved to draft successfully.'),
 				'final' => array('type' => 'ok', 'msg' => 'Survey record has been submitted successfully.')
 			)
 		)
