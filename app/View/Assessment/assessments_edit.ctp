@@ -56,7 +56,7 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 				<th class="cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></th>
 				<th class="cell_subject_code"><?php echo __('Subject Code'); ?></th>
 				<th class=""><?php echo __('Subject Name'); ?></th>
-				<th class="cell_number_input"><?php echo __('Minimum'); ?></th>
+				<th class="cell_number_input"><?php echo __('Pass'); ?></th>
 				<th class="cell_number_input"><?php echo __('Maximum'); ?></th>
 			</tr>
 		</thead>
