@@ -19,7 +19,7 @@ class StudentExtracurricular extends StudentsAppModel {
 	public $actsAs = array('ControllerAction', 'DatePicker' => 'start_date');
 	public $belongsTo = array(
 		'Student',
-		'SchoolYear',
+		'AcademicPeriod',
 		'ExtracurricularType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -87,7 +87,7 @@ class StudentExtracurricular extends StudentsAppModel {
 		$fields = array(
 			'model' => $this->alias,
 			'fields' => array(
-				array('field' => 'name', 'model' => 'SchoolYear'),
+				array('field' => 'name', 'model' => 'AcademicPeriod'),
 				array('field' => 'name', 'model' => 'ExtracurricularType', 'labelKey' => 'general.type'),
 				array('field' => 'name', 'labelKey' => 'general.title'),
 				array('field' => 'start_date', 'type' => 'datepicker'),
@@ -109,7 +109,7 @@ class StudentExtracurricular extends StudentsAppModel {
 		$controller->Navigation->addCrumb('Extracurricular');
 		$header = __('Extracurricular');
 		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
-		$data = $this->find('all', array('conditions' => array('student_id' => $controller->Session->read('Student.id')), 'order' => 'SchoolYear.start_date'));
+		$data = $this->find('all', array('conditions' => array('student_id' => $controller->Session->read('Student.id')), 'order' => 'AcademicPeriod.start_date'));
 	  
 		$controller->set(compact('data', 'header'));
 	}
@@ -145,11 +145,11 @@ class StudentExtracurricular extends StudentsAppModel {
 				return $controller->redirect(array('action' => 'extracurricular'));
 			}
 		}
-		$yearOptions = $this->SchoolYear->getYearList();
-		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
+		$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
+		$academicPeriodId = isset($params['pass'][0])?$params['pass'][0] : key($academicPeriodOptions);
 		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
 
-		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
+		$controller->set(compact('header','academicPeriodOptions','academicPeriodId', 'typeOptions'));
 	}
 
 	public function extracurricularEdit($controller, $params) {
@@ -176,11 +176,11 @@ class StudentExtracurricular extends StudentsAppModel {
 			}
 			$controller->request->data = $data;
 		}
-		$yearOptions = $this->SchoolYear->getYearList();
-		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
+		$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
+		$academicPeriodId = isset($params['pass'][0])?$params['pass'][0] : key($academicPeriodOptions);
 		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
 
-		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
+		$controller->set(compact('header','academicPeriodOptions','academicPeriodId', 'typeOptions'));
 	}
 
 	public function extracurricularDelete($controller, $params) {

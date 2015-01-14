@@ -10,12 +10,12 @@ $this->assign('contentHeader', __('Infrastructure'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-	echo $this->Html->link(__('Edit'), array('action' => 'infrastructureEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'infrastructureEdit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 //pr($data);
 ?>
 

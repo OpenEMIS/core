@@ -96,7 +96,7 @@ class InstitutionSiteStudentFee extends AppModel {
 	public function index($selectedAcademicPeriod=0, $selectedGrade=0) {
 		$params = $this->controller->params;
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods(true);
 		
 		if (empty($selectedAcademicPeriod)) {
 			$selectedAcademicPeriod = key($academicPeriodOptions);

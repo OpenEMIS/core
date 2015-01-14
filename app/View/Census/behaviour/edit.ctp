@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Behaviour'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'behaviour', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'behaviour', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -17,7 +17,7 @@ echo $this->Form->create('CensusBehaviour', array(
 	'inputDefaults' => array('label' => false, 'div' => false),
 	'url' => array('controller' => 'Census', 'action' => 'behaviourEdit')
 ));
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div class="table-responsive">
@@ -98,7 +98,7 @@ echo $this->element('census/year_options');
         </tfoot>
     </table>
 	<?php
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'behaviour', $selectedYear)));
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'behaviour', $selectedAcademicPeriod)));
 	echo $this->Form->end();
 	?>
 </div>

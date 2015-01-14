@@ -52,8 +52,8 @@ class AcademicPeriod extends AppModel {
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
 		$this->fields['order']['visible'] = false;
-		$this->fields['visible']['type'] = 'select';
-		$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
+		$this->fields['available']['type'] = 'select';
+		$this->fields['available']['options'] = $this->controller->Option->get('yesno');
 		
 		if ($this->action == 'view') {
 			$this->fields['academic_period_level_id']['dataModel'] = 'AcademicPeriodLevel';
@@ -63,6 +63,25 @@ class AcademicPeriod extends AppModel {
 		$this->Navigation->addCrumb('Academic Periods');
 		$this->setVar('contentHeader', __('Academic Periods'));
     }
+
+    public function getOptionFields() {
+		parent::getOptionFields();
+
+		$this->fields['start_year']['type'] = 'hidden';
+		$this->fields['end_year']['type'] = 'hidden';
+
+		$this->fields['current']['labelKey'] = 'FieldOption';
+		$this->fields['current']['type'] = 'select';
+		$this->fields['current']['default'] = 1;
+		$this->fields['current']['options'] = array(1 => __('Yes'), 0 => __('No'));
+
+		$this->fields['available']['labelKey'] = 'FieldOption';
+		$this->fields['available']['type'] = 'select';
+		$this->fields['available']['default'] = 1;
+		$this->fields['available']['options'] = array(1 => __('Yes'), 0 => __('No'));
+
+		return $this->fields;
+	}
 	
 	public function index() {
 		$params = $this->controller->params;
@@ -179,12 +198,18 @@ class AcademicPeriod extends AppModel {
 		if($list) {
 			$result = $this->find('list', array(
 				'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
-				'conditions' => array('AcademicPeriod.visible' => 1),
+				'conditions' => array(
+					'AcademicPeriod.available' => 1,
+					'AcademicPeriod.parent_id >' => 0
+				),
 				'order' => array('AcademicPeriod.name ' . $order)
 			));
 		} else {
 			$result = $this->find('all', array(
-				'conditions' => array('AcademicPeriod.visible' => 1),
+				'conditions' => array(
+					'AcademicPeriod.available' => 1,
+					'AcademicPeriod.parent_id >' => 0
+				),
 				'order' => array('AcademicPeriod.name ' . $order)
 			));
 		}
@@ -196,8 +221,107 @@ class AcademicPeriod extends AppModel {
 		$value = 'AcademicPeriod.' . $type;
 		$result = $this->find('list', array(
 			'fields' => array('AcademicPeriod.id', $value),
+			'conditions' => array('AcademicPeriod.parent_id > ' => 0),
 			'order' => array($value . ' ' . $order)
 		));
 		return $result;
+	}
+
+	public function getAcademicPeriodObjectById($academicPeriodId) {
+		$data = $this->findById($academicPeriodId);	
+		return $data['AcademicPeriod'];
+	}
+
+	public function getAcademicPeriodListForVerification($institutionSiteId, $validate=true) {
+		$CensusVerification = ClassRegistry::init('CensusVerification');
+		$academicPeriodIds = $CensusVerification->find('list', array(
+			'fields' => array('CensusVerification.academic_period_id'),
+			'joins' => array(
+				array(
+					'table' => 'census_verifications',
+					'alias' => 'CensusVerification2',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'CensusVerification2.academic_period_id = CensusVerification.academic_period_id',
+						'CensusVerification2.institution_site_id = CensusVerification.institution_site_id',
+						'CensusVerification2.created > CensusVerification.created'
+					)
+				)
+			),
+			'conditions' => array(
+				'CensusVerification.status' => 1,
+				'CensusVerification.institution_site_id' => $institutionSiteId,
+				'CensusVerification2.id IS NULL'
+			)
+		));
+		
+		$conditions = array();
+		if($validate) {
+			$conditions['id NOT'] = array_values($academicPeriodIds);
+		} else {
+			$conditions['id'] = array_values($academicPeriodIds);
+		}
+		$data = $this->find('list', array(
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+			'conditions' => $conditions,
+			'order' => 'AcademicPeriod.name'
+		));
+		return $data;
+	}	
+
+	public function getAcademicPeriodIdByDate($date) {
+		if(empty($date)){
+			return '';
+		}
+		
+		$result = $this->find('first', array(
+			'fields' => array('AcademicPeriod.id'),
+			'conditions' => array(
+				'AcademicPeriod.available' => 1,
+				'AcademicPeriod.start_date <=' => $date,
+				'AcademicPeriod.end_date >=' => $date
+			)
+		));
+		
+		if(!empty($result['AcademicPeriod']['id'])){
+			return $result['AcademicPeriod']['id'];
+		}else{
+			return '';
+		}
+	}
+
+	public function getAcademicPeriodById($periodId) {
+		$data = $this->findById($periodId);	
+		return $data['AcademicPeriod']['name'];
+	}
+
+	public function getCurrent() {
+		$result = $this->find('first', array(
+			'fields' => array('AcademicPeriod.id'),
+			'conditions' => array(
+				'AcademicPeriod.available = 1',
+				'AcademicPeriod.current = 1'
+			)
+		));
+		
+		if(!empty($result['AcademicPeriod']['id'])){
+			return $result['AcademicPeriod']['id'];
+		}else{
+			return '';
+		}
+	}
+
+	public function getAcademicPeriodListValues($type='name', $order='DESC') {
+		$value = 'AcademicPeriod.' . $type;
+		$result = $this->find('list', array(
+			'fields' => array($value, $value),
+			'order' => array($value . ' ' . $order)
+		));
+		return $result;
+	}
+
+	public function getAcademicPeriodId($academicPeriod) {
+		$data = $this->findByName($academicPeriod);	
+		return $data['AcademicPeriod']['id'];
 	}
 }

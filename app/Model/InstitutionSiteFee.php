@@ -76,13 +76,13 @@ class InstitutionSiteFee extends AppModel {
 		$this->Navigation->addCrumb($contentHeader);
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$AcademicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$academicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
 		
 		$this->fields['total']['visible'] = false;
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
 		$this->fields['academic_period_id']['type'] = 'select';
-		$this->fields['academic_period_id']['options'] = $AcademicPeriodOptions;
+		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
 		$this->fields['fee_types'] = array(
 			'type' => 'element',
 			'element' => '../InstitutionSites/InstitutionSiteFee/fee_types',
@@ -113,10 +113,10 @@ class InstitutionSiteFee extends AppModel {
 	public function index($selectedAcademicPeriod=0) {
 		$params = $this->controller->params;
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$AcademicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$academicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
 		
 		if ($selectedAcademicPeriod == 0) {
-			$selectedAcademicPeriod = key($AcademicPeriodOptions);
+			$selectedAcademicPeriod = key($academicPeriodOptions);
 		}
 		
 		// need to order by programmes, grades
@@ -157,10 +157,10 @@ class InstitutionSiteFee extends AppModel {
 		$feeTypes = $this->InstitutionSiteFeeType->FeeType->getList(true);
 		
 		if ($this->request->is('get')) {
-			$AcademicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+			$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods(true);
 		
 			if ($selectedAcademicPeriod == 0) {
-				$selectedAcademicPeriod = key($AcademicPeriodOptions);
+				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 			
 			foreach ($feeTypes as $key => $val) {
@@ -188,7 +188,7 @@ class InstitutionSiteFee extends AppModel {
 				}
 			}
 		}
-		
+
 		$this->fields['academic_period_id']['default'] = $selectedAcademicPeriod;
 		$this->fields['academic_period_id']['attr'] = array('onchange' => "$('#reload').click()");
 		

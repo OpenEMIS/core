@@ -44,11 +44,11 @@ $this->start('contentBody');
 	
 	<!--div class="row">
 		
-		<div class="label">Year</div>
-		<div class="value"><?php echo $this->Form->input('Year ', array(
-				'id' => 'schoolYear',
-				'options' => $years,
-				'default' => $selectedYear,
+		<div class="label">Academic Period</div>
+		<div class="value"><?php echo $this->Form->input('Academic Period', array(
+				'id' => 'academicPeriod',
+				'options' => $academicPeriods,
+				'default' => $selectedAcademicPeriod,
 				'onChange' => 'Survey.filterXML();',
 				'label' =>false
 			));  ?>	

@@ -27,7 +27,7 @@ class CensusFinance extends AppModel {
 	public $belongsTo = array(
 		'FinanceSource',
 		'FinanceCategory',
-		'SchoolYear'
+		'AcademicPeriod'
 	);
 	
 	public $validate = array(
@@ -71,16 +71,16 @@ class CensusFinance extends AppModel {
 	public function finances($controller, $params) {
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		if ($controller->request->is('post')) {
-			$yearId = $controller->data['CensusFinance']['school_year_id'];
+			$academicPeriodId = $controller->data['CensusFinance']['academic_period_id'];
 			$controller->request->data['CensusFinance']['institution_site_id'] = $institutionSiteId;
 			$this->save($controller->request->data['CensusFinance']);
 
-			$controller->redirect(array('action' => 'finances', $yearId));
+			$controller->redirect(array('action' => 'finances', $academicPeriodId));
 		}
 
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-		$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
+		$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId, 'CensusFinance.academic_period_id' => $selectedAcademicPeriod)));
 		$newSort = array();
 		foreach ($data as $k => $arrv) {
 			$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
@@ -91,15 +91,15 @@ class CensusFinance extends AppModel {
 		$natures = ClassRegistry::init('FinanceNature')->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
 		$sources = $this->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
 		
-		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 		
-		$controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources', 'isEditable'));
+		$controller->set(compact('data', 'selectedAcademicPeriod', 'academicPeriodList', 'natures', 'sources', 'isEditable'));
 	}
 	
 	public function financesAdd($controller, $params) {
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : null;
-		if(!is_null($selectedYear)) {
-			$year = $this->SchoolYear->field('name', array('id' => $selectedYear));
+		$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : null;
+		if(!is_null($selectedAcademicPeriod)) {
+			$academicPeriod = $this->AcademicPeriod->field('name', array('id' => $selectedAcademicPeriod));
 			$natureId = 0;
 			$typeId = 0;
 			$categoryId = 0;
@@ -115,10 +115,10 @@ class CensusFinance extends AppModel {
 				}
 			}
 			$sourceOptions = ClassRegistry::init('FinanceSource')->find('list', array('conditions' => array('visible' => 1)));
-			$controller->set(compact('selectedYear', 'year', 'natureOptions', 'natureId', 'typeId', 'typeOptions', 'categoryId', 'categoryOptions', 'sourceOptions'));
+			$controller->set(compact('selectedAcademicPeriod', 'academicPeriod', 'natureOptions', 'natureId', 'typeId', 'typeOptions', 'categoryId', 'categoryOptions', 'sourceOptions'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
-				$controller->request->data[$this->alias]['school_year_id'] = $selectedYear;
+				$controller->request->data[$this->alias]['academic_period_id'] = $selectedAcademicPeriod;
 				$controller->request->data[$this->alias]['institution_site_id'] = $controller->Session->read('InstitutionSite.id');
 				$controller->request->data[$this->alias]['source'] = 0;
 				
@@ -136,9 +136,9 @@ class CensusFinance extends AppModel {
 		$id = isset($params->pass[0]) ? $params->pass[0] : null;
 		$data = $this->findById($id);
 		if(!empty($data)) {
-			$yearList = $this->SchoolYear->getYearList();
-			$selectedYear = $data['SchoolYear']['id'];
-			$year = $data['SchoolYear']['name'];
+			$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+			$selectedAcademicPeriod = $data['AcademicPeriod']['id'];
+			$academicPeriod = $data['AcademicPeriod']['name'];
 			$financeType = ClassRegistry::init('FinanceType')->findById($data['FinanceCategory']['finance_type_id']);
 			$financeNature = $financeType['FinanceNature'];
 			$financeCategory = $data['FinanceCategory'];
@@ -147,20 +147,20 @@ class CensusFinance extends AppModel {
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				if ($this->save($controller->request->data)) {
 					$controller->Message->alert('general.edit.success');
-					return $controller->redirect(array('action' => $this->_action, $selectedYear));
+					return $controller->redirect(array('action' => $this->_action, $selectedAcademicPeriod));
 				}
 			} else {
 				$controller->Session->write('Census.finance.id', $id);
 				$controller->request->data = $data;
 			}
-			$controller->set(compact('data', 'selectedYear', 'year', 'yearList', 'financeType', 'financeNature', 'financeCategory', 'sourceOptions'));
+			$controller->set(compact('data', 'selectedAcademicPeriod', 'academicPeriod', 'academicPeriodList', 'financeType', 'financeNature', 'financeCategory', 'sourceOptions'));
 		} else {
 			return $controller->redirect(array('action' => $this->_action));
 		}
 	}
 	
 	public function financesDelete($controller, $params) {
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : null;
+		$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : null;
 		if($controller->Session->check('Census.finance.id')) {
 			$id = $controller->Session->read('Census.finance.id');
 			if($this->delete($id)) {
@@ -168,29 +168,29 @@ class CensusFinance extends AppModel {
 			} else {
 				$controller->Message->alert('general.delete.failed');
 			}
-			return $controller->redirect(array('action' => $this->_action, $selectedYear)); 
+			return $controller->redirect(array('action' => $this->_action, $selectedAcademicPeriod)); 
 		}
 	}
 	
-	public function getYearsHaveData($institutionSiteId){
+	public function getAcademicPeriodsHaveData($institutionSiteId){
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'SchoolYear.id',
-				'SchoolYear.name'
+				'AcademicPeriod.id',
+				'AcademicPeriod.name'
 			),
 			'joins' => array(
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'conditions' => array(
-						'CensusFinance.school_year_id = SchoolYear.id'
+						'CensusFinance.academic_period_id = AcademicPeriod.id'
 					)
 				)
 			),
 			'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId),
-			'group' => array('CensusFinance.school_year_id'),
-			'order' => array('SchoolYear.name DESC')
+			'group' => array('CensusFinance.academic_period_id'),
+			'order' => array('AcademicPeriod.name DESC')
 		));
 		
 		return $data;
@@ -209,15 +209,15 @@ class CensusFinance extends AppModel {
 		if ($index == 1) {
 			$data = array();
 
-			$header = array(__('Year'), __('Nature'), __('Type'), __('Source'), __('Category'), __('Description'), __('Amount (PM)'));
+			$header = array(__('Academic Period'), __('Nature'), __('Type'), __('Source'), __('Category'), __('Description'), __('Amount (PM)'));
 
-			$dataYears = $this->getYearsHaveData($institutionSiteId);
+			$dataAcademicPeriods = $this->getAcademicPeriodsHaveData($institutionSiteId);
 
-			foreach ($dataYears AS $rowYear) {
-				$yearId = $rowYear['SchoolYear']['id'];
-				$yearName = $rowYear['SchoolYear']['name'];
+			foreach ($dataAcademicPeriods AS $rowAcademicPeriod) {
+				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];
+				$academicPeriodName = $rowAcademicPeriod['AcademicPeriod']['name'];
 
-				$dataFinances = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId, 'CensusFinance.school_year_id' => $yearId)));
+				$dataFinances = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId, 'CensusFinance.academic_period_id' => $academicPeriodId)));
 				$newSort = array();
 				foreach ($dataFinances as $k => $arrv) {
 					$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
@@ -237,7 +237,7 @@ class CensusFinance extends AppModel {
 								$financeAmount = $arrValues['CensusFinance']['amount'];
 
 								$data[] = array(
-									$yearName,
+									$academicPeriodName,
 									$financeNature,
 									$financeType,
 									$financeSource,

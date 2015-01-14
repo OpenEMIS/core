@@ -107,17 +107,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->controller->FileUploader->additionalFileType();
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->InstitutionSiteSection->getYearOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
+		$academicPeriodOptions = $this->InstitutionSiteSection->getAcademicPeriodOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
 		
 		if ($this->action == 'add') {
-			$this->fields['school_year_id'] = array(
+			$this->fields['academic_period_id'] = array(
 				'type' => 'select',
-				'options' => $yearOptions,
+				'options' => $academicPeriodOptions,
 				'visible' => true,
 				'order' => 1,
 				'attr' => array('onchange' => "$('#reload').click()")
 			);
-			$this->setFieldOrder('school_year_id', 1);
+			$this->setFieldOrder('academic_period_id', 1);
 		}
 		
 		$this->fields['institution_site_section_id']['attr'] = array('onchange' => "$('#reload').click()");
@@ -150,18 +150,18 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$todayDate = date('Y-m-d');
 			$todayDateFormatted = date('d-m-Y');
 			
-			$yearId = 0;
+			$academicPeriodId = 0;
 
 			if ($this->action == 'add') {
-				$yearId = $this->controller->viewVars['selectedYear'];
+				$academicPeriodId = $this->controller->viewVars['selectedAcademicPeriod'];
 			} else {
 				$sectionId = $this->request->data['InstitutionSiteStudentAbsence']['institution_site_section_id'];
-				$yearId = $this->InstitutionSiteSection->field('InstitutionSiteSection.school_year_id', array('InstitutionSiteSection.id' => $sectionId));
+				$academicPeriodId = $this->InstitutionSiteSection->field('InstitutionSiteSection.academic_period_id', array('InstitutionSiteSection.id' => $sectionId));
 			}
 			//pr($this->request->data);die;
-			$yearObj = ClassRegistry::init('SchoolYear')->findById($yearId);
-			$startDate = $yearObj['SchoolYear']['start_date'];
-			$endDate = $yearObj['SchoolYear']['end_date'];
+			$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($academicPeriodId);
+			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
+			$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 			
 			if($todayDate >= $startDate && $todayDate <= $endDate){
 				$dataStartDate = $todayDateFormatted;
@@ -236,30 +236,30 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		parent::afterAction();
 	}
 	
-	public function index($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function index($academicPeriodId=0, $sectionId=0, $weekId=null, $dayId=null) {
 		if ($dayId!=null || $dayId!=0) {
-			return $this->redirect(array('action' => get_class($this), 'dayview', $yearId, $sectionId, $weekId, $dayId));
+			return $this->redirect(array('action' => get_class($this), 'dayview', $academicPeriodId, $sectionId, $weekId, $dayId));
 		}
 
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
-		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
-		if($currentYearId){
-			$defaultYearId = $currentYearId;
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
+		if($currentAcademicPeriodId){
+			$defaultAcademicPeriodId = $currentAcademicPeriodId;
 		}else{
-			$defaultYearId = key($yearList);
+			$defaultAcademicPeriodId = key($academicPeriodList);
 		}
-		if ($yearId != 0) {
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = $defaultYearId;
+		if ($academicPeriodId != 0) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = $defaultAcademicPeriodId;
 			}
 		} else {
-			$yearId = $defaultYearId;
+			$academicPeriodId = $defaultAcademicPeriodId;
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $academicPeriodId);
 		if(!empty($sectionOptions)){
 			if ($sectionId != 0) {
 				if (!array_key_exists($sectionId, $sectionOptions)) {
@@ -270,8 +270,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$weekList = $this->controller->getWeekListByYearId($yearId);
-		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
+		$weekList = $this->controller->getWeekListByAcademicPeriodId($academicPeriodId);
+		$currentWeekId = $this->controller->getCurrentWeekId($academicPeriodId);
 		if (!is_null($weekId)) {
 			if (!array_key_exists($weekId, $weekList)) {
 				$weekId = $currentWeekId;
@@ -280,7 +280,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$weekId = $currentWeekId;
 		}
 		
-		$startEndDates = $this->controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startEndDates = $this->controller->getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId);
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		
@@ -288,7 +288,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$headerDates = $this->controller->generateAttendanceHeaderDates($startDate, $endDate);
 		$weekDayIndex = $this->controller->generateAttendanceWeekDayIndex($startDate, $endDate);
 		
-		$absenceData = $this->getAbsenceData($institutionSiteId, $yearId, $sectionId, $startDate, $endDate);
+		$absenceData = $this->getAbsenceData($institutionSiteId, $academicPeriodId, $sectionId, $startDate, $endDate);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStudent = $absenceUnit['Student'];
@@ -325,31 +325,31 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			array_push($weekDayList, "(".$headerDates[$key].") ".substr($value,0,4)."-".substr($value,4,2)."-".substr($value,6,2));
 		}
 
-		$this->Session->write('InstitutionSiteStudentAbsence.backLink', array('index',$yearId,$sectionId,$weekId));
-		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'weekDayList', 'studentList', 'absenceCheckList'));
+		$this->Session->write('InstitutionSiteStudentAbsence.backLink', array('index',$academicPeriodId,$sectionId,$weekId));
+		$this->setVar(compact('academicPeriodList', 'academicPeriodId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'weekDayList', 'studentList', 'absenceCheckList'));
 	}
 	
-	public function absence($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function absence($academicPeriodId=0, $sectionId=0, $weekId=null, $dayId=null) {
 		$this->Navigation->addCrumb('Absence - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
-		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
-		if($currentYearId){
-			$defaultYearId = $currentYearId;
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods(true);
+		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
+		if($currentAcademicPeriodId){
+			$defaultAcademicPeriodId = $currentAcademicPeriodId;
 		}else{
-			$defaultYearId = key($yearList);
+			$defaultAcademicPeriodId = key($academicPeriodList);
 		}
 		
-		if ($yearId != 0) {
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = $defaultYearId;
+		if ($academicPeriodId != 0) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = $defaultAcademicPeriodId;
 			}
 		} else {
-			$yearId = $defaultYearId;
+			$academicPeriodId = $defaultAcademicPeriodId;
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $academicPeriodId);
 		if(!empty($sectionOptions)){
 			if ($sectionId != 0) {
 				if (!array_key_exists($sectionId, $sectionOptions)) {
@@ -360,8 +360,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$weekList = $this->controller->getWeekListByYearId($yearId);
-		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
+		$weekList = $this->controller->getWeekListByAcademicPeriodId($academicPeriodId);
+		$currentWeekId = $this->controller->getCurrentWeekId($academicPeriodId);
 		if (!is_null($weekId)) {
 			if (!array_key_exists($weekId, $weekList)) {
 				$weekId = $currentWeekId;
@@ -372,7 +372,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		$weekDayList = array();
 		array_push($weekDayList, __('All Days'));
-		$startEndDates = $this->controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startEndDates = $this->controller->getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId);
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		$weekDayIndex = $this->controller->generateAttendanceWeekDayIndex($startDate, $endDate);
@@ -389,31 +389,31 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$endDate = $selectedDate;
 		}
 
-		$data = $this->getAbsenceData($institutionSiteId, $yearId, $sectionId, $startDate, $endDate);
+		$data = $this->getAbsenceData($institutionSiteId, $academicPeriodId, $sectionId, $startDate, $endDate);
 		if(empty($data)){
 			$this->Message->alert('general.noData');
 		}
-		$this->Session->write('InstitutionSiteStudentAbsence.backLink', array('absence',$yearId,$sectionId,$weekId));
-		$this->setVar(compact('yearList', 'yearId', 'dayId', 'sectionOptions', 'sectionId', 'weekDayList', 'weekList', 'weekId', 'data'));
+		$this->Session->write('InstitutionSiteStudentAbsence.backLink', array('absence',$academicPeriodId,$sectionId,$weekId));
+		$this->setVar(compact('academicPeriodList', 'academicPeriodId', 'dayId', 'sectionOptions', 'sectionId', 'weekDayList', 'weekList', 'weekId', 'data'));
 	}
 	
 	public function add() {
 		$this->render = 'auto';
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$InstitutionSiteSectionStudentModel = ClassRegistry::init('InstitutionSiteSectionStudent');
-		
-		$yearOptions = $this->fields['school_year_id']['options'];
-		$selectedYear = 0;
+
+		$academicPeriodOptions = $this->fields['academic_period_id']['options'];
+		$selectedAcademicPeriod = 0;
 		$selectedSection = 0;
-		if (!empty($yearOptions)) {
-			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
-				$selectedYear = key($yearOptions);
+		if (!empty($academicPeriodOptions)) {
+			if (empty($selectedAcademicPeriod) || (!empty($selectedAcademicPeriod) && !array_key_exists($selectedAcademicPeriod, $academicPeriodOptions))) {
+				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 		}
 		
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$selectedYear = $data[$this->alias]['school_year_id'];
+			$selectedAcademicPeriod = $data[$this->alias]['academic_period_id'];
 			$selectedSection = $data[$this->alias]['institution_site_section_id'];
 			
 			if ($data['submit'] != 'reload') {
@@ -421,11 +421,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				if ($this->saveAll($data)) {
 					// trigger alert
 					$studentId = $data['InstitutionSiteStudentAbsence']['student_id'];
-					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
-					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
+					$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getCurrent();
+					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentAcademicPeriodId, $institutionSiteId));
 					
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => get_class($this), 'absence', $selectedYear));
+					return $this->redirect(array('action' => get_class($this), 'absence', $selectedAcademicPeriod));
 				} else {
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
@@ -433,7 +433,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedYear);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedAcademicPeriod);
 		$this->fields['institution_site_section_id']['type'] = 'select';
 		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
 		$this->setFieldOrder('institution_site_section_id', 2);
@@ -476,8 +476,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$classIdInput = $absenceData['institution_site_class_id'];
 			$firstDateAbsentData = new DateTime($firstDateAbsent);
 			$firstDateYear = $firstDateAbsentData->format('Y');
-			$firstDateYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId($firstDateYear); // error here
-			$classExists = $this->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
+			$firstDateYearId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodId($firstDateYear); // error here
+			$classExists = $this->InstitutionSiteClass->getClassByIdAcademicPeriod($classIdInput, $firstDateYearId);
 			
 			if($absenceData['full_day_absent'] == 'Yes'){
 				$absenceData['start_time_absent'] = '';
@@ -517,33 +517,33 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		*/
 		
 		$this->setVar('params', array('back' => 'absence'));
-		$this->setVar(compact('yearOptions', 'selectedYear', 'sectionOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'sectionId'));
+		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'sectionOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'sectionId'));
 	}
 
-	public function dayview($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function dayview($academicPeriodId=0, $sectionId=0, $weekId=null, $dayId=null) {
 		if ($dayId==null||$dayId==0) {
-			return $this->redirect(array('action' => get_class($this), 'index', $yearId, $sectionId, $weekId));
+			return $this->redirect(array('action' => get_class($this), 'index', $academicPeriodId, $sectionId, $weekId));
 		} 
 
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
-		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
-		if($currentYearId){
-			$defaultYearId = $currentYearId;
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
+		if($currentAcademicPeriodId){
+			$defaultAcademicPeriodId = $currentAcademicPeriodId;
 		}else{
-			$defaultYearId = key($yearList);
+			$defaultAcademicPeriodId = key($academicPeriodList);
 		}
-		if ($yearId != 0) {
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = $defaultYearId;
+		if ($academicPeriodId != 0) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = $defaultAcademicPeriodId;
 			}
 		} else {
-			$yearId = $defaultYearId;
+			$academicPeriodId = $defaultAcademicPeriodId;
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $academicPeriodId);
 		if(!empty($sectionOptions)){
 			if ($sectionId != 0) {
 				if (!array_key_exists($sectionId, $sectionOptions)) {
@@ -554,8 +554,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$weekList = $this->controller->getWeekListByYearId($yearId);
-		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
+		$weekList = $this->controller->getWeekListByAcademicPeriodId($academicPeriodId);
+		$currentWeekId = $this->controller->getCurrentWeekId($academicPeriodId);
 		if (!is_null($weekId)) {
 			if (!array_key_exists($weekId, $weekList)) {
 				$weekId = $currentWeekId;
@@ -564,7 +564,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$weekId = $currentWeekId;
 		}
 
-		$startEndDates = $this->controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startEndDates = $this->controller->getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId);
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 
@@ -586,7 +586,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$header = $this->controller->generateAttendanceDayHeader();
 		$headerDates = $this->controller->generateAttendanceHeaderDates($startDate, $endDate);
 		
-		$absenceData = $this->getAbsenceData($institutionSiteId, $yearId, $sectionId, $selectedDate, $selectedDate);
+		$absenceData = $this->getAbsenceData($institutionSiteId, $academicPeriodId, $sectionId, $selectedDate, $selectedDate);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStudent = $absenceUnit['Student'];
@@ -624,34 +624,34 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			array_push($weekDayList, "(".$headerDates[$key].") ".substr($value,0,4)."-".substr($value,4,2)."-".substr($value,6,2));
 		}
 		
-		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList'));
+		$this->setVar(compact('academicPeriodList', 'academicPeriodId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList'));
 
 	}
 
-	public function dayedit($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function dayedit($academicPeriodId=0, $sectionId=0, $weekId=null, $dayId=null) {
 		if ($dayId==null||$dayId==0) {
-			return $this->redirect(array('action' => get_class($this), 'index', $yearId, $sectionId, $weekId));
+			return $this->redirect(array('action' => get_class($this), 'index', $academicPeriodId, $sectionId, $weekId));
 		}
 
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->find('list', array('conditions' => array('SchoolYear.visible' => 1), 'order' => array('SchoolYear.order')));
-		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearIdByDate(date('Y-m-d'));
-		if($currentYearId){
-			$defaultYearId = $currentYearId;
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
+		if($currentAcademicPeriodId){
+			$defaultAcademicPeriodId = $currentAcademicPeriodId;
 		}else{
-			$defaultYearId = key($yearList);
+			$defaultAcademicPeriodId = key($academicPeriodList);
 		}
-		if ($yearId != 0) {
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = $defaultYearId;
+		if ($academicPeriodId != 0) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = $defaultAcademicPeriodId;
 			}
 		} else {
-			$yearId = $defaultYearId;
+			$academicPeriodId = $defaultAcademicPeriodId;
 		}
 		
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $academicPeriodId);
 		if(!empty($sectionOptions)){
 			if ($sectionId != 0) {
 				if (!array_key_exists($sectionId, $sectionOptions)) {
@@ -662,8 +662,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$weekList = $this->controller->getWeekListByYearId($yearId);
-		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
+		$weekList = $this->controller->getWeekListByAcademicPeriodId($academicPeriodId);
+		$currentWeekId = $this->controller->getCurrentWeekId($academicPeriodId);
 		if (!is_null($weekId)) {
 			if (!array_key_exists($weekId, $weekList)) {
 				$weekId = $currentWeekId;
@@ -672,7 +672,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$weekId = $currentWeekId;
 		}
 
-		$startEndDates = $this->controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startEndDates = $this->controller->getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId);
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 
@@ -693,7 +693,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		if ($this->request->is(array('post', 'put'))) {
 			$absenceOptions = array();
-			$absenceOptions['yearId'] = $yearId;
+			$absenceOptions['academicPeriodId'] = $academicPeriodId;
 			$absenceOptions['sectionId'] = $sectionId;
 			$absenceOptions['weekId'] = $weekId;
 			$absenceOptions['selectedDate'] = $selectedDate;
@@ -704,7 +704,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$header = $this->controller->generateAttendanceDayHeader();
 		$headerDates = $this->controller->generateAttendanceHeaderDates($startDate, $endDate);
 		
-		$absenceData = $this->getAbsenceData($institutionSiteId, $yearId, $sectionId, $selectedDate, $selectedDate);
+		$absenceData = $this->getAbsenceData($institutionSiteId, $academicPeriodId, $sectionId, $selectedDate, $selectedDate);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStudent = $absenceUnit['Student'];
@@ -745,14 +745,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
 		$absenceReasonList = $this->StudentAbsenceReason->getOptionList(array('FieldOption.code' => 'StudentAbsenceReason'));
 
-		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
+		$this->setVar(compact('academicPeriodList', 'academicPeriodId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 
 	}
 
-	public function getAbsenceData($institutionSiteId, $schoolYearId, $sectionId=0, $startDate='', $endDate='') {
+	public function getAbsenceData($institutionSiteId, $academicPeriodId, $sectionId=0, $startDate='', $endDate='') {
 		$conditions = array();
 		
-		// if $sectionId is not present, then $institutionSiteId and $schoolYearId are necessary for data filter
+		// if $sectionId is not present, then $institutionSiteId and $academicPeriodId are necessary for data filter
 		// update 10dec2014 - M discussed with U, if there are no classes (meaning combobox not selected for class - it returns no data - as it should)
 		if (!empty($sectionId)) {
 			$conditions[] = 'InstitutionSiteStudentAbsence.institution_site_section_id = ' . $sectionId;
@@ -777,9 +777,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		*/
 		
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$schoolYear = $SchoolYear->getSchoolYearById($schoolYearId);
-		//$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $schoolYear . '"';
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
+		//$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"';
 
 		$data = $this->find('all',
 			array(
@@ -854,8 +854,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					$this->save($value);
 					$institutionSiteId = $this->Session->read('InstitutionSite.id');
 					$studentId = $value['student_id'];
-					$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
-					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentYearId, $institutionSiteId));
+					$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getCurrent();
+					$this->controller->Alert->trigger(array('Attendance', $studentId, $currentAcademicPeriodId, $institutionSiteId));
 				}
 			} else {
 				// Marking present
@@ -876,12 +876,12 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 
 		$this->Message->alert('general.add.success');
-		return $this->redirect(array('action' => get_class($this), 'dayview', $options['yearId'], $options['sectionId'], $options['weekId'], $options['dayId']));
+		return $this->redirect(array('action' => get_class($this), 'dayview', $options['academicPeriodId'], $options['sectionId'], $options['weekId'], $options['dayId']));
 	}
 	
-	public function getStudentAbsenceDataByMonth($studentId, $schoolYearId, $monthId){
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$schoolYear = $SchoolYear->getSchoolYearById($schoolYearId);
+	public function getStudentAbsenceDataByMonth($studentId, $academicPeriodId, $monthId){
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
 		
 		$conditions = array(
 			'Student.id = ' . $studentId,
@@ -890,11 +890,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$conditions['OR'] = array(
 			array(
 				'MONTH(InstitutionSiteStudentAbsence.first_date_absent) = "' . $monthId . '"',
-				'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $schoolYear . '"'
+				'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"'
 			),
 			array(
 				'MONTH(InstitutionSiteStudentAbsence.last_date_absent) = "' . $monthId . '"',
-				'YEAR(InstitutionSiteStudentAbsence.last_date_absent) = "' . $schoolYear . '"'
+				'YEAR(InstitutionSiteStudentAbsence.last_date_absent) = "' . $academicPeriod . '"'
 			)
 		);
 		
@@ -955,19 +955,19 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	public function attendanceStudent($controller, $params){
 		$controller->Navigation->addCrumb('Attendance - Students');
 
-		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
-		//pr($yearList);
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
+		//pr($academicPeriodList);
 		
 		if (isset($controller->params['pass'][0])) {
-			$yearId = $controller->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $controller->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		}else{
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->Session->read('InstitutionSite.id'), $yearId);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitutionAcademicPeriod($controller->Session->read('InstitutionSite.id'), $academicPeriodId);
 		//pr($classOptions);
 		if (isset($controller->params['pass'][1])) {
 			$classId = $controller->params['pass'][1];
@@ -978,9 +978,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$classId = key($classOptions);
 		}
 		
-		$weekList = $controller->getWeekListByYearId($yearId);
+		$weekList = $controller->getWeekListByAcademicPeriodId($academicPeriodId);
 		//pr($weekList);
-		$currentWeekId = $controller->getCurrentWeekId($yearId);
+		$currentWeekId = $controller->getCurrentWeekId($academicPeriodId);
 		if (isset($controller->params['pass'][2])) {
 			$weekId = $controller->params['pass'][2];
 			if (!array_key_exists($weekId, $weekList)) {
@@ -990,14 +990,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$weekId = $currentWeekId;
 		}
 		
-		$startEndDates = $controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startEndDates = $controller->getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId);
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		
 		$header = $controller->generateAttendanceHeader($startDate, $endDate);
 		$weekDayIndex = $controller->generateAttendanceWeekDayIndex($startDate, $endDate);
 		
-		$absenceData = $this->getAbsenceData($controller->Session->read('InstitutionSite.id'), $yearId, $classId, $startDate, $endDate);
+		$absenceData = $this->getAbsenceData($controller->Session->read('InstitutionSite.id'), $academicPeriodId, $classId, $startDate, $endDate);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStudent = $absenceUnit['Student'];
@@ -1029,26 +1029,26 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$controller->Message->alert('institutionSiteAttendance.no_student');
 		}
 		
-		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'studentList', 'absenceCheckList'));
+		$controller->set(compact('academicPeriodList', 'academicPeriodId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'studentList', 'absenceCheckList'));
 	}
 	
 	public function attendanceStudentAbsence($controller, $params){
 		$controller->Navigation->addCrumb('Absence - Students');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
-		//pr($yearList);
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
+		//pr($academicPeriodList);
 		
 		if (isset($controller->params['pass'][0])) {
-			$yearId = $controller->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $controller->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		}else{
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		//pr($yearId);
+		//pr($academicPeriodId);
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->Session->read('InstitutionSite.id'), $yearId);
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitutionAcademicPeriod($controller->Session->read('InstitutionSite.id'), $academicPeriodId);
 		//pr($classOptions);
 		if (isset($controller->params['pass'][1])) {
 			$classId = $controller->params['pass'][1];
@@ -1060,9 +1060,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		//pr($classId);
 		
-		$weekList = $controller->getWeekListByYearId($yearId);
+		$weekList = $controller->getWeekListByAcademicPeriodId($academicPeriodId);
 		//pr($weekList);
-		$currentWeekId = $controller->getCurrentWeekId($yearId);
+		$currentWeekId = $controller->getCurrentWeekId($academicPeriodId);
 		if (isset($controller->params['pass'][2])) {
 			$weekId = $controller->params['pass'][2];
 			if (!array_key_exists($weekId, $weekList)) {
@@ -1073,17 +1073,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		//pr($weekId);
 		
-		$startEndDates = $controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startEndDates = $controller->getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId);
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		
-		$data = $this->getAbsenceData($controller->Session->read('InstitutionSite.id'), $yearId, $classId, $startDate, $endDate);
+		$data = $this->getAbsenceData($controller->Session->read('InstitutionSite.id'), $academicPeriodId, $classId, $startDate, $endDate);
 		if(empty($data)){
 			$controller->Message->alert('institutionSiteAttendance.no_data');
 		}
 		//pr($data);
 		
-		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'data'));
+		$controller->set(compact('academicPeriodList', 'academicPeriodId', 'classOptions', 'classId', 'weekList', 'weekId', 'data'));
 	}
 	
 	public function attendanceStudentAbsenceAdd($controller, $params) {
@@ -1111,8 +1111,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$classIdInput = $absenceData['institution_site_class_id'];
 			$firstDateAbsentData = new DateTime($firstDateAbsent);
 			$firstDateYear = $firstDateAbsentData->format('Y');
-			$firstDateYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId($firstDateYear);
-			$classExists= $this->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
+			$firstDateYearId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodId($firstDateYear);
+			$classExists= $this->InstitutionSiteClass->getClassByIdAcademicPeriod($classIdInput, $firstDateYearId);
 			
 			if($absenceData['full_day_absent'] == 'Yes'){
 				$absenceData['start_time_absent'] = '';
@@ -1200,8 +1200,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$classIdInput = $absenceData['institution_site_class_id'];
 			$firstDateAbsentData = new DateTime($firstDateAbsent);
 			$firstDateYear = $firstDateAbsentData->format('Y');
-			$firstDateYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId($firstDateYear);
-			$classExists= $this->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
+			$firstDateYearId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodId($firstDateYear);
+			$classExists= $this->InstitutionSiteClass->getClassByIdAcademicPeriod($classIdInput, $firstDateYearId);
 			
 			if ($this->save($absenceData, array('validate' => 'only'))) {
 				if($InstitutionSiteClassStudentModel->isStudentInClass($controller->Session->read('InstitutionSite.id'), $absenceData['institution_site_class_id'], $absenceData['student_id'])){
@@ -1336,7 +1336,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		//$institutionSiteId = $args[0];
 		//$index = $args[1];
 		$header = array(
-			__('School Year'),
+			__('Academic Period'),
 			
 			__('Section'),
 			
@@ -1370,7 +1370,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$options = array();
 			//$options['recursive'] = -1;
 			$options['fields'] = array(
-				'SchoolYear.name', 
+				'AcademicPeriod.name', 
 				
 				'InstitutionSiteSection.name', 
 				
@@ -1390,7 +1390,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				'StudentAbsenceReason.name',
 				'InstitutionSiteStudentAbsence.comment'
 			);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteStudentAbsence.first_date_absent', 'Student.first_name', 'Student.middle_name', 'Student.last_name');
+			$options['order'] = array('AcademicPeriod.name', 'InstitutionSiteStudentAbsence.first_date_absent', 'Student.first_name', 'Student.middle_name', 'Student.last_name');
 			//$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
 			
 			$options['joins'] = array(
@@ -1403,10 +1403,10 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'type' => 'LEFT',
-					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
+					'conditions' => array('InstitutionSiteSection.academic_period_id = AcademicPeriod.id')
 				)
 			);
 			
@@ -1418,13 +1418,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			foreach($data AS $row){
 				$tempRow = array();
 				
-				$schoolYear = $row['SchoolYear'];
+				$academicPeriod = $row['AcademicPeriod'];
 				$section = $row['InstitutionSiteSection'];
 				$absence = $row['InstitutionSiteStudentAbsence'];
 				$student = $row['Student'];
 				$reason = $row['StudentAbsenceReason'];
 				
-				$tempRow[] = $schoolYear['name'];
+				$tempRow[] = $academicPeriod['name'];
 				$tempRow[] = $section['name'];
 				
 				$tempRow[] = $this->formatDateByConfig($absence['first_date_absent']);

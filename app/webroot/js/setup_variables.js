@@ -22,7 +22,7 @@ var setup = {
 		$('#setup-variables .icon_plus').each(function() {
 			$(this).click(function() { setup.add(this); });
 		});
-		$('#school_year .icon_plus').click(setup.addYear);
+		$('#academic_period .icon_plus').click(setup.addYear);
 		$('#banks .icon_plus').click(function() { setup.addBank(this); });
 		$('#contact_types .icon_plus').click(function() { setup.addContactType(this); });
 		$('#training_credit_hours .icon_plus').click(function() { setup.addTrainingCreditHour(this); });

@@ -41,12 +41,12 @@ if (!empty($this->data[$model]['id'])) {
 	<div class="col-md-4">
 		<?php
 		if ($type == 'add') {
-			echo $this->Form->input('school_year_id', array('id' => 'schoolYearId', 'options' => $schoolYearOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
+			echo $this->Form->input('academic_period_id', array('id' => 'academicPeriodId', 'options' => $academicPeriodOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
 		} else {
-			if (isset($schoolYearOptions[$this->data['QualityInstitutionRubric']['school_year_id']])) {
-				echo $schoolYearOptions[$this->data['QualityInstitutionRubric']['school_year_id']];
+			if (isset($academicPeriodOptions[$this->data['QualityInstitutionRubric']['academic_period_id']])) {
+				echo $academicPeriodOptions[$this->data['QualityInstitutionRubric']['academic_period_id']];
 			} else {
-				echo $schoolYearOptions[0];
+				echo $academicPeriodOptions[0];
 			}
 		}
 		?>

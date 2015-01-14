@@ -2,12 +2,18 @@ CREATE TABLE `academic_periods` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(60) NOT NULL,
   `name` varchar(100) NOT NULL,
+  `start_date` date NOT NULL,
+  `start_year` int(4) NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `end_year` int(4) DEFAULT NULL,
+  `school_days` int(5) NOT NULL DEFAULT '0',
+  `current` char(1) NOT NULL,
+  `available` char(1) NOT NULL DEFAULT '1',,
   `parent_id` int(11) NOT NULL,
   `lft` int(11) DEFAULT NULL,
   `rght` int(11) DEFAULT NULL,
   `academic_period_level_id` int(11) NOT NULL,
   `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -16,6 +22,8 @@ CREATE TABLE `academic_periods` (
   KEY `academic_period_level_id` (`academic_period_level_id`),
   KEY `parent_id` (`parent_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+INSERT INTO `academic_periods` (`id`, `code`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `parent_id`, `lft`, `rght`, `academic_period_level_id`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (1, 'All', 'All Data', '', '', NULL, NULL, '0', '', '1', -1, 1, 2, '', '', NULL, NULL, '', '');
 
 CREATE TABLE `academic_period_levels` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -86,3 +94,15 @@ ALTER TABLE `student_attendances` CHANGE `school_year_id` `academic_period_id` I
 ALTER TABLE `student_details_custom_values` CHANGE `school_year_id` `academic_period_id` INT(11) NOT NULL;
 ALTER TABLE `student_extracurriculars` CHANGE `school_year_id` `academic_period_id` INT(11) NOT NULL;
 
+
+-- need to remove school year is 
+-- SELECT id INTO @fieldOptionId FROM field_options WHERE code = 'SchoolYear'; 
+CREATE TABLE IF NOT EXISTS 1132_field_options LIKE field_options;
+INSERT 1132_field_options SELECT * FROM field_options WHERE field_options.code = "SchoolYear" AND NOT EXISTS (SELECT * FROM 1132_field_options WHERE 1132_field_options.code = "SchoolYear");
+DELETE FROM field_options WHERE field_options.code = "SchoolYear";
+
+RENAME TABLE school_years to 1132_school_years;
+
+-- CREATE TABLE IF NOT EXISTS 1132_field_option_values LIKE field_option_values;
+-- INSERT 1132_field_option_values SELECT * FROM field_option_values WHERE field_option_values.field_option_id = @fieldOptionId AND NOT EXISTS (SELECT * FROM 1132_field_option_values WHERE 1132_field_option_values.field_option_id = @fieldOptionId);
+-- DELETE FROM field_option_values WHERE field_option_values.field_option_id = @fieldOptionId;

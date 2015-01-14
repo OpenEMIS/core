@@ -9,12 +9,12 @@ $this->assign('contentHeader', __('Results'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-    echo $this->Html->link(__('Edit'), array('action' => 'assessmentsEdit', $selectedYear), array('class' => 'divider'));
+    echo $this->Html->link(__('Edit'), array('action' => 'assessmentsEdit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div id="assessments" class="content_wrapper">

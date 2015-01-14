@@ -15,11 +15,11 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
 			<?php
-			echo $this->Form->input('school_year_id', array(
+			echo $this->Form->input('academic_period_id', array(
 				'label' => false,
 				'div' => false,
 				'options' => $years,
-				'default' => $selectedYear,
+				'default' => $selectedAcademicPeriod,
 				'onchange' => 'jsForm.change(this)',
 				'url' => $this->params['controller'] . '/' . $this->action
 			));
@@ -74,7 +74,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 ?>
 <div class="topDropDownWrapper page-controls" url="Staff/absence">
 	<?php 
-	echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
+	echo $this->Form->input('academic_period_id', array('options' => $academicPeriodList, 'value' => $academicPeriodId, 'id' => 'academicPeriodId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
 	echo $this->Form->input('month_id', array('options' => $monthOptions, 'value' => $monthId, 'id' => 'monthId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
 	?>
 </div>
