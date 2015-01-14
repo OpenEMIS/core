@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -84,10 +84,10 @@ class Programme extends AppModel {
 	
 	public function afterAction() {
 		if ($this->action == 'edit') {
-			$yearId = $this->request->data['InstitutionSiteProgramme']['school_year_id'];
-			$yearObj = $this->InstitutionSiteProgramme->SchoolYear->findById($yearId);
-			$startDate = $yearObj['SchoolYear']['start_date'];
-			$endDate = $yearObj['SchoolYear']['end_date'];
+			$academicPeriodId = $this->request->data['InstitutionSiteProgramme']['academic_period_id'];
+			$academicPeriodObj = $this->InstitutionSiteProgramme->AcademicPeriod->findById($academicPeriodId);
+			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
+			$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 			$dataStartDate = $this->request->data[$this->alias]['start_date'];
 			$date = new DateTime($dataStartDate);
 			$date->add(new DateInterval('P1D')); // plus 1 day

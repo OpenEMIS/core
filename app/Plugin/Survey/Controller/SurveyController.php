@@ -57,7 +57,6 @@ class SurveyController extends SurveyAppController {
 		'InfrastructureCategory',
 		'InfrastructureMaterial',
 		'InfrastructureStatus',
-		// 'SchoolYear',
 		'AcademicPeriod',
 		'StudentCategory'
 	);

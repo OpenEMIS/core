@@ -163,7 +163,7 @@ class EducationLevel extends AppModel {
 		}
 	}
 	
-	public function getInstitutionLevelsBySchoolYear($institutionSiteId, $schoolYearId){
+	public function getInstitutionLevelsByAcademicPeriod($institutionSiteId, $academicPeriodId){
 		$list = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
@@ -193,7 +193,7 @@ class EducationLevel extends AppModel {
 					'conditions' => array(
 						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
 						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-						'InstitutionSiteProgramme.school_year_id' => $schoolYearId
+						'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId
 					)
 				)
 			),

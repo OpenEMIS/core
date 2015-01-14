@@ -31,7 +31,7 @@ class DatawarehouseShell extends AppShell {
 
         $language = $this->args[0];
         $areaLevelID = $this->args[1];
-        $schoolYearID =$this->args[2]; 
+        $academicPeriodId =$this->args[2]; 
 
         Configure::write('Config.language', $language);
 
@@ -58,7 +58,7 @@ class DatawarehouseShell extends AppShell {
          
         
                 $settings['areaLevelId'] = $areaLevelID;
-                $settings['schoolYearId'] = $schoolYearID;
+                $settings['academicPeriodId'] = $academicPeriodId;
                 
                 $settings['indicatorId'] = $ReportRef_id;
                 $this->genReport($id, $settings);

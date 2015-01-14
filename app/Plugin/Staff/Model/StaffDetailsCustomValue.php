@@ -61,7 +61,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
 				'middle_name' => 'Middle Name',
 				'last_name' => 'Last Name',
 				'preferred_name' => 'Preferred Name',
-				'year' => 'Year'
+				'academic_period' => 'Academic Period'
 			);
 
 			$StudentDetailsCustomFieldModel = ClassRegistry::init('StudentDetailsCustomField');
@@ -108,7 +108,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
 			
 			$StaffDetailsCustomValueModel = ClassRegistry::init('StaffDetailsCustomValue');
 			
-			$staffYears = $StaffDetailsCustomValueModel->find('all', array(
+			$staffAcademicPeriods = $StaffDetailsCustomValueModel->find('all', array(
                 'recursive' => -1,
                 'fields' => array(
                     'StaffDetailsCustomValue.staff_id',
@@ -117,8 +117,8 @@ class StaffDetailsCustomValue extends StaffAppModel {
                     'Staff.middle_name',
                     'Staff.last_name',
                     'Staff.preferred_name',
-                    'StaffDetailsCustomValue.school_year_id',
-                    'SchoolYear.name'
+                    'StaffDetailsCustomValue.academic_period_id',
+                    'AcademicPeriod.name'
                 ),
                 'joins' => array(
                     array(
@@ -129,19 +129,19 @@ class StaffDetailsCustomValue extends StaffAppModel {
                         )
                     ),
                     array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
+                        'table' => 'academic_periods',
+                        'alias' => 'AcademicPeriod',
                         'conditions' => array(
-                            'StaffDetailsCustomValue.school_year_id = SchoolYear.id'
+                            'StaffDetailsCustomValue.academic_period_id = AcademicPeriod.id'
                         )
                     )
                 ),
                 'conditions' => array('StaffDetailsCustomValue.institution_site_id' => $institutionSiteId),
-                'group' => array('StaffDetailsCustomValue.staff_id', 'StaffDetailsCustomValue.school_year_id')
+                'group' => array('StaffDetailsCustomValue.staff_id', 'StaffDetailsCustomValue.academic_period_id')
                     )
             );
 
-            foreach ($staffYears AS $rowValue) {
+            foreach ($staffAcademicPeriods AS $rowValue) {
                 $fieldValues = $StaffDetailsCustomValueModel->find('all', array(
                     'recursive' => -1,
                     'fields' => array(
@@ -171,7 +171,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
                     'conditions' => array(
                         'StaffDetailsCustomValue.institution_site_id' => $institutionSiteId,
                         'StaffDetailsCustomValue.staff_id' => $rowValue['StaffDetailsCustomValue']['staff_id'],
-                        'StaffDetailsCustomValue.school_year_id' => $rowValue['StaffDetailsCustomValue']['school_year_id']
+                        'StaffDetailsCustomValue.academic_period_id' => $rowValue['StaffDetailsCustomValue']['academic_period_id']
                     )
                         )
                 );
@@ -183,7 +183,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
                 $row['middle_name'] = $rowValue['Staff']['middle_name'];
                 $row['last_name'] = $rowValue['Staff']['last_name'];
                 $row['preferred_name'] = $rowValue['Staff']['preferred_name'];
-                $row['year'] = $rowValue['SchoolYear']['name'];
+                $row['academic_period'] = $rowValue['AcademicPeriod']['name'];
 
                 foreach ($fieldValues AS $fieldValueRow) {
                     $fieldId = $fieldValueRow['StaffDetailsCustomField']['id'];

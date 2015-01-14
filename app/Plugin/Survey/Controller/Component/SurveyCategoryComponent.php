@@ -57,7 +57,6 @@ class SurveyCategoryComponent extends Component {
         'InfrastructureCategory',
         'InfrastructureMaterial',
         'InfrastructureStatus',
-        // 'SchoolYear',
         'AcademicPeriod',
         'StudentCategory',
         'StaffCategory',

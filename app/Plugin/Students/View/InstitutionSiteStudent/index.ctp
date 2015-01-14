@@ -20,7 +20,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 		echo $this->Form->input('academic_period_id', array(
 			'class' => 'form-control',
 			'empty' => __('All Academic Periods'),
-			'options' => $AcademicPeriodOptions,
+			'options' => $academicPeriodOptions,
 			'onchange' => "$('form').submit()",
 			'required' => false
 		));

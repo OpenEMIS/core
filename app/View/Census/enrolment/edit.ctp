@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'enrolment', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'enrolment', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -16,12 +16,12 @@ echo $this->Form->create('CensusStudent', array(
 	'inputDefaults' => array('label' => false, 'div' => false),	
 	'url' => array('controller' => 'Census', 'action' => 'enrolmentEdit')
 ));
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div id="enrolment" class="edit">
 <?php foreach($data as $key => $obj) : ?>
-<fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
+<fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedAcademicPeriod; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
 	<legend><?php echo $obj['name']; ?></legend>
 	
 	<div class="row page-controls">
@@ -175,7 +175,7 @@ echo $this->element('census/year_options');
 <?php if(!empty($data)) : ?>
 	<div class="controls">
 		<input type="button" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="CensusEnrolment.save()" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'enrolment', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'enrolment', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 <?php endif; ?>
 </div>

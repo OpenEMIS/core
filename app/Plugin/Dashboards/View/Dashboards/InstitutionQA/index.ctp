@@ -30,7 +30,7 @@ echo $this->Html->script('Dashboards.dashboards', false);
 	
 	<div class="row left">
         <div class="label"><?php echo __('Year'); ?></div>
-        <div class="value"><?php echo $this->Form->input('year_id', array('options' => $yearsOptions, 'default' =>$yearId, 'class' => 'dash_options')); ?></div>
+        <div class="value"><?php echo $this->Form->input('year_id', array('options' => $yearsOptions, 'default' =>$academicPeriodId, 'class' => 'dash_options')); ?></div>
     </div>
 	<div class="row left">
 		<input type="submit" value="<?php echo __("Update"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
@@ -88,7 +88,7 @@ echo $this->Form->create($modelName, array('url' => $formOptions, 'novalidate' =
 if(!empty($displayChartData)){
 echo $this->Form->input('year_id', array(
 	'options' => $yearsOptions,
-	'default' => $yearId,
+	'default' => $academicPeriodId,
 	'div' => 'col-md-3 form-group',
 	'between' => '<div class="col-md-8">',
 	'after' => '</div>',

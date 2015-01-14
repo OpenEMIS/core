@@ -32,7 +32,7 @@ class ReportsController extends ReportsAppController {
 		'InstitutionSiteCustomValue',
 		'InstitutionSiteProgramme',
 		'CensusStudent',
-		'SchoolYear'
+		'AcademicPeriod'
 	);
 	public $standardReports = array( //parameter passed to Index
 		'InstitutionGeneral'=>array('enable'=>true),
@@ -291,17 +291,17 @@ class ReportsController extends ReportsAppController {
 		);
 		$this->humanizeFields($selectedFields);
 		$data = $selectedFields;
-		$raw_school_years = $this->SchoolYear->find('list', array('order'=>'SchoolYear.name asc'));
-		$school_years = array();
-		foreach($raw_school_years as $value){
-			array_push($school_years, $value);
+		$raw_academic_periods = $this->AcademicPeriod->find('list', array('order'=>'AcademicPeriod.name asc'));
+		$academic_periods = array();
+		foreach($raw_academic_periods as $value){
+			array_push($academic_periods, $value);
 
 		}
   
 		$this->set('hideTableColumnsLabel', $this->hideOlapTableColumnsLabel);
 
 		$this->set('data', $data);
-		$this->set('school_years', $school_years);
+		$this->set('academic_periods', $academic_periods);
 
 	}
 
@@ -318,7 +318,7 @@ class ReportsController extends ReportsAppController {
 			$data = array('observations'=> array(), 'size' => 0);
 			$fields = array();
 			$models = array();
-			$selectedSchoolYear = (isset($this->request->data['schoolYear']) && !empty($this->request->data['schoolYear']))? $this->request->data['schoolYear']: 0000;
+			$selectedAcademicPeriod = (isset($this->request->data['academicPeriod']) && !empty($this->request->data['academicPeriod']))? $this->request->data['academicPeriod']: 0000;
 			foreach($this->request->data['variables'] as $key => $value){
 				array_push($fields, $value);
 			}
@@ -360,7 +360,7 @@ class ReportsController extends ReportsAppController {
 				'alias' => 'CensusStudent',
 				'type' => 'LEFT',
 				'conditions' => array(
-					'CensusStudent.school_year_id = SchoolYear.id'
+					'CensusStudent.academic_period_id = AcademicPeriod.id'
 				)
 			),
 			'institution_sites' => array(
@@ -452,12 +452,12 @@ class ReportsController extends ReportsAppController {
 
 			$params = array(
 				'fields' => array("COUNT(*) AS total"),
-				'table' => 'school_years',
-				'alias' => "SchoolYear",
+				'table' => 'academic_periods',
+				'alias' => "AcademicPeriod",
 				'limit' => null,
 				'offset' => 0,
 				'joins' => $selectedJoins,
-				'conditions' => array("Institution.id = {$observation} AND Institution.id IS NOT NULL AND SchoolYear.name = {$year}"),
+				'conditions' => array("Institution.id = {$observation} AND Institution.id IS NOT NULL AND AcademicPeriod.name = {$year}"),
 				'recursive' => 0,
 				'order' => null,
 				'group' => null
@@ -493,7 +493,7 @@ class ReportsController extends ReportsAppController {
 		if($this->request->is('post')){
 			$selectedFields = array(
 				'EducationProgramme' => array('name'),
-				'SchoolYear' => array('name'),
+				'AcademicPeriod' => array('name'),
 				'EducationGrade' => array('name'),
 				'StudentCategory' => array('name'),
 				'CensusStudent' => array('age', 'male', 'female'/*, 'institution_site_programme_id'*/),
@@ -656,7 +656,7 @@ class ReportsController extends ReportsAppController {
 				'alias' => 'CensusStudent',
 				'type' => 'LEFT',
 				'conditions' => array(
-					'CensusStudent.school_year_id = SchoolYear.id'
+					'CensusStudent.academic_period_id = AcademicPeriod.id'
 				)
 			),
 			'institution_sites' => array(
@@ -783,12 +783,12 @@ class ReportsController extends ReportsAppController {
 
 		$params = array(
 			'fields' => $fields,//array('*'),
-			'table' => 'school_years',
-			'alias' => "SchoolYear",
+			'table' => 'academic_periods',
+			'alias' => "AcademicPeriod",
 			'limit' => $this->limit,
 			'offset' => $offset,
 			'joins' => $selectedJoins,
-			'conditions' => array("Institution.id = {$observation} AND Institution.id IS NOT NULL AND SchoolYear.name = {$year} "),
+			'conditions' => array("Institution.id = {$observation} AND Institution.id IS NOT NULL AND AcademicPeriod.name = {$year} "),
 			'recursive' => 0,
 			'order' => null,
 			'group' => null

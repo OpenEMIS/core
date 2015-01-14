@@ -1,5 +1,6 @@
+<?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -13,23 +14,22 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-$(document).ready(function() {
-	InstitutionSiteAssessments.init();
-});
-
-var InstitutionSiteAssessments = {
-    yearId: '#AcademicPeriodId',
-	programmeId: '#EducationProgrammeId',
-	
-	init: function() {
+class AcademicPeriodBehavior extends ModelBehavior {
+	public function getAcademicPeriodOptions(Model $model, $conditions=array()) {
+		$options = array();
+		$options['fields'] = array('AcademicPeriod.id', 'AcademicPeriod.name');
+		$options['joins'] = array(
+			array(
+				'table' => 'academic_periods', 'alias' => 'AcademicPeriod',
+				'conditions' => array('AcademicPeriod.id = ' . $model->alias . '.academic_period_id')
+			)
+		);
+		$options['order'] = array('AcademicPeriod.order');
 		
-	},
-	
-	navigateProgramme: function(obj, both) {
-		var href = getRootURL() + $(obj).attr('url') + '/' + $(this.yearId).val();
-		if(both && $(this.programmeId).length==1) {
-			href += '/' + $(this.programmeId).val();
+		if (!empty($conditions)) {
+			$options['conditions'] = $conditions;
 		}
-		window.location.href = href;
+		$list = $model->find('list', $options);
+		return $list;
 	}
 }

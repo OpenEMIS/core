@@ -24,7 +24,7 @@ class CensusBehaviour extends AppModel {
 		)
 	);
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'Students.StudentBehaviourCategory',
 		'InstitutionSite',
 		'Gender' => array(
@@ -33,7 +33,7 @@ class CensusBehaviour extends AppModel {
 		)
 	);
 	
-	public function getCensusData($siteId, $yearId) {
+	public function getCensusData($siteId, $academicPeriodId) {
 		$this->StudentBehaviourCategory->formatResult = true;
 		
 		$list = $this->StudentBehaviourCategory->find('all', array(
@@ -49,7 +49,7 @@ class CensusBehaviour extends AppModel {
 					'type' => 'LEFT',
 					'conditions' => array(
 						'CensusBehaviour.institution_site_id = ' . $siteId,
-						'CensusBehaviour.school_year_id = ' . $yearId,
+						'CensusBehaviour.academic_period_id = ' . $academicPeriodId,
 						'CensusBehaviour.student_behaviour_category_id = StudentBehaviourCategory.id'
 					)
 				)
@@ -77,11 +77,11 @@ class CensusBehaviour extends AppModel {
 	}
 	
 	public function saveCensusData($data, $institutionSiteId) {
-		$yearId = $data['school_year_id'];
-		unset($data['school_year_id']);
+		$academicPeriodId = $data['academic_period_id'];
+		unset($data['academic_period_id']);
 		
 		foreach($data as $obj) {
-			$obj['school_year_id'] = $yearId;
+			$obj['academic_period_id'] = $academicPeriodId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			if($obj['id'] == 0) {
 				if($obj['value'] > 0) {
@@ -95,25 +95,25 @@ class CensusBehaviour extends AppModel {
 		}
 	}
 		
-		public function getYearsHaveData($institutionSiteId){
+		public function getAcademicPeriodsHaveData($institutionSiteId){
 			$data = $this->find('all', array(
 					'recursive' => -1,
 					'fields' => array(
-						'SchoolYear.id',
-						'SchoolYear.name'
+						'AcademicPeriod.id',
+						'AcademicPeriod.name'
 					),
 					'joins' => array(
 							array(
-								'table' => 'school_years',
-								'alias' => 'SchoolYear',
+								'table' => 'academic_periods',
+								'alias' => 'AcademicPeriod',
 								'conditions' => array(
-									'CensusBehaviour.school_year_id = SchoolYear.id'
+									'CensusBehaviour.academic_period_id = AcademicPeriod.id'
 								)
 							)
 					),
 					'conditions' => array('CensusBehaviour.institution_site_id' => $institutionSiteId),
-					'group' => array('CensusBehaviour.school_year_id'),
-					'order' => array('SchoolYear.name DESC')
+					'group' => array('CensusBehaviour.academic_period_id'),
+					'order' => array('AcademicPeriod.name DESC')
 				)
 			); 
 			
@@ -123,9 +123,9 @@ class CensusBehaviour extends AppModel {
 	public function behaviour($controller, $params) {
 		$controller->Navigation->addCrumb('Behaviour');
 
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
+		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 		
 		$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
 		//pr($staffCategories);die;
@@ -138,21 +138,21 @@ class CensusBehaviour extends AppModel {
 		);
 		//pr($genderOptions);die;
 		
-		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 		
-		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable', 'genderOptions', 'behaviourCategories'));
+		$controller->set(compact('selectedAcademicPeriod', 'academicPeriodList', 'data', 'isEditable', 'genderOptions', 'behaviourCategories'));
 	}
 
 	public function behaviourEdit($controller, $params) {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Behaviour');
 
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $controller->getAvailableYearId($yearList);
-			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
-			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+			$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);
+			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
+			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 			if (!$editable) {
-				$controller->redirect(array('action' => 'behaviour', $selectedYear));
+				$controller->redirect(array('action' => 'behaviour', $selectedAcademicPeriod));
 			} else {
 				$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
 				//pr($staffCategories);die;
@@ -165,14 +165,14 @@ class CensusBehaviour extends AppModel {
 				);
 				//pr($genderOptions);die;
 				
-				$controller->set(compact('selectedYear', 'yearList', 'data', 'genderOptions', 'behaviourCategories'));
+				$controller->set(compact('selectedAcademicPeriod', 'academicPeriodList', 'data', 'genderOptions', 'behaviourCategories'));
 			}
 		} else {
 			$data = $controller->data['CensusBehaviour'];
-			$yearId = $data['school_year_id'];
+			$academicPeriodId = $data['academic_period_id'];
 			$this->saveCensusData($data, $controller->Session->read('InstitutionSite.id'));
 			$controller->Message->alert('general.edit.success');
-			$controller->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
+			$controller->redirect(array('controller' => 'Census', 'action' => 'behaviour', $academicPeriodId));
 		}
 	}
 	
@@ -198,15 +198,15 @@ class CensusBehaviour extends AppModel {
 				$femaleGenderId => 'Female'
 			);
 
-			$header = array(__('Year'), __('Category'), __('Male'), __('Female'), __('Total'));
+			$header = array(__('AcademicPeriod'), __('Category'), __('Male'), __('Female'), __('Total'));
 
-			$dataYears = $this->getYearsHaveData($institutionSiteId);
+			$dataAcademicPeriods = $this->getAcademicPeriodsHaveData($institutionSiteId);
 
-			foreach ($dataYears AS $rowYear) {
-				$yearId = $rowYear['SchoolYear']['id'];
-				$yearName = $rowYear['SchoolYear']['name'];
+			foreach ($dataAcademicPeriods AS $rowAcademicPeriod) {
+				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];
+				$academicPeriodName = $rowAcademicPeriod['AcademicPeriod']['name'];
 
-				$dataBehaviour = $this->getCensusData($institutionSiteId, $yearId);
+				$dataBehaviour = $this->getCensusData($institutionSiteId, $academicPeriodId);
 
 				if (count($dataBehaviour) > 0) {
 					$data[] = $header;
@@ -230,7 +230,7 @@ class CensusBehaviour extends AppModel {
 							$rowTotal = $maleValue + $femaleValue;
 							
 							$data[] = array(
-								$yearName,
+								$academicPeriodName,
 								$catName,
 								$maleValue,
 								$femaleValue,

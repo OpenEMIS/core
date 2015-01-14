@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Graduates'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'graduates', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'graduates', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -17,7 +17,7 @@ echo $this->Form->create('CensusGraduate', array(
 	'inputDefaults' => array('label' => false, 'div' => false),
 	'url' => array('controller' => 'Census', 'action' => 'graduatesEdit')
 ));
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 <div class="table-responsive">
 	<?php
@@ -104,7 +104,7 @@ echo $this->element('census/year_options');
 		</fieldset>
 	<?php endforeach; ?>
 	<?php 
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'graduates', $selectedYear)));
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'graduates', $selectedAcademicPeriod)));
 	echo $this->Form->end();
 	?>
 </div>

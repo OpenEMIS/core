@@ -25,14 +25,14 @@ class CensusClass extends AppModel {
 	);
 	
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'InstitutionSite'
 	);
 	
-	public function getClassId($institutionSiteId, $yearId) {
+	public function getClassId($institutionSiteId, $academicPeriodId) {
 		$data = $this->find('list', array(
 			'fields' => array('CensusClass.id'),
-			'conditions' => array('CensusClass.institution_site_id' => $institutionSiteId, 'CensusClass.school_year_id' => $yearId)
+			'conditions' => array('CensusClass.institution_site_id' => $institutionSiteId, 'CensusClass.academic_period_id' => $academicPeriodId)
 		));
 		return $data;
 	}
@@ -57,7 +57,7 @@ class CensusClass extends AppModel {
 		}
 	}
 	
-	public function getSingleGradeData($institutionSiteId, $yearId) {
+	public function getSingleGradeData($institutionSiteId, $academicPeriodId) {
 		$this->formatResult = true;
 		$data = $this->find('all' , array(
 			'recursive' => -1,
@@ -77,7 +77,7 @@ class CensusClass extends AppModel {
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
 						'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = CensusClass.school_year_id',
+						'InstitutionSiteProgramme.academic_period_id = CensusClass.academic_period_id',
 						'InstitutionSiteProgramme.status' => 1
 					)
 				),
@@ -111,7 +111,7 @@ class CensusClass extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'CensusClass.school_year_id' => $yearId,
+				'CensusClass.academic_period_id' => $academicPeriodId,
 				'CensusClass.institution_site_id' => $institutionSiteId
 			),
 			'group' => array('CensusClass.id HAVING COUNT(CensusClassGrade.census_class_id) <= 1'),
@@ -121,7 +121,7 @@ class CensusClass extends AppModel {
 		return $data;
 	}
 	
-	public function getMultiGradeData($institutionSiteId, $yearId) {
+	public function getMultiGradeData($institutionSiteId, $academicPeriodId) {
 		$classList = $this->find('list' , array(
 			'recursive' => -1,
 			'fields' => array('CensusClass.id'),
@@ -133,7 +133,7 @@ class CensusClass extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'CensusClass.school_year_id' => $yearId,
+				'CensusClass.academic_period_id' => $academicPeriodId,
 				'CensusClass.institution_site_id' => $institutionSiteId
 			),
 			'group' => array('CensusClass.id HAVING COUNT(CensusClassGrade.census_class_id) > 1')
@@ -203,11 +203,11 @@ class CensusClass extends AppModel {
 		return $data;
 	}
 	
-	public function clean($data, $yearId, $institutionSiteId, &$duplicate) {
+	public function clean($data, $academicPeriodId, $institutionSiteId, &$duplicate) {
 		$clean = array();
 		$gradeList = array();
 		// get the current list of census class record ids from the database
-		$classIds = $this->getClassId($institutionSiteId, $yearId);		
+		$classIds = $this->getClassId($institutionSiteId, $academicPeriodId);		
 		foreach($data as $obj) {
 			// remove duplicate grades per record
 			$grades = array_unique($obj['CensusClassGrade']);
@@ -229,7 +229,7 @@ class CensusClass extends AppModel {
 					'classes' => $obj['classes'],
 					'seats' => $obj['seats'],
 					'institution_site_id' => $institutionSiteId,
-					'school_year_id' => $yearId,
+					'academic_period_id' => $academicPeriodId,
 					'CensusClassGrade' => $grades
 				);
 			} else {
@@ -268,82 +268,82 @@ class CensusClass extends AppModel {
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('Classes');
 
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedAcademicPeriod);
 		//$programmeGrades = array();
 		if (empty($programmeGrades)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
-			$singleGradeClasses = $this->getSingleGradeData($controller->Session->read('InstitutionSite.id'), $selectedYear);
-			$multiGradeData = $this->getMultiGradeData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			$singleGradeClasses = $this->getSingleGradeData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
+			$multiGradeData = $this->getMultiGradeData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 			$singleGradeData = $programmeGrades;
 			$this->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 
 			$controller->set(compact('singleGradeData', 'multiGradeData'));
 		}
 
-		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 
-		$controller->set(compact('displayContent', 'selectedYear', 'yearList', 'isEditable'));
+		$controller->set(compact('displayContent', 'selectedAcademicPeriod', 'academicPeriodList', 'isEditable'));
 	}
 
 	public function classesEdit($controller, $params) {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Classes');
 
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $controller->getAvailableYearId($yearList);
-			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+			$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);
+			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 			if (!$editable) {
-				$controller->redirect(array('action' => 'classes', $selectedYear));
+				$controller->redirect(array('action' => 'classes', $selectedAcademicPeriod));
 			} else {
 				$displayContent = true;
-				$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $selectedYear);
+				$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 				if (empty($programmeGrades)) {
 					$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 					$displayContent = false;
 				} else {
-					$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $selectedYear, false);
-					$singleGradeClasses = $this->getSingleGradeData($controller->Session->read('InstitutionSite.id'), $selectedYear);
-					$multiGradeData = $this->getMultiGradeData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+					$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod, false);
+					$singleGradeClasses = $this->getSingleGradeData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
+					$multiGradeData = $this->getMultiGradeData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 					$singleGradeData = $programmeGrades;
 					$this->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 
 					$controller->set(compact('programmes', 'programmeGrades', 'singleGradeData', 'multiGradeData'));
 				}
 
-				$controller->set(compact('displayContent', 'selectedYear', 'yearList'));
+				$controller->set(compact('displayContent', 'selectedAcademicPeriod', 'academicPeriodList'));
 			}
 		} else {
-			$yearId = $controller->data['CensusClass']['school_year_id'];
-			unset($controller->request->data['CensusClass']['school_year_id']);
+			$academicPeriodId = $controller->data['CensusClass']['academic_period_id'];
+			unset($controller->request->data['CensusClass']['academic_period_id']);
 			$duplicate = false;
-			$data = $this->clean($controller->data['CensusClass'], $yearId, $controller->Session->read('InstitutionSite.id'), $duplicate);
+			$data = $this->clean($controller->data['CensusClass'], $academicPeriodId, $controller->Session->read('InstitutionSite.id'), $duplicate);
 
 			if ($duplicate) {
 				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
 			}
 			$this->saveCensusData($data);
 			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
-			$controller->redirect(array('action' => 'classes', $yearId));
+			$controller->redirect(array('action' => 'classes', $academicPeriodId));
 		}
 	}
 
 	public function classesAddMultiClass($controller, $params) {
 		$controller->layout = 'ajax';
 
-		$yearId = $controller->params['pass'][0];
-		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $yearId);
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $yearId, false);
+		$academicPeriodId = $controller->params['pass'][0];
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $academicPeriodId);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $academicPeriodId, false);
 
 		$body = $controller->params->query['tableBody'];
 		$i = $controller->params->query['index'];
 
-		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId'));
+		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'academicPeriodId'));
 	}
 
 	public function classesAddMultiGrade($controller, $params) {
@@ -351,9 +351,9 @@ class CensusClass extends AppModel {
 
 		$row = $controller->params->query['row'];
 		$index = $controller->params->query['index'];
-		$yearId = $controller->params['pass'][0];
-		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $yearId);
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $yearId, false);
+		$academicPeriodId = $controller->params['pass'][0];
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $academicPeriodId);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->Session->read('InstitutionSite.id'), $academicPeriodId, false);
 		$grades = $programmeGrades[current($programmes)]['education_grades'];
 
 		$option = '<option value="%d">%s</option>';
@@ -385,18 +385,18 @@ class CensusClass extends AppModel {
 
 		if ($index == 1) {
 			$data = array();
-			$header = array(__('Year'), __('Class Type'), __('Programme'), __('Grade'), __('Classes'), __('Seats'));
+			$header = array(__('Academic Period'), __('Class Type'), __('Programme'), __('Grade'), __('Classes'), __('Seats'));
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
-			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+			$dataAcademicPeriods = $InstitutionSiteProgrammeModel->getAcademicPeriodsHaveProgrammes($institutionSiteId);
 
-			foreach ($dataYears AS $rowYear) {
-				$yearId = $rowYear['SchoolYear']['id'];
-				$yearName = $rowYear['SchoolYear']['name'];
+			foreach ($dataAcademicPeriods AS $rowAcademicPeriod) {
+				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];
+				$academicPeriodName = $rowAcademicPeriod['AcademicPeriod']['name'];
 
 				// single grade classes data start
-				$programmeGrades = $InstitutionSiteProgrammeModel->getProgrammeList($institutionSiteId, $yearId);
-				$singleGradeClasses = $this->getSingleGradeData($institutionSiteId, $yearId);
+				$programmeGrades = $InstitutionSiteProgrammeModel->getProgrammeList($institutionSiteId, $academicPeriodId);
+				$singleGradeClasses = $this->getSingleGradeData($institutionSiteId, $academicPeriodId);
 				$singleGradeData = $programmeGrades;
 				$this->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 
@@ -410,7 +410,7 @@ class CensusClass extends AppModel {
 							$seatsSingleGrade = empty($gradeData['seats']) ? 0 : $gradeData['seats'];
 
 							$data[] = array(
-								$yearName,
+								$academicPeriodName,
 								__('Single Grade Classes Only'),
 								$programmeName,
 								$gradeData['name'],
@@ -428,7 +428,7 @@ class CensusClass extends AppModel {
 				}
 				// single grade classes data end
 				// multi grades classes data start
-				$multiGradesData = $this->getMultiGradeData($institutionSiteId, $yearId);
+				$multiGradesData = $this->getMultiGradeData($institutionSiteId, $academicPeriodId);
 
 				if (count($multiGradesData) > 0) {
 					$data[] = $header;
@@ -462,7 +462,7 @@ class CensusClass extends AppModel {
 						}
 
 						$data[] = array(
-							$yearName,
+							$academicPeriodName,
 							__('Multi Grade Classes'),
 							$multiProgrammes,
 							$multiGrades,

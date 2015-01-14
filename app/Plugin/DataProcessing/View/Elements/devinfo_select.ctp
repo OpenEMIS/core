@@ -32,10 +32,10 @@ $arrMap = array(
 </div>
 <div class="col-md-4">
 	<?php
-	echo  $this->Form->input('school_year_id', array(
+	echo  $this->Form->input('academic_period_id', array(
 		'label' => false,
 		'div' => false,
-		'options' => $schoolYearOptions,
+		'options' => $academicPeriodOptions,
 		'class'=>'form-control'
 	));
 	?>

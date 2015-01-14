@@ -36,8 +36,8 @@ class StaffAttendance extends StaffAppModel {
                     'last_name' => 'Last Name',
                     'preferred_name' => 'Preferred Name'
                 ),
-                'SchoolYear' => array(
-                    'name' => 'School Year',
+                'AcademicPeriod' => array(
+                    'name' => 'Academic Period',
                     'school_days' => 'School Days'
                 ),
                 'StaffAttendance' => array(
@@ -50,22 +50,22 @@ class StaffAttendance extends StaffAppModel {
 		)
 	);
 	
-	public function getAttendanceData($id,$yearId,$institutionSiteId=null) {
+	public function getAttendanceData($id,$academicPeriodId,$institutionSiteId=null) {
                 if(empty($institutionSiteId)){
                     $list = $this->find('all',array(
-				'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId)));
+				'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.academic_period_id' => $academicPeriodId)));
                 }else{
                     $institutionSiteId = intval($institutionSiteId);
                     $list = $this->find('all',array(
-				'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId, 'StaffAttendance.institution_site_id' => $institutionSiteId)));
+				'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.academic_period_id' => $academicPeriodId, 'StaffAttendance.institution_site_id' => $institutionSiteId)));
                 }
 
 		return $list;
 	}
 
-    public function findID($id,$yearId) {
+    public function findID($id,$academicPeriodId) {
         $list = $this->find('all',array(
-            'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId)));
+            'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.academic_period_id' => $academicPeriodId)));
         $myid='';
         if(count($list)>0){
             $myid = $list[0]['StaffAttendance']['id'];
@@ -87,7 +87,7 @@ class StaffAttendance extends StaffAppModel {
 			$options = array();
 			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Staff.identification_no', 'SchoolYear.name');
+			$options['order'] = array('Staff.identification_no', 'AcademicPeriod.name');
 			$options['conditions'] = array('StaffAttendance.institution_site_id' => $institutionSiteId);
 
 			$options['joins'] = array(
@@ -104,9 +104,9 @@ class StaffAttendance extends StaffAppModel {
                         'conditions' => array('StaffAttendance.staff_id = Staff.id')
                     ),
                     array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
-                        'conditions' => array('StaffAttendance.school_year_id = SchoolYear.id')
+                        'table' => 'academic_periods',
+                        'alias' => 'AcademicPeriod',
+                        'conditions' => array('StaffAttendance.academic_period_id = AcademicPeriod.id')
                     ),
                 );
 			

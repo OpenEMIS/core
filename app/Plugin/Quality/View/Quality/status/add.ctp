@@ -25,7 +25,7 @@ if ($displayType != 'add') {
 }
 
 echo $this->Form->input('rubric_template_id', array('disabled' => $disabled, 'options' => $rubricOptions));
-echo $this->Form->input('year', array('disabled' => $disabled, 'options' => $yearOptions));
+echo $this->Form->input('year', array('disabled' => $disabled, 'options' => $academicPeriodOptions));
 echo $this->FormUtility->datepicker('date_enabled', array('id' => 'DateEnabled', 'data-date' => $dateEnabled));
 echo $this->FormUtility->datepicker('date_disabled', array('id' => 'DateDisabled', 'data-date' => $dateDisabled));
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'status')));

@@ -130,34 +130,34 @@ class AssessmentItemResult extends AppModel {
 	public function assessments($controller, $params) {
 		$controller->Navigation->addCrumb('Assessments');
 
-		$yearOptions = $this->AssessmentItem->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
-		$defaultYearId = 0;
-		if(!empty($yearOptions)){
-			$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
-			if(!empty($currentYearId) && array_key_exists($currentYearId, $yearOptions)){
-				$defaultYearId = $currentYearId;
+		$academicPeriodOptions = $this->AssessmentItem->AssessmentItemType->getAcademicPeriodListForAssessments($controller->institutionSiteId);
+		$defaultAcademicPeriodId = 0;
+		if(!empty($academicPeriodOptions)){
+			$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getCurrent();
+			if(!empty($currentAcademicPeriodId) && array_key_exists($currentAcademicPeriodId, $academicPeriodOptions)){
+				$defaultAcademicPeriodId = $currentAcademicPeriodId;
 			}else{
-				$defaultYearId = key($yearOptions);
+				$defaultAcademicPeriodId = key($academicPeriodOptions);
 			}
 		}
 		
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : $defaultYearId;
+		$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : $defaultAcademicPeriodId;
 		$data = array();
-		if (empty($yearOptions)) {
+		if (empty($academicPeriodOptions)) {
 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 		} else {
-			$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
+			$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsByAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod);
 
 			if (empty($data)) {
 				$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 			}
 		}
-		$controller->set(compact('data', 'yearOptions', 'selectedYear'));
+		$controller->set(compact('data', 'academicPeriodOptions', 'selectedAcademicPeriod'));
 	}
 
 	public function assessmentsResults($controller, $params) {
 		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
-            $selectedYear = intval($controller->params['pass'][0]);
+            $selectedAcademicPeriod = intval($controller->params['pass'][0]);
             $assessmentId = intval($controller->params['pass'][1]);
 			
 			$selectedClass = 0;
@@ -173,8 +173,8 @@ class AssessmentItemResult extends AppModel {
 			$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
 			$controller->Navigation->addCrumb('Results');
 			
-            if ($selectedYear != 0 && $assessmentId != 0) {
-				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+            if ($selectedAcademicPeriod != 0 && $assessmentId != 0) {
+				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod, $assessmentId);
 
                 if(empty($classOptions)){
 					$controller->Message->alert('Assessment.result.noClass');
@@ -195,7 +195,7 @@ class AssessmentItemResult extends AppModel {
 					}
                 }
 				
-				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'data', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName'));
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'data', 'assessmentId', 'selectedAcademicPeriod', 'assessmentName', 'educationGradeName'));
             } else {
 				$controller->redirect(array('action' => 'assessments'));
             }
@@ -206,7 +206,7 @@ class AssessmentItemResult extends AppModel {
 	
 	public function assessmentsResultsEdit($controller, $params) {
 		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
-			$selectedYear = intval($controller->params['pass'][0]);
+			$selectedAcademicPeriod = intval($controller->params['pass'][0]);
 			$assessmentId = intval($controller->params['pass'][1]);
 			
 			$selectedClass = 0;
@@ -222,8 +222,8 @@ class AssessmentItemResult extends AppModel {
 			$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
 			$controller->Navigation->addCrumb('Results');
 
-			if ($selectedYear != 0 && $assessmentId != 0) {
-				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+			if ($selectedAcademicPeriod != 0 && $assessmentId != 0) {
+				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod, $assessmentId);
 
 				if (empty($classOptions)) {
 					$controller->Message->alert('Assessment.result.noClass');
@@ -292,12 +292,12 @@ class AssessmentItemResult extends AppModel {
 							}
 							
 							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-							$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
+							$controller->redirect(array('action' => 'assessmentsResults', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem));
 						}
 					}
 				}
 
-				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName', 'minMarks', 'maxMarks'));
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedAcademicPeriod', 'assessmentName', 'educationGradeName', 'minMarks', 'maxMarks'));
 			} else {
 				$controller->redirect(array('action' => 'assessments'));
 			}

@@ -9,7 +9,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Teachers'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'teachers', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'teachers', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -18,7 +18,7 @@ echo $this->Form->create('CensusTeacher', array(
 	'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 	'url' => array('controller' => 'Census', 'action' => 'teachersEdit')
 ));
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div id="teachers" class="content_wrapper edit page-controls">
@@ -381,14 +381,14 @@ echo $this->element('census/year_options');
 
 			<?php if ($_add) { ?>
 				<div class="row">
-					<a class="void icon_plus" id="add_multi_teacher" url="Census/teachersAddMultiTeacher/<?php echo $selectedYear; ?>"><?php echo __('Add') . ' ' . __('Multi Grade Teacher'); ?></a>
+					<a class="void icon_plus" id="add_multi_teacher" url="Census/teachersAddMultiTeacher/<?php echo $selectedAcademicPeriod; ?>"><?php echo __('Add') . ' ' . __('Multi Grade Teacher'); ?></a>
 				</div>
 			<?php } ?>
 		</fieldset>
 
 		<div class="controls">
 			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-			<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachers', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+			<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachers', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
 		</div>
 
 	<?php } // end display content    ?>

@@ -6,7 +6,7 @@
 var Survey = {
 	filterXML : function(){
 		var maskId;
-		var sy = $("#schoolYear :selected").text();
+		var sy = $("#academicPeriod :selected").text();
 		var st = $("#siteType :selected").text().replace(" ","-");
 		var sc = $("#category :selected").text().replace(" ","-");
 		var resp = (($("#pageType").val() == 'import')?'import':'');
@@ -14,7 +14,7 @@ var Survey = {
 			type: 'GET',
 			dataType: 'text',
 			url: getRootURL() + 'Survey/filter/'+resp,
-			data: {schoolYear:sy,siteType:st,category:sc},
+			data: {academicPeriod:sy,siteType:st,category:sc},
 			beforeSend: function (jqXHR) {
 				maskId = $.mask({parent: '#divSurvey', text: i18n.General.textLoading});
 			},
