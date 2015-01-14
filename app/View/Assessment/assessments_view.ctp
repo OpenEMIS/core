@@ -56,7 +56,7 @@ $this->start('contentBody');
 			<tr>
 				<th class="table_cell cell_subject_code"><?php echo __('Code'); ?></th>
 				<th class="table_cell"><?php echo __('Subject'); ?></th>
-				<th class="table_cell cell_number_input"><?php echo __('Minimum'); ?></th>
+				<th class="table_cell cell_number_input"><?php echo __('Pass'); ?></th>
 				<th class="table_cell cell_number_input"><?php echo __('Maximum'); ?></th>
 			</tr>
 		</thead>
