@@ -36,18 +36,9 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
-		'Surveys.SurveyStatus',
 		'AcademicPeriod' => array(
 			'className' => 'SchoolYear',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
-		),
-		'SurveyStatusPeriod' => array(
-			'className' => 'Surveys.SurveyStatusPeriod',
-			'foreignKey' => false,
-			'conditions' => array(
-				'InstitutionSiteSurveyCompleted.academic_period_id = SurveyStatusPeriod.academic_period_id',
-				'InstitutionSiteSurveyCompleted.survey_status_id = SurveyStatusPeriod.survey_status_id'
-			)
 		),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -74,25 +65,16 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 	}
 
 	public function index() {
-		$data = $this->getSurveyDataByStatus();
+		$data = $this->getSurveyTemplatesByModule();
 		$this->setVar(compact('data'));
 	}
 
 	public function view($id=0) {
 		if ($this->exists($id)) {
-			$data = $this->getSurveyById($id);
-			$this->Session->write($this->alias.'.id', $id);
-			$this->setVar(compact('id', 'data'));
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => $this->alias, 'index'));
-		}
-	}
-
-	public function details($id=0) {
-		if ($this->exists($id)) {
-			$templateData = $this->getSurveyTemplateBySurveyId($id);
-			$data = $this->getFormatedSurveyData($templateData['id']);
+			$this->contain('SurveyTemplate');
+			$template = $this->findById($id);
+			$template = $template['SurveyTemplate'];
+			$data = $this->getFormatedSurveyData($template['id']);
 			$dataValues = $this->getFormatedSurveyDataValues($id);
 
 			$model = 'SurveyQuestion';
@@ -103,7 +85,8 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 			$modelCell = 'InstitutionSiteSurveyTableCell';
 			$action = 'view';
 
-			$this->setVar(compact('id', 'templateData', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
+			$this->Session->write($this->alias.'.id', $id);
+			$this->setVar(compact('id', 'template', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias, 'index'));
@@ -114,9 +97,11 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		if ($this->Session->check($this->alias.'.id')) {
 			$id = $this->Session->read($this->alias.'.id');
 			$result = $this->updateAll(
-			    array(''.$this->alias.'.status' => 1),
 			    array(
-			    	''.$this->alias.'.id' => $id
+			    	$this->alias.'.status' => 1
+			    ),
+			    array(
+			    	$this->alias.'.id' => $id
 			    )
 			);
 			if($result) {

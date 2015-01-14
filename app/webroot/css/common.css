@@ -166,7 +166,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 .survey .panel-title { font-size: 12px; }
 .survey .panel-title > a { color: #007cbe; }
-.survey .panel-title > span { color: #666666; float: right; font-weight: normal; font-style: italic; }
+.survey .list-group-item > span { color: #666666; font-weight: normal; font-style: italic; }
+.survey .list-group-item > span.modified { margin-left: 5px; }
+
 
 .accordion-toggle {
   cursor: pointer;

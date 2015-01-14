@@ -27,7 +27,18 @@ class SurveyQuestionsController extends SurveysAppController {
 		'Surveys.SurveyTemplate'
 	);
 
-	public $components = array('CustomField2');
+	public $components = array(
+		'CustomField2' => array(
+			'models' => array(
+				'Module' => 'Surveys.SurveyModule',
+				'Parent' => 'Surveys.SurveyTemplate',
+				'Field' => 'Surveys.SurveyQuestion',
+				'FieldOption' => 'Surveys.SurveyQuestionChoice',
+				'TableRow' => 'Surveys.SurveyTableRow',
+				'TableColumn' => 'Surveys.SurveyTableColumn'
+			)
+		)
+	);
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -45,28 +56,6 @@ class SurveyQuestionsController extends SurveysAppController {
 		} else {
 			$this->Navigation->addCrumb('Questions');
 		}
-
-		$fieldTypeOptions = $this->CustomField2->get('fieldType');
-		$selectedFieldType = key($fieldTypeOptions);
-		$mandatoryOptions = $this->CustomField2->get('mandatory');
-		$selectedMandatory = 0;
-		$mandatoryDisabled = $this->CustomField2->getMandatoryDisabled($selectedFieldType);
-		$uniqueOptions = $this->CustomField2->get('unique');
-		$selectedUnique = 0;
-		$uniqueDisabled = $this->CustomField2->getUniqueDisabled($selectedFieldType);
-		$visibleOptions = $this->CustomField2->get('visible');
-		$selectedVisible = 1;
-
-		$this->set('fieldTypeOptions', $fieldTypeOptions);
-		$this->set('selectedFieldType', $selectedFieldType);
-		$this->set('mandatoryOptions', $mandatoryOptions);
-		$this->set('selectedMandatory', $selectedMandatory);
-		$this->set('mandatoryDisabled', $mandatoryDisabled);
-		$this->set('uniqueOptions', $uniqueOptions);
-		$this->set('selectedUnique', $selectedUnique);
-		$this->set('uniqueDisabled', $uniqueDisabled);
-		$this->set('visibleOptions', $visibleOptions);
-		$this->set('selectedVisible', $selectedVisible);
 
 		$this->set('contentHeader', __('Questions'));
 	}
@@ -100,158 +89,94 @@ class SurveyQuestionsController extends SurveysAppController {
     }
 
     public function view($id=0) {
-		if ($this->SurveyQuestion->exists($id)) {
-			$data = $this->SurveyQuestion->findById($id);
-			$this->Session->write($this->SurveyQuestion->alias.'.id', $id);
-			$this->set('data', $data);
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
-		}
+    	$this->CustomField2->view($id);
 	}
 
     public function add() {
-    	if ($this->Session->check($this->SurveyTemplate->alias . '.id')) {
-			$id = $this->Session->read($this->SurveyTemplate->alias . '.id');
-
-			$templateData = $this->SurveyTemplate->findById($id);
-			$this->set('templateData', $templateData);
-
-	    	if ($this->request->is(array('post', 'put'))) {
-	    		$data = $this->request->data;
-	    		$selectedFieldType = $data['SurveyQuestion']['type'];
-
-	    		if ($data['submit'] == 'reload') {
-				} else if($data['submit'] == 'SurveyQuestionChoice') {
-					$data['SurveyQuestionChoice'][] =array(
-						'id' => String::uuid(),
-						'value' => '',
-						'default_choice' => 0,
-						'visible' => 1,
-						'survey_question_id' => $id
-					);
-				} else if($data['submit'] == 'SurveyTableRow') {
-					$data['SurveyTableRow'][] =array(
-						'id' => '',
-						'name' => '',
-						'visible' => 1,
-						'survey_question_id' => $id
-					);
-				} else if($data['submit'] == 'SurveyTableColumn') {
-					$data['SurveyTableColumn'][] =array(
-						'id' => '',
-						'name' => '',
-						'visible' => 1,
-						'survey_question_id' => $id
-					);
-	    		} else {
-	    			if(isset($this->request->data['SurveyQuestionChoice'])) {
-						foreach ($this->request->data['SurveyQuestionChoice'] as $key => $value) {
-							if(empty($value['value'])) {
-								unset($this->request->data['SurveyQuestionChoice'][$key]);
-							}
-						}
-					}
-
-		    		if ($this->SurveyQuestion->saveAll($this->request->data)) {
-						$this->Message->alert('general.add.success');
-						return $this->redirect(array('action' => 'index'));
-					} else {
-						$this->log($this->validationErrors, 'debug');
-						$this->Message->alert('general.add.failed');
-					}
-	    		}
-
-	    		$mandatoryDisabled = $this->CustomField2->getMandatoryDisabled($selectedFieldType);
-				$uniqueDisabled = $this->CustomField2->getUniqueDisabled($selectedFieldType);
-				$this->set('mandatoryDisabled', $mandatoryDisabled);
-				$this->set('uniqueDisabled', $uniqueDisabled);
-	    		$this->set('selectedFieldType', $selectedFieldType);
-				$this->set('data', $data);
-	    	}
-		}
+    	$this->CustomField2->add();
     }
 
     public function edit($id=0) {
-		if ($this->SurveyQuestion->exists($id)) {
-			$this->SurveyQuestion->recursive = -1;
-			$this->SurveyQuestion->contain('SurveyTemplate', 'SurveyQuestionChoice', 'SurveyTableRow', 'SurveyTableColumn');
-			$data = $this->SurveyQuestion->findById($id);
-			$selectedFieldType = $data['SurveyQuestion']['type'];
+		if ($this->CustomField2->Field->exists($id)) {
+			$this->CustomField2->Field->contain(
+				$this->CustomField2->Parent->alias,
+				$this->CustomField2->FieldOption->alias,
+				$this->CustomField2->TableRow->alias,
+				$this->CustomField2->TableColumn->alias
+			);
+			$data = $this->CustomField2->Field->findById($id);
+			$selectedFieldType = $data[$this->CustomField2->Field->alias]['type'];
+			
 			if ($this->request->is(array('post', 'put'))) {
 
 				$data = $this->request->data;
-				$selectedFieldType = $data['SurveyQuestion']['type'];
-				$data['SurveyQuestion']['is_mandatory'] = 0;
-				$data['SurveyQuestion']['is_unique'] = 0;
+				$selectedFieldType = $data[$this->CustomField2->Field->alias]['type'];
+				//$data[$this->CustomField2->Field->alias]['is_mandatory'] = 0;
+				//$data[$this->CustomField2->Field->alias]['is_unique'] = 0;
 
 				if ($data['submit'] == 'reload') {
-				} else if($data['submit'] == 'SurveyQuestionChoice') {
-					$data['SurveyQuestionChoice'][] =array(
+				} else if($data['submit'] == $this->CustomField2->FieldOption->alias) {
+					$data[$this->CustomField2->FieldOption->alias][] =array(
 						'id' => String::uuid(),
 						'value' => '',
-						'default_choice' => 0,
-						'visible' => 1,
-						'survey_question_id' => $this->Session->read($this->SurveyTemplate->alias . '.id')
+						'visible' => 1
 					);
-				} else if($data['submit'] == 'SurveyTableRow') {
-					$data['SurveyTableRow'][] =array(
+				} else if($data['submit'] == $this->CustomField2->TableRow->alias) {
+					$data[$this->CustomField2->TableRow->alias][] =array(
 						'id' => '',
 						'name' => '',
 						'visible' => 1,
-						'survey_question_id' => $id
 					);
-				} else if($data['submit'] == 'SurveyTableColumn') {
-					$data['SurveyTableColumn'][] =array(
+				} else if($data['submit'] == $this->CustomField2->TableColumn->alias) {
+					$data[$this->CustomField2->TableColumn->alias][] =array(
 						'id' => '',
 						'name' => '',
 						'visible' => 1,
-						'survey_question_id' => $id
 					);
 				} else {
-					if(isset($this->request->data['SurveyQuestionChoice'])) {
-						foreach ($this->request->data['SurveyQuestionChoice'] as $key => $value) {
+					if(isset($this->request->data[$this->CustomField2->FieldOption->alias])) {
+						foreach ($this->request->data[$this->CustomField2->FieldOption->alias] as $key => $value) {
 							if(empty($value['value'])) {
-								unset($this->request->data['SurveyQuestionChoice'][$key]);
+								unset($this->request->data[$this->CustomField2->FieldOption->alias][$key]);
 							}
 						}
 					}
-					if(isset($this->request->data['SurveyTableColumn'])) {
-						foreach ($this->request->data['SurveyTableColumn'] as $key => $value) {
+					if(isset($this->request->data[$this->CustomField2->TableColumn->alias])) {
+						foreach ($this->request->data[$this->CustomField2->TableColumn->alias] as $key => $value) {
 							if(empty($value['name'])) {
-								unset($this->request->data['SurveyTableColumn'][$key]);
+								unset($this->request->data[$this->CustomField2->TableColumn->alias][$key]);
 							}
 						}
 					}
-					if(isset($this->request->data['SurveyTableRow'])) {
-						foreach ($this->request->data['SurveyTableRow'] as $key => $value) {
+					if(isset($this->request->data[$this->CustomField2->TableRow->alias])) {
+						foreach ($this->request->data[$this->CustomField2->TableRow->alias] as $key => $value) {
 							if(empty($value['name'])) {
-								unset($this->request->data['SurveyTableRow'][$key]);
+								unset($this->request->data[$this->CustomField2->TableRow->alias][$key]);
 							}
 						}
 					}
-					if(isset($this->request->data['SurveyTemplate'])) {
-						unset($this->request->data['SurveyTemplate']);
+					if(isset($this->request->data[$this->CustomField2->Parent->alias])) {
+						unset($this->request->data[$this->CustomField2->Parent->alias]);
 					}
 
-					$this->SurveyQuestionChoice->updateAll(
-					    array('SurveyQuestionChoice.visible' => 0),
-					    array('SurveyQuestionChoice.survey_question_id' => $id)
+					$this->CustomField2->FieldOption->updateAll(
+					    array($this->CustomField2->FieldOption->alias . '.visible' => 0),
+					    array($this->CustomField2->FieldOption->alias . '.survey_question_id' => $id)
 					);
-					$this->SurveyTableRow->updateAll(
-					    array('SurveyTableRow.visible' => 0),
-					    array('SurveyTableRow.survey_question_id' => $id)
+					$this->CustomField2->TableRow->updateAll(
+					    array($this->CustomField2->TableRow->alias . '.visible' => 0),
+					    array($this->CustomField2->TableRow->alias . '.survey_question_id' => $id)
 					);
-					$this->SurveyTableColumn->updateAll(
-					    array('SurveyTableColumn.visible' => 0),
-					    array('SurveyTableColumn.survey_question_id' => $id)
+					$this->CustomField2->TableColumn->updateAll(
+					    array($this->CustomField2->TableColumn->alias . '.visible' => 0),
+					    array($this->CustomField2->TableColumn->alias . '.survey_question_id' => $id)
 					);
 
-					if ($this->SurveyQuestion->saveAll($this->request->data)) {
+					if ($this->CustomField2->Field->saveAll($this->request->data)) {
 						$this->Message->alert('general.edit.success');
 						return $this->redirect(array('action' => 'view', $id));
 					} else {
-						$this->log($this->validationErrors, 'debug');
+						$this->log($this->CustomField2->Field->validationErrors, 'debug');
 						$this->Message->alert('general.edit.failed');
 					}
 				}
@@ -267,7 +192,8 @@ class SurveyQuestionsController extends SurveysAppController {
 			$uniqueDisabled = $this->CustomField2->getUniqueDisabled($selectedFieldType);
 			$this->set('mandatoryDisabled', $mandatoryDisabled);
 			$this->set('uniqueDisabled', $uniqueDisabled);
-			$this->set('data', $data);
+			//$this->request->data = $data;
+			//$this->set('data', $data);
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index'));

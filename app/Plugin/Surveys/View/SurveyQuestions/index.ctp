@@ -4,7 +4,7 @@ $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 	if(isset($templateData)) {
 		if ($_add) {
-		    echo $this->Html->link(__('Add'), array('action' => 'add'), array('class' => 'divider'));
+		    echo $this->Html->link(__('Add'), array('action' => 'add', 'module' => $selectedModule, 'parent' => $selectedTemplate), array('class' => 'divider'));
 		}
 		if ($_edit) {
 		    echo $this->Html->link(__('Reorder'), array('action' => 'reorder', $templateData['SurveyTemplate']['id']), array('class' => 'divider'));
@@ -59,7 +59,7 @@ $this->start('contentBody');
 				<?php foreach ($data as $obj) : ?>
 					<tr>
 						<td class="cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['SurveyQuestion']['visible']==1); ?></td>
-						<td><?php echo $this->Html->link($obj['SurveyQuestion']['name'], array('action' => 'view', $obj['SurveyQuestion']['id'])) ?></td>
+						<td><?php echo $this->Html->link($obj['SurveyQuestion']['name'], array('action' => 'view', $obj['SurveyQuestion']['id'], 'module' => $selectedModule, 'parent' => $selectedTemplate)) ?></td>
 						<td><?php echo $fieldTypeOptions[$obj['SurveyQuestion']['type']] ?></td>
 						<td class="cell_visible">
 							<?php

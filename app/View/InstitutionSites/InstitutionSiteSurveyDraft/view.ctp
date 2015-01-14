@@ -1,46 +1,26 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get("$model.title"));
+$this->assign('contentHeader', $this->Label->get("InstitutionSiteSurveyDraft.title"));
 $this->start('contentActions');
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteSurveyDraft', 'index'), array('class' => 'divider'));
 	if ($_edit) {
-	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $data[$model]['id']), array('class' => 'divider'));
+	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'InstitutionSiteSurveyDraft', 'edit', $id), array('class' => 'divider'));
 	}
 	if ($_delete) {
-		echo $this->Html->link($this->Label->get('general.delete'), array('action' => $model, 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'InstitutionSiteSurveyDraft', 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 	}
 $this->end();
 
 $this->start('contentBody');
+
+	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->params['action'], 'edit', $id));
+	$labelOptions = $formOptions['inputDefaults']['label'];
+	echo $this->Form->create('InstitutionSiteSurveyDraft', $formOptions);
+		echo $this->Form->hidden('id', array('value' => $id));
+		$labelOptions['text'] = __('Name');
+		echo $this->Form->input('InstitutionSiteSurvey.survey_template_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $template['name']));
+		echo $this->element('customfields/index', compact('model', 'modelOption', 'modelRow', 'modelColumn', 'action'));
+	echo $this->Form->end();
+
+$this->end(); 
 ?>
-
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Name'); ?></div>
-		<div class="col-md-6"><?php echo $data['SurveyStatus']['SurveyTemplate']['name']; ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Academic Period Type'); ?></div>
-		<div class="col-md-6"><?php echo $data['SurveyStatus']['AcademicPeriodType']['name']; ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Academic Period'); ?></div>
-		<div class="col-md-6"><?php echo $data['SurveyStatusPeriod']['AcademicPeriod']['name']; ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Modified by'); ?></div>
-		<div class="col-md-6"><?php if(isset($data['ModifiedUser'])) { echo $data['ModifiedUser']['first_name'] . " " . $data['ModifiedUser']['last_name']; } ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Modified on'); ?></div>
-		<div class="col-md-6"><?php if(isset($data[$model])) { echo $data[$model]['modified']; } ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Created by'); ?></div>
-		<div class="col-md-6"><?php if(isset($data['CreatedUser'])) { echo $data['CreatedUser']['first_name'] . " " . $data['ModifiedUser']['last_name']; } ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Created on'); ?></div>
-		<div class="col-md-6"><?php if(isset($data[$model])) { echo $data[$model]['created']; } ?></div>
-	</div>
-
-<?php $this->end(); ?>
