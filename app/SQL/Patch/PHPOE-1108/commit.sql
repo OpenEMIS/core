@@ -213,7 +213,7 @@ NULL , 'Institution', NULL, 'InstitutionSites', 'Surveys', 'Completed', 'Institu
 SET @orderOfDashboardsSecurity := 0;
 SELECT `order` INTO @orderOfDashboardsSecurity FROM `security_functions` WHERE `controller` LIKE 'Dashboards' AND `category` LIKE 'Reports' AND `name` LIKE 'Dashboards';
 
-UPDATE `security_functions` SET `order` = `order` + 3 WHERE `order` >= @orderOfDashboardsSecurity;
+UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` >= @orderOfDashboardsSecurity;
 
 INSERT INTO `security_functions` (
 `id` ,
@@ -233,7 +233,7 @@ INSERT INTO `security_functions` (
 `created`
 )
 VALUES (
-NULL , 'New', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyNew|InstitutionSiteSurveyNew.index', NULL, '_view:add', NULL, NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
+NULL , 'New', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyNew|InstitutionSiteSurveyNew.index|InstitutionSiteSurveyNew.view|InstitutionSiteSurveyDraft|InstitutionSiteSurveyDraft.index|InstitutionSiteSurveyDraft.view', '_view:InstitutionSiteSurveyDraft.edit', '_view:InstitutionSiteSurveyNew.add', '_view:InstitutionSiteSurveyDraft.remove', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfDashboardsSecurity := @orderOfDashboardsSecurity + 1;
@@ -256,30 +256,7 @@ INSERT INTO `security_functions` (
 `created`
 )
 VALUES (
-NULL , 'Draft', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyDraft|InstitutionSiteSurveyDraft.index', '_view:edit', NULL, '_view:delete', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
-);
-
-SET @orderOfDashboardsSecurity := @orderOfDashboardsSecurity + 1;
-
-INSERT INTO `security_functions` (
-`id` ,
-`name` ,
-`controller` ,
-`module` ,
-`category` ,
-`parent_id` ,
-`_view` ,
-`_edit` ,
-`_add` ,
-`_delete` ,
-`_execute` ,
-`order` ,
-`visible` ,
-`created_user_id` ,
-`created`
-)
-VALUES (
-NULL , 'Completed', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyCompleted|InstitutionSiteSurveyCompleted.index', NULL, NULL, '_view:delete', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
+NULL , 'Completed', 'InstitutionSites', 'Institutions', 'Surveys', '8', 'InstitutionSiteSurveyCompleted|InstitutionSiteSurveyCompleted.index|InstitutionSiteSurveyCompleted.view|InstitutionSiteSurveyCompleted.details', NULL, NULL, '_view:InstitutionSiteSurveyCompleted.remove', NULL , @orderOfDashboardsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 --
