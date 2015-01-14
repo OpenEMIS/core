@@ -33,7 +33,7 @@ class StudentsController extends StudentsAppController {
 		'Students.StudentCustomValue',
 		'Students.StudentAssessment',
 		'Students.StudentAttendanceType',
-		'SchoolYear',
+		'AcademicPeriod',
 		'ConfigItem'
 	);
 	
@@ -375,33 +375,33 @@ class StudentsController extends StudentsAppController {
 			return $this->redirect(array('action' => 'index'));
 		}
 		$studentId = $this->Session->read('Student.id');
-		$years = $this->StudentAssessment->getYears($studentId);
+		$academicPeriods = $this->StudentAssessment->getAcademicPeriods($studentId);
 		$programmeGrades = $this->StudentAssessment->getProgrammeGrades($studentId);
 
-		reset($years);
+		reset($academicPeriods);
 		reset($programmeGrades);
 
 		if ($this->request->isPost()) {
-			$selectedYearId = $this->request->data['year'];
-			if (!$this->Session->check('Student.assessment.year')) {
-				$this->Session->write('Student.assessment.year', $selectedYearId);
+			$selectedAcademicPeriodId = $this->request->data['academicPeriod'];
+			if (!$this->Session->check('Student.assessment.academicPeriod')) {
+				$this->Session->write('Student.assessment.academicPeriod', $selectedAcademicPeriodId);
 			}
-			$isYearChanged = $this->Session->read('Student.assessment.year') !== $this->request->data['year'];
+			$isAcademicPeriodChanged = $this->Session->read('Student.assessment.academicPeriod') !== $this->request->data['academicPeriod'];
 			
-			$programmeGrades = $this->StudentAssessment->getProgrammeGrades($studentId, $selectedYearId);
-			$selectedProgrammeGrade = $isYearChanged ? key($programmeGrades) : $this->request->data['programmeGrade'];
+			$programmeGrades = $this->StudentAssessment->getProgrammeGrades($studentId, $selectedAcademicPeriodId);
+			$selectedProgrammeGrade = $isAcademicPeriodChanged ? key($programmeGrades) : $this->request->data['programmeGrade'];
 		} else {
-			$selectedYearId = key($years);
+			$selectedAcademicPeriodId = key($academicPeriods);
 			$selectedProgrammeGrade = key($programmeGrades);
 		}
-		$data = $this->StudentAssessment->getData($studentId, $selectedYearId, $selectedProgrammeGrade);
+		$data = $this->StudentAssessment->getData($studentId, $selectedAcademicPeriodId, $selectedProgrammeGrade);
 
-		if (empty($data) && empty($years) && empty($programmeGrades)) {
+		if (empty($data) && empty($academicPeriods) && empty($programmeGrades)) {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->set('years', $years);
-		$this->set('selectedYear', $selectedYearId);
+		$this->set('academicPeriods', $academicPeriods);
+		$this->set('selectedAcademicPeriod', $selectedAcademicPeriodId);
 		$this->set('programmeGrades', $programmeGrades);
 		$this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
 		$this->set('data', $data);
@@ -418,15 +418,15 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb('Absence');
 		$header = __('Absence');
 		
-		$yearList = $this->SchoolYear->getYearList();
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
 		
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
 		
 		$monthOptions = $this->generateMonthOptions();
@@ -440,7 +440,8 @@ class StudentsController extends StudentsAppController {
 			$monthId = $currentMonthId;
 		}
 		
-		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
+		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $academicPeriodId, $monthId);
+		
 		$data = $absenceData;
 		
 		if (empty($data)) {
@@ -449,20 +450,20 @@ class StudentsController extends StudentsAppController {
 		
 		$settingWeekdays = $this->getWeekdaysBySetting();
 
-		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
+		$this->set(compact('header', 'data','academicPeriodList','academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 
-	private function getAvailableYearId($yearList) {
-		$yearId = 0;
+	private function getAvailableAcademicPeriodId($academicPeriodList) {
+		$academicPeriodId = 0;
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	public function getUniqueID() {

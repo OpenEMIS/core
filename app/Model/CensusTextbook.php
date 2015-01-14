@@ -25,11 +25,11 @@ class CensusTextbook extends AppModel {
 	);
 	
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'EducationGradeSubject'
 	);
 	
-	public function getCensusData($siteId, $yearId, $programmeId, $gradeId) {
+	public function getCensusData($siteId, $academicPeriodId, $programmeId, $gradeId) {
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
 		$InstitutionSiteProgramme->formatResult = true;
 		$list = $InstitutionSiteProgramme->find('all' , array(
@@ -91,13 +91,13 @@ class CensusTextbook extends AppModel {
 					'conditions' => array(
 						'CensusTextbook.institution_site_id = InstitutionSiteProgramme.institution_site_id',
 						'CensusTextbook.education_grade_subject_id = EducationGradeSubject.id',
-						'CensusTextbook.school_year_id = InstitutionSiteProgramme.school_year_id'
+						'CensusTextbook.academic_period_id = InstitutionSiteProgramme.academic_period_id'
 					)
 				)
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $siteId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId,
+				'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
 				'InstitutionSiteProgramme.id' => $programmeId,
 				'InstitutionSiteProgramme.status' => 1
 			),
@@ -128,13 +128,13 @@ class CensusTextbook extends AppModel {
 	}
 	
 	public function saveCensusData($data) {
-		$yearId = $data['school_year_id'];
-		unset($data['school_year_id']);
+		$academicPeriodId = $data['academic_period_id'];
+		unset($data['academic_period_id']);
 		unset($data['education_programme_id']);
 		unset($data['education_grade_id']);
 		
 		foreach($data as $obj) {
-			$obj['school_year_id'] = $yearId;
+			$obj['academic_period_id'] = $academicPeriodId;
 			if($obj['id'] == 0) {
 				if($obj['value'] > 0) {
 					$this->create();
@@ -149,28 +149,28 @@ class CensusTextbook extends AppModel {
 	public function textbooks($controller, $params) {
 		$controller->Navigation->addCrumb('Textbooks');
 
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
-		$programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($institutionSiteId, $selectedYear);
+		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedAcademicPeriod);
+		$programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($institutionSiteId, $selectedAcademicPeriod);
 		$selectedProgramme = isset($controller->params['pass'][1]) ? $controller->params['pass'][1] : key($programmeOptions);
 
-		$gradeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeGrades($institutionSiteId, $selectedYear, $selectedProgramme);
+		$gradeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeGrades($institutionSiteId, $selectedAcademicPeriod, $selectedProgramme);
 		$selectedGrade = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($gradeOptions);
 
 		$data = array();
 		if (empty($programmes)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		} else {
-			$data = $this->getCensusData($institutionSiteId, $selectedYear, $selectedProgramme, $selectedGrade);
+			$data = $this->getCensusData($institutionSiteId, $selectedAcademicPeriod, $selectedProgramme, $selectedGrade);
 			if (empty($data)) {
 				$controller->Message->alert('Census.noSubjects');
 			}
 		}
-		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
 		
-		$controller->set(compact('selectedYear', 'yearList', 'selectedProgramme', 'programmeOptions', 'selectedGrade', 'gradeOptions', 'data', 'isEditable'));
+		$controller->set(compact('selectedAcademicPeriod', 'academicPeriodList', 'selectedProgramme', 'programmeOptions', 'selectedGrade', 'gradeOptions', 'data', 'isEditable'));
 	}
 
 	public function textbooksEdit($controller, $params) {
@@ -178,38 +178,38 @@ class CensusTextbook extends AppModel {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Textbooks');
 
-			$yearList = $this->SchoolYear->getAvailableYears(true, 'DESC');
-			$selectedYear = $controller->getAvailableYearId($yearList);
-			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+			$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods(true, 'DESC');
+			$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
 			if (!$editable) {
-				$controller->redirect(array('action' => 'textbooks', $selectedYear));
+				$controller->redirect(array('action' => 'textbooks', $selectedAcademicPeriod));
 			} else {
-				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
-				$programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($institutionSiteId, $selectedYear);
+				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedAcademicPeriod);
+				$programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($institutionSiteId, $selectedAcademicPeriod);
 				$selectedProgramme = $controller->getAvailableprogrammeId($programmeOptions);
-				$gradeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeGrades($institutionSiteId, $selectedYear, $selectedProgramme);
+				$gradeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeGrades($institutionSiteId, $selectedAcademicPeriod, $selectedProgramme);
 				$selectedGrade = $controller->getAvailableGradeId($gradeOptions);
 
 				$data = array();
 				if (empty($programmes)) {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 				} else {
-					$data = $this->getCensusData($institutionSiteId, $selectedYear, $selectedProgramme, $selectedGrade);
+					$data = $this->getCensusData($institutionSiteId, $selectedAcademicPeriod, $selectedProgramme, $selectedGrade);
 					if (empty($data)) {
 						$controller->Message->alert('Census.noSubjects');
 					}
 				}
 				
-				$controller->set(compact('selectedYear', 'yearList', 'selectedProgramme', 'programmeOptions', 'selectedGrade', 'gradeOptions', 'data'));
+				$controller->set(compact('selectedAcademicPeriod', 'academicPeriodList', 'selectedProgramme', 'programmeOptions', 'selectedGrade', 'gradeOptions', 'data'));
 			}
 		} else {
 			$data = $controller->data['CensusTextbook'];
-			$yearId = $data['school_year_id'];
+			$academicPeriodId = $data['academic_period_id'];
 			$programmeId = $data['education_programme_id'];
 			$gradeId = $data['education_grade_id'];
 			$this->saveCensusData($data);
 			$controller->Message->alert('general.edit.success');
-			$controller->redirect(array('action' => 'textbooks', $yearId, $programmeId, $gradeId));
+			$controller->redirect(array('action' => 'textbooks', $academicPeriodId, $programmeId, $gradeId));
 		}
 	}
 	
@@ -225,16 +225,16 @@ class CensusTextbook extends AppModel {
 
 		if ($index == 1) {
 			$data = array();
-			$header = array(__('Year'), __('Programme'), __('Grade'), __('Subject'), __('Total'));
+			$header = array(__('Academic Period'), __('Programme'), __('Grade'), __('Subject'), __('Total'));
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
-			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+			$dataAcademicPeriod = $InstitutionSiteProgrammeModel->getAcademicPeriodsHaveProgrammes($institutionSiteId);
 
-			foreach ($dataYears AS $rowYear) {
-				$yearId = $rowYear['SchoolYear']['id'];
-				$yearName = $rowYear['SchoolYear']['name'];
+			foreach ($dataAcademicPeriod AS $rowAcademicPeriod) {
+				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];
+				$academicPeriodName = $rowAcademicPeriod['AcademicPeriod']['name'];
 
-				$dataCensus = $this->getCensusData($institutionSiteId, $yearId);
+				$dataCensus = $this->getCensusData($institutionSiteId, $academicPeriodId);
 
 				if (count($dataCensus) > 0) {
 					foreach ($dataCensus AS $programmeName => $dataByProgramme) {
@@ -246,7 +246,7 @@ class CensusTextbook extends AppModel {
 							$total = $rowCensus['total'];
 
 							$data[] = array(
-								$yearName,
+								$academicPeriodName,
 								$programmeName,
 								$gradeName,
 								$subjectName,

@@ -37,8 +37,8 @@ class InstitutionSiteClassStudent extends AppModel {
 				'InstitutionSite' => array(
 					'name' => 'Institution'
 				),
-				'SchoolYear' => array(
-					'name' => 'School Year'
+				'AcademicPeriod' => array(
+					'name' => 'Academic Period'
 				),
 				'InstitutionSiteClass' => array(
 					'name' => 'Class'
@@ -203,7 +203,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
-		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'InstitutionSiteSection.name');
+		$fields = array('AcademicPeriod.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'InstitutionSiteSection.name');
 		
 		$joins = array(
 			array(
@@ -243,9 +243,9 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
-				'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
 			)
 		);
 		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
@@ -265,7 +265,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			'fields' => $fields,
 			'joins' => $joins,
 			'conditions' => $conditions,
-			'order' => array('SchoolYear.start_year DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+			'order' => array('AcademicPeriod.start_year DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		$this->bindModel(array('belongsTo' => array('EducationGrade', 'InstitutionSiteClass')));
 		return $data;
@@ -503,7 +503,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			$options = array();
 			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'AssessmentItemType.name', 'EducationSubject.name', 'Student.identification_no');
+			$options['order'] = array('AcademicPeriod.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'AssessmentItemType.name', 'EducationSubject.name', 'Student.identification_no');
 			$options['conditions'] = array();
 
 			$options['joins'] = array(
@@ -540,9 +540,9 @@ class InstitutionSiteClassStudent extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
 				),
 				array(
 					'table' => 'students',
@@ -576,7 +576,7 @@ class InstitutionSiteClassStudent extends AppModel {
 					'conditions' => array(
 						'AssessmentItemResult.student_id = Student.id',
 						'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
-						'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
+						'AssessmentItemResult.academic_period_id = InstitutionSiteClass.academic_period_id',
 						'AssessmentItemResult.assessment_item_id = AssessmentItem.id'
 					)
 				),
@@ -606,7 +606,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		$options['fields'] = array(
 			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
-			'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
+			'AssessmentResultType.name', 'InstitutionSiteClass.academic_period_id',
 			'AssessmentItem.min', 'AssessmentItem.max'
 		);
 
@@ -631,7 +631,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array(
 					'AssessmentItemResult.student_id = Student.id',
 					'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
-					'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
+					'AssessmentItemResult.academic_period_id = InstitutionSiteClass.academic_period_id',
 					'AssessmentItemResult.assessment_item_id = ' . $itemId
 				)
 			),

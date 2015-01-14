@@ -134,7 +134,7 @@ class DashboardsController extends DashboardsAppController {
 		
 		$geoLvlId = empty($this->params['pass'][1])? 0: $this->params['pass'][1]; //Country ID/Geo Level Id
 		$areaId = empty($this->params['pass'][2])? 0: $this->params['pass'][2]; //Area Id 
-		$yearId = empty($this->params['pass'][3])? 0: $this->params['pass'][3]; //year Id 
+		$academicPeriodId = empty($this->params['pass'][3])? 0: $this->params['pass'][3]; //year Id 
 		
 		$Report = ClassRegistry::init('Report');
 		$rData = $Report->findById($id);
@@ -153,26 +153,26 @@ class DashboardsController extends DashboardsAppController {
 		$selectedAreaId = (empty($areaId))? key($areaLvlOptions): $areaId;
 		
 		$yearsOptions = $this->QADashboard->getYears();
-		$yearId = (empty($yearId))? key($yearsOptions): $yearId;
+		$academicPeriodId = (empty($academicPeriodId))? key($yearsOptions): $academicPeriodId;
 
 		$tableTitle = '';
 		$QATableData = array();
 		$displayChartData = array();
 		if (!empty($areaLvlOptions) && !empty($yearsOptions)) {
 			$tableTitle = $areaLvlOptions[$selectedAreaId];
-			$tableTitle .= " ".__('Year')." ".$yearsOptions[$yearId];
-			$QATableData = $this->setupQATableData($selectedAreaId,$yearId);
+			$tableTitle .= " ".__('Year')." ".$yearsOptions[$academicPeriodId];
+			$QATableData = $this->setupQATableData($selectedAreaId,$academicPeriodId);
 			
 			$displayChartData = array(
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $yearId, $yearsOptions[$yearId])),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AdminBreakdownJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TechBreakdownJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDBothBreakdownJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDTechAdminBreakdownJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AppointmentJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'OwnershipJSON', $selectedAreaId, $yearId)),
-				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $yearId))
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'ATAspectJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TrendLineJSON',$selectedAreaId, $academicPeriodId, $yearsOptions[$academicPeriodId])),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AdminBreakdownJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'TechBreakdownJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDBothBreakdownJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'FDTechAdminBreakdownJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'AppointmentJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'OwnershipJSON', $selectedAreaId, $academicPeriodId)),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'LocalityJSON', $selectedAreaId, $academicPeriodId))
 			);
 			
 			if (empty($QATableData['tableData'])) {
@@ -182,7 +182,7 @@ class DashboardsController extends DashboardsAppController {
 			$this->Message->alert('general.noData');
 		}
 		
-		$this->set(compact('header', 'geoLvlId', 'areaId', 'yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', 'displayChartData', 'QATableData', 'tableTitle'));
+		$this->set(compact('header', 'geoLvlId', 'areaId', 'academicPeriodId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', 'displayChartData', 'QATableData', 'tableTitle'));
     }
 	
 	public function dashboardsAjaxGetArea($firstBlank = false){
@@ -202,14 +202,14 @@ class DashboardsController extends DashboardsAppController {
 		}
 	}
 	
-	public function ATAspectJSON($selectedAreaId, $yearId){
+	public function ATAspectJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		
 		$countryId = $this->Session->read('Dashboard.Overview.CountryId');
 		//$countryName = $this->Session->read('Dashboard.Overview.CountryName');
 		
 		$areaRawData = $this->QADashboard->getAreaById(array($countryId, $selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -234,11 +234,11 @@ class DashboardsController extends DashboardsAppController {
 		return  json_encode($data, JSON_NUMERIC_CHECK);
 	}
 	
-	public function TrendLineJSON($selectedAreaId, $yearId, $year){
+	public function TrendLineJSON($selectedAreaId, $academicPeriodId, $year){
 		$this->autoRender = false;
 		$data = $this->HighCharts->customGenerateHeader(array('caption' => 'Trends'));
 		$areaRawData = $this->QADashboard->getAreaById(array($selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYearRange($yearId,10);
+		$timePeriodRawData = $this->QADashboard->getYearRange($academicPeriodId,10);
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -262,7 +262,7 @@ class DashboardsController extends DashboardsAppController {
 		return  json_encode($data, JSON_NUMERIC_CHECK);
 	}
 	
-	public function AdminBreakdownJSON($selectedAreaId, $yearId){
+	public function AdminBreakdownJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		$this->autoRender = false;
 		//$selectedAreaId = !empty($FDId)?$FDId :$areaId;
@@ -270,7 +270,7 @@ class DashboardsController extends DashboardsAppController {
 		//$countryName = $this->Session->read('Dashboard.Overview.CountryName');
 		
 		$areaRawData = $this->QADashboard->getAreaById(array($countryId, $selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminBreakdown_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -297,14 +297,14 @@ class DashboardsController extends DashboardsAppController {
 		return  json_encode($data, JSON_NUMERIC_CHECK);
 	}
 	
-	public function TechBreakdownJSON($selectedAreaId, $yearId){
+	public function TechBreakdownJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		//$selectedAreaId = !empty($FDId)?$FDId :$areaId;
 		$countryId = $this->Session->read('Dashboard.Overview.CountryId');
 		//$countryName = $this->Session->read('Dashboard.Overview.CountryName');
 		
 		$areaRawData = $this->QADashboard->getAreaById(array($countryId, $selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_TechBreakdown_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -330,7 +330,7 @@ class DashboardsController extends DashboardsAppController {
 		return  json_encode($data, JSON_NUMERIC_CHECK);
 	}
 	
-	public function FDBothBreakdownJSON($selectedAreaId, $yearId){
+	public function FDBothBreakdownJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		//$countryId = $this->Session->read('Dashboard.Overview.CountryId');
 		//$countryName = $this->Session->read('Dashboard.Overview.CountryName');
@@ -339,7 +339,7 @@ class DashboardsController extends DashboardsAppController {
 		//$childAreaOptions = $this->QADashboard->getAreaChildLevel($selectedAreaId, false);
 	//	pr($areaRawData);
 		//pr($childAreaOptions);
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score']['Both'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -367,12 +367,12 @@ class DashboardsController extends DashboardsAppController {
 	}
 	
 	
-	public function FDTechAdminBreakdownJSON($selectedAreaId, $yearId){
+	public function FDTechAdminBreakdownJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		//$title = "Scatterplot of Administrative and Technical and Aspects";
 		$areaRawData =  $this->QADashboard->getAllAreaChildByLevel($selectedAreaId, 5, false);
 		
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = array($this->QADashboard->indicators['QA_AdminTechBoth_Score']['Admin'],$this->QADashboard->indicators['QA_AdminTechBoth_Score']['Tech']);
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -396,14 +396,14 @@ class DashboardsController extends DashboardsAppController {
 		return  json_encode($data, JSON_NUMERIC_CHECK);
 	}
 	
-	public function AppointmentJSON($selectedAreaId, $yearId){
+	public function AppointmentJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		//$countryId = $this->Session->read('Dashboard.Overview.CountryId');
 		$countryId = $this->Session->read('Dashboard.Overview.CountryId');
 		$countryName = $this->Session->read('Dashboard.Overview.CountryName');
 		
 		$areaRawData = $this->QADashboard->getAreaById(array( $selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -430,11 +430,11 @@ class DashboardsController extends DashboardsAppController {
 		
 	}
 
-	public function OwnershipJSON($selectedAreaId, $yearId){
+	public function OwnershipJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		
 		$areaRawData = $this->QADashboard->getAreaById(array( $selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -461,11 +461,11 @@ class DashboardsController extends DashboardsAppController {
 		
 	}
 	
-	public function LocalityJSON($selectedAreaId, $yearId){
+	public function LocalityJSON($selectedAreaId, $academicPeriodId){
 		$this->autoRender = false;
 		
 		$areaRawData = $this->QADashboard->getAreaById(array( $selectedAreaId));
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -493,13 +493,13 @@ class DashboardsController extends DashboardsAppController {
 	}
 	//Table Setup
 	
-	public function setupQATableData($areaId,$yearId){
+	public function setupQATableData($areaId,$academicPeriodId){
 		$areaRawData = $this->QADashboard->getAreaChildLevel($areaId, false);
 		if(empty($areaRawData)){
 			$areaRawData = $this->QADashboard->getAreaById(array($areaId));
 		}
 		//
-		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $yearId));
+		$timePeriodRawData = $this->QADashboard->getYears('all', array('id'=> $academicPeriodId));
 		
 		$_options['indicatorGId'] = $this->QADashboard->indicators['QA_AdminTechBoth_Score'];
 		$_options['unitGId'] = array($this->QADashboard->indicators['Unit']['Percent']/*,$this->QADashboard->indicators['Unit']['Number']*/);
@@ -557,11 +557,11 @@ class DashboardsController extends DashboardsAppController {
         fputcsv($csv_file, $footer, ',', '"');
     }
 	
-	public function genCSV($areaId, $yearId) {
+	public function genCSV($areaId, $academicPeriodId) {
         $this->autoRender = false;
-		$data = $this->setupQATableData($areaId, $yearId);
+		$data = $this->setupQATableData($areaId, $academicPeriodId);
 		
-		$year = $this->QADashboard->getYear($yearId);
+		$year = $this->QADashboard->getYear($academicPeriodId);
 		$areaName = $this->QADashboard->getAreaName($areaId);
 		$fileName = 'QA_'.$year."_".$areaName."_". date("Y.m.d");
 		$downloadedFile = $fileName . '.csv';

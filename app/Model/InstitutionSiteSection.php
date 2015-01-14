@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteSection extends AppModel {
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'InstitutionSite',
 		'InstitutionSiteShift',
 		'ModifiedUser' => array(
@@ -46,11 +46,11 @@ class InstitutionSiteSection extends AppModel {
 				'message' => 'Please enter a valid name'
 			)
 		),
-		'school_year_id' => array(
+		'academic_period_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid school year'
+				'message' => 'Please enter a valid school academic period'
 			)
 		),
 		'institution_site_shift_id' => array(
@@ -64,7 +64,7 @@ class InstitutionSiteSection extends AppModel {
 	
 	public $actsAs = array(
 		'ControllerAction2',
-		'SchoolYear'
+		'AcademicPeriod'
 	);
 	
 	public function beforeAction() {
@@ -76,7 +76,7 @@ class InstitutionSiteSection extends AppModel {
 			'model' => $this->alias,
 			'fields' => array(
 				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'SchoolYear'),
+				array('field' => 'name', 'model' => 'AcademicPeriod'),
 				array('field' => 'name'),
 				array('field' => 'no_of_seats'),
 				array('field' => 'no_of_shifts'),
@@ -102,66 +102,66 @@ class InstitutionSiteSection extends AppModel {
 		return $options;
 	}
 	
-	public function index($selectedYear=0) {
+	public function index($selectedAcademicPeriod=0) {
 		$this->Navigation->addCrumb('List of Sections');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearConditions = array(
+		$academicPeriodConditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
 			'InstitutionSiteProgramme.status' => 1,
-			'SchoolYear.visible' => 1
+			'AcademicPeriod.available' => 1
 		);
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
-		if(!empty($yearOptions)){
-			if ($selectedYear != 0) {
-				if (!array_key_exists($selectedYear, $yearOptions)) {
-					$selectedYear = key($yearOptions);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
+		if(!empty($academicPeriodOptions)){
+			if ($selectedAcademicPeriod != 0) {
+				if (!array_key_exists($selectedAcademicPeriod, $academicPeriodOptions)) {
+					$selectedAcademicPeriod = key($academicPeriodOptions);
 				}
 			} else {
-				$selectedYear = key($yearOptions);
+				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 		}
 		
-		if(empty($yearOptions)){
+		if(empty($academicPeriodOptions)){
 			$this->Message->alert('InstitutionSite.noProgramme');
 		}
 		
-		$data = $this->getListOfSections($selectedYear, $institutionSiteId);
+		$data = $this->getListOfSections($selectedAcademicPeriod, $institutionSiteId);
 		
-		$this->setVar(compact('yearOptions', 'selectedYear', 'data'));
+		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data'));
 	}
 	
-	public function add($selectedYear=0) {
+	public function add($selectedAcademicPeriod=0) {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearConditions = array(
+		$academicPeriodConditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
 			'InstitutionSiteProgramme.status' => 1,
-			'SchoolYear.visible' => 1
+			'AcademicPeriod.available' => 1
 		);
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
-		if(!empty($yearOptions)) {
-			if ($selectedYear != 0) {
-				if (!array_key_exists($selectedYear, $yearOptions)) {
-					$selectedYear = key($yearOptions);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
+		if(!empty($academicPeriodOptions)) {
+			if ($selectedAcademicPeriod != 0) {
+				if (!array_key_exists($selectedAcademicPeriod, $academicPeriodOptions)) {
+					$selectedAcademicPeriod = key($academicPeriodOptions);
 				}
 			} else {
-				$selectedYear = key($yearOptions);
+				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 			
-			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedYear);
+			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedAcademicPeriod);
 			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedYear);
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedYear);
+			$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedAcademicPeriod);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedAcademicPeriod);
 			
-			$this->setVar(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			$this->setVar(compact('grades', 'selectedAcademicPeriod', 'academicPeriodOptions', 'shiftOptions', 'institutionSiteId'));
 			
 			if($this->request->is('post') || $this->request->is('put')) {
 				$data = $this->request->data;
 				$result = $this->saveAll($data);
 				if ($result) {
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedYear));
+					return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedAcademicPeriod));
 				}
 			}
 		} else {
@@ -200,7 +200,7 @@ class InstitutionSiteSection extends AppModel {
 					$this->redirect(array('action' => $this->alias, 'view', $id));
 				}
 				
-				$this->request->data['SchoolYear']['name'] = $data['SchoolYear']['name'];
+				$this->request->data['AcademicPeriod']['name'] = $data['AcademicPeriod']['name'];
 			} else {
 				$this->request->data = $data;
 			}
@@ -211,7 +211,7 @@ class InstitutionSiteSection extends AppModel {
 			$this->Navigation->addCrumb($name);
 			
 			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $data['InstitutionSiteSection']['school_year_id']);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $data['InstitutionSiteSection']['academic_period_id']);
 			
 			$this->setVar(compact('grades', 'shiftOptions'));
 		} else {
@@ -227,7 +227,7 @@ class InstitutionSiteSection extends AppModel {
 
 		$this->delete($id);
 		$this->Message->alert('general.delete.success');
-		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['school_year_id']));
+		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['academic_period_id']));
 	}
 	
 	public function getClass($classId, $institutionSiteId=0) {
@@ -241,11 +241,11 @@ class InstitutionSiteSection extends AppModel {
 		return $obj;
 	}
 
-	public function getSectionOptions($yearId, $institutionSiteId, $gradeId=false) {
+	public function getSectionOptions($academicPeriodId, $institutionSiteId, $gradeId=false) {
 		$options = array(
 			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name'),
 			'conditions' => array(
-				'InstitutionSiteSection.school_year_id' => $yearId,
+				'InstitutionSiteSection.academic_period_id' => $academicPeriodId,
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteSection.name')
@@ -270,11 +270,11 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getListOfSections($yearId, $institutionSiteId) {
+	public function getListOfSections($academicPeriodId, $institutionSiteId) {
 		$classes = $this->find('list', array(
 			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name'),
 			'conditions' => array(
-				'InstitutionSiteSection.school_year_id' => $yearId,
+				'InstitutionSiteSection.academic_period_id' => $academicPeriodId,
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteSection.name')
@@ -291,29 +291,29 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getSectionListByInstitution($institutionSiteId, $yearId=0) {
+	public function getSectionListByInstitution($institutionSiteId, $academicPeriodId=0) {
 		$options = array();
 		$options['fields'] = array('InstitutionSiteSection.id', 'InstitutionSiteSection.name');
 		$options['order'] = array('InstitutionSiteSection.name');
 		$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
 		
-		if (!empty($yearId)) {
-			$options['conditions']['InstitutionSiteSection.school_year_id'] = $yearId;
+		if (!empty($academicPeriodId)) {
+			$options['conditions']['InstitutionSiteSection.academic_period_id'] = $academicPeriodId;
 		}
 		
 		$data = $this->find('list', $options);
 		return $data;
 	}
 	
-	public function getSectionListWithYear($institutionSiteId, $schoolYearId, $assessmentId){
+	public function getSectionListWithAcademicPeriod($institutionSiteId, $academicPeriodId, $assessmentId){
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name', 'SchoolYear.name'),
+			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name', 'AcademicPeriod.name'),
 			'joins' => array(
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('InstitutionSiteSection.academic_period_id = AcademicPeriod.id')
 				),
 				array(
 					'table' => 'institution_site_section_grades',
@@ -333,30 +333,30 @@ class InstitutionSiteSection extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteSection.school_year_id' => $schoolYearId
+				'InstitutionSiteSection.academic_period_id' => $academicPeriodId
 			),
-			'order' => array('SchoolYear.name, InstitutionSiteSection.name')
+			'order' => array('AcademicPeriod.name, InstitutionSiteSection.name')
 		));
 		
 		$result = array();
 		foreach($data AS $row){
 			$section = $row['InstitutionSiteSection'];
-			$schoolYear = $row['SchoolYear'];
-			$result[$section['id']] = $schoolYear['name'] . ' - ' . $section['name'];
+			$academicPeriod = $row['AcademicPeriod'];
+			$result[$section['id']] = $academicPeriod['name'] . ' - ' . $section['name'];
 		}
 		
 		return $result;
 	}
 	
-	public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
-		if(empty($yearId)){
+	public function getClassListByInstitutionAcademicPeriod($institutionSiteId, $academicPeriodId){
+		if(empty($academicPeriodId)){
 			$conditions = array(
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
 			);
 		}else{
 			$conditions = array(
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $yearId
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
 			);
 		}
 		
@@ -369,12 +369,12 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 		
-	public function getClassByIdSchoolYear($classId, $schoolYearId){
+	public function getClassByIdAcademicPeriod($classId, $academicPeriodId){
 		$data = $this->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'InstitutionSiteClass.id' => $classId,
-				'InstitutionSiteClass.school_year_id' => $schoolYearId
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
 			)
 		));
 		

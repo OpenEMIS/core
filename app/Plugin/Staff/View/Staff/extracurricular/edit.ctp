@@ -17,7 +17,7 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->hidden('id');
-echo $this->Form->input('academic_period_id', array('options' => $AcademicPeriodOptions, 'selected' => $academicPeriodId));
+echo $this->Form->input('academic_period_id', array('options' => $academicPeriodOptions, 'selected' => $academicPeriodId));
 echo $this->Form->input('extracurricular_type_id', array('options' => $typeOptions));
 echo $this->Form->input('name', array('class' => 'form-control autoComplete', 'label' => array('text'=> $this->Label->get('general.title'), 'class'=>'col-md-3 control-label'), 'url' => 'Staff/extracurricularSearchAutoComplete'));
 echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate'));

@@ -3,9 +3,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => $_action, $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => $_action, $selectedAcademicPeriod), array('class' => 'divider'));
 if($_delete) {
-	echo $this->Html->link(__('Delete'), array('action' => $_action.'Delete', $selectedYear), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	echo $this->Html->link(__('Delete'), array('action' => $_action.'Delete', $selectedAcademicPeriod), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 
@@ -24,7 +24,7 @@ echo $this->Form->input(__('Finance Category'), array('value' => $financeCategor
 echo $this->Form->input('finance_source_id', array('options' => $sourceOptions));
 echo $this->Form->input('amount');
 echo $this->Form->input('description', array('type' => 'textarea'));
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $_action, $selectedYear)));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $_action, $selectedAcademicPeriod)));
 echo $this->Form->end();
 $this->end();
 ?>

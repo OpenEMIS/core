@@ -525,16 +525,16 @@ class DataProcessingController extends DataProcessingAppController {
 		$q = array();
 		if($this->request->is('post')){
             $areaLevelID = $this->request->data['DataProcessing']['area_level_id'];
-            $schoolYearID = $this->request->data['DataProcessing']['school_year_id'];
+            $academicPeriodId = $this->request->data['DataProcessing']['academic_period_id'];
             if(isset($this->request->data['Reports']) && !empty($this->request->data['Reports'])){
                 /*foreach($this->request->data['Reports'] as $reportId){
                     $settings['indicatorId'] = $reportId;
                     $settings['areaLevelId'] = $areaLevelID;
-                    $settings['schoolYearId'] = $schoolYearID;
+                    $settings['academicPeriodId'] = $academicPeriodId;
                     $this->DevInfo->export($settings);
                 }*/
                 $this->Report->processRequest($this->data['Reports'], false);
-                $this->runJob(array('datawarehouse', 'run', $this->Session->read('configItem.language'), $areaLevelID, $schoolYearID));
+                $this->runJob(array('datawarehouse', 'run', $this->Session->read('configItem.language'), $areaLevelID, $academicPeriodId));
             
                 $this->redirect(array('action'=>'processes'));
                 
@@ -552,10 +552,10 @@ class DataProcessingController extends DataProcessingAppController {
         );
 
 
-        $SchoolYear = ClassRegistry::init('SchoolYear');
-        $schoolYearOptions = $SchoolYear->find('list', array('fields'=>array('id', 'name'), 'order'=>array('start_year DESC')));
+        $AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+        $academicPeriodOptions = $AcademicPeriod->getAcademicPeriodList();
 
-        $this->set(compact('areaLevelOptions', 'schoolYearOptions'));
+        $this->set(compact('areaLevelOptions', 'academicPeriodOptions'));
 
        
         /*$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));

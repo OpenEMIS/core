@@ -5,7 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
-if (count($academicPeriod) != 0 && count($programmeGrades) != 0) {
+if (count($academicPeriods) != 0 && count($programmeGrades) != 0) {
 	echo $this->Form->create('Institution', array('style' => 'margin-bottom:20px;'));
 	?>
 	<div class="row myyear">
@@ -16,7 +16,7 @@ if (count($academicPeriod) != 0 && count($programmeGrades) != 0) {
 				'label' => false,
 				'class' => 'form-control',
 				'div' => false,
-				'options' => $academicPeriod,
+				'options' => $academicPeriods,
 				'default' => $selectedAcademicPeriod,
 				'onchange' => '',
 				'name' => "data[academicPeriod]"

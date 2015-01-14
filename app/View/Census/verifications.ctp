@@ -25,7 +25,7 @@ $this->start('contentBody');
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
-                <th><?php echo __('Year'); ?></th>
+                <th><?php echo __('Academic Period'); ?></th>
                 <th><?php echo __('By'); ?></th>
                 <th><?php echo __('Date'); ?></th>
                 <th><?php echo __('Status'); ?></th>
@@ -35,26 +35,26 @@ $this->start('contentBody');
         <tbody>
             <?php
             $bold = '<b>%s</b>';
-            $counter = count($data) > 0 ? $data[0]['SchoolYear']['name'] : null;
+            $counter = count($data) > 0 ? $data[0]['AcademicPeriod']['name'] : null;
             for ($i = 0; $i < count($data); $i++) {
                 $highlight = '';
                 $obj = $data[$i];
                 $created = $obj['CensusVerification']['created'];
                 $status = $obj['CensusVerification']['status'];
-                $year = $obj['SchoolYear']['name'];
+                $academicPeriod = $obj['AcademicPeriod']['name'];
                 $by = trim($obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['last_name']);
                 $date = $this->Utility->formatDate($created, null, false) . ' ' . date('H:i:s', strtotime($created));
                 $status = '<span class="' . ($status == 1 ? 'green' : 'red') . '">' . ($status == 1 ? __('Verified') : __('Unverified')) . '</span>';
 
-                if ($i == count($data) - 1 || ($counter !== $data[$i + 1]['SchoolYear']['name'])) {
+                if ($i == count($data) - 1 || ($counter !== $data[$i + 1]['AcademicPeriod']['name'])) {
                     if ($i != count($data) - 1) {
-                        $counter = $data[$i + 1]['SchoolYear']['name'];
+                        $counter = $data[$i + 1]['AcademicPeriod']['name'];
                     }
                     $highlight = 'selected';
                 }
                 ?>
                 <tr class="<?php echo $highlight ?>">
-                    <td><?php echo $year; ?></td>
+                    <td><?php echo $academicPeriod; ?></td>
                     <td><?php echo $by; ?></td>
                     <td><?php echo $date; ?></td>
                     <td><?php echo $status; ?></td>

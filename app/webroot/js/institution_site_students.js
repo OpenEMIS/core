@@ -19,7 +19,7 @@ $(document).ready(function() {
 });
 
 var InstitutionSiteStudents = {
-	yearId: '#SchoolYearId',
+	periodId: '#AcademicPeriodId',
 	programmeId: '#InstitutionSiteProgrammeId',
 	
 	init: function() {
@@ -29,7 +29,7 @@ var InstitutionSiteStudents = {
 	
 	navigate: function() {
 		var href = $('.content_wrapper > form').attr('action');
-		window.location.href = href + '/' + $(this.yearId).val() + '/' + $(this.programmeId).val();
+		window.location.href = href + '/' + $(this.periodId).val() + '/' + $(this.programmeId).val();
 	},
 	
 	attachSortOrder: function() {
@@ -49,7 +49,7 @@ var InstitutionSiteStudents = {
 		var $this = $(obj);
 		var maskId;
 		var yearURL = getRootURL() + $this.attr('yearUrl');
-		var ajaxParams = {yearId: $this.val()};
+		var ajaxParams = {periodId: $this.val()};
 		var ajaxSuccess = function(data, textStatus) {
 			$('#InstitutionSiteProgrammeId').html(data);
 			$.ajax({

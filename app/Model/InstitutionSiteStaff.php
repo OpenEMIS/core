@@ -184,7 +184,7 @@ class InstitutionSiteStaff extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStaff.search.';
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$academicPeriodOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array();
 
@@ -195,12 +195,12 @@ class InstitutionSiteStaff extends AppModel {
 
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
-			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
+			$selectedAcademicPeriod = $this->request->data[$this->alias]['academic_period_id'];
 
-			if (strlen($selectedYear) != '') {
-				$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
+			if (strlen($selectedAcademicPeriod) != '') {
+				$conditions['InstitutionSiteStaff.start_year <='] = $selectedAcademicPeriod;
 				$conditions['OR'] = array(
-					'InstitutionSiteStaff.end_year >=' => $selectedYear,
+					'InstitutionSiteStaff.end_year >=' => $selectedAcademicPeriod,
 					'InstitutionSiteStaff.end_year IS NULL'
 				);
 			} else {
@@ -211,7 +211,7 @@ class InstitutionSiteStaff extends AppModel {
 			}
 		} else {
 			if (array_key_exists('InstitutionSiteStaff.start_year <=', $conditions)) {
-				$this->request->data[$this->alias]['school_year_id'] = $conditions['InstitutionSiteStaff.start_year <='];
+				$this->request->data[$this->alias]['academic_period_id'] = $conditions['InstitutionSiteStaff.start_year <='];
 			}
 		}
 		
@@ -244,7 +244,7 @@ class InstitutionSiteStaff extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
-		$this->setVar(compact('data', 'yearOptions', 'positionList'));
+		$this->setVar(compact('data', 'academicPeriodOptions', 'positionList'));
 	}
 	
 	public function add() {
@@ -646,10 +646,10 @@ class InstitutionSiteStaff extends AppModel {
 		return $data;
 	}
 	
-	public function getStaffByYear($institutionSiteId, $schoolYearId) {
-		$yearObj = ClassRegistry::init('SchoolYear')->findById($schoolYearId);
-		$startDate = $yearObj['SchoolYear']['start_date'];
-		$endDate = $yearObj['SchoolYear']['end_date'];
+	public function getStaffByAcademicPeriod($institutionSiteId, $academicPeriodId) {
+		$yearObj = ClassRegistry::init('AcademicPeriod')->findById($academicPeriodId);
+		$startDate = $yearObj['AcademicPeriod']['start_date'];
+		$endDate = $yearObj['AcademicPeriod']['end_date'];
 		
 		$options['conditions'] = array(
 			'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,

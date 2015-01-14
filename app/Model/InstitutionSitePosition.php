@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class InstitutionSitePosition extends AppModel {
+class InstitutionSitePosition extends ApapModel {
 	public $actsAs = array('ControllerAction2');
    
 	public $belongsTo = array(
