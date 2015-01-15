@@ -1,7 +1,3 @@
-DROP TABLE academic_periods;
-DROP TABLE academic_period_levels;
-
-
 SET @academicPeriodOrderId := 0;
 SELECT `order` INTO @academicPeriodOrderId FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'System Setup' AND `title` LIKE 'Academic Periods';
 DELETE FROM navigations WHERE `module` LIKE 'Administration' AND `header` LIKE 'System Setup' AND `title` LIKE 'Academic Periods' LIMIT 1;
