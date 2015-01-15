@@ -59,7 +59,7 @@ class QualityInstitutionVisit extends QualityAppModel {
 		'Staff.Staff',
 		'SchoolYear',
 		'EducationGrade',
-		'InstitutionSiteClass',
+		'InstitutionSiteSection',
 		'QualityVisitType',
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
