@@ -51,10 +51,10 @@ DELETE FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'S
 DELETE FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'Surveys' AND `title` LIKE 'Draft';
 DELETE FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'Surveys' AND `title` LIKE 'Completed';
 
-SET @orderOfDashboardsNav := 0;
-SELECT `order` INTO @orderOfDashboardsNav FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'Reports' AND `title` LIKE 'Dashboards';
+SET @orderOfRubricsNav := 0;
+SELECT `order` INTO @orderOfRubricsNav FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'Quality' AND `title` LIKE 'Rubrics';
 
-UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` >= @orderOfDashboardsNav;
+UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` >= @orderOfRubricsNav;
 
 --
 -- 4. security_functions
@@ -63,10 +63,10 @@ UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` >= @orderOfDashboar
 DELETE FROM `security_functions` WHERE `controller` LIKE 'InstitutionSites' AND `category` LIKE 'Surveys' AND `name` LIKE 'New';
 DELETE FROM `security_functions` WHERE `controller` LIKE 'InstitutionSites' AND `category` LIKE 'Surveys' AND `name` LIKE 'Completed';
 
-SET @orderOfDashboardsSecurity := 0;
-SELECT `order` INTO @orderOfDashboardsSecurity FROM `security_functions` WHERE `controller` LIKE 'Dashboards' AND `category` LIKE 'Reports' AND `name` LIKE 'Dashboards';
+SET @orderOfRubricsSecurity := 0;
+SELECT `order` INTO @orderOfRubricsSecurity FROM `security_functions` WHERE `module` LIKE 'Institutions' AND `controller` LIKE 'Quality' AND `category` LIKE 'Quality' AND `name` LIKE 'Rubrics';
 
-UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= @orderOfDashboardsSecurity;
+UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= @orderOfRubricsSecurity;
 
 --
 -- 5. new table: survey_modules
