@@ -14,7 +14,6 @@ echo $this->Form->hidden('id', array('class' => 'option-id'));
 echo $this->Form->hidden('move', array('class' => 'option-move'));
 echo $this->Form->end();
 ?>
-<?php echo $this->element('alert'); ?>
 
 <div class="row form-group">
 	<label class="col-md-3 control-label" for="SurveyQuestionSurveyTemplateName"><?php echo __('Name'); ?></label>

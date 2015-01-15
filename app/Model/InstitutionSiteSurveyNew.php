@@ -57,6 +57,37 @@ class InstitutionSiteSurveyNew extends AppModel {
 		'InstitutionSiteSurveyTableCell'
 	);
 
+	public function beforeSave($options=array()) {
+		/*not working
+		foreach ($this->data['InstitutionSiteSurveyAnswer'] as $key => $obj) {
+			switch($obj['InstitutionSiteSurveyAnswer']['type']) {
+				case 2:
+					$fieldName = 'text_value';
+					break;
+				case 3:
+					$fieldName = 'int_value';
+					break;
+				case 4:
+					$fieldName = 'int_value';
+					break;
+				case 5:
+					$fieldName = 'textarea_value';
+					break;
+				case 6:
+					$fieldName = 'int_value';
+					break;
+				default:
+					$fieldName = 'text_value';
+			}
+			if(empty($obj['InstitutionSiteSurveyAnswer'][$fieldName])) {
+				unset($this->data['InstitutionSiteSurveyAnswer'][$key]);
+			}
+		}
+
+		return true;
+		*/
+	}
+
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Surveys', array('action' => $this->alias, $this->action));
@@ -67,24 +98,6 @@ class InstitutionSiteSurveyNew extends AppModel {
 	public function index() {
 		$data = $this->getSurveyTemplatesByModule();
 		$this->setVar(compact('data'));
-	}
-
-	public function view($templateId=0, $academicPeriodId) {
-		$this->SurveyTemplate->contain();
-		$template = $this->SurveyTemplate->findById($templateId);
-		$period = $this->AcademicPeriod->findById($academicPeriodId);
-		
-		//$data = $this->getSurveyStatusPeriod($academicPeriodId, $surveyStatusId);
-
-		if(!empty($template) && !empty($period)) {
-			$this->Session->write($this->alias.'.academicPeriodId', $academicPeriodId);
-			//$this->Session->write($this->alias.'.surveyStatusId', $surveyStatusId);
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => $this->alias, 'index'));
-		}
-
-		$this->setVar(compact('template', 'period'));
 	}
 
 	public function add($templateId=0, $academicPeriodId=0) {
@@ -125,48 +138,5 @@ class InstitutionSiteSurveyNew extends AppModel {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias, 'index'));
 		}
-
-		/*
-		if ($this->Session->check($this->alias.'.surveyStatusId')) {
-			$academicPeriodId = $this->Session->read($this->alias.'.academicPeriodId');
-			$surveyStatusId = $this->Session->read($this->alias.'.surveyStatusId');
-
-			$templateData = $this->getSurveyTemplate($academicPeriodId, $surveyStatusId);
-			$data = $this->getFormatedSurveyData($templateData['id']);
-			$dataValues = array();
-
-			$model = 'SurveyQuestion';
-	    	$modelOption = 'SurveyQuestionChoice';
-	    	$modelValue = 'InstitutionSiteSurveyAnswer';
-	    	$modelRow = 'SurveyTableRow';
-	    	$modelColumn = 'SurveyTableColumn';
-			$modelCell = 'InstitutionSiteSurveyTableCell';
-			$action = 'edit';
-
-			if ($this->request->is(array('post', 'put'))) {
-
-				$surveyData = $this->prepareSubmitSurveyData($this->request->data);
-
-				if ($this->saveAll($surveyData)) {
-					if($surveyData[$this->alias]['status'] == 2) {
-						$this->Message->alert('Survey.save.final');
-						return $this->redirect(array('action' => $this->alias, 'index'));
-					} else {
-						$this->Message->alert('Survey.save.draft');
-						return $this->redirect(array('action' => 'InstitutionSiteSurveyDraft', 'edit', $this->id));
-					}
-				} else {
-					$dataValues = $this->prepareFormatedDataValues($surveyData);
-					$this->log($this->validationErrors, 'debug');
-					$this->Message->alert('general.add.failed');
-				}
-			}
-
-			$this->setVar(compact('academicPeriodId', 'surveyStatusId', 'templateData', 'data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => $this->alias, 'index'));
-		}
-		*/
 	}
 }

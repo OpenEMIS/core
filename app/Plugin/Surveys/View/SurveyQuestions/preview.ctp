@@ -2,7 +2,8 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-	echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
+	$params = $this->params->named;
+	echo $this->Html->link(__('Back'), array_merge(array('action' => 'index'), $params), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -14,7 +15,7 @@ $this->start('contentBody');
 			'class' => 'form-control',
 			'label' => false,
 			'options' => $moduleOptions,
-			'default' => $selectedModule,
+			'default' => 'module:' . $selectedModule,
 			'div' => 'col-md-3',
 			'url' => $this->params['controller'] . '/preview',
 			'onchange' => 'jsForm.change(this)'
@@ -25,9 +26,9 @@ $this->start('contentBody');
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $templateOptions,
-				'default' => $selectedTemplate,
+				'default' => 'parent:' . $selectedTemplate,
 				'div' => 'col-md-3',
-				'url' => $this->params['controller'] . '/preview/' . $selectedModule,
+				'url' => $this->params['controller'] . '/preview/module:' . $selectedModule,
 				'onchange' => 'jsForm.change(this)'
 			));
 		}
@@ -35,7 +36,7 @@ $this->start('contentBody');
 </div>
 
 <?php
-	$formOptions = $this->FormUtility->getFormOptions(array('plugin' => 'Surveys', 'controller' => $this->params['controller'], 'action' => 'add'));
+	$formOptions = $this->FormUtility->getFormOptions(array('plugin' => $this->params->plugin, 'controller' => $this->params['controller'], 'action' => 'preview'));
 	$labelOptions = $formOptions['inputDefaults']['label'];
 	echo $this->Form->create('SurveyQuestion', $formOptions);
 		if(isset($templateOptions)) {

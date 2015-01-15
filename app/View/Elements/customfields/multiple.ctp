@@ -11,8 +11,8 @@
 			foreach($obj[$modelOption] as $dropdownValue) {
 				if(isset($dataValues[$modelId]) && count($dataValues[$modelId] > 0)){
 					foreach($dataValues[$modelId] as $checkboxValue) {
-						if(isset($checkboxValue['text_value'])) {
-							$defaults[] = $checkboxValue['text_value'];
+						if(isset($checkboxValue['int_value'])) {
+							$defaults[] = $checkboxValue['int_value'];
 						} else {
 							$defaults[] = isset($checkboxValue['value']) ? $checkboxValue['value'] : "";
 						}

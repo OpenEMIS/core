@@ -4,8 +4,8 @@
 	<?php
 		if(count($obj[$modelOption]) > 0) {
 			$modelId = $obj[$model]['id'];
-			if(isset($dataValues[$modelId][0]['text_value'])) {
-				$value = $dataValues[$modelId][0]['text_value'];
+			if(isset($dataValues[$modelId][0]['int_value'])) {
+				$value = $dataValues[$modelId][0]['int_value'];
 			} else {
 				$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "";
 			}
