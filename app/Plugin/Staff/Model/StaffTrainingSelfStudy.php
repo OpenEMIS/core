@@ -109,7 +109,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             'model' => $this->alias,
             'fields' => array(
                 array('field' => 'id', 'type' => 'hidden'),
-             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(), 'labelKey' => 'general.type'),
+             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(array('listOnly'=>true)), 'labelKey' => 'general.type'),
                 array('field' => 'title',  'labelKey' => 'StaffTraining.course_title'),
 				array('field' => 'start_date'),
 				array('field' => 'end_date'),
@@ -328,18 +328,12 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		}
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviderOptions = $trainingProvider->getList();
-
-		$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList();
-		$controller->set('trainingAchievementTypeOptions', $trainingAchievementTypeOptions);
-
 		$passfailOptions = $controller->Option->get('passfail');
-		
+
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id'=>$id)));
 		
 		$parentApproved = false;
-
-		$controller->set(compact('trainingCreditHourOptions', 'trainingProviderOptions', 'passfailOptions', 'attachments', 'parentApproved'));
+		
 		
 		if($controller->request->is('get')){
 			$resultEditable = '1';
@@ -406,7 +400,22 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				}
 			}
 		}
-		$controller->set(compact('resultEditable'));
+		if (!empty($controller->request->data)) {
+
+			if (array_key_exists('StaffTrainingSelfStudy', $controller->request->data)) {
+				// if (array_key_exists(key, search)
+				if (array_key_exists('training_achievement_type_id', $controller->request->data)) {
+					$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList(array('value' => $controller->request->data['StaffTrainingSelfStudy']['training_achievement_type_id']));
+				} else {
+					$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList(array('value' => 0));
+				}
+			}	
+		} else {
+			$trainingAchievementTypeOptions = $this->TrainingAchievementType->getList(array('value' => 0));
+			$trainingProviderOptions = $trainingProvider->getList(array('value' => 0));
+		}
+		$trainingProviderOptions = $trainingProvider->getList(array('value' => 0));
+		$controller->set(compact('resultEditable', 'trainingAchievementTypeOptions', 'trainingCreditHourOptions', 'trainingProviderOptions', 'passfailOptions', 'attachments', 'parentApproved'));
 
 	}
 	
