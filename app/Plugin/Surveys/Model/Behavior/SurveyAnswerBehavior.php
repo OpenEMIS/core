@@ -28,20 +28,21 @@ class SurveyAnswerBehavior extends ModelBehavior {
 		$model->validator()->remove('textarea_value');
 		$model->validator()->remove('int_value');
 
+		//only validate when user submit to completed
 		if($model->data[$modelValue]['survey_status'] == 2) {
 			switch($model->data[$modelValue]['type']) {
-				case 2:
+				case 2: //Text
 					$fieldName = 'text_value';
 					break;
-				case 5:
+				case 5:	//Textarea
 					$fieldName = 'textarea_value';
 					break;
-				case 6:
+				case 6:	//Number
 					$fieldName = 'int_value';
 					break;
 			}
 
-			if($model->data[$modelValue]['is_mandatory'] == 1) {
+			if(isset($model->data[$modelValue]['is_mandatory']) && $model->data[$modelValue]['is_mandatory'] == 1) {
 				$model->validator()->add($fieldName, 'required', array(
 				    'rule' => 'notEmpty',
 				    'required' => true,
@@ -49,7 +50,7 @@ class SurveyAnswerBehavior extends ModelBehavior {
 				));
 			}
 
-			if($model->data[$modelValue]['is_unique'] == 1) {
+			if(isset($model->data[$modelValue]['is_unique']) && $model->data[$modelValue]['is_unique'] == 1) {
 				$model->validator()->add($fieldName, 'unique', array(
 				    'rule' => array('checkUnique', array('institution_site_id', 'survey_question_id', $fieldName), false),
 				    'message' => 'Please enter a unique value'

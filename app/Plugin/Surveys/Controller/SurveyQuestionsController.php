@@ -15,10 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class SurveyQuestionsController extends SurveysAppController {
-	public $actsAs = array(
-		'Reorder'
-	);
-
 	public $uses = array(
 		'Surveys.SurveyQuestion',
 		'Surveys.SurveyQuestionChoice',
@@ -42,16 +38,19 @@ class SurveyQuestionsController extends SurveysAppController {
 
 	public function beforeFilter() {
 		parent::beforeFilter();
+		$params = $this->params->named;
 
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Surveys', array('action' => 'index'));
 
 		if($this->action == 'reorder') {
-			$this->Navigation->addCrumb('Details', array('action' => 'index'));
+			$params['action'] = 'index';
+			$this->Navigation->addCrumb('Questions', $params);
 			$this->Navigation->addCrumb('Reorder');
 		} else if($this->action == 'preview') {
-			$this->Navigation->addCrumb('Details', array('action' => 'index'));
+			$params['action'] = 'index';
+			$this->Navigation->addCrumb('Questions', $params);
 			$this->Navigation->addCrumb('Preview');
 		} else {
 			$this->Navigation->addCrumb('Questions');
@@ -60,25 +59,52 @@ class SurveyQuestionsController extends SurveysAppController {
 		$this->set('contentHeader', __('Questions'));
 	}
 
-	public function index($selectedModule=0, $selectedTemplate=0) {
+	public function index() {
+		$params = $this->params->named;
+
 		$SurveyModule = ClassRegistry::init('SurveyModule');
-		$moduleOptions = $SurveyModule->find('list' , array(
+		$modules = $SurveyModule->find('list' , array(
 			'conditions' => array('SurveyModule.visible' => 1),
 			'order' => array('SurveyModule.order')
 		));
-		$selectedModule = $selectedModule == 0 ? key($moduleOptions) : $selectedModule;
-		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($selectedModule);
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
 
-		if(!empty($templateOptions)) {
-			$selectedTemplate = $selectedTemplate == 0 ? key($templateOptions) : $selectedTemplate;
-			$templateData = $this->SurveyTemplate->findById($selectedTemplate);
-			$data = $this->SurveyQuestion->getSurveyQuestionData($selectedTemplate);
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
 
+		$templates = $this->SurveyTemplate->find('list', array(
+			'conditions' => array(
+				'SurveyTemplate.survey_module_id' => $selectedModule
+			),
+			'order' => array(
+				'SurveyTemplate.name'
+			)
+		));
+
+		if(!empty($templates)) {
+			$selectedTemplate = isset($params['parent']) ? $params['parent'] : key($templates);
+
+			$templateOptions = array();
+			foreach ($templates as $key => $template) {
+				$templateOptions['parent:' . $key] = $template;
+			}
+
+			$this->SurveyQuestion->contain();
+			$data = $this->SurveyQuestion->find('all', array(
+				'conditions' => array(
+					'SurveyQuestion.survey_template_id' => $selectedTemplate
+				),
+				'order' => array(
+					'SurveyQuestion.order', 
+					'SurveyQuestion.name'
+				)
+			));
 			$this->Session->write($this->SurveyTemplate->alias.'.id', $selectedTemplate);
 
 			$this->set('templateOptions', $templateOptions);
 			$this->set('selectedTemplate', $selectedTemplate);
-			$this->set('templateData', $templateData);
 			$this->set('data', $data);
 		} else {
 			$this->Message->alert('general.noData');
@@ -97,136 +123,11 @@ class SurveyQuestionsController extends SurveysAppController {
     }
 
     public function edit($id=0) {
-		if ($this->CustomField2->Field->exists($id)) {
-			$this->CustomField2->Field->contain(
-				$this->CustomField2->Parent->alias,
-				$this->CustomField2->FieldOption->alias,
-				$this->CustomField2->TableRow->alias,
-				$this->CustomField2->TableColumn->alias
-			);
-			$data = $this->CustomField2->Field->findById($id);
-			$selectedFieldType = $data[$this->CustomField2->Field->alias]['type'];
-			
-			if ($this->request->is(array('post', 'put'))) {
-
-				$data = $this->request->data;
-				$selectedFieldType = $data[$this->CustomField2->Field->alias]['type'];
-				//$data[$this->CustomField2->Field->alias]['is_mandatory'] = 0;
-				//$data[$this->CustomField2->Field->alias]['is_unique'] = 0;
-
-				if ($data['submit'] == 'reload') {
-				} else if($data['submit'] == $this->CustomField2->FieldOption->alias) {
-					$data[$this->CustomField2->FieldOption->alias][] =array(
-						'id' => String::uuid(),
-						'value' => '',
-						'visible' => 1
-					);
-				} else if($data['submit'] == $this->CustomField2->TableRow->alias) {
-					$data[$this->CustomField2->TableRow->alias][] =array(
-						'id' => '',
-						'name' => '',
-						'visible' => 1,
-					);
-				} else if($data['submit'] == $this->CustomField2->TableColumn->alias) {
-					$data[$this->CustomField2->TableColumn->alias][] =array(
-						'id' => '',
-						'name' => '',
-						'visible' => 1,
-					);
-				} else {
-					if(isset($this->request->data[$this->CustomField2->FieldOption->alias])) {
-						foreach ($this->request->data[$this->CustomField2->FieldOption->alias] as $key => $value) {
-							if(empty($value['value'])) {
-								unset($this->request->data[$this->CustomField2->FieldOption->alias][$key]);
-							}
-						}
-					}
-					if(isset($this->request->data[$this->CustomField2->TableColumn->alias])) {
-						foreach ($this->request->data[$this->CustomField2->TableColumn->alias] as $key => $value) {
-							if(empty($value['name'])) {
-								unset($this->request->data[$this->CustomField2->TableColumn->alias][$key]);
-							}
-						}
-					}
-					if(isset($this->request->data[$this->CustomField2->TableRow->alias])) {
-						foreach ($this->request->data[$this->CustomField2->TableRow->alias] as $key => $value) {
-							if(empty($value['name'])) {
-								unset($this->request->data[$this->CustomField2->TableRow->alias][$key]);
-							}
-						}
-					}
-					if(isset($this->request->data[$this->CustomField2->Parent->alias])) {
-						unset($this->request->data[$this->CustomField2->Parent->alias]);
-					}
-
-					$this->CustomField2->FieldOption->updateAll(
-					    array($this->CustomField2->FieldOption->alias . '.visible' => 0),
-					    array($this->CustomField2->FieldOption->alias . '.survey_question_id' => $id)
-					);
-					$this->CustomField2->TableRow->updateAll(
-					    array($this->CustomField2->TableRow->alias . '.visible' => 0),
-					    array($this->CustomField2->TableRow->alias . '.survey_question_id' => $id)
-					);
-					$this->CustomField2->TableColumn->updateAll(
-					    array($this->CustomField2->TableColumn->alias . '.visible' => 0),
-					    array($this->CustomField2->TableColumn->alias . '.survey_question_id' => $id)
-					);
-
-					if ($this->CustomField2->Field->saveAll($this->request->data)) {
-						$this->Message->alert('general.edit.success');
-						return $this->redirect(array('action' => 'view', $id));
-					} else {
-						$this->log($this->CustomField2->Field->validationErrors, 'debug');
-						$this->Message->alert('general.edit.failed');
-					}
-				}
-
-
-				$this->set('selectedFieldType', $selectedFieldType);
-				
-			} else {
-				$this->request->data = $data;
-			}
-
-			$mandatoryDisabled = $this->CustomField2->getMandatoryDisabled($selectedFieldType);
-			$uniqueDisabled = $this->CustomField2->getUniqueDisabled($selectedFieldType);
-			$this->set('mandatoryDisabled', $mandatoryDisabled);
-			$this->set('uniqueDisabled', $uniqueDisabled);
-			//$this->request->data = $data;
-			//$this->set('data', $data);
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
-		}
+    	$this->CustomField2->edit($id);
     }
 
     public function delete() {
-    	if ($this->Session->check($this->SurveyQuestion->alias . '.id')) {
-			$id = $this->Session->read($this->SurveyQuestion->alias . '.id');
-			if($this->SurveyQuestion->delete($id)) {
-				$this->SurveyQuestionChoice->updateAll(
-				    array('SurveyQuestionChoice.visible' => 0),
-				    array('SurveyQuestionChoice.survey_question_id' => $id)
-				);
-				$this->SurveyTableRow->updateAll(
-				    array('SurveyTableRow.visible' => 0),
-				    array('SurveyTableRow.survey_question_id' => $id)
-				);
-				$this->SurveyTableColumn->updateAll(
-				    array('SurveyTableColumn.visible' => 0),
-				    array('SurveyTableColumn.survey_question_id' => $id)
-				);
-				//$this->SurveyQuestionChoice->deleteAll(array('SurveyQuestionChoice.survey_question_id' => $id));
-				//$this->SurveyTableRow->deleteAll(array('SurveyTableRow.survey_question_id' => $id));
-				//$this->SurveyTableColumn->deleteAll(array('SurveyTableColumn.survey_question_id' => $id));
-				$this->Message->alert('general.delete.success');
-			} else {
-				$this->log($this->validationErrors, 'debug');
-				$this->Message->alert('general.delete.failed');
-			}
-			$this->Session->delete($this->SurveyQuestion->alias . '.id');
-			return $this->redirect(array('action' => 'index'));
-		}
+    	$this->CustomField2->delete();
     }
 
 	public function reorder($id=0) {
@@ -288,7 +189,85 @@ class SurveyQuestionsController extends SurveysAppController {
 		}
 	}
 
-    public function preview($selectedModule=0, $selectedTemplate=0) {
+    public function preview() {
+		$params = $this->params->named;
+
+		$SurveyModule = ClassRegistry::init('SurveyModule');
+		$modules = $SurveyModule->find('list' , array(
+			'conditions' => array('SurveyModule.visible' => 1),
+			'order' => array('SurveyModule.order')
+		));
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
+
+		$templates = $this->SurveyTemplate->find('list', array(
+			'conditions' => array(
+				'SurveyTemplate.survey_module_id' => $selectedModule
+			),
+			'order' => array(
+				'SurveyTemplate.name'
+			)
+		));
+
+		if(!empty($templates)) {
+			$selectedTemplate = isset($params['parent']) ? $params['parent'] : key($templates);
+			$templateOptions = array();
+			foreach ($templates as $key => $template) {
+				$templateOptions['parent:' . $key] = $template;
+			}
+
+			$this->SurveyTemplate->contain();
+			$template = $this->SurveyTemplate->findById($selectedTemplate);
+			$this->SurveyQuestion->contain(array('SurveyQuestionChoice', 'SurveyTableRow', 'SurveyTableColumn'));
+			$data = $this->SurveyQuestion->find('all', array(
+				'conditions' => array(
+					'SurveyQuestion.survey_template_id' => $selectedTemplate,
+					'SurveyQuestion.visible' => 1
+				),
+				'order' => array(
+					'SurveyQuestion.order', 
+					'SurveyQuestion.name'
+				)
+			));
+			$model = 'SurveyQuestion';
+			$modelOption = 'SurveyQuestionChoice';
+			$modelValue = 'InstitutionSiteSurveyAnswer';
+			$modelRow = 'SurveyTableRow';
+			$modelColumn = 'SurveyTableColumn';
+			$modelCell = 'InstitutionSiteSurveyTableCell';
+			$action = 'edit';
+
+			$this->Session->write($this->SurveyTemplate->alias.'.id', $selectedTemplate);
+
+			$this->set('templateOptions', $templateOptions);
+			$this->set('selectedTemplate', $selectedTemplate);
+			$this->set('template', $template);
+			$this->set('data', $data);
+			$this->set('model', $model);
+			$this->set('modelOption', $modelOption);
+			$this->set('modelValue', $modelValue);
+			$this->set('modelRow', $modelRow);
+			$this->set('modelColumn', $modelColumn);
+			$this->set('modelCell', $modelCell);
+			$this->set('action', $action);
+		} else {
+			$this->Message->alert('general.noData');
+		}
+
+		$this->set('moduleOptions', $moduleOptions);
+		$this->set('selectedModule', $selectedModule);
+
+		/*
+		pr($selectedModule);
+		pr($selectedTemplate);
+		pr($moduleOptions);
+		pr($templateOptions);
+		die;
+
 		$SurveyModule = ClassRegistry::init('SurveyModule');
 		$moduleOptions = $SurveyModule->find('list' , array(
 			'conditions' => array('SurveyModule.visible' => 1),
@@ -328,6 +307,7 @@ class SurveyQuestionsController extends SurveysAppController {
 
 		$this->set('moduleOptions', $moduleOptions);
 		$this->set('selectedModule', $selectedModule);
+		*/
     }    
 }
 ?>
