@@ -15,7 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffContact extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
 	
 	public $belongsTo = array(
 		'Staff.Staff',
@@ -52,6 +55,16 @@ class StaffContact extends StaffAppModel {
 			)
 		),
 	);
+
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.preferred" => array(0 => 'No', 1 => 'Yes')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
 
 	function validatePreferred($check1, $field2) {
 		$flag = false;

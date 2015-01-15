@@ -15,7 +15,12 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffIdentity extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
+	public $actsAs = array(
+		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction', 
+		'DatePicker' => array('issue_date', 'expiry_date')
+	);
+
 	public $belongsTo = array(
 		'Staff.Staff',
 		'IdentityType',
