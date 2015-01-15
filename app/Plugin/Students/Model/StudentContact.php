@@ -56,6 +56,16 @@ class StudentContact extends StudentsAppModel {
 		),
 	);
 
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.preferred" => array(0 => 'No', 1 => 'Yes')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
+
 	function validatePreferred($check1, $field2) {
 		$flag = false;
 		foreach ($check1 as $key => $value1) {

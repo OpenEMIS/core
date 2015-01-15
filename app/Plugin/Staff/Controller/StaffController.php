@@ -81,7 +81,8 @@ class StaffController extends StaffAppController {
 		// new ControllerAction
 		'InstitutionSiteStaff',
 		'Position' => array('plugin' => 'Staff'),
-		'StaffBehaviour' => array('plugin' => 'Staff')
+		'StaffBehaviour' => array('plugin' => 'Staff'),
+		'StaffClass' => array('plugin' => 'Staff')
 	);
 
 	public function beforeFilter() {
@@ -329,6 +330,10 @@ class StaffController extends StaffAppController {
 			$this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
 		}
 		$this->redirect(array('action' => 'index'));
+	}
+
+	public function excel() {
+		$this->Staff->excel();
 	}
 
 	public function history() {
