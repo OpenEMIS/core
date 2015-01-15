@@ -3,6 +3,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Assessments'));
 
 $this->start('contentActions');
+if ($_execute) {
+	echo $this->Html->link($this->Label->get('general.export'), array('action' => 'assessmentsToExcel', $selectedYear), array('class' => 'divider'));
+}
 $this->end();
 
 $this->start('contentBody');
