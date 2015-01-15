@@ -98,7 +98,12 @@ class StaffSpecialNeed extends StaffAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params, $type){
-		$specialNeedTypeOptions = $this->SpecialNeedType->getList();
+		if (!empty($controller->request->data)) {
+			$specialNeedTypeOptions = $this->SpecialNeedType->getList(array('value' => $controller->request->data['StaffSpecialNeed']['special_need_type_id']));
+		} else {
+			$specialNeedTypeOptions = $this->SpecialNeedType->getList(array('value' => 0));
+		}
+
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
