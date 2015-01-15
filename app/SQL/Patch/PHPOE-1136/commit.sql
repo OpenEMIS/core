@@ -476,3 +476,7 @@ UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_s
 UPDATE institution_site_positions LEFT JOIN field_option_values ON institution_site_positions.staff_position_grade_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET institution_site_positions.staff_position_grade_id = field_option_values.id WHERE field_options.code = 'StaffPositionGrade';
 UPDATE staff_qualifications LEFT JOIN field_option_values ON staff_qualifications.qualification_specialisation_id = field_option_values.old_id LEFT JOIN field_options ON field_option_values.field_option_id = field_options.id SET staff_qualifications.qualification_specialisation_id = field_option_values.id WHERE field_options.code = 'QualificationSpecialisation';
 
+
+
+ALTER TABLE `field_option_values` CHANGE `international_code` `international_code` VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
+ALTER TABLE `field_option_values` CHANGE `national_code` `national_code` VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
