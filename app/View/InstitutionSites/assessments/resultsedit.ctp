@@ -43,7 +43,11 @@ echo $this->Form->create($model, $formOptions);
 		<tr>
 			<th class="cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
 			<th class=""><?php echo __('Student Name'); ?></th>
-			<th class="cell_marks"><?php echo __('Marks'); ?></th>
+			<th class="cell_marks">
+				<?php 
+				echo sprintf('%s (%s=%d, %s=%d)', __('Marks'), __('Pass'), $minMarks, __('Max'), $maxMarks); 
+				?>
+			</th>
 			<th class="cell_grading"><?php echo __('Grading'); ?></th>
 		</tr>
 	</thead>

@@ -15,8 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffQualification extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
+		'Staff.Staff',
 		'QualificationLevel' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'qualification_level_id'

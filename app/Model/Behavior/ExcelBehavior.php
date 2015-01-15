@@ -143,7 +143,7 @@ class ExcelBehavior extends ModelBehavior {
 		$schema = $model->schema();
 
 		$header = array();
-		$exclude = array('id', 'photo_name', 'modified_user_id', 'modified', 'created_user_id', 'created');
+		$exclude = array('id', 'photo_name', 'file_name', 'modified_user_id', 'modified', 'created_user_id', 'created');
 
 		if (array_key_exists('header', $this->settings[$alias])) {
 			$appendedHeader = $this->settings[$alias]['header'];
