@@ -32,30 +32,8 @@ class InstitutionSiteStudentAttendance extends AppModel {
 
 	public $actsAs = array(
 		'ControllerAction2',
-		'Excel' => array(
-			'header' => array('Student' => array('identification_no', 'first_name', 'last_name'))
-		)
+		'Excel'
 	);
-
-	/* Excel Behaviour */
-	public function excelGetConditions() {
-		$id = CakeSession::read('InstitutionSite.id');
-		$conditions = array('InstitutionSiteSection.institution_site_id' => $id);
-		return $conditions;
-	}
-	public function excelGetFieldLookup() {
-		$alias = $this->alias;
-		$lookup = array(
-			"$alias.status" => array(0 => 'Inactive', 1 => 'Active'),
-			"$alias.type" => array(0 => 'Non-Teaching', 1 => 'Teaching')
-		);
-		return $lookup;
-	}
-	public function excelGetOrder() {
-		$order = array('InstitutionSitePosition.position_no');
-		return $order;
-	}
-	/* End Excel Behaviour */
 
 	public function excel($periodId) {
 		$this->selectedPeriod = $periodId;
@@ -68,7 +46,7 @@ class InstitutionSiteStudentAttendance extends AppModel {
 		$startDate = $period['SchoolYear']['start_date'];
 		$endDate = $period['SchoolYear']['end_date'];
 
-		$months = $this->generateMonthsByDates($startDate, $endDate);
+		$months = $this->controller->generateMonthsByDates($startDate, $endDate);
 		//pr($months);
 		$footer = $this->excelGetFooter();
 		
@@ -77,18 +55,26 @@ class InstitutionSiteStudentAttendance extends AppModel {
 			$monthInNumber = $month['month']['inNumber'];
 			$year = $month['year'];
 			
-			$days = $this->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
+			$days = $this->controller->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
 			//pr($days);
+			$headerDays = array();
+			$daysIndex = array();
+			foreach($days as $item){
+				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
+				$daysIndex[] = $item['date'];
+			}
 			
-			$header = array(
+			$headerInfo = array(
 				__('Section'),
-				__('Student')
+				__('OpenEMIS ID'),
+				__('First Name'),
+				__('Last Name')
 			);
-			$header = array_merge($header, $days);
+			$header = array_merge($headerInfo, $headerDays);
 			//pr($header);
 			$writer->writeSheetRow($monthInString, $header);
 			
-			$data = $this->getData($days);
+			$data = $this->getData($daysIndex);
 			//pr($data);die;
 			
 			foreach ($data as $row) {
@@ -134,7 +120,7 @@ class InstitutionSiteStudentAttendance extends AppModel {
 
 				$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
 
-				if(!empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
+				if($absenceRecord['full_day_absent'] == 'Yes' && !empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
 					$tempStartDate = date("Y-m-d", strtotime($absenceRecord['first_date_absent']));
 					$formatedLastDate = date("Y-m-d", strtotime($absenceRecord['last_date_absent']));
 					
@@ -154,11 +140,13 @@ class InstitutionSiteStudentAttendance extends AppModel {
 			foreach ($studentList as $student){
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
+				//$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
 				
 				$row = array();
 				$row[] = $sectionName;
-				$row[] = $studentName;
+				$row[] = $studentObj['identification_no'];
+				$row[] = $studentObj['first_name'];
+				$row[] = $studentObj['last_name'];
 				
 				foreach ($days as $index){
 					if (isset($absenceCheckList[$studentId][$index])) {
@@ -172,7 +160,7 @@ class InstitutionSiteStudentAttendance extends AppModel {
 							$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
 						}
 					}else{
-						$row[] = __('Attended');
+						$row[] = __('');
 					}
 				}
 				
@@ -181,59 +169,6 @@ class InstitutionSiteStudentAttendance extends AppModel {
 		}
 		//pr($data);die;
 		return $data;
-	}
-	
-	public function generateMonthsByDates($startDate, $endDate) {
-		$result = array();
-		$stampStartDay = strtotime($startDate);
-		$stampEndDay = strtotime($endDate);
-		$stampToday = strtotime(date('Y-m-d'));
-		
-		$stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
-		while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
-			$monthString = date('F', $stampFirstDayOfMonth);
-			$monthNumber = date('m', $stampFirstDayOfMonth);
-			$year = date('Y', $stampFirstDayOfMonth);
-			
-			$result[] = array(
-				'month' => array('inNumber' => $monthNumber, 'inString' => $monthString),
-				'year' => $year
-			);
-			
-			$stampFirstDayOfMonth = strtotime('+1 month', $stampFirstDayOfMonth);
-		}
-		
-		return $result;
-	}
-	
-	public function generateDaysOfMonth($year, $month, $startDate, $endDate){
-		$days = array();
-		$stampStartDay = strtotime($startDate);
-		//pr($startDate);
-		$stampEndDay = strtotime($endDate);
-		//pr($endDate);
-		$stampToday = strtotime(date('Y-m-d'));
-		
-		$stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
-		//pr($year . '-' . $month . '-01');
-		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);
-		//pr(date('Y-m-d', $stampFirstDayNextMonth));
-		
-		
-		if($stampFirstDayOfMonth <= $stampStartDay){
-			$tempStamp = $stampStartDay;
-		}else{
-			$tempStamp = $stampFirstDayOfMonth;
-		}
-		//pr(date('Y-m-d', $tempStamp));
-		
-		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
-			$days[] = date('Y-m-d', $tempStamp);
-			
-			$tempStamp = strtotime('+1 day', $tempStamp);
-		}
-
-		return $days;
 	}
 	
 }
