@@ -11,7 +11,7 @@ $this->start('contentBody');
 $model = 'Student';
 ?>
 
-<?php echo $this->element('layout/search', array('model' => $model, 'placeholder' => 'OpenEMIS ID, First Name or Last Name')) ?>
+<?php echo $this->element('layout/search', array('model' => $model, 'placeholder' => 'OpenEMIS ID or Name')) ?>
 
 <?php if (!empty($data)) : ?>
 <div class="table-responsive">
@@ -32,8 +32,9 @@ $model = 'Student';
 				$identificationNo = $this->Utility->highlight($search, $obj[$model]['identification_no']);
 				$firstName = $this->Utility->highlight($search, $obj[$model]['first_name'].((isset($obj[$model]['history_first_name']))?'<br>'.$obj[$model]['history_first_name']:''));
 				$middleName = $this->Utility->highlight($search, $obj[$model]['middle_name'].((isset($obj[$model]['history_middle_name']))?'<br>'.$obj[$model]['history_middle_name']:''));
+				$thirdName = $this->Utility->highlight($search, $obj[$model]['third_name'].((isset($obj[$model]['history_third_name']))?'<br>'.$obj[$model]['history_third_name']:''));
 				$lastName = $this->Utility->highlight($search, $obj[$model]['last_name'].((isset($obj[$model]['history_last_name']))?'<br>'.$obj[$model]['history_last_name']:''));
-				$name = $this->Html->link($firstName.' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
 				$gender = $obj[$model]['gender'];
 				$birthday = $obj[$model]['date_of_birth'];
 		?>

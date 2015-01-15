@@ -88,6 +88,7 @@ class InstitutionSiteStaff extends AppModel {
 					'identification_no' => 'OpenEMIS ID',
 					'first_name' => 'First Name',
 					'middle_name' => 'Middle Name',
+					'third_name' => 'Third Name',
 					'last_name' => 'Last Name',
 					'preferred_name' => 'Preferred Name',
 					'gender' => 'Gender',
@@ -221,6 +222,7 @@ class InstitutionSiteStaff extends AppModel {
 				'Staff.identification_no LIKE' => $search,
 				'Staff.first_name LIKE' => $search,
 				'Staff.middle_name LIKE' => $search,
+				'Staff.third_name LIKE' => $search,
 				'Staff.last_name LIKE' => $search,
 				'Staff.preferred_name LIKE' => $search
 			);
@@ -228,6 +230,7 @@ class InstitutionSiteStaff extends AppModel {
 			unset($conditions['OR']['Staff.identification_no LIKE']);
 			unset($conditions['OR']['Staff.first_name LIKE']);
 			unset($conditions['OR']['Staff.middle_name LIKE']);
+			unset($conditions['OR']['Staff.third_name LIKE']);
 			unset($conditions['OR']['Staff.last_name LIKE']);
 			unset($conditions['OR']['Staff.preferred_name LIKE']);
 		}
@@ -243,6 +246,7 @@ class InstitutionSiteStaff extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
+		//pr($data);
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
 		$this->setVar(compact('data', 'yearOptions', 'positionList'));
 	}
@@ -354,7 +358,7 @@ class InstitutionSiteStaff extends AppModel {
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 
 				'InstitutionSitePosition.position_no', 'InstitutionSitePosition.staff_position_title_id',
 				'StaffStatus.name', 'InstitutionSiteStaff.start_date'
 			),
@@ -554,6 +558,7 @@ class InstitutionSiteStaff extends AppModel {
 				'Staff.first_name LIKE' => $search,
 				'Staff.last_name LIKE' => $search,
 				'Staff.middle_name LIKE' => $search,
+				'Staff.third_name LIKE' => $search,
 				'Staff.preferred_name LIKE' => $search,
 				'Staff.identification_no LIKE' => $search
 			)
@@ -571,7 +576,7 @@ class InstitutionSiteStaff extends AppModel {
 		foreach ($list as $obj) {
 			$staff = $obj['Staff'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']),
+				'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['third_name'], $staff['last_name'], $staff['preferred_name']),
 				'value' => $staff['id']
 			);
 		}
@@ -605,6 +610,7 @@ class InstitutionSiteStaff extends AppModel {
 				'Staff.identification_no',
 				'Staff.first_name',
 				'Staff.middle_name',
+				'Staff.third_name',
 				'Staff.last_name',
 				'Staff.preferred_name'
 			),
@@ -694,6 +700,7 @@ class InstitutionSiteStaff extends AppModel {
 				'Staff.identification_no',
 				'Staff.first_name',
 				'Staff.middle_name',
+				'Staff.third_name',
 				'Staff.last_name',
 				'Staff.preferred_name'
 		);
@@ -725,7 +732,7 @@ class InstitutionSiteStaff extends AppModel {
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name',
-				'Staff.last_name', 'Staff.gender'
+				'Staff.third_name', 'Staff.last_name', 'Staff.gender'
 			),
 			'conditions' => array(
 				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
