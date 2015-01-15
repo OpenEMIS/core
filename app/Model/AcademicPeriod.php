@@ -84,15 +84,18 @@ class AcademicPeriod extends AppModel {
 	}
 	
 	public function index() {
+		$this->recover();
+
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
-		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
 		$academicPeriod = end($paths);
 		$data = array();
 		$maxLevel = $this->AcademicPeriodLevel->field('level', null, 'level DESC');
 		
 		if($academicPeriod !== false) {
 			$data = $this->find('all', array(
+				'recursive'=>0,
 				'conditions' => array('parent_id' => $academicPeriod[$this->alias]['id']),
 				'order' => array('order')
 			));
@@ -103,7 +106,7 @@ class AcademicPeriod extends AppModel {
 	public function reorder() {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
-		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
 		$academicPeriod = end($paths);
 		$data = array();
 		
@@ -135,7 +138,7 @@ class AcademicPeriod extends AppModel {
 		$this->fields['visible']['visible'] = false;
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
-		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
 		$academicPeriod = end($paths);
 		
 		$pathList = array();

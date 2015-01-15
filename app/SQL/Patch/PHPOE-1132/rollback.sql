@@ -50,5 +50,9 @@ ALTER TABLE `student_extracurriculars` CHANGE `academic_period_id` `school_year_
 
 INSERT field_options SELECT * FROM 1132_field_options WHERE 1132_field_options.code = "SchoolYear" AND NOT EXISTS (SELECT * FROM field_options WHERE field_options.code = "SchoolYear");
 
+
+DROP TABLE academic_period_levels;
+
+DROP TABLE academic_periods;
 RENAME TABLE 1132_school_years to school_years;
 
