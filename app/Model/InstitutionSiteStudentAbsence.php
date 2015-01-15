@@ -304,7 +304,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			
 			$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
 			
-			if(!empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
+			if($absenceRecord['full_day_absent'] == 'Yes' && !empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
 				$tempStartDate = date("Y-m-d", strtotime($absenceRecord['first_date_absent']));
 				$formatedLastDate = date("Y-m-d", strtotime($absenceRecord['last_date_absent']));
 				while($tempStartDate <= $formatedLastDate){

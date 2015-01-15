@@ -9,6 +9,9 @@ $this->assign('contentHeader', __('Attendance') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
 echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $yearId, $weekId), array('class' => 'divider'));
+if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteStaffAttendance', 'excel', $yearId), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');
