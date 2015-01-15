@@ -223,9 +223,13 @@ class StaffQualification extends StaffAppModel {
 				}
 			}
 		}
-		
-		$levelOptions = $this->QualificationLevel->getList();
-		$specializationOptions = $this->QualificationSpecialisation->getList();
+		if (!empty($controller->request->data)) {
+			$levelOptions = $this->QualificationLevel->getList(array('value' => $controller->request->data['StaffQualification']['qualification_level_id']));
+			$specializationOptions = $this->QualificationSpecialisation->getList(array('value' => $controller->request->data['StaffQualification']['qualification_specialisation_id']));
+		} else {
+			$levelOptions = $this->QualificationLevel->getList(array('value' => 0));
+			$specializationOptions = $this->QualificationSpecialisation->getList(array('value' => 0));
+		}
 
 		$controller->set(compact('levelOptions', 'specializationOptions', 'id', 'staffQualificationObj'));
 	}
