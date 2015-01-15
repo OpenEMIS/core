@@ -235,8 +235,6 @@ class StaffTrainingNeed extends StaffAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingPriorityOptions = $this->TrainingPriority->getList();
-
 		$trainingCourseOptions = array();
 		if($controller->Session->check('Staff.id')){
 		 	$staffId = $controller->Session->read('Staff.id');
@@ -299,9 +297,6 @@ class StaffTrainingNeed extends StaffAppModel {
 			);
 		}
 
-		$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList();
-		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
-
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -352,6 +347,16 @@ class StaffTrainingNeed extends StaffAppModel {
 				}
 			}
 		}
+
+		if (!empty($controller->request->data)) {
+			$trainingPriorityOptions = $this->TrainingPriority->getList(array('value' => $controller->request->data['StaffTrainingNeed']['training_priority_id']));
+			$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(array('value' => $controller->request->data['StaffTrainingNeed']['training_need_type']));
+		} else {
+			$trainingPriorityOptions = $this->TrainingPriority->getList(array('value' => 0));
+			$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(array('value' => 0));
+		}
+				
+		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 	}
 
 

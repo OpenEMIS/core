@@ -121,8 +121,13 @@ class StaffEmployment extends StaffAppModel {
                 $controller->request->data = $data;
             }
         }
+        if (!empty($controller->request->data)) {
+        	$employmentTypeOptions = $this->EmploymentType->getList(array('value' => $controller->request->data['StaffEmployment']['employment_type_id']));
+		} else {
+			$employmentTypeOptions = $this->EmploymentType->getList(array('value' => 0));
+		}
 
-        $employmentTypeOptions = $this->EmploymentType->getList();
+        
 		$controller->set(compact('employmentTypeOptions'));
 	}
 	
