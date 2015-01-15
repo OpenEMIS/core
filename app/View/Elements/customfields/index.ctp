@@ -1,6 +1,6 @@
 <?php
 $customElement = array(
-	1 => 'customfields/label',
+	1 => 'customfields/section_break',
 	2 => 'customfields/text',
 	3 => 'customfields/dropdown',
 	4 => 'customfields/multiple',

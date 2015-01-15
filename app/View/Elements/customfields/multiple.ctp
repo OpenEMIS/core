@@ -1,6 +1,6 @@
-<div class="custom_field">
-	<div class="field_label"><?php echo $obj[$model]['name']; ?></div>
-	<div class="field_value">
+<div class="panel panel-default panel-custom">
+	<div class="panel-heading"><?php echo $obj[$model]['name']; ?></div>
+	<div class="panel-body">
 	<?php
 		$defaults = array();
 		$checkboxOptions = array('type' => 'checkbox', 'label' => false, 'div' => false, 'before' => false, 'between' => false, 'after' => false, 'class' => false);

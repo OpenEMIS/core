@@ -7,7 +7,6 @@ $this->end();
 
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
 
 <div class="row page-controls">
 	<?php
