@@ -124,7 +124,11 @@ class StaffHealthAllergy extends StaffAppModel {
 			}
 		}
 
-		$healthAllergiesOptions = $this->HealthAllergyType->getList();
+		if (!empty($controller->request->data)) {
+			$healthAllergiesOptions = $this->HealthAllergyType->getList(array('value' => $controller->request->data['StaffHealthAllergy']['health_allergy_type_id']));
+		} else {
+			$healthAllergiesOptions = $this->HealthAllergyType->getList(array('value' => 0));
+		}
 		$yesnoOptions = $controller->Option->get('yesno');
 
 		$controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));

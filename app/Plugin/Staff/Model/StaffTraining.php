@@ -121,7 +121,12 @@ class StaffTraining extends StaffAppModel {
             }
         }
 		
-		$categoryOptions = $this->StaffTrainingCategory->getList();
+		if (!empty($controller->request->data)) {
+			$categoryOptions = $this->StaffTrainingCategory->getList(array('value' => $controller->request->data['StaffTraining']['staff_training_category_id']));
+		} else {
+			$categoryOptions = $this->StaffTrainingCategory->getList(array('value' => 0));
+		}
+
 		$controller->set(compact('categoryOptions'));
 	}
 	

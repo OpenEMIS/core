@@ -171,16 +171,26 @@ class FieldOptionValue extends AppModel {
 					array(
 						'name' => $name, 
 						'value' => $value[$alias]['id'],
-						'obsolete' => ($value[$alias]['visible']!='0')?false:true
+						'obsolete' => ($value[$alias]['visible']!='0')?false:true,
+						'selected' => ($value[$alias]['default']!='0')?true:false
 					)
 				);
 			}
 			if (array_key_exists('value', $customOptions)) {
 				$value = $customOptions['value'];
-				foreach ($result as $okey => $ovalue) {
-					if ($ovalue['obsolete'] == '1' && $ovalue['value']!=$value) {
+
+				if (is_array($value)) {
+					foreach ($result as $okey => $ovalue) {
+					if ($ovalue['obsolete'] == '1' && !in_array($ovalue['value'], $value)) {
 						unset($result[$okey]);
 					}
+				}
+				} else {
+					foreach ($result as $okey => $ovalue) {
+						if ($ovalue['obsolete'] == '1' && $ovalue['value']!=$value) {
+							unset($result[$okey]);
+						}
+					}	
 				}
 			}
 		}

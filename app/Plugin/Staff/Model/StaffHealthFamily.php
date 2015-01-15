@@ -140,9 +140,15 @@ class StaffHealthFamily extends StaffAppModel {
                 $controller->request->data = $data;
             }
         }
-        
-        $healthConditionsOptions = $this->HealthCondition->getList();//('list', array('fields' => array('id', 'name')));
-        $healthRelationshipsOptions = $this->HealthRelationship->getList();//('list', array('fields' => array('id', 'name')));
+
+        if (!empty($controller->request->data)) {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => $controller->request->data['StaffHealthFamily']['health_condition_id']));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => $controller->request->data['StaffHealthFamily']['health_relationship_id']));
+		} else {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => 0));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => 0));
+		}
+		
         $yesnoOptions = $controller->Option->get('yesno');
         
         $controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));
