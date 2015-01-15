@@ -57,12 +57,6 @@ class InstitutionSiteSurveyDraft extends AppModel {
 		'InstitutionSiteSurveyTableCell'
 	);
 
-	public function beforeSave($options=array()) {
-
-		//pr($this->data);die;
-		return true;
-	}
-
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Surveys', array('action' => $this->alias, $this->action));

@@ -2,20 +2,19 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-	if(isset($templateData)) {
+	if(isset($selectedTemplate)) {
 		if ($_add) {
 		    echo $this->Html->link(__('Add'), array('action' => 'add', 'module' => $selectedModule, 'parent' => $selectedTemplate), array('class' => 'divider'));
 		}
 		if ($_edit) {
-		    echo $this->Html->link(__('Reorder'), array('action' => 'reorder', $templateData['SurveyTemplate']['id']), array('class' => 'divider'));
-		    echo $this->Html->link(__('Preview'), array('action' => 'preview'), array('class' => 'divider'));
+		    echo $this->Html->link(__('Reorder'), array('action' => 'reorder', $selectedTemplate, 'module' => $selectedModule, 'parent' => $selectedTemplate), array('class' => 'divider'));
+		    echo $this->Html->link(__('Preview'), array('action' => 'preview', $selectedTemplate, 'module' => $selectedModule, 'parent' => $selectedTemplate), array('class' => 'divider'));
 		}
 	}
 $this->end();
 
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
 
 <div class="row page-controls">
 	<?php
@@ -23,7 +22,7 @@ $this->start('contentBody');
 			'class' => 'form-control',
 			'label' => false,
 			'options' => $moduleOptions,
-			'default' => $selectedModule,
+			'default' => 'module:' . $selectedModule,
 			'div' => 'col-md-3',
 			'url' => $this->params['controller'] . '/index',
 			'onchange' => 'jsForm.change(this)'
@@ -34,9 +33,9 @@ $this->start('contentBody');
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $templateOptions,
-				'default' => $selectedTemplate,
+				'default' => 'parent:' . $selectedTemplate,
 				'div' => 'col-md-3',
-				'url' => $this->params['controller'] . '/index/' . $selectedModule,
+				'url' => $this->params['controller'] . '/index/module:' . $selectedModule,
 				'onchange' => 'jsForm.change(this)'
 			));
 		}
