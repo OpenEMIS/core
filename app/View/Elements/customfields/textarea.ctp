@@ -1,11 +1,11 @@
-<div class="custom_field">
-	<div class="field_label">
+<div class="panel panel-default panel-custom">
+	<div class="panel-heading">
 		<?php
 			echo $obj[$model]['name'];
 			echo $this->element('customfields/mandatory', compact('obj'));
 		?>
 	</div>
-	<div class="field_value">
+	<div class="panel-body">
 	<?php
 		$modelId = $obj[$model]['id'];
 		if(isset($dataValues[$modelId][0]['textarea_value'])) {

@@ -1,6 +1,6 @@
-<div class="custom_field">
-	<div class="field_label"><?php echo $obj[$model]['name']; ?></div>
-	<div class="field_value">
+<div class="panel panel-default panel-custom">
+	<div class="panel-heading"><?php echo $obj[$model]['name']; ?></div>
+	<div class="panel-body">
 	<?php
 		if(count($obj[$modelOption]) > 0) {
 			$modelId = $obj[$model]['id'];
