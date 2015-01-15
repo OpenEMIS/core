@@ -130,7 +130,13 @@ class StudentHealthTest extends StudentsAppModel {
 			}
 		}
 
-		$healthTestsOptions = $this->HealthTestType->getList();
+		if (!empty($controller->request->data)) {
+			$healthTestsOptions = $this->HealthTestType->getList(array('value' => $controller->request->data['StudentHealthTest']['health_test_type_id']));
+		} else {
+			$healthTestsOptions = $this->HealthTestType->getList(array('value' => 0));
+		}
+
+		
 		$controller->set(compact('healthTestsOptions'));
 	}
 

@@ -13,11 +13,10 @@ $this->start('contentBody');
 $tableHeaders = array(__('Relationship'), __('Conditions'), __('Current'), __('Comment'));
 $tableData = array();
 
-
 foreach($data as $obj) {
     $symbol = $this->Utility->checkOrCrossMarker($obj[$model]['current']==1);
 	$row = array();
-        $row[] = $this->Html->link($obj['HealthRelationships']['name'], array('action' => 'healthFamilyView', $obj[$model]['id']), array('escape' => false));
+        $row[] = $this->Html->link($obj['HealthRelationship']['name'], array('action' => 'healthFamilyView', $obj[$model]['id']), array('escape' => false));
         $row[] = $obj['HealthCondition']['name'] ;
         $row[] = array($symbol, array('class' => 'center')) ;
         $row[] = $obj[$model]['comment'] ;

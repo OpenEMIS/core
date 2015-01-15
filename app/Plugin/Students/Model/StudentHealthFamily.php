@@ -140,8 +140,16 @@ class StudentHealthFamily extends StudentsAppModel {
 			}
 		}
 		
-		$healthConditionsOptions = $this->HealthCondition->getList();
-		$healthRelationshipsOptions = $this->HealthRelationship->getList();
+		if (!empty($controller->request->data)) {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => $controller->request->data['StudentHealthFamily']['health_condition_id']));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => $controller->request->data['StudentHealthFamily']['health_relationship_id']));
+		} else {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => 0));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => 0));
+		}
+
+
+		
 		$yesnoOptions = $controller->Option->get('yesno');
 		
 		$controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));
