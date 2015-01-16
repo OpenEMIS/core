@@ -21,7 +21,8 @@ class AcademicPeriod extends AppModel {
 		'Tree',
 		'Reorder',
 		'CustomReport',
-		'ControllerAction2'
+		'ControllerAction2',
+		'DatePicker' => array('start_date', 'end_date')
 	);
 	
 	public $belongsTo = array(
@@ -241,14 +242,14 @@ class AcademicPeriod extends AppModel {
 
 	public function beforeSave($options=array()) {
 		if (array_key_exists($this->alias, $this->data)) {
-			if (array_key_exists('start_date', $this->data[$this->alias])) {
-				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
-				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
-			}
-			if (array_key_exists('end_date', $this->data[$this->alias])) {
-				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
-				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
-			}
+			// if (array_key_exists('start_date', $this->data[$this->alias])) {
+			// 	$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
+			// 	$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
+			// }
+			// if (array_key_exists('end_date', $this->data[$this->alias])) {
+			// 	$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
+			// 	$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
+			// }
 
 			$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
 			$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
