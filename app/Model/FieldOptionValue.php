@@ -74,9 +74,19 @@ class FieldOptionValue extends AppModel {
 		
 		$data = array();
 		if ($model->alias == $this->alias) {
+
+			$FieldOption = ClassRegistry::init('FieldOption');
+			$fieldOptionId = $FieldOption->find('first', 
+				array(
+					'recursive' => -1,
+					'fields' => array('id'),
+					'conditions' => array('FieldOption.code' => $model->alias)
+				)
+			);
+
 			$data = $model->find('first', array(
 				'fields' => array('id'),
-				'conditions' => array('FieldOption.code' => $model->alias)
+				'conditions' => array($model->alias.'.field_option_id' => $fieldOptionId['FieldOption']['id'])
 			));
 		} else {
 			$data = $model->findByDefault(1);

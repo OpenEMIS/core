@@ -78,10 +78,12 @@ class InstitutionSitePosition extends AppModel {
 		$data = $this->find('all', $options);
 		$list = array();
 		if (!empty($data)) {
-			$staffOptions = $this->StaffPositionTitle->getList();
+			$staffOptions = $this->StaffPositionTitle->getList(array('listOnly'=>true));
 			foreach ($data as $obj) {
 				$posInfo = $obj['InstitutionSitePosition'];
-				$list[$posInfo['id']] = sprintf('%s - %s', $posInfo['position_no'], $staffOptions[$posInfo['staff_position_title_id']]);
+				$list[$posInfo['id']] = sprintf('%s - %s', 
+					$posInfo['position_no'], 
+					$staffOptions[$posInfo['staff_position_title_id']]);
 			}
 		}
 
