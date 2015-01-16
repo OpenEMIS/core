@@ -1,17 +1,3 @@
-<?php
-	/*can be deleted later
-	if ($this->action == 'add' || $this->action == 'edit') {
-		echo $this->Form->button('SurveyTableRow', array('id' => 'SurveyTableRow', 'type' => 'submit', 'name' => 'submit', 'value' => 'SurveyTableRow', 'class' => 'hidden'));
-		echo $this->Form->button('SurveyTableColumn', array('id' => 'SurveyTableColumn', 'type' => 'submit', 'name' => 'submit', 'value' => 'SurveyTableColumn', 'class' => 'hidden'));
-	}
-	*/
-	/*
-	pr($Custom_Field); //SurveyQuestion
-	pr($Custom_TableColumn); //SurveyTableColumn
-	pr($Custom_TableRow); //SurveyTableRow
-	pr($this->request->data);
-	*/
-?>
 <div class="row form-group">
 	<div class="col-md-12">
 		<fieldset class="section_group">

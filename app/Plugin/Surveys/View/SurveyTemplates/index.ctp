@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 	if ($_add) {
-	    echo $this->Html->link(__('Add'), array('action' => 'add'), array('class' => 'divider'));
+	    echo $this->Html->link(__('Add'), array('action' => 'add', 'module' => $selectedModule), array('class' => 'divider'));
 	}
 $this->end();
 
@@ -17,7 +17,7 @@ $this->start('contentBody');
 			'class' => 'form-control',
 			'label' => false,
 			'options' => $moduleOptions,
-			'default' => $selectedModule,
+			'default' => 'module:' . $selectedModule,
 			'div' => 'col-md-3',
 			'url' => $this->params['controller'] . '/index',
 			'onchange' => 'jsForm.change(this)'
@@ -37,7 +37,7 @@ $this->start('contentBody');
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['SurveyTemplate']['name'], array('action' => 'view', $obj['SurveyTemplate']['id'])) ?></td>
+					<td><?php echo $this->Html->link($obj['SurveyTemplate']['name'], array('action' => 'view', 'module' => $selectedModule, $obj['SurveyTemplate']['id'])) ?></td>
 					<td><?php echo $obj['SurveyTemplate']['description'] ?></td>
 					<td><?php echo $obj['SurveyModule']['name'] ?></td>
 				</tr>

@@ -2,12 +2,13 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-	echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
+	$params = $this->params->named;
+	echo $this->Html->link(__('Back'), array_merge(array('action' => 'index'), $params), array('class' => 'divider'));
 	if ($_edit) {
-		echo $this->Html->link(__('Edit'), array('action' => 'edit', $data['SurveyTemplate']['id']), array('class' => 'divider'));
+		echo $this->Html->link(__('Edit'), array_merge(array('action' => 'edit', $data['SurveyTemplate']['id']), $params), array('class' => 'divider'));
 	}
 	if ($_delete) {
-		echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		echo $this->Html->link(__('Delete'), array_merge(array('action' => 'delete'), $params), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 	}
 $this->end();
 

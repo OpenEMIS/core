@@ -22,39 +22,6 @@ class SurveyBehavior extends ModelBehavior {
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
 	}
 
-	/*/*not working
-	public function beforeSave(Model $model, $options=array()) {	
-		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
-
-		foreach ($model->data[$modelValue] as $key => $obj) {
-			switch($obj[$modelValue]['type']) {
-				case 2:
-					$fieldName = 'text_value';
-					break;
-				case 3:
-					$fieldName = 'int_value';
-					break;
-				case 4:
-					$fieldName = 'int_value';
-					break;
-				case 5:
-					$fieldName = 'textarea_value';
-					break;
-				case 6:
-					$fieldName = 'int_value';
-					break;
-				default:
-					$fieldName = 'text_value';
-			}
-			if(empty($obj[$modelValue][$fieldName])) {
-				unset($model->data[$modelValue][$key]);
-			}
-		}
-
-		return parent::beforeSave($model, $options);
-	}
-	*/
-
 	public function getSurveyTemplatesByModule(Model $model) {
 		$moduleName = $this->settings[$model->alias]['module'];
 		$moduleId = ClassRegistry::init('Surveys.SurveyModule')->field('id', array('SurveyModule.name' => $moduleName));

@@ -57,37 +57,6 @@ class InstitutionSiteSurveyNew extends AppModel {
 		'InstitutionSiteSurveyTableCell'
 	);
 
-	public function beforeSave($options=array()) {
-		/*not working
-		foreach ($this->data['InstitutionSiteSurveyAnswer'] as $key => $obj) {
-			switch($obj['InstitutionSiteSurveyAnswer']['type']) {
-				case 2:
-					$fieldName = 'text_value';
-					break;
-				case 3:
-					$fieldName = 'int_value';
-					break;
-				case 4:
-					$fieldName = 'int_value';
-					break;
-				case 5:
-					$fieldName = 'textarea_value';
-					break;
-				case 6:
-					$fieldName = 'int_value';
-					break;
-				default:
-					$fieldName = 'text_value';
-			}
-			if(empty($obj['InstitutionSiteSurveyAnswer'][$fieldName])) {
-				unset($this->data['InstitutionSiteSurveyAnswer'][$key]);
-			}
-		}
-
-		return true;
-		*/
-	}
-
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Surveys', array('action' => $this->alias, $this->action));
