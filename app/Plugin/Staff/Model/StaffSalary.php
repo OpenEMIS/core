@@ -228,7 +228,7 @@ class StaffSalary extends StaffAppModel {
 		$index = $controller->request->data['index'];
 
 		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
-		$categories = $SalaryAdditionType->getList();
+		$categories = $SalaryAdditionType->getList(array('value' => 0));
 
 		$controller->set(compact('categories', 'index'));
 	}
@@ -237,7 +237,7 @@ class StaffSalary extends StaffAppModel {
 		$index = $controller->request->data['index'];
 		
 		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
-		$categories = $SalaryDeductionType->getList();
+		$categories = $SalaryDeductionType->getList(array('value' => 0));
 		
 		$controller->set(compact('categories', 'index'));
 	}
