@@ -138,14 +138,14 @@ class TrainingController extends TrainingAppController {
         $this->set('index', $this->params->query['index']);
         $TrainingResultType = ClassRegistry::init('Training.TrainingResultType');
  		
-        $this->set('trainingResultTypeOptions', $TrainingResultType->getList());
+        $this->set('trainingResultTypeOptions', $TrainingResultType->getList(array('value'=>0)));
         $this->render('/Elements/result_type');
     }
 
     public function ajax_add_specialisation() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getList());
+        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getList(array('value'=>0)));
         $this->render('/Elements/specialisation');
     }
 
@@ -343,7 +343,7 @@ class TrainingController extends TrainingAppController {
      public function ajax_add_provider() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $trainingProviderOptions = $this->TrainingProvider->getList();
+        $trainingProviderOptions = $this->TrainingProvider->getList(array('value'=>0));
         $this->set('trainingProviderOptions', $trainingProviderOptions);
         $this->render('/Elements/provider');
     }
