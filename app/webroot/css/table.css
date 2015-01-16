@@ -23,12 +23,14 @@
 .table a { color: #007CBE; }
 .action { margin-left: 5px; }
 .cell-number { text-align: right; }
-.cell-visible { width: 70px; }
+.cell-visible { width: 70px; text-align: center; }
 .cell-order { width: 83px; }
 .cell-action { width: 100px; }
 .cell-hours-required { width: 200px; }
 .cell-report-name { width: 200px; }
 .cell-delete { width: 34px; }
+.cell-mandatory { width: 90px; text-align: center; }
+.cell-unique { width: 70px; text-align: center; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
 

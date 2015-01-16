@@ -24,7 +24,7 @@
 				echo $this->Form->hidden("$modelValue.number.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
 			}
 			echo $this->Form->input("$modelValue.number.$modelId.value", array(
-				'class' => 'form-control',
+				'class' => 'form-control number',
 				'div' => false,
 				'label' => false,
 				'error' => false,
