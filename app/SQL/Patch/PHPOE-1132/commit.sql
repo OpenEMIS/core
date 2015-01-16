@@ -1,28 +1,3 @@
-CREATE TABLE `academic_periods` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `code` varchar(60) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `start_date` date NOT NULL,
-  `start_year` int(4) NOT NULL,
-  `end_date` date DEFAULT NULL,
-  `end_year` int(4) DEFAULT NULL,
-  `school_days` int(5) NOT NULL DEFAULT '0',
-  `current` char(1) NOT NULL,
-  `available` char(1) NOT NULL DEFAULT '1',,
-  `parent_id` int(11) NOT NULL,
-  `lft` int(11) DEFAULT NULL,
-  `rght` int(11) DEFAULT NULL,
-  `academic_period_level_id` int(11) NOT NULL,
-  `order` int(3) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `academic_period_level_id` (`academic_period_level_id`),
-  KEY `parent_id` (`parent_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-
 -- need to remove school year is 
 CREATE TABLE IF NOT EXISTS 1132_field_options LIKE field_options;
 INSERT 1132_field_options SELECT * FROM field_options WHERE field_options.code = "SchoolYear" AND NOT EXISTS (SELECT * FROM 1132_field_options WHERE 1132_field_options.code = "SchoolYear");
