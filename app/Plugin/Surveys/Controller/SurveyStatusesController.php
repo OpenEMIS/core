@@ -163,7 +163,7 @@ class SurveyStatusesController extends SurveysAppController {
 			if($this->SurveyStatus->delete($id)) {
 				$this->Message->alert('general.delete.success');
 			} else {
-				$this->log($this->validationErrors, 'debug');
+				$this->log($this->SurveyStatus->validationErrors, 'debug');
 				$this->Message->alert('general.delete.failed');
 			}
 

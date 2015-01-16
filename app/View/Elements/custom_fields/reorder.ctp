@@ -5,6 +5,9 @@ $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 	$params = $this->params->named;
 	echo $this->Html->link($this->Label->get('general.back'), array_merge(array('action' => 'index'), $params), array('class' => 'divider'));
+	if ($_edit) {
+	    echo $this->Html->link(__('Preview'), array_merge(array('action' => 'preview', $id), $params), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');

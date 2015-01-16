@@ -44,20 +44,4 @@ class SurveyQuestion extends SurveysAppModel {
 			)
 		)
 	);
-
-	public function getSurveyQuestionData($id=0) {
-		$this->contain(array('SurveyQuestionChoice', 'SurveyTableRow', 'SurveyTableColumn'));
-		$data = $this->find('all', array(
-			'conditions' => array(
-				'SurveyQuestion.survey_template_id' => $id,
-				'SurveyQuestion.visible' => 1
-			),
-			'order' => array(
-				'SurveyQuestion.order', 
-				'SurveyQuestion.name'
-			)
-		));
-
-		return $data;
-	}
 }
