@@ -314,7 +314,7 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingCourseProviders = $this->TrainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
-		$trainingProviders = $trainingProvider->getList();
+		$trainingProviders = $trainingProvider->getList(array('listOnly'=>true));
 
 		// $this->TrainingCourseResultType->bindModel(
 	 //        array('belongsTo' => array(
