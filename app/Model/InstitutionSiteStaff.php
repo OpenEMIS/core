@@ -150,7 +150,6 @@ class InstitutionSiteStaff extends AppModel {
 	public function beforeSave($options = array()) {
 		$alias = $this->alias;
 		
-		//pr($this->data);die;
 		$this->data[$alias]['FTE'] = $this->data[$alias]['FTE'] / 100;
 		
 		return parent::beforeSave($options);
@@ -246,7 +245,6 @@ class InstitutionSiteStaff extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		//pr($data);
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
 		$this->setVar(compact('data', 'yearOptions', 'positionList'));
 	}
@@ -407,7 +405,7 @@ class InstitutionSiteStaff extends AppModel {
 		$data = $this->find('first', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.last_name AS last_name',
+				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.third_name AS third_name', 'Staff.last_name AS last_name',
 				'InstitutionSite.name AS institution_site_name'
 			),
 			'conditions' => array(
@@ -546,7 +544,7 @@ class InstitutionSiteStaff extends AppModel {
 
 		$options['recursive'] = -1;
 		$options['fields'] = array('DISTINCT Staff.id', 'Staff.*');
-		$options['order'] = array('Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name');
+		$options['order'] = array('Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 'Staff.preferred_name');
 		$options['joins'] = array(
 			array(
 				'table' => 'staff',
@@ -576,7 +574,7 @@ class InstitutionSiteStaff extends AppModel {
 		foreach ($list as $obj) {
 			$staff = $obj['Staff'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['third_name'], $staff['last_name'], $staff['preferred_name']),
+				'label' => sprintf('%s - %s %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['third_name'], $staff['last_name'], $staff['preferred_name']),
 				'value' => $staff['id']
 			);
 		}
