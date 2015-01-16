@@ -31,30 +31,51 @@ class SurveyStatusesController extends SurveysAppController {
 		$this->Navigation->addCrumb('Surveys', array('action' => 'index'));
 		$this->Navigation->addCrumb('Status');
 
-		$moduleOptions = $this->SurveyModule->getModuleList();
-    	$selectedModule = key($moduleOptions);
-		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($selectedModule);
 		$academicPeriodTypeOptions = $this->AcademicPeriodType->getAcademicPeriodTypeList();
 		$selectedAcademicPeriodType = key($academicPeriodTypeOptions);
 
-		$this->set('moduleOptions', $moduleOptions);
-		$this->set('templateOptions', $templateOptions);
 		$this->set('academicPeriodTypeOptions', $academicPeriodTypeOptions);
 		$this->set('selectedAcademicPeriodType', $selectedAcademicPeriodType);
 		$this->set('contentHeader', __('Status'));
 	}
 
-	public function index($selectedSurveyStatus = 1) {
-		$surveyStatusOptions = array(0 => 'Past', 1 => 'Current');
-		$data = $this->SurveyStatus->getSurveyStatusData($selectedSurveyStatus);
+	public function index() {
+		$params = $this->params->named;
 
-		$this->set('surveyStatusOptions', $surveyStatusOptions);
-		$this->set('selectedSurveyStatus', $selectedSurveyStatus);
+		$SurveyModule = ClassRegistry::init('SurveyModule');
+		$modules = $SurveyModule->find('list' , array(
+			'conditions' => array(
+				'SurveyModule.visible' => 1
+			),
+			'order' => array(
+				'SurveyModule.order',
+				'SurveyModule.name'
+			)
+		));
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
+
+		$statusOptions = array(
+			'status:0' => 'Past',
+			'status:1' => 'Current'
+		);
+		$selectedStatus = isset($params['status']) ? $params['status'] : 1;
+		$data = $this->SurveyStatus->getSurveyStatusByModule($selectedModule, $selectedStatus);
+
+		$this->set('modules', $modules);
+		$this->set('moduleOptions', $moduleOptions);
+		$this->set('selectedModule', $selectedModule);
+		$this->set('statusOptions', $statusOptions);
+		$this->set('selectedStatus', $selectedStatus);
 		$this->set('data', $data);
     }
 
     public function view($id=0) {
-		$academicPeriodOptions = $this->SchoolYear->getAvailableYears();
+    	$params = $this->params->named;
 
 		if ($this->SurveyStatus->exists($id)) {
 			$this->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriodType', 'AcademicPeriod', 'ModifiedUser', 'CreatedUser'));
@@ -71,73 +92,84 @@ class SurveyStatusesController extends SurveysAppController {
 			$this->set('data', $data);
 		} else {
 			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
+			$params['action'] = 'index';
+			return $this->redirect($params);
 		}
-
-		$this->set('academicPeriodOptions', $academicPeriodOptions);
 	}
 
 	public function add() {
+		$params = $this->params->named;
+
+		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($params['module']);
 		$academicPeriodOptions = $this->SchoolYear->getAvailableYears();
 
 		if ($this->request->is(array('post', 'put'))) {
 			if ($this->SurveyStatus->saveAll($this->request->data)) {
 				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => 'index'));
+				$params['action'] = 'index';
+				return $this->redirect($params);
 			} else {
-				$this->log($this->validationErrors, 'debug');
+				$this->log($this->SurveyStatus->validationErrors, 'debug');
 				$this->Message->alert('general.add.failed');
 			}
-		}
-		
-		if(isset($this->params['pass'][0])) {
-			$selectedAcademicPeriodType = $this->params['pass'][0];
-			$this->set('selectedAcademicPeriodType', $selectedAcademicPeriodType);
+		} else {
+			$todayDate = date('d-m-Y');
+			$this->request->data['SurveyStatus']['date_enabled'] = $todayDate;
+			$this->request->data['SurveyStatus']['date_disabled'] = $todayDate;
 		}
 
+		$this->set('templateOptions', $templateOptions);
 		$this->set('academicPeriodOptions', $academicPeriodOptions);
+		$this->render('edit');
     }
 
     public function edit($id=0) {
-		$academicPeriodOptions = $this->SchoolYear->getAvailableYears();
+		$params = $this->params->named;
 
 		if ($this->SurveyStatus->exists($id)) {
+			$templateOptions = $this->SurveyTemplate->getTemplateListByModule($params['module']);
+			$academicPeriodOptions = $this->SchoolYear->getAvailableYears();
+
 			$this->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriod'));
 			$data = $this->SurveyStatus->findById($id);
 
 			if ($this->request->is(array('post', 'put'))) {
 				if ($this->SurveyStatus->saveAll($this->request->data)) {
 					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => 'view', $id));
+					$params = array_merge(array('action' => 'view', $id), $params);
+					return $this->redirect($params);
 				} else {
-					$this->log($this->validationErrors, 'debug');
+					$this->log($this->SurveyStatus->validationErrors, 'debug');
 					$this->Message->alert('general.edit.failed');
 				}
-				$data = $this->request->data;
 			} else {
 				$this->request->data = $data;
 			}
-			$this->set('data', $data);
+
+			$this->set('templateOptions', $templateOptions);
+			$this->set('academicPeriodOptions', $academicPeriodOptions);
 		} else {
 			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
+			$params['action'] = 'index';
+			return $this->redirect($params);
 		}
-
-		$this->set('academicPeriodOptions', $academicPeriodOptions);
     }
 
     public function delete() {
     	if ($this->Session->check($this->SurveyStatus->alias . '.id')) {
+    		$params = $this->params->named;
 			$id = $this->Session->read($this->SurveyStatus->alias . '.id');
+
 			if($this->SurveyStatus->delete($id)) {
-				$this->SurveyStatusPeriod->deleteAll(array('SurveyStatusPeriod.survey_status_id' => $id));
 				$this->Message->alert('general.delete.success');
 			} else {
 				$this->log($this->validationErrors, 'debug');
 				$this->Message->alert('general.delete.failed');
 			}
+
 			$this->Session->delete($this->SurveyStatus->alias . '.id');
-			return $this->redirect(array('action' => 'index'));
+			$params['action'] = 'index';
+			return $this->redirect($params);
 		}
     }
 }

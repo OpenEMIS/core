@@ -41,7 +41,6 @@ class CustomField2Component extends Component {
 	public function startup(Controller $controller) {
 		$fieldTypeOptions = $this->get('fieldType');
 		$selectedFieldType = key($fieldTypeOptions);
-		$fieldTypeDisabled = $this->controller->action == 'edit' ? 'disabled' : '' ;
 		$mandatoryOptions = $this->get('mandatory');
 		$selectedMandatory = 0;
 		$uniqueOptions = $this->get('unique');
@@ -49,22 +48,42 @@ class CustomField2Component extends Component {
 		$visibleOptions = $this->get('visible');
 		$selectedVisible = 1;
 
-		if ($this->controller->request->is(array('post', 'put'))) {
-			//Field Type should follow user selection when reload
-			$selectedFieldType = $this->controller->request->data[$this->Field->alias]['type'];
-			if(isset($this->controller->request->data[$this->Field->alias]['is_mandatory'])) {
-				$selectedMandatory = $this->controller->request->data[$this->Field->alias]['is_mandatory'];
+		if($this->controller->action == 'add' || $this->controller->action == 'edit') {
+			$params = $this->controller->params->named;
+
+			foreach ($params as $key => $value) {
+	    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
+	    	}
+
+			$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $params['parent']));
+			$this->controller->set('parentName', $parentName);
+
+			if ($this->controller->request->is(array('post', 'put'))) {
+				$data = $this->controller->request->data;
+				$selectedFieldType = $data[$this->Field->alias]['type'];
+
+				if ($data['submit'] == 'reload' || $data['submit'] == $this->FieldOption->alias || $data['submit'] == $this->TableColumn->alias || $data['submit'] == $this->TableRow->alias) {
+					//always reset to 0 when reload; in other conditions should set to 0 too
+					$selectedMandatory = 0;
+					$selectedUnique = 0;
+
+					$this->controller->request->data[$this->Field->alias]['is_mandatory'] = $selectedMandatory;
+					$this->controller->request->data[$this->Field->alias]['is_unique'] = $selectedUnique;
+				} else {
+					//actual submit
+				}
+			} else {
+				//the below are set so that variable can be access from $this->request->data in view for add and edit
+				$this->controller->request->data[$this->Field->alias]['type'] = $selectedFieldType;
+				$this->controller->request->data[$this->Field->alias]['is_mandatory'] = $selectedMandatory;
+				$this->controller->request->data[$this->Field->alias]['is_unique'] = $selectedUnique;
+				$this->controller->request->data[$this->Field->alias]['visible'] = $selectedVisible;
 			}
-			if(isset($this->controller->request->data[$this->Field->alias]['is_unique'])) {
-				$selectedUnique = $this->controller->request->data[$this->Field->alias]['is_unique'];
-			}
-			$selectedVisible = $this->controller->request->data[$this->Field->alias]['visible'];
 		}
 
+		$fieldTypeDisabled = $this->controller->action == 'edit' ? 'disabled' : '' ;
 		$mandatoryDisabled = $this->getMandatoryDisabled($selectedFieldType);
-		$selectedMandatory = $mandatoryDisabled ? 0 : $selectedMandatory;
 		$uniqueDisabled = $this->getUniqueDisabled($selectedFieldType);
-		$selectedUnique = $uniqueDisabled ? 0 : $selectedUnique;
 
 		$controller->set('fieldTypeOptions', $fieldTypeOptions);
 		$controller->set('fieldTypeDisabled', $fieldTypeDisabled);
@@ -73,12 +92,6 @@ class CustomField2Component extends Component {
 		$controller->set('uniqueOptions', $uniqueOptions);
 		$controller->set('uniqueDisabled', $uniqueDisabled);
 		$controller->set('visibleOptions', $visibleOptions);
-
-		//the below is set so that variable can be access from $this->request->data in view for add and edit
-		$this->controller->request->data[$this->Field->alias]['type'] = $selectedFieldType;
-		$this->controller->request->data[$this->Field->alias]['is_mandatory'] = $selectedMandatory;
-		$this->controller->request->data[$this->Field->alias]['is_unique'] = $selectedUnique;
-		$this->controller->request->data[$this->Field->alias]['visible'] = $selectedVisible;
 	}
 
 	public function get($code) {
@@ -139,6 +152,74 @@ class CustomField2Component extends Component {
 		return $result;
     }
 
+    public function doRender($page) {
+    	if (!empty($this->controller->params->plugin)) {
+    		$this->controller->render('../../../../View/Elements/custom_fields/'.$page);
+    	} else {
+			$this->controller->render('/Elements/custom_fields/'.$page);
+    	}
+    }
+
+    public function index() {
+		$params = $this->controller->params->named;
+
+		foreach ($params as $key => $value) {
+    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
+    	}
+
+		$Module = ClassRegistry::init($this->Module->alias);
+		$modules = $Module->find('list' , array(
+			'conditions' => array($this->Module->alias.'.visible' => 1),
+			'order' => array($this->Module->alias.'.order')
+		));
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+		
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
+
+		$parents = $this->Parent->find('list', array(
+			'conditions' => array(
+				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+			),
+			'order' => array(
+				$this->Parent->alias.'.name'
+			)
+		));
+
+		if(!empty($parents)) {
+			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
+
+			$parentOptions = array();
+			foreach ($parents as $key => $parent) {
+				$parentOptions['parent:' . $key] = $parent;
+			}
+
+			$this->Field->contain();
+			$data = $this->Field->find('all', array(
+				'conditions' => array(
+					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent
+				),
+				'order' => array(
+					$this->Field->alias.'.order', 
+					$this->Field->alias.'.name'
+				)
+			));
+			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
+
+			$this->controller->set('parentOptions', $parentOptions);
+			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('data', $data);
+		} else {
+			$this->Message->alert('general.noData');
+		}
+
+		$this->controller->set('moduleOptions', $moduleOptions);
+		$this->controller->set('selectedModule', $selectedModule);
+		$this->doRender('index');
+    }
+
     public function view($id=0) {
     	$params = $this->controller->params->named;
 
@@ -151,32 +232,17 @@ class CustomField2Component extends Component {
 			$params['action'] = 'index';
 			return $this->controller->redirect($params);
 		}
-
-		if (!empty($this->controller->params->plugin)) {
-    		$this->controller->render('../../../../View/Elements/custom_fields/view');
-    	} else {
-			$this->controller->render('/Elements/custom_fields/view');
-    	}
+		$this->doRender('view');
     }
 
     public function add() {
     	$params = $this->controller->params->named;
 
-    	foreach ($params as $key => $value) {
-    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
-    	}
-
-    	//Set value of Parent Id and Parent Name through here
-    	$parentId = $params['parent'];
-    	$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $parentId));
-		$this->controller->request->data[$this->Field->alias][Inflector::underscore($this->Parent->alias).'_id'] = $parentId;
-		$this->controller->request->data[$this->Parent->alias]['name'] = $parentName;
-
     	if ($this->controller->request->is(array('post', 'put'))) {
     		$data = $this->controller->request->data;
-
+    		
     		if ($data['submit'] == 'reload') {
-    			
+
 			} else if($data['submit'] == $this->FieldOption->alias) {
 				$this->controller->request->data[$this->FieldOption->alias][] =array(
 					'value' => '',
@@ -194,28 +260,25 @@ class CustomField2Component extends Component {
 				);
     		} else {
     			if(isset($this->controller->request->data[$this->FieldOption->alias])) {
-					foreach ($this->controller->request->data[$this->FieldOption->alias] as $key => $value) {
-						if(empty($value['value'])) {
+					foreach ($this->controller->request->data[$this->FieldOption->alias] as $key => $obj) {
+						if(empty($obj['value'])) {
 							unset($this->controller->request->data[$this->FieldOption->alias][$key]);
 						}
 					}
 				}
 				if(isset($this->controller->request->data[$this->TableColumn->alias])) {
-					foreach ($this->controller->request->data[$this->TableColumn->alias] as $key => $value) {
-						if(empty($value['name'])) {
+					foreach ($this->controller->request->data[$this->TableColumn->alias] as $key => $obj) {
+						if(empty($obj['name'])) {
 							unset($this->controller->request->data[$this->TableColumn->alias][$key]);
 						}
 					}
 				}
 				if(isset($this->controller->request->data[$this->TableRow->alias])) {
-					foreach ($this->controller->request->data[$this->TableRow->alias] as $key => $value) {
-						if(empty($value['name'])) {
+					foreach ($this->controller->request->data[$this->TableRow->alias] as $key => $obj) {
+						if(empty($obj['name'])) {
 							unset($this->controller->request->data[$this->TableRow->alias][$key]);
 						}
 					}
-				}
-				if(isset($this->controller->request->data[$this->Parent->alias])) {
-					unset($this->controller->request->data[$this->Parent->alias]);
 				}
 
 	    		if ($this->Field->saveAll($this->controller->request->data)) {
@@ -223,19 +286,12 @@ class CustomField2Component extends Component {
 					$params['action'] = 'index';
 					return $this->controller->redirect($params);
 				} else {
-					//put back Parent Name when validation failed
-					$this->controller->request->data[$this->Parent->alias]['name'] = $parentName;
 					$this->log($this->Field->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
 				}
     		}
     	}
-
-    	if (!empty($this->controller->params->plugin)) {
-    		$this->controller->render('../../../../View/Elements/custom_fields/edit');
-    	} else {
-			$this->controller->render('/Elements/custom_fields/edit');
-    	}
+    	$this->doRender('edit');
     }
 
     public function edit($id=0) {
@@ -243,13 +299,12 @@ class CustomField2Component extends Component {
 			$params = $this->controller->params->named;
 
 			$this->Field->contain(
-				$this->Parent->alias,
 				$this->FieldOption->alias,
 				$this->TableRow->alias,
 				$this->TableColumn->alias
 			);
+
 			$data = $this->Field->findById($id);
-			$parentName = $data[$this->Parent->alias]['name'];
 			
 			if ($this->controller->request->is(array('post', 'put'))) {
 				$data = $this->controller->request->data;
@@ -273,28 +328,25 @@ class CustomField2Component extends Component {
 					);
 				} else {
 					if(isset($this->controller->request->data[$this->FieldOption->alias])) {
-						foreach ($this->controller->request->data[$this->FieldOption->alias] as $key => $value) {
-							if(empty($value['value'])) {
+						foreach ($this->controller->request->data[$this->FieldOption->alias] as $key => $obj) {
+							if(empty($obj['value'])) {
 								unset($this->controller->request->data[$this->FieldOption->alias][$key]);
 							}
 						}
 					}
 					if(isset($this->controller->request->data[$this->TableColumn->alias])) {
-						foreach ($this->controller->request->data[$this->TableColumn->alias] as $key => $value) {
-							if(empty($value['name'])) {
+						foreach ($this->controller->request->data[$this->TableColumn->alias] as $key => $obj) {
+							if(empty($obj['name'])) {
 								unset($this->controller->request->data[$this->TableColumn->alias][$key]);
 							}
 						}
 					}
 					if(isset($this->controller->request->data[$this->TableRow->alias])) {
-						foreach ($this->controller->request->data[$this->TableRow->alias] as $key => $value) {
-							if(empty($value['name'])) {
+						foreach ($this->controller->request->data[$this->TableRow->alias] as $key => $obj) {
+							if(empty($obj['name'])) {
 								unset($this->controller->request->data[$this->TableRow->alias][$key]);
 							}
 						}
-					}
-					if(isset($this->controller->request->data[$this->Parent->alias])) {
-						unset($this->controller->request->data[$this->Parent->alias]);
 					}
 
 					$dataSource = $this->Field->getDataSource();
@@ -319,27 +371,21 @@ class CustomField2Component extends Component {
 						return $this->controller->redirect($params);
 					} else {
 						$dataSource->rollback();
-						//put back Parent Name when validation failed
-						$this->controller->request->data[$this->Parent->alias]['name'] = $parentName;
 						$this->log($this->Field->validationErrors, 'debug');
 						$this->Message->alert('general.edit.failed');
 					}
 				}
 			} else {
+				$selectedFieldType = $data[$this->Field->alias]['type'];
+				$mandatoryDisabled = $this->getMandatoryDisabled($selectedFieldType);
+				$uniqueDisabled = $this->getUniqueDisabled($selectedFieldType);
+
+				$this->controller->set('mandatoryDisabled', $mandatoryDisabled);
+				$this->controller->set('uniqueDisabled', $uniqueDisabled);
 				$this->controller->request->data = $data;
 			}
 
-			$selectedFieldType = $data[$this->Field->alias]['type'];
-			$mandatoryDisabled = $this->getMandatoryDisabled($selectedFieldType);
-			$uniqueDisabled = $this->getUniqueDisabled($selectedFieldType);
-			$this->controller->set('mandatoryDisabled', $mandatoryDisabled);
-			$this->controller->set('uniqueDisabled', $uniqueDisabled);
-
-			if (!empty($this->controller->params->plugin)) {
-	    		$this->controller->render('../../../../View/Elements/custom_fields/edit');
-	    	} else {
-				$this->controller->render('/Elements/custom_fields/edit');
-	    	}
+			$this->doRender('edit');
 		} else {
 			$this->Message->alert('general.notExists');
 			$params['action'] = 'index';
@@ -380,5 +426,159 @@ class CustomField2Component extends Component {
 			$params['action'] = 'index';
 			return $this->controller->redirect($params);
 		}
+    }
+
+    public function reorder($id=0) {
+    	$params = $this->controller->params->named;
+		$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $params['parent']));
+
+		$this->Field->contain();
+		$data = $this->Field->find('all', array(
+			'conditions' => array(
+				$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $id,
+				$this->Field->alias.'.visible' => 1
+			),
+			'order' => array(
+				$this->Field->alias.'.order', 
+				$this->Field->alias.'.name'
+			)
+		));
+
+		$this->controller->set('parentName', $parentName);
+		$this->controller->set('data', $data);
+		$this->controller->set('id', $id);
+		$this->doRender('reorder');
+    }
+
+	public function moveOrder($parentId=0) {
+		$params = $this->controller->params->named;
+
+		$data = $this->controller->request->data;
+		$conditions = array($this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $parentId);
+
+		$id = $data[$this->Field->alias]['id'];
+		$idField = $this->Field->alias.'.id';
+		$orderField = $this->Field->alias.'.order';
+		$move = $data[$this->Field->alias]['move'];
+		$order = $this->Field->field('order', array('id' => $id));
+		$idConditions = array_merge(array($idField => $id), $conditions);
+		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
+		
+		$this->fixOrder($conditions);
+		if($move === 'up') {
+			$this->Field->updateAll(array($orderField => $order-1), $idConditions);
+			$updateConditions[$orderField] = $order-1;
+			$this->Field->updateAll(array($orderField => $order), $updateConditions);
+		} else if($move === 'down') {
+			$this->Field->updateAll(array($orderField => $order+1), $idConditions);
+			$updateConditions[$orderField] = $order+1;
+			$this->Field->updateAll(array($orderField => $order), $updateConditions);
+		} else if($move === 'first') {
+			$this->Field->updateAll(array($orderField => 1), $idConditions);
+			$updateConditions[$orderField . ' <'] = $order;
+			$this->Field->updateAll(array($orderField => $orderField . ' + 1'), $updateConditions);
+		} else if($move === 'last') {
+			$count = $this->Field->find('count', array('conditions' => $conditions));
+			$this->Field->updateAll(array($orderField => $count), $idConditions);
+			$updateConditions[$orderField . ' >'] = $order;
+			$this->Field->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
+		}
+
+		$params = array_merge(array('action' => 'reorder', $parentId), $params);
+		return $this->controller->redirect($params);
+    }
+
+    public function fixOrder($conditions) {
+		$count = $this->Field->find('count', array('conditions' => $conditions));
+		if($count > 0) {
+			$list = $this->Field->find('list', array(
+				'conditions' => $conditions,
+				'order' => array($this->Field->alias.'.order')
+			));
+			$order = 1;
+			foreach($list as $id => $name) {
+				$this->Field->id = $id;
+				$this->Field->saveField('order', $order++);
+			}
+		}
+	}
+
+	public function preview() {
+		$params = $this->controller->params->named;
+
+		foreach ($params as $key => $value) {
+    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
+    	}
+
+		$Module = ClassRegistry::init($this->Module->alias);
+		$modules = $Module->find('list' , array(
+			'conditions' => array($this->Module->alias.'.visible' => 1),
+			'order' => array($this->Module->alias.'.order')
+		));
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
+
+		$parents = $this->Parent->find('list', array(
+			'conditions' => array(
+				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+			),
+			'order' => array(
+				$this->Parent->alias.'.name'
+			)
+		));
+
+		if(!empty($parents)) {
+			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
+			$parentOptions = array();
+			foreach ($parents as $key => $template) {
+				$parentOptions['parent:' . $key] = $template;
+			}
+
+			$this->Field->contain(
+				$this->FieldOption->alias,
+				$this->TableRow->alias,
+				$this->TableColumn->alias
+			);
+			$data = $this->Field->find('all', array(
+				'conditions' => array(
+					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent,
+					$this->Field->alias.'.visible' => 1
+				),
+				'order' => array(
+					$this->Field->alias.'.order', 
+					$this->Field->alias.'.name'
+				)
+			));
+			$model = $this->Field->alias;
+			$modelOption = $this->FieldOption->alias;
+			$modelValue = 'InstitutionSiteSurveyAnswer';
+			$modelRow = $this->TableRow->alias;
+			$modelColumn = $this->TableColumn->alias;
+			$modelCell = 'InstitutionSiteSurveyTableCell';
+			$action = 'edit';
+
+			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
+
+			$this->controller->set('parentOptions', $parentOptions);
+			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('data', $data);
+			$this->controller->set('model', $model);
+			$this->controller->set('modelOption', $modelOption);
+			$this->controller->set('modelValue', $modelValue);
+			$this->controller->set('modelRow', $modelRow);
+			$this->controller->set('modelColumn', $modelColumn);
+			$this->controller->set('modelCell', $modelCell);
+			$this->controller->set('action', $action);
+		} else {
+			$this->Message->alert('general.noData');
+		}
+
+		$this->controller->set('moduleOptions', $moduleOptions);
+		$this->controller->set('selectedModule', $selectedModule);
+		$this->doRender('preview');
     }
 }

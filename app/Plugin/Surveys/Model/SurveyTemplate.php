@@ -54,21 +54,6 @@ class SurveyTemplate extends SurveysAppModel {
 		)
 	);
 
-	public function getSurveyTemplateByModule($surveyModuleId) {
-		$this->contain(array('SurveyModule'));
-		$data = $this->find('all', array(
-			'conditions' => array(
-				'SurveyTemplate.survey_module_id' => $surveyModuleId
-			),
-			'order' => array(
-				'SurveyModule.order', 
-				'SurveyTemplate.name'
-			)
-		));
-
-		return $data;
-	}
-
 	public function getTemplateListByModule($surveyModuleId) {
 		$list = $this->find('list', array(
 				'conditions' => array(
