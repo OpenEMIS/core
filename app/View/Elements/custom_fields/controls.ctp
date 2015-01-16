@@ -6,7 +6,7 @@
 			'options' => $moduleOptions,
 			'default' => 'module:' . $selectedModule,
 			'div' => 'col-md-3',
-			'url' => $this->params['controller'] . '/index',
+			'url' => $this->params['controller'] . '/' . $this->request->action,
 			'onchange' => 'jsForm.change(this)'
 		));
 
@@ -17,7 +17,7 @@
 				'options' => $parentOptions,
 				'default' => 'parent:' . $selectedParent,
 				'div' => 'col-md-3',
-				'url' => $this->params['controller'] . '/index/module:' . $selectedModule,
+				'url' => $this->params['controller'] . '/' . $this->request->action . '/module:' . $selectedModule,
 				'onchange' => 'jsForm.change(this)'
 			));
 		}
