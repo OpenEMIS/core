@@ -459,7 +459,7 @@ class InstitutionSiteStudent extends AppModel {
 					'Student.identification_no LIKE' => $search
 				)
 			);
-		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.third_name', 'Student.preferred_name');
+		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.preferred_name');
 		if(!empty($limit)){
 			$options['limit'] = $limit;
 		}
@@ -470,7 +470,7 @@ class InstitutionSiteStudent extends AppModel {
 		foreach ($list as $obj) {
 			$student = $obj['Student'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['third_name'], $student['last_name'], $student['preferred_name']),
+				'label' => sprintf('%s - %s %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['third_name'], $student['last_name'], $student['preferred_name']),
 				'value' => $student['id']
 			);
 		}
@@ -698,8 +698,6 @@ class InstitutionSiteStudent extends AppModel {
 						$sortRow[0] = $row[0];
 					}
 				}
-
-				//pr($sortRow);
 
 				$newData[] = $sortRow;
 				$r++;
