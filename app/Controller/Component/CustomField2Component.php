@@ -206,6 +206,7 @@ class CustomField2Component extends Component {
 					$this->Field->alias.'.name'
 				)
 			));
+
 			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
 
 			$this->controller->set('parentOptions', $parentOptions);
@@ -555,10 +556,10 @@ class CustomField2Component extends Component {
 			));
 			$model = $this->Field->alias;
 			$modelOption = $this->FieldOption->alias;
-			$modelValue = 'InstitutionSiteSurveyAnswer';
+			$modelValue = '';
 			$modelRow = $this->TableRow->alias;
 			$modelColumn = $this->TableColumn->alias;
-			$modelCell = 'InstitutionSiteSurveyTableCell';
+			$modelCell = '';
 			$action = 'edit';
 
 			$this->Session->write($this->Parent->alias.'.id', $selectedParent);

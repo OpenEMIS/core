@@ -26,6 +26,7 @@
 
 textarea { resize: none; }
 
+input.number { text-align: right; }
 .left { float: left; }
 .right { float: right; }
 .center { text-align: center; }
