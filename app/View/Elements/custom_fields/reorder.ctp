@@ -1,19 +1,16 @@
 <?php
-echo $this->Html->script('/Surveys/js/survey.question', false);
+echo $this->Html->script('reorder', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 	$params = $this->params->named;
 	echo $this->Html->link($this->Label->get('general.back'), array_merge(array('action' => 'index'), $params), array('class' => 'divider'));
-	if ($_edit) {
-	    echo $this->Html->link(__('Preview'), array_merge(array('action' => 'preview', $id), $params), array('class' => 'divider'));
-	}
 $this->end();
 
 $this->start('contentBody');
 	$formParams = array('plugin' => $this->params->plugin, 'controller' => $this->params['controller'], 'action' => 'moveOrder', $id);
 	$formParams = array_merge($formParams, $params);
-	echo $this->Form->create($Custom_Field, array('id' => $Custom_Field.'MoveForm', 'url' => $formParams));
+	echo $this->Form->create($Custom_Field, array('id' => $Custom_Field.'MoveForm', 'url' => $formParams, 'class' => 'reorder'));
 		echo $this->Form->hidden('id', array('class' => 'option-id'));
 		echo $this->Form->hidden('move', array('class' => 'option-move'));
 	echo $this->Form->end();
