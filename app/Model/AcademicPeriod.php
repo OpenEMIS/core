@@ -42,8 +42,55 @@ class AcademicPeriod extends AppModel {
 	);
 	
 	public $validate = array(
-		// fix validate
+		'code' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the code for the Academic Period.'
+			),
+			'isUnique' => array(
+				'rule' => 'isUnique',
+				'message' => 'There are duplicate Academic Period code.'
+			)
+		),
+		'name' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				 'message' => 'Please enter the name for the Academic Period.'
+			)
+		)
+		// ,
+		// 'start_date' => array(
+		// 	'ruleCheckStartDate' => array(
+		// 		'rule' => 'checkStartDate',
+		// 		'required' => true,
+		// 		'message' => 'Please enter a valid start date.'
+		// 	)
+		// ),
+		// 'end_date' => array(
+		// 	'ruleCheckEndDate' => array(
+		// 		'rule' => 'checkEndDate',
+		// 		'required' => true,
+		// 		'message' => 'Please enter a valid end date.'
+		// 	)
+		// )
 	);
+
+
+// 	public function checkStartDate() {
+// 		$startDateExists = array_key_exists('start_date', $this->data[$this->alias])&&$this->data[$this->alias]['start_date']&&$this->data[$this->alias]['start_date']!='';
+// 		if
+// 		pr($startDateExists);
+// // need to check the parent
+
+		
+// 		return true;
+// 	}
+
+// 	public function checkEndDate() {
+// 		$endDateExists = array_key_exists('end_date', $this->data[$this->alias])&&$this->data[$this->alias]['end_date']&&$this->data[$this->alias]['end_date']!='';
+// 	}
 	
 	public function beforeAction() {
         parent::beforeAction();
@@ -175,7 +222,7 @@ class AcademicPeriod extends AppModel {
 		$data = $this->findById($id);
 		
 		$yesnoOptions = $this->controller->Option->get('yesno');
-		
+
 		if(!empty($data)) {
 			$this->setVar(compact('yesnoOptions', 'parentId'));
 			if($this->request->is(array('post', 'put'))) {
@@ -189,6 +236,22 @@ class AcademicPeriod extends AppModel {
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this), 'parent' => $parentId));
+		}
+	}
+
+	public function beforeSave($options=array()) {
+		if (array_key_exists($this->alias, $this->data)) {
+			if (array_key_exists('start_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
+				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
+			}
+			if (array_key_exists('end_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
+				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
+			}
+
+			$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
+			$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
 		}
 	}
 
