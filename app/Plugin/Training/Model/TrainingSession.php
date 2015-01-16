@@ -153,7 +153,7 @@ class TrainingSession extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingStatus = ClassRegistry::init('TrainingStatus');
-		$statusOptions = $trainingStatus->getList();
+		$statusOptions = $trainingStatus->getList(array('visibleOnly'=>true));
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
 
