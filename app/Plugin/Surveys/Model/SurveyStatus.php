@@ -87,26 +87,40 @@ class SurveyStatus extends SurveysAppModel {
 		return true;
 	}
 
-	public function getSurveyStatusData($selectedSurveyStatus) {
+	public function getSurveyStatusByModule($selectedModule, $selectedStatus) {
 		$todayDate = date('Y-m-d');
 		$todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
 
-		if($selectedSurveyStatus == 1) {
-			$conditions = array(
+		$this->SurveyTemplate->contain();
+		$templates = $this->SurveyTemplate->find('list', array(
+			'conditions' => array(
+				'SurveyTemplate.survey_module_id' => $selectedModule
+			)
+		));
+
+		$options = array();
+		$options['conditions'][] = array(
+			'SurveyStatus.survey_template_id' => array_keys($templates),
+		);
+
+		if($selectedStatus == 1) {
+			$options['conditions'][] = array(
 				'SurveyStatus.date_disabled >=' => $todayTimestamp
 			);
 		} else {
-			$conditions = array(
+			$options['conditions'][] = array(
 				'SurveyStatus.date_disabled <' => $todayTimestamp
 			);
 		}
 
-		$this->contain('SurveyTemplate');
-		$data = $this->find('all', array(
-			'conditions' => $conditions,
-			'order' => array('SurveyTemplate.name', 'SurveyStatus.date_enabled'))
+		$options['order'] = array(
+			'SurveyTemplate.name',
+			'SurveyStatus.date_enabled'
 		);
 
-		return $data;
+		$this->contain('SurveyTemplate');
+		$result = $this->find('all', $options);
+
+		return $result;
 	}
 }

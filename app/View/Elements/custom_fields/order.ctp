@@ -1,4 +1,4 @@
-<?php 
+<?php
 	$options = array('escape' => false, 'class' => 'void action', 'onclick' => 'SurveyQuestion.move(this)');
 	if($index!=$size) {
 		$class = $index>1 ? 'void action' : 'void action action-last';

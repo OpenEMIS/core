@@ -27,77 +27,118 @@ class SurveyTemplatesController extends SurveysAppController {
 		$this->Navigation->addCrumb('Surveys', array('action' => 'index'));
 		$this->Navigation->addCrumb('Templates');
 
-		$moduleOptions = $this->SurveyModule->getModuleList();
-    	$this->set('moduleOptions', $moduleOptions);
     	$this->set('contentHeader', __('Templates'));
 	}
 
-	public function index($selectedModule=0) {
-		$moduleOptions = $this->SurveyModule->getModuleList();
-		$selectedModule = $selectedModule==0 ? key($moduleOptions) : $selectedModule;
-    	$data = $this->SurveyTemplate->getSurveyTemplateByModule($selectedModule);
+	public function index() {
+		$params = $this->params->named;
 
-    	$this->set('moduleOptions', $moduleOptions);
+		$modules = $this->SurveyModule->getModuleList();
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
+
+		$this->SurveyTemplate->contain('SurveyModule');
+    	$data = $this->SurveyTemplate->find('all', array(
+			'conditions' => array(
+				'SurveyTemplate.survey_module_id' => $selectedModule
+			),
+			'order' => array(
+				'SurveyTemplate.name'
+			)
+		));
+
+		$this->set('moduleOptions', $moduleOptions);
 		$this->set('selectedModule', $selectedModule);
 		$this->set('data', $data);
     }
 
     public function view($id=0) {
+		$params = $this->params->named;
+
 		if ($this->SurveyTemplate->exists($id)) {
+			$this->SurveyTemplate->contain('SurveyModule', 'ModifiedUser', 'CreatedUser');
 			$data = $this->SurveyTemplate->findById($id);
 			$this->Session->write($this->SurveyTemplate->alias.'.id', $id);
 			$this->set('data', $data);
 		} else {
 			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
+			$params['action'] = 'index';
+			return $this->redirect($params);
 		}
 	}
 
     public function add() {
+		$params = $this->params->named;
+
+		$moduleOptions = $this->SurveyModule->getModuleList();
+		$selectedModule = isset($params['module']) ? $params['module'] : key($moduleOptions);
+
 		if ($this->request->is(array('post', 'put'))) {
 			if ($this->SurveyTemplate->saveAll($this->request->data)) {
 				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => 'index'));
+				$params['action'] = 'index';
+				return $this->redirect($params);
 			} else {
-				$this->log($this->validationErrors, 'debug');
+				$this->log($this->SurveyTemplate->validationErrors, 'debug');
 				$this->Message->alert('general.add.failed');
 			}
+		} else {
+			$this->request->data['SurveyTemplate']['survey_module_id'] = $selectedModule;
 		}
+
+		$this->set('moduleOptions', $moduleOptions);
+		$this->render('edit');
     }
 
     public function edit($id=0) {
+    	$params = $this->params->named;
+
 		if ($this->SurveyTemplate->exists($id)) {
+			$moduleOptions = $this->SurveyModule->getModuleList();
+
+			$this->SurveyTemplate->contain();
 			$data = $this->SurveyTemplate->findById($id);
+
 			if ($this->request->is(array('post', 'put'))) {
 				if ($this->SurveyTemplate->saveAll($this->request->data)) {
 					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => 'view', $id));
+					$params = array_merge(array('action' => 'view', $id), $params);
+					return $this->redirect($params);
 				} else {
-					$this->log($this->validationErrors, 'debug');
+					$this->log($this->SurveyTemplate->validationErrors, 'debug');
 					$this->Message->alert('general.edit.failed');
 				}
-				$data = $this->request->data;
 			} else {
 				$this->request->data = $data;
 			}
-			$this->set('data', $data);
+
+			$this->set('moduleOptions', $moduleOptions);
 		} else {
 			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
+			$params['action'] = 'index';
+			return $this->redirect($params);
 		}
     }
 
     public function delete() {
     	if ($this->Session->check($this->SurveyTemplate->alias.'.id')) {
+    		$params = $this->params->named;
 			$id = $this->Session->read($this->SurveyTemplate->alias.'.id');
+
 			if($this->SurveyTemplate->delete($id)) {
 				$this->Message->alert('general.delete.success');
 			} else {
 				$this->log($this->validationErrors, 'debug');
 				$this->Message->alert('general.delete.failed');
 			}
+
 			$this->Session->delete($this->SurveyTemplate->alias.'.id');
-			return $this->redirect(array('action' => 'index'));
+			$params['action'] = 'index';
+			return $this->redirect($params);
 		}
     }
 }
