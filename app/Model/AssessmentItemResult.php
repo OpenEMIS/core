@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class AssessmentItemResult extends AppModel {
 	public $selectedPeriod;
-	public $InstitutionSiteId;
+	public $assessmentId;
 	
 	public $actsAs = array(
 		'ControllerAction',
@@ -312,183 +312,101 @@ class AssessmentItemResult extends AppModel {
 	
 	public function assessmentsToExcel($controller, $params){
 		$periodId = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$assessmentId = isset($params->pass[1]) ? $params->pass[1] : 0;
 		
-		$this->excel($periodId);
+		$this->excel($periodId, $assessmentId);
 	}
 	
-	public function excel($periodId) {
+	public function excel($periodId, $assessmentId) {
 		$this->selectedPeriod = $periodId;
+		$this->assessmentId = $assessmentId;
 		parent::excel();
+	}
+	
+	public function excelGetFileName() {
+		$this->assessmentId = $assessmentId;
+		return 'test';//$fileName;
 	}
 
 	public function generateSheet($writer) {
 		$institutionSiteId = CakeSession::read('InstitutionSite.id');
 		$periodId = $this->selectedPeriod;
-		//$SchoolYear = ClassRegistry::init('SchoolYear');
-		//$period = $SchoolYear->findById($this->selectedPeriod);
-		$assessmentsData = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($institutionSiteId, $periodId);
-		//pr($assessments);die;
-		$assessments = array();
-		foreach($assessmentsData as $assessmentItem){
-			foreach($assessmentItem['items'] as $item){
-				$assessments[] = $item;
-			}
-		}
-		//pr($assessments);die;
+		$assessmentId = $this->assessmentId;
+		
+		$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
 		
 		$commonHeader = array(
-			__('Class'),
 			__('OpenEMIS ID'),
 			__('First Name'),
 			__('Last Name')
 		);
-		
-		foreach($assessments as $assessment){
-			$assessmentId = $assessment['id'];
-			$assessmentName = $assessment['name'];
-			
+		$footer = $this->excelGetFooter();
+
+		$classOptions = ClassRegistry::init('InstitutionSiteClass')->getAssessmentClassList($institutionSiteId, $periodId, $assessmentId);
+		foreach($classOptions as $classId => $className){
+			$checkList = array();
 			$subjectsHeader = array();
-			$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($institutionSiteId, $periodId, $assessmentId);
-			foreach($classOptions as $classId => $className){
-				$subjectOptions = $this->AssessmentItem->getClassItemList($assessmentId, $classId);
-				foreach($subjectOptions as $subjectId => $subjectName){
-					$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Marks'));
-					$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Grading'));
+			
+			$subjectOptions = $this->AssessmentItem->getClassItemList($assessmentId, $classId);
+			//pr($subjectOptions);die;
+			foreach($subjectOptions as $subjectId => $subjectName){
+				$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Marks'));
+				$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Grading'));
+
+				$resultData = $InstitutionSiteClassStudent->getStudentAssessmentResults($classId, $subjectId, $assessmentId);
+				//pr($resultData);die;
+				foreach($resultData as $row){
+					$StudentObj = $row['Student'];
+					$studentId = $StudentObj['id'];
+					$AssessmentItemResultObj = $row['AssessmentItemResult'];
+					$AssessmentResultTypeObj = $row['AssessmentResultType'];
+
+					$resultArr = array(
+						'marks' => $AssessmentItemResultObj['marks'],
+						'grading' => $AssessmentResultTypeObj['name']
+					);
+
+					$checkList[$classId][$studentId][$subjectId] = $resultArr;
 				}
+			}
+			//pr($checkList);die;
+			
+			$studentsData = $InstitutionSiteClassStudent->getStudentsByClassAssessment($classId, $assessmentId);
+			//pr($studentsData);
+			$sheetData = array();
+			foreach($studentsData as $row){
+				$dataRow = array();
+
+				$StudentObj = $row['Student'];
+				$studentId = $StudentObj['id'];
+				$dataRow[] = $StudentObj['identification_no'];
+				$dataRow[] = $StudentObj['first_name'];
+				$dataRow[] = $StudentObj['last_name'];
+
+				foreach($subjectOptions as $subjectId => $subjectName){
+					if(isset($checkList[$classId][$studentId][$subjectId])){
+						$dataRow[] = $checkList[$classId][$studentId][$subjectId]['marks'];
+						$dataRow[] = $checkList[$classId][$studentId][$subjectId]['grading'];
+					}else{
+						$dataRow[] = '';
+						$dataRow[] = '';
+					}
+				}
+
+				$sheetData[] = $dataRow;
 			}
 			
 			$header = array_merge($commonHeader, $subjectsHeader);
-			pr($header);die;
-			$writer->writeSheetRow($assessmentName, $header);
+			//pr($header);die;
+			$writer->writeSheetRow($className, $header);
+			
+			foreach ($sheetData as $sheetRow) {
+				$writer->writeSheetRow($className, $sheetRow);
+			}
+
+			$writer->writeSheetRow($className, array(''));
+			$writer->writeSheetRow($className, $footer);
 		}
-		
-		
-		
-//		$startDate = $period['SchoolYear']['start_date'];
-//		$endDate = $period['SchoolYear']['end_date'];
-//
-//		$months = $this->controller->generateMonthsByDates($startDate, $endDate);
-//		//pr($months);
-//		$footer = $this->excelGetFooter();
-//		
-//		foreach($months as $month){
-//			$monthInString = $month['month']['inString'];
-//			$monthInNumber = $month['month']['inNumber'];
-//			$year = $month['year'];
-//			
-//			$days = $this->controller->generateDaysOfMonth($year, $monthInNumber, $startDate, $endDate);
-//			//pr($days);
-//			$headerDays = array();
-//			$daysIndex = array();
-//			foreach($days as $item){
-//				$headerDays[] = sprintf('%s (%s)', $item['day'], $item['weekDay']);
-//				$daysIndex[] = $item['date'];
-//			}
-//			
-//			$headerInfo = array(
-//				__('Section'),
-//				__('OpenEMIS ID'),
-//				__('First Name'),
-//				__('Last Name')
-//			);
-//			$header = array_merge($headerInfo, $headerDays);
-//			//pr($header);
-//			$writer->writeSheetRow($monthInString, $header);
-//			
-//			$data = $this->getData($daysIndex);
-//			//pr($data);die;
-//			
-//			foreach ($data as $row) {
-//				$writer->writeSheetRow($monthInString, $row);
-//			}
-//			
-//			$writer->writeSheetRow($monthInString, array(''));
-//			$writer->writeSheetRow($monthInString, $footer);
-//		}
 	}
-//	
-//	public function getData($days) {
-//		if(count($days) == 0){
-//			return null;
-//		}else{
-//			$monthStartDay = $days[0];
-//			//pr($monthStartDay);
-//			$monthEndDay = $days[count($days) - 1];
-//			//pr($monthEndDay);
-//		}
-//		//pr($days);die;
-//		
-//		$InstitutionSiteStudentAbsence = ClassRegistry::init('InstitutionSiteStudentAbsence');
-//		
-//		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-//		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
-//		$yearId = $this->selectedPeriod;
-//		$sections = $InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
-//		
-//		$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-//		$data = array();
-//		foreach($sections as $sectionId => $sectionName){
-//			$studentList = $InstitutionSiteSectionStudent->getSectionSutdents($sectionId, $monthStartDay, $monthEndDay);
-//			//pr($studentList);die;
-//			$absenceData = $InstitutionSiteStudentAbsence->getAbsenceData($institutionSiteId, $yearId, $sectionId, $monthStartDay, $monthEndDay);
-//			
-//			$absenceCheckList = array();
-//			foreach($absenceData AS $absenceUnit){
-//				$absenceStudent = $absenceUnit['Student'];
-//				$studentId = $absenceStudent['id'];
-//				$absenceRecord = $absenceUnit['InstitutionSiteStudentAbsence'];
-//				$indexAbsenceDate = date('Y-m-d', strtotime($absenceRecord['first_date_absent']));
-//
-//				$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
-//
-//				if($absenceRecord['full_day_absent'] == 'Yes' && !empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
-//					$tempStartDate = date("Y-m-d", strtotime($absenceRecord['first_date_absent']));
-//					$formatedLastDate = date("Y-m-d", strtotime($absenceRecord['last_date_absent']));
-//					
-//					while($tempStartDate <= $formatedLastDate){
-//						$stampTempDate = strtotime($tempStartDate);
-//						$tempIndex = date('Y-m-d', $stampTempDate);
-//
-//						$absenceCheckList[$studentId][$tempIndex] = $absenceUnit;
-//
-//						$stampTempDateNew = strtotime('+1 day', $stampTempDate);
-//						$tempStartDate = date("Y-m-d", $stampTempDateNew);
-//					}
-//				}
-//			}
-//			//pr($absenceCheckList);die;
-//			
-//			foreach ($studentList as $student){
-//				$studentObj = $student['Student'];
-//				$studentId = $studentObj['id'];
-//				//$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
-//				
-//				$row = array();
-//				$row[] = $sectionName;
-//				$row[] = $studentObj['identification_no'];
-//				$row[] = $studentObj['first_name'];
-//				$row[] = $studentObj['last_name'];
-//				
-//				foreach ($days as $index){
-//					if (isset($absenceCheckList[$studentId][$index])) {
-//						$absenceObj = $absenceCheckList[$studentId][$index]['InstitutionSiteStudentAbsence'];
-//						if ($absenceObj['full_day_absent'] !== 'Yes') {
-//							$startTimeAbsent = $absenceObj['start_time_absent'];
-//							$endTimeAbsent = $absenceObj['end_time_absent'];
-//							$timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_type']. ' (%s - %s)' , $startTimeAbsent, $endTimeAbsent);
-//							$row[] = $timeStr;
-//						}else{
-//							$row[] = sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
-//						}
-//					}else{
-//						$row[] = __('');
-//					}
-//				}
-//				
-//				$data[] = $row;
-//			}
-//		}
-//		//pr($data);die;
-//		return $data;
-//	}
+	
 }
