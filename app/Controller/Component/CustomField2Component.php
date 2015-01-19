@@ -55,8 +55,8 @@ class CustomField2Component extends Component {
 	    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
 	    	}
 
-			$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $params['parent']));
-			$this->controller->set('parentName', $parentName);
+			$groupName = $this->Group->field('name', array($this->Group->alias.'.id' => $params['group']));
+			$this->controller->set('groupName', $groupName);
 
 			if ($this->controller->request->is(array('post', 'put'))) {
 				$data = $this->controller->request->data;
@@ -179,27 +179,27 @@ class CustomField2Component extends Component {
 			$moduleOptions['module:' . $key] = $module;
 		}
 
-		$parents = $this->Parent->find('list', array(
+		$groups = $this->Group->find('list', array(
 			'conditions' => array(
-				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
 			),
 			'order' => array(
-				$this->Parent->alias.'.name'
+				$this->Group->alias.'.name'
 			)
 		));
 
-		if(!empty($parents)) {
-			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
+		if(!empty($groups)) {
+			$selectedGroup = isset($params['group']) ? $params['group'] : key($groups);
 
-			$parentOptions = array();
-			foreach ($parents as $key => $parent) {
-				$parentOptions['parent:' . $key] = $parent;
+			$groupOptions = array();
+			foreach ($groups as $key => $group) {
+				$groupOptions['group:' . $key] = $group;
 			}
 
 			$this->Field->contain();
 			$data = $this->Field->find('all', array(
 				'conditions' => array(
-					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent
+					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup
 				),
 				'order' => array(
 					$this->Field->alias.'.order', 
@@ -207,10 +207,10 @@ class CustomField2Component extends Component {
 				)
 			));
 
-			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
+			$this->Session->write($this->Group->alias.'.id', $selectedGroup);
 
-			$this->controller->set('parentOptions', $parentOptions);
-			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('groupOptions', $groupOptions);
+			$this->controller->set('selectedGroup', $selectedGroup);
 			$this->controller->set('data', $data);
 		} else {
 			$this->Message->alert('general.noData');
@@ -444,26 +444,26 @@ class CustomField2Component extends Component {
 			$moduleOptions['module:' . $key] = $module;
 		}
 
-		$parents = $this->Parent->find('list', array(
+		$groups = $this->Group->find('list', array(
 			'conditions' => array(
-				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
 			),
 			'order' => array(
-				$this->Parent->alias.'.name'
+				$this->Group->alias.'.name'
 			)
 		));
 
-		if(!empty($parents)) {
-			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
-			$parentOptions = array();
-			foreach ($parents as $key => $template) {
-				$parentOptions['parent:' . $key] = $template;
+		if(!empty($groups)) {
+			$selectedGroup = isset($params['group']) ? $params['group'] : key($groups);
+			$groupOptions = array();
+			foreach ($groups as $key => $template) {
+				$groupOptions['group:' . $key] = $template;
 			}
 
 			$this->Field->contain();
 			$data = $this->Field->find('all', array(
 				'conditions' => array(
-					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent,
+					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup,
 					$this->Field->alias.'.visible' => 1
 				),
 				'order' => array(
@@ -472,8 +472,8 @@ class CustomField2Component extends Component {
 				)
 			));
 
-			$this->controller->set('parentOptions', $parentOptions);
-			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('groupOptions', $groupOptions);
+			$this->controller->set('selectedGroup', $selectedGroup);
 			$this->controller->set('data', $data);
 		} else {
 			$this->Message->alert('general.noData');
@@ -484,11 +484,11 @@ class CustomField2Component extends Component {
 		$this->doRender('reorder');
     }
 
-	public function moveOrder($parentId=0) {
+	public function moveOrder($groupId=0) {
 		$params = $this->controller->params->named;
 
 		$data = $this->controller->request->data;
-		$conditions = array($this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $parentId);
+		$conditions = array($this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $groupId);
 
 		$id = $data[$this->Field->alias]['id'];
 		$idField = $this->Field->alias.'.id';
@@ -518,7 +518,7 @@ class CustomField2Component extends Component {
 			$this->Field->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
 		}
 
-		$params = array_merge(array('action' => 'reorder', $parentId), $params);
+		$params = array_merge(array('action' => 'reorder', $groupId), $params);
 		return $this->controller->redirect($params);
     }
 
@@ -556,20 +556,20 @@ class CustomField2Component extends Component {
 			$moduleOptions['module:' . $key] = $module;
 		}
 
-		$parents = $this->Parent->find('list', array(
+		$groups = $this->Group->find('list', array(
 			'conditions' => array(
-				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
 			),
 			'order' => array(
-				$this->Parent->alias.'.name'
+				$this->Group->alias.'.name'
 			)
 		));
 
-		if(!empty($parents)) {
-			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
-			$parentOptions = array();
-			foreach ($parents as $key => $template) {
-				$parentOptions['parent:' . $key] = $template;
+		if(!empty($groups)) {
+			$selectedGroup = isset($params['group']) ? $params['group'] : key($groups);
+			$groupOptions = array();
+			foreach ($groups as $key => $template) {
+				$groupOptions['group:' . $key] = $template;
 			}
 
 			$this->Field->contain(
@@ -579,7 +579,7 @@ class CustomField2Component extends Component {
 			);
 			$data = $this->Field->find('all', array(
 				'conditions' => array(
-					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent,
+					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup,
 					$this->Field->alias.'.visible' => 1
 				),
 				'order' => array(
@@ -595,10 +595,10 @@ class CustomField2Component extends Component {
 			$modelCell = '';
 			$action = 'edit';
 
-			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
+			$this->Session->write($this->Group->alias.'.id', $selectedGroup);
 
-			$this->controller->set('parentOptions', $parentOptions);
-			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('groupOptions', $groupOptions);
+			$this->controller->set('selectedGroup', $selectedGroup);
 			$this->controller->set('data', $data);
 			$this->controller->set('model', $model);
 			$this->controller->set('modelOption', $modelOption);
