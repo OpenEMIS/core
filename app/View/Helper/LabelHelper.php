@@ -470,6 +470,15 @@ class LabelHelper extends AppHelper {
 			'year_disposed' => 'Year Disposed',
 			'infrastructure_ownership_id' => 'Ownership',
 			'infrastructure_condition_id' => 'Condition'
+		),
+		'InstitutionSiteSurveyNew' => array(
+			'title' => 'New'
+		),
+		'InstitutionSiteSurveyDraft' => array(
+			'title' => 'Draft'
+		),
+		'InstitutionSiteSurveyCompleted' => array(
+			'title' => 'Completed'
 		)
 	);
 	
