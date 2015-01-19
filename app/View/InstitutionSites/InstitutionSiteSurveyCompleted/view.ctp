@@ -1,10 +1,20 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get("InstitutionSiteSurveyCompleted.title"));
+$this->assign('contentHeader', $template['name']);
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteSurveyCompleted', 'index'), array('class' => 'divider'));
 	if ($_delete) {
-		echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'InstitutionSiteSurveyCompleted', 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		echo $this->Html->link(
+			__('Reject'), 
+			array('action' => 'InstitutionSiteSurveyCompleted', 'remove'), 
+			array(
+				'class' => 'divider', 
+				'onclick' => 'return jsForm.confirmDelete(this)',
+				'data-title' => __('Reject Confirmation'),
+				'data-content' => __('You are about to reject this survey.<br><br>Are you sure you want to do this?'),
+				'data-button-text' => __('Reject')
+			)
+		);
 	}
 $this->end();
 
@@ -14,8 +24,6 @@ $this->start('contentBody');
 	$labelOptions = $formOptions['inputDefaults']['label'];
 	echo $this->Form->create('InstitutionSiteSurveyCompleted', $formOptions);
 		echo $this->Form->hidden('id', array('value' => $id));
-		$labelOptions['text'] = __('Name');
-		echo $this->Form->input('InstitutionSiteSurvey.survey_template_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $template['name']));
 		echo $this->element('customfields/index', compact('model', 'modelOption', 'modelRow', 'modelColumn', 'action'));
 	echo $this->Form->end();
 

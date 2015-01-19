@@ -30,9 +30,18 @@ class SurveyQuestion extends SurveysAppModel {
 	);
 
 	public $hasMany = array(
-		'Surveys.SurveyQuestionChoice',
-		'Surveys.SurveyTableRow',
-		'Surveys.SurveyTableColumn'
+		'SurveyQuestionChoice' => array(
+			'className' => 'Surveys.SurveyQuestionChoice',
+			'dependent' => true
+		),
+		'SurveyTableColumn' => array(
+			'className' => 'Surveys.SurveyTableColumn',
+			'dependent' => true
+		),
+		'SurveyTableRow' => array(
+			'className' => 'Surveys.SurveyTableRow',
+			'dependent' => true
+		)
 	);
 
 	public $validate = array(
