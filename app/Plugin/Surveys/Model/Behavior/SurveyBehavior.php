@@ -149,7 +149,11 @@ class SurveyBehavior extends ModelBehavior {
 			$options['group'] = array('AcademicPeriod.id');
 			$options['order'] = array('SurveyStatus.date_disabled');
 			$periods = $SurveyStatus->AcademicPeriod->find('all', $options);
-			$templates[$i]['AcademicPeriod'] = $periods;
+			if (!empty($periods)) {
+				$templates[$i]['AcademicPeriod'] = $periods;
+			} else {
+				unset($templates[$i]);
+			}
 		}
 		
 		return $templates;
@@ -198,23 +202,20 @@ class SurveyBehavior extends ModelBehavior {
 	}
 
 	public function getFormatedSurveyData(Model $model, $id) {
-		$model->SurveyTemplate->contain(array('SurveyQuestion', 'SurveyQuestion.SurveyQuestionChoice', 'SurveyQuestion.SurveyTableRow', 'SurveyQuestion.SurveyTableColumn'));
-		$result = $model->SurveyTemplate->findById($id);
+		$SurveyQuestion = ClassRegistry::init('Surveys.SurveyQuestion');
+		$SurveyQuestion->contain(array('SurveyQuestionChoice', 'SurveyTableRow', 'SurveyTableColumn'));
+		$result = $SurveyQuestion->find('all', array(
+			'conditions' => array(
+				'SurveyQuestion.survey_template_id' => $id,
+				'SurveyQuestion.visible' => 1
+			),
+			'order' => array(
+				'SurveyQuestion.order',
+				'SurveyQuestion.name'
+			)
+		));
 
-		$tmp = array();
-		if($result) {
-			foreach ($result['SurveyQuestion'] as $key => $value) {
-				$tmp[$key]['SurveyQuestion'] = $value;
-				$tmp[$key]['SurveyQuestionChoice'] = $value['SurveyQuestionChoice'];
-				$tmp[$key]['SurveyTableRow'] = $value['SurveyTableRow'];
-				$tmp[$key]['SurveyTableColumn'] = $value['SurveyTableColumn'];
-				unset($tmp[$key]['SurveyQuestion']['SurveyQuestionChoice']);
-				unset($tmp[$key]['SurveyQuestion']['SurveyTableRow']);
-				unset($tmp[$key]['SurveyQuestion']['SurveyTableColumn']);
-			}
-		}
-
-		return $tmp;
+		return $result;
 	}
 
 	public function getFormatedSurveyDataValues(Model $model, $id) {

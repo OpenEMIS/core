@@ -55,8 +55,8 @@ class CustomField2Component extends Component {
 	    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
 	    	}
 
-			$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $params['parent']));
-			$this->controller->set('parentName', $parentName);
+			$groupName = $this->Group->field('name', array($this->Group->alias.'.id' => $params['group']));
+			$this->controller->set('groupName', $groupName);
 
 			if ($this->controller->request->is(array('post', 'put'))) {
 				$data = $this->controller->request->data;
@@ -160,46 +160,65 @@ class CustomField2Component extends Component {
     	}
     }
 
-    public function index() {
-		$params = $this->controller->params->named;
+    public function checkModule() {
+    	if(isset($this->settings['models']['Module'])) {
+			$params = $this->controller->params->named;
 
-		foreach ($params as $key => $value) {
-    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
-    	}
+	    	foreach ($params as $key => $value) {
+	    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
+	    	}
 
-		$Module = ClassRegistry::init($this->Module->alias);
-		$modules = $Module->find('list' , array(
-			'conditions' => array($this->Module->alias.'.visible' => 1),
-			'order' => array($this->Module->alias.'.order')
-		));
-		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
-		
-		$moduleOptions = array();
-		foreach ($modules as $key => $module) {
-			$moduleOptions['module:' . $key] = $module;
+			$Module = ClassRegistry::init($this->Module->alias);
+			$modules = $Module->find('list' , array(
+				'conditions' => array($this->Module->alias.'.visible' => 1),
+				'order' => array($this->Module->alias.'.order')
+			));
+			$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+			
+			$moduleOptions = array();
+			foreach ($modules as $key => $module) {
+				$moduleOptions['module:' . $key] = $module;
+			}
+
+			$this->controller->set('moduleOptions', $moduleOptions);
+		} else {
+			$selectedModule = null;
 		}
 
-		$parents = $this->Parent->find('list', array(
-			'conditions' => array(
-				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
-			),
+		return $selectedModule;
+    }
+
+    public function index() {
+		$params = $this->controller->params->named;
+		$selectedModule = $this->checkModule();
+
+		if(!is_null($selectedModule)) {
+			$groupsConditions = array(
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+			);
+		} else {
+			$groupsConditions = array();
+		}
+
+		$groups = $this->Group->find('list', array(
+			'conditions' => $groupsConditions,
 			'order' => array(
-				$this->Parent->alias.'.name'
+				$this->Group->alias.'.name'
 			)
 		));
 
-		if(!empty($parents)) {
-			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
+		if(!empty($groups)) {
+			$selectedGroup = isset($params['group']) ? $params['group'] : key($groups);
 
-			$parentOptions = array();
-			foreach ($parents as $key => $parent) {
-				$parentOptions['parent:' . $key] = $parent;
+			$groupOptions = array();
+			foreach ($groups as $key => $group) {
+				$groupOptions['group:' . $key] = $group;
 			}
 
 			$this->Field->contain();
 			$data = $this->Field->find('all', array(
 				'conditions' => array(
-					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent
+					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup
 				),
 				'order' => array(
 					$this->Field->alias.'.order', 
@@ -207,18 +226,17 @@ class CustomField2Component extends Component {
 				)
 			));
 
-			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
+			$this->Session->write($this->Group->alias.'.id', $selectedGroup);
 
-			$this->controller->set('parentOptions', $parentOptions);
-			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('groupOptions', $groupOptions);
+			$this->controller->set('selectedGroup', $selectedGroup);
 			$this->controller->set('data', $data);
 		} else {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->controller->set('moduleOptions', $moduleOptions);
+		//$this->controller->set('moduleOptions', $moduleOptions);
 		$this->controller->set('selectedModule', $selectedModule);
-		$this->doRender('index');
     }
 
     public function view($id=0) {
@@ -233,7 +251,6 @@ class CustomField2Component extends Component {
 			$params['action'] = 'index';
 			return $this->controller->redirect($params);
 		}
-		$this->doRender('view');
     }
 
     public function add() {
@@ -292,7 +309,7 @@ class CustomField2Component extends Component {
 				}
     		}
     	}
-    	$this->doRender('edit');
+    	$this->controller->render('edit');
     }
 
     public function edit($id=0) {
@@ -385,8 +402,6 @@ class CustomField2Component extends Component {
 				$this->controller->set('uniqueDisabled', $uniqueDisabled);
 				$this->controller->request->data = $data;
 			}
-
-			$this->doRender('edit');
 		} else {
 			$this->Message->alert('general.notExists');
 			$params['action'] = 'index';
@@ -429,33 +444,60 @@ class CustomField2Component extends Component {
 		}
     }
 
-    public function reorder($id=0) {
+    public function reorder() {
     	$params = $this->controller->params->named;
-		$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $params['parent']));
+		$selectedModule = $this->checkModule();
 
-		$this->Field->contain();
-		$data = $this->Field->find('all', array(
-			'conditions' => array(
-				$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $id,
-				$this->Field->alias.'.visible' => 1
-			),
+		if(!is_null($selectedModule)) {
+			$groupsConditions = array(
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+			);
+		} else {
+			$groupsConditions = array();
+		}
+
+		$groups = $this->Group->find('list', array(
+			'conditions' => $groupsConditions,
 			'order' => array(
-				$this->Field->alias.'.order', 
-				$this->Field->alias.'.name'
+				$this->Group->alias.'.name'
 			)
 		));
 
-		$this->controller->set('parentName', $parentName);
-		$this->controller->set('data', $data);
-		$this->controller->set('id', $id);
+		if(!empty($groups)) {
+			$selectedGroup = isset($params['group']) ? $params['group'] : key($groups);
+			$groupOptions = array();
+			foreach ($groups as $key => $template) {
+				$groupOptions['group:' . $key] = $template;
+			}
+
+			$this->Field->contain();
+			$data = $this->Field->find('all', array(
+				'conditions' => array(
+					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup,
+					$this->Field->alias.'.visible' => 1
+				),
+				'order' => array(
+					$this->Field->alias.'.order', 
+					$this->Field->alias.'.name'
+				)
+			));
+
+			$this->controller->set('groupOptions', $groupOptions);
+			$this->controller->set('selectedGroup', $selectedGroup);
+			$this->controller->set('data', $data);
+		} else {
+			$this->Message->alert('general.noData');
+		}
+
+		$this->controller->set('selectedModule', $selectedModule);
 		$this->doRender('reorder');
     }
 
-	public function moveOrder($parentId=0) {
+	public function moveOrder($groupId=0) {
 		$params = $this->controller->params->named;
 
 		$data = $this->controller->request->data;
-		$conditions = array($this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $parentId);
+		$conditions = array($this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $groupId);
 
 		$id = $data[$this->Field->alias]['id'];
 		$idField = $this->Field->alias.'.id';
@@ -485,7 +527,7 @@ class CustomField2Component extends Component {
 			$this->Field->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
 		}
 
-		$params = array_merge(array('action' => 'reorder', $parentId), $params);
+		$params = array_merge(array('action' => 'reorder', $groupId), $params);
 		return $this->controller->redirect($params);
     }
 
@@ -506,37 +548,28 @@ class CustomField2Component extends Component {
 
 	public function preview() {
 		$params = $this->controller->params->named;
+		$selectedModule = $this->checkModule();
 
-		foreach ($params as $key => $value) {
-    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
-    	}
-
-		$Module = ClassRegistry::init($this->Module->alias);
-		$modules = $Module->find('list' , array(
-			'conditions' => array($this->Module->alias.'.visible' => 1),
-			'order' => array($this->Module->alias.'.order')
-		));
-		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
-
-		$moduleOptions = array();
-		foreach ($modules as $key => $module) {
-			$moduleOptions['module:' . $key] = $module;
+		if(!is_null($selectedModule)) {
+			$groupsConditions = array(
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+			);
+		} else {
+			$groupsConditions = array();
 		}
 
-		$parents = $this->Parent->find('list', array(
-			'conditions' => array(
-				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
-			),
+		$groups = $this->Group->find('list', array(
+			'conditions' => $groupsConditions,
 			'order' => array(
-				$this->Parent->alias.'.name'
+				$this->Group->alias.'.name'
 			)
 		));
 
-		if(!empty($parents)) {
-			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
-			$parentOptions = array();
-			foreach ($parents as $key => $template) {
-				$parentOptions['parent:' . $key] = $template;
+		if(!empty($groups)) {
+			$selectedGroup = isset($params['group']) ? $params['group'] : key($groups);
+			$groupOptions = array();
+			foreach ($groups as $key => $template) {
+				$groupOptions['group:' . $key] = $template;
 			}
 
 			$this->Field->contain(
@@ -546,7 +579,7 @@ class CustomField2Component extends Component {
 			);
 			$data = $this->Field->find('all', array(
 				'conditions' => array(
-					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent,
+					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup,
 					$this->Field->alias.'.visible' => 1
 				),
 				'order' => array(
@@ -562,10 +595,10 @@ class CustomField2Component extends Component {
 			$modelCell = '';
 			$action = 'edit';
 
-			$this->Session->write($this->Parent->alias.'.id', $selectedParent);
+			$this->Session->write($this->Group->alias.'.id', $selectedGroup);
 
-			$this->controller->set('parentOptions', $parentOptions);
-			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('groupOptions', $groupOptions);
+			$this->controller->set('selectedGroup', $selectedGroup);
 			$this->controller->set('data', $data);
 			$this->controller->set('model', $model);
 			$this->controller->set('modelOption', $modelOption);
@@ -578,7 +611,6 @@ class CustomField2Component extends Component {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->controller->set('moduleOptions', $moduleOptions);
 		$this->controller->set('selectedModule', $selectedModule);
 		$this->doRender('preview');
     }

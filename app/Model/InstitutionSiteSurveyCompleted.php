@@ -66,6 +66,9 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 
 	public function index() {
 		$data = $this->getSurveyTemplatesByModule();
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
 		$this->setVar(compact('data'));
 	}
 
@@ -105,10 +108,10 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 			    )
 			);
 			if($result) {
-				$this->Message->alert('general.delete.success');
+				$this->Message->alert('Survey.reject.success');
 			} else {
 				$this->log($this->validationErrors, 'debug');
-				$this->Message->alert('general.delete.failed');
+				$this->Message->alert('Survey.reject.failed');
 			}
 			$this->Session->delete($this->alias.'.id');
 			return $this->redirect(array('action' => $this->alias, 'index'));
