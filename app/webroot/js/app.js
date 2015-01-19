@@ -393,18 +393,22 @@ var jsForm = {
 	
 	confirmDelete: function(obj) {
 		var href = $(obj).attr('href');
+		var btnValue = $(obj).attr('data-button-text') !== undefined ? $(obj).attr('data-button-text') : i18n.General.textDelete;
+		var dlgTitle = $(obj).attr('data-title') !== undefined ? $(obj).attr('data-title') : i18n.General.textDeleteConfirmation;
+		var dlgContent = $(obj).attr('data-content') !== undefined ? $(obj).attr('data-content') : i18n.App.confirmDeleteContent;
+
 		if($(obj).prop('tagName') !== 'A') {
 			href = getRootURL() + href;
 		}
 		var btn = {
-			value: i18n.General.textDelete,
+			value: btnValue,
 			callback: function() { window.location.href = href; }
 		};
 		
 		var dlgOpt = {	
 			id: 'delete-dialog',
-			title: i18n.General.textDeleteConfirmation,
-			content: i18n.App.confirmDeleteContent,
+			title: dlgTitle,
+			content: dlgContent,
 			buttons: [btn]
 		};
 		

@@ -66,6 +66,9 @@ class InstitutionSiteSurveyDraft extends AppModel {
 
 	public function index() {
 		$data = $this->getSurveyTemplatesByModule();
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
 		$this->setVar(compact('data'));
 	}
 
@@ -132,6 +135,7 @@ class InstitutionSiteSurveyDraft extends AppModel {
 					}
 				} else {
 					$dataSource->rollback();
+					//put back data when validation failed
 					$dataValues = $this->prepareFormatedDataValues($surveyData);
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');

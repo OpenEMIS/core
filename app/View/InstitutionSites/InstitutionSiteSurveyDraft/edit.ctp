@@ -1,6 +1,6 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get("InstitutionSiteSurveyDraft.title"));
+$this->assign('contentHeader', $template['name']);
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteSurveyDraft', 'view', $id), array('class' => 'divider'));
 $this->end();
@@ -11,8 +11,6 @@ $this->start('contentBody');
 	$labelOptions = $formOptions['inputDefaults']['label'];
 	echo $this->Form->create('InstitutionSiteSurveyDraft', $formOptions);
 		echo $this->Form->hidden('id', array('value' => $id));
-		$labelOptions['text'] = __('Name');
-		echo $this->Form->input('InstitutionSiteSurvey.survey_template_name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $template['name']));
 		echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 ?>
 

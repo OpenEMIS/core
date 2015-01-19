@@ -27,7 +27,7 @@ class SurveyQuestionsController extends SurveysAppController {
 		'CustomField2' => array(
 			'models' => array(
 				'Module' => 'Surveys.SurveyModule',
-				'Parent' => 'Surveys.SurveyTemplate',
+				'Group' => 'Surveys.SurveyTemplate',
 				'Field' => 'Surveys.SurveyQuestion',
 				'FieldOption' => 'Surveys.SurveyQuestionChoice',
 				'TableRow' => 'Surveys.SurveyTableRow',
