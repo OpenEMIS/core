@@ -61,3 +61,15 @@ DELETE FROM `field_options` WHERE `code` LIKE 'InfrastructureOwnership';
 --
 
 DELETE FROM `field_options` WHERE `code` LIKE 'InfrastructureCondition';
+
+--
+-- 8. Table structure for table `infrastructure_custom_fields`
+--
+
+DROP TABLE IF EXISTS `infrastructure_custom_fields`;
+
+--
+-- 9. Table structure for table `infrastructure_custom_field_options`
+--
+
+DROP TABLE IF EXISTS `infrastructure_custom_field_options`;
