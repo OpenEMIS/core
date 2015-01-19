@@ -11,9 +11,9 @@ echo $this->Form->create($Custom_Field, $formOptions);
 		echo $this->Form->hidden('id');
 		echo $this->Form->hidden('type');
 	}
-	echo $this->Form->hidden(Inflector::underscore($Custom_Parent).'_id', array('value' => $Custom_ParentId));
+	echo $this->Form->hidden(Inflector::underscore($Custom_Group).'_id', array('value' => $Custom_GroupId));
 	$labelOptions['text'] = __('Name');
-	echo $this->Form->input($Custom_Parent . '.name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $parentName));
+	echo $this->Form->input($Custom_Group . '.name', array('disabled' => 'disabled', 'label' => $labelOptions, 'value' => $groupName));
 	$labelOptions['text'] = __('Field Name');
 	echo $this->Form->input('name', array('label' => $labelOptions, 'onkeyup' => '$("#custom_table_name").html(this.value);'));
 	$labelOptions['text'] = __('Field Type');

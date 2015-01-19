@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-md-3"><?php echo __('Name'); ?></div>
-	<div class="col-md-6"><?php echo $data[$Custom_Parent]['name']; ?></div>
+	<div class="col-md-6"><?php echo $data[$Custom_Group]['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Field Name'); ?></div>
