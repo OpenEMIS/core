@@ -17,7 +17,7 @@
 			<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$Custom_Field]['visible']==1); ?></td>
-					<td><?php echo $this->Html->link($obj[$Custom_Field]['name'], array('action' => 'view', $obj[$Custom_Field]['id'], 'module' => $selectedModule, 'parent' => $selectedParent)) ?></td>
+					<td><?php echo $this->Html->link($obj[$Custom_Field]['name'], array('action' => 'view', $obj[$Custom_Field]['id'], 'module' => $selectedModule, 'group' => $selectedGroup)) ?></td>
 					<td><?php echo $fieldTypeOptions[$obj[$Custom_Field]['type']] ?></td>
 					<td class="center">
 						<?php

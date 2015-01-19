@@ -11,7 +11,7 @@ $this->start('contentBody');
 	echo $this->element('/custom_fields/controls');
 
 	if(isset($data)) {
-		$formParams = array('plugin' => $this->params->plugin, 'controller' => $this->params['controller'], 'action' => 'moveOrder', $selectedParent);
+		$formParams = array('plugin' => $this->params->plugin, 'controller' => $this->params['controller'], 'action' => 'moveOrder', $selectedGroup);
 		$formParams = array_merge($formParams, $params);
 		echo $this->Form->create($Custom_Field, array('id' => $Custom_Field.'MoveForm', 'url' => $formParams, 'class' => 'reorder'));
 			echo $this->Form->hidden('id', array('class' => 'option-id'));
