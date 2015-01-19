@@ -1,23 +1,29 @@
 <div class="row page-controls">
 	<?php
-		echo $this->Form->input($Custom_Module.'_id', array(
-			'class' => 'form-control',
-			'label' => false,
-			'options' => $moduleOptions,
-			'default' => 'module:' . $selectedModule,
-			'div' => 'col-md-3',
-			'url' => $this->params['controller'] . '/' . $this->request->action,
-			'onchange' => 'jsForm.change(this)'
-		));
+		$baseUrl = $this->params['controller'] . '/' . $this->request->action;
 
-		if(isset($parentOptions)) {
-			echo $this->Form->input($Custom_Parent.'_id', array(
+		if(isset($moduleOptions)) {
+			echo $this->Form->input($Custom_Module.'_id', array(
 				'class' => 'form-control',
 				'label' => false,
-				'options' => $parentOptions,
-				'default' => 'parent:' . $selectedParent,
+				'options' => $moduleOptions,
+				'default' => 'module:' . $selectedModule,
 				'div' => 'col-md-3',
-				'url' => $this->params['controller'] . '/' . $this->request->action . '/module:' . $selectedModule,
+				'url' => $baseUrl,
+				'onchange' => 'jsForm.change(this)'
+			));
+
+			$baseUrl = $baseUrl . '/module:' . $selectedModule;
+		}
+
+		if(isset($groupOptions)) {
+			echo $this->Form->input($Custom_Group.'_id', array(
+				'class' => 'form-control',
+				'label' => false,
+				'options' => $groupOptions,
+				'default' => 'group:' . $selectedGroup,
+				'div' => 'col-md-3',
+				'url' => $baseUrl,
 				'onchange' => 'jsForm.change(this)'
 			));
 		}
