@@ -108,6 +108,14 @@ class ReportsController extends ReportsAppController {
 	public function index() {
 		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'InstitutionGeneral'));
 	}
+
+	public function listOfReports() {
+
+	}
+
+	public function generateReports() {
+
+	}
 	
 	public function renderReport($reportType = 'Institution') {
 		$Navigation = ClassRegistry::init('Navigation');
@@ -420,7 +428,7 @@ class ReportsController extends ReportsAppController {
 				)
 			),
 			'student_categories' => array(
-				'table' => 'student_categories',
+				'table' => 'field_option_values',
 				'alias' => 'StudentCategory',
 				'type' => 'LEFT',
 				'conditions' => array(
@@ -748,7 +756,7 @@ class ReportsController extends ReportsAppController {
 				)
 			),
 			'student_categories' => array(
-				'table' => 'student_categories',
+				'table' => 'field_option_values',
 				'alias' => 'StudentCategory',
 				'type' => 'LEFT',
 				'conditions' => array(
