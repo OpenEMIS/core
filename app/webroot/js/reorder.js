@@ -1,5 +1,3 @@
-
-<?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
@@ -15,8 +13,22 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+$(document).ready(function() {
+	Reorder.init();
+});
 
-class SchoolPeriodType extends AppModel {
+var Reorder = {
+	init: function() {
+		$('span[move]').click(function() {
+			Reorder.move(this);
+		});
+	},
 	
-}
+	move: function(obj) {
+		var row = $(obj).closest('tr');
+		var form = $('form.reorder');
+		$('.option-id').val(row.attr('row-id'));
+		$('.option-move').val($(obj).attr('move'));
+		form.submit();
+	}
+};
