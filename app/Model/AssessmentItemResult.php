@@ -324,8 +324,12 @@ class AssessmentItemResult extends AppModel {
 	}
 	
 	public function excelGetFileName() {
-		$this->assessmentId = $assessmentId;
-		return 'test';//$fileName;
+		$assessmentId = $this->assessmentId;
+		$assessment = ClassRegistry::init('AssessmentItemType')->findById($assessmentId);
+		//$modelName = $this->alias;
+		$assessmentName = str_replace(' ', '_', $assessment['AssessmentItemType']['name']);
+		$fileName = $assessmentName;
+		return $fileName;
 	}
 
 	public function generateSheet($writer) {
