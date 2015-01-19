@@ -74,7 +74,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
 				),
 				array(
-					'table' => 'student_categories',
+					'table' => 'field_option_values',
 					'alias' => 'StudentCategory',
 					'conditions' => array('InstitutionSiteSectionStudent.student_category_id = StudentCategory.id')
 				)
@@ -114,7 +114,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 		}
 		
 		if($this->request->is('get')) {
-			$categoryOptions = $this->StudentCategory->findList(true);
+			$categoryOptions = $this->StudentCategory->getList();
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
@@ -461,7 +461,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'conditions' => array('AssessmentItem.id = AssessmentItemResult.assessment_item_id')
 			),
 			array(
-				'table' => 'assessment_result_types',
+				'table' => 'field_option_values',
 				'alias' => 'AssessmentResultType',
 				'type' => 'LEFT',
 				'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
