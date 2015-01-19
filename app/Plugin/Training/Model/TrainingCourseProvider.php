@@ -6,10 +6,7 @@ class TrainingCourseProvider extends TrainingAppModel {
 			'className' => 'TrainingCourse',
 			'foreignKey' => 'training_course_id'
 		),
-		'TrainingProvider' => array(
-			'className' => 'TrainingProvider',
-			'foreignKey' => 'training_provider_id'
-		),
+		'TrainingProvider'
 	);
 
 }
