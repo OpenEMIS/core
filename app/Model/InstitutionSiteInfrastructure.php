@@ -127,7 +127,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 			$this->Session->write($this->alias.'.id', $id);
 			
 			$parents = array();
-			$this->getParents($id, &$parents);
+			$this->getParents($id, $parents);
 			$parentsInOrder = array_reverse($parents);
 			
 			$categoryId = $data['InfrastructureCategory']['id'];
@@ -215,7 +215,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 		}
 	}
 
-	public function delete() {
+	public function delete($id = NULL, $cascade = true) {
 		$this->autoRender = false;
 		$id = $this->Session->read($this->alias.'.id');
 		$obj = $this->findById($id);
@@ -303,7 +303,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 				);
 				
 				if(!empty($data['Parent']['id'])){
-					$this->getParents($data['Parent']['id'], &$arr);
+					$this->getParents($data['Parent']['id'], $arr);
 				}
 			}
 			

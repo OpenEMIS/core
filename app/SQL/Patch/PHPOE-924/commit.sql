@@ -160,5 +160,81 @@ SELECT MAX(`order`) INTO @maxFieldOptionOrder FROM `field_options`;
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
 (NULL, 'InfrastructureCondition', 'Condition', 'Infrastructure', NULL, @maxFieldOptionOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
+--
+-- 8. Table structure for table `infrastructure_custom_fields`
+--
+
+CREATE TABLE `infrastructure_custom_fields` (
+`id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL,
+  `type` int(1) NOT NULL DEFAULT '1' COMMENT '1 -> Label, 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number, 7 -> Table',
+  `is_mandatory` int(1) DEFAULT NULL,
+  `is_unique` int(1) DEFAULT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `infrastructure_category_id` int(11) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `infrastructure_custom_fields`
+--
+ALTER TABLE `infrastructure_custom_fields`
+ ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `infrastructure_custom_fields`
+--
+ALTER TABLE `infrastructure_custom_fields`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 
+--
+-- 9. Table structure for table `infrastructure_custom_field_options`
+--
+
+CREATE TABLE `infrastructure_custom_field_options` (
+`id` int(11) NOT NULL,
+  `value` varchar(250) NOT NULL,
+  `default_option` int(1) DEFAULT '0',
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `international_code` varchar(50) DEFAULT NULL,
+  `national_code` varchar(50) DEFAULT NULL,
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `infrastructure_custom_field_options`
+--
+ALTER TABLE `infrastructure_custom_field_options`
+ ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_custom_field_id` (`infrastructure_custom_field_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `infrastructure_custom_field_options`
+--
+ALTER TABLE `infrastructure_custom_field_options`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
