@@ -18,11 +18,6 @@ App::uses('AppModel', 'Model');
 
 class ContactOption extends AppModel {
 	public $hasMany = array('ContactType');
-	
-	public function getLookupVariables() {
-		$lookup = array('Type' => array('model' => 'ContactOption'));
-		return $lookup;
-	}
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('ContactOption.order')));

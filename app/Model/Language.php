@@ -14,19 +14,23 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class Language extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array('StaffLanguage', 'StudentLanguage');
-
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('Language.order')));
-		$list = array();
-		foreach($data as $obj){
-			$list[$obj['Language']['id']] = $obj['Language']['name'];
-		}
-
-		return $list;
-	}
+class Language extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Staff.StaffLanguage', 'Students.StudentLanguage');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 }

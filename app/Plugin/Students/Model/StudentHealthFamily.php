@@ -17,8 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentHealthFamily extends StudentsAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
-		'HealthRelationships' => array('foreignKey' => 'health_relationship_id'),
+		'HealthCondition',
+		'HealthRelationship',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -49,7 +49,7 @@ class StudentHealthFamily extends StudentsAppModel {
 		$fields = array(
 			'model' => $this->alias,
 			'fields' => array(
-				array('field' => 'name', 'model' => 'HealthRelationships'),
+				array('field' => 'name', 'model' => 'HealthRelationship'),
 				array('field' => 'name', 'model' => 'HealthCondition'),
 				array('field' => 'current','type' => 'select', 'options' => $controller->Option->get('yesno')),
 				array('field' => 'comment'),
@@ -70,6 +70,7 @@ class StudentHealthFamily extends StudentsAppModel {
 	}
 
 	public function healthFamily($controller, $params) {
+
 		$controller->Navigation->addCrumb('Health - Family');
 		$header = __('Health - Family');
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
@@ -139,8 +140,16 @@ class StudentHealthFamily extends StudentsAppModel {
 			}
 		}
 		
-		$healthConditionsOptions = $this->HealthCondition->find('list', array('fields' => array('id', 'name')));
-		$healthRelationshipsOptions = $this->HealthRelationships->find('list', array('fields' => array('id', 'name')));
+		if (!empty($controller->request->data)) {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => $controller->request->data['StudentHealthFamily']['health_condition_id']));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => $controller->request->data['StudentHealthFamily']['health_relationship_id']));
+		} else {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => 0));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => 0));
+		}
+
+
+		
 		$yesnoOptions = $controller->Option->get('yesno');
 		
 		$controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));
