@@ -66,6 +66,9 @@ class InstitutionSiteSurveyNew extends AppModel {
 
 	public function index() {
 		$data = $this->getSurveyTemplatesByModule();
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
 		$this->setVar(compact('data'));
 	}
 
@@ -73,6 +76,7 @@ class InstitutionSiteSurveyNew extends AppModel {
 		if ($this->SurveyTemplate->exists($templateId)) {
 			$this->SurveyTemplate->contain();
 			$template = $this->SurveyTemplate->findById($templateId);
+			$template = $template['SurveyTemplate'];
 			$data = $this->getFormatedSurveyData($templateId);
 			$dataValues = array();
 
@@ -96,6 +100,7 @@ class InstitutionSiteSurveyNew extends AppModel {
 						return $this->redirect(array('action' => 'InstitutionSiteSurveyDraft', 'edit', $this->id));
 					}
 				} else {
+					//put back data when validation failed
 					$dataValues = $this->prepareFormatedDataValues($surveyData);
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
