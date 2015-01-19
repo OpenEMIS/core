@@ -169,6 +169,12 @@ class MessageComponent extends Component {
 		),
 		'InstitutionSiteInfrastructure' => array(
 			'noCategory' => array('type' => 'warn', 'msg' => 'There are no category created.')
+		),
+		'Survey' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Survey record has been saved to draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Survey record has been submitted successfully.')
+			)
 		)
 	);
 	

@@ -16,6 +16,13 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class SchoolPeriod extends AppModel {
-	
+class AcademicPeriodType extends AppModel {
+	public function getAcademicPeriodTypeList() {
+		$data = $this->find('list', array(
+			'fields' => array('AcademicPeriodType.id', 'AcademicPeriodType.name'),
+			'conditions' => array('AcademicPeriodType.visible' => 1),
+			'order' => array('AcademicPeriodType.order'),
+		));
+		return $data;
+	}
 }
