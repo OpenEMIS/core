@@ -30,8 +30,14 @@ class SurveyTemplate extends SurveysAppModel {
 	);
 
 	public $hasMany = array(
-		'Surveys.SurveyQuestion',
-		'Surveys.SurveyStatus'
+		'SurveyQuestion' => array(
+			'className' => 'Surveys.SurveyQuestion',
+			'dependent' => true
+		),
+		'SurveyStatus' => array(
+			'className' => 'Surveys.SurveyStatus',
+			'dependent' => true
+		)
 	);
 
 	public $validate = array(

@@ -218,7 +218,6 @@ class CustomField2Component extends Component {
 
 		$this->controller->set('moduleOptions', $moduleOptions);
 		$this->controller->set('selectedModule', $selectedModule);
-		$this->doRender('index');
     }
 
     public function view($id=0) {
@@ -233,7 +232,6 @@ class CustomField2Component extends Component {
 			$params['action'] = 'index';
 			return $this->controller->redirect($params);
 		}
-		$this->doRender('view');
     }
 
     public function add() {
@@ -292,7 +290,7 @@ class CustomField2Component extends Component {
 				}
     		}
     	}
-    	$this->doRender('edit');
+    	$this->controller->render('edit');
     }
 
     public function edit($id=0) {
@@ -385,8 +383,6 @@ class CustomField2Component extends Component {
 				$this->controller->set('uniqueDisabled', $uniqueDisabled);
 				$this->controller->request->data = $data;
 			}
-
-			$this->doRender('edit');
 		} else {
 			$this->Message->alert('general.notExists');
 			$params['action'] = 'index';
@@ -429,25 +425,62 @@ class CustomField2Component extends Component {
 		}
     }
 
-    public function reorder($id=0) {
+    public function reorder() {
     	$params = $this->controller->params->named;
-		$parentName = $this->Parent->field('name', array($this->Parent->alias.'.id' => $params['parent']));
 
-		$this->Field->contain();
-		$data = $this->Field->find('all', array(
+		foreach ($params as $key => $value) {
+    		$this->controller->set('Custom_' . ucfirst($key) . 'Id', $value);
+    	}
+
+    	$Module = ClassRegistry::init($this->Module->alias);
+		$modules = $Module->find('list' , array(
+			'conditions' => array($this->Module->alias.'.visible' => 1),
+			'order' => array($this->Module->alias.'.order')
+		));
+		$selectedModule = isset($params['module']) ? $params['module'] : key($modules);
+
+		$moduleOptions = array();
+		foreach ($modules as $key => $module) {
+			$moduleOptions['module:' . $key] = $module;
+		}
+
+		$parents = $this->Parent->find('list', array(
 			'conditions' => array(
-				$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $id,
-				$this->Field->alias.'.visible' => 1
+				$this->Parent->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
 			),
 			'order' => array(
-				$this->Field->alias.'.order', 
-				$this->Field->alias.'.name'
+				$this->Parent->alias.'.name'
 			)
 		));
 
-		$this->controller->set('parentName', $parentName);
-		$this->controller->set('data', $data);
-		$this->controller->set('id', $id);
+		if(!empty($parents)) {
+			$selectedParent = isset($params['parent']) ? $params['parent'] : key($parents);
+			$parentOptions = array();
+			foreach ($parents as $key => $template) {
+				$parentOptions['parent:' . $key] = $template;
+			}
+
+			$this->Field->contain();
+			$data = $this->Field->find('all', array(
+				'conditions' => array(
+					$this->Field->alias.'.'.Inflector::underscore($this->Parent->alias).'_id' => $selectedParent,
+					$this->Field->alias.'.visible' => 1
+				),
+				'order' => array(
+					$this->Field->alias.'.order', 
+					$this->Field->alias.'.name'
+				)
+			));
+
+			$this->controller->set('parentOptions', $parentOptions);
+			$this->controller->set('selectedParent', $selectedParent);
+			$this->controller->set('data', $data);
+		} else {
+			$this->Message->alert('general.noData');
+		}
+
+		$this->controller->set('moduleOptions', $moduleOptions);
+		$this->controller->set('selectedModule', $selectedModule);
 		$this->doRender('reorder');
     }
 
