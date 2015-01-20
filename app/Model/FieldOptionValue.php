@@ -86,10 +86,14 @@ class FieldOptionValue extends AppModel {
 
 			$data = $model->find('first', array(
 				'fields' => array('id'),
-				'conditions' => array($model->alias.'.field_option_id' => $fieldOptionId['FieldOption']['id'])
+				'conditions' => array($model->alias.'.field_option_id' => $fieldOptionId['FieldOption']['id']),
+				'order' => array($model->alias.'.default DESC')
 			));
 		} else {
-			$data = $model->findByDefault(1);
+			$data = $model->find('first', array(
+				'fields' => array('id'),
+				'order' => array($model->alias.'.default DESC')
+			));
 		}
 		if(empty($data)){
 			return 0;
