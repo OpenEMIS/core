@@ -32,6 +32,16 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 			)
 		)
 	);
+	
+	public function beforeRender(){
+		parent::beforeRender();
+		if(!empty($this->viewVars['fieldTypeOptions'])) {
+			unset($this->viewVars['fieldTypeOptions'][1]);
+			unset($this->viewVars['fieldTypeOptions'][4]);
+			unset($this->viewVars['fieldTypeOptions'][5]);
+			unset($this->viewVars['fieldTypeOptions'][7]);
+		}
+	}
 
 	public function beforeFilter() {
 		parent::beforeFilter();
