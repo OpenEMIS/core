@@ -117,7 +117,7 @@ class StaffLanguage extends StaffAppModel {
 		for ($i = 0; $i < 6; $i++) {
 			$gradeOptions[$i] = $i;
 		}
-		$languageOptions = $this->Language->getOptions();
+		$languageOptions = $this->Language->getList(array('value' => 0));
 		$controller->set(compact('header', 'gradeOptions','languageOptions'));
 	}
 
@@ -162,7 +162,7 @@ class StaffLanguage extends StaffAppModel {
 		for ($i = 0; $i < 6; $i++) {
 			$gradeOptions[$i] = $i;
 		}
-		$languageOptions = $this->Language->getOptions();
+		$languageOptions = $this->Language->getList(array('value' => $controller->request->data['StaffLanguage']['language_id']));
 		$controller->set(compact('id', 'header', 'gradeOptions', 'languageOptions'));
 	}
 

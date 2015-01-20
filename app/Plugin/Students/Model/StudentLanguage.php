@@ -117,7 +117,7 @@ class StudentLanguage extends StudentsAppModel {
 		for ($i = 0; $i < 6; $i++) {
 			$gradeOptions[$i] = $i;
 		}
-		$languageOptions = $this->Language->getOptions();
+		$languageOptions = $this->Language->getList(array('value' => 0));
 		$controller->set(compact('header', 'gradeOptions','languageOptions'));
 	}
 
@@ -162,7 +162,7 @@ class StudentLanguage extends StudentsAppModel {
 		for ($i = 0; $i < 6; $i++) {
 			$gradeOptions[$i] = $i;
 		}
-		$languageOptions = $this->Language->getOptions();
+		$languageOptions = $this->Language->getList(array('value' => $data['StudentLanguage']['language_id']));
 		$controller->set(compact('id', 'header', 'gradeOptions', 'languageOptions'));
 	}
 

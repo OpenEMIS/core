@@ -115,6 +115,7 @@ class StaffExtracurricular extends StaffAppModel {
 	public function extracurricularView($controller, $params) {
 		$id = isset($params['pass'][0])?$params['pass'][0]:0;
 		$data = $this->findById($id);
+
 		if (empty($data)) {
 			$controller->Message->alert('general.noData');
 			return $controller->redirect(array('action' => 'extracurricular'));
@@ -125,6 +126,7 @@ class StaffExtracurricular extends StaffAppModel {
 
 		$controller->Session->write('StaffExtracurricular.id', $id);
 		$fields = $this->getDisplayFields($controller);
+
 		$controller->set(compact('header', 'data', 'fields'));
 	}
 
@@ -146,7 +148,7 @@ class StaffExtracurricular extends StaffAppModel {
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
+		$typeOptions = $this->ExtracurricularType->getList(array('value' => 0));
 
 		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
 	}
@@ -178,7 +180,8 @@ class StaffExtracurricular extends StaffAppModel {
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-		$typeOptions = $this->ExtracurricularType->findList(array('orderBy' => 'name'));
+
+		$typeOptions = $this->ExtracurricularType->getList(array('value' => $controller->request->data['StaffExtracurricular']['extracurricular_type_id']));
 		
 		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
 	}

@@ -13,7 +13,6 @@ $this->start('contentBody');
 $tableHeaders = array(__('Relationship'), __('Conditions'), __('Current'), __('Comment'));
 $tableData = array();
 
-
 foreach($data as $obj) {
     $symbol = $this->Utility->checkOrCrossMarker($obj[$model]['current']==1);
 	$row = array();

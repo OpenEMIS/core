@@ -424,7 +424,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array('AssessmentItem.id = AssessmentItemResult.assessment_item_id')
 			),
 			array(
-				'table' => 'assessment_result_types',
+				'table' => 'field_option_values',
 				'alias' => 'AssessmentResultType',
 				'type' => 'LEFT',
 				'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')

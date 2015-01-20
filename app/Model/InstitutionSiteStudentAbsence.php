@@ -31,10 +31,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'InstitutionSiteSection',
-		'StudentAbsenceReason' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'student_absence_reason_id'
-		),
+		'Students.StudentAbsenceReason',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -686,7 +683,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
-		$absenceReasonList = $this->StudentAbsenceReason->getOptionList(array('FieldOption.code' => 'StudentAbsenceReason'));
+		$absenceReasonList = $this->StudentAbsenceReason->getList();
 
 		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'studentList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 
