@@ -34,7 +34,7 @@ class InfrastructureCustomField extends InfrastructureAppModel {
 	);
 	
 	public $hasMany = array(
-		'InfrastructureCustomFieldOption'
+		'Infrastructure.InfrastructureCustomFieldOption'
 	);
 	
 	public $validate = array(
@@ -46,5 +46,21 @@ class InfrastructureCustomField extends InfrastructureAppModel {
 			)
 		)
 	);
+	
+	public function getCustomFields($id) {
+		$this->contain(array('InfrastructureCustomFieldOption'));
+		$result = $this->find('all', array(
+			'conditions' => array(
+				'InfrastructureCustomField.infrastructure_category_id' => $id,
+				'InfrastructureCustomField.visible' => 1
+			),
+			'order' => array(
+				'InfrastructureCustomField.order',
+				'InfrastructureCustomField.name'
+			)
+		));
+
+		return $result;
+	}
 	
 }

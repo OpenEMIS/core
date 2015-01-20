@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class InstitutionSiteInfrastructureCustomValues extends AppModel {
+class InstitutionSiteInfrastructureCustomValue extends AppModel {
 	public $useTable = 'institution_site_infrastructure_custom_values';
 
 	public $actsAs = array(
@@ -39,7 +39,40 @@ class InstitutionSiteInfrastructureCustomValues extends AppModel {
 		)
 	);
 
-	public function beforeAction() {
+	public function prepareDataBeforeSave($requestData) {
+		pr($requestData);die;
+		$modelValue = 'InstitutionSiteInfrastructureCustomValue';
+
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+
+		$result[$this->alias] = $requestData[$this->alias];
+		$result[$this->alias]['institution_site_id'] = $institutionSiteId;
+		//pr($result);die;
+		$arrFields = array(
+			'textbox' => 'text_value',
+			'dropdown' => 'int_value',
+			//'checkbox' => 'int_value',	//Separate out checbox to handle put back data if save failed
+			'textarea' => 'textarea_value',
+			'number' => 'int_value'
+		);
+
+		$index = 0;
+		foreach ($arrFields as $fieldVal => $fieldName) {
+			if (!isset($requestData[$modelValue][$fieldVal]))
+                continue;
+
+            foreach ($requestData[$modelValue][$fieldVal] as $key => $obj) {
+            	$index = $key > $index ? $key : $index;
+				$result[$modelValue][$key]['institution_site_id'] = $institutionSiteId;
+            	$result[$modelValue][$key]['survey_question_id'] = $key;
+            	$result[$modelValue][$key]['type'] = $obj['type'];
+				$result[$modelValue][$key]['is_mandatory'] = $obj['is_mandatory'];
+				$result[$modelValue][$key]['is_unique'] = $obj['is_unique'];
+            	$result[$modelValue][$key][$fieldName] = $obj['value'];
+        	}
+		}
+
+		return $result;
 	}
 	
 }
