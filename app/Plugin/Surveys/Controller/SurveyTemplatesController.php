@@ -21,7 +21,6 @@ class SurveyTemplatesController extends SurveysAppController {
 	);
 
 	public function beforeFilter() {
-		$this->Auth->allow('templatelist');
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
@@ -141,16 +140,6 @@ class SurveyTemplatesController extends SurveysAppController {
 			$params['action'] = 'index';
 			return $this->redirect($params);
 		}
-    }
-
-    public function templatelist() {
-    	$this->autoRender = false;
-    	$data = $this->SurveyTemplate->find('list');
-    	return json_encode($data);
-    }
-
-    public function download($id) {
-    	//$this->CustomField2->download($id);
     }
 }
 ?>
