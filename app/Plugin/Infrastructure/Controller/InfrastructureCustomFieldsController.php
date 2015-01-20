@@ -24,7 +24,7 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 		'CustomField2' => array(
 			'models' => array(
 				'Module' => NULL,
-				'Parent' => 'Infrastructure.InfrastructureCategory',
+				'Group' => 'Infrastructure.InfrastructureCategory',
 				'Field' => 'Infrastructure.InfrastructureCustomField',
 				'FieldOption' => 'Infrastructure.InfrastructureCustomFieldOption',
 				'TableRow' => NULL,
@@ -52,6 +52,9 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 		} else {
 			$this->Navigation->addCrumb('Custom Fields');
 		}
+		
+		$currentTab = 'Custom Fields';
+		$this->set(compact('currentTab'));
 
 		$this->set('contentHeader', __('Custom') . ' ' . __('Fields'));
 	}
