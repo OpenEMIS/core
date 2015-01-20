@@ -429,14 +429,6 @@ class InstitutionSitesController extends AppController {
 	public function excel() {
 		$this->InstitutionSite->excel();
 	}
-
-	public function reports() {
-
-	}
-
-	public function generate() {
-		
-	}
 	
 	public function shiftLocationAutoComplete() {
 		$this->autoRender = false;
