@@ -26,6 +26,7 @@ class SearchBehavior extends ModelBehavior {
 				$class . '.identification_no LIKE' => $search,
 				$class . '.first_name LIKE' => $search,
 				$class . '.middle_name LIKE' => $search,
+				$class . '.third_name LIKE' => $search,
 				$class . '.last_name LIKE' => $search,
 				$class . '.preferred_name LIKE' => $search
 			)
@@ -257,6 +258,7 @@ class SearchBehavior extends ModelBehavior {
 			$conditions['OR'] = array(
 				$class . '.first_name LIKE' => $search,
 				$class . '.middle_name LIKE' => $search,
+				$class . '.third_name LIKE' => $search,
 				$class . '.last_name LIKE' => $search,
 				$class . '.preferred_name LIKE' => $search,
 				$class . '.identification_no LIKE' => $search,
@@ -357,7 +359,7 @@ class SearchBehavior extends ModelBehavior {
 		$class = $model->alias;
 		$fields = array(
 			$class.'.id', $class.'.identification_no',
-			$class.'.first_name', $class.'.middle_name', $class.'.last_name', $class.'.preferred_name',
+			$class.'.first_name', $class.'.middle_name', $class.'.third_name', $class.'.last_name', $class.'.preferred_name',
 			$class.'.gender', $class.'.date_of_birth'
 		);
 		
