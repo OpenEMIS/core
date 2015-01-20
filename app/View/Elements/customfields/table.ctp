@@ -1,4 +1,4 @@
-<?php if (count($obj[$modelRow]) > 0 || count($obj[$modelColumn]) > 0) : ?>
+<?php if (isset($obj[$modelRow]) && isset($obj[$modelColumn])) : ?>
 <?php
 	$modelId = $obj[$model]['id'];
 	$dataCells = array();
