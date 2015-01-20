@@ -34,7 +34,7 @@ class InfrastructureCustomFieldOption extends InfrastructureAppModel {
 	);
 	
 	public $validate = array(
-		'name' => array(
+		'value' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
