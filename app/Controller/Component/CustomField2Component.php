@@ -35,6 +35,7 @@ class CustomField2Component extends Component {
 			$base = count($modelInfo) == 1 ? $modelInfo[0] : $modelInfo[1];
 			$this->controller->set('Custom_' . $key, $base);
 		}
+		$this->controller->set('viewType', $this->settings['viewType']);
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.

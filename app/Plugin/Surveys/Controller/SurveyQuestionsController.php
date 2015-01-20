@@ -32,7 +32,8 @@ class SurveyQuestionsController extends SurveysAppController {
 				'FieldOption' => 'Surveys.SurveyQuestionChoice',
 				'TableColumn' => 'Surveys.SurveyTableColumn',
 				'TableRow' => 'Surveys.SurveyTableRow'
-			)
+			),
+			'viewType' => 'list'
 		)
 	);
 
