@@ -10,7 +10,6 @@ $this->start('contentActions');
 		if ($_edit) {
 		    echo $this->Html->link(__('Reorder'), array('action' => 'reorder', 'module' => $selectedModule, 'group' => $selectedGroup), array('class' => 'divider'));
 		}
-		echo $this->Html->link(__('Preview'), array('action' => 'preview', 'module' => $selectedModule, 'group' => $selectedGroup), array('class' => 'divider'));
 	}
 $this->end();
 

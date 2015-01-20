@@ -29,7 +29,8 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 				'FieldOption' => 'Infrastructure.InfrastructureCustomFieldOption',
 				'TableRow' => NULL,
 				'TableColumn' => NULL
-			)
+			),
+			'viewType' => 'form'
 		)
 	);
 	
@@ -95,10 +96,6 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 
     public function moveOrder($id=0) {
     	$this->CustomField2->moveOrder($id);
-    }
-
-    public function preview() {
-    	$this->CustomField2->preview();
     }
 }
 ?>

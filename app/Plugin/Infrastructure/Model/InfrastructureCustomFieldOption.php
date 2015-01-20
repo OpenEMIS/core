@@ -20,7 +20,7 @@ class InfrastructureCustomFieldOption extends InfrastructureAppModel {
 	);
 	
 	public $belongsTo = array(
-		'InfrastructureCustomField',
+		'Infrastructure.InfrastructureCustomField',
 		'ModifiedUser' => array(
 			'fields' => array('first_name', 'last_name'),
 			'className' => 'SecurityUser',
