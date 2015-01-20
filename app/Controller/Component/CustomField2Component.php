@@ -62,7 +62,7 @@ class CustomField2Component extends Component {
 				$data = $this->controller->request->data;
 				$selectedFieldType = $data[$this->Field->alias]['type'];
 
-				if ($data['submit'] == 'reload' || $data['submit'] == $this->FieldOption->alias || $data['submit'] == $this->TableColumn->alias || $data['submit'] == $this->TableRow->alias) {
+				if ($data['submit'] == 'reload' || (isset($this->FieldOption) && $data['submit'] == $this->FieldOption->alias) || (isset($this->TableColumn) && $data['submit'] == $this->TableColumn->alias) || (isset($this->TableRow) && $data['submit'] == $this->TableRow->alias)) {
 					//always reset to 0 when reload; in other conditions should set to 0 too
 					$selectedMandatory = 0;
 					$selectedUnique = 0;
@@ -261,37 +261,37 @@ class CustomField2Component extends Component {
     		
     		if ($data['submit'] == 'reload') {
 
-			} else if($data['submit'] == $this->FieldOption->alias) {
+			} else if(isset($this->FieldOption) && $data['submit'] == $this->FieldOption->alias) {
 				$this->controller->request->data[$this->FieldOption->alias][] =array(
 					'value' => '',
 					'visible' => 1
 				);
-			} else if($data['submit'] == $this->TableColumn->alias) {
+			} else if(isset($this->TableColumn) && $data['submit'] == $this->TableColumn->alias) {
 				$this->controller->request->data[$this->TableColumn->alias][] =array(
 					'name' => '',
 					'visible' => 1
 				);
-			} else if($data['submit'] == $this->TableRow->alias) {
+			} else if(isset($this->TableRow) && $data['submit'] == $this->TableRow->alias) {
 				$this->controller->request->data[$this->TableRow->alias][] =array(
 					'name' => '',
 					'visible' => 1
 				);
     		} else {
-    			if(isset($this->controller->request->data[$this->FieldOption->alias])) {
+    			if(isset($this->FieldOption) && isset($this->controller->request->data[$this->FieldOption->alias])) {
 					foreach ($this->controller->request->data[$this->FieldOption->alias] as $key => $obj) {
 						if(empty($obj['value'])) {
 							unset($this->controller->request->data[$this->FieldOption->alias][$key]);
 						}
 					}
 				}
-				if(isset($this->controller->request->data[$this->TableColumn->alias])) {
+				if(isset($this->TableColumn) && isset($this->controller->request->data[$this->TableColumn->alias])) {
 					foreach ($this->controller->request->data[$this->TableColumn->alias] as $key => $obj) {
 						if(empty($obj['name'])) {
 							unset($this->controller->request->data[$this->TableColumn->alias][$key]);
 						}
 					}
 				}
-				if(isset($this->controller->request->data[$this->TableRow->alias])) {
+				if(isset($this->TableRow) && isset($this->controller->request->data[$this->TableRow->alias])) {
 					foreach ($this->controller->request->data[$this->TableRow->alias] as $key => $obj) {
 						if(empty($obj['name'])) {
 							unset($this->controller->request->data[$this->TableRow->alias][$key]);
@@ -316,11 +316,11 @@ class CustomField2Component extends Component {
 		if ($this->Field->exists($id)) {
 			$params = $this->controller->params->named;
 
-			$this->Field->contain(
-				$this->FieldOption->alias,
-				$this->TableRow->alias,
-				$this->TableColumn->alias
-			);
+			$fieldContains = array();
+			$fieldContains = isset($this->FieldOption) ? array_merge(array($this->FieldOption->alias), $fieldContains) : $fieldContains;
+			$fieldContains = isset($this->TableColumn) ? array_merge(array($this->TableColumn->alias), $fieldContains) : $fieldContains;
+			$fieldContains = isset($this->TableRow) ? array_merge(array($this->TableRow->alias), $fieldContains) : $fieldContains;
+			$this->Field->contain($fieldContains);
 
 			$data = $this->Field->findById($id);
 			
@@ -329,37 +329,37 @@ class CustomField2Component extends Component {
 
 				if ($data['submit'] == 'reload') {
 
-				} else if($data['submit'] == $this->FieldOption->alias) {
+				} else if(isset($this->FieldOption) && $data['submit'] == $this->FieldOption->alias) {
 					$this->controller->request->data[$this->FieldOption->alias][] =array(
 						'value' => '',
 						'visible' => 1
 					);
-				} else if($data['submit'] == $this->TableColumn->alias) {
+				} else if(isset($this->TableColumn) && $data['submit'] == $this->TableColumn->alias) {
 					$this->controller->request->data[$this->TableColumn->alias][] =array(
 						'name' => '',
 						'visible' => 1
 					);
-				} else if($data['submit'] == $this->TableRow->alias) {
+				} else if(isset($this->TableRow) && $data['submit'] == $this->TableRow->alias) {
 					$this->controller->request->data[$this->TableRow->alias][] =array(
 						'name' => '',
 						'visible' => 1
 					);
 				} else {
-					if(isset($this->controller->request->data[$this->FieldOption->alias])) {
+					if(isset($this->FieldOption) && isset($this->controller->request->data[$this->FieldOption->alias])) {
 						foreach ($this->controller->request->data[$this->FieldOption->alias] as $key => $obj) {
 							if(empty($obj['value'])) {
 								unset($this->controller->request->data[$this->FieldOption->alias][$key]);
 							}
 						}
 					}
-					if(isset($this->controller->request->data[$this->TableColumn->alias])) {
+					if(isset($this->TableColumn) && isset($this->controller->request->data[$this->TableColumn->alias])) {
 						foreach ($this->controller->request->data[$this->TableColumn->alias] as $key => $obj) {
 							if(empty($obj['name'])) {
 								unset($this->controller->request->data[$this->TableColumn->alias][$key]);
 							}
 						}
 					}
-					if(isset($this->controller->request->data[$this->TableRow->alias])) {
+					if(isset($this->TableRow) && isset($this->controller->request->data[$this->TableRow->alias])) {
 						foreach ($this->controller->request->data[$this->TableRow->alias] as $key => $obj) {
 							if(empty($obj['name'])) {
 								unset($this->controller->request->data[$this->TableRow->alias][$key]);
@@ -369,18 +369,24 @@ class CustomField2Component extends Component {
 
 					$dataSource = $this->Field->getDataSource();
 					$dataSource->begin();
-					$this->FieldOption->updateAll(
-					    array($this->FieldOption->alias.'.visible' => 0),
-					    array($this->FieldOption->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
-					);
-					$this->TableColumn->updateAll(
-					    array($this->TableColumn->alias.'.visible' => 0),
-					    array($this->TableColumn->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
-					);
-					$this->TableRow->updateAll(
-					    array($this->TableRow->alias.'.visible' => 0),
-					    array($this->TableRow->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
-					);
+					if(isset($this->FieldOption)) {
+						$this->FieldOption->updateAll(
+						    array($this->FieldOption->alias.'.visible' => 0),
+						    array($this->FieldOption->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
+						);
+					}
+					if(isset($this->TableColumn)) {
+						$this->TableColumn->updateAll(
+						    array($this->TableColumn->alias.'.visible' => 0),
+						    array($this->TableColumn->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
+						);
+					}
+					if(isset($this->TableRow)) {
+						$this->TableRow->updateAll(
+						    array($this->TableRow->alias.'.visible' => 0),
+						    array($this->TableRow->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
+						);
+					}
 
 					if ($this->Field->saveAll($this->controller->request->data)) {
 						$dataSource->commit();
@@ -417,18 +423,24 @@ class CustomField2Component extends Component {
 
 			$dataSource = $this->Field->getDataSource();
 			$dataSource->begin();
-			$this->FieldOption->updateAll(
-			    array($this->FieldOption->alias.'.visible' => 0),
-			    array($this->FieldOption->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
-			);
-			$this->TableColumn->updateAll(
-			    array($this->TableColumn->alias.'.visible' => 0),
-			    array($this->TableColumn->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
-			);
-			$this->TableRow->updateAll(
-			    array($this->TableRow->alias.'.visible' => 0),
-			    array($this->TableRow->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
-			);
+			if(isset($this->FieldOption)) {
+				$this->FieldOption->updateAll(
+				    array($this->FieldOption->alias.'.visible' => 0),
+				    array($this->FieldOption->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
+				);
+			}
+			if(isset($this->TableColumn)) {
+				$this->TableColumn->updateAll(
+				    array($this->TableColumn->alias.'.visible' => 0),
+				    array($this->TableColumn->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
+				);
+			}
+			if(isset($this->TableRow)) {
+				$this->TableRow->updateAll(
+				    array($this->TableRow->alias.'.visible' => 0),
+				    array($this->TableRow->alias.'.'.Inflector::underscore($this->Field->alias).'_id' => $id)
+				);
+			}
 
 			if($this->Field->delete($id)) {
 				$dataSource->commit();
