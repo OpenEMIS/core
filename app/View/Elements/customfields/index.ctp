@@ -14,6 +14,7 @@ $elementOptions['modelValue'] = $action == 'edit' ? $modelValue : '';
 $elementOptions['modelRow'] = isset($modelRow) ? $modelRow : '';
 $elementOptions['modelColumn'] = isset($modelColumn) ? $modelColumn : '';
 $elementOptions['modelCell'] = isset($modelCell) && $action == 'edit' ? $modelCell : '';
+$elementOptions['viewType'] = isset($viewType) ? $viewType : 'list';
 
 foreach($data as $obj) {
 	$element = $customElement[$obj[$model]['type']];
