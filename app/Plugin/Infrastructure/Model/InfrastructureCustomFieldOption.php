@@ -20,6 +20,7 @@ class InfrastructureCustomFieldOption extends InfrastructureAppModel {
 	);
 	
 	public $belongsTo = array(
+		'InfrastructureCustomField',
 		'ModifiedUser' => array(
 			'fields' => array('first_name', 'last_name'),
 			'className' => 'SecurityUser',
@@ -32,14 +33,6 @@ class InfrastructureCustomFieldOption extends InfrastructureAppModel {
 		)
 	);
 	
-	public $hasAndBelongsToMany = array(
-		'SecurityRole' => array(
-			'joinTable' => 'alert_roles',
-			'fields' => array('SecurityRole.id', 'SecurityRole.name'),
-			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
-		)
-	);
-	
 	public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
@@ -47,27 +40,6 @@ class InfrastructureCustomFieldOption extends InfrastructureAppModel {
 				'required' => true,
 				'message' => 'Please enter a valid Name',
 				'on' => 'create'
-			)
-		),
-		'threshold' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Threshold'
-			)
-		),
-		'subject' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Subject'
-			)
-		),
-		'message' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Message'
 			)
 		)
 	);
