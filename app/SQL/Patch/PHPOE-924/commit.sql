@@ -2,6 +2,8 @@
 -- 1. navigations
 --
 
+ALTER TABLE `navigations` CHANGE `controller` `controller` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
 ALTER TABLE `navigations` CHANGE `pattern` `pattern` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ;
 
 SET @orderEduStructure := 0;
