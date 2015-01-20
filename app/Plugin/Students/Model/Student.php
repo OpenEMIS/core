@@ -38,7 +38,11 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
-	public $hasMany = array('InstitutionSiteStudentFee');
+	public $hasMany = array(
+		'InstitutionSiteStudentFee',
+		'InstitutionSiteStudent',
+		'StudentIdentity'
+	);
 	
 	public $validate = array(
 		'first_name' => array(

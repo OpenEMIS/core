@@ -210,6 +210,14 @@ class InstitutionSiteStudent extends AppModel {
 		}
 		$conditions['InstitutionSiteStudent.institution_site_id'] = $institutionSiteId;
 
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$defaultIdentity = $IdentityType->find('first', array(
+			'contain' => array('FieldOption'),
+			'conditions' => array('FieldOption.code' => $IdentityType->alias),
+			'order' => array('IdentityType.default DESC')
+		));
+		$conditions['defaultIdentity'] = $defaultIdentity['IdentityType']['id'];
+
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
 			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
@@ -273,7 +281,8 @@ class InstitutionSiteStudent extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('data', 'yearOptions', 'programmeOptions', 'statusOptions'));
+		$defaultIdentity = $defaultIdentity['IdentityType'];
+		$this->setVar(compact('data', 'yearOptions', 'programmeOptions', 'statusOptions', 'defaultIdentity'));
 	}
 	
 	public function add() {
@@ -364,21 +373,58 @@ class InstitutionSiteStudent extends AppModel {
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$identityConditions[] = 'StudentIdentity.student_id = InstitutionSiteStudent.student_id';
+		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
+			$identityConditions[] = 'StudentIdentity.identity_type_id = '.$conditions['defaultIdentity'];
+		}
+		$joins[] = array(
+			'table' => 'student_identities',
+			'alias' => 'StudentIdentity',
+			'type' => 'LEFT',
+			'conditions' => $identityConditions,
+		);
+
+		/*
+		*	Default identity is a required condition for extracting row on StudentIdentity only.
+		*	Must be unset to avoid mysql unknown column error when querying InstitutionSiteStudent table.
+		*	
+		*	Any other parameter that can be used other than $conditions?
+		*/
+		unset($conditions['defaultIdentity']);
+				
+		/*
+		*	Sorting would not work on National ID column.
+		*	The script below is to enforce sorting on that column.
+		*/
+		if(isset($extra['sort'])&&substr_count($extra['sort'], '.')>0){$order = array($extra['sort'] => $extra['direction']);}
+		/**/
+		
+
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-				'Student.third_name', 'Student.last_name', 'EducationProgramme.name', 'StudentStatus.name'
+				'Student.third_name', 'Student.last_name', 'EducationProgramme.name', 'StudentStatus.name',
+				'StudentIdentity.number',
+				//'*'
 			),
+			'joins' => $joins,
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
 			'group' => array('Student.id', 'EducationProgramme.id'),
 			'order' => $order
 		));
+		$data = $this->attachSectionInfo($data);
+		//pr($data);//die();
 		return $data;
 	}
 	 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
+		/*
+		*	Default identity is a required condition for extracting row on StudentIdentity only.
+		*	Must be unset to avoid mysql unknown column error when querying InstitutionSiteStudent table.
+		*/
+		unset($conditions['defaultIdentity']);
 		$count = $this->find('count', array('conditions' => $conditions));
 		return $count;
 	}

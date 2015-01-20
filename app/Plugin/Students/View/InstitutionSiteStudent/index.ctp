@@ -54,6 +54,23 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 
 <?php echo $this->Form->end() ?>
 
+<style>
+.table .educationProgrammeName,
+.table .institutionSiteSectionName,
+.table .middot,
+.table .middotHeader{display:block;float:left;}
+.table .middot{
+	font-size:30px;
+	margin:0px 5px 0px 5px;
+	line-height:14px;
+}
+.table .middotHeader{
+	font-size:28px;
+	margin:0px 5px 0px 5px;
+	line-height:10px;
+}
+</style>
+
 <?php if (!empty($data)) : ?>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered table-sortable">
@@ -61,7 +78,12 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			<tr>
 				<th><?php echo $this->Paginator->sort('Student.identification_no', __('OpenEMIS ID')) ?></th>
 				<th><?php echo $this->Paginator->sort('Student.first_name', __('Name')) ?></th>
-				<th><?php echo $this->Paginator->sort('EducationProgramme.name', __('Programme')) ?></th>
+				<th><?php echo $this->Paginator->sort('StudentIdentity.number', __($defaultIdentity['name'])) ?></th>
+				<th>
+					<span class="educationProgrammeName">Programme</span>
+					<span class="middotHeader">&middot;</span>
+					<span class="institutionSiteSectionName">Section</span>
+				</th>
 				<th><?php echo $this->Paginator->sort('StudentStatus.name', __('Status')) ?></th>
 			</tr>
 		</thead>
@@ -76,11 +98,13 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 				$thirdName = $this->Utility->highlight($search, $obj['Student']['third_name'].((isset($obj['Student']['history_third_name']))?'<br>'.$obj['Student']['history_third_name']:''));
 				$lastName = $this->Utility->highlight($search, $obj['Student']['last_name'].((isset($obj['Student']['history_last_name']))?'<br>'.$obj['Student']['history_last_name']:''));
 				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+				$identity = (isset($obj['StudentIdentity'])) ? $obj['StudentIdentity']['number'] : '';
 		?>
 			<tr>
 				<td><?php echo $identificationNo; ?></td>
 				<td><?php echo $name; ?></td>
-				<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+				<td><?php echo $identity; ?></td>
+				<td><span class="educationProgrammeName"><?php echo $obj['EducationProgramme']['name']; ?></span>  <span class="middot">&middot;</span> <span class="institutionSiteSectionName"><?php echo $obj['InstitutionSiteSection']['name'];?></span></td>
 				<td><?php echo $obj['StudentStatus']['name']; ?></td>
 			</tr>
 		<?php endforeach ?>
