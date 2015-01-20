@@ -121,14 +121,23 @@ class StudentsController extends StudentsAppController {
 			$searchKey = Sanitize::escape($this->request->data['Student']['search']);
 		}
 
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$defaultIdentity = $IdentityType->find('first', array(
+			'contain' => array('FieldOption'),
+			'conditions' => array('FieldOption.code' => $IdentityType->alias),
+			'order' => array('IdentityType.default DESC')
+		));
+
 		$conditions = array(
 			'SearchKey' => $searchKey,
 			'AdvancedSearch' => $this->Session->check('Student.AdvancedSearch') ? $this->Session->read('Student.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id')
+			'userId' => $this->Auth->user('id'),
+			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
 		$data = $this->Search->search($this->Student, $conditions);
+		$data = $this->Student->attachLatestInstitutionInfo($data);
 		
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
@@ -139,6 +148,7 @@ class StudentsController extends StudentsAppController {
 			$this->Message->alert('general.noData');
 		}
 		$this->set('data', $data);
+		$this->set('defaultIdentity', $defaultIdentity['IdentityType']);
 	}
 
 	public function advanced() {

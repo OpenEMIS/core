@@ -61,7 +61,8 @@ class Staff extends StaffAppModel {
 			'foreignKey' => 'staff_id',
 			'dependent' => true
 		),
-		'InstitutionSiteStaff'
+		'InstitutionSiteStaff',
+		'StaffIdentity'
 	);
 
 	public $validate = array(
