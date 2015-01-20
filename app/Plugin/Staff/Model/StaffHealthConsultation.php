@@ -106,7 +106,7 @@ class StaffHealthConsultation extends StaffAppModel {
             $controller->request->data[$this->alias]['staff_id'] = $controller->Session->read('Staff.id');
             
             if ($this->save($controller->request->data)) {
-                $controller->Message->alert('general.' . $type . '.success');
+                $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'healthConsultation'));
             }
         }
@@ -118,7 +118,11 @@ class StaffHealthConsultation extends StaffAppModel {
             }
         }
         
-        $healthConsultationsOptions = $this->HealthConsultationType->find('list', array('fields' => array('id', 'name')));
+        if (!empty($controller->request->data)) {
+			$healthConsultationsOptions = $this->HealthConsultationType->getList(array('value' => $controller->request->data['StaffHealthConsultation']['health_consultation_type_id']));
+		} else {
+			$healthConsultationsOptions = $this->HealthConsultationType->getList(array('value' => 0));
+		}
         $controller->set(compact('healthConsultationsOptions'));
     }
 }

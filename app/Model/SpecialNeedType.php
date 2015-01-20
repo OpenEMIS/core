@@ -14,27 +14,23 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class SpecialNeedType extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array('StudentSpecialNeed', 'TeacherSpecialNeed', 'StaffSpecialNeed');
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Special Need Types' => array('model' => 'SpecialNeedType')
-		);
-		return $lookup;
-	}
-
-
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('SpecialNeedType.order')));
-		$list = array();
-		foreach($data as $obj){
-			$list[$obj['SpecialNeedType']['id']] = $obj['SpecialNeedType']['name'];
-		}
-
-		return $list;
-	}
+class SpecialNeedType extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Students.StudentSpecialNeed', 'Staff.StaffSpecialNeed');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 }

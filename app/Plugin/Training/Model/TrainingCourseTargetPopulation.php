@@ -6,10 +6,7 @@ class TrainingCourseTargetPopulation extends TrainingAppModel {
 			'className' => 'TrainingCourse',
 			'foreignKey' => 'training_course_id'
 		),
-		'StaffPositionTitle' => array(
-			'className' => 'StaffPositionTitle',
-			'foreignKey' => 'staff_position_title_id'
-		)
+		'StaffPositionTitle'
 	);
 
 }

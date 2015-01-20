@@ -26,14 +26,8 @@ class Position extends AppModel {
 	
 	public $belongsTo = array(
 		'Staff.Staff',
-		'StaffType' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_type_id'
-		),
-		'StaffStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_status_id'
-		),
+		'Staff.StaffType',
+		'Staff.StaffStatus',
 		'InstitutionSitePosition',
 		'InstitutionSite',
 		'ModifiedUser' => array(
