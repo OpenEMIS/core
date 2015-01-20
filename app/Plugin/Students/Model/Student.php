@@ -167,6 +167,7 @@ class Student extends StudentsAppModel {
 				$this->alias . '.identification_no LIKE' => $search,
 				$this->alias . '.first_name LIKE' => $search,
 				$this->alias . '.middle_name LIKE' => $search,
+				$this->alias . '.third_name LIKE' => $search,
 				$this->alias . '.last_name LIKE' => $search
 			)
 		);
@@ -176,7 +177,7 @@ class Student extends StudentsAppModel {
 			'order' => array($this->alias . '.first_name')
 		);
 		
-		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'gender', 'identification_no', 'date_of_birth');
+		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'third_name', 'gender', 'identification_no', 'date_of_birth');
 		$data = $this->find('all', $options);
 		
 		return $data;

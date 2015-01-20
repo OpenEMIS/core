@@ -274,7 +274,8 @@ class StudentsController extends StudentsAppController {
 						$id = $this->Student->getLastInsertId();
 						$this->Session->write($model . '.id', $id);
 					}
-					
+					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
+					$dataToSite['student_status_id'] = $studentStatusId;
 					$dataToSite['student_id'] = $id;
 					$InstitutionSiteStudentModel->save($dataToSite);
 					
@@ -347,15 +348,12 @@ class StudentsController extends StudentsAppController {
 			'order' => array('StudentHistory.created' => 'desc')
 		));
 
-		// pr($historyData);
 		$data = $this->Student->findById($studentId);
 		$data2 = array();
 		foreach ($historyData as $key => $arrVal) {
 			foreach ($arrTables as $table) {
-				//pr($arrVal);die;
 				foreach ($arrVal[$table] as $k => $v) {
 					$keyVal = ($k == 'name') ? $table . '_name' : $k;
-					//echo $k.'<br>';
 					$data2[$keyVal][$v] = $arrVal['StudentHistory']['created'];
 				}
 			}
