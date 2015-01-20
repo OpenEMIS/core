@@ -49,6 +49,10 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $data[$model]['year_disposed']; ?></div>
 </div>
 <div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteInfrastructure.infrastructure_condition_id'); ?></div>
+	<div class="col-md-6"><?php echo $data['InfrastructureCondition']['name']; ?></div>
+</div>
+<div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('general.comment'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['comment']; ?></div>
 </div>
