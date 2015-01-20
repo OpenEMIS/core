@@ -19,9 +19,6 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteFeeType extends AppModel {
 	public $belongsTo = array(
 		'InstitutionSiteFee',
-		'FeeType' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'fee_type_id'
-		)
+		'FeeType'
 	);
 }

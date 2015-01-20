@@ -44,7 +44,7 @@ class AssessmentItemResult extends AppModel {
 				'conditions' => array('AssessmentItemType.id = AssessmentItem.assessment_item_type_id')
 			),
 			array(
-				'table' => 'assessment_result_types',
+				'table' => 'field_option_values',
 				'alias' => 'AssessmentResultType',
 				'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
 			),
@@ -252,8 +252,7 @@ class AssessmentItemResult extends AppModel {
 					$maxMarks = 0;
 				}
 				
-				$gradingOptions = $this->AssessmentResultType->findList(true);
-
+				$gradingOptions = $this->AssessmentResultType->getList();
 				$controller->set(compact('data', 'gradingOptions'));
 
 				if ($controller->request->is('get')) {

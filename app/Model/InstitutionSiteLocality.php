@@ -14,11 +14,11 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class InstitutionSiteLocality extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array('InstitutionsSite');
+class InstitutionSiteLocality extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('InstitutionSite','InstitutionSiteHistory');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -33,8 +33,4 @@ class InstitutionSiteLocality extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-	
-	public function findListAsSubgroups() {
-		return $this->findList(true);
-	}
 }

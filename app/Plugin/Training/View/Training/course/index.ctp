@@ -19,7 +19,7 @@ $this->start('contentBody');
     <div class="col-md-4">
         <?php
             echo $this->Form->input('training_status_id', array(
-                'options' => array_map('__',$statusOptions),
+                'options' => $statusOptions,
                 'default' => $selectedStatus,
                 'empty' => __('Current'),
                 'class'=>'form-control',

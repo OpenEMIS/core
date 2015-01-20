@@ -23,10 +23,7 @@ class CensusTeacherFte extends AppModel {
 		'EducationLevel',
 		'InstitutionSite',
 		'SchoolYear',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 	
 	public function getCensusData($institutionSiteId, $yearId) {

@@ -134,7 +134,12 @@ class StaffHealthTest extends StaffAppModel {
             }
         }
 
-        $healthTestsOptions = $this->HealthTestType->find('list', array('fields' => array('id', 'name')));
+        if (!empty($controller->request->data)) {
+			$healthTestsOptions = $this->HealthTestType->getList(array('value' => $controller->request->data['StaffHealthTest']['health_test_type_id']));
+		} else {
+			$healthTestsOptions = $this->HealthTestType->getList(array('value' => 0));
+		}
+		
         $controller->set(compact('healthTestsOptions'));
     }
 }

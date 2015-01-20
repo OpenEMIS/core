@@ -162,10 +162,6 @@ class SchoolYear extends AppModel {
 		return $data;
 	}
 	
-	public function getLookupVariables() {
-		return array('School Year' => array('model' => 'SchoolYear'));
-	}
-	
 	public function findOptions($options=array()) {
 		$options['order'] = array('SchoolYear.name DESC');
 		$list = parent::findOptions($options);
