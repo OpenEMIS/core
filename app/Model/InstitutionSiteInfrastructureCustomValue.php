@@ -40,10 +40,9 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
 	);
 
 	public function prepareDataBeforeSave($requestData) {
-		pr($requestData);die;
 		$modelValue = 'InstitutionSiteInfrastructureCustomValue';
 
-		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$institutionSiteId = CakeSession::read('InstitutionSite.id');
 
 		$result[$this->alias] = $requestData[$this->alias];
 		$result[$this->alias]['institution_site_id'] = $institutionSiteId;
@@ -58,9 +57,10 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
 
 		$index = 0;
 		foreach ($arrFields as $fieldVal => $fieldName) {
-			if (!isset($requestData[$modelValue][$fieldVal]))
-                continue;
-
+			if (!isset($requestData[$modelValue][$fieldVal])){
+				continue;
+			}
+            
             foreach ($requestData[$modelValue][$fieldVal] as $key => $obj) {
             	$index = $key > $index ? $key : $index;
 				$result[$modelValue][$key]['institution_site_id'] = $institutionSiteId;
