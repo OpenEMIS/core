@@ -35,6 +35,10 @@ class InstitutionSiteInfrastructure extends AppModel {
 		)
 	);
 	
+	public $hasMany = array(
+		'InstitutionSiteInfrastructureCustomValues'
+	);
+	
 	public $validate = array(
 		'code' => array(
 			'ruleRequired' => array(
@@ -269,7 +273,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 	
 	public function getInfrastructureWithParent($id){
 		$data = $this->find('first', array(
-			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureCategory.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'Parent.*', 'ModifiedUser.*', 'CreatedUser.*'),
+			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureCategory.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'InfrastructureCondition.*', 'Parent.*', 'ModifiedUser.*', 'CreatedUser.*'),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_infrastructures',

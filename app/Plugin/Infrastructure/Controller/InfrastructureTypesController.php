@@ -178,7 +178,7 @@ class InfrastructureTypesController extends InfrastructureAppController {
 			);
 		}
 		
-		$currentTab = 'Categories';
+		$currentTab = 'Types';
 		
 		$this->set(compact('data', 'categoryId', 'breadcrumbs', 'currentTab'));
 	}
