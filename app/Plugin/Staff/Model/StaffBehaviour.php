@@ -28,10 +28,7 @@ class StaffBehaviour extends StaffAppModel {
 	
 	public $belongsTo = array(
 		'Staff.Staff',
-		'StaffBehaviourCategory' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_behaviour_category_id'
-		),
+		'Staff.StaffBehaviourCategory',
 		'InstitutionSite',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -122,7 +119,7 @@ class StaffBehaviour extends StaffAppModel {
 		
 		$categoryOptions = array();
 		if ($this->action = 'add' || $this->action = 'edit') {
-			$categoryOptions = $this->StaffBehaviourCategory->getList(true);
+			$categoryOptions = $this->StaffBehaviourCategory->getList();
 		} else {
 			$categoryOptions = $this->StaffBehaviourCategory->getList();
 		}

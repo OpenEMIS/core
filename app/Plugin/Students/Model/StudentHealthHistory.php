@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentHealthHistory extends StudentsAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
+		'HealthCondition',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -128,7 +128,14 @@ class StudentHealthHistory extends StudentsAppModel {
 			}
 		}
 
-		$healthConditionsOptions = $this->HealthCondition->find('list', array('fields' => array('id', 'name')));
+		if (!empty($controller->request->data)) {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => $controller->request->data['StudentHealthHistory']['health_condition_id']));
+		} else {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => 0));
+		}
+
+
+
 		$yesnoOptions = $controller->Option->get('yesno');
 
 		$controller->set(compact('healthConditionsOptions', 'yesnoOptions'));

@@ -14,10 +14,11 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('FieldOptionValue', 'Model');
 
-class StudentBehaviourCategory extends AppModel {
-	public $actsAs = array('FieldOption');
+class StudentBehaviourCategory extends FieldOptionValue {
+	public $useTable = 'field_option_values';
+	public $hasMany = array('Students.StudentBehaviour');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -30,21 +31,4 @@ class StudentBehaviourCategory extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
-	public function getCategory(){
-		$list = $this->find('list',array(
-			'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
-			'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
-		return $list;
-	}
-	
-	public function getCategoryList(){
-		$list = $this->find('list' , array(
-			'recursive' => '-1',
-			'fields' => array('StudentBehaviourCategory.id', 'StudentBehaviourCategory.name'),
-			'conditions' => array('StudentBehaviourCategory.visible' => 1),
-			'order' => array('StudentBehaviourCategory.order')
-		));
-		return $list;
-	}
 }

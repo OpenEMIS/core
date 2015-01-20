@@ -33,10 +33,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 	public $belongsTo = array(
 		'Staff.Staff',
 		'InstitutionSite',
-		'StaffAbsenceReason' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'staff_absence_reason_id'
-		),
+		'Staff.StaffAbsenceReason',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -591,7 +588,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
-		$absenceReasonList = $this->StaffAbsenceReason->getOptionList(array('FieldOption.code' => 'StaffAbsenceReason'));
+		$absenceReasonList = $this->StaffAbsenceReason->getList();
 
 		$this->setVar(compact('yearList', 'yearId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'staffList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 	}

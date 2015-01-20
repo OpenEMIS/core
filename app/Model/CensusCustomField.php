@@ -41,7 +41,7 @@ class CensusCustomField extends AppModel {
 	);
 
 	public function getSubOptions() {
-		$options = $this->InstitutionSiteType->findList();
+		$options = $this->InstitutionSiteType->getList();
 		array_unshift($options, __('All'));
 		return $options;
 	}

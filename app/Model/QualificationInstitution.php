@@ -17,13 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 class QualificationInstitution extends AppModel {
 	public $useTable = "qualification_institutions";
 	public $hasMany = array('StaffQualification');
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Qualification Institutions' => array('model' => 'QualificationInstitution')
-		);
-		return $lookup;
-	}
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('QualificationInstitution.order')));

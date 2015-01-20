@@ -127,7 +127,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
-		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
+		$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(array('listOnly' => true));
 		$trainingNeedTypes = array_map('__', $this->trainingNeedTypes);
 		$controller->Session->write('StaffTrainingNeedId', $id);
         $controller->set(compact('header', 'data', 'id', 'trainingNeedTypes', 'trainingNeedCategoryOptions'));
@@ -235,7 +235,6 @@ class StaffTrainingNeed extends StaffAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingPriorityOptions = $this->TrainingPriority->find('list', array('fields'=> array('id', 'name')));
 		$trainingCourseOptions = array();
 		if($controller->Session->check('Staff.id')){
 		 	$staffId = $controller->Session->read('Staff.id');
@@ -298,9 +297,6 @@ class StaffTrainingNeed extends StaffAppModel {
 			);
 		}
 
-		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
-		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
-
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -351,6 +347,16 @@ class StaffTrainingNeed extends StaffAppModel {
 				}
 			}
 		}
+
+		if (!empty($controller->request->data)) {
+			$trainingPriorityOptions = $this->TrainingPriority->getList(array('value' => $controller->request->data['StaffTrainingNeed']['training_priority_id']));
+			$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(array('value' => $controller->request->data['StaffTrainingNeed']['training_need_type']));
+		} else {
+			$trainingPriorityOptions = $this->TrainingPriority->getList(array('value' => 0));
+			$trainingNeedCategoryOptions = $this->TrainingNeedCategory->getList(array('value' => 0));
+		}
+				
+		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 	}
 
 
