@@ -235,7 +235,6 @@ class CustomField2Component extends Component {
 			$this->Message->alert('general.noData');
 		}
 
-		//$this->controller->set('moduleOptions', $moduleOptions);
 		$this->controller->set('selectedModule', $selectedModule);
     }
 
@@ -584,11 +583,11 @@ class CustomField2Component extends Component {
 				$groupOptions['group:' . $key] = $template;
 			}
 
-			$this->Field->contain(
-				$this->FieldOption->alias,
-				$this->TableRow->alias,
-				$this->TableColumn->alias
-			);
+			$fieldContains = array();
+			$fieldContains = isset($this->FieldOption) ? array_merge(array($this->FieldOption->alias), $fieldContains) : $fieldContains;
+			$fieldContains = isset($this->TableColumn) ? array_merge(array($this->TableColumn->alias), $fieldContains) : $fieldContains;
+			$fieldContains = isset($this->TableRow) ? array_merge(array($this->TableRow->alias), $fieldContains) : $fieldContains;
+			$this->Field->contain($fieldContains);
 			$data = $this->Field->find('all', array(
 				'conditions' => array(
 					$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $selectedGroup,
@@ -600,10 +599,10 @@ class CustomField2Component extends Component {
 				)
 			));
 			$model = $this->Field->alias;
-			$modelOption = $this->FieldOption->alias;
+			$modelOption = isset($this->FieldOption) ? $this->FieldOption->alias : '';
 			$modelValue = '';
-			$modelRow = $this->TableRow->alias;
-			$modelColumn = $this->TableColumn->alias;
+			$modelRow = isset($this->TableRow) ? $this->TableRow->alias : '';
+			$modelColumn = isset($this->TableColumn) ? $this->TableColumn->alias : '';
 			$modelCell = '';
 			$action = 'edit';
 
