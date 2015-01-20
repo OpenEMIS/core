@@ -1,4 +1,5 @@
 <?php
+echo $this->Html->css('/Infrastructure/css/infrastructure', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
@@ -14,6 +15,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
+	echo $this->element('nav_tabs');
 	echo $this->element('/custom_fields/index');
 $this->end();
 ?>
