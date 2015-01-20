@@ -46,20 +46,35 @@
 		} else {
 			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;			
 		}
-		$dropdownOptions = array();
-		foreach($obj[$modelOption] as $dropdownValue) {
-			$dropdownOptions[$dropdownValue['id']] = $dropdownValue['value'];
+		if($pageType == 'view') {
+		?>
+		<div class="row">
+			<div class="col-md-3"><?php echo $obj[$model]['name']; ?></div>
+			<div class="col-md-6"><?php echo $value; ?></div>
+		</div>
+		<?php
+		}else{
+			$dropdownOptions = array();
+			foreach($obj[$modelOption] as $dropdownValue) {
+				$dropdownOptions[$dropdownValue['id']] = $dropdownValue['value'];
+			}
+			echo $this->Form->hidden("$modelValue.dropdown.$modelId.type", array('value' => $obj[$model]['type']));
+			if(isset($obj[$model]['is_mandatory'])) {
+				echo $this->Form->hidden("$modelValue.dropdown.$modelId.is_mandatory", array('value' => $obj[$model]['is_mandatory']));
+			}
+			if(isset($obj[$model]['is_unique'])) {
+				echo $this->Form->hidden("$modelValue.dropdown.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
+			}
+			$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
+			echo $this->Form->input("$modelValue.dropdown.$modelId.value", array(
+				'class' => 'form-control',
+				'div' => 'row form-group',
+				'between' => '<div class="col-md-4">',
+				'after' => '</div>',
+				'label' => $labelOptions,
+				'options' => $dropdownOptions,
+				'selected' => $value
+			));
 		}
-
-		$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
-		echo $this->Form->input("$modelValue.dropdown.$modelId.value", array(
-			'class' => 'form-control',
-			'div' => 'row form-group',
-			'between' => '<div class="col-md-4">',
-			'after' => '</div>',
-			'label' => $labelOptions,
-			'options' => $dropdownOptions,
-			'selected' => $value
-		));
 	?>
 <?php endif ?>
