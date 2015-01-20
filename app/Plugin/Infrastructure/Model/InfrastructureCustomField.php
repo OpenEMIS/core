@@ -46,5 +46,5 @@ class InfrastructureCustomField extends InfrastructureAppModel {
 			)
 		)
 	);
-
+	
 }
