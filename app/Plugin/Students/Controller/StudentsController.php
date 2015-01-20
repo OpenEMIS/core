@@ -347,15 +347,12 @@ class StudentsController extends StudentsAppController {
 			'order' => array('StudentHistory.created' => 'desc')
 		));
 
-		// pr($historyData);
 		$data = $this->Student->findById($studentId);
 		$data2 = array();
 		foreach ($historyData as $key => $arrVal) {
 			foreach ($arrTables as $table) {
-				//pr($arrVal);die;
 				foreach ($arrVal[$table] as $k => $v) {
 					$keyVal = ($k == 'name') ? $table . '_name' : $k;
-					//echo $k.'<br>';
 					$data2[$keyVal][$v] = $arrVal['StudentHistory']['created'];
 				}
 			}
