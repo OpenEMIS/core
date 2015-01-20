@@ -25,7 +25,7 @@ class InstitutionSitePosition extends AppModel {
 	public $belongsTo = array(
 		'InstitutionSite',
 		'Staff.StaffPositionTitle',
-		'StaffPositionGrade',
+		'Staff.StaffPositionGrade',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -99,10 +99,12 @@ class InstitutionSitePosition extends AppModel {
 		$data = $this->find('all', $options);
 		$list = array();
 		if (!empty($data)) {
-			$staffOptions = $this->StaffPositionTitle->findList(true);
+			$staffOptions = $this->StaffPositionTitle->getList(array('listOnly'=>true));
 			foreach ($data as $obj) {
 				$posInfo = $obj['InstitutionSitePosition'];
-				$list[$posInfo['id']] = sprintf('%s - %s', $posInfo['position_no'], $staffOptions[$posInfo['staff_position_title_id']]);
+				$list[$posInfo['id']] = sprintf('%s - %s', 
+					$posInfo['position_no'], 
+					$staffOptions[$posInfo['staff_position_title_id']]);
 			}
 		}
 
@@ -124,11 +126,11 @@ class InstitutionSitePosition extends AppModel {
 		$this->fields['status']['options'] = $this->controller->Option->get('status');
 		
 		if ($this->action == 'add') {
-			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->findList(true);
-			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->findList(true);
+			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->getList();
+			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->getList();
 		} else {
-			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->findList();
-			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->findList();
+			$this->fields['staff_position_title_id']['options'] = $this->StaffPositionTitle->getList();
+			$this->fields['staff_position_grade_id']['options'] = $this->StaffPositionGrade->getList();
 		}
 		
 		if ($this->action == 'view') {

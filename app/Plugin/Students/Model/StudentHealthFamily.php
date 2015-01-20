@@ -22,8 +22,8 @@ class StudentHealthFamily extends StudentsAppModel {
 
 	public $belongsTo = array(
 		'Students.Student',
-		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
-		'HealthRelationship' => array('foreignKey' => 'health_relationship_id'),
+		'HealthCondition',
+		'HealthRelationship',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -85,6 +85,7 @@ class StudentHealthFamily extends StudentsAppModel {
 	}
 
 	public function healthFamily($controller, $params) {
+
 		$controller->Navigation->addCrumb('Health - Family');
 		$header = __('Health - Family');
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
@@ -154,8 +155,14 @@ class StudentHealthFamily extends StudentsAppModel {
 			}
 		}
 		
-		$healthConditionsOptions = $this->HealthCondition->find('list', array('fields' => array('id', 'name')));
-		$healthRelationshipOptions = $this->HealthRelationship->find('list', array('fields' => array('id', 'name')));
+		if (!empty($controller->request->data)) {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => $controller->request->data['StudentHealthFamily']['health_condition_id']));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => $controller->request->data['StudentHealthFamily']['health_relationship_id']));
+		} else {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => 0));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => 0));
+		}
+		
 		$yesnoOptions = $controller->Option->get('yesno');
 		
 		$controller->set(compact('healthConditionsOptions', 'healthRelationshipOptions','yesnoOptions'));

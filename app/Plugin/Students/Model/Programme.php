@@ -27,10 +27,7 @@ class Programme extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		'StudentStatus' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'student_status_id'
-		),
+		'Students.StudentStatus',
 		'InstitutionSiteProgramme',
 		'EducationProgramme',
 		'InstitutionSite',

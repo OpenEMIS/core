@@ -141,7 +141,11 @@ class StaffHealthImmunization extends StaffAppModel {
 			}
 		}
 
-		$healthImmunizationsOptions = $this->HealthImmunization->find('list', array('fields' => array('id', 'name')));
+		if (!empty($controller->request->data)) {
+			$healthImmunizationsOptions = $this->HealthImmunization->getList(array('value' => $controller->request->data['StaffHealthImmunization']['health_immunization_id']));
+		} else {
+			$healthImmunizationsOptions = $this->HealthImmunization->getList(array('value' => 0));
+		}
 
 		$controller->set(compact('healthImmunizationsOptions'));
 	}
