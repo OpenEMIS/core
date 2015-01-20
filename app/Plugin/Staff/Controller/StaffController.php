@@ -281,16 +281,20 @@ class StaffController extends StaffAppController {
 						$this->Session->write($model . '.id', $id);
 					}
 					
-					$dataToSite['staff_id'] = $id;
-					$InstitutionSiteStaffModel->save($dataToSite);
+					if(!empty($dataToSite)){
+						$dataToSite['staff_id'] = $id;
+						$InstitutionSiteStaffModel->save($dataToSite);
+					}
 					
 					$this->Session->write($model . '.data', $this->Staff->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 					$this->Wizard->next();
 				} else {
-					$dataToSite['staff_id'] = $id;
-					$InstitutionSiteStaffModel->save($dataToSite);
+					if(!empty($dataToSite)){
+						$dataToSite['staff_id'] = $id;
+						$InstitutionSiteStaffModel->save($dataToSite);
+					}
 					
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
