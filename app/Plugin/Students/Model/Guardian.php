@@ -17,10 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class Guardian extends StudentsAppModel {
 
     public $belongsTo = array(
-		'GuardianEducationLevel' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'guardian_education_level_id'
-		),
+		'Students.GuardianEducationLevel',
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
             'foreignKey' => 'modified_user_id'

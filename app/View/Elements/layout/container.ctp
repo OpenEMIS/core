@@ -1,6 +1,6 @@
 <div class="body_title">
 	<?php
-	$controllers = array('InstitutionSites', 'InstitutionSiteReports', 'Census', 'Students', 'Staff');
+	$controllers = array('InstitutionSites', 'InstitutionSiteReports', 'Census', 'Students', 'Staff', 'Quality');
 	// if the current controller exists in the list, hyperlink the header
 	if (in_array($this->params['controller'], $controllers) && $this->Session->check('InstitutionSite.id')) {
 		$id = $this->Session->read('InstitutionSite.id');

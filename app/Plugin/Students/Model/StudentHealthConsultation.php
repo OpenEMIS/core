@@ -125,7 +125,12 @@ class StudentHealthConsultation extends StudentsAppModel {
 			}
 		}
 		
-		$healthConsultationsOptions = $this->HealthConsultationType->find('list', array('fields' => array('id', 'name')));
+		if (!empty($controller->request->data)) {
+			$healthConsultationsOptions = $this->HealthConsultationType->getList(array('value' => $controller->request->data['StudentHealthConsultation']['health_consultation_type_id']));
+		} else {
+			$healthConsultationsOptions = $this->HealthConsultationType->getList(array('value' => 0));
+		}
+
 		$controller->set(compact('healthConsultationsOptions'));
 	}
 

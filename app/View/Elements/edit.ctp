@@ -60,6 +60,9 @@ foreach($fields as $key => $field) {
 
 			case 'string':
 				$options['type'] = 'string';
+				if (array_key_exists('length', $field)) {
+					$options['maxlength'] = $field['length'];
+				}
 				break;
 				
 			case 'text':

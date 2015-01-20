@@ -13,9 +13,11 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-App::uses('AppModel', 'Model');
-class TrainingFieldStudy extends AppModel {
-	public $actsAs = array('FieldOption');
+
+App::uses('FieldOptionValue', 'Model');
+
+class TrainingFieldStudy extends FieldOptionValue {
+	public $useTable = 'field_option_values';
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -30,16 +32,5 @@ class TrainingFieldStudy extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-	public $hasMany = array('TrainingCourse');
-
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingFieldStudy.order')));
-		$list = array();
-		foreach($data as $obj){
-			$list[$obj['TrainingFieldStudy']['id']] = $obj['TrainingFieldStudy']['name'];
-		}
-
-		return $list;
-	}
-	
+	public $hasMany = array('Training.TrainingCourse');
 }
