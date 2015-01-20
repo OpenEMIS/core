@@ -37,6 +37,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			<tr>
 				<th><?php echo $this->Paginator->sort('Staff.identification_no', __('OpenEMIS ID')) ?></th>
 				<th><?php echo $this->Paginator->sort('Staff.first_name', __('Name')) ?></th>
+				<th><?php echo $this->Paginator->sort('StaffIdentity.number', __($defaultIdentity['name'])) ?></th>
 				<th><?php echo __('Position') ?></th>
 				<th><?php echo $this->Paginator->sort('StaffStatus.name', __('Status')) ?></th>
 			</tr>
@@ -56,6 +57,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			<tr>
 				<td><?php echo $identificationNo; ?></td>
 				<td><?php echo $name; ?></td>
+				<td><?php echo $obj['StaffIdentity']['number']; ?></td>
 				<td><?php echo $positionList[$obj['InstitutionSitePosition']['staff_position_title_id']]; ?></td>
 				<td><?php echo $obj['StaffStatus']['name']; ?></td>
 			</tr>

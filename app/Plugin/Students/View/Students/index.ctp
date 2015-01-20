@@ -20,8 +20,9 @@ $model = 'Student';
 			<tr>
 				<th><?php echo $this->Paginator->sort('identification_no', __('OpenEMIS ID')) ?></th>
 				<th><?php echo $this->Paginator->sort('first_name', __('Name')) ?></th>
-				<th><?php echo $this->Paginator->sort('gender') ?></th>
-				<th><?php echo $this->Paginator->sort('date_of_birth') ?></th>
+				<th><?php echo $this->Paginator->sort('StudentIdentity.number', __($defaultIdentity['name'])) ?></th>
+				<th><?php echo __('School Name') ?></th>
+				<th><?php echo __('Status') ?></th>
 			</tr>
 		</thead>
 		
@@ -35,14 +36,16 @@ $model = 'Student';
 				$thirdName = $this->Utility->highlight($search, $obj[$model]['third_name'].((isset($obj[$model]['history_third_name']))?'<br>'.$obj[$model]['history_third_name']:''));
 				$lastName = $this->Utility->highlight($search, $obj[$model]['last_name'].((isset($obj[$model]['history_last_name']))?'<br>'.$obj[$model]['history_last_name']:''));
 				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
-				$gender = $obj[$model]['gender'];
-				$birthday = $obj[$model]['date_of_birth'];
+				$identity = (isset($obj['StudentIdentity'])) ? $obj['StudentIdentity']['number'] : '';
+				$schoolName = (isset($obj['InstitutionSite'])) ? $obj['InstitutionSite']['name'] : '';
+				$status = (isset($obj['StudentStatus'])) ? $obj['StudentStatus']['name'] : '';
 		?>
 			<tr>
 				<td><?php echo $identificationNo; ?></td>
 				<td><?php echo $name; ?></td>
-				<td><?php echo $gender; ?></td>
-				<td><?php $this->Utility->formatDate($birthday); ?></td>
+				<td><?php echo $identity; ?></td>
+				<td><?php echo $schoolName; ?></td>
+				<td><?php echo $status; ?></td>
 			</tr>
 		<?php endforeach ?>
 		</tbody>
