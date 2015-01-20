@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class CustomField2Component extends Component {
 	private $controller;
 
-	public $components = array('Session', 'Message');
+	public $components = array('Session', 'Message', 'Auth');
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(Controller $controller) {
@@ -36,6 +36,7 @@ class CustomField2Component extends Component {
 			$this->controller->set('Custom_' . $key, $base);
 		}
 		$this->controller->set('viewType', $this->settings['viewType']);
+		$this->Auth->allow('listing', 'download');
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
@@ -625,5 +626,97 @@ class CustomField2Component extends Component {
 
 		$this->controller->set('selectedModule', $selectedModule);
 		$this->doRender('preview');
+    }
+
+    public function listing() {
+		$this->controller->autoRender = false;
+
+    	$params = $this->controller->params->named;
+
+		$selectedModule = $this->checkModule();
+		if(!is_null($selectedModule)) {
+			$groupsConditions = array(
+				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
+			);
+		} else {
+			$groupsConditions = array();
+		}
+
+		$this->controller->paginate['conditions'] = $groupsConditions;
+    	$this->controller->paginate['order'] = array(
+    		$this->Group->alias.'.name' => 'asc'
+    	);
+    	$this->controller->paginate['limit'] = isset($params['limit']) ? $params['limit'] : 20;
+    	$this->controller->paginate['page'] = isset($params['page']) ? $params['page'] : 1;
+    	$this->controller->paginate['findType'] = 'list';
+
+		$this->controller->Paginator->settings = $this->controller->paginate;
+
+		try {
+			$templates = $this->controller->Paginator->paginate($this->Group->alias);
+
+			$result = array();
+			if(!empty($templates)) {
+				$protocol = $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://';
+				$host = $_SERVER['HTTP_HOST'];
+				$url = $protocol . $host . $this->controller->webroot . $this->controller->params->controller . '/download/';
+
+				$list = array();
+				foreach ($templates as $key => $template) {
+					$list[] = array(
+						'id' => $key,
+						'name' => $template
+					);
+				}
+
+				$requestPaging = $this->controller->request['paging'][$this->Group->alias];
+				$result['total'] = $requestPaging['count'];
+				$result['page'] = $requestPaging['page'];
+				$result['limit'] = $requestPaging['limit'];
+				$result['list'] = $list;
+				$result['url'] = $url;
+			}
+		} catch (NotFoundException $e) {
+			$this->controller->log($e->getMessage(), 'debug');
+			$result['list'] = array();
+		}
+
+    	return json_encode($result);
+    }
+
+    public function download($id=0, $format="xform", $output=true) {
+    	$fieldContains = array();
+		$fieldContains = isset($this->FieldOption) ? array_merge(array($this->FieldOption->alias), $fieldContains) : $fieldContains;
+		//$fieldContains = isset($this->TableColumn) ? array_merge(array($this->TableColumn->alias), $fieldContains) : $fieldContains;
+		//$fieldContains = isset($this->TableRow) ? array_merge(array($this->TableRow->alias), $fieldContains) : $fieldContains;
+		$this->Field->contain($fieldContains);
+		$data = $this->Field->find('all', array(
+			'conditions' => array(
+				$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $id,
+				$this->Field->alias.'.visible' => 1
+			),
+			'order' => array(
+				$this->Field->alias.'.order', 
+				$this->Field->alias.'.name'
+			)
+		));
+
+		$this->controller->set('data', $data);
+		$render = false;
+		if ($output) { // true = output to screen
+			switch ($format) {
+				case 'xform':
+					$this->controller->layout = false;
+					$render = 'xform';
+					break;
+				default:
+					break;
+			}
+		} else { // download as file
+
+		}
+		if ($render !== false) {
+			$this->doRender($render);
+		}
     }
 }
