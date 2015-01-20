@@ -33,6 +33,10 @@ class InfrastructureCustomField extends InfrastructureAppModel {
 		)
 	);
 	
+	public $hasMany = array(
+		'InfrastructureCustomFieldOption'
+	);
+	
 	public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
