@@ -30,8 +30,8 @@ class SurveyQuestionsController extends SurveysAppController {
 				'Group' => 'Surveys.SurveyTemplate',
 				'Field' => 'Surveys.SurveyQuestion',
 				'FieldOption' => 'Surveys.SurveyQuestionChoice',
-				'TableRow' => 'Surveys.SurveyTableRow',
-				'TableColumn' => 'Surveys.SurveyTableColumn'
+				'TableColumn' => 'Surveys.SurveyTableColumn',
+				'TableRow' => 'Surveys.SurveyTableRow'
 			)
 		)
 	);
