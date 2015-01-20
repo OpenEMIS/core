@@ -19,7 +19,7 @@ echo $this->element('census/year_options');
 <div id="attendance" class="dataDisplay">
 	<div class="row school_days">
 		<div class="label"><?php echo __('School Days'); ?></div>
-		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
+		<div class="value"><input type="text" class="form-control" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
 	<?php foreach ($data['programmeData'] as $programmeId => $programmeData) { ?>
 		<fieldset class="section_group">
