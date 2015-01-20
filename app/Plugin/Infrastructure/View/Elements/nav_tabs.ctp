@@ -1,8 +1,8 @@
 <?php
 $options = array(
-	'Categories' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => 'Infrastructure'),
-	'Types' => array('controller' => 'InfrastructureTypes', 'action' => 'index', 'plugin' => 'Infrastructure'),
-	'Custom Fields' => '#'
+	'Categories' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false),
+	'Types' => array('controller' => 'InfrastructureTypes', 'action' => 'index', 'plugin' => false),
+	'Custom Fields' => array('controller' => 'InfrastructureCustomFields', 'action' => 'index', 'plugin' => false)
 );
 
 $currentPage = isset($currentTab) ? $currentTab : 'Categories';
