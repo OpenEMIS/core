@@ -8,15 +8,15 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Infrastructure') . ' - ' . $category['InfrastructureCategory']['name']);
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $categoryId), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'add', $categoryId));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'InstitutionSiteInfrastructure', 'add', $categoryId));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
-echo $this->Form->create($model, $formOptions);
+echo $this->Form->create('InstitutionSiteInfrastructure', $formOptions);
 
 if(!empty($parentCategory)){
 	$labelOptions['text'] = __($parentCategory['InfrastructureCategory']['name']);
@@ -58,8 +58,10 @@ echo $this->Form->input('infrastructure_condition_id', array(
 
 echo $this->Form->input('comment', array('onkeyup' => 'utility.charLimit(this)', 'type' => 'textarea'));
 
+echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $categoryId)));
+
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId)));
 echo $this->Form->end();
 
 $this->end(); 

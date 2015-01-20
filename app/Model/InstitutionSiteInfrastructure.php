@@ -36,7 +36,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 	);
 	
 	public $hasMany = array(
-		'InstitutionSiteInfrastructureCustomValues'
+		'InstitutionSiteInfrastructureCustomValue'
 	);
 	
 	public $validate = array(
@@ -166,14 +166,30 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$ownershipOptions = $this->InfrastructureOwnership->getList(1);
 		$conditionOptions = $this->InfrastructureCondition->getList(1);
 		
+		// custom fields start
+		$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+		$model = 'InfrastructureCustomField';
+		$modelOption = 'InfrastructureCustomFieldOption';
+		$modelValue = 'InstitutionSiteInfrastructureCustomValue';
+		$modelRow = '';
+		$modelColumn = '';
+		$modelCell = '';
+		$action = 'edit';
+		$viewType = 'form';
+		
+		$this->setVar(compact('data', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action', 'viewType'));
+		// custom fields end
+		
 		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 		
 		if($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data['InstitutionSiteInfrastructure'];
 			$postData['institution_site_id'] = $institutionSiteId;
 			$postData['infrastructure_category_id'] = $categoryId;
-			
-			if ($this->saveAll($postData)) {
+			//pr($this->request->data['InstitutionSiteInfrastructureCustomValue']);die;
+			$customData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data['InstitutionSiteInfrastructureCustomValue']);
+			pr($customData);die;
+			if ($this->saveAll($postData) && $this->InstitutionSiteInfrastructureCustomValue->saveAll($customData)) {	
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId));
 			}
