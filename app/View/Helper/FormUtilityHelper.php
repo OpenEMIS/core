@@ -106,28 +106,26 @@ class FormUtilityHelper extends AppHelper {
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
 		$_options = array(
 			'id' => 'date',
-			'data-date' => date('d-m-Y'),
 			'data-date-format' => $dateFormat,
 			'data-date-autoclose' => 'true',
 			'label' => false,
 			'disabled' => false
 		);
-		if(!empty($options)) {
-			$_options = array_merge($_options, $options);
-		}
-		
 		$label = $_options['label'];
 		unset($_options['label']);
 		$disabled = $_options['disabled'];
 		unset($_options['disabled']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
+		if(!empty($options)) {
+			$_options = array_merge($_options, $options);
+		}
 		$defaults = $this->Form->inputDefaults();
 		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
-			'value' => $_options['data-date']
+			'value' => isset($_options['data-date'])?$_options['data-date']:date('d-m-Y')
 		);
 		if($label !== false) {
 			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
