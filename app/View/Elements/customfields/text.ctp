@@ -46,18 +46,35 @@
 		} else {
 			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;
 		}
-		$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
-		echo $this->Form->input("$modelValue.textbox.$modelId.value", array(
-			'class' => 'form-control',
-			'div' => 'row form-group',
-			'between' => '<div class="col-md-4">',
-			'after' => '</div>',
-			'label' => $labelOptions,
-			'error' => false,
-			'value' => $value
-		));
-		$customFieldName = "$modelValue.$modelId.text_value";
-		$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
-		echo $error;
+		
+		if($pageType == 'view') {
+		?>
+		<div class="row">
+			<div class="col-md-3"><?php echo $obj[$model]['name']; ?></div>
+			<div class="col-md-6"><?php echo $value; ?></div>
+		</div>
+		<?php
+		}else{
+			echo $this->Form->hidden("$modelValue.textbox.$modelId.type", array('value' => $obj[$model]['type']));
+			if(isset($obj[$model]['is_mandatory'])) {
+				echo $this->Form->hidden("$modelValue.textbox.$modelId.is_mandatory", array('value' => $obj[$model]['is_mandatory']));
+			}
+			if(isset($obj[$model]['is_unique'])) {
+				echo $this->Form->hidden("$modelValue.textbox.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
+			}
+			$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
+			echo $this->Form->input("$modelValue.textbox.$modelId.value", array(
+				'class' => 'form-control',
+				'div' => 'row form-group',
+				'between' => '<div class="col-md-4">',
+				'after' => '</div>',
+				'label' => $labelOptions,
+				'error' => false,
+				'value' => $value
+			));
+			$customFieldName = "$modelValue.$modelId.text_value";
+			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
+			echo $error;
+		}
 	?>
 <?php endif ?>
