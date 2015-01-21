@@ -17,6 +17,7 @@ $formOptions = $this->FormUtility->getFormOptions(array('action' => 'Institution
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create('InstitutionSiteInfrastructure', $formOptions);
+echo $this->Form->hidden('infrastructure_category_id', array('value' => $categoryId));
 
 if(!empty($parentCategory)){
 	$labelOptions['text'] = __($parentCategory['InfrastructureCategory']['name']);
