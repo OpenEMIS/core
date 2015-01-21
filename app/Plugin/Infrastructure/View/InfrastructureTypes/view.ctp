@@ -3,12 +3,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Types'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', 'category_id' => $data[$model]['infrastructure_category_id']), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', $data[$model]['infrastructure_category_id']), array('class' => 'divider'));
 if ($_edit) {
 	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
 if($_delete) {
-	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 $this->start('contentBody');
