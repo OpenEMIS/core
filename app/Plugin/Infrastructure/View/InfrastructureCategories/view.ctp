@@ -8,7 +8,7 @@ if ($_edit) {
 	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
 if ($_delete) {
-	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 $this->start('contentBody');
