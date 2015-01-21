@@ -63,19 +63,19 @@
 				echo $this->Form->hidden("$modelValue.number.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
 			}
 			$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
+			
+			$customFieldName = "$modelValue.$modelId.int_value";
+			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
 			echo $this->Form->input("$modelValue.number.$modelId.value", array(
 				'class' => 'form-control number',
 				'div' => 'row form-group',
 				'between' => '<div class="col-md-4">',
-				'after' => '</div>',
+				'after' => '</div>' . $error,
 				'label' => $labelOptions,
 				'error' => false,
 				'onkeypress' => 'return utility.integerCheck(event)',
 				'value' => $value
 			));
-			$customFieldName = "$modelValue.$modelId.int_value";
-			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
-			echo $error;
 		}
 	?>
 <?php endif ?>
