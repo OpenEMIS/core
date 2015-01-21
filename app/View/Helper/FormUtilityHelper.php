@@ -244,21 +244,19 @@ class FormUtilityHelper extends AppHelper {
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
-				}
-				if($i < count($path) - 1) {
-					$inputOptions['disabled'] = true;
-					$options = array($this->Label->get('Area.select')) + $options;
-				}else{
-					$inputOptions['disabled'] = false;
-					if(isset($userAreas)&&count($userAreas)>0){
-						$options = array();
-						foreach($userAreas as $ua){
-							$options[$ua['area_id']] = $ua['area_name'];
-						}				
-						$options = array($this->Label->get('Area.select')) + $options;
+					if($i < count($path) - 1) {
+						$options = array($obj[$model]['id'] => $obj[$model]['name']);
 					}else{
+						if(isset($userAreas)&&count($userAreas)>0){
+							$options = array();
+							foreach($userAreas as $ua){
+								$options[$ua['area_id']] = $ua['area_name'];
+							}				
+						}
 						$options = array($this->Label->get('Area.select')) + $options;
 					}
+				}else{
+					$options = array($this->Label->get('Area.select')) + $options;	
 				}
 				$inputOptions['options'] = $options;
 				$label = $inputDefaults['label'];
