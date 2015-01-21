@@ -63,18 +63,17 @@
 				echo $this->Form->hidden("$modelValue.textbox.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
 			}
 			$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
+			$customFieldName = "$modelValue.$modelId.text_value";
+			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
 			echo $this->Form->input("$modelValue.textbox.$modelId.value", array(
 				'class' => 'form-control',
 				'div' => 'row form-group',
 				'between' => '<div class="col-md-4">',
-				'after' => '</div>',
+				'after' => '</div>' . $error,
 				'label' => $labelOptions,
 				'error' => false,
 				'value' => $value
 			));
-			$customFieldName = "$modelValue.$modelId.text_value";
-			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
-			echo $error;
 		}
 	?>
 <?php endif ?>
