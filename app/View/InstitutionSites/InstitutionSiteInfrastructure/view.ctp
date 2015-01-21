@@ -8,7 +8,7 @@ if ($_edit) {
     echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'InstitutionSiteInfrastructure', 'edit', $id), array('class' => 'divider'));
 }
 if ($_delete) {
-	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'InstitutionSiteInfrastructure', 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'InstitutionSiteInfrastructure', 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 
@@ -25,12 +25,12 @@ $this->start('contentBody');
 	</div>
 <?php endforeach; ?>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
-	<div class="col-md-6"><?php echo $commonFieldsData['InstitutionSiteInfrastructure']['name']; ?></div>
-</div>
-<div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('general.code'); ?></div>
 	<div class="col-md-6"><?php echo $commonFieldsData['InstitutionSiteInfrastructure']['code']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
+	<div class="col-md-6"><?php echo $commonFieldsData['InstitutionSiteInfrastructure']['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('general.type'); ?></div>

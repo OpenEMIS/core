@@ -38,6 +38,40 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+	
+	public function beforeValidate($options=array()) {
+		$modelValue = $this->alias;
+		$this->validator()->remove('text_value');
+		$this->validator()->remove('textarea_value');
+		$this->validator()->remove('int_value');
+
+		switch($this->data[$modelValue]['type']) {
+			case 2: //Text
+				$fieldName = 'text_value';
+				break;
+			case 5:	//Textarea
+				$fieldName = 'textarea_value';
+				break;
+			case 6:	//Number
+				$fieldName = 'int_value';
+				break;
+		}
+
+		if(isset($this->data[$modelValue]['is_mandatory']) && $this->data[$modelValue]['is_mandatory'] == 1) {
+			$this->validator()->add($fieldName, 'required', array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a value'
+			));
+		}
+
+		if(isset($this->data[$modelValue]['is_unique']) && $this->data[$modelValue]['is_unique'] == 1) {
+			$this->validator()->add($fieldName, 'unique', array(
+				'rule' => array('checkUnique', array('institution_site_id', 'infrastructure_custom_field_id', $fieldName), false),
+				'message' => 'Please enter a unique value'
+			));
+		}
+	}
 
 	public function prepareDataBeforeSave($requestData) {
 		//pr($requestData);die;
@@ -75,29 +109,6 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
 		}
 
 		return $result;
-	}
-	
-	public function prepareCustomFieldsDataValues($result) {
-		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
-		$modelCell = $this->settings[$model->alias]['customfields']['modelCell'];
-
-		$tmp = array();
-
-		if(isset($result[$modelValue])) {
-			foreach ($result[$modelValue] as $key => $obj) {
-				$surveyQuestionId = $obj['survey_question_id'];
-				$tmp[$surveyQuestionId][] = $obj;
-			}
-		}
-
-		if(isset($result[$modelCell])) {
-			foreach ($result[$modelCell] as $key => $obj) {
-				$surveyQuestionId = $obj['survey_question_id'];
-				$tmp[$surveyQuestionId][] = $obj;
-			}
-		}
-
-		return $tmp;
 	}
 	
 }
