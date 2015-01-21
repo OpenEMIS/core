@@ -4,12 +4,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Types'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'index', 'category_id' => $categoryId), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => 'index', $categoryId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => 'add', 'category_id' => $categoryId));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'add', $categoryId));
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($model, $formOptions);
 
@@ -21,7 +21,7 @@ if (!empty($categoryName)) {
 }
 echo $this->Form->input('visible', array('options' => $visibleOptions));
 
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'index', 'category_id' => $categoryId)));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'index', $categoryId)));
 
 echo $this->Form->end();
 $this->end();

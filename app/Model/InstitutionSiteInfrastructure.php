@@ -147,6 +147,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 		
 		// custom fields start
 		$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+		$dataValues = array();
 		//pr($data);
 		$model = 'InfrastructureCustomField';
 		$modelOption = 'InfrastructureCustomFieldOption';
@@ -157,8 +158,6 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$action = 'edit'; // for survey
 		$viewType = 'form'; // for survey and infrastructure, form/list
 		$pageType = 'form'; // for infrastructure, form/view
-		
-		$this->setVar(compact('data', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action', 'viewType', 'pageType'));
 		// custom fields end
 		
 		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
@@ -173,8 +172,15 @@ class InstitutionSiteInfrastructure extends AppModel {
 			if ($this->saveAll($postData)) {	
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId));
+			}else{
+				$dataValues = $this->prepareCustomFieldsDataValues($postData);
+				$this->request->data = $postData;
+				$this->log($this->validationErrors, 'debug');
+				$this->Message->alert('general.add.failed');
 			}
 		}
+		
+		$this->setVar(compact('data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action', 'viewType', 'pageType'));
 	}
 	
 	public function view($id=0) {
@@ -256,16 +262,17 @@ class InstitutionSiteInfrastructure extends AppModel {
 
 			$this->setVar(compact('id', 'commonFieldsData', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 			
-			$dataSource = $this->getDataSource();
-			$dataSource->begin();
-			$this->InstitutionSiteInfrastructureCustomValue->deleteAll(array(
-				'InstitutionSiteInfrastructureCustomValue.institution_site_infrastructure_id' => $id
-			), false);
-			
 			if($this->request->is('post') || $this->request->is('put')) {
 				//$postData = $this->request->data['InstitutionSiteInfrastructure'];
 				$postData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data);
 				//pr($postData);die;
+				
+				$dataSource = $this->getDataSource();
+				$dataSource->begin();
+				$this->InstitutionSiteInfrastructureCustomValue->deleteAll(array(
+					'InstitutionSiteInfrastructureCustomValue.institution_site_infrastructure_id' => $id
+				), false);
+			
 				if ($this->saveAll($postData)) {
 					$dataSource->commit();
 					
@@ -273,12 +280,12 @@ class InstitutionSiteInfrastructure extends AppModel {
 					$this->redirect(array('action' => $this->alias, 'view', $id));
 				}else {
 					$dataSource->rollback();
-					$dataValues = $this->prepareFormatedDataValues($surveyData);
+					
+					$dataValues = $this->prepareCustomFieldsDataValues($postData);
 					$this->log($this->validationErrors, 'debug');
+					$this->Message->alert('general.edit.failed');
 				}
-				
-				$this->request->data['SchoolYear']['name'] = $commonFieldsData['SchoolYear']['name'];
-			} else {
+			}else{
 				$this->request->data = $commonFieldsData;
 			}
 			
@@ -289,13 +296,26 @@ class InstitutionSiteInfrastructure extends AppModel {
 		}
 	}
 
-	public function delete($id = NULL, $cascade = true) {
+	public function remove() {
 		$this->autoRender = false;
 		$id = $this->Session->read($this->alias.'.id');
 		$obj = $this->findById($id);
-
-		$this->delete($id);
-		$this->Message->alert('general.delete.success');
+		
+		$dataSource = $this->getDataSource();
+		$dataSource->begin();
+		$this->InstitutionSiteInfrastructureCustomValue->deleteAll(array(
+			'InstitutionSiteInfrastructureCustomValue.institution_site_infrastructure_id' => $id
+		), false);
+		
+		if($this->delete($id)) {
+			$dataSource->commit();
+			$this->Message->alert('general.delete.success');
+		} else {
+			$dataSource->rollback();
+			$this->log($this->validationErrors, 'debug');
+			$this->Message->alert('general.delete.failed');
+		}
+		$this->Session->delete($this->alias.'.id');
 		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['infrastructure_category_id']));
 	}
 	
@@ -393,6 +413,20 @@ class InstitutionSiteInfrastructure extends AppModel {
 
 		foreach ($result[$modelValue] as $key => $value) {
 			$tmp[$value['infrastructure_custom_field_id']][] = $value;
+		}
+
+		return $tmp;
+	}
+	
+	public function prepareCustomFieldsDataValues($result) {
+		$modelValue = 'InstitutionSiteInfrastructureCustomValue';
+
+		$tmp = array();
+		if(isset($result[$modelValue])) {
+			foreach ($result[$modelValue] as $key => $obj) {
+				$customFieldId = $obj['infrastructure_custom_field_id'];
+				$tmp[$customFieldId][] = $obj;
+			}
 		}
 
 		return $tmp;
