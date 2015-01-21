@@ -62,7 +62,7 @@
 			if(isset($obj[$model]['is_unique'])) {
 				echo $this->Form->hidden("$modelValue.textbox.$modelId.is_unique", array('value' => $obj[$model]['is_unique']));
 			}
-			$labelOptions = array('text' => $obj[$model]['name'], 'class' => 'col-md-3 control-label');
+			$labelOptions = array('text' => $obj[$model]['name'] .' '.$this->element('customfields/mandatory', compact('obj')), 'class' => 'col-md-3 control-label');
 			$customFieldName = "$modelValue.$modelId.text_value";
 			$error = $this->Form->isFieldError($customFieldName) ? $this->Form->error($customFieldName) : '';
 			echo $this->Form->input("$modelValue.textbox.$modelId.value", array(
