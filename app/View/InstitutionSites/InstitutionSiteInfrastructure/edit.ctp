@@ -5,22 +5,22 @@ echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
 echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $data[$model]['name']);
+$this->assign('contentHeader', $commonFieldsData['InstitutionSiteInfrastructure']['name']);
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'view', $id), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteInfrastructure', 'view', $id), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edit', $id));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'InstitutionSiteInfrastructure', 'edit', $id));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
-echo $this->Form->create($model, $formOptions);
+echo $this->Form->create('InstitutionSiteInfrastructure', $formOptions);
 echo $this->Form->hidden('id');
 
 $labelOptions['text'] = __('Category');
-echo $this->Form->input('category_name', array('value' => $data['InfrastructureCategory']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
+echo $this->Form->input('category_name', array('value' => $commonFieldsData['InfrastructureCategory']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
 
 if(!empty($parentCategory)){
 	$labelOptions['text'] = __($parentCategory['InfrastructureCategory']['name']);
@@ -62,8 +62,9 @@ echo $this->Form->input('infrastructure_condition_id', array(
 
 echo $this->Form->input('comment', array('onkeyup' => 'utility.charLimit(this)', 'type' => 'textarea'));
 
+echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action'));
 
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $id)));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'InstitutionSiteInfrastructure', 'view', $id)));
 echo $this->Form->end();
 
 $this->end(); 

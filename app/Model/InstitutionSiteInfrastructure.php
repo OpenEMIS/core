@@ -122,27 +122,6 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$this->setVar(compact('category', 'categoryName', 'categoryOptions', 'categoryId', 'data', 'parentCategory'));
 	}
 	
-	public function view($id=0) {
-		$this->Navigation->addCrumb('View Infrastructure Details');
-		
-		$data = $this->getInfrastructureWithParent($id);
-		
-		if (!empty($data)) {
-			$this->Session->write($this->alias.'.id', $id);
-			
-			$parents = array();
-			$this->getParents($id, $parents);
-			$parentsInOrder = array_reverse($parents);
-			
-			$categoryId = $data['InfrastructureCategory']['id'];
-			
-			$this->setVar(compact('id', 'data', 'categoryId', 'parentsInOrder'));
-		} else {
-			$this->Message->alert('general.notExists');
-			$this->redirect(array('action' => $this->_action));
-		}
-	}
-	
 	public function add($categoryId=0) {
 		$this->Navigation->addCrumb('Add Infrastructure');
 		
@@ -175,9 +154,9 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$modelRow = '';
 		$modelColumn = '';
 		$modelCell = '';
-		$action = 'edit';
-		$viewType = 'form';
-		$pageType = 'form';
+		$action = 'edit'; // for survey
+		$viewType = 'form'; // for survey and infrastructure, form/list
+		$pageType = 'form'; // for infrastructure, form/view
 		
 		$this->setVar(compact('data', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action', 'viewType', 'pageType'));
 		// custom fields end
@@ -185,52 +164,125 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 		
 		if($this->request->is(array('post', 'put'))) {
-			$postData = $this->request->data['InstitutionSiteInfrastructure'];
-			$postData['institution_site_id'] = $institutionSiteId;
-			$postData['infrastructure_category_id'] = $categoryId;
+			//$postData = $this->request->data['InstitutionSiteInfrastructure'];
+			//$postData['institution_site_id'] = $institutionSiteId;
+			//$postData['infrastructure_category_id'] = $categoryId;
 
-			$customData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data);
-			//pr($customData);die;
-			if ($this->saveAll($postData) && $this->InstitutionSiteInfrastructureCustomValue->saveAll($customData)) {	
+			$postData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data);
+			//pr($postData);die;
+			if ($this->saveAll($postData)) {	
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId));
 			}
+		}
+	}
+	
+	public function view($id=0) {
+		$this->Navigation->addCrumb('View Infrastructure Details');
+		
+		$commonFieldsData = $this->getInfrastructureWithParent($id);
+		
+		if (!empty($commonFieldsData)) {
+			$this->Session->write($this->alias.'.id', $id);
+			
+			$parents = array();
+			$this->getParents($id, $parents);
+			$parentsInOrder = array_reverse($parents);
+			
+			$categoryId = $commonFieldsData['InfrastructureCategory']['id'];
+			
+			$this->setVar(compact('id', 'commonFieldsData', 'categoryId', 'parentsInOrder'));
+			
+			// custom fields start
+			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+			$dataValues = $this->getCustomFieldsValues($id);
+			//pr($data);
+			//pr($dataValues);
+			$model = 'InfrastructureCustomField';
+			$modelOption = 'InfrastructureCustomFieldOption';
+			$modelValue = 'InstitutionSiteInfrastructureCustomValue';
+			$modelRow = '';
+			$modelColumn = '';
+			$modelCell = '';
+			$action = 'edit'; // for survey
+			$viewType = 'form'; // for survey and infrastructure, form/list
+			$pageType = 'view'; // for infrastructure, form/view
+
+			$this->setVar(compact('data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action', 'viewType', 'pageType'));
+			// custom fields end
+		} else {
+			$this->Message->alert('general.notExists');
+			$this->redirect(array('action' => $this->_action));
 		}
 	}
 
 	public function edit($id=0) {
 		$this->Navigation->addCrumb('Edit Infrastructure Details');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$data = $this->getInfrastructureWithParent($id);
+		$commonFieldsData = $this->getInfrastructureWithParent($id);
 
-		if (!empty($data)) {
-			$parentCategory = $this->InfrastructureCategory->getParentCategory($data['InfrastructureCategory']['id']);
+		if (!empty($commonFieldsData)) {
+			$categoryId = $commonFieldsData['InfrastructureCategory']['id'];
+			
+			$parentCategory = $this->InfrastructureCategory->getParentCategory($commonFieldsData['InfrastructureCategory']['id']);
 			if(!empty($parentCategory)){
 				$parentInfraOptions = $this->infrastructureOptionsByCategory($parentCategory['InfrastructureCategory']['id'], $institutionSiteId);
 			}else{
 				$parentInfraOptions = array();
 			}
 
-			$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($data['InfrastructureCategory']['id']);
+			$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($commonFieldsData['InfrastructureCategory']['id']);
 			$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
 			$currentYear = Date('Y');
 			$ownershipOptions = $this->InfrastructureOwnership->getList(1);
 			$conditionOptions = $this->InfrastructureCondition->getList(1);
+			
+			// custom fields start
+			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+			//pr($data);
+			$dataValues = $this->getCustomFieldsValues($id);
+			
+			$model = 'InfrastructureCustomField';
+			$modelOption = 'InfrastructureCustomFieldOption';
+			$modelValue = 'InstitutionSiteInfrastructureCustomValue';
+			$modelRow = '';
+			$modelColumn = '';
+			$modelCell = '';
+			$action = 'edit'; // for survey
+			$viewType = 'form'; // for survey and infrastructure, form/list
+			$pageType = 'form'; // for infrastructure, form/view
 
-			$this->setVar(compact('id', 'data', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
+			// custom fields end
+
+			$this->setVar(compact('id', 'commonFieldsData', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
+			
+			$dataSource = $this->getDataSource();
+			$dataSource->begin();
+			$this->InstitutionSiteInfrastructureCustomValue->deleteAll(array(
+				'InstitutionSiteInfrastructureCustomValue.institution_site_infrastructure_id' => $id
+			), false);
 			
 			if($this->request->is('post') || $this->request->is('put')) {
-				$postData = $this->request->data['InstitutionSiteInfrastructure'];
+				//$postData = $this->request->data['InstitutionSiteInfrastructure'];
+				$postData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data);
 				//pr($postData);die;
 				if ($this->saveAll($postData)) {
+					$dataSource->commit();
+					
 					$this->Message->alert('general.edit.success');
 					$this->redirect(array('action' => $this->alias, 'view', $id));
+				}else {
+					$dataSource->rollback();
+					$dataValues = $this->prepareFormatedDataValues($surveyData);
+					$this->log($this->validationErrors, 'debug');
 				}
 				
-				$this->request->data['SchoolYear']['name'] = $data['SchoolYear']['name'];
+				$this->request->data['SchoolYear']['name'] = $commonFieldsData['SchoolYear']['name'];
 			} else {
-				$this->request->data = $data;
+				$this->request->data = $commonFieldsData;
 			}
+			
+			$this->setVar(compact('data', 'dataValues', 'model', 'modelOption', 'modelValue', 'modelRow', 'modelColumn', 'modelCell', 'action', 'viewType', 'pageType'));
 		} else {
 			$this->Message->alert('general.notExists');
 			$this->redirect(array('action' => $this->alias, 'index'));
@@ -330,5 +382,19 @@ class InstitutionSiteInfrastructure extends AppModel {
 			}
 			
 		}
+	}
+	
+	public function getCustomFieldsValues($id) {
+		$modelValue = 'InstitutionSiteInfrastructureCustomValue';
+
+		$tmp = array();
+		$this->contain(array($modelValue));
+		$result = $this->findById($id);
+
+		foreach ($result[$modelValue] as $key => $value) {
+			$tmp[$value['infrastructure_custom_field_id']][] = $value;
+		}
+
+		return $tmp;
 	}
 }
