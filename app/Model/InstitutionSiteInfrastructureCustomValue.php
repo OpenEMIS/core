@@ -40,12 +40,14 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
 	);
 
 	public function prepareDataBeforeSave($requestData) {
+		//pr($requestData);die;
 		$modelValue = 'InstitutionSiteInfrastructureCustomValue';
 
 		$institutionSiteId = CakeSession::read('InstitutionSite.id');
 
-		$result[$this->alias] = $requestData[$this->alias];
-		$result[$this->alias]['institution_site_id'] = $institutionSiteId;
+		$result['InstitutionSiteInfrastructure'] = $requestData['InstitutionSiteInfrastructure'];
+		$result['InstitutionSiteInfrastructure']['institution_site_id'] = $institutionSiteId;
+		
 		//pr($result);die;
 		$arrFields = array(
 			'textbox' => 'text_value',
@@ -64,7 +66,7 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
             foreach ($requestData[$modelValue][$fieldVal] as $key => $obj) {
             	$index = $key > $index ? $key : $index;
 				$result[$modelValue][$key]['institution_site_id'] = $institutionSiteId;
-            	$result[$modelValue][$key]['survey_question_id'] = $key;
+            	$result[$modelValue][$key]['infrastructure_custom_field_id'] = $key;
             	$result[$modelValue][$key]['type'] = $obj['type'];
 				$result[$modelValue][$key]['is_mandatory'] = $obj['is_mandatory'];
 				$result[$modelValue][$key]['is_unique'] = $obj['is_unique'];
@@ -73,6 +75,29 @@ class InstitutionSiteInfrastructureCustomValue extends AppModel {
 		}
 
 		return $result;
+	}
+	
+	public function prepareCustomFieldsDataValues($result) {
+		$modelValue = $this->settings[$model->alias]['customfields']['modelValue'];
+		$modelCell = $this->settings[$model->alias]['customfields']['modelCell'];
+
+		$tmp = array();
+
+		if(isset($result[$modelValue])) {
+			foreach ($result[$modelValue] as $key => $obj) {
+				$surveyQuestionId = $obj['survey_question_id'];
+				$tmp[$surveyQuestionId][] = $obj;
+			}
+		}
+
+		if(isset($result[$modelCell])) {
+			foreach ($result[$modelCell] as $key => $obj) {
+				$surveyQuestionId = $obj['survey_question_id'];
+				$tmp[$surveyQuestionId][] = $obj;
+			}
+		}
+
+		return $tmp;
 	}
 	
 }
