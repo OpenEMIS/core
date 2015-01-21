@@ -73,3 +73,9 @@ DROP TABLE IF EXISTS `infrastructure_custom_fields`;
 --
 
 DROP TABLE IF EXISTS `infrastructure_custom_field_options`;
+
+--
+-- 10. Table structure for table `institution_site_infrastructure_custom_values`
+--
+
+DROP TABLE IF EXISTS `institution_site_infrastructure_custom_values`;

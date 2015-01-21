@@ -124,7 +124,7 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		$this->set(compact('id', 'visibleOptions', 'category'));
 	}
 	
-	public function delete() {
+	public function remove() {
 		if ($this->Session->check('InfrastructureCategory.id')) {
 			$id = $this->Session->read('InfrastructureCategory.id');
 			if(!empty($id)){
