@@ -141,6 +141,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 		
 		$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($categoryId);
 		$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
+		$yearDisposedOptions = array_merge(array('' => __('Select')), $yearOptions);
 		$currentYear = Date('Y');
 		$ownershipOptions = $this->InfrastructureOwnership->getList(1);
 		$conditionOptions = $this->InfrastructureCondition->getList(1);
@@ -160,7 +161,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$pageType = 'form'; // for infrastructure, form/view
 		// custom fields end
 		
-		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
+		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 		
 		if($this->request->is(array('post', 'put'))) {
 			//$postData = $this->request->data['InstitutionSiteInfrastructure'];
@@ -239,6 +240,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 
 			$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($commonFieldsData['InfrastructureCategory']['id']);
 			$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
+			$yearDisposedOptions = array_merge(array('' => __('Select')), $yearOptions);
 			$currentYear = Date('Y');
 			$ownershipOptions = $this->InfrastructureOwnership->getList(1);
 			$conditionOptions = $this->InfrastructureCondition->getList(1);
@@ -260,7 +262,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 
 			// custom fields end
 
-			$this->setVar(compact('id', 'commonFieldsData', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
+			$this->setVar(compact('id', 'commonFieldsData', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 			
 			if($this->request->is('post') || $this->request->is('put')) {
 				//$postData = $this->request->data['InstitutionSiteInfrastructure'];
