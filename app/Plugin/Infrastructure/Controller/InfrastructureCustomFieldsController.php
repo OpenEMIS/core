@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class InfrastructureCustomFieldsController extends InfrastructureAppController {
 	public $uses = array(
-		'Infrastructure.InfrastructureCategory',
+		'Infrastructure.InfrastructureLevel',
 		'Infrastructure.InfrastructureType'
 	);
 
@@ -24,7 +24,7 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 		'CustomField2' => array(
 			'models' => array(
 				'Module' => NULL,
-				'Group' => 'Infrastructure.InfrastructureCategory',
+				'Group' => 'Infrastructure.InfrastructureLevel',
 				'Field' => 'Infrastructure.InfrastructureCustomField',
 				'FieldOption' => 'Infrastructure.InfrastructureCustomFieldOption',
 				'TableRow' => NULL,
@@ -50,7 +50,7 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Infrastructure', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureCategories', 'action' => 'index'));
+		$this->Navigation->addCrumb('Infrastructure', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureLevels', 'action' => 'index'));
 
 		if($this->action == 'reorder') {
 			$params['action'] = 'index';

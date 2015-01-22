@@ -462,7 +462,7 @@ class LabelHelper extends AppHelper {
 			'time_of_behaviour' => 'Time'
 		),
 		'Infrastructure' => array(
-			'parent_category' => 'Parent Category'
+			'parent_level' => 'Parent Category'
 		),
 		'InstitutionSiteInfrastructure' => array(
 			'infrastructure_type_id' => 'Type',

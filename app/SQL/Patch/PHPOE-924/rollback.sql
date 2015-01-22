@@ -34,7 +34,7 @@ UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @orderDeta
 SET @orderEduProgSecurity := 0;
 SELECT `order` INTO @orderEduProgSecurity FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Education' AND `name` LIKE 'Education Programme Orientations';
 
-DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Categories';
+DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Levels';
 DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Types';
 DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Custom Fields';
 
@@ -44,7 +44,7 @@ UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` > @orderEduP
 -- 3. infrastructure_categories
 --
 
-ALTER TABLE `infrastructure_categories` DROP `parent_id` ;
+DROP TABLE IF EXISTS `infrastructure_levels`;
 
 --
 -- 4. `infrastructure_types`

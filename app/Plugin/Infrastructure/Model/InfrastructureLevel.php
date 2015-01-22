@@ -14,7 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class InfrastructureCategory extends InfrastructureAppModel {
+class InfrastructureLevel extends InfrastructureAppModel {
 	public $actsAs = array('Reorder');
 	
 	public $belongsTo = array(
@@ -41,20 +41,20 @@ class InfrastructureCategory extends InfrastructureAppModel {
 		)
 	);
 	
-	public function getCategoryOptions(){
+	public function getLevelOptions(){
 		$data = $this->find('list', array(
-			'conditions' => array('InfrastructureCategory.visible' => 1),
-			'order' => array('InfrastructureCategory.parent_id', 'InfrastructureCategory.order')
+			'conditions' => array('InfrastructureLevel.visible' => 1),
+			'order' => array('InfrastructureLevel.parent_id', 'InfrastructureLevel.order')
 		));
 		
 		return $data;
 	}
 	
-	public function getParentCategory($categoryId=0){
-		$category = $this->findById($categoryId);
-		if(!empty($category)){
-			$parentCategory = $this->findById($category['InfrastructureCategory']['parent_id']);
-			return $parentCategory;
+	public function getParentLevel($levelId=0){
+		$level = $this->findById($levelId);
+		if(!empty($level)){
+			$parentLevel = $this->findById($level['InfrastructureLevel']['parent_id']);
+			return $parentLevel;
 		}else{
 			return null;
 		}
