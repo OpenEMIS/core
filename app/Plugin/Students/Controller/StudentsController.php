@@ -146,7 +146,7 @@ class StudentsController extends StudentsAppController {
 		$this->set('header', __('Advanced Search'));
 
 		$IdentityType = ClassRegistry::init('IdentityType');
-		$identityTypeOptions = $IdentityType->findList();
+		$identityTypeOptions = $IdentityType->getList();
 
 		if ($this->request->is('get')) {
 			if ($this->request->is('ajax')) {
@@ -193,7 +193,7 @@ class StudentsController extends StudentsAppController {
 		
 		$instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
 		$dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
-		$types = $this->InstitutionSiteType->findList(1);
+		$types = $this->InstitutionSiteType->getList();
 		$this->set("customfields",array($customfields));
 		$this->set('types',  $types);	
 		$this->set('typeSelected',  $sitetype);
@@ -274,7 +274,8 @@ class StudentsController extends StudentsAppController {
 						$id = $this->Student->getLastInsertId();
 						$this->Session->write($model . '.id', $id);
 					}
-					
+					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
+					$dataToSite['student_status_id'] = $studentStatusId;
 					$dataToSite['student_id'] = $id;
 					$InstitutionSiteStudentModel->save($dataToSite);
 					

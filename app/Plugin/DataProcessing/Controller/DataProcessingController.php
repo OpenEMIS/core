@@ -871,7 +871,7 @@ class DataProcessingController extends DataProcessingAppController {
                     'conditions' => array('Staff.id = InsitutionSiteStaff.staff_id')
                 ),
                 array(
-                    'table' => 'staff_position_titles','alias' => 'StaffPositionTitle','type' => 'LEFT',
+                    'table' => 'field_option_values','alias' => 'StaffPositionTitle','type' => 'LEFT',
                     'conditions' => array('StaffPositionTitle.id = InsitutionSiteStaff.staff_position_title_id')
                 )";
 
