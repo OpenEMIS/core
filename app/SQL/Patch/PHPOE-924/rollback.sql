@@ -41,7 +41,7 @@ DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `categ
 UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` > @orderEduProgSecurity;
 
 --
--- 3. infrastructure_categories
+-- 3. infrastructure_levels
 --
 
 DROP TABLE IF EXISTS `infrastructure_levels`;
