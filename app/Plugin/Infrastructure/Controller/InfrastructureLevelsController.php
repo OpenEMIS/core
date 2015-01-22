@@ -15,55 +15,55 @@
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
 
-class InfrastructureCategoriesController extends InfrastructureAppController {
+class InfrastructureLevelsController extends InfrastructureAppController {
 	public $uses = array(
-		'Infrastructure.InfrastructureCategory'
+		'Infrastructure.InfrastructureLevel'
 	);
 
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Infrastructure', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureCategories', 'action' => 'index'));
+		$this->Navigation->addCrumb('Infrastructure', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureLevels', 'action' => 'index'));
 		
-		$model = 'InfrastructureCategory';
+		$model = 'InfrastructureLevel';
 		$this->set(compact('model'));
 	}
 
 	public function index(){
-		$this->Navigation->addCrumb('Categories');
+		$this->Navigation->addCrumb('Levels');
 		
 		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
-		$conditions = array('InfrastructureCategory.parent_id' => $parentId);
+		$conditions = array('InfrastructureLevel.parent_id' => $parentId);
 		
-		$data = $this->InfrastructureCategory->find('all', array(
+		$data = $this->InfrastructureLevel->find('all', array(
 			'conditions' => $conditions, 
-			'order' => array('InfrastructureCategory.order')
+			'order' => array('InfrastructureLevel.order')
 		));
 		
 		$breadcrumbs = array();
 		$this->generatebreadcrumbs($parentId, $breadcrumbs);
 		$breadcrumbs = array_reverse($breadcrumbs);
 		
-		$currentTab = 'Categories';
+		$currentTab = 'Levels';
 		
 		$this->set(compact('data', 'parentId', 'breadcrumbs', 'currentTab'));
 	}
 
 	public function view() {
-		$this->Navigation->addCrumb('Category Details');
+		$this->Navigation->addCrumb('Level Details');
 
 		$id = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
 		
-		if ($this->InfrastructureCategory->exists($id)) {
-			$data = $this->InfrastructureCategory->findById($id);
-			$this->Session->write('InfrastructureCategory.id', $id);
+		if ($this->InfrastructureLevel->exists($id)) {
+			$data = $this->InfrastructureLevel->findById($id);
+			$this->Session->write('InfrastructureLevel.id', $id);
 			
 			if(!empty($data)){
-				$parentCategory = $this->InfrastructureCategory->findById($data['InfrastructureCategory']['parent_id']);
+				$parentLevel = $this->InfrastructureLevel->findById($data['InfrastructureLevel']['parent_id']);
 			}
 			
-			$this->set(compact('data', 'parentCategory'));
+			$this->set(compact('data', 'parentLevel'));
 		} else {
 			$this->Message->alert('general.view.notExists');
 			return $this->redirect(array('action' => 'index'));
@@ -71,19 +71,19 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 	}
 	
 	public function add() {
-		$this->Navigation->addCrumb('Add Category');
+		$this->Navigation->addCrumb('Add Level');
 		
 		$visibleOptions = $this->Option->get('yesno');
 		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
-		$parentCategory = $this->InfrastructureCategory->findById($parentId);
+		$parentLevel = $this->InfrastructureLevel->findById($parentId);
 
-		$parentName = !empty($parentCategory) ? $parentCategory['InfrastructureCategory']['name'] : '';
+		$parentName = !empty($parentLevel) ? $parentLevel['InfrastructureLevel']['name'] : '';
 		
 		if ($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
-			$this->InfrastructureCategory->create();
+			$this->InfrastructureLevel->create();
 			
-			if ($this->InfrastructureCategory->save($postData)) {
+			if ($this->InfrastructureLevel->save($postData)) {
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'index', 'parent_id' => $parentId));
 			} else {
@@ -96,21 +96,21 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 	}
 
 	public function edit() {
-		$this->Navigation->addCrumb('Edit Category');
+		$this->Navigation->addCrumb('Edit Level');
 		
 		$id = isset($this->params->pass[0]) ? $this->params->pass[0] : 0;
 		
-		$data = $this->InfrastructureCategory->findById($id);
+		$data = $this->InfrastructureLevel->findById($id);
 		$visibleOptions = $this->Option->get('yesno');
 		
 		if(!empty($data)){
-			$category = $this->InfrastructureCategory->findById($data['InfrastructureCategory']['parent_id']);
+			$level = $this->InfrastructureLevel->findById($data['InfrastructureLevel']['parent_id']);
 		}
 
 		if ($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
 
-			if ($this->InfrastructureCategory->save($postData)) {
+			if ($this->InfrastructureLevel->save($postData)) {
 				$this->Message->alert('general.edit.success');
 				return $this->redirect(array('action' => 'view', $id));
 			} else {
@@ -121,18 +121,18 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 			$this->request->data = $data;
 		}
 		
-		$this->set(compact('id', 'visibleOptions', 'category'));
+		$this->set(compact('id', 'visibleOptions', 'level'));
 	}
 	
 	public function remove() {
-		if ($this->Session->check('InfrastructureCategory.id')) {
-			$id = $this->Session->read('InfrastructureCategory.id');
+		if ($this->Session->check('InfrastructureLevel.id')) {
+			$id = $this->Session->read('InfrastructureLevel.id');
 			if(!empty($id)){
-				$category = $this->InfrastructureCategory->findById($id);
-				$parentId = $category['InfrastructureCategory']['parent_id'];
+				$level = $this->InfrastructureLevel->findById($id);
+				$parentId = $level['InfrastructureLevel']['parent_id'];
 			}
 
-			$this->InfrastructureCategory->deleteAll(array('InfrastructureCategory.id' => $id));
+			$this->InfrastructureLevel->deleteAll(array('InfrastructureLevel.id' => $id));
 			$this->Message->alert('general.delete.success');
 			$this->redirect(array('action' => 'index', 'parent_id' => !empty($parentId) ? $parentId : 0));
 		} else {
@@ -140,16 +140,16 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		}
 	}
 	
-	private function generatebreadcrumbs($categoryId, &$arr){
-		$category = $this->InfrastructureCategory->findById($categoryId);
+	private function generatebreadcrumbs($levelId, &$arr){
+		$level = $this->InfrastructureLevel->findById($levelId);
 
-		if(!empty($category)){
+		if(!empty($level)){
 			$arr[] = array(
-				'id' => $category['InfrastructureCategory']['id'],
-				'name' => $category['InfrastructureCategory']['name']
+				'id' => $level['InfrastructureLevel']['id'],
+				'name' => $level['InfrastructureLevel']['name']
 			);
 			
-			$parentId = $category['InfrastructureCategory']['parent_id'];
+			$parentId = $level['InfrastructureLevel']['parent_id'];
 			if(!empty($parentId)){
 				$this->generatebreadcrumbs($parentId, $arr);
 			}
@@ -157,21 +157,21 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 	}
 	
 	public function reorder() {
-		$this->Navigation->addCrumb('Categories');
+		$this->Navigation->addCrumb('Levels');
 		
 		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
-		$conditions = array('InfrastructureCategory.parent_id' => $parentId);
+		$conditions = array('InfrastructureLevel.parent_id' => $parentId);
 		
-		$data = $this->InfrastructureCategory->find('all', array(
+		$data = $this->InfrastructureLevel->find('all', array(
 			'conditions' => $conditions, 
-			'order' => array('InfrastructureCategory.order')
+			'order' => array('InfrastructureLevel.order')
 		));
 		
 		$breadcrumbs = array();
 		$this->generatebreadcrumbs($parentId, $breadcrumbs);
 		$breadcrumbs = array_reverse($breadcrumbs);
 		
-		$currentTab = 'Categories';
+		$currentTab = 'Levels';
 		
 		$this->set(compact('data', 'parentId', 'breadcrumbs', 'currentTab'));
 	}
@@ -180,8 +180,8 @@ class InfrastructureCategoriesController extends InfrastructureAppController {
 		$this->autoRender = false;
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$conditions = array('InfrastructureCategory.parent_id' => $this->params->named['parent_id']);
-			$this->InfrastructureCategory->moveOrder($data, $conditions);
+			$conditions = array('InfrastructureLevel.parent_id' => $this->params->named['parent_id']);
+			$this->InfrastructureLevel->moveOrder($data, $conditions);
 			$redirect = array('action' => 'reorder', 'parent_id' => $this->params->named['parent_id']);
 			return $this->redirect($redirect);
 		}

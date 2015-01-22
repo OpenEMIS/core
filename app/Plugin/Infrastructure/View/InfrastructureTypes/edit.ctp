@@ -15,9 +15,9 @@ echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->hidden('id');
 echo $this->Form->input('name', array('type' => 'text'));
-if (!empty($category)) {
-	echo $this->Form->hidden('infrastructure_category_id', array('value' => $category['InfrastructureCategory']['id']));
-	echo $this->Form->input('category_name', array('value' => $category['InfrastructureCategory']['name'], 'disabled' => 'disabled'));
+if (!empty($level)) {
+	echo $this->Form->hidden('infrastructure_level_id', array('value' => $level['InfrastructureLevel']['id']));
+	echo $this->Form->input('level_name', array('value' => $level['InfrastructureLevel']['name'], 'disabled' => 'disabled'));
 }
 echo $this->Form->input('visible', array('options' => $visibleOptions));
 

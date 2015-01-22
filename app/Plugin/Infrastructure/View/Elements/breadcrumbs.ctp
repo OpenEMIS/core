@@ -1,6 +1,6 @@
 <?php 
 if(empty($rootUrl)){
-	$rootUrl = array('controller' => 'InfrastructureCategory', 'action' => 'index', 'plugin' => false);
+	$rootUrl = array('controller' => 'InfrastructureLevel', 'action' => 'index', 'plugin' => false);
 }
 
 if(empty($rootName)){

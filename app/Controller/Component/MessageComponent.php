@@ -168,7 +168,7 @@ class MessageComponent extends Component {
 			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.')
 		),
 		'InstitutionSiteInfrastructure' => array(
-			'noCategory' => array('type' => 'warn', 'msg' => 'There are no category created.')
+			'noLevel' => array('type' => 'warn', 'msg' => 'There are no category created.')
 		),
 		'Survey' => array(
 			'save' => array(

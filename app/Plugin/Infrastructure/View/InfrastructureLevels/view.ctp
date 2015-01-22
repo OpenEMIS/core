@@ -1,6 +1,6 @@
 <?php
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Categories'));
+$this->assign('contentHeader', __('Levels'));
 
 $this->start('contentActions');
 echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', 'parent_id' => $data[$model]['parent_id']), array('class' => 'divider'));
@@ -22,10 +22,10 @@ echo $this->element('breadcrumbs');
 	<div class="col-md-3"><?php echo __('Visible'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['visible'] == 1 ? __('Yes') : __('No'); ?></div>
 </div>
-<?php if (!empty($parentCategory)) { ?>
+<?php if (!empty($parentLevel)) { ?>
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Category'); ?></div>
-		<div class="col-md-6"><?php echo $parentCategory['InfrastructureCategory']['name']; ?></div>
+		<div class="col-md-3"><?php echo __('Level'); ?></div>
+		<div class="col-md-6"><?php echo $parentLevel['InfrastructureLevel']['name']; ?></div>
 	</div>
 <?php } ?>
 <div class="row">

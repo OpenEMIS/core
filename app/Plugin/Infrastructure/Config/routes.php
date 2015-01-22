@@ -1,6 +1,6 @@
 <?php
-Router::connect('/InfrastructureCategories', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureCategories'));
-Router::connect('/InfrastructureCategories/:action/*', array('plugin'=>'Infrastructure', 'controller' => 'InfrastructureCategories'));
+Router::connect('/InfrastructureLevels', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureLevels'));
+Router::connect('/InfrastructureLevels/:action/*', array('plugin'=>'Infrastructure', 'controller' => 'InfrastructureLevels'));
 
 Router::connect('/InfrastructureTypes', array('plugin' => 'Infrastructure', 'controller' => 'InfrastructureTypes'));
 Router::connect('/InfrastructureTypes/:action/*', array('plugin'=>'Infrastructure', 'controller' => 'InfrastructureTypes'));

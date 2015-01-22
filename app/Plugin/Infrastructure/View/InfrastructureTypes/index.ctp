@@ -4,10 +4,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Types'));
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', $categoryId, 'plugin' => false), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', $levelId, 'plugin' => false), array('class' => 'divider'));
 }
 if ($_edit && count($data) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', $categoryId, 'plugin' => false), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'reorder', $levelId, 'plugin' => false), array('class' => 'divider'));
 }
 $this->end();
 
@@ -17,13 +17,13 @@ echo $this->element('nav_tabs');
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		echo $this->Form->input('infrastructure_category_id', array(
-			'id' => 'InfrastructureCategoryId',
+		echo $this->Form->input('infrastructure_level_id', array(
+			'id' => 'InfrastructureLevelId',
 			'label' => false,
 			'div' => false,
 			'class' => 'form-control',
-			'options' => $categoryOptions,
-			'default' => $categoryId,
+			'options' => $levelOptions,
+			'default' => $levelId,
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . '/index'
 		));

@@ -4,7 +4,7 @@ echo $this->Html->css('/Infrastructure/css/infrastructure', 'stylesheet', array(
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Types'));
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'index', $categoryId), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => 'index', $levelId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -13,13 +13,13 @@ echo $this->element('nav_tabs');
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		echo $this->Form->input('infrastructure_category_id', array(
-			'id' => 'InfrastructureCategoryId',
+		echo $this->Form->input('infrastructure_level_id', array(
+			'id' => 'InfrastructureLevelId',
 			'label' => false,
 			'div' => false,
 			'class' => 'form-control',
-			'options' => $categoryOptions,
-			'default' => $categoryId,
+			'options' => $levelOptions,
+			'default' => $levelId,
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . '/index'
 		));
@@ -27,7 +27,7 @@ echo $this->element('nav_tabs');
 	</div>
 </div>
 <?php
-$formOptions = array('controller' => 'InfrastructureTypes', 'action' => 'move', $categoryId, 'plugin' => false);
+$formOptions = array('controller' => 'InfrastructureTypes', 'action' => 'move', $levelId, 'plugin' => false);
 
 echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formOptions));
 echo $this->Form->hidden('id', array('class' => 'option-id'));

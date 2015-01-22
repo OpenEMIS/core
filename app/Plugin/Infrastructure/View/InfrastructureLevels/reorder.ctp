@@ -2,7 +2,7 @@
 echo $this->Html->script('field.option', false);
 echo $this->Html->css('/Infrastructure/css/infrastructure', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Categories'));
+$this->assign('contentHeader', __('Levels'));
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'index', 'parent_id' => $parentId), array('class' => 'divider'));
 $this->end();
@@ -13,11 +13,11 @@ echo $this->element('nav_tabs');
 $breadcrumbOptions = array(
 	'breadcrumbs' => $breadcrumbs,
 	'rootName' => __('All'),
-	'rootUrl' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false)
+	'rootUrl' => array('controller' => 'InfrastructureLevels', 'action' => 'index', 'plugin' => false)
 );
 echo $this->element('breadcrumbs', $breadcrumbOptions);
 
-$formOptions = array('controller' => 'InfrastructureCategories', 'action' => 'move', 'parent_id' => $parentId, 'plugin' => false);
+$formOptions = array('controller' => 'InfrastructureLevels', 'action' => 'move', 'parent_id' => $parentId, 'plugin' => false);
 
 echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formOptions));
 echo $this->Form->hidden('id', array('class' => 'option-id'));

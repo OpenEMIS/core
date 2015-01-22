@@ -20,7 +20,7 @@ class InfrastructureCustomField extends InfrastructureAppModel {
 	);
 	
 	public $belongsTo = array(
-		'InfrastructureCategory',
+		'InfrastructureLevel',
 		'ModifiedUser' => array(
 			'fields' => array('first_name', 'last_name'),
 			'className' => 'SecurityUser',
@@ -51,7 +51,7 @@ class InfrastructureCustomField extends InfrastructureAppModel {
 		$this->contain(array('InfrastructureCustomFieldOption'));
 		$result = $this->find('all', array(
 			'conditions' => array(
-				'InfrastructureCustomField.infrastructure_category_id' => $id,
+				'InfrastructureCustomField.infrastructure_level_id' => $id,
 				'InfrastructureCustomField.visible' => 1
 			),
 			'order' => array(
