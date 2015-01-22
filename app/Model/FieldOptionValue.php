@@ -74,12 +74,26 @@ class FieldOptionValue extends AppModel {
 		
 		$data = array();
 		if ($model->alias == $this->alias) {
+
+			$FieldOption = ClassRegistry::init('FieldOption');
+			$fieldOptionId = $FieldOption->find('first', 
+				array(
+					'recursive' => -1,
+					'fields' => array('id'),
+					'conditions' => array('FieldOption.code' => $model->alias)
+				)
+			);
+
 			$data = $model->find('first', array(
 				'fields' => array('id'),
-				'conditions' => array('FieldOption.code' => $model->alias)
+				'conditions' => array($model->alias.'.field_option_id' => $fieldOptionId['FieldOption']['id']),
+				'order' => array($model->alias.'.default DESC')
 			));
 		} else {
-			$data = $model->findByDefault(1);
+			$data = $model->find('first', array(
+				'fields' => array('id'),
+				'order' => array($model->alias.'.default DESC')
+			));
 		}
 		if(empty($data)){
 			return 0;
@@ -128,7 +142,7 @@ class FieldOptionValue extends AppModel {
 		return $key;
 	}
         
-	public function getList($status = false, $customOptions=array()) {
+	public function getList($customOptions=array()) {
 		$alias = $this->alias;
 
 		$options = array(
@@ -145,24 +159,55 @@ class FieldOptionValue extends AppModel {
 			),
 			'order' => array($alias.'.order')
 		);
+
 		$options['conditions'] = array();
-		if ($status !== false) {
-			$options['conditions'][$alias.'.visible'] = $status;
-		}
-		$optionData = $this->find('all',$options);
-		$result = array();
-		foreach ($optionData as $key => $value) {
-			$name = __($value[$alias]['name']);
-			
-			array_push($result, 
-				array(
-					'name' => $name, 
-	                'value' => $value[$alias]['id'],
-	                'obsolete' => ($value[$alias]['visible']!='0')?false:true
-					)
-			);
+
+		if (array_key_exists('visibleOnly', $customOptions)) {
+			$options['conditions'][$alias.'.visible >'] = 0;
 		}
 
+		if (array_key_exists('conditions', $customOptions)) {
+			$options['conditions'] = array_merge($options['conditions'], $customOptions['conditions']);
+		}
+		
+		$optionData = $this->find('all',$options);
+
+		$result = array();
+		if (array_key_exists('listOnly', $customOptions) && $customOptions['listOnly']) {
+			foreach ($optionData as $key => $value) {
+				$name = __($value[$alias]['name']);
+				$result[$value[$alias]['id']] = $name;
+			}
+		} else {
+			foreach ($optionData as $key => $value) {
+				$name = __($value[$alias]['name']);
+				array_push($result, 
+					array(
+						'name' => $name, 
+						'value' => $value[$alias]['id'],
+						'obsolete' => ($value[$alias]['visible']!='0')?false:true,
+						'selected' => ($value[$alias]['default']!='0')?true:false
+					)
+				);
+			}
+			if (array_key_exists('value', $customOptions)) {
+				$value = $customOptions['value'];
+
+				if (is_array($value)) {
+					foreach ($result as $okey => $ovalue) {
+					if ($ovalue['obsolete'] == '1' && !in_array($ovalue['value'], $value)) {
+						unset($result[$okey]);
+					}
+				}
+				} else {
+					foreach ($result as $okey => $ovalue) {
+						if ($ovalue['obsolete'] == '1' && $ovalue['value']!=$value) {
+							unset($result[$okey]);
+						}
+					}	
+				}
+			}
+		}
 		return $result;
 	}
 	

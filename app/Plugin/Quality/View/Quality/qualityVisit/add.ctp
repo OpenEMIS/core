@@ -53,7 +53,7 @@ $this->start('contentBody');
 	echo $this->Form->input('staff_id', array('id' => 'staffId', 'options' => $staffOptions,'onChange' => 'QualityVisit.updateURL(this)'));
 	echo $this->Form->input('evaluator', array('disabled' => true));
 	$labelOptions['text'] = $this->Label->get('general.type');
-	echo $this->Form->input('quality_type_id', array('id' => 'qualityTypeId', 'options' => $visitOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
+	echo $this->Form->input('quality_visit_type_id', array('id' => 'qualityTypeId', 'options' => $visitOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
 	echo $this->Form->input('comment', array('type' => 'textarea'));
 	?>
     <div class="row">

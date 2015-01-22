@@ -29,10 +29,7 @@ class CensusAttendance extends AppModel {
 		'SchoolYear',
 		'EducationGrade',
 		'InstitutionSite',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 
 	public function getCensusData($siteId, $yearId) {

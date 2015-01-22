@@ -136,8 +136,13 @@ class StudentHealthAllergy extends StudentsAppModel {
 				$controller->request->data = $data;
 			}
 		}
+		if (!empty($controller->request->data)) {
+			$healthAllergiesOptions = $this->HealthAllergyType->getList(array('value' => $controller->request->data['StudentHealthAllergy']['health_allergy_type_id']));
+		} else {
+			$healthAllergiesOptions = $this->HealthAllergyType->getList(array('value' => 0));
+		}
 
-		$healthAllergiesOptions = $this->HealthAllergyType->find('list', array('fields' => array('id', 'name')));
+		
 		$yesnoOptions = $controller->Option->get('yesno');
 
 		$controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));

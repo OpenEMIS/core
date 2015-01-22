@@ -20,8 +20,8 @@ class StaffHealthFamily extends StaffAppModel {
 	
 	public $belongsTo = array(
 		//'Staff',
-		'HealthCondition' => array('foreignKey' => 'health_condition_id'),
-        'HealthRelationships' => array('foreignKey' => 'health_relationship_id'),
+		'HealthCondition',
+        'HealthRelationship',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -53,7 +53,7 @@ class StaffHealthFamily extends StaffAppModel {
         $fields = array(
             'model' => $this->alias,
             'fields' => array(
-                array('field' => 'name', 'model' => 'HealthRelationships'),
+                array('field' => 'name', 'model' => 'HealthRelationship'),
                 array('field' => 'name', 'model' => 'HealthCondition'),
                 array('field' => 'current','type' => 'select', 'options' => $controller->Option->get('yesno')),
                 array('field' => 'comment'),
@@ -140,9 +140,15 @@ class StaffHealthFamily extends StaffAppModel {
                 $controller->request->data = $data;
             }
         }
-        
-        $healthConditionsOptions = $this->HealthCondition->findList(true);//('list', array('fields' => array('id', 'name')));
-        $healthRelationshipsOptions = $this->HealthRelationships->findList(true);//('list', array('fields' => array('id', 'name')));
+
+        if (!empty($controller->request->data)) {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => $controller->request->data['StaffHealthFamily']['health_condition_id']));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => $controller->request->data['StaffHealthFamily']['health_relationship_id']));
+		} else {
+			$healthConditionsOptions = $this->HealthCondition->getList(array('value' => 0));
+			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => 0));
+		}
+		
         $yesnoOptions = $controller->Option->get('yesno');
         
         $controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));

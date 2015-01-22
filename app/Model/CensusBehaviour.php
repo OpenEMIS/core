@@ -27,10 +27,7 @@ class CensusBehaviour extends AppModel {
 		'SchoolYear',
 		'Students.StudentBehaviourCategory',
 		'InstitutionSite',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		)
+		'Gender'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
@@ -127,15 +124,10 @@ class CensusBehaviour extends AppModel {
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
-		$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+		$behaviourCategories = $this->StudentBehaviourCategory->getList();
 		//pr($staffCategories);die;
 
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male', 
-			$femaleGenderId => 'Female'
-		);
+		$genderOptions = $this->Gender->getList();
 		//pr($genderOptions);die;
 		
 		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
@@ -154,15 +146,10 @@ class CensusBehaviour extends AppModel {
 			if (!$editable) {
 				$controller->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
-				$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+				$behaviourCategories = $this->StudentBehaviourCategory->getList();
 				//pr($staffCategories);die;
 
-				$maleGenderId = $this->Gender->getIdByName('Male');
-				$femaleGenderId = $this->Gender->getIdByName('Female');
-				$genderOptions = array(
-					$maleGenderId => 'Male', 
-					$femaleGenderId => 'Female'
-				);
+				$genderOptions = $this->Gender->getList();
 				//pr($genderOptions);die;
 				
 				$controller->set(compact('selectedYear', 'yearList', 'data', 'genderOptions', 'behaviourCategories'));
@@ -189,7 +176,7 @@ class CensusBehaviour extends AppModel {
 		if ($index == 1) {
 			$data = array();
 			
-			$behaviourCategories = $this->StudentBehaviourCategory->getCategoryList();
+			$behaviourCategories = $this->StudentBehaviourCategory->getList(array('listOnly'=>true));
 			
 			$maleGenderId = $this->Gender->getIdByName('Male');
 			$femaleGenderId = $this->Gender->getIdByName('Female');
