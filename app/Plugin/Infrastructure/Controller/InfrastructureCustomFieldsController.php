@@ -79,6 +79,12 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 	}
 
     public function add() {
+		if (!$this->request->is(array('post', 'put'))) {
+			$mandatoryDisabled = '';
+			$uniqueDisabled = '';
+			$this->set('mandatoryDisabled', $mandatoryDisabled);
+			$this->set('uniqueDisabled', $uniqueDisabled);
+		}
     	$this->CustomField2->add();
     }
 
