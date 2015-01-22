@@ -221,6 +221,7 @@ CREATE TABLE `institution_site_infrastructures` (
   `year_acquired` year(4) DEFAULT NULL,
   `year_disposed` year(4) DEFAULT NULL,
   `comment` text NOT NULL,
+  `size` float NOT NULL,
   `parent_id` int(11) DEFAULT NULL,
   `institution_site_id` int(11) NOT NULL,
   `infrastructure_level_id` int(11) NOT NULL,
@@ -233,6 +234,9 @@ CREATE TABLE `institution_site_infrastructures` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+--
+-- Indexes for dumped tables
+--
 
 --
 -- Indexes for table `institution_site_infrastructures`
@@ -240,6 +244,9 @@ CREATE TABLE `institution_site_infrastructures` (
 ALTER TABLE `institution_site_infrastructures`
  ADD PRIMARY KEY (`id`), ADD KEY `name` (`name`), ADD KEY `code` (`code`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `parent_id` (`parent_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
 
+--
+-- AUTO_INCREMENT for dumped tables
+--
 
 --
 -- AUTO_INCREMENT for table `institution_site_infrastructures`

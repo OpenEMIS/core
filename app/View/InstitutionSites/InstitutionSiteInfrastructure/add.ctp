@@ -36,6 +36,9 @@ echo $this->Form->input('infrastructure_type_id', array(
 	'label' => $labelOptions
 ));
 
+$labelOptions['text'] = $this->Label->get('general.size');
+echo $this->Form->input('size', array('label' => $labelOptions));
+
 $labelOptions['text'] = $this->Label->get('InstitutionSiteInfrastructure.infrastructure_ownership_id');
 echo $this->Form->input('infrastructure_ownership_id', array(
 	'options' => $ownershipOptions,

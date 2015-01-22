@@ -92,7 +92,8 @@ class LabelHelper extends AppHelper {
 			'section' => 'Section',
 			'sections' => 'Sections',
 			'code' => 'Code',
-			'type' => 'Type'
+			'type' => 'Type',
+			'size' => 'Size'
 		),
 		'date' => array(
 			'start' => 'Start Date',
