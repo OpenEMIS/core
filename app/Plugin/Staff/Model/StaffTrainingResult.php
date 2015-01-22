@@ -55,7 +55,7 @@ class StaffTrainingResult extends AppModel {
 					),
 					array(
 						'type' => 'INNER',
-						'table' => 'training_statuses',
+						'table' => 'field_option_values',
 						'alias' => 'TrainingStatus',
 						'conditions' => array(
 							'TrainingStatus.id = TrainingSessionResult.training_status_id'
@@ -107,7 +107,7 @@ class StaffTrainingResult extends AppModel {
 					),
 					array(
 						'type' => 'LEFT',
-						'table' => 'training_providers',
+						'table' => 'field_option_values',
 						'alias' => 'TrainingProvider',
 						'conditions' => array(
 							'TrainingProvider.id = TrainingSession.training_provider_id'
@@ -185,15 +185,12 @@ class StaffTrainingResult extends AppModel {
 		);
 
 		$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
-		$trainingCourseResultType->bindModel(
-		        array('belongsTo' => array(
-		                'TrainingResultType' => array(
-							'className' => 'FieldOptionValue',
-							'foreignKey' => 'training_result_type_id'
-						)
-		            )
-		        )
-	    );
+		// $trainingCourseResultType->bindModel(
+		//         array('belongsTo' => array(
+		//                 'TrainingResultType'
+		//             )
+		//         )
+	 //    );
 
 		$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingCourse']['id'])));	
 		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);

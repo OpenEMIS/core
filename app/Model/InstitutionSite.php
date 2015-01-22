@@ -25,18 +25,9 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteOwnership',
 		'Area',
 		'AreaEducation',
-		'InstitutionSiteProvider' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'institution_site_provider_id'
-		),
-		'InstitutionSiteSector' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'institution_site_sector_id'
-		),
-		'InstitutionSiteGender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'institution_site_gender_id'
-		)
+		'InstitutionSiteProvider',
+		'InstitutionSiteSector',
+		'InstitutionSiteGender'
 	);
 	
 	public $actsAs = array(
@@ -501,7 +492,7 @@ class InstitutionSite extends AppModel {
 		}
                 
 		$joins[] = array(
-			'table' => 'institution_site_types',
+			'table' => 'field_option_values',
 			'alias' => 'InstitutionSiteType',
                         'type' => 'LEFT',
 			'conditions' => array('InstitutionSite.institution_site_type_id = InstitutionSiteType.id')

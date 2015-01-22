@@ -207,7 +207,7 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('Area.id = InstitutionSite.area_id')
 			),
 			array(
-				'table' => 'institution_site_localities',
+				'table' => 'field_option_values',
 				'alias' => 'InstitutionSiteLocality',
 				'conditions' => array('InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id')
 			),

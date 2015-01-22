@@ -80,7 +80,7 @@ class EducationProgramme extends AppModel {
 		$this->fields['order']['visible'] = false;
 		$this->fields['education_cycle_id']['type'] = 'disabled';
 		$this->fields['education_field_of_study_id']['type'] = 'select';
-		$this->fields['education_field_of_study_id']['options'] = $this->EducationFieldOfStudy->getList(1);
+		$this->fields['education_field_of_study_id']['options'] = $this->EducationFieldOfStudy->getList();
 		$this->fields['education_certification_id']['type'] = 'select';
 		$this->fields['education_certification_id']['options'] = $this->EducationCertification->find('list', array('conditions' => array('visible' => 1), 'order' => 'order'));
 		

@@ -28,10 +28,7 @@ class CensusStaff extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'Gender' => array(
-			'className' => 'FieldOptionValue',
-			'foreignKey' => 'gender_id'
-		),
+		'Gender',
 		'InstitutionSite',
 		'Staff.StaffPositionTitle'
 	);
@@ -50,7 +47,7 @@ class CensusStaff extends AppModel {
 			),
 			'joins' => array(
 				array(
-					'table' => 'staff_position_titles',
+					'table' => 'field_option_values',
 					'alias' => 'StaffPositionTitle',
 					'type' => 'LEFT',
 					'conditions' => array(
@@ -266,12 +263,7 @@ class CensusStaff extends AppModel {
 		$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);
 		//pr($positionTitles);
 		
-		$maleGenderId = $this->Gender->getIdByName('Male');
-		$femaleGenderId = $this->Gender->getIdByName('Female');
-		$genderOptions = array(
-			$maleGenderId => 'Male', 
-			$femaleGenderId => 'Female'
-		);
+		$genderOptions = $this->Gender->getList();
 		//pr($genderOptions);die;
 		
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
@@ -297,12 +289,7 @@ class CensusStaff extends AppModel {
 				
 				$positionTitles = $this->StaffPositionTitle->getInstitutionPositionTitles($institutionSiteId);			
 
-				$maleGenderId = $this->Gender->getIdByName('Male');
-				$femaleGenderId = $this->Gender->getIdByName('Female');
-				$genderOptions = array(
-					$maleGenderId => 'Male', 
-					$femaleGenderId => 'Female'
-				);
+				$genderOptions = $this->Gender->getList();
 				//pr($genderOptions);die;
 
 				$this->setVar(compact('selectedYear', 'yearList', 'data', 'positionTitles', 'genderOptions'));

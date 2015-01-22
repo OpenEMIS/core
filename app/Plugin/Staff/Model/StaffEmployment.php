@@ -18,7 +18,7 @@ class StaffEmployment extends StaffAppModel {
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('employment_date'));
 	public $belongsTo = array(
 		'Staff.Staff',
-		'EmploymentType',
+		'Staff.EmploymentType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -121,8 +121,13 @@ class StaffEmployment extends StaffAppModel {
                 $controller->request->data = $data;
             }
         }
+        if (!empty($controller->request->data)) {
+        	$employmentTypeOptions = $this->EmploymentType->getList(array('value' => $controller->request->data['StaffEmployment']['employment_type_id']));
+		} else {
+			$employmentTypeOptions = $this->EmploymentType->getList(array('value' => 0));
+		}
 
-        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        
 		$controller->set(compact('employmentTypeOptions'));
 	}
 	
