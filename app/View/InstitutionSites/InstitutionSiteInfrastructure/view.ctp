@@ -37,6 +37,10 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $commonFieldsData['InfrastructureType']['name']; ?></div>
 </div>
 <div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.size'); ?></div>
+	<div class="col-md-6"><?php echo $commonFieldsData['InstitutionSiteInfrastructure']['size']; ?></div>
+</div>
+<div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteInfrastructure.infrastructure_ownership_id'); ?></div>
 	<div class="col-md-6"><?php echo $commonFieldsData['InfrastructureOwnership']['name']; ?></div>
 </div>
