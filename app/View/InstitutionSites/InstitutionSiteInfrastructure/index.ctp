@@ -2,11 +2,11 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Infrastructure') . ' - ' . __($categoryName));
+$this->assign('contentHeader', __('Infrastructure') . ' - ' . __($levelName));
 
 $this->start('contentActions');
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $categoryId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $levelId), array('class' => 'divider'));
 }
 $this->end();
 
@@ -15,13 +15,13 @@ $this->start('contentBody');
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		echo $this->Form->input('infrastructure_category_id', array(
-			'id' => 'InfrastructureCategoryId',
+		echo $this->Form->input('infrastructure_level_id', array(
+			'id' => 'InfrastructureLevelId',
 			'label' => false,
 			'div' => false,
 			'class' => 'form-control',
-			'options' => $categoryOptions,
-			'default' => $categoryId,
+			'options' => $levelOptions,
+			'default' => $levelId,
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . '/' . $model . '/index'
 		));
@@ -32,8 +32,8 @@ $this->start('contentBody');
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<?php if(!empty($parentCategory)):?>
-					<th><?php echo __($parentCategory['InfrastructureCategory']['name']); ?></th>
+				<?php if(!empty($parentLevel)):?>
+					<th><?php echo __($parentLevel['InfrastructureLevel']['name']); ?></th>
 				<?php endif;?>
 				<th><?php echo __('Code'); ?></th>
 				<th><?php echo __('Name'); ?></th>
@@ -49,7 +49,7 @@ $this->start('contentBody');
 				$i = 0;
 				?>
 				<tr>
-					<?php if(!empty($parentCategory)):?>
+					<?php if(!empty($parentLevel)):?>
 						<td><?php echo !empty($obj['Parent']) ? $obj['Parent']['name'] : ''; ?></td>
 					<?php endif;?>
 					<td><?php echo $infrastructure['code']; ?></td>

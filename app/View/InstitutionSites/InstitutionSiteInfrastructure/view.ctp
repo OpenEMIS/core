@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $commonFieldsData['InstitutionSiteInfrastructure']['name']);
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'InstitutionSiteInfrastructure', 'index', $levelId), array('class' => 'divider'));
 if ($_edit) {
     echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'InstitutionSiteInfrastructure', 'edit', $id), array('class' => 'divider'));
 }
@@ -15,12 +15,12 @@ $this->end();
 $this->start('contentBody');
 ?>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.category'); ?></div>
-	<div class="col-md-6"><?php echo $commonFieldsData['InfrastructureCategory']['name']; ?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('general.level'); ?></div>
+	<div class="col-md-6"><?php echo $commonFieldsData['InfrastructureLevel']['name']; ?></div>
 </div>
 <?php foreach($parentsInOrder AS $record): ?>
 	<div class="row">
-		<div class="col-md-3"><?php echo $record['parentCategory']; ?></div>
+		<div class="col-md-3"><?php echo $record['parentLevel']; ?></div>
 		<div class="col-md-6"><?php echo $record['parent']; ?></div>
 	</div>
 <?php endforeach; ?>

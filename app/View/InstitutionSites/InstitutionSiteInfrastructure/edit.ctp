@@ -19,11 +19,11 @@ $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('InstitutionSiteInfrastructure', $formOptions);
 echo $this->Form->hidden('id');
 
-$labelOptions['text'] = __('Category');
-echo $this->Form->input('category_name', array('value' => $commonFieldsData['InfrastructureCategory']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
+$labelOptions['text'] = __('Level');
+echo $this->Form->input('level_name', array('value' => $commonFieldsData['InfrastructureLevel']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
 
-if(!empty($parentCategory)){
-	$labelOptions['text'] = __($parentCategory['InfrastructureCategory']['name']);
+if(!empty($parentLevel)){
+	$labelOptions['text'] = __($parentLevel['InfrastructureLevel']['name']);
 	echo $this->Form->input('parent_id', array(
 		'options' => $parentInfraOptions,
 		'label' => $labelOptions

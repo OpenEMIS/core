@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteInfrastructure extends AppModel {
 	public $belongsTo = array(
 		'InstitutionSite',
-		'Infrastructure.InfrastructureCategory',
+		'Infrastructure.InfrastructureLevel',
 		'Infrastructure.InfrastructureType',
 		'Infrastructure.InfrastructureOwnership',
 		'Infrastructure.InfrastructureCondition',
@@ -90,64 +90,64 @@ class InstitutionSiteInfrastructure extends AppModel {
 		return $yearAcquired <= $yearDisposed;
 	}
 	
-	public function index($categoryId=0) {
+	public function index($levelId=0) {
 		$this->Navigation->addCrumb('Infrastructure');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$categoryOptions = $this->InfrastructureCategory->getCategoryOptions();
+		$levelOptions = $this->InfrastructureLevel->getLevelOptions();
 		
-		if(!empty($categoryOptions)){
-			if ($categoryId != 0) {
-				if (!array_key_exists($categoryId, $categoryOptions)) {
-					$categoryId = key($categoryOptions);
+		if(!empty($levelOptions)){
+			if ($levelId != 0) {
+				if (!array_key_exists($levelId, $levelOptions)) {
+					$levelId = key($levelOptions);
 				}
 			} else {
-				$categoryId = key($categoryOptions);
+				$levelId = key($levelOptions);
 			}
 		}
 		
-		if(empty($categoryOptions)){
-			$this->Message->alert('InstitutionSiteInfrastructure.noCategory');
+		if(empty($levelOptions)){
+			$this->Message->alert('InstitutionSiteInfrastructure.noLevel');
 		}
 		
-		$category = $this->InfrastructureCategory->findById($categoryId);
-		if(!empty($category)){
-			$categoryName = $category['InfrastructureCategory']['name'];
+		$level = $this->InfrastructureLevel->findById($levelId);
+		if(!empty($level)){
+			$levelName = $level['InfrastructureLevel']['name'];
 		}else{
-			$categoryName = '';
+			$levelName = '';
 		}
-		$parentCategory = $this->InfrastructureCategory->getParentCategory($categoryId);
+		$parentLevel = $this->InfrastructureLevel->getParentLevel($levelId);
 		
-		$data = $this->getInfrastructureData($categoryId, $institutionSiteId);
+		$data = $this->getInfrastructureData($levelId, $institutionSiteId);
 		
-		$this->setVar(compact('category', 'categoryName', 'categoryOptions', 'categoryId', 'data', 'parentCategory'));
+		$this->setVar(compact('level', 'levelName', 'levelOptions', 'levelId', 'data', 'parentLevel'));
 	}
 	
-	public function add($categoryId=0) {
+	public function add($levelId=0) {
 		$this->Navigation->addCrumb('Add Infrastructure');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$category = $this->InfrastructureCategory->findById($categoryId);
+		$level = $this->InfrastructureLevel->findById($levelId);
 		
-		if(empty($category)){
+		if(empty($level)){
 			return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index'));
 		}
 		
-		$parentCategory = $this->InfrastructureCategory->getParentCategory($categoryId);
-		if(!empty($parentCategory)){
-			$parentInfraOptions = $this->infrastructureOptionsByCategory($parentCategory['InfrastructureCategory']['id'], $institutionSiteId);
+		$parentLevel = $this->InfrastructureLevel->getParentLevel($levelId);
+		if(!empty($parentLevel)){
+			$parentInfraOptions = $this->infrastructureOptionsByLevel($parentLevel['InfrastructureLevel']['id'], $institutionSiteId);
 		}else{
 			$parentInfraOptions = array();
 		}
 		
-		$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($categoryId);
+		$typeOptions = $this->InfrastructureType->getTypeOptionsByLevel($levelId);
 		$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
-		$yearDisposedOptions = array_merge(array('' => __('Select')), $yearOptions);
+		$yearDisposedOptions = $this->controller->DateTime->yearOptionsByConfig(true);
 		$currentYear = Date('Y');
 		$ownershipOptions = $this->InfrastructureOwnership->getList(1);
 		$conditionOptions = $this->InfrastructureCondition->getList(1);
 		
 		// custom fields start
-		$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+		$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($levelId);
 		$dataValues = array();
 		//pr($data);
 		$model = 'InfrastructureCustomField';
@@ -161,18 +161,18 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$pageType = 'form'; // for infrastructure, form/view
 		// custom fields end
 		
-		$this->setVar(compact('categoryId', 'category', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
+		$this->setVar(compact('levelId', 'level', 'parentLevel', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 		
 		if($this->request->is(array('post', 'put'))) {
 			//$postData = $this->request->data['InstitutionSiteInfrastructure'];
 			//$postData['institution_site_id'] = $institutionSiteId;
-			//$postData['infrastructure_category_id'] = $categoryId;
+			//$postData['infrastructure_level_id'] = $levelId;
 
 			$postData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data);
 			//pr($postData);die;
 			if ($this->saveAll($postData)) {	
 				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $categoryId));
+				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $levelId));
 			}else{
 				$dataValues = $this->prepareCustomFieldsDataValues($postData);
 				$this->request->data = $postData;
@@ -196,12 +196,12 @@ class InstitutionSiteInfrastructure extends AppModel {
 			$this->getParents($id, $parents);
 			$parentsInOrder = array_reverse($parents);
 			
-			$categoryId = $commonFieldsData['InfrastructureCategory']['id'];
+			$levelId = $commonFieldsData['InfrastructureLevel']['id'];
 			
-			$this->setVar(compact('id', 'commonFieldsData', 'categoryId', 'parentsInOrder'));
+			$this->setVar(compact('id', 'commonFieldsData', 'levelId', 'parentsInOrder'));
 			
 			// custom fields start
-			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($levelId);
 			$dataValues = $this->getCustomFieldsValues($id);
 			//pr($data);
 			//pr($dataValues);
@@ -229,24 +229,24 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$commonFieldsData = $this->getInfrastructureWithParent($id);
 
 		if (!empty($commonFieldsData)) {
-			$categoryId = $commonFieldsData['InfrastructureCategory']['id'];
+			$levelId = $commonFieldsData['InfrastructureLevel']['id'];
 			
-			$parentCategory = $this->InfrastructureCategory->getParentCategory($commonFieldsData['InfrastructureCategory']['id']);
-			if(!empty($parentCategory)){
-				$parentInfraOptions = $this->infrastructureOptionsByCategory($parentCategory['InfrastructureCategory']['id'], $institutionSiteId);
+			$parentLevel = $this->InfrastructureLevel->getParentLevel($commonFieldsData['InfrastructureLevel']['id']);
+			if(!empty($parentLevel)){
+				$parentInfraOptions = $this->infrastructureOptionsByLevel($parentLevel['InfrastructureLevel']['id'], $institutionSiteId);
 			}else{
 				$parentInfraOptions = array();
 			}
 
-			$typeOptions = $this->InfrastructureType->getTypeOptionsByCategory($commonFieldsData['InfrastructureCategory']['id']);
+			$typeOptions = $this->InfrastructureType->getTypeOptionsByLevel($commonFieldsData['InfrastructureLevel']['id']);
 			$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
-			$yearDisposedOptions = array_merge(array('' => __('Select')), $yearOptions);
+			$yearDisposedOptions = $this->controller->DateTime->yearOptionsByConfig(true);
 			$currentYear = Date('Y');
 			$ownershipOptions = $this->InfrastructureOwnership->getList(1);
 			$conditionOptions = $this->InfrastructureCondition->getList(1);
 			
 			// custom fields start
-			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($categoryId);
+			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($levelId);
 			//pr($data);
 			$dataValues = $this->getCustomFieldsValues($id);
 			
@@ -262,7 +262,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 
 			// custom fields end
 
-			$this->setVar(compact('id', 'commonFieldsData', 'parentCategory', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
+			$this->setVar(compact('id', 'commonFieldsData', 'parentLevel', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 			
 			if($this->request->is('post') || $this->request->is('put')) {
 				//$postData = $this->request->data['InstitutionSiteInfrastructure'];
@@ -318,12 +318,12 @@ class InstitutionSiteInfrastructure extends AppModel {
 			$this->Message->alert('general.delete.failed');
 		}
 		$this->Session->delete($this->alias.'.id');
-		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['infrastructure_category_id']));
+		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['infrastructure_level_id']));
 	}
 	
-	public function getInfrastructureData($categoryId, $institutionSiteId){
-		$parentCategory = $this->InfrastructureCategory->getParentCategory($categoryId);
-		if(!empty($parentCategory)){
+	public function getInfrastructureData($levelId, $institutionSiteId){
+		$parentLevel = $this->InfrastructureLevel->getParentLevel($levelId);
+		if(!empty($parentLevel)){
 			$fields = array('InstitutionSiteInfrastructure.*', 'InfrastructureType.*', 'Parent.name');
 			
 			$joins = array(
@@ -344,7 +344,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 			'fields' => $fields,
 			'joins' => $joins,
 			'conditions' => array(
-				'InstitutionSiteInfrastructure.infrastructure_category_id' => $categoryId,
+				'InstitutionSiteInfrastructure.infrastructure_level_id' => $levelId,
 				'InstitutionSiteInfrastructure.institution_site_id' => $institutionSiteId
 			)
 		));
@@ -352,10 +352,10 @@ class InstitutionSiteInfrastructure extends AppModel {
 		return $data;
 	}
 	
-	public function infrastructureOptionsByCategory($categoryId, $institutionSiteId){
+	public function infrastructureOptionsByLevel($levelId, $institutionSiteId){
 		$data = $this->find('list', array(
 			'conditions' => array(
-				'InstitutionSiteInfrastructure.infrastructure_category_id' => $categoryId,
+				'InstitutionSiteInfrastructure.infrastructure_level_id' => $levelId,
 				'InstitutionSiteInfrastructure.institution_site_id' => $institutionSiteId
 			)
 		));
@@ -365,7 +365,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 	
 	public function getInfrastructureWithParent($id){
 		$data = $this->find('first', array(
-			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureCategory.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'InfrastructureCondition.*', 'Parent.*', 'ModifiedUser.*', 'CreatedUser.*'),
+			'fields' => array('InstitutionSiteInfrastructure.*', 'InfrastructureLevel.*', 'InfrastructureOwnership.*', 'InfrastructureType.*', 'InfrastructureCondition.*', 'Parent.*', 'ModifiedUser.*', 'CreatedUser.*'),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_infrastructures',
@@ -388,13 +388,13 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$data = $this->getInfrastructureWithParent($infrastructureId);
 		
 		if (!empty($data)) {
-			$parentCategory = $this->InfrastructureCategory->getParentCategory($data['InfrastructureCategory']['id']);
+			$parentLevel = $this->InfrastructureLevel->getParentLevel($data['InfrastructureLevel']['id']);
 			
-			if(!empty($data['Parent']['name']) && !empty($parentCategory)){
-				$parentCategoryName = $parentCategory['InfrastructureCategory']['name'];
+			if(!empty($data['Parent']['name']) && !empty($parentLevel)){
+				$parentLevelName = $parentLevel['InfrastructureLevel']['name'];
 				
 				$arr[] = array(
-					'parentCategory' => $parentCategoryName,
+					'parentLevel' => $parentLevelName,
 					'parent' => $data['Parent']['name']
 				);
 				
