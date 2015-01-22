@@ -10,6 +10,7 @@ $this->end();
 $this->start('contentBody');
 
 $formOptions = array('url' => array('plugin' => 'Students', 'controller' => 'Students', 'action' => $model), 'inputDefaults' => array('label' => false, 'div' => false));
+
 echo $this->Form->create($model, $formOptions);
 echo $this->element('layout/search', array('model' => $model, 'placeholder' => 'OpenEMIS ID or Name', 'form' => false));
 ?>
@@ -21,7 +22,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Years'),
 			'options' => $yearOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -33,7 +34,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Programmes'),
 			'options' => $programmeOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -45,7 +46,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Statuses'),
 			'options' => $statusOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -53,23 +54,6 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 </div>
 
 <?php echo $this->Form->end() ?>
-
-<style>
-.table .educationProgrammeName,
-.table .institutionSiteSectionName,
-.table .middot,
-.table .middotHeader{display:block;float:left;}
-.table .middot{
-	font-size:30px;
-	margin:0px 5px 0px 5px;
-	line-height:14px;
-}
-.table .middotHeader{
-	font-size:28px;
-	margin:0px 5px 0px 5px;
-	line-height:10px;
-}
-</style>
 
 <?php if (!empty($data)) : ?>
 <div class="table-responsive">
@@ -79,12 +63,12 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 				<th><?php echo $this->Paginator->sort('Student.identification_no', __('OpenEMIS ID')) ?></th>
 				<th><?php echo $this->Paginator->sort('Student.first_name', __('Name')) ?></th>
 				<th><?php echo $this->Paginator->sort('StudentIdentity.number', __($defaultIdentity['name'])) ?></th>
-				<th>
-					<span class="educationProgrammeName">Programme</span>
-					<span class="middotHeader">&middot;</span>
-					<span class="institutionSiteSectionName">Section</span>
+				<th class="section-info">
+					<span>Programme</span>
+					<span class="middot">&middot;</span>
+					<span>Section</span>
 				</th>
-				<th><?php echo $this->Paginator->sort('StudentStatus.name', __('Status')) ?></th>
+				<th><?php echo __('Status') ?></th>
 			</tr>
 		</thead>
 		
@@ -104,7 +88,11 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 				<td><?php echo $identificationNo; ?></td>
 				<td><?php echo $name; ?></td>
 				<td><?php echo $identity; ?></td>
-				<td><span class="educationProgrammeName"><?php echo $obj['EducationProgramme']['name']; ?></span>  <span class="middot">&middot;</span> <span class="institutionSiteSectionName"><?php echo $obj['InstitutionSiteSection']['name'];?></span></td>
+				<td class="section-info">
+					<span><?php echo $obj['EducationProgramme']['name'] ?></span>
+					<span class="middot">&middot;</span>
+					<span><?php echo $obj['InstitutionSiteSection']['name'] ?></span>
+				</td>
 				<td><?php echo $obj['StudentStatus']['name']; ?></td>
 			</tr>
 		<?php endforeach ?>

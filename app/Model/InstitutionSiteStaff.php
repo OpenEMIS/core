@@ -367,7 +367,11 @@ class InstitutionSiteStaff extends AppModel {
 			'conditions' => $identityConditions,
 		);
 		unset($conditions['defaultIdentity']);
-		//if(isset($extra['sort'])&&substr_count($extra['sort'], '.')>0){$order = array($extra['sort'] => $extra['direction']);}
+
+		if (isset($extra['sort']) && isset($extra['direction'])) {
+			$order = array($extra['sort'] => $extra['direction']);
+		}
+		
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 

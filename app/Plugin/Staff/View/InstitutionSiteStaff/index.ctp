@@ -21,7 +21,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Years'),
 			'options' => $yearOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -39,7 +39,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 				<th><?php echo $this->Paginator->sort('Staff.first_name', __('Name')) ?></th>
 				<th><?php echo $this->Paginator->sort('StaffIdentity.number', __($defaultIdentity['name'])) ?></th>
 				<th><?php echo __('Position') ?></th>
-				<th><?php echo $this->Paginator->sort('StaffStatus.name', __('Status')) ?></th>
+				<th><?php echo __('Status') ?></th>
 			</tr>
 		</thead>
 		
