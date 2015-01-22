@@ -20,7 +20,7 @@ if ($form) {
 			))
 			?>
 			<span class="input-group-btn">
-				<button class="btn btn-default" type="button" onclick="$('.search-input').val('');$('form').submit()"><i class="fa fa-close"></i></button>
+				<button class="btn btn-default" type="button" onclick="$('.search-input').val('');$(this).closest('form').submit()"><i class="fa fa-close"></i></button>
 			</span>
 		</div>
 	</div>

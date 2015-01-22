@@ -80,8 +80,7 @@ class SearchBehavior extends ModelBehavior {
 			$joins[] = array(
 				'table' => 'institution_site_students',
 				'alias' => 'InstitutionSiteStudent',
-				'conditions' => array('InstitutionSiteStudent.student_id = Student.id'),
-				'order' => array('InstitutionSiteStudent.end_year DESC'),
+				'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
 			);
 			$joins[] = array(
 				'table' => 'institution_site_programmes',
@@ -537,20 +536,23 @@ class SearchBehavior extends ModelBehavior {
 	public function attachLatestInstitutionInfo(Model $model, $data) {
 		$class = $model->alias;
 		$institutionPersonnel = $model->{'InstitutionSite'.$class};
-		for($i=0;$i<count($data);$i++){
+
+		foreach ($data as $key => $obj) {
 			$buffer = $institutionPersonnel->find('first', array(
 				'fields' => array('InstitutionSite.name', $class.'Status.name'),
+				'contain' => array('InstitutionSite', $class.'Status'),
 				'conditions' => array(
-					'InstitutionSite'.$class.'.'.strtolower($class).'_id = '.$data[$i][$class]['id']
+					'InstitutionSite'.$class.'.'.strtolower($class).'_id = '.$obj[$class]['id']
 				),
-				'order' => array('InstitutionSite'.$class.'.end_year' => ' DESC'),
+				'order' => array('InstitutionSite'.$class.'.end_date DESC'),
 			));
-			if(isset($buffer['InstitutionSite'])){
-				$data[$i]['InstitutionSite']=$buffer['InstitutionSite'];
-				$data[$i][$class.'Status']=$buffer[$class.'Status'];
-			}else{
-				$data[$i]['InstitutionSite']=array('name'=>'');
-				$data[$i][$class.'Status']=array('name'=>'');
+
+			if (isset($buffer['InstitutionSite'])) {
+				$data[$key]['InstitutionSite'] = $buffer['InstitutionSite'];
+				$data[$key][$class.'Status'] = $buffer[$class.'Status'];
+			} else {
+				$data[$key]['InstitutionSite'] = array('name'=>'');
+				$data[$key][$class.'Status'] = array('name'=>'');
 			}
 		}
 		return $data;
@@ -565,27 +567,22 @@ class SearchBehavior extends ModelBehavior {
 		}else{
 			return $data;
 		}
-		$joins[] = array(
-			'table' => 'institution_site_sections',
-			'alias' => 'InstitutionSiteSection',
-			'type' => 'LEFT',
-			'conditions' => array('InstitutionSiteSection.id = InstitutionSiteSection'.$class.'.institution_site_section_id')
-		);
+
 		$SectionPersonnel = ClassRegistry::init('InstitutionSiteSection'.$class);
-		for($i=0;$i<count($data);$i++){
+		foreach ($data as $key => $obj) {
 			$buffer = $SectionPersonnel->find('first', array(
-				'recursive' => -1,
 				'fields' => array('InstitutionSiteSection.name'),
-				'joins' => $joins,
+				'contain' => array('InstitutionSiteSection'),
 				'conditions' => array(
-					'InstitutionSiteSection'.$class.'.'.strtolower($class).'_id = '.$data[$i][$class]['id']
+					'InstitutionSiteSection'.$class.'.'.strtolower($class).'_id = '.$obj[$class]['id'],
+					'InstitutionSiteSection'.$class.'.status = 1'
 				),
-				'order' => array('InstitutionSiteSection'.$class.'.institution_site_section_id' => ' DESC'),
+				'order' => array('InstitutionSiteSection'.$class.'.institution_site_section_id DESC'),
 			));
 			if(isset($buffer['InstitutionSiteSection'])){
-				$data[$i]['InstitutionSiteSection']=$buffer['InstitutionSiteSection'];
+				$data[$key]['InstitutionSiteSection']=$buffer['InstitutionSiteSection'];
 			}else{
-				$data[$i]['InstitutionSiteSection']=array('name'=>'');
+				$data[$key]['InstitutionSiteSection']=array('name'=>'');
 			}
 		}
 		return $data;

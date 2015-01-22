@@ -396,16 +396,16 @@ class InstitutionSiteStudent extends AppModel {
 		*	Sorting would not work on National ID column.
 		*	The script below is to enforce sorting on that column.
 		*/
-		if(isset($extra['sort'])&&substr_count($extra['sort'], '.')>0){$order = array($extra['sort'] => $extra['direction']);}
+		if (isset($extra['sort']) && isset($extra['direction'])) {
+			$order = array($extra['sort'] => $extra['direction']);
+		}
 		/**/
-		
 
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
 				'Student.third_name', 'Student.last_name', 'EducationProgramme.name', 'StudentStatus.name',
-				'StudentIdentity.number',
-				//'*'
+				'StudentIdentity.number'
 			),
 			'joins' => $joins,
 			'conditions' => $conditions,
@@ -415,7 +415,7 @@ class InstitutionSiteStudent extends AppModel {
 			'order' => $order
 		));
 		$data = $this->attachSectionInfo($data);
-		//pr($data);//die();
+		
 		return $data;
 	}
 	 
