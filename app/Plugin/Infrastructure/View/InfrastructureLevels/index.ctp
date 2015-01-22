@@ -1,7 +1,7 @@
 <?php 
 echo $this->Html->css('/Infrastructure/css/infrastructure', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Categories'));
+$this->assign('contentHeader', __('Levels'));
 $this->start('contentActions');
 if ($_add) {
 	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'parent_id' => $parentId, 'plugin' => false), array('class' => 'divider'));
@@ -17,7 +17,7 @@ echo $this->element('nav_tabs');
 $breadcrumbOptions = array(
 	'breadcrumbs' => $breadcrumbs,
 	'rootName' => __('All'),
-	'rootUrl' => array('controller' => 'InfrastructureCategories', 'action' => 'index', 'plugin' => false)
+	'rootUrl' => array('controller' => 'InfrastructureLevels', 'action' => 'index', 'plugin' => false)
 );
 echo $this->element('breadcrumbs', $breadcrumbOptions);
 ?>

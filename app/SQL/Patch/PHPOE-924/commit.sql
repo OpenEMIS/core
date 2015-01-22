@@ -30,7 +30,7 @@ INSERT INTO `navigations` (
 `created_user_id` ,
 `created`
 ) 
-VALUES (NULL , 'Administration', 'Infrastructure' , 'InfrastructureCategories|InfrastructureTypes|InfrastructureCustomFields', 'System Setup', 'Infrastructure', 'index', 'index|view|add|edit|delete|remove|categories|reorder|preview', NULL , '33', '0', @orderEduStructure + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+VALUES (NULL , 'Administration', 'Infrastructure' , 'InfrastructureLevels|InfrastructureTypes|InfrastructureCustomFields', 'System Setup', 'Infrastructure', 'index', 'index|view|add|edit|delete|remove|reorder|preview', NULL , '33', '0', @orderEduStructure + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 
 SET @orderDetailsClasses := 0;
 SELECT `order` INTO @orderDetailsClasses FROM `navigations` WHERE `module` LIKE 'Institution' AND `header` LIKE 'Details' AND `title` LIKE 'Classes';
@@ -67,7 +67,7 @@ SELECT `order` INTO @orderDetailsClassesSecurity FROM `security_functions` WHERE
 
 UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > @orderDetailsClassesSecurity;
 
-INSERT INTO `_openemis_`.`security_functions` (
+INSERT INTO `security_functions` (
 `id` ,
 `name` ,
 `controller` ,
@@ -95,7 +95,7 @@ SELECT `order` INTO @orderEduProgSecurity FROM `security_functions` WHERE `modul
 
 UPDATE `security_functions` SET `order` = `order` + 3 WHERE `order` > @orderEduProgSecurity;
 
-INSERT INTO `_openemis_`.`security_functions` (
+INSERT INTO `security_functions` (
 `id` ,
 `name` ,
 `controller` ,
@@ -114,12 +114,12 @@ INSERT INTO `_openemis_`.`security_functions` (
 `created_user_id` ,
 `created`
 ) VALUES  
-(NULL , 'Categories', 'InfrastructureCategories', 'Administration', 'Infrastructure', '-1', 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+(NULL , 'Levels', 'InfrastructureLevels', 'Administration', 'Infrastructure', '-1', 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 
 SET @securityInfraCatId := 0;
-SELECT `id` INTO @securityInfraCatId FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Categories';
+SELECT `id` INTO @securityInfraCatId FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Levels';
 
-INSERT INTO `_openemis_`.`security_functions` (
+INSERT INTO `security_functions` (
 `id` ,
 `name` ,
 `controller` ,
@@ -140,11 +140,44 @@ INSERT INTO `_openemis_`.`security_functions` (
 ) VALUES 
 (NULL , 'Types', 'InfrastructureTypes', 'Administration', 'Infrastructure', @securityInfraCatId, 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 2, '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
 (NULL , 'Custom Fields', 'InfrastructureCustomFields', 'Administration', 'Infrastructure', @securityInfraCatId, 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 3, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+
 --
--- 3. infrastructure_categories
+-- 3. Table structure for table `infrastructure_levels`
 --
 
-ALTER TABLE `infrastructure_categories` ADD `parent_id` INT NOT NULL AFTER `national_code` ;
+CREATE TABLE `infrastructure_levels` (
+`id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `order` int(3) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `international_code` varchar(10) DEFAULT NULL,
+  `national_code` varchar(10) DEFAULT NULL,
+  `parent_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `infrastructure_levels`
+--
+ALTER TABLE `infrastructure_levels`
+ ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `infrastructure_levels`
+--
+ALTER TABLE `infrastructure_levels`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 
 --
 -- 4. Table structure for table `infrastructure_types`
@@ -155,7 +188,7 @@ CREATE TABLE `infrastructure_types` (
   `name` varchar(100) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `order` int(3) NOT NULL,
-  `infrastructure_category_id` int(11) NOT NULL,
+  `infrastructure_level_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -166,7 +199,7 @@ CREATE TABLE `infrastructure_types` (
 -- Indexes for table `infrastructure_types`
 --
 ALTER TABLE `infrastructure_types`
- ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`);
 
 
 --
@@ -190,7 +223,7 @@ CREATE TABLE `institution_site_infrastructures` (
   `comment` text NOT NULL,
   `parent_id` int(11) DEFAULT NULL,
   `institution_site_id` int(11) NOT NULL,
-  `infrastructure_category_id` int(11) NOT NULL,
+  `infrastructure_level_id` int(11) NOT NULL,
   `infrastructure_type_id` int(11) NOT NULL,
   `infrastructure_ownership_id` int(11) NOT NULL,
   `infrastructure_condition_id` int(11) NOT NULL,
@@ -205,7 +238,7 @@ CREATE TABLE `institution_site_infrastructures` (
 -- Indexes for table `institution_site_infrastructures`
 --
 ALTER TABLE `institution_site_infrastructures`
- ADD PRIMARY KEY (`id`), ADD KEY `name` (`name`), ADD KEY `code` (`code`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `parent_id` (`parent_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `name` (`name`), ADD KEY `code` (`code`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `parent_id` (`parent_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
 
 
 --
@@ -249,7 +282,7 @@ CREATE TABLE `infrastructure_custom_fields` (
   `is_mandatory` int(1) DEFAULT '0',
   `is_unique` int(1) DEFAULT '0',
   `visible` int(1) NOT NULL DEFAULT '1',
-  `infrastructure_category_id` int(11) NOT NULL DEFAULT '0',
+  `infrastructure_level_id` int(11) NOT NULL DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -261,7 +294,7 @@ CREATE TABLE `infrastructure_custom_fields` (
 -- Indexes for table `infrastructure_custom_fields`
 --
 ALTER TABLE `infrastructure_custom_fields`
- ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`);
 
 
 --

@@ -41,11 +41,11 @@ class InfrastructureType extends InfrastructureAppModel {
 		)
 	);
 	
-	public function getTypeOptionsByCategory($categoryId=0){
+	public function getTypeOptionsByLevel($levelId=0){
 		$data = $this->find('list', array(
 			'conditions' => array(
 				'InfrastructureType.visible' => 1,
-				'InfrastructureType.infrastructure_category_id' => $categoryId
+				'InfrastructureType.infrastructure_level_id' => $levelId
 			),
 			'order' => array('InfrastructureType.order')
 		));

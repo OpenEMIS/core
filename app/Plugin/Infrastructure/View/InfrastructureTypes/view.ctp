@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Types'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', $data[$model]['infrastructure_category_id']), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', $data[$model]['infrastructure_level_id']), array('class' => 'divider'));
 if ($_edit) {
 	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
@@ -18,10 +18,10 @@ echo $this->element('breadcrumbs');
 	<div class="col-md-3"><?php echo __('Name'); ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
 </div>
-<?php if (!empty($category)) { ?>
+<?php if (!empty($level)) { ?>
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Category'); ?></div>
-		<div class="col-md-6"><?php echo $category['InfrastructureCategory']['name']; ?></div>
+		<div class="col-md-3"><?php echo __('Level'); ?></div>
+		<div class="col-md-6"><?php echo $level['InfrastructureLevel']['name']; ?></div>
 	</div>
 <?php } ?>
 
