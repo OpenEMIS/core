@@ -31,6 +31,14 @@ DELETE FROM `security_functions` WHERE `module` LIKE 'Institutions' AND `categor
 UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @orderDetailsClassesSecurity;
 
 
+SET @orderEduProgSecurity := 0;
+SELECT `order` INTO @orderEduProgSecurity FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Education' AND `name` LIKE 'Education Programme Orientations';
+
+DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Categories';
+DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Types';
+DELETE FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Custom Fields';
+
+UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` > @orderEduProgSecurity;
 
 --
 -- 3. infrastructure_categories

@@ -87,9 +87,59 @@ INSERT INTO `_openemis_`.`security_functions` (
 `created`
 )
 VALUES (
-NULL , 'Infrastructure', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteInfrastructure|InstitutionSiteInfrastructure.index|InstitutionSiteInfrastructure.view', 'InstitutionSiteInfrastructure.edit', 'InstitutionSiteInfrastructure.add', 'InstitutionSiteInfrastructure.remove', NULL , @orderDetailsClassesSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+NULL , 'Infrastructure', 'InstitutionSites', 'Institutions', 'Details', '8', 'InstitutionSiteInfrastructure|InstitutionSiteInfrastructure.index|InstitutionSiteInfrastructure.view', '_view:InstitutionSiteInfrastructure.edit', '_view:InstitutionSiteInfrastructure.add', '_view:InstitutionSiteInfrastructure.remove', NULL , @orderDetailsClassesSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
 );
 
+SET @orderEduProgSecurity := 0;
+SELECT `order` INTO @orderEduProgSecurity FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Education' AND `name` LIKE 'Education Programme Orientations';
+
+UPDATE `security_functions` SET `order` = `order` + 3 WHERE `order` > @orderEduProgSecurity;
+
+INSERT INTO `_openemis_`.`security_functions` (
+`id` ,
+`name` ,
+`controller` ,
+`module` ,
+`category` ,
+`parent_id` ,
+`_view` ,
+`_edit` ,
+`_add` ,
+`_delete` ,
+`_execute` ,
+`order` ,
+`visible` ,
+`modified_user_id` ,
+`modified` ,
+`created_user_id` ,
+`created`
+) VALUES  
+(NULL , 'Categories', 'InfrastructureCategories', 'Administration', 'Infrastructure', '-1', 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
+
+SET @securityInfraCatId := 0;
+SELECT `id` INTO @securityInfraCatId FROM `security_functions` WHERE `module` LIKE 'Administration' AND `category` LIKE 'Infrastructure' AND `name` LIKE 'Categories';
+
+INSERT INTO `_openemis_`.`security_functions` (
+`id` ,
+`name` ,
+`controller` ,
+`module` ,
+`category` ,
+`parent_id` ,
+`_view` ,
+`_edit` ,
+`_add` ,
+`_delete` ,
+`_execute` ,
+`order` ,
+`visible` ,
+`modified_user_id` ,
+`modified` ,
+`created_user_id` ,
+`created`
+) VALUES 
+(NULL , 'Types', 'InfrastructureTypes', 'Administration', 'Infrastructure', @securityInfraCatId, 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 2, '1', NULL , NULL , '1', '0000-00-00 00:00:00'),
+(NULL , 'Custom Fields', 'InfrastructureCustomFields', 'Administration', 'Infrastructure', @securityInfraCatId, 'index|view', '_view:edit', '_view:add', '_view:remove', NULL , @orderEduProgSecurity + 3, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 --
 -- 3. infrastructure_categories
 --
@@ -98,10 +148,6 @@ ALTER TABLE `infrastructure_categories` ADD `parent_id` INT NOT NULL AFTER `nati
 
 --
 -- 4. Table structure for table `infrastructure_types`
---
-
---
--- Table structure for table `infrastructure_types`
 --
 
 CREATE TABLE `infrastructure_types` (
@@ -117,18 +163,11 @@ CREATE TABLE `infrastructure_types` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 --
--- Indexes for dumped tables
---
-
---
 -- Indexes for table `infrastructure_types`
 --
 ALTER TABLE `infrastructure_types`
  ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
 
 --
 -- AUTO_INCREMENT for table `infrastructure_types`
@@ -141,9 +180,6 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 -- 5. Table structure for table `institution_site_infrastructures`
 --
 
---
--- Table structure for table `institution_site_infrastructures`
---
 
 CREATE TABLE `institution_site_infrastructures` (
 `id` int(11) NOT NULL,
@@ -164,9 +200,6 @@ CREATE TABLE `institution_site_infrastructures` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
---
--- Indexes for dumped tables
---
 
 --
 -- Indexes for table `institution_site_infrastructures`
@@ -174,9 +207,6 @@ CREATE TABLE `institution_site_infrastructures` (
 ALTER TABLE `institution_site_infrastructures`
  ADD PRIMARY KEY (`id`), ADD KEY `name` (`name`), ADD KEY `code` (`code`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `parent_id` (`parent_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
 
 --
 -- AUTO_INCREMENT for table `institution_site_infrastructures`
@@ -210,9 +240,6 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 -- 8. Table structure for table `infrastructure_custom_fields`
 --
 
---
--- Table structure for table `infrastructure_custom_fields`
---
 
 CREATE TABLE `infrastructure_custom_fields` (
 `id` int(11) NOT NULL,
@@ -229,9 +256,6 @@ CREATE TABLE `infrastructure_custom_fields` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
---
--- Indexes for dumped tables
---
 
 --
 -- Indexes for table `infrastructure_custom_fields`
@@ -239,9 +263,6 @@ CREATE TABLE `infrastructure_custom_fields` (
 ALTER TABLE `infrastructure_custom_fields`
  ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_category_id` (`infrastructure_category_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
 
 --
 -- AUTO_INCREMENT for table `infrastructure_custom_fields`
@@ -253,9 +274,6 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 -- 9. Table structure for table `infrastructure_custom_field_options`
 --
 
---
--- Table structure for table `infrastructure_custom_field_options`
---
 
 CREATE TABLE `infrastructure_custom_field_options` (
 `id` int(11) NOT NULL,
@@ -273,18 +291,11 @@ CREATE TABLE `infrastructure_custom_field_options` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 --
--- Indexes for dumped tables
---
-
---
 -- Indexes for table `infrastructure_custom_field_options`
 --
 ALTER TABLE `infrastructure_custom_field_options`
  ADD PRIMARY KEY (`id`), ADD KEY `infrastructure_custom_field_id` (`infrastructure_custom_field_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
 
 --
 -- AUTO_INCREMENT for table `infrastructure_custom_field_options`
@@ -296,9 +307,6 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 -- 10. Table structure for table `institution_site_infrastructure_custom_values`
 --
 
---
--- Table structure for table `institution_site_infrastructure_custom_values`
---
 
 CREATE TABLE `institution_site_infrastructure_custom_values` (
   `text_value` varchar(250) NOT NULL,
@@ -314,9 +322,6 @@ CREATE TABLE `institution_site_infrastructure_custom_values` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Indexes for dumped tables
---
 
 --
 -- Indexes for table `institution_site_infrastructure_custom_values`

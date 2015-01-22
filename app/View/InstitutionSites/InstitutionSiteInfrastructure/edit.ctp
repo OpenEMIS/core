@@ -50,7 +50,7 @@ echo $this->Form->input('year_acquired', array(
 	'value' => $currentYear
 ));
 echo $this->Form->input('year_disposed', array(
-	'options' => $yearOptions,
+	'options' => $yearDisposedOptions,
 	'value' => $currentYear
 ));
 
