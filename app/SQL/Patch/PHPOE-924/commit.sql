@@ -157,7 +157,16 @@ CREATE TABLE `infrastructure_levels` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `infrastructure_levels`
+--
+
+INSERT INTO `infrastructure_levels` (`id`, `name`, `order`, `visible`, `international_code`, `national_code`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(1, 'Property', 0, 1, NULL, NULL, 0, NULL, NULL, 1, '2015-01-23 04:46:57'),
+(2, 'Building', 0, 1, NULL, NULL, 1, NULL, NULL, 1, '2015-01-23 04:47:05'),
+(3, 'Room', 0, 1, NULL, NULL, 2, NULL, NULL, 1, '2015-01-23 04:47:17');
 
 --
 -- Indexes for dumped tables
@@ -177,7 +186,7 @@ ALTER TABLE `infrastructure_levels`
 -- AUTO_INCREMENT for table `infrastructure_levels`
 --
 ALTER TABLE `infrastructure_levels`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=4;
 
 --
 -- 4. Table structure for table `infrastructure_types`
@@ -213,6 +222,9 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 -- 5. Table structure for table `institution_site_infrastructures`
 --
 
+--
+-- Table structure for table `institution_site_infrastructures`
+--
 
 CREATE TABLE `institution_site_infrastructures` (
 `id` int(11) NOT NULL,
@@ -220,8 +232,8 @@ CREATE TABLE `institution_site_infrastructures` (
   `code` varchar(50) NOT NULL,
   `year_acquired` year(4) DEFAULT NULL,
   `year_disposed` year(4) DEFAULT NULL,
-  `comment` text NOT NULL,
-  `size` float NOT NULL,
+  `comment` text,
+  `size` float DEFAULT NULL,
   `parent_id` int(11) DEFAULT NULL,
   `institution_site_id` int(11) NOT NULL,
   `infrastructure_level_id` int(11) NOT NULL,
@@ -244,9 +256,7 @@ CREATE TABLE `institution_site_infrastructures` (
 ALTER TABLE `institution_site_infrastructures`
  ADD PRIMARY KEY (`id`), ADD KEY `name` (`name`), ADD KEY `code` (`code`), ADD KEY `infrastructure_level_id` (`infrastructure_level_id`), ADD KEY `infrastructure_type_id` (`infrastructure_type_id`), ADD KEY `infrastructure_ownership_id` (`infrastructure_ownership_id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `parent_id` (`parent_id`), ADD KEY `infrastructure_condition_id` (`infrastructure_condition_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
+
 
 --
 -- AUTO_INCREMENT for table `institution_site_infrastructures`

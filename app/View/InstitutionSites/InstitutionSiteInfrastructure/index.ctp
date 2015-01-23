@@ -1,17 +1,17 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Infrastructure') . ' - ' . __($levelName));
+$this->assign('contentHeader', __('Infrastructure') . (isset($levelName) ? ' - ' . __($levelName) : ''));
 
 $this->start('contentActions');
-if ($_add) {
+if ($_add && isset($levelId)) {
 	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $levelId), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
 ?>
+
+<?php if (isset($levelOptions)) : ?>
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
@@ -28,6 +28,9 @@ $this->start('contentBody');
 		?>
 	</div>
 </div>
+<?php endif ?>
+
+<?php if (isset($data)) : ?>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
@@ -56,8 +59,9 @@ $this->start('contentBody');
 					<td><?php echo $this->Html->link($infrastructure['name'], array('action' => $model, 'view', $infrastructure['id']), array('escape' => false)); ?></td>
 					<td><?php echo $type['name']; ?></td>
 				</tr>
-			<?php } // end for (multigrade)    ?>
+			<?php }  ?>
 		</tbody>
 	</table>
 </div>
+<?php endif ?>
 <?php $this->end(); ?>

@@ -17,6 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteInfrastructure extends AppModel {
+	public $actsAs = array(
+		'ControllerAction2'
+	);
+	
 	public $belongsTo = array(
 		'InstitutionSite',
 		'Infrastructure.InfrastructureLevel',
@@ -76,10 +80,6 @@ class InstitutionSiteInfrastructure extends AppModel {
 		)
 	);
 	
-	public $actsAs = array(
-		'ControllerAction2'
-	);
-	
 	public function beforeAction() {
 		parent::beforeAction();
 	}
@@ -103,23 +103,20 @@ class InstitutionSiteInfrastructure extends AppModel {
 			} else {
 				$levelId = key($levelOptions);
 			}
-		}
-		
-		if(empty($levelOptions)){
+			
+			$level = $this->InfrastructureLevel->findById($levelId);
+			if(!empty($level)){
+				$levelName = $level['InfrastructureLevel']['name'];
+			}else{
+				$levelName = '';
+			}
+			$parentLevel = $this->InfrastructureLevel->getParentLevel($levelId);
+
+			$data = $this->getInfrastructureData($levelId, $institutionSiteId);
+			$this->setVar(compact('level', 'levelName', 'levelOptions', 'levelId', 'data', 'parentLevel'));
+		} else {
 			$this->Message->alert('InstitutionSiteInfrastructure.noLevel');
 		}
-		
-		$level = $this->InfrastructureLevel->findById($levelId);
-		if(!empty($level)){
-			$levelName = $level['InfrastructureLevel']['name'];
-		}else{
-			$levelName = '';
-		}
-		$parentLevel = $this->InfrastructureLevel->getParentLevel($levelId);
-		
-		$data = $this->getInfrastructureData($levelId, $institutionSiteId);
-		
-		$this->setVar(compact('level', 'levelName', 'levelOptions', 'levelId', 'data', 'parentLevel'));
 	}
 	
 	public function add($levelId=0) {
@@ -164,12 +161,8 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$this->setVar(compact('levelId', 'level', 'parentLevel', 'parentInfraOptions', 'typeOptions', 'yearOptions', 'yearDisposedOptions', 'currentYear', 'ownershipOptions', 'conditionOptions'));
 		
 		if($this->request->is(array('post', 'put'))) {
-			//$postData = $this->request->data['InstitutionSiteInfrastructure'];
-			//$postData['institution_site_id'] = $institutionSiteId;
-			//$postData['infrastructure_level_id'] = $levelId;
-
 			$postData = $this->InstitutionSiteInfrastructureCustomValue->prepareDataBeforeSave($this->request->data);
-			//pr($postData);die;
+			
 			if ($this->saveAll($postData)) {	
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'InstitutionSiteInfrastructure', 'index', $levelId));
@@ -203,8 +196,7 @@ class InstitutionSiteInfrastructure extends AppModel {
 			// custom fields start
 			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($levelId);
 			$dataValues = $this->getCustomFieldsValues($id);
-			//pr($data);
-			//pr($dataValues);
+
 			$model = 'InfrastructureCustomField';
 			$modelOption = 'InfrastructureCustomFieldOption';
 			$modelValue = 'InstitutionSiteInfrastructureCustomValue';
