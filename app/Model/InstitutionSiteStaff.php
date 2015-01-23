@@ -186,6 +186,7 @@ class InstitutionSiteStaff extends AppModel {
 			$conditions = $this->Session->read($prefix . 'conditions');
 		}
 		$conditions['InstitutionSiteStaff.institution_site_id'] = $institutionSiteId;
+		$conditions[] = 'Staff.id != ""';
 
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
