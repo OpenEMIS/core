@@ -178,7 +178,7 @@ class CensusTextbook extends AppModel {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Textbooks');
 
-			$yearList = $this->SchoolYear->getAvailableYears(true, 'DESC');
+			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $controller->getAvailableYearId($yearList);
 			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 			if (!$editable) {
