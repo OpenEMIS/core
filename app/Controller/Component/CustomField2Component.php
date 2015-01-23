@@ -661,9 +661,8 @@ class CustomField2Component extends Component {
 
 			$result = array();
 			if(!empty($templates)) {
-				$protocol = $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://';
-				$host = $_SERVER['HTTP_HOST'];
-				$url = $protocol . $host . $this->controller->webroot . $this->controller->params->controller . '/download/xform/';
+				$url = '/' . $this->controller->params->controller . '/download/xform/';
+				//$media_url = '/' . $this->controller->params->controller . '/downloadImage/';
 
 				$list = array();
 				foreach ($templates as $key => $template) {
@@ -679,6 +678,7 @@ class CustomField2Component extends Component {
 				$result['limit'] = $requestPaging['limit'];
 				$result['list'] = $list;
 				$result['url'] = $url;
+				//$result['media_url'] = $media_url;
 			}
 		} catch (NotFoundException $e) {
 			$this->controller->log($e->getMessage(), 'debug');
@@ -755,6 +755,7 @@ class CustomField2Component extends Component {
     	$xml = new SimpleXMLElement($xmlstr);
 
 		$headNode = $xml->addChild("head");
+		$bodyNode = $xml->addChild("body");
 			$headNode->addChild("title", $title);
 				$modelNode = $headNode->addChild("model", null, NS_XF);
 					$instanceNode = $modelNode->addChild("instance", null, NS_XF);
@@ -763,40 +764,49 @@ class CustomField2Component extends Component {
 						foreach ($fields as $key => $field) {
 							if(isset($this->Group) && $key == 0) {
 								$groupNode = $instanceNode->addChild($this->Group->alias, null, NS_OE);
-									$groupNode->addChild('id', $field[$this->Field->alias][Inflector::underscore($this->Group->alias).'_id'], NS_OE);
+									$groupNode->addAttribute("id", $field[$this->Field->alias][Inflector::underscore($this->Group->alias).'_id']);
+									//$groupNode->addChild('id', $field[$this->Field->alias][Inflector::underscore($this->Group->alias).'_id'], NS_OE);
 							}
 
-							if($field[$this->Field->alias]['type'] < 7) { //Skip Table
+							$fieldTypeArr = array(2, 3, 5, 6); //Only support Text, Dropdown, Textarea and Number
+							if(in_array($field[$this->Field->alias]['type'], $fieldTypeArr)) {
 								$fieldNode = $instanceNode->addChild($this->Field->alias, null, NS_OE);
-									$fieldNode->addChild('id', $field[$this->Field->alias]['id'], NS_OE);
-									$fieldNode->addChild('name', $field[$this->Field->alias]['name'], NS_OE);
-									$fieldNode->addChild('type', $field[$this->Field->alias]['type'], NS_OE);
-									$fieldNode->addChild('isMandatory', $field[$this->Field->alias]['is_mandatory'], NS_OE);
-									$fieldNode->addChild('isUnique', $field[$this->Field->alias]['is_unique'], NS_OE);
-									$fieldNode->addChild('value', null, NS_OE);
+									$fieldNode->addAttribute("id", $field[$this->Field->alias]['id']);
 
 								$bindNode = $modelNode->addChild("bind", null, NS_XF);
-								$bindNode->addAttribute("nodeset", "instance('" . $instanceId . "')/question[".$index."]");
+								$bindNode->addAttribute("nodeset", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
 								switch($field[$this->Field->alias]['type']) {
-									case 1:	//Section Break
-										$fieldType = 'string';
-										break;
 									case 2:	//Text
 										$fieldType = 'string';
+										$textNode = $bodyNode->addChild("input", null, NS_XF);
+										$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$textNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 										break;
 									case 3:	//Dropdown
 										$fieldType = 'integer';
-										break;
-									case 4:	//Checkbox
-										$fieldType = 'integer';
+										$dropdownNode = $bodyNode->addChild("select1", null, NS_XF);
+										$dropdownNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$dropdownNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
+												$itemNode = $dropdownNode->addChild("item", null, NS_XF);
+													$itemNode->addChild("label", $fieldOption['value'], NS_XF);
+													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
+											}
 										break;
 									case 5:	//Textarea
 										$fieldType = 'string';
+										$textareaNode = $bodyNode->addChild("textarea", null, NS_XF);
+										$textareaNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$textareaNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 										break;
 									case 6:	//Number
 										$fieldType = 'integer';
+										$numberNode = $bodyNode->addChild("input", null, NS_XF);
+										$numberNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$numberNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 										break;
 								}
+
 								$bindNode->addAttribute("type", $fieldType);
 								if($field[$this->Field->alias]['is_mandatory']) {
 									$bindNode->addAttribute("required", 'true()');
@@ -807,15 +817,6 @@ class CustomField2Component extends Component {
 								$index++;
 							}
 						}
-
-		$bodyNode = $xml->addChild("body");
-			$repeatNode = $bodyNode->addChild("repeat", null, NS_XF);
-			$repeatNode->addAttribute("nodeset", "instance('" . $instanceId . "')/question");
-				$inputNode = $repeatNode->addChild("input", null, NS_XF);
-				$inputNode->addAttribute("ref", "value");
-					$labelNode = $inputNode->addChild("label", null, NS_XF);
-						$outputNode = $labelNode->addChild("output", null, NS_XF);
-						$outputNode->addAttribute("ref", "name");
 
     	return $xml;
     }
