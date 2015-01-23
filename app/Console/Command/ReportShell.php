@@ -108,7 +108,7 @@ class ReportShell extends AppShell {
 				*/
 			}
 		} catch (Exception $e) {
-			pr($e);
+			pr($e->getMessage());
 		}
     }
 }
