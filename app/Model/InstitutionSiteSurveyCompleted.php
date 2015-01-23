@@ -64,9 +64,9 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		$this->setVar(compact('contentHeader'));
 	}
 
-	public function index() {
+	public function index($action=null) {
 		$data = $this->getSurveyTemplatesByModule();
-		if (empty($data)) {
+		if (is_null($action) && empty($data)) {
 			$this->Message->alert('general.noData');
 		}
 		$this->setVar(compact('data'));
@@ -114,7 +114,7 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 				$this->Message->alert('Survey.reject.failed');
 			}
 			$this->Session->delete($this->alias.'.id');
-			return $this->redirect(array('action' => $this->alias, 'index'));
+			return $this->redirect(array('action' => $this->alias, 'index', $this->action));
 		}
 	}
 }
