@@ -10,8 +10,10 @@ class ReportShell extends AppShell {
 
     public function run() {
 		$id = $this->args[0];
+
+		$ReportProgress = $this->ReportProgress;
 		
-		$obj = $this->ReportProgress->findByIdAndStatus($id, 1);
+		$obj = $ReportProgress->findByIdAndStatus($id, 1);
 		if ($obj) {
 			$obj = $obj['ReportProgress'];
 			$params = json_decode($obj['params'], true);
@@ -21,20 +23,20 @@ class ReportShell extends AppShell {
 			$model = ClassRegistry::init($params['model']);
 
 			echo 'Start Processing ' . $name . "\n";
-			$this->ReportProgress->id = $id;
+			$ReportProgress->id = $id;
 
 			$format = 'xlsx';
 			$settings = array(
 				'download' => false,
-				'onStartSheet' => function($count, $pages) use ($id) {
-					$this->ReportProgress->saveField('total_records', $count);
+				'onStartSheet' => function($count, $pages) use ($ReportProgress) {
+					$ReportProgress->saveField('total_records', $count);
 				},
-				'onBeforeWrite' => function($rowCount, $percentCount) {
+				'onBeforeWrite' => function($rowCount, $percentCount) use ($ReportProgress) {
 					if (($percentCount > 0 && $rowCount % $percentCount == 0) ||  $percentCount == 0)  {
-						$this->ReportProgress->saveField('current_records', $rowCount);
+						$ReportProgress->saveField('current_records', $rowCount);
 					}
 				},
-				'onComplete' => function($path) use ($id, $obj) {
+				'onComplete' => function($path) use ($id, $obj, $ReportProgress) {
 					$expiryDate = new DateTime($obj['created']);
 					$expiryDate->add(new DateInterval('P3D')); // config item
 					$updateObj = array(
@@ -43,7 +45,7 @@ class ReportShell extends AppShell {
 						'status' => 0,
 						'expiry_date' => $expiryDate->format('Y-m-d H:i:s')
 					);
-					$this->ReportProgress->save($updateObj);
+					$ReportProgress->save($updateObj);
 				}
 			);
 
