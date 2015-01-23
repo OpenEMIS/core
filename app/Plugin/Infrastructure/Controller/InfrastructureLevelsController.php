@@ -16,9 +16,6 @@
  */
 
 class InfrastructureLevelsController extends InfrastructureAppController {
-	public $uses = array(
-		'Infrastructure.InfrastructureLevel'
-	);
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -134,10 +131,8 @@ class InfrastructureLevelsController extends InfrastructureAppController {
 
 			$this->InfrastructureLevel->deleteAll(array('InfrastructureLevel.id' => $id));
 			$this->Message->alert('general.delete.success');
-			$this->redirect(array('action' => 'index', 'parent_id' => !empty($parentId) ? $parentId : 0));
-		} else {
-			$this->redirect(array('action' => 'index', 'parent_id' => !empty($parentId) ? $parentId : 0));
 		}
+		$this->redirect(array('action' => 'index', 'parent_id' => !empty($parentId) ? $parentId : 0));
 	}
 	
 	private function generatebreadcrumbs($levelId, &$arr){
@@ -186,7 +181,4 @@ class InfrastructureLevelsController extends InfrastructureAppController {
 			return $this->redirect($redirect);
 		}
 	}
-
 }
-
-?>

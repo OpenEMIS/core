@@ -150,10 +150,8 @@ class InfrastructureTypesController extends InfrastructureAppController {
 
 			$this->InfrastructureType->deleteAll(array('InfrastructureType.id' => $id));
 			$this->Message->alert('general.delete.success');
-			$this->redirect(array('action' => 'index', !empty($levelId) ? $levelId : 0));
-		} else {
-			$this->redirect(array('action' => 'index', !empty($levelId) ? $levelId : 0));
 		}
+		$this->redirect(array('action' => 'index', !empty($levelId) ? $levelId : 0));
 	}
 	
 	public function reorder() {
@@ -187,5 +185,3 @@ class InfrastructureTypesController extends InfrastructureAppController {
 	}
 
 }
-
-?>
