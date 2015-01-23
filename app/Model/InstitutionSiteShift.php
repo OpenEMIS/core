@@ -18,7 +18,7 @@
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteShift extends AppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Excel');
 
 	public $belongsTo = array(
 		'SchoolYear',
