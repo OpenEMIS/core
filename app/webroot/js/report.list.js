@@ -19,10 +19,8 @@ var ReportList = {
 					ReportList.getProgress(rowId);
 				} else {
 					$(e).closest('.progress').fadeOut(1000, function() {
-						$(e).closest('td').find('a.none').fadeIn(1000, function() {
-							$(this).removeClass('none');
-							$(e).closest('.progress').remove();
-						});
+						$(e).closest('td').find('a.none').removeClass('none');
+						$(e).closest('.progress').remove();
 					});
 				}
 			}
