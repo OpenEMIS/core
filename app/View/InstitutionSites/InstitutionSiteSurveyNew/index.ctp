@@ -22,7 +22,13 @@ $this->start('contentBody');
 				<ul class="list-group">
 					<?php foreach ($obj['AcademicPeriod'] as $key => $period) : ?>
 						<li class="list-group-item">
-							<?php echo $this->Html->link($period['AcademicPeriod']['name'], array('action' => $model, 'add', $obj['SurveyTemplate']['id'], $period['AcademicPeriod']['id'])) ?>
+							<?php
+								if($_add) {
+									echo $this->Html->link($period['AcademicPeriod']['name'], array('action' => $model, 'add', $obj['SurveyTemplate']['id'], $period['AcademicPeriod']['id']));
+								} else {
+									echo $period['AcademicPeriod']['name'];
+								}
+							?>
 							<span class="pull-right"><?php echo __('To be completed by : '); ?><?php echo $period['SurveyStatus']['date_disabled']; ?></span>
 						</li>
 					<?php endforeach ?>
