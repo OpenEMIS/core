@@ -19,10 +19,6 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteInfrastructureCustomValue extends AppModel {
 	public $useTable = 'institution_site_infrastructure_custom_values';
 
-	public $actsAs = array(
-		'ControllerAction2'
-	);
-
 	public $belongsTo = array(
 		'InstitutionSiteInfrastructure',
 		'InstitutionSite',

@@ -56,10 +56,6 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 			$params['action'] = 'index';
 			$this->Navigation->addCrumb('Custom Fields', $params);
 			$this->Navigation->addCrumb('Reorder');
-		} else if($this->action == 'preview') {
-			$params['action'] = 'index';
-			$this->Navigation->addCrumb('Custom Fields', $params);
-			$this->Navigation->addCrumb('Preview');
 		} else {
 			$this->Navigation->addCrumb('Custom Fields');
 		}
@@ -67,7 +63,7 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
 		$currentTab = 'Custom Fields';
 		$this->set(compact('currentTab'));
 
-		$this->set('contentHeader', __('Custom') . ' ' . __('Fields'));
+		$this->set('contentHeader', __($currentTab));
 	}
 
 	public function index() {
@@ -104,4 +100,3 @@ class InfrastructureCustomFieldsController extends InfrastructureAppController {
     	$this->CustomField2->moveOrder($id);
     }
 }
-?>

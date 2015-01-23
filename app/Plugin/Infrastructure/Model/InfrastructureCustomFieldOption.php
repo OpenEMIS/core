@@ -15,10 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class InfrastructureCustomFieldOption extends InfrastructureAppModel {
-	public $actsAs = array(
-		'Containable'
-	);
-	
 	public $belongsTo = array(
 		'Infrastructure.InfrastructureCustomField',
 		'ModifiedUser' => array(
