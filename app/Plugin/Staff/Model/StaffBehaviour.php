@@ -97,9 +97,17 @@ class StaffBehaviour extends StaffAppModel {
 		$this->fields['title']['labelKey'] = 'name';
 		
 		if ($this->action == 'add' || $this->action == 'edit' || $this->action == 'view') {
-			if ($this->Session->check($this->alias.'.staffId')) {
-				$staffId = $this->Session->read($this->alias.'.staffId');
-				
+			$staffId = null;
+			if ($this->controller->name == 'InstitutionSites') {
+				if ($this->Session->check($this->alias.'.staffId')) {
+					$staffId = $this->Session->read($this->alias.'.staffId');
+				}
+			} else {
+				if ($this->Session->check('Staff.id')) {
+					$staffId = $this->Session->read('Staff.id');
+				}
+			}
+			if(isset($staffId)) {
 				$this->Staff->contain();
 				$obj = $this->Staff->findById($staffId);
 				
