@@ -31,6 +31,9 @@ class ReportShell extends AppShell {
 				'onStartSheet' => function($count, $pages) use ($ReportProgress) {
 					$ReportProgress->saveField('total_records', $count);
 				},
+				'onEndSheet' => function($count) use ($ReportProgress) {
+					$ReportProgress->saveField('current_records', $count);
+				},
 				'onBeforeWrite' => function($rowCount, $percentCount) use ($ReportProgress) {
 					if (($percentCount > 0 && $rowCount % $percentCount == 0) ||  $percentCount == 0)  {
 						$ReportProgress->saveField('current_records', $rowCount);
