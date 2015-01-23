@@ -172,8 +172,8 @@ class MessageComponent extends Component {
 				'final' => array('type' => 'ok', 'msg' => 'Survey record has been submitted successfully.')
 			),
 			'reject' => array(
-				'success' => array('type' => 'ok', 'msg' => 'The record has been rejected successfully.'),
-				'failed' => array('type' => 'error', 'msg' => 'The record is not rejected due to errors encountered.')
+				'success' => array('type' => 'ok', 'msg' => 'Survey record has been rejected successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'Survey record is not rejected due to errors encountered.')
 			)
 		)
 	);
