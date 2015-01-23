@@ -22,6 +22,7 @@ class ExcelBehavior extends ModelBehavior {
 	public $rootFolder = 'export';
 	public $LabelHelper;
 	public $Model;
+	public $limit = 500;
 	public $conditions = array();
 
 	public function setup(Model $Model, $settings = array()) {
@@ -37,7 +38,7 @@ class ExcelBehavior extends ModelBehavior {
 		$this->Model = $newModel;
 	}
 
-	public function excel(Model $model, $format='xlsx') {
+	public function excel(Model $model, $format='xlsx', $settings=array()) {
 		$this->Model = $model;
 		$folder = WWW_ROOT . $this->rootFolder;
 		if (!file_exists($folder)) {
@@ -49,7 +50,7 @@ class ExcelBehavior extends ModelBehavior {
 
 		switch ($format) {
 			case 'xlsx':
-				$this->generateXLXS($model);
+				$this->generateXLXS($model, $settings);
 				break;
 		}
 	}
@@ -74,20 +75,45 @@ class ExcelBehavior extends ModelBehavior {
 		}
 	}
 
-	public function generateXLXS(Model $model) {
+	public function generateXLXS(Model $model, $settings=array()) {
 		$filename = $this->Model->excelGetFileName($model) . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
 		$path = WWW_ROOT . $this->rootFolder . DS . $filename;
 
 		$writer = new XLSXWriter();
 
-		$this->Model->generateSheet($writer);
+		$_settings = array(
+			'onStart' => false,
+			'onComplete' => false,
+			'download' => true
+		);
+		$_settings = array_merge($_settings, $settings);
+
+		if (is_callable($_settings['onStart'])) {
+			$_settings['onStart']($path);
+		}
+
+		$this->Model->generateSheet($writer, $settings);
 
 		$writer->writeToFile($path);
 
-		$this->download($path);
+		if (is_callable($_settings['onComplete'])) {
+			$_settings['onComplete']($path);
+		}
+
+		if ($_settings['download']) {
+			$this->download($path);
+		}
 	}
 
-	public function generateSheet(Model $model, $writer) {
+	public function generateSheet(Model $model, $writer, $settings) {
+		$_settings = array(
+			'onStartSheet' => false,
+			'onEndSheet' => false,
+			'onBeforeWrite' => false,
+			'onAfterWrite' => false
+		);
+		$_settings = array_merge($_settings, $settings);
+
 		$models = $this->Model->excelGetModels();
 
 		foreach ($models as $sheet) {
@@ -103,26 +129,51 @@ class ExcelBehavior extends ModelBehavior {
 				$sheetModel->Behaviors->load('Excel');
 			}
 
+			$rowCount = 0;
+			$count = $sheetModel->excelGetCount();
+			$percentCount = intval($count / 100);
+
+			$pages = ceil($count / $this->limit);
+
 			$header = $sheetModel->excelGetHeader();
 			$footer = $sheetModel->excelGetFooter();
-			$data = $sheetModel->excelGetData();
+
+			if (is_callable($_settings['onStartSheet'])) {
+				$_settings['onStartSheet']($count, $pages);
+			}
 
 			$writer->writeSheetRow($sheetName, array_values($header));
-			//pr($data);
-			
-			foreach ($data as $row) {
-				$sheetRow = array();
-				foreach ($header as $key => $label) {
-					$value = $sheetModel->getValue($row, $key);
-					$sheetRow[] = $value;
+
+			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
+				$data = $sheetModel->excelGetData($pageNo);
+				
+				foreach ($data as $row) {
+					$sheetRow = array();
+					foreach ($header as $key => $label) {
+						$value = $sheetModel->getValue($row, $key);
+						$sheetRow[] = $value;
+					}
+
+					$rowCount++;
+
+					if (is_callable($_settings['onBeforeWrite'])) {
+						$_settings['onBeforeWrite']($rowCount, $percentCount);
+					}
+					
+					$writer->writeSheetRow($sheetName, $sheetRow);
+
+					if (is_callable($_settings['onAfterWrite'])) {
+						$_settings['onAfterWrite']($rowCount, $percentCount);
+					}
 				}
-				//pr($$sheetRow);
-				$writer->writeSheetRow($sheetName, $sheetRow);
-			}
+			}	
 			
 			$writer->writeSheetRow($sheetName, array(''));
 			$writer->writeSheetRow($sheetName, $footer);
-			
+
+			if (is_callable($_settings['onEndSheet'])) {
+				$_settings['onEndSheet']($count);
+			}
 		}//die;
 	}
 
@@ -187,11 +238,23 @@ class ExcelBehavior extends ModelBehavior {
 		return $header;
 	}
 
-	public function excelGetData(Model $model) {
+	public function excelGetData(Model $model, $page=false) {
 		$options = $this->Model->excelGetFindOptions();
+
+		if ($page !== false) {
+			$options['offset'] = $page * $this->limit;
+			$options['limit'] = $this->limit;
+		}
 		
 		$data = $this->Model->find('all', $options);
 		return $data;
+	}
+
+	public function excelGetCount(Model $model) {
+		$options = $this->Model->excelGetFindOptions();
+
+		$count = $this->Model->find('count', $options);
+		return $count;
 	}
 
 	public function excelGetFindOptions(Model $model) {
@@ -208,6 +271,10 @@ class ExcelBehavior extends ModelBehavior {
 		$options['order'] = $order;
 
 		return $options;
+	}
+
+	public function excelSetLimit($limit) {
+		$this->limit = $limit;
 	}
 
 	public function excelGetConditions(Model $model) {

@@ -18,23 +18,36 @@ App::uses('AppController', 'Controller');
 
 class InstitutionReportsController extends AppController {
 	public $uses = array('InstitutionSite');
+
+	public $components = array('Report');
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-		
-		if ($this->Session->check('InstitutionSite.id')) {
-			$this->institutionSiteId = $this->Session->read('InstitutionSite.id');
-			
-			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
-			$this->bodyTitle = $name;
-			
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
-			$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
-		} else {
-			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-		}
+		$this->bodyTitle = 'Reports';
+		$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
+		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionReports', 'action' => 'index'));
+		$this->Navigation->addCrumb('List of Reports');
+    }
+
+    public function ajaxGetReportProgress() {
+    	return $this->Report->ajaxGetReportProgress();
     }
 	
-	
-}	
+	public function index() {
+		$this->Report->index();
+	}
+
+	public function generate($selectedFeature=0) {
+		$i=0;
+		$features = array(
+			array('value' => $i, 'selected' => ($selectedFeature == $i++), 'name' => __('Overview'), 'model' => 'InstitutionSite', 'period' => false),
+			array('value' => $i, 'selected' => ($selectedFeature == $i++), 'name' => __('Programmes'), 'model' => 'InstitutionSiteProgramme', 'period' => true)
+		);
+
+		$this->Report->generate($features, $selectedFeature);
+	}
+
+	public function download($id) {
+		$this->Report->download($id);
+	}
+}
