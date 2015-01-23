@@ -233,7 +233,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		parent::afterAction();
 	}
 	
-	public function index($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function index($yearId=0, $sectionId=null, $weekId=null, $dayId=null) {
 		if ($dayId!=null || $dayId!=0) {
 			return $this->redirect(array('action' => get_class($this), 'dayview', $yearId, $sectionId, $weekId, $dayId));
 		}
@@ -258,14 +258,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
 		if(!empty($sectionOptions)){
-			if ($sectionId != 0) {
-				if (!array_key_exists($sectionId, $sectionOptions)) {
-					$sectionId = key($sectionOptions);
+			if(isset($sectionId)){
+				if ($sectionId != 0) {
+					if (!array_key_exists($sectionId, $sectionOptions)) {
+						$sectionId = key($sectionOptions);
+					}
 				}
-			} else {
+			}else{
 				$sectionId = key($sectionOptions);
 			}
 		}
+		$sectionOptions = $this->controller->Option->prependLabel($sectionOptions, 'InstitutionSiteStudentAbsence.select_section');
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
 		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
@@ -326,7 +329,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->setVar(compact('yearList', 'yearId', 'sectionOptions', 'sectionId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'weekDayList', 'studentList', 'absenceCheckList'));
 	}
 	
-	public function absence($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function absence($yearId=0, $sectionId=null, $weekId=null, $dayId=null) {
 		$this->Navigation->addCrumb('Absence - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
@@ -348,14 +351,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
 		if(!empty($sectionOptions)){
-			if ($sectionId != 0) {
-				if (!array_key_exists($sectionId, $sectionOptions)) {
-					$sectionId = key($sectionOptions);
+			if(isset($sectionId)){
+				if ($sectionId != 0) {
+					if (!array_key_exists($sectionId, $sectionOptions)) {
+						$sectionId = key($sectionOptions);
+					}
 				}
-			} else {
+			}else{
 				$sectionId = key($sectionOptions);
 			}
 		}
+		$sectionOptions = $this->controller->Option->prependLabel($sectionOptions, 'InstitutionSiteStudentAbsence.select_section');
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
 		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
@@ -517,7 +523,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->setVar(compact('yearOptions', 'selectedYear', 'sectionOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'sectionId'));
 	}
 
-	public function dayview($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function dayview($yearId=0, $sectionId=null, $weekId=null, $dayId=null) {
 		if ($dayId==null||$dayId==0) {
 			return $this->redirect(array('action' => get_class($this), 'index', $yearId, $sectionId, $weekId));
 		} 
@@ -542,14 +548,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
 		if(!empty($sectionOptions)){
-			if ($sectionId != 0) {
-				if (!array_key_exists($sectionId, $sectionOptions)) {
-					$sectionId = key($sectionOptions);
+			if(isset($sectionId)){
+				if ($sectionId != 0) {
+					if (!array_key_exists($sectionId, $sectionOptions)) {
+						$sectionId = key($sectionOptions);
+					}
 				}
-			} else {
+			}else{
 				$sectionId = key($sectionOptions);
 			}
 		}
+		$sectionOptions = $this->controller->Option->prependLabel($sectionOptions, 'InstitutionSiteStudentAbsence.select_section');
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
 		$currentWeekId = $this->controller->getCurrentWeekId($yearId);
@@ -625,7 +634,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 	}
 
-	public function dayedit($yearId=0, $sectionId=0, $weekId=null, $dayId=null) {
+	public function dayedit($yearId=0, $sectionId=null, $weekId=null, $dayId=null) {
 		if ($dayId==null||$dayId==0) {
 			return $this->redirect(array('action' => get_class($this), 'index', $yearId, $sectionId, $weekId));
 		}
@@ -650,14 +659,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $yearId);
 		if(!empty($sectionOptions)){
-			if ($sectionId != 0) {
-				if (!array_key_exists($sectionId, $sectionOptions)) {
-					$sectionId = key($sectionOptions);
+			if(isset($sectionId)){
+				if ($sectionId != 0) {
+					if (!array_key_exists($sectionId, $sectionOptions)) {
+						$sectionId = key($sectionOptions);
+					}
 				}
-			} else {
+			}else{
 				$sectionId = key($sectionOptions);
 			}
 		}
+		$sectionOptions = $this->controller->Option->prependLabel($sectionOptions, 'InstitutionSiteStudentAbsence.select_section');
 		
 		$weekList = $this->controller->getWeekListByYearId($yearId);
 		$currentWeekId = $this->controller->getCurrentWeekId($yearId);

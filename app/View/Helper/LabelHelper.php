@@ -347,7 +347,8 @@ class LabelHelper extends AppHelper {
 			'institution_site_section_id' => 'Section',
 			'student_id' => 'Student',
 			'absence_type' => 'Type',
-			'student_absence_reason_id' => 'Reason'
+			'student_absence_reason_id' => 'Reason',
+			'select_section' => 'Select Section'
 		),
 		'InstitutionSiteStaffAbsence' => array(
 			'title' => 'Absence - Staff',
