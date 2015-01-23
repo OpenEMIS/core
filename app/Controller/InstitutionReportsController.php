@@ -40,9 +40,16 @@ class InstitutionReportsController extends AppController {
 	public function generate($selectedFeature=0) {
 		$i=0;
 		$features = array(
-			array('value' => $i, 'selected' => ($selectedFeature == $i++), 'name' => __('Overview'), 'model' => 'InstitutionSite', 'period' => false),
-			array('value' => $i, 'selected' => ($selectedFeature == $i++), 'name' => __('Programmes'), 'model' => 'InstitutionSiteProgramme', 'period' => true)
+			array('name' => __('Overview'), 'model' => 'InstitutionSite', 'period' => false),
+			array('name' => __('Programmes'), 'model' => 'InstitutionSiteProgramme', 'period' => true),
+			array('name' => __('Positions'), 'model' => 'InstitutionSitePosition', 'period' => true),
+			array('name' => __('Shifts'), 'model' => 'InstitutionSiteShift', 'period' => true)
 		);
+
+		foreach ($features as $i => $feature) {
+			$features[$i]['value'] = $i;
+			$features[$i]['selected'] = ($selectedFeature == $i);
+		}
 
 		$this->Report->generate($features, $selectedFeature);
 	}

@@ -95,16 +95,14 @@ class ReportComponent extends Component {
 		$request = $this->controller->request;
 		
 		if ($request->is('post')) {
-			//pr($features[$selectedFeature]);
-			//pr($request->data);
 			$name = $features[$selectedFeature]['name'];
 			$period = null;
-			$params = array('model' => $features[$selectedFeature]['model']);
+			$params = array('model' => $features[$selectedFeature]['model'], 'options' => array());
 			if (array_key_exists('period', $request->data['Report'])) {
 				$periodId = $request->data['Report']['period'];
 				$period = $this->Period->field('name', $periodId);
 				$name .= ' (' . $period . ')';
-				$params['conditions'] = array('SchoolYear.id' => $periodId);
+				$params['options']['conditions'] = array('SchoolYear.id' => $periodId);
 			}
 			$obj = array(
 				'name' => $name,
