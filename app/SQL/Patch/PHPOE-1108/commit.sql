@@ -104,7 +104,7 @@ INSERT INTO `security_functions` (
 `created`
 )
 VALUES (
-NULL , 'Questions', 'SurveyQuestions', 'Administration', 'Surveys', '-1', 'index|view|preview|download', '_view:edit|reorder|moveOrder', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', '1', '0000-00-00 00:00:00'
+NULL , 'Questions', 'SurveyQuestions', 'Administration', 'Surveys', '-1', 'index|view|preview|listing|download', '_view:edit|reorder|moveOrder', '_view:add', '_view:delete', NULL , @orderOfAlertsSecurity, '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @orderOfAlertsSecurity := @orderOfAlertsSecurity + 1;
