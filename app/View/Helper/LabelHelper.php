@@ -90,7 +90,9 @@ class LabelHelper extends AppHelper {
 			'system' => 'System',
 			'method' => 'Method',
 			'section' => 'Section',
-			'sections' => 'Sections'
+			'sections' => 'Sections',
+			'classes' => 'Classes',
+			'academic_period' => 'Academic Peroid'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -458,6 +460,9 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'InstitutionSiteSection' => array(
+			'home_room_teacher' => 'Home Room Teacher'
 		)
 	);
 	
