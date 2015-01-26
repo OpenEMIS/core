@@ -77,6 +77,16 @@ class InstitutionSiteInfrastructure extends AppModel {
 				'rule' => array('compareYear', 'year_disposed'),
 				'message' => 'Year Acquired cannot be later than Year Disposed'
 			)
+		),
+		'size' => array(
+			'ruleNumeric' => array(
+				'rule' => 'numeric',
+				'message' => 'Please enter a valid Size.'
+			),
+			'rulePositive' => array(
+				'rule' => array('comparison', '>', 0),
+				'message' => 'Please enter a valid Size.'
+			)
 		)
 	);
 	
