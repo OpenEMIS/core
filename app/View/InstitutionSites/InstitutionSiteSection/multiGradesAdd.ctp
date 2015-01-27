@@ -30,6 +30,12 @@ echo $this->Form->input('name');
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 
+$labelOptions['text'] = $this->Label->get('InstitutionSiteSection.home_room_teacher');
+echo $this->Form->input('institution_site_staff_id', array(
+	'options' => $staffOptions,
+	'label' => $labelOptions
+));
+
 ?>
 <div class="form-group">
 	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>

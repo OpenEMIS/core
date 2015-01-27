@@ -92,7 +92,13 @@ class LabelHelper extends AppHelper {
 			'section' => 'Section',
 			'sections' => 'Sections',
 			'classes' => 'Classes',
-			'academic_period' => 'Academic Peroid'
+			'academic_period' => 'Academic Peroid',
+			'subject' => 'Subject',
+			'teacher' => 'Teacher',
+			'student' => 'Student',
+			'date_of_birth' => 'Date of Birth',
+			'sex' => 'Sex',
+			
 		),
 		'date' => array(
 			'start' => 'Start Date',
