@@ -604,25 +604,6 @@ class InstitutionSiteStaff extends AppModel {
 	}
 	
 	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
-		//$startYear = date('Y', strtotime($startDate));
-		//$endYear = date('Y', strtotime($endDate));
-
-		$conditions = array(
-			'InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId
-		);
-
-//		$conditions['OR'] = array(
-//				array(
-//					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
-//					'InstitutionSiteStaff.end_year IS NULL'
-//				),
-//				array(
-//					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
-//					'InstitutionSiteStaff.end_year >= "' . $startYear . '"',
-//					'InstitutionSiteStaff.end_year IS NOT NULL'
-//				)
-//		);
-
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
@@ -674,60 +655,10 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function getStaffByAcademicPeriod($institutionSiteId, $academicPeriodId) {
 		$yearObj = ClassRegistry::init('AcademicPeriod')->findById($academicPeriodId);
-		$startDate = $yearObj['AcademicPeriod']['start_date'];
-		$endDate = $yearObj['AcademicPeriod']['end_date'];
+		$startDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['start_date']));
+		$endDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['end_date']));
 		
-		$options['conditions'] = array(
-			'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
-			'OR' => array(
-				array(
-					'InstitutionSiteStaff.end_date IS NULL',
-					'InstitutionSiteStaff.start_date >=' => $startDate
-				),
-				array(
-					'InstitutionSiteStaff.end_date IS NOT NULL',
-					'InstitutionSiteStaff.start_date <=' => $endDate,
-					'InstitutionSiteStaff.end_date >=' => $startDate
-				),
-				array(
-					'InstitutionSiteStaff.end_date IS NOT NULL',
-					'InstitutionSiteStaff.start_date >' => $startDate,
-					'InstitutionSiteStaff.start_date <=' => $endDate
-				)
-			)
-		);
-
-		// $options['conditions'] = array(
-		// 	'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
-		// 	'OR' => array(
-		// 		array(
-		// 			'InstitutionSiteStaff.end_date IS NULL',
-		// 			'InstitutionSiteStaff.start_date <=' => $endDate
-		// 		),
-		// 		array(
-		// 			'InstitutionSiteStaff.end_date IS NOT NULL',
-		// 			'InstitutionSiteStaff.start_date <=' => $endDate,
-		// 			'InstitutionSiteStaff.end_date >=' => $startDate
-		// 		)
-		// 	)
-		// );
-
-
-		
-		//$options['recursive'] =-1;
-		$options['fields'] = array(
-				'DISTINCT Staff.id',
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
-				'Staff.preferred_name'
-		);
-		
-		$options['recursive'] = 0;
-		
-		$data = $this->find('all', $options);
+		$data = $this->getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate);
 		
 		return $data;
 	}
