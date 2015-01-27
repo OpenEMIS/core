@@ -277,6 +277,11 @@ class InstitutionSiteClass extends AppModel {
 			
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForClass($id);
 			//pr($sections);
+			
+			$staffData = array();
+			$studentsData = array();
+			$controller->set(compact('staffData', 'studentsData'));
+			
 			$controller->set('sections', $sections);
 			
 			$name = $data[$this->alias]['name'];

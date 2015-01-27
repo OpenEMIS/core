@@ -19,13 +19,18 @@ $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
+
+$labelOptions['text'] = $this->Label->get('general.academic_period');
 echo $this->Form->input('school_year_id', array(
 	'options' => $yearOptions, 
 	'url' => $this->params['controller'] . '/' . $model . '/add',
 	'default' => $selectedYear,
-	'onchange' => 'jsForm.change(this)'
+	'onchange' => 'jsForm.change(this)',
+	'label' => $labelOptions
 ));
-echo $this->Form->input('name');
+
+$labelOptions['text'] = $this->Label->get('general.section');
+echo $this->Form->input('name', array('label' => $labelOptions));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
