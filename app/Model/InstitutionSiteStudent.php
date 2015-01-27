@@ -156,6 +156,7 @@ class InstitutionSiteStudent extends AppModel {
 			'order' => array('IdentityType.default DESC')
 		));
 		$conditions['defaultIdentity'] = $defaultIdentity['IdentityType']['id'];
+		$conditions[] = 'Student.id != ""';
 
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
