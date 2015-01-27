@@ -29,7 +29,11 @@ class ReportComponent extends Component {
 			'period' => __('Period'),
 			'format' => __('Format')
 		);
+		$formatOptions = array(
+			'excel' => 'Excel'
+		);
 		$this->controller->set('steps', $steps);
+		$this->controller->set('formatOptions', $formatOptions);
 
 		$this->Period = ClassRegistry::init('AcademicPeriod');
 		$this->controller->set('periodOptions', $this->Period->getAvailableAcademicPeriods());
@@ -63,7 +67,7 @@ class ReportComponent extends Component {
 		$userId = $this->Auth->user('id');
 		$id = $this->controller->params->query['id'];
 		$fields = array(
-			'ReportProgress.expiry_date',
+			'ReportProgress.modified',
 			'ReportProgress.current_records',
 			'ReportProgress.total_records'
 		);
@@ -76,7 +80,7 @@ class ReportComponent extends Component {
 			} else {
 				$data['percent'] = 0;
 			}
-			$data['expiry'] = $obj['ReportProgress']['expiry_date'];
+			$data['modified'] = $obj['ReportProgress']['modified'];
 		}
 		return json_encode($data);
 	}
@@ -96,18 +100,20 @@ class ReportComponent extends Component {
 		
 		if ($request->is('post')) {
 			$name = $features[$selectedFeature]['name'];
+			$format = $request->data['Report']['format'];
 			$period = null;
-			$params = array('model' => $features[$selectedFeature]['model'], 'options' => array());
+			$params = array('model' => $features[$selectedFeature]['model'], 'format' => $format, 'options' => array());
 			if (array_key_exists('period', $request->data['Report'])) {
 				$periodId = $request->data['Report']['period'];
-				$period = $this->Period->field('name', $periodId);
+				$period = $this->Period->field('name', array('id' => $periodId));
 				$name .= ' (' . $period . ')';
-				$params['options']['conditions'] = array('SchoolYear.id' => $periodId);
+				$params['options']['conditions'] = array('AcademicPeriod.id' => $periodId);
 			}
 			$obj = array(
 				'name' => $name,
 				'params' => $params
 			);
+			//pr($request->data);die;
 			//pr($obj);die;
 			$id = $this->ReportProgress->addReport($obj);
 			if ($id !== false) {

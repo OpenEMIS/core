@@ -15,7 +15,7 @@ var ReportList = {
 				var current = $(e).attr('data-transitiongoal');
 				var rowId = $(e).closest('tr').attr('row-id');
 
-				if (current < 100 || $(e).closest('tr').find('.expiry').html() == '') {
+				if (current < 100 || $(e).closest('tr').find('.modified').html() == '') {
 					ReportList.getProgress(rowId);
 				} else {
 					$(e).closest('.progress').fadeOut(1000, function() {
@@ -39,8 +39,8 @@ var ReportList = {
 				if (data['percent'] != undefined) {
 					$('[row-id="' + id + '"] [role="progressbar"]').attr('data-transitiongoal', data['percent']);
 					ReportList.init(id);
-					if (data['expiry'] != null) {
-						$(selector).find('.expiry').html(data['expiry']);
+					if (data['percent'] == 100 && data['modified'] != null) {
+						$(selector).find('.modified').html(data['modified']);
 					}
 				}
 			}
