@@ -31,8 +31,8 @@ class ReportComponent extends Component {
 		);
 		$this->controller->set('steps', $steps);
 
-		$this->Period = ClassRegistry::init('SchoolYear');
-		$this->controller->set('periodOptions', $this->Period->getAvailableYears());
+		$this->Period = ClassRegistry::init('AcademicPeriod');
+		$this->controller->set('periodOptions', $this->Period->getAvailableAcademicPeriods());
 
 		$this->ReportProgress = ClassRegistry::init('ReportProgress');
 	}
