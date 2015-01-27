@@ -21,8 +21,8 @@ echo $this->element('../InstitutionSites/classes/control', array());
 				<th><?php echo $this->Label->get('general.class') ?></th>
 				<th><?php echo $this->Label->get('general.subject'); ?></th>
 				<th><?php echo $this->Label->get('general.teacher'); ?></th>
-				<th><?php echo $this->Label->get('gender.m'); ?></th>
-				<th><?php echo $this->Label->get('gender.f'); ?></th>
+				<th><?php echo $this->Label->get('general.male_students'); ?></th>
+				<th><?php echo $this->Label->get('general.female_students'); ?></th>
 			</tr>
 		</thead>
 

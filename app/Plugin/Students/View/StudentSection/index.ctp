@@ -1,6 +1,6 @@
 <?php 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Classes'));
+$this->assign('contentHeader', __('Sections'));
 
 $this->start('contentBody');
 ?>
@@ -11,10 +11,9 @@ $this->start('contentBody');
 			<tr>
 				<th><?php echo $this->Label->get('general.academic_period'); ?></th>
 				<th><?php echo $this->Label->get('Institution.name'); ?></th>
+				<th><?php echo $this->Label->get('general.grade'); ?></th>
 				<th><?php echo $this->Label->get('general.section'); ?></th>
-				<th><?php echo $this->Label->get('general.class'); ?></th>
-				<th><?php echo $this->Label->get('general.subject'); ?></th>
-				<th><?php echo $this->Label->get('general.teacher'); ?></th>
+				<th><?php echo $this->Label->get('InstitutionSiteSection.home_room_teacher'); ?></th>
 			</tr>
 		</thead>
 		
