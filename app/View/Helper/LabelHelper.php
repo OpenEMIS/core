@@ -93,7 +93,8 @@ class LabelHelper extends AppHelper {
 			'sections' => 'Sections',
 			'code' => 'Code',
 			'type' => 'Type',
-			'size' => 'Size'
+			'size' => 'Size',
+			'academic_period' => 'Academic Period'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -345,7 +346,7 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteStudentAbsence' => array(
 			'title' => 'Absence - Students',
-			'school_year_id' => 'School Year',
+			'academic_period_id' => 'Academic Period',
 			'institution_site_class_id' => 'Class',
 			'institution_site_section_id' => 'Section',
 			'student_id' => 'Student',
@@ -360,7 +361,7 @@ class LabelHelper extends AppHelper {
 			'last_date_absent' => 'Last Date Absent',
 			'start_time_absent' => 'Start Time Absent',
 			'end_time_absent' => 'End Time Absent',
-			'school_year_id' => 'School Year',
+			'academic_period_id' => 'Academic Period',
 			'staff_id' => 'Staff',
 			'absence_type' => 'Type',
 			'staff_absence_reason_id' => 'Reason'
@@ -399,7 +400,7 @@ class LabelHelper extends AppHelper {
 		),
 		
 		'InstitutionSiteFee' => array(
-			'school_year_id' => 'School Year',
+			'academic_period_id' => 'Academic Period',
 			'education_grade_id' => 'Grade',
 			'InstitutionSiteFeeType' => 'Fee Types'
 		),
@@ -411,7 +412,7 @@ class LabelHelper extends AppHelper {
 			'fees' => 'Fees',
 			'paid' => 'Paid',
 			'outstanding' => 'Outstanding',
-			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
+			'no_student' => 'No Student associated in the selected Education Grade and Academic Period.',
 			'no_payment' => 'No Payment Records.',
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
@@ -480,6 +481,14 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteSurveyCompleted' => array(
 			'title' => 'Completed'
+		),
+		'AcademicPeriod' => array(
+			'name' => 'Academic Period',
+			'academic_period_level_id' => 'Academic Period Level',
+			'select' => '-- Select Academic Period --'
+		),
+		'AcademicPeriodLevel' => array(
+			'name' => 'Academic Period Level'
 		)
 	);
 	

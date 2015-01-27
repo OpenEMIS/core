@@ -9,7 +9,7 @@ var QualityRubric = {
 
         //   alert('b4 = '+url);
         //var selectedDate = $('#dateYear').val()+ '-'+$('#dateMonth').val()+ '-'+$('#dateDay').val();
-        var schoolYearId = $('#schoolYearId').val();
+        var academicPeriodId = $('#academicPeriodId').val();
         var rubricsTemplateId = $('#rubricsTemplateId').val();
         var institutionSiteClassGradeId = $('#institutionSiteClassGradeId').val();
         var institutionSiteClassId = $('#institutionSiteClassId').val();
@@ -19,20 +19,20 @@ var QualityRubric = {
         //url += '/'+ selectedDate;
 
         switch ($(obj).attr('id')) {
-            case 'schoolYearId':
-                url += '/' + schoolYearId;
+            case 'academicPeriodId':
+                url += '/' + academicPeriodId;
                 break;
             case 'institutionSiteClassGradeId':
-                url += '/' + schoolYearId + '/' + institutionSiteClassGradeId;
+                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId;
                 break;
             case 'institutionSiteClassId':
-                url += '/' + schoolYearId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId;
+                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId;
                 break;
             case 'rubricsTemplateId':
-                url += '/' + schoolYearId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId;
+                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId;
                 break;
             case 'institutionSitestaffId':
-                url += '/' + schoolYearId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId + '/' + institutionSitestaffId;
+                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId + '/' + institutionSitestaffId;
                 break;
 
         }

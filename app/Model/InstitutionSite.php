@@ -317,7 +317,7 @@ class InstitutionSite extends AppModel {
 	}
 	
 	// Yearbook
-	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
+	public function getCountByCycleId($academicPeriodId, $cycleId, $extras=array()) {
 		$options = array('recursive' => -1);
 		
 		$conditions = array();
@@ -337,11 +337,11 @@ class InstitutionSite extends AppModel {
 				)
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
 				'conditions' => array(
-					'SchoolYear.id = ' . $yearId,
-					'SchoolYear.end_date >= InstitutionSite.date_opened'
+					'AcademicPeriod.id = ' . $academicPeriodId,
+					'AcademicPeriod.end_date >= InstitutionSite.date_opened'
 				)
 			)
 		);
@@ -375,7 +375,7 @@ class InstitutionSite extends AppModel {
 		return $data;
 	}
 	
-	public function getCountByAreaId($yearId, $areaId) {
+	public function getCountByAreaId($academicPeriodId, $areaId) {
 		$data = $this->find('count', array(
 			'recursive' => -1,
 			'joins' => array(
@@ -394,11 +394,11 @@ class InstitutionSite extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'conditions' => array(
-						'SchoolYear.id = ' . $yearId,
-						'SchoolYear.end_date >= InstitutionSite.date_opened'
+						'AcademicPeriod.id = ' . $academicPeriodId,
+						'AcademicPeriod.end_date >= InstitutionSite.date_opened'
 					)
 				)
 			)

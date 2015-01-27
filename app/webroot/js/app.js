@@ -591,14 +591,14 @@ var jsForm = {
 	},
 	
 	filterAbsenceByMonth: function(obj){
-		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldAcademicPeriod = $("select#academicPeriodId");
 		var fieldMonth = $("select#monthId");
-		if(fieldSchoolYear.length !== 1 || fieldMonth.length !== 1){
+		if(fieldAcademicPeriod.length !== 1 || fieldMonth.length !== 1){
 			return false;
 		}
 		
 		var url = getRootURL() + $(obj).parent('div').attr('url');
-		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldAcademicPeriod.val();
 		url += '/' + fieldMonth.val();
 		
 		window.location.href = url;

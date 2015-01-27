@@ -1,15 +1,15 @@
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		if (empty($yearOptions)) {
-			array_push($yearOptions, $this->Label->get('general.noData'));
+		if (empty($academicPeriodOptions)) {
+			array_push($academicPeriodOptions, $this->Label->get('general.noData'));
 		}
-		echo $this->Form->input('school_year_id', array(
+		echo $this->Form->input('academic_period_id', array(
 			'label' => false,
 			'div' => false,
 			'class' => ' form-control',
-			'default' => $selectedYear,
-			'options' => $yearOptions,
+			'default' => $selectedAcademicPeriod,
+			'options' => $academicPeriodOptions,
 			'onchange' => 'jsForm.change(this)',
 			'url' => "InstitutionSites/$model/show"
 		));
@@ -28,7 +28,7 @@
 			'default' => $selectedSection,
 			'options' => $sectionOptions,
 			'onchange' => 'jsForm.change(this)',
-			'url' => "InstitutionSites/$model/show/" . $selectedYear
+			'url' => "InstitutionSites/$model/show/" . $selectedAcademicPeriod
 		));
 		?>
 	</div>

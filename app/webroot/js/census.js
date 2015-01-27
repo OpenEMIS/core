@@ -14,9 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 var Census = {
-	yearId: '#SchoolYearId',
+	academicPeriodId: '#AcademicPeriodId',
 	
-	navigateYear: function(obj) {
+	navigateAcademicPeriod: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
 	},
 	
@@ -148,7 +148,7 @@ var Census = {
 			$.dialog(dlgOpt);
 			return false;
 		} else {
-			var yearId = $('#SchoolYearId').val();
+			var academicPeriodId = $('#AcademicPeriodId').val();
 			var maskId;
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
@@ -161,7 +161,7 @@ var Census = {
 				type: 'POST',
 				dataType: 'text',
 				url: url,
-				data: {school_year_id: yearId},
+				data: {academic_period_id: academicPeriodId},
 				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
 				success: ajaxSuccess
 			});

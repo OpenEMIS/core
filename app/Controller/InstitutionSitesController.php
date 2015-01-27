@@ -46,7 +46,7 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteType',
 		'InstitutionSiteStudent',
 		'InstitutionSiteStaff',
-		'SchoolYear',
+		'AcademicPeriod',
 		'Students.Student',
 		'Staff.Staff',
 		'Staff.StaffStatus',
@@ -483,238 +483,17 @@ class InstitutionSitesController extends AppController {
 		$this->set('id', $this->institutionSiteId);
 	}
 
-	public function classesAssessments() {
+	private function getAvailableAcademicPeriodId($academicPeriodList) {
+		$academicPeriodId = 0;
 		if (isset($this->params['pass'][0])) {
-			$classId = $this->params['pass'][0];
-			$class = $this->InstitutionSiteClass->findById($classId);
-			if ($class) {
-				$class = $class['InstitutionSiteClass'];
-				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Results');
-				$data = $this->AssessmentItemType->getAssessmentsByClass($classId);
-
-				if (empty($data)) {
-					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
-				}
-				$this->set('classId', $classId);
-				$this->set('data', $data);
-			} else {
-				$this->redirect(array('action' => 'classes'));
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$this->redirect(array('action' => 'classes'));
+			$academicPeriodId = key($academicPeriodList);
 		}
-	}
-
-	public function classesResults() {
-		if (count($this->params['pass']) == 2 || count($this->params['pass']) == 3) {
-			$classId = $this->params['pass'][0];
-			$assessmentId = $this->params['pass'][1];
-			$class = $this->InstitutionSiteClass->findById($classId);
-			$selectedItem = 0;
-			if ($class) {
-				$class = $class['InstitutionSiteClass'];
-				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Results');
-				$items = $this->AssessmentItem->getItemList($assessmentId);
-				if (empty($items)) {
-					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
-				} else {
-					$selectedItem = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($items);
-					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
-					if (empty($data)) {
-						$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
-					}
-					$this->set('itemOptions', $items);
-					$this->set('data', $data);
-				}
-				$this->set('classId', $classId);
-				$this->set('assessmentId', $assessmentId);
-				$this->set('selectedItem', $selectedItem);
-			} else {
-				$this->redirect(array('action' => 'classes'));
-			}
-		} else {
-			$this->redirect(array('action' => 'classes'));
-		}
-	}
-
-	public function classesResultsEdit() {
-		if (count($this->params['pass']) == 2 || count($this->params['pass']) == 3) {
-			$classId = $this->params['pass'][0];
-			$assessmentId = $this->params['pass'][1];
-			$class = $this->InstitutionSiteClass->findById($classId);
-			$selectedItem = 0;
-			if ($class) {
-				$class = $class['InstitutionSiteClass'];
-				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Results');
-				$items = $this->AssessmentItem->getItemList($assessmentId);
-				if (empty($items)) {
-					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
-				} else {
-					$selectedItem = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($items);
-					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
-					if ($this->request->is('get')) {
-						if (empty($data)) {
-							$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
-						}
-						$gradingOptions = $this->AssessmentResultType->getList();
-						$this->set('classId', $classId);
-						$this->set('assessmentId', $assessmentId);
-						$this->set('selectedItem', $selectedItem);
-						$this->set('itemOptions', $items);
-						$this->set('gradingOptions', $gradingOptions);
-						$this->set('data', $data);
-					} else {
-						if (isset($this->data['AssessmentItemResult'])) {
-							$result = $this->data['AssessmentItemResult'];
-							foreach ($result as $key => &$obj) {
-								$obj['assessment_item_id'] = $selectedItem;
-								$obj['institution_site_id'] = $this->institutionSiteId;
-							}
-							if (!empty($result)) {
-								$this->AssessmentItemResult->saveMany($result);
-								$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-							}
-						}
-						$this->redirect(array('action' => 'classesResults', $classId, $assessmentId, $selectedItem));
-					}
-				}
-				$this->set('classId', $classId);
-				$this->set('assessmentId', $assessmentId);
-				$this->set('selectedItem', $selectedItem);
-			} else {
-				$this->redirect(array('action' => 'classes'));
-			}
-		} else {
-			$this->redirect(array('action' => 'classes'));
-		}
-	}
-	
-	//STUDENTS CUSTOM FIELD PER YEAR - STARTS - 
-	public function studentsCustFieldYrInits() {
-		$action = $this->action;
-		$siteid = $this->institutionSiteId;
-		$id = @$this->request->params['pass'][0];
-		$years = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
-		$condParam = array('student_id' => $id, 'institution_site_id' => $siteid, 'school_year_id' => $selectedYear);
-		$arrMap = array('CustomField' => 'StudentDetailsCustomField',
-			'CustomFieldOption' => 'StudentDetailsCustomFieldOption',
-			'CustomValue' => 'StudentDetailsCustomValue',
-			'Year' => 'SchoolYear');
-
-		$studentId = $this->params['pass'][0];
-		$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-		$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
-		return compact('action', 'siteid', 'id', 'years', 'selectedYear', 'condParam', 'arrMap');
-	}
-
-	public function studentsCustFieldYrView() {
-		extract($this->studentsCustFieldYrInits());
-		$this->Navigation->addCrumb('Academic');
-		$customfield = $this->Components->load('CustomField', $arrMap);
-		$data = array();
-		if ($id && $selectedYear && $siteid)
-			$data = $customfield->getCustomFieldView($condParam);
-
-		$displayEdit = true;
-		if (count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
-			$displayEdit = false;
-		}
-		$this->set(compact('arrMap', 'selectedYear', 'years', 'action', 'id', 'displayEdit'));
-		$this->set($data);
-		$this->set('id', $id);
-		$this->set('myview', 'studentsView');
-		$this->render('/Elements/customfields/view');
-	}
-
-	public function studentsCustFieldYrEdit() {
-		if ($this->request->is('post')) {
-			extract($this->studentsCustFieldYrInits());
-			$customfield = $this->Components->load('CustomField', $arrMap);
-			$cond = array('institution_site_id' => $siteid,
-				'student_id' => $id,
-				'school_year_id' => $selectedYear);
-			$customfield->saveCustomFields($this->request->data, $cond);
-			$this->redirect(array('action' => 'studentsCustFieldYrView', $id, $selectedYear));
-		} else {
-			$this->studentsCustFieldYrView();
-			$this->render('/Elements/customfields/edit');
-		}
-	}
-
-	//STUDENTS CUSTOM FIELD PER YEAR - ENDS - 
-	//STAFF CUSTOM FIELD PER YEAR - STARTS - 
-	public function staffCustFieldYrInits() {
-		$action = $this->action;
-		$siteid = $this->institutionSiteId;
-		$id = @$this->request->params['pass'][0];
-		$years = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
-		$condParam = array('staff_id' => $id, 'institution_site_id' => $siteid, 'school_year_id' => $selectedYear);
-		$arrMap = array('CustomField' => 'StaffDetailsCustomField',
-			'CustomFieldOption' => 'StaffDetailsCustomFieldOption',
-			'CustomValue' => 'StaffDetailsCustomValue',
-			'Year' => 'SchoolYear');
-
-		$staffId = $this->params['pass'][0];
-		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-		$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
-		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
-		return compact('action', 'siteid', 'id', 'years', 'selectedYear', 'condParam', 'arrMap');
-	}
-
-	public function staffCustFieldYrView() {
-		extract($this->staffCustFieldYrInits());
-		$this->Navigation->addCrumb('Academic');
-		$customfield = $this->Components->load('CustomField', $arrMap);
-		$data = array();
-		if ($id && $selectedYear && $siteid)
-			$data = $customfield->getCustomFieldView($condParam);
-		$displayEdit = true;
-		if (count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
-			$displayEdit = false;
-		}
-		$this->set(compact('arrMap', 'selectedYear', 'years', 'action', 'id', 'displayEdit'));
-		$this->set($data);
-		$this->set('id', $id);
-		$this->set('myview', 'staffView');
-		$this->render('/Elements/customfields/view');
-	}
-
-	public function staffCustFieldYrEdit() {
-		if ($this->request->is('post')) {
-			extract($this->staffCustFieldYrInits());
-			$customfield = $this->Components->load('CustomField', $arrMap);
-			$cond = array('institution_site_id' => $siteid,
-				'staff_id' => $id,
-				'school_year_id' => $selectedYear);
-			$customfield->saveCustomFields($this->request->data, $cond);
-			$this->redirect(array('action' => 'staffCustFieldYrView', $id, $selectedYear));
-		} else {
-			$this->staffCustFieldYrView();
-			$this->render('/Elements/customfields/edit');
-		}
-	}
-
-	//STAFF CUSTOM FIELD PER YEAR - ENDS -
-	
-	private function getAvailableYearId($yearList) {
-		$yearId = 0;
-		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
-			}
-		} else {
-			$yearId = key($yearList);
-		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	public function siteProfile($id) {
@@ -846,24 +625,22 @@ class InstitutionSitesController extends AppController {
 		return $lastWeekday;
 	}
 	
-	public function getWeekListByYearId($yearId, $forOptions=true){
+	public function getWeekListByAcademicPeriodId($academicPeriodId, $forOptions=true){
 		$settingFirstWeekDay = $this->getFirstWeekdayBySetting();
 		$lastWeekDay = $this->getLastWeekdayBySetting();
 		
 		$currentDate = date("Y-m-d");
 		
-		//$yearName = $this->SchoolYear->getSchoolYearById($yearId);
-		$schoolYearObject = $this->SchoolYear->getSchoolYearObjectById($yearId);
-		//pr($schoolYearObject);
-		$yearName = $schoolYearObject['name'];
-		$startDateOfSchoolYear = $schoolYearObject['start_date'];
-		$endDateOfSchoolYear = $schoolYearObject['end_date'];
-		$stampFirstDayOfYear = strtotime($startDateOfSchoolYear);
-		//pr($stampFirstDayOfYear);
-		$stampEndDateOfSchoolYear = strtotime($endDateOfSchoolYear);
-		//$stampFirstDayOfYear = mktime(0, 0, 0, 1, 1, $yearName);
+		$academicPeriodObject = $this->AcademicPeriod->getAcademicPeriodObjectById($academicPeriodId);
+		$academicPeriodName = $academicPeriodObject['name'];
+		$startDateOfAcademicPeriod = $academicPeriodObject['start_date'];
+		$endDateOfAcademicPeriod = $academicPeriodObject['end_date'];
+		$stampFirstDayOfAcademicPeriod = strtotime($startDateOfAcademicPeriod);
+		//pr($stampFirstDayOfAcademicPeriod);
+		$stampEndDateOfAcademicPeriod = strtotime($endDateOfAcademicPeriod);
+		//$stampFirstDayOfAcademicPeriod = mktime(0, 0, 0, 1, 1, $academicPeriodName);
 		
-		$stampFirstWeekDay = strtotime($settingFirstWeekDay, $stampFirstDayOfYear);
+		$stampFirstWeekDay = strtotime($settingFirstWeekDay, $stampFirstDayOfAcademicPeriod);
 		//pr($stampFirstWeekDay);
 		$stampLastWeekDay = strtotime($lastWeekDay, $stampFirstWeekDay);
 		
@@ -874,7 +651,7 @@ class InstitutionSitesController extends AppController {
 		$stampNextLastWeekDay = $stampLastWeekDay;
 
 		$weekList = array();
-		if($stampFirstDayOfYear === $stampFirstWeekDay){
+		if($stampFirstDayOfAcademicPeriod === $stampFirstWeekDay){
 			$startingIndexWeek = 1;
 		}else{
 			$stampPrevFirstWeekDay = strtotime('-1 week', $stampNextFirstWeekDay);
@@ -882,8 +659,8 @@ class InstitutionSitesController extends AppController {
 			$datePrevFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampPrevFirstWeekDay));
 			$datePrevLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampPrevLastWeekDay));
 			
-			//if(date('Y', $stampPrevLastWeekDay) === $yearName){
-			if($stampPrevLastWeekDay >= $stampFirstDayOfYear){
+			//if(date('Y', $stampPrevLastWeekDay) === $academicPeriodName){
+			if($stampPrevLastWeekDay >= $stampFirstDayOfAcademicPeriod){
 				$startingIndexWeek = 2;
 				if($forOptions){
 					if($currentDate >= date("Y-m-d", $stampPrevFirstWeekDay) && $currentDate <= date("Y-m-d", $stampPrevLastWeekDay)){
@@ -901,10 +678,10 @@ class InstitutionSitesController extends AppController {
 			}
 		}
 		//pr($startingIndexWeek);
-		//while(date('Y', $stampNextFirstWeekDay) == $yearName){
+		//while(date('Y', $stampNextFirstWeekDay) == $academicPeriodName){
 		//pr($stampNextFirstWeekDay);
-		//pr($stampEndDateOfSchoolYear);
-		while($stampNextFirstWeekDay <= $stampEndDateOfSchoolYear){
+		//pr($stampEndDateOfAcademicPeriod);
+		while($stampNextFirstWeekDay <= $stampEndDateOfAcademicPeriod){
 			$dateNextFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampNextFirstWeekDay));
 			$dateNextLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampNextLastWeekDay));
 			
@@ -928,8 +705,8 @@ class InstitutionSitesController extends AppController {
 		return $weekList;
 	}
 	
-	public function getStartEndDateByYearWeek($yearId, $weekId){
-		$weekList = $this->getWeekListByYearId($yearId, false);
+	public function getStartEndDateByAcademicPeriodWeek($academicPeriodId, $weekId){
+		$weekList = $this->getWeekListByAcademicPeriodId($academicPeriodId, false);
 		if(isset($weekList[$weekId])){
 			return $weekList[$weekId];
 		}else{
@@ -938,8 +715,8 @@ class InstitutionSitesController extends AppController {
 		
 	}
 	
-	public function getCurrentWeekId($yearId){
-		$weekList = $this->getWeekListByYearId($yearId, false);
+	public function getCurrentWeekId($academicPeriodId){
+		$weekList = $this->getWeekListByAcademicPeriodId($academicPeriodId, false);
 		$currentDate = date("Y-m-d");
 		$currentWeekId = key($weekList);
 		foreach($weekList AS $id => $week){

@@ -23,7 +23,7 @@ $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('InstitutionSiteShift', $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->input('name');
-echo $this->Form->input('school_year_id', array('options' => $yearOptions));
+echo $this->Form->input('academic_period_id', array('options' => $academicPeriodOptions));
 
 echo $this->FormUtility->timepicker('start_time', array('id' => 'startTime'));
 echo $this->FormUtility->timepicker('end_time', array('id' => 'endTime'));

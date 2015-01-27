@@ -23,12 +23,12 @@ echo $this->Form->hidden('student_id', array('id' => 'StudentId'));
 $labelOptions['text'] = $this->Label->get('general.openemisId');
 echo $this->Form->input('search', array('label' => $labelOptions, 'id' => 'studentNameAutoComplete', 'placeholder' => __('OpenEMIS ID, First Name or Last Name'),));
 
-$labelOptions['text'] = $this->Label->get('general.year');
-echo $this->Form->input('school_year_id', array(
+$labelOptions['text'] = $this->Label->get('general.academic_period');
+echo $this->Form->input('academic_period_id', array(
 	'class' => 'form-control',
-	'options' => $yearOptions,
+	'options' => $academicPeriodOptions,
 	'url' => 'InstitutionSites/programmesOptions',
-	'yearUrl' => 'InstitutionSites/studentsAjaxStartDate',
+	'academicPeriodUrl' => 'InstitutionSites/studentsAjaxStartDate',
 	'onchange' => 'InstitutionSiteStudents.getProgrammeOptions(this)',
 	'label' => $labelOptions
 ));
@@ -40,7 +40,7 @@ echo $this->Form->input('institution_site_programme_id', array('id' => 'Institut
 //$labelOptions['text'] = $this->Label->get('general.status');
 //echo $this->Form->input('student_status_id', array('class' => 'form-control', 'options' => $statusOptions, 'label' => $labelOptions));
 
-echo $this->FormUtility->datepicker('start_date', array('id' => 'startDate', 'data-date' => $yearData['SchoolYear']['start_date'],'startDate' => $yearData['SchoolYear']['start_date'], 'endDate' => $yearData['SchoolYear']['end_date']));
+echo $this->FormUtility->datepicker('start_date', array('id' => 'startDate', 'data-date' => $academicPeriodData['AcademicPeriod']['start_date'],'startDate' => $academicPeriodData['AcademicPeriod']['start_date'], 'endDate' => $academicPeriodData['AcademicPeriod']['end_date']));
 
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'students')));
 echo $this->Form->end();

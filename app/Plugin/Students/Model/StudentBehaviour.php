@@ -133,15 +133,15 @@ class StudentBehaviour extends StudentsAppModel {
 		$this->Navigation->addCrumb('Behaviour - Students');
 	}
 	
-//	public function show($selectedYear=0, $selectedClass=0) {
+//	public function show($selectedAcademicPeriod=0, $selectedClass=0) {
 //		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-//		$yearOptions = $this->InstitutionSiteClass->getYearOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
-//		if (!empty($yearOptions)) {
-//			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
-//				$selectedYear = key($yearOptions);
+//		$academicPeriodOptions = $this->InstitutionSiteClass->getAcademicPeriodOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
+//		if (!empty($academicPeriodOptions)) {
+//			if (empty($selectedAcademicPeriod) || (!empty($selectedAcademicPeriod) && !array_key_exists($selectedAcademicPeriod, $academicPeriodOptions))) {
+//				$selectedAcademicPeriod = key($academicPeriodOptions);
 //			}
 //		}
-//		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedYear);
+//		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedAcademicPeriod);
 //		if (!empty($classOptions)) {
 //			if (empty($selectedClass) || (!empty($selectedClass) && !array_key_exists($selectedClass, $classOptions))) {
 //				$selectedClass = key($classOptions);
@@ -152,20 +152,20 @@ class StudentBehaviour extends StudentsAppModel {
 //		if (empty($data)) {
 //			$this->Message->alert('general.noData');
 //		}
-//		$this->Session->write($this->alias.'.selectedYear', $selectedYear);
+//		$this->Session->write($this->alias.'.selectedAcademicPeriod', $selectedAcademicPeriod);
 //		$this->Session->write($this->alias.'.selectedClass', $selectedClass);
-//		$this->setVar(compact('data', 'yearOptions', 'classOptions', 'selectedYear', 'selectedClass'));
+//		$this->setVar(compact('data', 'academicPeriodOptions', 'classOptions', 'selectedAcademicPeriod', 'selectedClass'));
 //	}
 	
-	public function show($selectedYear=0, $selectedSection=0) {
+	public function show($selectedAcademicPeriod=0, $selectedSection=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->InstitutionSiteSection->getYearOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
-		if (!empty($yearOptions)) {
-			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
-				$selectedYear = key($yearOptions);
+		$academicPeriodOptions = $this->InstitutionSiteSection->getAcademicPeriodOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
+		if (!empty($academicPeriodOptions)) {
+			if (empty($selectedAcademicPeriod) || (!empty($selectedAcademicPeriod) && !array_key_exists($selectedAcademicPeriod, $academicPeriodOptions))) {
+				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 		}
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedYear);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedAcademicPeriod);
 		if (!empty($sectionOptions)) {
 			if (empty($selectedSection) || (!empty($selectedSection) && !array_key_exists($selectedSection, $sectionOptions))) {
 				$selectedSection = key($sectionOptions);
@@ -176,9 +176,9 @@ class StudentBehaviour extends StudentsAppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->Session->write($this->alias.'.selectedYear', $selectedYear);
+		$this->Session->write($this->alias.'.selectedAcademicPeriod', $selectedAcademicPeriod);
 		$this->Session->write($this->alias.'.selectedSection', $selectedSection);
-		$this->setVar(compact('data', 'yearOptions', 'sectionOptions', 'selectedYear', 'selectedSection'));
+		$this->setVar(compact('data', 'academicPeriodOptions', 'sectionOptions', 'selectedAcademicPeriod', 'selectedSection'));
 	}
 	
 	public function index($studentId = 0) {
@@ -202,9 +202,9 @@ class StudentBehaviour extends StudentsAppModel {
 				$student = $this->Student->findById($studentId);
 				$data = $this->findAllByStudentIdAndInstitutionSiteId($studentId, $institutionSiteId, array(), array('StudentBehaviour.date_of_behaviour'));
 				
-				$selectedYear = $this->Session->read($this->alias.'.selectedYear');
+				$selectedAcademicPeriod = $this->Session->read($this->alias.'.selectedAcademicPeriod');
 				$selectedClass = $this->Session->read($this->alias.'.selectedClass');
-				$this->setVar(compact('data', 'student', 'selectedYear', 'selectedClass'));
+				$this->setVar(compact('data', 'student', 'selectedAcademicPeriod', 'selectedClass'));
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => get_class($this), 'show'));

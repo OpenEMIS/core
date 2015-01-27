@@ -143,12 +143,12 @@ class InstitutionSiteStudent extends AppModel {
 		);
 		$this->setFieldOrder('institution', 0);
 		
-		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 		
-		$yearOptions = $SchoolYear->find('list', array('order' => array('order')));
+		$academicPeriodOptions = $AcademicPeriod->getAcademicPeriodList();
 		$this->fields['year'] = array(
 			'type' => 'select',
-			'options' => $yearOptions,
+			'options' => $academicPeriodOptions,
 			'visible' => true,
 			'attr' => array('onchange' => "$('#reload').click()")
 		);
@@ -171,10 +171,10 @@ class InstitutionSiteStudent extends AppModel {
 		
 		if ($this->action == 'add') {
 			if ($this->request->is('get')) {
-				$yearId = key($yearOptions);
-				$yearObj = $SchoolYear->findById($yearId);
-				$startDate = $yearObj['SchoolYear']['start_date'];
-				$endDate = $yearObj['SchoolYear']['end_date'];
+				$academicPeriodId = key($academicPeriodOptions);
+				$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
+				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
+				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 				$date = new DateTime($startDate);
 				$date->add(new DateInterval('P1D')); // plus 1 day
 				
@@ -188,7 +188,7 @@ class InstitutionSiteStudent extends AppModel {
 					'data-date' => $date->format('d-m-Y')
 				);
 		
-				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $yearId, true);
+				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
 				$this->fields['education_programme_id']['options'] = $programmeOptions;
 			}
 		}
@@ -199,7 +199,7 @@ class InstitutionSiteStudent extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStudent.search.';
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$yearOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
 		$statusOptions = $this->StudentStatus->getList();
@@ -212,14 +212,14 @@ class InstitutionSiteStudent extends AppModel {
 
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
-			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
+			$selectedAcademicPeriod = $this->request->data[$this->alias]['academic_period_id'];
 			$selectedProgramme = $this->request->data[$this->alias]['education_programme_id'];
 			$selectedStatus = $this->request->data[$this->alias]['student_status_id'];
 
-			if (strlen($selectedYear) != '') {
+			if (strlen($selectedAcademicPeriod) != '') {
 				// if the year falls between the start and end date
-				$conditions['InstitutionSiteStudent.start_year <='] = $selectedYear;
-				$conditions['InstitutionSiteStudent.end_year >='] = $selectedYear;
+				$conditions['InstitutionSiteStudent.start_year <='] = $selectedAcademicPeriod;
+				$conditions['InstitutionSiteStudent.end_year >='] = $selectedAcademicPeriod;
 			} else {
 				unset($conditions['InstitutionSiteStudent.start_year <=']);
 				unset($conditions['InstitutionSiteStudent.end_year >=']);
@@ -238,7 +238,7 @@ class InstitutionSiteStudent extends AppModel {
 			}
 		} else {
 			if (array_key_exists('InstitutionSiteStudent.start_year <=', $conditions)) {
-				$this->request->data[$this->alias]['school_year_id'] = $conditions['InstitutionSiteStudent.start_year <='];
+				$this->request->data[$this->alias]['academic_period_id'] = $conditions['InstitutionSiteStudent.start_year <='];
 			}
 			if (array_key_exists('EducationProgramme.id', $conditions)) {
 				$this->request->data[$this->alias]['education_programme_id'] = $conditions['EducationProgramme.id'];
@@ -279,15 +279,15 @@ class InstitutionSiteStudent extends AppModel {
 	public function add() {
 		$this->Navigation->addCrumb('Add existing Student');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 		
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$yearId = $data[$this->alias]['year'];
+			$academicPeriodId = $data[$this->alias]['year'];
 			
-			$yearObj = $SchoolYear->findById($yearId);
-			$startDate = $yearObj['SchoolYear']['start_date'];
-			$endDate = $yearObj['SchoolYear']['end_date'];
+			$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
+			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
+			$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 			$date = new DateTime($startDate);
 			$date->add(new DateInterval('P1D')); // plus 1 day
 			
@@ -300,7 +300,7 @@ class InstitutionSiteStudent extends AppModel {
 				'startDate' => $date->format('d-m-Y'),
 				'data-date' => $date->format('d-m-Y')
 			);
-			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $yearId, true);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			
 			$submit = $this->request->data['submit'];
@@ -330,7 +330,7 @@ class InstitutionSiteStudent extends AppModel {
 						$programmeId = $this->EducationProgramme->InstitutionSiteProgramme->field('id', array(
 							'institution_site_id' => $institutionSiteId,
 							'education_programme_id' => $data[$this->alias]['education_programme_id'],
-							'school_year_id' => $yearId
+							'academic_period_id' => $academicPeriodId
 						));
 						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
 						

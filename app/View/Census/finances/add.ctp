@@ -3,13 +3,13 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-	echo $this->Html->link(__('Back'), array('action' => 'finances', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Back'), array('action' => 'finances', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 
-$url = $this->params['controller'] . '/financesAdd/' . $selectedYear;
-$action = array('controller' => $this->params['controller'], 'action' => 'financesAdd', $selectedYear);
+$url = $this->params['controller'] . '/financesAdd/' . $selectedAcademicPeriod;
+$action = array('controller' => $this->params['controller'], 'action' => 'financesAdd', $selectedAcademicPeriod);
 if(!empty($natureId)) {
 	$action[] = $natureId;
 }
@@ -18,7 +18,7 @@ if(!empty($typeId)) {
 }
 $formOptions = $this->FormUtility->getFormOptions($action);
 echo $this->Form->create($model, $formOptions);
-echo $this->Form->input('year', array('value' => $year, 'disabled'));
+echo $this->Form->input('academicPeriod', array('value' => $academicPeriod, 'disabled'));
 echo $this->Form->input(__('Finance Nature'), array(
 	'options' => $natureOptions,
 	'url' => $url,
@@ -27,7 +27,7 @@ echo $this->Form->input(__('Finance Nature'), array(
 ));
 echo $this->Form->input(__('Finance Type'), array(
 	'options' => $typeOptions,
-	'url' => $this->params['controller'] . '/financesAdd/' . $selectedYear . '/' . $natureId,
+	'url' => $this->params['controller'] . '/financesAdd/' . $selectedAcademicPeriod . '/' . $natureId,
 	'value' => $typeId,
 	'onchange' => 'jsForm.change(this)'
 ));

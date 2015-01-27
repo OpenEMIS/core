@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Results'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'assessments', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'assessments', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -17,7 +17,7 @@ echo $this->Form->create('CensusAssessment', array(
     'inputDefaults' => array('label' => false, 'div' => false),
     'url' => array('controller' => 'Census', 'action' => 'assessmentsEdit')
 ));
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div id="textbooks" class="content_wrapper edit">
@@ -81,7 +81,7 @@ echo $this->element('census/year_options');
         <?php if (!empty($data)) { ?>
         <div class="controls">
             <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-        <?php echo $this->Html->link(__('Cancel'), array('action' => 'assessments', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'assessments', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
         </div>
     <?php } ?>
 

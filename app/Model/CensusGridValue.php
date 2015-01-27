@@ -29,12 +29,12 @@ class CensusGridValue extends AppModel {
 							'table' => 'school_years',
 							'alias' => 'SchoolYear',
 							'conditions' => array(
-								'CensusGridValue.school_year_id = SchoolYear.id'
+								'CensusGridValue.academic_period_id = SchoolYear.id'
 							)
 						)
 				),
 				'conditions' => array('CensusGridValue.institution_site_id' => $institutionSiteId),
-				'group' => array('CensusGridValue.school_year_id'),
+				'group' => array('CensusGridValue.academic_period_id'),
 				'order' => array('SchoolYear.name DESC')
 			)
 		);
