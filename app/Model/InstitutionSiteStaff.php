@@ -347,7 +347,7 @@ class InstitutionSiteStaff extends AppModel {
 			foreach ($list as $obj) {
 				$info = $obj['Staff'];
 				$data[] = array(
-					'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+					'label' => ModelHelper::getName($info, array('openEmisId'=>true)),
 					'value' => array('staff_id' => $info['id']) 
 				);
 			}
@@ -575,9 +575,9 @@ class InstitutionSiteStaff extends AppModel {
 		$options['conditions'] = array(
 			'OR' => array(
 				'Staff.first_name LIKE' => $search,
-				'Staff.last_name LIKE' => $search,
 				'Staff.middle_name LIKE' => $search,
 				'Staff.third_name LIKE' => $search,
+				'Staff.last_name LIKE' => $search,
 				'Staff.preferred_name LIKE' => $search,
 				'Staff.identification_no LIKE' => $search
 			)
@@ -595,7 +595,7 @@ class InstitutionSiteStaff extends AppModel {
 		foreach ($list as $obj) {
 			$staff = $obj['Staff'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['third_name'], $staff['last_name'], $staff['preferred_name']),
+				'label' => ModelHelper::getName($staff, array('openEmisId'=>true, 'preferred' => true)),
 				'value' => $staff['id']
 			);
 		}
@@ -681,11 +681,11 @@ class InstitutionSiteStaff extends AppModel {
 			'OR' => array(
 				array(
 					'InstitutionSiteStaff.end_date IS NULL',
-					'InstitutionSiteStaff.start_date >=' => $endDate
+					'InstitutionSiteStaff.start_date >=' => $startDate
 				),
 				array(
 					'InstitutionSiteStaff.end_date IS NOT NULL',
-					'InstitutionSiteStaff.start_date <=' => $startDate,
+					'InstitutionSiteStaff.start_date <=' => $endDate,
 					'InstitutionSiteStaff.end_date >=' => $startDate
 				),
 				array(

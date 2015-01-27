@@ -48,11 +48,8 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			foreach ($data as $obj):
 				$id = $obj['Staff']['id'];
 				$identificationNo = $this->Utility->highlight($search, $obj['Staff']['identification_no']);
-				$firstName = $this->Utility->highlight($search, $obj['Staff']['first_name'].((isset($obj['Staff']['history_first_name']))?'<br>'.$obj['Staff']['history_first_name']:''));
-				$middleName = $this->Utility->highlight($search, $obj['Staff']['middle_name'].((isset($obj['Staff']['history_middle_name']))?'<br>'.$obj['Staff']['history_middle_name']:''));
-				$thirdName = $this->Utility->highlight($search, $obj['Staff']['third_name'].((isset($obj['Staff']['history_third_name']))?'<br>'.$obj['Staff']['history_third_name']:''));
-				$lastName = $this->Utility->highlight($search, $obj['Staff']['last_name'].((isset($obj['Staff']['history_last_name']))?'<br>'.$obj['Staff']['history_last_name']:''));
-				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+				$name = $this->Utility->highlight($search, $this->Model->getName($obj['Staff']));
+				$name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
 		?>
 			<tr>
 				<td><?php echo $identificationNo; ?></td>

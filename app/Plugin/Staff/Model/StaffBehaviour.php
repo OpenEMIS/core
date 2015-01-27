@@ -69,6 +69,7 @@ class StaffBehaviour extends StaffAppModel {
                     'identification_no' => 'Staff OpenEMIS ID',
                     'first_name' => '',
                     'middle_name' => '',
+                    'third_name' => '',
                     'last_name' => '',
                     'preferred_name' => ''
                 ),
@@ -105,7 +106,7 @@ class StaffBehaviour extends StaffAppModel {
 				
 				$this->fields['staff_name']['visible'] = true;
 				$this->fields['staff_name']['type'] = 'disabled';
-				$this->fields['staff_name']['value'] = trim($obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']);
+				$this->fields['staff_name']['value'] = ModelHelper::getName($obj['Staff']);
 				$this->fields['staff_name']['order'] = 0;
 				$this->setFieldOrder('staff_name', 0);
 				
@@ -136,7 +137,7 @@ class StaffBehaviour extends StaffAppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
 		$this->InstitutionSiteStaff->contain(array(
-			'Staff' => array('fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name')),
+			'Staff' => array('fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name')),
 			'StaffType' => array('fields' => array('StaffType.name')),
 			'StaffStatus' => array('fields' => array('StaffStatus.name'))
 		));

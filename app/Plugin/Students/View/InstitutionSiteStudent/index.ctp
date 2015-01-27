@@ -77,11 +77,8 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			foreach ($data as $obj):
 				$id = $obj['Student']['id'];
 				$identificationNo = $this->Utility->highlight($search, $obj['Student']['identification_no']);
-				$firstName = $this->Utility->highlight($search, $obj['Student']['first_name'].((isset($obj['Student']['history_first_name']))?'<br>'.$obj['Student']['history_first_name']:''));
-				$middleName = $this->Utility->highlight($search, $obj['Student']['middle_name'].((isset($obj['Student']['history_middle_name']))?'<br>'.$obj['Student']['history_middle_name']:''));
-				$thirdName = $this->Utility->highlight($search, $obj['Student']['third_name'].((isset($obj['Student']['history_third_name']))?'<br>'.$obj['Student']['history_third_name']:''));
-				$lastName = $this->Utility->highlight($search, $obj['Student']['last_name'].((isset($obj['Student']['history_last_name']))?'<br>'.$obj['Student']['history_last_name']:''));
-				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+	            $name = $this->Utility->highlight($search, $this->Model->getNameWithHistory($obj['Student']));
+	            $name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
 				$identity = (isset($obj['StudentIdentity'])) ? $obj['StudentIdentity']['number'] : '';
 		?>
 			<tr>

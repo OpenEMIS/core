@@ -85,7 +85,7 @@ class AlertAttendanceTask extends AlertTask {
 			$this->log('data:', 'alert_processes');
 			$this->log($data, 'alert_processes');
 			
-			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.last_name'));
+			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name'));
 			
 			$this->log('studentData:', 'alert_processes');
 			$this->log($studentData, 'alert_processes');
@@ -103,7 +103,7 @@ class AlertAttendanceTask extends AlertTask {
 					$this->AlertLog->create();
 					
 					$message .= '<p>' . __('Student') . ': ';
-					$message .= $student['first_name'] . ' ' . $student['last_name'] . ' (' . $student['identification_no'] . ')';
+					$message .= ModelHelper::getName($student) . ' (' . $student['identification_no'] . ')';
 					$message .= '<br/>' . __('Institution') . ': ';
 					$message .= $InstitutionSite['name'] . ' (' . $InstitutionSite['code'] . ')';
 					$message .= '</p>';

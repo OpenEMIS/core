@@ -14,6 +14,7 @@
   have received a copy of the GNU General Public License along with this program.  If not, see
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
+App::import('Helper', 'Model');
 
 class AlertTask extends Shell {
 	public $uses = array('Alerts.Alert');

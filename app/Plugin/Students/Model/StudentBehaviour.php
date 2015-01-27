@@ -68,6 +68,7 @@ class StudentBehaviour extends StudentsAppModel {
 					'identification_no' => 'Student OpenEMIS ID',
 					'first_name' => '',
 					'middle_name' => '',
+					'third_name' => '',
 					'last_name' => '',
 					'preferred_name' => ''
 				),
@@ -107,7 +108,7 @@ class StudentBehaviour extends StudentsAppModel {
 				
 				$this->fields['student_name']['visible'] = true;
 				$this->fields['student_name']['type'] = 'disabled';
-				$this->fields['student_name']['value'] = trim($obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']);
+				$this->fields['student_name']['value'] = ModelHelper::getName($obj['Student']);
 				$this->fields['student_name']['order'] = 0;
 				$this->setFieldOrder('student_name', 0);
 				

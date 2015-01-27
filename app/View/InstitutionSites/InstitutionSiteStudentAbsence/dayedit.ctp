@@ -33,7 +33,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			foreach ($studentList as $student):
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
+				$studentName = $this->Model->getName($studentObj);
 				$additionalReasonOptionFieldData = array();
 
 				echo $this->Form->hidden($model . '.' . $count . '.student_id', array('value' => $studentId));
