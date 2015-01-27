@@ -29,6 +29,7 @@ class ReportShell extends AppShell {
 				$format = 'xlsx';
 				$settings = array(
 					'download' => false,
+					'delete' => false,
 					'onStartSheet' => function($count, $pages) use ($ReportProgress) {
 						$ReportProgress->saveField('total_records', $count);
 					},
