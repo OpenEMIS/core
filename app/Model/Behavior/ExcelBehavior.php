@@ -129,6 +129,14 @@ class ExcelBehavior extends ModelBehavior {
 			if ($model->alias == $sheetModel->alias) {
 				$this->conditions = $model->excelGetConditions();
 			}
+
+			// options set by external source
+			if (isset($_settings['options'])) {
+				if (array_key_exists('conditions', $_settings['options'])) {
+					$this->conditions = $_settings['options']['conditions'];
+				}
+			}
+
 			$model->setModel($sheetModel);
 
 			if (!$sheetModel->Behaviors->loaded('Excel')) {

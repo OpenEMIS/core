@@ -15,9 +15,6 @@ $this->start('contentBody');
 <div class="fuelux">
 	<div class="wizard" data-initialize="wizard">
 		<ul class="steps">
-			<!--li data-step="1" class="active"><span class="badge">1</span>Feature<span class="chevron"></span></li>
-			<li data-step="2"><span class="badge">2</span>Academic Period<span class="chevron"></span></li>
-			<li data-step="3"><span class="badge">3</span>Generate<span class="chevron"></span></li-->
 			<?php 
 			$li = '<li data-step="%d" %s><span class="badge">%d</span>%s<span class="chevron"></span></li>';
 			$i=0;
@@ -82,7 +79,7 @@ $this->start('contentBody');
 						<div class="col-md-1"><label class="control-label">Format</label></div>
 						<div class="col-md-5">
 						<?php
-						echo $this->Form->input('format', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => array('Excel')));
+						echo $this->Form->input('format', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $formatOptions));
 						?>
 						</div>
 					</div>
