@@ -108,6 +108,14 @@ class ReportsController extends ReportsAppController {
 	public function index() {
 		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'InstitutionGeneral'));
 	}
+
+	public function listOfReports() {
+
+	}
+
+	public function generateReports() {
+
+	}
 	
 	public function renderReport($reportType = 'Institution') {
 		$Navigation = ClassRegistry::init('Navigation');

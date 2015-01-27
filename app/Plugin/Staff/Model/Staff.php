@@ -214,7 +214,7 @@ class Staff extends StaffAppModel {
 		$models = array(
 			array('model' => $this),
 			array('model' => $this->StaffContact, 'name' => 'Contacts'),
-			array('model' => $this->StaffIdentity, 'name' => 'Identities'),
+			//array('model' => $this->StaffIdentity, 'name' => 'Identities'), -- not working due to unknown reasons
 			array('model' => $this->StaffNationality, 'name' => 'Nationalities'),
 			array('model' => $this->StaffLanguage, 'name' => 'Languages'),
 			array('model' => $this->StaffComment, 'name' => 'Comments'),
