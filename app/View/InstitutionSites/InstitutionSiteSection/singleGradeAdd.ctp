@@ -20,12 +20,13 @@ $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 
-//$labelOptions['text'] = $this->Label->get('general.academic_period');
+$labelOptions['text'] = $this->Label->get('general.academic_period');
 echo $this->Form->input('school_year_id', array(
 	'options' => $yearOptions, 
 	'url' => $this->params['controller'] . '/' . $model . '/singleGradeAdd',
 	'default' => $selectedYear,
-	'onchange' => 'jsForm.change(this)'
+	'onchange' => 'jsForm.change(this)',
+	'label' => $labelOptions
 ));
 echo $this->Form->input('education_grade_id', array(
 	'options' => $gradeOptions, 
@@ -57,7 +58,7 @@ echo $this->Form->input('number_of_sections', array(
 				
 				<tbody>
 					<?php 
-					for($i=0; $i<2; $i++) :
+					for($i=0; $i<3; $i++) :
 					?>
 					<tr>
 						<td><?php echo $this->Form->input(sprintf('InstitutionSection.%d.name', $i), array('label' => false, 'div' => false, 'between' => false, 'after' => false)); ?></td>

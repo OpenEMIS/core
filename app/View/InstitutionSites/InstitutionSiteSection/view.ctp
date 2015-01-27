@@ -14,16 +14,16 @@ if ($_delete) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
+//echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
 ?>
 <fieldset class="section_break">
 	<legend><?php echo __('Section'); ?></legend>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('SchoolYear.name'); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('general.academic_period'); ?></div>
 		<div class="col-md-6"><?php echo $data['SchoolYear']['name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('general.section'); ?></div>
 		<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
 	</div>
 	<div class="row">
@@ -54,6 +54,8 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
 					<tr>
 						<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 						<th><?php echo $this->Label->get('general.name'); ?></th>
+						<th><?php echo $this->Label->get('general.sex'); ?></th>
+						<th><?php echo $this->Label->get('general.date_of_birth'); ?></th>
 						<th><?php echo $this->Label->get('general.category'); ?></th>
 					</tr>
 				</thead>
@@ -63,6 +65,8 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
 					<tr>
 						<td><?php echo $obj['Student']['identification_no']; ?></td>
 						<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+						<td><?php echo ''; ?></td>
+						<td><?php echo ''; ?></td>
 						<td><?php echo $obj['StudentCategory']['name']; ?></td>
 					</tr>
 			<?php endforeach ?>
