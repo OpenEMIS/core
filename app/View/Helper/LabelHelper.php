@@ -123,13 +123,13 @@ class LabelHelper extends AppHelper {
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
-			'name' => 'Area Level'
+			'name' => 'Area Level (Education)'
 		),
-		'AreaEducation' => array(
-			'area_education_level_id' => 'Area Education Level'
+		'AreaAdministrative' => array(
+			'area_administrative_level_id' => 'Area Administrative Level'
 		),
-		'AreaEducationLevel' => array(
-			'name' => 'Area Level'
+		'AreaAdministrativeLevel' => array(
+			'name' => 'Area Level (Administrative)'
 		),
 		'EducationSystem' => array(
 			'title' => 'Education Systems',

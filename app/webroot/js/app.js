@@ -264,7 +264,7 @@ var jsForm = {
 		var mainContainerId = $(this).parents().parents().parents().attr('id');
 		
 		var hiddenValue= $(this).closest('#'+mainContainerId).find('.areapicker_areaid').first();//$(this).parents().find('.areapicker_areaid').first();//alert('out = '+hiddenValue.attr('id') );
-		var myAreaArr = ["area_level","area_education_level"];
+		var myAreaArr = ["area_level","area_administrative_level"];
         for (var i = 0; i < myAreaArr.length; i++) {
             var areaItems = $(this).parent().parent().parent().find('select[name*="['+myAreaArr[i]+'_"]');
 			
