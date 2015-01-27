@@ -90,7 +90,10 @@ class LabelHelper extends AppHelper {
 			'system' => 'System',
 			'method' => 'Method',
 			'section' => 'Section',
-			'sections' => 'Sections'
+			'sections' => 'Sections',
+			'code' => 'Code',
+			'type' => 'Type',
+			'size' => 'Size'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -458,6 +461,25 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'Infrastructure' => array(
+			'parent_level' => 'Parent Category'
+		),
+		'InstitutionSiteInfrastructure' => array(
+			'infrastructure_type_id' => 'Type',
+			'year_acquired' => 'Year Acquired',
+			'year_disposed' => 'Year Disposed',
+			'infrastructure_ownership_id' => 'Ownership',
+			'infrastructure_condition_id' => 'Condition'
+		),
+		'InstitutionSiteSurveyNew' => array(
+			'title' => 'New'
+		),
+		'InstitutionSiteSurveyDraft' => array(
+			'title' => 'Draft'
+		),
+		'InstitutionSiteSurveyCompleted' => array(
+			'title' => 'Completed'
 		)
 	);
 	

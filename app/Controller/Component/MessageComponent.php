@@ -167,6 +167,19 @@ class MessageComponent extends Component {
 		'InstitutionSiteSection' => array(
 			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.')
 		),
+		'InstitutionSiteInfrastructure' => array(
+			'noLevel' => array('type' => 'warn', 'msg' => 'There are no category created.')
+		),
+		'Survey' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Survey record has been saved to draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Survey record has been submitted successfully.')
+			),
+			'reject' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The record has been rejected successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not rejected due to errors encountered.')
+			)
+		)
 	);
 	
 	public function get($code) {
