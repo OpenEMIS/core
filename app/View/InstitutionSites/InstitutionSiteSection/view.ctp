@@ -1,4 +1,5 @@
 <?php
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $data[$model]['name']);
 
@@ -15,44 +16,61 @@ $this->end();
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/InstitutionSiteSection/controls');
 ?>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('SchoolYear.name'); ?></div>
-	<div class="col-md-6"><?php echo $data['SchoolYear']['name']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
-	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.shift'); ?></div>
-	<div class="col-md-6"><?php echo $data['InstitutionSiteShift']['name']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('EducationGrade.name'); ?></div>
-	<div class="col-md-6">
+<fieldset class="section_break">
+	<legend><?php echo __('Section'); ?></legend>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('SchoolYear.name'); ?></div>
+		<div class="col-md-6"><?php echo $data['SchoolYear']['name']; ?></div>
+	</div>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
+		<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
+	</div>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.shift'); ?></div>
+		<div class="col-md-6"><?php echo $data['InstitutionSiteShift']['name']; ?></div>
+	</div>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('EducationGrade.name'); ?></div>
+		<div class="col-md-6">
 		<?php
 		foreach($grades as $g) {
 			echo $g . '<br />';
 		}
 		?>
+		</div>
 	</div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.modified_by'); ?></div>
-	<div class="col-md-6"><?php echo $data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.modified'); ?></div>
-	<div class="col-md-6"><?php echo $data[$model]['modified']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.created_by'); ?></div>
-	<div class="col-md-6"><?php echo $data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.created'); ?></div>
-	<div class="col-md-6"><?php echo $data[$model]['created']; ?></div>
-</div>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.home_room_teacher'); ?></div>
+		<div class="col-md-6"><?php echo ''; ?></div>
+	</div>
+</fieldset>
+<fieldset class="section_break">
+	<legend><?php echo __('Students'); ?></legend>
+	<div class="row">
+		<div class="table-responsive">
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+						<th><?php echo $this->Label->get('general.openemisId'); ?></th>
+						<th><?php echo $this->Label->get('general.name'); ?></th>
+						<th><?php echo $this->Label->get('general.category'); ?></th>
+					</tr>
+				</thead>
+
+				<tbody>
+			<?php foreach($studentsData as $obj) : ?>
+					<tr>
+						<td><?php echo $obj['Student']['identification_no']; ?></td>
+						<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+						<td><?php echo $obj['StudentCategory']['name']; ?></td>
+					</tr>
+			<?php endforeach ?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</fieldset>
 <?php
 $this->end();
 ?>

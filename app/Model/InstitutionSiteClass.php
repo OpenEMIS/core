@@ -173,11 +173,15 @@ class InstitutionSiteClass extends AppModel {
 		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
 		
+		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedYear, $institutionSiteId);
+		$selectedSection = isset($params->pass[1]) ? $params->pass[1] : key($sectionOptions);
+		
 		if(empty($yearOptions)){
 			$controller->Message->alert('InstitutionSite.noProgramme');
 		}
 		
-		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
+		$controller->set(compact('yearOptions', 'selectedYear', 'data', 'sectionOptions', 'selectedSection'));
 	}
 	
 	public function classesAdd($controller, $params) {
@@ -194,7 +198,21 @@ class InstitutionSiteClass extends AppModel {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedYear);
-			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'institutionSiteId'));
+			
+			$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedYear, $institutionSiteId);
+			$selectedSection = isset($params->pass[1]) ? $params->pass[1] : key($sectionOptions);
+			
+			$yearObj = ClassRegistry::init('SchoolYear')->findById($selectedYear);
+			$startDate = $yearObj['SchoolYear']['start_date'];
+			$endDate = $yearObj['SchoolYear']['end_date'];
+		
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+			
+			$subjects = array(__('English'), __('Science'), __('Math'));
+			
+			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjects'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				$data = $controller->request->data;
@@ -227,7 +245,11 @@ class InstitutionSiteClass extends AppModel {
 			$controller->Navigation->addCrumb($className);
 			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
 			//pr($sections);
-			$controller->set(compact('data', 'sections'));
+			
+			$staffData = array();
+			$studentsData = array();
+			
+			$controller->set(compact('data', 'sections', 'staffData', 'studentsData'));
 			$controller->set('actionOptions', $this->getClassActions($controller, $id));
 		} else {
 			$controller->Message->alert('general.notExists');
