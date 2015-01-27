@@ -6,10 +6,13 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
-if ($_add) {
-	echo $this->Html->link(__('Add'), array('action' => $model, 'add'), array('class' => 'divider'));
-}
+	echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $sectionId), array('class' => 'divider'));
+	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');

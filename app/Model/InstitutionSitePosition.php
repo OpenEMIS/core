@@ -17,17 +17,23 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSitePosition extends AppModel {
-	public $actsAs = array('ControllerAction2');
+	public $actsAs = array(
+		'Excel',
+		'ControllerAction2'
+	);
    
 	public $belongsTo = array(
+		'InstitutionSite',
 		'Staff.StaffPositionTitle',
 		'Staff.StaffPositionGrade',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
 			'foreignKey' => 'modified_user_id'
 		),
 		'CreatedUser' => array(
 			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
 			'foreignKey' => 'created_user_id'
 		)
 	);
@@ -61,6 +67,21 @@ class InstitutionSitePosition extends AppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.status" => array(0 => 'Inactive', 1 => 'Active'),
+			"$alias.type" => array(0 => 'Non-Teaching', 1 => 'Teaching')
+		);
+		return $lookup;
+	}
+	public function excelGetOrder() {
+		$order = array('InstitutionSitePosition.position_no');
+		return $order;
+	}
+	/* End Excel Behaviour */
 	
 	// Used by InstitutionSiteStaff.add
 	public function getInstitutionSitePositionList($institutionId = false, $status = false) {

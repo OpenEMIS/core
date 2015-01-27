@@ -75,7 +75,8 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteStudent',
 		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
-		'StudentBehaviour' => array('plugin' => 'Students')
+		'StudentBehaviour' => array('plugin' => 'Students'),
+		'Absence' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {
@@ -136,7 +137,8 @@ class StudentsController extends StudentsAppController {
 			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$data = $this->Search->search($this->Student, $conditions);
+		$order = empty($this->params->named['sort']) ? array('Student.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->Student, $conditions, $order);
 		$data = $this->Student->attachLatestInstitutionInfo($data);
 		
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
@@ -348,6 +350,10 @@ class StudentsController extends StudentsAppController {
 		$this->redirect(array('action' => 'index'));
 	}
 
+	public function excel() {
+		$this->Student->excel();
+	}
+
 	public function history() {
 		$this->Navigation->addCrumb('History');
 
@@ -414,51 +420,6 @@ class StudentsController extends StudentsAppController {
 		$this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
 		$this->set('data', $data);
 		$this->set('header',$header);
-	}
-
-	// STUDENT ATTENDANCE PART
-	public function absence() {
-		if (!$this->Session->check('Student.id')) {
-			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
-		}
-		$studentId = $this->Session->read('Student.id');
-		//$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-		$this->Navigation->addCrumb('Absence');
-		$header = __('Absence');
-		
-		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
-		
-		if (isset($this->params['pass'][0])) {
-			$academicPeriodId = $this->params['pass'][0];
-			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
-				$academicPeriodId = key($academicPeriodList);
-			}
-		} else {
-			$academicPeriodId = key($academicPeriodList);
-		}
-		
-		$monthOptions = $this->generateMonthOptions();
-		$currentMonthId = $this->getCurrentMonthId();
-		if (isset($this->params['pass'][1])) {
-			$monthId = $this->params['pass'][1];
-			if (!array_key_exists($monthId, $monthOptions)) {
-				$monthId = $currentMonthId;
-			}
-		} else {
-			$monthId = $currentMonthId;
-		}
-		
-		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $academicPeriodId, $monthId);
-		
-		$data = $absenceData;
-		
-		if (empty($data)) {
-			$this->Message->alert('general.noData');
-		}
-		
-		$settingWeekdays = $this->getWeekdaysBySetting();
-
-		$this->set(compact('header', 'data','academicPeriodList','academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 
 	private function getAvailableAcademicPeriodId($academicPeriodList) {

@@ -1,14 +1,14 @@
 <?php
-
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'qualityVisitAdd'), array('class' => 'divider'));
-}
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'qualityVisitAdd'), array('class' => 'divider'));
+	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'qualityVisitExcel'), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');

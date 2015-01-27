@@ -3,7 +3,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
+	echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteStudentAttendance', 'excel', $academicPeriodId, $sectionId), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');

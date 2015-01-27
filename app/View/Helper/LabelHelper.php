@@ -22,6 +22,7 @@ class LabelHelper extends AppHelper {
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
+			'export' => 'Export',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'reorder' => 'Reorder',
@@ -244,7 +245,7 @@ class LabelHelper extends AppHelper {
 		'Country' => array(
 			'name' => 'Country'
 		),
-		'HealthRelationships' => array(
+		'HealthRelationship' => array(
 			'name' => 'Relationship'
 		),
 		'HealthCondition' => array(
@@ -298,6 +299,9 @@ class LabelHelper extends AppHelper {
 			'processing' => 'Processing'
 		),
 		'Student' => array(
+			'identification_no' => 'OpenEMIS ID',
+			'first_name' => 'First Name',
+			'last_name' => 'Last Name',
 			'add_existing' => 'Add existing Student'
 		),
 		'StaffLeave' => array(
@@ -341,6 +345,9 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSitePosition' => array(
 			'title' => 'Positions',
+			'position_no' => 'Position No',
+			'status' => 'Status',
+			'type' => 'Type',
 			'staff_position_title_id' => 'Title',
 			'staff_position_grade_id' => 'Grade'
 		),
@@ -489,6 +496,12 @@ class LabelHelper extends AppHelper {
 		),
 		'AcademicPeriodLevel' => array(
 			'name' => 'Academic Period Level'
+		),
+		'StaffPositionTitle' => array(
+			'name' => 'Position Title'
+		),
+		'StaffPositionGrade' => array(
+			'name' => 'Position Grade'
 		)
 	);
 	
