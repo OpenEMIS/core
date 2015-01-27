@@ -10,10 +10,17 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'add', 'parent' => $parentId));
 echo $this->Form->create($model, $formOptions);
-echo $this->Form->input('name');
+if(isset($countryOptions)) {
+	echo $this->Form->input('name', array('options' => $countryOptions));
+	$areaAdministrativeLevelDisabled = 'disabled';
+	echo $this->Form->hidden('area_administrative_level_id', array('value' => key($areaLevelOptions)));
+} else {
+	echo $this->Form->input('name');
+	$areaAdministrativeLevelDisabled = '';
+}
 echo $this->Form->input('code');
 echo $this->Form->input('parent', array('value' => $pathToString, 'disabled'));
-echo $this->Form->input('area_education_level_id', array('options' => $areaLevelOptions));
+echo $this->Form->input('area_administrative_level_id', array('options' => $areaLevelOptions, 'disabled' => $areaAdministrativeLevelDisabled));
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'parent' => $parentId)));
 echo $this->Form->end();
 
