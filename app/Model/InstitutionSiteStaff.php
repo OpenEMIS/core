@@ -186,6 +186,7 @@ class InstitutionSiteStaff extends AppModel {
 			$conditions = $this->Session->read($prefix . 'conditions');
 		}
 		$conditions['InstitutionSiteStaff.institution_site_id'] = $institutionSiteId;
+		$conditions[] = 'Staff.id != ""';
 
 		$IdentityType = ClassRegistry::init('IdentityType');
 		$defaultIdentity = $IdentityType->find('first', array(
