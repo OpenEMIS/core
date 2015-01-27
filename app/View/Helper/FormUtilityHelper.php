@@ -204,9 +204,25 @@ class FormUtilityHelper extends AppHelper {
 		$inputDefaults = $this->Form->inputDefaults();
 		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
 		$_options = array_merge($_options, $options);
-		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : null;
-		$model = $_options['model'];
-		
+		$model = $_options['model'];		
+		$areaId = null;
+		if($model=='Area'){
+			$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+			$SecurityGroupArea = ClassRegistry::init('SecurityGroupArea');
+			if(AuthComponent::user('id')){
+				$userId = AuthComponent::user('id');
+			}else{
+				$userId = 0;
+			}
+			$groupId = $SecurityGroupUser->getGroupIdsByUserId($userId);
+			$userAreas = $SecurityGroupArea->getAreas($groupId);
+			if(count($userAreas)>0){
+				foreach($userAreas as $ua){
+					$areaId = !$areaId ? $ua['area_id'] : (($ua['area_id']<$areaId) ? $ua['area_id'] : $areaId);
+				}
+			}
+		}
+		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : (($areaId) ? $areaId : null);		
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		
 		$html = '';
@@ -220,20 +236,31 @@ class FormUtilityHelper extends AppHelper {
 					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
 					'order' => array('order')
 				));
-				$options = array($this->Label->get('Area.select')) + $options;
 				$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
 				
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
+					if($i < count($path) - 1) {
+						$options = array($obj[$model]['id'] => $obj[$model]['name']);
+					}else{
+						if(isset($userAreas)&&count($userAreas)>0){
+							$options = array();
+							foreach($userAreas as $ua){
+								$options[$ua['area_id']] = $ua['area_name'];
+							}				
+						}
+						$options = array($this->Label->get('Area.select')) + $options;
+					}
+				}else{
+					$options = array($this->Label->get('Area.select')) + $options;	
 				}
 				$inputOptions['options'] = $options;
 				$label = $inputDefaults['label'];
 				$label['text'] = $levelName;
 				$inputOptions['label'] = $label;
 				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
-				//$value = $obj[$model]['id'];
 			}
 		}
 		
