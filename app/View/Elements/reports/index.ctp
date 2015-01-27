@@ -13,10 +13,11 @@ $this->start('contentBody');
 	<table class="table table-striped table-hover table-bordered" id="ReportList" url="<?php echo $this->Html->url(array('action' => 'ajaxGetReportProgress')) ?>">
 		<thead>
 			<tr>
-				<th>Name</th>
-				<th>Generated</th>
-				<th>Expires</th>
-				<th>Status</th>
+				<th><?php echo __('Name') ?></th>
+				<th><?php echo __('Started On') ?></th>
+				<th><?php echo __('Completed On') ?></th>
+				<th><?php echo __('Expires On') ?></th>
+				<th style="width: 150px"><?php echo __('Status') ?></th>
 			</tr>
 		</thead>
 		
@@ -25,7 +26,8 @@ $this->start('contentBody');
 			<tr row-id="<?php echo $obj[$model]['id'] ?>">
 				<td><?php echo $obj[$model]['name'] ?></td>
 				<td><?php echo $obj[$model]['created'] ?></td>
-				<td class="expiry"><?php echo $obj[$model]['expiry_date'] ?></td>
+				<td class="modified"><?php echo !empty($obj[$model]['file_path']) ? $obj[$model]['modified'] : '' ?></td>
+				<td><?php echo $obj[$model]['expiry_date'] ?></td>
 				<td>
 					<?php
 					$class = '';

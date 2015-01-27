@@ -75,6 +75,7 @@ class InstitutionSiteClass extends AppModel {
 	);
 	
 	public $actsAs = array(
+		'Excel',
 		'ControllerAction',
 		'AcademicPeriod'
 	);

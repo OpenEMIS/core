@@ -18,10 +18,11 @@
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteBankAccount extends AppModel {
-
 	public $actsAs = array(
+		'Excel',
 		'ControllerAction'
 	);
+
 	public $belongsTo = array(
 		'BankBranch',
 		'InstitutionSite',
@@ -61,6 +62,16 @@ class InstitutionSiteBankAccount extends AppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.active" => array(0 => 'Inactive', 1 => 'Active')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
 
 	public function getDisplayFields($controller) {
 		$Bank = ClassRegistry::init('Bank');

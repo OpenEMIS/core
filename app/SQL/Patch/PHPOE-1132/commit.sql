@@ -30,9 +30,9 @@ CREATE TABLE `academic_periods` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
-INSERT INTO academic_periods (`id`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT id , `name` , `start_date` , `start_year` , `end_date` , `end_year` , `school_days` , `current` , `available` , `order` , `modified_user_id` , `modified` , `created_user_id` , `created` FROM 1132_school_years;
+INSERT INTO `academic_periods` (`id`, `code`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `parent_id`, `lft`, `rght`, `academic_period_level_id`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT id , '', `name` , `start_date` , `start_year` , `end_date` , `end_year` , `school_days` , `current` , `available` , 1, 0, 0, 1, `order` , `modified_user_id` , `modified` , `created_user_id` , `created` FROM 1132_school_years;
 
-INSERT INTO `academic_periods` (`id`, `code`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `parent_id`, `lft`, `rght`, `academic_period_level_id`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (null, 'All', 'All Data', '', '', NULL, NULL, '0', '', '1', -1, 1, 2, '', '', NULL, NULL, '', '');
+INSERT INTO `academic_periods` (`id`, `code`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `parent_id`, `lft`, `rght`, `academic_period_level_id`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (null, 'All', 'All Data', '0000-00-00', '0000', NULL, NULL, 0, 0, '1', -1, 1, 2, -1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 DROP TABLE school_years;
 
 -- need to update parent id
@@ -58,12 +58,12 @@ SELECT id INTO @academicBoundriesId FROM navigations WHERE header = 'System Setu
 INSERT INTO `navigations` (`module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 ('Administration', NULL, 'AcademicPeriods', 'System Setup', 'Academic Periods', 'index', 'AcademicPeriod', NULL, @academicBoundriesId, 0, @academicBoundriesOrderId+1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
-INSERT INTO academic_period_levels (id, name, level) VALUES 
-('1', 'Year', '1'),
-('2', 'Semester', '2'),
-('3', 'Term', '3'),
-('4', 'Month', '4'),
-('5', 'Week', '5');
+INSERT INTO academic_period_levels (id, name, level, created_user_id, created) VALUES 
+('1', 'Year', '1', 1, NOW()),
+('2', 'Semester', '2', 1, NOW()),
+('3', 'Term', '3', 1, NOW()),
+('4', 'Month', '4', 1, NOW()),
+('5', 'Week', '5', 1, NOW());
 
 
 -- select * from information_schema.columns where column_name = 'school_year_id'and table_schema = 'openemis-core';

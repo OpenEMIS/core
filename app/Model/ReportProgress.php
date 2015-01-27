@@ -40,8 +40,12 @@ class ReportProgress extends AppModel {
 			}
 		}
 		*/
+
+		$expiryDate = new DateTime();
+		$expiryDate->add(new DateInterval('P3D')); // config item
+
 		$obj['file_path'] = NULL;
-		$obj['expiry_date'] = NULL;
+		$obj['expiry_date'] = $expiryDate->format('Y-m-d H:i:s');
 		$obj['current_records'] = 0;
 		$obj['total_records'] = 0;
 		$obj['status'] = 1;
@@ -51,7 +55,7 @@ class ReportProgress extends AppModel {
 	}
 
 	public function generate($id) {
-		$params = array('Report', 'run', $id);
+		$params = array('Report', 'run', 'excel', $id);
 		$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
 		$nohup = 'nohup %s > %stmp/logs/reports.log & echo $!';
 		$shellCmd = sprintf($nohup, $cmd, APP);
