@@ -33,7 +33,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			foreach ($staffList as $staff):
 				$staffObj = $staff['Staff'];
 				$staffId = $staffObj['id'];
-				$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
+				$staffName = $this->Model->getName($staffObj);
 				$additionalReasonOptionFieldData = array();
 
 				echo $this->Form->hidden($model . '.' . $count . '.staff_id', array('value' => $staffId));

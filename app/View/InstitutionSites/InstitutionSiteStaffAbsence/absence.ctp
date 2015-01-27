@@ -41,7 +41,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						$id = $arrItems['InstitutionSiteStaffAbsence']['id'];
 						$staff = $arrItems['Staff'];
 
-						$staffName = sprintf('%s %s %s %s', $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']);
+						$staffName = $this->Model->getName($staff);
 
 						$firstDateAbsentOriginal = $arrItems['InstitutionSiteStaffAbsence']['first_date_absent'];
 						$lastDateAbsentOriginal = $arrItems['InstitutionSiteStaffAbsence']['last_date_absent'];

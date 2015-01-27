@@ -21,6 +21,7 @@
  */
 
 App::uses('Controller', 'Controller');
+App::import('Helper', 'Model'); 
 
 /**
  * Application Controller
@@ -37,7 +38,7 @@ class AppController extends Controller {
 	public $bodyTitle = '';
 	public $modules = array();
 	public $uses = array('ConfigItem', 'SecurityUser');
-	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility');
+	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility', 'Model');
 	public $components = array(
 		'DebugKit.Toolbar',
 		'RequestHandler',

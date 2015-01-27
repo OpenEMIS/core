@@ -60,7 +60,6 @@ class SearchBehavior extends ModelBehavior {
 			'group' => null,
 			'order' => null
 		), $model);
-		//return '('.$query.')';
 		return $query;
 	}
 	
@@ -217,7 +216,7 @@ class SearchBehavior extends ModelBehavior {
 				'conditions' => array(sprintf('%s.%s = %s.id', $alias, $id, $class))
 			);
 		}
-                
+
 		if(!is_null($params['AdvancedSearch'])) {
 			$advanced = $params['AdvancedSearch'];
 			if($advanced['Search']['area_id'] > 0) { // search by area and all its children
@@ -246,6 +245,19 @@ class SearchBehavior extends ModelBehavior {
 					'conditions' => $joinConditions
 				);
 			}
+		}else{
+			if($class==='Student'||$class==='Staff'){
+				$identityConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
+				if(isset($params['defaultIdentity'])&&strlen($params['defaultIdentity']>0)) {
+					$identityConditions[] = $class.'Identity.identity_type_id = '.$params['defaultIdentity'];
+				}
+				$joins[] = array(
+					'table' => strtolower($class).'_identities',
+					'alias' => $class.'Identity',
+					'type' => 'LEFT',
+					'conditions' => $identityConditions,
+				);
+			}
 		}
 		return $joins;
 	}
@@ -263,6 +275,8 @@ class SearchBehavior extends ModelBehavior {
 				$class . '.preferred_name LIKE' => $search,
 				$class . '.identification_no LIKE' => $search,
 				$class . 'History.first_name LIKE' => $search,
+				$class . 'History.middle_name LIKE' => $search,
+				$class . 'History.third_name LIKE' => $search,
 				$class . 'History.last_name LIKE' => $search,
 				$class . 'History.identification_no LIKE' => $search
 			);
@@ -280,7 +294,7 @@ class SearchBehavior extends ModelBehavior {
 			            $mainTable = str_replace("CustomValue","",$key);
 			            $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
 			            $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
-			             $field = $key.'.'.$fkey;
+			           	$field = $key.'.'.$fkey;
 			            
 			            foreach($advanced as $arrIdVal){
 			                foreach ($arrIdVal as $id => $val) {
@@ -360,15 +374,17 @@ class SearchBehavior extends ModelBehavior {
 		$fields = array(
 			$class.'.id', $class.'.identification_no',
 			$class.'.first_name', $class.'.middle_name', $class.'.third_name', $class.'.last_name', $class.'.preferred_name',
-			$class.'.gender', $class.'.date_of_birth'
+			$class.'Identity.number'
 		);
 		
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = $class.'History.identification_no AS history_identification_no';
 			$fields[] = $class.'History.first_name AS history_first_name';
+			$fields[] = $class.'History.middle_name AS history_middle_name';
+			$fields[] = $class.'History.third_name AS history_third_name';
 			$fields[] = $class.'History.last_name AS history_last_name';
 		}
-		
+
 		$joins = array();
 		$data = array();
 		// if super admin
@@ -519,6 +535,61 @@ class SearchBehavior extends ModelBehavior {
 		$conditions['AND'] = array('InstitutionSite'.$mainClass.'.institution_site_id' => $institutionSiteId);
 
 		return $conditions;
+	}
+
+	public function attachLatestInstitutionInfo(Model $model, $data) {
+		$class = $model->alias;
+		$institutionPersonnel = $model->{'InstitutionSite'.$class};
+
+		foreach ($data as $key => $obj) {
+			$buffer = $institutionPersonnel->find('first', array(
+				'fields' => array('InstitutionSite.name', $class.'Status.name'),
+				'contain' => array('InstitutionSite', $class.'Status'),
+				'conditions' => array(
+					'InstitutionSite'.$class.'.'.strtolower($class).'_id = '.$obj[$class]['id']
+				),
+				'order' => array('InstitutionSite'.$class.'.end_date DESC'),
+			));
+
+			if (isset($buffer['InstitutionSite'])) {
+				$data[$key]['InstitutionSite'] = $buffer['InstitutionSite'];
+				$data[$key][$class.'Status'] = $buffer[$class.'Status'];
+			} else {
+				$data[$key]['InstitutionSite'] = array('name'=>'');
+				$data[$key][$class.'Status'] = array('name'=>'');
+			}
+		}
+		return $data;
+	}
+	
+	public function attachSectionInfo(Model $model, $data) {
+		$modelClass = $model->alias;
+		if($modelClass=='InstitutionSiteStudent'){
+			$class = 'Student';
+		}else if($modelClass=='InstitutionSiteStaff'){
+			$class = 'Staff';
+		}else{
+			return $data;
+		}
+
+		$SectionPersonnel = ClassRegistry::init('InstitutionSiteSection'.$class);
+		foreach ($data as $key => $obj) {
+			$buffer = $SectionPersonnel->find('first', array(
+				'fields' => array('InstitutionSiteSection.name'),
+				'contain' => array('InstitutionSiteSection'),
+				'conditions' => array(
+					'InstitutionSiteSection'.$class.'.'.strtolower($class).'_id = '.$obj[$class]['id'],
+					'InstitutionSiteSection'.$class.'.status = 1'
+				),
+				'order' => array('InstitutionSiteSection'.$class.'.institution_site_section_id DESC'),
+			));
+			if(isset($buffer['InstitutionSiteSection'])){
+				$data[$key]['InstitutionSiteSection']=$buffer['InstitutionSiteSection'];
+			}else{
+				$data[$key]['InstitutionSiteSection']=array('name'=>'');
+			}
+		}
+		return $data;
 	}
 	
 	public function searchStart(Model $model, $userId) {

@@ -21,7 +21,7 @@ $this->start('contentBody');
 				<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['Student']['identification_no'], array('action' => $model, 'viewPayments', $obj['Student']['id'], $obj['InstitutionSiteFee']['id'])) ?></td>
-					<td><?php echo trim($obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']) ?></td>
+					<td><?php echo $this->Model->getName($obj['Student']) ?></td>
 					<td class="cell-number"><?php echo $obj['InstitutionSiteFee']['total'] ?></td>
 					<td class="cell-number"><?php echo $obj[0]['paid'] ?></td>
 					<td class="cell-number"><?php echo number_format($obj['InstitutionSiteFee']['total'] - $obj[0]['paid'], 2) ?></td>

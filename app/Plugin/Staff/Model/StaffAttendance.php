@@ -33,6 +33,7 @@ class StaffAttendance extends StaffAppModel {
                     'identification_no' => 'OpenEMIS ID',
                     'first_name' => 'First Name',
                     'middle_name' => 'Middle Name',
+                    'third_name' => 'Third Name',
                     'last_name' => 'Last Name',
                     'preferred_name' => 'Preferred Name'
                 ),

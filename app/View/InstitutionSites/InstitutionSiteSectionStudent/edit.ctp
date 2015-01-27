@@ -43,7 +43,7 @@ echo $this->Form->create($model, $formOptions);
 					?>
 				</td>
 				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 				<td>
 					<?php
 					echo $this->Form->input($i . '.student_category_id', array(

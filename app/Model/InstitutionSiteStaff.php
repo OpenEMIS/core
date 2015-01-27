@@ -187,6 +187,14 @@ class InstitutionSiteStaff extends AppModel {
 		}
 		$conditions['InstitutionSiteStaff.institution_site_id'] = $institutionSiteId;
 
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$defaultIdentity = $IdentityType->find('first', array(
+			'contain' => array('FieldOption'),
+			'conditions' => array('FieldOption.code' => $IdentityType->alias),
+			'order' => array('IdentityType.default DESC')
+		));
+		$conditions['defaultIdentity'] = $defaultIdentity['IdentityType']['id'];
+
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
 			$selectedAcademicPeriod = $this->request->data[$this->alias]['academic_period_id'];
@@ -201,7 +209,6 @@ class InstitutionSiteStaff extends AppModel {
 				unset($conditions['InstitutionSiteStaff.start_year <=']);
 				unset($conditions['OR']['InstitutionSiteStaff.end_year >=']);
 				unset($conditions['OR'][0]);
-
 			}
 		} else {
 			if (array_key_exists('InstitutionSiteStaff.start_year <=', $conditions)) {
@@ -240,7 +247,8 @@ class InstitutionSiteStaff extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->getList(array('listOnly'=>true));
-		$this->setVar(compact('data', 'yearOptions', 'positionList'));
+		$defaultIdentity = $defaultIdentity['IdentityType'];
+		$this->setVar(compact('data', 'yearOptions', 'positionList', 'defaultIdentity'));
 	}
 	
 	public function add() {
@@ -339,7 +347,7 @@ class InstitutionSiteStaff extends AppModel {
 			foreach ($list as $obj) {
 				$info = $obj['Staff'];
 				$data[] = array(
-					'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+					'label' => ModelHelper::getName($info, array('openEmisId'=>true)),
 					'value' => array('staff_id' => $info['id']) 
 				);
 			}
@@ -348,12 +356,30 @@ class InstitutionSiteStaff extends AppModel {
 	}
 
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$identityConditions[] = 'StaffIdentity.staff_id = InstitutionSiteStaff.staff_id';
+		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
+			$identityConditions[] = 'StaffIdentity.identity_type_id = '.$conditions['defaultIdentity'];
+		}
+		$joins[] = array(
+			'table' => 'staff_identities',
+			'alias' => 'StaffIdentity',
+			'type' => 'LEFT',
+			'conditions' => $identityConditions,
+		);
+		unset($conditions['defaultIdentity']);
+
+		if (isset($extra['sort']) && isset($extra['direction'])) {
+			$order = array($extra['sort'] => $extra['direction']);
+		}
+		
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 
 				'InstitutionSitePosition.position_no', 'InstitutionSitePosition.staff_position_title_id',
-				'StaffStatus.name', 'InstitutionSiteStaff.start_date'
+				'StaffStatus.name', 'InstitutionSiteStaff.start_date',
+				'StaffIdentity.number',
 			),
+			'joins' => $joins,
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
@@ -382,6 +408,7 @@ class InstitutionSiteStaff extends AppModel {
 	}
 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
+		unset($conditions['defaultIdentity']);
 		$count = $this->find('count', array('conditions' => $conditions));
 		return $count;
 	}
@@ -548,9 +575,9 @@ class InstitutionSiteStaff extends AppModel {
 		$options['conditions'] = array(
 			'OR' => array(
 				'Staff.first_name LIKE' => $search,
-				'Staff.last_name LIKE' => $search,
 				'Staff.middle_name LIKE' => $search,
 				'Staff.third_name LIKE' => $search,
+				'Staff.last_name LIKE' => $search,
 				'Staff.preferred_name LIKE' => $search,
 				'Staff.identification_no LIKE' => $search
 			)
@@ -568,7 +595,7 @@ class InstitutionSiteStaff extends AppModel {
 		foreach ($list as $obj) {
 			$staff = $obj['Staff'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['third_name'], $staff['last_name'], $staff['preferred_name']),
+				'label' => ModelHelper::getName($staff, array('openEmisId'=>true, 'preferred' => true)),
 				'value' => $staff['id']
 			);
 		}
@@ -654,11 +681,11 @@ class InstitutionSiteStaff extends AppModel {
 			'OR' => array(
 				array(
 					'InstitutionSiteStaff.end_date IS NULL',
-					'InstitutionSiteStaff.start_date >=' => $endDate
+					'InstitutionSiteStaff.start_date >=' => $startDate
 				),
 				array(
 					'InstitutionSiteStaff.end_date IS NOT NULL',
-					'InstitutionSiteStaff.start_date <=' => $startDate,
+					'InstitutionSiteStaff.start_date <=' => $endDate,
 					'InstitutionSiteStaff.end_date >=' => $startDate
 				),
 				array(

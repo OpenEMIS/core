@@ -30,7 +30,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($staffList as $staff):
 				$staffObj = $staff['Staff'];
 				$staffId = $staffObj['id'];
-				$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
+				$staffName = $this->Model->getName($staffObj);
 				?>
 				<tr>
 					<td><?php echo $staffObj['identification_no']; ?></td>

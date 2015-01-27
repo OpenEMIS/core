@@ -17,7 +17,7 @@
 					<td><?php echo $obj['Staff']['identification_no'] ?></td>
 					<td>
 						<?php 
-						$name = trim($obj['Staff']['first_name'] . ' ' . $obj['Staff']['middle_name'] . ' ' . $obj['Staff']['last_name']);
+						$name = $this->Model->getName($obj['Staff']);
 						if ($_edit) {
 							echo $this->Html->link($name, array('action' => $model, 'staffEdit', $obj['InstitutionSiteStaff']['id']));
 						} else {

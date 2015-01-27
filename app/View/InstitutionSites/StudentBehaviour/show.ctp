@@ -20,14 +20,10 @@ echo $this->element('../InstitutionSites/StudentBehaviour/controls');
 			<?php 
 			foreach ($data as $obj) : 
 				$idNo = $obj['Student']['identification_no'];
-				$firstName = $obj['Student']['first_name'];
-				$middleName = $obj['Student']['middle_name'];
-				$lastName = $obj['Student']['last_name'];
-				$fullName = trim($firstName . ' ' . $middleName) . ' ' . $lastName;
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => $model, 'index', $obj['Student']['id'])) ?></td>
-					<td><?php echo trim($fullName) ?></td>
+					<td><?php echo $this->Model->getName($obj['Student']) ?></td>
 					<td><?php echo $obj['EducationGrade']['name'] ?></td>
 				</tr>
 			<?php endforeach ?>
