@@ -178,7 +178,8 @@ class InstitutionSiteStaff extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStaff.search.';
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$yearOptions = $SchoolYear->getYearListValues('id');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array();
 
@@ -189,23 +190,28 @@ class InstitutionSiteStaff extends AppModel {
 
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
-			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
+			$selectedYearId = $this->request->data[$this->alias]['school_year_id'];
 
-			if (strlen($selectedYear) != '') {
-				$conditions['InstitutionSiteStaff.start_year <='] = $selectedYear;
+			if (strlen($selectedYearId) != '') {
+				$yearObj = $SchoolYear->findById($selectedYearId);
+				$schoolYearStartDate = date('Y-m-d', strtotime($yearObj['SchoolYear']['start_date']));
+				$schoolYearEndDate = date('Y-m-d', strtotime($yearObj['SchoolYear']['end_date']));
+
+				$conditions['InstitutionSiteStaff.start_date <='] = $schoolYearEndDate;
 				$conditions['OR'] = array(
-					'InstitutionSiteStaff.end_year >=' => $selectedYear,
-					'InstitutionSiteStaff.end_year IS NULL'
+					'InstitutionSiteStaff.end_date >=' => $schoolYearStartDate,
+					'InstitutionSiteStaff.end_date IS NULL'
 				);
+				$this->Session->write($prefix . 'yearId', $selectedYearId);
 			} else {
-				unset($conditions['InstitutionSiteStaff.start_year <=']);
-				unset($conditions['OR']['InstitutionSiteStaff.end_year >=']);
+				unset($conditions['InstitutionSiteStaff.start_date <=']);
+				unset($conditions['OR']['InstitutionSiteStaff.end_date >=']);
 				unset($conditions['OR'][0]);
-
+				$this->Session->delete($prefix . 'yearId');
 			}
 		} else {
-			if (array_key_exists('InstitutionSiteStaff.start_year <=', $conditions)) {
-				$this->request->data[$this->alias]['school_year_id'] = $conditions['InstitutionSiteStaff.start_year <='];
+			if ($this->Session->check($prefix . 'yearId')) {
+				$this->request->data[$this->alias]['school_year_id'] = $this->Session->read($prefix . 'yearId');
 			}
 		}
 		

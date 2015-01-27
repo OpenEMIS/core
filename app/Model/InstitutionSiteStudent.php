@@ -199,7 +199,8 @@ class InstitutionSiteStudent extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStudent.search.';
-		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$yearOptions = $SchoolYear->getYearListValues('id');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
 		$statusOptions = $this->StudentStatus->getList();
@@ -212,17 +213,22 @@ class InstitutionSiteStudent extends AppModel {
 
 		if ($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->request->data[$this->alias]['search']));
-			$selectedYear = $this->request->data[$this->alias]['school_year_id'];
+			$selectedYearId = $this->request->data[$this->alias]['school_year_id'];
 			$selectedProgramme = $this->request->data[$this->alias]['education_programme_id'];
 			$selectedStatus = $this->request->data[$this->alias]['student_status_id'];
 
-			if (strlen($selectedYear) != '') {
+			if (strlen($selectedYearId) != '') {
 				// if the year falls between the start and end date
-				$conditions['InstitutionSiteStudent.start_year <='] = $selectedYear;
-				$conditions['InstitutionSiteStudent.end_year >='] = $selectedYear;
+				$yearObj = $SchoolYear->findById($selectedYearId);
+				$schoolYearStartDate = date('Y-m-d', strtotime($yearObj['SchoolYear']['start_date']));
+				$schoolYearEndDate = date('Y-m-d', strtotime($yearObj['SchoolYear']['end_date']));
+				$conditions['InstitutionSiteStudent.start_date <='] = $schoolYearEndDate;
+				$conditions['InstitutionSiteStudent.end_date >='] = $schoolYearStartDate;
+				$this->Session->write($prefix . 'yearId', $selectedYearId);
 			} else {
-				unset($conditions['InstitutionSiteStudent.start_year <=']);
-				unset($conditions['InstitutionSiteStudent.end_year >=']);
+				unset($conditions['InstitutionSiteStudent.start_date <=']);
+				unset($conditions['InstitutionSiteStudent.end_date >=']);
+				$this->Session->delete($prefix . 'yearId');
 			}
 
 			if (strlen($selectedProgramme) != '') {
@@ -237,8 +243,8 @@ class InstitutionSiteStudent extends AppModel {
 				unset($conditions['InstitutionSiteStudent.student_status_id']);
 			}
 		} else {
-			if (array_key_exists('InstitutionSiteStudent.start_year <=', $conditions)) {
-				$this->request->data[$this->alias]['school_year_id'] = $conditions['InstitutionSiteStudent.start_year <='];
+			if ($this->Session->check($prefix . 'yearId')) {
+				$this->request->data[$this->alias]['school_year_id'] = $this->Session->read($prefix . 'yearId');
 			}
 			if (array_key_exists('EducationProgramme.id', $conditions)) {
 				$this->request->data[$this->alias]['education_programme_id'] = $conditions['EducationProgramme.id'];
