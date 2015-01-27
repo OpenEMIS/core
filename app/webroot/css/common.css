@@ -126,29 +126,29 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 
 /*bootstrap*/
-.panel-group .panel {
+.left_nav.panel-group .panel {
 	border: none;
 	border-radius: 0px;
 	box-shadow: none;
 }
 
-.panel-group .panel + .panel { margin-top: 0px; }
+.left_nav.panel-group .panel + .panel { margin-top: 0px; }
 
-.panel-heading {
+.left_nav .panel-heading {
 	padding: 0;
 	border: none;
 }
 
-.panel-default > .panel-heading + .panel-collapse .panel-body { 
+.left_nav .panel-default > .panel-heading + .panel-collapse .panel-body { 
 	border: none;
 	padding: 0px;
 }
 
-.panel-title {
+.left_nav .panel-title {
 	border-bottom: 0;
 }
 
-.panel-title .accordion-toggle {
+.left_nav .panel-title .accordion-toggle {
 	display: block;
 	padding: 6px 15px 8px 15px;
 	color: #007CBE;
@@ -158,11 +158,17 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	background-position: right 14px;
 	background-repeat: no-repeat;
 }
-.panel-title .accordion-toggle:hover{
+.left_nav .panel-title .accordion-toggle:hover{
 	background-color:#5B8BAF;
 	color:#ffffff;
 	background-position: right -76px;
 }
+
+.survey .panel-title { font-size: 12px; }
+.survey .panel-title > a { color: #007cbe; }
+.survey .list-group-item > span { color: #666666; font-weight: normal; font-style: italic; }
+.survey .list-group-item > span.modified { margin-left: 5px; }
+
 
 .accordion-toggle {
   cursor: pointer;
