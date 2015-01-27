@@ -18,7 +18,7 @@ class StaffExtracurricular extends StaffAppModel {
 	public $actsAs = array('ControllerAction','DatePicker' => 'start_date');
 	public $belongsTo = array(
 		'Staff.Staff',
-		'SchoolYear',
+		'AcademicPeriod',
 		'ExtracurricularType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -80,7 +80,7 @@ class StaffExtracurricular extends StaffAppModel {
 		$fields = array(
 			'model' => $this->alias,
 			'fields' => array(
-				array('field' => 'name', 'model' => 'SchoolYear'),
+				array('field' => 'name', 'model' => 'AcademicPeriod'),
 				array('field' => 'name', 'model' => 'ExtracurricularType', 'labelKey' => 'general.type'),
 				array('field' => 'name', 'labelKey' => 'general.title'),
 				array('field' => 'start_date', 'type' => 'datepicker'),
@@ -102,7 +102,7 @@ class StaffExtracurricular extends StaffAppModel {
 		$controller->Navigation->addCrumb('Extracurricular');
 		$header = __('Extracurricular');
 		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser', 'CreatedUser')));
-		$data = $this->find('all', array('conditions' => array('staff_id' => $controller->Session->read('Staff.id')), 'order' => 'SchoolYear.start_date'));
+		$data = $this->find('all', array('conditions' => array('staff_id' => $controller->Session->read('Staff.id')), 'order' => 'AcademicPeriod.start_date'));
 	  
 		$controller->set(compact('data', 'header'));
 	}
@@ -141,11 +141,11 @@ class StaffExtracurricular extends StaffAppModel {
 			}
 		}
 		
-		$yearOptions = $this->SchoolYear->getYearList();
-		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
+		$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
+		$academicPeriodId = isset($params['pass'][0])?$params['pass'][0] : key($academicPeriodOptions);
 		$typeOptions = $this->ExtracurricularType->getList(array('value' => 0));
 
-		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
+		$controller->set(compact('header','academicPeriodOptions','academicPeriodId', 'typeOptions'));
 	}
 
 	public function extracurricularEdit($controller, $params) {
@@ -173,12 +173,11 @@ class StaffExtracurricular extends StaffAppModel {
 			$controller->request->data = $data;
 		}
 		
-		$yearOptions = $this->SchoolYear->getYearList();
-		$yearId = isset($params['pass'][0])?$params['pass'][0] : key($yearOptions);
-
+		$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
+		$academicPeriodId = isset($params['pass'][0])?$params['pass'][0] : key($academicPeriodOptions);
 		$typeOptions = $this->ExtracurricularType->getList(array('value' => $controller->request->data['StaffExtracurricular']['extracurricular_type_id']));
 		
-		$controller->set(compact('header','yearOptions','yearId', 'typeOptions'));
+		$controller->set(compact('header','academicPeriodOptions','academicPeriodId', 'typeOptions'));
 	}
 
 	public function extracurricularDelete($controller, $params) {

@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Other Forms'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'otherforms', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'otherforms', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -19,7 +19,7 @@ $this->start('contentBody');
 		'url' => array('controller' => 'Census', 'action' => 'otherformsEdit')
 	));
 	
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div id="infrastructure" class="">
@@ -97,7 +97,7 @@ echo $this->element('census/year_options');
             foreach($data as $arrval){
                     
                     echo $arrval['CensusGrid']['name'].'<br><br>';
-                    echo '<div align="center" style="font-size:11px;color:#666;margin-bottom:10px">'.$years[$selectedYear].' '.$arrval['CensusGrid']['description'].'</div>';
+                    echo '<div align="center" style="font-size:11px;color:#666;margin-bottom:10px">'.$academicPeriods[$selectedAcademicPeriod].' '.$arrval['CensusGrid']['description'].'</div>';
                     echo '<div class="table" style="white-space:nowrap;overflow-x:scroll;">
                             
                             <div class="head" style="overflow:visible;border-style:none">
@@ -226,7 +226,7 @@ echo $this->element('census/year_options');
         ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'otherforms', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'otherforms', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 	

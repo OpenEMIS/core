@@ -3,12 +3,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 $this->start('contentActions');
 if($_edit) {
-	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/year_options', array('url' => $model . '/index'));
+echo $this->element('templates/academic_period_options', array('url' => $model . '/index'));
 $tableHeaders = array(__('Programme'), __('Cycle'));
 $tableData = array();
 foreach($data as $obj) {

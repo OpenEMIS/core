@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
 
 $this->start('contentActions');
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'show', $selectedYear, $selectedClass), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'show', $selectedAcademicPeriod, $selectedClass), array('class' => 'divider'));
 	if($_add) {
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 	}

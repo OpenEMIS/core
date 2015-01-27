@@ -45,7 +45,7 @@ $this->start('contentBody');
 	echo $this->Form->input('institution_site_id', array('type' => 'hidden'));
 
 	echo $this->FormUtility->datepicker('date', array('id' => 'date'));
-	echo $this->Form->input('school_year_id', array('id' => 'schoolYearId', 'options' => $schoolYearOptions,'onChange' => 'QualityVisit.updateURL(this)'));
+	echo $this->Form->input('academic_period_id', array('id' => 'academicPeriodId', 'options' => $academicPeriodOptions,'onChange' => 'QualityVisit.updateURL(this)'));
 	$labelOptions['text'] = $this->Label->get('general.grade');
 	echo $this->Form->input('education_grade_id', array('id' => 'educationGradeId', 'options' => $gradesOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
 	$labelOptions['text'] = $this->Label->get('general.section');

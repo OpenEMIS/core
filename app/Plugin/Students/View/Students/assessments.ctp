@@ -5,21 +5,21 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
-if (count($years) != 0 && count($programmeGrades) != 0) {
+if (count($academicPeriods) != 0 && count($programmeGrades) != 0) {
 	echo $this->Form->create('Institution', array('style' => 'margin-bottom:20px;'));
 	?>
 	<div class="row myyear">
-		<div class="col-md-2"><?php echo __('Year'); ?></div>
+		<div class="col-md-2"><?php echo __('Academic Period'); ?></div>
 		<div class="col-md-3">
 			<?php
-			echo $this->Form->input('school_year_id', array(
+			echo $this->Form->input('academic_period_id', array(
 				'label' => false,
 				'class' => 'form-control',
 				'div' => false,
-				'options' => $years,
-				'default' => $selectedYear,
+				'options' => $academicPeriods,
+				'default' => $selectedAcademicPeriod,
 				'onchange' => '',
-				'name' => "data[year]"
+				'name' => "data[academicPeriod]"
 			));
 			?>
 		</div>
@@ -74,7 +74,7 @@ if (isset($data) && !empty($data)) {
 ?>
 <script type="text/javascript">
 	$(document).ready(function(){
-		$('#InstitutionSchoolYearId,#InstitutionEducationGradeId').change(function(e){
+		$('#InstitutionSchoolAcademicPeriodId,#InstitutionEducationGradeId').change(function(e){
 			$(this).closest('form').submit();
 		})
 	});

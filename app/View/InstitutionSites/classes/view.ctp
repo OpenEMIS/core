@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $data[$model]['name']);
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, $data[$model]['school_year_id']), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, $data[$model]['academic_period_id']), array('class' => 'divider'));
 if ($_edit) {
     echo $this->Html->link($this->Label->get('general.edit'), array('action' => $_action.'Edit', $data[$model]['id']), array('class' => 'divider'));
 }
@@ -16,8 +16,8 @@ $this->start('contentBody');
 echo $this->element('../InstitutionSites/classes/controls');
 ?>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('SchoolYear.name'); ?></div>
-	<div class="col-md-6"><?php echo $data['SchoolYear']['name']; ?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('AcademicPeriod.name'); ?></div>
+	<div class="col-md-6"><?php echo $data['AcademicPeriod']['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>

@@ -22,11 +22,14 @@ class CensusTeacherFte extends AppModel {
 	public $belongsTo = array(
 		'EducationLevel',
 		'InstitutionSite',
-		'SchoolYear',
-		'Gender'
+		'AcademicPeriod',
+		'Gender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'gender_id'
+		)
 	);
 	
-	public function getCensusData($institutionSiteId, $yearId) {
+	public function getCensusData($institutionSiteId, $academicPeriodId) {
 		/* Actual SQL
 		SELECT
 			`education_levels`.`id` AS `education_level_id`,
@@ -47,7 +50,7 @@ class CensusTeacherFte extends AppModel {
 		LEFT JOIN `census_teacher_fte`
 			ON `census_teacher_fte`.`education_level_id` = `education_levels`.`id`
 			AND `census_teacher_fte`.`institution_site_id` = `institution_site_programmes`.`institution_site_id`
-			AND `census_teacher_fte`.`school_year_id` = %d
+			AND `census_teacher_fte`.`academic_period_id` = %d
 		WHERE `institution_site_programmes`.`institution_site_id` = %d
 		AND `institution_site_programmes`.`status` = 1
 		GROUP BY `education_levels`.`id`
@@ -98,7 +101,7 @@ class CensusTeacherFte extends AppModel {
 					'conditions' => array(
 						'CensusTeacherFte.institution_site_id = InstitutionSiteProgramme.institution_site_id',
 						'CensusTeacherFte.education_level_id = EducationLevel.id',
-						'CensusTeacherFte.school_year_id = ' . $yearId
+						'CensusTeacherFte.academic_period_id = ' . $academicPeriodId
 					)
 				)
 			),
@@ -127,9 +130,9 @@ class CensusTeacherFte extends AppModel {
 		return $data;
 	}
 	
-	public function saveCensusData($data, $yearId, $institutionSiteId) {
+	public function saveCensusData($data, $academicPeriodId, $institutionSiteId) {
 		foreach($data as $key => $obj) {
-			$obj['school_year_id'] = $yearId;
+			$obj['academic_period_id'] = $academicPeriodId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			if(empty($obj['id'])) {
 				if($obj['value'] > 0) {

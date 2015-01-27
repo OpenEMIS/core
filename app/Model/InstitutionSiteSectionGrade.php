@@ -54,7 +54,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
 						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteSection.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = InstitutionSiteSection.school_year_id',
+						'InstitutionSiteProgramme.academic_period_id = InstitutionSiteSection.academic_period_id',
 						'InstitutionSiteSection.id = ' . $id
 					)
 				),
@@ -74,7 +74,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 		return $data;
 	}
 	
-	public function getAvailableGradesForNewSection($institutionSiteId, $schoolYearId) {
+	public function getAvailableGradesForNewSection($institutionSiteId, $academicPeriodId) {
 		$data = $this->EducationGrade->find('all', array(
 			'fields' => array('EducationProgramme.name', 'EducationGrade.name'),
 			'joins' => array(
@@ -84,7 +84,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 					'conditions' => array(
 						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
 						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.school_year_id = ' . $schoolYearId,
+						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
 						'InstitutionSiteProgramme.status = 1'
 					)
 				)
@@ -182,7 +182,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 	public function getGradesByInstitutionSiteId($institutionSiteId, $year = null) {
 		$conditions = array('InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id', 'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId); 
 		if(!is_null($year)){
-			$conditions[] = 'InstitutionSiteSection.school_year_id = '.$year;
+			$conditions[] = 'InstitutionSiteSection.academic_period_id = '.$year;
 		}
 		
 		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'InstitutionSiteSection')));

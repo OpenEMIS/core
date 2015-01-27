@@ -6,7 +6,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/year_options', array('url' => 'assessments'));
+echo $this->element('templates/academic_period_options', array('url' => 'assessments'));
 if(!empty($data)):
 ?>
 <?php foreach ($data as $obj) : ?>
@@ -25,7 +25,7 @@ if(!empty($data)):
 				<?php foreach ($obj['items'] as $item) : ?>
 					<tr>
 						<td><?php echo $item['code']; ?></td>
-						<td><?php echo $this->Html->link($item['name'], array('action' => 'assessmentsResults', $selectedYear, $item['id']), array('escape' => false)); ?></td>
+						<td><?php echo $this->Html->link($item['name'], array('action' => 'assessmentsResults', $selectedAcademicPeriod, $item['id']), array('escape' => false)); ?></td>
 						<td><?php echo $item['description']; ?></td>
 					</tr>
 				<?php endforeach ?>

@@ -36,7 +36,7 @@ class StudentFee extends StudentsAppModel {
 		$alias = $this->alias;
 		$this->contain(array(
 			'InstitutionSiteFee' => array(
-				'SchoolYear' => array('fields' => array('name')),
+				'AcademicPeriod' => array('fields' => array('name')),
 				'EducationGrade' => array(
 					'fields' => array('name'),
 					'EducationProgramme' => array('fields' => array('name'))
@@ -49,7 +49,7 @@ class StudentFee extends StudentsAppModel {
 				"$alias.student_id",
 				"$alias.institution_site_fee_id",
 				'InstitutionSiteFee.total',
-				'InstitutionSiteFee.school_year_id',
+				'InstitutionSiteFee.academic_period_id',
 				'InstitutionSiteFee.education_grade_id',
 				'SUM(StudentFee.amount) AS paid'
 			),

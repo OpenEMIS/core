@@ -32,7 +32,7 @@ class StaffController extends StaffAppController {
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomValue',
 		'Staff.StaffAttendance',
-		'SchoolYear',
+		'AcademicPeriod',
 		'ConfigItem',
 		'SalaryAdditionType',
 		'SalaryDeductionType',
@@ -372,15 +372,15 @@ class StaffController extends StaffAppController {
 		$this->Navigation->addCrumb('Absence');
 		$header = __('Absence');
 		
-		$yearList = $this->SchoolYear->getYearList();
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
 		
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		}else{
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
 		
 		$monthOptions = $this->generateMonthOptions();
@@ -394,7 +394,7 @@ class StaffController extends StaffAppController {
 			$monthId = $currentMonthId;
 		}
 		
-		$absenceData = $this->InstitutionSiteStaffAbsence->getStaffAbsenceDataByMonth($staffId, $yearId, $monthId);
+		$absenceData = $this->InstitutionSiteStaffAbsence->getStaffAbsenceDataByMonth($staffId, $academicPeriodId, $monthId);
 		//pr($absenceData);
 		$data = $absenceData;
 		
@@ -405,7 +405,7 @@ class StaffController extends StaffAppController {
 		
 		$settingWeekdays = $this->getWeekdaysBySetting();
 
-		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
+		$this->set(compact('header', 'data','academicPeriodList','academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 
 	public function generateAttendanceLegend(){
@@ -429,17 +429,17 @@ class StaffController extends StaffAppController {
 		return $str;
 	}
 	
-	private function getAvailableYearId($yearList) {
-		$yearId = 0;
+	private function getAvailableAcademicPeriodId($academicPeriodList) {
+		$academicPeriodId = 0;
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	public function getUniqueID() {

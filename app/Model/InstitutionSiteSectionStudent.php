@@ -155,9 +155,9 @@ class InstitutionSiteSectionStudent extends AppModel {
 						)
 					),
 					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
+						'table' => 'academic_periods',
+						'alias' => 'AcademicPeriod',
+						'conditions' => array('AcademicPeriod.id = InstitutionSiteSection.academic_period_id')
 					),
 					array(
 						'table' => 'institution_site_section_students',
@@ -174,8 +174,8 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'OR' => array(
 						'InstitutionSiteStudent.end_date IS NULL',
 						'AND' => array(
-							'InstitutionSiteStudent.start_year >= ' => 'SchoolYear.start_year',
-							'InstitutionSiteStudent.end_year >= ' => 'SchoolYear.start_year'
+							'InstitutionSiteStudent.start_year >= ' => 'AcademicPeriod.start_year',
+							'InstitutionSiteStudent.end_year >= ' => 'AcademicPeriod.start_year'
 						)
 					)
 				),
@@ -214,7 +214,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
-		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
+		$fields = array('AcademicPeriod.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
 		
 		$joins = array(
 			array(
@@ -238,9 +238,9 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
-				'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
 			)
 		);
 		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
@@ -260,7 +260,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 			'fields' => $fields,
 			'joins' => $joins,
 			'conditions' => $conditions,
-			'order' => array('SchoolYear.start_year DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+			'order' => array('AcademicPeriod.start_year DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		$this->bindModel(array('belongsTo' => array('EducationGrade', 'InstitutionSiteClass')));
 		return $data;
@@ -425,7 +425,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$options['fields'] = array(
 			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
-			'AssessmentResultType.name', 'InstitutionSiteSection.school_year_id',
+			'AssessmentResultType.name', 'InstitutionSiteSection.academic_period_id',
 			'AssessmentItem.min', 'AssessmentItem.max'
 		);
 
@@ -450,7 +450,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'conditions' => array(
 					'AssessmentItemResult.student_id = Student.id',
 					'AssessmentItemResult.institution_site_id = InstitutionSiteSection.institution_site_id',
-					'AssessmentItemResult.school_year_id = InstitutionSiteSection.school_year_id',
+					'AssessmentItemResult.academic_period_id = InstitutionSiteSection.academic_period_id',
 					'AssessmentItemResult.assessment_item_id = ' . $itemId
 				)
 			),
