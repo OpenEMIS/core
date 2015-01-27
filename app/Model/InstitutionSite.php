@@ -250,21 +250,28 @@ class InstitutionSite extends AppModel {
 
     /* Excel Behaviour */
 	public function excelGetConditions() {
-		$id = CakeSession::read('InstitutionSite.id');
-		$conditions = array('InstitutionSite.id' => $id);
+		$conditions = array();
+
+		if (CakeSession::check('InstitutionSite.id')) {
+			$id = CakeSession::read('InstitutionSite.id');
+			$conditions = array('InstitutionSite.id' => $id);
+		}
 		return $conditions;
 	}
 	public function excelGetModels() {
-		$models = array(
-			array('model' => $this),
-			array('model' => $this->InstitutionSiteBankAccount),
-			array('model' => $this->InstitutionSitePosition),
-			array('model' => $this->InstitutionSiteProgramme),
-			array('model' => $this->InstitutionSiteShift),
-			array('model' => $this->InstitutionSiteSection),
-			array('model' => $this->InstitutionSiteClass),
-			array('model' => $this->InstitutionSiteFee)
-		);
+		$models = parent::excelGetModels();
+		if (CakeSession::check('InstitutionSite.id')) {
+			$models = array(
+				array('model' => $this),
+				array('model' => $this->InstitutionSiteBankAccount),
+				array('model' => $this->InstitutionSitePosition),
+				array('model' => $this->InstitutionSiteProgramme),
+				array('model' => $this->InstitutionSiteShift),
+				array('model' => $this->InstitutionSiteSection),
+				array('model' => $this->InstitutionSiteClass),
+				array('model' => $this->InstitutionSiteFee)
+			);
+		}
 		return $models;
 	}
 	/* End Excel Behaviour */

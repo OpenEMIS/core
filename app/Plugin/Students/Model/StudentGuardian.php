@@ -26,8 +26,8 @@ class StudentGuardian extends StudentsAppModel {
 	);
 
 	public $belongsTo = array(
-		'Students.GuardianRelation',
 		'Students.Student',
+		'Students.GuardianRelation',
 		'Students.Guardian',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
