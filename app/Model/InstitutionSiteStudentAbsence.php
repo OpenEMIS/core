@@ -18,14 +18,12 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudentAbsence extends AppModel {
 	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		),
 		'TimePicker' => array('start_time_absent' => array('format' => 'h:i a'), 'end_time_absent' => array('format' => 'h:i a')),
-		'ControllerAction2',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
+		'ControllerAction2'
 	);
 	
 	public $belongsTo = array(
@@ -87,6 +85,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSiteSection.institution_site_id' => $id);
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function compareDate($field = array(), $compareField = null) {
 		$startDate = new DateTime(current($field));

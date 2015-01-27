@@ -20,10 +20,7 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteBankAccount extends AppModel {
 
 	public $actsAs = array(
-		'ControllerAction',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
+		'ControllerAction'
 	);
 	public $belongsTo = array(
 		'BankBranch',
@@ -63,22 +60,6 @@ class InstitutionSiteBankAccount extends AppModel {
 				'message' => 'Please select a Bank Branch'
 			)
 		)
-	);
-	public $reportMapping = array(
-		'fields' => array(
-			'Bank' => array(
-				'name' => ''
-			),
-			'BankBranch' => array(
-				'name' => 'Branch Name'
-			),
-			'InstitutionSiteBankAccount' => array(
-				'account_name' => 'Bank Account Name',
-				'account_number' => 'Bank Account Number',
-				'active' => 'Is Active'
-			)
-		),
-		'fileName' => 'Report_General_Bank_Accounts'
 	);
 
 	public function getDisplayFields($controller) {
@@ -191,44 +172,4 @@ class InstitutionSiteBankAccount extends AppModel {
 			return $controller->redirect(array('action' => 'bankAccounts'));
 		}
 	}
-
-	public function reportsGetHeader($args) {
-		return $this->getCSVHeader($this->reportMapping['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$options = array();
-		$options['recursive'] = -1;
-		$options['fields'] = $this->getCSVFields($this->reportMapping['fields']);
-		$options['joins'] = array(
-			array(
-				'table' => 'bank_branches',
-				'alias' => 'BankBranch',
-				'conditions' => array('InstitutionSiteBankAccount.bank_branch_id = BankBranch.id')
-			),
-			array(
-				'table' => 'banks',
-				'alias' => 'Bank',
-				'conditions' => array('BankBranch.bank_id = Bank.id')
-			)
-		);
-		$options['conditions'] = array('InstitutionSiteBankAccount.institution_site_id' => $institutionSiteId);
-
-		$data = $this->find('all', $options);
-
-		$newData = array();
-
-		foreach ($data AS $row) {
-			$row['InstitutionSiteBankAccount']['active'] = $row['InstitutionSiteBankAccount']['active'] == 1 ? 'Yes' : 'No';
-			$newData[] = $row;
-		}
-
-		return $newData;
-	}
-	
-	public function reportsGetFileName(){
-		return $this->reportMapping['fileName'];
-	}
-
 }

@@ -4,6 +4,9 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('List of Students'));
 $this->start('contentActions');
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
+	}
 	echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'divider'));
 $this->end();
 

@@ -15,8 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthHistory extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
+		'Students.Student',
 		'HealthCondition',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',

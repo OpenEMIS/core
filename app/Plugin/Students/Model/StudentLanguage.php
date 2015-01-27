@@ -15,7 +15,12 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentLanguage extends StudentsAppModel {
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('evaluation_date'));
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction', 
+		'DatePicker' => array('evaluation_date')
+	);
+
 	public $belongsTo = array(
 		'Students.Student',
 		'Language',

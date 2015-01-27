@@ -18,6 +18,7 @@ class Staff extends StaffAppModel {
 	public $useTable = 'staff';
 
 	public $actsAs = array(
+		'Excel',
 		'Search',
 		'UserAccess',
 		'TrackHistory' => array('historyTable' => 'Staff.StaffHistory'),
@@ -39,7 +40,39 @@ class Staff extends StaffAppModel {
 		)
 	);
 
+	public $belongsTo = array(
+		'AddressArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'address_area_id'
+		),
+		'BirthplaceArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'birthplace_area_id'
+		)
+	);
+
 	public $hasMany = array(
+		'Staff.StaffContact',
+		'Staff.StaffIdentity',
+		'Staff.StaffNationality',
+		'Staff.StaffLanguage',
+		'Staff.StaffComment',
+		'Staff.StaffSpecialNeed',
+		'Staff.StaffAward',
+		'Staff.StaffMembership',
+		'Staff.StaffLicense',
+		'Staff.StaffQualification',
+		'Staff.StaffBehaviour',
+		'Staff.StaffExtracurricular',
+		'Staff.StaffBankAccount',
+		'Staff.StaffHealth',
+		'Staff.StaffHealthHistory',
+		'Staff.StaffHealthFamily',
+		'Staff.StaffHealthImmunization',
+		'Staff.StaffHealthMedication',
+		'Staff.StaffHealthAllergy',
+		'Staff.StaffHealthTest',
+		'Staff.StaffHealthConsultation',
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
 			'foreignKey' => 'staff_id',
@@ -170,6 +203,41 @@ class Staff extends StaffAppModel {
 		$check = $check[0];
 		return !preg_match('#[0-9]#',$check);
 	}
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$id = CakeSession::read('Staff.id');
+		$conditions = array('Staff.id' => $id);
+		return $conditions;
+	}
+	public function excelGetModels() {
+		$models = array(
+			array('model' => $this),
+			array('model' => $this->StaffContact, 'name' => 'Contacts'),
+			array('model' => $this->StaffIdentity, 'name' => 'Identities'),
+			array('model' => $this->StaffNationality, 'name' => 'Nationalities'),
+			array('model' => $this->StaffLanguage, 'name' => 'Languages'),
+			array('model' => $this->StaffComment, 'name' => 'Comments'),
+			array('model' => $this->StaffSpecialNeed, 'name' => 'Special Needs'),
+			array('model' => $this->StaffAward, 'name' => 'Awards'),
+			array('model' => $this->StaffMembership, 'name' => 'Membership'),
+			array('model' => $this->StaffLicense, 'name' => 'Licenses'),
+			array('model' => $this->StaffQualification, 'name' => 'Qualifications'),
+			array('model' => $this->StaffBehaviour, 'name' => 'Behaviour'),
+			array('model' => $this->StaffExtracurricular, 'name' => 'Extracurricular'),
+			array('model' => $this->StaffBankAccount, 'name' => 'Bank Accounts'),
+			array('model' => $this->StaffHealth, 'name' => 'Health Overview'),
+			array('model' => $this->StaffHealthHistory, 'name' => 'Health History'),
+			array('model' => $this->StaffHealthFamily, 'name' => 'Health Family'),
+			array('model' => $this->StaffHealthImmunization, 'name' => 'Immunizations'),
+			array('model' => $this->StaffHealthMedication, 'name' => 'Medications'),
+			array('model' => $this->StaffHealthAllergy, 'name' => 'Allergies'),
+			array('model' => $this->StaffHealthTest, 'name' => 'Health Tests'),
+			array('model' => $this->StaffHealthConsultation, 'name' => 'Health Consulations')
+		);
+		return $models;
+	}
+	/* End Excel Behaviour */
 
 	public function compareBirthDate() {
 		if(!empty($this->data[$this->alias]['date_of_birth'])) {
