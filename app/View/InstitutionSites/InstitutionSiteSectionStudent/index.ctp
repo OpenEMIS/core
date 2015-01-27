@@ -33,7 +33,7 @@ if(!empty($data)) :
 			<?php foreach($data as $obj) : ?>
 			<tr>
 				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 				<td><?php echo $obj['StudentCategory']['name']; ?></td>
 			</tr>
 			<?php endforeach ?>

@@ -55,7 +55,7 @@ $this->start('contentBody');
 			<?php foreach ($data as $obj) { ?>
 				<tr>
 					<td><?php echo $obj['Student']['identification_no']; ?></td>
-					<td><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></td>
+					<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 					<td class="center">
 						<?php
 						$marks = $obj[$model]['marks'];

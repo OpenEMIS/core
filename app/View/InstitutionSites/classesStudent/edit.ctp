@@ -42,7 +42,7 @@ echo $this->Form->create($model, $formOptions);
 					?>
 				</td>
 				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 			</tr>
 			<?php endforeach; ?>
 		</tbody>

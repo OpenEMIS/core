@@ -10,6 +10,7 @@ $this->end();
 $this->start('contentBody');
 
 $formOptions = array('url' => array('plugin' => 'Students', 'controller' => 'Students', 'action' => $model), 'inputDefaults' => array('label' => false, 'div' => false));
+
 echo $this->Form->create($model, $formOptions);
 echo $this->element('layout/search', array('model' => $model, 'placeholder' => 'OpenEMIS ID or Name', 'form' => false));
 ?>
@@ -21,7 +22,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Years'),
 			'options' => $yearOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -33,7 +34,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Programmes'),
 			'options' => $programmeOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -45,7 +46,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Statuses'),
 			'options' => $statusOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -61,8 +62,13 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			<tr>
 				<th><?php echo $this->Paginator->sort('Student.identification_no', __('OpenEMIS ID')) ?></th>
 				<th><?php echo $this->Paginator->sort('Student.first_name', __('Name')) ?></th>
-				<th><?php echo $this->Paginator->sort('EducationProgramme.name', __('Programme')) ?></th>
-				<th><?php echo $this->Paginator->sort('StudentStatus.name', __('Status')) ?></th>
+				<th><?php echo $this->Paginator->sort('StudentIdentity.number', __($defaultIdentity['name'])) ?></th>
+				<th class="section-info">
+					<span>Programme</span>
+					<span class="middot">&middot;</span>
+					<span>Section</span>
+				</th>
+				<th><?php echo __('Status') ?></th>
 			</tr>
 		</thead>
 		
@@ -71,16 +77,19 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			foreach ($data as $obj):
 				$id = $obj['Student']['id'];
 				$identificationNo = $this->Utility->highlight($search, $obj['Student']['identification_no']);
-				$firstName = $this->Utility->highlight($search, $obj['Student']['first_name'].((isset($obj['Student']['history_first_name']))?'<br>'.$obj['Student']['history_first_name']:''));
-				$middleName = $this->Utility->highlight($search, $obj['Student']['middle_name'].((isset($obj['Student']['history_middle_name']))?'<br>'.$obj['Student']['history_middle_name']:''));
-				$thirdName = $this->Utility->highlight($search, $obj['Student']['third_name'].((isset($obj['Student']['history_third_name']))?'<br>'.$obj['Student']['history_third_name']:''));
-				$lastName = $this->Utility->highlight($search, $obj['Student']['last_name'].((isset($obj['Student']['history_last_name']))?'<br>'.$obj['Student']['history_last_name']:''));
-				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+	            $name = $this->Utility->highlight($search, $this->Model->getNameWithHistory($obj['Student']));
+	            $name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
+				$identity = (isset($obj['StudentIdentity'])) ? $obj['StudentIdentity']['number'] : '';
 		?>
 			<tr>
 				<td><?php echo $identificationNo; ?></td>
 				<td><?php echo $name; ?></td>
-				<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+				<td><?php echo $identity; ?></td>
+				<td class="section-info">
+					<span><?php echo $obj['EducationProgramme']['name'] ?></span>
+					<span class="middot">&middot;</span>
+					<span><?php echo $obj['InstitutionSiteSection']['name'] ?></span>
+				</td>
 				<td><?php echo $obj['StudentStatus']['name']; ?></td>
 			</tr>
 		<?php endforeach ?>

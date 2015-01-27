@@ -65,7 +65,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'DISTINCT Student.identification_no',
-				'Student.first_name', 'Student.last_name', 'StudentCategory.name'
+				'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'StudentCategory.name'
 			),
 			'joins' => array(
 				array(
@@ -118,7 +118,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
+					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.identification_no',
 					'InstitutionSiteSectionStudent.id', 'InstitutionSiteSectionStudent.student_category_id', 'InstitutionSiteSectionStudent.status', 'InstitutionSiteSection.id'
 				),
 				'joins' => array(
@@ -314,6 +314,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'Student.identification_no',
 				'Student.first_name',
 				'Student.middle_name',
+				'Student.third_name',
 				'Student.last_name',
 				'Student.preferred_name'
 			);
@@ -373,19 +374,20 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'OR' => array(
 					'Student.first_name LIKE' => $search,
 					'Student.last_name LIKE' => $search,
+					'Student.third_name LIKE' => $search,
 					'Student.middle_name LIKE' => $search,
 					'Student.preferred_name LIKE' => $search,
 					'Student.identification_no LIKE' => $search
 				)
 			),
-			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
+			'order' => array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.preferred_name')
 		));
 
 		$data = array();
 		foreach ($list as $obj) {
 			$student = $obj['Student'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
+				'label' => ModelHelper::getName($student, array('openEmisId'=>true, 'preferred'=>true)),
 				'value' => $student['id']
 			);
 		}
@@ -423,7 +425,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$options['recursive'] = -1;
 		
 		$options['fields'] = array(
-			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
+			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
 			'AssessmentResultType.name', 'InstitutionSiteSection.academic_period_id',
 			'AssessmentItem.min', 'AssessmentItem.max'
@@ -485,14 +487,14 @@ class InstitutionSiteSectionStudent extends AppModel {
 			$options['joins'] = $options_joins;
 		}
 
-		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name');
+		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name');
 
 		$data = $this->find('all', $options);
 
 		return $data;
 	}
 	
-	public function getSectionSutdents($sectionId, $startDate, $endDate){
+	public function getSectionStudents($sectionId, $startDate, $endDate){
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
@@ -500,6 +502,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'Student.identification_no',
 				'Student.first_name',
 				'Student.middle_name',
+				'Student.third_name',
 				'Student.last_name',
 				'Student.preferred_name'
 			),
