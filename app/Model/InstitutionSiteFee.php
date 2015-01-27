@@ -76,7 +76,7 @@ class InstitutionSiteFee extends AppModel {
 		$this->Navigation->addCrumb($contentHeader);
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods();
 		
 		$this->fields['total']['visible'] = false;
 		$this->fields['institution_site_id']['type'] = 'hidden';
@@ -113,7 +113,7 @@ class InstitutionSiteFee extends AppModel {
 	public function index($selectedAcademicPeriod=0) {
 		$params = $this->controller->params;
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodOptions = $this->AcademicPeriod->find('list', array('conditions' => array('available' => 1), 'order' => array('order')));
+		$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods();
 		
 		if ($selectedAcademicPeriod == 0) {
 			$selectedAcademicPeriod = key($academicPeriodOptions);

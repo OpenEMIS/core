@@ -216,7 +216,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 
 		$this->Navigation->addCrumb('Attendance - Staff');
 
-		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods();
 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
 		if($currentAcademicPeriodId){
 			$defaultAcademicPeriodId = $currentAcademicPeriodId;
@@ -399,7 +399,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 
 		$this->Navigation->addCrumb('Attendance - Staff');
 
-		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods();
 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
 		if($currentAcademicPeriodId){
 			$defaultAcademicPeriodId = $currentAcademicPeriodId;
@@ -495,7 +495,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 
 		$this->Navigation->addCrumb('Attendance - Staff');
 
-		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods();
 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
 		if($currentAcademicPeriodId){
 			$defaultAcademicPeriodId = $currentAcademicPeriodId;

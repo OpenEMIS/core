@@ -3,22 +3,41 @@ CREATE TABLE IF NOT EXISTS 1132_field_options LIKE field_options;
 INSERT 1132_field_options SELECT * FROM field_options WHERE field_options.code = "SchoolYear" AND NOT EXISTS (SELECT * FROM 1132_field_options WHERE 1132_field_options.code = "SchoolYear");
 DELETE FROM field_options WHERE field_options.code = "SchoolYear";
 
-
 CREATE TABLE IF NOT EXISTS 1132_school_years LIKE school_years;
 INSERT 1132_school_years SELECT * FROM school_years WHERE NOT EXISTS (SELECT * FROM 1132_school_years);
-RENAME TABLE school_years to academic_periods;
-ALTER TABLE `academic_periods` ADD `code` VARCHAR(60) NOT NULL AFTER `id`;
-ALTER TABLE `academic_periods` ADD `academic_period_level_id` int(11) NOT NULL AFTER `available`;
-ALTER TABLE `academic_periods` ADD `rght` int(11) NOT NULL AFTER `available`;
-ALTER TABLE `academic_periods` ADD `lft` int(11) NOT NULL AFTER `available`;
-ALTER TABLE `academic_periods` ADD `parent_id` int(11) NOT NULL AFTER `available`;
+
+CREATE TABLE `academic_periods` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(60) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `start_date` date NOT NULL,
+  `start_year` int(4) NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `end_year` int(4) DEFAULT NULL,
+  `school_days` int(5) NOT NULL DEFAULT '0',
+  `current` char(1) NOT NULL DEFAULT '0',
+  `available` char(1) NOT NULL DEFAULT '1',
+  `parent_id` int(11) NOT NULL,
+  `lft` int(11) NOT NULL,
+  `rght` int(11) NOT NULL,
+  `academic_period_level_id` int(11) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+INSERT INTO academic_periods (`id`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created` ) SELECT id , `name` , `start_date` , `start_year` , `end_date` , `end_year` , `school_days` , `current` , `available` , `order` , `modified_user_id` , `modified` , `created_user_id` , `created` FROM 1132_school_years;
 
 INSERT INTO `academic_periods` (`id`, `code`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`, `parent_id`, `lft`, `rght`, `academic_period_level_id`, `order`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (null, 'All', 'All Data', '', '', NULL, NULL, '0', '', '1', -1, 1, 2, '', '', NULL, NULL, '', '');
+DROP TABLE school_years;
 
 -- need to update parent id
 SELECT `id` INTO @academicPeriodAllDataId FROM `academic_periods` WHERE parent_id = -1;
 UPDATE academic_periods SET parent_id = @academicPeriodAllDataId, academic_period_level_id = 1 WHERE parent_id != -1;
-
 
 CREATE TABLE `academic_period_levels` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

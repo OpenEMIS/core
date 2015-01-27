@@ -18,7 +18,7 @@ if(!empty($typeId)) {
 }
 $formOptions = $this->FormUtility->getFormOptions($action);
 echo $this->Form->create($model, $formOptions);
-echo $this->Form->input('year', array('value' => $year, 'disabled'));
+echo $this->Form->input('academicPeriod', array('value' => $academicPeriod, 'disabled'));
 echo $this->Form->input(__('Finance Nature'), array(
 	'options' => $natureOptions,
 	'url' => $url,

@@ -291,7 +291,7 @@ class ReportsController extends ReportsAppController {
 		);
 		$this->humanizeFields($selectedFields);
 		$data = $selectedFields;
-		$raw_academic_periods = $this->AcademicPeriod->find('list', array('order'=>'AcademicPeriod.name asc'));
+		$raw_academic_periods = $this->AcademicPeriod->getAvailableAcademicPeriods();
 		$academic_periods = array();
 		foreach($raw_academic_periods as $value){
 			array_push($academic_periods, $value);

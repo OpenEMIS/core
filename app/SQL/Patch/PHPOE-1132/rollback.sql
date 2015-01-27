@@ -1,9 +1,3 @@
-SET @academicPeriodOrderId := 0;
-SELECT `order` INTO @academicPeriodOrderId FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'System Setup' AND `title` LIKE 'Academic Periods';
-DELETE FROM navigations WHERE `module` LIKE 'Administration' AND `header` LIKE 'System Setup' AND `title` LIKE 'Academic Periods' LIMIT 1;
-
-UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @academicPeriodOrderId;
-
 ALTER TABLE `assessment_item_results` CHANGE `academic_period_id` `school_year_id` INT(11) NOT NULL;
 ALTER TABLE `assessment_item_types` CHANGE `academic_period_id` `school_year_id` INT(11) NOT NULL;
 ALTER TABLE `assessment_results` CHANGE `academic_period_id` `school_year_id` INT(11) NOT NULL;
@@ -48,6 +42,12 @@ INSERT field_options SELECT * FROM 1132_field_options WHERE 1132_field_options.c
 
 
 DROP TABLE academic_period_levels;
+
+-- NEED TO ROLLBACK navigations
+SET @academicPeriodOrderId := 0;
+SELECT `order` INTO @academicPeriodOrderId FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'System Setup' AND `title` LIKE 'Academic Periods';
+DELETE FROM navigations WHERE `module` LIKE 'Administration' AND `header` LIKE 'System Setup' AND `title` LIKE 'Academic Periods' LIMIT 1;
+UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @academicPeriodOrderId;
 
 DROP TABLE academic_periods;
 RENAME TABLE 1132_school_years to school_years;
