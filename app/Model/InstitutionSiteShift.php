@@ -21,7 +21,7 @@ class InstitutionSiteShift extends AppModel {
 	public $actsAs = array('ControllerAction');
 
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'InstitutionSite',
 		'LocationInstitutionSite' => array(
 			'className' => 'InstitutionSite',
@@ -294,10 +294,6 @@ class InstitutionSiteShift extends AppModel {
 		} else {
 			$controller->redirect(array('action' => 'shifts'));
 		}
-	}
-
-	public function shiftsExport($controller, $params) {
-		$this->export();
 	}
 	
 	public function createInstitutionDefaultShift($institutionSiteId, $academicPeriodId){
