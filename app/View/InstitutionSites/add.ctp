@@ -53,7 +53,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 </fieldset>
 <fieldset class="section_break">
 	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-	<?php echo $this->FormUtility->areapicker('area_education_id', array('model' => 'AreaEducation', 'value' => $areaEducationId)); ?>
+	<?php echo $this->FormUtility->areapicker('area_administrative_id', array('model' => 'AreaAdministrative', 'value' => $areaAdministrativeId)); ?>
 </fieldset>
 
 <fieldset class="section_break">

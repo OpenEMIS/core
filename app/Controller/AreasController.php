@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class AreasController extends AppController {
-	public $uses = array('Area', 'AreaLevel', 'AreaEducation', 'AreaEducationLevel');
+	public $uses = array('Area', 'AreaLevel', 'AreaAdministrative', 'AreaAdministrativeLevel');
 	
 	public $modules = array(
 		'Area',
 		'AreaLevel',
-		'AreaEducation',
-		'AreaEducationLevel'
+		'AreaAdministrative',
+		'AreaAdministrativeLevel'
 	);
 	
 	public function beforeFilter() {
@@ -33,10 +33,10 @@ class AreasController extends AppController {
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
 		
 		$areaOptions = array(
-			'Area' => __('Areas'),
-			'AreaLevel' => __('Area Levels'),
-			'AreaEducation' => __('Areas (Education)'),
-			'AreaEducationLevel' => __('Area Levels (Education)')
+			'Area' => __('Areas (Education)'),
+			'AreaLevel' => __('Area Levels (Education)'),
+			'AreaAdministrative' => __('Areas (Administrative)'),
+			'AreaAdministrativeLevel' => __('Area Levels (Administrative)')
 		);
 		
 		if(array_key_exists($this->action, $areaOptions)) {
@@ -63,7 +63,7 @@ class AreasController extends AppController {
 	
 	public function ajaxGetAreaOptions($model='Area', $parentId=0) {
 		$this->layout = 'ajax';
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$levelModel = $levelModels[$model];
 		if($parentId > 0) {
 			$data = $this->{$model}->find('all', array(

@@ -202,7 +202,7 @@ class FormUtilityHelper extends AppHelper {
 			'model' => 'Area'
 		);
 		$inputDefaults = $this->Form->inputDefaults();
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$_options = array_merge($_options, $options);
 		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : null;
 		$model = $_options['model'];
@@ -251,7 +251,7 @@ class FormUtilityHelper extends AppHelper {
 	}
 	
 	public function areas($value, $model='Area') {
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 		
 		$html = '';
