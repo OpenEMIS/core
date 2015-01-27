@@ -21,7 +21,7 @@ class SurveyStatusesController extends SurveysAppController {
 		'Surveys.SurveyTemplate',
 		'Surveys.SurveyModule',
 		'AcademicPeriodType',
-		'SchoolYear'
+		'AcademicPeriod'
 	);
 
 	public function beforeFilter() {

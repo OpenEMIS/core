@@ -5,9 +5,6 @@ $this->start('contentActions');
 	if($_edit) {
 		echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $selectedAcademicPeriod), array('class' => 'divider'));
 	}
-	if ($_execute) {
-		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
-	}
 $this->end();
 
 $this->start('contentBody');

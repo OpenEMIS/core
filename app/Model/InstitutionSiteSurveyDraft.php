@@ -37,7 +37,7 @@ class InstitutionSiteSurveyDraft extends AppModel {
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
 		'AcademicPeriod' => array(
-			'className' => 'SchoolYear',
+			'className' => 'AcademicPeriod',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
 		),
 		'ModifiedUser' => array(

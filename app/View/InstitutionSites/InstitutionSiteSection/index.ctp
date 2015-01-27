@@ -8,9 +8,6 @@ $this->start('contentActions');
 	if ($_add) {
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedAcademicPeriod), array('class' => 'divider'));
 	}
-	if ($_execute) {
-        echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteSection', 'excel'), array('class' => 'divider'));
-    }
 $this->end();
 
 $this->start('contentBody');

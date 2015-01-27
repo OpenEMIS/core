@@ -18,7 +18,6 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSitePosition extends AppModel {
 	public $actsAs = array(
-		'Excel',
 		'ControllerAction2'
 	);
    
