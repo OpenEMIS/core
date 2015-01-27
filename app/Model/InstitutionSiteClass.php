@@ -76,52 +76,7 @@ class InstitutionSiteClass extends AppModel {
 	
 	public $actsAs = array(
 		'ControllerAction',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		),
 		'AcademicPeriod'
-	);
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'AcademicPeriod' => array(
-					'name' => 'Academic Period'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class Name',
-					'no_of_seats' => 'Seats'
-				)
-			),
-			'fileName' => 'Report_Class_List'
-		),
-		2 => array(
-			'fields' => array(
-				'AcademicPeriod' => array(
-					'name' => 'Academic Period'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class Name'
-				),
-				'EducationGrade' => array(
-					'name' => 'Grade'
-				),
-				'Student' => array(
-					'identification_no' => 'OpenEMIS ID',
-					'first_name' => 'First Name',
-					'middle_name' => 'Middle Name',
-					'third_name' => 'Third Name',
-					'last_name' => 'Last Name'
-				),
-				'StudentCategory' => array(
-					'name' => 'Category'
-				)
-			),
-			'fileName' => 'Report_Details_Classes_Students'
-		)
 	);
 	
 	public $_action = 'classes';
@@ -274,6 +229,10 @@ class InstitutionSiteClass extends AppModel {
 		$this->delete($id);
 		$controller->Message->alert('general.delete.success');
 		$controller->redirect(array('action' => $this->_action, $obj[$this->alias]['academic_period_id']));
+	}
+
+	public function classesExcel($controller, $params) {
+		$this->excel();
 	}
 	
 	public function getClass($classId, $institutionSiteId=0) {
@@ -433,88 +392,5 @@ class InstitutionSiteClass extends AppModel {
 		));
 		
 		return $data;
-	}
-	
-	public function reportsGetHeader($args) {
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-
-		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('AcademicPeriod.name', 'InstitutionSiteClass.name');
-			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
-					)
-				),
-				array(
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		} else if ($index == 2) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('AcademicPeriod.name', 'InstitutionSiteClass.name', 'Student.first_name');
-			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_students',
-					'alias' => 'InstitutionSiteClassStudent',
-					'conditions' => array(
-						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassStudent.status = 1'
-					)
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = EducationGrade.id')
-				),
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'StudentCategory',
-					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
-				),
-				array(
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		}
-	}
-
-	public function reportsGetFileName($args) {
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }

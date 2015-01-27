@@ -18,12 +18,27 @@
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteShift extends AppModel {
-
 	public $actsAs = array('ControllerAction');
+
 	public $belongsTo = array(
-		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
-		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser'),
+		'SchoolYear',
+		'InstitutionSite',
+		'LocationInstitutionSite' => array(
+			'className' => 'InstitutionSite',
+			'foreignKey' => 'Location_institution_site_id'
+		),
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
+
 	public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
@@ -279,6 +294,10 @@ class InstitutionSiteShift extends AppModel {
 		} else {
 			$controller->redirect(array('action' => 'shifts'));
 		}
+	}
+
+	public function shiftsExport($controller, $params) {
+		$this->export();
 	}
 	
 	public function createInstitutionDefaultShift($institutionSiteId, $academicPeriodId){

@@ -2,13 +2,16 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
-}
-if ($_delete) {
-	echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
-}
-echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
+	if ($_edit) {
+		echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
+	}
+	if ($_delete) {
+		echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'excel'), array('class' => 'divider'));
+	}
+	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');

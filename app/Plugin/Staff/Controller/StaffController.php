@@ -143,7 +143,8 @@ class StaffController extends StaffAppController {
 			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$data = $this->Search->search($this->Staff, $conditions);
+		$order = empty($this->params->named['sort']) ? array('Staff.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->Staff, $conditions, $order);
 		$data = $this->Staff->attachLatestInstitutionInfo($data);
 		
 		if (empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
@@ -343,6 +344,10 @@ class StaffController extends StaffAppController {
 			$this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
 		}
 		$this->redirect(array('action' => 'index'));
+	}
+
+	public function excel() {
+		$this->Staff->excel();
 	}
 
 	public function history() {

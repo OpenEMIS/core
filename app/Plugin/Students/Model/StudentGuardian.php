@@ -15,9 +15,19 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentGuardian extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array(
+			'header' => array(
+				'Student' => array('identification_no', 'first_name', 'last_name'),
+				'Guardian' => array('first_name', 'middle_name', 'last_name', 'email', 'home_phone', 'mobile_phone')
+			)
+		),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
 		'Students.GuardianRelation',
+		'Students.Student',
 		'Students.Guardian',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
