@@ -23,7 +23,7 @@ class ReportShell extends AppShell {
 				$name = $obj['name'];
 				$model = ClassRegistry::init($params['model']);
 
-				echo 'Start Processing ' . $name . "\n";
+				echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
 				$ReportProgress->id = $id;
 
 				$format = 'xlsx';
@@ -55,6 +55,7 @@ class ReportShell extends AppShell {
 				);
 
 				$model->excel($format, $settings);
+				echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
 
 				/*
 				$count = $this->DataRecord->find('count', $options);
