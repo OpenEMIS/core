@@ -13,7 +13,7 @@ $this->start('contentBody');
 $tableHeaders = array(__('Academic Period'), __('Name'), __('Class'), __('Staff'));
 $tableData = array();
 foreach ($data as $obj) {
-	$staffName = $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name'];
+	$staffName = $this->Model->getName($obj['Staff']);
 	$row = array();
 	$row[] = $obj['AcademicPeriod']['name'];
 	$row[] = $this->Html->link($obj['RubricsTemplate']['name'], array('action' => 'qualityRubricView', $obj[$model]['id']), array('escape' => false));

@@ -21,6 +21,7 @@
  */
 
 App::uses('Model', 'Model');
+App::import('Helper', 'Model'); 
 
 /**
  * Application model for Cake.

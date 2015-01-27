@@ -84,7 +84,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingSessionTrainees)){ 
 			foreach($trainingSessionTrainees as $val){
-				echo $val['Staff']['first_name'] . ', ' . $val['Staff']['last_name'] . '<br />';
+				echo $this->Model->getName($val['Staff']) . '<br />';
 			}
 		}else{
 			echo "-";

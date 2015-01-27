@@ -21,7 +21,7 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			'class' => 'form-control',
 			'empty' => __('All Years'),
 			'options' => $yearOptions,
-			'onchange' => "$('form').submit()",
+			'onchange' => "$(this).closest('form').submit()",
 			'required' => false
 		));
 		?>
@@ -37,8 +37,9 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			<tr>
 				<th><?php echo $this->Paginator->sort('Staff.identification_no', __('OpenEMIS ID')) ?></th>
 				<th><?php echo $this->Paginator->sort('Staff.first_name', __('Name')) ?></th>
+				<th><?php echo $this->Paginator->sort('StaffIdentity.number', __($defaultIdentity['name'])) ?></th>
 				<th><?php echo __('Position') ?></th>
-				<th><?php echo $this->Paginator->sort('StaffStatus.name', __('Status')) ?></th>
+				<th><?php echo __('Status') ?></th>
 			</tr>
 		</thead>
 		
@@ -47,15 +48,13 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 			foreach ($data as $obj):
 				$id = $obj['Staff']['id'];
 				$identificationNo = $this->Utility->highlight($search, $obj['Staff']['identification_no']);
-				$firstName = $this->Utility->highlight($search, $obj['Staff']['first_name'].((isset($obj['Staff']['history_first_name']))?'<br>'.$obj['Staff']['history_first_name']:''));
-				$middleName = $this->Utility->highlight($search, $obj['Staff']['middle_name'].((isset($obj['Staff']['history_middle_name']))?'<br>'.$obj['Staff']['history_middle_name']:''));
-				$thirdName = $this->Utility->highlight($search, $obj['Staff']['third_name'].((isset($obj['Staff']['history_third_name']))?'<br>'.$obj['Staff']['history_third_name']:''));
-				$lastName = $this->Utility->highlight($search, $obj['Staff']['last_name'].((isset($obj['Staff']['history_last_name']))?'<br>'.$obj['Staff']['history_last_name']:''));
-				$name = $this->Html->link($firstName.(($middleName!='')?' '.$middleName:'').(($thirdName!='')?' '.$thirdName:'').' '.$lastName, array('action' => 'view', $id), array('escape' => false));
+				$name = $this->Utility->highlight($search, $this->Model->getName($obj['Staff']));
+				$name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
 		?>
 			<tr>
 				<td><?php echo $identificationNo; ?></td>
 				<td><?php echo $name; ?></td>
+				<td><?php echo $obj['StaffIdentity']['number']; ?></td>
 				<td><?php echo $positionList[$obj['InstitutionSitePosition']['staff_position_title_id']]; ?></td>
 				<td><?php echo $obj['StaffStatus']['name']; ?></td>
 			</tr>

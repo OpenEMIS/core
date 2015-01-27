@@ -128,14 +128,23 @@ class StaffController extends StaffAppController {
 			$searchKey = Sanitize::escape($this->request->data['Staff']['search']);
 		}
 
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$defaultIdentity = $IdentityType->find('first', array(
+			'contain' => array('FieldOption'),
+			'conditions' => array('FieldOption.code' => $IdentityType->alias),
+			'order' => array('IdentityType.default DESC')
+		));
+
 		$conditions = array(
 			'SearchKey' => $searchKey,
 			'AdvancedSearch' => $this->Session->check('Staff.AdvancedSearch') ? $this->Session->read('Staff.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id')
+			'userId' => $this->Auth->user('id'),
+			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
 		$data = $this->Search->search($this->Staff, $conditions);
+		$data = $this->Staff->attachLatestInstitutionInfo($data);
 		
 		if (empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
@@ -146,6 +155,7 @@ class StaffController extends StaffAppController {
 			$this->Message->alert('general.noData');
 		}
 		$this->set('data', $data);
+		$this->set('defaultIdentity', $defaultIdentity['IdentityType']);
 	}
 
 	public function advanced() {
@@ -234,7 +244,7 @@ class StaffController extends StaffAppController {
 		$this->Staff->recursive = 0;
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
-		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);

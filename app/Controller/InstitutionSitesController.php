@@ -57,7 +57,7 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentAbsence'
 	);
 	
-	public $helpers = array('Paginator');
+	public $helpers = array('Paginator', 'Model');
 	public $components = array(
 		'Mpdf',
 		'Paginator',

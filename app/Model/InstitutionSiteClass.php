@@ -113,6 +113,7 @@ class InstitutionSiteClass extends AppModel {
 					'identification_no' => 'OpenEMIS ID',
 					'first_name' => 'First Name',
 					'middle_name' => 'Middle Name',
+					'third_name' => 'Third Name',
 					'last_name' => 'Last Name'
 				),
 				'StudentCategory' => array(

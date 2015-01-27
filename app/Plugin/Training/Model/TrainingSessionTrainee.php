@@ -104,7 +104,7 @@ class TrainingSessionTrainee extends TrainingAppModel {
 
 		$list = $this->Staff->find('all', 
 			array(
-				'fields'=>array('Staff.id', 'Staff.first_name', 'Staff.last_name'),
+				'fields'=>array('Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'),
 				'joins'=> $joins,
 				'conditions'=>$conditions,
 				'order'=> array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name')
@@ -118,21 +118,21 @@ class TrainingSessionTrainee extends TrainingAppModel {
 	public function autocomplete($search, $index, $trainingCourseID) {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();
-		$conditions['OR'] = array("Staff.first_name LIKE '" . $search . "'", "Staff.last_name LIKE '" . $search  . "'", "Staff.identification_no LIKE '" . $search . "'");
+		$conditions['OR'] = array("Staff.first_name LIKE '" . $search . "'", "Staff.middle_name LIKE '" . $search  . "'", "Staff.third_name LIKE '" . $search . "'", "Staff.last_name LIKE '" . $search  . "'", "Staff.identification_no LIKE '" . $search . "'");
 		$list = $this->searchCriteria($conditions, $trainingCourseID);
 		
 		foreach($list as $obj) {
 			$id = $obj['Staff']['id'];
-			$firstName = $obj['Staff']['first_name'];
-			$lastName = $obj['Staff']['last_name'];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s,  %s', $firstName, $lastName)),
+				'label' => ModelHelper::getName($obj['Staff']),
 				'value' => array(
 					'trainee-id-'.$index => $id, 
-					'trainee-first-name-'.$index => $firstName,
-					'trainee-last-name-'.$index => $lastName,
-					'trainee-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
+					'trainee-first-name-'.$index => $obj['Staff']['first_name'],
+					'trainee-middle-name-'.$index => $obj['Staff']['middle_name'],
+					'trainee-third-name-'.$index => $obj['Staff']['third_name'],
+					'trainee-last-name-'.$index => $obj['Staff']['last_name'],
+					'trainee-name-'.$index => ModelHelper::getName($obj['Staff']),
 					'trainee-validate-'.$index => $id
 					)
 			);

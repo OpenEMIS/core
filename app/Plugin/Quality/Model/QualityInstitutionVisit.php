@@ -157,7 +157,8 @@ class QualityInstitutionVisit extends QualityAppModel {
 			'QualityInstitutionVisit.id',
 			'QualityInstitutionVisit.date',
 			'Staff.first_name',
-			'Staff.middle_name',
+            'Staff.middle_name',
+			'Staff.third_name',
 			'Staff.last_name',
 			'EducationGrade.name',
 			'InstitutionSiteSection.name',
@@ -478,7 +479,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                 );
 			
 			
-			$this->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.last_name)";
+			$this->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.middle_name,' ',Staff.third_name,' ',Staff.last_name)";
 			$this->virtualFields['evaluator_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.last_name)";
 			
 			$data = $this->find('all', $options);
