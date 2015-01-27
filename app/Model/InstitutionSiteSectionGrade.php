@@ -180,6 +180,30 @@ class InstitutionSiteSectionGrade extends AppModel {
 	}
         
 	public function getGradesByInstitutionSiteId($institutionSiteId, $year = null) {
+		$data = $this->getInstitutionSiteGradesData($institutionSiteId, $year);
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['EducationGrade']['id'];
+			$cycleName = $obj['EducationCycle']['name'];
+			$programmeName = $obj['EducationProgramme']['name'];
+			$gradeName = $obj['EducationGrade']['name'];
+			$list[$id] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
+		}
+		return $list;
+	}
+	
+	public function getInstitutionSiteGradeOptions($institutionSiteId, $year = null) {
+		$data = $this->getInstitutionSiteGradesData($institutionSiteId, $year);
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['EducationGrade']['id'];
+			$gradeName = $obj['EducationGrade']['name'];
+			$list[$id] = $gradeName;
+		}
+		return $list;
+	}
+	
+	public function getInstitutionSiteGradesData($institutionSiteId, $year = null) {
 		$conditions = array('InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id', 'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId); 
 		if(!is_null($year)){
 			$conditions[] = 'InstitutionSiteSection.school_year_id = '.$year;
@@ -213,15 +237,8 @@ class InstitutionSiteSectionGrade extends AppModel {
 			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order'),
 			'conditions' => array('InstitutionSiteSectionGrade.status' => 1)
 		));
-		$list = array();
-		foreach($data as $obj) {
-			$id = $obj['EducationGrade']['id'];
-			$cycleName = $obj['EducationCycle']['name'];
-			$programmeName = $obj['EducationProgramme']['name'];
-			$gradeName = $obj['EducationGrade']['name'];
-			$list[$id] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
-		}
-		return $list;
+
+		return $data;
 	}
 	
 	public function getGrade($id) {
