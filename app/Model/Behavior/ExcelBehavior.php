@@ -45,7 +45,13 @@ class ExcelBehavior extends ModelBehavior {
 			umask(0);
 			mkdir($folder, 0777);
 		} else {
-			$this->deleteOldFiles($folder, $format);
+			$delete = true;
+			if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+				$delete = false;
+			}
+			if ($delete) {
+				$this->deleteOldFiles($folder, $format);
+			}
 		}
 
 		switch ($format) {
@@ -146,7 +152,7 @@ class ExcelBehavior extends ModelBehavior {
 
 			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 				$data = $sheetModel->excelGetData($pageNo);
-				
+
 				foreach ($data as $row) {
 					$sheetRow = array();
 					foreach ($header as $key => $label) {
