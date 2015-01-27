@@ -53,6 +53,7 @@ class InstitutionSiteClassStudent extends AppModel {
 					'identification_no' => 'Student OpenEMIS ID',
 					'first_name' => '',
 					'middle_name' => '',
+					'third_name' => '',
 					'last_name' => '',
 					'preferred_name' => ''
 				),
@@ -101,7 +102,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'recursive' => -1,
 				'fields' => array(
 					'DISTINCT Student.identification_no',
-					'Student.first_name', 'Student.last_name'
+					'Student.first_name', 'Student.last_name', 'Student.middle_name', 'Student.third_name'
 				),
 				'joins' => array(
 					array(
@@ -145,7 +146,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
+					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.identification_no',
 					'InstitutionSiteClassStudent.id', 'InstitutionSiteClassStudent.institution_site_section_id', 'InstitutionSiteClassStudent.status'
 				),
 				'joins' => array(
@@ -319,6 +320,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'Student.identification_no',
 				'Student.first_name',
 				'Student.middle_name',
+				'Student.third_name',
 				'Student.last_name',
 				'Student.preferred_name'
 			);
@@ -368,6 +370,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'Student.identification_no',
 				'Student.first_name',
 				'Student.middle_name',
+				'Student.third_name',
 				'Student.last_name',
 				'Student.preferred_name'
 			),
@@ -444,18 +447,19 @@ class InstitutionSiteClassStudent extends AppModel {
 					'Student.first_name LIKE' => $search,
 					'Student.last_name LIKE' => $search,
 					'Student.middle_name LIKE' => $search,
+					'Student.third_name LIKE' => $search,
 					'Student.preferred_name LIKE' => $search,
 					'Student.identification_no LIKE' => $search
 				)
 			),
-			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
+			'order' => array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.preferred_name')
 		));
 
 		$data = array();
 		foreach ($list as $obj) {
 			$student = $obj['Student'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
+				'label' => ModelHelper::getName($student, array('openEmisId'=>true)),
 				'value' => $student['id']
 			);
 		}
@@ -604,7 +608,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		$options['recursive'] = -1;
 		
 		$options['fields'] = array(
-			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
+			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
 			'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
 			'AssessmentItem.min', 'AssessmentItem.max'
@@ -675,7 +679,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			$options['joins'] = $options_joins;
 		}
 
-		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name');
+		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name');
 		$options['conditions'] = array('InstitutionSiteClassStudent.status = 1');
 
 		$data = $this->find('all', $options);

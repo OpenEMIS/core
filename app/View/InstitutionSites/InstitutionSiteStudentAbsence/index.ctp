@@ -26,7 +26,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($studentList as $student):
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
+				$studentName = $this->Model->getName($studentObj);
 				?>
 				<tr>
 					<td><?php echo $studentObj['identification_no']; ?></td>

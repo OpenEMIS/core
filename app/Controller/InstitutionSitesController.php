@@ -57,7 +57,7 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentAbsence'
 	);
 	
-	public $helpers = array('Paginator');
+	public $helpers = array('Paginator', 'Model');
 	public $components = array(
 		'Mpdf',
 		'Paginator',
@@ -603,7 +603,7 @@ class InstitutionSitesController extends AppController {
 
 		$studentId = $this->params['pass'][0];
 		$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-		$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+		$name = ModelHelper::getName($data['Student']);
 		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
 		return compact('action', 'siteid', 'id', 'years', 'selectedYear', 'condParam', 'arrMap');
 	}
@@ -659,7 +659,7 @@ class InstitutionSitesController extends AppController {
 
 		$staffId = $this->params['pass'][0];
 		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-		$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
+		$name = ModelHelper::getName($data['Staff']);
 		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
 		return compact('action', 'siteid', 'id', 'years', 'selectedYear', 'condParam', 'arrMap');
 	}

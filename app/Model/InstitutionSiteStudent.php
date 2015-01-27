@@ -440,7 +440,7 @@ class InstitutionSiteStudent extends AppModel {
 			foreach ($list as $obj) {
 				$info = $obj['Student'];
 				$data[] = array(
-					'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+					'label' => ModelHelper::getName($info, array('openEmisId'=>true)),
 					'value' => array('student_id' => $info['id']) 
 				);
 			}
@@ -495,9 +495,9 @@ class InstitutionSiteStudent extends AppModel {
 		$options['conditions'] = array(
 				'OR' => array(
 					'Student.first_name LIKE' => $search,
-					'Student.last_name LIKE' => $search,
 					'Student.middle_name LIKE' => $search,
 					'Student.third_name LIKE' => $search,
+					'Student.last_name LIKE' => $search,
 					'Student.preferred_name LIKE' => $search,
 					'Student.identification_no LIKE' => $search
 				)
@@ -513,7 +513,7 @@ class InstitutionSiteStudent extends AppModel {
 		foreach ($list as $obj) {
 			$student = $obj['Student'];
 			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['third_name'], $student['last_name'], $student['preferred_name']),
+				'label' => ModelHelper::getName($student, array('openEmisId'=>true, 'preferred'=>true)),
 				'value' => $student['id']
 			);
 		}

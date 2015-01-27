@@ -238,7 +238,7 @@ class StudentsController extends StudentsAppController {
 		}
 		$data = $this->Student->findById($id);
 		$obj = $data['Student'];
-		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Student.data', $obj);

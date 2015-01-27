@@ -33,7 +33,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 				$id = $arrItems['InstitutionSiteStudentAbsence']['id'];
 				$student = $arrItems['Student'];
 
-				$studentName = sprintf('%s %s %s', $student['first_name'], $student['middle_name'], $student['last_name']);
+				$studentName = $this->Model->getName($student);
 
 				$firstDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['first_date_absent'];
 				$lastDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['last_date_absent'];
