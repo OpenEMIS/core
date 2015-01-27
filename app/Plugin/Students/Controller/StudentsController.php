@@ -75,7 +75,8 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteStudent',
 		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
-		'StudentBehaviour' => array('plugin' => 'Students')
+		'StudentBehaviour' => array('plugin' => 'Students'),
+		'StudentSection' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {
@@ -319,14 +320,14 @@ class StudentsController extends StudentsAppController {
 		$header = __(ucfirst($this->action));
 		$studentId = $this->Session->read('Student.id');
 		$data = array();
-		$classes = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
-
+		//$classes = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
+		$classes = array();
 		foreach ($classes as $row) {
 			$key = $row['InstitutionSite']['name'];
 			$data[$key][] = $row;
 		}
 		if (empty($data)) {
-			$this->Message->alert('general.noData');
+			//$this->Message->alert('general.noData');
 		}
 		$this->set(compact('data', 'header'));
 	}

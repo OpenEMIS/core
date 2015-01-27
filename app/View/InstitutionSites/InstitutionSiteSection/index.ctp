@@ -20,8 +20,8 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 				<th><?php echo $this->Label->get('general.section') ?></th>
 <!--				<th><?php echo $this->Label->get('general.grade'); ?></th>-->
 				<th><?php echo $this->Label->get('InstitutionSiteSection.home_room_teacher'); ?></th>
-				<th><?php echo $this->Label->get('gender.m'); ?></th>
-				<th><?php echo $this->Label->get('gender.f'); ?></th>
+				<th><?php echo $this->Label->get('general.male_students'); ?></th>
+				<th><?php echo $this->Label->get('general.female_students'); ?></th>
 				<th><?php echo $this->Label->get('general.classes') ?></th>
 			</tr>
 		</thead>
