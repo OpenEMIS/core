@@ -64,9 +64,9 @@ class InstitutionSiteSurveyDraft extends AppModel {
 		$this->setVar(compact('contentHeader'));
 	}
 
-	public function index() {
+	public function index($action=null) {
 		$data = $this->getSurveyTemplatesByModule();
-		if (empty($data)) {
+		if (is_null($action) && empty($data)) {
 			$this->Message->alert('general.noData');
 		}
 		$this->setVar(compact('data'));
@@ -128,7 +128,7 @@ class InstitutionSiteSurveyDraft extends AppModel {
 					$dataSource->commit();
 					if($surveyData[$this->alias]['status'] == 2) {
 						$this->Message->alert('Survey.save.final');
-						return $this->redirect(array('action' => $this->alias, 'index'));
+						return $this->redirect(array('action' => $this->alias, 'index', $this->action));
 					} else {
 						$this->Message->alert('Survey.save.draft');
 						return $this->redirect(array('action' => $this->alias, 'edit', $id));
@@ -171,7 +171,7 @@ class InstitutionSiteSurveyDraft extends AppModel {
 				$this->Message->alert('general.delete.failed');
 			}
 			$this->Session->delete($this->alias.'.id');
-			return $this->redirect(array('action' => $this->alias, 'index'));
+			return $this->redirect(array('action' => $this->alias, 'index', $this->action));
 		}
 	}
 }
