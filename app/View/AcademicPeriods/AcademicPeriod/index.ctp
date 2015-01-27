@@ -22,11 +22,11 @@ echo $this->element('../AcademicPeriods/breadcrumbs');
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('general.code'); ?></th>
+				<th><?php echo $this->Label->get('general.period'); ?></th>
 				<th><?php echo $this->Label->get('AcademicPeriodLevel.name'); ?></th>
 				<th><?php echo $this->Label->get('general.action'); ?></th>
 			</tr>
 		</thead>
-
 		<tbody>
 			<?php foreach($data as $obj) { ?>
 			<tr>
@@ -41,6 +41,7 @@ echo $this->element('../AcademicPeriods/breadcrumbs');
 					?>
 				</td>
 				<td><?php echo $obj[$model]['code']; ?></td>
+				<td><?php echo $obj['AcademicPeriod']['start_date'] . ' TO ' . $obj['AcademicPeriod']['end_date']; ?></td>
 				<td><?php echo $obj['AcademicPeriodLevel']['name']; ?></td>
 				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>

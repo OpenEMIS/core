@@ -17,7 +17,7 @@ $formOptions = $this->FormUtility->getFormOptions($action);
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->hidden('finance_category_id');
-echo $this->Form->input('year', array('value' => $year, 'disabled'));
+echo $this->Form->input('academicPeriod', array('value' => $academicPeriod, 'disabled'));
 echo $this->Form->input(__('Finance Nature'), array('value' => $financeNature['name'], 'disabled'));
 echo $this->Form->input(__('Finance Type'), array('value' => $financeType['FinanceType']['name'], 'disabled'));
 echo $this->Form->input(__('Finance Category'), array('value' => $financeCategory['name'], 'disabled'));

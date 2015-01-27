@@ -167,7 +167,8 @@ class InstitutionSiteClass extends AppModel {
 		$academicPeriodConditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
 			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1
+			'AcademicPeriod.available' => 1,
+			'AcademicPeriod.parent_id >' => 0
 		);
 		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
 		$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : key($academicPeriodOptions);
@@ -187,7 +188,8 @@ class InstitutionSiteClass extends AppModel {
 		$academicPeriodConditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
 			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1
+			'AcademicPeriod.available' => 1,
+			'AcademicPeriod.parent_id >' => 0
 		);
 		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
 		if(!empty($academicPeriodOptions)) {

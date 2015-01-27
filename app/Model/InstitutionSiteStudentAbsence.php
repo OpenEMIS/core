@@ -244,7 +244,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods();
 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
 		if($currentAcademicPeriodId){
 			$defaultAcademicPeriodId = $currentAcademicPeriodId;
@@ -528,7 +528,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods();
 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
 		if($currentAcademicPeriodId){
 			$defaultAcademicPeriodId = $currentAcademicPeriodId;
@@ -636,7 +636,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->Navigation->addCrumb('Attendance - Students');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->find('list', array('conditions' => array('AcademicPeriod.available' => 1), 'order' => array('AcademicPeriod.order')));
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAvailableAcademicPeriods();
 		$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodIdByDate(date('Y-m-d'));
 		if($currentAcademicPeriodId){
 			$defaultAcademicPeriodId = $currentAcademicPeriodId;

@@ -184,7 +184,7 @@ class InstitutionSiteStaff extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStaff.search.';
-		$academicPeriodOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
+		$yearOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array();
 
@@ -244,7 +244,7 @@ class InstitutionSiteStaff extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 		$positionList = $this->InstitutionSitePosition->StaffPositionTitle->find('list');
-		$this->setVar(compact('data', 'academicPeriodOptions', 'positionList'));
+		$this->setVar(compact('data', 'yearOptions', 'positionList'));
 	}
 	
 	public function add() {
