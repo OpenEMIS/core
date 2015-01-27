@@ -41,7 +41,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 					<td class="cell-number"><?php echo 'Abel Tuter'; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
-					<td class="cell-number"><?php echo 2; ?></td>
+					<td class="cell-number"><?php echo $this->Html->link(3, array('action' => 'InstitutionSiteSection', 'view', $id), array('escape' => false)); ?></td>
 				</tr>
 			<?php } // end for (multigrade)    ?>
 		</tbody>

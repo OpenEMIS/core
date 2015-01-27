@@ -24,6 +24,10 @@ echo $this->Form->create($model, $formOptions);
 <?php
 echo $this->Form->hidden('id');
 echo $this->Form->hidden('school_year_id');
+
+$labelOptions['text'] = $this->Label->get('general.academic_period');
+echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
+
 ?>
 <div class="form-group">
 	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
@@ -36,8 +40,8 @@ echo $this->Form->hidden('school_year_id');
 	</div>
 </div>
 <?php
-echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled'));
-echo $this->Form->input('name');
+$labelOptions['text'] = $this->Label->get('general.section');
+echo $this->Form->input('name', array('label' => $labelOptions));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
@@ -49,8 +53,8 @@ echo $this->Form->input('institution_site_staff_id', array(
 ));
 ?>
 </fieldset>
-<fieldset class="section_break">
-	<legend><?php echo __('Section'); ?></legend>
+<fieldset class="section_break form">
+	<legend><?php echo __('Students'); ?></legend>
 	<div class="row">
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered">
@@ -58,7 +62,10 @@ echo $this->Form->input('institution_site_staff_id', array(
 					<tr>
 						<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 						<th><?php echo $this->Label->get('general.name'); ?></th>
+						<th><?php echo $this->Label->get('general.sex'); ?></th>
+						<th><?php echo $this->Label->get('general.date_of_birth'); ?></th>
 						<th><?php echo $this->Label->get('general.category'); ?></th>
+						<th class="cell-delete"></th>
 					</tr>
 				</thead>
 
@@ -67,6 +74,8 @@ echo $this->Form->input('institution_site_staff_id', array(
 					<tr>
 						<td><?php echo $obj['Student']['identification_no']; ?></td>
 						<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+						<td><?php echo ''; ?></td>
+						<td><?php echo ''; ?></td>
 						<td>
 							<?php
 							echo $this->Form->input($i . '.student_category_id', array(
@@ -80,10 +89,14 @@ echo $this->Form->input('institution_site_staff_id', array(
 							));
 							?>
 						</td>
+						<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 					</tr>
 			<?php endforeach ?>
 				</tbody>
 			</table>
+			<a class="void icon_plus" url="" onclick="">
+				<?php echo $this->Label->get('general.add'); ?>
+			</a>
 		</div>
 	</div>
 </fieldset>

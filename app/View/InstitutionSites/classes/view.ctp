@@ -14,7 +14,7 @@ if ($_delete) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
+//echo $this->element('../InstitutionSites/classes/controls');
 ?>
 <fieldset class="section_break">
 	<legend><?php echo __('Class'); ?></legend>
