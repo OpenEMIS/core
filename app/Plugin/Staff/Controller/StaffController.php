@@ -244,7 +244,7 @@ class StaffController extends StaffAppController {
 		$this->Staff->recursive = 0;
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
-		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);

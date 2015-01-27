@@ -61,7 +61,7 @@ echo $this->Form->create($model, $formOptions);
 				echo $this->Form->hidden($i . '.school_year_id', array('value' => $obj['InstitutionSiteClass']['school_year_id']));
 				?>
 				<td class="middle"><?php echo $obj['Student']['identification_no']; ?></td>
-				<td class="middle"><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></td>
+				<td class="middle"><?php echo $this->Model->getName($obj['Student']); ?></td>
 				<td class="input">
 					<?php
 					echo $this->Form->input($i . '.marks', array(

@@ -32,6 +32,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
                     'identification_no' => 'Student OpenEMIS ID',
                     'first_name' => '',
                     'middle_name' => '',
+                    'third_name' => '',
                     'last_name' => '',
                     'preferred_name' => ''
                 ),
@@ -58,7 +59,8 @@ class StaffDetailsCustomValue extends StaffAppModel {
 				'institution_site' => 'Institution',
 				'openemis_id' => 'OpenEMIS ID',
 				'first_name' => 'First Name',
-				'middle_name' => 'Middle Name',
+                'middle_name' => 'Middle Name',
+				'third_name' => 'Middle Name',
 				'last_name' => 'Last Name',
 				'preferred_name' => 'Preferred Name',
 				'year' => 'Year'
@@ -115,6 +117,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
                     'Staff.identification_no',
                     'Staff.first_name',
                     'Staff.middle_name',
+                    'Staff.third_name',
                     'Staff.last_name',
                     'Staff.preferred_name',
                     'StaffDetailsCustomValue.school_year_id',
@@ -181,6 +184,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
                 $row['openemis_id'] = $rowValue['Staff']['identification_no'];
                 $row['first_name'] = $rowValue['Staff']['first_name'];
                 $row['middle_name'] = $rowValue['Staff']['middle_name'];
+                $row['third_name'] = $rowValue['Staff']['third_name'];
                 $row['last_name'] = $rowValue['Staff']['last_name'];
                 $row['preferred_name'] = $rowValue['Staff']['preferred_name'];
                 $row['year'] = $rowValue['SchoolYear']['name'];

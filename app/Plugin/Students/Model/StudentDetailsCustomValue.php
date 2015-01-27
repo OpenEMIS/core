@@ -32,6 +32,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                     'identification_no' => 'Student OpenEMIS ID',
                     'first_name' => '',
                     'middle_name' => '',
+                    'third_name' => '',
                     'last_name' => '',
                     'preferred_name' => ''
                 ),
@@ -58,7 +59,8 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 				'institution_site' => 'Institution',
 				'openemis_id' => 'OpenEMIS ID',
 				'first_name' => 'First Name',
-				'middle_name' => 'Middle Name',
+                'middle_name' => 'Middle Name',
+				'third_name' => 'Third Name',
 				'last_name' => 'Last Name',
 				'preferred_name' => 'Preferred Name',
 				'year' => 'Year'

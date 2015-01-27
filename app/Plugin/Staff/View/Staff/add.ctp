@@ -45,10 +45,14 @@ $obj = @$data['Staff'];
 			<div class="value"><?php echo $this->Form->input('middle_name'); ?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Third Name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('third_name'); ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('last_name'); ?></div>
 		</div>
-                <div class="row">
+        <div class="row">
 			<div class="label"><?php echo __('Preferred Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('preferred_name'); ?></div>
 		</div>

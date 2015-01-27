@@ -59,7 +59,7 @@ class InstitutionSiteClassStaff extends AppModel {
 			$data = $this->Staff->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.identification_no',
+					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 'Staff.identification_no',
 					'InstitutionSiteClassStaff.id', 'InstitutionSiteClassStaff.status', 'InstitutionSiteClass.id'
 				),
 				'joins' => array(
@@ -128,7 +128,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => 0,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
 			),
 			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId),
 			'order' => array('Staff.first_name')
@@ -138,7 +138,7 @@ class InstitutionSiteClassStaff extends AppModel {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+				$list[$id] = ModelHelper::getName($obj['Staff']);
 			}
 			return $list;
 		} else {
@@ -150,7 +150,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
 			),
 			'joins' => array(
 				array(
@@ -172,8 +172,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		$list = array();
 		foreach ($data as $obj) {
 			$id = $obj['Staff']['id'];
-			$teacherName = $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name'];
-			$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+			$list[$id] = ModelHelper::getName($obj['Staff']);
 		}
 		return $list;
 	}
@@ -182,7 +181,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
 			),
 			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId, 'SchoolYear.id' => $yearId),
 			'joins' => array(
@@ -215,7 +214,7 @@ class InstitutionSiteClassStaff extends AppModel {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+				$list[$id] = ModelHelper::getName($obj['Staff']);
 			}
 			return $list;
 		} else {

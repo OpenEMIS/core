@@ -29,11 +29,13 @@ class TrainingSessionTrainer extends TrainingAppModel {
 		
 		$list = $this->Staff->find('all', array(
 			'recursive' => -1,
-			'fields' => array('DISTINCT Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'),
+			'fields' => array('DISTINCT Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'),
 			'conditions' => array(
 				'OR' => array(
 					'Staff.identification_no LIKE' => $search,
 					'Staff.first_name LIKE' => $search,
+					'Staff.middle_name LIKE' => $search,
+					'Staff.third_name LIKE' => $search,
 					'Staff.last_name LIKE' => $search
 				)
 			),
@@ -42,16 +44,14 @@ class TrainingSessionTrainer extends TrainingAppModel {
 		
 		foreach($list as $obj) {
 			$id = $obj['Staff']['id'];
-			$firstName = $obj['Staff']['first_name'];
-			$lastName = $obj['Staff']['last_name'];
 			$identificationNo = $obj['Staff']['identification_no'];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s,  %s', $firstName, $lastName)),
+				'label' => ModelHelper::getName($obj['Staff']),
 				'value' => array(
 					'trainer-id-'.$index => $id, 
-					'trainer-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
-					'trainer-full-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
+					'trainer-name-'.$index => ModelHelper::getName($obj['Staff'], array('middle'=>false, 'third'=>false)),
+					'trainer-full-name-'.$index => ModelHelper::getName($obj['Staff']),
 					'trainer-table-'.$index => 'Staff',
 					'trainer-validate-'.$index => 'Staff_'.$id
 					)

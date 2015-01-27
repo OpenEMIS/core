@@ -275,6 +275,8 @@ class SearchBehavior extends ModelBehavior {
 				$class . '.preferred_name LIKE' => $search,
 				$class . '.identification_no LIKE' => $search,
 				$class . 'History.first_name LIKE' => $search,
+				$class . 'History.middle_name LIKE' => $search,
+				$class . 'History.third_name LIKE' => $search,
 				$class . 'History.last_name LIKE' => $search,
 				$class . 'History.identification_no LIKE' => $search
 			);
@@ -378,6 +380,8 @@ class SearchBehavior extends ModelBehavior {
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = $class.'History.identification_no AS history_identification_no';
 			$fields[] = $class.'History.first_name AS history_first_name';
+			$fields[] = $class.'History.middle_name AS history_middle_name';
+			$fields[] = $class.'History.third_name AS history_third_name';
 			$fields[] = $class.'History.last_name AS history_last_name';
 		}
 
