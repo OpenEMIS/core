@@ -17,15 +17,15 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StudentAttendance extends AppModel {
-	public function getAttendanceData($id,$yearId) {
+	public function getAttendanceData($id,$academicPeriodId) {
 		$list = $this->find('all',array(
-										'conditions'=>array('StudentAttendance.student_id' => $id, 'StudentAttendance.school_year_id' => $yearId)));
+										'conditions'=>array('StudentAttendance.student_id' => $id, 'StudentAttendance.academic_period_id' => $academicPeriodId)));
 		return $list;
 	}
 
-    public function findID($id,$yearId) {
+    public function findID($id,$academicPeriodId) {
         $list = $this->find('all',array(
-            'conditions'=>array('StudentAttendance.student_id' => $id, 'StudentAttendance.school_year_id' => $yearId)));
+            'conditions'=>array('StudentAttendance.student_id' => $id, 'StudentAttendance.academic_period_id' => $academicPeriodId)));
         $myid='';
         if(count($list)>0){
             $myid = $list[0]['StudentAttendance']['id'];
@@ -33,7 +33,7 @@ class StudentAttendance extends AppModel {
         return $myid;
     }
     
-    public function getAttendanceByStudentAndYear($studentId, $yearId){
+    public function getAttendanceByStudentAndYear($studentId, $academicPeriodId){
         $data = $this->find('all', array(
             'recursive' => -1,
             'fields' => array(
@@ -49,7 +49,7 @@ class StudentAttendance extends AppModel {
             ),
             'conditions' => array(
                 'StudentAttendance.student_id' => $studentId,
-                'StudentAttendance.school_year_id' => $yearId
+                'StudentAttendance.academic_period_id' => $academicPeriodId
             )
         ));
         

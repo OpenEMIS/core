@@ -18,8 +18,8 @@ $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
-echo $this->Form->hidden('school_year_id');
-echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled'));
+echo $this->Form->hidden('academic_period_id');
+echo $this->Form->input('academic_period', array('value' => $this->data['AcademicPeriod']['name'], 'disabled' => 'disabled'));
 echo $this->Form->input('name');
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');

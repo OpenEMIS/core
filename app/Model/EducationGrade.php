@@ -181,7 +181,7 @@ class EducationGrade extends AppModel {
 	}
 	
 	// Used by InstitutionSiteFee
-	public function getGradeOptionsByInstitutionAndSchoolYear($institutionSiteId, $yearId, $visible = false) {
+	public function getGradeOptionsByInstitutionAndAcademicPeriod($institutionSiteId, $academicPeriodId, $visible = false) {
 		$conditions = array();
 		if ($visible !== false) {
 			$conditions['EducationProgramme.visible'] = 1;
@@ -197,7 +197,7 @@ class EducationGrade extends AppModel {
 					'conditions' => array(
 						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
 						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.school_year_id = ' . $yearId,
+						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
 						'InstitutionSiteProgramme.status = 1'
 					)
 				)

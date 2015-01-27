@@ -9,16 +9,16 @@ $this->assign('contentId', 'enrolment');
 $this->assign('contentHeader', __('Students'));
 $this->start('contentActions');
 if($_edit && $isEditable) {
-	echo $this->Html->link(__('Edit'), array('action' => 'enrolmentEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'enrolmentEdit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <?php foreach($data as $key => $obj) : ?>
-<fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
+<fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedAcademicPeriod; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
 	<legend><?php echo $obj['name']; ?></legend>
 	<div class="row page-controls">
 		<div class="col-md-4">

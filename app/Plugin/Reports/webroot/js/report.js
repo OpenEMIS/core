@@ -178,10 +178,10 @@ var olapReport = {
 
     queryForObservations:function(selectedFields) {
         var data = {
-            'schoolYear': 0000,
+            'academicPeriod': 0000,
             'variables' : {}
         };
-        data.schoolYear = $('div.date-selector select option:selected').val();
+        data.academicPeriod = $('div.date-selector select option:selected').val();
         data.variables = new Array();
         if(olapReport.variables.length > 0) {
             olapReport.variables = new Array();
@@ -240,7 +240,7 @@ var olapReport = {
         for(var observationId in olapReport.observations){
             var data = {
                 'observationId':observationId,
-                'schoolYear': olapReport.year
+                'academicPeriod': olapReport.year
             }
             $.ajax({
                 type: 'GET',

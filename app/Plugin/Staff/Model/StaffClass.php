@@ -35,7 +35,7 @@ class StaffClass extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'InstitutionSite.name', 'InstitutionSiteClass.name', 'SchoolYear.name'
+				'InstitutionSite.name', 'InstitutionSiteClass.name', 'AcademicPeriod.name'
 			),
 			'joins' => array(
 				array(
@@ -53,11 +53,11 @@ class StaffClass extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'conditions' => array(
-						"SchoolYear.id = InstitutionSiteClass.school_year_id",
-						"SchoolYear.visible = 1"
+						"AcademicPeriod.id = InstitutionSiteClass.academic_period_id",
+						"AcademicPeriod.available = 1"
 					)
 				)
 			),
@@ -65,7 +65,7 @@ class StaffClass extends AppModel {
 				"$alias.staff_id" => $staffId,
 				"$alias.status = 1"
 			),
-			'order' => array("SchoolYear.order")
+			'order' => array("AcademicPeriod.order")
 		));
 		
 		$this->setVar('data', $data);

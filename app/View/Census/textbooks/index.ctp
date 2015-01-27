@@ -9,12 +9,12 @@ $this->assign('contentHeader', __('Textbooks'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-    echo $this->Html->link(__('Edit'), array('action' => 'textbooksEdit', $selectedYear, $selectedProgramme, $selectedGrade), array('class' => 'divider'));
+    echo $this->Html->link(__('Edit'), array('action' => 'textbooksEdit', $selectedAcademicPeriod, $selectedProgramme, $selectedGrade), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <?php if (!empty($programmeOptions)) : ?>
@@ -28,7 +28,7 @@ echo $this->element('census/year_options');
                 'options' => $programmeOptions,
                 'default' => $selectedProgramme,
                 'onchange' => 'jsForm.change(this, false)',
-                'url' => 'Census/' . $this->action . '/' . $selectedYear . '/'
+                'url' => 'Census/' . $this->action . '/' . $selectedAcademicPeriod . '/'
             ));
             ?>
         </div>
@@ -49,7 +49,7 @@ echo $this->element('census/year_options');
                     'options' => $gradeOptions,
                     'default' => $selectedGrade,
                     'onchange' => 'jsForm.change(this, false)',
-                    'url' => 'Census/' . $this->action . '/' . $selectedYear . '/' . $selectedProgramme . '/'
+                    'url' => 'Census/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $selectedProgramme . '/'
                 ));
             ?>
             </div>

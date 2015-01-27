@@ -18,9 +18,9 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->hidden('id');
-echo $this->Form->input('school_year_id', array(
-    'options' => $yearOptions,
-    'selected' => $yearId)
+echo $this->Form->input('academic_period_id', array(
+    'options' => $academicPeriodOptions,
+    'selected' => $academicPeriodId)
 );
 echo $this->Form->input('extracurricular_type_id', array(
     'options' => $typeOptions

@@ -79,10 +79,10 @@ class InfrastructureCategory extends AppModel {
 
 		if ($index == 1) {
 			$data = array();
-			$headerCommon = array(__('Year'), __('Infrastructure Name'), __('Category'));
+			$headerCommon = array(__('Academic Period'), __('Infrastructure Name'), __('Category'));
 			
-			$SchoolYearModel = ClassRegistry::init('SchoolYear');
-			$yearList = $SchoolYearModel->getYearList();
+			$AcademicPeriodModel = ClassRegistry::init('AcademicPeriod');
+			$academicPeriodList = $AcademicPeriodModel->getAcademicPeriodList();
 			
 			$InfrastructureStatusModel = ClassRegistry::init('InfrastructureStatus');
 			$InfrastructureSanitationModel = ClassRegistry::init('InfrastructureSanitation');
@@ -90,7 +90,7 @@ class InfrastructureCategory extends AppModel {
 			$InfrastructureBuildingModel = ClassRegistry::init('InfrastructureBuilding');
 			$CensusBuildingModel = ClassRegistry::init('CensusBuilding');
 			
-			foreach ($yearList AS $yearId => $yearName) {
+			foreach ($academicPeriodList AS $academicPeriodId => $academicPeriodName) {
 				$infraCategories = $this->find('list', array('conditions' => array('InfrastructureCategory.visible' => 1), 'order' => 'InfrastructureCategory.order'));
 				foreach ($infraCategories AS $categoryId => $categoryName) {
 					$dataInfraStatuses = $InfrastructureStatusModel->find('list', array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $categoryId, 'InfrastructureStatus.visible' => 1)));
@@ -117,7 +117,7 @@ class InfrastructureCategory extends AppModel {
 							),
 							'conditions' => array(
 								'CensusSanitation.institution_site_id' => $institutionSiteId,
-								'CensusSanitation.school_year_id' => $yearId
+								'CensusSanitation.academic_period_id' => $academicPeriodId
 							),
 							'group' => array('CensusSanitation.infrastructure_material_id'),
 							'order' => array('InfrastructureMaterial.order')
@@ -132,7 +132,7 @@ class InfrastructureCategory extends AppModel {
 									'recursive' => -1,
 									'conditions' => array(
 										'CensusSanitation.institution_site_id' => $institutionSiteId,
-										'CensusSanitation.school_year_id' => $yearId,
+										'CensusSanitation.academic_period_id' => $academicPeriodId,
 										'CensusSanitation.infrastructure_material_id' => $sanitationMaterialId
 									)
 										)
@@ -151,7 +151,7 @@ class InfrastructureCategory extends AppModel {
 									$countByGender = $CensusSanitationModel->find('count', array(
 										'conditions' => array(
 											'CensusSanitation.institution_site_id' => $institutionSiteId,
-											'CensusSanitation.school_year_id' => $yearId,
+											'CensusSanitation.academic_period_id' => $academicPeriodId,
 											'CensusSanitation.infrastructure_material_id' => $sanitationMaterialId,
 											'CensusSanitation.gender_id' => $genderId
 										)
@@ -159,7 +159,7 @@ class InfrastructureCategory extends AppModel {
 									);
 
 									if ($countByGender > 0) {
-										$header = array(__('Year'), __('Infrastructure Name'), __('Infrastructure Type'), __('Gender'), __('Category'));
+										$header = array(__('Academic Period'), __('Infrastructure Name'), __('Infrastructure Type'), __('Gender'), __('Category'));
 										foreach ($dataInfraStatuses AS $infraStatusName) {
 											$header[] = __($infraStatusName);
 										}
@@ -168,7 +168,7 @@ class InfrastructureCategory extends AppModel {
 
 										$totalAll = 0;
 										foreach ($dataInfraTypes AS $infraTypeId => $infraTypeName) {
-											$csvRow = array(__($yearName), __($categoryName), __($sanitationMaterialName), __($genderName), __($infraTypeName));
+											$csvRow = array(__($academicPeriodName), __($categoryName), __($sanitationMaterialName), __($genderName), __($infraTypeName));
 											$totalRow = 0;
 											foreach ($dataInfraStatuses AS $infraStatusId => $infraStatusName) {
 												if (isset($cellValueCheckSource[$infraTypeId][$infraStatusId][$censusGenderId])) {
@@ -215,7 +215,7 @@ class InfrastructureCategory extends AppModel {
 							),
 							'conditions' => array(
 								'CensusBuilding.institution_site_id' => $institutionSiteId,
-								'CensusBuilding.school_year_id' => $yearId
+								'CensusBuilding.academic_period_id' => $academicPeriodId
 							),
 							'group' => array('CensusBuilding.infrastructure_material_id'),
 							'order' => array('InfrastructureMaterial.order')
@@ -230,7 +230,7 @@ class InfrastructureCategory extends AppModel {
 									'recursive' => -1,
 									'conditions' => array(
 										'CensusBuilding.institution_site_id' => $institutionSiteId,
-										'CensusBuilding.school_year_id' => $yearId,
+										'CensusBuilding.academic_period_id' => $academicPeriodId,
 										'CensusBuilding.infrastructure_material_id' => $buildingMaterialId
 									)
 										)
@@ -244,7 +244,7 @@ class InfrastructureCategory extends AppModel {
 								}
 								//pr($buildingCheckSource);
 
-								$header = array(__('Year'), __('Infrastructure Name'), __('Infrastructure Type'), __('Category'));
+								$header = array(__('Academic Period'), __('Infrastructure Name'), __('Infrastructure Type'), __('Category'));
 								foreach ($dataInfraStatuses AS $infraStatusName) {
 									$header[] = __($infraStatusName);
 								}
@@ -253,7 +253,7 @@ class InfrastructureCategory extends AppModel {
 
 								$totalAll = 0;
 								foreach ($dataInfraTypes AS $infraTypeId => $infraTypeName) {
-									$csvRow = array(__($yearName), __($categoryName), __($buildingMaterialName), __($infraTypeName));
+									$csvRow = array(__($academicPeriodName), __($categoryName), __($buildingMaterialName), __($infraTypeName));
 									$totalRow = 0;
 									foreach ($dataInfraStatuses AS $infraStatusId => $infraStatusName) {
 										if (isset($cellValueCheckSource[$infraTypeId][$infraStatusId]['value'])) {
@@ -291,7 +291,7 @@ class InfrastructureCategory extends AppModel {
 							'recursive' => -1,
 							'conditions' => array(
 								'institution_site_id' => $institutionSiteId,
-								'school_year_id' => $yearId
+								'academic_period_id' => $academicPeriodId
 							)
 								)
 						);
@@ -314,7 +314,7 @@ class InfrastructureCategory extends AppModel {
 
 							$totalAll = 0;
 							foreach ($dataInfraTypes AS $infraTypeId => $infraTypeName) {
-								$csvRow = array(__($yearName), __($categoryName), __($infraTypeName));
+								$csvRow = array(__($academicPeriodName), __($categoryName), __($infraTypeName));
 								$totalRow = 0;
 								foreach ($dataInfraStatuses AS $infraStatusId => $infraStatusName) {
 									if (isset($cellValueCheckSource[$infraTypeId][$infraStatusId]['value'])) {

@@ -77,9 +77,9 @@ class InstitutionSiteClassStaff extends AppModel {
 						)
 					),
 					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+						'table' => 'academic_periods',
+						'alias' => 'AcademicPeriod',
+						'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
 					),
 					array(
 						'table' => 'institution_site_class_staff',
@@ -95,8 +95,8 @@ class InstitutionSiteClassStaff extends AppModel {
 					'OR' => array(
 						'InstitutionSiteStaff.end_date IS NULL',
 						'AND' => array(
-							'InstitutionSiteStaff.start_year >= ' => 'SchoolYear.start_year',
-							'InstitutionSiteStaff.end_year >= ' => 'SchoolYear.start_year'
+							'InstitutionSiteStaff.start_year >= ' => 'AcademicPeriod.start_year',
+							'InstitutionSiteStaff.end_year >= ' => 'AcademicPeriod.start_year'
 						)
 					)
 				),
@@ -178,13 +178,13 @@ class InstitutionSiteClassStaff extends AppModel {
 		return $list;
 	}
 
-	public function getStaffsInClassYear($classId, $yearId, $mode = 'all') {
+	public function getStaffsInClassAcademicPeriod($classId, $academicPeriodId, $mode = 'all') {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
 			),
-			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId, 'SchoolYear.id' => $yearId),
+			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId, 'AcademicPeriod.id' => $academicPeriodId),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_classes',
@@ -194,16 +194,16 @@ class InstitutionSiteClassStaff extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
 				),
 				array(
 					'table' => 'institution_site_staff',
 					'alias' => 'InstitutionSiteStaff',
 					'conditions' => array('InstitutionSiteStaff.staff_id = InstitutionSiteClassStaff.staff_id',
 						'OR' => array(
-							'InstitutionSiteStaff.end_year >= SchoolYear.end_year', 'InstitutionSiteStaff.end_year is null'
+							'InstitutionSiteStaff.end_year >= AcademicPeriod.end_year', 'InstitutionSiteStaff.end_year is null'
 						)
 					)
 				)

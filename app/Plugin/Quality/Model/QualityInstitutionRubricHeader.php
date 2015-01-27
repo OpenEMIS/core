@@ -87,11 +87,11 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
 
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricData = $RubricsTemplate->getRubric($rubricId);
-        $SchoolYear = ClassRegistry::init('SchoolYear');
-        $year = $SchoolYear->findById($rubricHeaderData['QualityInstitutionRubric']['school_year_id']);
+        $AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+        $academicPeriod = $AcademicPeriod->findById($rubricHeaderData['QualityInstitutionRubric']['academic_period_id']);
 
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
-        $dataExist = $QualityStatus->getRubricStatus($year['SchoolYear']['name'], $rubricHeaderData['QualityInstitutionRubric']['rubric_template_id']);
+        $dataExist = $QualityStatus->getRubricStatus($academicPeriod['AcademicPeriod']['name'], $rubricHeaderData['QualityInstitutionRubric']['rubric_template_id']);
 
 		
 		

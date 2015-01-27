@@ -6,9 +6,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $yearId, $sectionId, $weekId), array('class' => 'divider'));
+echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
 if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $sectionId), array('class' => 'divider'));
+	echo $this->Html->link(__('Add'), array('action' => $model, 'add'), array('class' => 'divider'));
 }
 $this->end();
 

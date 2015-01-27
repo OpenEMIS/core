@@ -25,15 +25,15 @@ class CensusTeacher extends AppModel {
 	);
 	
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'InstitutionSite',
 		'Gender'
 	);
 	
-	public function getTeacherId($institutionSiteId, $yearId) {
+	public function getTeacherId($institutionSiteId, $academicPeriodId) {
 		$data = $this->find('list', array(
 			'fields' => array('CensusTeacher.id'),
-			'conditions' => array('CensusTeacher.institution_site_id' => $institutionSiteId, 'CensusTeacher.school_year_id' => $yearId)
+			'conditions' => array('CensusTeacher.institution_site_id' => $institutionSiteId, 'CensusTeacher.academic_period_id' => $academicPeriodId)
 		));
 		return $data;
 	}
@@ -76,7 +76,7 @@ class CensusTeacher extends AppModel {
 		//pr($class);
 	}
 	
-	public function getSingleGradeData($institutionSiteId, $yearId) {
+	public function getSingleGradeData($institutionSiteId, $academicPeriodId) {
 		$this->formatResult = true;
 		$data = $this->find('all' , array(
 			'recursive' => -1,
@@ -96,7 +96,7 @@ class CensusTeacher extends AppModel {
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
 						'InstitutionSiteProgramme.institution_site_id = CensusTeacher.institution_site_id',
-						'InstitutionSiteProgramme.school_year_id = CensusTeacher.school_year_id',
+						'InstitutionSiteProgramme.academic_period_id = CensusTeacher.academic_period_id',
 						'InstitutionSiteProgramme.status' => 1
 					)
 				),
@@ -130,7 +130,7 @@ class CensusTeacher extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'CensusTeacher.school_year_id' => $yearId,
+				'CensusTeacher.academic_period_id' => $academicPeriodId,
 				'CensusTeacher.institution_site_id' => $institutionSiteId
 			),
 			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) = 1'),
@@ -140,7 +140,7 @@ class CensusTeacher extends AppModel {
 		return $data;
 	}
 	
-	public function getMultiGradeData($institutionSiteId, $yearId) {
+	public function getMultiGradeData($institutionSiteId, $academicPeriodId) {
 		$dataGradeStr = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array('CensusTeacher.id', 'GROUP_CONCAT(CensusTeacherGrade.education_grade_id ORDER BY CensusTeacherGrade.education_grade_id SEPARATOR "-") AS gradeStr'),
@@ -153,7 +153,7 @@ class CensusTeacher extends AppModel {
 			),
 			'conditions' => array(
 				'CensusTeacher.institution_site_id' => $institutionSiteId,
-				'CensusTeacher.school_year_id' => $yearId
+				'CensusTeacher.academic_period_id' => $academicPeriodId
 			),
 			'group' => array('CensusTeacher.id HAVING COUNT(CensusTeacherGrade.census_teacher_id) > 1')
 		));
@@ -248,12 +248,12 @@ class CensusTeacher extends AppModel {
 		return $data;
 	}
 	
-	public function clean($data, $yearId, $institutionSiteId, &$duplicate) {
+	public function clean($data, $academicPeriodId, $institutionSiteId, &$duplicate) {
 		//pr($data);die;
 		$clean = array();
 		$gradeList = array();
 		// get the current list of census teacher record ids from the database
-		$ids = $this->getTeacherId($institutionSiteId, $yearId);		
+		$ids = $this->getTeacherId($institutionSiteId, $academicPeriodId);		
 		foreach($data as $obj) {
 			// remove duplicate grades per record
 			$grades = array_unique($obj['CensusTeacherGrade']);
@@ -285,7 +285,7 @@ class CensusTeacher extends AppModel {
 						'gender_id' => $obj['gender_id'],
 						'value' => $obj['value'],
 						'institution_site_id' => $institutionSiteId,
-						'school_year_id' => $yearId,
+						'academic_period_id' => $academicPeriodId,
 						'CensusTeacherGrade' => $grades
 					);
 				}
@@ -323,7 +323,7 @@ class CensusTeacher extends AppModel {
 	}
 	
 	//Used by Yearbook
-	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
+	public function getCountByCycleId($academicPeriodId, $cycleId, $extras=array()) {
 		$this->formatResult = true;
 		
 		$maleGenderId = $this->Gender->getIdByName('Male');
@@ -396,11 +396,11 @@ class CensusTeacher extends AppModel {
 		$optionsFemale['joins'] = $joins;
 		
 		$optionsMale['conditions'] = array(
-			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.academic_period_id' => $academicPeriodId,
 			'CensusTeacher.gender_id' => $maleGenderId
 		);
 		$optionsFemale['conditions'] = array(
-			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.academic_period_id' => $academicPeriodId,
 			'CensusTeacher.gender_id' => $femaleGenderId
 		);
 		
@@ -419,7 +419,7 @@ class CensusTeacher extends AppModel {
 		return $data;
 	}
 	
-	public function getCountByAreaId($yearId, $areaId) {
+	public function getCountByAreaId($academicPeriodId, $areaId) {
 		$this->formatResult = true;
 		
 		$maleGenderId = $this->Gender->getIdByName('Male');
@@ -461,11 +461,11 @@ class CensusTeacher extends AppModel {
 		$optionsFemale['joins'] = $joins;
 		
 		$optionsMale['conditions'] = array(
-			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.academic_period_id' => $academicPeriodId,
 			'CensusTeacher.gender_id' => $maleGenderId
 		);
 		$optionsFemale['conditions'] = array(
-			'CensusTeacher.school_year_id' => $yearId,
+			'CensusTeacher.academic_period_id' => $academicPeriodId,
 			'CensusTeacher.gender_id' => $femaleGenderId
 		);
 		
@@ -484,14 +484,14 @@ class CensusTeacher extends AppModel {
 	public function teachers($controller, $params) {
 		$controller->Navigation->addCrumb('Teachers');
 
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
 		$displayContent = true;
 		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
-		$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
+		$programmes = $InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedAcademicPeriod);
 
-		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedAcademicPeriod);
 		if (empty($programmes)) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
@@ -499,12 +499,12 @@ class CensusTeacher extends AppModel {
 			$genderOptions = $this->Gender->getList();
 
 			$EducationLevel = ClassRegistry::init('EducationLevel');
-			$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
+			$eduLevelOptions = $EducationLevel->getInstitutionLevelsByAcademicPeriod($institutionSiteId, $selectedAcademicPeriod);
 			
-			$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
-			$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
-			$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
-			$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedYear);
+			$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedAcademicPeriod);
+			$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedAcademicPeriod);
+			$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedAcademicPeriod);
+			$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedAcademicPeriod);
 			$singleGradeData = $programmeGrades;
 			
 			$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
@@ -512,9 +512,9 @@ class CensusTeacher extends AppModel {
 			$controller->set(compact('fte', 'training', 'singleGradeData', 'multiGradeData', 'genderOptions', 'eduLevelOptions'));
 		}
 		
-		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
 		
-		$controller->set(compact('displayContent', 'selectedYear', 'yearList', 'isEditable'));
+		$controller->set(compact('displayContent', 'selectedAcademicPeriod', 'academicPeriodList', 'isEditable'));
 	}
 
 	public function teachersEdit($controller, $params) {
@@ -523,14 +523,14 @@ class CensusTeacher extends AppModel {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Teachers');
 
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $controller->getAvailableYearId($yearList);	
-			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+			$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+			$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);	
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
 			if (!$editable) {
-				$controller->redirect(array('action' => 'teachers', $selectedYear));
+				$controller->redirect(array('action' => 'teachers', $selectedAcademicPeriod));
 			} else {
 				$displayContent = true;
-				$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear);
+				$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedAcademicPeriod);
 
 				if (empty($programmeGrades)) {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
@@ -540,37 +540,37 @@ class CensusTeacher extends AppModel {
 					//pr($genderOptions);die;
 
 					$EducationLevel = ClassRegistry::init('EducationLevel');
-					$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $selectedYear);
+					$eduLevelOptions = $EducationLevel->getInstitutionLevelsByAcademicPeriod($institutionSiteId, $selectedAcademicPeriod);
 					
-					$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedYear, false);
-					$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedYear);
-					$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedYear);
-					$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedYear);
-					$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedYear);
+					$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($institutionSiteId, $selectedAcademicPeriod, false);
+					$fte = $controller->CensusTeacherFte->getCensusData($institutionSiteId, $selectedAcademicPeriod);
+					$training = $controller->CensusTeacherTraining->getCensusData($institutionSiteId, $selectedAcademicPeriod);
+					$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $selectedAcademicPeriod);
+					$multiGradeData = $this->getMultiGradeData($institutionSiteId, $selectedAcademicPeriod);
 					$singleGradeData = $programmeGrades;
 					$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 					
 					$controller->set(compact('programmes', 'programmeGrades', 'fte', 'training', 'singleGradeData', 'multiGradeData', 'genderOptions', 'eduLevelOptions'));
 				}
 				
-				$controller->set(compact('displayContent', 'selectedYear', 'yearList'));
+				$controller->set(compact('displayContent', 'selectedAcademicPeriod', 'academicPeriodList'));
 			}
 		} else {
-			$yearId = $controller->data['CensusTeacher']['school_year_id'];
-			unset($controller->request->data['CensusTeacher']['school_year_id']);
+			$academicPeriodId = $controller->data['CensusTeacher']['academic_period_id'];
+			unset($controller->request->data['CensusTeacher']['academic_period_id']);
 			$fte = $controller->data['CensusTeacherFte'];
 			$training = $controller->data['CensusTeacherTraining'];
 			$teachers = $controller->data['CensusTeacher'];
-			$controller->CensusTeacherFte->saveCensusData($fte, $yearId, $institutionSiteId);
-			$controller->CensusTeacherTraining->saveCensusData($training, $yearId, $institutionSiteId);
+			$controller->CensusTeacherFte->saveCensusData($fte, $academicPeriodId, $institutionSiteId);
+			$controller->CensusTeacherTraining->saveCensusData($training, $academicPeriodId, $institutionSiteId);
 			$duplicate = false;
-			$data = $this->clean($teachers, $yearId, $institutionSiteId, $duplicate);
+			$data = $this->clean($teachers, $academicPeriodId, $institutionSiteId, $duplicate);
 			if ($duplicate) {
 				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn'));
 			}
 			$this->saveCensusData($data);
 			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
-			$controller->redirect(array('action' => 'teachers', $yearId));
+			$controller->redirect(array('action' => 'teachers', $academicPeriodId));
 		}
 	}
 
@@ -578,9 +578,9 @@ class CensusTeacher extends AppModel {
 		$controller->layout = 'ajax';
 		//$this->render = false;
 
-		$yearId = $controller->params['pass'][0];
-		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId);
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId, false);
+		$academicPeriodId = $controller->params['pass'][0];
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $academicPeriodId);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $academicPeriodId, false);
 
 		$i = $controller->params->query['index'];
 		$body = $controller->params->query['tableBody'];
@@ -588,7 +588,7 @@ class CensusTeacher extends AppModel {
 		$maleGenderId = $this->Gender->getIdByName('Male');
 		$femaleGenderId = $this->Gender->getIdByName('Female');
 		
-		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId', 'maleGenderId', 'femaleGenderId'));
+		$controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'academicPeriodId', 'maleGenderId', 'femaleGenderId'));
 	}
 
 	public function teachersAddMultiGrade($controller, $params) {
@@ -596,9 +596,9 @@ class CensusTeacher extends AppModel {
 
 		$row = $controller->params->query['row'];
 		$index = $controller->params->query['index'];
-		$yearId = $controller->params['pass'][0];
-		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId);
-		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $yearId, false);
+		$academicPeriodId = $controller->params['pass'][0];
+		$programmeGrades = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $academicPeriodId);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getProgrammeList($controller->institutionSiteId, $academicPeriodId, false);
 		$grades = $programmeGrades[current($programmes)]['education_grades'];
 
 		$option = '<option value="%d">%s</option>';
@@ -647,24 +647,24 @@ class CensusTeacher extends AppModel {
 			
 			$data = array();
 
-			$headerFTE = array(__('Year'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
+			$headerFTE = array(__('Academic Period'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
 			$headerTraining = $headerFTE;
-			$headerSingleGrade = array(__('Year'), __('Teacher Type'), __('Programme'), __('Grade'), __('Male'), __('Female'));
+			$headerSingleGrade = array(__('Academic Period'), __('Teacher Type'), __('Programme'), __('Grade'), __('Male'), __('Female'));
 			$headerMultiGrade = $headerSingleGrade;
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
-			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+			$dataAcademicPeriod = $InstitutionSiteProgrammeModel->getAcademicPeriodsHaveProgrammes($institutionSiteId);
 
-			foreach ($dataYears AS $rowYear) {
-				$yearId = $rowYear['SchoolYear']['id'];
-				$yearName = $rowYear['SchoolYear']['name'];
+			foreach ($dataAcademicPeriod AS $rowAcademicPeriod) {
+				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];
+				$academicPeriodName = $rowAcademicPeriod['AcademicPeriod']['name'];
 				
 				$EducationLevel = ClassRegistry::init('EducationLevel');
-				$eduLevelOptions = $EducationLevel->getInstitutionLevelsBySchoolYear($institutionSiteId, $yearId);
+				$eduLevelOptions = $EducationLevel->getInstitutionLevelsByAcademicPeriod($institutionSiteId, $academicPeriodId);
 
 				// FTE teachers data start
 				$CensusTeacherFteModel = ClassRegistry::init('CensusTeacherFte');
-				$dataFTE = $CensusTeacherFteModel->getCensusData($institutionSiteId, $yearId);
+				$dataFTE = $CensusTeacherFteModel->getCensusData($institutionSiteId, $academicPeriodId);
 				if (count($dataFTE) > 0) {
 					$data[] = $headerFTE;
 					$totalFTE = 0;
@@ -683,7 +683,7 @@ class CensusTeacher extends AppModel {
 						}
 
 						$data[] = array(
-							$yearName,
+							$academicPeriodName,
 							'Full Time Equivalent Teachers',
 							$eduLevelName,
 							$maleFTE,
@@ -701,7 +701,7 @@ class CensusTeacher extends AppModel {
 				// FTE teachers data end
 				// trained teachers data start
 				$CensusTeacherTrainingModel = ClassRegistry::init('CensusTeacherTraining');
-				$dataTraining = $CensusTeacherTrainingModel->getCensusData($institutionSiteId, $yearId);
+				$dataTraining = $CensusTeacherTrainingModel->getCensusData($institutionSiteId, $academicPeriodId);
 				if (count($dataTraining) > 0) {
 					$data[] = $headerTraining;
 					$totalTraining = 0;
@@ -720,7 +720,7 @@ class CensusTeacher extends AppModel {
 						}
 
 						$data[] = array(
-							$yearName,
+							$academicPeriodName,
 							'Trained Teachers',
 							$eduLevelName,
 							$maleTraining,
@@ -737,9 +737,9 @@ class CensusTeacher extends AppModel {
 				}
 				// trained teachers data end
 				// single grade teachers data start
-				$programmeGrades = $InstitutionSiteProgrammeModel->getProgrammeList($institutionSiteId, $yearId);
+				$programmeGrades = $InstitutionSiteProgrammeModel->getProgrammeList($institutionSiteId, $academicPeriodId);
 				$singleGradeData = $programmeGrades;
-				$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $yearId);
+				$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $academicPeriodId);
 				$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 
 				if (count($singleGradeData) > 0) {
@@ -762,7 +762,7 @@ class CensusTeacher extends AppModel {
 							}
 
 							$data[] = array(
-								$yearName,
+								$academicPeriodName,
 								'Single Grade Teachers Only',
 								$programmeName,
 								$gradeData['gradeName'],
@@ -780,7 +780,7 @@ class CensusTeacher extends AppModel {
 				}
 				// single grade teachers data end
 				// multi grades teachers data start
-				$multiGradeData = $this->getMultiGradeData($institutionSiteId, $yearId);
+				$multiGradeData = $this->getMultiGradeData($institutionSiteId, $academicPeriodId);
 
 				if (count($multiGradeData) > 0) {
 					$data[] = $headerMultiGrade;
@@ -824,7 +824,7 @@ class CensusTeacher extends AppModel {
 						}
 
 						$data[] = array(
-							$yearName,
+							$academicPeriodName,
 							'Multi Grade Teachers',
 							$multiProgrammes,
 							$multiGrades,
