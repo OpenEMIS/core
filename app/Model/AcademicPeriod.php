@@ -61,41 +61,69 @@ class AcademicPeriod extends AppModel {
 				 'message' => 'Please enter the name for the Academic Period.'
 			)
 		)
-		// ,
-		// 'start_date' => array(
-		// 	'ruleCheckStartDate' => array(
-		// 		'rule' => 'checkStartDate',
-		// 		'required' => true,
-		// 		'message' => 'Please enter a valid start date.'
-		// 	)
-		// ),
-		// 'end_date' => array(
-		// 	'ruleCheckEndDate' => array(
-		// 		'rule' => 'checkEndDate',
-		// 		'required' => true,
-		// 		'message' => 'Please enter a valid end date.'
-		// 	)
-		// )
+		,
+		'start_date' => array(
+			'ruleCheckStartDate' => array(
+				'rule' => 'checkParentPeriodStartDate',
+				'required' => true,
+				'message' => 'Please enter a valid start date.'
+			),
+			'ruleNotLater' => array(
+				'rule' => array('compareDate', 'end_date'),
+				'message' => 'Start Date cannot be later than End Date.'
+			)
+		),
+		'end_date' => array(
+			'ruleCheckEndDate' => array(
+				'rule' => 'checkParentPeriodEndDate',
+				'required' => true,
+				'message' => 'Please enter a valid end date.'
+			)
+		)
 	);
 
+	public function compareDate($field = array(), $compareField = null) {
+		$startDate = new DateTime(current($field));
+		$endDate = new DateTime($this->data[$this->name][$compareField]);
+		return $endDate >= $startDate;
+	}
 
-// 	public function checkStartDate() {
-// 		$startDateExists = array_key_exists('start_date', $this->data[$this->alias])&&$this->data[$this->alias]['start_date']&&$this->data[$this->alias]['start_date']!='';
-// 		if
-// 		pr($startDateExists);
-// // need to check the parent
+	public function checkParentPeriodStartDate() {
+		$startDateExists = array_key_exists('start_date', $this->data[$this->alias])&&$this->data[$this->alias]['start_date']&&$this->data[$this->alias]['start_date']!='';
 
-		
-// 		return true;
-// 	}
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
+		$academicPeriod = end($paths);
 
-// 	public function checkEndDate() {
-// 		$endDateExists = array_key_exists('end_date', $this->data[$this->alias])&&$this->data[$this->alias]['end_date']&&$this->data[$this->alias]['end_date']!='';
-// 	}
+		if($academicPeriod['AcademicPeriod']['parent_id']>0) {
+			return $this->checkParentPeriodDate($this->data[$this->alias]['start_date'], $academicPeriod);
+		} else return true;
+	}
+
+	public function checkParentPeriodEndDate() {
+		$endDateExists = array_key_exists('end_date', $this->data[$this->alias])&&$this->data[$this->alias]['end_date']&&$this->data[$this->alias]['end_date']!='';
+
+		$params = $this->controller->params;
+		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
+		$academicPeriod = end($paths);
+
+		if($academicPeriod['AcademicPeriod']['parent_id']>0) {
+			return $this->checkParentPeriodDate($this->data[$this->alias]['end_date'], $academicPeriod);
+		} return true;
+	}
+
+	public function checkParentPeriodDate($theDate, $academicPeriod) {
+		$parentStartDate =	$academicPeriod['AcademicPeriod']['start_date'];
+		$parentEndDate = $academicPeriod['AcademicPeriod']['end_date'];
+
+		return (strtotime($parentStartDate) <= strtotime($theDate)) && (strtotime($parentEndDate) >= strtotime($theDate));
+	}
 	
 	public function beforeAction() {
         parent::beforeAction();
-		
+
 		$this->fields['parent_id']['type'] = 'hidden';
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
@@ -188,7 +216,17 @@ class AcademicPeriod extends AppModel {
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
 		$academicPeriod = end($paths);
-		
+
+		$parentStartDate = array();
+		if ($academicPeriod['AcademicPeriod']['parent_id']>0) {
+			$parentStartDate = array(
+				'startDate' => $academicPeriod['AcademicPeriod']['start_date'],
+	 			'endDate' => $academicPeriod['AcademicPeriod']['end_date'],
+	 			'data-date' => $academicPeriod['AcademicPeriod']['start_date']
+			);
+		}
+		$parentEndDate = $parentStartDate;
+
 		$pathList = array();
 		foreach($paths as $item) {
 			$pathList[] = $item[$this->alias]['name'];
@@ -199,6 +237,8 @@ class AcademicPeriod extends AppModel {
 		$academicPeriodLevelOptions = $this->AcademicPeriodLevel->find('list', array('conditions' => array('level >' => $level)));
 		
 		if($this->request->is(array('post', 'put'))) {
+			$parentStartDate['data-date'] = $this->request->data[$this->alias]['start_date'];
+			$parentEndDate['data-date'] = $this->request->data[$this->alias]['end_date'];
 			$this->request->data[$this->alias]['parent_id'] = $parentId;
 			$this->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
 			if ($this->save($this->request->data)) {
@@ -206,7 +246,8 @@ class AcademicPeriod extends AppModel {
 				return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $this->id));
 			}
 		}
-		$this->setVar(compact('data', 'fields', 'parentId', 'pathToString', 'academicPeriodLevelOptions'));
+
+		$this->setVar(compact('fields', 'parentId', 'pathToString', 'academicPeriodLevelOptions', 'parentStartDate', 'parentEndDate'));
 	}
 	
 	public function view($id=0) {
@@ -221,12 +262,29 @@ class AcademicPeriod extends AppModel {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$data = $this->findById($id);
+
+		$academicPeriod = $this->findById($parentId);
+		$parentStartDate = array();
+		$parentEndDate = array();
+		if (array_key_exists('AcademicPeriod', $data)) {
+			$parentStartDate['data-date'] = $data['AcademicPeriod']['start_date'];
+			$parentEndDate['data-date'] = $data['AcademicPeriod']['end_date'];
+		}
+
+		if (array_key_exists('AcademicPeriod', $academicPeriod) && $academicPeriod['AcademicPeriod']['parent_id']>0) {
+			$parentStartDate['startDate'] = $academicPeriod['AcademicPeriod']['start_date'];
+			$parentStartDate['endDate'] = $academicPeriod['AcademicPeriod']['end_date'];
+			$parentEndDate['startDate'] = $academicPeriod['AcademicPeriod']['start_date'];
+			$parentEndDate['endDate'] = $academicPeriod['AcademicPeriod']['end_date'];
+		}
 		
 		$yesnoOptions = $this->controller->Option->get('yesno');
 
 		if(!empty($data)) {
 			$this->setVar(compact('yesnoOptions', 'parentId'));
 			if($this->request->is(array('post', 'put'))) {
+				$parentStartDate['data-date'] = $this->request->data[$this->alias]['start_date'];
+				$parentEndDate['data-date'] = $this->request->data[$this->alias]['end_date'];
 				if ($this->save($this->request->data)) {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => get_class($this), 'view', 'parent' => $parentId, $id));
@@ -238,18 +296,20 @@ class AcademicPeriod extends AppModel {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this), 'parent' => $parentId));
 		}
+
+		$this->setVar(compact('parentStartDate', 'parentEndDate'));
 	}
 
 	public function beforeSave($options=array()) {
 		if (array_key_exists($this->alias, $this->data)) {
-			// if (array_key_exists('start_date', $this->data[$this->alias])) {
-			// 	$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
-			// 	$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
-			// }
-			// if (array_key_exists('end_date', $this->data[$this->alias])) {
-			// 	$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
-			// 	$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
-			// }
+			if (array_key_exists('start_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
+				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
+			}
+			if (array_key_exists('end_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
+				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
+			}
 
 			$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
 			$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
@@ -261,12 +321,26 @@ class AcademicPeriod extends AppModel {
 		return $data['AcademicPeriod']['name'];
 	}
 
-	public function getAvailableAcademicPeriods($list = true, $order='ASC') {
+
+	/******/
+
+	public function getAcademicPeriodListValues($type='name', $order='DESC') {
+		$value = 'AcademicPeriod.' . $type;
+		$result = $this->find('list', array(
+			'fields' => array($value, $value),
+			'conditions' => array('AcademicPeriod.parent_id > ' => 0),
+			'order' => array($value . ' ' . $order)
+		));
+		return $result;
+	}
+
+	public function getAvailableAcademicPeriods($list = true, $order='DESC') {
 		if($list) {
 			$result = $this->find('list', array(
 				'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
 				'conditions' => array(
 					'AcademicPeriod.available' => 1,
+					'AcademicPeriod.visible >' => 0,
 					'AcademicPeriod.parent_id >' => 0
 				),
 				'order' => array('AcademicPeriod.name ' . $order)
@@ -275,6 +349,7 @@ class AcademicPeriod extends AppModel {
 			$result = $this->find('all', array(
 				'conditions' => array(
 					'AcademicPeriod.available' => 1,
+					'AcademicPeriod.visible >' => 0,
 					'AcademicPeriod.parent_id >' => 0
 				),
 				'order' => array('AcademicPeriod.name ' . $order)
@@ -293,6 +368,8 @@ class AcademicPeriod extends AppModel {
 		));
 		return $result;
 	}
+
+	/******/
 
 	public function getAcademicPeriodObjectById($academicPeriodId) {
 		$data = $this->findById($academicPeriodId);	
@@ -345,6 +422,8 @@ class AcademicPeriod extends AppModel {
 			'fields' => array('AcademicPeriod.id'),
 			'conditions' => array(
 				'AcademicPeriod.available' => 1,
+				'AcademicPeriod.visible >' => 0,
+				'AcademicPeriod.parent_id >' => 0,
 				'AcademicPeriod.start_date <=' => $date,
 				'AcademicPeriod.end_date >=' => $date
 			)
@@ -367,6 +446,7 @@ class AcademicPeriod extends AppModel {
 			'fields' => array('AcademicPeriod.id'),
 			'conditions' => array(
 				'AcademicPeriod.available = 1',
+				'AcademicPeriod.visible >' => 0,
 				'AcademicPeriod.current = 1'
 			)
 		));
@@ -376,15 +456,6 @@ class AcademicPeriod extends AppModel {
 		}else{
 			return '';
 		}
-	}
-
-	public function getAcademicPeriodListValues($type='name', $order='DESC') {
-		$value = 'AcademicPeriod.' . $type;
-		$result = $this->find('list', array(
-			'fields' => array($value, $value),
-			'order' => array($value . ' ' . $order)
-		));
-		return $result;
 	}
 
 	public function getAcademicPeriodId($academicPeriod) {

@@ -201,7 +201,7 @@ class InstitutionSiteStudent extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStudent.search.';
-		$academicPeriodOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
+		$yearOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
 		$statusOptions = $this->StudentStatus->getList();
@@ -274,7 +274,7 @@ class InstitutionSiteStudent extends AppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('data', 'academicPeriodOptions', 'programmeOptions', 'statusOptions'));
+		$this->setVar(compact('data', 'yearOptions', 'programmeOptions', 'statusOptions'));
 	}
 	
 	public function add() {

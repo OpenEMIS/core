@@ -17,10 +17,10 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 <div class="row form-horizontal">
 	<div class="col-md-4" style="padding-left: 0">
 		<?php
-		echo $this->Form->input('academic_period_id', array(
+		echo $this->Form->input('school_year_id', array(
 			'class' => 'form-control',
 			'empty' => __('All Years'),
-			'options' => $academicPeriodOptions,
+			'options' => $yearOptions,
 			'onchange' => "$('form').submit()",
 			'required' => false
 		));
