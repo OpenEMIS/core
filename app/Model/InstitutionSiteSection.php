@@ -220,20 +220,16 @@ class InstitutionSiteSection extends AppModel {
 	
 	public function view($id=0) {
 		if ($this->exists($id)) {
-			//$this->contain('ModifiedUser', 'CreatedUser', 'AcademicPeriod', );
+			$this->contain('ModifiedUser', 'CreatedUser', 'AcademicPeriod', 'InstitutionSiteShift', 'EducationGrade', 'Staff');
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
 
 			$sectionName = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($sectionName);
-			//$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
-
-			//pr($data);die;
+			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
 			
 			$studentsData = $this->InstitutionSiteSectionStudent->getStudentsBySection($id);
-			$this->setVar(compact('studentsData'));
-			
-			$this->setVar(compact('data', 'grades', 'selectedAction'));
+			$this->setVar(compact('data', 'grades', 'studentsData'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this)));
