@@ -8,11 +8,29 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
     'url' => array('controller' => $this->params['controller'], 'action' => 'attendanceStudentAbsence')
 ));
 ?>
-<div class="topDropDownWrapper page-controls" url="Students/absence">
-	<?php 
-	echo $this->Form->input('academic_period_id', array('options' => $academicPeriodList, 'value' => $academicPeriodId, 'id' => 'academicPeriodId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
-	echo $this->Form->input('month_id', array('options' => $monthOptions, 'value' => $monthId, 'id' => 'monthId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
-	?>
+<div class="row page-controls" url="Students/Absence/index">
+	<div class="col-md-4">
+		<?php 
+		echo $this->Form->input('academic_period_id', array(
+			'id' => 'academicPeriodId', 
+			'options' => $academicPeriodList, 
+			'default' => $academicPeriodId, 
+			'class' => 'form-control', 
+			'onchange' => 'jsForm.filterAbsenceByMonth(this)'
+		));
+		?>
+	</div>
+	<div class="col-md-4">
+		<?php
+		echo $this->Form->input('month_id', array(
+			'id' => 'monthId', 
+			'options' => $monthOptions, 
+			'default' => $monthId,
+			'class' => 'form-control', 
+			'onchange' => 'jsForm.filterAbsenceByMonth(this)'
+		));
+		?>
+	</div>
 </div>
 <?php
 if(isset($data)) { 

@@ -49,7 +49,7 @@ class Absence extends AppModel {
 		)
 	);
 
-	public function index() {
+	public function index($academicPeriodId=0, $monthId=0) {
 		if (!$this->Session->check('Student.id')) {
 			return $this->redirect(array('plugins' => 'Students', 'controller' => 'Students', 'action' => 'index'));
 		}
@@ -58,21 +58,19 @@ class Absence extends AppModel {
 		$this->Navigation->addCrumb('Absence');
 		$header = __('Absence');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
 		
-		if (isset($this->controller->params['pass'][0])) {
-			$yearId = $this->controller->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+		if ($academicPeriodId != 0) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
 		
 		$monthOptions = $this->controller->generateMonthOptions();
 		$currentMonthId = $this->controller->getCurrentMonthId();
-		if (isset($this->controller->params['pass'][1])) {
-			$monthId = $this->controller->params['pass'][1];
+		if ($monthId != 0) {
 			if (!array_key_exists($monthId, $monthOptions)) {
 				$monthId = $currentMonthId;
 			}
@@ -80,7 +78,7 @@ class Absence extends AppModel {
 			$monthId = $currentMonthId;
 		}
 		
-		$absenceData = ClassRegistry::init('InstitutionSiteStudentAbsence')->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
+		$absenceData = ClassRegistry::init('InstitutionSiteStudentAbsence')->getStudentAbsenceDataByMonth($studentId, $academicPeriodId, $monthId);
 		$data = $absenceData;
 		
 		if (empty($data)) {
@@ -89,6 +87,6 @@ class Absence extends AppModel {
 		
 		$settingWeekdays = $this->controller->getWeekdaysBySetting();
 
-		$this->setVar(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
+		$this->setVar(compact('header', 'data', 'academicPeriodList', 'academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 }

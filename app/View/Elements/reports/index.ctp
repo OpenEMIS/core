@@ -30,9 +30,11 @@ $this->start('contentBody');
 				<td><?php echo $obj[$model]['expiry_date'] ?></td>
 				<td>
 					<?php
-					$class = '';
-					if (empty($obj[$model]['file_path'])) {
-						$class = 'none';
+					$downloadClass = 'download';
+					$errorClass = 'none';
+					$status = $obj[$model]['status'];
+					if ($status == 1 && empty($obj[$model]['file_path'])) {
+						$downloadClass = 'download none';
 						$progress = 0;
 						$current = $obj[$model]['current_records'];
 						$total = $obj[$model]['total_records'];
@@ -43,9 +45,13 @@ $this->start('contentBody');
 						echo '<div class="progress progress-striped active" style="margin-bottom:0">';
 						echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '"></div>';
 						echo '</div>';
+					} else if ($status == -1) {
+						$downloadClass = 'none';
+						$errorClass = '';
 					}
-					echo $this->Html->link(__('Download'), array('action' => 'download', $obj[$model]['id']), array('class' => $class));
+					echo $this->Html->link(__('Download'), array('action' => 'download', $obj[$model]['id']), array('class' => $downloadClass));
 					?>
+					<a href="#" data-toggle="tooltip" title="<?php echo $this->Label->get('ReportProgress.error') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 				</td>
 			</tr>
 			<?php endforeach ?>
