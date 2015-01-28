@@ -24,6 +24,10 @@
 .chosen-container { font-size: 11px !important; }
 /* end jquery chosen */
 
+/* fuelux */
+.fuelux .wizard .steps > li { font-size: 12px; }
+/* end fuelux override */
+
 textarea { resize: none; }
 
 input.number { text-align: right; }

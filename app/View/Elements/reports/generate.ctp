@@ -8,10 +8,6 @@ $this->assign('contentHeader', __('Generate Reports'));
 $this->start('contentBody');
 ?>
 
-<style type="text/css">
-.fuelux .wizard .steps > li { font-size: 12px; }
-</style>
-
 <div class="fuelux">
 	<div class="wizard" data-initialize="wizard">
 		<ul class="steps">
