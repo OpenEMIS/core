@@ -9,7 +9,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/control', array());
+echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array());
 ?>
 
 <div class="table-responsive">
