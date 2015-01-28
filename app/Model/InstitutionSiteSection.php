@@ -90,7 +90,7 @@ class InstitutionSiteSection extends AppModel {
 			$this->Message->alert('InstitutionSite.noProgramme');
 		}
 		
-		$data = $this->getListOfSections($selectedPeriod, $institutionSiteId);
+		$data = $this->getListOfSections($selectedPeriod, $institutionSiteId, $selectedGradeId);
 		
 		$gradeOptionsData = $this->InstitutionSiteSectionGrade->getInstitutionGradeOptions($institutionSiteId, $selectedPeriod);
 		$gradeOptions = $this->controller->Option->prependLabel($gradeOptionsData, 'InstitutionSiteSection.all_grades_select');
@@ -219,23 +219,20 @@ class InstitutionSiteSection extends AppModel {
 	}
 	
 	public function view($id=0) {
-		$this->Session->write($this->alias.'.id', $id);
-		$data = $this->findById($id);
-		
-		if (!empty($data)) {
+		if ($this->exists($id)) {
+			$this->contain('ModifiedUser', 'CreatedUser', 'AcademicPeriod', 'InstitutionSiteShift', 'EducationGrade', 'Staff');
+			$data = $this->findById($id);
+			$this->Session->write($this->alias.'.id', $id);
+
 			$sectionName = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
-			$selectedAction = $this->alias . '/view/' . $id;
 			
-			$studentsData = $this->InstitutionSiteSectionStudent->getSutdentsBySection($id);
-			$this->setVar(compact('studentsData'));
-			
-			$this->setVar(compact('data', 'grades', 'selectedAction'));
-			$this->setVar('actionOptions', $this->getSectionActions());
+			$studentsData = $this->InstitutionSiteSectionStudent->getStudentsBySection($id);
+			$this->setVar(compact('data', 'grades', 'studentsData'));
 		} else {
 			$this->Message->alert('general.notExists');
-			$this->redirect(array('action' => $this->_action));
+			return $this->redirect(array('action' => get_class($this)));
 		}
 	}
 
@@ -341,8 +338,8 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getListOfSections($periodId, $institutionSiteId) {
-		$data = $this->find('all', array(
+	public function getListOfSections($periodId, $institutionSiteId, $gradeId=0) {
+		$options = array(
 			'fields' => array(
 				'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
 				'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name',
@@ -354,7 +351,15 @@ class InstitutionSiteSection extends AppModel {
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteSection.name')
-		));
+		);
+
+		if (!empty($gradeId)) {
+			$options['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
+
+			// need to include multi grade search
+		}
+
+		$data = $this->find('all', $options);
 		
 		foreach($data as $i => $obj) {
 			$id = $obj[$this->alias]['id'];
