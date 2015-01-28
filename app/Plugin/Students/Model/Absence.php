@@ -58,15 +58,15 @@ class Absence extends AppModel {
 		$this->Navigation->addCrumb('Absence');
 		$header = __('Absence');
 		
-		$yearList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
+		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
 		
 		if (isset($this->controller->params['pass'][0])) {
-			$yearId = $this->controller->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->controller->params['pass'][0];
+			if (!array_key_exists($yearId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
 		
 		$monthOptions = $this->controller->generateMonthOptions();
@@ -80,7 +80,7 @@ class Absence extends AppModel {
 			$monthId = $currentMonthId;
 		}
 		
-		$absenceData = ClassRegistry::init('InstitutionSiteStudentAbsence')->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
+		$absenceData = ClassRegistry::init('InstitutionSiteStudentAbsence')->getStudentAbsenceDataByMonth($studentId, $academicPeriodId, $monthId);
 		$data = $absenceData;
 		
 		if (empty($data)) {
@@ -89,6 +89,6 @@ class Absence extends AppModel {
 		
 		$settingWeekdays = $this->controller->getWeekdaysBySetting();
 
-		$this->setVar(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
+		$this->setVar(compact('header', 'data','academicPeriodList','academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 }
