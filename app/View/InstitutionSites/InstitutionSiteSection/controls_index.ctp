@@ -1,19 +1,17 @@
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		echo $this->Form->input('school_year_id', array(
-			'id' => 'SchoolYearId',
+		echo $this->Form->input('academic_period_id', array(
 			'label' => false,
 			'div' => false,
 			'class' => 'form-control',
-			'options' => $academicPeriodOptions,
-			'default' => $selectedAcademicPeriod,
+			'options' => $periodOptions,
+			'default' => $selectedPeriod,
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . '/' . $url
 		));
 		?>
 	</div>
-	<div class="row page-controls">
 	<div class="col-md-3">
 		<?php
 		echo $this->Form->input('education_grade_id', array(
@@ -24,9 +22,8 @@
 			'options' => $gradeOptions,
 			'default' => $selectedGradeId,
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $url . '/' . $selectedAcademicPeriod
+			'url' => $this->params['controller'] . '/' . $url . '/' . $selectedPeriod
 		));
 		?>
 	</div>
-</div>
 </div>
