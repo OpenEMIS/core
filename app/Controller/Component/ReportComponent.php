@@ -87,12 +87,17 @@ class ReportComponent extends Component {
 		return json_encode($data);
 	}
 
-	public function index() {
+	public function index($module=null) {
+		if (is_null($module)) {
+			if (isset($this->settings['module'])) {
+				$module = $this->settings['module'];
+			}
+		}
 		$userId = $this->Auth->user('id');
 		$this->ReportProgress->purge($userId);
 		
 		$model = 'ReportProgress';
-		$data = $this->ReportProgress->findAllByCreatedUserId($userId, array(), array('created' => 'desc'));
+		$data = $this->ReportProgress->findAllByModuleAndCreatedUserId($module, $userId, array(), array('created' => 'desc'));
 		$this->controller->set(compact('data', 'model'));
 		$this->controller->render('/Elements/reports/index');
 	}
@@ -113,6 +118,7 @@ class ReportComponent extends Component {
 			}
 			$obj = array(
 				'name' => $name,
+				'module' => $this->settings['module'],
 				'params' => $params
 			);
 			//pr($request->data);die;
