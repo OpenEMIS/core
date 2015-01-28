@@ -155,7 +155,7 @@ class StudentBehaviour extends StudentsAppModel {
 				$selectedSection = key($sectionOptions);
 			}
 		}
-		$data = $this->InstitutionSiteSection->InstitutionSiteSectionStudent->getStudentsBySection($selectedSection, true);
+		$data = $this->InstitutionSiteSection->InstitutionSiteSectionStudent->getStudentsBySectionWithGrades($selectedSection, true);
 		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
