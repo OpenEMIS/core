@@ -80,6 +80,26 @@ class AreaAdministrative extends AppModel {
 	public function index() {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		if($parentId == 0) {	//recover
+			$world = $this->find('first', array(
+				'conditions' => array(
+					'AreaAdministrative.parent_id' => -1,
+					'AreaAdministrative.name' => 'World'
+				)
+			));
+			if(!empty($world) && (is_null($world[$this->alias]['lft']) || is_null($world[$this->alias]['rght']))) {
+				$recoverWorld = $this->recover();
+				if($recoverWorld) {
+					$this->updateAll(array(
+						'AreaAdministrative.parent_id' => -1
+					), array(
+						'AreaAdministrative.parent_id' => 0,
+						'AreaAdministrative.name' => 'World'
+					));
+				}
+			}
+		}
+
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
 		$data = array();

@@ -31,8 +31,12 @@ ALTER TABLE `institution_sites` CHANGE `area_education_id` `area_administrative_
 -- 4. Update area_administrative_levels table
 --
 
-UPDATE `area_administrative_levels` SET `level` = `level` + 1;
+SET @idOfCurrentCountry := 0;
+SELECT `id` INTO @idOfCurrentCountry FROM `area_administratives` WHERE `parent_id` = -1;
 
+UPDATE `area_administrative_levels` SET `area_administrative_id` = @idOfCurrentCountry WHERE `level` <> 1;
+
+UPDATE `area_administrative_levels` SET `level` = `level` + 1;
 INSERT INTO `area_administrative_levels` (
 `name`,
 `level`,
@@ -45,8 +49,6 @@ INSERT INTO `area_administrative_levels` (
 --
 -- 5. Update area_administratives table
 --
-
-UPDATE `area_administratives` SET `area_administrative_level_id` = `area_administrative_level_id` + 1;
 
 SET @levelIdOfWorld := 0;
 SELECT `id` INTO @levelIdOfWorld FROM `area_administrative_levels` WHERE `level` = 1;
