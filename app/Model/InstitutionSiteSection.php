@@ -189,14 +189,11 @@ class InstitutionSiteSection extends AppModel {
 			}
 		}
 
-		$currentTab = 'Multiple Grades';
+		$currentTab = 'Multi Grades';
 		$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedAcademicPeriod);
 		$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
 		$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedAcademicPeriod);
 		$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedAcademicPeriod);
-
-		$gradeOptions = $this->InstitutionSiteSectionGrade->getGradesByInstitutionSiteId($institutionSiteId, $selectedAcademicPeriod);
-		$gradeChecklist = $this->InstitutionSiteSectionGrade->getInstitutionSiteGradeOptions($institutionSiteId, $selectedAcademicPeriod);
 
 		$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
 		$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
@@ -204,18 +201,21 @@ class InstitutionSiteSection extends AppModel {
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 		$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
 
-		$this->setVar(compact('currentTab', 'gradeOptions', 'staffOptions', 'gradeChecklist'));
-
-		$this->setVar(compact('grades', 'selectedAcademicPeriod', 'academicPeriodOptions', 'shiftOptions', 'institutionSiteId'));
-
 		if($this->request->is('post') || $this->request->is('put')) {
 			$data = $this->request->data;
+			pr($data);
 			$result = $this->saveAll($data);
 			if ($result) {
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedAcademicPeriod));
+			}else{
+				$this->log($this->validationErrors, 'debug');
+				$this->Message->alert('general.add.failed');
 			}
 		}
+		
+		$this->setVar(compact('currentTab', 'gradeOptions', 'staffOptions', 'gradeChecklist'));
+		$this->setVar(compact('grades', 'selectedAcademicPeriod', 'academicPeriodOptions', 'shiftOptions', 'institutionSiteId'));
 	}
 	
 	public function view($id=0) {
