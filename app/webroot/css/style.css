@@ -475,3 +475,13 @@ select.topSelectControl{
     margin-right: 10px;
 	font-size: 11px;
 }
+.nav.nav-tabs{
+	margin-bottom: 20px;
+}
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus{
+	cursor: pointer;
+}
+.stackElements select{
+	margin-bottom: 8px;
+}
+

@@ -9,7 +9,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/academic_period_options', array('url' => $_action));
+echo $this->element('../InstitutionSites/classes/control', array());
 ?>
 
 <div class="table-responsive">
@@ -17,9 +17,10 @@ echo $this->element('templates/academic_period_options', array('url' => $_action
 		<thead>
 			<tr>
 				<th><?php echo $this->Label->get('general.class') ?></th>
-				<th><?php echo $this->Label->get('general.section'); ?></th>
-				<th><?php echo $this->Label->get('gender.m'); ?></th>
-				<th><?php echo $this->Label->get('gender.f'); ?></th>
+				<th><?php echo $this->Label->get('general.subject'); ?></th>
+				<th><?php echo $this->Label->get('general.teacher'); ?></th>
+				<th><?php echo $this->Label->get('general.male_students'); ?></th>
+				<th><?php echo $this->Label->get('general.female_students'); ?></th>
 			</tr>
 		</thead>
 
@@ -30,11 +31,8 @@ echo $this->element('templates/academic_period_options', array('url' => $_action
 				?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['name'], array('action' => $_action . 'View', $id), array('escape' => false)); ?></td>
-					<td class="table_cell">
-						<?php foreach ($obj['sections'] as $sectionId => $name) : ?>
-							<div class="table_cell_row <?php echo ++$i == sizeof($obj['sections']) ? 'last' : ''; ?>"><?php echo $name; ?></div>
-						<?php endforeach ?>
-					</td>
+					<td><?php echo ''; ?></td>
+					<td><?php echo ''; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
 				</tr>
