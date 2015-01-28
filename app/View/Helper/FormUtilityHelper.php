@@ -249,13 +249,16 @@ class FormUtilityHelper extends AppHelper {
 		
 		$levelOptions = array();
 		$levelOptions['limit'] = 1;
-		if($model == 'AreaAdministrative') {
-		}
 		$levelOptions['offset'] = count($path);
 		$levelOptions['order'] = $levelModels[$model].'.level';
-		//$levels = $AreaHandler->{$levelModels[$model]}->find('list', array('limit' => 1, 'offset' => count($path), 'order' => 'level'));
+		if($model == 'AreaAdministrative') {
+			/*if(isset($path[1][$model]['parent_id'])) {
+				$levelOptions['conditions'] = array(
+					$levelModels[$model].'.area_administrative_id' => array(0, $path[1][$model]['parent_id'])
+				);
+			}*/
+		}
 		$levels = $AreaHandler->{$levelModels[$model]}->find('list', $levelOptions);
-		//pr($levels);
 		
 		foreach($levels as $id => $name) {
 			$inputOptions = $inputDefaults;
@@ -265,64 +268,12 @@ class FormUtilityHelper extends AppHelper {
 		}
 		
 		$url = 'Areas/ajaxGetAreaOptions/' . $model . '/';
-		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/';
+		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/' . $field . '/';
 		$html .= $this->Form->hidden($field, array('value' => $value));
 		if($_options['div']) {
 			$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url, 'urlReload' => $urlReload));
 		}
 
-		/*
-		$_options = array(
-			'id' => 'areapicker',
-			'model' => 'Area'
-		);
-		$inputDefaults = $this->Form->inputDefaults();
-		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
-		$_options = array_merge($_options, $options);
-		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : null;
-		$model = $_options['model'];
-		
-		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-		
-		$html = '';
-		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllByParentId(-1);
-		$inputOptions = array();
-		$inputOptions['autocomplete'] = 'off';
-		$inputOptions['onchange'] = 'Area.getList(this)';
-		if (!empty($path)) {
-			foreach($path as $i => $obj) {
-				$options = $AreaHandler->{$model}->find('list', array(
-					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
-					'order' => array('order')
-				));
-				$options = array($this->Label->get('Area.select')) + $options;
-				$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
-				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
-				
-				if(count($path) != 1) {
-					$inputOptions['default'] = $obj[$model]['id'];
-					$inputOptions['value'] = $obj[$model]['id'];
-				}
-				$inputOptions['options'] = $options;
-				$label = $inputDefaults['label'];
-				$label['text'] = $levelName;
-				$inputOptions['label'] = $label;
-				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
-				//$value = $obj[$model]['id'];
-			}
-		}
-		
-		$levels = $AreaHandler->{$levelModels[$model]}->find('list', array('limit' => -1, 'offset' => count($path), 'order' => 'level'));
-		
-		foreach($levels as $id => $name) {
-			$html .= $this->Form->input($name, array('options' => array(), 'onchange' => 'Area.getList(this)', 'disabled'));
-		}
-		
-		$url = 'Areas/ajaxGetAreaOptions/' . $model . '/';
-		$html .= $this->Form->hidden($field, array('value' => $value));
-		$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url));
-		*/
-		
 		return $html;
 	}
 	
