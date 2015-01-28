@@ -540,4 +540,16 @@ class InstitutionSiteProgramme extends AppModel {
 		$controller->set(compact('programmeOptions'));
 		$controller->render('/Elements/programmes/programmes_options');
 	}
+	
+	public function getInstitutionAcademicPeriodOptions($institutionSiteId) {
+		$options = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'AcademicPeriod.available' => 1,
+			'AcademicPeriod.parent_id >' => 0
+		);
+		$list = $this->getAcademicPeriodOptions($options);
+		
+		return $list;
+	}
 }
