@@ -25,7 +25,7 @@
 							'after' => false
 							)); ?></td>
 						<td><?php 
-						echo $this->Form->input(sprintf('InstitutionSections.%d.institution_site_staff_id', $i), array(
+						echo $this->Form->input(sprintf('InstitutionSections.%d.staff_id', $i), array(
 							'options' => $staffOptions, 
 							'label' => false,
 							'div' => false,
