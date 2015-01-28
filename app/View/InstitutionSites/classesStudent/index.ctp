@@ -12,7 +12,7 @@ if ($_edit) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
+echo $this->element('../InstitutionSites/InstitutionSiteClass/controls');
 if(!empty($data)) :
 ?>
 
