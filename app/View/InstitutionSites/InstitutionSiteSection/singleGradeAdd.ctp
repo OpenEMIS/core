@@ -14,7 +14,7 @@ $this->end();
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/InstitutionSiteSection/tabs', array());
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'add', $selectedAcademicPeriod));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'singleGradeAdd', $selectedAcademicPeriod));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
@@ -30,7 +30,7 @@ echo $this->Form->input('school_year_id', array(
 ));
 echo $this->Form->input('education_grade_id', array(
 	'options' => $gradeOptions, 
-	'url' => $this->params['controller'] . '/' . $model . '/singleGradeAdd/' . $selectedAcademicPeriod . '/',
+	'url' => $this->params['controller'] . '/' . $model . '/singleGradeAdd/' . $selectedAcademicPeriod,
 	'onchange' => 'jsForm.change(this)'
 ));
 //echo $this->Form->input('name');
@@ -39,8 +39,9 @@ $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 
 echo $this->Form->input('number_of_sections', array(
-	'options' => $numberOfSections, 
-	'value' => 2
+	'options' => $numberOfSectionsOptions, 
+	'value' => $numberOfSections,
+	'onclick' => "$('#reload').val($(this).val()).click()"
 ));
 
 ?>
@@ -82,6 +83,7 @@ echo $this->Form->input('number_of_sections', array(
 
 <?php
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $selectedAcademicPeriod)));
+echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 echo $this->Form->end();
 
 $this->end(); 

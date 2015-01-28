@@ -24,7 +24,7 @@
 			'options' => $gradeOptions,
 			'default' => $selectedGradeId,
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $selectedGradeId
+			'url' => $this->params['controller'] . '/' . $url . '/' . $selectedAcademicPeriod
 		));
 		?>
 	</div>

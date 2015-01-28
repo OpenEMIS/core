@@ -6,7 +6,7 @@ $this->assign('contentHeader', __('List of Sections'));
 
 $this->start('contentActions');
 	if ($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'singleGradeAdd', $selectedAcademicPeriod), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'singleGradeAdd', $selectedAcademicPeriod, $selectedGradeId), array('class' => 'divider'));
 	}
 $this->end();
 
