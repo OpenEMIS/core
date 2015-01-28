@@ -243,44 +243,52 @@ class InstitutionSiteSection extends AppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$data = $this->findById($id);
 
-		if (!empty($data)) {
-			if($this->request->is('post') || $this->request->is('put')) {
-				$postData = $this->request->data;
-				//pr($postData);die;
-				if ($this->saveAll($postData)) {
-					$this->Message->alert('general.edit.success');
-					$this->redirect(array('action' => $this->alias, 'view', $id));
-				}
-				
-				$this->request->data['AcademicPeriod']['name'] = $data['AcademicPeriod']['name'];
-			} else {
-				$this->request->data = $data;
-			}
-			
-			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
-			$studentsData = $this->InstitutionSiteSectionStudent->getSectionStudentsData($id);
-			
-			$yearObj = ClassRegistry::init('SchoolYear')->findById($data['SchoolYear']['id']);
-			$startDate = $yearObj['SchoolYear']['start_date'];
-			$endDate = $yearObj['SchoolYear']['end_date'];
-		
-			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
-			
-			$StudentCategory = ClassRegistry::init('Students.StudentCategory');
-			$categoryOptions = $StudentCategory->getList();
-			
-			$name = $data[$this->alias]['name'];
-			$this->Navigation->addCrumb($name);
-			
-			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $data['InstitutionSiteSection']['academic_period_id']);
-			
-			$this->setVar(compact('grades', 'shiftOptions', 'studentsData', 'staffOptions', 'categoryOptions'));
-		} else {
+		if (empty($data)) {
 			$this->Message->alert('general.notExists');
-			$this->redirect(array('action' => $this->alias));
+			return $this->redirect(array('action' => $this->alias));
 		}
+		
+		$academicPeriodId = $data['InstitutionSiteSection']['academic_period_id'];
+		
+		if(empty($data['InstitutionSiteSection']['education_grade_id'])){
+			// multi grades
+			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
+		}else{
+			// single grade
+			$grades = $this->getSingleGradeBySection($id);
+		}
+		
+		$studentsData = $this->InstitutionSiteSectionStudent->getSectionStudentsData($id);
+
+		$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($academicPeriodId);
+		$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
+		$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
+		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+		$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+
+		$StudentCategory = ClassRegistry::init('Students.StudentCategory');
+		$categoryOptions = $StudentCategory->getList();
+
+		$name = $data[$this->alias]['name'];
+		$this->Navigation->addCrumb($name);
+
+		$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+		$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $data['InstitutionSiteSection']['academic_period_id']);
+		
+		if($this->request->is('post') || $this->request->is('put')) {
+			$postData = $this->request->data;
+			//pr($postData);die;
+			if ($this->saveAll($postData)) {
+				$this->Message->alert('general.edit.success');
+				$this->redirect(array('action' => $this->alias, 'view', $id));
+			}
+
+			$this->request->data['AcademicPeriod']['name'] = $data['AcademicPeriod']['name'];
+		} else {
+			$this->request->data = $data;
+		}
+
+		$this->setVar(compact('grades', 'shiftOptions', 'studentsData', 'staffOptions', 'categoryOptions'));
 	}
 
 	public function remove() {
@@ -454,5 +462,43 @@ class InstitutionSiteSection extends AppModel {
 		}
 		
 		return $options;
+	}
+	
+	public function getSingleGradeBySection($sectionId) {
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('EducationGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = InstitutionSiteSection.education_grade_id')
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteSection.id' => $sectionId
+			),
+			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+		));
+
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['EducationGrade']['id'];
+			$cycleName = $obj['EducationCycle']['name'];
+			$programmeName = $obj['EducationProgramme']['name'];
+			$gradeName = $obj['EducationGrade']['name'];
+			$list[$id] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
+		}
+		return $list;
 	}
 }
