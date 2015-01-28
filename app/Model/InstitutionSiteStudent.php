@@ -138,7 +138,10 @@ class InstitutionSiteStudent extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStudent.search.';
-		$yearOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
+
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$yearOptions = $AcademicPeriod->getAcademicPeriodListValues('id');
+
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
 		$statusOptions = $this->StudentStatus->getList();
@@ -166,11 +169,16 @@ class InstitutionSiteStudent extends AppModel {
 
 			if (strlen($selectedAcademicPeriod) != '') {
 				// if the year falls between the start and end date
-				$conditions['InstitutionSiteStudent.start_year <='] = $selectedAcademicPeriod;
-				$conditions['InstitutionSiteStudent.end_year >='] = $selectedAcademicPeriod;
+				$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
+				$startDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['start_date']));
+				$endDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['end_date']));
+				$conditions['InstitutionSiteStudent.start_date <='] = $endDate;
+				$conditions['InstitutionSiteStudent.end_date >='] = $startDate;
+				$this->Session->write($prefix . 'yearId', $selectedAcademicPeriod);
 			} else {
-				unset($conditions['InstitutionSiteStudent.start_year <=']);
-				unset($conditions['InstitutionSiteStudent.end_year >=']);
+				unset($conditions['InstitutionSiteStudent.start_date <=']);
+				unset($conditions['InstitutionSiteStudent.end_date >=']);
+				$this->Session->delete($prefix . 'yearId');
 			}
 
 			if (strlen($selectedProgramme) != '') {
@@ -185,8 +193,8 @@ class InstitutionSiteStudent extends AppModel {
 				unset($conditions['InstitutionSiteStudent.student_status_id']);
 			}
 		} else {
-			if (array_key_exists('InstitutionSiteStudent.start_year <=', $conditions)) {
-				$this->request->data[$this->alias]['academic_period_id'] = $conditions['InstitutionSiteStudent.start_year <='];
+			if ($this->Session->check($prefix . 'yearId')) {
+				$this->request->data[$this->alias]['academic_period_id'] = $this->Session->read($prefix . 'yearId');
 			}
 			if (array_key_exists('EducationProgramme.id', $conditions)) {
 				$this->request->data[$this->alias]['education_programme_id'] = $conditions['EducationProgramme.id'];
