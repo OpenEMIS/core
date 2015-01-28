@@ -67,6 +67,7 @@ class ReportComponent extends Component {
 		$userId = $this->Auth->user('id');
 		$id = $this->controller->params->query['id'];
 		$fields = array(
+			'ReportProgress.status',
 			'ReportProgress.modified',
 			'ReportProgress.current_records',
 			'ReportProgress.total_records'
@@ -81,6 +82,7 @@ class ReportComponent extends Component {
 				$data['percent'] = 0;
 			}
 			$data['modified'] = $obj['ReportProgress']['modified'];
+			$data['status'] = $obj['ReportProgress']['status'];
 		}
 		return json_encode($data);
 	}
