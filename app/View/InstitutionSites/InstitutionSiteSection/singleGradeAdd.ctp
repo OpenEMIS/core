@@ -14,14 +14,14 @@ $this->end();
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/InstitutionSiteSection/tabs', array());
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'singleGradeAdd', $selectedAcademicPeriod));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'singleGradeAdd', $selectedAcademicPeriod, $selectedGradeId));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 
 $labelOptions['text'] = $this->Label->get('general.academic_period');
-echo $this->Form->input('school_year_id', array(
+echo $this->Form->input('academic_period_id', array(
 	'options' => $academicPeriodOptions, 
 	'url' => $this->params['controller'] . '/' . $model . '/singleGradeAdd',
 	'default' => $selectedAcademicPeriod,
@@ -30,6 +30,7 @@ echo $this->Form->input('school_year_id', array(
 ));
 echo $this->Form->input('education_grade_id', array(
 	'options' => $gradeOptions, 
+	'default' => $selectedGradeId,
 	'url' => $this->params['controller'] . '/' . $model . '/singleGradeAdd/' . $selectedAcademicPeriod,
 	'onchange' => 'jsForm.change(this)'
 ));
@@ -41,47 +42,11 @@ echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOp
 echo $this->Form->input('number_of_sections', array(
 	'options' => $numberOfSectionsOptions, 
 	'value' => $numberOfSections,
-	'onclick' => "$('#reload').val($(this).val()).click()"
+	'onchange' => "$('#reload').click()"
 ));
 
-?>
-<div class="form-group">
-	<label class="col-md-3 control-label"></label>
-	<div class="col-md-8">
-		<div class="table-responsive">
-			<table class="table table-striped table-hover table-bordered table-checkable table-input">
-				<thead>
-					<tr>
-						<th><?php echo $this->Label->get('general.section'); ?></th>
-						<th><?php echo $this->Label->get('InstitutionSiteSection.staff_id'); ?></th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<?php 
-					for($i=0; $i<3; $i++) :
-					?>
-					<tr>
-						<td><?php echo $this->Form->input(sprintf('InstitutionSection.%d.name', $i), array('label' => false, 'div' => false, 'between' => false, 'after' => false)); ?></td>
-						<td><?php 
-						echo $this->Form->input(sprintf('InstitutionSiteStaff.%d.id', $i), array(
-							'options' => $staffOptions, 
-							'label' => false,
-							'div' => false,
-							'between' => false,
-							'after' => false
-						));
-						?></td>
-					</tr>
-					<?php endfor; ?>
-				</tbody>
-			</table>
-		</div>
+echo $this->element('../InstitutionSites/InstitutionSiteSection/single_grade_sections');
 
-	</div>
-</div>
-
-<?php
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $selectedAcademicPeriod)));
 echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 echo $this->Form->end();
