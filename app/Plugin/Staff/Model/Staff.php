@@ -206,35 +206,42 @@ class Staff extends StaffAppModel {
 
 	/* Excel Behaviour */
 	public function excelGetConditions() {
-		$id = CakeSession::read('Staff.id');
-		$conditions = array('Staff.id' => $id);
+		$conditions = array();
+
+		if (CakeSession::check('Staff.id')) {
+			$id = CakeSession::read('Staff.id');
+			$conditions = array('Staff.id' => $id);
+		}
 		return $conditions;
 	}
 	public function excelGetModels() {
-		$models = array(
-			array('model' => $this),
-			array('model' => $this->StaffContact, 'name' => 'Contacts'),
-			//array('model' => $this->StaffIdentity, 'name' => 'Identities'), -- not working due to unknown reasons
-			array('model' => $this->StaffNationality, 'name' => 'Nationalities'),
-			array('model' => $this->StaffLanguage, 'name' => 'Languages'),
-			array('model' => $this->StaffComment, 'name' => 'Comments'),
-			array('model' => $this->StaffSpecialNeed, 'name' => 'Special Needs'),
-			array('model' => $this->StaffAward, 'name' => 'Awards'),
-			array('model' => $this->StaffMembership, 'name' => 'Membership'),
-			array('model' => $this->StaffLicense, 'name' => 'Licenses'),
-			array('model' => $this->StaffQualification, 'name' => 'Qualifications'),
-			array('model' => $this->StaffBehaviour, 'name' => 'Behaviour'),
-			array('model' => $this->StaffExtracurricular, 'name' => 'Extracurricular'),
-			array('model' => $this->StaffBankAccount, 'name' => 'Bank Accounts'),
-			array('model' => $this->StaffHealth, 'name' => 'Health Overview'),
-			array('model' => $this->StaffHealthHistory, 'name' => 'Health History'),
-			array('model' => $this->StaffHealthFamily, 'name' => 'Health Family'),
-			array('model' => $this->StaffHealthImmunization, 'name' => 'Immunizations'),
-			array('model' => $this->StaffHealthMedication, 'name' => 'Medications'),
-			array('model' => $this->StaffHealthAllergy, 'name' => 'Allergies'),
-			array('model' => $this->StaffHealthTest, 'name' => 'Health Tests'),
-			array('model' => $this->StaffHealthConsultation, 'name' => 'Health Consulations')
-		);
+		$models = parent::excelGetModels();
+		if (CakeSession::check('Staff.id')) {
+			$models = array(
+				array('model' => $this),
+				array('model' => $this->StaffContact, 'name' => 'Contacts'),
+				//array('model' => $this->StaffIdentity, 'name' => 'Identities'), -- not working due to unknown reasons
+				array('model' => $this->StaffNationality, 'name' => 'Nationalities'),
+				array('model' => $this->StaffLanguage, 'name' => 'Languages'),
+				array('model' => $this->StaffComment, 'name' => 'Comments'),
+				array('model' => $this->StaffSpecialNeed, 'name' => 'Special Needs'),
+				array('model' => $this->StaffAward, 'name' => 'Awards'),
+				array('model' => $this->StaffMembership, 'name' => 'Membership'),
+				array('model' => $this->StaffLicense, 'name' => 'Licenses'),
+				array('model' => $this->StaffQualification, 'name' => 'Qualifications'),
+				array('model' => $this->StaffBehaviour, 'name' => 'Behaviour'),
+				array('model' => $this->StaffExtracurricular, 'name' => 'Extracurricular'),
+				array('model' => $this->StaffBankAccount, 'name' => 'Bank Accounts'),
+				array('model' => $this->StaffHealth, 'name' => 'Health Overview'),
+				array('model' => $this->StaffHealthHistory, 'name' => 'Health History'),
+				array('model' => $this->StaffHealthFamily, 'name' => 'Health Family'),
+				array('model' => $this->StaffHealthImmunization, 'name' => 'Immunizations'),
+				array('model' => $this->StaffHealthMedication, 'name' => 'Medications'),
+				array('model' => $this->StaffHealthAllergy, 'name' => 'Allergies'),
+				array('model' => $this->StaffHealthTest, 'name' => 'Health Tests'),
+				array('model' => $this->StaffHealthConsultation, 'name' => 'Health Consulations')
+			);
+		}
 		return $models;
 	}
 	/* End Excel Behaviour */

@@ -34,6 +34,9 @@ class ReportsController extends ReportsAppController {
 		'CensusStudent',
 		'AcademicPeriod'
 	);
+
+	// Institution, Student, Staff related reports have been shifted to
+	// InstitutionReports, StudentReports, StaffReports
 	public $standardReports = array( //parameter passed to Index
 		'InstitutionGeneral'=>array('enable'=>true),
 		'InstitutionDetails'=>array('enable'=>true),

@@ -18,8 +18,7 @@ class SurveyStatusPeriod extends SurveysAppModel {
 	public $belongsTo = array(
 		'Surveys.SurveyStatus',
 		'AcademicPeriod' => array(
-			//'className' => 'AcademicPeriod',
-			'className' => 'SchoolYear',
+			'className' => 'AcademicPeriod',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
 		)
 	);
