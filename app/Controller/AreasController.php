@@ -74,7 +74,7 @@ class AreasController extends AppController {
 		}
 	}
 
-	public function ajaxReloadAreaDiv($model='Area', $parentId=0) {
-		$this->set(compact('model', 'parentId'));
+	public function ajaxReloadAreaDiv($model='Area', $field='area_id', $parentId=0) {
+		$this->set(compact('model', 'field', 'parentId'));
 	}
 }
