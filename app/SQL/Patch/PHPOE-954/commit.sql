@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `report_progress` (
   `total_records` int(11) NOT NULL DEFAULT '0',
   `pid` int(11) NOT NULL DEFAULT '0',
   `status` int(1) NOT NULL DEFAULT '1',
+  `error_message` text NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -19,4 +20,7 @@ CREATE TABLE IF NOT EXISTS `report_progress` (
 
 UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `parent` = -1 AND `controller` = 'Reports' AND `title` = 'General' AND `action` = 'InstitutionGeneral';
 UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'InstitutionDetails';
+
+-- hide other institution related report links
+UPDATE `navigations` SET `visible` = 0 WHERE `controller` = 'Reports' AND `action` IN ('InstitutionAttendance', 'InstitutionAssessment', 'InstitutionBehaviors', 'InstitutionFinance', 'InstitutionTotals', 'InstitutionQuality');
 

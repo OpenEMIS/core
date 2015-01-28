@@ -3,7 +3,7 @@ $(document).ready(function() {
 });
 
 var ReportList = {
-	init: function(id) {
+	init: function(id, data) {
 		var selector = '.progress .progress-bar';
 
 		if (id != undefined) {
@@ -16,10 +16,12 @@ var ReportList = {
 				var rowId = $(e).closest('tr').attr('row-id');
 
 				if (current < 100 || $(e).closest('tr').find('.modified').html() == '') {
-					ReportList.getProgress(rowId);
+					if (data == undefined || (data != undefined && data['status'] != -1)) {
+						ReportList.getProgress(rowId);
+					}
 				} else {
 					$(e).closest('.progress').fadeOut(1000, function() {
-						$(e).closest('td').find('a.none').removeClass('none');
+						$(e).closest('td').find('a.download').removeClass('none');
 						$(e).closest('.progress').remove();
 					});
 				}
@@ -36,11 +38,19 @@ var ReportList = {
 			data: {'id': id},
 			url: url,
 			success: function(data, textStatus) {
+				console.log(data);
 				if (data['percent'] != undefined) {
-					$('[row-id="' + id + '"] [role="progressbar"]').attr('data-transitiongoal', data['percent']);
-					ReportList.init(id);
-					if (data['percent'] == 100 && data['modified'] != null) {
+					var progressbar = $('[row-id="' + id + '"] [role="progressbar"]');
+					progressbar.attr('data-transitiongoal', data['percent']);
+					ReportList.init(id, data);
+
+					if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
 						$(selector).find('.modified').html(data['modified']);
+					} else if (data['status'] == -1) {
+						progressbar.closest('.progress').fadeOut(1000, function() {
+							$('[data-toggle="tooltip"]').removeClass('none').tooltip();
+							progressbar.closest('.progress').remove();
+						});
 					}
 				}
 			}

@@ -32,8 +32,7 @@ class SurveyStatus extends SurveysAppModel {
 
 	public $hasAndBelongsToMany = array(
 		'AcademicPeriod' => array(
-			//'className' => 'AcademicPeriod',
-			'className' => 'SchoolYear',
+			'className' => 'AcademicPeriod',
 			'joinTable' => 'survey_status_periods',
 			'associationForeignKey' => 'academic_period_id',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order'),
