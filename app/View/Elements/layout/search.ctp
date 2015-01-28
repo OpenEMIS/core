@@ -3,7 +3,7 @@ $formOptions = !isset($formOptions) ? array() : $formOptions;
 $form = !isset($form) ? true : $form;
 $pagination = !isset($pagination) ? true : $pagination;
 $placeholder = !isset($placeholder) ? 'Search' : $placeholder;
-if ($this->request->is(array('post', 'put'))) {
+if (isset($this->request->data[$model]['search'])) {
 	$this->request->data[$model]['search'] = stripslashes($this->request->data[$model]['search']);
 }
 if ($form) {
