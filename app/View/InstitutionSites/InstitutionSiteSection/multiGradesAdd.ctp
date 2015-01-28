@@ -21,7 +21,7 @@ echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 
 $labelOptions['text'] = $this->Label->get('general.academic_period');
-echo $this->Form->input('school_year_id', array(
+echo $this->Form->input('academic_period_id', array(
 	'options' => $academicPeriodOptions, 
 	'url' => $this->params['controller'] . '/' . $model . '/add',
 	'default' => $selectedAcademicPeriod,
