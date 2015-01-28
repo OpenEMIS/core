@@ -301,8 +301,37 @@ class InstitutionSiteSectionStudent extends AppModel {
 		}
 		return $gender;
 	}
+
+	public function getStudentsBySection($sectionId){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Student.identification_no',
+				'Student.first_name', 'Student.last_name', 'StudentCategory.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'field_option_values',
+					'alias' => 'StudentCategory',
+					'conditions' => array('InstitutionSiteSectionStudent.student_category_id = StudentCategory.id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+				'InstitutionSiteSectionStudent.status' => 1
+			),
+			'order' => array('Student.first_name ASC')
+		));
+		
+		return $data;
+	}
 	
-	public function getStudentsBySection($sectionId, $showGrade = false) {
+	public function getStudentsBySectionWithGrades($sectionId, $showGrade = false) {
 		$options['conditions'] = array(
 			'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
 			'InstitutionSiteSectionStudent.status = 1'
@@ -491,35 +520,6 @@ class InstitutionSiteSectionStudent extends AppModel {
 
 		$data = $this->find('all', $options);
 
-		return $data;
-	}
-	
-	public function getStudentsBySection($sectionId){
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'DISTINCT Student.identification_no',
-				'Student.first_name', 'Student.last_name', 'StudentCategory.name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'StudentCategory',
-					'conditions' => array('InstitutionSiteSectionStudent.student_category_id = StudentCategory.id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
-				'InstitutionSiteSectionStudent.status' => 1
-			),
-			'order' => array('Student.first_name ASC')
-		));
-		
 		return $data;
 	}
 	
