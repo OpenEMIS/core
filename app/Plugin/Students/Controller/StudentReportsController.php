@@ -38,8 +38,8 @@ class StudentReportsController extends StudentsAppController {
 	public function generate($selectedFeature=0) {
 		$i=0;
 		$features = array(
-			array('name' => __('Overview'), 'model' => 'Student', 'period' => false),
-			array('name' => __('Contacts'), 'model' => 'StudentContact', 'period' => false),
+			array('name' => __('Overview'), 'model' => 'Students.Student', 'period' => false),
+			array('name' => __('Contacts'), 'model' => 'Students.StudentContact', 'period' => false),
 		);
 
 		foreach ($features as $i => $feature) {
