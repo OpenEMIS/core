@@ -19,13 +19,13 @@ App::uses('AppController', 'Controller');
 class InstitutionReportsController extends AppController {
 	public $uses = array('InstitutionSite');
 
-	public $components = array('Report');
+	public $components = array('Report' => array('module' => 'Institution'));
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Reports';
-		$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
-		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionReports', 'action' => 'index'));
+		$this->Navigation->addCrumb('Reports', array('plugin' => false, 'controller' => 'InstitutionReports', 'action' => 'index'));
+		$this->Navigation->addCrumb('Institutions', array('plugin' => false, 'controller' => 'InstitutionReports', 'action' => 'index'));
 		$this->Navigation->addCrumb('List of Reports');
     }
 

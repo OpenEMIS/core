@@ -25,7 +25,7 @@
 /* end jquery chosen */
 
 /* fuelux */
-.fuelux .wizard .steps > li { font-size: 12px; }
+.fuelux .wizard .steps > li { font-size: 12px !important; }
 /* end fuelux override */
 
 textarea { resize: none; }
