@@ -25,9 +25,13 @@ UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `
 UPDATE `navigations` SET `plugin` = 'Students', `controller` = 'StudentReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `controller` = 'Reports' AND `title` = 'General' AND `action` = 'StudentGeneral';
 UPDATE `navigations` SET `plugin` = 'Students', `controller` = 'StudentReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'StudentDetails';
 
+UPDATE `navigations` SET `plugin` = 'Staff', `controller` = 'StaffReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `controller` = 'Reports' AND `title` = 'General' AND `action` = 'StaffGeneral';
+UPDATE `navigations` SET `plugin` = 'Staff', `controller` = 'StaffReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'StaffDetails';
+
 -- hide other report links
 UPDATE `navigations` SET `visible` = 0 WHERE `controller` = 'Reports' 
 AND `action` IN (
   'InstitutionAttendance', 'InstitutionAssessment', 'InstitutionBehaviors', 'InstitutionFinance', 'InstitutionTotals', 'InstitutionQuality',
-  'StudentFinance', 'StudentHealth'
+  'StudentFinance', 'StudentHealth',
+  'StaffFinance', 'StaffHealth', 'StaffTraining'
 );
