@@ -86,8 +86,8 @@ class SurveyQuestionsController extends SurveysAppController {
     	$this->CustomField2->delete();
     }
 
-	public function reorder($id=0) {
-		$this->CustomField2->reorder($id);
+	public function reorder() {
+		$this->CustomField2->reorder();
     }
 
     public function moveOrder($id=0) {
@@ -102,8 +102,8 @@ class SurveyQuestionsController extends SurveysAppController {
 		return $this->CustomField2->listing();
     }
 
-    public function download($id) {
-    	$this->CustomField2->download($id);
+    public function download($format="xform", $id=0, $output=true) {
+    	return $this->CustomField2->download($format, $id, $output);
     }
 }
 ?>
