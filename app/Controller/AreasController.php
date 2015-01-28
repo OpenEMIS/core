@@ -70,7 +70,11 @@ class AreasController extends AppController {
 				'conditions' => array('parent_id' => $parentId, 'visible' => 1),
 				'order' => array('order')
 			));
-			$this->set(compact('data', 'model', 'levelModel'));
+			$this->set(compact('data', 'model', 'levelModel', 'parentId'));
 		}
+	}
+
+	public function ajaxReloadAreaDiv($model='Area', $parentId=0) {
+		$this->set(compact('model', 'parentId'));
 	}
 }
