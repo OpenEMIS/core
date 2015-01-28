@@ -1,6 +1,6 @@
 <?php 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Classes'));
+$this->assign('contentHeader', __('Sections'));
 
 $this->start('contentBody');
 ?>
@@ -9,11 +9,10 @@ $this->start('contentBody');
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo $this->Label->get('AcademicPeriod.name') ?></th>
+				<th><?php echo $this->Label->get('general.academic_period') ?></th>
 				<th><?php echo $this->Label->get('Institution.name') ?></th>
+				<th><?php echo $this->Label->get('general.grade') ?></th>
 				<th><?php echo $this->Label->get('general.section') ?></th>
-				<th><?php echo $this->Label->get('general.class') ?></th>
-				<th><?php echo $this->Label->get('general.subject') ?></th>
 				<th><?php echo $this->Label->get('general.male_students') ?></th>
 				<th><?php echo $this->Label->get('general.female_students') ?></th>
 			</tr>
@@ -22,13 +21,9 @@ $this->start('contentBody');
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 			<tr>
-				<td><?php echo $obj['AcademicPeriod']['name'] ?></td>
+				<td><?php echo $obj['SchoolYear']['name'] ?></td>
 				<td><?php echo $obj['InstitutionSite']['name'] ?></td>
-				<td></td>
-				<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('action' => 'InstitutionSiteClass', 'view'), array('escape' => false)); ?></td>
-				<td></td>
-				<td></td>
-				<td></td>
+				<td><?php echo $obj['InstitutionSiteSection']['name'] ?></td>
 			</tr>
 			
 			<?php endforeach ?>

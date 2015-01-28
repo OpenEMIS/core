@@ -494,6 +494,35 @@ class InstitutionSiteSectionStudent extends AppModel {
 		return $data;
 	}
 	
+	public function getStudentsBySection($sectionId){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Student.identification_no',
+				'Student.first_name', 'Student.last_name', 'StudentCategory.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'field_option_values',
+					'alias' => 'StudentCategory',
+					'conditions' => array('InstitutionSiteSectionStudent.student_category_id = StudentCategory.id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+				'InstitutionSiteSectionStudent.status' => 1
+			),
+			'order' => array('Student.first_name ASC')
+		));
+		
+		return $data;
+	}
+	
 	public function getSectionStudents($sectionId, $startDate, $endDate){
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -556,6 +585,78 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
 			)
 		));
+		
+		return $data;
+	}
+	
+	public function getSectionStudentsData($sectionId){
+		$data = $this->Student->find('all', array(
+				'recursive' => 0,
+				'fields' => array(
+					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.identification_no',
+					'InstitutionSiteSectionStudent.id', 'InstitutionSiteSectionStudent.student_category_id', 'InstitutionSiteSectionStudent.status', 'InstitutionSiteSection.id'
+				),
+				'joins' => array(
+					array(
+						'table' => 'institution_site_students',
+						'alias' => 'InstitutionSiteStudent',
+						'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+					),
+					array(
+						'table' => 'institution_site_programmes',
+						'alias' => 'InstitutionSiteProgramme',
+						'conditions' => array('InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id')
+					),
+					array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array('EducationGrade.education_programme_id = InstitutionSiteProgramme.education_programme_id')
+					),
+					array(
+						'table' => 'institution_site_sections',
+						'alias' => 'InstitutionSiteSection',
+						'conditions' => array(
+							'InstitutionSiteSection.institution_site_id = InstitutionSiteProgramme.institution_site_id',
+							'InstitutionSiteSection.id' => $sectionId,
+						)
+					),
+					array(
+						'table' => 'institution_site_section_grades',
+						'alias' => 'InstitutionSiteSectionGrade',
+						'conditions' => array(
+							'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+							'InstitutionSiteSectionGrade.education_grade_id = EducationGrade.id'/*,
+							'InstitutionSiteSectionGrade.education_grade_id' => $selectedGrade*/
+						)
+					),
+					array(
+						'table' => 'school_years',
+						'alias' => 'SchoolYear',
+						'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
+					),
+					array(
+						'table' => 'institution_site_section_students',
+						'alias' => $this->alias,
+						'type' => 'LEFT',
+						'conditions' => array(
+							$this->alias . '.student_id = InstitutionSiteStudent.student_id',
+							$this->alias . '.institution_site_section_id = InstitutionSiteSection.id'/*,
+							$this->alias . '.education_grade_id' => $selectedGrade*/
+						)
+					)
+				),
+				'conditions' => array( // the class school year must be within the staff start and end date
+					'OR' => array(
+						'InstitutionSiteStudent.end_date IS NULL',
+						'AND' => array(
+							'InstitutionSiteStudent.start_year >= ' => 'SchoolYear.start_year',
+							'InstitutionSiteStudent.end_year >= ' => 'SchoolYear.start_year'
+						)
+					)
+				),
+				'group' => array('Student.id'),
+				'order' => array($this->alias.'.status DESC')
+			));
 		
 		return $data;
 	}

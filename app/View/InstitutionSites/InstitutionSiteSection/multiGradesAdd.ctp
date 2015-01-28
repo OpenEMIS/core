@@ -8,27 +8,38 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Add Section'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $selectedAcademicPeriod), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $selectedYear), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/InstitutionSiteSection/tabs', array());
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'add', $selectedAcademicPeriod));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'add', $selectedYear));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
-echo $this->Form->input('academic_period_id', array(
-	'options' => $academicPeriodOptions, 
+
+$labelOptions['text'] = $this->Label->get('general.academic_period');
+echo $this->Form->input('school_year_id', array(
+	'options' => $yearOptions, 
 	'url' => $this->params['controller'] . '/' . $model . '/add',
-	'default' => $selectedAcademicPeriod,
-	'onchange' => 'jsForm.change(this)'
+	'default' => $selectedYear,
+	'onchange' => 'jsForm.change(this)',
+	'label' => $labelOptions
 ));
-echo $this->Form->input('name');
+
+$labelOptions['text'] = $this->Label->get('general.section');
+echo $this->Form->input('name', array('label' => $labelOptions));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteSection.staff_id');
+echo $this->Form->input('institution_site_staff_id', array(
+	'options' => $staffOptions,
+	'label' => $labelOptions
+));
 
 ?>
 <div class="form-group">
@@ -68,7 +79,7 @@ echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOp
 </div>
 
 <?php
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $selectedAcademicPeriod)));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $selectedYear)));
 echo $this->Form->end();
 
 $this->end(); 

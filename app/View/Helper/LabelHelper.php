@@ -95,7 +95,15 @@ class LabelHelper extends AppHelper {
 			'code' => 'Code',
 			'type' => 'Type',
 			'size' => 'Size',
-			'academic_period' => 'Academic Period'
+			'classes' => 'Classes',
+			'academic_period' => 'Academic Period',
+			'subject' => 'Subject',
+			'teacher' => 'Teacher',
+			'student' => 'Student',
+			'date_of_birth' => 'Date of Birth',
+			'sex' => 'Sex',
+			'male_students' => 'Male Students',
+			'female_students' => 'Female Students'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -204,7 +212,8 @@ class LabelHelper extends AppHelper {
 			'no_of_seats' => 'Seats',
 			'no_of_shifts' => 'Shifts',
 			'shift' => 'Shift',
-			'seats' => 'Seats'
+			'seats' => 'Seats',
+			'name' => 'Class Name'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -503,6 +512,9 @@ class LabelHelper extends AppHelper {
 		),
 		'StaffPositionGrade' => array(
 			'name' => 'Position Grade'
+		),
+		'InstitutionSiteSection' => array(
+			'staff_id' => 'Home Room Teacher'
 		)
 	);
 	
