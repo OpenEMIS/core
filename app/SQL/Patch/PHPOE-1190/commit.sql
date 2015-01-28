@@ -1,4 +1,4 @@
-ALTER TABLE `institution_site_sections` ADD `institution_site_staff_id` INT NULL AFTER `name`, ADD INDEX (`institution_site_staff_id`) ;
+ALTER TABLE `institution_site_sections` ADD `staff_id` INT NULL AFTER `name`, ADD INDEX (`staff_id`) ;
 ALTER TABLE `institution_site_sections` ADD `education_grade_id` INT NULL AFTER `name`, ADD INDEX (`education_grade_id`) ;
 
 SET @orderOfPositionsNav := 0;
