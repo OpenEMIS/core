@@ -106,15 +106,7 @@ class ReportsController extends ReportsAppController {
 	}
 	
 	public function index() {
-		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'InstitutionGeneral'));
-	}
-
-	public function listOfReports() {
-
-	}
-
-	public function generateReports() {
-
+		$this->redirect(array('plugin' => false, 'controller' => 'InstitutionReports'));
 	}
 	
 	public function renderReport($reportType = 'Institution') {

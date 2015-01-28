@@ -16,3 +16,7 @@ CREATE TABLE IF NOT EXISTS `report_progress` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `parent` = -1 AND `controller` = 'Reports' AND `title` = 'General' AND `action` = 'InstitutionGeneral';
+UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'InstitutionDetails';
+
