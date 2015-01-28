@@ -49,7 +49,7 @@ class Absence extends AppModel {
 		)
 	);
 
-	public function index() {
+	public function index($academicPeriodId=0, $monthId=0) {
 		if (!$this->Session->check('Student.id')) {
 			return $this->redirect(array('plugins' => 'Students', 'controller' => 'Students', 'action' => 'index'));
 		}
@@ -60,9 +60,8 @@ class Absence extends AppModel {
 		
 		$academicPeriodList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
 		
-		if (isset($this->controller->params['pass'][0])) {
-			$academicPeriodId = $this->controller->params['pass'][0];
-			if (!array_key_exists($yearId, $academicPeriodList)) {
+		if ($academicPeriodId != 0) {
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
 				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
@@ -71,8 +70,7 @@ class Absence extends AppModel {
 		
 		$monthOptions = $this->controller->generateMonthOptions();
 		$currentMonthId = $this->controller->getCurrentMonthId();
-		if (isset($this->controller->params['pass'][1])) {
-			$monthId = $this->controller->params['pass'][1];
+		if ($monthId != 0) {
 			if (!array_key_exists($monthId, $monthOptions)) {
 				$monthId = $currentMonthId;
 			}
@@ -89,6 +87,6 @@ class Absence extends AppModel {
 		
 		$settingWeekdays = $this->controller->getWeekdaysBySetting();
 
-		$this->setVar(compact('header', 'data','academicPeriodList','academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
+		$this->setVar(compact('header', 'data', 'academicPeriodList', 'academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 }
