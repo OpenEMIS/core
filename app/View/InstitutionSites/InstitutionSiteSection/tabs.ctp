@@ -1,7 +1,7 @@
 <?php
 $options = array(
-	'Single Grade' => array('action' => 'InstitutionSiteSection', 'singleGradeAdd', $selectedYear),
-	'Multiple Grades' => array('action' => 'InstitutionSiteSection', 'multiGradesAdd', $selectedYear)
+	'Single Grade' => array('action' => 'InstitutionSiteSection', 'singleGradeAdd', $selectedAcademicPeriod),
+	'Multiple Grades' => array('action' => 'InstitutionSiteSection', 'multiGradesAdd', $selectedAcademicPeriod)
 );
 
 //$currentPage = isset($currentTab) ? $currentTab : 'Single Grade';
