@@ -11,7 +11,7 @@ echo $this->Html->link(__('View'), array('action' => $_action, $selectedSection)
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
+echo $this->element('../InstitutionSites/InstitutionSiteClass/controls');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action.'Edit'));
 echo $this->Form->create($model, $formOptions);
 ?>
