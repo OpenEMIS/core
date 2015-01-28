@@ -613,6 +613,20 @@ class InstitutionSiteStaff extends AppModel {
 		return $data;
 	}
 	
+	public function getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate){
+		$staffData = $this->getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate);
+		
+		$options = array();
+		foreach($staffData as $row){
+			$staff = $row['Staff'];
+			$staffId = $staff['id'];
+			$staffName = sprintf('%s %s', $staff['first_name'], $staff['last_name']);
+			$options[$staffId] = $staffName;
+		}
+		
+		return $options;
+	}
+	
 	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
 		$data = $this->find('all', array(
 			'recursive' => -1,

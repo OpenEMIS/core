@@ -129,7 +129,10 @@ class InstitutionSiteSection extends AppModel {
 		
 		$data = $this->getListOfSections($selectedAcademicPeriod, $institutionSiteId);
 		
-		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data'));
+		$gradeOptions = array(sprintf('%s %s', __('All'), __('Grades')));
+		$selectedGradeId = 0;
+		
+		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data', 'gradeOptions', 'selectedGradeId'));
 	}
 	
 	public function add($selectedAcademicPeriod=0) {
@@ -173,6 +176,116 @@ class InstitutionSiteSection extends AppModel {
 		}
 	}
 	
+	public function singleGradeAdd($selectedYear=0) {
+		$this->Navigation->addCrumb('Add Section');
+		
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
+		if(!empty($yearOptions)) {
+			if ($selectedYear != 0) {
+				if (!array_key_exists($selectedYear, $yearOptions)) {
+					$selectedYear = key($yearOptions);
+				}
+			} else {
+				$selectedYear = key($yearOptions);
+			}
+			
+			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedYear);
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedYear);
+			
+			$currentTab = 'Single Grade';
+			
+			$gradeOptions = $this->InstitutionSiteSectionGrade->getGradesByInstitutionSiteId($institutionSiteId, $selectedYear);
+			$gradeChecklist = $this->InstitutionSiteSectionGrade->getInstitutionSiteGradeOptions($institutionSiteId, $selectedYear);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedYear);
+			$numberOfSections = array(1, 2, 3, 4);
+			
+			$yearObj = ClassRegistry::init('SchoolYear')->findById($selectedYear);
+			$startDate = $yearObj['SchoolYear']['start_date'];
+			$endDate = $yearObj['SchoolYear']['end_date'];
+		
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+			
+			$this->setVar(compact('currentTab', 'gradeOptions', 'numberOfSections', 'staffOptions', 'gradeChecklist'));
+			
+			$this->setVar(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			
+			if($this->request->is('post') || $this->request->is('put')) {
+				$data = $this->request->data;
+				$result = $this->saveAll($data);
+				if ($result) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedYear));
+				}
+			}
+		} else {
+			$this->Message->alert('InstitutionSite.noProgramme');
+			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
+		}
+	}
+	
+	public function multiGradesAdd($selectedYear=0) {
+		$this->Navigation->addCrumb('Add Section');
+		
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$yearConditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1,
+			'SchoolYear.visible' => 1
+		);
+		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
+		if(!empty($yearOptions)) {
+			if ($selectedYear != 0) {
+				if (!array_key_exists($selectedYear, $yearOptions)) {
+					$selectedYear = key($yearOptions);
+				}
+			} else {
+				$selectedYear = key($yearOptions);
+			}
+			
+			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedYear);
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedYear);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedYear);
+			
+			$currentTab = 'Multiple Grades';
+			
+			$gradeOptions = $this->InstitutionSiteSectionGrade->getGradesByInstitutionSiteId($institutionSiteId, $selectedYear);
+			$gradeChecklist = $this->InstitutionSiteSectionGrade->getInstitutionSiteGradeOptions($institutionSiteId, $selectedYear);
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedYear);
+			
+			$yearObj = ClassRegistry::init('SchoolYear')->findById($selectedYear);
+			$startDate = $yearObj['SchoolYear']['start_date'];
+			$endDate = $yearObj['SchoolYear']['end_date'];
+		
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+			
+			$this->setVar(compact('currentTab', 'gradeOptions', 'staffOptions', 'gradeChecklist'));
+			
+			$this->setVar(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			
+			if($this->request->is('post') || $this->request->is('put')) {
+				$data = $this->request->data;
+				$result = $this->saveAll($data);
+				if ($result) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedYear));
+				}
+			}
+		} else {
+			$this->Message->alert('InstitutionSite.noProgramme');
+			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
+		}
+	}
+	
 	public function view($id=0) {
 		$this->Session->write($this->alias.'.id', $id);
 		$data = $this->findById($id);
@@ -182,6 +295,10 @@ class InstitutionSiteSection extends AppModel {
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
 			$selectedAction = $this->alias . '/view/' . $id;
+			
+			$studentsData = $this->InstitutionSiteSectionStudent->getSutdentsBySection($id);
+			$this->setVar(compact('studentsData'));
+			
 			$this->setVar(compact('data', 'grades', 'selectedAction'));
 			$this->setVar('actionOptions', $this->getSectionActions());
 		} else {
@@ -208,7 +325,18 @@ class InstitutionSiteSection extends AppModel {
 				$this->request->data = $data;
 			}
 			
-			$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForSection($id);
+			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
+			$studentsData = $this->InstitutionSiteSectionStudent->getSectionStudentsData($id);
+			
+			$yearObj = ClassRegistry::init('SchoolYear')->findById($data['SchoolYear']['id']);
+			$startDate = $yearObj['SchoolYear']['start_date'];
+			$endDate = $yearObj['SchoolYear']['end_date'];
+		
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+			
+			$StudentCategory = ClassRegistry::init('Students.StudentCategory');
+			$categoryOptions = $StudentCategory->getList();
 			
 			$name = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($name);
@@ -216,7 +344,7 @@ class InstitutionSiteSection extends AppModel {
 			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
 			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $data['InstitutionSiteSection']['academic_period_id']);
 			
-			$this->setVar(compact('grades', 'shiftOptions'));
+			$this->setVar(compact('grades', 'shiftOptions', 'studentsData', 'staffOptions', 'categoryOptions'));
 		} else {
 			$this->Message->alert('general.notExists');
 			$this->redirect(array('action' => $this->alias));

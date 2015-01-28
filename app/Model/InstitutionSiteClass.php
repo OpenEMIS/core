@@ -130,12 +130,16 @@ class InstitutionSiteClass extends AppModel {
 		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
 		$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : key($academicPeriodOptions);
 		$data = $this->getListOfClasses($selectedAcademicPeriod, $institutionSiteId);
+
+		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
+		$selectedSection = isset($params->pass[1]) ? $params->pass[1] : key($sectionOptions);
 		
 		if(empty($academicPeriodOptions)){
 			$controller->Message->alert('InstitutionSite.noProgramme');
 		}
 		
-		$controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data'));
+		$controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data', 'sectionOptions', 'selectedSection'));
 	}
 	
 	public function classesAdd($controller, $params) {
@@ -153,7 +157,21 @@ class InstitutionSiteClass extends AppModel {
 			$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : key($academicPeriodOptions);
 			
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedAcademicPeriod);
-			$controller->set(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId'));
+			
+			$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
+			$selectedSection = isset($params->pass[1]) ? $params->pass[1] : key($sectionOptions);
+			
+			$yearObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
+			$startDate = $yearObj['AcademicPeriod']['start_date'];
+			$endDate = $yearObj['AcademicPeriod']['end_date'];
+		
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+			
+			$subjects = array(__('English'), __('Science'), __('Math'));
+			
+			$controller->set(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjects'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				$data = $controller->request->data;
@@ -186,7 +204,11 @@ class InstitutionSiteClass extends AppModel {
 			$controller->Navigation->addCrumb($className);
 			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
 			//pr($sections);
-			$controller->set(compact('data', 'sections'));
+			
+			$staffData = array();
+			$studentsData = array();
+			
+			$controller->set(compact('data', 'sections', 'staffData', 'studentsData'));
 			$controller->set('actionOptions', $this->getClassActions($controller, $id));
 		} else {
 			$controller->Message->alert('general.notExists');
@@ -214,6 +236,11 @@ class InstitutionSiteClass extends AppModel {
 			
 			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForClass($id);
 			//pr($sections);
+			
+			$staffData = array();
+			$studentsData = array();
+			$controller->set(compact('staffData', 'studentsData'));
+			
 			$controller->set('sections', $sections);
 			
 			$name = $data[$this->alias]['name'];

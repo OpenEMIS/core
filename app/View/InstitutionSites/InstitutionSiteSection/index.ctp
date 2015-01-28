@@ -6,22 +6,24 @@ $this->assign('contentHeader', __('List of Sections'));
 
 $this->start('contentActions');
 	if ($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'add', $selectedAcademicPeriod), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'InstitutionSiteSection', 'singleGradeAdd', $selectedAcademicPeriod), array('class' => 'divider'));
 	}
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/academic_period_options', array('url' => 'InstitutionSiteSection/index'));
-?>
+echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index', array('url' => 'InstitutionSiteSection/index'));
 
+?>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
 				<th><?php echo $this->Label->get('general.section') ?></th>
-				<th><?php echo $this->Label->get('general.grade'); ?></th>
-				<th><?php echo $this->Label->get('gender.m'); ?></th>
-				<th><?php echo $this->Label->get('gender.f'); ?></th>
+<!--				<th><?php echo $this->Label->get('general.grade'); ?></th>-->
+				<th><?php echo $this->Label->get('InstitutionSiteSection.staff_id'); ?></th>
+				<th><?php echo $this->Label->get('general.male_students'); ?></th>
+				<th><?php echo $this->Label->get('general.female_students'); ?></th>
+				<th><?php echo $this->Label->get('general.classes') ?></th>
 			</tr>
 		</thead>
 
@@ -32,13 +34,15 @@ echo $this->element('templates/academic_period_options', array('url' => 'Institu
 				?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['name'], array('action' => 'InstitutionSiteSection', 'view', $id), array('escape' => false)); ?></td>
-					<td>
+<!--					<td>
 						<?php foreach ($obj['grades'] as $gradeId => $name) : ?>
 							<div class="table_cell_row <?php echo ++$i == sizeof($obj['grades']) ? 'last' : ''; ?>"><?php echo $name; ?></div>
 						<?php endforeach ?>
-					</td>
+					</td>-->
+					<td class="cell-number"><?php echo 'Abel Tuter'; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
+					<td class="cell-number"><?php echo $this->Html->link(3, array('action' => 'InstitutionSiteSection', 'view', $id), array('escape' => false)); ?></td>
 				</tr>
 			<?php } // end for (multigrade)    ?>
 		</tbody>

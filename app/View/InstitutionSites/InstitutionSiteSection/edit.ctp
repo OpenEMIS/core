@@ -1,4 +1,5 @@
 <?php
+
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
@@ -17,55 +18,88 @@ $formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edi
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
+?>
+<fieldset class="section_break">
+	<legend><?php echo __('Section'); ?></legend>
+<?php
 echo $this->Form->hidden('id');
 echo $this->Form->hidden('academic_period_id');
-echo $this->Form->input('academic_period', array('value' => $this->data['AcademicPeriod']['name'], 'disabled' => 'disabled'));
-echo $this->Form->input('name');
+
+$labelOptions['text'] = $this->Label->get('AcademicPeriod.name');
+echo $this->Form->input('academic_period', array('value' => $this->data['AcademicPeriod']['name'], 'disabled' => 'disabled', 'label' => $labelOptions));
+
+?>
+<div class="form-group">
+	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
+	<div class="col-md-4 stackElements">
+	<?php
+	foreach($grades as $g) {
+		echo $this->Form->input('grade', array('value' => $g, 'label' => false, 'div' => false, 'disabled' => 'disabled', 'between' => false, 'after' => false));
+	}
+	?>
+	</div>
+</div>
+<?php
+$labelOptions['text'] = $this->Label->get('general.section');
+echo $this->Form->input('name', array('label' => $labelOptions));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 
+$labelOptions['text'] = $this->Label->get('InstitutionSiteSection.staff_id');
+echo $this->Form->input('institution_site_staff_id', array(
+	'options' => $staffOptions,
+	'label' => $labelOptions
+));
 ?>
-
-<div class="form-group">
-	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
-	<div class="col-md-8">
+</fieldset>
+<fieldset class="section_break form">
+	<legend><?php echo __('Students'); ?></legend>
+	<div class="row">
 		<div class="table-responsive">
-			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+			<table class="table table-striped table-hover table-bordered">
 				<thead>
 					<tr>
-						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-						<th><?php echo $this->Label->get('EducationProgramme.name'); ?></th>
-						<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
+						<th><?php echo $this->Label->get('general.openemisId'); ?></th>
+						<th><?php echo $this->Label->get('general.name'); ?></th>
+						<th><?php echo $this->Label->get('general.sex'); ?></th>
+						<th><?php echo $this->Label->get('general.date_of_birth'); ?></th>
+						<th><?php echo $this->Label->get('general.category'); ?></th>
+						<th class="cell-delete"></th>
 					</tr>
 				</thead>
-				
+
 				<tbody>
-					<?php 
-					$i = 0;
-					foreach($grades as $obj) :
-						$checked = empty($obj['InstitutionSiteSectionGrade']['status']) ? '' : 'checked';
-					?>
+			<?php foreach($studentsData as $i => $obj) : ?>
 					<tr>
-						<td class="checkbox-column">
+						<td><?php echo $obj['Student']['identification_no']; ?></td>
+						<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+						<td><?php echo ''; ?></td>
+						<td><?php echo ''; ?></td>
+						<td>
 							<?php
-							echo $this->Form->hidden('InstitutionSiteSectionGrade.' . $i . '.id', array('value' => $obj['InstitutionSiteSectionGrade']['id']));
-							echo $this->Form->hidden('InstitutionSiteSectionGrade.' . $i . '.institution_site_section_id', array('value' => $this->data[$model]['id']));
-							echo $this->Form->hidden('InstitutionSiteSectionGrade.' . $i . '.education_grade_id', array('value' => $obj['EducationGrade']['id']));
-							echo $this->Form->checkbox('InstitutionSiteSectionGrade.' . $i++ . '.status', array('class' => 'icheck-input', 'checked' => $checked));
+							echo $this->Form->input($i . '.student_category_id', array(
+								'label' => false,
+								'div' => false,
+								'before' => false,
+								'between' => false,
+								'after' => false,
+								'options' => $categoryOptions,
+								'value' => $obj['InstitutionSiteSectionStudent']['student_category_id']
+							));
 							?>
 						</td>
-						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
-						<td><?php echo $obj['EducationGrade']['name']; ?></td>
+						<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 					</tr>
-					<?php endforeach; ?>
+			<?php endforeach ?>
 				</tbody>
 			</table>
+			<a class="void icon_plus" url="" onclick="">
+				<?php echo $this->Label->get('general.add'); ?>
+			</a>
 		</div>
-
 	</div>
-</div>
-
+</fieldset>
 <?php
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $this->data[$model]['id'])));
 echo $this->Form->end();
