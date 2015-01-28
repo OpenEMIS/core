@@ -515,6 +515,9 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteSection' => array(
 			'staff_id' => 'Home Room Teacher'
+		),
+		'ReportProgress' => array(
+			'error' => 'Please contact the administrator for assistance.'
 		)
 	);
 	
