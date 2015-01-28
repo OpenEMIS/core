@@ -55,7 +55,7 @@ class ReportProgress extends AppModel {
 	}
 
 	public function generate($id) {
-		$params = array('Report', 'run', 'excel', $id);
+		$params = array('Report', 'run', $id);
 		$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
 		$nohup = 'nohup %s > %stmp/logs/reports.log & echo $!';
 		$shellCmd = sprintf($nohup, $cmd, APP);
