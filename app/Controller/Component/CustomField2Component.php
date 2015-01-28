@@ -14,6 +14,10 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
+define("NS_XF", "http://www.w3.org/2002/xforms");
+define("NS_OE", "https://www.openemis.org");
+App::uses('Xml', 'Utility');
+
 class CustomField2Component extends Component {
 	private $controller;
 
@@ -540,7 +544,7 @@ class CustomField2Component extends Component {
 			$this->Field->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
 		}
 
-		$params = array_merge(array('action' => 'reorder', $groupId), $params);
+		$params = array_merge(array('action' => 'reorder'), $params);
 		return $this->controller->redirect($params);
     }
 
@@ -632,8 +636,8 @@ class CustomField2Component extends Component {
 		$this->controller->autoRender = false;
 
     	$params = $this->controller->params->named;
-
-		$selectedModule = $this->checkModule();
+    	$selectedModule = $this->checkModule();
+		
 		if(!is_null($selectedModule)) {
 			$groupsConditions = array(
 				$this->Group->alias.'.'.Inflector::underscore($this->Module->alias).'_id' => $selectedModule
@@ -657,9 +661,8 @@ class CustomField2Component extends Component {
 
 			$result = array();
 			if(!empty($templates)) {
-				$protocol = $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://';
-				$host = $_SERVER['HTTP_HOST'];
-				$url = $protocol . $host . $this->controller->webroot . $this->controller->params->controller . '/download/';
+				$url = '/' . $this->controller->params->controller . '/download/xform/';
+				//$media_url = '/' . $this->controller->params->controller . '/downloadImage/';
 
 				$list = array();
 				foreach ($templates as $key => $template) {
@@ -675,6 +678,7 @@ class CustomField2Component extends Component {
 				$result['limit'] = $requestPaging['limit'];
 				$result['list'] = $list;
 				$result['url'] = $url;
+				//$result['media_url'] = $media_url;
 			}
 		} catch (NotFoundException $e) {
 			$this->controller->log($e->getMessage(), 'debug');
@@ -684,13 +688,16 @@ class CustomField2Component extends Component {
     	return json_encode($result);
     }
 
-    public function download($id=0, $format="xform", $output=true) {
+    public function download($format="xform", $id=0, $output=true) {
+		$this->controller->autoRender = false;
+		$groupName = $this->Group->field('name', array($this->Group->alias.'.id' => $id));
+
     	$fieldContains = array();
 		$fieldContains = isset($this->FieldOption) ? array_merge(array($this->FieldOption->alias), $fieldContains) : $fieldContains;
 		//$fieldContains = isset($this->TableColumn) ? array_merge(array($this->TableColumn->alias), $fieldContains) : $fieldContains;
 		//$fieldContains = isset($this->TableRow) ? array_merge(array($this->TableRow->alias), $fieldContains) : $fieldContains;
 		$this->Field->contain($fieldContains);
-		$data = $this->Field->find('all', array(
+		$fields = $this->Field->find('all', array(
 			'conditions' => array(
 				$this->Field->alias.'.'.Inflector::underscore($this->Group->alias).'_id' => $id,
 				$this->Field->alias.'.visible' => 1
@@ -701,22 +708,116 @@ class CustomField2Component extends Component {
 			)
 		));
 
-		$this->controller->set('data', $data);
-		$render = false;
 		if ($output) { // true = output to screen
 			switch ($format) {
 				case 'xform':
-					$this->controller->layout = false;
-					$render = 'xform';
+					$xml = $this->getXML($format, $groupName, $fields);
+					return $xml->asXML();
 					break;
 				default:
 					break;
 			}
 		} else { // download as file
+			$xml = $this->getXML($format, $groupName, $fields);
+			$fileName = $format . '_' . date('Ymdhis') . '.xml';
+		    
+		    header('Expires: 0');
+		    header('Content-Encoding: UTF-8');
+		    // force download  
+		    header("Content-Type: application/force-download; charset=UTF-8'");
+		    header("Content-Type: application/octet-stream; charset=UTF-8'");
+		    header("Content-Type: application/download; charset=UTF-8'");
+		    // disposition / encoding on response body
+		    header("Content-Disposition: attachment;filename={$fileName}");
+		    header("Content-Transfer-Encoding: binary");
 
+		   	if (ob_get_contents()){
+			    ob_end_clean();
+			}
+			ob_start();
+			$df = fopen("php://output", 'w');
+			fputs($df, $xml->asXML());
+			fclose($df);
+			return ob_get_clean();
 		}
-		if ($render !== false) {
-			$this->doRender($render);
-		}
+    }
+
+    public function getXML($instanceId, $title, $fields) {
+		$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
+    				<html
+    					xmlns="http://www.w3.org/1999/xhtml"
+    					xmlns:xf="' .NS_XF. '"
+	    				xmlns:ev="http://www.w3.org/2001/xml-events"
+	    				xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	    				xmlns:oe="' .NS_OE. '">
+					</html>';
+
+    	$xml = new SimpleXMLElement($xmlstr);
+
+		$headNode = $xml->addChild("head");
+		$bodyNode = $xml->addChild("body");
+			$headNode->addChild("title", $title);
+				$modelNode = $headNode->addChild("model", null, NS_XF);
+					$instanceNode = $modelNode->addChild("instance", null, NS_XF);
+					$instanceNode->addAttribute("id", $instanceId);
+						$index = 1;
+						foreach ($fields as $key => $field) {
+							if(isset($this->Group) && $key == 0) {
+								$groupNode = $instanceNode->addChild($this->Group->alias, null, NS_OE);
+									$groupNode->addAttribute("id", $field[$this->Field->alias][Inflector::underscore($this->Group->alias).'_id']);
+									//$groupNode->addChild('id', $field[$this->Field->alias][Inflector::underscore($this->Group->alias).'_id'], NS_OE);
+							}
+
+							$fieldTypeArr = array(2, 3, 5, 6); //Only support Text, Dropdown, Textarea and Number
+							if(in_array($field[$this->Field->alias]['type'], $fieldTypeArr)) {
+								$fieldNode = $instanceNode->addChild($this->Field->alias, null, NS_OE);
+									$fieldNode->addAttribute("id", $field[$this->Field->alias]['id']);
+
+								$bindNode = $modelNode->addChild("bind", null, NS_XF);
+								$bindNode->addAttribute("nodeset", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+								switch($field[$this->Field->alias]['type']) {
+									case 2:	//Text
+										$fieldType = 'string';
+										$textNode = $bodyNode->addChild("input", null, NS_XF);
+										$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$textNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+										break;
+									case 3:	//Dropdown
+										$fieldType = 'integer';
+										$dropdownNode = $bodyNode->addChild("select1", null, NS_XF);
+										$dropdownNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$dropdownNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
+												$itemNode = $dropdownNode->addChild("item", null, NS_XF);
+													$itemNode->addChild("label", $fieldOption['value'], NS_XF);
+													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
+											}
+										break;
+									case 5:	//Textarea
+										$fieldType = 'string';
+										$textareaNode = $bodyNode->addChild("textarea", null, NS_XF);
+										$textareaNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$textareaNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+										break;
+									case 6:	//Number
+										$fieldType = 'integer';
+										$numberNode = $bodyNode->addChild("input", null, NS_XF);
+										$numberNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Field->alias."[".$index."]");
+											$numberNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+										break;
+								}
+
+								$bindNode->addAttribute("type", $fieldType);
+								if($field[$this->Field->alias]['is_mandatory']) {
+									$bindNode->addAttribute("required", 'true()');
+								} else {
+									$bindNode->addAttribute("required", 'false()');
+								}
+
+								$index++;
+							}
+						}
+
+    	return $xml;
     }
 }
