@@ -133,6 +133,19 @@ class AppModel extends Model {
 		return $a['order'] >= $b['order'];
 	}
 	// End ControllerActionBehaviour
+
+	public function checkIdInOptions($key, $options) {
+		if (!empty($options)) {
+			if ($key != 0) {
+				if (!array_key_exists($key, $options)) {
+					$key = key($options);
+				}
+			} else {
+				$key = key($options);
+			}
+		}
+		return $key;
+	}
 	
 	public function prepend($list, $items) {
 		$data = array();

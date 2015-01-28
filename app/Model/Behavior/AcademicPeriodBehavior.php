@@ -25,9 +25,10 @@ class AcademicPeriodBehavior extends ModelBehavior {
 			)
 		);
 		$options['order'] = array('AcademicPeriod.order');
+		$options['conditions'] = array('AcademicPeriod.parent_id >' => 0);
 		
 		if (!empty($conditions)) {
-			$options['conditions'] = $conditions;
+			$options['conditions'] = array_merge($options['conditions'], $conditions);
 		}
 		$list = $model->find('list', $options);
 		return $list;
