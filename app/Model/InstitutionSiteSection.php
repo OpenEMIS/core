@@ -209,18 +209,11 @@ class InstitutionSiteSection extends AppModel {
 		$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedAcademicPeriod);
 		$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedAcademicPeriod);
 
-		$gradeOptions = $this->InstitutionSiteSectionGrade->getGradesByInstitutionSiteId($institutionSiteId, $selectedAcademicPeriod);
-		$gradeChecklist = $this->InstitutionSiteSectionGrade->getInstitutionSiteGradeOptions($institutionSiteId, $selectedAcademicPeriod);
-
 		$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
 		$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
 		$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 		$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
-
-		$this->setVar(compact('currentTab', 'gradeOptions', 'staffOptions', 'gradeChecklist'));
-
-		$this->setVar(compact('grades', 'selectedAcademicPeriod', 'academicPeriodOptions', 'shiftOptions', 'institutionSiteId'));
 
 		if($this->request->is('post') || $this->request->is('put')) {
 			$data = $this->request->data;
@@ -230,6 +223,9 @@ class InstitutionSiteSection extends AppModel {
 				return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedAcademicPeriod));
 			}
 		}
+		
+		$this->setVar(compact('currentTab', 'gradeOptions', 'staffOptions', 'gradeChecklist'));
+		$this->setVar(compact('grades', 'selectedAcademicPeriod', 'academicPeriodOptions', 'shiftOptions', 'institutionSiteId'));
 	}
 	
 	public function view($id=0) {
