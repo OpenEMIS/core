@@ -178,7 +178,10 @@ class InstitutionSiteStaff extends AppModel {
 		$params = $this->controller->params;
 
 		$prefix = 'InstitutionSiteStaff.search.';
-		$yearOptions = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodListValues('start_year');
+
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$yearOptions = $AcademicPeriod->getAcademicPeriodListValues('id');
+
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array();
 
@@ -201,19 +204,26 @@ class InstitutionSiteStaff extends AppModel {
 			$selectedAcademicPeriod = $this->request->data[$this->alias]['academic_period_id'];
 
 			if (strlen($selectedAcademicPeriod) != '') {
-				$conditions['InstitutionSiteStaff.start_year <='] = $selectedAcademicPeriod;
+				$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
+				$startDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['start_date']));
+				$endDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['end_date']));
+
+				$conditions['InstitutionSiteStaff.start_date <='] = $startDate;
 				$conditions['OR'] = array(
-					'InstitutionSiteStaff.end_year >=' => $selectedAcademicPeriod,
-					'InstitutionSiteStaff.end_year IS NULL'
+					'InstitutionSiteStaff.end_date >=' => $endDate,
+					'InstitutionSiteStaff.end_date IS NULL'
 				);
+				$this->Session->write($prefix . 'yearId', $selectedAcademicPeriod);
 			} else {
-				unset($conditions['InstitutionSiteStaff.start_year <=']);
-				unset($conditions['OR']['InstitutionSiteStaff.end_year >=']);
+				unset($conditions['InstitutionSiteStaff.start_date <=']);
+				unset($conditions['OR']['InstitutionSiteStaff.end_date >=']);
 				unset($conditions['OR'][0]);
+
+				$this->Session->delete($prefix . 'yearId');
 			}
 		} else {
-			if (array_key_exists('InstitutionSiteStaff.start_year <=', $conditions)) {
-				$this->request->data[$this->alias]['academic_period_id'] = $conditions['InstitutionSiteStaff.start_year <='];
+			if ($this->Session->check($prefix . 'yearId')) {
+				$this->request->data[$this->alias]['academic_period_id'] = $this->Session->read($prefix . 'yearId');
 			}
 		}
 		
