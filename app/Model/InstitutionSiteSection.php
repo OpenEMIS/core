@@ -189,7 +189,7 @@ class InstitutionSiteSection extends AppModel {
 			}
 		}
 
-		$currentTab = 'Multiple Grades';
+		$currentTab = 'Multi Grades';
 		$grades = $this->InstitutionSiteSectionGrade->getAvailableGradesForNewSection($institutionSiteId, $selectedAcademicPeriod);
 		$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
 		$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedAcademicPeriod);
@@ -203,10 +203,14 @@ class InstitutionSiteSection extends AppModel {
 
 		if($this->request->is('post') || $this->request->is('put')) {
 			$data = $this->request->data;
+			pr($data);
 			$result = $this->saveAll($data);
 			if ($result) {
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'InstitutionSiteSection', 'index', $selectedAcademicPeriod));
+			}else{
+				$this->log($this->validationErrors, 'debug');
+				$this->Message->alert('general.add.failed');
 			}
 		}
 		
