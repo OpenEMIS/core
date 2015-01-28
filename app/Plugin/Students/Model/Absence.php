@@ -58,7 +58,7 @@ class Absence extends AppModel {
 		$this->Navigation->addCrumb('Absence');
 		$header = __('Absence');
 		
-		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
+		$yearList = ClassRegistry::init('AcademicPeriod')->getAcademicPeriodList();
 		
 		if (isset($this->controller->params['pass'][0])) {
 			$yearId = $this->controller->params['pass'][0];

@@ -630,9 +630,9 @@ class InstitutionSiteSectionStudent extends AppModel {
 						)
 					),
 					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
+						'table' => 'academic_periods',
+						'alias' => 'AcademicPeriod',
+						'conditions' => array('AcademicPeriod.id = InstitutionSiteSection.academic_period_id')
 					),
 					array(
 						'table' => 'institution_site_section_students',
@@ -649,8 +649,8 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'OR' => array(
 						'InstitutionSiteStudent.end_date IS NULL',
 						'AND' => array(
-							'InstitutionSiteStudent.start_year >= ' => 'SchoolYear.start_year',
-							'InstitutionSiteStudent.end_year >= ' => 'SchoolYear.start_year'
+							'InstitutionSiteStudent.start_year >= ' => 'AcademicPeriod.start_year',
+							'InstitutionSiteStudent.end_year >= ' => 'AcademicPeriod.start_year'
 						)
 					)
 				),
