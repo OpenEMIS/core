@@ -263,6 +263,9 @@ class FormUtilityHelper extends AppHelper {
 		$path = $AreaHandler->{$model}->getPath($value);
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
+				if($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == -1) {
+					continue;
+				}
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
 				$html .= sprintf($row, sprintf($labelCol, $levelName) . sprintf($valueCol, $obj[$model]['name']));
 			}

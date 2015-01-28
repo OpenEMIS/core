@@ -20,7 +20,7 @@ class StudentsController extends StudentsAppController {
 	public $name = 'Students';
 	public $studentId;
 	public $uses = array(
-		'Area',
+		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteClass',
 		'InstitutionSiteType',

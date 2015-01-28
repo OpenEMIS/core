@@ -119,14 +119,14 @@ class LabelHelper extends AppHelper {
 		),
 		'Area' => array(
 			'name' => 'Area',
-			'area_level_id' => 'Area Level',
+			'area_level_id' => 'Area Level (Education)',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
 			'name' => 'Area Level (Education)'
 		),
 		'AreaAdministrative' => array(
-			'area_administrative_level_id' => 'Area Administrative Level'
+			'area_administrative_level_id' => 'Area Level (Administrative)'
 		),
 		'AreaAdministrativeLevel' => array(
 			'name' => 'Area Level (Administrative)'
@@ -379,7 +379,7 @@ class LabelHelper extends AppHelper {
 			'staff_custom_field_id' => 'Custom Field'
 		),
 		'SecurityGroup' => array(
-			'SecurityGroupArea' => 'Areas',
+			'SecurityGroupArea' => 'Areas (Education)',
 			'SecurityGroupInstitutionSite' => 'Institutions',
 			'SecurityGroupUser' => 'Users'
 		),

@@ -88,7 +88,7 @@ $obj = $data['InstitutionSite'];
 
 <?php if ($obj['area_id'] > 0) : ?>
 <fieldset class="section_break">
-	<legend><?php echo __('Area'); ?></legend>
+	<legend><?php echo __('Area (Education)'); ?></legend>
 	<?php echo $this->FormUtility->areas($obj['area_id']); ?>
 </fieldset>
 <?php endif; ?>
