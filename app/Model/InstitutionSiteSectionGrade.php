@@ -276,4 +276,24 @@ class InstitutionSiteSectionGrade extends AppModel {
 		//}
 		return $list;
 	}
+	
+	public function getInstitutionGradeOptions($institutionSiteId, $academicPeriodId) {
+		$data = $this->EducationGrade->find('list', array(
+			'fields' => array('EducationGrade.id', 'EducationGrade.name'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
+						'InstitutionSiteProgramme.status = 1'
+					)
+				)
+			),
+			'order' => array('EducationGrade.order')
+		));
+		return $data;
+	}
 }
