@@ -21,6 +21,8 @@ class InstitutionSiteSection extends AppModel {
 		'AcademicPeriod',
 		'InstitutionSite',
 		'InstitutionSiteShift',
+		'EducationGrade',
+		'Staff.Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -33,7 +35,7 @@ class InstitutionSiteSection extends AppModel {
 		)
 	);
 	public $hasMany = array(
-		'InstitutionSiteSectionStaff',
+		'InstitutionSiteSectionClass',
 		'InstitutionSiteSectionStudent',
 		'InstitutionSiteSectionGrade'
 	);
@@ -72,44 +74,28 @@ class InstitutionSiteSection extends AppModel {
 		parent::beforeAction();
 	}
 	
-	public function getSectionActions($id=0) {
-		if($id==0) {
-			$id = $this->Session->read($this->alias.'.id');
-		}
-		
-		$options = array(
-			'InstitutionSiteSection/view/'.$id => __('Section Details'),
-			'InstitutionSiteSectionStudent/index' => __('Students'),
-			'InstitutionSiteSectionStaff/index' => __('Staff')
-		);
-		return $options;
-	}
-	
-	public function index($selectedAcademicPeriod=0, $selectedGradeId=0) {
+	public function index($selectedPeriod=0, $selectedGradeId=0) {
 		$this->Navigation->addCrumb('List of Sections');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1
+		);
+
+		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
+
+		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
 		
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getInstitutionAcademicPeriodOptions($institutionSiteId);
-		if(!empty($academicPeriodOptions)){
-			if ($selectedAcademicPeriod != 0) {
-				if (!array_key_exists($selectedAcademicPeriod, $academicPeriodOptions)) {
-					$selectedAcademicPeriod = key($academicPeriodOptions);
-				}
-			} else {
-				$selectedAcademicPeriod = key($academicPeriodOptions);
-			}
-		}
-		
-		if(empty($academicPeriodOptions)){
+		if (empty($periodOptions)) {
 			$this->Message->alert('InstitutionSite.noProgramme');
 		}
 		
-		$data = $this->getListOfSections($selectedAcademicPeriod, $institutionSiteId);
+		$data = $this->getListOfSections($selectedPeriod, $institutionSiteId);
 		
-		$gradeOptionsData = $this->InstitutionSiteSectionGrade->getInstitutionGradeOptions($institutionSiteId, $selectedAcademicPeriod);
+		$gradeOptionsData = $this->InstitutionSiteSectionGrade->getInstitutionGradeOptions($institutionSiteId, $selectedPeriod);
 		$gradeOptions = $this->controller->Option->prependLabel($gradeOptionsData, 'InstitutionSiteSection.all_grades_select');
 		
-		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data', 'gradeOptions', 'selectedGradeId'));
+		$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'gradeOptions', 'selectedGradeId'));
 	}
 	
 	public function singleGradeAdd($selectedAcademicPeriod=0, $selectedGradeId=0) {
@@ -343,23 +329,25 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getListOfSections($academicPeriodId, $institutionSiteId) {
-		$classes = $this->find('list', array(
-			'fields' => array('InstitutionSiteSection.id', 'InstitutionSiteSection.name'),
+	public function getListOfSections($periodId, $institutionSiteId) {
+		$data = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
+				'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name',
+				'EducationGrade.name'
+			),
+			'contain' => array('Staff', 'EducationGrade'),
 			'conditions' => array(
-				'InstitutionSiteSection.academic_period_id' => $academicPeriodId,
+				'InstitutionSiteSection.academic_period_id' => $periodId,
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteSection.name')
 		));
 		
-		$data = array();
-		foreach($classes as $id => $name) {
-			$data[$id] = array(
-				'name' => $name,
-				'grades' => $this->InstitutionSiteSectionGrade->getGradesBySection($id),
-				'gender' => $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id)
-			);
+		foreach($data as $i => $obj) {
+			$id = $obj[$this->alias]['id'];
+			$data[$i][$this->alias]['classes'] = $this->InstitutionSiteSectionClass->getClassCount($id);
+			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id);
 		}
 		return $data;
 	}
