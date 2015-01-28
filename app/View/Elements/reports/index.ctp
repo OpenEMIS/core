@@ -30,11 +30,11 @@ $this->start('contentBody');
 				<td><?php echo $obj[$model]['expiry_date'] ?></td>
 				<td>
 					<?php
-					$downloadClass = '';
+					$downloadClass = 'download';
 					$errorClass = '';
 					$status = $obj[$model]['status'];
 					if ($status == 1 && empty($obj[$model]['file_path'])) {
-						$downloadClass = 'none';
+						$downloadClass = 'download none';
 						$errorClass = 'none';
 						$progress = 0;
 						$current = $obj[$model]['current_records'];
