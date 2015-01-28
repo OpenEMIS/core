@@ -23,7 +23,7 @@ echo $this->Form->hidden('institution_site_id', array('value' => $institutionSit
 $labelOptions['text'] = $this->Label->get('general.academic_period');
 echo $this->Form->input('academic_period_id', array(
 	'options' => $academicPeriodOptions, 
-	'url' => $this->params['controller'] . '/' . $model . '/add',
+	'url' => $this->params['controller'] . '/' . $model . '/multiGradesAdd',
 	'default' => $selectedAcademicPeriod,
 	'onchange' => 'jsForm.change(this)',
 	'label' => $labelOptions
@@ -36,7 +36,7 @@ $labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteSection.staff_id');
-echo $this->Form->input('institution_site_staff_id', array(
+echo $this->Form->input('staff_id', array(
 	'options' => $staffOptions,
 	'label' => $labelOptions
 ));
