@@ -31,11 +31,10 @@ $this->start('contentBody');
 				<td>
 					<?php
 					$downloadClass = 'download';
-					$errorClass = '';
+					$errorClass = 'none';
 					$status = $obj[$model]['status'];
 					if ($status == 1 && empty($obj[$model]['file_path'])) {
 						$downloadClass = 'download none';
-						$errorClass = 'none';
 						$progress = 0;
 						$current = $obj[$model]['current_records'];
 						$total = $obj[$model]['total_records'];
@@ -48,6 +47,7 @@ $this->start('contentBody');
 						echo '</div>';
 					} else if ($status == -1) {
 						$downloadClass = 'none';
+						$errorClass = '';
 					}
 					echo $this->Html->link(__('Download'), array('action' => 'download', $obj[$model]['id']), array('class' => $downloadClass));
 					?>
