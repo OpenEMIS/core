@@ -24,6 +24,13 @@ class InstitutionSiteSectionClass extends AppModel {
 		'InstitutionSiteSection',
 		'InstitutionSiteClass'
 	);
+
+	public function getClassCount($sectionId) {
+		$count = $this->find('count', array(
+			'conditions' => array('InstitutionSiteSection.id' => $sectionId)
+		));
+		return $count;
+	}
 	
 	// used by InstitutionSiteClass.edit
 	public function getAvailableGradesForSection($id) {
