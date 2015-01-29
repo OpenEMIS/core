@@ -27,6 +27,10 @@ class StudentSection extends AppModel {
 		'InstitutionSiteSection'
 	);
 	
+	public $hasMany = array(
+		'InstitutionSiteSectionGrade'
+	);
+	
 	public function index() {
 		$this->Navigation->addCrumb('Sections');
 		$alias = $this->alias;
@@ -35,7 +39,9 @@ class StudentSection extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'AcademicPeriod.name', 'InstitutionSite.name', 'InstitutionSiteSection.name', 
+				"$this->alias.*", 'AcademicPeriod.name', 'InstitutionSite.name',
+				'InstitutionSiteSection.name', 'EducationGrade.id', 'EducationGrade.name',
+				'Staff.*'
 			),
 			'joins' => array(
 				array(
@@ -63,8 +69,16 @@ class StudentSection extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
+					'type' => 'LEFT',
 					'conditions' => array(
 						"EducationGrade.id = InstitutionSiteSection.education_grade_id"
+					)
+				),
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array(
+						"Staff.id = InstitutionSiteSection.staff_id"
 					)
 				)
 			),
@@ -75,7 +89,16 @@ class StudentSection extends AppModel {
 			'order' => array("AcademicPeriod.order")
 		));
 		
-		pr($data);
+		foreach($data as $i => $obj) {
+			$sectionId = $obj[$this->alias]['institution_site_section_id'];
+			if(empty($obj['EducationGrade']['id'])){
+				$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSectionGrade->getGradesBySection($sectionId);
+			}else{
+				$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSection->getSingleGradeBySection($sectionId);
+			}
+			
+			$data[$i]['Staff']['staff_name'] = ModelHelper::getName($obj['Staff']);
+		}
 		
 		$this->setVar('data', $data);
 	}
