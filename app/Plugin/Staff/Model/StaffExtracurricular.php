@@ -18,9 +18,8 @@ class StaffExtracurricular extends StaffAppModel {
 	public $actsAs = array(
 		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
 		'ControllerAction',
-		'DatePicker' => 'start_date'
+		'DatePicker' => array('start_date', 'end_date')
 	);
-
 	public $belongsTo = array(
 		'Staff.Staff',
 		'AcademicPeriod',
@@ -114,6 +113,7 @@ class StaffExtracurricular extends StaffAppModel {
 
 	public function extracurricularView($controller, $params) {
 		$id = isset($params['pass'][0])?$params['pass'][0]:0;
+		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser', 'CreatedUser')));
 		$data = $this->findById($id);
 
 		if (empty($data)) {
@@ -169,6 +169,7 @@ class StaffExtracurricular extends StaffAppModel {
 			}
 		}
 		else{
+			$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser', 'CreatedUser')));
 			$data = $this->findById($id);
 			
 			if (empty($data)) {

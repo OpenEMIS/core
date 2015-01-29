@@ -7,21 +7,24 @@ echo $this->Html->script('Staff.licenses', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
+
+$redirectAction = array('action' => 'license');
+$issueDate = array('id' => 'IssueDate');
+$expiryDate = array('id' => 'ExpiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
 if (!$WizardMode) {
-    if(!empty($this->data[$model]['id'])){
+    if(!empty($this->data[$model]['id'])) {
         $redirectAction = array('action' => 'licenseView', $this->data[$model]['id']);
         $issueDate = array('id' => 'IssueDate' ,'data-date' => $this->data[$model]['issue_date']);
         $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => $this->data[$model]['expiry_date']);
-    }
-    else{
+    } else if(isset($this->data[$model])) {
         $redirectAction = array('action' => 'license');
-        $issueDate = array('id' => 'IssueDate');
-        $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
+        $issueDate = array('id' => 'IssueDate' ,'data-date' => $this->data[$model]['issue_date']);
+        $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => $this->data[$model]['expiry_date']);
     }
     echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
-}else{
-	$issueDate = array('id' => 'IssueDate');
-    $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
+}else if(isset($this->data[$model])) {
+    $issueDate = array('id' => 'IssueDate' ,'data-date' => $this->data[$model]['issue_date']);
+    $expiryDate = array('id' => 'ExpiryDate' ,'data-date' => $this->data[$model]['expiry_date']);
 }
 $this->end();
 $this->start('contentBody');

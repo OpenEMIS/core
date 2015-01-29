@@ -22,7 +22,8 @@ $labelOptions = $this->FormUtility->getLabelOptions();
 echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->input('id', array('type' => 'hidden'));
-echo $this->FormUtility->datepicker('special_need_date', array('label'=>$this->Label->get('general.date')));
+$tempDate = isset($this->data[$model]) ? $this->data[$model]['special_need_date'] : false;
+echo $this->FormUtility->datepicker('special_need_date', array('label'=>$this->Label->get('general.date'), 'data-date' => $tempDate));
 echo $this->Form->input('special_need_type_id', array('options' => $specialNeedTypeOptions,'label'=>array('text'=> $this->Label->get('general.type'),'class'=>$labelOptions['class'])));
 echo $this->Form->input('comment');
 
