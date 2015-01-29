@@ -50,7 +50,7 @@ class DatePickerBehavior extends ModelBehavior {
 		return $results;
 	}
 
-	public function getDate($obj, $field, $format='Y-m-d') {
+	public function getDate(Model $model, $obj, $field, $format='Y-m-d') {
 		$date = $obj[$field];
 		return date($format, strtotime($date));
 	}
