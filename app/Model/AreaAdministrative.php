@@ -88,7 +88,7 @@ class AreaAdministrative extends AppModel {
 				)
 			));
 			if(!empty($world) && (is_null($world[$this->alias]['lft']) || is_null($world[$this->alias]['rght']))) {
-				$recoverWorld = $this->recover();
+				$recoverWorld = $this->recover('parent', -1);
 				if($recoverWorld) {
 					$this->updateAll(array(
 						'AreaAdministrative.parent_id' => -1
