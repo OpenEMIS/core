@@ -61,7 +61,10 @@ $this->start('contentBody');
 			</thead>
 
 			<tbody>
-				<?php foreach($data['InstitutionSiteSectionStudent'] as $obj) : ?>
+				<?php 
+				foreach($data['InstitutionSiteSectionStudent'] as $obj) : 
+					if ($obj['status'] == 0) continue;
+				?>
 						<tr>
 							<td><?php echo $obj['Student']['identification_no'] ?></td>
 							<td><?php echo ModelHelper::getName($obj['Student']) ?></td>
