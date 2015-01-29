@@ -9,11 +9,13 @@ $this->end();
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'add', 'parent' => $parentId));
+$labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->input('name');
 echo $this->Form->input('code');
 echo $this->Form->input('parent', array('value' => $pathToString, 'disabled'));
-echo $this->Form->input('area_level_id', array('options' => $areaLevelOptions));
+$labelOptions['text'] = $this->Label->get('AreaLevel.name');
+echo $this->Form->input('area_level_id', array('options' => $areaLevelOptions, 'label' => $labelOptions));
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'parent' => $parentId)));
 echo $this->Form->end();
 

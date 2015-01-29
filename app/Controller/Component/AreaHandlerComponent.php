@@ -18,8 +18,8 @@ class AreaHandlerComponent extends Component {
 	private $controller;
 	public $Area;
 	public $AreaLevel;
-    public $AreaEducation;
-    public $AreaEducationLevel;
+    public $AreaAdministrative;
+    public $AreaAdministrativeLevel;
 	
 	//public $components = array('Auth', 'Session');
 	public function __construct(ComponentCollection $collection, $settings = array()) {
@@ -35,8 +35,8 @@ class AreaHandlerComponent extends Component {
 	public function init() {
 		$this->Area = ClassRegistry::init('Area');
 		$this->AreaLevel = ClassRegistry::init('AreaLevel');
-        $this->AreaEducation = ClassRegistry::init('AreaEducation');
-        $this->AreaEducationLevel = ClassRegistry::init('AreaEducationLevel');
+        $this->AreaAdministrative = ClassRegistry::init('AreaAdministrative');
+        $this->AreaAdministrativeLevel = ClassRegistry::init('AreaAdministrativeLevel');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -88,7 +88,7 @@ class AreaHandlerComponent extends Component {
 
     public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
         if(!is_array($arrMap)){
-            $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
+            $arrMap = ($arrMap == 'education')?  array('AreaAdministrative','AreaAdministrativeLevel') : array('Area','AreaLevel');
         }
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
         $this->autoRender = false;

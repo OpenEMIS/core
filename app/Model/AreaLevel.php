@@ -55,8 +55,8 @@ class AreaLevel extends AppModel {
 			$this->fields['level']['visible'] = false;
 		}
 		
-		$this->Navigation->addCrumb('Area Levels');
-		$this->setVar('contentHeader', __('Area Levels'));
+		$this->Navigation->addCrumb('Area Levels (Education)');
+		$this->setVar('contentHeader', __('Area Levels (Education)'));
     }
 	
 	public function index() {

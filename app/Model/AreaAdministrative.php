@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class AreaEducation extends AppModel {
+class AreaAdministrative extends AppModel {
 	public $actsAs = array(
 		'Tree',
 		'Reorder',
@@ -24,7 +24,7 @@ class AreaEducation extends AppModel {
 	);
 	
 	public $belongsTo = array(
-		'AreaEducationLevel',
+		'AreaAdministrativeLevel',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -69,25 +69,47 @@ class AreaEducation extends AppModel {
 		$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
 		
 		if ($this->action == 'view') {
-			$this->fields['area_level_id']['dataModel'] = 'AreaEducationLevel';
-			$this->fields['area_level_id']['dataField'] = 'name';
+			$this->fields['area_administrative_level_id']['dataModel'] = 'AreaAdministrativeLevel';
+			$this->fields['area_administrative_level_id']['dataField'] = 'name';
 		}
 		
-		$this->Navigation->addCrumb('Areas (Education)');
-		$this->setVar('contentHeader', __('Areas (Education)'));
+		$this->Navigation->addCrumb('Areas (Administrative)');
+		$this->setVar('contentHeader', __('Areas (Administrative)'));
     }
 	
 	public function index() {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
+		if($parentId == 0) {	//recover
+			$world = $this->find('first', array(
+				'conditions' => array(
+					'AreaAdministrative.parent_id' => -1,
+					'AreaAdministrative.name' => 'World'
+				)
+			));
+			if(!empty($world) && (is_null($world[$this->alias]['lft']) || is_null($world[$this->alias]['rght']))) {
+				$recoverWorld = $this->recover('parent', -1);
+				if($recoverWorld) {
+					$this->updateAll(array(
+						'AreaAdministrative.parent_id' => -1
+					), array(
+						'AreaAdministrative.parent_id' => 0,
+						'AreaAdministrative.name' => 'World'
+					));
+				}
+			}
+		}
+
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
 		$data = array();
-		$maxLevel = $this->AreaEducationLevel->field('level', null, 'level DESC');
+		$maxLevel = $this->AreaAdministrativeLevel->field('level', null, 'level DESC');
 		
 		if($area !== false) {
 			$data = $this->find('all', array(
-				'conditions' => array('parent_id' => $area[$this->alias]['id']),
+				'conditions' => array(
+					'parent_id' => $area[$this->alias]['id']
+				),
 				'order' => array('order')
 			));
 		}
@@ -138,8 +160,22 @@ class AreaEducation extends AppModel {
 		}
 		$pathToString = implode(' / ', $pathList);
 		$parentId = $area[$this->alias]['id'];
-		$level = $this->AreaEducationLevel->field('level', array('id' => $area[$this->alias]['area_education_level_id']));
-		$areaLevelOptions = $this->AreaEducationLevel->find('list', array('conditions' => array('level >' => $level)));
+		$level = $this->AreaAdministrativeLevel->field('level', array('id' => $area[$this->alias]['area_administrative_level_id']));
+		$areaAdministrativeId = $this->AreaAdministrativeLevel->field('area_administrative_id', array('id' => $area[$this->alias]['area_administrative_level_id']));
+		$areaAdministrativeId = $level == 2 ? $parentId : $areaAdministrativeId;
+
+		$areaLevelOptions = $this->AreaAdministrativeLevel->find('list', array(
+			'conditions' => array(
+				'AreaAdministrativeLevel.level >' => $level,
+				'AreaAdministrativeLevel.area_administrative_id' => $areaAdministrativeId
+			)
+		));
+
+		if($level == 1) {
+			$Country = ClassRegistry::init('Country');
+			$countryOptions = $Country->getOptions('name');
+			$this->setVar(compact('countryOptions'));
+		}
 		
 		if($this->request->is(array('post', 'put'))) {
 			$this->request->data[$this->alias]['parent_id'] = $parentId;
@@ -168,6 +204,12 @@ class AreaEducation extends AppModel {
 		$yesnoOptions = $this->controller->Option->get('yesno');
 		
 		if(!empty($data)) {
+			if($data[$this->AreaAdministrativeLevel->alias]['level'] == 2) {
+				$Country = ClassRegistry::init('Country');
+				$countryOptions = $Country->getOptions('name');
+				$this->setVar(compact('countryOptions'));
+			}
+
 			$this->setVar(compact('yesnoOptions', 'parentId'));
 			if($this->request->is(array('post', 'put'))) {
 				if ($this->save($this->request->data)) {
@@ -186,15 +228,15 @@ class AreaEducation extends AppModel {
 	public function fetchSubLevelList($parentId) {
 
 		$children = $this->find('all', array(
-			'conditions' => array('AreaEducation.parent_id' => $parentId ),
-			'fields' => 'GROUP_CONCAT(AreaEducation.id) as children'
+			'conditions' => array('AreaAdministrative.parent_id' => $parentId ),
+			'fields' => 'GROUP_CONCAT(AreaAdministrative.id) as children'
 		));
 		$data = $children[0][0]['children'];
 		return $data;
 	}
 
 	public function getChildren($parentId, $str=null) {
-		$children = $this->find('all', array('conditions' => array('AreaEducation.parent_id' => $parentId ), 'fields' => 'GROUP_CONCAT(AreaEducation.id) as children'));
+		$children = $this->find('all', array('conditions' => array('AreaAdministrative.parent_id' => $parentId ), 'fields' => 'GROUP_CONCAT(AreaAdministrative.id) as children'));
 		$childrenId = $children[0][0]['children'];
 
 		if ($childrenId == "") { return $str; }
@@ -219,6 +261,6 @@ class AreaEducation extends AppModel {
 	 */
 	public function getName($id) {
 		$data = $this->findById($id);	
-		return $data['AreaEducation']['name'];
+		return $data['AreaAdministrative']['name'];
 	}
 }
