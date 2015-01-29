@@ -324,12 +324,12 @@ class AcademicPeriod extends AppModel {
 
 	/******/
 
-	public function getAcademicPeriodListValues($type='name', $order='DESC') {
+	public function getAcademicPeriodListValues($type='name', $order='ASC') {
 		$value = 'AcademicPeriod.' . $type;
 		$result = $this->find('list', array(
-			'fields' => array($value, $value),
+			'fields' => array($value, 'AcademicPeriod.name'),
 			'conditions' => array('AcademicPeriod.parent_id > ' => 0),
-			'order' => array($value . ' ' . $order)
+			'order' => array('AcademicPeriod.order ' . $order)
 		));
 		return $result;
 	}
