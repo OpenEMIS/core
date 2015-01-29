@@ -314,6 +314,7 @@ class InstitutionSiteSection extends AppModel {
 						$newRow = array(
 							'student_id' => $studentId,
 							'student_category_id' => key($categoryOptions),
+							'status' => 1,
 							'Student' => $studentObj['Student']
 						);
 
