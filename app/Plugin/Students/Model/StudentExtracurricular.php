@@ -15,10 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentExtracurricular extends StudentsAppModel {
-
 	public $actsAs = array(
 		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction', 'DatePicker' => 'start_date'
+		'ControllerAction', 'DatePicker' => array('start_date', 'end_date')
 	);
 	public $belongsTo = array(
 		'Student',
@@ -129,7 +128,7 @@ class StudentExtracurricular extends StudentsAppModel {
 		$header = __('Details');
 
 		$controller->Session->write('StudentExtracurricular.id', $id);
-		 $fields = $this->getDisplayFields($controller);
+		$fields = $this->getDisplayFields($controller);
 		$controller->set(compact('header', 'data', 'fields'));
 	}
 
@@ -173,7 +172,7 @@ class StudentExtracurricular extends StudentsAppModel {
 		}
 		else{
 			$data = $this->findById($id);
-			
+
 			if (empty($data)) {
 				$controller->Message->alert('general.noData');
 				return $controller->redirect(array('action' => 'extracurricular'));

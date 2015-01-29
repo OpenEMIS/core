@@ -107,23 +107,23 @@ class StaffHealthTest extends StaffAppModel {
     public function healthTestAdd($controller, $params) {
         $controller->Navigation->addCrumb('Health - Add Test');
         $controller->set('header', __('Health - Add Test'));
-        $this->setup_add_edit_form($controller, $params);
+        $this->setup_add_edit_form($controller, $params, 'add');
     }
 
     public function healthTestEdit($controller, $params) {
         $controller->Navigation->addCrumb('Health - Edit Test');
         $controller->set('header', __('Health - Edit Test'));
-        $this->setup_add_edit_form($controller, $params);
+        $this->setup_add_edit_form($controller, $params, 'edit');
         $this->render = 'add';
     }
 
-    function setup_add_edit_form($controller, $params) {
+    function setup_add_edit_form($controller, $params, $type) {
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
 
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $controller->request->data[$this->name]['staff_id'] = $controller->staffId;
             if ($this->save($controller->request->data)) {
-                $controller->Message->alert('general.add.success');
+                $controller->Message->alert('general.'. $type .'.success');
                 return $controller->redirect(array('action' => 'healthTest'));
             }
         } else {
