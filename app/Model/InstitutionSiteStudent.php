@@ -366,7 +366,7 @@ class InstitutionSiteStudent extends AppModel {
 		*	Must be unset to avoid mysql unknown column error when querying InstitutionSiteStudent table.
 		*/
 		unset($conditions['defaultIdentity']);
-		$count = $this->find('count', array('conditions' => $conditions));
+		$count = $this->find('count', array('conditions' => $conditions, 'group' => array('Student.id'),));
 		return $count;
 	}
 	
