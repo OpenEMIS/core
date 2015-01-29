@@ -13,7 +13,7 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'languagesEdit'));
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
-echo $this->FormUtility->datepicker('evaluation_date', array('id' => 'IssueDate'));
+echo $this->FormUtility->datepicker('evaluation_date', array('id' => 'IssueDate', 'data-date' => $this->data[$model]['evaluation_date']));
 echo $this->Form->input('language_id', array('options'=>$languageOptions));
 echo $this->Form->input('listening', array('options'=>$gradeOptions));
 echo $this->Form->input('speaking', array('options'=>$gradeOptions));

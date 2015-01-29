@@ -307,7 +307,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'DISTINCT Student.identification_no',
-				'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 
+				'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 
 				'Student.gender', 'Student.date_of_birth',
 				'StudentCategory.name'
 			),

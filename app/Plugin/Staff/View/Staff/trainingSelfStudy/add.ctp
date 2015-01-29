@@ -11,15 +11,18 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 
+$redirectAction = array('action' => 'trainingSelfStudy');
 $startDate = array('id' => 'startDate');
 $endDate = array('id' => 'endDate');
 if(!empty($this->data[$model]['id'])){
 	$redirectAction = array('action' => 'trainingSelfStudyView', $this->data[$model]['id']);
 	$startDate['data-date'] = $this->data[$model]['start_date'];
     $endDate['data-date'] = $this->data[$model]['end_date'];
+} else if (isset($this->data[$model]['start_date'])){
+	$startDate['data-date'] = $this->data[$model]['start_date'];
+    $endDate['data-date'] = $this->data[$model]['end_date'];
 }
 else{
-	$redirectAction = array('action' => 'trainingSelfStudy');
     $endDate['data-date'] =  date('d-m-Y', time() + 86400);
 }
 $readonly = array();
