@@ -3,6 +3,10 @@
 
 /*app#############################################*/
 
+.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9 {
+    float: right;
+}
+
 /*header*/
 .header_nav_function{
 	float:right;
@@ -305,7 +309,7 @@ fieldset.section_break > .profile-image {
 	left: 0;
 }
 
-.panel-title .accordion-toggle { background-position: 12px 14px; }
+.panel-title .accordion-toggle { background-position: 12px 14px !important; }
 .panel-title .accordion-toggle:hover { background-position: 12px 14px; }
 
 .language { float: left; }
