@@ -30,11 +30,11 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array())
 				$i = 0;
 				?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['name'], array('action' => $_action , 'view', $id), array('escape' => false)); ?></td>
-					<td><?php echo $obj['educationSubjectName']; ?></td>
-					<td><?php echo $obj['staffName'];; ?></td>
-					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
-					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
+					<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('action' => $_action , 'view', $obj['InstitutionSiteClass']['id']), array('escape' => false)); ?></td>
+					<td><?php echo $obj['InstitutionSiteClass']['educationSubjectName']; ?></td>
+					<td><?php echo implode(",<br>", $obj['InstitutionSiteClass']['staffName']); ?></td>
+					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['M']; ?></td>
+					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['F']; ?></td>
 				</tr>
 			<?php } // end for (multigrade)    ?>
 		</tbody>

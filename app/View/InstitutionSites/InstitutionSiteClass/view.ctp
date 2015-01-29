@@ -24,7 +24,7 @@ $this->start('contentBody');
 		<div class="col-md-6"><?php echo $data['AcademicPeriod']['name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('general.section'); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.name'); ?></div>
 		<div class="col-md-6">
 		<?php
 		foreach($sections as $g) {
@@ -35,16 +35,12 @@ $this->start('contentBody');
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('general.class'); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.name'); ?></div>
 		<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('general.subject'); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('EducationSubject.name'); ?></div>
 		<div class="col-md-6"><?php echo __('English') ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.no_of_seats'); ?></div>
-		<div class="col-md-6"><?php echo $data[$model]['no_of_seats']; ?></div>
 	</div>
 
 </fieldset>
