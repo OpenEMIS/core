@@ -172,7 +172,7 @@ class LabelHelper extends AppHelper {
 		),
 		'EducationSubject' => array(
 			'title' => 'Education Subjects',
-			'name' => 'Subject',
+			'name' => 'Subject Name',
 			'code' => 'Subject Code'
 		),
 		'EducationGradeSubject' => array(
@@ -514,6 +514,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Position Grade'
 		),
 		'InstitutionSiteSection' => array(
+			'name' => 'Section Name',
 			'staff_id' => 'Home Room Teacher',
 			'all_grades_select' => 'All Grades',
 			'single_grade' => 'Single Grade',
