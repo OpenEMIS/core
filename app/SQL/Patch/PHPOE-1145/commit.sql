@@ -43,7 +43,7 @@ SELECT `id` INTO @idOfCurrentCountry FROM `area_administratives` WHERE `parent_i
 
 UPDATE `area_administrative_levels` SET `area_administrative_id` = @idOfCurrentCountry WHERE `level` <> 1;
 
-UPDATE `area_administrative_levels` SET `level` = `level` + 1;
+UPDATE `area_administrative_levels` SET `level` = `level` - 1;
 INSERT INTO `area_administrative_levels` (
 `name`,
 `level`,
@@ -51,7 +51,7 @@ INSERT INTO `area_administrative_levels` (
 `created_user_id`,
 `created`
 ) VALUES (
-'World', '1', 0, '1', '0000-00-00 00:00:00'
+'World', '-1', 0, '1', '0000-00-00 00:00:00'
 );
 
 --
@@ -59,7 +59,7 @@ INSERT INTO `area_administrative_levels` (
 --
 
 SET @levelIdOfWorld := 0;
-SELECT `id` INTO @levelIdOfWorld FROM `area_administrative_levels` WHERE `level` = 1;
+SELECT `id` INTO @levelIdOfWorld FROM `area_administrative_levels` WHERE `level` = -1;
 
 INSERT INTO `area_administratives` (
 `code`,
@@ -78,3 +78,5 @@ SET @parentIdOfWorld := 0;
 SELECT `id` INTO @parentIdOfWorld FROM `area_administratives` WHERE `name` LIKE 'World' AND `parent_id` = -1;
 
 UPDATE `area_administratives` SET `parent_id` = @parentIdOfWorld WHERE `parent_id` = '-1' AND `name` <> 'World';
+
+UPDATE `area_administrative_levels` SET `area_administrative_id` = @parentIdOfWorld WHERE `level` = 0;
