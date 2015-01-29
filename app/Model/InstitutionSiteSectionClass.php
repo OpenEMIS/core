@@ -180,7 +180,14 @@ class InstitutionSiteSectionClass extends AppModel {
 			'contain' => array(
 				'InstitutionSiteClass' => array(
 					'EducationSubject',
-					//'Staff'
+					'InstitutionSiteClassStaff' => array(
+						'Staff' => array(
+							'fields' => array(
+								'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
+								'Staff.third_name', 'Staff.last_name'
+							)
+						)
+					)
 				)
 			),
 			'conditions' => array(

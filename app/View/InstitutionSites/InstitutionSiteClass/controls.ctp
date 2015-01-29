@@ -1,33 +1,30 @@
 <div class="row page-controls">
-	<div class="col-md-4">
+	<div class="col-md-3">
 		<?php
-		echo $this->Form->input('options', array(
-			'class' => 'form-control',
+		echo $this->Form->input('academic_period_id', array(
+			'id' => 'AcademicPeriodId',
 			'label' => false,
 			'div' => false,
-			'options' => $actionOptions,
-			'default' => $selectedAction,
+			'class' => 'form-control',
+			'options' => $periodOptions,
+			'default' => $selectedPeriod,
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'],
-			'autocomplete' => 'off'
+			'url' => $this->params['controller'] . '/InstitutionSiteClass/index'
 		));
 		?>
 	</div>
-	
-	<?php if(isset($studentActionOptions) && !empty($studentActionOptions)) : ?>
-		<div class="col-md-6">
-			<?php
-				echo $this->Form->input('education_grade_id', array(
-					'class' => 'form-control',
-					'label' => false,
-					'div' => false,
-					'options' => $studentActionOptions,
-					'default' => $selectedSection,
-					'onchange' => 'jsForm.change(this)',
-					'url' => $this->params['controller'] . '/' . $selectedAction,
-					'autocomplete' => 'off'
-				));
-			?>
-		</div>
-	<?php endif; ?>
+	<div class="col-md-3">
+		<?php
+		echo $this->Form->input('institution_site_section_id', array(
+			'id' => 'InstitutionSiteSectionId',
+			'label' => false,
+			'div' => false,
+			'class' => 'form-control',
+			'options' => $sectionOptions,
+			'default' => $selectedSection,
+			'onchange' => 'jsForm.change(this)',
+			'url' => $this->params['controller'] . '/InstitutionSiteClass/index/' . $selectedPeriod
+		));
+		?>
+	</div>
 </div>
