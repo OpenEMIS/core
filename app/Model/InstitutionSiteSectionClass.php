@@ -176,15 +176,18 @@ class InstitutionSiteSectionClass extends AppModel {
 	}
 
 	public function getClassesBySection($sectionId) {
-		$data = $this->find(
-			'all',
-			array(
-				'conditions' => array(
-					'InstitutionSiteSectionClass.institution_site_section_id' => $sectionId,
-					'InstitutionSiteSectionClass.status' => 1
+		$data = $this->find('all', array(
+			'contain' => array(
+				'InstitutionSiteClass' => array(
+					'EducationSubject',
+					//'Staff'
 				)
+			),
+			'conditions' => array(
+				'InstitutionSiteSectionClass.institution_site_section_id' => $sectionId,
+				'InstitutionSiteSectionClass.status' => 1
 			)
-		);
+		));
 		return $data;
 
 	}
