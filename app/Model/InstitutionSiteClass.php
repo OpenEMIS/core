@@ -20,7 +20,6 @@ class InstitutionSiteClass extends AppModel {
 	public $belongsTo = array(
 		'AcademicPeriod',
 		'InstitutionSite',
-		'Staff.Staff',
 		'EducationSubject',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -100,6 +99,7 @@ class InstitutionSiteClass extends AppModel {
 	}
 	
 	public function index($selectedAcademicPeriod=null, $selectedSection=null) {
+
 		$this->Navigation->addCrumb('List of Classes');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$academicPeriodConditions = array(
@@ -114,7 +114,6 @@ class InstitutionSiteClass extends AppModel {
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
 		$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
-
 		$data = $this->getListOfClasses($selectedAcademicPeriod, $institutionSiteId, $selectedSection);
 		
 		if(empty($academicPeriodOptions)){
@@ -168,18 +167,15 @@ class InstitutionSiteClass extends AppModel {
 			if($this->controller->request->is('post') || $this->controller->request->is('put')) {
 				$data = $this->controller->request->data;
 				$tData = array();
-				if (array_key_exists('InstitutionSiteClass', $data)) {
-					foreach ($data['InstitutionSiteClass'] as $key => $value) {
-						if ($value['status'] <= 0) {
-							unset($data['InstitutionSiteClass'][$key]);
-						} else {
-							array_push($tData, $value);
-						}
+				unset($data['submit']);
+				unset($data['InstitutionSiteSection']);
+				foreach ($data as $key => $value) {
+					if ($value['InstitutionSiteClass']['status'] <= 0) {
+						unset($data[$key]);
 					}
 				}
-				$data = $tData;
-				$result = $this->saveAll($data);
 
+				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => $this->alias, 'index',$selectedAcademicPeriod));
@@ -193,11 +189,38 @@ class InstitutionSiteClass extends AppModel {
 			return $controller->redirect(array('action' => $this->alias));
 		}
 	}
+
+	function afterSave($created, $options = Array()) {
+		$addClassStudent = (array_key_exists('addClassStudent', $options))? $options['addClassStudent']: false;
+        if($created && $addClassStudent) {
+        	if (array_key_exists('InstitutionSiteClassStaff', $this->data)) {
+        		$institutionSiteClassStaffData = $this->data['InstitutionSiteClassStaff'];
+        		foreach ($institutionSiteClassStaffData as $key => $value) {
+        			$institutionSiteClassStaffData[$key]['institution_site_class_id'] = $this->getInsertID();
+        		}
+        		$this->InstitutionSiteClassStaff->saveMany($institutionSiteClassStaffData);
+        	}
+        }
+        return true;
+    }
 	
 	public function view($institutionSiteClassId = null) {
 		$id = $institutionSiteClassId;
 		$this->Session->write($this->alias.'.id', $id);
-		$data = $this->findById($id);
+
+		$data = $this->find('first',
+			array(
+				'recursive' => -1,
+				'contain' => array(
+					'AcademicPeriod' => array('name'),
+					'Staff',
+					'EducationSubject' => array('name', 'code')
+				),
+				'conditions' => array('InstitutionSiteClass.id'=>$id)
+			)
+		);
+
+		/// get full name
 		
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
@@ -206,7 +229,7 @@ class InstitutionSiteClass extends AppModel {
 			
 			$staffData = array();
 			$studentsData = array();
-			
+
 			$this->setVar(compact('data', 'sections', 'staffData', 'studentsData'));
 			$this->setVar('actionOptions', $this->getClassActions($id));
 		} else {
@@ -277,7 +300,7 @@ class InstitutionSiteClass extends AppModel {
 		$classes = $this->find('all', array(
 			'recursive' => -1,
 			'contain' => array(
-				'Staff',
+				'InstitutionSiteClassStaff' => array('id','status','staff_id'),
 				'EducationSubject' => array('name')
 			),
 			'conditions' => array(
@@ -287,6 +310,7 @@ class InstitutionSiteClass extends AppModel {
 			),
 			'order' => array('InstitutionSiteClass.name')
 		));
+		
 		$data = array();
 		foreach ($classes as $key => $value) {
 			$currId = $value['InstitutionSiteClass']['id'];
@@ -295,7 +319,14 @@ class InstitutionSiteClass extends AppModel {
 				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($currId),
 				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($currId)
 			);
-			$data[$currId]['staffName'] = ModelHelper::getName($value['Staff']);
+			
+			foreach ($value['InstitutionSiteClassStaff'] as $key2 => $value2) {
+				$this->InstitutionSiteClassStaff->Staff->recursive = -1;
+				$currStaffData = $this->InstitutionSiteClassStaff->Staff->findById($classes[$key]['InstitutionSiteClassStaff'][$key2]['staff_id']);
+				$currStaffData = $currStaffData['Staff'];
+				$classes[$key]['InstitutionSiteClassStaff'][$key2] = ModelHelper::getName($currStaffData);
+			}
+			$data[$currId]['staffName'] = $classes[$key]['InstitutionSiteClassStaff'];
 			$data[$currId]['educationSubjectName'] = (array_key_exists('name', $value['EducationSubject']))? $value['EducationSubject']['name']: '';
 		}
 		return $data;
