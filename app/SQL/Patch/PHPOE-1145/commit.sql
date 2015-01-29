@@ -13,12 +13,19 @@ INSERT 1145_area_educations SELECT * FROM area_educations WHERE NOT EXISTS (SELE
 INSERT 1145_area_education_levels SELECT * FROM area_education_levels WHERE NOT EXISTS (SELECT * FROM 1145_area_education_levels);
 
 --
--- 2. Rename Areas Tables & Columns
+-- 2. Duplicate area_educations from areas, rename Areas Tables & Columns
 --
 
-RENAME TABLE `area_educations` TO `area_administratives`;
-RENAME TABLE `area_education_levels` TO `area_administrative_levels`;
-ALTER TABLE `area_administratives` CHANGE `area_education_level_id` `area_administrative_level_id` INT(11) NOT NULL;
+DROP TABLE area_educations;
+DROP TABLE area_education_levels;
+
+CREATE TABLE IF NOT EXISTS area_administratives LIKE areas;
+CREATE TABLE IF NOT EXISTS area_administrative_levels LIKE area_levels;
+
+INSERT area_administratives SELECT * FROM areas WHERE NOT EXISTS (SELECT * FROM area_administratives);
+INSERT area_administrative_levels SELECT * FROM area_levels WHERE NOT EXISTS (SELECT * FROM area_administrative_levels);
+
+ALTER TABLE `area_administratives` CHANGE `area_level_id` `area_administrative_level_id` INT(11) NOT NULL;
 ALTER TABLE `area_administrative_levels` ADD `area_administrative_id` INT(11) NOT NULL AFTER `level`;
 
 --
