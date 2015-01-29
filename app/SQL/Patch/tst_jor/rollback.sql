@@ -23,7 +23,4 @@ ALTER TABLE `institution_site_classes` DROP `education_grade_subject_id`;
 INSERT config_items SELECT * FROM 1190_config_items WHERE name = 'max_subjects_per_class';
 
 RENAME TABLE 1190_institution_site_class_subjects to institution_site_class_subjects;
-
-ALTER TABLE `institution_site_classes` DROP `institution_site_section_id`;
-ALTER TABLE `institution_site_classes` DROP `staff_id`;
 -- Malcolm SQL END
