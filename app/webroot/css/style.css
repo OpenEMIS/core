@@ -485,7 +485,7 @@ select.topSelectControl{
 .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus{
 	cursor: pointer;
 }
-.stackElements select{
+.stackElements input{
 	margin-bottom: 8px;
 }
 
