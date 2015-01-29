@@ -20,9 +20,15 @@ $this->start('contentBody');
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 			<tr>
-				<td><?php echo $obj['SchoolYear']['name']; ?></td>
+				<td><?php echo $obj['AcademicPeriod']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSite']['name']; ?></td>
-				<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
+				<td><?php 
+				foreach($obj['EducationGrade']['grades'] as $grade){
+					echo $grade . '<br>';
+				}
+				?></td>
+				<td><?php echo $this->Html->link($obj['InstitutionSiteSection']['name'], array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'InstitutionSiteSection', 'view', $obj['StudentSection']['id']), array('escape' => false)); ?></td>
+				<td><?php echo $obj['Staff']['staff_name']; ?></td>
 			</tr>
 			
 			<?php endforeach ?>
