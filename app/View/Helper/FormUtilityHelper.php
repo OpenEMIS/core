@@ -217,7 +217,7 @@ class FormUtilityHelper extends AppHelper {
 		
 		$html = '';
 		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
-		$path = (!is_null($value) && $value != -1) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllById($worldId);
+		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllById($worldId);
 		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
@@ -225,7 +225,8 @@ class FormUtilityHelper extends AppHelper {
 					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
 					'order' => array('order')
 				));
-				if($obj[$model]['parent_id'] != -1) {
+
+				if($obj[$model]['parent_id'] != -1 && $obj[$model]['parent_id'] != $worldId) {
 					$options = array(
 						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
 					) + $options;
@@ -242,8 +243,10 @@ class FormUtilityHelper extends AppHelper {
 				}
 				$inputOptions['options'] = $options;
 				$inputOptions['label']['text'] = $levelName;
+				if($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == -1) {	//hide World
+					continue;
+				}
 				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
-				//$value = $obj[$model]['id'];
 			}
 		}
 		
@@ -269,7 +272,7 @@ class FormUtilityHelper extends AppHelper {
 		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/' . $controller . '/' . $field . '/';
 		$html .= $this->Form->hidden($field, array('value' => $value));
 		if($_options['div']) {
-			$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url, 'urlReload' => $urlReload));
+			$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'value' => $worldId, 'url' => $url, 'urlReload' => $urlReload));
 		}
 
 		return $html;

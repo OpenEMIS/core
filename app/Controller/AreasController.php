@@ -66,11 +66,12 @@ class AreasController extends AppController {
 		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$levelModel = $levelModels[$model];
 		if($parentId > 0) {
+			$worldId = $this->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
 			$data = $this->{$model}->find('all', array(
 				'conditions' => array('parent_id' => $parentId, 'visible' => 1),
 				'order' => array('order')
 			));
-			$this->set(compact('data', 'model', 'levelModel', 'parentId'));
+			$this->set(compact('data', 'model', 'levelModel', 'parentId', 'worldId'));
 		}
 	}
 
