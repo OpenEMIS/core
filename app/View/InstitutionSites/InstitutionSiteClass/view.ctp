@@ -4,12 +4,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $data[$model]['name']);
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, $data[$model]['academic_period_id']), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, 'index', $data[$model]['academic_period_id']), array('class' => 'divider'));
 if ($_edit) {
-    echo $this->Html->link($this->Label->get('general.edit'), array('action' => $_action.'Edit', $data[$model]['id']), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.edit'), array('action' => $_action, 'edit', $data[$model]['id']), array('class' => 'divider'));
 }
 if ($_delete) {
-	echo $this->Html->link($this->Label->get('general.delete'), array('action' => $_action.'Delete', $data[$model]['id']), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => $_action, 'delete', $data[$model]['id']), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 

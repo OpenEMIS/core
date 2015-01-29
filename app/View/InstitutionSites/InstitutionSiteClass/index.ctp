@@ -4,7 +4,7 @@ $this->assign('contentHeader', __('List of Classes'));
 
 $this->start('contentActions');
 	if ($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action . 'Add', $selectedAcademicPeriod), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action , 'add', $selectedAcademicPeriod, $selectedSection), array('class' => 'divider'));
 	}
 $this->end();
 
@@ -30,9 +30,9 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array())
 				$i = 0;
 				?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['name'], array('action' => $_action . 'View', $id), array('escape' => false)); ?></td>
-					<td><?php echo ''; ?></td>
-					<td><?php echo ''; ?></td>
+					<td><?php echo $this->Html->link($obj['name'], array('action' => $_action , 'view', $id), array('escape' => false)); ?></td>
+					<td><?php echo $obj['educationSubjectName']; ?></td>
+					<td><?php echo $obj['staffName'];; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
 				</tr>

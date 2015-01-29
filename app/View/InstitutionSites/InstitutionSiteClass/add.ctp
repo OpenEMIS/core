@@ -8,38 +8,32 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Add Classes'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, $selectedAcademicPeriod), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action . 'Add', $selectedAcademicPeriod));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model , 'add', $selectedAcademicPeriod));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
-echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 
 $labelOptions['text'] = $this->Label->get('AcademicPeriod.name');
-echo $this->Form->input('academic_period_id', array(
+echo $this->Form->input('InstitutionSiteSection.academic_period_id', array(
 	'options' => $academicPeriodOptions, 
-	'url' => $this->params['controller'] . '/' . $this->action,
+	'url' => $this->params['controller'] . '/' . $model . '/add',
 	'default' => $selectedAcademicPeriod,
 	'onchange' => 'jsForm.change(this)',
 	'label' => $labelOptions
 ));
 $labelOptions['text'] = $this->Label->get('general.section');
-echo $this->Form->input('institution_site_section_id', array(
+echo $this->Form->input('InstitutionSiteSection.section_id', array(
 	'options' => $sectionOptions, 
-	'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod,
+	'url' => $this->params['controller'] . '/' . $model . '/add/' . $selectedAcademicPeriod,
 	'default' => $selectedSection,
 	'onchange' => 'jsForm.change(this)',
 	'label' => $labelOptions
 ));
-
-//echo $this->Form->input('name');
-
-$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
-echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
 ?>
 
 <div class="form-group">
@@ -59,18 +53,21 @@ echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
 				<tbody>
 					<?php 
 					$i = 0;
-					foreach($subjects as $subject) :
+					foreach($subjectData as $subjectId => $subject) :
+						echo $this->Form->hidden('InstitutionSiteClass.' . $i . '.institution_site_id', array('value' => $institutionSiteId));
+						echo $this->Form->hidden('InstitutionSiteClass.' . $i . '.education_subject_id', array('value' => $subjectId));
+						echo $this->Form->hidden('InstitutionSiteClass.' . $i . '.academic_period_id', array('value' => $selectedAcademicPeriod));
+						echo $this->Form->hidden('InstitutionSiteClass.' . $i . '.institution_site_section_id', array('value' => $selectedSection));
 					?>
 					<tr>
 						<td class="checkbox-column">
 							<?php
-							echo $this->Form->hidden('InstitutionSiteSectionClass.' . $i . '.institution_site_section_id', array('value' => ''));
-							echo $this->Form->checkbox('InstitutionSiteSectionClass.' . $i++ . '.status', array('class' => 'icheck-input'));
+							echo $this->Form->checkbox('InstitutionSiteClass.' . $i . '.status', array('class' => 'icheck-input'));
 							?>
 						</td>
 						<td><?php echo $subject; ?></td>
 						<td><?php 
-						echo $this->Form->input('class_name', array(
+						echo $this->Form->input('InstitutionSiteClass.' . $i . '.name', array(
 							'label' => false,
 							'div' => false,
 							'between' => false,
@@ -79,7 +76,7 @@ echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
 						));
 						?></td>
 						<td><?php 
-						echo $this->Form->input('institution_site_staff_id', array(
+						echo $this->Form->input('InstitutionSiteClass.' . $i . '.staff_id', array(
 							'options' => $staffOptions, 
 							'label' => false,
 							'div' => false,
@@ -88,7 +85,10 @@ echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
 						));
 						?></td>
 					</tr>
-					<?php endforeach; ?>
+					<?php 
+					$i++;
+					endforeach; 
+					?>
 				</tbody>
 			</table>
 		</div>
@@ -97,7 +97,7 @@ echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
 </div>
 
 <?php
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $_action, $selectedAcademicPeriod)));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'index', $selectedAcademicPeriod)));
 echo $this->Form->end();
 
 $this->end(); 
