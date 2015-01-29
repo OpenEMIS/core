@@ -461,229 +461,32 @@ class InstitutionSiteStudent extends AppModel {
 		return $data;
 	}
 
-	/*
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
+	// used by InstitutionSiteSection.edit
+	public function getStudentOptions($institutionSiteId, $periodId) {
+		$periodModel = ClassRegistry::init('AcademicPeriod');
 
-		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Student.first_name');
-			$options['conditions'] = array();
-			$options['group'] = array('Student.id', 'InstitutionSiteProgramme.id');
+		$periodObj = $periodModel->findById($periodId);
+		$periodStartDate = $periodObj['AcademicPeriod']['start_date'];
+		$periodEndDate = $periodObj['AcademicPeriod']['end_date'];
 
-			$options['joins'] = array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-					)
-				),
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array('InstitutionSiteProgramme.education_programme_id = EducationProgramme.id')
-				),
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array('InstitutionSite.id = InstitutionSiteProgramme.institution_site_id')
-				),
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite2',
-					'type' => 'inner',
-					'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
-				),
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite3',
-					'type' => 'inner',
-					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'InstitutionSiteStatus',
-					'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'InstitutionSiteType',
-					'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'InstitutionSiteOwnership',
-					'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
-				),
-				array(
-					'table' => 'areas',
-					'alias' => 'Area',
-					'conditions' => array('InstitutionSite.area_id = Area.id')
-				),
-				array(
-					'table' => 'area_administratives',
-					'alias' => 'AreaAdministrative',
-					'type' => 'left',
-					'conditions' => array('InstitutionSite.area_administrative_id = AreaAdministrative.id')
-				),
-				array(
-					'table' => 'student_nationalities',
-					'alias' => 'StudentNationality',
-					'type' => 'left',
-					'conditions' => array('InstitutionSiteStudent.student_id = StudentNationality.student_id')
-				),
-				array(
-					'table' => 'student_contacts',
-					'alias' => 'StudentContact',
-					'type' => 'left',
-					'conditions' => array('InstitutionSiteStudent.student_id = StudentContact.student_id')
-				),
-				array(
-					'table' => 'student_identities',
-					'alias' => 'StudentIdentity',
-					'type' => 'left',
-					'conditions' => array('InstitutionSiteStudent.student_id = StudentIdentity.student_id')
-				),
-				array(
-					'table' => 'countries',
-					'alias' => 'Country',
-					'type' => 'left',
-					'conditions' => array('Country.id = StudentNationality.country_id')
-				),
-				array(
-					'table' => 'contact_types',
-					'alias' => 'ContactType',
-					'type' => 'left',
-					'conditions' => array('ContactType.id = StudentContact.contact_type_id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'IdentityType',
-					'type' => 'left',
-					'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'StudentStatus',
-					'type' => 'left',
-					'conditions' => array('InstitutionSiteStudent.student_status_id = StudentStatus.id')
-				)
-			);
+		pr($periodObj);
+		$alias = $this->alias;
+		$options = array(
+			'contain' => array('Student'),
+			'conditions' => array(
+				"$alias.institution_site_id" => $institutionSiteId,
+				"$alias.start_date >= " => $periodStartDate,
+				"$alias.end_date >= " => $periodStartDate
+			)
+		);
 
-			$data = $this->find('all', $options);
-
-			$siteCustomFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
-
-			$reportFields = $this->reportMapping[$index]['fields'];
-
-			$studentCustomFieldModel = ClassRegistry::init('StudentCustomField');
-
-			$studentCustomFields = $studentCustomFieldModel->find('all', array(
-				'recursive' => -1,
-				'fields' => array('StudentCustomField.name as FieldName'),
-				'conditions' => array('StudentCustomField.visible' => 1, 'StudentCustomField.type != 1'),
-				'order' => array('StudentCustomField.order'),
-					)
-			);
-
-			foreach ($studentCustomFields as $val) {
-				if (!empty($val['StudentCustomField']['FieldName'])) {
-					$reportFields['StudentCustomField'][$val['StudentCustomField']['FieldName']] = '';
-				}
-			}
-
-
-			$this->reportMapping[$index]['fields'] = $reportFields;
-
-			$newData = array();
-
-			$studentModel = ClassRegistry::init('Student');
-
-			$students = $studentModel->find('list', array(
-				'recursive' => -1,
-				'fields' => array('Student.id'),
-				'joins' => array(
-					array(
-						'table' => 'institution_site_students',
-						'alias' => 'InstitutionSiteStudent',
-						'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-					),
-					array(
-						'table' => 'institution_site_programmes',
-						'alias' => 'InstitutionSiteProgramme',
-						'conditions' => array(
-							'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
-						)
-					)
-				),
-				'conditions' => array('InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId),
-				'order' => array('Student.first_name')
-					)
-			);
-
-			$r = 0;
-			foreach ($data AS $row) {
-				$studentCustomFields = $studentCustomFieldModel->find('all', array(
-					'recursive' => -1,
-					'fields' => array('StudentCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(StudentCustomFieldOption.value),StudentCustomValue.value) as FieldValue'),
-					'joins' => array(
-						array(
-							'table' => 'student_custom_values',
-							'alias' => 'StudentCustomValue',
-							'type' => 'left',
-							'conditions' => array(
-								'StudentCustomField.id = StudentCustomValue.student_custom_field_id',
-								'StudentCustomValue.student_id' => array_slice($students, $r, 1)
-							)
-						),
-						array(
-							'table' => 'student_custom_field_options',
-							'alias' => 'StudentCustomFieldOption',
-							'type' => 'left',
-							'conditions' => array(
-								'StudentCustomField.id = StudentCustomFieldOption.student_custom_field_id',
-								'StudentCustomField.type' => array(3, 4),
-								'StudentCustomValue.value = StudentCustomFieldOption.id'
-							)
-						),
-					),
-					'conditions' => array('StudentCustomField.visible' => 1, 'StudentCustomField.type !=1'),
-					'order' => array('StudentCustomField.order'),
-					'group' => array('StudentCustomField.id')
-						)
-				);
-
-				foreach ($studentCustomFields as $val) {
-					if (!empty($val['StudentCustomField']['FieldName'])) {
-						$row['StudentCustomField'][$val['StudentCustomField']['FieldName']] = $val[0]['FieldValue'];
-					}
-				}
-
-				$sortRow = array();
-				foreach ($this->reportMapping[$index]['fields'] as $key => $value) {
-					if (isset($row[$key])) {
-						$sortRow[$key] = $row[$key];
-					} else {
-						$sortRow[0] = $row[0];
-					}
-				}
-
-				$newData[] = $sortRow;
-				$r++;
-			}
-
-			return $newData;
+		$list = $this->find('all', $options);
+		$data = array();
+		foreach ($list as $obj) {
+			$studentObj = $obj['Student'];
+			$data[$studentObj['id']] = ModelHelper::getName($studentObj, array('openEmisId' => true));
 		}
+		return $data;
 	}
-	*/
 }
+
