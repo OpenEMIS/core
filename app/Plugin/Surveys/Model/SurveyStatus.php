@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class SurveyStatus extends SurveysAppModel {
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
-		'AcademicPeriodType',
+		'AcademicPeriodLevel',
 		'ModifiedUser' => array(
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
 			'className' => 'SecurityUser',

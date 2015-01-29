@@ -178,7 +178,7 @@ class SurveyBehavior extends ModelBehavior {
 	}
 
 	public function getSurveyStatusPeriod(Model $model, $academicPeriodId, $surveyStatusId) {
-		$model->SurveyStatusPeriod->contain(array('AcademicPeriod', 'SurveyStatus.SurveyTemplate', 'SurveyStatus.AcademicPeriodType'));
+		$model->SurveyStatusPeriod->contain(array('AcademicPeriod', 'SurveyStatus.SurveyTemplate', 'SurveyStatus.AcademicPeriodLevel'));
 		$result = $model->SurveyStatusPeriod->find('first', array(
 			'conditions' => array(
 				'SurveyStatusPeriod.academic_period_id' => $academicPeriodId,

@@ -20,7 +20,7 @@ class SurveyStatusesController extends SurveysAppController {
 		'Surveys.SurveyStatusPeriod',
 		'Surveys.SurveyTemplate',
 		'Surveys.SurveyModule',
-		'AcademicPeriodType',
+		'AcademicPeriodLevel',
 		'AcademicPeriod'
 	);
 
@@ -31,11 +31,14 @@ class SurveyStatusesController extends SurveysAppController {
 		$this->Navigation->addCrumb('Surveys', array('action' => 'index'));
 		$this->Navigation->addCrumb('Status');
 
-		$academicPeriodTypeOptions = $this->AcademicPeriodType->getAcademicPeriodTypeList();
-		$selectedAcademicPeriodType = key($academicPeriodTypeOptions);
+		$academicPeriodLevelOptions = $this->AcademicPeriodLevel->find('list', array(
+			'fields' => array('AcademicPeriodLevel.id', 'AcademicPeriodLevel.name'),
+			'order' => array('AcademicPeriodLevel.level'),
+		));
+		$selectedAcademicPeriodLevel = key($academicPeriodLevelOptions);
 
-		$this->set('academicPeriodTypeOptions', $academicPeriodTypeOptions);
-		$this->set('selectedAcademicPeriodType', $selectedAcademicPeriodType);
+		$this->set('academicPeriodLevelOptions', $academicPeriodLevelOptions);
+		$this->set('selectedAcademicPeriodLevel', $selectedAcademicPeriodLevel);
 		$this->set('contentHeader', __('Status'));
 	}
 
@@ -78,7 +81,7 @@ class SurveyStatusesController extends SurveysAppController {
     	$params = $this->params->named;
 
 		if ($this->SurveyStatus->exists($id)) {
-			$this->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriodType', 'AcademicPeriod', 'ModifiedUser', 'CreatedUser'));
+			$this->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriodLevel', 'AcademicPeriod', 'ModifiedUser', 'CreatedUser'));
 			$data = $this->SurveyStatus->findById($id);
 			$arrAcademicPeriod = array();
 			if(sizeof($data['AcademicPeriod']) > 0) {
@@ -101,7 +104,7 @@ class SurveyStatusesController extends SurveysAppController {
 		$params = $this->params->named;
 
 		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($params['module']);
-		$academicPeriodOptions = $this->SchoolYear->getAvailableYears();
+		$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods();
 
 		if ($this->request->is(array('post', 'put'))) {
 			if ($this->SurveyStatus->saveAll($this->request->data)) {
@@ -128,7 +131,7 @@ class SurveyStatusesController extends SurveysAppController {
 
 		if ($this->SurveyStatus->exists($id)) {
 			$templateOptions = $this->SurveyTemplate->getTemplateListByModule($params['module']);
-			$academicPeriodOptions = $this->SchoolYear->getAvailableYears();
+			$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods();
 
 			$this->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriod'));
 			$data = $this->SurveyStatus->findById($id);
