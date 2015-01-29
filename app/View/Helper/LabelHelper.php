@@ -521,7 +521,8 @@ class LabelHelper extends AppHelper {
 			'multi_grades' => 'Multi Grades',
 			'education_grade_id' => 'Education Grade',
 			'institution_site_shift_id' => 'Shift',
-			'academic_period_id' => 'Academic Period'
+			'academic_period_id' => 'Academic Period',
+			'add_student' => 'Add Student'
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'
