@@ -28,8 +28,8 @@ $this->start('contentBody');
 		<div class="col-md-6"><?php echo $data['SurveyStatus']['date_disabled']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo __('Academic Period Type'); ?></div>
-		<div class="col-md-6"><?php echo $data['AcademicPeriodType']['name']; ?></div>
+		<div class="col-md-3"><?php echo __('Academic Period Level'); ?></div>
+		<div class="col-md-6"><?php echo $data['AcademicPeriodLevel']['name']; ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Academic Periods'); ?></div>
