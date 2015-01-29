@@ -68,8 +68,11 @@ class AreasController extends AppController {
 		if($parentId > 0) {
 			$worldId = $this->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
 			$data = $this->{$model}->find('all', array(
-				'conditions' => array('parent_id' => $parentId, 'visible' => 1),
-				'order' => array('order')
+				'conditions' => array(
+					$model.'.parent_id' => $parentId,
+					$model.'.visible' => 1
+				),
+				'order' => array($model.'.order')
 			));
 			$this->set(compact('data', 'model', 'levelModel', 'parentId', 'worldId'));
 		}
