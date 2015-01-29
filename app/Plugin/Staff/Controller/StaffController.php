@@ -21,7 +21,7 @@ class StaffController extends StaffAppController {
 	public $staffId;
 	public $staffObj;
 	public $uses = array(
-		'Area',
+		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteType',
 		'InstitutionSiteStaff',

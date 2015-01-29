@@ -1050,7 +1050,7 @@ class SurveyCategoryComponent extends Component {
                              "date_opened" => array_merge($arr['questions']["date_opened"],array("label"=>'Date Opened')), 
                              "date_closed" => array_merge($arr['questions']["date_closed"],array("label"=>'Date Closed')), 
                              "area_id" => array_merge($arr['questions']["area_id"],array("label"=>'Area')), 
-                             "area_education_id" => array_merge($arr['questions']["area_education_id"],array("label"=>'Area (Education)')), 
+                             "area_administrative_id" => array_merge($arr['questions']["area_administrative_id"],array("label"=>'Area (Administrative)')), 
                              "address" => array_merge($arr['questions']["address"],array("label"=>'Address')), 
                              "postal_code" => array_merge($arr['questions']["postal_code"],array("label"=>'Postal Code')), 
                              "institution_site_locality_id" => array_merge($arr['questions']["institution_site_locality_id"],array("label"=>'Locality')), 

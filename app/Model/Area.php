@@ -82,8 +82,8 @@ class Area extends AppModel {
 			$this->fields['area_level_id']['dataField'] = 'name';
 		}
 		
-		$this->Navigation->addCrumb('Areas');
-		$this->setVar('contentHeader', __('Areas'));
+		$this->Navigation->addCrumb('Areas (Education)');
+		$this->setVar('contentHeader', __('Areas (Education)'));
     }
 	
 	public function index() {
