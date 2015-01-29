@@ -25,55 +25,6 @@ class InstitutionSiteSectionGrade extends AppModel {
 		'InstitutionSiteSection'
 	);
 	
-	// used by InstitutionSiteClass.edit
-	public function getAvailableGradesForSection($id) {
-		$data = $this->EducationGrade->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'EducationProgramme.name', 'EducationGrade.name', 'EducationGrade.id', 
-				'InstitutionSiteSectionGrade.id', 'InstitutionSiteSectionGrade.status'
-			),
-			'joins' => array(
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id'
-					)
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-						'InstitutionSiteProgramme.status = 1'
-					)
-				),
-				array(
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteSection.institution_site_id',
-						'InstitutionSiteProgramme.academic_period_id = InstitutionSiteSection.academic_period_id',
-						'InstitutionSiteSection.id = ' . $id
-					)
-				),
-				array(
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'InstitutionSiteSectionGrade.education_grade_id = EducationGrade.id',
-						'InstitutionSiteSectionGrade.institution_site_section_id = ' . $id
-					)
-				)
-			),
-			'order' => array('InstitutionSiteSectionGrade.id DESC', 'EducationProgramme.order', 'EducationGrade.order')
-		));
-		//pr($data);
-		return $data;
-	}
-	
 	public function getAvailableGradesForNewSection($institutionSiteId, $academicPeriodId) {
 		$data = $this->EducationGrade->find('all', array(
 			'fields' => array('EducationProgramme.name', 'EducationGrade.name'),
