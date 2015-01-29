@@ -103,7 +103,10 @@ class LabelHelper extends AppHelper {
 			'date_of_birth' => 'Date of Birth',
 			'sex' => 'Sex',
 			'male_students' => 'Male Students',
-			'female_students' => 'Female Students'
+			'female_students' => 'Female Students',
+			'levels' => 'Levels',
+			'types' => 'Types',
+			'custom_fields' => 'Custom Fields',
 		),
 		'date' => array(
 			'start' => 'Start Date',
