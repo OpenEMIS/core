@@ -114,7 +114,41 @@ class InstitutionSiteClass extends AppModel {
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
 		$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
-		$data = $this->getListOfClasses($selectedAcademicPeriod, $institutionSiteId, $selectedSection);
+
+		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
+
+
+		foreach ($data as $key => $value) {
+			unset($data[$key]['InstitutionSiteSectionClass']);
+			unset($data[$key]['InstitutionSiteSection']);
+			// get subject name
+			$educationSubjectData = $this->EducationSubject->find('first',
+				array(
+					'recursive' => -1,
+					'fields' => array('name'),
+					'conditions' => array(
+						'EducationSubject.id' => $value['InstitutionSiteClass']['education_subject_id']
+					)
+				)
+			);
+			$data[$key]['InstitutionSiteClass']['educationSubjectName'] = $educationSubjectData['EducationSubject']['name'];
+			// get staff data
+			$data[$key]['InstitutionSiteClass']['staffName'] = $this->InstitutionSiteClassStaff->find('all',
+				array(
+					'recursive' => -1,
+					'contain' => array('Staff'),
+					'conditions' => array(
+						'InstitutionSiteClassStaff.institution_site_class_id' => $value['InstitutionSiteClass']['id']
+					)
+				)
+			);
+			foreach ($data[$key]['InstitutionSiteClass']['staffName'] as $staffKey => $staffValue) {
+				unset($data[$key]['InstitutionSiteClass']['staffName'][$staffKey]['InstitutionSiteClassStaff']);
+				$data[$key]['InstitutionSiteClass']['staffName'][$staffKey] = ModelHelper::getName($data[$key]['InstitutionSiteClass']['staffName'][$staffKey]['Staff']);
+			}
+
+			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);	
+		}
 		
 		if(empty($academicPeriodOptions)){
 			$this->Message->alert('InstitutionSite.noProgramme');
@@ -172,16 +206,17 @@ class InstitutionSiteClass extends AppModel {
 				foreach ($data as $key => $value) {
 					if ($value['InstitutionSiteClass']['status'] <= 0) {
 						unset($data[$key]);
+						continue;
 					}
+					$data[$key]['InstitutionSiteSectionClass'] = array(
+						'institution_site_section_id' => $selectedSection,
+						'status' => 1
+					);
 				}
-
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action' => $this->alias, 'index',$selectedAcademicPeriod));
-				} else {
-					pr($data);
-					pr($this->validationErrors);
 				}
 			}
 		} else {
@@ -199,6 +234,12 @@ class InstitutionSiteClass extends AppModel {
         			$institutionSiteClassStaffData[$key]['institution_site_class_id'] = $this->getInsertID();
         		}
         		$this->InstitutionSiteClassStaff->saveMany($institutionSiteClassStaffData);
+        	}
+        	// also need to save the section class relationship
+        	if (array_key_exists('InstitutionSiteSectionClass', $this->data)) {
+				$institutionSiteSectionClassData = $this->data['InstitutionSiteSectionClass'];
+				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
+        		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
         	}
         }
         return true;
@@ -220,15 +261,20 @@ class InstitutionSiteClass extends AppModel {
 			)
 		);
 
-		/// get full name
-		
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($className);
 			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
-			
+		
+
+
+
 			$staffData = array();
 			$studentsData = array();
+
+
+
+
 
 			$this->setVar(compact('data', 'sections', 'staffData', 'studentsData'));
 			$this->setVar('actionOptions', $this->getClassActions($id));
@@ -305,8 +351,7 @@ class InstitutionSiteClass extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteClass.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.institution_site_section_id' => $institutionSiteSectionId
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteClass.name')
 		));
