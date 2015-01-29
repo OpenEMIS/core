@@ -222,11 +222,15 @@ class FormUtilityHelper extends AppHelper {
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
 				$options = $AreaHandler->{$model}->find('list', array(
-					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
-					'order' => array('order')
+					'conditions' => array(
+						$model.'.parent_id' => $obj[$model]['parent_id'],
+						$model.'.visible' => 1
+					),
+					'order' => array($model.'.order')
 				));
 
-				if($obj[$model]['parent_id'] != -1 && $obj[$model]['parent_id'] != $worldId) {
+				if($obj[$model]['parent_id'] == -1 || ($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
+				} else {
 					$options = array(
 						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
 					) + $options;
