@@ -39,12 +39,12 @@
 		</div>
 	</div>
 <?php else : ?>
-	<?
+	<?php
 		$modelId = $obj[$model]['id'];
 		if(isset($dataValues[$modelId][0]['int_value'])) {
 			$value = $dataValues[$modelId][0]['int_value'];
 		} else {
-			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;			
+			$value = isset($dataValues[$modelId][0]['value']) ? $dataValues[$modelId][0]['value'] : "" ;
 		}
 		if($pageType == 'view') {
 		?>
@@ -77,4 +77,4 @@
 			));
 		}
 	?>
-<?php endif ?>
+<?php endif; ?>
