@@ -101,44 +101,26 @@ class InstitutionSiteShift extends AppModel {
 		return $result;
 	}
 	
-	public function getInstitutionShiftsByAcademicPeriod($institutionSiteId, $academicPeriodId) {
-		$result = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('InstitutionSiteShift.*', 'InstitutionSite.*', 'AcademicPeriod.*'),
-			'joins' => array(
-				array(
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'type' => 'LEFT',
-					'conditions' => array('InstitutionSiteShift.academic_period_id = AcademicPeriod.id')
-				),
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'type' => 'LEFT',
-					'conditions' => array('InstitutionSiteShift.location_institution_site_id = InstitutionSite.id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteShift.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteShift.academic_period_id' => $academicPeriodId
-			)
-		));
-
-		return $result;
+	public function getShifts($institutionSiteId, $periodId) {
+		$options = array();
+		$options['conditions'] = array(
+			'InstitutionSiteShift.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteShift.academic_period_id' => $periodId
+		);
+		$this->contain('InstitutionSite', 'LocationInstitutionSite', 'AcademicPeriod');
+		$data = $this->find('all', $options);
+		return $data;
 	}
 	
-	public function getShiftOptions($institutionSiteId, $academicPeriodId) {
-		$result = $this->find('list', array(
-			'recursive' => -1,
-			'fields' => array('InstitutionSiteShift.id', 'InstitutionSiteShift.name'),
+	public function getShiftOptions($institutionSiteId, $periodId) {
+		$data = $this->find('list', array(
 			'conditions' => array(
 				'InstitutionSiteShift.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteShift.academic_period_id' => $academicPeriodId
+				'InstitutionSiteShift.academic_period_id' => $periodId
 			)
 		));
 
-		return $result;
+		return $data;
 	}
 
 	public function getShiftById($shiftId) {
@@ -297,7 +279,7 @@ class InstitutionSiteShift extends AppModel {
 	}
 	
 	public function createInstitutionDefaultShift($institutionSiteId, $academicPeriodId){
-		$data = $this->getInstitutionShiftsByAcademicPeriod($institutionSiteId, $academicPeriodId);
+		$data = $this->getShifts($institutionSiteId, $academicPeriodId);
 
 		if (empty($data)) {
 			$this->create();

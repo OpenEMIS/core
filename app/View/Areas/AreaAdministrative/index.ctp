@@ -22,7 +22,7 @@ echo $this->element('../Areas/breadcrumbs');
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('general.code'); ?></th>
-				<th><?php echo $this->Label->get('AreaEducationLevel.name'); ?></th>
+				<th><?php echo $this->Label->get('AreaAdministrativeLevel.name'); ?></th>
 				<th><?php echo $this->Label->get('general.action'); ?></th>
 			</tr>
 		</thead>
@@ -33,7 +33,7 @@ echo $this->element('../Areas/breadcrumbs');
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
 				<td>
 					<?php
-					if($obj['AreaEducationLevel']['level'] == $maxLevel) {
+					if($obj['AreaAdministrativeLevel']['level'] == $maxLevel) {
 						echo $obj[$model]['name'];
 					} else {
 						echo $this->Html->link($obj[$model]['name'], array('action' => $model, 'parent' => $obj[$model]['id']));
@@ -41,7 +41,7 @@ echo $this->element('../Areas/breadcrumbs');
 					?>
 				</td>
 				<td><?php echo $obj[$model]['code']; ?></td>
-				<td><?php echo $obj['AreaEducationLevel']['name']; ?></td>
+				<td><?php echo $obj['AreaAdministrativeLevel']['name']; ?></td>
 				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>
 			<?php } ?>

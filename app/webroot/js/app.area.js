@@ -22,8 +22,32 @@ var Area = {
 		$('.areapicker').each(function() {
 			var input = $(this).find('select:enabled:last');
 			var value = input.val();
-			if(parseInt(value) > 0) {
-				Area.getList(input);
+			if(parseInt(value) > 0) {	//handle Area Administrative, hide world
+			} else {
+				input = $(this).find('select:disabled:last');
+			}
+			Area.getList(input);
+		});
+	},
+	reloadDiv: function(obj) {
+		var parent = $(obj).closest('.areapicker');
+		var value = $(obj).val();
+
+		var maskId;
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + parent.attr('urlReload') + $(obj).val(),
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({id: maskId, parent: parent});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					parent.html(data);
+					var input = parent.find('select:enabled:last');
+					Area.getList(input);
+				};
+				$.unmask({id: maskId, callback: callback});
 			}
 		});
 	},
@@ -37,53 +61,48 @@ var Area = {
 		if(level != undefined) {
 			$(obj).closest(wrapperClass).find('label').html(level);
 		}
-		
-		if(parseInt(value) != 0) { // valid area id
+
+		if(parseInt(value) > 0) { //handle Area Administrative, hide world
 			var child = $(obj).closest(wrapperClass).next(wrapperClass);
-			if(child.length==1) {
-				var next = child;
-				do {
-					next = next.next(wrapperClass);
-					if(next.length==1) {
-						next.find('select').attr('disabled', '');
-					}
-				} while(next.next(wrapperClass).length==1);
-				var maskId;
-				$.ajax({
-					type: 'GET',
-					dataType: 'text',
-					url: getRootURL() + parent.attr('url') + $(obj).val(),
-					beforeSend: function (jqXHR) {
-						maskId = $.mask({id: maskId, parent: parent});
-					},
-					success: function (data, textStatus) {
-						var callback = function() {
-							var control = child.find(controlClass);
-							control.html(data);
-							
-							if(data.length > 0) {
-								control.removeAttr('disabled');
-								value = control.find('option:first').val();
-							} else {
-								control.attr('disabled', '');
-							}
-						};
-						$.unmask({id: maskId, callback: callback});
-					}
-				});
-			}
 		} else {
-			var input = $(obj).closest(wrapperClass);
-			while(input.next().length==1) {
-				input = input.next();
-				input.find('select').attr('disabled', '').empty();
-			}
-			if($(obj).closest(wrapperClass).prev().length == 1) {
-				value = $(obj).closest(wrapperClass).prev().find('select').val();
-			} else {
-				value = 0;
-			}
+			value = parent.attr('value');
+			var child = $(obj).closest(wrapperClass);
 		}
+
+		if(child.length==1) {
+			var next = child;
+			do {
+				next = next.next(wrapperClass);
+				if(next.length==1) {
+					next.find('select').attr('disabled', '');
+				}
+			} while(next.next(wrapperClass).length==1);
+
+			var maskId;
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: getRootURL() + parent.attr('url') + value,
+				beforeSend: function (jqXHR) {
+					maskId = $.mask({id: maskId, parent: parent});
+				},
+				success: function (data, textStatus) {
+					var callback = function() {
+						var control = child.find(controlClass);
+						control.html(data);
+						
+						if(data.length > 0) {
+							control.removeAttr('disabled');
+							value = control.find('option:first').val();
+						} else {
+							control.attr('disabled', '');
+						}
+					};
+					$.unmask({id: maskId, callback: callback});
+				}
+			});
+		}
+
 		parent.find('input:hidden').val(value);
 	}
 };
