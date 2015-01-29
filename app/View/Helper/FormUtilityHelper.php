@@ -199,6 +199,7 @@ class FormUtilityHelper extends AppHelper {
 	public function areapicker($field, $options=array()) {
 		$_options = array(
 			'id' => 'areapicker',
+			'controller' => Inflector::singularize($this->request->controller),
 			'model' => 'Area',
 			'div' => true
 		);
@@ -209,13 +210,13 @@ class FormUtilityHelper extends AppHelper {
 		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$_options = array_merge($_options, $options);
 		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : null;
+		$controller = $_options['controller'];
 		$model = $_options['model'];
 		
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		
 		$html = '';
 		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
-		//$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllByParentId(-1);
 		$path = (!is_null($value) && $value != -1) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllById($worldId);
 		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
@@ -224,12 +225,14 @@ class FormUtilityHelper extends AppHelper {
 					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
 					'order' => array('order')
 				));
-				$options = array(
-					$obj[$model]['parent_id'] => $this->Label->get('Area.select')
-				) + $options;
+				if($obj[$model]['parent_id'] != -1) {
+					$options = array(
+						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
+					) + $options;
+				}
 				$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
-				
+
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
@@ -239,9 +242,6 @@ class FormUtilityHelper extends AppHelper {
 				}
 				$inputOptions['options'] = $options;
 				$inputOptions['label']['text'] = $levelName;
-				if($model == 'AreaAdministrative' && $i == 0) {
-					//continue;
-				}
 				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
 				//$value = $obj[$model]['id'];
 			}
@@ -251,12 +251,10 @@ class FormUtilityHelper extends AppHelper {
 		$levelOptions['limit'] = 1;
 		$levelOptions['offset'] = count($path);
 		$levelOptions['order'] = $levelModels[$model].'.level';
-		if($model == 'AreaAdministrative') {
-			/*if(isset($path[1][$model]['parent_id'])) {
-				$levelOptions['conditions'] = array(
-					$levelModels[$model].'.area_administrative_id' => array(0, $path[1][$model]['parent_id'])
-				);
-			}*/
+		if($model == 'AreaAdministrative' && count($path) >= 2) {
+			$levelOptions['conditions'] = array(
+				$levelModels[$model].'.area_administrative_id' => array(0, $path[1][$model]['id'])
+			);
 		}
 		$levels = $AreaHandler->{$levelModels[$model]}->find('list', $levelOptions);
 		
@@ -268,7 +266,7 @@ class FormUtilityHelper extends AppHelper {
 		}
 		
 		$url = 'Areas/ajaxGetAreaOptions/' . $model . '/';
-		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/' . $field . '/';
+		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/' . $controller . '/' . $field . '/';
 		$html .= $this->Form->hidden($field, array('value' => $value));
 		if($_options['div']) {
 			$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url, 'urlReload' => $urlReload));

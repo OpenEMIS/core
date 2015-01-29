@@ -1,3 +1,3 @@
 <?php
-	echo $this->FormUtility->areapicker($field, array('model' => $model, 'value' => $parentId, 'div' => false));
+	echo $this->FormUtility->areapicker($controller.'.'.$field, array('model' => $model, 'value' => $parentId, 'div' => false));
 ?>
