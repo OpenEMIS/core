@@ -32,7 +32,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array())
 				<tr>
 					<td><?php echo $this->Html->link($obj['name'], array('action' => $_action , 'view', $id), array('escape' => false)); ?></td>
 					<td><?php echo $obj['educationSubjectName']; ?></td>
-					<td><?php echo $obj['staffName'];; ?></td>
+					<td><?php echo implode(",<br>", $obj['staffName']); ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
 				</tr>
