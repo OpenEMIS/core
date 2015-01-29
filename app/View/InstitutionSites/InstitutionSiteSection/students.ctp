@@ -26,7 +26,7 @@
 					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.id");
 					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.student_id");
 					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.status", array('value' => 1));
-					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.education_grade_id", array('value' => $this->data[$model]['education_grade_id']));
+					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.education_grade_id", array('value' => !is_null($this->data[$model]['education_grade_id'])) ? $this->data[$model]['education_grade_id'] : 0);
 
 					foreach ($obj['Student'] as $field => $value) {
 						echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.Student.$field", array('value' => $value));
@@ -52,7 +52,6 @@
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>
 			<?php endforeach ?>
-
 				
 			</tbody>
 		</table>
