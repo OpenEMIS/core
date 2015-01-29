@@ -423,6 +423,32 @@ class InstitutionSiteStaff extends AppModel {
 		$count = $this->find('count', array('conditions' => $conditions));
 		return $count;
 	}
+
+	// used by InstitutionSiteClass.edit
+	public function getStaffOptions($institutionSiteId, $periodId) {
+		$periodModel = ClassRegistry::init('AcademicPeriod');
+
+		$periodObj = $periodModel->findById($periodId);
+		$periodStartDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'start_date');
+
+		$alias = $this->alias;
+		$options = array(
+			'contain' => array('Staff'),
+			'conditions' => array(
+				"$alias.institution_site_id" => $institutionSiteId,
+				"$alias.start_date <= " => $periodStartDate,
+				"$alias.end_date >= " => $periodStartDate
+			)
+		);
+
+		$list = $this->find('all', $options);
+		$data = array();
+		foreach ($list as $obj) {
+			$staffObj = $obj['Staff'];
+			$data[$staffObj['id']] = ModelHelper::getName($staffObj, array('openEmisId' => true));
+		}
+		return $data;
+	}
 	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;

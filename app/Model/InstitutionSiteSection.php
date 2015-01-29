@@ -250,6 +250,7 @@ class InstitutionSiteSection extends AppModel {
 	}
 
 	public function edit($id=0) {
+		$this->render = 'auto';
 		if ($this->exists($id)) {
 			$institutionSiteId = $this->Session->read('InstitutionSite.id');
 			$contain = array(
@@ -266,7 +267,8 @@ class InstitutionSiteSection extends AppModel {
 			);
 			$this->contain($contain);
 			$data = $this->findById($id);
-			$this->Navigation->addCrumb($data[$this->alias]['name']);
+			$contentHeader = $data[$this->alias]['name'];
+			$this->Navigation->addCrumb($contentHeader);
 
 			$periodId = $data['AcademicPeriod']['id'];
 			$periodStartDate = $data['AcademicPeriod']['start_date'];
@@ -351,7 +353,7 @@ class InstitutionSiteSection extends AppModel {
 				}
 			}
 
-			$this->setVar(compact('categoryOptions', 'studentOptions'));
+			$this->setVar(compact('categoryOptions', 'studentOptions', 'contentHeader'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias));

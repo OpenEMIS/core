@@ -9,7 +9,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array());
+echo $this->element('../InstitutionSites/InstitutionSiteClass/controls', array());
 ?>
 
 <div class="table-responsive">
@@ -29,7 +29,15 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array())
 				<tr>
 					<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('action' => $model , 'view', $obj['InstitutionSiteClass']['id']), array('escape' => false)); ?></td>
 					<td><?php echo !empty($obj['EducationSubject']['name']) ? $obj['EducationSubject']['name'] : ''; ?></td>
-					<td><?php //echo implode(",<br>", $obj['InstitutionSiteClass']['staffName']); ?></td>
+					<td>
+					<?php
+					if (!empty($data[$model]['InstitutionSiteClassStaff'])) {
+						foreach ($data[$model]['InstitutionSiteClassStaff'] as $staff) {
+
+						}
+					}
+					?>
+					</td>
 					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['F']; ?></td>
 				</tr>
