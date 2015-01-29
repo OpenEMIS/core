@@ -32,43 +32,50 @@ class StudentSection extends AppModel {
 		$alias = $this->alias;
 		$studentId = $this->Session->read('Student.id');
 
-//		$data = $this->find('all', array(
-//			'recursive' => -1,
-//			'fields' => array(
-//				'InstitutionSite.name', 'InstitutionSiteClass.name', 'SchoolYear.name'
-//			),
-//			'joins' => array(
-//				array(
-//					'table' => 'institution_site_classes',
-//					'alias' => 'InstitutionSiteClass',
-//					'conditions' => array(
-//						"InstitutionSiteClass.id = $alias.institution_site_class_id"
-//					)
-//				),
-//				array(
-//					'table' => 'institution_sites',
-//					'alias' => 'InstitutionSite',
-//					'conditions' => array(
-//						"InstitutionSite.id = InstitutionSiteClass.institution_site_id"
-//					)
-//				),
-//				array(
-//					'table' => 'school_years',
-//					'alias' => 'SchoolYear',
-//					'conditions' => array(
-//						"SchoolYear.id = InstitutionSiteClass.school_year_id",
-//						"SchoolYear.visible = 1"
-//					)
-//				)
-//			),
-//			'conditions' => array(
-//				"$alias.staff_id" => $staffId,
-//				"$alias.status = 1"
-//			),
-//			'order' => array("SchoolYear.order")
-//		));
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'AcademicPeriod.name', 'InstitutionSite.name', 'InstitutionSiteSection.name', 
+			),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array(
+						"InstitutionSiteSection.id = $alias.institution_site_section_id"
+					)
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+						"InstitutionSite.id = InstitutionSiteSection.institution_site_id"
+					)
+				),
+				array(
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array(
+						"AcademicPeriod.id = InstitutionSiteSection.academic_period_id",
+						"AcademicPeriod.visible = 1"
+					)
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						"EducationGrade.id = InstitutionSiteSection.education_grade_id"
+					)
+				)
+			),
+			'conditions' => array(
+				"$alias.student_id" => $studentId,
+				"$alias.status = 1"
+			),
+			'order' => array("AcademicPeriod.order")
+		));
 		
-		$data = array();
+		pr($data);
 		
 		$this->setVar('data', $data);
 	}

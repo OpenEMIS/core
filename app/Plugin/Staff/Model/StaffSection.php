@@ -61,8 +61,10 @@ class StaffSection extends AppModel {
 		foreach($data as $i => $obj) {
 			$id = $obj[$this->alias]['id'];
 			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id);
-			if(empty($obj['EducationGrade']['name'])){
-				$data[$i]['EducationGrade']['name'] = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
+			if(empty($obj[$this->alias]['education_grade_id'])){
+				$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
+			}else{
+				$data[$i]['EducationGrade']['grades'] = ClassRegistry::init('InstitutionSiteSection')->getSingleGradeBySection($id);
 			}
 		}
 		
