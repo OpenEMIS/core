@@ -209,11 +209,13 @@ class LabelHelper extends AppHelper {
 			'title' => 'Programmes'
 		),
 		'InstitutionSiteClass' => array(
-			'no_of_seats' => 'Seats',
-			'no_of_shifts' => 'Shifts',
-			'shift' => 'Shift',
+			'name' => 'Class Name',
+			'no_of_seats' => 'No of Seats',
 			'seats' => 'Seats',
-			'name' => 'Class Name'
+			'education_subject_id' => 'Education Subject',
+			'academic_period_id' => 'Academic Period',
+			'add_staff' => 'Add Staff',
+			'add_student' => 'Add Student'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
