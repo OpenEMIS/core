@@ -331,16 +331,18 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb(ucfirst($this->action));
 		$header = __(ucfirst($this->action));
 		$studentId = $this->Session->read('Student.id');
-		$data = array();
-		//$classes = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
-		$classes = array();
-		foreach ($classes as $row) {
-			$key = $row['InstitutionSite']['name'];
-			$data[$key][] = $row;
+		
+		$data = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
+		
+		foreach($data as $i => $obj) {
+			$classId = $obj['InstitutionSiteClassStudent']['institution_site_class_id'];
+			$data[$i]['InstitutionSiteClass']['teachers'] = ClassRegistry::init('InstitutionSiteClassStaff')->getStaffs($classId, 'list');
 		}
-		if (empty($data)) {
-			//$this->Message->alert('general.noData');
+		
+		if(empty($data)){
+			$this->Message->alert('general.noData');
 		}
+		
 		$this->set(compact('data', 'header'));
 	}
 
