@@ -60,101 +60,61 @@ class InstitutionSiteClass extends AppModel {
 		'ControllerAction2',
 		'AcademicPeriod'
 	);
-	
-	public $_action = 'InstitutionSiteClass';
+
+	public function afterSave($created, $options = Array()) {
+		$addClassStudent = (array_key_exists('addClassStudent', $options))? $options['addClassStudent']: false;
+        if($created && $addClassStudent) {
+        	if (array_key_exists('InstitutionSiteClassStaff', $this->data)) {
+        		$institutionSiteClassStaffData = $this->data['InstitutionSiteClassStaff'];
+        		foreach ($institutionSiteClassStaffData as $key => $value) {
+        			$institutionSiteClassStaffData[$key]['institution_site_class_id'] = $this->getInsertID();
+        		}
+        		$this->InstitutionSiteClassStaff->saveMany($institutionSiteClassStaffData);
+        	}
+        	// also need to save the section class relationship
+        	if (array_key_exists('InstitutionSiteSectionClass', $this->data)) {
+				$institutionSiteSectionClassData = $this->data['InstitutionSiteSectionClass'];
+				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
+        		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
+        	}
+        }
+        return true;
+    }
 	
 	public function beforeAction() {
 		parent::beforeAction();
-		$this->setVar('_action', $this->_action);
-		$this->setVar('selectedAction', $this->_action . 'View');
 	}
 	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'AcademicPeriod'),
-				array('field' => 'name'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-	
-	public function getClassActions($id=0) {
-		if($id==0) {
-			$id = $this->Session->read($this->alias.'.id');
-		}
-		$options = array(
-			'classesView/'.$id => __('Class Details'),
-			'classesStudent' => __('Students'),
-			'classesStaff' => __('Staff'),
-			'classesSubject' => __('Subjects')
-		);
-		return $options;
-	}
-	
-	public function index($selectedAcademicPeriod=null, $selectedSection=null) {
-
+	public function index($selectedPeriod=0, $selectedSection=0) {
 		$this->Navigation->addCrumb('List of Classes');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodConditions = array(
+		$conditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1,
-			'AcademicPeriod.parent_id >' => 0
+			'InstitutionSiteProgramme.status' => 1
 		);
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
-		$selectedAcademicPeriod = isset($selectedAcademicPeriod)? $selectedAcademicPeriod: key($academicPeriodOptions);
+		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
+		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
+
+		if (empty($periodOptions)) {
+			$this->Message->alert('InstitutionSite.noProgramme');
+			return;
+		}
 
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
-		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
-		$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId);
+		$selectedSection = $this->checkIdInOptions($selectedSection, $sectionOptions);
+
+		if (empty($sectionOptions)) {
+			$this->Message->alert('InstitutionSiteSection.noDataForSelectedPeriod');
+			return;
+		}
 
 		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
 
-
 		foreach ($data as $key => $value) {
-			unset($data[$key]['InstitutionSiteSectionClass']);
-			unset($data[$key]['InstitutionSiteSection']);
-			// get subject name
-			$educationSubjectData = $this->EducationSubject->find('first',
-				array(
-					'recursive' => -1,
-					'fields' => array('name'),
-					'conditions' => array(
-						'EducationSubject.id' => $value['InstitutionSiteClass']['education_subject_id']
-					)
-				)
-			);
-			$data[$key]['InstitutionSiteClass']['educationSubjectName'] = $educationSubjectData['EducationSubject']['name'];
-			// get staff data
-			$data[$key]['InstitutionSiteClass']['staffName'] = $this->InstitutionSiteClassStaff->find('all',
-				array(
-					'recursive' => -1,
-					'contain' => array('Staff'),
-					'conditions' => array(
-						'InstitutionSiteClassStaff.institution_site_class_id' => $value['InstitutionSiteClass']['id']
-					)
-				)
-			);
-			foreach ($data[$key]['InstitutionSiteClass']['staffName'] as $staffKey => $staffValue) {
-				unset($data[$key]['InstitutionSiteClass']['staffName'][$staffKey]['InstitutionSiteClassStaff']);
-				$data[$key]['InstitutionSiteClass']['staffName'][$staffKey] = ModelHelper::getName($data[$key]['InstitutionSiteClass']['staffName'][$staffKey]['Staff']);
-			}
-
 			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);	
 		}
-		
-		if(empty($academicPeriodOptions)){
-			$this->Message->alert('InstitutionSite.noProgramme');
-		}
-
-		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data', 'sectionOptions', 'selectedSection'));
+		$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection'));
 	}
 	
 	public function add($selectedAcademicPeriod = null, $selectedSection = null) {
@@ -224,26 +184,6 @@ class InstitutionSiteClass extends AppModel {
 			return $controller->redirect(array('action' => $this->alias));
 		}
 	}
-
-	function afterSave($created, $options = Array()) {
-		$addClassStudent = (array_key_exists('addClassStudent', $options))? $options['addClassStudent']: false;
-        if($created && $addClassStudent) {
-        	if (array_key_exists('InstitutionSiteClassStaff', $this->data)) {
-        		$institutionSiteClassStaffData = $this->data['InstitutionSiteClassStaff'];
-        		foreach ($institutionSiteClassStaffData as $key => $value) {
-        			$institutionSiteClassStaffData[$key]['institution_site_class_id'] = $this->getInsertID();
-        		}
-        		$this->InstitutionSiteClassStaff->saveMany($institutionSiteClassStaffData);
-        	}
-        	// also need to save the section class relationship
-        	if (array_key_exists('InstitutionSiteSectionClass', $this->data)) {
-				$institutionSiteSectionClassData = $this->data['InstitutionSiteSectionClass'];
-				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
-        		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
-        	}
-        }
-        return true;
-    }
 	
 	public function view($institutionSiteClassId = null) {
 		$id = $institutionSiteClassId;
