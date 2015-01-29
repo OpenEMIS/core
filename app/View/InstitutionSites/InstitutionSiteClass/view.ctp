@@ -40,7 +40,11 @@ $this->start('contentBody');
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo $this->Label->get('EducationSubject.name'); ?></div>
-		<div class="col-md-6"><?php echo __('English') ?></div>
+		<div class="col-md-6"><?php echo $data['EducationSubject']['name']; ?></div>
+	</div>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('EducationSubject.name'); ?></div>
+		<div class="col-md-6"><?php echo $data['EducationSubject']['code']; ?></div>
 	</div>
 
 </fieldset>

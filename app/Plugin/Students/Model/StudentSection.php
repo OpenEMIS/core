@@ -100,6 +100,10 @@ class StudentSection extends AppModel {
 			$data[$i]['Staff']['staff_name'] = ModelHelper::getName($obj['Staff']);
 		}
 		
-		$this->setVar('data', $data);
+		if(empty($data)){
+			$this->Message->alert('general.noData');
+		}
+		
+		$this->setVar(compact('data'));
 	}
 }

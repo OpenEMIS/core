@@ -68,6 +68,10 @@ class StaffSection extends AppModel {
 			}
 		}
 		
+		if(empty($data)){
+			$this->Message->alert('general.noData');
+		}
+		
 		$this->setVar(compact('data'));
 	}
 }

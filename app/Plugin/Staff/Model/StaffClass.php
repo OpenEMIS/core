@@ -98,7 +98,10 @@ class StaffClass extends AppModel {
 			$classId = $obj[$this->alias]['institution_site_class_id'];
 			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($classId);
 		}
-		pr($data);
+		
+		if(empty($data)){
+			$this->Message->alert('general.noData');
+		}
 		
 		$this->setVar(compact('data'));
 	}
