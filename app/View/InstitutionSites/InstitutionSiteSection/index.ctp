@@ -32,7 +32,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 					<td class="cell-number"><?php echo $obj[$model]['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj[$model]['gender']['F']; ?></td>
 					<td class="cell-number">
-						<?php echo $this->Html->link($obj[$model]['classes'], array('action' => 'InstitutionSiteSection', 'view', $obj[$model]['id']), array('escape' => false)); ?>
+						<?php echo $this->Html->link($obj[$model]['classes'], array('action' => 'InstitutionSiteClass', 'index', $obj[$model]['id']), array('escape' => false)); ?>
 					</td>
 				</tr>
 			<?php endforeach ?>
