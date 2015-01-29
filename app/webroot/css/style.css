@@ -204,12 +204,13 @@ input.default { width: 240px; }
 
 .custom_field .field_value textarea { width: 98.5%; }
 
+.panel-heading { font-weight: bold; font-size: 14px; color: #666 !important; }
 /* Custom Fields */
 .panel-custom.panel-default { margin-bottom: 15px; }
 .panel-custom.page-header { margin-top: 30px; padding-bottom: 0; margin-bottom: 15px; }
 .panel-custom.page-header h4 { color: #666; }
 .panel-custom .col-md-4 { padding-left: 0; }
-.panel-custom .panel-heading { color: #666; padding: 8px 12px; }
+.panel-custom .panel-heading { padding: 8px 12px; }
 .panel-custom .panel-body { padding: 10px; }
 /* End Custom Fields */
 

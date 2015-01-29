@@ -307,7 +307,7 @@ class InstitutionSiteSection extends AppModel {
 				$postData = $this->request->data;
 
 				if ($postData['submit'] == 'add') {
-					if (isset($postData[$this->alias]['student_id'])) {
+					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
 						$InstitutionSiteStudent->Student->recursive = -1;
