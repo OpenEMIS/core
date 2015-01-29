@@ -54,6 +54,9 @@ echo $this->Form->input('InstitutionSiteSection.section_id', array(
 					<?php 
 					$i = 0;
 					foreach($subjectData as $subjectId => $subject) :
+						// need to check if there is already an existing class
+						$subjectClassExists = array_key_exists($subjectId, $classesBySectionBySubjectId);
+
 						echo $this->Form->hidden($i. '.InstitutionSiteClass' . '.institution_site_id', array('value' => $institutionSiteId));
 						echo $this->Form->hidden($i. '.InstitutionSiteClass' . '.education_subject_id', array('value' => $subjectId));
 						echo $this->Form->hidden($i. '.InstitutionSiteClass' . '.academic_period_id', array('value' => $selectedAcademicPeriod));
@@ -62,7 +65,7 @@ echo $this->Form->input('InstitutionSiteSection.section_id', array(
 					<tr>
 						<td class="checkbox-column">
 							<?php
-							echo $this->Form->checkbox($i. '.InstitutionSiteClass' . '.status', array('class' => 'icheck-input'));
+							echo $this->Form->checkbox($i. '.InstitutionSiteClass' . '.status', array('class' => 'icheck-input', 'checked' => $subjectClassExists, 'disabled' => $subjectClassExists));
 							?>
 						</td>
 						<td><?php echo $subject; ?></td>
@@ -72,20 +75,26 @@ echo $this->Form->input('InstitutionSiteSection.section_id', array(
 							'div' => false,
 							'between' => false,
 							'after' => false,
-							'value' => $subject
+							'value' => ($subjectClassExists)? $classesBySectionBySubjectId[$subjectId]['InstitutionSiteClass']['name']:$subject,
+							'disabled' => $subjectClassExists
 						));
 						?></td>
 						<td><?php 
 						echo $this->Form->hidden($i. '.InstitutionSiteClassStaff.0.status', array(
 							'value' => 1));
 
-						echo $this->Form->input($i. '.InstitutionSiteClassStaff.0.staff_id', array(
-							'options' => $staffOptions, 
-							'label' => false,
-							'div' => false,
-							'between' => false,
-							'after' => false
-						));
+						if (!$subjectClassExists) {
+							echo $this->Form->input($i. '.InstitutionSiteClassStaff.0.staff_id', array(
+								'options' => $staffOptions, 
+								'label' => false,
+								'div' => false,
+								'between' => false,
+								'after' => false,
+								'disabled' => $subjectClassExists
+							));
+						} else {
+							echo '';
+						}
 						?></td>
 					</tr>
 					<?php 

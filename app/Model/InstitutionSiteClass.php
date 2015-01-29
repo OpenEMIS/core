@@ -155,8 +155,16 @@ class InstitutionSiteClass extends AppModel {
 				),
 				'order' => array('EducationSubject.order')
 			));
-			
-			$this->setVar(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjectData'));
+
+			// need to get the section classes that are alraeady there
+			$classesBySection = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
+
+			$classesBySectionBySubjectId = array();
+			foreach ($classesBySection as $key => $value) {
+				$classesBySectionBySubjectId[$value['InstitutionSiteClass']['education_subject_id']] = $value;
+			}
+
+			$this->setVar(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjectData', 'classesBySectionBySubjectId'));
 			
 			if($this->controller->request->is('post') || $this->controller->request->is('put')) {
 				$data = $this->controller->request->data;
@@ -164,7 +172,7 @@ class InstitutionSiteClass extends AppModel {
 				unset($data['submit']);
 				unset($data['InstitutionSiteSection']);
 				foreach ($data as $key => $value) {
-					if ($value['InstitutionSiteClass']['status'] <= 0) {
+					if ((!array_key_exists('status', $value['InstitutionSiteClass'])) || $value['InstitutionSiteClass']['status'] <= 0) {
 						unset($data[$key]);
 						continue;
 					}
@@ -173,6 +181,7 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
+				
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
