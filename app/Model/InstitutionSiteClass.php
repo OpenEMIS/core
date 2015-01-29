@@ -261,15 +261,20 @@ class InstitutionSiteClass extends AppModel {
 			)
 		);
 
-		/// get full name
-		
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($className);
 			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
-			
+		
+
+
+
 			$staffData = array();
 			$studentsData = array();
+
+
+
+
 
 			$this->setVar(compact('data', 'sections', 'staffData', 'studentsData'));
 			$this->setVar('actionOptions', $this->getClassActions($id));
