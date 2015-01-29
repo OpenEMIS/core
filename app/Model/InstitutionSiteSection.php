@@ -346,7 +346,7 @@ class InstitutionSiteSection extends AppModel {
 
 			// removing existing students from StudentOptions
 			foreach ($this->request->data['InstitutionSiteSectionStudent'] as $row) {
-				if (array_key_exists($row['student_id'], $studentOptions)) {
+				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
 					unset($studentOptions[$row['student_id']]);
 				}
 			}
