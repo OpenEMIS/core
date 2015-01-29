@@ -313,8 +313,6 @@ class InstitutionSiteSection extends AppModel {
 						
 						$newRow = array(
 							'student_id' => $studentId,
-							'status' => 1,
-							'education_grade_id' => $postData[$this->alias]['education_grade_id'],
 							'student_category_id' => key($categoryOptions),
 							'Student' => $studentObj['Student']
 						);
