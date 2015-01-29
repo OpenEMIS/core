@@ -24,7 +24,7 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteType',
 		'InstitutionSiteOwnership',
 		'Area',
-		'AreaEducation',
+		'AreaAdministrative',
 		'InstitutionSiteProvider',
 		'InstitutionSiteSector',
 		'InstitutionSiteGender'
@@ -849,7 +849,7 @@ class InstitutionSite extends AppModel {
 	*/
 
 	public function displayByAreaLevel($data, $model='Area', $areaLevelID){
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 		
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);

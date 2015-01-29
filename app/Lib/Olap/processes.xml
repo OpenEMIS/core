@@ -1687,7 +1687,7 @@
                       `longitude` varchar(15) DEFAULT NULL,
                       `latitude` varchar(15) DEFAULT NULL,
                       `area_id` int(11) NOT NULL,
-                      `area_education_id` int(11) DEFAULT NULL,
+                      `area_administrative_id` int(11) DEFAULT NULL,
                       `institution_id` int(11) NOT NULL,
                       `institution_site_locality_id` int(11) NOT NULL,
                       `institution_site_type_id` int(11) NOT NULL,
@@ -1724,11 +1724,11 @@
                 <![CDATA[
                     INSERT INTO `institution_sites` (
                         `id`, `name`, `code`, `address`, `postal_code`, `contact_person`, `telephone`, `fax`, `email`,
-                        `website`, `date_opened`, `year_opened`, `date_closed`, `year_closed`, `longitude`, `latitude`, `area_id`, `area_education_id`,`institution_id`, `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
+                        `website`, `date_opened`, `year_opened`, `date_closed`, `year_closed`, `longitude`, `latitude`, `area_id`, `area_administrative_id`,`institution_id`, `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
                         `institution_site_status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     )VALUES (
                         :id, :name, :code, :address, :postal_code, :contact_person, :telephone, :fax, :email,
-                        :website, :date_opened, :year_opened, :date_closed, :year_closed, :longitude, :latitude, :area_id, :area_education_id, :institution_id,
+                        :website, :date_opened, :year_opened, :date_closed, :year_closed, :longitude, :latitude, :area_id, :area_administrative_id, :institution_id,
                         :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
                         :institution_site_status_id, :modified_user_id, :modified, :created_user_id, :created
                     );

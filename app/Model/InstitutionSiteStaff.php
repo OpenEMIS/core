@@ -122,8 +122,8 @@ class InstitutionSiteStaff extends AppModel {
 				'Area' => array(
 					'name' => 'Area'
 				),
-				'AreaEducation' => array(
-					'name' => 'Area (Education)'
+				'AreaAdministrative' => array(
+					'name' => 'Area (Administrative)'
 				),
 				'InstitutionSite3' => array(
 					'address' => 'Address',
@@ -787,10 +787,10 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('InstitutionSite.area_id = Area.id')
 				),
 				array(
-					'table' => 'area_educations',
-					'alias' => 'AreaEducation',
+					'table' => 'area_administratives',
+					'alias' => 'AreaAdministrative',
 					'type' => 'left',
-					'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+					'conditions' => array('InstitutionSite.area_administrative_id = AreaAdministrative.id')
 				),
 				array(
 					'table' => 'staff_nationalities',
