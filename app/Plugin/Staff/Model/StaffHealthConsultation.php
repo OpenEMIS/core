@@ -103,7 +103,7 @@ class StaffHealthConsultation extends StaffAppModel {
         $this->render = 'add';
     }
 
-    function setup_add_edit_form($controller, $params) {
+    function setup_add_edit_form($controller, $params, $type) {
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         
         if ($controller->request->is('post') || $controller->request->is('put')) {

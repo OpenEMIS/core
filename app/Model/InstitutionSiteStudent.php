@@ -249,13 +249,13 @@ class InstitutionSiteStudent extends AppModel {
 			$date->add(new DateInterval('P1D')); // plus 1 day
 			
 			$this->fields['start_date']['attr'] = array(
-				'startDate' => $startDate,
+				'startDate' => (isset($data['InstitutionSiteStudent']['start_date']) ? $data['InstitutionSiteStudent']['start_date'] : $startDate),
 				'endDate' => $endDate,
-				'data-date' => $startDate
+				'data-date' => (isset($data['InstitutionSiteStudent']['start_date']) ? $data['InstitutionSiteStudent']['start_date'] : $startDate)
 			);
 			$this->fields['end_date']['attr'] = array(
-				'startDate' => $date->format('d-m-Y'),
-				'data-date' => $date->format('d-m-Y')
+				'startDate' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y')),
+				'data-date' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y'))
 			);
 			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
 			$this->fields['education_programme_id']['options'] = $programmeOptions;

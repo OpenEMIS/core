@@ -263,7 +263,8 @@ class StaffLeave extends StaffAppModel {
 		
 		$fileId = $controller->request->data['size'];
 		$multiple = true;
-		$controller->set(compact('fileId', 'multiple'));
+		$label = 'File';
+		$controller->set(compact('fileId', 'multiple', 'label'));
 		$controller->render('/Elements/templates/file_upload_field');
 	}
 }
