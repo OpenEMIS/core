@@ -466,16 +466,14 @@ class InstitutionSiteStudent extends AppModel {
 		$periodModel = ClassRegistry::init('AcademicPeriod');
 
 		$periodObj = $periodModel->findById($periodId);
-		$periodStartDate = $periodObj['AcademicPeriod']['start_date'];
-		$periodEndDate = $periodObj['AcademicPeriod']['end_date'];
+		$periodStartDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'start_date');
 
-		pr($periodObj);
 		$alias = $this->alias;
 		$options = array(
 			'contain' => array('Student'),
 			'conditions' => array(
 				"$alias.institution_site_id" => $institutionSiteId,
-				"$alias.start_date >= " => $periodStartDate,
+				"$alias.start_date <= " => $periodStartDate,
 				"$alias.end_date >= " => $periodStartDate
 			)
 		);

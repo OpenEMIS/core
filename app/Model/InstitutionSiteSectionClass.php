@@ -174,6 +174,20 @@ class InstitutionSiteSectionClass extends AppModel {
 		}
 		return $list;
 	}
+
+	public function getClassesBySection($sectionId) {
+		$data = $this->find(
+			'all',
+			array(
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_section_id' => $sectionId,
+					'InstitutionSiteSectionClass.status' => 1
+				)
+			)
+		);
+		return $data;
+
+	}
 	
 	public function getSectionOptions($classId=null, $status=null) {
 		$conditions = array();
