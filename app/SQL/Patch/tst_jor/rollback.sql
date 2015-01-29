@@ -24,3 +24,15 @@ INSERT config_items SELECT * FROM 1190_config_items WHERE name = 'max_subjects_p
 
 RENAME TABLE 1190_institution_site_class_subjects to institution_site_class_subjects;
 -- Malcolm SQL END
+
+
+-- Academic period security SQL START
+SET @lastAcademicPeriodNo := 0;
+SELECT MAX(security_functions.order) INTO @lastAcademicPeriodNo FROM `security_functions` WHERE `category` = 'Academic Periods' AND controller = 'AcademicPeriods' AND name <> 'Staff - Academic' AND name <> 'Students - Academic';
+UPDATE security_functions SET security_functions.order = security_functions.order -2 WHERE security_functions.order > @lastAcademicPeriodNo;
+
+DELETE FROM security_functions WHERE name = 'Academic Period Levels'  AND `category` = 'Academic Periods' AND controller = 'AcademicPeriods';
+DELETE FROM security_functions WHERE name = 'Academic Periods' AND `category` = 'Academic Periods' AND controller = 'AcademicPeriods';
+-- SELECT name, security_functions.order FROM security_functions WHERE security_functions.order > 130 order by security_functions.order ASC;
+
+-- Academic period security SQL END
