@@ -24,15 +24,11 @@ $this->start('contentBody');
 				<td><?php echo $obj['AcademicPeriod']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSite']['name']; ?></td>
 				<td><?php 
-				if(is_array($obj['EducationGrade']['name'])){
-					foreach($obj['EducationGrade']['name'] as $grade){
-						echo $grade . '<br>';
-					}
-				}else{
-					echo $obj['EducationGrade']['name'];
+				foreach($obj['EducationGrade']['grades'] as $grade){
+					echo $grade . '<br>';
 				}
 				?></td>
-				<td><?php echo $this->Html->link($obj['StaffSection']['name'], array('action' => 'InstitutionSiteSection', 'view', $obj['StaffSection']['id']), array('escape' => false)); ?></td>
+				<td><?php echo $this->Html->link($obj['StaffSection']['name'], array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'InstitutionSiteSection', 'view', $obj['StaffSection']['id']), array('escape' => false)); ?></td>
 				<td><?php echo empty($obj[$model]['gender']['M']) ? 0 : $obj[$model]['gender']['M']; ?></td>
 				<td><?php echo empty($obj[$model]['gender']['M']) ? 0 : $obj[$model]['gender']['F']; ?></td>
 			</tr>
