@@ -27,6 +27,10 @@ class StaffClass extends AppModel {
 		'InstitutionSiteClass'
 	);
 	
+	public $hasMany = array(
+		'InstitutionSiteClassStudent'
+	);
+	
 	public function index() {
 		$this->Navigation->addCrumb('Classes');
 		$alias = $this->alias;
@@ -35,7 +39,8 @@ class StaffClass extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'InstitutionSite.name', 'InstitutionSiteClass.name', 'AcademicPeriod.name'
+				"$alias.*", 'AcademicPeriod.name', 'InstitutionSite.name', 'InstitutionSiteSection.*', 'InstitutionSiteClass.*',
+				'EducationSubject.name'
 			),
 			'joins' => array(
 				array(
@@ -50,6 +55,27 @@ class StaffClass extends AppModel {
 					'alias' => 'InstitutionSite',
 					'conditions' => array(
 						"InstitutionSite.id = InstitutionSiteClass.institution_site_id"
+					)
+				),
+				array(
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
+					'conditions' => array(
+						"InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id"
+					)
+				),
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array(
+						"InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id"
+					)
+				),
+				array(
+					'table' => 'education_subjects',
+					'alias' => 'EducationSubject',
+					'conditions' => array(
+						"EducationSubject.id = InstitutionSiteClass.education_subject_id"
 					)
 				),
 				array(
@@ -68,6 +94,12 @@ class StaffClass extends AppModel {
 			'order' => array("AcademicPeriod.order")
 		));
 		
-		$this->setVar('data', $data);
+		foreach($data as $i => $obj) {
+			$classId = $obj[$this->alias]['institution_site_class_id'];
+			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($classId);
+		}
+		pr($data);
+		
+		$this->setVar(compact('data'));
 	}
 }
