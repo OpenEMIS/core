@@ -329,7 +329,7 @@ class FormUtilityHelper extends AppHelper {
 		$levelOptions['order'] = $levelModels[$model].'.level';
 		if($model == 'AreaAdministrative' && count($path) >= 2) {
 			$levelOptions['conditions'] = array(
-				$levelModels[$model].'.area_administrative_id' => array(0, $path[1][$model]['id'])
+				$levelModels[$model].'.area_administrative_id' => array(0, $path[0][$model]['id'], $path[1][$model]['id'])
 			);
 		}
 		$levels = $AreaHandler->{$levelModels[$model]}->find('list', $levelOptions);
