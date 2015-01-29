@@ -83,8 +83,5 @@ RENAME TABLE institution_site_class_subjects to 1190_institution_site_class_subj
 
 ALTER TABLE `institution_site_classes` DROP `institution_site_shift_id`;
 
-ALTER TABLE `institution_site_classes` ADD `institution_site_section_id` INT NULL DEFAULT NULL AFTER `institution_site_id`;
-ALTER TABLE `institution_site_classes` ADD `staff_id` INT NULL DEFAULT NULL AFTER `institution_site_section_id`;
-
 -- Malcolm SQL END
 
