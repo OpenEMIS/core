@@ -4,7 +4,7 @@ $this->assign('contentHeader', __('List of Classes'));
 
 $this->start('contentActions');
 	if ($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => $_action , 'add', $selectedAcademicPeriod, $selectedSection), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model , 'add', $selectedPeriod, $selectedSection), array('class' => 'divider'));
 	}
 $this->end();
 
@@ -25,18 +25,15 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/control', array())
 		</thead>
 
 		<tbody>
-			<?php
-			foreach ($data as $id => $obj) {
-				$i = 0;
-				?>
+			<?php foreach ($data as $id => $obj) : ?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('action' => $_action , 'view', $obj['InstitutionSiteClass']['id']), array('escape' => false)); ?></td>
-					<td><?php echo $obj['InstitutionSiteClass']['educationSubjectName']; ?></td>
-					<td><?php echo implode(",<br>", $obj['InstitutionSiteClass']['staffName']); ?></td>
+					<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('action' => $model , 'view', $obj['InstitutionSiteClass']['id']), array('escape' => false)); ?></td>
+					<td><?php echo !empty($obj['EducationSubject']['name']) ? $obj['EducationSubject']['name'] : ''; ?></td>
+					<td><?php //echo implode(",<br>", $obj['InstitutionSiteClass']['staffName']); ?></td>
 					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['M']; ?></td>
 					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['F']; ?></td>
 				</tr>
-			<?php } // end for (multigrade)    ?>
+			<?php endforeach ?>
 		</tbody>
 	</table>
 </div>
