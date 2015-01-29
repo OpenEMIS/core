@@ -66,6 +66,6 @@ INSERT INTO `area_administratives` (
 );
 
 SET @parentIdOfWorld := 0;
-SELECT `id` INTO @parentIdOfWorld FROM `area_administratives` WHERE `name` LIKE 'World';
+SELECT `id` INTO @parentIdOfWorld FROM `area_administratives` WHERE `name` LIKE 'World' AND `parent_id` = -1;
 
 UPDATE `area_administratives` SET `parent_id` = @parentIdOfWorld WHERE `parent_id` = '-1' AND `name` <> 'World';
