@@ -6,8 +6,8 @@
 			'label' => false,
 			'div' => false,
 			'class' => 'form-control',
-			'options' => $academicPeriodOptions,
-			'default' => $selectedAcademicPeriod,
+			'options' => $periodOptions,
+			'default' => $selectedPeriod,
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . '/InstitutionSiteClass/index'
 		));
@@ -23,7 +23,7 @@
 			'options' => $sectionOptions,
 			'default' => $selectedSection,
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/InstitutionSiteClass/index/' . $selectedAcademicPeriod
+			'url' => $this->params['controller'] . '/InstitutionSiteClass/index/' . $selectedPeriod
 		));
 		?>
 	</div>
