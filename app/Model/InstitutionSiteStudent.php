@@ -531,10 +531,10 @@ class InstitutionSiteStudent extends AppModel {
 					'conditions' => array('InstitutionSite.area_id = Area.id')
 				),
 				array(
-					'table' => 'area_educations',
-					'alias' => 'AreaEducation',
+					'table' => 'area_administratives',
+					'alias' => 'AreaAdministrative',
 					'type' => 'left',
-					'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+					'conditions' => array('InstitutionSite.area_administrative_id = AreaAdministrative.id')
 				),
 				array(
 					'table' => 'student_nationalities',

@@ -1,236 +1,373 @@
 <?php
-echo $this->Html->css('timeline', 'stylesheet', array('inline' => false));
+echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('History'));
+$this->assign('contentId', 'site_history');
+$this->assign('contentHeader', __('Institution Site History'));
 $this->start('contentActions');
-	echo $this->Html->link(__('Back'), array('action' => 'view'), array('class' => 'divider'));
+echo $this->Html->link(__('Details'), array('action' => 'view'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 ?>
 
-<style type="text/css">
-.timeline {
-	list-style: none;
-	padding: 20px 0 20px;
-	position: relative;
-	margin-left: 50px;
-	margin-top: 20px;
-}
-
-.timeline:before {
-	top: 0;
-	bottom: 0;
-	position: absolute;
-	content: " ";
-	width: 3px;
-	background-color: #eeeeee;
-	margin-left: -1.5px;
-	margin-bottom: 40px;
-}
-
-.timeline > li {
-  margin-bottom: 10px;
-  position: relative;
-}
-.timeline > li:before,
-.timeline > li:after {
-  content: " ";
-  display: table;
-}
-.timeline > li:after {
-  clear: both;
-}
-.timeline > li:before,
-.timeline > li:after {
-  content: " ";
-  display: table;
-}
-.timeline > li:after {
-  clear: both;
-}
-
-.timeline > li > .timeline-panel {
-  float: left;
-  border: 1px solid #d4d4d4;
-  border-radius: 5px;
-  padding: 15px;
-  position: relative;
-  -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
-}
-.timeline > li > .timeline-panel:before {
-  position: absolute;
-  top: 26px;
-  right: -15px;
-  display: inline-block;
-  border-top: 15px solid transparent;
-  border-left: 15px solid #ccc;
-  border-right: 0 solid #ccc;
-  border-bottom: 15px solid transparent;
-  content: " ";
-}
-.timeline > li > .timeline-panel:after {
-  position: absolute;
-  top: 27px;
-  right: -14px;
-  display: inline-block;
-  border-top: 14px solid transparent;
-  border-left: 14px solid #fff;
-  border-right: 0 solid #fff;
-  border-bottom: 14px solid transparent;
-  content: " ";
-}
-
-.timeline > li > .timeline-badge {
-  color: #fff;
-  width: 50px;
-  height: 50px;
-  line-height: 50px;
-  font-size: 1.4em;
-  text-align: center;
-  position: absolute;
-  top: 16px;
-  margin-left: -25px;
-  background-color: #999999;
-  z-index: 100;
-  border-top-right-radius: 50%;
-  border-top-left-radius: 50%;
-  border-bottom-right-radius: 50%;
-  border-bottom-left-radius: 50%;
-}
-.timeline > li.timeline-inverted > .timeline-panel {
-	margin-left: 45px;
-}
-.timeline > li.timeline-inverted > .timeline-panel:before {
-	border-left-width: 0;
-	border-right-width: 15px;
-	left: -15px;
-	right: auto;
-}
-.timeline > li.timeline-inverted > .timeline-panel:after {
-	border-left-width: 0;
-	border-right-width: 14px;
-	left: -14px;
-	right: auto;
-}
-.timeline-badge.primary {
-  background-color: #2e6da4 !important;
-}
-.timeline-badge.success {
-  background-color: #3f903f !important;
-}
-.timeline-badge.warning {
-  background-color: #f0ad4e !important;
-}
-.timeline-badge.danger {
-  background-color: #d9534f !important;
-}
-.timeline-badge.info {
-  background-color: #5bc0de !important;
-}
-.timeline-title {
-  margin-top: 0;
-  color: inherit;
-}
-.timeline-body > p,
-.timeline-body > ul {
-  margin-bottom: 0;
-}
-.timeline-body > p + p {
-  margin-top: 5px;
-}
-</style>
-
-<!--div class="row">
-	<div class="col-md-4">
-	<?php
-	echo $this->Form->input('field', array(
-		'label' => false,
-		'class' => 'form-control',
-		'options' => array(
-			'' => 'All', 'name' => 'Name', 'institution_site_provider_id' => 'Provider'
-		)
-	));
-	?>
+<?php if(!empty($data2)) : ?>
+<fieldset class="section_break dataDisplay">
+	<legend><?php echo __('General'); ?></legend>
+	<div class="row">
+		<div class="label"><?php echo __('Site Name'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['name']; ?></span>
+			<?php if(@sizeof($data2['InstitutionSiteHistory_name'])>0){ // && ( sizeof($data2['InstitutionSiteHistory_name']) != 1 && array_key_exists($data['InstitutionSite']['name'], $data2['InstitutionSiteHistory_name']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['InstitutionSiteHistory_name'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['name'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
 	</div>
-</div-->
+	<div class="row">
+		<div class="label"><?php echo __('Site Code'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['code']; ?></span>
+			<?php if(@sizeof($data2['InstitutionSiteHistory_code'])>0){ // && ( sizeof($data2['InstitutionSiteHistory_code']) != 1 && array_key_exists($data['InstitutionSite']['name'], $data2['InstitutionSiteHistory_code']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['InstitutionSiteHistory_code'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['code'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td><?php echo $time; ?></td>
 
-<ul class="nav nav-pills">
-	<li role="presentation" class="active"><a href="#">All</a></li>
-	<li role="presentation"><a href="#">Name</a></li>
-	<li role="presentation"><a href="#">Code</a></li>
-	<li role="presentation"><a href="#">Sector</a></li>
-	<li role="presentation"><a href="#">Provider</a></li>
-	<li role="presentation"><a href="#">Type</a></li>
-	<li role="presentation"><a href="#">Ownership</a></li>
-	<li role="presentation"><a href="#">Gender</a></li>
-	<li role="presentation"><a href="#">Status</a></li>
-	<li role="presentation"><a href="#">Address</a></li>
-	<li role="presentation"><a href="#">Postal Code</a></li>
-</ul>
-
-<ul class="timeline">
-	<li class="timeline-inverted">
-		<div class="timeline-badge info"><i class="fa fa-edit"></i></div>
-		<div class="timeline-panel">
-			<div class="timeline-heading">
-				<h5 class="timeline-title"><i>2015-01-01 09:00am</i></h5>
-			</div>
-			<div class="timeline-body">
-				Jeff has updated [<span style="color: #5B8BAF">Status</span>] from '<span style="color: red">Open</span>' to '<span style="color: green">Suspended</span>'.
-			</div>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
 		</div>
-	</li>
-
-	<li class="timeline-inverted">
-		<div class="timeline-badge info"><i class="fa fa-edit"></i></div>
-		<div class="timeline-panel">
-			<div class="timeline-heading">
-				<h5 class="timeline-title"><i>2015-01-01 08:30am</i></h5>
-			</div>
-			<div class="timeline-body">
-				Umairah has updated [<span style="color: #5B8BAF">Name</span>] from '<span style="color: red">Umairah School</span>' to '<span style="color: green">Umairah School of Technology</span>'.
-			</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Type'); ?></div>
+		<div class="value"><?php //pr($data);?>
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteType']['name']; ?></span>
+			<?php if(@sizeof($data2['InstitutionSiteType_name'])>0){ // && ( sizeof($data2['InstitutionSiteType_name']) != 1 && array_key_exists($data['InstitutionSiteType']['name'], $data2['InstitutionSiteType_name']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['InstitutionSiteType_name'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSiteType']['name'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
 		</div>
-	</li>
-
-	<li class="timeline-inverted">
-		<div class="timeline-badge info"><i class="fa fa-edit"></i></div>
-		<div class="timeline-panel">
-			<div class="timeline-heading">
-				<h5 class="timeline-title"><i>2015-01-01 08:00am</i></h5>
-			</div>
-			<div class="timeline-body">
-				Umairah has updated [<span style="color: #5B8BAF">Provider</span>] from '<span style="color: red">Government</span>' to '<span style="color: green">Public</span>'.
-			</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Ownership'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteOwnership']['name']; ?></span>
+			<?php if(@sizeof($data2['InstitutionSiteOwnership_name'])>0){ // && ( sizeof($data2['InstitutionSiteOwnership_name']) != 1 && array_key_exists($data['InstitutionSiteOwnership']['name'], $data2['InstitutionSiteOwnership_name']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['InstitutionSiteOwnership_name'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSiteOwnership']['name'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $time; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
 		</div>
-	</li>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Status'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteStatus']['name']; ?></span>
+			<?php if(@sizeof($data2['InstitutionSiteStatus_name'])>0){ // && ( sizeof($data2['InstitutionSiteStatus_name']) != 1 && array_key_exists($data['InstitutionSiteStatus']['name'], $data2['InstitutionSiteStatus_name']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['InstitutionSiteStatus_name'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSiteStatus']['name'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td><?php echo $time; ?></td>
 
-	<li class="timeline-inverted">
-		<div class="timeline-badge info"><i class="fa fa-edit"></i></div>
-		<div class="timeline-panel">
-			<div class="timeline-heading">
-				<h5 class="timeline-title"><i>2015-01-01 07:00am</i></h5>
-			</div>
-			<div class="timeline-body">
-				Umairah has updated [<span style="color: #5B8BAF">Gender</span>] from '<span style="color: red">Boys</span>' to '<span style="color: green">Mixed</span>'.
-			</div>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
 		</div>
-	</li>
-
-	<li class="timeline-inverted">
-		<div class="timeline-badge success"><i class="fa fa-plus-square"></i></div>
-		<div class="timeline-panel">
-			<div class="timeline-heading">
-				<h5 class="timeline-title"><i>2015-01-01 06:00am</i></h5>
-			</div>
-			<div class="timeline-body">
-				Umairah has created [<span style="color: green">Umairah School</span>]'.
-			</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Date Opened'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $this->Utility->formatDate($data['InstitutionSite']['date_opened']); ?></span>
+			<?php if(@sizeof($data2['date_opened'])>0){ // && ( sizeof($data2['date_opened']) != 1 && array_key_exists($data['InstitutionSite']['date_opened'], $data2['date_opened']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['date_opened'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['date_opened'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $this->Utility->formatDate($val); ?></td>
+						<td><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
 		</div>
-	</li>
-</ul>
+	</div>
+	<div class="row last">
+		<div class="label"><?php echo __('Date Closed'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $this->Utility->formatDate($data['InstitutionSite']['date_closed']); ?></span>
+			<?php if(@sizeof($data2['date_opened'])>0){ // && ( sizeof($data2['date_opened']) != 1 && array_key_exists($data['Institution']['date_opened'], $data2['date_opened']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['date_closed'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['date_closed'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $this->Utility->formatDate($val);?></td>
+						<td><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+</fieldset>
 
+<?php if(@count($data2['area_id'])>0){ ?>
+<fieldset class="section_break dataDisplay">
+	<legend><?php echo __('Area'); ?></legend>
+	<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_id', array(), $data['InstitutionSite']['area_id'],$data2['area_id']);  ?>
+</fieldset>
+<?php } ?>
+
+<?php if(@count($data2['area_administrative_id'])>0){ ?>
+<fieldset class="section_break dataDisplay">
+	<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+	<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_administrative_id', array(), $data['InstitutionSite']['area_administrative_id'],$data2['area_administrative_id']);  ?>
+</fieldset>
+<?php } ?>
+
+<fieldset class="section_break dataDisplay">
+	<legend><?php echo __('Location'); ?></legend>
+	<div class="row">
+		<div class="label"><?php echo __('Address'); ?></div>
+		<div class="value" style="width:400px;">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['address']; ?></span>
+			<?php if(@sizeof($data2['address'])>0){ // && ( sizeof($data2['address']) != 1 && array_key_exists($data['InstitutionSite']['address'], $data2['address']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['address'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['address'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Postal Code'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['postal_code']; ?></span>
+			<?php if(@sizeof($data2['postal_code'])>0){ // && ( sizeof($data2['postal_code']) != 1 && array_key_exists($data['InstitutionSite']['postal_code'], $data2['postal_code']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['postal_code'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['postal_code'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Locality'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSiteLocality']['name']; ?></span>
+			 <?php if(@sizeof($data2['InstitutionSiteLocality_name'])>0){ // && ( sizeof($data2['InstitutionSiteLocality_name']) != 1 && array_key_exists($data['InstitutionSiteLocality']['name'], $data2['InstitutionSiteLocality_name']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['InstitutionSiteLocality_name'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSiteLocality']['name'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Longitude'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['longitude']; ?></span>
+			<?php if(@sizeof($data2['longitude'])>0){ // && ( sizeof($data2['longitude']) != 1 && array_key_exists($data['InstitutionSite']['longitude'], $data2['longitude']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['longitude'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['longitude'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Latitude'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['latitude']; ?></span>
+			<?php if(@sizeof($data2['latitude'])>0){ // && ( sizeof($data2['latitude']) != 1 && array_key_exists($data['InstitutionSite']['latitude'], $data2['latitude']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['latitude'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['latitude'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+</fieldset>
+
+<fieldset class="section_break dataDisplay">
+	<legend><?php echo __('Contact'); ?></legend>
+	<div class="row">
+		<div class="label"><?php echo __('Contact Person '); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['contact_person']; ?></span>
+			<?php if(@sizeof($data2['contact_person'])>0){ // && ( sizeof($data2['contact_person']) != 1 && array_key_exists($data['InstitutionSite']['contact_person'], $data2['contact_person']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['contact_person'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['contact_person'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Telephone'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['telephone']; ?></span>
+			<?php if(@sizeof($data2['telephone'])>0){ // && ( sizeof($data2['fax']) != 1 && array_key_exists($data['InstitutionSite']['telephone'], $data2['telephone']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['telephone'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['telephone'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Fax'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['fax']; ?></span>
+			<?php if(@sizeof($data2['fax'])>0){ // && ( sizeof($data2['fax']) != 1 && array_key_exists($data['InstitutionSite']['fax'], $data2['fax']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['fax'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['fax'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Email'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['email']; ?></span>
+			<?php if(@sizeof($data2['email'])>0){ // && ( sizeof($data2['email']) != 1 && array_key_exists($data['InstitutionSite']['email'], $data2['email']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['email'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['email'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Website'); ?></div>
+		<div class="value">
+			<span style="margin-left: 8px;"><?php echo $data['InstitutionSite']['website']; ?></span>
+			 <?php if(@sizeof($data2['website'])>0){ // && ( sizeof($data2['website']) != 1 && array_key_exists($data['InstitutionSite']['website'], $data2['website']) ) ) { ?>
+			<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
+				<tbody>
+					<?php $ctr = 1; foreach($data2['website'] as $val => $time):?>
+					<?php if($ctr == 1 && $data['InstitutionSite']['website'] == $val) continue; ?>
+					<tr>
+						<td><?php echo $val; ?></td>
+						<td class="table_cell"><?php echo $time; ?></td>
+
+					</tr>
+					<?php $ctr++; endforeach;?>
+				</tbody>
+			</table>
+			 <?php } ?>
+		</div>
+	</div>
+</fieldset>
+<?php endif; ?>
 <?php $this->end(); ?>

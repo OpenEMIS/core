@@ -34,11 +34,11 @@ class Country extends AppModel {
 		)
 	);
 
-	public function getOptions(){
+	public function getOptions($type='id'){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('Country.order')));
 		$list = array();
 		foreach($data as $obj){
-			$list[$obj['Country']['id']] = $obj['Country']['name'];
+			$list[$obj['Country'][$type]] = $obj['Country']['name'];
 		}
 
 		return $list;
