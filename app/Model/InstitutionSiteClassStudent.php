@@ -160,24 +160,15 @@ class InstitutionSiteClassStudent extends AppModel {
 	}
 	
 	// used by StudentController.classes
-	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
-		$fields = array('AcademicPeriod.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'InstitutionSiteSection.name');
+	public function getListOfClassByStudent($studentId) {
+		$fields = array("$this->alias.*", 'AcademicPeriod.name', 'InstitutionSite.name', 'InstitutionSiteSection.*', 'InstitutionSiteClass.*', 'EducationSubject.name');
 		
 		$joins = array(
-			array(
-				'table' => 'institution_site_section_students',
-				'alias' => 'InstitutionSiteSectionStudent',
-				'conditions' => array(
-					'InstitutionSiteClassStudent.student_id = InstitutionSiteSectionStudent.student_id',
-					'InstitutionSiteClassStudent.institution_site_section_id = InstitutionSiteSectionStudent.institution_site_section_id',
-					'InstitutionSiteSectionStudent.status = 1'
-				)
-			),
 			array(
 				'table' => 'institution_site_sections',
 				'alias' => 'InstitutionSiteSection',
 				'conditions' => array(
-					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteSection.id'
+					'InstitutionSiteSection.id = InstitutionSiteClassStudent.institution_site_section_id'
 				)
 			),
 			array(
@@ -186,19 +177,16 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array('InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id')
 			),
 			array(
-				'table' => 'education_grades',
-				'alias' => 'EducationGrade',
-				'conditions' => array('InstitutionSiteSectionStudent.education_grade_id = EducationGrade.id')
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.id = InstitutionSiteClass.institution_site_id')
 			),
 			array(
-				'table' => 'education_programmes',
-				'alias' => 'EducationProgramme',
-				'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
-			),
-			array(
-				'table' => 'education_cycles',
-				'alias' => 'EducationCycle',
-				'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+					'table' => 'education_subjects',
+					'alias' => 'EducationSubject',
+					'conditions' => array(
+						"EducationSubject.id = InstitutionSiteClass.education_subject_id"
+					)
 			),
 			array(
 				'table' => 'academic_periods',
@@ -208,24 +196,14 @@ class InstitutionSiteClassStudent extends AppModel {
 		);
 		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
 
-		if ($institutionSiteId == 0) {
-			$fields[] = 'InstitutionSite.name';
-			$joins[] = array(
-				'table' => 'institution_sites',
-				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.id = InstitutionSiteClass.institution_site_id')
-			);
-		} else {
-			$conditions['InstitutionSiteClass.institution_site_id'] = $institutionSiteId;
-		}
-		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'InstitutionSiteClass')));
 		$data = $this->find('all', array(
+			'recursive' => -1,
 			'fields' => $fields,
 			'joins' => $joins,
 			'conditions' => $conditions,
-			'order' => array('AcademicPeriod.start_year DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+			'order' => array('AcademicPeriod.order')
 		));
-		$this->bindModel(array('belongsTo' => array('EducationGrade', 'InstitutionSiteClass')));
+		
 		return $data;
 	}
 	
