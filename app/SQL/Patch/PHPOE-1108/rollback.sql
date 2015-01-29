@@ -133,3 +133,9 @@ DROP TABLE IF EXISTS `institution_site_survey_answers`;
 --
 
 DROP TABLE IF EXISTS `institution_site_survey_table_cells`;
+
+--
+-- 16. new table: academic_period_types
+--
+
+DROP TABLE IF EXISTS `academic_period_types`;
