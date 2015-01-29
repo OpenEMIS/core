@@ -43,7 +43,7 @@ foreach($fields['fields'] as $field) {
 					$linkOptions[] = $data[$model]['id'];
 					$value = $this->Html->link($value, $linkOptions);
 				} else if($fieldType === 'select') { // dropdown list
-					if(isset($field['options'])) {
+					if(isset($field['options'])&&isset($field['options'][$data[$model][$key]])) {
 						$value = $field['options'][$data[$model][$key]];
 					}
 				}

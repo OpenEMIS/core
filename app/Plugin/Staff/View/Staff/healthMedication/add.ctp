@@ -4,20 +4,18 @@ echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit) {
-	$startDate = array('id' => 'startDate', 'label' => $this->Label->get('HealthMedication.start_date'));
-	$endDate = array('id' => 'endDate', 'label' => $this->Label->get('HealthMedication.end_date'));
-    if(!empty($this->data[$model]['id'])){
+
+$redirectAction = array('action' => 'healthMedication');
+$startDate = array('id' => 'startDate', 'label' => $this->Label->get('HealthMedication.start_date'));
+$endDate = array('id' => 'endDate', 'label' => $this->Label->get('HealthMedication.end_date'), 'data-date' =>  date('d-m-Y', time() + 86400));
+if(isset($this->data[$model])) {
+    if(!empty($this->data[$model]['id'])) {
         $redirectAction = array('action' => 'healthMedicationView', $this->data[$model]['id']);
-        $startDate['data-date'] = $this->data[$model]['start_date'];
-        $endDate['data-date'] = $this->data[$model]['end_date'];
     }
-    else{
-        $redirectAction = array('action' => 'healthMedication');
-        $endDate['data-date'] =  date('d-m-Y', time() + 86400);
-    }
-    echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+    $startDate['data-date'] = $this->data[$model]['start_date'];
+    $endDate['data-date'] = $this->data[$model]['end_date'];    
 }
+echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Staff'));
