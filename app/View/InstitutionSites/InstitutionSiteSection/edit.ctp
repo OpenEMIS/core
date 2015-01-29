@@ -1,6 +1,4 @@
 <?php
-
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
 echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
@@ -18,7 +16,17 @@ $formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'edi
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
+
+echo $this->element('edit');
 ?>
+<?php
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $this->data[$model]['id'])));
+echo $this->Form->end();
+
+$this->end(); 
+?>
+
+
 <fieldset class="section_break">
 	<legend><?php echo __('Section'); ?></legend>
 <?php
@@ -100,9 +108,3 @@ echo $this->Form->input('institution_site_staff_id', array(
 		</div>
 	</div>
 </fieldset>
-<?php
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $this->data[$model]['id'])));
-echo $this->Form->end();
-
-$this->end(); 
-?>
