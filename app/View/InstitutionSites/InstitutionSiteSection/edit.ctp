@@ -34,7 +34,7 @@ echo $this->Form->input('academic_period', array('value' => $this->data['Academi
 	<div class="col-md-4 stackElements">
 	<?php
 	foreach($grades as $g) {
-		echo $this->Form->input('grade', array('value' => $g, 'label' => false, 'div' => false, 'disabled' => 'disabled', 'between' => false, 'after' => false));
+		echo $this->Form->input('grade_name)', array('value' => $g, 'label' => false, 'div' => false, 'disabled' => 'disabled', 'between' => false, 'after' => false));
 	}
 	?>
 	</div>
