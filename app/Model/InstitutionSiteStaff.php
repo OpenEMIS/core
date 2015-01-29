@@ -620,7 +620,7 @@ class InstitutionSiteStaff extends AppModel {
 		foreach($staffData as $row){
 			$staff = $row['Staff'];
 			$staffId = $staff['id'];
-			$staffName = sprintf('%s %s', $staff['first_name'], $staff['last_name']);
+			$staffName = ModelHelper::getName($staff);
 			$options[$staffId] = $staffName;
 		}
 		
