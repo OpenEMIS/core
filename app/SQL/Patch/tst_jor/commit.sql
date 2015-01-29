@@ -60,7 +60,7 @@ VALUES (NULL , 'Student', 'Students' , 'Students', 'Details', 'Sections', 'Stude
 
 -- Malcolm SQL START 
 UPDATE `navigations` SET `action` = 'InstitutionSiteClass', `pattern` = 'InstitutionSiteClass' WHERE controller = 'InstitutionSites' AND header = 'Details' AND title = 'Classes';
-ALTER TABLE `institution_site_classes` ADD `education_grade_subject_id` INT NULL DEFAULT NULL AFTER `academic_period_id`;
+ALTER TABLE `institution_site_classes` ADD `education_subject_id` INT NULL DEFAULT NULL AFTER `academic_period_id`;
 
 CREATE TABLE IF NOT EXISTS 1190_config_items LIKE config_items;
 INSERT 1190_config_items SELECT * FROM config_items WHERE name = 'max_subjects_per_class';
@@ -80,6 +80,11 @@ SET t1.education_grade_subject_id = t2.education_grade_subject_id;
 -- SELECT * FROM institution_site_classes INNER JOIN institution_site_class_subjects ON institution_site_classes.id = institution_site_class_subjects.institution_site_class_id GROUP BY institution_site_classes.id ORDER BY institution_site_class_subjects.id; 
 
 RENAME TABLE institution_site_class_subjects to 1190_institution_site_class_subjects;
+
+ALTER TABLE `institution_site_classes` DROP `institution_site_shift_id`;
+
+ALTER TABLE `institution_site_classes` ADD `institution_site_section_id` INT NULL DEFAULT NULL AFTER `institution_site_id`;
+ALTER TABLE `institution_site_classes` ADD `staff_id` INT NULL DEFAULT NULL AFTER `institution_site_section_id`;
 
 -- Malcolm SQL END
 
