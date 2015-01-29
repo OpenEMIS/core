@@ -517,7 +517,10 @@ class LabelHelper extends AppHelper {
 			'staff_id' => 'Home Room Teacher',
 			'all_grades_select' => 'All Grades',
 			'single_grade' => 'Single Grade',
-			'multi_grades' => 'Multi Grades'
+			'multi_grades' => 'Multi Grades',
+			'education_grade_id' => 'Education Grade',
+			'institution_site_shift_id' => 'Shift',
+			'academic_period_id' => 'Academic Period'
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'

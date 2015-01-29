@@ -96,4 +96,7 @@ class ModelHelper extends AppHelper {
 		return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['identification_no'], $name)) : trim(sprintf('%s', $name));
 	}
 
+	public function getGender($gender) {
+		return ($gender == 'F') ? __('Female') : __('Male');
+	}
 }
