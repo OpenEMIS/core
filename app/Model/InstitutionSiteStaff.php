@@ -437,7 +437,10 @@ class InstitutionSiteStaff extends AppModel {
 			'conditions' => array(
 				"$alias.institution_site_id" => $institutionSiteId,
 				"$alias.start_date <= " => $periodStartDate,
-				"$alias.end_date >= " => $periodStartDate
+				'OR' => array(
+					"$alias.end_date IS NULL",
+					"$alias.end_date >= " => $periodStartDate
+				)
 			)
 		);
 

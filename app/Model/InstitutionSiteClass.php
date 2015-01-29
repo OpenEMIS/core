@@ -50,7 +50,8 @@ class InstitutionSiteClass extends AppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid academic period'
+				'message' => 'Please enter a valid academic period',
+				'on' => 'create'
 			)
 		)
 	);
@@ -97,7 +98,6 @@ class InstitutionSiteClass extends AppModel {
 
 		if (empty($periodOptions)) {
 			$this->Message->alert('InstitutionSite.noProgramme');
-			return;
 		}
 
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
@@ -106,7 +106,6 @@ class InstitutionSiteClass extends AppModel {
 
 		if (empty($sectionOptions)) {
 			$this->Message->alert('InstitutionSiteSection.noDataForSelectedPeriod');
-			return;
 		}
 
 		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
@@ -251,7 +250,7 @@ class InstitutionSiteClass extends AppModel {
 				)
 			);
 			$this->contain($contain);
-			$data = $this->findById($id);
+			$data = $this->findById($id);//pr($data);
 			$contentHeader = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($contentHeader);
 			
@@ -294,7 +293,7 @@ class InstitutionSiteClass extends AppModel {
 				$postData = $this->request->data;
 
 				if ($postData['submit'] == 'add') {
-					if (isset($postData[$this->alias]['student_id'])) {
+					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
 						$InstitutionSiteSectionStudent->Student->recursive = -1;
@@ -302,7 +301,7 @@ class InstitutionSiteClass extends AppModel {
 						
 						$newRow = array(
 							'student_id' => $studentId,
-							'student_category_id' => key($categoryOptions),
+							'student_category_id' => 0,
 							'status' => 1,
 							'Student' => $studentObj['Student']
 						);
@@ -315,14 +314,39 @@ class InstitutionSiteClass extends AppModel {
 						}
 
 						$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
-
 						unset($this->request->data[$this->alias]['student_id']);
-						unset($this->request->data['submit']);
 					}
+					if (isset($postData[$this->alias]['staff_id']) && !empty($postData[$this->alias]['staff_id'])) {
+						$staffId = $postData[$this->alias]['staff_id'];
+
+						$InstitutionSiteStaff->Staff->recursive = -1;
+						$staffObj = $InstitutionSiteStaff->Staff->findById($staffId, $contain['InstitutionSiteClassStaff']['Staff']['fields']);
+						
+						$newRow = array(
+							'staff_id' => $staffId,
+							'status' => 1,
+							'Staff' => $staffObj['Staff']
+						);
+
+						// search if the new student was previously added before
+						foreach ($data['InstitutionSiteClassStaff'] as $row) {
+							if ($row['staff_id'] == $staffId) {
+								$newRow['id'] = $row['id'];
+							}
+						}
+
+						$this->request->data['InstitutionSiteClassStaff'][] = $newRow;
+						unset($this->request->data[$this->alias]['staff_id']);
+					}
+					unset($this->request->data['submit']);
 				} else if ($postData['submit'] = 'Save') {
+					$this->InstitutionSiteClassStaff->updateAll(
+						array('InstitutionSiteClassStaff.status' => 0),
+						array('InstitutionSiteClassStaff.institution_site_class_id' => $id)
+					);
 					$this->InstitutionSiteClassStudent->updateAll(
 						array('InstitutionSiteClassStudent.status' => 0),
-						array('InstitutionSiteClassStudent.institution_site_section_id' => $id)
+						array('InstitutionSiteClassStudent.institution_site_class_id' => $id)
 					);
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
@@ -331,6 +355,13 @@ class InstitutionSiteClass extends AppModel {
 				}
 			} else {
 				$this->request->data = $data;
+			}
+
+			// removing existing staff from StaffOptions
+			foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
+				if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
+					unset($staffOptions[$row['staff_id']]);
+				}
 			}
 
 			// removing existing students from StudentOptions
