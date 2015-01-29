@@ -91,15 +91,15 @@ $obj = $data['InstitutionSite'];
 
 <?php if ($obj['area_id'] > 0) : ?>
 <fieldset class="section_break">
-	<legend><?php echo __('Area'); ?></legend>
+	<legend><?php echo __('Area (Education)'); ?></legend>
 	<?php echo $this->FormUtility->areas($obj['area_id']); ?>
 </fieldset>
 <?php endif; ?>
 
-<?php if ($obj['area_education_id'] > 0) : ?>
+<?php if ($obj['area_administrative_id'] > 0) : ?>
 <fieldset class="section_break">
-	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-	<?php echo $this->FormUtility->areas($obj['area_education_id'], 'AreaEducation'); ?>
+	<legend><?php echo __('Area (Administrative)'); ?></legend>
+	<?php echo $this->FormUtility->areas($obj['area_administrative_id'], 'AreaAdministrative'); ?>
 </fieldset>
 <?php endif; ?>
 

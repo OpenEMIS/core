@@ -150,8 +150,8 @@ class InstitutionSiteInfrastructure extends AppModel {
 		$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
 		$yearDisposedOptions = $this->controller->DateTime->yearOptionsByConfig(true);
 		$currentYear = Date('Y');
-		$ownershipOptions = $this->InfrastructureOwnership->getList(1);
-		$conditionOptions = $this->InfrastructureCondition->getList(1);
+		$ownershipOptions = $this->InfrastructureOwnership->getList();
+		$conditionOptions = $this->InfrastructureCondition->getList();
 		
 		// custom fields start
 		$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($levelId);
@@ -244,8 +244,8 @@ class InstitutionSiteInfrastructure extends AppModel {
 			$yearOptions = $this->controller->DateTime->yearOptionsByConfig();
 			$yearDisposedOptions = $this->controller->DateTime->yearOptionsByConfig(true);
 			$currentYear = Date('Y');
-			$ownershipOptions = $this->InfrastructureOwnership->getList(1);
-			$conditionOptions = $this->InfrastructureCondition->getList(1);
+			$ownershipOptions = $this->InfrastructureOwnership->getList();
+			$conditionOptions = $this->InfrastructureCondition->getList();
 			
 			// custom fields start
 			$data = ClassRegistry::init('Infrastructure.InfrastructureCustomField')->getCustomFields($levelId);

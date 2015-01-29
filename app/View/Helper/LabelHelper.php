@@ -132,17 +132,17 @@ class LabelHelper extends AppHelper {
 		),
 		'Area' => array(
 			'name' => 'Area',
-			'area_level_id' => 'Area Level',
+			'area_level_id' => 'Area Level (Education)',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
-			'name' => 'Area Level'
+			'name' => 'Area Level (Education)'
 		),
-		'AreaEducation' => array(
-			'area_education_level_id' => 'Area Education Level'
+		'AreaAdministrative' => array(
+			'area_administrative_level_id' => 'Area Level (Administrative)'
 		),
-		'AreaEducationLevel' => array(
-			'name' => 'Area Level'
+		'AreaAdministrativeLevel' => array(
+			'name' => 'Area Level (Administrative)'
 		),
 		'EducationSystem' => array(
 			'title' => 'Education Systems',
@@ -400,7 +400,7 @@ class LabelHelper extends AppHelper {
 			'staff_custom_field_id' => 'Custom Field'
 		),
 		'SecurityGroup' => array(
-			'SecurityGroupArea' => 'Areas',
+			'SecurityGroupArea' => 'Areas (Education)',
 			'SecurityGroupInstitutionSite' => 'Institutions',
 			'SecurityGroupUser' => 'Users'
 		),
@@ -518,7 +518,10 @@ class LabelHelper extends AppHelper {
 			'staff_id' => 'Home Room Teacher',
 			'all_grades_select' => 'All Grades',
 			'single_grade' => 'Single Grade',
-			'multi_grades' => 'Multi Grades'
+			'multi_grades' => 'Multi Grades',
+			'education_grade_id' => 'Education Grade',
+			'institution_site_shift_id' => 'Shift',
+			'academic_period_id' => 'Academic Period'
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'

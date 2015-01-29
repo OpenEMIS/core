@@ -52,6 +52,9 @@ class FormUtilityHelper extends AppHelper {
 		$center = isset($options['center']) ? $options['center'] : false;
 		$html .= '<div class="form-group">';
 		$html .= '<div class="col-md-offset-' . ($center ? '5' : '4') . '">';
+		if (array_key_exists('reloadBtn', $options) && $options['reloadBtn'] == true) {
+			$html .= $this->Form->button('reload', array('id' => 'reload', 'name' => 'submit', 'class' => 'none'));
+		}
 		$html .= $this->Form->submit($this->Label->get('general.save'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		$html .= $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
 		$html .= '</div>';
@@ -230,12 +233,19 @@ class FormUtilityHelper extends AppHelper {
 	public function areapicker($field, $options=array()) {
 		$_options = array(
 			'id' => 'areapicker',
-			'model' => 'Area'
+			'controller' => Inflector::singularize($this->request->controller),
+			'model' => 'Area',
+			'div' => true
 		);
-		$inputDefaults = $this->Form->inputDefaults();
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+
+		$inputDefaults = $this->getFormDefaults();
+		$inputDefaults['autocomplete'] = 'off';
+		$inputDefaults['onchange'] = 'Area.reloadDiv(this)';
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$_options = array_merge($_options, $options);
-		$model = $_options['model'];		
+
+		$controller = $_options['controller'];
+		$model = $_options['model'];
 		$areaId = null;
 		if($model=='Area'){
 			$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
@@ -253,26 +263,39 @@ class FormUtilityHelper extends AppHelper {
 				}
 			}
 		}
-		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : (($areaId) ? $areaId : null);		
+		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : (($areaId) ? $areaId : null);
+
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		
 		$html = '';
-		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllByParentId(-1);
-		$inputOptions = array();
-		$inputOptions['autocomplete'] = 'off';
-		$inputOptions['onchange'] = 'Area.getList(this)';
+		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
+		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllById($worldId);
+		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
+				// $options = $AreaHandler->getChildren($model, $obj[$model]['parent_id']);
 				$options = $AreaHandler->{$model}->find('list', array(
-					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
-					'order' => array('order')
+					'conditions' => array(
+						$model.'.parent_id' => $obj[$model]['parent_id'],
+						$model.'.visible' => 1
+					),
+					'order' => array($model.'.order')
 				));
+
+				if($obj[$model]['parent_id'] == -1 || ($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
+				} else {
+					$options = array(
+						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
+					) + $options;
+				}
 				$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
-				
+
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
+
+					/*
 					if($i < count($path) - 1) {
 						$options = array($obj[$model]['id'] => $obj[$model]['name']);
 					}else{
@@ -286,30 +309,50 @@ class FormUtilityHelper extends AppHelper {
 					}
 				}else{
 					$options = array($this->Label->get('Area.select')) + $options;	
+					*/
+				} else {
+					$inputOptions['default'] = $worldId;
+					$inputOptions['value'] = $worldId;
 				}
 				$inputOptions['options'] = $options;
-				$label = $inputDefaults['label'];
-				$label['text'] = $levelName;
-				$inputOptions['label'] = $label;
+				$inputOptions['label']['text'] = $levelName;
+				if($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == -1) {	//hide World
+					continue;
+				}
 				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
 			}
 		}
 		
-		$levels = $AreaHandler->{$levelModels[$model]}->find('list', array('limit' => -1, 'offset' => count($path), 'order' => 'level'));
+		$levelOptions = array();
+		$levelOptions['limit'] = 1;
+		$levelOptions['offset'] = count($path);
+		$levelOptions['order'] = $levelModels[$model].'.level';
+		if($model == 'AreaAdministrative' && count($path) >= 2) {
+			$levelOptions['conditions'] = array(
+				$levelModels[$model].'.area_administrative_id' => array(0, $path[1][$model]['id'])
+			);
+		}
+		$levels = $AreaHandler->{$levelModels[$model]}->find('list', $levelOptions);
 		
 		foreach($levels as $id => $name) {
-			$html .= $this->Form->input($name, array('options' => array(), 'onchange' => 'Area.getList(this)', 'disabled'));
+			$inputOptions = $inputDefaults;
+			$inputOptions['options'] = array();
+			$inputOptions['disabled'] = 'disabled';
+			$html .= $this->Form->input($name, $inputOptions);
 		}
 		
 		$url = 'Areas/ajaxGetAreaOptions/' . $model . '/';
+		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/' . $controller . '/' . $field . '/';
 		$html .= $this->Form->hidden($field, array('value' => $value));
-		$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url));
-		
+		if($_options['div']) {
+			$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'value' => $worldId, 'url' => $url, 'urlReload' => $urlReload));
+		}
+
 		return $html;
 	}
 	
 	public function areas($value, $model='Area') {
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 		
 		$html = '';
@@ -321,6 +364,9 @@ class FormUtilityHelper extends AppHelper {
 		$path = $AreaHandler->{$model}->getPath($value);
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
+				if($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == -1) {
+					continue;
+				}
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
 				$html .= sprintf($row, sprintf($labelCol, $levelName) . sprintf($valueCol, $obj[$model]['name']));
 			}

@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StaffSection extends AppModel {
-	public $useTable = 'institution_site_section_staff';
+	public $useTable = 'institution_site_sections';
 	
 	public $actsAs = array(
 		'ControllerAction2'
@@ -24,52 +24,50 @@ class StaffSection extends AppModel {
 	
 	public $belongsTo = array(
 		'Staff.Staff',
-		'InstitutionSiteSection'
+		'InstitutionSite',
+		'AcademicPeriod',
+		'EducationGrade'
+	);
+	
+	public $hasMany = array(
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteSectionGrade'
 	);
 	
 	public function index() {
 		$this->Navigation->addCrumb('Sections');
 		$alias = $this->alias;
 		$staffId = $this->Session->read('Staff.id');
+		
+		$this->contain(array(
+			'InstitutionSite' => array(
+				'fields' => array('InstitutionSite.name')
+			),
+			'AcademicPeriod' => array(
+				'fields' => array('AcademicPeriod.name')
+			),
+			'EducationGrade' => array(
+				'fields' => array('EducationGrade.name')
+			)
+		));
 
-//		$data = $this->find('all', array(
-//			'recursive' => -1,
-//			'fields' => array(
-//				'InstitutionSite.name', 'InstitutionSiteClass.name', 'SchoolYear.name'
-//			),
-//			'joins' => array(
-//				array(
-//					'table' => 'institution_site_classes',
-//					'alias' => 'InstitutionSiteClass',
-//					'conditions' => array(
-//						"InstitutionSiteClass.id = $alias.institution_site_class_id"
-//					)
-//				),
-//				array(
-//					'table' => 'institution_sites',
-//					'alias' => 'InstitutionSite',
-//					'conditions' => array(
-//						"InstitutionSite.id = InstitutionSiteClass.institution_site_id"
-//					)
-//				),
-//				array(
-//					'table' => 'school_years',
-//					'alias' => 'SchoolYear',
-//					'conditions' => array(
-//						"SchoolYear.id = InstitutionSiteClass.school_year_id",
-//						"SchoolYear.visible = 1"
-//					)
-//				)
-//			),
-//			'conditions' => array(
-//				"$alias.staff_id" => $staffId,
-//				"$alias.status = 1"
-//			),
-//			'order' => array("SchoolYear.order")
-//		));
+		$data = $this->find('all', array(
+			'conditions' => array(
+				"$alias.staff_id" => $staffId
+			),
+			'order' => array("AcademicPeriod.order")
+		));
 		
-		$data = array();
+		foreach($data as $i => $obj) {
+			$id = $obj[$this->alias]['id'];
+			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id);
+			if(empty($obj[$this->alias]['education_grade_id'])){
+				$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
+			}else{
+				$data[$i]['EducationGrade']['grades'] = ClassRegistry::init('InstitutionSiteSection')->getSingleGradeBySection($id);
+			}
+		}
 		
-		$this->setVar('data', $data);
+		$this->setVar(compact('data'));
 	}
 }

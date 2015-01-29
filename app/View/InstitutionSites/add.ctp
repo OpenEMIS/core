@@ -48,12 +48,12 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 </fieldset>
 
 <fieldset class="section_break">
-	<legend><?php echo __('Area'); ?></legend>
+	<legend><?php echo __('Area (Education)'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('area_id', array('value' => $areaId)); ?>
 </fieldset>
 <fieldset class="section_break">
-	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-	<?php echo $this->FormUtility->areapicker('area_education_id', array('model' => 'AreaEducation', 'value' => $areaEducationId)); ?>
+	<legend><?php echo __('Area (Administrative)'); ?></legend>
+	<?php echo $this->FormUtility->areapicker('area_administrative_id', array('id' => 'area_administrative_picker', 'model' => 'AreaAdministrative', 'value' => $areaAdministrativeId)); ?>
 </fieldset>
 
 <fieldset class="section_break">
