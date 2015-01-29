@@ -47,10 +47,11 @@ UPDATE `area_administrative_levels` SET `level` = `level` + 1;
 INSERT INTO `area_administrative_levels` (
 `name`,
 `level`,
+`area_administrative_id`,
 `created_user_id`,
 `created`
 ) VALUES (
-'World', '1', '1', '0000-00-00 00:00:00'
+'World', '1', 0, '1', '0000-00-00 00:00:00'
 );
 
 --
@@ -61,6 +62,7 @@ SET @levelIdOfWorld := 0;
 SELECT `id` INTO @levelIdOfWorld FROM `area_administrative_levels` WHERE `level` = 1;
 
 INSERT INTO `area_administratives` (
+`code`,
 `name`,
 `parent_id`,
 `area_administrative_level_id`,
@@ -69,7 +71,7 @@ INSERT INTO `area_administratives` (
 `created_user_id`,
 `created`
 ) VALUES (
-'World', '-1', @levelIdOfWorld, '1', '1', '1', '0000-00-00 00:00:00'
+'World', 'World', '-1', @levelIdOfWorld, '1', '1', '1', '0000-00-00 00:00:00'
 );
 
 SET @parentIdOfWorld := 0;
