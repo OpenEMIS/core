@@ -52,7 +52,8 @@ class InstitutionSiteSection extends AppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid school academic period'
+				'message' => 'Please enter a valid school academic period',
+				'on' => 'create'
 			)
 		),
 		'institution_site_shift_id' => array(
@@ -237,13 +238,23 @@ class InstitutionSiteSection extends AppModel {
 	}
 
 	public function edit($id=0) {
-		if ($this->exists($id)) {pr($this->getGradeOptions($id));
+		if ($this->exists($id)) {
 			$institutionSiteId = $this->Session->read('InstitutionSite.id');
-			$this->contain('AcademicPeriod', 'Staff');
+			$this->contain(array(
+				'AcademicPeriod', 
+				'Staff', 
+				'InstitutionSiteSectionStudent' => array(
+					'Student' => array(
+						'fields' => array(
+							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
+							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+						)
+					)
+				)
+			));
 			$data = $this->findById($id);
-			
-			pr($data);
 
+			$periodId = $data['AcademicPeriod']['id'];
 			$periodStartDate = $data['AcademicPeriod']['start_date'];
 			$periodEndDate = $data['AcademicPeriod']['start_date'];
 
@@ -256,8 +267,28 @@ class InstitutionSiteSection extends AppModel {
 			$this->fields['staff_id']['type'] = 'select';
 			$this->fields['staff_id']['options'] = $staffOptions;
 
+			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($institutionSiteId, $periodId);
+			$this->fields['institution_site_shift_id']['type'] = 'select';
+			$this->fields['institution_site_shift_id']['options'] = $shiftOptions;
 
-			pr($staffOptions);
+			$this->fields['education_grade_id']['type'] = 'hidden'; // hide this field temporary
+
+			$this->fields['students'] = array(
+				'type' => 'element',
+				'element' => '../InstitutionSites/InstitutionSiteSection/students',
+				'override' => true,
+				'visible' => true
+			);
+			// end fields setup
+
+			$categoryOptions = $this->InstitutionSiteSectionStudent->StudentCategory->getList();
+
+			$studentOptions = ClassRegistry::init('InstitutionSiteStudent')->getStudentOptions($institutionSiteId, $periodId);
+			pr($studentOptions);
+			//pr($categoryOptions);
+
+			//pr($data);
+
 			/*
 			$academicPeriodId = $data['InstitutionSiteSection']['academic_period_id'];
 			
@@ -293,13 +324,11 @@ class InstitutionSiteSection extends AppModel {
 					$this->Message->alert('general.edit.success');
 					$this->redirect(array('action' => $this->alias, 'view', $id));
 				}
-
-				$this->request->data['AcademicPeriod']['name'] = $data['AcademicPeriod']['name'];
 			} else {
 				$this->request->data = $data;
 			}
 
-			$this->setVar(compact('grades', 'shiftOptions', 'studentsData', 'staffOptions', 'categoryOptions'));
+			$this->setVar(compact('categoryOptions'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias));
@@ -324,7 +353,7 @@ class InstitutionSiteSection extends AppModel {
 			)
 		));
 		$data = $this->findById($sectionId);
-		
+
 		$list = array();
 		if (!empty($data['EducationGrade']['id'])) {
 			$list[$data['EducationGrade']['id']] = $data['EducationGrade']['name'];

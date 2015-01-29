@@ -52,6 +52,9 @@ class FormUtilityHelper extends AppHelper {
 		$center = isset($options['center']) ? $options['center'] : false;
 		$html .= '<div class="form-group">';
 		$html .= '<div class="col-md-offset-' . ($center ? '5' : '4') . '">';
+		if (array_key_exists('reloadBtn', $options) && $options['reloadBtn'] == true) {
+			$html .= $this->Form->button('reload', array('id' => 'reload', 'name' => 'submit', 'class' => 'none'));
+		}
 		$html .= $this->Form->submit($this->Label->get('general.save'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		$html .= $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
 		$html .= '</div>';

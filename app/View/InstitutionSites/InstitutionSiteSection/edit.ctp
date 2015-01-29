@@ -20,7 +20,7 @@ echo $this->Form->create($model, $formOptions);
 echo $this->element('edit');
 ?>
 <?php
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $this->data[$model]['id'])));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $this->data[$model]['id']), 'reloadBtn' => true));
 echo $this->Form->end();
 
 $this->end(); 
