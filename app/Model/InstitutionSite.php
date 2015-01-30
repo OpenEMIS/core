@@ -687,7 +687,7 @@ class InstitutionSite extends AppModel {
 				'recursive' => -1,
 				'joins' => $this->paginateJoins($joins, $conditions),
 				'conditions' => $this->paginateConditions($conditions),
-				'group' => array('InstitutionSite.id')
+				//'group' => array('InstitutionSite.id')
 			));
 		} else {
 			$data = $this->paginateQuery($conditions);
