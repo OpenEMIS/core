@@ -168,7 +168,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .survey .panel-title > a { color: #007cbe; }
 .survey .list-group-item > span { color: #666666; font-weight: normal; font-style: italic; }
 .survey .list-group-item > span.modified { margin-left: 5px; }
-
+.action_pullright {
+	float: right;
+}
 
 .accordion-toggle {
   cursor: pointer;
