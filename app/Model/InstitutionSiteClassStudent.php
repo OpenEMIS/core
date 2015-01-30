@@ -367,7 +367,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		$options['fields'] = array(
 			'DISTINCT Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
-			'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
+			'AssessmentResultType.name', 'InstitutionSiteClass.academic_period_id',
 			'AssessmentItem.min', 'AssessmentItem.max', 'AssessmentResultType.name'
 		);
 
