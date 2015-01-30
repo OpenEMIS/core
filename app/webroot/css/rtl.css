@@ -381,3 +381,7 @@ fieldset.section_break > .profile-image {
 .page-controls .col-md-3{
 	padding-left: 15px;
 }
+
+/* survey */
+.survey .list-group { padding-right: 0px; }
+.survey .list-group-item > span.modified { margin-right: 5px; }

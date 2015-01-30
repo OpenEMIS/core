@@ -23,7 +23,7 @@ $this->start('contentBody');
 					<?php foreach ($obj['AcademicPeriod'] as $key => $period) : ?>
 						<li class="list-group-item">
 							<?php echo $this->Html->link($period['AcademicPeriod']['name'], array('action' => $model, 'view', $period[$model]['id'])) ?>
-							<span style="float: right;"><?php echo __('Completed On : '); ?><?php echo !empty($period[$model]['modified']) ? $period[$model]['modified'] : $period[$model]['created']; ?></span>
+							<span class="action_pullright"><?php echo __('Completed On : '); ?><?php echo !empty($period[$model]['modified']) ? $period[$model]['modified'] : $period[$model]['created']; ?></span>
 						</li>
 					<?php endforeach ?>
 				</ul>
