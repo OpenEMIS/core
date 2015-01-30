@@ -95,7 +95,7 @@ echo $this->Form->input('InstitutionSiteSection.section_id', array(
 						} else {
 							$currStaff = array();
 							foreach ($classesBySectionBySubjectId[$subjectId]['InstitutionSiteClass']['InstitutionSiteClassStaff'] as $staffKey => $staffValue) {
-								array_push($currStaff, $staffValue['staffName']);
+								array_push($currStaff, ModelHelper::getName($staffValue['Staff']));
 							}
 							echo implode(', <br>', $currStaff);
 						}

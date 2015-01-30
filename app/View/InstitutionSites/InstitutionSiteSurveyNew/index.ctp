@@ -29,7 +29,7 @@ $this->start('contentBody');
 									echo $period['AcademicPeriod']['name'];
 								}
 							?>
-							<span class="pull-right"><?php echo __('To be completed by : '); ?><?php echo $period['SurveyStatus']['date_disabled']; ?></span>
+							<span class="action_pullright"><?php echo __('To be completed by : '); ?><?php echo $period['SurveyStatus']['date_disabled']; ?></span>
 						</li>
 					<?php endforeach ?>
 				</ul>
