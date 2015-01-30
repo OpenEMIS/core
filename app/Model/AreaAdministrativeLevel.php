@@ -58,7 +58,7 @@ class AreaAdministrativeLevel extends AppModel {
 					'AreaAdministrativeLevel.area_administrative_id' => $selectedCountry
 				)
 			));
-			$maxLevelVal = isset($maxLevel[0]['maxLevel']) ? $maxLevel[0]['maxLevel']+1 : 3;
+			$maxLevelVal = isset($maxLevel[0]['maxLevel']) ? $maxLevel[0]['maxLevel']+1 : 1;
 
 			$this->fields['level']['type'] = 'hidden';
 			$this->fields['level']['value'] = $maxLevelVal;
@@ -84,7 +84,7 @@ class AreaAdministrativeLevel extends AppModel {
 		$this->AreaAdministrative->contain('AreaAdministrativeLevel');
 		$countryOptions = $this->AreaAdministrative->find('list', array(
 			'conditions' => array(
-				'AreaAdministrativeLevel.level' => 2
+				'AreaAdministrativeLevel.level' => 0
 			)
 		));
 		if(!empty($countryOptions)) {
@@ -93,17 +93,10 @@ class AreaAdministrativeLevel extends AppModel {
 			$data = $this->find('all', array(
 				'conditions' => array(
 					'AreaAdministrativeLevel.area_administrative_id' => $selectedCountry,
-					'AreaAdministrativeLevel.level >' => 2
+					'AreaAdministrativeLevel.level >' => 0
 				),
 				'order' => array('level')
 			));
-
-			$tmp = array();
-			foreach ($data as $key => $obj) {
-				$obj[$this->alias]['level'] = $obj[$this->alias]['level'] - 2;
-				$tmp[$key] = $obj;
-			}
-			$data = $tmp;
 
 			$this->setVar(compact('countryOptions', 'selectedCountry'));
 		} else {
