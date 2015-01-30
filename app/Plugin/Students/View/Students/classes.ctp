@@ -41,8 +41,8 @@ foreach($data as $key => $classes){
 			<tr>
 				<td><?php echo $obj['AcademicPeriod']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSite']['name']; ?></td>
-				<td><?php echo $this->Html->link($obj['InstitutionSiteSection']['name'], array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'InstitutionSiteSection', 'view', $obj['InstitutionSiteSection']['id']), array('escape' => false)); ?></td>
-				<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'InstitutionSiteClass', 'view', $obj['InstitutionSiteClass']['id']), array('escape' => false)); ?></td>
+				<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
+				<td><?php echo $obj['InstitutionSiteClass']['name']; ?></td>
 				<td><?php echo $obj['EducationSubject']['name']; ?></td>
 				<td><?php 
 				foreach($obj['InstitutionSiteClass']['teachers'] as $teacher){
