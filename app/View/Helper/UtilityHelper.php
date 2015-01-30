@@ -709,4 +709,14 @@ class UtilityHelper extends AppHelper {
 		
 		return $paginationStr;
 	}
+	
+	public function getColumnLetter($columnNumber) {
+        if ($columnNumber > 26) {
+            $columnLetter = Chr(intval(($columnNumber - 1) / 26) + 64) . Chr((($columnNumber - 1) % 26) + 65);
+        } else {
+            $columnLetter = Chr($columnNumber + 64);
+        }
+        return $columnLetter;
+    }
+	
 }
