@@ -54,9 +54,7 @@ INSERT INTO `navigations` (
 ) 
 VALUES (NULL , 'Student', 'Students' , 'Students', 'Details', 'Sections', 'StudentSection', 'StudentSection|StudentSection.index', NULL , '62', '0', @orderOfStudentProgrammesNav + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00');
 
-
-
-
+ALTER TABLE `institution_site_sections` ADD `section_number` INT NULL AFTER `name`;
 
 -- Malcolm SQL START 
 UPDATE `navigations` SET `action` = 'InstitutionSiteClass', `pattern` = 'InstitutionSiteClass' WHERE controller = 'InstitutionSites' AND header = 'Details' AND title = 'Classes';

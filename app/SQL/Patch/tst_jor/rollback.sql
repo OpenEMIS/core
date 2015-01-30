@@ -15,6 +15,8 @@ DELETE FROM `navigations` WHERE `module` LIKE 'Student' AND `header` LIKE 'Detai
 
 UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @orderOfStudentProgrammesNav;
 
+ALTER TABLE `institution_site_sections` DROP `section_number`;
+
 -- Malcolm SQL START 
 UPDATE `navigations` SET `action` = 'classes', `pattern` = 'classes' WHERE controller = 'InstitutionSites' AND header = 'Details' AND title = 'Classes';
 

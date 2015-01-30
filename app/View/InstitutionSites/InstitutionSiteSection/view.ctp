@@ -24,7 +24,7 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $data[$model]['name'] ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.shift') ?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.institution_site_shift_id') ?></div>
 	<div class="col-md-6"><?php echo $data['InstitutionSiteShift']['name'] ?></div>
 </div>
 <div class="row">
