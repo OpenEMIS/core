@@ -13,7 +13,7 @@ $this->start('contentBody');
 ?>
 
 <fieldset class="section_group">
-	<legend><?php echo trim($staff['Staff']['first_name'] . ' ' . $staff['Staff']['last_name']) ?></legend>
+	<legend><?php echo $this->Model->getName($staff['Staff']) ?></legend>
 	
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">

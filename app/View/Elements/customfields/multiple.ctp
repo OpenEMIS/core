@@ -1,16 +1,21 @@
-<div class="custom_field">
-	<div class="field_label"><?php echo $obj[$model]['name']; ?></div>
-	<div class="field_value">
+<div class="panel panel-default panel-custom">
+	<div class="panel-heading"><?php echo $obj[$model]['name']; ?></div>
+	<div class="panel-body">
 	<?php
 		$defaults = array();
 		$checkboxOptions = array('type' => 'checkbox', 'label' => false, 'div' => false, 'before' => false, 'between' => false, 'after' => false, 'class' => false);
 		if(count($obj[$modelOption]) > 0) {
 			$modelId = $obj[$model]['id'];
 			$counter = 0;
+			echo $this->Form->hidden("$modelValue.checkbox.$modelId.type", array('value' => $obj[$model]['type']));
 			foreach($obj[$modelOption] as $dropdownValue) {
 				if(isset($dataValues[$modelId]) && count($dataValues[$modelId] > 0)){
 					foreach($dataValues[$modelId] as $checkboxValue) {
-						$defaults[] = $checkboxValue['value'];
+						if(isset($checkboxValue['int_value'])) {
+							$defaults[] = $checkboxValue['int_value'];
+						} else {
+							$defaults[] = isset($checkboxValue['value']) ? $checkboxValue['value'] : "";
+						}
 					}
 				}
 				$checkboxOptions['checked'] = in_array($dropdownValue['id'], $defaults) ? 'checked' : '';

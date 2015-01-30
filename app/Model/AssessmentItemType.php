@@ -83,7 +83,7 @@ class AssessmentItemType extends AppModel {
 		if(!empty($filter)) {
 			foreach($filter as $key => $val) {
 				if($type == false) {
-					if($key === 'institution_site_id' || $key === 'school_year_id') {
+					if($key === 'institution_site_id' || $key === 'academic_period_id') {
 						$conditions['AND'][] = array('OR' => array(sprintf($model, $key) . ' = 0', sprintf($model, $key) . ' = ' . $val));
 					} else {
 						$conditions['AND'][sprintf($model, $key)] =  $val;
@@ -189,7 +189,7 @@ class AssessmentItemType extends AppModel {
 		return $data;
 	}
 	
-	public function getInstitutionAssessmentsBySchoolYear($institutionSiteId, $schoolYearId) {
+	public function getInstitutionAssessmentsByAcademicPeriod($institutionSiteId, $academicPeriodId) {
 		$list = $this->find('all', array(
 			'fields' => array(
 				'DISTINCT AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name', 'AssessmentItemType.description',
@@ -210,9 +210,9 @@ class AssessmentItemType extends AppModel {
 					'table' => 'institution_site_sections',
 					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
 						'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
-						'InstitutionSiteSection.school_year_id' => $schoolYearId
+						'InstitutionSiteSection.academic_period_id' => $academicPeriodId
 					)
 				),
 				array(
@@ -224,19 +224,26 @@ class AssessmentItemType extends AppModel {
 					)
 				),
 				array(
-					'table' => 'institution_site_class_subjects',
-					'alias' => 'InstitutionSiteClassSubject',
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteClassSubject.institution_site_class_id = InstitutionSiteSectionClass.institution_site_class_id',
-						'InstitutionSiteClassSubject.status = 1'
+						'InstitutionSiteClass.id = InstitutionSiteSectionClass.institution_site_class_id',
+					)
+				),
+				array(
+					'table' => '`education_grades_subjects`',
+					'alias' => 'EducationGradeSubject',
+					'conditions' => array(
+						'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
+						'EducationGradeSubject.visible = 1'
 					)
 				),
 				array(
 					'table' => 'assessment_items',
 					'alias' => 'AssessmentItem',
 					'conditions' => array(
-						'AssessmentItemType.id = AssessmentItem.assessment_item_type_id',
-						'InstitutionSiteClassSubject.education_grade_subject_id = AssessmentItem.education_grade_subject_id',
+						'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+						'AssessmentItem.education_grade_subject_id = EducationGradeSubject.id',
 						'AssessmentItem.visible = 1'
 					)
 				),
@@ -266,7 +273,7 @@ class AssessmentItemType extends AppModel {
 				)
 			),
 			'conditions' => array(
-				'AssessmentItemType.school_year_id' => array(0, $schoolYearId),
+				'AssessmentItemType.academic_period_id' => array(0, $academicPeriodId),
 				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId),
 				'AssessmentItemType.visible = 1'
 			),
@@ -292,9 +299,9 @@ class AssessmentItemType extends AppModel {
 		return $data;
 	}
 	
-	public function getYearListForAssessments($institutionSiteId) {
+	public function getAcademicPeriodListForAssessments($institutionSiteId) {
 		$data = $this->find('list', array(
-			'fields' => array('SchoolYear.id', 'SchoolYear.name'),
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
 			'recursive' => -1,
 			'joins' => array(
 				array(
@@ -311,15 +318,15 @@ class AssessmentItemType extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteSection.school_year_id = SchoolYear.id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('InstitutionSiteSection.academic_period_id = AcademicPeriod.id')
 				)
 			),
 			'conditions' => array(
 				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId)
 			),
-			'order' => array('SchoolYear.order')
+			'order' => array('AcademicPeriod.order')
 		));
 
 		return $data;
@@ -348,7 +355,7 @@ class AssessmentItemType extends AppModel {
 				'EducationProgramme.name as education_programme_name', 'EducationGrade.name as education_grade_name',
 				'AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name',
 				'AssessmentItemType.description', 'AssessmentItemType.visible', 'AssessmentItemType.education_grade_id',
-				'SchoolYear.name as school_year_name'
+				'AcademicPeriod.name as academic_period_name'
 			),
 			'joins' => array(
 				array(
@@ -372,10 +379,10 @@ class AssessmentItemType extends AppModel {
 					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'type' => 'LEFT',
-					'conditions' => array('SchoolYear.id = AssessmentItemType.school_year_id')
+					'conditions' => array('AcademicPeriod.id = AssessmentItemType.academic_period_id')
 				)
 			),
 			'conditions' => array('AssessmentItemType.id' => $id)

@@ -24,7 +24,7 @@ $this->end();
 $this->start('contentBody');
 
 $staff = $obj['Staff'];
-$staffIdName = sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']);
+$staffIdName = $this->Model->getName($staff, array('openEmisId'=>true));
 
 $filesList = '';
 foreach($attachments AS $objItem){

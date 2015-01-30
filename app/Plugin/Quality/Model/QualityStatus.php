@@ -118,12 +118,12 @@ class QualityStatus extends QualityAppModel {
 
 		$data['QualityStatus']['name'] = $rubricTemplateInfo['RubricsTemplate']['name'];
 
-        $SchoolYear = ClassRegistry::init('SchoolYear');
-        $schoolyearId = $SchoolYear->getSchoolYearId($data[$this->name]['year']);
+        $AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+        $academicPeriodId = $AcademicPeriod->getAcademicPeriodId($data[$this->name]['year']);
 
         $disableDelete = false;
         $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
-        if ($QualityInstitutionRubric->getAssignedInstitutionRubricCount($schoolyearId, $id) > 0) {
+        if ($QualityInstitutionRubric->getAssignedInstitutionRubricCount($academicPeriodId, $id) > 0) {
             $disableDelete = true;
         }
 
@@ -140,7 +140,7 @@ class QualityStatus extends QualityAppModel {
         $controller->Navigation->addCrumb('Add Status');
         $controller->set('header', __('Add Status'));
         $controller->set('displayType', 'add');
-        $controller->set('selectedYear', date("Y"));
+        $controller->set('selectedAcademicPeriod', date("Y"));
 
         $this->_setupStatusForm($controller, $params, 'add');
     }
@@ -148,7 +148,7 @@ class QualityStatus extends QualityAppModel {
     public function statusEdit($controller, $params) {
         $controller->Navigation->addCrumb('Edit Status');
         $controller->set('header', __('Edit Status'));
-        $controller->set('selectedYear', date("Y"));
+        $controller->set('selectedAcademicPeriod', date("Y"));
         $controller->set('displayType', 'edit');
         $this->_setupStatusForm($controller, $params, 'edit');
         $this->render = 'add';
@@ -161,10 +161,10 @@ class QualityStatus extends QualityAppModel {
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricOptions = $RubricsTemplate->getRubricOptions();
 
-        $SchoolYear = ClassRegistry::init('SchoolYear');
-        $yearOptions = $SchoolYear->getYearListValues();
+        $AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+        $academicPeriodOptions = $AcademicPeriod->getAcademicPeriodListValues();
         
-		$controller->set(compact('rubricOptions', 'yearOptions', 'displayType', 'statusOptions'));
+		$controller->set(compact('rubricOptions', 'academicPeriodOptions', 'displayType', 'statusOptions'));
         if ($controller->request->is('get')) {
 
             $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -174,7 +174,7 @@ class QualityStatus extends QualityAppModel {
 
             if (!empty($data)) {
                 $controller->request->data = $data;
-                $controller->set('selectedYear', $data[$this->name]['year']);
+                $controller->set('selectedAcademicPeriod', $data[$this->name]['year']);
             } /*else {
                // $controller->request->data['QualityStatus']['date_disabled'] = date('d-m-Y', time() + 86400);
                 //$controller->request->data[$this->name]['institution_id'] = $institutionId;

@@ -9,7 +9,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Shifts'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'shifts', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'shifts', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -18,7 +18,7 @@ echo $this->Form->create('CensusShift', array(
     'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
     'url' => array('controller' => 'Census', 'action' => 'shiftsEdit')
 ));
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div class="table-responsive edit">
@@ -236,7 +236,7 @@ echo $this->element('census/year_options');
 
         <div class="controls">
             <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-    <?php echo $this->Html->link(__('Cancel'), array('action' => 'classes', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+    <?php echo $this->Html->link(__('Cancel'), array('action' => 'classes', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
         </div>
 <?php } // end display content  ?>
 <?php echo $this->Form->end(); ?>

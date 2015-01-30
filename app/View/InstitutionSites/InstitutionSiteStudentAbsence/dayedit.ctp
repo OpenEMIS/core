@@ -5,13 +5,13 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => $model, 'dayview', $yearId, $sectionId, $weekId, $dayId), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => $model, 'dayview', $academicPeriodId, $sectionId, $weekId, $dayId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 echo $this->element("../InstitutionSites/$model/controls");
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'dayedit', $yearId, $sectionId, $weekId, $dayId));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'dayedit', $academicPeriodId, $sectionId, $weekId, $dayId));
 echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 ?>
 
@@ -33,7 +33,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			foreach ($studentList as $student):
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
+				$studentName = $this->Model->getName($studentObj);
 				$additionalReasonOptionFieldData = array();
 
 				echo $this->Form->hidden($model . '.' . $count . '.student_id', array('value' => $studentId));
@@ -117,7 +117,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => $model, 'dayview', $yearId, $sectionId, $weekId, $dayId), array('class' => 'btn_cancel btn_left')); ?>
+	<?php echo $this->Html->link(__('Cancel'), array('action' => $model, 'dayview', $academicPeriodId, $sectionId, $weekId, $dayId), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
 <?php echo $this->Form->end(); ?>

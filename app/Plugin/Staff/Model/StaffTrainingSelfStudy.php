@@ -89,7 +89,8 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 
 	function field_comparison($check1, $operator, $field2) {
         foreach($check1 as $key=>$value1) {
-            $value2 = $this->data[$this->alias][$field2];
+        	$value1 = strtotime($value1);
+            $value2 = strtotime($this->data[$this->alias][$field2]);
             if (!Validation::comparison($value1, $operator, $value2))
                 return false;
         }
@@ -452,7 +453,8 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		
 		$fileId = $controller->request->data['size'];
 		$multiple = true;
-		$controller->set(compact('fileId', 'multiple'));
+		$label = 'File';
+		$controller->set(compact('fileId', 'multiple', 'label'));
 		$controller->render('/Elements/templates/file_upload_field');
 	}
 }

@@ -82,9 +82,9 @@ class UtilityHelper extends AppHelper {
 	public function showArea($form,$id,$value,$settings=array()){
         $arrmap = array('Area','AreaLevel');
         $arealevelfk = 'area_level';
-        if($id=='area_education_id'){
-            $arrmap = array('AreaEducation','AreaEducationLevel');
-            $arealevelfk = 'area_education_level';
+        if($id=='area_administrative_id'){
+            $arrmap = array('AreaAdministrative','AreaAdministrativeLevel');
+            $arealevelfk = 'area_administrative_level';
         }
 
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
@@ -117,9 +117,9 @@ class UtilityHelper extends AppHelper {
     public function showAreaHistory($form,$id,$settings=array(),$orgValue,$arrRec){
         $arrmap = array('Area','AreaLevel');
         $arealevelfk = 'area_level';
-        if($id=='area_education_id'){
-            $arrmap = array('AreaEducation','AreaEducationLevel');
-            $arealevelfk = 'area_education_level';
+        if($id=='area_administrative_id'){
+            $arrmap = array('AreaAdministrative','AreaAdministrativeLevel');
+            $arealevelfk = 'area_administrative_level';
         }
 
         $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
@@ -180,9 +180,9 @@ class UtilityHelper extends AppHelper {
 	
 	public function getAreaPicker($form,$id,$value,$settings=array(), $filter = array()){
         switch($id){
-            case 'area_education_id':
-                $arrmap = array('AreaEducation','AreaEducationLevel');
-                $arealevelfk = 'area_education_level';
+            case 'area_administrative_id':
+                $arrmap = array('AreaAdministrative','AreaAdministrativeLevel');
+                $arealevelfk = 'area_administrative_level';
                 break;
 
             default:
@@ -709,4 +709,14 @@ class UtilityHelper extends AppHelper {
 		
 		return $paginationStr;
 	}
+	
+	public function getColumnLetter($columnNumber) {
+        if ($columnNumber > 26) {
+            $columnLetter = Chr(intval(($columnNumber - 1) / 26) + 64) . Chr((($columnNumber - 1) % 26) + 65);
+        } else {
+            $columnLetter = Chr($columnNumber + 64);
+        }
+        return $columnLetter;
+    }
+	
 }

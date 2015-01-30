@@ -3,8 +3,8 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $yearId, $weekId), array('class' => 'divider'));
-echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $yearId, $weekId, $dayId), array('class' => 'divider'));
+echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $academicPeriodId, $weekId), array('class' => 'divider'));
+echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $academicPeriodId, $weekId, $dayId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -30,7 +30,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($staffList as $staff):
 				$staffObj = $staff['Staff'];
 				$staffId = $staffObj['id'];
-				$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
+				$staffName = $this->Model->getName($staffObj);
 				?>
 				<tr>
 					<td><?php echo $staffObj['identification_no']; ?></td>

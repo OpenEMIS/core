@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'attendance', $selectedYear), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'attendance', $selectedAcademicPeriod), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -18,7 +18,7 @@ echo $this->Form->create('CensusAttendance', array(
 	'url' => array('controller' => 'Census', 'action' => 'attendanceEdit')
 ));
 
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 <div id="attendance" class="dataDisplay edit">
 
@@ -107,7 +107,7 @@ echo $this->element('census/year_options');
 	<?php if (!empty($data)) { ?>
 		<div class="controls">
 			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-			<?php echo $this->Html->link(__('Cancel'), array('action' => 'attendance', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+			<?php echo $this->Html->link(__('Cancel'), array('action' => 'attendance', $selectedAcademicPeriod), array('class' => 'btn_cancel btn_left')); ?>
 		</div>
 	<?php } ?>
 	<?php echo $this->Form->end(); ?>

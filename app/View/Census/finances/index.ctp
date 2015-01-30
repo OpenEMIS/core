@@ -8,13 +8,13 @@ $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($isEditable) {
     if ($_add) {
-        echo $this->Html->link(__('Add'), array('action' => 'financesAdd', $selectedYear), array('class' => 'divider'));
+        echo $this->Html->link(__('Add'), array('action' => 'financesAdd', $selectedAcademicPeriod), array('class' => 'divider'));
     }
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <?php

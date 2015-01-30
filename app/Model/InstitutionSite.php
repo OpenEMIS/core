@@ -24,13 +24,24 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteType',
 		'InstitutionSiteOwnership',
 		'Area',
-		'AreaEducation',
+		'AreaAdministrative',
 		'InstitutionSiteProvider',
 		'InstitutionSiteSector',
 		'InstitutionSiteGender'
 	);
+
+	public $hasMany = array(
+		'InstitutionSiteBankAccount',
+		'InstitutionSitePosition',
+		'InstitutionSiteProgramme',
+		'InstitutionSiteShift',
+		'InstitutionSiteSection',
+		'InstitutionSiteClass',
+		'InstitutionSiteFee'
+	);
 	
 	public $actsAs = array(
+		'Excel',
 		'TrackHistory',
 		'CascadeDelete' => array(
 			'cascade' => array(
@@ -57,10 +68,7 @@ class InstitutionSite extends AppModel {
 				'Area' => array('lft', 'rght')
 			)
 		),
-		'DatePicker' => array('date_opened', 'date_closed'),
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
+		'DatePicker' => array('date_opened', 'date_closed')
 	);
 	
 	public $validate = array(
@@ -195,36 +203,6 @@ class InstitutionSite extends AppModel {
 		)
 	);
 	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite.name' => 'Institution Name',
-				'InstitutionSite.code' => 'Institution Code',
-				'InstitutionSiteProvider.name' => 'Institution Provider',
-				'InstitutionSiteSector.name' => 'Institution Sector',
-				'InstitutionSiteType.name' => 'Institution Type',
-				'InstitutionSiteOwnership.name' => 'Institution Ownership',
-				'InstitutionSiteGender.name' => 'Institution Gender',
-				'InstitutionSiteStatus.name' => 'Institution Status',
-				'InstitutionSite.date_opened' => 'Date Opened',
-				'InstitutionSite.date_closed' => 'Date Closed',
-				'InstitutionSite.address' => 'Address',
-				'InstitutionSite.postal_code' => 'Postal Code',
-				'InstitutionSiteLocality.name' => 'Locality',
-				'InstitutionSite.longitude' => 'Longitude',
-				'InstitutionSite.latitude' => 'Latitude',
-				'Area.name' => 'Area',
-				'AreaEducation.name' => 'Area (Education)',
-				'InstitutionSite.contact_person' => 'Contact Person',
-				'InstitutionSite.telephone' => 'Telephone',
-				'InstitutionSite.fax' => 'Fax',
-				'InstitutionSite.email' => 'Email',
-				'InstitutionSite.website' => 'Website'
-			),
-			'fileName' => 'Report_General_Overview'
-		)
-	);
-	
 	public function compareDates() {
 		if(!empty($this->data[$this->alias]['date_closed'])) {
 			$startDate = $this->data[$this->alias]['date_opened'];
@@ -269,6 +247,34 @@ class InstitutionSite extends AppModel {
         }
         return $isValid;
     }
+
+    /* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+
+		if (CakeSession::check('InstitutionSite.id')) {
+			$id = CakeSession::read('InstitutionSite.id');
+			$conditions = array('InstitutionSite.id' => $id);
+		}
+		return $conditions;
+	}
+	public function excelGetModels() {
+		$models = parent::excelGetModels();
+		if (CakeSession::check('InstitutionSite.id')) {
+			$models = array(
+				array('model' => $this),
+				array('model' => $this->InstitutionSiteBankAccount),
+				array('model' => $this->InstitutionSitePosition),
+				array('model' => $this->InstitutionSiteProgramme),
+				array('model' => $this->InstitutionSiteShift),
+				array('model' => $this->InstitutionSiteSection),
+				array('model' => $this->InstitutionSiteClass),
+				array('model' => $this->InstitutionSiteFee)
+			);
+		}
+		return $models;
+	}
+	/* End Excel Behaviour */
 	
 	// Used by SecurityController
 	public function getGroupAccessList($exclude) {
@@ -317,7 +323,7 @@ class InstitutionSite extends AppModel {
 	}
 	
 	// Yearbook
-	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
+	public function getCountByCycleId($academicPeriodId, $cycleId, $extras=array()) {
 		$options = array('recursive' => -1);
 		
 		$conditions = array();
@@ -337,11 +343,11 @@ class InstitutionSite extends AppModel {
 				)
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
 				'conditions' => array(
-					'SchoolYear.id = ' . $yearId,
-					'SchoolYear.end_date >= InstitutionSite.date_opened'
+					'AcademicPeriod.id = ' . $academicPeriodId,
+					'AcademicPeriod.end_date >= InstitutionSite.date_opened'
 				)
 			)
 		);
@@ -375,7 +381,7 @@ class InstitutionSite extends AppModel {
 		return $data;
 	}
 	
-	public function getCountByAreaId($yearId, $areaId) {
+	public function getCountByAreaId($academicPeriodId, $areaId) {
 		$data = $this->find('count', array(
 			'recursive' => -1,
 			'joins' => array(
@@ -394,11 +400,11 @@ class InstitutionSite extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'conditions' => array(
-						'SchoolYear.id = ' . $yearId,
-						'SchoolYear.end_date >= InstitutionSite.date_opened'
+						'AcademicPeriod.id = ' . $academicPeriodId,
+						'AcademicPeriod.end_date >= InstitutionSite.date_opened'
 					)
 				)
 			)
@@ -681,7 +687,7 @@ class InstitutionSite extends AppModel {
 				'recursive' => -1,
 				'joins' => $this->paginateJoins($joins, $conditions),
 				'conditions' => $this->paginateConditions($conditions),
-				'group' => array('InstitutionSite.id')
+				//'group' => array('InstitutionSite.id')
 			));
 		} else {
 			$data = $this->paginateQuery($conditions);
@@ -721,7 +727,8 @@ class InstitutionSite extends AppModel {
 		
 		return $data;
 	}
-	
+
+	/*
 	public function processFields($fieldsArr){
 		$fields = array();
 		$columns = array();
@@ -734,10 +741,6 @@ class InstitutionSite extends AppModel {
 		$data['columns'] = $columns;
 		
 		return $data;
-	}
-	
-	public function reportsGetHeader($args) {
-		return '';
 	}
 
 	public function reportsGetData($args) {
@@ -843,9 +846,10 @@ class InstitutionSite extends AppModel {
 		$index = $args[1];
 		return $this->reportMapping[$index]['fileName'];
 	}
+	*/
 
 	public function displayByAreaLevel($data, $model='Area', $areaLevelID){
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 		
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);

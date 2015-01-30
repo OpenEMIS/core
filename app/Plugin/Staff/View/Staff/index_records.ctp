@@ -21,14 +21,6 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
             <span class="left"><?php echo __('Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.first_name')?$sorteddir:'up'; ?>" order="Staff.first_name"></span>
         </th>
-        <?php /*<th class="table_cell cell_code">
-            <span class="left"><?php echo __('Middle Name'); ?></span>
-            <span class="icon_sort_<?php echo ($sortedcol =='Staff.middle_name')?$sorteddir:'up'; ?>" order="Staff.middle_name"></span>
-        </th>
-        <th class="table_cell cell_code">
-            <span class="left"><?php echo __('Last Name'); ?></span>
-            <span class="icon_sort_<?php echo ($sortedcol =='Staff.last_name')?$sorteddir:'up'; ?>" order="Staff.last_name"></span>
-        </th>*/ ?>
         <th class="cell_code">
             <span class="left"><?php echo __('Gender'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Staff.gender')?$sorteddir:'up'; ?>" order="Staff.gender"></span>
@@ -42,23 +34,20 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 
     <tbody>
     <?php
-    //pr($staff);
     if(isset($staff) && count($staff) > 0){
         $ctr = 1;
         foreach ($staff as $arrItems):
             $id = $arrItems['Staff']['id'];
             $identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
-            $firstName = $this->Utility->highlight($searchField, $arrItems['Staff']['first_name'].((isset($arrItems['Staff']['history_first_name']))?'<br>'.$arrItems['Staff']['history_first_name']:''));
-            $middleName = $this->Utility->highlight($searchField, $arrItems['Staff']['middle_name'].((isset($arrItems['Staff']['history_middle_name']))?'<br>'.$arrItems['Staff']['history_middle_name']:''));
-            $lastName = $this->Utility->highlight($searchField, $arrItems['Staff']['last_name'].((isset($arrItems['Staff']['history_last_name']))?'<br>'.$arrItems['Staff']['history_last_name']:''));
+            $name = $this->Utility->highlight($search, $this->Model->getNameWithHistory($arrItems['Staff']));
+            $name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
             $gender = $arrItems['Staff']['gender'];
             $birthday = $arrItems['Staff']['date_of_birth'];
+
     ?>
             <tr class="table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
                 <td><?php echo $identificationNo; ?></td>
-                <td><?php echo $this->Html->link($firstName. ' '.$lastName, array('action' => 'view', $id), array('escape' => false)); ?></td>
-               <?php /* <td class="table_cell"><?php echo $middleName; ?></td>
-                <td class="table_cell"><?php echo $lastName; ?></td> */?>
+                <td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
                 <td><?php echo $gender; ?></td>
                 <td><?php echo $this->Utility->formatDate($birthday); ?></td>
             </tr>
