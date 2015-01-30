@@ -25,17 +25,20 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/controls', array()
 		</thead>
 
 		<tbody>
-			<?php foreach ($data as $id => $obj) : ?>
+			<?php foreach ($data as $id => $obj) : 
+			?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['InstitutionSiteClass']['name'], array('action' => $model , 'view', $obj['InstitutionSiteClass']['id']), array('escape' => false)); ?></td>
-					<td><?php echo !empty($obj['EducationSubject']['name']) ? $obj['EducationSubject']['name'] : ''; ?></td>
+					<td><?php echo !empty($obj[$model]['EducationSubject']['name']) ? $obj[$model]['EducationSubject']['name'] : ''; ?></td>
 					<td>
 					<?php
-					if (!empty($data[$model]['InstitutionSiteClassStaff'])) {
-						foreach ($data[$model]['InstitutionSiteClassStaff'] as $staff) {
-
+					$staffNames = array();
+					if (!empty($obj[$model]['InstitutionSiteClassStaff'])) {
+						foreach ($obj[$model]['InstitutionSiteClassStaff'] as $staff) {
+							array_push($staffNames, $staff['staffName']);
 						}
 					}
+					echo implode(', ', $staffNames)
 					?>
 					</td>
 					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['M']; ?></td>
