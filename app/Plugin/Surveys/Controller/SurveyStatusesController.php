@@ -31,14 +31,6 @@ class SurveyStatusesController extends SurveysAppController {
 		$this->Navigation->addCrumb('Surveys', array('action' => 'index'));
 		$this->Navigation->addCrumb('Status');
 
-		$academicPeriodLevelOptions = $this->AcademicPeriodLevel->find('list', array(
-			'fields' => array('AcademicPeriodLevel.id', 'AcademicPeriodLevel.name'),
-			'order' => array('AcademicPeriodLevel.level'),
-		));
-		$selectedAcademicPeriodLevel = key($academicPeriodLevelOptions);
-
-		$this->set('academicPeriodLevelOptions', $academicPeriodLevelOptions);
-		$this->set('selectedAcademicPeriodLevel', $selectedAcademicPeriodLevel);
 		$this->set('contentHeader', __('Status'));
 	}
 
@@ -104,16 +96,26 @@ class SurveyStatusesController extends SurveysAppController {
 		$params = $this->params->named;
 
 		$templateOptions = $this->SurveyTemplate->getTemplateListByModule($params['module']);
-		$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		$academicPeriodLevelOptions = $this->AcademicPeriodLevel->find('list', array(
+			'fields' => array('AcademicPeriodLevel.id', 'AcademicPeriodLevel.name'),
+			'order' => array('AcademicPeriodLevel.level'),
+		));
+		$selectedAcademicPeriodLevel = key($academicPeriodLevelOptions);
 
 		if ($this->request->is(array('post', 'put'))) {
-			if ($this->SurveyStatus->saveAll($this->request->data)) {
-				$this->Message->alert('general.add.success');
-				$params['action'] = 'index';
-				return $this->redirect($params);
+			$data = $this->request->data;
+
+			if ($data['submit'] == 'reload') {
+				$selectedAcademicPeriodLevel = $data['SurveyStatus']['academic_period_level_id'];
 			} else {
-				$this->log($this->SurveyStatus->validationErrors, 'debug');
-				$this->Message->alert('general.add.failed');
+				if ($this->SurveyStatus->saveAll($this->request->data)) {
+					$this->Message->alert('general.add.success');
+					$params['action'] = 'index';
+					return $this->redirect($params);
+				} else {
+					$this->log($this->SurveyStatus->validationErrors, 'debug');
+					$this->Message->alert('general.add.failed');
+				}
 			}
 		} else {
 			$todayDate = date('d-m-Y');
@@ -121,7 +123,19 @@ class SurveyStatusesController extends SurveysAppController {
 			$this->request->data['SurveyStatus']['date_disabled'] = $todayDate;
 		}
 
+		$academicPeriodOptions = $this->AcademicPeriod->find('list', array(
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+			'conditions' => array(
+				'AcademicPeriod.academic_period_level_id' => $selectedAcademicPeriodLevel,
+				'AcademicPeriod.available' => 1,
+				'AcademicPeriod.visible >' => 0,
+				'AcademicPeriod.parent_id >' => 0
+			),
+			'order' => array('AcademicPeriod.order ASC')
+		));
+
 		$this->set('templateOptions', $templateOptions);
+		$this->set('academicPeriodLevelOptions', $academicPeriodLevelOptions);
 		$this->set('academicPeriodOptions', $academicPeriodOptions);
 		$this->render('edit');
     }
@@ -131,25 +145,47 @@ class SurveyStatusesController extends SurveysAppController {
 
 		if ($this->SurveyStatus->exists($id)) {
 			$templateOptions = $this->SurveyTemplate->getTemplateListByModule($params['module']);
-			$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods();
+			$academicPeriodLevelOptions = $this->AcademicPeriodLevel->find('list', array(
+				'fields' => array('AcademicPeriodLevel.id', 'AcademicPeriodLevel.name'),
+				'order' => array('AcademicPeriodLevel.level'),
+			));
 
 			$this->SurveyStatus->contain(array('SurveyTemplate', 'AcademicPeriod'));
 			$data = $this->SurveyStatus->findById($id);
 
 			if ($this->request->is(array('post', 'put'))) {
-				if ($this->SurveyStatus->saveAll($this->request->data)) {
-					$this->Message->alert('general.edit.success');
-					$params = array_merge(array('action' => 'view', $id), $params);
-					return $this->redirect($params);
+				$data = $this->request->data;
+
+				if ($data['submit'] == 'reload') {
+					
 				} else {
-					$this->log($this->SurveyStatus->validationErrors, 'debug');
-					$this->Message->alert('general.edit.failed');
+					if ($this->SurveyStatus->saveAll($this->request->data)) {
+						$this->Message->alert('general.edit.success');
+						$params = array_merge(array('action' => 'view', $id), $params);
+						return $this->redirect($params);
+					} else {
+						$this->log($this->SurveyStatus->validationErrors, 'debug');
+						$this->Message->alert('general.edit.failed');
+					}
 				}
 			} else {
 				$this->request->data = $data;
 			}
 
+			$selectedAcademicPeriodLevel = $data['SurveyStatus']['academic_period_level_id'];
+			$academicPeriodOptions = $this->AcademicPeriod->find('list', array(
+				'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+				'conditions' => array(
+					'AcademicPeriod.academic_period_level_id' => $selectedAcademicPeriodLevel,
+					'AcademicPeriod.available' => 1,
+					'AcademicPeriod.visible >' => 0,
+					'AcademicPeriod.parent_id >' => 0
+				),
+				'order' => array('AcademicPeriod.order ASC')
+			));
+
 			$this->set('templateOptions', $templateOptions);
+			$this->set('academicPeriodLevelOptions', $academicPeriodLevelOptions);
 			$this->set('academicPeriodOptions', $academicPeriodOptions);
 		} else {
 			$this->Message->alert('general.notExists');

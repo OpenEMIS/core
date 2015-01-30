@@ -17,7 +17,7 @@ echo $this->Form->create($Custom_Field, $formOptions);
 	$labelOptions['text'] = __('Field Name');
 	echo $this->Form->input('name', array('label' => $labelOptions, 'onkeyup' => '$("#custom_table_name").html(this.value);'));
 	$labelOptions['text'] = __('Field Type');
-	echo $this->Form->input('type', array('options' => $fieldTypeOptions, 'label' => $labelOptions, 'disabled' => $fieldTypeDisabled,'onchange' => '$("#reload").click();'));
+	echo $this->Form->input('type', array('options' => $fieldTypeOptions, 'label' => $labelOptions, 'disabled' => $fieldTypeDisabled, 'onchange' => '$("#reload").click();'));
 	$labelOptions['text'] = __('Mandatory');
 	echo $this->Form->input('is_mandatory', array('options' => $mandatoryOptions, 'label' => $labelOptions, 'disabled' => $mandatoryDisabled));
 	$labelOptions['text'] = __('Unique');
