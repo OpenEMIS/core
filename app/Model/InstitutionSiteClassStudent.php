@@ -24,7 +24,6 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public $belongsTo = array(
 		'Students.Student',
-		'Students.StudentCategory',
 		'InstitutionSiteClass',
 		'EducationGrade'
 	);
@@ -261,11 +260,11 @@ class InstitutionSiteClassStudent extends AppModel {
 			);
 		
 		if($showGrade){
-			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteClass')));
+			$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
 			$options['fields'][] = 'EducationGrade.name';
 		}
 		else{
-			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteClass','EducationGrade')));
+			$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass','EducationGrade')));
 		}
 		
 		$data = $this->find('all', $options);
@@ -366,10 +365,10 @@ class InstitutionSiteClassStudent extends AppModel {
 		$options['recursive'] = -1;
 		
 		$options['fields'] = array(
-			'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name',
+			'DISTINCT Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
-			'AssessmentResultType.name', 'InstitutionSiteClass.academic_period_id',
-			'AssessmentItem.min', 'AssessmentItem.max'
+			'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
+			'AssessmentItem.min', 'AssessmentItem.max', 'AssessmentResultType.name'
 		);
 
 		$options_joins = array(
@@ -439,6 +438,50 @@ class InstitutionSiteClassStudent extends AppModel {
 
 		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name');
 		$options['conditions'] = array('InstitutionSiteClassStudent.status = 1');
+
+		$data = $this->find('all', $options);
+
+		return $data;
+	}
+	
+	public function getStudentsByClassAssessment($classId, $assessmentId) {
+		$options['recursive'] = -1;
+		
+		$options['fields'] = array(
+			'DISTINCT Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name'
+		);
+
+		$options['joins'] = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'conditions' => array('Student.id = InstitutionSiteClassStudent.student_id')
+			),
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
+					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
+					'InstitutionSiteSectionStudent.status = 1'
+				)
+			),
+			array(
+				'table' => 'assessment_item_types',
+				'alias' => 'AssessmentItemType',
+				'conditions' => array(
+					'AssessmentItemType.education_grade_id = InstitutionSiteSectionStudent.education_grade_id',
+					'AssessmentItemType.id = ' . $assessmentId
+				)
+			)
+		);
+		
+		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name');
+
+		$options['conditions'] = array(
+			'InstitutionSiteClassStudent.status = 1',
+			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+		);
 
 		$data = $this->find('all', $options);
 
