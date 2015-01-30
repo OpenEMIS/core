@@ -11,8 +11,8 @@ SET @lastDetailOrderNo := 0;
 SELECT MAX(security_functions.order) INTO @lastDetailOrderNo FROM `security_functions` WHERE `category` = 'Details' AND controller = 'InstitutionSites' AND name <> 'Staff - Academic' AND name <> 'Students - Academic';
 UPDATE security_functions SET security_functions.order = security_functions.order +2 WHERE security_functions.order > @lastDetailOrderNo;
 
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_add`, `_execute`, `order`, `visible` ) VALUES (null , 'Student', 'Students', 'Institutions', 'Details', 8 , 'InstitutionSiteStudent|InstitutionSiteStudent.index', 'InstitutionSiteStudent.add', 'InstitutionSiteStudent.excel', @lastDetailOrderNo + 1 , 1 );
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_add`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (null , 'Student', 'Students', 'Institutions', 'Details', 8 , 'InstitutionSiteStudent|InstitutionSiteStudent.index', 'InstitutionSiteStudent.add', 'InstitutionSiteStudent.excel', @lastDetailOrderNo + 1 , 1, 1, NOW());
 
-INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_add`, `_execute`, `order`, `visible` ) VALUES (null , 'Staff', 'Staff', 'Institutions', 'Details', 8 , 'InstitutionSiteStaff|InstitutionSiteStaff.index', 'InstitutionSiteStaff.add', 'InstitutionSiteStaff.excel', @lastDetailOrderNo + 2 , 1 );
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_add`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES (null , 'Staff', 'Staff', 'Institutions', 'Details', 8 , 'InstitutionSiteStaff|InstitutionSiteStaff.index', 'InstitutionSiteStaff.add', 'InstitutionSiteStaff.excel', @lastDetailOrderNo + 2 , 1, 1, NOW());
 
 -- SELECT * FROM security_functions WHERE `category` = 'Details' AND name <> 'Staff - Academic' AND name <> 'Students - Academic';

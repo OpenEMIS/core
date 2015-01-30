@@ -17,8 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AssessmentItemResult extends AppModel {
+	public $selectedPeriod;
+	public $assessmentId;
+	
 	public $actsAs = array(
-		'ControllerAction'
+		'ControllerAction',
+		'Excel'
 	);
 
 	public $belongsTo = array(
@@ -304,4 +308,108 @@ class AssessmentItemResult extends AppModel {
 			$controller->redirect(array('action' => 'assessments'));
 		}
 	}
+	
+	public function assessmentsToExcel($controller, $params){
+		$periodId = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$assessmentId = isset($params->pass[1]) ? $params->pass[1] : 0;
+		
+		$this->excel($periodId, $assessmentId);
+	}
+	
+	public function excel($periodId, $assessmentId) {
+		$this->selectedPeriod = $periodId;
+		$this->assessmentId = $assessmentId;
+		parent::excel();
+	}
+	
+	public function excelGetFileName() {
+		$assessmentId = $this->assessmentId;
+		$assessment = ClassRegistry::init('AssessmentItemType')->findById($assessmentId);
+		//$modelName = $this->alias;
+		$assessmentName = str_replace(' ', '_', $assessment['AssessmentItemType']['name']);
+		$fileName = $assessmentName;
+		return $fileName;
+	}
+
+	public function generateSheet($writer) {
+		$institutionSiteId = CakeSession::read('InstitutionSite.id');
+		$periodId = $this->selectedPeriod;
+		$assessmentId = $this->assessmentId;
+		
+		$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
+		
+		$commonHeader = array(
+			__('OpenEMIS ID'),
+			__('First Name'),
+			__('Last Name')
+		);
+		$footer = $this->excelGetFooter();
+
+		$classOptions = ClassRegistry::init('InstitutionSiteClass')->getAssessmentClassList($institutionSiteId, $periodId, $assessmentId);
+		foreach($classOptions as $classId => $className){
+			$checkList = array();
+			$subjectsHeader = array();
+			
+			$subjectOptions = $this->AssessmentItem->getClassItemList($assessmentId, $classId);
+			//pr($subjectOptions);die;
+			foreach($subjectOptions as $subjectId => $subjectName){
+				$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Marks'));
+				$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Grading'));
+
+				$resultData = $InstitutionSiteClassStudent->getStudentAssessmentResults($classId, $subjectId, $assessmentId);
+				//pr($resultData);die;
+				foreach($resultData as $row){
+					$StudentObj = $row['Student'];
+					$studentId = $StudentObj['id'];
+					$AssessmentItemResultObj = $row['AssessmentItemResult'];
+					$AssessmentResultTypeObj = $row['AssessmentResultType'];
+
+					$resultArr = array(
+						'marks' => $AssessmentItemResultObj['marks'],
+						'grading' => $AssessmentResultTypeObj['name']
+					);
+
+					$checkList[$classId][$studentId][$subjectId] = $resultArr;
+				}
+			}
+			//pr($checkList);die;
+			
+			$studentsData = $InstitutionSiteClassStudent->getStudentsByClassAssessment($classId, $assessmentId);
+			//pr($studentsData);
+			$sheetData = array();
+			foreach($studentsData as $row){
+				$dataRow = array();
+
+				$StudentObj = $row['Student'];
+				$studentId = $StudentObj['id'];
+				$dataRow[] = $StudentObj['identification_no'];
+				$dataRow[] = $StudentObj['first_name'];
+				$dataRow[] = $StudentObj['last_name'];
+
+				foreach($subjectOptions as $subjectId => $subjectName){
+					if(isset($checkList[$classId][$studentId][$subjectId])){
+						$dataRow[] = $checkList[$classId][$studentId][$subjectId]['marks'];
+						$dataRow[] = $checkList[$classId][$studentId][$subjectId]['grading'];
+					}else{
+						$dataRow[] = '';
+						$dataRow[] = '';
+					}
+				}
+
+				$sheetData[] = $dataRow;
+			}
+			
+			$header = array_merge($commonHeader, $subjectsHeader);
+			//pr($header);die;
+			$writer->writeSheetRow($className, $header);
+			
+			foreach ($sheetData as $sheetRow) {
+				$writer->writeSheetRow($className, $sheetRow);
+			}
+
+			$writer->writeSheetRow($className, array(''));
+			$writer->writeSheetRow($className, $footer);
+		}
+	}
+	
 }
