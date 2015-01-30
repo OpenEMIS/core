@@ -60,7 +60,17 @@ class AreaAdministrative extends AppModel {
 	
 	public function beforeAction() {
         parent::beforeAction();
-		
+
+        $orphanConditions = array();
+        $orphanConditions['conditions']['OR'] = array(
+			$this->alias.'.lft' => NULL,
+			$this->alias.'.rght' => NULL
+        );
+        $orphans = $this->find('all', $orphanConditions);
+        if(!empty($orphans)) {
+			$this->recover('parent', -1);
+        }
+
 		$this->fields['parent_id']['type'] = 'hidden';
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
@@ -80,30 +90,14 @@ class AreaAdministrative extends AppModel {
 	public function index() {
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
-		if($parentId == 0) {	//recover
-			$world = $this->find('first', array(
-				'conditions' => array(
-					'AreaAdministrative.parent_id' => -1,
-					'AreaAdministrative.name' => 'World'
-				)
-			));
-			if(!empty($world) && (is_null($world[$this->alias]['lft']) || is_null($world[$this->alias]['rght']))) {
-				$recoverWorld = $this->recover('parent', -1);
-				if($recoverWorld) {
-					$this->updateAll(array(
-						'AreaAdministrative.parent_id' => -1
-					), array(
-						'AreaAdministrative.parent_id' => 0,
-						'AreaAdministrative.name' => 'World'
-					));
-				}
-			}
-		}
-
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
 		$data = array();
-		$maxLevel = $this->AreaAdministrativeLevel->field('level', null, 'level DESC');
+		//$maxLevel = $this->AreaAdministrativeLevel->field('level', null, 'level DESC');
+		$level = $this->AreaAdministrativeLevel->field('level', array('id' => $area[$this->alias]['area_administrative_level_id']));
+		$areaAdministrativeId = $this->AreaAdministrativeLevel->field('area_administrative_id', array('id' => $area[$this->alias]['area_administrative_level_id']));
+		$areaAdministrativeId = $level == 0 ? $parentId : $areaAdministrativeId;
+		$maxLevel = $this->AreaAdministrativeLevel->field('level', array('area_administrative_id' => $areaAdministrativeId), 'level DESC');
 		
 		if($area !== false) {
 			$data = $this->find('all', array(
@@ -162,7 +156,7 @@ class AreaAdministrative extends AppModel {
 		$parentId = $area[$this->alias]['id'];
 		$level = $this->AreaAdministrativeLevel->field('level', array('id' => $area[$this->alias]['area_administrative_level_id']));
 		$areaAdministrativeId = $this->AreaAdministrativeLevel->field('area_administrative_id', array('id' => $area[$this->alias]['area_administrative_level_id']));
-		$areaAdministrativeId = $level == 2 ? $parentId : $areaAdministrativeId;
+		$areaAdministrativeId = $level == 0 ? $parentId : $areaAdministrativeId;
 
 		$areaLevelOptions = $this->AreaAdministrativeLevel->find('list', array(
 			'conditions' => array(
@@ -171,7 +165,7 @@ class AreaAdministrative extends AppModel {
 			)
 		));
 
-		if($level == 1) {
+		if($level == -1) {
 			$Country = ClassRegistry::init('Country');
 			$countryOptions = $Country->getOptions('name');
 			$this->setVar(compact('countryOptions'));
@@ -204,7 +198,7 @@ class AreaAdministrative extends AppModel {
 		$yesnoOptions = $this->controller->Option->get('yesno');
 		
 		if(!empty($data)) {
-			if($data[$this->AreaAdministrativeLevel->alias]['level'] == 2) {
+			if($data[$this->AreaAdministrativeLevel->alias]['level'] == 0) {
 				$Country = ClassRegistry::init('Country');
 				$countryOptions = $Country->getOptions('name');
 				$this->setVar(compact('countryOptions'));
