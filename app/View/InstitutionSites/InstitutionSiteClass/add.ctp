@@ -13,7 +13,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model , 'add', $selectedAcademicPeriod));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model , 'add', $selectedAcademicPeriod, $selectedSection));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);
