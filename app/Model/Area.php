@@ -95,6 +95,7 @@ class Area extends AppModel {
 		$maxLevel = $this->AreaLevel->field('level', null, 'level DESC');
 		
 		if($area !== false) {
+			$this->contain('AreaLevel');
 			$data = $this->find('all', array(
 				'conditions' => array('parent_id' => $area[$this->alias]['id']),
 				'order' => array('order')
