@@ -119,7 +119,7 @@ NULL , 'Sections', 'Staff', 'Staff', 'Details', '84', 'StaffSection|StaffSection
 
 -- Malcolm SQL START 
 UPDATE `navigations` SET `action` = 'InstitutionSiteClass', `pattern` = 'InstitutionSiteClass' WHERE controller = 'InstitutionSites' AND header = 'Details' AND title = 'Classes';
-ALTER TABLE `institution_site_classes` ADD `education_subject_id` INT NULL DEFAULT NULL AFTER `academic_period_id`;
+ALTER TABLE `institution_site_classes` ADD `education_subject_id` INT NULL DEFAULT NULL AFTER `institution_site_id`;
 
 CREATE TABLE IF NOT EXISTS 1190_config_items LIKE config_items;
 INSERT 1190_config_items SELECT * FROM config_items WHERE name = 'max_subjects_per_class';
@@ -166,64 +166,3 @@ UPDATE `security_functions` SET `_view` = 'InstitutionSiteClass|InstitutionSiteC
 WHERE `controller` = 'InstitutionSites' AND `name` = 'Classes';
 
 -- Malcolm SQL END
-
-
--- Academic period security SQL START
-SET @lastAdminBoundaryOrderNo := 0;
-SELECT MAX(security_functions.order) INTO @lastAdminBoundaryOrderNo FROM `security_functions` WHERE `category` = 'Administrative Boundaries' AND controller = 'Areas' AND name <> 'Staff - Academic' AND name <> 'Students - Academic';
-UPDATE security_functions SET security_functions.order = security_functions.order +2 WHERE security_functions.order > @lastAdminBoundaryOrderNo;
-
-INSERT INTO `security_functions` (`id`, 
-	`name`, 
-`controller`, 
-`module`, 
-`category`, 
-`parent_id`, 
-`_view`, 
-`_edit`, 
-`_add`, 
-`order`, 
-`visible`) VALUES
-(null, 
-	'Academic Period Levels', 
-'AcademicPeriods', 
-'Administration', 
-'Academic Periods', 
--1, 
-'AcademicPeriodLevel.index|AcademicPeriodLevel.view', 
-'_view:AcademicPeriodLevel.edit', 
-'_view:AcademicPeriodLevel.add', 
-@lastAdminBoundaryOrderNo + 1, 
-1
-);
-
-INSERT INTO `security_functions` (`id`, 
-	`name`, 
-`controller`, 
-`module`, 
-`category`, 
-`parent_id`, 
-`_view`, 
-`_edit`, 
-`_add`, 
-`order`, 
-`visible`) VALUES
-(null, 
-	'Academic Periods', 
-'AcademicPeriods', 
-'Administration', 
-'Academic Periods', 
--1, 
-'index|AcademicPeriod.index|AcademicPeriod.view', 
-'_view:AcademicPeriod.edit|AcademicPeriod.reorder|AcademicPeriod.move', 
-'_view:AcademicPeriod.add', 
-@lastAdminBoundaryOrderNo + 2, 
-1
-);
-
-
--- need to set as parent
-SELECT id INTO @parentId FROM `security_functions` WHERE name = 'Academic Periods' AND `category` = 'Academic Periods' AND controller = 'AcademicPeriods';
-
-UPDATE security_functions SET parent_id = @parentId WHERE name = 'Academic Period Levels' AND `category` = 'Academic Periods' AND controller = 'AcademicPeriods';
--- Academic period security SQL END
