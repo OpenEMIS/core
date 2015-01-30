@@ -76,6 +76,7 @@ class InstitutionSiteClass extends AppModel {
         	if (array_key_exists('InstitutionSiteSectionClass', $this->data)) {
 				$institutionSiteSectionClassData = $this->data['InstitutionSiteSectionClass'];
 				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
+				$this->InstitutionSiteSectionClass->create();
         		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
         	}
         }
@@ -111,8 +112,16 @@ class InstitutionSiteClass extends AppModel {
 		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
 
 		foreach ($data as $key => $value) {
-			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);	
+			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
+
+			foreach ($value['InstitutionSiteClass']['InstitutionSiteClassStaff'] as $staffKey => $staffValue) {
+				$data[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['staffName'] = ModelHelper::getName($value['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['Staff']);
+				// pr($data[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]);
+			}
+
 		}
+
+
 		$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection'));
 	}
 	
