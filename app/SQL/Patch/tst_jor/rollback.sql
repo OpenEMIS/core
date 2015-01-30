@@ -17,6 +17,25 @@ UPDATE `navigations` SET `order` = `order` - 1 WHERE `order` > @orderOfStudentPr
 
 ALTER TABLE `institution_site_sections` DROP `section_number`;
 
+--
+--  security_functions for Student/Staff Sections
+--
+
+SET @orderStudentDetailsProgsSecurity := 0;
+SELECT `order` INTO @orderStudentDetailsProgsSecurity FROM `security_functions` WHERE `module` LIKE 'Students' AND `category` LIKE 'Details' AND `name` LIKE 'Programmes';
+
+DELETE FROM `security_functions` WHERE `module` LIKE 'Students' AND `category` LIKE 'Details' AND `name` LIKE 'Sections'; 
+
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @orderStudentDetailsProgsSecurity;
+
+
+SET @orderStaffDetailsPositionsSecurity := 0;
+SELECT `order` INTO @orderStaffDetailsPositionsSecurity FROM `security_functions` WHERE `module` LIKE 'Staff' AND `category` LIKE 'Details' AND `name` LIKE 'Positions';
+
+DELETE FROM `security_functions` WHERE `module` LIKE 'Staff' AND `category` LIKE 'Details' AND `name` LIKE 'Sections'; 
+
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > @orderStaffDetailsPositionsSecurity;
+
 -- Malcolm SQL START 
 UPDATE `navigations` SET `action` = 'classes', `pattern` = 'classes' WHERE controller = 'InstitutionSites' AND header = 'Details' AND title = 'Classes';
 

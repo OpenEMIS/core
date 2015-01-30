@@ -56,6 +56,67 @@ VALUES (NULL , 'Student', 'Students' , 'Students', 'Details', 'Sections', 'Stude
 
 ALTER TABLE `institution_site_sections` ADD `section_number` INT NULL AFTER `name`;
 
+--
+--  security_functions for Student/Staff Sections
+--
+
+SET @orderStudentDetailsProgsSecurity := 0;
+SELECT `order` INTO @orderStudentDetailsProgsSecurity FROM `security_functions` WHERE `module` LIKE 'Students' AND `category` LIKE 'Details' AND `name` LIKE 'Programmes';
+
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > @orderStudentDetailsProgsSecurity;
+
+INSERT INTO `security_functions` (
+`id` ,
+`name` ,
+`controller` ,
+`module` ,
+`category` ,
+`parent_id` ,
+`_view` ,
+`_edit` ,
+`_add` ,
+`_delete` ,
+`_execute` ,
+`order` ,
+`visible` ,
+`modified_user_id` ,
+`modified` ,
+`created_user_id` ,
+`created`
+)
+VALUES (
+NULL , 'Sections', 'Students', 'Students', 'Details', '66', 'StudentSection|StudentSection.index', NULL, NULL, NULL, NULL , @orderStudentDetailsProgsSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+);
+
+
+SET @orderStaffDetailsPositionsSecurity := 0;
+SELECT `order` INTO @orderStaffDetailsPositionsSecurity FROM `security_functions` WHERE `module` LIKE 'Staff' AND `category` LIKE 'Details' AND `name` LIKE 'Positions';
+
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > @orderStaffDetailsPositionsSecurity;
+
+INSERT INTO `security_functions` (
+`id` ,
+`name` ,
+`controller` ,
+`module` ,
+`category` ,
+`parent_id` ,
+`_view` ,
+`_edit` ,
+`_add` ,
+`_delete` ,
+`_execute` ,
+`order` ,
+`visible` ,
+`modified_user_id` ,
+`modified` ,
+`created_user_id` ,
+`created`
+)
+VALUES (
+NULL , 'Sections', 'Staff', 'Staff', 'Details', '84', 'StaffSection|StaffSection.index', NULL, NULL, NULL, NULL , @orderStaffDetailsPositionsSecurity + 1, '1', NULL , NULL , '1', '0000-00-00 00:00:00'
+);
+
 -- Malcolm SQL START 
 UPDATE `navigations` SET `action` = 'InstitutionSiteClass', `pattern` = 'InstitutionSiteClass' WHERE controller = 'InstitutionSites' AND header = 'Details' AND title = 'Classes';
 ALTER TABLE `institution_site_classes` ADD `education_subject_id` INT NULL DEFAULT NULL AFTER `academic_period_id`;
