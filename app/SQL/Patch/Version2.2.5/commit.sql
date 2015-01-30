@@ -1013,12 +1013,12 @@ UPDATE `area_administrative_levels` SET `area_administrative_id` = @parentIdOfWo
 
 UPDATE `config_items` 
 SET 
-	`value`='Copyright &copy; year OpenEMIS. All rights reserved.',
-	`default_value`='Copyright &copy; 2015 OpenEMIS. All rights reserved.'
+  `value`='Copyright &copy; year OpenEMIS. All rights reserved.',
+  `default_value`='Copyright &copy; 2015 OpenEMIS. All rights reserved.'
 WHERE 
-	`name`='footer'
+  `name`='footer'
 AND
-	`type`='System';
+  `type`='System';
 
 
 -- PHPOE-1159 (Added students permission)
@@ -1031,7 +1031,7 @@ UPDATE security_functions SET _view = REPLACE(_view , '|InstitutionSiteStaff.ind
 UPDATE security_functions SET _add = REPLACE(_add , '|InstitutionSiteStaff.add','') WHERE name = 'Staff' AND controller = 'Staff' AND  module = 'Staff';
 -- SELECT * FROM security_functions WHERE name = 'Staff' AND controller = 'Staff' AND  module = 'Staff';
 
-	
+  
 SET @lastDetailOrderNo := 0;
 SELECT MAX(security_functions.order) INTO @lastDetailOrderNo FROM `security_functions` WHERE `category` = 'Details' AND controller = 'InstitutionSites' AND name <> 'Staff - Academic' AND name <> 'Students - Academic';
 UPDATE security_functions SET security_functions.order = security_functions.order +2 WHERE security_functions.order > @lastDetailOrderNo;
@@ -1176,9 +1176,9 @@ UPDATE
       ) AS t2
   ON t1.id = t2.institution_site_class_id 
   INNER JOIN (
-  		SELECT education_grades_subjects.id, education_grades_subjects.education_subject_id
-  		FROM education_grades_subjects
-  	) AS t3
+      SELECT education_grades_subjects.id, education_grades_subjects.education_subject_id
+      FROM education_grades_subjects
+    ) AS t3
   ON t2.education_grade_subject_id = t3.id
 SET t1.education_subject_id = t3.education_subject_id;
 
@@ -1190,9 +1190,9 @@ SET t1.education_subject_id = t3.education_subject_id;
 --       ) AS t2
 --   ON t1.id = t2.institution_site_class_id 
 --   INNER JOIN (
---   		SELECT education_grades_subjects.id, education_grades_subjects.education_subject_id
---   		FROM education_grades_subjects
---   	) AS t3
+--      SELECT education_grades_subjects.id, education_grades_subjects.education_subject_id
+--      FROM education_grades_subjects
+--    ) AS t3
 --   ON t2.education_grade_subject_id = t3.id
 
 RENAME TABLE institution_site_class_subjects to 1190_institution_site_class_subjects;
@@ -1381,6 +1381,69 @@ UPDATE security_functions SET parent_id = @parentId WHERE name = 'Academic Perio
 -- Academic period security SQL END
 
 
+-- PHPOE-1150 (Reports)
+
+-- Drop unused columns and not show in reports
+ALTER TABLE `student_behaviours` DROP `student_action_category_id` ;
+ALTER TABLE `staff_behaviours` DROP `staff_action_category_id` ;
+
+-- Move Institution -> Reports -> Dashboard to Institution -> Quality -> Dashboard
+UPDATE `navigations` SET `header` = 'Quality' WHERE `module` = 'Institution' AND `controller` = 'Dashboards' AND `header` = 'Reports';
+
+-- Remove all links under Institution -> Reports, Staff -> Reports
+DELETE FROM `navigations` WHERE `module` = 'Institution' AND `header` = 'Reports';
+DELETE FROM `navigations` WHERE `controller` = 'Staff' AND `header` = 'Reports';
+DELETE FROM `security_functions` WHERE `category` = 'Reports' AND `controller` <> 'Dashboards';
+
+-- Update security_functions to enable execute permissions to be configurable
+UPDATE `security_functions` SET `_execute` = '_view:excel' WHERE `name` = 'Institution' AND `controller` = 'InstitutionSites' AND `category` = 'General';
+UPDATE `security_functions` SET `_execute` = '_view:qualityVisitExcel' WHERE `name` = 'Visits' AND `controller` = 'Quality' AND `module` = 'Institutions';
+UPDATE `security_functions` SET `_execute` = '_view:StudentBehaviour.excel' WHERE `name` = 'Students' AND `controller` = 'InstitutionSites' AND `category` = 'Behaviour';
+UPDATE `security_functions` SET `_execute` = '_view:StaffBehaviour.excel' WHERE `name` = 'Staff' AND `controller` = 'InstitutionSites' AND `category` = 'Behaviour';
+UPDATE `security_functions` SET `category` = 'Quality' WHERE `controller` = 'Dashboards' AND `name` = 'Dashboards' AND `module` = 'Institutions';
+
+UPDATE `navigations` SET `action` = 'Absence', `pattern` = 'Absence' WHERE `plugin` = 'Students' AND `controller` = 'Students' AND `title` = 'Absence';
+
+
+-- PHPOE-954 (Reports)
+
+DROP TABLE IF EXISTS `report_progress`;
+
+CREATE TABLE IF NOT EXISTS `report_progress` (
+  `id` char(36) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `module` varchar(100) NULL,
+  `params` text NOT NULL,
+  `expiry_date` datetime DEFAULT NULL,
+  `file_path` varchar(255) DEFAULT NULL,
+  `current_records` int(11) NOT NULL DEFAULT '0',
+  `total_records` int(11) NOT NULL DEFAULT '0',
+  `pid` int(11) NOT NULL DEFAULT '0',
+  `status` int(1) NOT NULL DEFAULT '1',
+  `error_message` text NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `parent` = -1 AND `controller` = 'Reports' AND `title` = 'General' AND `action` = 'InstitutionGeneral';
+UPDATE `navigations` SET `plugin` = NULL, `controller` = 'InstitutionReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'InstitutionDetails';
+
+UPDATE `navigations` SET `plugin` = 'Students', `controller` = 'StudentReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `controller` = 'Reports' AND `title` = 'General' AND `action` = 'StudentGeneral';
+UPDATE `navigations` SET `plugin` = 'Students', `controller` = 'StudentReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'StudentDetails';
+
+UPDATE `navigations` SET `plugin` = 'Staff', `controller` = 'StaffReports', `title` = 'List of Reports', `action` = 'index', `pattern` = 'index' WHERE `controller` = 'Reports' AND `title` = 'General' AND `action` = 'StaffGeneral';
+UPDATE `navigations` SET `plugin` = 'Staff', `controller` = 'StaffReports', `title` = 'Generate', `action` = 'generate', `pattern` = 'generate' WHERE `controller` = 'Reports' AND `title` = 'Details' AND `action` = 'StaffDetails';
+
+-- hide other report links
+UPDATE `navigations` SET `visible` = 0 WHERE `controller` = 'Reports' 
+AND `action` IN (
+  'InstitutionAttendance', 'InstitutionAssessment', 'InstitutionBehaviors', 'InstitutionFinance', 'InstitutionTotals', 'InstitutionQuality',
+  'StudentFinance', 'StudentHealth',
+  'StaffFinance', 'StaffHealth', 'StaffTraining'
+);
 
 
 
