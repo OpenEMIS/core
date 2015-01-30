@@ -38,6 +38,20 @@ class AreasController extends AppController {
 			'AreaAdministrative' => __('Areas (Administrative)'),
 			'AreaAdministrativeLevel' => __('Area Levels (Administrative)')
 		);
+
+		$areas = array('Area', 'AreaAdministrative');
+		foreach ($areas as $key => $area) {
+			$orphanConditions = array();
+	        $orphanConditions['conditions']['OR'] = array(
+				$this->{$area}->alias.'.lft' => NULL,
+				$this->{$area}->alias.'.rght' => NULL
+	        );
+	        $this->{$area}->contain();
+	        $orphans = $this->{$area}->find('all', $orphanConditions);
+	        if(!empty($orphans)) {
+				$this->recover($key);
+	        }
+		}
 		
 		if(array_key_exists($this->action, $areaOptions)) {
 			$this->set('selectedAction', $this->action);
@@ -52,9 +66,9 @@ class AreasController extends AppController {
 		$nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
 		$shellCmd = sprintf($nohup, $cmd, APP);
 		$this->log($shellCmd, 'debug');
-		pr($shellCmd);
+		//pr($shellCmd);
 		$pid = exec($shellCmd);
-		pr($pid);
+		//pr($pid);
 	}
 	
 	public function index() {
