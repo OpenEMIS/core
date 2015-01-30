@@ -290,8 +290,8 @@ class InstitutionSiteSection extends AppModel {
 			$this->Navigation->addCrumb($contentHeader);
 
 			$periodId = $data['AcademicPeriod']['id'];
-			$periodStartDate = $data['AcademicPeriod']['start_date'];
-			$periodEndDate = $data['AcademicPeriod']['start_date'];
+			$periodStartDate = $this->AcademicPeriod->getDate($data['AcademicPeriod'], 'start_date');
+            $periodEndDate = $this->AcademicPeriod->getDate($data['AcademicPeriod'], 'end_date');
 
 			// fields setup
 			$this->fields['institution_site_id']['type'] = 'hidden';
