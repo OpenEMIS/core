@@ -288,8 +288,15 @@ class InstitutionSiteClass extends AppModel {
 			$staffOptions = $InstitutionSiteStaff->getStaffOptions($institutionSiteId, $periodId);
 			$staffOptions = $this->controller->Option->prependLabel($staffOptions, $this->alias . '.add_staff');
 
+			// get all the section ids that are linked to this class
+			$sectionIds = $this->InstitutionSiteSectionClass->find('list', array(
+				'fields' => array('id', 'InstitutionSiteSectionClass.institution_site_section_id'), 
+				'conditions' => array('InstitutionSiteSectionClass.institution_site_class_id' => $id)
+			));
+
+			// retrieve all the students linked to the sections
 			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions($institutionSiteId, $periodId);
+			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
 			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
 
 			if($this->request->is('post') || $this->request->is('put')) {
