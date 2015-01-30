@@ -163,6 +163,12 @@ class InstitutionSiteClass extends AppModel {
 				$classesBySectionBySubjectId[$value['InstitutionSiteClass']['education_subject_id']] = $value;
 			}
 
+			foreach ($classesBySectionBySubjectId as $key => $value) {
+				foreach ($value['InstitutionSiteClass']['InstitutionSiteClassStaff'] as $staffKey => $staffValue) {
+					$classesBySectionBySubjectId[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['staffName'] = ModelHelper::getName($classesBySectionBySubjectId[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['Staff']);
+				}
+			}
+
 			$this->setVar(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjectData', 'classesBySectionBySubjectId'));
 			
 			if($this->controller->request->is('post') || $this->controller->request->is('put')) {
