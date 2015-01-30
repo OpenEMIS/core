@@ -1,3 +1,4 @@
+<?php ?>
 <div class="form-group">
 	<label class="col-md-3 control-label"></label>
 	<div class="col-md-8">
@@ -13,17 +14,22 @@
 				<tbody>
 					<?php 
 					for($i=0; $i<$numberOfSections; $i++) :
-					$letter = 'A';
+					$letter = $this->Utility->getColumnLetter($startingSectionNumber);
 					$defaultName = sprintf('%s-%s', $grade['EducationGrade']['name'], $letter);
 					?>
 					<tr>
-						<td><?php echo $this->Form->input(sprintf('InstitutionSections.%d.name', $i), array(
+						<td><?php 
+						echo $this->Form->input(sprintf('InstitutionSections.%d.name', $i), array(
 							'value' => $defaultName,
 							'label' => false, 
 							'div' => false, 
 							'between' => false, 
 							'after' => false
-							)); ?></td>
+							)); 
+						echo $this->Form->hidden(sprintf('InstitutionSections.%d.section_number', $i), array(
+							'value' => $startingSectionNumber
+						));
+						?></td>
 						<td><?php 
 						echo $this->Form->input(sprintf('InstitutionSections.%d.staff_id', $i), array(
 							'options' => $staffOptions, 
@@ -34,7 +40,9 @@
 						));
 						?></td>
 					</tr>
-					<?php endfor; ?>
+					<?php 
+					$startingSectionNumber += 1;
+					endfor; ?>
 				</tbody>
 			</table>
 		</div>

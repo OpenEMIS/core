@@ -140,6 +140,7 @@ class InstitutionSiteSection extends AppModel {
 
 		$numberOfSectionsOptions = $this->numberOfSectionsOptions();
 		$numberOfSections = 1;
+		$startingSectionNumber = $this->getNewSectionNumber($institutionSiteId, $selectedGradeId);
 		
 		if($this->controller->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
@@ -168,8 +169,26 @@ class InstitutionSiteSection extends AppModel {
 		
 		$grade = ClassRegistry::init('EducationGrade')->findById($selectedGradeId);
 		
-		$this->setVar(compact('currentTab', 'gradeOptions', 'numberOfSections', 'staffOptions', 'numberOfSections', 'numberOfSectionsOptions'));
+		$this->setVar(compact('currentTab', 'gradeOptions', 'numberOfSections', 'staffOptions', 'numberOfSections', 'numberOfSectionsOptions', 'startingSectionNumber'));
 		$this->setVar(compact('selectedAcademicPeriod', 'academicPeriodOptions', 'shiftOptions', 'institutionSiteId', 'selectedGradeId', 'grade'));
+	}
+	
+	public function getNewSectionNumber($institutionSiteId, $gradeId){
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteSection.education_grade_id' => $gradeId
+			),
+			'order' => array('InstitutionSiteSection.section_number DESC')
+		));
+		
+		$number = 1;
+		if(!empty($data)){
+			$number = $data['InstitutionSiteSection']['section_number'] + 1;
+		}
+		
+		return $number;
 	}
 	
 	public function multiGradesAdd($selectedAcademicPeriod=0) {
@@ -554,7 +573,7 @@ class InstitutionSiteSection extends AppModel {
 	}
 	
 	public function numberOfSectionsOptions(){
-		$total = 5;
+		$total = 10;
 		$options = array();
 		for($i=1; $i<=$total; $i++){
 			$options[$i] = $i;
