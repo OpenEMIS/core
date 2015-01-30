@@ -93,7 +93,11 @@ echo $this->Form->input('InstitutionSiteSection.section_id', array(
 								'disabled' => $subjectClassExists
 							));
 						} else {
-							echo '';
+							$currStaff = array();
+							foreach ($classesBySectionBySubjectId[$subjectId]['InstitutionSiteClass']['InstitutionSiteClassStaff'] as $staffKey => $staffValue) {
+								array_push($currStaff, $staffValue['staffName']);
+							}
+							echo implode(', <br>', $currStaff);
 						}
 						?></td>
 					</tr>
