@@ -23,9 +23,9 @@ $this->start('contentBody');
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.name'); ?></div>
 	<div class="col-md-6">
 	<?php
-	if (!empty($sections)) {
-		foreach($sections as $g) {
-			echo $g;
+	if (!empty($data['InstitutionSiteSectionClass'])) {
+		foreach($data['InstitutionSiteSectionClass'] as $section) {
+			echo $section['InstitutionSiteSection']['name'] . '<br>';
 			break;
 		}
 	}

@@ -200,6 +200,12 @@ class InstitutionSiteClass extends AppModel {
 		if ($this->exists($id)) {
 			$this->contain(array(
 				'AcademicPeriod',
+				'EducationSubject',
+				'InstitutionSiteSectionClass' => array(
+					'InstitutionSiteSection' => array(
+						'fields' => array('InstitutionSiteSection.name')
+					)
+				),
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'fields' => array(
@@ -219,7 +225,7 @@ class InstitutionSiteClass extends AppModel {
 			));
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
-
+			
 			$this->Navigation->addCrumb($data[$this->alias]['name']);
 			
 			$this->setVar(compact('data'));
@@ -235,6 +241,7 @@ class InstitutionSiteClass extends AppModel {
 			$institutionSiteId = $this->Session->read('InstitutionSite.id');
 			$contain = array(
 				'AcademicPeriod',
+				'EducationSubject',
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'fields' => array(

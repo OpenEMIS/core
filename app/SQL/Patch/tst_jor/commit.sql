@@ -158,6 +158,13 @@ RENAME TABLE institution_site_class_subjects to 1190_institution_site_class_subj
 
 ALTER TABLE `institution_site_classes` DROP `institution_site_shift_id`;
 
+UPDATE `security_functions` SET `_view` = 'InstitutionSiteSection|InstitutionSiteSection.index|InstitutionSiteSection.view' WHERE `controller` = 'InstitutionSites' AND `name` = 'Sections';
+UPDATE `security_functions` SET `_view` = 'InstitutionSiteClass|InstitutionSiteClass.index|InstitutionSiteClass.view',
+`_edit` = '_view:InstitutionSiteClass.edit',
+`_add` = '_view:InstitutionSiteClass.add',
+`_delete` = '_view:InstitutionSiteClass.delete'
+WHERE `controller` = 'InstitutionSites' AND `name` = 'Classes';
+
 -- Malcolm SQL END
 
 
