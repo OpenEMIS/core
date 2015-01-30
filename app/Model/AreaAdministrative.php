@@ -61,16 +61,6 @@ class AreaAdministrative extends AppModel {
 	public function beforeAction() {
         parent::beforeAction();
 
-        $orphanConditions = array();
-        $orphanConditions['conditions']['OR'] = array(
-			$this->alias.'.lft' => NULL,
-			$this->alias.'.rght' => NULL
-        );
-        $orphans = $this->find('all', $orphanConditions);
-        if(!empty($orphans)) {
-			$this->recover('parent', -1);
-        }
-
 		$this->fields['parent_id']['type'] = 'hidden';
 		$this->fields['lft']['visible'] = false;
 		$this->fields['rght']['visible'] = false;
