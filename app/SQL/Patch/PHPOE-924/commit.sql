@@ -157,7 +157,7 @@ CREATE TABLE `infrastructure_levels` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `infrastructure_levels`

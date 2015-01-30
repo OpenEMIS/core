@@ -59,11 +59,11 @@ INSERT INTO `navigations` (`module`, `plugin`, `controller`, `header`, `title`, 
 ('Administration', NULL, 'AcademicPeriods', 'System Setup', 'Academic Periods', 'index', 'AcademicPeriod', NULL, @academicBoundriesId, 0, @academicBoundriesOrderId+1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
 INSERT INTO academic_period_levels (id, name, level, created_user_id, created) VALUES 
-('1', 'Year', '1', 1, NOW()),
-('2', 'Semester', '2', 1, NOW()),
-('3', 'Term', '3', 1, NOW()),
-('4', 'Month', '4', 1, NOW()),
-('5', 'Week', '5', 1, NOW());
+('1', 'Year', '1', 1, NOW());
+-- ('2', 'Semester', '2', 1, NOW()),
+-- ('3', 'Term', '3', 1, NOW()),
+-- ('4', 'Month', '4', 1, NOW()),
+-- ('5', 'Week', '5', 1, NOW());
 
 
 -- select * from information_schema.columns where column_name = 'school_year_id'and table_schema = 'openemis-core';
@@ -110,3 +110,62 @@ ALTER TABLE `student_extracurriculars` CHANGE `school_year_id` `academic_period_
 
 
 
+-- Academic period security SQL START
+SET @lastAdminBoundaryOrderNo := 0;
+SELECT MAX(security_functions.order) INTO @lastAdminBoundaryOrderNo FROM `security_functions` WHERE `category` = 'Administrative Boundaries' AND controller = 'Areas' AND name <> 'Staff - Academic' AND name <> 'Students - Academic';
+UPDATE security_functions SET security_functions.order = security_functions.order +2 WHERE security_functions.order > @lastAdminBoundaryOrderNo;
+
+INSERT INTO `security_functions` (`id`, 
+  `name`, 
+`controller`, 
+`module`, 
+`category`, 
+`parent_id`, 
+`_view`, 
+`_edit`, 
+`_add`, 
+`order`, 
+`visible`) VALUES
+(null, 
+  'Academic Period Levels', 
+'AcademicPeriods', 
+'Administration', 
+'Academic Periods', 
+-1, 
+'AcademicPeriodLevel.index|AcademicPeriodLevel.view', 
+'_view:AcademicPeriodLevel.edit', 
+'_view:AcademicPeriodLevel.add', 
+@lastAdminBoundaryOrderNo + 1, 
+1
+);
+
+INSERT INTO `security_functions` (`id`, 
+  `name`, 
+`controller`, 
+`module`, 
+`category`, 
+`parent_id`, 
+`_view`, 
+`_edit`, 
+`_add`, 
+`order`, 
+`visible`) VALUES
+(null, 
+  'Academic Periods', 
+'AcademicPeriods', 
+'Administration', 
+'Academic Periods', 
+-1, 
+'index|AcademicPeriod.index|AcademicPeriod.view', 
+'_view:AcademicPeriod.edit|AcademicPeriod.reorder|AcademicPeriod.move', 
+'_view:AcademicPeriod.add', 
+@lastAdminBoundaryOrderNo + 2, 
+1
+);
+
+
+-- need to set as parent
+SELECT id INTO @parentId FROM `security_functions` WHERE name = 'Academic Periods' AND `category` = 'Academic Periods' AND controller = 'AcademicPeriods';
+
+UPDATE security_functions SET parent_id = @parentId WHERE name = 'Academic Period Levels' AND `category` = 'Academic Periods' AND controller = 'AcademicPeriods';
+-- Academic period security SQL END

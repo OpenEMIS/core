@@ -282,11 +282,11 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=1;
 
 TRUNCATE TABLE `survey_modules`;
 INSERT INTO `survey_modules` (`id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 1, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
-(2, 'Student', 2, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
-(3, 'Staff', 3, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
-(4, 'InstitutionSiteStudent', 4, 0, NULL, NULL, 1, '2014-12-17 18:00:00'),
-(5, 'InstitutionSiteStaff', 5, 0, NULL, NULL, 1, '2014-12-17 18:00:00');
+(1, 'Institution', 1, 1, NULL, NULL, 1, '2014-12-17 18:00:00');
+-- (2, 'Student', 2, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
+-- (3, 'Staff', 3, 1, NULL, NULL, 1, '2014-12-17 18:00:00'),
+-- (4, 'InstitutionSiteStudent', 4, 0, NULL, NULL, 1, '2014-12-17 18:00:00'),
+-- (5, 'InstitutionSiteStaff', 5, 0, NULL, NULL, 1, '2014-12-17 18:00:00');
 
 --
 -- 6. new table: survey_questions
