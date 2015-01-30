@@ -87,11 +87,11 @@ class AssessmentItem extends AppModel {
 					'conditions' => array('EducationSubject.id = EducationGradeSubject.education_subject_id')
 				),
 				array(
-					'table' => 'institution_site_class_subjects',
-					'alias' => 'InstitutionSiteClassSubject',
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteClassSubject.education_grade_subject_id = EducationGradeSubject.id',
-						'InstitutionSiteClassSubject.institution_site_class_id = ' . $classId
+						'InstitutionSiteClass.education_subject_id = EducationGradeSubject.education_subject_id',
+						'InstitutionSiteClass.id = ' . $classId
 					)
 				),
 			),

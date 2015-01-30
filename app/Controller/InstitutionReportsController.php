@@ -17,161 +17,47 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class InstitutionReportsController extends AppController {
-	public $options = array();
-	public $institutionSiteId;
 	public $uses = array('InstitutionSite');
+
+	public $components = array('Report' => array('module' => 'Institution'));
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-		
-		if ($this->Session->check('InstitutionSite.id')) {
-			$this->institutionSiteId = $this->Session->read('InstitutionSite.id');
-			
-			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
-			$this->bodyTitle = $name;
-			
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
-			$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
-		} else {
-			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-		}
+		$this->bodyTitle = 'Reports';
+		$this->Navigation->addCrumb('Reports', array('plugin' => false, 'controller' => 'InstitutionReports', 'action' => 'index'));
+		$this->Navigation->addCrumb('Institutions', array('plugin' => false, 'controller' => 'InstitutionReports', 'action' => 'index'));
+		$this->Navigation->addCrumb('List of Reports');
+    }
+
+    public function ajaxGetReportProgress() {
+    	return $this->Report->ajaxGetReportProgress();
     }
 	
-	public function generate($model, $format) {
-		$this->autoRender = false;
-		$modelObj = ClassRegistry::init($model);
-		$method = $modelObj->getFormatFunction($format);
-		if($method !== false) {
-			$args = $this->params->pass;
-			array_shift($args); // remove model
-			array_shift($args); // remove format
-			
-			// args[0] = institutionSiteId
-			// args[1] = index
-			
-			$args = array_merge(array($this->institutionSiteId), $args);
-			$args = array_merge($args, $this->params->named);
-			$result = call_user_func_array(array($modelObj, $method), array($args));
-			//pr($result);
-		}
-	}
-	
 	public function index() {
-		return $this->redirect(array('action' => 'general'));
-	}
-	
-	public function general() {
-		$header = __('General');
-		$this->Navigation->addCrumb($header);
-		
-		$data = array(
-			array('name' => 'Overview and More', 'model' => 'InstitutionSite', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Bank Accounts', 'model' => 'InstitutionSiteBankAccount')
-		);
-		
-		foreach($data as $i => $obj) {
-			$model = ClassRegistry::init($obj['model']);
-			$formats = $model->getSupportedFormats();
-			$data[$i]['formats'] = $formats;
-		}
-		
-		$this->set(compact('data', 'header'));
-		$this->render('index');
-	}
-	
-	public function details() {
-		$header = __('Details');
-		$this->Navigation->addCrumb($header);
-		
-		$data = array(
-			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => array(1))),
-			array('name' => 'Student List', 'model' => 'InstitutionSiteStudent', 'params' => array('csv' => array(1))),
-			array('name' => 'Student Result', 'model' => 'InstitutionSiteClassStudent', 'params' => array('csv' => array(1))),
-			array('name' => 'Student Attendance', 'model' => 'InstitutionSiteStudentAbsence', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Student Behaviour', 'model' => 'Students.StudentBehaviour', 'params' => array('csv' => array(1))),
-			array('name' => 'Student Academic', 'model' => 'Students.StudentDetailsCustomValue', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Staff List', 'model' => 'InstitutionSiteStaff', 'params' => array('csv' => array(1))),
-			array('name' => 'Staff Attendance', 'model' => 'InstitutionSiteStaffAbsence', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Staff Behaviour', 'model' => 'Staff.StaffBehaviour', 'params' => array('csv' => array(1))),
-			array('name' => 'Staff Academic', 'model' => 'Staff.StaffDetailsCustomValue', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Class List', 'model' => 'InstitutionSiteClass', 'params' => array('csv' => array(1))),
-			array('name' => 'Classes - Students', 'model' => 'InstitutionSiteClass', 'params' => array('csv' => array(2)))
-		);
-		
-		foreach($data as $i => $obj) {
-			$model = ClassRegistry::init($obj['model']);
-			$formats = $model->getSupportedFormats();
-			$data[$i]['formats'] = $formats;
-		}
-		
-		$this->set(compact('data', 'header'));
-		$this->render('index');
-	}
-	
-	public function totals() {
-		$header = __('Totals');
-		$this->Navigation->addCrumb($header);
-		
-		$data = array(
-			array('name' => 'Students', 'model' => 'CensusStudent', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Teachers', 'model' => 'CensusTeacher', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Staff', 'model' => 'CensusStaff', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Classes', 'model' => 'CensusClass', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Shifts', 'model' => 'CensusShift', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Graduates', 'model' => 'CensusGraduate', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Attendance', 'model' => 'CensusAttendance', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Results', 'model' => 'CensusAssessment', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Behaviour', 'model' => 'CensusBehaviour', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Textbooks', 'model' => 'CensusTextbook', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Infrastructure', 'model' => 'InfrastructureCategory', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Finances', 'model' => 'CensusFinance', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'More', 'model' => 'CensusCustomField', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
-		);
-		
-		foreach($data as $i => $obj) {
-			$model = ClassRegistry::init($obj['model']);
-			$formats = $model->getSupportedFormats();
-			$data[$i]['formats'] = $formats;
-		}
-		
-		$this->set(compact('data', 'header'));
-		$this->render('index');
-	}
-	
-	public function quality() {
-		$header = __('Quality');
-		$this->Navigation->addCrumb($header);
-		$data = array(
-			array('name' => 'QA Report', 'model' => 'Quality.QualityInstitutionRubric', 'params' => array('csv' => array(1))),
-			array('name' => 'Visit Report', 'model' => 'Quality.QualityInstitutionVisit', 'params' => array('csv' => array(1)))
-		);
-		
-		foreach($data as $i => $obj) {
-			$model = ClassRegistry::init($obj['model']);
-			$formats = $model->getSupportedFormats();
-			$data[$i]['formats'] = $formats;
-		}
-		
-		$this->set(compact('data', 'header'));
-		$this->render('index');
+		$this->Report->index();
 	}
 
-	public function finance() {
-		$header = __('Finance');
-		$this->Navigation->addCrumb($header);
-		$data = array(
-			array('name' => 'Fees', 'model' => 'InstitutionSiteFee', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
-			array('name' => 'Student', 'model' => 'InstitutionSiteStudentFee', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
+	public function generate($selectedFeature=0) {
+		$i=0;
+		$features = array(
+			array('name' => __('Overview'), 'model' => 'InstitutionSite', 'period' => false),
+			array('name' => __('Programmes'), 'model' => 'InstitutionSiteProgramme', 'period' => true),
+			array('name' => __('Positions'), 'model' => 'InstitutionSitePosition', 'period' => false),
+			array('name' => __('Shifts'), 'model' => 'InstitutionSiteShift', 'period' => true),
+			array('name' => __('Sections'), 'model' => 'InstitutionSiteSection', 'period' => true),
+			array('name' => __('Classes'), 'model' => 'InstitutionSiteClass', 'period' => true),
+			array('name' => __('Bank Accounts'), 'model' => 'InstitutionSiteBankAccount', 'period' => false),
 		);
-		
-		foreach($data as $i => $obj) {
-			$model = ClassRegistry::init($obj['model']);
-			$formats = $model->getSupportedFormats();
-			$data[$i]['formats'] = $formats;
+
+		foreach ($features as $i => $feature) {
+			$features[$i]['value'] = $i;
+			$features[$i]['selected'] = ($selectedFeature == $i);
 		}
-		
-		$this->set(compact('data', 'header'));
-		$this->render('index');
+
+		$this->Report->generate($features, $selectedFeature);
 	}
-}	
+
+	public function download($id) {
+		$this->Report->download($id);
+	}
+}

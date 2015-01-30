@@ -17,13 +17,18 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StudentBankAccount extends AppModel {
-	public $actsAs = array('ControllerAction','Containable');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
 		'BankBranch',
 		'Students.Student',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
 		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser'),
 	);
+
 	public $validate = array(
 		'account_name' => array(
 			'ruleRequired' => array(
@@ -54,6 +59,16 @@ class StudentBankAccount extends AppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.active" => array(0 => 'No', 1 => 'Yes')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
 
 	public function getDisplayFields($controller) {
 		$Bank = ClassRegistry::init('Bank');

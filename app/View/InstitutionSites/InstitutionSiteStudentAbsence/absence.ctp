@@ -6,10 +6,13 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $yearId, $sectionId, $weekId), array('class' => 'divider'));
-if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $sectionId), array('class' => 'divider'));
-}
+	echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $sectionId), array('class' => 'divider'));
+	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');
@@ -33,7 +36,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 				$id = $arrItems['InstitutionSiteStudentAbsence']['id'];
 				$student = $arrItems['Student'];
 
-				$studentName = sprintf('%s %s %s', $student['first_name'], $student['middle_name'], $student['last_name']);
+				$studentName = $this->Model->getName($student);
 
 				$firstDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['first_date_absent'];
 				$lastDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['last_date_absent'];

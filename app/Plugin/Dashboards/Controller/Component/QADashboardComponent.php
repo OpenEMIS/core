@@ -311,16 +311,16 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
-/*	public function getSummaryAllFDBreakdownJorData($areaId,$yearId){
+/*	public function getSummaryAllFDBreakdownJorData($areaId,$academicPeriodId){
 		$jorMainData = ClassRegistry::init('Dashboards.DIData');
 		$conditions = array('DIData.IUSNId' => array(8,15,18));
-		$data = $jorMainData->getFDData($areaId,$yearId, $conditions);
+		$data = $jorMainData->getFDData($areaId,$academicPeriodId, $conditions);
 	
 		return $data;
 	}
 	
-	public function getSummaryAllAspectTotalKG($areaId,$yearId){
-		$conditions =  array('DIData.IUSNId' => array(20,21,22,23),'DIData.TimePeriod_NId' => $yearId);
+	public function getSummaryAllAspectTotalKG($areaId,$academicPeriodId){
+		$conditions =  array('DIData.IUSNId' => array(20,21,22,23),'DIData.TimePeriod_NId' => $academicPeriodId);
 		
 		$jorMainData = ClassRegistry::init('Dashboards.DIData');
 		$data = $jorMainData->getTotalKGData($areaId, $conditions);
@@ -526,7 +526,7 @@ class QADashboardComponent extends Component {
 	}
 	
 	//public function setupLineChartDataset($name, $achorOptions , $catData, $data, $filterArr = array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 0))){
-	public function setupLineChartDataset($data, $indData, $unitIndData, $yearOptions) {
+	public function setupLineChartDataset($data, $indData, $unitIndData, $academicPeriodOptions) {
 		$colorArr = array('9ACCF6', '82CF27', 'CF5227');
 		$anchorSides = array(3, 4, 20);
 		$counter = 0;
@@ -541,7 +541,7 @@ class QADashboardComponent extends Component {
 			$finalData['anchorSides'] = $anchorSides[$counter]; //$color;
 			$finalData['anchorRadius'] = 4; //$color;
 			$filtedData = array();
-			foreach ($yearOptions as $yKey => $year) {
+			foreach ($academicPeriodOptions as $yKey => $year) {
 				foreach ($unitIndData as $uKey => $unit) {
 					foreach ($data as $i => $item) {
 						$item = $item['DIData'];
@@ -554,7 +554,7 @@ class QADashboardComponent extends Component {
 			}
 			$tempData = array();
 			foreach ($filtedData as $year) {
-				foreach ($yearOptions as $defaultYear) {
+				foreach ($academicPeriodOptions as $defaultYear) {
 					if (array_key_exists($defaultYear, $year)) {
 						foreach ($year as $key => $obj) {
 							$tempData['value'] = $obj['Percent'];

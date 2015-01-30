@@ -22,21 +22,21 @@ var Infrastructure = {
         var parent = $('#'+model).closest('.section_group');
 		var gender = ($('#'+model+'Gender').val() == undefined)?'':'/'+$('#'+model+'Gender').val();
 		
-		if($('#school_year_id').length == 1){
-			var currentYearId = $('#school_year_id').val();
-		}else if($('#CensusInfrastructureSchoolYearId').length == 1){
-			var currentYearId = $('#CensusInfrastructureSchoolYearId').val();
-		}else if($('#SchoolYearId').length == 1){
-			var currentYearId = $('#SchoolYearId').val();
+		if($('#academic_period_id').length == 1){
+			var currentAcademicPeriodId = $('#academic_period_id').val();
+		}else if($('#CensusInfrastructureAcademicPeriodId').length == 1){
+			var currentAcademicPeriodId = $('#CensusInfrastructureAcademicPeriodId').val();
+		}else if($('#AcademicPeriodId').length == 1){
+			var currentAcademicPeriodId = $('#AcademicPeriodId').val();
 		}else{
-			var currentYearId = 0;
+			var currentAcademicPeriodId = 0;
 		}
 		
 		
 		
         $.ajax({
             type: "post",
-            url: getRootURL()+"Census/infrastructureByMaterial/"+id+"/"+currentYearId+'/'+$('#is_edit').val()+'/'+model+gender,
+            url: getRootURL()+"Census/infrastructureByMaterial/"+id+"/"+currentAcademicPeriodId+'/'+$('#is_edit').val()+'/'+model+gender,
             beforeSend: function (jqXHR) {
                     maskId = $.mask({parent: parent, text: i18n.General.textRetrieving});
             },

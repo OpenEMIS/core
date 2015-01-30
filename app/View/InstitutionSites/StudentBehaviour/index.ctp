@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
 
 $this->start('contentActions');
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'show', $selectedYear, $selectedClass), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'show', $selectedAcademicPeriod, $selectedClass), array('class' => 'divider'));
 	if($_add) {
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 	}
@@ -13,7 +13,7 @@ $this->start('contentBody');
 ?>
 
 <fieldset class="section_group">
-	<legend><?php echo trim($student['Student']['first_name'] . ' ' . $student['Student']['last_name']) ?></legend>
+	<legend><?php echo $this->Model->getName($student['Student']) ?></legend>
 	
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">

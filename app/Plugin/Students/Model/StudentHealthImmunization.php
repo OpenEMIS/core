@@ -15,8 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthImmunization extends StudentsAppModel {
-	public $actsAs = array('ControllerAction', 'DatePicker' => 'date');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction',
+		'DatePicker' => 'date'
+	);
 	public $belongsTo = array(
+		'Students.Student',
 		'HealthImmunization',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',

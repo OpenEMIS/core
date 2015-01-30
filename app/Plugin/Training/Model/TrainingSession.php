@@ -240,7 +240,7 @@ class TrainingSession extends TrainingAppModel {
 		
 		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
+				'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'),
 				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
 				'joins' => array(
 					array(
@@ -418,12 +418,14 @@ class TrainingSession extends TrainingAppModel {
 		        )
 		    );
 	 	 	$result = array();
- 	 		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all', array('fields'=>array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name'), 'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)));
+ 	 		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all', array('fields'=>array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'), 'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)));
  	 		if(!empty($trainingSessionTrainees)){
 		        $i = 0;
 		        foreach($trainingSessionTrainees as $obj){
 		        	$result[$i]['Staff.identification_no'] =  $obj['Staff']['identification_no'];
 	        		$result[$i]['Staff.first_name'] =  $obj['Staff']['first_name'];
+        			$result[$i]['Staff.middle_name'] =  $obj['Staff']['middle_name'];
+	        		$result[$i]['Staff.third_name'] =  $obj['Staff']['third_name'];
         			$result[$i]['Staff.last_name'] =  $obj['Staff']['last_name'];
 		        	$i++;
 		        }
@@ -508,7 +510,7 @@ class TrainingSession extends TrainingAppModel {
 				$provider = $data['TrainingSession']['training_provider_id'];
 				$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 					array(
-						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
+						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'),
 						'recursive' => -1, 
 						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
 						'joins' => array(
@@ -525,6 +527,8 @@ class TrainingSession extends TrainingAppModel {
 				if(!empty($trainingSessionTrainees)){
 					foreach($trainingSessionTrainees as $val){
 						$val['TrainingSessionTrainee']['first_name'] = $val['Staff']['first_name'];
+						$val['TrainingSessionTrainee']['middle_name'] = $val['Staff']['middle_name'];
+						$val['TrainingSessionTrainee']['third_name'] = $val['Staff']['third_name'];
 						$val['TrainingSessionTrainee']['last_name'] = $val['Staff']['last_name'];
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}

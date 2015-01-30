@@ -18,7 +18,7 @@ $(document).ready(function() {
 });
 
 var InstitutionSiteResults = {
-    yearId: '#SchoolYearId',
+    periodId: '#AcademicPeriodId',
 	programmeId: '#EducationProgrammeId',
 	classId: '#InstitutionSiteClassId',
 	
@@ -27,7 +27,7 @@ var InstitutionSiteResults = {
 	},
 	
 	navigateProgramme: function(obj, both) {
-		var href = getRootURL() + $(obj).attr('url') + '/' + $(this.yearId).val();
+		var href = getRootURL() + $(obj).attr('url') + '/' + $(this.periodId).val();
 		if(both && $(this.programmeId).length==1) {
 			href += '/' + $(this.programmeId).val();
 		}
@@ -35,7 +35,7 @@ var InstitutionSiteResults = {
 	},
 	
 	navigateClass: function(obj, both) {
-		var href = getRootURL() + $(obj).attr('url') + '/' + $(this.yearId).val();
+		var href = getRootURL() + $(obj).attr('url') + '/' + $(this.periodId).val();
 		if(both && $(this.classId).length==1) {
 			var classId = $(this.classId).val();
 			if(classId != null) {

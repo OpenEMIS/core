@@ -5,9 +5,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Shifts'));
 
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link(__('Add'), array('action' => 'shiftsAdd'), array('class' => 'divider'));
-}
+	if ($_add) {
+		echo $this->Html->link(__('Add'), array('action' => 'shiftsAdd'), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');
@@ -27,7 +27,7 @@ $this->start('contentBody');
 		<tbody>
 			<?php foreach ($data as $obj): ?>
 				<tr>
-					<td><?php echo $obj['SchoolYear']['name']; ?></td>
+					<td><?php echo $obj['AcademicPeriod']['name']; ?></td>
 					<td><?php echo $this->Html->link($obj['InstitutionSiteShift']['name'], array('action' => 'shiftsView', $obj['InstitutionSiteShift']['id']), array('escape' => false)); ?></td>
 					<td><?php echo $obj['InstitutionSiteShift']['start_time']; ?> - <?php echo $obj['InstitutionSiteShift']['end_time']; ?></td>
 					<td><?php echo $obj['InstitutionSite']['name']; ?></td>

@@ -32,6 +32,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                     'identification_no' => 'Student OpenEMIS ID',
                     'first_name' => '',
                     'middle_name' => '',
+                    'third_name' => '',
                     'last_name' => '',
                     'preferred_name' => ''
                 ),
@@ -58,10 +59,11 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 				'institution_site' => 'Institution',
 				'openemis_id' => 'OpenEMIS ID',
 				'first_name' => 'First Name',
-				'middle_name' => 'Middle Name',
+                'middle_name' => 'Middle Name',
+				'third_name' => 'Third Name',
 				'last_name' => 'Last Name',
 				'preferred_name' => 'Preferred Name',
-				'year' => 'Year'
+				'academic_period' => 'Academic Period'
 			);
 
 			$StaffDetailsCustomFieldModel = ClassRegistry::init('StaffDetailsCustomField');
@@ -108,7 +110,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 			
 			$StudentDetailsCustomValueModel = ClassRegistry::init('StudentDetailsCustomValue');
 			
-			$studentsYears = $StudentDetailsCustomValueModel->find('all', array(
+			$studentsAcademicPeriods = $StudentDetailsCustomValueModel->find('all', array(
                 'recursive' => -1,
                 'fields' => array(
                     'StudentDetailsCustomValue.student_id',
@@ -117,8 +119,8 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                     'Student.middle_name',
                     'Student.last_name',
                     'Student.preferred_name',
-                    'StudentDetailsCustomValue.school_year_id',
-                    'SchoolYear.name'
+                    'StudentDetailsCustomValue.academic_period_id',
+                    'AcademicPeriod.name'
                 ),
                 'joins' => array(
                     array(
@@ -129,19 +131,19 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                         )
                     ),
                     array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
+                        'table' => 'academic_periods',
+                        'alias' => 'AcademicPeriod',
                         'conditions' => array(
-                            'StudentDetailsCustomValue.school_year_id = SchoolYear.id'
+                            'StudentDetailsCustomValue.academic_period_id = AcademicPeriod.id'
                         )
                     )
                 ),
                 'conditions' => array('StudentDetailsCustomValue.institution_site_id' => $institutionSiteId),
-                'group' => array('StudentDetailsCustomValue.student_id', 'StudentDetailsCustomValue.school_year_id')
+                'group' => array('StudentDetailsCustomValue.student_id', 'StudentDetailsCustomValue.academic_period_id')
                     )
             );
 
-            foreach ($studentsYears AS $rowValue) {
+            foreach ($studentsAcademicPeriods AS $rowValue) {
                 $fieldValues = $StudentDetailsCustomValueModel->find('all', array(
                     'recursive' => -1,
                     'fields' => array(
@@ -171,7 +173,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                     'conditions' => array(
                         'StudentDetailsCustomValue.institution_site_id' => $institutionSiteId,
                         'StudentDetailsCustomValue.student_id' => $rowValue['StudentDetailsCustomValue']['student_id'],
-                        'StudentDetailsCustomValue.school_year_id' => $rowValue['StudentDetailsCustomValue']['school_year_id']
+                        'StudentDetailsCustomValue.academic_period_id' => $rowValue['StudentDetailsCustomValue']['academic_period_id']
                     )
                         )
                 );
@@ -183,7 +185,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                 $row['middle_name'] = $rowValue['Student']['middle_name'];
                 $row['last_name'] = $rowValue['Student']['last_name'];
                 $row['preferred_name'] = $rowValue['Student']['preferred_name'];
-                $row['year'] = $rowValue['SchoolYear']['name'];
+                $row['academic_period'] = $rowValue['AcademicPeriod']['name'];
 
                 foreach ($fieldValues AS $fieldValueRow) {
                     $fieldId = $fieldValueRow['StudentDetailsCustomField']['id'];
