@@ -209,15 +209,6 @@ class InstitutionSiteClassStudent extends AppModel {
 	// used by InstitutionSiteClass.classes
 	public function getGenderTotalByClass($classId) {
 		$joins = array(
-			array(
-				'table' => 'institution_site_section_students',
-				'alias' => 'InstitutionSiteSectionStudent',
-				'conditions' => array(
-					'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
-					'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
-					'InstitutionSiteSectionStudent.status' => 1
-				)
-			),
 			array('table' => 'students', 'alias' => 'Student')
 		);
 		
@@ -231,12 +222,11 @@ class InstitutionSiteClassStudent extends AppModel {
 		
 		foreach ($gender as $i => $val) {
 			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
-			$joins[1]['conditions'] = $studentConditions;
+			$joins[0]['conditions'] = $studentConditions;
 			$gender[$i] = $this->find('count', array(
 				'recursive' => -1, 
 				'joins' => $joins, 
-				'conditions' => $conditions,
-				'group' => array('Student.id')
+				'conditions' => $conditions
 			));
 		}
 		return $gender;
