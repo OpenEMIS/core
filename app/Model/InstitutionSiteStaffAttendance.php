@@ -39,10 +39,9 @@ class InstitutionSiteStaffAttendance extends AppModel {
 	}
 
 	public function generateSheet($writer) {
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$period = $SchoolYear->findById($this->selectedPeriod);
-		$startDate = $period['SchoolYear']['start_date'];
-		$endDate = $period['SchoolYear']['end_date'];
+		$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($this->selectedPeriod);
+		$startDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['start_date']));
+		$endDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['end_date']));
 
 		$months = $this->controller->generateMonthsByDates($startDate, $endDate);
 		//pr($months);die;
