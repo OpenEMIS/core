@@ -33,7 +33,10 @@ echo $this->element('../Areas/breadcrumbs');
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
 				<td>
 					<?php
-					if($obj['AreaAdministrativeLevel']['level'] == $maxLevel) {
+					$level = $obj['AreaAdministrativeLevel']['level'];
+					$areaAdministrativeId = ($level == 0) ? $obj['AreaAdministrative']['id'] : $obj['AreaAdministrativeLevel']['area_administrative_id'];	//Country
+					$maxLevel = isset($maxLevels[$areaAdministrativeId]) ? $maxLevels[$areaAdministrativeId] : 0;
+					if($level == $maxLevel) {
 						echo $obj[$model]['name'];
 					} else {
 						echo $this->Html->link($obj[$model]['name'], array('action' => $model, 'parent' => $obj[$model]['id']));
