@@ -207,7 +207,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 	}
 	
 	public function index($academicPeriodId=0, $weekId=null, $dayId=null){
-		if ($dayId!=null || $dayId!=0) {
+		if ($dayId==null || $dayId!=0) {
 			return $this->redirect(array('action' => get_class($this), 'dayview', $academicPeriodId, $weekId, $dayId));
 		}
 
@@ -390,8 +390,8 @@ class InstitutionSiteStaffAbsence extends AppModel {
 	}
 
 	public function dayview($academicPeriodId=0, $weekId=null, $dayId=null) {
-		if ($dayId==null||$dayId==0) {
-			return $this->redirect(array('action' => get_class($this), 'index', $academicPeriodId, $weekId));
+		if (!is_null($dayId) && $dayId==0) {
+			return $this->redirect(array('action' => get_class($this), 'index', $academicPeriodId, $weekId, 0));
 		}
 
 		$this->Navigation->addCrumb('Attendance - Staff');
@@ -435,9 +435,9 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$todayDate = date("Ymd");
 		if ($dayId==null) {
 			if (array_search($todayDate, $weekDayIndex)) {
-				$dayId = array_search($todayDate, $weekDayIndex);
+				$dayId = array_search($todayDate, $weekDayIndex)+1;
 			} else {
-				$dayId = 0;
+				$dayId = 1;
 			}
 		}
 

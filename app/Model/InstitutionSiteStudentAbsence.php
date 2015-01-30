@@ -232,8 +232,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	}
 	
 	public function index($academicPeriodId=0, $sectionId=null, $weekId=null, $dayId=null) {
-		if ($dayId!=null || $dayId!=0) {
-			return $this->redirect(array('action' => get_class($this), 'dayview', $academicPeriodId, $sectionId, $weekId, $dayId));
+		if ($dayId==null || $dayId!=0) {
+			return $this->redirect(array('action' => get_class($this), 'dayview', $academicPeriodId, $sectionId, $weekId, $dayId));	
 		}
 
 		$this->Navigation->addCrumb('Attendance - Students');
@@ -458,9 +458,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'sectionOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'sectionId'));
 	}
 
-	public function dayview($academicPeriodId=0, $sectionId=null, $weekId=null, $dayId=null) {
-		if ($dayId==null||$dayId==0) {
-			return $this->redirect(array('action' => get_class($this), 'index', $academicPeriodId, $sectionId, $weekId));
+	public function dayview($academicPeriodId=0, $sectionId=0, $weekId=null, $dayId=null) {
+		if (!is_null($dayId) && $dayId==0) {
+			return $this->redirect(array('action' => get_class($this), 'index', $academicPeriodId, $sectionId, $weekId, 0));
 		} 
 
 		$this->Navigation->addCrumb('Attendance - Students');
@@ -514,9 +514,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$todayDate = date("Ymd");
 		if ($dayId==null) {
 			if (array_search($todayDate, $weekDayIndex)) {
-				$dayId = array_search($todayDate, $weekDayIndex);
+				$dayId = array_search($todayDate, $weekDayIndex)+1;
 			} else {
-				$dayId = 0;
+				$dayId = 1;
 			}
 		}
 
