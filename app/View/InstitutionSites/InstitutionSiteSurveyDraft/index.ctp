@@ -24,7 +24,7 @@ $this->start('contentBody');
 						<li class="list-group-item">
 							<?php echo $this->Html->link($period['AcademicPeriod']['name'], array('action' => $model, 'view', $period[$model]['id'])) ?>
 							<span class="modified"><?php echo __('Last Modified On : ') . (!empty($period[$model]['modified']) ? $period[$model]['modified'] : $period[$model]['created']) ?></span>
-							<span class="pull-right"><?php echo __('To be completed by : '); ?><?php echo $period['SurveyStatus']['date_disabled']; ?></span>
+							<span class="action_pullright"><?php echo __('To be completed by : '); ?><?php echo $period['SurveyStatus']['date_disabled']; ?></span>
 						</li>
 					<?php endforeach ?>
 				</ul>

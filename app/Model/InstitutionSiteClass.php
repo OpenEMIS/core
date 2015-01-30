@@ -113,12 +113,6 @@ class InstitutionSiteClass extends AppModel {
 
 		foreach ($data as $key => $value) {
 			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
-
-			foreach ($value['InstitutionSiteClass']['InstitutionSiteClassStaff'] as $staffKey => $staffValue) {
-				$data[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['staffName'] = ModelHelper::getName($value['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['Staff']);
-				// pr($data[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]);
-			}
-
 		}
 
 
@@ -170,12 +164,6 @@ class InstitutionSiteClass extends AppModel {
 			$classesBySectionBySubjectId = array();
 			foreach ($classesBySection as $key => $value) {
 				$classesBySectionBySubjectId[$value['InstitutionSiteClass']['education_subject_id']] = $value;
-			}
-
-			foreach ($classesBySectionBySubjectId as $key => $value) {
-				foreach ($value['InstitutionSiteClass']['InstitutionSiteClassStaff'] as $staffKey => $staffValue) {
-					$classesBySectionBySubjectId[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['staffName'] = ModelHelper::getName($classesBySectionBySubjectId[$key]['InstitutionSiteClass']['InstitutionSiteClassStaff'][$staffKey]['Staff']);
-				}
 			}
 
 			$this->setVar(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjectData', 'classesBySectionBySubjectId'));
