@@ -21,21 +21,21 @@ class CensusGridValue extends AppModel {
 		$data = $this->find('all', array(
 				'recursive' => -1,
 				'fields' => array(
-					'SchoolYear.id',
-					'SchoolYear.name'
+					'AcademicPeriod.id',
+					'AcademicPeriod.name'
 				),
 				'joins' => array(
 						array(
-							'table' => 'school_years',
-							'alias' => 'SchoolYear',
+							'table' => 'academic_periods',
+							'alias' => 'AcademicPeriod',
 							'conditions' => array(
-								'CensusGridValue.school_year_id = SchoolYear.id'
+								'CensusGridValue.academic_period_id = AcademicPeriod.id'
 							)
 						)
 				),
 				'conditions' => array('CensusGridValue.institution_site_id' => $institutionSiteId),
-				'group' => array('CensusGridValue.school_year_id'),
-				'order' => array('SchoolYear.name DESC')
+				'group' => array('CensusGridValue.academic_period_id'),
+				'order' => array('AcademicPeriod.name DESC')
 			)
 		);
 		

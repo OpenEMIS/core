@@ -52,12 +52,12 @@ class SecurityUserAccess extends AppModel {
 			$table = $obj['table_name'];
 			$id = $obj['table_id'];
 			$user = $modules[$table]->find('first', array(
-				'fields' => array('first_name', 'last_name', 'identification_no'),
+				'fields' => array('first_name', 'middle_name', 'third_name', 'last_name', 'identification_no'),
 				'recursive' => -1,
 				'conditions' => array($table . '.id' => $id)
 			));
 			if($user) {
-				$obj['name'] = $user[$table]['first_name'] . ' ' . $user[$table]['last_name'];
+				$obj['name'] = ModelHelper::getName($user[$table]);
 				$obj['identification_no'] = $user[$table]['identification_no'];
 			}
 		}
@@ -71,7 +71,7 @@ class SecurityUserAccess extends AppModel {
 			$this->SecurityUser->formatResult = true;
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['access'] = $this->getAccess($userId);
-			$name = $data['first_name'] . ' ' . $data['last_name'];
+			$name = ModelHelper::getName($data);
 			$moduleOptions = array('Student' => __('Student'), /*'Teacher' => __('Teacher'), */'Staff' => __('Staff'));
 			$this->setVar('data', $data);
 			$this->setVar('moduleOptions', $moduleOptions);
@@ -140,7 +140,7 @@ class SecurityUserAccess extends AppModel {
 			foreach ($list as $obj) {
 				$info = $obj[$model];
 				$data[] = array(
-					'label' => sprintf('%s - %s %s', $info['identification_no'], $info['first_name'], $info['last_name']),
+					'label' => ModelHelper::getName($info, array('openEmisId'=>true)),
 					'value' => array('table_id' => $info['id']) 
 				);
 			}

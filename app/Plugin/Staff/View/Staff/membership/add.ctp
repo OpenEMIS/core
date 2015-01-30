@@ -7,22 +7,18 @@ echo $this->Html->script('Staff.memberships', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit) {
-    if(!empty($this->data[$model]['id'])){
-        $redirectAction = array('action' => 'membershipView', $this->data[$model]['id']);
-        $startDate = array('id' => 'issueDate' ,'data-date' => $this->data[$model]['issue_date']);
-        $endDate = array('id' => 'expiryDate' ,'data-date' => $this->data[$model]['expiry_date']);
-    }
-    else{
-        $redirectAction = array('action' => 'membership');
-        $startDate = array('id' => 'issueDate');
-        $endDate = array('id' => 'expiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
-    }
+
+$redirectAction = array('action' => 'membership');
+$startDate = array('id' => 'issueDate');
+$endDate = array('id' => 'expiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
+if(!empty($this->data[$model]['id'])){
+    $redirectAction = array('action' => 'membershipView', $this->data[$model]['id']);
+    $startDate = array('id' => 'issueDate', 'data-date' => $this->data[$model]['issue_date']);
+    $endDate = array('id' => 'expiryDate', 'data-date' => $this->data[$model]['expiry_date']);
     echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
-}else{
-	$redirectAction = array('action' => 'membership');
-    $startDate = array('id' => 'issueDate');
-    $endDate = array('id' => 'expiryDate' ,'data-date' => date('d-m-Y', time() + 86400));
+} else if (isset($this->data[$model]['issue_date'])){
+    $startDate = array('id' => 'issueDate', 'data-date' => $this->data[$model]['issue_date']);
+    $endDate = array('id' => 'expiryDate', 'data-date' => $this->data[$model]['expiry_date']);
 }
 $this->end();
 $this->start('contentBody');

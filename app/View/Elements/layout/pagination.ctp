@@ -58,7 +58,7 @@ if (!isset($displayCount)) {
 			'label' => false,
 			'div' => false,
 			'options' => $pageOptions,
-			'onchange' => "$('form').submit()"
+			'onchange' => "$(this).closest('form').submit()"
 		));
 		echo __('records');
 		?>

@@ -52,6 +52,9 @@ class FormUtilityHelper extends AppHelper {
 		$center = isset($options['center']) ? $options['center'] : false;
 		$html .= '<div class="form-group">';
 		$html .= '<div class="col-md-offset-' . ($center ? '5' : '4') . '">';
+		if (array_key_exists('reloadBtn', $options) && $options['reloadBtn'] == true) {
+			$html .= $this->Form->button('reload', array('id' => 'reload', 'name' => 'submit', 'class' => 'none'));
+		}
 		$html .= $this->Form->submit($this->Label->get('general.save'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		$html .= $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
 		$html .= '</div>';
@@ -104,29 +107,57 @@ class FormUtilityHelper extends AppHelper {
 	public function datepicker($field, $options=array()) {
 		$dateFormat = 'dd-mm-yyyy';
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
+		$model=false;
+		$exp = explode('.', $field);
+		if(count($exp)>1){
+			$model = $exp[0];
+			$field = $exp[1];
+		}else{
+			foreach($this->request->data as $k => $v){
+				if(is_array($v)){
+					$model = array_key_exists($field, $v) ? $k : $model;
+				}
+			}
+		}
 		$_options = array(
 			'id' => 'date',
 			'data-date-format' => $dateFormat,
 			'data-date-autoclose' => 'true',
-			'label' => false,
+			'label' => $this->Label->getLabel($model, array('field'=>$field)),
 			'disabled' => false
 		);
-		$label = $_options['label'];
+		$label = isset($options['label']) ? $options['label'] : $_options['label'];
+		unset($options['label']);
 		unset($_options['label']);
-		$disabled = $_options['disabled'];
+		$disabled = isset($options['disabled']) ? $options['disabled'] : $_options['disabled'];
+		unset($options['disabled']);
 		unset($_options['disabled']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
 		$defaults = $this->Form->inputDefaults();
+
+		if(isset($_options['data-date'])){
+			if($_options['data-date']=='blank'){
+				$defaultDate = '';
+			} else if(strlen($_options['data-date'])>0) {
+				$defaultDate = $_options['data-date'];
+			} else {
+				$defaultDate = date('d-m-Y');
+			}
+		} else {
+			$defaultDate = date('d-m-Y');
+		}
 		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
-			'value' => isset($_options['data-date'])?$_options['data-date']:date('d-m-Y')
+			'value' => $defaultDate
 		);
+		$inputOptions = array_merge($_options, $inputOptions);
+
 		if($label !== false) {
 			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
@@ -134,8 +165,11 @@ class FormUtilityHelper extends AppHelper {
 		if($disabled !== false) {
 			$inputOptions['disabled'] = $disabled;
 		}
+		if($field == 'end_date'){
+			//pr($inputOptions);die;
+		}
 		$html = $this->Form->input($field, $inputOptions);
-	
+		
 		$_datepickerOptions = array();
 		$_datepickerOptions['id'] = $_options['id'];
 		if(!empty($_options['startDate'])){
@@ -199,59 +233,138 @@ class FormUtilityHelper extends AppHelper {
 	public function areapicker($field, $options=array()) {
 		$_options = array(
 			'id' => 'areapicker',
-			'model' => 'Area'
+			'controller' => Inflector::singularize($this->request->controller),
+			'model' => 'Area',
+			'div' => true
 		);
-		$inputDefaults = $this->Form->inputDefaults();
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+
+		$inputDefaults = $this->getFormDefaults();
+		$inputDefaults['autocomplete'] = 'off';
+		$inputDefaults['onchange'] = 'Area.reloadDiv(this)';
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$_options = array_merge($_options, $options);
-		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : null;
+
+		$controller = $_options['controller'];
 		$model = $_options['model'];
-		
+		$areaId = null;
+		if($model=='Area'){
+			$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+			$SecurityGroupArea = ClassRegistry::init('SecurityGroupArea');
+			if(AuthComponent::user('id')){
+				$userId = AuthComponent::user('id');
+			}else{
+				$userId = 0;
+			}
+			$groupId = $SecurityGroupUser->getGroupIdsByUserId($userId);
+			$userAreas = $SecurityGroupArea->getAreas($groupId);
+			if(count($userAreas)>0){
+				foreach($userAreas as $ua){
+					$areaId = !$areaId ? $ua['area_id'] : (($ua['area_id']<$areaId) ? $ua['area_id'] : $areaId);
+				}
+			}
+		}
+		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : (($areaId) ? $areaId : null);
+
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		
 		$html = '';
-		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllByParentId(-1);
-		$inputOptions = array();
-		$inputOptions['autocomplete'] = 'off';
-		$inputOptions['onchange'] = 'Area.getList(this)';
+		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
+		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllById($worldId);
+		if(empty($path)) {	//handle situation where got $value but area record deleted
+			$path = $AreaHandler->{$model}->findAllById($worldId);
+		}
+		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
+				// $options = $AreaHandler->getChildren($model, $obj[$model]['parent_id']);
 				$options = $AreaHandler->{$model}->find('list', array(
-					'conditions' => array('parent_id' => $obj[$model]['parent_id']),
-					'order' => array('order')
+					'conditions' => array(
+						$model.'.parent_id' => $obj[$model]['parent_id'],
+						$model.'.visible' => 1
+					),
+					'order' => array($model.'.order')
 				));
-				$options = array($this->Label->get('Area.select')) + $options;
+
+				if($obj[$model]['parent_id'] == -1 || ($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
+				} else {
+					$options = array(
+						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
+					) + $options;
+				}
 				$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
-				
+
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
+
+					/*
+					if($i < count($path) - 1) {
+						$options = array($obj[$model]['id'] => $obj[$model]['name']);
+					}else{
+						if(isset($userAreas)&&count($userAreas)>0){
+							$options = array();
+							foreach($userAreas as $ua){
+								$options[$ua['area_id']] = $ua['area_name'];
+							}				
+						}
+						$options = array($this->Label->get('Area.select')) + $options;
+					}
+				}else{
+					$options = array($this->Label->get('Area.select')) + $options;	
+					*/
+				} else {
+					$inputOptions['default'] = $worldId;
+					$inputOptions['value'] = $worldId;
 				}
 				$inputOptions['options'] = $options;
-				$label = $inputDefaults['label'];
-				$label['text'] = $levelName;
-				$inputOptions['label'] = $label;
+				$inputOptions['label']['text'] = $levelName;
+				if($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == -1) {	//hide World
+					continue;
+				}
 				$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
-				//$value = $obj[$model]['id'];
 			}
 		}
 		
-		$levels = $AreaHandler->{$levelModels[$model]}->find('list', array('limit' => -1, 'offset' => count($path), 'order' => 'level'));
-		
+		$area = end($path);
+		$level = $AreaHandler->{$levelModels[$model]}->field('level', array('id' => $area[$model][$foreignKey]));
+		$levelOptions = array();
+		$levelOptions['limit'] = 1;
+		$levelOptions['order'] = $levelModels[$model].'.level';
+		if($model == 'Area') {
+			$levelOptions['conditions'] = array(
+				$levelModels[$model].'.level >' => $level
+			);
+		} else if($model == 'AreaAdministrative'){
+			$parentId = $area[$model]['id'];
+			$areaAdministrativeId = $AreaHandler->{$levelModels[$model]}->field(Inflector::underscore($model).'_id', array('id' => $area[$model][Inflector::underscore($levelModels[$model]).'_id']));
+			$areaAdministrativeId = $level < 1 ? $parentId : $areaAdministrativeId;	//-1 => World, 0 => Country
+			$levelOptions['conditions'] = array(
+				$levelModels[$model].'.level >' => $level,
+				$levelModels[$model].'.'.Inflector::underscore($model).'_id' => $areaAdministrativeId
+			);
+		}
+		$levels = $AreaHandler->{$levelModels[$model]}->find('list', $levelOptions);
+
 		foreach($levels as $id => $name) {
-			$html .= $this->Form->input($name, array('options' => array(), 'onchange' => 'Area.getList(this)', 'disabled'));
+			$inputOptions = $inputDefaults;
+			$inputOptions['options'] = array();
+			$inputOptions['disabled'] = 'disabled';
+			$html .= $this->Form->input($name, $inputOptions);
 		}
 		
 		$url = 'Areas/ajaxGetAreaOptions/' . $model . '/';
+		$urlReload = 'Areas/ajaxReloadAreaDiv/' . $model . '/' . $controller . '/' . $field . '/';
 		$html .= $this->Form->hidden($field, array('value' => $value));
-		$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url));
-		
+		if($_options['div']) {
+			$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'value' => $worldId, 'url' => $url, 'urlReload' => $urlReload));
+		}
+
 		return $html;
 	}
 	
 	public function areas($value, $model='Area') {
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
 		
 		$html = '';
@@ -263,6 +376,9 @@ class FormUtilityHelper extends AppHelper {
 		$path = $AreaHandler->{$model}->getPath($value);
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
+				if($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == -1) {
+					continue;
+				}
 				$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
 				$html .= sprintf($row, sprintf($labelCol, $levelName) . sprintf($valueCol, $obj[$model]['name']));
 			}

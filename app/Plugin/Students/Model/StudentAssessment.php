@@ -19,35 +19,35 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentAssessment extends StudentsAppModel {
     public $useTable = 'assessment_item_results';
 
-    public function getYears($studentId){
-        $years = array();
+    public function getAcademicPeriods($studentId){
+        $academicPeriods = array();
         $result = $this->find('all', array(
-            'fields' => array("DISTINCT SchoolYear.id", "SchoolYear.name"),
+            'fields' => array("DISTINCT AcademicPeriod.id", "AcademicPeriod.name"),
             'joins' => array(
                 array(
-                    'table' => 'school_years',
-                    'alias' => 'SchoolYear',
+                    'table' => 'academic_periods',
+                    'alias' => 'AcademicPeriod',
                     'type' => 'INNER',
                     'conditions' => array(
-                        "SchoolYear.id = {$this->name}.school_year_id"
+                        "AcademicPeriod.id = {$this->name}.academic_period_id"
                     ),
-                    'order' => array("{$this->name}.school_year_id DESC")
+                    'order' => array("{$this->name}.academic_period_id DESC")
                 )
             ),
             'conditions' => array($this->name.'.student_id' => $studentId)
         ));
 
         foreach($result as $row){
-            $years[$row['SchoolYear']['id']] = $row['SchoolYear']['name'];
+            $academicPeriods[$row['AcademicPeriod']['id']] = $row['AcademicPeriod']['name'];
         }
-        return $years;
+        return $academicPeriods;
     }
 
-    public function getProgrammeGrades($studentId, $yearId=0){
+    public function getProgrammeGrades($studentId, $academicPeriodId=0){
         $programmeGrades = array();
         $conditions = array("{$this->name}.student_id" => $studentId);
-        if($yearId > 0){
-            $conditions["{$this->name}.school_year_id"] = $yearId;
+        if($academicPeriodId > 0){
+            $conditions["{$this->name}.academic_period_id"] = $academicPeriodId;
         }
 
         $result = $this->find('all', array(
@@ -98,7 +98,7 @@ class StudentAssessment extends StudentsAppModel {
         return $programmeGrades;
     }
 
-    public function getData($studentId, $yearId, $gradeId){
+    public function getData($studentId, $academicPeriodId, $gradeId){
 
 
         $result = $this->find('all', array(
@@ -183,7 +183,7 @@ class StudentAssessment extends StudentsAppModel {
             ),
             'conditions' => array(
                 "{$this->name}.student_id" => $studentId,
-                "{$this->name}.school_year_id" => intval($yearId),
+                "{$this->name}.academic_period_id" => intval($academicPeriodId),
                 "EducationGradeSubject.education_grade_id" => intval($gradeId),
             ),
 //            'group' => array("InstitutionSite.name"),

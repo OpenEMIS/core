@@ -1687,7 +1687,7 @@
                       `longitude` varchar(15) DEFAULT NULL,
                       `latitude` varchar(15) DEFAULT NULL,
                       `area_id` int(11) NOT NULL,
-                      `area_education_id` int(11) DEFAULT NULL,
+                      `area_administrative_id` int(11) DEFAULT NULL,
                       `institution_id` int(11) NOT NULL,
                       `institution_site_locality_id` int(11) NOT NULL,
                       `institution_site_type_id` int(11) NOT NULL,
@@ -1724,11 +1724,11 @@
                 <![CDATA[
                     INSERT INTO `institution_sites` (
                         `id`, `name`, `code`, `address`, `postal_code`, `contact_person`, `telephone`, `fax`, `email`,
-                        `website`, `date_opened`, `year_opened`, `date_closed`, `year_closed`, `longitude`, `latitude`, `area_id`, `area_education_id`,`institution_id`, `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
+                        `website`, `date_opened`, `year_opened`, `date_closed`, `year_closed`, `longitude`, `latitude`, `area_id`, `area_administrative_id`,`institution_id`, `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
                         `institution_site_status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     )VALUES (
                         :id, :name, :code, :address, :postal_code, :contact_person, :telephone, :fax, :email,
-                        :website, :date_opened, :year_opened, :date_closed, :year_closed, :longitude, :latitude, :area_id, :area_education_id, :institution_id,
+                        :website, :date_opened, :year_opened, :date_closed, :year_closed, :longitude, :latitude, :area_id, :area_administrative_id, :institution_id,
                         :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
                         :institution_site_status_id, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -1816,6 +1816,7 @@
                       `identification_no` varchar(100) DEFAULT NULL,
                       `first_name` varchar(100) NOT NULL,
                       `middle_name` varchar(100) DEFAULT NULL,
+                      `third_name` varchar(100) DEFAULT NULL,
                       `last_name` varchar(100) NOT NULL,
                       `preferred_name` varchar(100) DEFAULT NULL,
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
@@ -1859,11 +1860,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `staff` (
-                        `id`, `identification_no`, `first_name`, `middle_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
+                        `id`, `identification_no`, `first_name`, `middle_name`, `third_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
                         `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
                         `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :identification_no, :first_name, :middle_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
+                        :id, :identification_no, :first_name, :middle_name, :third_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
                         :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
                         :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -1996,6 +1997,7 @@
                       `identification_no` varchar(100) NOT NULL,
                       `first_name` varchar(100) NOT NULL,
                       `middle_name` varchar(100) DEFAULT NULL,
+                      `third_name` varchar(100) DEFAULT NULL,
                       `last_name` varchar(100) NOT NULL,
                       `preferred_name` varchar(100) DEFAULT NULL,
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
@@ -2039,11 +2041,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `students` (
-                        `id`, `identification_no`, `first_name`, `middle_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
+                        `id`, `identification_no`, `first_name`, `middle_name`, `third_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
                         `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
                         `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :identification_no, :first_name, :middle_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
+                        :id, :identification_no, :first_name, :middle_name, :third_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
                         :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
                         :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -2347,6 +2349,7 @@
                       `identification_no` varchar(100) NOT NULL,
                       `first_name` varchar(100) NOT NULL,
                       `middle_name` varchar(100) DEFAULT NULL,
+                      `third_name` varchar(100) DEFAULT NULL,
                       `last_name` varchar(100) NOT NULL,
                       `preferred_name` varchar(100) DEFAULT NULL,
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
@@ -2389,11 +2392,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teachers` (
-                        `id`, `identification_no`, `first_name`, `middle_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
+                        `id`, `identification_no`, `first_name`, `middle_name`, `third_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
                         `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
                         `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :identification_no, :first_name, :middle_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
+                        :id, :identification_no, :first_name, :middle_name, :third_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
                         :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
                         :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );

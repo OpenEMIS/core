@@ -11,7 +11,7 @@ echo $this->Html->link(__('View'), array('action' => $_action), array('class' =>
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
+echo $this->element('../InstitutionSites/InstitutionSiteClass/controls');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action.'Edit'));
 echo $this->Form->create($model, $formOptions);
 ?>
@@ -41,7 +41,7 @@ echo $this->Form->create($model, $formOptions);
 					?>
 				</td>
 				<td><?php echo $obj['Staff']['identification_no']; ?></td>
-				<td><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
+				<td><?php echo $this->Model->getName($obj['Staff']); ?></td>
 			</tr>
 			<?php endforeach; ?>
 		</tbody>

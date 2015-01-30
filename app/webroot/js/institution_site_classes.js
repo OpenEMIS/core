@@ -18,7 +18,7 @@ $(document).ready(function() {
 });
 
 var InstitutionSiteClasses = {
-	yearId: '#SchoolYearId',
+	periodId: '#AcademicPeriodId',
 	noDataMsg: 'No data available.',
 	
 	init: function() {
@@ -30,7 +30,7 @@ var InstitutionSiteClasses = {
 	
 	navigate: function() {
 		var href = $('.content_wrapper > form').attr('action');
-		window.location.href = href + '/' + $(this.yearId).val();
+		window.location.href = href + '/' + $(this.periodId).val();
 	},
 	
 	switchYear: function() {
@@ -39,7 +39,7 @@ var InstitutionSiteClasses = {
 	
 	validateClassAdd: function() {
 		var name = $('#ClassName').val();
-		var year = $(InstitutionSiteClasses.yearId).val();
+		var year = $(InstitutionSiteClasses.periodId).val();
 		
 		var maskId;
 		var ajaxParams = {name: name, year: year, count: $('#grade_list tr').length};
@@ -74,13 +74,13 @@ var InstitutionSiteClasses = {
 	
 	addGrade: function() {
 		var exclude = [];
-		var yearId = $(InstitutionSiteClasses.yearId).val();
+		var periodId = $(InstitutionSiteClasses.periodId).val();
 		var index = $('.grades').length;
 		$('.grades').each(function() {
 			exclude.push($(this).val());
 		});
 		var maskId;
-		var ajaxParams = {exclude: exclude, index: index, yearId: yearId};
+		var ajaxParams = {exclude: exclude, index: index, periodId: periodId};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
 				if(!$($.parseHTML(data)).hasClass('alert')) {

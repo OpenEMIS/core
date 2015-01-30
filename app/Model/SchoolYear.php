@@ -119,7 +119,7 @@ class SchoolYear extends AppModel {
 	public function getYearListValues($type='name', $order='DESC') {
 		$value = 'SchoolYear.' . $type;
 		$result = $this->find('list', array(
-			'fields' => array($value, $value),
+			'fields' => array($value, 'SchoolYear.name'),
 			'order' => array($value . ' ' . $order)
 		));
 		return $result;

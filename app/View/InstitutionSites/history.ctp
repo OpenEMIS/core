@@ -158,10 +158,10 @@ $this->start('contentBody');
 </fieldset>
 <?php } ?>
 
-<?php if(@count($data2['area_education_id'])>0){ ?>
+<?php if(@count($data2['area_administrative_id'])>0){ ?>
 <fieldset class="section_break dataDisplay">
 	<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
-	<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_education_id', array(), $data['InstitutionSite']['area_education_id'],$data2['area_education_id']);  ?>
+	<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_administrative_id', array(), $data['InstitutionSite']['area_administrative_id'],$data2['area_administrative_id']);  ?>
 </fieldset>
 <?php } ?>
 

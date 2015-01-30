@@ -79,7 +79,7 @@ class DashData extends DashboardsAppModel {
 		return $data;
 	}
 
-	public function getFDData($areaId, $yearId, $filter = array()) {
+	public function getFDData($areaId, $academicPeriodId, $filter = array()) {
 		$options['joins'] = array(
 			array(
 				'table' => 'ut_area_' . $this->setupUseTableLang(),
@@ -91,7 +91,7 @@ class DashData extends DashboardsAppModel {
 			)
 		);
 
-		$options['conditions'] = array('DIData.TimePeriod_NId' => $yearId, 'DIArea.Area_Parent_NId' => $areaId);
+		$options['conditions'] = array('DIData.TimePeriod_NId' => $academicPeriodId, 'DIArea.Area_Parent_NId' => $areaId);
 		if (!empty($filter)) {
 			$options['conditions'] = array_merge($options['conditions'], $filter);
 		}

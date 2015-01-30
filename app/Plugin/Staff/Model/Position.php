@@ -100,6 +100,8 @@ class Position extends AppModel {
 			$this->fields['institution_site_position_id']['type'] = 'disabled';
 			$this->fields['institution_site_position_id']['value'] = $name;
 
+			$this->request->data['Position']['end_date'] = (strlen($data['Position']['end_date'])>0) ? $data['Position']['end_date'] : 'blank' ;
+			
 			$positionId = $this->request->data['InstitutionSitePosition']['id'];
 			$startDate = $this->request->data['Position']['start_date'];
 			$currentFTE = $this->request->data['Position']['FTE'] * 100;

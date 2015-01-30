@@ -48,7 +48,8 @@ class InstitutionSiteSectionStaff extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'DISTINCT Staff.identification_no',
-				'Staff.first_name', 'Staff.last_name'
+				'Staff.first_name', 'Staff.last_name',
+				'Staff.middle_name', 'Staff.third_name'
 			),
 			'joins' => array(
 				array(
@@ -75,7 +76,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$data = $this->Staff->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.identification_no',
+					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.third_name', 'Staff.identification_no',
 					'InstitutionSiteSectionStaff.id', 'InstitutionSiteSectionStaff.status', 'InstitutionSiteSection.id'
 				),
 				'joins' => array(
@@ -93,9 +94,9 @@ class InstitutionSiteSectionStaff extends AppModel {
 						)
 					),
 					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
+						'table' => 'academic_periods',
+						'alias' => 'AcademicPeriod',
+						'conditions' => array('AcademicPeriod.id = InstitutionSiteSection.academic_period_id')
 					),
 					array(
 						'table' => 'institution_site_section_staff',
@@ -111,8 +112,8 @@ class InstitutionSiteSectionStaff extends AppModel {
 					'OR' => array(
 						'InstitutionSiteStaff.end_date IS NULL',
 						'AND' => array(
-							'InstitutionSiteStaff.start_year >= ' => 'SchoolYear.start_year',
-							'InstitutionSiteStaff.end_year >= ' => 'SchoolYear.start_year'
+							'InstitutionSiteStaff.start_year >= ' => 'AcademicPeriod.start_year',
+							'InstitutionSiteStaff.end_year >= ' => 'AcademicPeriod.start_year'
 						)
 					)
 				),
@@ -145,7 +146,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => 0,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
 			),
 			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId),
 			'order' => array('Staff.first_name')
@@ -155,7 +156,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+				$list[$id] = ModelHelper::getName($obj['Staff']);
 			}
 			return $list;
 		} else {
@@ -167,7 +168,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
 			),
 			'joins' => array(
 				array(
@@ -189,19 +190,19 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$list = array();
 		foreach ($data as $obj) {
 			$id = $obj['Staff']['id'];
-			$teacherName = $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name'];
-			$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+			$teacherName = $obj['Staff']['first_name'] . ' ' . $obj['Staff']['middle_name'] . ' ' . $obj['Staff']['third_name'] . ' ' . $obj['Staff']['last_name'];
+			$list[$id] = ModelHelper::getName($obj['Staff']);
 		}
 		return $list;
 	}
 
-	public function getStaffsInClassYear($classId, $yearId, $mode = 'all') {
+	public function getStaffsInClassAcademicPeriod($classId, $academicPeriodId, $mode = 'all') {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteSection')));
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
 			),
-			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $classId, 'SchoolYear.id' => $yearId),
+			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $classId, 'AcademicPeriod.id' => $academicPeriodId),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_sections',
@@ -211,16 +212,16 @@ class InstitutionSiteSectionStaff extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteSection.school_year_id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('AcademicPeriod.id = InstitutionSiteSection.academic_period_id')
 				),
 				array(
 					'table' => 'institution_site_staff',
 					'alias' => 'InstitutionSiteStaff',
 					'conditions' => array('InstitutionSiteStaff.staff_id = InstitutionSiteSectionStaff.staff_id',
 						'OR' => array(
-							'InstitutionSiteStaff.end_year >= SchoolYear.end_year', 'InstitutionSiteStaff.end_year is null'
+							'InstitutionSiteStaff.end_year >= AcademicPeriod.end_year', 'InstitutionSiteStaff.end_year is null'
 						)
 					)
 				)
@@ -232,7 +233,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+				$list[$id] = ModelHelper::getName($obj['Staff']);
 			}
 			return $list;
 		} else {

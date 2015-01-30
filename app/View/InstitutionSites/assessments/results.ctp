@@ -5,7 +5,10 @@ $this->assign('contentHeader', $educationGradeName . ' - ' . $assessmentName);
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'assessments'), array('class' => 'divider'));
 if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsResultsEdit', $selectedYear, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsResultsEdit', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
+}
+if ($_execute) {
+	echo $this->Html->link($this->Label->get('general.export'), array('action' => 'assessmentsToExcel', $selectedAcademicPeriod, $assessmentId), array('class' => 'divider'));
 }
 $this->end();
 
@@ -22,7 +25,7 @@ $this->start('contentBody');
 			'value' => $selectedClass,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $assessmentId
 		));
 		?>
 	</div>
@@ -35,7 +38,7 @@ $this->start('contentBody');
 			'value' => $selectedItem,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedYear . '/' . $assessmentId . '/' . $selectedClass
+			'url' => $this->params['controller'] . '/' . $this->action . '/' . $selectedAcademicPeriod . '/' . $assessmentId . '/' . $selectedClass
 		));
 		?>
 	</div>
@@ -55,7 +58,7 @@ $this->start('contentBody');
 			<?php foreach ($data as $obj) { ?>
 				<tr>
 					<td><?php echo $obj['Student']['identification_no']; ?></td>
-					<td><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></td>
+					<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 					<td class="center">
 						<?php
 						$marks = $obj[$model]['marks'];

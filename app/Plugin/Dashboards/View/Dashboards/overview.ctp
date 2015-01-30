@@ -37,7 +37,7 @@ if (!empty($QATableData['tableData'])) {
 	));
 	echo $this->Form->input('year_id', array(
 		'options' => $yearsOptions,
-		'default' => $yearId,
+		'default' => $academicPeriodId,
 		'between' => '<div class="col-md-5">',
 		'label' => array('text' => __('Year'), 'class' => 'col-md-5 control-label')
 	));
@@ -82,7 +82,7 @@ if (!empty($QATableData['tableData'])) {
 	
 		<?php echo $this->element('templates/table', compact('tableHeaders', 'tableData')); ?>
 		<div class="center">
-			<?php echo $this->Html->link(__('Download CSV'), array('action' => 'genCSV', $areaId, $yearId), array('class' => 'btn_save')); ?>
+			<?php echo $this->Html->link(__('Download CSV'), array('action' => 'genCSV', $areaId, $academicPeriodId), array('class' => 'btn_save')); ?>
 		</div>
 	</div>
 

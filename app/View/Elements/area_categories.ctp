@@ -3,8 +3,8 @@
 $arrMap = array(
 	''=>'Areas',
 	'levels'=>'Area Levels',
-	'AreaEducation'=>'Areas (Education)',
-	'AreaEducationLevels'=>'Area Levels (Education)'
+	'AreaAdministrative'=>'Areas (Administrative)',
+	'AreaAdministrativeLevels'=>'Area Levels (Administrative)'
 );
 ?>
 

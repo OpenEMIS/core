@@ -223,7 +223,9 @@ class SecurityController extends AppController {
 		$this->Navigation->addCrumb('Users');
 
 		$conditions = array('SecurityUser.super_admin' => 0);
-		$data = $this->Search->search($this->SecurityUser, $conditions);
+
+		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->SecurityUser, $conditions, $order);
 		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
