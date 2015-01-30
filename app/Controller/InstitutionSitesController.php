@@ -88,6 +88,7 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),
+		'InstitutionSiteStaffAttendance',
 		'InstitutionSiteStaffAbsence',
 		'InstitutionSiteSection',
 		'InstitutionSiteSectionStudent',
@@ -777,5 +778,66 @@ class InstitutionSitesController extends AppController {
 	
 	public function getDayViewAttendanceOptions() {
 		return array(__('Present'), __('Absent').' - '.__('Excused'), __('Absent').' - '.__('Unexcused'));
+	}
+	
+	public function generateMonthsByDates($startDate, $endDate) {
+		$result = array();
+		$stampStartDay = strtotime($startDate);
+		$stampEndDay = strtotime($endDate);
+		$stampToday = strtotime(date('Y-m-d'));
+		
+		$stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
+		while($stampFirstDayOfMonth <= $stampEndDay && $stampFirstDayOfMonth <= $stampToday){
+			$monthString = date('F', $stampFirstDayOfMonth);
+			$monthNumber = date('m', $stampFirstDayOfMonth);
+			$year = date('Y', $stampFirstDayOfMonth);
+			
+			$result[] = array(
+				'month' => array('inNumber' => $monthNumber, 'inString' => $monthString),
+				'year' => $year
+			);
+			
+			$stampFirstDayOfMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+		}
+		
+		return $result;
+	}
+	
+	public function generateDaysOfMonth($year, $month, $startDate, $endDate){
+		$days = array();
+		$stampStartDay = strtotime($startDate);
+		//pr($startDate);
+		$stampEndDay = strtotime($endDate);
+		//pr($endDate);
+		$stampToday = strtotime(date('Y-m-d'));
+		
+		$stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
+		//pr($year . '-' . $month . '-01');
+		$stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+		//pr(date('Y-m-d', $stampFirstDayNextMonth));
+		
+		
+		if($stampFirstDayOfMonth <= $stampStartDay){
+			$tempStamp = $stampStartDay;
+		}else{
+			$tempStamp = $stampFirstDayOfMonth;
+		}
+		//pr(date('Y-m-d', $tempStamp));
+		
+		while($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth && $tempStamp < $stampToday){
+			$weekDay = date('l', $tempStamp);
+			$date = date('Y-m-d', $tempStamp);
+			$day = date('d', $tempStamp);
+			
+			$days[] = array(
+				'weekDay' => $weekDay,
+				'date' => $date,
+				'day' => $day
+			);
+			
+			$tempStamp = strtotime('+1 day', $tempStamp);
+		}
+
+		return $days;
 	}
 }

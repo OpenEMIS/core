@@ -478,6 +478,31 @@ class InstitutionSiteClass extends AppModel {
 	}
 	
 	public function getClassListWithAcademicPeriod($institutionSiteId, $academicPeriodId, $assessmentId){
+		$data = $this->getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId);
+		
+		$result = array();
+		foreach($data AS $row){
+			$class = $row['InstitutionSiteClass'];
+			$schoolYear = $row['SchoolYear'];
+			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
+		}
+		
+		return $result;
+	}
+	
+	public function getAssessmentClassList($institutionSiteId, $academicPeriodId, $assessmentId){
+		$data = $this->getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId);
+		
+		$result = array();
+		foreach($data AS $row){
+			$class = $row['InstitutionSiteClass'];
+			$result[$class['id']] = $class['name'];
+		}
+		
+		return $result;
+	}
+	
+	public function getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId){
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name'),
@@ -518,14 +543,7 @@ class InstitutionSiteClass extends AppModel {
 			'order' => array('AcademicPeriod.name, InstitutionSiteClass.name')
 		));
 		
-		$result = array();
-		foreach($data AS $row){
-			$class = $row['InstitutionSiteClass'];
-			$academicPeriod = $row['AcademicPeriod'];
-			$result[$class['id']] = $academicPeriod['name'] . ' - ' . $class['name'];
-		}
-		
-		return $result;
+		return $data;
 	}
 	
 	public function getClassListByInstitutionAcademicPeriod($institutionSiteId, $academicPeriodId){
