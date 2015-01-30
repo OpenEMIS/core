@@ -27,7 +27,7 @@ $this->start('contentBody');
 					echo $grade . '<br>';
 				}
 				?></td>
-				<td><?php echo $this->Html->link($obj['InstitutionSiteSection']['name'], array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'InstitutionSiteSection', 'view', $obj['StudentSection']['id']), array('escape' => false)); ?></td>
+				<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
 				<td><?php echo $obj['Staff']['staff_name']; ?></td>
 			</tr>
 			
