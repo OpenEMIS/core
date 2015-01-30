@@ -33,7 +33,7 @@ $this->start('contentBody');
 		echo $this->FormUtility->datepicker('date_enabled', array('id' => 'SurveyStatusDateEnabled', 'data-date' => $obj['date_enabled']));
 		echo $this->FormUtility->datepicker('date_disabled', array('id' => 'SurveyStatusDateDisabled', 'data-date' => $obj['date_disabled']));
 		$labelOptions['text'] = __('Academic Period Level');
-		echo $this->Form->input('academic_period_level_id', array('options' => $academicPeriodLevelOptions, 'label' => $labelOptions));
+		echo $this->Form->input('academic_period_level_id', array('options' => $academicPeriodLevelOptions, 'label' => $labelOptions, 'onchange' => '$("#reload").click();'));
 		$labelOptions['text'] = __('Academic Periods');
 		echo $this->Form->input('AcademicPeriod.AcademicPeriod', array('options' => $academicPeriodOptions, 'class' => 'chosen-select', 'label' => $labelOptions, 'multiple' => true, 'data-placeholder' => __('Select academic periods')));
 		if(isset($this->request->data['SurveyStatus']['id'])) {	//edit
@@ -41,6 +41,7 @@ $this->start('contentBody');
 		} else {
 			echo $this->FormUtility->getFormButtons(array('cancelURL' => array_merge(array('action' => 'index'), $params)));
 		}
+		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 	echo $this->Form->end();
 
 $this->end();

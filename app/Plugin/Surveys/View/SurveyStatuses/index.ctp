@@ -3,7 +3,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 	if ($_add) {
-	    echo $this->Html->link(__('Add'), array('action' => 'add', 'module' => $selectedModule), array('class' => 'divider'));
+	    echo $this->Html->link(__('Add'), array('action' => 'add', 'module' => $selectedModule, 'status' => $selectedStatus), array('class' => 'divider'));
 	}
 $this->end();
 
