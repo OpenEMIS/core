@@ -93,21 +93,28 @@ class AreaAdministrative extends AppModel {
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(-1);
 		$area = end($paths);
 		$data = array();
-		//$maxLevel = $this->AreaAdministrativeLevel->field('level', null, 'level DESC');
-		$level = $this->AreaAdministrativeLevel->field('level', array('id' => $area[$this->alias]['area_administrative_level_id']));
-		$areaAdministrativeId = $this->AreaAdministrativeLevel->field('area_administrative_id', array('id' => $area[$this->alias]['area_administrative_level_id']));
-		$areaAdministrativeId = $level == 0 ? $parentId : $areaAdministrativeId;
-		$maxLevel = $this->AreaAdministrativeLevel->field('level', array('area_administrative_id' => $areaAdministrativeId), 'level DESC');
-		
+		$this->AreaAdministrativeLevel->contain();
+		$maxLevels = $this->AreaAdministrativeLevel->find('all', array(
+			'fields' => array(
+				'AreaAdministrativeLevel.area_administrative_id',
+				'MAX(AreaAdministrativeLevel.level) AS maxLevel'
+			),
+			'group' => array('AreaAdministrativeLevel.area_administrative_id')
+		));
+		$tmp = array();
+		foreach ($maxLevels as $key => $obj) {
+			$tmp[$obj['AreaAdministrativeLevel']['area_administrative_id']] = $obj[0]['maxLevel'];
+		}
+		$maxLevels = $tmp;
+
 		if($area !== false) {
+			$this->contain('AreaAdministrativeLevel');
 			$data = $this->find('all', array(
-				'conditions' => array(
-					'parent_id' => $area[$this->alias]['id']
-				),
+				'conditions' => array('parent_id' => $area[$this->alias]['id']),
 				'order' => array('order')
 			));
 		}
-		$this->setVar(compact('paths', 'data', 'parentId', 'maxLevel'));
+		$this->setVar(compact('paths', 'data', 'parentId', 'maxLevels'));
 	}
 	
 	public function reorder() {
@@ -150,14 +157,14 @@ class AreaAdministrative extends AppModel {
 		
 		$pathList = array();
 		foreach($paths as $item) {
-			$pathList[] = $item[$this->alias]['name'];
+			$itemName = $item[$this->alias]['parent_id'] == -1 ? __('All') : $item[$this->alias]['name'];
+			$pathList[] = $itemName;
 		}
 		$pathToString = implode(' / ', $pathList);
 		$parentId = $area[$this->alias]['id'];
 		$level = $this->AreaAdministrativeLevel->field('level', array('id' => $area[$this->alias]['area_administrative_level_id']));
 		$areaAdministrativeId = $this->AreaAdministrativeLevel->field('area_administrative_id', array('id' => $area[$this->alias]['area_administrative_level_id']));
-		$areaAdministrativeId = $level == 0 ? $parentId : $areaAdministrativeId;
-
+		$areaAdministrativeId = $level < 1 ? $parentId : $areaAdministrativeId;	//-1 => World, 0 => Country
 		$areaLevelOptions = $this->AreaAdministrativeLevel->find('list', array(
 			'conditions' => array(
 				'AreaAdministrativeLevel.level >' => $level,
@@ -165,7 +172,7 @@ class AreaAdministrative extends AppModel {
 			)
 		));
 
-		if($level == -1) {
+		if($level == -1) {	//-1 => World
 			$Country = ClassRegistry::init('Country');
 			$countryOptions = $Country->getOptions('name');
 			$this->setVar(compact('countryOptions'));
