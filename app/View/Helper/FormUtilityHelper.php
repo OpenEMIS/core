@@ -270,6 +270,9 @@ class FormUtilityHelper extends AppHelper {
 		$html = '';
 		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
 		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllById($worldId);
+		if(empty($path)) {	//handle situation where got $value but area record deleted
+			$path = $AreaHandler->{$model}->findAllById($worldId);
+		}
 		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
@@ -323,17 +326,26 @@ class FormUtilityHelper extends AppHelper {
 			}
 		}
 		
+		$area = end($path);
+		$level = $AreaHandler->{$levelModels[$model]}->field('level', array('id' => $area[$model][$foreignKey]));
 		$levelOptions = array();
 		$levelOptions['limit'] = 1;
-		$levelOptions['offset'] = count($path);
 		$levelOptions['order'] = $levelModels[$model].'.level';
-		if($model == 'AreaAdministrative' && count($path) >= 2) {
+		if($model == 'Area') {
 			$levelOptions['conditions'] = array(
-				$levelModels[$model].'.area_administrative_id' => array(0, $path[0][$model]['id'], $path[1][$model]['id'])
+				$levelModels[$model].'.level >' => $level
+			);
+		} else if($model == 'AreaAdministrative'){
+			$parentId = $area[$model]['id'];
+			$areaAdministrativeId = $AreaHandler->{$levelModels[$model]}->field(Inflector::underscore($model).'_id', array('id' => $area[$model][Inflector::underscore($levelModels[$model]).'_id']));
+			$areaAdministrativeId = $level < 1 ? $parentId : $areaAdministrativeId;	//-1 => World, 0 => Country
+			$levelOptions['conditions'] = array(
+				$levelModels[$model].'.level >' => $level,
+				$levelModels[$model].'.'.Inflector::underscore($model).'_id' => $areaAdministrativeId
 			);
 		}
 		$levels = $AreaHandler->{$levelModels[$model]}->find('list', $levelOptions);
-		
+
 		foreach($levels as $id => $name) {
 			$inputOptions = $inputDefaults;
 			$inputOptions['options'] = array();
