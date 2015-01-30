@@ -492,7 +492,7 @@ class InstitutionSiteClass extends AppModel {
 		$result = array();
 		foreach($data AS $row){
 			$class = $row['InstitutionSiteClass'];
-			$schoolYear = $row['SchoolYear'];
+			$schoolYear = $row['AcademicPeriod'];
 			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
 		}
 		

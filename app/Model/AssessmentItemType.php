@@ -210,7 +210,7 @@ class AssessmentItemType extends AppModel {
 					'table' => 'institution_site_sections',
 					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
-						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
 						'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
 						'InstitutionSiteSection.academic_period_id' => $academicPeriodId
 					)
@@ -224,19 +224,26 @@ class AssessmentItemType extends AppModel {
 					)
 				),
 				array(
-					'table' => 'institution_site_class_subjects',
-					'alias' => 'InstitutionSiteClassSubject',
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
-						'InstitutionSiteClassSubject.institution_site_class_id = InstitutionSiteSectionClass.institution_site_class_id',
-						'InstitutionSiteClassSubject.status = 1'
+						'InstitutionSiteClass.id = InstitutionSiteSectionClass.institution_site_class_id',
+					)
+				),
+				array(
+					'table' => '`education_grades_subjects`',
+					'alias' => 'EducationGradeSubject',
+					'conditions' => array(
+						'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
+						'EducationGradeSubject.visible = 1'
 					)
 				),
 				array(
 					'table' => 'assessment_items',
 					'alias' => 'AssessmentItem',
 					'conditions' => array(
-						'AssessmentItemType.id = AssessmentItem.assessment_item_type_id',
-						'InstitutionSiteClassSubject.education_grade_subject_id = AssessmentItem.education_grade_subject_id',
+						'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+						'AssessmentItem.education_grade_subject_id = EducationGradeSubject.id',
 						'AssessmentItem.visible = 1'
 					)
 				),
