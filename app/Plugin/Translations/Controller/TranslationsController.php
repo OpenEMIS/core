@@ -55,7 +55,8 @@ class TranslationsController extends AppController {
 		if (empty($data)){
 			$this->Message->alert('general.notExists');
 		}
-		$this->set(compact('header', 'data', 'languageOptions', 'selectedLang'));
+		$model = 'Translation';
+		$this->set(compact('header', 'data', 'model', 'languageOptions', 'selectedLang'));
 	}
 
 	public function view() {
