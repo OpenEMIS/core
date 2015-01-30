@@ -35,10 +35,10 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/controls', array()
 					$staffNames = array();
 					if (!empty($obj[$model]['InstitutionSiteClassStaff'])) {
 						foreach ($obj[$model]['InstitutionSiteClassStaff'] as $staff) {
-							array_push($staffNames, $staff['staffName']);
+							array_push($staffNames, ModelHelper::getName($staff['Staff']));
 						}
 					}
-					echo implode(', ', $staffNames)
+					echo implode(', <br>', $staffNames)
 					?>
 					</td>
 					<td class="cell-number"><?php echo !empty($obj['InstitutionSiteClass']['gender']['M']) ? $obj['InstitutionSiteClass']['gender']['M'] : 0; ?></td>
