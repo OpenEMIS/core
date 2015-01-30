@@ -186,11 +186,11 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
-				
+
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => $this->alias, 'index',$selectedAcademicPeriod));
+					return $this->redirect(array('action' => $this->alias, 'index',$selectedAcademicPeriod, $selectedSection));
 				}
 			}
 		} else {
