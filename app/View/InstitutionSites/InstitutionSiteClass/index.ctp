@@ -41,8 +41,8 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/controls', array()
 					echo implode(', ', $staffNames)
 					?>
 					</td>
-					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['M']; ?></td>
-					<td class="cell-number"><?php echo $obj['InstitutionSiteClass']['gender']['F']; ?></td>
+					<td class="cell-number"><?php echo !empty($obj['InstitutionSiteClass']['gender']['M']) ? $obj['InstitutionSiteClass']['gender']['M'] : 0; ?></td>
+					<td class="cell-number"><?php echo !empty($obj['InstitutionSiteClass']['gender']['F']) ? $obj['InstitutionSiteClass']['gender']['F'] : 0; ?></td>
 				</tr>
 			<?php endforeach ?>
 		</tbody>
