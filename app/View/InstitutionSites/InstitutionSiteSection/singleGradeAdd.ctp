@@ -36,7 +36,7 @@ echo $this->Form->input('education_grade_id', array(
 ));
 //echo $this->Form->input('name');
 
-$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
+$labelOptions['text'] = $this->Label->get('InstitutionSiteSection.institution_site_shift_id');
 echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 
 echo $this->Form->input('number_of_sections', array(
