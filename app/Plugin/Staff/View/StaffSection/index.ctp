@@ -28,7 +28,7 @@ $this->start('contentBody');
 					echo $grade . '<br>';
 				}
 				?></td>
-				<td><?php echo $this->Html->link($obj['StaffSection']['name'], array('plugin' => false, 'controller' => 'InstitutionSites', 'action' => 'InstitutionSiteSection', 'view', $obj['StaffSection']['id']), array('escape' => false)); ?></td>
+				<td><?php echo $obj['StaffSection']['name']; ?></td>
 				<td><?php echo empty($obj[$model]['gender']['M']) ? 0 : $obj[$model]['gender']['M']; ?></td>
 				<td><?php echo empty($obj[$model]['gender']['F']) ? 0 : $obj[$model]['gender']['F']; ?></td>
 			</tr>
