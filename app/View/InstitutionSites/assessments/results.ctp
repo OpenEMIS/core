@@ -8,7 +8,7 @@ if ($_edit) {
 	echo $this->Html->link(__('Edit'), array('action' => 'assessmentsResultsEdit', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem), array('class' => 'divider'));
 }
 if ($_execute) {
-	echo $this->Html->link($this->Label->get('general.export'), array('action' => 'assessmentsToExcel', $selectedYear, $assessmentId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.export'), array('action' => 'assessmentsToExcel', $selectedAcademicPeriod, $assessmentId), array('class' => 'divider'));
 }
 $this->end();
 
