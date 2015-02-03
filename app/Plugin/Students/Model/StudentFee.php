@@ -15,7 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentFee extends StudentsAppModel {
-	public $actsAs = array('ControllerAction2');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction2'
+	);
 	
 	public $belongsTo = array(
 		'InstitutionSiteFee',
@@ -36,7 +39,7 @@ class StudentFee extends StudentsAppModel {
 		$alias = $this->alias;
 		$this->contain(array(
 			'InstitutionSiteFee' => array(
-				'SchoolYear' => array('fields' => array('name')),
+				'AcademicPeriod' => array('fields' => array('name')),
 				'EducationGrade' => array(
 					'fields' => array('name'),
 					'EducationProgramme' => array('fields' => array('name'))
@@ -49,7 +52,7 @@ class StudentFee extends StudentsAppModel {
 				"$alias.student_id",
 				"$alias.institution_site_fee_id",
 				'InstitutionSiteFee.total',
-				'InstitutionSiteFee.school_year_id',
+				'InstitutionSiteFee.academic_period_id',
 				'InstitutionSiteFee.education_grade_id',
 				'SUM(StudentFee.amount) AS paid'
 			),

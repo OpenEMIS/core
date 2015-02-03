@@ -24,8 +24,13 @@
 .chosen-container { font-size: 11px !important; }
 /* end jquery chosen */
 
+/* fuelux */
+.fuelux .wizard .steps > li { font-size: 12px !important; }
+/* end fuelux override */
+
 textarea { resize: none; }
 
+input.number { text-align: right; }
 .left { float: left; }
 .right { float: right; }
 .center { text-align: center; }
@@ -199,6 +204,16 @@ input.default { width: 240px; }
 
 .custom_field .field_value textarea { width: 98.5%; }
 
+.panel-heading { font-weight: bold; font-size: 14px; color: #666 !important; }
+/* Custom Fields */
+.panel-custom.panel-default { margin-bottom: 15px; }
+.panel-custom.page-header { margin-top: 30px; padding-bottom: 0; margin-bottom: 15px; }
+.panel-custom.page-header h4 { color: #666; }
+.panel-custom .col-md-4 { padding-left: 0; }
+.panel-custom .panel-heading { padding: 8px 12px; }
+.panel-custom .panel-body { padding: 10px; }
+/* End Custom Fields */
+
 .field_option {
 	float: left;
 	overflow: hidden;
@@ -206,7 +221,9 @@ input.default { width: 240px; }
 }
 
 .field_option input[type="checkbox"] { margin-left: 0; }
-
+.fa-exclamation-circle[data-toggle="tooltip"] {
+	cursor: pointer;
+}
 /* End Additional Info */
 
 /* use for flash messages */
@@ -338,19 +355,7 @@ a.btn:hover { text-decoration: none; }
 }
 
 .options > span { margin: 5px 3px 0 0; }
-/*
-.datepicker { float: left; }
-.datepicker_date { display: none; }
-.datepicker_day { width: 55px; padding-left: 2px !important; }
-.datepicker_month { width: 85px; padding-left: 2px !important; }
-.datepicker_year { width: 56px; padding-left: 2px !important; }
-.add .datepicker_day { width: 64px; }
-.chrome .add .datepicker_day, .datepicker select{
-	height:24px;
-}
-.add .datepicker_month { width: 101px; }
-.add .datepicker_year { width: 64px; }
-*/
+
 .address { width: 400px; }
 .history .row { border-bottom: 1px dotted #DEDEDE; padding-bottom: 10px; margin-bottom: 10px; }
 .history .row.last { border: 0; padding-bottom: 0; margin-bottom: 0; }
@@ -394,27 +399,7 @@ fieldset.area .label{
 .dataDisplay .row .value{
 	line-height: 25px;
 }
-.customFieldsWrapper .row .label,
-.customFieldsWrapper .row .col-md-3{
-	color: #333333;
-	font-size: 12px;
-	font-weight: normal;
-	text-align: left;
-	padding: 0;
-	white-space: normal;
-	line-height: 1.4;
-	width: 25%;
-}
-.customFieldsWrapper .row .col-md-4{
-	width: auto;
-}
-.customFieldsWrapper .row{
-	padding-left: 15px;
-}
-.customFieldsWrapper h3{
-	font-size: 15px;
-	color: #666;
-}
+
 .topDropDownWrapper{
 	margin-bottom: 12px;
 }
@@ -495,3 +480,13 @@ select.topSelectControl{
     margin-right: 10px;
 	font-size: 11px;
 }
+.nav.nav-tabs{
+	margin-bottom: 20px;
+}
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus{
+	cursor: pointer;
+}
+.stackElements input{
+	margin-bottom: 8px;
+}
+

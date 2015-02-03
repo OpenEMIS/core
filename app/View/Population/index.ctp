@@ -1,5 +1,4 @@
 <?php
-// echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('population', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.area', false);
 echo $this->Html->script('population', false);

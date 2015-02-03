@@ -3,6 +3,9 @@ $formOptions = !isset($formOptions) ? array() : $formOptions;
 $form = !isset($form) ? true : $form;
 $pagination = !isset($pagination) ? true : $pagination;
 $placeholder = !isset($placeholder) ? 'Search' : $placeholder;
+if (isset($this->request->data[$model]['search'])) {
+	$this->request->data[$model]['search'] = stripslashes($this->request->data[$model]['search']);
+}
 if ($form) {
 	echo $this->Form->create($model, $formOptions);
 }
@@ -20,7 +23,7 @@ if ($form) {
 			))
 			?>
 			<span class="input-group-btn">
-				<button class="btn btn-default" type="button" onclick="$('.search-input').val('');$('form').submit()"><i class="fa fa-close"></i></button>
+				<button class="btn btn-default" type="button" onclick="$('.search-input').val('');$(this).closest('form').submit()"><i class="fa fa-close"></i></button>
 			</span>
 		</div>
 	</div>

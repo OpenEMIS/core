@@ -18,7 +18,7 @@ $(document).ready(function() {
 });
 
 var InstitutionSiteAssessments = {
-    yearId: '#SchoolYearId',
+    yearId: '#AcademicPeriodId',
 	programmeId: '#EducationProgrammeId',
 	
 	init: function() {

@@ -15,8 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthAllergy extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
+		'Students.Student',
 		'HealthAllergyType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -43,6 +48,16 @@ class StudentHealthAllergy extends StudentsAppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.severe" => array(0 => 'No', 1 => 'Yes')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
 
 	public function getDisplayFields($controller) {
 		$fields = array(

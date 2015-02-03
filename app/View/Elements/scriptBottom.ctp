@@ -1,6 +1,8 @@
 <script type="text/javascript">
 $(document).ready(function() {
 	Chosen.init();
+	$('[data-toggle="tooltip"]').tooltip();
+	FuelUX.init();
 });
 
 var Chosen = {
@@ -21,4 +23,15 @@ var Chosen = {
 	}
 };
 
+var FuelUX = {
+	init: function() {
+		this.initWizard();
+	},
+
+	initWizard: function() {
+		$('.fuelux .wizard').on('finished.fu.wizard', function(evt, data) {
+			$(this).find('form').submit();
+		});
+	}
+}
 </script>

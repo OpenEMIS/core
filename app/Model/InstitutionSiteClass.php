@@ -18,8 +18,9 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteClass extends AppModel {
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'InstitutionSite',
+		'EducationSubject',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -34,7 +35,6 @@ class InstitutionSiteClass extends AppModel {
 	public $hasMany = array(
 		'InstitutionSiteClassStaff',
 		'InstitutionSiteClassStudent',
-		'InstitutionSiteClassSubject',
 		'InstitutionSiteSectionClass'
 	);
 	
@@ -46,231 +46,357 @@ class InstitutionSiteClass extends AppModel {
 				'message' => 'Please enter a valid name'
 			)
 		),
-		'school_year_id' => array(
+		'academic_period_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid school year'
+				'message' => 'Please enter a valid academic period',
+				'on' => 'create'
 			)
-		),
-		'no_of_seats' => array(
-			'notEmpty' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter the number of seats'
-			),
-			'numeric' => array(
-				'rule' => 'numeric',
-				'message' => 'Please enter a numeric value'
-			),
-			'maxValue' => array(
-                'rule'    => array('comparison', '<=', 100),
-                'message' => 'Please enter a value between 0 and 100'
-            ),
-			'minValue' => array(
-                'rule'    => array('comparison', '>=', 0),
-                'message' => 'Please enter a value between 0 and 100'
-            )
 		)
 	);
 	
 	public $actsAs = array(
-		'ControllerAction',
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		),
-		'SchoolYear'
+		'Excel',
+		'ControllerAction2',
+		'AcademicPeriod'
 	);
+
+	public function afterSave($created, $options = Array()) {
+		$addClassStudent = (array_key_exists('addClassStudent', $options))? $options['addClassStudent']: false;
+        if($created && $addClassStudent) {
+        	if (array_key_exists('InstitutionSiteClassStaff', $this->data)) {
+        		$institutionSiteClassStaffData = $this->data['InstitutionSiteClassStaff'];
+        		foreach ($institutionSiteClassStaffData as $key => $value) {
+        			$institutionSiteClassStaffData[$key]['institution_site_class_id'] = $this->getInsertID();
+        		}
+        		$this->InstitutionSiteClassStaff->saveMany($institutionSiteClassStaffData);
+        	}
+        	// also need to save the section class relationship
+        	if (array_key_exists('InstitutionSiteSectionClass', $this->data)) {
+				$institutionSiteSectionClassData = $this->data['InstitutionSiteSectionClass'];
+				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
+				$this->InstitutionSiteSectionClass->create();
+        		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
+        	}
+        }
+        return true;
+    }
 	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class Name',
-					'no_of_seats' => 'Seats'
-				)
-			),
-			'fileName' => 'Report_Class_List'
-		),
-		2 => array(
-			'fields' => array(
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class Name'
-				),
-				'EducationGrade' => array(
-					'name' => 'Grade'
-				),
-				'Student' => array(
-					'identification_no' => 'OpenEMIS ID',
-					'first_name' => 'First Name',
-					'middle_name' => 'Middle Name',
-					'last_name' => 'Last Name'
-				),
-				'StudentCategory' => array(
-					'name' => 'Category'
-				)
-			),
-			'fileName' => 'Report_Details_Classes_Students'
-		)
-	);
-	
-	public $_action = 'classes';
-	
-	public function beforeAction($controller, $action) {
-		parent::beforeAction($controller, $action);
-		$controller->set('_action', $this->_action);
-		$controller->set('selectedAction', $this->_action . 'View');
+	public function beforeAction() {
+		parent::beforeAction();
 	}
 	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'SchoolYear'),
-				array('field' => 'name'),
-				array('field' => 'no_of_seats'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
+	public function index($selectedPeriod=0, $selectedSection=0) {
+		$this->Navigation->addCrumb('List of Classes');
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1
 		);
-		return $fields;
-	}
-	
-	public function getClassActions($controller, $id=0) {
-		if($id==0) {
-			$id = $controller->Session->read($this->alias.'.id');
+		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
+		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
+
+		if (empty($periodOptions)) {
+			$this->Message->alert('InstitutionSite.noProgramme');
 		}
-		$options = array(
-			'classesView/'.$id => __('Class Details'),
-			'classesStudent' => __('Students'),
-			'classesStaff' => __('Staff'),
-			'classesSubject' => __('Subjects')
-		);
-		return $options;
+
+		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId);
+		$selectedSection = $this->checkIdInOptions($selectedSection, $sectionOptions);
+
+		if (empty($sectionOptions)) {
+			$this->Message->alert('InstitutionSiteSection.noDataForSelectedPeriod');
+		}
+
+		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
+
+		foreach ($data as $key => $value) {
+			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
+		}
+
+
+		$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection'));
 	}
 	
-	public function classes($controller, $params) {
-		$controller->Navigation->addCrumb('List of Classes');
-		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$yearConditions = array(
+	public function add($selectedAcademicPeriod = null, $selectedSection = null) {
+		$this->Navigation->addCrumb('Add Class');
+		
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$academicPeriodConditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
 			'InstitutionSiteProgramme.status' => 1,
-			'SchoolYear.visible' => 1
+			'AcademicPeriod.available' => 1,
+			'AcademicPeriod.parent_id >' => 0
 		);
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
-		$data = $this->getListOfClasses($selectedYear, $institutionSiteId);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
+		if(!empty($academicPeriodOptions)) {
+			$selectedAcademicPeriod = isset($selectedAcademicPeriod) ? $selectedAcademicPeriod : key($academicPeriodOptions);
+			
+			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedAcademicPeriod);
+			
+			$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
+			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
+			
+			$yearObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
+			$startDate = $yearObj['AcademicPeriod']['start_date'];
+			$endDate = $yearObj['AcademicPeriod']['end_date'];
 		
-		if(empty($yearOptions)){
-			$controller->Message->alert('InstitutionSite.noProgramme');
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
+
+			$gradeData = $InstitutionSiteSection->getGradeOptions($selectedSection);
+
+			$GradeSubject = ClassRegistry::init('EducationGradeSubject');
+			$subjectData = $GradeSubject->find('list', array(
+				'fields' => array('EducationSubject.id', 'EducationSubject.name'),
+				'contain' => array('EducationSubject'),
+				'conditions' => array(
+					'EducationGradeSubject.education_grade_id' => array_keys($gradeData)
+				),
+				'order' => array('EducationSubject.order')
+			));
+
+			// need to get the section classes that are alraeady there
+			$classesBySection = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
+
+			$classesBySectionBySubjectId = array();
+			foreach ($classesBySection as $key => $value) {
+				$classesBySectionBySubjectId[$value['InstitutionSiteClass']['education_subject_id']] = $value;
+			}
+
+			$this->setVar(compact('sections', 'selectedAcademicPeriod', 'academicPeriodOptions', 'institutionSiteId', 'sectionOptions', 'selectedSection', 'staffOptions', 'subjectData', 'classesBySectionBySubjectId'));
+			
+			if($this->controller->request->is('post') || $this->controller->request->is('put')) {
+				$data = $this->controller->request->data;
+				$tData = array();
+				unset($data['submit']);
+				unset($data['InstitutionSiteSection']);
+				foreach ($data as $key => $value) {
+					if ((!array_key_exists('status', $value['InstitutionSiteClass'])) || $value['InstitutionSiteClass']['status'] <= 0) {
+						unset($data[$key]);
+						continue;
+					}
+					$data[$key]['InstitutionSiteSectionClass'] = array(
+						'institution_site_section_id' => $selectedSection,
+						'status' => 1
+					);
+				}
+
+				$result = $this->saveAll($data, array('addClassStudent' => true));
+				if ($result) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => $this->alias, 'index',$selectedAcademicPeriod, $selectedSection));
+				}
+			}
+		} else {
+			$this->Message->alert('InstitutionSite.noProgramme');
+			return $controller->redirect(array('action' => $this->alias));
 		}
-		
-		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
 	}
 	
-	public function classesAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add Class');
-		
-		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
-		$yearConditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'SchoolYear.visible' => 1
-		);
-		$yearOptions = ClassRegistry::init('InstitutionSiteProgramme')->getYearOptions($yearConditions);
-		if(!empty($yearOptions)) {
-			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+	public function view($id=0) {
+		if ($this->exists($id)) {
+			$this->contain(array(
+				'AcademicPeriod',
+				'EducationSubject',
+				'InstitutionSiteSectionClass' => array(
+					'InstitutionSiteSection' => array(
+						'fields' => array('InstitutionSiteSection.name')
+					)
+				),
+				'InstitutionSiteClassStaff' => array(
+					'Staff' => array(
+						'fields' => array(
+							'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
+							'Staff.third_name', 'Staff.last_name', 'Staff.gender', 'Staff.date_of_birth'
+						)
+					)
+				),
+				'InstitutionSiteClassStudent' => array(
+					'Student' => array(
+						'fields' => array(
+							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
+							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+						)
+					)
+				)
+			));
+			$data = $this->findById($id);
+			$this->Session->write($this->alias.'.id', $id);
 			
-			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForNewClass($institutionSiteId, $selectedYear);
-			$controller->set(compact('sections', 'selectedYear', 'yearOptions', 'institutionSiteId'));
+			$this->Navigation->addCrumb($data[$this->alias]['name']);
 			
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				$data = $controller->request->data;
-				if(isset($data['InstitutionSiteSectionClass'])) {
-					foreach($data['InstitutionSiteSectionClass'] as $i => $obj) {
-						if(empty($obj['status'])) {
-							unset($data['InstitutionSiteSectionClass'][$i]);
+			$this->setVar(compact('data'));
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => get_class($this)));
+		}
+	}
+
+	public function edit($id=0) {
+		$this->render = 'auto';
+		if ($this->exists($id)) {
+			$institutionSiteId = $this->Session->read('InstitutionSite.id');
+			$contain = array(
+				'AcademicPeriod',
+				'EducationSubject',
+				'InstitutionSiteClassStaff' => array(
+					'Staff' => array(
+						'fields' => array(
+							'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
+							'Staff.third_name', 'Staff.last_name', 'Staff.gender', 'Staff.date_of_birth'
+						)
+					)
+				),
+				'InstitutionSiteClassStudent' => array(
+					'Student' => array(
+						'fields' => array(
+							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
+							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+						)
+					)
+				)
+			);
+			$this->contain($contain);
+			$data = $this->findById($id);//pr($data);
+			$contentHeader = $data[$this->alias]['name'];
+			$this->Navigation->addCrumb($contentHeader);
+			
+			$periodId = $data['AcademicPeriod']['id'];
+			$periodStartDate = $data['AcademicPeriod']['start_date'];
+			$periodEndDate = $data['AcademicPeriod']['start_date'];
+
+			// fields setup
+			$this->fields['institution_site_id']['type'] = 'hidden';
+			$this->fields['academic_period_id']['type'] = 'disabled';
+			$this->fields['academic_period_id']['value'] = $data['AcademicPeriod']['name'];
+
+			$this->fields['education_subject_id']['type'] = 'disabled';
+			$this->fields['education_subject_id']['value'] = !empty($data['EducationSubject']['name']) ? $data['EducationSubject']['name'] : '';
+
+			$this->fields['teachers'] = array(
+				'type' => 'element',
+				'element' => '../InstitutionSites/InstitutionSiteClass/teachers',
+				'override' => true,
+				'visible' => true
+			);
+
+			$this->fields['students'] = array(
+				'type' => 'element',
+				'element' => '../InstitutionSites/InstitutionSiteClass/students',
+				'override' => true,
+				'visible' => true
+			);
+			// end fields setup
+
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$staffOptions = $InstitutionSiteStaff->getStaffOptions($institutionSiteId, $periodId);
+			$staffOptions = $this->controller->Option->prependLabel($staffOptions, $this->alias . '.add_staff');
+
+			// get all the section ids that are linked to this class
+			$sectionIds = $this->InstitutionSiteSectionClass->find('list', array(
+				'fields' => array('id', 'InstitutionSiteSectionClass.institution_site_section_id'), 
+				'conditions' => array('InstitutionSiteSectionClass.institution_site_class_id' => $id)
+			));
+
+			// retrieve all the students linked to the sections
+			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
+			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
+			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
+
+			if($this->request->is('post') || $this->request->is('put')) {
+				$postData = $this->request->data;
+
+				if ($postData['submit'] == 'add') {
+					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
+						$studentId = $postData[$this->alias]['student_id'];
+
+						$InstitutionSiteSectionStudent->Student->recursive = -1;
+						$studentObj = $InstitutionSiteSectionStudent->Student->findById($studentId, $contain['InstitutionSiteClassStudent']['Student']['fields']);
+						
+						$newRow = array(
+							'student_id' => $studentId,
+							'student_category_id' => 0,
+							'status' => 1,
+							'Student' => $studentObj['Student']
+						);
+
+						// search if the new student was previously added before
+						foreach ($data['InstitutionSiteClassStudent'] as $row) {
+							if ($row['student_id'] == $studentId) {
+								$newRow['id'] = $row['id'];
+							}
 						}
+
+						$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
+						unset($this->request->data[$this->alias]['student_id']);
+					}
+					if (isset($postData[$this->alias]['staff_id']) && !empty($postData[$this->alias]['staff_id'])) {
+						$staffId = $postData[$this->alias]['staff_id'];
+
+						$InstitutionSiteStaff->Staff->recursive = -1;
+						$staffObj = $InstitutionSiteStaff->Staff->findById($staffId, $contain['InstitutionSiteClassStaff']['Staff']['fields']);
+						
+						$newRow = array(
+							'staff_id' => $staffId,
+							'status' => 1,
+							'Staff' => $staffObj['Staff']
+						);
+
+						// search if the new student was previously added before
+						foreach ($data['InstitutionSiteClassStaff'] as $row) {
+							if ($row['staff_id'] == $staffId) {
+								$newRow['id'] = $row['id'];
+							}
+						}
+
+						$this->request->data['InstitutionSiteClassStaff'][] = $newRow;
+						unset($this->request->data[$this->alias]['staff_id']);
+					}
+					unset($this->request->data['submit']);
+				} else if ($postData['submit'] = 'Save') {
+					$this->InstitutionSiteClassStaff->updateAll(
+						array('InstitutionSiteClassStaff.status' => 0),
+						array('InstitutionSiteClassStaff.institution_site_class_id' => $id)
+					);
+					$this->InstitutionSiteClassStudent->updateAll(
+						array('InstitutionSiteClassStudent.status' => 0),
+						array('InstitutionSiteClassStudent.institution_site_class_id' => $id)
+					);
+					if ($this->saveAll($postData)) {
+						$this->Message->alert('general.edit.success');
+						$this->redirect(array('action' => $this->alias, 'view', $id));
 					}
 				}
-				$result = $this->saveAll($data);
-				if ($result) {
-					$controller->Message->alert('general.add.success');
-					return $controller->redirect(array('action' => $this->_action, $selectedYear));
-				}
-			}
-		} else {
-			$controller->Message->alert('InstitutionSite.noProgramme');
-			return $controller->redirect(array('action' => $this->_action));
-		}
-	}
-	
-	public function classesView($controller, $params) {
-		$id = $controller->params['pass'][0];
-		$controller->Session->write($this->alias.'.id', $id);
-		$data = $this->findById($id);
-		
-		if (!empty($data)) {
-			$className = $data[$this->alias]['name'];
-			$controller->Navigation->addCrumb($className);
-			$sections = $this->InstitutionSiteSectionClass->getSectionsByClass($id);
-			//pr($sections);
-			$controller->set(compact('data', 'sections'));
-			$controller->set('actionOptions', $this->getClassActions($controller, $id));
-		} else {
-			$controller->Message->alert('general.notExists');
-			$controller->redirect(array('action' => $this->_action));
-		}
-	}
-
-	public function classesEdit($controller, $params) {
-		$id = $params->pass[0];
-		$data = $this->findById($id);
-
-		if (!empty($data)) {
-			if($controller->request->is('post') || $controller->request->is('put')) {
-				$postData = $controller->request->data;
-				//pr($postData);die;
-				if ($this->saveAll($postData)) {
-					$controller->Message->alert('general.edit.success');
-					$controller->redirect(array('action' => $this->_action . 'View', $id));
-				}
-				
-				$controller->request->data['SchoolYear']['name'] = $data['SchoolYear']['name'];
 			} else {
-				$controller->request->data = $data;
+				$this->request->data = $data;
 			}
-			
-			$sections = $this->InstitutionSiteSectionClass->getAvailableSectionsForClass($id);
-			//pr($sections);
-			$controller->set('sections', $sections);
-			
-			$name = $data[$this->alias]['name'];
-			$controller->Navigation->addCrumb($name);
+
+			// removing existing staff from StaffOptions
+			foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
+				if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
+					unset($staffOptions[$row['staff_id']]);
+				}
+			}
+
+			// removing existing students from StudentOptions
+			foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
+				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+					unset($studentOptions[$row['student_id']]);
+				}
+			}
+
+			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions'));
 		} else {
-			$controller->Message->alert('general.notExists');
-			$controller->redirect(array('action' => $this->_action));
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => $this->alias));
 		}
 	}
 
-	public function classesDelete($controller, $params) {
-		$id = $params->pass[0];
-		$obj = $this->findById($id);
-		$this->delete($id);
-		$controller->Message->alert('general.delete.success');
-		$controller->redirect(array('action' => $this->_action, $obj[$this->alias]['school_year_id']));
+	public function excel($controller, $params) {
+		$this->excel();
 	}
 	
 	public function getClass($classId, $institutionSiteId=0) {
@@ -284,32 +410,46 @@ class InstitutionSiteClass extends AppModel {
 		return $obj;
 	}
 	
-	public function getListOfClasses($yearId, $institutionSiteId) {
-		$classes = $this->find('list', array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+	public function getListOfClasses($academicPeriodId, $institutionSiteId, $institutionSiteSectionId) {
+		$classes = $this->find('all', array(
+			'recursive' => -1,
+			'contain' => array(
+				'InstitutionSiteClassStaff' => array('id','status','staff_id'),
+				'EducationSubject' => array('name')
+			),
 			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId,
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteClass.name')
 		));
 		
 		$data = array();
-		foreach($classes as $id => $name) {
-			$data[$id] = array(
-				'name' => $name,
-				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($id),
-				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
+		foreach ($classes as $key => $value) {
+			$currId = $value['InstitutionSiteClass']['id'];
+			$data[$currId] = array(
+				'name' => $value['InstitutionSiteClass']['name'],
+				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($currId),
+				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($currId)
 			);
+			
+			foreach ($value['InstitutionSiteClassStaff'] as $key2 => $value2) {
+				$this->InstitutionSiteClassStaff->Staff->recursive = -1;
+				$currStaffData = $this->InstitutionSiteClassStaff->Staff->findById($classes[$key]['InstitutionSiteClassStaff'][$key2]['staff_id']);
+				$currStaffData = $currStaffData['Staff'];
+				$classes[$key]['InstitutionSiteClassStaff'][$key2] = ModelHelper::getName($currStaffData);
+			}
+			$data[$currId]['staffName'] = $classes[$key]['InstitutionSiteClassStaff'];
+			$data[$currId]['educationSubjectName'] = (array_key_exists('name', $value['EducationSubject']))? $value['EducationSubject']['name']: '';
 		}
 		return $data;
 	}
 	
-	public function getClassOptions($yearId, $institutionSiteId, $gradeId=false) {
+	public function getClassOptions($academicPeriodId, $institutionSiteId, $gradeId=false) {
 		$options = array(
 			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
 			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId,
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('InstitutionSiteClass.name')
@@ -334,29 +474,54 @@ class InstitutionSiteClass extends AppModel {
 		return $data;
 	}
 		
-	public function getClassListByInstitution($institutionSiteId, $yearId=0) {
+	public function getClassListByInstitution($institutionSiteId, $academicPeriodId=0) {
 		$options = array();
 		$options['fields'] = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name');
 		$options['order'] = array('InstitutionSiteClass.name');
 		$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
 		
-		if (!empty($yearId)) {
-			$options['conditions']['InstitutionSiteClass.school_year_id'] = $yearId;
+		if (!empty($academicPeriodId)) {
+			$options['conditions']['InstitutionSiteClass.academic_period_id'] = $academicPeriodId;
 		}
 		
 		$data = $this->find('list', $options);
 		return $data;
 	}
 	
-	public function getClassListWithYear($institutionSiteId, $schoolYearId, $assessmentId){
+	public function getClassListWithAcademicPeriod($institutionSiteId, $academicPeriodId, $assessmentId){
+		$data = $this->getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId);
+		
+		$result = array();
+		foreach($data AS $row){
+			$class = $row['InstitutionSiteClass'];
+			$schoolYear = $row['AcademicPeriod'];
+			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
+		}
+		
+		return $result;
+	}
+	
+	public function getAssessmentClassList($institutionSiteId, $academicPeriodId, $assessmentId){
+		$data = $this->getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId);
+		
+		$result = array();
+		foreach($data AS $row){
+			$class = $row['InstitutionSiteClass'];
+			$result[$class['id']] = $class['name'];
+		}
+		
+		return $result;
+	}
+	
+	public function getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId){
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'SchoolYear.name'),
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name'),
 			'joins' => array(
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
 				),
 				array(
 					'table' => 'institution_site_section_classes',
@@ -384,30 +549,23 @@ class InstitutionSiteClass extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $schoolYearId
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
 			),
-			'order' => array('SchoolYear.name, InstitutionSiteClass.name')
+			'order' => array('AcademicPeriod.name, InstitutionSiteClass.name')
 		));
 		
-		$result = array();
-		foreach($data AS $row){
-			$class = $row['InstitutionSiteClass'];
-			$schoolYear = $row['SchoolYear'];
-			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
-		}
-		
-		return $result;
+		return $data;
 	}
 	
-	public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
-		if(empty($yearId)){
+	public function getClassListByInstitutionAcademicPeriod($institutionSiteId, $academicPeriodId){
+		if(empty($academicPeriodId)){
 			$conditions = array(
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
 			);
 		}else{
 			$conditions = array(
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $yearId
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
 			);
 		}
 		
@@ -420,98 +578,15 @@ class InstitutionSiteClass extends AppModel {
 		return $data;
 	}
 		
-	public function getClassByIdSchoolYear($classId, $schoolYearId){
+	public function getClassByIdAcademicPeriod($classId, $academicPeriodId){
 		$data = $this->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'InstitutionSiteClass.id' => $classId,
-				'InstitutionSiteClass.school_year_id' => $schoolYearId
+				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
 			)
 		));
 		
 		return $data;
-	}
-	
-	public function reportsGetHeader($args) {
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-
-		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name');
-			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
-					)
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		} else if ($index == 2) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
-			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_students',
-					'alias' => 'InstitutionSiteClassStudent',
-					'conditions' => array(
-						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassStudent.status = 1'
-					)
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = EducationGrade.id')
-				),
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'field_option_values',
-					'alias' => 'StudentCategory',
-					'conditions' => array('InstitutionSiteClassStudent.student_category_id = StudentCategory.id')
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		}
-	}
-
-	public function reportsGetFileName($args) {
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }

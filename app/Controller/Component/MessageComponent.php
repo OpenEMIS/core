@@ -165,8 +165,22 @@ class MessageComponent extends Component {
 			'noProcess' => array('type' => 'warn', 'msg' => 'There is no process currently.')
 		),
 		'InstitutionSiteSection' => array(
-			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.')
+			'noGrades' => array('type' => 'warn', 'msg' => 'There are no grades linked to this section.'),
+			'noDataForSelectedPeriod' => array('type' => 'warn', 'msg' => 'There are no sections for the selected period.')
 		),
+		'InstitutionSiteInfrastructure' => array(
+			'noLevel' => array('type' => 'warn', 'msg' => 'There are no category created.')
+		),
+		'Survey' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Survey record has been saved to draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Survey record has been submitted successfully.')
+			),
+			'reject' => array(
+				'success' => array('type' => 'ok', 'msg' => 'Survey record has been rejected successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'Survey record is not rejected due to errors encountered.')
+			)
+		)
 	);
 	
 	public function get($code) {

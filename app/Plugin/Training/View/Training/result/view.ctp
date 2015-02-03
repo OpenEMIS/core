@@ -117,7 +117,7 @@ $this->start('contentBody'); ?>
 			        	<?php 
 			        	foreach($trainingSessionTrainees as $val){ ?>
 			            	<tr class="table_row">
-				            	<td class="table_cell"><?php echo $val['Staff']['first_name'] ?>, <?php echo $val['Staff']['last_name'] ?></td>
+				            	<td class="table_cell"><?php echo $this->Model->getName($val['Staff']) ?></td>
 				              	<?php 
 			        			if(!empty($val['TrainingSessionTraineeResult'])){ 
 						 		foreach($val['TrainingSessionTraineeResult'] as $key2=>$val2){ 

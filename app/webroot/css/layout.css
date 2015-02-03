@@ -60,3 +60,8 @@
 .rtl .header-side-nav .dropdown-menu a span { margin-left: 0; margin-right: 5px; }
 .rtl .product-list .dropdown-menu { right: auto; left: 0; }
 
+/* forcing the copyright notice text direction to always be from left to right */
+#footer > span.copyright-notice{direction: ltr;}
+#footer > span.copyright-notice[dir]{unicode-bidi: bidi-override;}
+
+
