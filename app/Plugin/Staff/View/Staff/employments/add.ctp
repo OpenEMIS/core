@@ -18,7 +18,8 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->input('employment_type_id', array('options' => $employmentTypeOptions));
-echo $this->FormUtility->datepicker('employment_date');
+$tempDate = isset($this->data[$model]) ? $this->data[$model]['employment_date'] : false;
+echo $this->FormUtility->datepicker('employment_date', array('data-date' => $tempDate));
 echo $this->Form->input('comment');
 echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
 echo $this->Form->end();

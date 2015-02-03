@@ -13,8 +13,16 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
+App::uses('LabelHelper', 'View/Helper');
 
 class OptionComponent extends Component {
+	public $LabelHelper;
+
+	public function initialize(Controller $controller) {
+	    parent::initialize($controller);
+		$this->LabelHelper = new LabelHelper(new View());
+	}
+	
 	public function get($code) {
 		$options = array(
 			'yesno' => array(1 => __('Yes'), 0 => __('No')),
@@ -57,5 +65,9 @@ class OptionComponent extends Component {
 			$data[$key] = $value;
 		}
 		return $data;
+	}
+	
+	public function prependLabel($list, $code) {
+		return $this->prepend($list, '-- ' . $this->LabelHelper->get($code) . ' --');
 	}
 }

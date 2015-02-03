@@ -276,7 +276,7 @@ var CensusEnrolment = {
 			$.alert(alertOpt);
 			return false;
 		}
-		var yearId = $('#CensusStudentSchoolYearId').val();
+		var academicPeriodId = $('#CensusStudentAcademicPeriodId').val();
 		var maleCensusId, femaleCensusId, age, male, female, maleGenderId, femaleGenderId;
 		var obj, gradeId, data = [];
 		var objTrMale, inputFieldMale;
@@ -311,7 +311,7 @@ var CensusEnrolment = {
 							gender_id: maleGenderId,
 							education_grade_id: gradeId,
 							student_category_id: obj.find('#StudentCategoryId').val(),
-							school_year_id: yearId
+							academic_period_id: academicPeriodId
 						});
 						
 						data.push({
@@ -321,7 +321,7 @@ var CensusEnrolment = {
 							gender_id: femaleGenderId,
 							education_grade_id: gradeId,
 							student_category_id: obj.find('#StudentCategoryId').val(),
-							school_year_id: yearId
+							academic_period_id: academicPeriodId
 						});
 					}
 				});
@@ -341,7 +341,7 @@ var CensusEnrolment = {
 			success: function(data, textStatus) {
 				var callback = function() {
 					window.onbeforeunload = null;
-					location.href = CensusEnrolment.base + CensusEnrolment.viewUrl + yearId;
+					location.href = CensusEnrolment.base + CensusEnrolment.viewUrl + academicPeriodId;
 				};
 				$.unmask({id: maskId, callback: callback});
 			}

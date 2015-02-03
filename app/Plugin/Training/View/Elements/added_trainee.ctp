@@ -11,7 +11,7 @@ if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->reques
 	<td class="table_cell cell_description" style="width:90%">
 		<div class="input_wrapper">
 	 	<div class="training-course-title-<?php echo $i;?>">
-			<?php echo $val['first_name'] . ', ' . $val['last_name'];?>
+			<?php echo $this->Model->getName($val);?>
 		</div>
 		<?php if(isset($val['id'])){ ?>
 		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.id', array('value'=>$val['id'], 
@@ -20,6 +20,8 @@ if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->reques
 		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.staff_id', array('class' => 'trainee-id-'.$i,
 			'value'=>$val['staff_id'])); ?>
 			<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.first_name', array('value'=>$val['first_name'])); ?>
+			<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.middle_name', array('value'=>$val['middle_name'])); ?>
+			<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.third_name', array('value'=>$val['third_name'])); ?>
 			<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.last_name', array('value'=>$val['last_name'])); ?>
 			<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_validate', array('class' => 'trainee-validate-'.$i . ' validate-trainee', 'value'=>$val['staff_id'])); ?>
 		</div>

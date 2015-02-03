@@ -22,6 +22,7 @@ class LabelHelper extends AppHelper {
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
+			'export' => 'Export',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'reorder' => 'Reorder',
@@ -90,7 +91,22 @@ class LabelHelper extends AppHelper {
 			'system' => 'System',
 			'method' => 'Method',
 			'section' => 'Section',
-			'sections' => 'Sections'
+			'sections' => 'Sections',
+			'code' => 'Code',
+			'type' => 'Type',
+			'size' => 'Size',
+			'classes' => 'Classes',
+			'academic_period' => 'Academic Period',
+			'subject' => 'Subject',
+			'teacher' => 'Teacher',
+			'student' => 'Student',
+			'date_of_birth' => 'Date of Birth',
+			'sex' => 'Sex',
+			'male_students' => 'Male Students',
+			'female_students' => 'Female Students',
+			'levels' => 'Levels',
+			'types' => 'Types',
+			'custom_fields' => 'Custom Fields',
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -119,17 +135,17 @@ class LabelHelper extends AppHelper {
 		),
 		'Area' => array(
 			'name' => 'Area',
-			'area_level_id' => 'Area Level',
+			'area_level_id' => 'Area Level (Education)',
 			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
-			'name' => 'Area Level'
+			'name' => 'Area Level (Education)'
 		),
-		'AreaEducation' => array(
-			'area_education_level_id' => 'Area Education Level'
+		'AreaAdministrative' => array(
+			'area_administrative_level_id' => 'Area Level (Administrative)'
 		),
-		'AreaEducationLevel' => array(
-			'name' => 'Area Level'
+		'AreaAdministrativeLevel' => array(
+			'name' => 'Area Level (Administrative)'
 		),
 		'EducationSystem' => array(
 			'title' => 'Education Systems',
@@ -159,7 +175,7 @@ class LabelHelper extends AppHelper {
 		),
 		'EducationSubject' => array(
 			'title' => 'Education Subjects',
-			'name' => 'Subject',
+			'name' => 'Subject Name',
 			'code' => 'Subject Code'
 		),
 		'EducationGradeSubject' => array(
@@ -196,10 +212,13 @@ class LabelHelper extends AppHelper {
 			'title' => 'Programmes'
 		),
 		'InstitutionSiteClass' => array(
-			'no_of_seats' => 'Seats',
-			'no_of_shifts' => 'Shifts',
-			'shift' => 'Shift',
-			'seats' => 'Seats'
+			'name' => 'Class Name',
+			'no_of_seats' => 'No of Seats',
+			'seats' => 'Seats',
+			'education_subject_id' => 'Education Subject',
+			'academic_period_id' => 'Academic Period',
+			'add_staff' => 'Add Staff',
+			'add_student' => 'Add Student'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -240,7 +259,7 @@ class LabelHelper extends AppHelper {
 		'Country' => array(
 			'name' => 'Country'
 		),
-		'HealthRelationships' => array(
+		'HealthRelationship' => array(
 			'name' => 'Relationship'
 		),
 		'HealthCondition' => array(
@@ -294,6 +313,9 @@ class LabelHelper extends AppHelper {
 			'processing' => 'Processing'
 		),
 		'Student' => array(
+			'identification_no' => 'OpenEMIS ID',
+			'first_name' => 'First Name',
+			'last_name' => 'Last Name',
 			'add_existing' => 'Add existing Student'
 		),
 		'StaffLeave' => array(
@@ -337,17 +359,21 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSitePosition' => array(
 			'title' => 'Positions',
+			'position_no' => 'Position No',
+			'status' => 'Status',
+			'type' => 'Type',
 			'staff_position_title_id' => 'Title',
 			'staff_position_grade_id' => 'Grade'
 		),
 		'InstitutionSiteStudentAbsence' => array(
 			'title' => 'Absence - Students',
-			'school_year_id' => 'School Year',
+			'academic_period_id' => 'Academic Period',
 			'institution_site_class_id' => 'Class',
 			'institution_site_section_id' => 'Section',
 			'student_id' => 'Student',
 			'absence_type' => 'Type',
-			'student_absence_reason_id' => 'Reason'
+			'student_absence_reason_id' => 'Reason',
+			'select_section' => 'Select Section'
 		),
 		'InstitutionSiteStaffAbsence' => array(
 			'title' => 'Absence - Staff',
@@ -357,7 +383,7 @@ class LabelHelper extends AppHelper {
 			'last_date_absent' => 'Last Date Absent',
 			'start_time_absent' => 'Start Time Absent',
 			'end_time_absent' => 'End Time Absent',
-			'school_year_id' => 'School Year',
+			'academic_period_id' => 'Academic Period',
 			'staff_id' => 'Staff',
 			'absence_type' => 'Type',
 			'staff_absence_reason_id' => 'Reason'
@@ -379,7 +405,7 @@ class LabelHelper extends AppHelper {
 			'staff_custom_field_id' => 'Custom Field'
 		),
 		'SecurityGroup' => array(
-			'SecurityGroupArea' => 'Areas',
+			'SecurityGroupArea' => 'Areas (Education)',
 			'SecurityGroupInstitutionSite' => 'Institutions',
 			'SecurityGroupUser' => 'Users'
 		),
@@ -396,7 +422,7 @@ class LabelHelper extends AppHelper {
 		),
 		
 		'InstitutionSiteFee' => array(
-			'school_year_id' => 'School Year',
+			'academic_period_id' => 'Academic Period',
 			'education_grade_id' => 'Grade',
 			'InstitutionSiteFeeType' => 'Fee Types'
 		),
@@ -408,7 +434,7 @@ class LabelHelper extends AppHelper {
 			'fees' => 'Fees',
 			'paid' => 'Paid',
 			'outstanding' => 'Outstanding',
-			'no_student' => 'No Student associated in the selected Education Grade and School Year.',
+			'no_student' => 'No Student associated in the selected Education Grade and Academic Period.',
 			'no_payment' => 'No Payment Records.',
 			'no_fees' => 'No Fee Records.',
 			'created' => 'Created'
@@ -458,6 +484,53 @@ class LabelHelper extends AppHelper {
 			'staff_behaviour_category_id' => 'Category',
 			'date_of_behaviour' => 'Date',
 			'time_of_behaviour' => 'Time'
+		),
+		'Infrastructure' => array(
+			'parent_level' => 'Parent Category'
+		),
+		'InstitutionSiteInfrastructure' => array(
+			'infrastructure_type_id' => 'Type',
+			'year_acquired' => 'Year Acquired',
+			'year_disposed' => 'Year Disposed',
+			'infrastructure_ownership_id' => 'Ownership',
+			'infrastructure_condition_id' => 'Condition'
+		),
+		'InstitutionSiteSurveyNew' => array(
+			'title' => 'New'
+		),
+		'InstitutionSiteSurveyDraft' => array(
+			'title' => 'Draft'
+		),
+		'InstitutionSiteSurveyCompleted' => array(
+			'title' => 'Completed'
+		),
+		'AcademicPeriod' => array(
+			'name' => 'Academic Period',
+			'academic_period_level_id' => 'Academic Period Level',
+			'select' => '-- Select Academic Period --'
+		),
+		'AcademicPeriodLevel' => array(
+			'name' => 'Academic Period Level'
+		),
+		'StaffPositionTitle' => array(
+			'name' => 'Position Title'
+		),
+		'StaffPositionGrade' => array(
+			'name' => 'Position Grade'
+		),
+		'InstitutionSiteSection' => array(
+			'name' => 'Section Name',
+			'staff_id' => 'Home Room Teacher',
+			'all_grades_select' => 'All Grades',
+			'single_grade' => 'Single Grade',
+			'multi_grades' => 'Multi Grades',
+			'education_grade_id' => 'Education Grade',
+			'institution_site_shift_id' => 'Shift',
+			'academic_period_id' => 'Academic Period',
+			'add_student' => 'Add Student'
+		),
+		'ReportProgress' => array(
+			'error' => 'Please contact the administrator for assistance.'
 		)
 	);
 	

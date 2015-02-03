@@ -2,13 +2,16 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
-}
-if ($_delete) {
-	echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
-}
-echo $this->Html->link(__('History'), array('action' => 'history'),	array('class' => 'divider'));
+	if ($_edit) {
+		echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
+	}
+	if ($_delete) {
+		echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'excel'), array('class' => 'divider'));
+	}
+	echo $this->Html->link(__('History'), array('action' => 'history'),	array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -74,14 +77,14 @@ $obj = $data['Student'];
 </fieldset>
 	<fieldset class="section_break">
 	<legend><?php echo __('Address Area'); ?></legend>
-	<?php echo $this->FormUtility->areas($obj['address_area_id']); ?>
+	<?php echo $this->FormUtility->areas($obj['address_area_id'], 'AreaAdministrative'); ?>
 </fieldset>
 <?php endif ?>
 
 <?php if ($obj['birthplace_area_id']>0) : ?>
 <fieldset class="section_break">
 	<legend><?php echo __('Birth Place Area'); ?></legend>
-	<?php echo $this->FormUtility->areas($obj['birthplace_area_id']); ?>
+	<?php echo $this->FormUtility->areas($obj['birthplace_area_id'], 'AreaAdministrative'); ?>
 </fieldset>
 <?php endif ?>
 

@@ -85,12 +85,12 @@ echo $this->Form->create($model, $formOptions);
 
 <fieldset class="section_break">
 	<legend><?php echo __('Address Area'); ?></legend>
-	<?php echo $this->FormUtility->areapicker('address_area_id', array('model' => 'Area', 'value' => $addressAreaId)); ?>
+	<?php echo $this->FormUtility->areapicker('address_area_id', array('id' => 'area_address_picker', 'model' => 'AreaAdministrative', 'value' => $addressAreaId)); ?>
 </fieldset>
 
 <fieldset class="section_break">
 	<legend><?php echo __('Birth Place Area'); ?></legend>
-	<?php echo $this->FormUtility->areapicker('birthplace_area_id', array('model' => 'Area', 'value' => $birthplaceAreaId)); ?>
+	<?php echo $this->FormUtility->areapicker('birthplace_area_id', array('id' => 'area_birthplace_picker', 'model' => 'AreaAdministrative', 'value' => $birthplaceAreaId)); ?>
 </fieldset>
 
 <?php 

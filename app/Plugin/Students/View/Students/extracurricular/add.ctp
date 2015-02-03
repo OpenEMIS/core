@@ -17,17 +17,19 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'extracurricularAdd', 'plugin'=>'Students'));
 echo $this->Form->create($model, $formOptions);
 
-echo $this->Form->input('school_year_id', array(
-    'options' => $yearOptions,
-    'selected' => $yearId)
+echo $this->Form->input('academic_period_id', array(
+    'options' => $academicPeriodOptions,
+    'selected' => $academicPeriodId)
 );
 echo $this->Form->input('extracurricular_type_id', array(
     'options' => $typeOptions
         )
 );
 echo $this->Form->input('name', array('class' => 'form-control autoComplete',  'label' => array('text'=> $this->Label->get('general.title'), 'class'=>'col-md-3 control-label'), 'url' => 'Students/extracurricularSearchAutoComplete'));
-echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate'));
-echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => date('d-m-Y', time() + 86400)));
+$tempStart = isset($this->data[$model]) ? $this->data[$model]['start_date'] : false;
+$tempEnd = isset($this->data[$model]) ? $this->data[$model]['end_date'] : date('d-m-Y', time() + 86400);
+echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate', 'data-date' => $tempStart));
+echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => $tempEnd));
 echo $this->Form->input('hours', array('type' => 'number'));
 echo $this->Form->input('points', array('type' => 'number'));
 echo $this->Form->input('location');

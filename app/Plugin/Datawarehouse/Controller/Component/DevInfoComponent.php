@@ -56,7 +56,7 @@ class DevInfoComponent extends Component {
 	
 	public function init() {
 		$this->Area = ClassRegistry::init('Area');
-		$this->SchoolYear = ClassRegistry::init('SchoolYear');
+		$this->AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 		$this->ConfigItem  = ClassRegistry::init('ConfigItem');
 		$this->DatawarehouseIndicator = ClassRegistry::init('Datawarehouse.DatawarehouseIndicator');
 		$this->DatawarehouseIndicatorDimension = ClassRegistry::init('Datawarehouse.DatawarehouseIndicatorDimension');
@@ -106,9 +106,9 @@ class DevInfoComponent extends Component {
         unset($settings['indicatorId']);
 
         $areaLevelId = $settings['areaLevelId'];
-        $schoolYearId = $settings['schoolYearId'];
+        $academicPeriodId = $settings['academicPeriodId'];
         unset($settings['areaId']);
-     	unset($settings['schoolYearId']);
+     	unset($settings['academicPeriodId']);
 
 		$_settings = array(
 			'onBeforeGenerate' => array('callback' => array(), 'params' => array()),
@@ -212,17 +212,17 @@ class DevInfoComponent extends Component {
 				$subqueryNumerator = null;
 				$subqueryDenominator = null;	
 
-				$schoolYear = $this->SchoolYear->find('first', array('recursive'=>-1, 'conditions'=>array('SchoolYear.id'=>$schoolYearId)));
-				$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($schoolYear['SchoolYear']['name']);
+				$academicPeriod = $this->AcademicPeriod->find('first', array('recursive'=>-1, 'conditions'=>array('AcademicPeriod.id'=>$academicPeriodId)));
+				$diTimePeriodId 	= $this->TimePeriod->getPrimaryKey($academicPeriod['AcademicPeriod']['name']);
 				
-				$this->Logger->write("Populate ut_timeperiod - " . $schoolYear['SchoolYear']['name']);
+				$this->Logger->write("Populate ut_timeperiod - " . $academicPeriod['AcademicPeriod']['name']);
 
 				$offset = 0;
 				do {
 					$numeratorID = $indicatorNumeratorObj['id'];
 					$numeratorFieldName = $indicatorNumeratorFieldObj['name'];
 
-					$group = array('area_id', 'school_year_id');
+					$group = array('area_id', 'academic_period_id');
 
 					$numeratorModule = $this->DatawarehouseModule->find('first', array('recursive'=>-1, 'conditions'=>array('DatawarehouseModule.id'=>$indicatorNumeratorFieldObj['datawarehouse_module_id'])));
 					$numeratorModelName = $numeratorModule['DatawarehouseModule']['model'];
@@ -233,7 +233,7 @@ class DevInfoComponent extends Component {
 					$fieldFormat = '%s(%s.%s) as %s, "%s" as Subgroup, %s as AreaID, %s as SchoolYearID';
 
 					$conditions['area_id'] = $areaListId;
-					$conditions['school_year_id'] = $schoolYearId;
+					$conditions['academic_period_id'] = $academicPeriodId;
 
 					$numeratorSubgroups = $this->DatawarehouseIndicatorSubgroup->find('all', array('recursive'=>-1, 
 						'conditions'=>array('DatawarehouseIndicatorSubgroup.datawarehouse_indicator_id'=>$numeratorID),
@@ -281,7 +281,7 @@ class DevInfoComponent extends Component {
 							}
 
 
-							$numeratorFields = array(sprintf($fieldFormat, $numeratorAggregate, $numeratorModelName, $numeratorFieldName, strtolower($type), $numeratorSubgroup['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'school_year_id'));
+							$numeratorFields = array(sprintf($fieldFormat, $numeratorAggregate, $numeratorModelName, $numeratorFieldName, strtolower($type), $numeratorSubgroup['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'academic_period_id'));
 
 							$subqueryNumerator =
 								$dbo->buildStatement(
@@ -347,7 +347,7 @@ class DevInfoComponent extends Component {
 									} 
 								}
 
-								$denominatorFields = array(sprintf($fieldFormat, $denominatorAggregate, $denominatorModelName, $denominatorFieldName, strtolower($type), $datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'school_year_id'));
+								$denominatorFields = array(sprintf($fieldFormat, $denominatorAggregate, $denominatorModelName, $denominatorFieldName, strtolower($type), $datawarehouseDenominatorSubgroups['DatawarehouseIndicatorSubgroup']['subgroup'], 'area_id', 'academic_period_id'));
 
 
 								$dbo = $denominatorModelTable->getDataSource();

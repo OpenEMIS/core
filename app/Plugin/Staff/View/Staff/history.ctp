@@ -38,7 +38,7 @@ $this->start('contentBody');
         </div>
 		<div class="row">
 			<div class="col-md-2"><?php echo __('First Name'); ?></div>
-			<div class="col-md-6"><?php //pr($data); ?>
+			<div class="col-md-6">
                             <span style="margin-left: 8px;"><?php echo $data['Staff']['first_name']; ?></span>
                             <?php if(@sizeof($data2['first_name'])>0){ ?>
                             <div class="table" style="margin-top: 10px;">
@@ -58,7 +58,7 @@ $this->start('contentBody');
 		</div>
         <div class="row">
 			<div class="col-md-2"><?php echo __('Middle Name'); ?></div>
-			<div class="col-md-6"><?php //pr($data); ?>
+			<div class="col-md-6">
                             <span style="margin-left: 8px;"><?php echo $data['Staff']['middle_name']; ?></span>
                             <?php if(@sizeof($data2['middle_name'])>0){ ?>
                             <div class="table" style="margin-top: 10px;">
@@ -78,7 +78,7 @@ $this->start('contentBody');
 		</div>
         <div class="row">
             <div class="col-md-2"><?php echo __('Third Name'); ?></div>
-            <div class="col-md-6"><?php //pr($data); ?>
+            <div class="col-md-6">
                             <span style="margin-left: 8px;"><?php echo $data['Staff']['third_name']; ?></span>
                             <?php if(@sizeof($data2['third_name'])>0){ ?>
                             <div class="table" style="margin-top: 10px;">
@@ -138,7 +138,7 @@ $this->start('contentBody');
 		</div>
 		<div class="row">
 			<div class="col-md-2"><?php echo __('Gender'); ?></div>
-			<div class="col-md-6"><?php //pr($data);?>
+			<div class="col-md-6">
                             <span style="margin-left: 8px;"><?php echo $data['Staff']['gender']; ?></span>
                             <?php if(@sizeof($data2['gender'])>0){ ?>
                             <div class="table" style="margin-top: 10px;">

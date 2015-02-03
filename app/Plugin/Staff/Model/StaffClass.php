@@ -27,6 +27,10 @@ class StaffClass extends AppModel {
 		'InstitutionSiteClass'
 	);
 	
+	public $hasMany = array(
+		'InstitutionSiteClassStudent'
+	);
+	
 	public function index() {
 		$this->Navigation->addCrumb('Classes');
 		$alias = $this->alias;
@@ -35,7 +39,8 @@ class StaffClass extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'InstitutionSite.name', 'InstitutionSiteClass.name', 'SchoolYear.name'
+				"$alias.*", 'AcademicPeriod.name', 'InstitutionSite.name', 'InstitutionSiteSection.*', 'InstitutionSiteClass.*',
+				'EducationSubject.name'
 			),
 			'joins' => array(
 				array(
@@ -53,11 +58,32 @@ class StaffClass extends AppModel {
 					)
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => array(
-						"SchoolYear.id = InstitutionSiteClass.school_year_id",
-						"SchoolYear.visible = 1"
+						"InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id"
+					)
+				),
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array(
+						"InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id"
+					)
+				),
+				array(
+					'table' => 'education_subjects',
+					'alias' => 'EducationSubject',
+					'conditions' => array(
+						"EducationSubject.id = InstitutionSiteClass.education_subject_id"
+					)
+				),
+				array(
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array(
+						"AcademicPeriod.id = InstitutionSiteClass.academic_period_id",
+						"AcademicPeriod.available = 1"
 					)
 				)
 			),
@@ -65,9 +91,18 @@ class StaffClass extends AppModel {
 				"$alias.staff_id" => $staffId,
 				"$alias.status = 1"
 			),
-			'order' => array("SchoolYear.order")
+			'order' => array("AcademicPeriod.order")
 		));
 		
-		$this->setVar('data', $data);
+		foreach($data as $i => $obj) {
+			$classId = $obj[$this->alias]['institution_site_class_id'];
+			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($classId);
+		}
+		
+		if(empty($data)){
+			$this->Message->alert('general.noData');
+		}
+		
+		$this->setVar(compact('data'));
 	}
 }

@@ -57,7 +57,7 @@ var areas = {
     },
     addAreaSwitching : function(){
         var saveBtn = $('.btn_save');
-        var myAreaArr = ["area_level","area_education_level"];
+        var myAreaArr = ["area_level","area_administrative_level"];
         for (var i = 0; i < myAreaArr.length; i++) {
             $('select[name*="['+myAreaArr[i]+'_"]').each(function(i, obj){
                 $(obj).change(function (d, o){
@@ -405,8 +405,8 @@ var areas = {
                 // area_id: (typeof area_id !== 'undefined')? area_id : areaarea.currentAreaId
             }
 			
-			if(Model=='AreaEducation'){
-				dataval.area_education_level_id = area_level_id;
+			if(Model=='AreaAdministrative'){
+				dataval.area_administrative_level_id = area_level_id;
 			}else{
 				dataval.area_level_id = area_level_id;
 			}
@@ -559,7 +559,7 @@ var areas = {
             html += '</div>';
             
             html += '<div class="cell cell_level">';
-            html += '   <select name="data['+Model+']['+i+']['+((Model=='AreaEducation')?'area_education_level_id':'area_level_id')+']" style="width:100px;">';
+            html += '   <select name="data['+Model+']['+i+']['+((Model=='AreaAdministrative')?'area_administrative_level_id':'area_level_id')+']" style="width:100px;">';
 
             $.each(areas.area_levels, function(i,o){
                 if(element.lowest_id > o.id || element.lowest_id==null){
