@@ -246,26 +246,8 @@ class FormUtilityHelper extends AppHelper {
 
 		$controller = $_options['controller'];
 		$model = $_options['model'];
-		$areaId = null;
-		if($model=='Area'){
-			$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
-			$SecurityGroupArea = ClassRegistry::init('SecurityGroupArea');
-			if(AuthComponent::user('id')){
-				$userId = AuthComponent::user('id');
-			}else{
-				$userId = 0;
-			}
-			$groupId = $SecurityGroupUser->getGroupIdsByUserId($userId);
-			$userAreas = $SecurityGroupArea->getAreas($groupId);
-			if(count($userAreas)>0){
-				foreach($userAreas as $ua){
-					$areaId = !$areaId ? $ua['area_id'] : (($ua['area_id']<$areaId) ? $ua['area_id'] : $areaId);
-				}
-			}
-		}
-		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : (($areaId) ? $areaId : null);
-
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : $AreaHandler->getDefaultAreaId($model);
 		
 		$html = '';
 		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
@@ -276,17 +258,8 @@ class FormUtilityHelper extends AppHelper {
 		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
-				// $options = $AreaHandler->getChildren($model, $obj[$model]['parent_id']);
-				$options = $AreaHandler->{$model}->find('list', array(
-					'conditions' => array(
-						$model.'.parent_id' => $obj[$model]['parent_id'],
-						$model.'.visible' => 1
-					),
-					'order' => array($model.'.order')
-				));
-
-				if($obj[$model]['parent_id'] == -1 || ($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
-				} else {
+				$options = $AreaHandler->getChildren(array('model'=>$model, 'parentId'=>$obj[$model]['parent_id'], 'dataType'=>'list'));
+				if($obj[$model]['parent_id'] > 0 && !($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
 					$options = array(
 						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
 					) + $options;
@@ -297,22 +270,6 @@ class FormUtilityHelper extends AppHelper {
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
-
-					/*
-					if($i < count($path) - 1) {
-						$options = array($obj[$model]['id'] => $obj[$model]['name']);
-					}else{
-						if(isset($userAreas)&&count($userAreas)>0){
-							$options = array();
-							foreach($userAreas as $ua){
-								$options[$ua['area_id']] = $ua['area_name'];
-							}				
-						}
-						$options = array($this->Label->get('Area.select')) + $options;
-					}
-				}else{
-					$options = array($this->Label->get('Area.select')) + $options;	
-					*/
 				} else {
 					$inputOptions['default'] = $worldId;
 					$inputOptions['value'] = $worldId;
