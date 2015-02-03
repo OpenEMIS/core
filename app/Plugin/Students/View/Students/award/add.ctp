@@ -25,7 +25,8 @@ $formOptions['selectAwardUrl']=$this->params['controller']."/awardAjaxFindAward/
 $labelOptions = $this->FormUtility->getLabelOptions();
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
-echo $this->FormUtility->datepicker('issue_date');
+$tempDate = isset($this->data[$model]) ? $this->data[$model]['issue_date'] : false;
+echo $this->FormUtility->datepicker('issue_date', array('data-date' => $tempDate));
 echo $this->Form->input('award', array('id' => 'searchAward', 'class' => 'form-control award', 'label'=>array('text'=> $this->Label->get('general.name'),'class'=>$labelOptions['class'])));
 echo $this->Form->input('issuer', array('id' => 'searchIssuer', 'class' => 'form-control issuer'));
 echo $this->Form->input('comment');

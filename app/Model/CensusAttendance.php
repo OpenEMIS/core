@@ -26,13 +26,13 @@ class CensusAttendance extends AppModel {
 		)
 	);
 	public $belongsTo = array(
-		'SchoolYear',
+		'AcademicPeriod',
 		'EducationGrade',
 		'InstitutionSite',
 		'Gender'
 	);
 
-	public function getCensusData($siteId, $yearId) {
+	public function getCensusData($siteId, $academicPeriodId) {
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
 
 		$sourceData = $InstitutionSiteProgramme->find('all', array(
@@ -70,7 +70,7 @@ class CensusAttendance extends AppModel {
 					'conditions' => array(
 						'CensusAttendance.education_grade_id = EducationGrade.id',
 						'CensusAttendance.institution_site_id = ' . $siteId,
-						'CensusAttendance.school_year_id = ' . $yearId
+						'CensusAttendance.academic_period_id = ' . $academicPeriodId
 					)
 				),
 				array(
@@ -91,7 +91,7 @@ class CensusAttendance extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $siteId,
-				'InstitutionSiteProgramme.school_year_id' => $yearId,
+				'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
 				'InstitutionSiteProgramme.status' => 1
 			),
 			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
@@ -127,11 +127,11 @@ class CensusAttendance extends AppModel {
 	}
 
 	public function saveCensusData($data, $institutionSiteId) {
-		$yearId = $data['school_year_id'];
-		unset($data['school_year_id']);
+		$academicPeriodId = $data['academic_period_id'];
+		unset($data['academic_period_id']);
 
 		foreach ($data as $obj) {
-			$obj['school_year_id'] = $yearId;
+			$obj['academic_period_id'] = $academicPeriodId;
 			$obj['institution_site_id'] = $institutionSiteId;
 			if ($obj['id'] == 0) {
 				$this->create();
@@ -143,10 +143,10 @@ class CensusAttendance extends AppModel {
 	public function attendance($controller, $params) {
 		$controller->Navigation->addCrumb('Attendance');
 
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
-		$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYear));
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
+		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
+		$schoolDays = $this->AcademicPeriod->field('school_days', array('AcademicPeriod.id' => $selectedAcademicPeriod));
 
 		if (empty($data['censusData'])) {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
@@ -154,23 +154,23 @@ class CensusAttendance extends AppModel {
 		
 		$genderOptions = $this->Gender->getList();
 		//pr($genderOptions);die;
-		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 		
-		$controller->set(compact('genderOptions', 'data', 'selectedYear', 'yearList', 'schoolDays', 'isEditable'));
+		$controller->set(compact('genderOptions', 'data', 'selectedAcademicPeriod', 'academicPeriodList', 'schoolDays', 'isEditable'));
 	}
 
 	public function attendanceEdit($controller, $params) {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Attendance');
 
-			$yearList = $this->SchoolYear->getYearList();
-			$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
-			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYear));
+			$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+			$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
+			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
+			$schoolDays = $this->AcademicPeriod->field('school_days', array('AcademicPeriod.id' => $selectedAcademicPeriod));
 
-			$editable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 			if (!$editable) {
-				$controller->redirect(array('action' => 'attendance', $selectedYear));
+				$controller->redirect(array('action' => 'attendance', $selectedAcademicPeriod));
 			} else {
 				if (empty($data['censusData'])) {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
@@ -179,14 +179,14 @@ class CensusAttendance extends AppModel {
 				$genderOptions = $this->Gender->getList();
 				//pr($genderOptions);die;
 				
-				$controller->set(compact('genderOptions', 'data', 'selectedYear', 'yearList', 'schoolDays'));
+				$controller->set(compact('genderOptions', 'data', 'selectedAcademicPeriod', 'academicPeriodList', 'schoolDays'));
 			}
 		} else {
 			$data = $controller->data['CensusAttendance'];
-			$yearId = $data['school_year_id'];
+			$academicPeriodId = $data['academic_period_id'];
 			$this->saveCensusData($data, $controller->Session->read('InstitutionSite.id'));
 			$controller->Message->alert('general.edit.success');
-			$controller->redirect(array('controller' => 'Census', 'action' => 'attendance', $yearId));
+			$controller->redirect(array('controller' => 'Census', 'action' => 'attendance', $academicPeriodId));
 		}
 	}
 	
@@ -202,22 +202,22 @@ class CensusAttendance extends AppModel {
 
 		if ($index == 1) {
 			$data = array();
-			$header = array(__('Year'), __('School Days'), __('Programme'), __('Grade'), __('Days Absent (Male)'), __('Days Absent (Female)'), __('Days Attended (Male)'), __('Days Attended (Female)'));
+			$header = array(__('Academic Period'), __('School Days'), __('Programme'), __('Grade'), __('Days Absent (Male)'), __('Days Absent (Female)'), __('Days Attended (Male)'), __('Days Attended (Female)'));
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
-			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+			$dataAcademicPeriods = $InstitutionSiteProgrammeModel->getAcademicPeriodsHaveProgrammes($institutionSiteId);
 			$genderOptions = $this->Gender->getList();
 
-			foreach ($dataYears AS $rowYear) {
-				$yearId = $rowYear['SchoolYear']['id'];
-				$yearName = $rowYear['SchoolYear']['name'];
+			foreach ($dataAcademicPeriods AS $rowAcademicPeriod) {
+				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];
+				$academicPeriodName = $rowAcademicPeriod['AcademicPeriod']['name'];
 
-				$dataReturned = $this->getCensusData($institutionSiteId, $yearId);
+				$dataReturned = $this->getCensusData($institutionSiteId, $academicPeriodId);
 				$programmeData = $dataReturned['programmeData'];
 				$censusData = $dataReturned['censusData'];
 				
-				$SchoolYearModel = ClassRegistry::init('SchoolYear');
-				$schoolDays = $SchoolYearModel->field('school_days', array('SchoolYear.id' => $yearId));
+				$AcademicPeriodModel = ClassRegistry::init('AcademicPeriod');
+				$schoolDays = $AcademicPeriodModel->field('school_days', array('AcademicPeriod.id' => $academicPeriodId));
 
 				if (!empty($censusData)) {
 					foreach ($programmeData as $programmeId => $programmeData) {
@@ -244,7 +244,7 @@ class CensusAttendance extends AppModel {
 							$femaleAttended = ($schoolDays - $femaleValue) >= 0 ? ($schoolDays - $femaleValue) : 0;
 							
 							$data[] = array(
-								$yearName,
+								$academicPeriodName,
 								$schoolDays,
 								$programmeName,
 								$gradeName,

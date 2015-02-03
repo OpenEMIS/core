@@ -54,7 +54,10 @@ class WizardComponent extends Component {
 					$this->redirect(0);
 				}
 				else if ($linkIndex - $lastIndex > 1) {
-					$this->redirect(intval($lastIndex)+1);
+					$redirectIndex = $this->setMandatoryStatus(intval($lastIndex)+1, false);
+					if($redirectIndex){
+						$this->redirect($redirectIndex);
+					}
 				} else {
 					$this->setCurrent($linkIndex);
 					// if user is in wizard mode, clicking on view will automatically redirect to edit
@@ -187,9 +190,7 @@ class WizardComponent extends Component {
 		return $actions;
 	}
 	
-	public function getLink() {
-		$controllerName = $this->controller->name;
-		$action = $this->controller->action;
+	protected function loopLinks($controllerName, $action){
 		$result = array();
 		$links = $this->Session->read($this->module . '.wizard.links');
 		foreach($links as $index => $link) {
@@ -201,6 +202,23 @@ class WizardComponent extends Component {
 		}
 		return $result;
 	}
+
+	public function getLink() {
+		$controllerName = $this->controller->name;
+		$action = $this->controller->action;
+		return $this->loopLinks($controllerName, $action);
+	}
+
+	public function checkLink(){
+		$split = explode('/', str_replace(Router::url('/', true), '', $this->controller->referer()));
+		$result = array();
+		if(count($split)>1){
+			$controllerName = $split[0];
+			$action = $split[1];
+			$result = $this->loopLinks($controllerName, $action);
+		}
+		return $result;
+	}
 	
 	public function getNoOfLinks() {
 		$links = $this->Session->read($this->module . '.wizard.links');
@@ -209,10 +227,14 @@ class WizardComponent extends Component {
 	
 	public function start() {
 		$links = $this->getLinks($this->module);
+		$personnelId = $this->Session->read($this->module.'.id');
 		$this->Session->delete($this->module);
 		$this->Session->write($this->module . '.wizard.links', $links);
 		$this->Session->write($this->module . '.wizard.mode', true);
 		$this->setCurrent(0);
+		if(count($this->checkLink())>0){
+			$this->Session->write($this->module . '.id', $personnelId);
+		}
 	}
 	
 	public function stop() {
@@ -226,42 +248,59 @@ class WizardComponent extends Component {
 		return $this->controller->redirect($url);
 	}
 	
-	public function next() {
-		$controllerName = $this->controller->name;
-		$action = $this->controller->action;
-		$mandatory = $this->module . '.wizard.mandatory';
-		
-		$link = $this->getLink();
-		$links = $this->Session->read($this->module . '.wizard.links');
-		$linkIndex = intval(key($link)) + 1;
+	public function next() {		
+		$index = $this->getCurrent();
+		$toLinkIndex = $index + 1;
 		
 		// set current link to completed
-		$this->setCompleted(key($link));
+		$this->setCompleted($index);
 		
-		if(array_key_exists($linkIndex, $links)) { // retrieve the next link
-			$nextLink = $links[$linkIndex];
-			$config = $nextLink['ConfigItem'];
-			$navigation = $nextLink['Navigation'];
-			if(isset($config['value']) && $config['value'] == 1) { // check whether if user allow to skip
+		$redirectIndex = $this->setMandatoryStatus($toLinkIndex, 'next');
+		if($redirectIndex){
+			$this->redirect($redirectIndex);
+		}
+	}
+	
+	public function previous() {
+		$index = $this->getCurrent();
+		$toLinkIndex = $index - 1;
+		$redirectIndex = $this->setMandatoryStatus($toLinkIndex, 'previous');
+		if($redirectIndex > -1){
+			$this->redirect($redirectIndex);
+		}
+	}
+	
+	public function skip() {
+		$index = $this->getCurrent();
+		$toLinkIndex = $index + 1;
+		$this->setCompleted($index);
+		$redirectIndex = $this->setMandatoryStatus($toLinkIndex, 'skip');
+		if($redirectIndex){
+			$this->redirect($redirectIndex);
+		}
+	}
+	
+	// returns redirect index
+	protected function setMandatoryStatus($toLinkIndex, $type){
+		$mandatory = $this->module . '.wizard.mandatory';
+		$links = $this->Session->read($this->module . '.wizard.links');
+		if(array_key_exists($toLinkIndex, $links)) { // retrieve the next or previous link
+			$toLink = $links[$toLinkIndex];
+			$config = $toLink['ConfigItem'];
+			if(isset($config['value']) && $config['value'] == 1) { // check whether if user allow to skip the next or the previous link
+				$this->Session->write($mandatory, true);
+			} else if($toLinkIndex == 0){
 				$this->Session->write($mandatory, true);
 			} else {
 				$this->Session->write($mandatory, false);
 			}
-			unset($this->controller->request->data['wizard']['next']);
-			$this->redirect($linkIndex);
+			if($type){
+				unset($this->controller->request->data['wizard'][$type]);
+			}
+			return $toLinkIndex;
+		}else{
+			return false;
 		}
-		//pr($link);
-	}
-	
-	public function previous() {
-		$prevIndex = $this->getCurrent()-1;
-		$this->redirect($prevIndex);
-	}
-	
-	public function skip() {
-		$index = $this->getCurrent()+1;
-		$this->setCompleted($index);
-		$this->redirect($index);
 	}
 	
 	public function redirect($index) {
@@ -302,7 +341,6 @@ class WizardComponent extends Component {
 	
 	public function isMandatory() {
 		$key = $this->module . '.wizard.mandatory';
-		//var_dump($this->Session->check($key));
 		return $this->getCurrent() == 0 || ($this->Session->check($key) && $this->Session->read($key));
 	}
 	

@@ -15,8 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthFamily extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'ControllerAction'
+	);
+
 	public $belongsTo = array(
+		'Students.Student',
 		'HealthCondition',
 		'HealthRelationship',
 		'ModifiedUser' => array(
@@ -44,6 +49,16 @@ class StudentHealthFamily extends StudentsAppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$lookup = array(
+			"$alias.current" => array(0 => 'No', 1 => 'Yes')
+		);
+		return $lookup;
+	}
+	/* End Excel Behaviour */
 
 	public function getDisplayFields($controller) {
 		$fields = array(
@@ -148,11 +163,9 @@ class StudentHealthFamily extends StudentsAppModel {
 			$healthRelationshipsOptions = $this->HealthRelationship->getList(array('value' => 0));
 		}
 
-
-		
 		$yesnoOptions = $controller->Option->get('yesno');
 		
-		$controller->set(compact('healthConditionsOptions', 'healthRelationshipsOptions','yesnoOptions'));
+		$controller->set(compact('healthConditionsOptions', 'healthRelationshipOptions','yesnoOptions'));
 	}
 
 }

@@ -18,9 +18,9 @@ $formOptions['type'] = 'file';
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->input('staff_leave_type_id',array('options' => $typeOptions));
 echo $this->Form->input('leave_status_id', array('options' => $statusOptions));
-echo $this->FormUtility->datepicker('date_from', array('id' => 'StaffLeaveDateFromDay','onchange'=>'objStaffLeaves.compute_work_days()'));
-echo $this->FormUtility->datepicker('date_to', array('id' => 'StaffLeaveDateToDay' ,'onchange'=>'objStaffLeaves.compute_work_days()' ,'data-date' => date('d-m-Y', time() + 86400)));
-echo $this->Form->input('number_of_days', array('type'=>'number', 'class' => 'form-control compute_days'));
+echo $this->FormUtility->datepicker('date_from', array('id' => 'StaffLeaveDateFromDay'));
+echo $this->FormUtility->datepicker('date_to', array('id' => 'StaffLeaveDateToDay','data-date' => date('d-m-Y', time() + 86400)));
+echo $this->Form->input('number_of_days', array('type'=>'number', 'class' => 'form-control', 'id' => 'StaffLeaveNumberOfDays'));
 echo $this->Form->input('comments');
 
 $multiple = array('multipleURL' => $this->params['controller']."/leavesAjaxAddField/");

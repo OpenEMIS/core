@@ -1,5 +1,4 @@
 <?php
-//echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 echo $this->Html->css('finance', 'stylesheet', array('inline' => false));
 

@@ -217,9 +217,9 @@ class EducationProgramme extends AppModel {
 	}
 	
 	// Used by InstitutionSiteController->programmeAdd
-	public function getAvailableProgrammeOptions($institutionSiteId, $yearId) {
+	public function getAvailableProgrammeOptions($institutionSiteId, $academicPeriodId) {
 		$table = 'institution_site_programmes';
-		$notExists = 'NOT EXISTS (SELECT %s.id FROM %s WHERE %s.institution_site_id = %d AND %s.school_year_id = %d AND %s.education_programme_id = EducationProgramme.id)';
+		$notExists = 'NOT EXISTS (SELECT %s.id FROM %s WHERE %s.institution_site_id = %d AND %s.academic_period_id = %d AND %s.education_programme_id = EducationProgramme.id)';
 		
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -245,7 +245,7 @@ class EducationProgramme extends AppModel {
 				)
 			),
 			'conditions' => array(
-				sprintf($notExists, $table, $table, $table, $institutionSiteId, $table, $yearId, $table),
+				sprintf($notExists, $table, $table, $table, $institutionSiteId, $table, $academicPeriodId, $table),
 				'EducationProgramme.visible' => 1
 			),
 			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')

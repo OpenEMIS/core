@@ -264,7 +264,7 @@ var jsForm = {
 		var mainContainerId = $(this).parents().parents().parents().attr('id');
 		
 		var hiddenValue= $(this).closest('#'+mainContainerId).find('.areapicker_areaid').first();//$(this).parents().find('.areapicker_areaid').first();//alert('out = '+hiddenValue.attr('id') );
-		var myAreaArr = ["area_level","area_education_level"];
+		var myAreaArr = ["area_level","area_administrative_level"];
         for (var i = 0; i < myAreaArr.length; i++) {
             var areaItems = $(this).parent().parent().parent().find('select[name*="['+myAreaArr[i]+'_"]');
 			
@@ -393,18 +393,22 @@ var jsForm = {
 	
 	confirmDelete: function(obj) {
 		var href = $(obj).attr('href');
+		var btnValue = $(obj).attr('data-button-text') !== undefined ? $(obj).attr('data-button-text') : i18n.General.textDelete;
+		var dlgTitle = $(obj).attr('data-title') !== undefined ? $(obj).attr('data-title') : i18n.General.textDeleteConfirmation;
+		var dlgContent = $(obj).attr('data-content') !== undefined ? $(obj).attr('data-content') : i18n.App.confirmDeleteContent;
+
 		if($(obj).prop('tagName') !== 'A') {
 			href = getRootURL() + href;
 		}
 		var btn = {
-			value: i18n.General.textDelete,
+			value: btnValue,
 			callback: function() { window.location.href = href; }
 		};
 		
 		var dlgOpt = {	
 			id: 'delete-dialog',
-			title: i18n.General.textDeleteConfirmation,
-			content: i18n.App.confirmDeleteContent,
+			title: dlgTitle,
+			content: dlgContent,
 			buttons: [btn]
 		};
 		
@@ -587,14 +591,14 @@ var jsForm = {
 	},
 	
 	filterAbsenceByMonth: function(obj){
-		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldAcademicPeriod = $("select#academicPeriodId");
 		var fieldMonth = $("select#monthId");
-		if(fieldSchoolYear.length !== 1 || fieldMonth.length !== 1){
+		if(fieldAcademicPeriod.length !== 1 || fieldMonth.length !== 1){
 			return false;
 		}
 		
-		var url = getRootURL() + $(obj).parent('div').attr('url');
-		url += '/' + fieldSchoolYear.val();
+		var url = getRootURL() + $(obj).closest('.row').attr('url');
+		url += '/' + fieldAcademicPeriod.val();
 		url += '/' + fieldMonth.val();
 		
 		window.location.href = url;

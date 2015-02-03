@@ -8,6 +8,9 @@ if ($_edit) {
 if ($_delete) {
 	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
+if ($_execute) {
+	echo $this->Html->link($this->Label->get('general.export'), array('action' => 'excel'), array('class' => 'divider'));
+}
 echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 $this->end();
 
@@ -88,15 +91,15 @@ $obj = $data['InstitutionSite'];
 
 <?php if ($obj['area_id'] > 0) : ?>
 <fieldset class="section_break">
-	<legend><?php echo __('Area'); ?></legend>
+	<legend><?php echo __('Area (Education)'); ?></legend>
 	<?php echo $this->FormUtility->areas($obj['area_id']); ?>
 </fieldset>
 <?php endif; ?>
 
-<?php if ($obj['area_education_id'] > 0) : ?>
+<?php if ($obj['area_administrative_id'] > 0) : ?>
 <fieldset class="section_break">
-	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-	<?php echo $this->FormUtility->areas($obj['area_education_id'], 'AreaEducation'); ?>
+	<legend><?php echo __('Area (Administrative)'); ?></legend>
+	<?php echo $this->FormUtility->areas($obj['area_administrative_id'], 'AreaAdministrative'); ?>
 </fieldset>
 <?php endif; ?>
 

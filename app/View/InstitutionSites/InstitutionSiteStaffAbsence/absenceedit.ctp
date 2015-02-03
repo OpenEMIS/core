@@ -25,6 +25,7 @@ $this->end();
 
 $this->start('contentBody');
 
+
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'attendanceStaffAbsenceEdit', $absenceId));
 $labelOptions = $formOptions['inputDefaults']['label'];
 $formOptions['type'] = 'file';
@@ -40,7 +41,7 @@ if(isset($obj['InstitutionSiteStaffAbsence']['hidden_staff_id'])){
 	$objAbsence['staff_id'] = $obj['InstitutionSiteStaffAbsence']['hidden_staff_id'];
 }else{
 	$objStaff = $obj['Staff'];
-	$staffIdName = sprintf('%s - %s %s %s %s', $objStaff['identification_no'], $objStaff['first_name'], $objStaff['middle_name'], $objStaff['last_name'], $objStaff['preferred_name']);
+	$staffIdName = $this->Model->getName($objStaff, array('openEmisId'=>true));
 }
 
 ?>

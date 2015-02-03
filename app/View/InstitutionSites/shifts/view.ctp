@@ -5,7 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Shift'));
 
 $dataShift = $shiftObj['InstitutionSiteShift'];
-$dataSchoolYear = $shiftObj['SchoolYear'];
+$dataAcademicPeriod = $shiftObj['AcademicPeriod'];
 $dataLocationSite = $shiftObj['InstitutionSite'];
 $dataModifiedUser = $shiftObj['ModifiedUser'];
 $dataCreatedUser = $shiftObj['CreatedUser'];
@@ -28,8 +28,8 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $dataShift['name']; ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('School Year'); ?></div>
-	<div class="col-md-6"><?php echo $dataSchoolYear['name']; ?></div>
+	<div class="col-md-3"><?php echo __('Academic Period'); ?></div>
+	<div class="col-md-6"><?php echo $dataAcademicPeriod['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Start Time'); ?></div>

@@ -20,7 +20,7 @@ class CensusVerification extends AppModel {
 	public function getVerifications($institutionSiteId) {
 		$data = $this->find('all', array(
 			'fields' => array(
-				'CensusVerification.*', 'SchoolYear.name',
+				'CensusVerification.*', 'AcademicPeriod.name',
 				'SecurityUser.username', 'SecurityUser.first_name', 'SecurityUser.last_name'
 			),
 			'recursive' => -1,
@@ -31,29 +31,29 @@ class CensusVerification extends AppModel {
 					'conditions' => array('SecurityUser.id = CensusVerification.created_user_id')
 				),
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = CensusVerification.school_year_id')
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
+					'conditions' => array('AcademicPeriod.id = CensusVerification.academic_period_id')
 				)
 			),
 			'conditions' => array('CensusVerification.institution_site_id' => $institutionSiteId),
-			'order' => array('SchoolYear.name', 'CensusVerification.created')
+			'order' => array('AcademicPeriod.name', 'CensusVerification.created')
 		));
 		return $data;
 	}
 	
-	public function isEditable($institutionSiteId, $yearId) {
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$yearList = $SchoolYear->getYearListForVerification($institutionSiteId);
+	public function isEditable($institutionSiteId, $academicPeriodId) {
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$academicPeriodList = $AcademicPeriod->getAcademicPeriodListForVerification($institutionSiteId);
 		
-		return array_key_exists($yearId, $yearList);
+		return array_key_exists($academicPeriodId, $academicPeriodList);
 	}
 	
 	public function saveEntry($data) {
 		$result = $this->find('all', array(
 			'conditions' => array(
 				'CensusVerification.institution_site_id' => $data['institution_site_id'],
-				'CensusVerification.school_year_id' => $data['school_year_id']
+				'CensusVerification.academic_period_id' => $data['academic_period_id']
 			),
 			'order' => array('CensusVerification.created DESC')
 		));

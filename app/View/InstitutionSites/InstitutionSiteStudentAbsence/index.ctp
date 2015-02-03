@@ -3,7 +3,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Attendance') . ' - ' . __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $yearId, $sectionId, $weekId), array('class' => 'divider'));
+	echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteStudentAttendance', 'excel', $academicPeriodId), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');
@@ -26,7 +29,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($studentList as $student):
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = sprintf('%s %s %s', $studentObj['first_name'], $studentObj['middle_name'], $studentObj['last_name']);
+				$studentName = $this->Model->getName($studentObj);
 				?>
 				<tr>
 					<td><?php echo $studentObj['identification_no']; ?></td>
