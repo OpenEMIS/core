@@ -8,12 +8,12 @@ $this->assign('contentHeader', __('Other Forms'));
 
 $this->start('contentActions');
 if($_edit && $isEditable) {
-	echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <?php foreach($data as $arrval) { ?>

@@ -17,8 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AssessmentItemResult extends AppModel {
+	public $selectedPeriod;
+	public $assessmentId;
+	
 	public $actsAs = array(
-		'ControllerAction'
+		'ControllerAction',
+		'Excel'
 	);
 
 	public $belongsTo = array(
@@ -130,34 +134,34 @@ class AssessmentItemResult extends AppModel {
 	public function assessments($controller, $params) {
 		$controller->Navigation->addCrumb('Assessments');
 
-		$yearOptions = $this->AssessmentItem->AssessmentItemType->getYearListForAssessments($controller->institutionSiteId);
-		$defaultYearId = 0;
-		if(!empty($yearOptions)){
-			$currentYearId = ClassRegistry::init('SchoolYear')->getCurrent();
-			if(!empty($currentYearId) && array_key_exists($currentYearId, $yearOptions)){
-				$defaultYearId = $currentYearId;
+		$academicPeriodOptions = $this->AssessmentItem->AssessmentItemType->getAcademicPeriodListForAssessments($controller->institutionSiteId);
+		$defaultAcademicPeriodId = 0;
+		if(!empty($academicPeriodOptions)){
+			$currentAcademicPeriodId = ClassRegistry::init('AcademicPeriod')->getCurrent();
+			if(!empty($currentAcademicPeriodId) && array_key_exists($currentAcademicPeriodId, $academicPeriodOptions)){
+				$defaultAcademicPeriodId = $currentAcademicPeriodId;
 			}else{
-				$defaultYearId = key($yearOptions);
+				$defaultAcademicPeriodId = key($academicPeriodOptions);
 			}
 		}
 		
-		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : $defaultYearId;
+		$selectedAcademicPeriod = isset($params->pass[0]) ? $params->pass[0] : $defaultAcademicPeriodId;
 		$data = array();
-		if (empty($yearOptions)) {
+		if (empty($academicPeriodOptions)) {
 			$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 		} else {
-			$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsBySchoolYear($controller->institutionSiteId, $selectedYear);
+			$data = $this->AssessmentItem->AssessmentItemType->getInstitutionAssessmentsByAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod);
 
 			if (empty($data)) {
 				$controller->Utility->alert($controller->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
 			}
 		}
-		$controller->set(compact('data', 'yearOptions', 'selectedYear'));
+		$controller->set(compact('data', 'academicPeriodOptions', 'selectedAcademicPeriod'));
 	}
 
 	public function assessmentsResults($controller, $params) {
 		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
-            $selectedYear = intval($controller->params['pass'][0]);
+            $selectedAcademicPeriod = intval($controller->params['pass'][0]);
             $assessmentId = intval($controller->params['pass'][1]);
 			
 			$selectedClass = 0;
@@ -173,8 +177,8 @@ class AssessmentItemResult extends AppModel {
 			$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
 			$controller->Navigation->addCrumb('Results');
 			
-            if ($selectedYear != 0 && $assessmentId != 0) {
-				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+            if ($selectedAcademicPeriod != 0 && $assessmentId != 0) {
+				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod, $assessmentId);
 
                 if(empty($classOptions)){
 					$controller->Message->alert('Assessment.result.noClass');
@@ -195,7 +199,7 @@ class AssessmentItemResult extends AppModel {
 					}
                 }
 				
-				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'data', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName'));
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'data', 'assessmentId', 'selectedAcademicPeriod', 'assessmentName', 'educationGradeName'));
             } else {
 				$controller->redirect(array('action' => 'assessments'));
             }
@@ -206,7 +210,7 @@ class AssessmentItemResult extends AppModel {
 	
 	public function assessmentsResultsEdit($controller, $params) {
 		if (count($controller->params['pass']) >= 2 && count($controller->params['pass']) <= 4) {
-			$selectedYear = intval($controller->params['pass'][0]);
+			$selectedAcademicPeriod = intval($controller->params['pass'][0]);
 			$assessmentId = intval($controller->params['pass'][1]);
 			
 			$selectedClass = 0;
@@ -222,8 +226,8 @@ class AssessmentItemResult extends AppModel {
 			$controller->Navigation->addCrumb('Assessments', array('controller' => 'InstitutionSites', 'action' => 'assessments'));
 			$controller->Navigation->addCrumb('Results');
 
-			if ($selectedYear != 0 && $assessmentId != 0) {
-				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithYear($controller->institutionSiteId, $selectedYear, $assessmentId);
+			if ($selectedAcademicPeriod != 0 && $assessmentId != 0) {
+				$classOptions = ClassRegistry::init('InstitutionSiteClass')->getClassListWithAcademicPeriod($controller->institutionSiteId, $selectedAcademicPeriod, $assessmentId);
 
 				if (empty($classOptions)) {
 					$controller->Message->alert('Assessment.result.noClass');
@@ -291,12 +295,12 @@ class AssessmentItemResult extends AppModel {
 							}
 							
 							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-							$controller->redirect(array('action' => 'assessmentsResults', $selectedYear, $assessmentId, $selectedClass, $selectedItem));
+							$controller->redirect(array('action' => 'assessmentsResults', $selectedAcademicPeriod, $assessmentId, $selectedClass, $selectedItem));
 						}
 					}
 				}
 
-				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedYear', 'assessmentName', 'educationGradeName', 'minMarks', 'maxMarks'));
+				$controller->set(compact('classOptions', 'itemOptions', 'selectedClass', 'selectedItem', 'assessmentId', 'selectedAcademicPeriod', 'assessmentName', 'educationGradeName', 'minMarks', 'maxMarks'));
 			} else {
 				$controller->redirect(array('action' => 'assessments'));
 			}
@@ -304,4 +308,108 @@ class AssessmentItemResult extends AppModel {
 			$controller->redirect(array('action' => 'assessments'));
 		}
 	}
+	
+	public function assessmentsToExcel($controller, $params){
+		$periodId = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$assessmentId = isset($params->pass[1]) ? $params->pass[1] : 0;
+		
+		$this->excel($periodId, $assessmentId);
+	}
+	
+	public function excel($periodId, $assessmentId) {
+		$this->selectedPeriod = $periodId;
+		$this->assessmentId = $assessmentId;
+		parent::excel();
+	}
+	
+	public function excelGetFileName() {
+		$assessmentId = $this->assessmentId;
+		$assessment = ClassRegistry::init('AssessmentItemType')->findById($assessmentId);
+		//$modelName = $this->alias;
+		$assessmentName = str_replace(' ', '_', $assessment['AssessmentItemType']['name']);
+		$fileName = $assessmentName;
+		return $fileName;
+	}
+
+	public function generateSheet($writer) {
+		$institutionSiteId = CakeSession::read('InstitutionSite.id');
+		$periodId = $this->selectedPeriod;
+		$assessmentId = $this->assessmentId;
+		
+		$InstitutionSiteClassStudent = ClassRegistry::init('InstitutionSiteClassStudent');
+		
+		$commonHeader = array(
+			__('OpenEMIS ID'),
+			__('First Name'),
+			__('Last Name')
+		);
+		$footer = $this->excelGetFooter();
+
+		$classOptions = ClassRegistry::init('InstitutionSiteClass')->getAssessmentClassList($institutionSiteId, $periodId, $assessmentId);
+		foreach($classOptions as $classId => $className){
+			$checkList = array();
+			$subjectsHeader = array();
+			
+			$subjectOptions = $this->AssessmentItem->getClassItemList($assessmentId, $classId);
+			//pr($subjectOptions);die;
+			foreach($subjectOptions as $subjectId => $subjectName){
+				$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Marks'));
+				$subjectsHeader[] = sprintf('%s %s', $subjectName, __('Grading'));
+
+				$resultData = $InstitutionSiteClassStudent->getStudentAssessmentResults($classId, $subjectId, $assessmentId);
+				//pr($resultData);die;
+				foreach($resultData as $row){
+					$StudentObj = $row['Student'];
+					$studentId = $StudentObj['id'];
+					$AssessmentItemResultObj = $row['AssessmentItemResult'];
+					$AssessmentResultTypeObj = $row['AssessmentResultType'];
+
+					$resultArr = array(
+						'marks' => $AssessmentItemResultObj['marks'],
+						'grading' => $AssessmentResultTypeObj['name']
+					);
+
+					$checkList[$classId][$studentId][$subjectId] = $resultArr;
+				}
+			}
+			//pr($checkList);die;
+			
+			$studentsData = $InstitutionSiteClassStudent->getStudentsByClassAssessment($classId, $assessmentId);
+			//pr($studentsData);
+			$sheetData = array();
+			foreach($studentsData as $row){
+				$dataRow = array();
+
+				$StudentObj = $row['Student'];
+				$studentId = $StudentObj['id'];
+				$dataRow[] = $StudentObj['identification_no'];
+				$dataRow[] = $StudentObj['first_name'];
+				$dataRow[] = $StudentObj['last_name'];
+
+				foreach($subjectOptions as $subjectId => $subjectName){
+					if(isset($checkList[$classId][$studentId][$subjectId])){
+						$dataRow[] = $checkList[$classId][$studentId][$subjectId]['marks'];
+						$dataRow[] = $checkList[$classId][$studentId][$subjectId]['grading'];
+					}else{
+						$dataRow[] = '';
+						$dataRow[] = '';
+					}
+				}
+
+				$sheetData[] = $dataRow;
+			}
+			
+			$header = array_merge($commonHeader, $subjectsHeader);
+			//pr($header);die;
+			$writer->writeSheetRow($className, $header);
+			
+			foreach ($sheetData as $sheetRow) {
+				$writer->writeSheetRow($className, $sheetRow);
+			}
+
+			$writer->writeSheetRow($className, array(''));
+			$writer->writeSheetRow($className, $footer);
+		}
+	}
+	
 }

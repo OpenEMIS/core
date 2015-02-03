@@ -47,16 +47,16 @@ class PublicExpenditure extends AppModel {
 	}
 	
 	// Used by Yearbook
-	public function geDataByYearAndArea($yearId, $areaId) {
+	public function geDataByAcademicPeriodAndArea($academicPeriodId, $areaId) {
 		$this->formatResult = true;
 		$data = $this->find('first', array(
 			'joins' => array(
 				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
+					'table' => 'academic_periods',
+					'alias' => 'AcademicPeriod',
 					'conditions' => array(
-						'SchoolYear.start_year = PublicExpenditure.year',
-						'SchoolYear.id = ' . $yearId
+						'AcademicPeriod.start_year = PublicExpenditure.year',
+						'AcademicPeriod.id = ' . $academicPeriodId
 					)
 				)
 			),

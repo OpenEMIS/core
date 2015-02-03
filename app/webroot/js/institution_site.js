@@ -64,16 +64,16 @@ var objInstitutionSite = {
 	},
 			
 	filterStudentAttendance: function(obj){
-		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldAcademicPeriod = $("select#academicPeriodId");
 		var fieldClass = $("select#classId");
 		var fieldWeek = $("select#weekId");
 
-		if(fieldSchoolYear.length !== 1 || fieldClass.length !== 1 || fieldWeek.length !== 1){
+		if(fieldAcademicPeriod.length !== 1 || fieldClass.length !== 1 || fieldWeek.length !== 1){
 			return false;
 		}
 		
 		var url = getRootURL() + $(obj).parent('div').attr('url');
-		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldAcademicPeriod.val();
 		url += '/' + fieldClass.val();
 		url += '/' + fieldWeek.val();
 		
@@ -81,15 +81,15 @@ var objInstitutionSite = {
 	},
 			
 	filterStaffAttendance: function(obj){
-		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldAcademicPeriod = $("select#academicPeriodId");
 		var fieldWeek = $("select#weekId");
 
-		if(fieldSchoolYear.length !== 1 || fieldWeek.length !== 1){
+		if(fieldAcademicPeriod.length !== 1 || fieldWeek.length !== 1){
 			return false;
 		}
 		
 		var url = getRootURL() + $(obj).parent('div').attr('url');
-		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldAcademicPeriod.val();
 		url += '/' + fieldWeek.val();
 		
 		window.location.href = url;

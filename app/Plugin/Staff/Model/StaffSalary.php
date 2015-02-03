@@ -178,15 +178,19 @@ class StaffSalary extends StaffAppModel {
 
 		if (!empty($controller->request->data)) {
 			$existingValuesStaffSalaryAddition = array();
-			foreach ($controller->request->data['StaffSalaryAddition'] as $key => $value) {
-				array_push($existingValuesStaffSalaryAddition, $value['salary_addition_type_id']);
+			if(isset($controller->request->data['StaffSalaryAddition'])){
+				foreach ($controller->request->data['StaffSalaryAddition'] as $key => $value) {
+					array_push($existingValuesStaffSalaryAddition, $value['salary_addition_type_id']);
+				}
 			}
 
 			$existingValuesStaffSalaryDeduction = array();
-			foreach ($controller->request->data['StaffSalaryDeduction'] as $key => $value) {
-				array_push($existingValuesStaffSalaryDeduction, $value['salary_deduction_type_id']);
+			if(isset($controller->request->data['StaffSalaryDeduction'])){
+				foreach ($controller->request->data['StaffSalaryDeduction'] as $key => $value) {
+					array_push($existingValuesStaffSalaryDeduction, $value['salary_deduction_type_id']);
+				}
 			}
-
+			
 			$additionOptions = $SalaryAdditionType->getList(array('value' => $existingValuesStaffSalaryAddition));
 			$deductionOptions = $SalaryDeductionType->getList(array('value' => $existingValuesStaffSalaryDeduction));
 		} else {

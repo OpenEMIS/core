@@ -276,15 +276,15 @@ class RubricsTemplate extends QualityAppModel {
 				'conditions' => array('InstitutionSiteClass.institution_site_id =' . $institutionSiteId)
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
-				'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				'table' => 'academic_period',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
 			),
 			array(
 				'table' => 'quality_statuses',
 				'alias' => 'QualityStatus',
 				//  'type' => 'LEFT',
-				'conditions' => array('QualityStatus.year = SchoolYear.name',
+				'conditions' => array('QualityStatus.year = AcademicPeriod.name',
 					'QualityStatus.year =' . $year,
 					'RubricsTemplate.id = QualityStatus.rubric_template_id')
 			),
@@ -313,7 +313,7 @@ class RubricsTemplate extends QualityAppModel {
 	}
 
 	public function getLatestRubricYear($institutionSiteId) {
-		$options['order'] = array('RubricsTemplate.id', 'SchoolYear.name DESC');
+		$options['order'] = array('RubricsTemplate.id', 'AcademicPeriod.name DESC');
 		$options['recursive'] = -1;
 		$options['joins'] = array(
 			array(
@@ -322,24 +322,24 @@ class RubricsTemplate extends QualityAppModel {
 				'conditions' => array('InstitutionSiteClass.institution_site_id =' . $institutionSiteId)
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
-				'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				'table' => 'academic_period',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
 			),
 			array(
 				'table' => 'quality_statuses',
 				'alias' => 'QualityStatus',
 				//  'type' => 'LEFT',
-				'conditions' => array('QualityStatus.year = SchoolYear.name',
+				'conditions' => array('QualityStatus.year = AcademicPeriod.name',
 					'RubricsTemplate.id = QualityStatus.rubric_template_id')
 			),
 		);
-		$options['fields'] = array('SchoolYear.name');
+		$options['fields'] = array('AcademicPeriod.name');
 		//$options['conditions'] = array('RubricTemplate.id' => 'QualityStatus.rubric_template_id');
 		$data = $this->find('first', $options);
 
 		if (!empty($data)) {
-			return $data['SchoolYear']['name'];
+			return $data['AcademicPeriod']['name'];
 		} else {
 			return date('Y');
 		}

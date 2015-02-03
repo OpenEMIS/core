@@ -15,11 +15,14 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffHealthMedication extends StaffAppModel {
-	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('start_date', 'end_date'));
+	public $actsAs = array(
+        'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+        'ControllerAction', 
+        'DatePicker' => array('start_date', 'end_date')
+    );
 	
 	public $belongsTo = array(
-		//'Staff',
+		'Staff.Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'

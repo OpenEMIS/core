@@ -21,14 +21,14 @@ class StaffReport extends StaffAppModel {
     public $actsAs = array('ControllerAction');
     public $staffId = '';
     public $institutionSiteId = '';
-    public $schoolYear = '';
+    public $academicPeriod = '';
     private $ReportData = array(); //param 1 name ; param2 type
     private $reportMapping = array(
         'QA Report' => array(
             'Model' => 'InstitutionSite',
             'fields' => array(
-                'SchoolYear' => array(
-                    'name AS Year' => ''
+                'AcademicPeriod' => array(
+                    'name AS AcademicPeriod' => ''
                 ),
                 'InstitutionSite' => array(
                     //'name AS InstitutionSiteName' => '',
@@ -58,8 +58,8 @@ class StaffReport extends StaffAppModel {
         'Visit Report' => array(
             'Model' => 'QualityInstitutionVisit',
             'fields' => array(
-                'SchoolYear' => array(
-                    'name' => 'School Year'
+                'AcademicPeriod' => array(
+                    'name' => 'Academic Period'
                 ),
                 'InstitutionSite' => array(
                     'name' => 'Institution Name',
@@ -138,9 +138,9 @@ class StaffReport extends StaffAppModel {
                 $options['conditions'] = $cond;
                 $options['joins'] = array(
                     array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
-                        'conditions' => array('QualityInstitutionVisit.school_year_id = SchoolYear.id')
+                        'table' => 'academic_periods',
+                        'alias' => 'AcademicPeriod',
+                        'conditions' => array('QualityInstitutionVisit.academic_period_id = AcademicPeriod.id')
                     ),
                     array(
                         'table' => 'institution_sites',
@@ -187,7 +187,7 @@ class StaffReport extends StaffAppModel {
                     )
                 );
 				
-				$modal->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.last_name)";
+				$modal->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.middle_name,' ',Staff.third_name,' ',Staff.last_name)";
 				$modal->virtualFields['evaluator_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.last_name)";
             } else if ($this->reportMapping[$name]['Model'] == 'InstitutionSite') {
 
@@ -203,10 +203,10 @@ class StaffReport extends StaffAppModel {
                         )
                     ),
                     array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
+                        'table' => 'academic_periods',
+                        'alias' => 'AcademicPeriod',
                       //  'type' => 'LEFT',
-                        'conditions' => array('SchoolYear.id = QualityInstitutionRubric.school_year_id',)
+                        'conditions' => array('AcademicPeriod.id = QualityInstitutionRubric.academic_period_id',)
                     ),
                   array(
                         'table' => 'institution_site_classes',
@@ -239,7 +239,7 @@ class StaffReport extends StaffAppModel {
                     array(
                         'table' => 'quality_statuses',
                         'alias' => 'QualityStatus',
-                        'conditions' => array('QualityStatus.year = SchoolYear.name')
+                        'conditions' => array('QualityStatus.year = AcademicPeriod.name')
                     ),
                     
                      array(
@@ -294,7 +294,7 @@ class StaffReport extends StaffAppModel {
                         ),
                     ),
                 );
-                $options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
+                $options['order'] = array('AcademicPeriod.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
                 $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
                 
             }
@@ -311,13 +311,13 @@ class StaffReport extends StaffAppModel {
         $dateFormat = 'd F, Y';
 
         if ($name == 'QA Report') {
-            $header = array(array('Year'), array('Institution Name'), array('Institution Code'), array('Class'), array('Grade'));
+            $header = array(array('Academic Period'), array('Institution Name'), array('Institution Code'), array('Class'), array('Grade'));
             $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
             $newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
             $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header);  //pr($newData);die;
             if(!empty($data)){
                 $this->institutionSiteId = $data[0]['InstitutionSite']['InstitutionSiteId'];
-                $this->schoolYear = $data[0]['SchoolYear']['Year'];
+                $this->academicPeriod = $data[0]['AcademicPeriod']['AcademicPeriod'];
             }
         }
 
@@ -429,10 +429,10 @@ class StaffReport extends StaffAppModel {
 		
 		$QualityInstitutionRubric->unbindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass')));
 		$data = $QualityInstitutionRubric->find('first', array(
-			//'fields' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
-			'order' => array('SchoolYear.name DESC', ),
-			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteSectionGrade.*'),
-			'group' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
+			//'fields' => array('AcademicPeriod.name', 'QualityInstitutionRubric.rubric_template_id'),
+			'order' => array('AcademicPeriod.name DESC', ),
+			'fields' => array('AcademicPeriod.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteSectionGrade.*'),
+			'group' => array('AcademicPeriod.name', 'QualityInstitutionRubric.rubric_template_id'),
 			'conditions' => array('QualityInstitutionRubric.institution_site_id' => $institutionSiteId, 'Staff.id' => $this->staffId),
 			'joins' => array(
 				array(
@@ -451,7 +451,7 @@ class StaffReport extends StaffAppModel {
 			)
 		));
 
-		$year = !empty($data['SchoolYear']['name'])?$data['SchoolYear']['name'] : NULL;
+		$year = !empty($data['AcademicPeriod']['name'])?$data['AcademicPeriod']['name'] : NULL;
 		$gradeId = !empty($data['InstitutionSiteSectionGrade']['education_grade_id'])?$data['InstitutionSiteSectionGrade']['education_grade_id'] : NULL;
 
 		$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');

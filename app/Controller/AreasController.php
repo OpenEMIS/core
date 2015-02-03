@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class AreasController extends AppController {
-	public $uses = array('Area', 'AreaLevel', 'AreaEducation', 'AreaEducationLevel');
+	public $uses = array('Area', 'AreaLevel', 'AreaAdministrative', 'AreaAdministrativeLevel');
 	
 	public $modules = array(
 		'Area',
 		'AreaLevel',
-		'AreaEducation',
-		'AreaEducationLevel'
+		'AreaAdministrative',
+		'AreaAdministrativeLevel'
 	);
 	
 	public function beforeFilter() {
@@ -33,11 +33,25 @@ class AreasController extends AppController {
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
 		
 		$areaOptions = array(
-			'Area' => __('Areas'),
-			'AreaLevel' => __('Area Levels'),
-			'AreaEducation' => __('Areas (Education)'),
-			'AreaEducationLevel' => __('Area Levels (Education)')
+			'Area' => __('Areas (Education)'),
+			'AreaLevel' => __('Area Levels (Education)'),
+			'AreaAdministrative' => __('Areas (Administrative)'),
+			'AreaAdministrativeLevel' => __('Area Levels (Administrative)')
 		);
+
+		$areas = array('Area', 'AreaAdministrative');
+		foreach ($areas as $key => $area) {
+			$orphanConditions = array();
+	        $orphanConditions['conditions']['OR'] = array(
+				$this->{$area}->alias.'.lft' => NULL,
+				$this->{$area}->alias.'.rght' => NULL
+	        );
+	        $this->{$area}->contain();
+	        $orphans = $this->{$area}->find('all', $orphanConditions);
+	        if(!empty($orphans)) {
+				$this->recover($key);
+	        }
+		}
 		
 		if(array_key_exists($this->action, $areaOptions)) {
 			$this->set('selectedAction', $this->action);
@@ -52,9 +66,9 @@ class AreasController extends AppController {
 		$nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
 		$shellCmd = sprintf($nohup, $cmd, APP);
 		$this->log($shellCmd, 'debug');
-		pr($shellCmd);
+		//pr($shellCmd);
 		$pid = exec($shellCmd);
-		pr($pid);
+		//pr($pid);
 	}
 	
 	public function index() {
@@ -63,14 +77,22 @@ class AreasController extends AppController {
 	
 	public function ajaxGetAreaOptions($model='Area', $parentId=0) {
 		$this->layout = 'ajax';
-		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModels = array('Area' => 'AreaLevel', 'AreaAdministrative' => 'AreaAdministrativeLevel');
 		$levelModel = $levelModels[$model];
 		if($parentId > 0) {
+			$worldId = $this->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
 			$data = $this->{$model}->find('all', array(
-				'conditions' => array('parent_id' => $parentId, 'visible' => 1),
-				'order' => array('order')
+				'conditions' => array(
+					$model.'.parent_id' => $parentId,
+					$model.'.visible' => 1
+				),
+				'order' => array($model.'.order')
 			));
-			$this->set(compact('data', 'model', 'levelModel'));
+			$this->set(compact('data', 'model', 'levelModel', 'parentId', 'worldId'));
 		}
+	}
+
+	public function ajaxReloadAreaDiv($model='Area', $controller='', $field='area_id', $parentId=0) {
+		$this->set(compact('model', 'controller', 'field', 'parentId'));
 	}
 }

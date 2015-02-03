@@ -11,7 +11,8 @@ $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'commentsAdd'));
 echo $this->Form->create($model, $formOptions);
-echo $this->FormUtility->datepicker('comment_date', array('id' => 'CommentDate'));
+$tempDate = isset($this->data[$model]) ? $this->data[$model]['comment_date'] : false;
+echo $this->FormUtility->datepicker('comment_date', array('id' => 'CommentDate', 'data-date' => $tempDate));
 echo $this->Form->input('title');
 echo $this->Form->input('comment', array('type' => 'textarea'));
 

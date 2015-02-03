@@ -24,14 +24,14 @@ class AlertAttendanceTask extends AlertTask {
 		'Alerts.AlertLog',
 		'SecurityRole',
 		'InstitutionSiteStudentAbsence',
-		'SchoolYear',
+		'AcademicPeriod',
 		'SecurityUser',
 		'Students.Student'
 	);
 	
 	public function execute($args) {
 		$studentId = $args[0];
-		$schoolYearId = $args[1];
+		$academicPeriodId = $args[1];
 		$institutionSiteId = $args[2];
 		
 		$alert = $this->getObject();
@@ -43,7 +43,7 @@ class AlertAttendanceTask extends AlertTask {
 		$this->log('roleIds:', 'alert_processes');
 		$this->log($roleIds, 'alert_processes');
 		
-		$triggered = $this->checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold);
+		$triggered = $this->checkStudentAbsenceAlert($studentId, $academicPeriodId, $institutionSiteId, $threshold);
 		
 		$this->log('triggered:', 'alert_processes');
 		$this->log($triggered, 'alert_processes');
@@ -85,7 +85,7 @@ class AlertAttendanceTask extends AlertTask {
 			$this->log('data:', 'alert_processes');
 			$this->log($data, 'alert_processes');
 			
-			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.last_name'));
+			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name'));
 			
 			$this->log('studentData:', 'alert_processes');
 			$this->log($studentData, 'alert_processes');
@@ -103,7 +103,7 @@ class AlertAttendanceTask extends AlertTask {
 					$this->AlertLog->create();
 					
 					$message .= '<p>' . __('Student') . ': ';
-					$message .= $student['first_name'] . ' ' . $student['last_name'] . ' (' . $student['identification_no'] . ')';
+					$message .= ModelHelper::getName($student) . ' (' . $student['identification_no'] . ')';
 					$message .= '<br/>' . __('Institution') . ': ';
 					$message .= $InstitutionSite['name'] . ' (' . $InstitutionSite['code'] . ')';
 					$message .= '</p>';
@@ -130,7 +130,7 @@ class AlertAttendanceTask extends AlertTask {
 		return $alertLogIds;
 	}
 	
-	public function checkStudentAbsenceAlert($studentId, $schoolYearId, $institutionSiteId, $threshold){
+	public function checkStudentAbsenceAlert($studentId, $academicPeriodId, $institutionSiteId, $threshold){
 		$list = $this->InstitutionSiteStudentAbsence->find('all', array(
 			'recursive' => -1,
 			'fields' => array('InstitutionSiteStudentAbsence.*'),
@@ -140,7 +140,7 @@ class AlertAttendanceTask extends AlertTask {
 					'alias' => 'InstitutionSiteSection',
 					'conditions' => array(
 						'InstitutionSiteSection.id = InstitutionSiteStudentAbsence.institution_site_section_id',
-						'InstitutionSiteSection.school_year_id' => $schoolYearId, 
+						'InstitutionSiteSection.academic_period_id' => $academicPeriodId, 
 						'InstitutionSiteSection.institution_site_id' => $institutionSiteId
 					)
 				)

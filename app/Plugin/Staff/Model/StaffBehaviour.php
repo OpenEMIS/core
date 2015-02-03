@@ -18,12 +18,10 @@ class StaffBehaviour extends StaffAppModel {
 	public $useTable = 'staff_behaviours';
 	
 	public $actsAs = array(
+		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('date_of_behaviour'),
-		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a')),
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
+		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
 	);
 	
 	public $belongsTo = array(
@@ -58,33 +56,19 @@ class StaffBehaviour extends StaffAppModel {
 			)
 		)
 	);
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-                'InstitutionSite' => array(
-                    'name' => 'Institution'
-                ),
-                'Staff' => array(
-                    'identification_no' => 'Staff OpenEMIS ID',
-                    'first_name' => '',
-                    'middle_name' => '',
-                    'last_name' => '',
-                    'preferred_name' => ''
-                ),
-                'StaffBehaviourCategory' => array(
-                    'name' => 'Category'
-                ),
-                'StaffBehaviour' => array(
-                    'date_of_behaviour' => 'Date',
-                    'title' => 'Title',
-                    'description' => 'Description',
-                    'action' => 'Action'
-                )
-            ),
-            'fileName' => 'Report_Staff_Behaviour'
-		)
-	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		if (!empty($this->controller)) { // via ControllerAction
+			$id = CakeSession::read('InstitutionSite.id');
+			$conditions = array('InstitutionSite.id' => $id);
+		} else {
+			$id = CakeSession::read('Staff.id');
+			$conditions = array('Staff.id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -97,15 +81,23 @@ class StaffBehaviour extends StaffAppModel {
 		$this->fields['title']['labelKey'] = 'name';
 		
 		if ($this->action == 'add' || $this->action == 'edit' || $this->action == 'view') {
-			if ($this->Session->check($this->alias.'.staffId')) {
-				$staffId = $this->Session->read($this->alias.'.staffId');
-				
+			$staffId = null;
+			if ($this->controller->name == 'InstitutionSites') {
+				if ($this->Session->check($this->alias.'.staffId')) {
+					$staffId = $this->Session->read($this->alias.'.staffId');
+				}
+			} else {
+				if ($this->Session->check('Staff.id')) {
+					$staffId = $this->Session->read('Staff.id');
+				}
+			}
+			if(isset($staffId)) {
 				$this->Staff->contain();
 				$obj = $this->Staff->findById($staffId);
 				
 				$this->fields['staff_name']['visible'] = true;
 				$this->fields['staff_name']['type'] = 'disabled';
-				$this->fields['staff_name']['value'] = trim($obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']);
+				$this->fields['staff_name']['value'] = ModelHelper::getName($obj['Staff']);
 				$this->fields['staff_name']['order'] = 0;
 				$this->setFieldOrder('staff_name', 0);
 				
@@ -136,7 +128,7 @@ class StaffBehaviour extends StaffAppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
 		$this->InstitutionSiteStaff->contain(array(
-			'Staff' => array('fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name')),
+			'Staff' => array('fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name')),
 			'StaffType' => array('fields' => array('StaffType.name')),
 			'StaffStatus' => array('fields' => array('StaffStatus.name'))
 		));
@@ -185,47 +177,5 @@ class StaffBehaviour extends StaffAppModel {
 			$data = $this->findAllByStaffId($staffId, array(), array('StaffBehaviour.date_of_behaviour'));
 			$this->setVar(compact('data'));
 		}
-	}
-	
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-		$options = array();
-		
-		if ($index == 1) {
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Staff.identification_no', 'StaffBehaviour.date_of_behaviour', 'StaffBehaviour.id');
-			$options['conditions'] = array('StaffBehaviour.institution_site_id' => $institutionSiteId);
-			
-			$this->contain(array(
-				'Staff',
-				'InstitutionSite' => array('fields' => array('InstitutionSite.name')),
-				'StaffBehaviourCategory' => array('fields' => array('StaffBehaviourCategory.name'))
-			));
-		}
-		
-		$list = $this->find('all', $options);
-		$data = array();
-		
-		foreach ($list as $row) {
-			unset($row['InstitutionSite']['id']);
-			unset($row['Staff']['id']);
-			unset($row['StaffBehaviourCategory']['id']);
-			$row[$this->alias]['date_of_behaviour'] = $this->formatDateByConfig($row[$this->alias]['date_of_behaviour']);
-			$data[] = $row;
-		}
-		return $data;
-	}
-
-	public function reportsGetFileName($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }

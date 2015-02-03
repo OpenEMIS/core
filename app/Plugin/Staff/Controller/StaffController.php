@@ -21,7 +21,7 @@ class StaffController extends StaffAppController {
 	public $staffId;
 	public $staffObj;
 	public $uses = array(
-		'Area',
+		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteType',
 		'InstitutionSiteStaff',
@@ -32,7 +32,7 @@ class StaffController extends StaffAppController {
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomValue',
 		'Staff.StaffAttendance',
-		'SchoolYear',
+		'AcademicPeriod',
 		'ConfigItem',
 		'SalaryAdditionType',
 		'SalaryDeductionType',
@@ -82,7 +82,8 @@ class StaffController extends StaffAppController {
 		'InstitutionSiteStaff',
 		'Position' => array('plugin' => 'Staff'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),
-		'StaffClass' => array('plugin' => 'Staff')
+		'StaffClass' => array('plugin' => 'Staff'),
+		'StaffSection' => array('plugin' => 'Staff')
 	);
 
 	public function beforeFilter() {
@@ -128,14 +129,24 @@ class StaffController extends StaffAppController {
 			$searchKey = Sanitize::escape($this->request->data['Staff']['search']);
 		}
 
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$defaultIdentity = $IdentityType->find('first', array(
+			'contain' => array('FieldOption'),
+			'conditions' => array('FieldOption.code' => $IdentityType->alias),
+			'order' => array('IdentityType.default DESC')
+		));
+
 		$conditions = array(
 			'SearchKey' => $searchKey,
 			'AdvancedSearch' => $this->Session->check('Staff.AdvancedSearch') ? $this->Session->read('Staff.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id')
+			'userId' => $this->Auth->user('id'),
+			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$data = $this->Search->search($this->Staff, $conditions);
+		$order = empty($this->params->named['sort']) ? array('Staff.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->Staff, $conditions, $order);
+		$data = $this->Staff->attachLatestInstitutionInfo($data);
 		
 		if (empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
@@ -146,6 +157,7 @@ class StaffController extends StaffAppController {
 			$this->Message->alert('general.noData');
 		}
 		$this->set('data', $data);
+		$this->set('defaultIdentity', $defaultIdentity['IdentityType']);
 	}
 
 	public function advanced() {
@@ -234,7 +246,7 @@ class StaffController extends StaffAppController {
 		$this->Staff->recursive = 0;
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
-		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);
@@ -281,16 +293,20 @@ class StaffController extends StaffAppController {
 						$this->Session->write($model . '.id', $id);
 					}
 					
-					$dataToSite['staff_id'] = $id;
-					$InstitutionSiteStaffModel->save($dataToSite);
+					if(!empty($dataToSite)){
+						$dataToSite['staff_id'] = $id;
+						$InstitutionSiteStaffModel->save($dataToSite);
+					}
 					
 					$this->Session->write($model . '.data', $this->Staff->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 					$this->Wizard->next();
 				} else {
-					$dataToSite['staff_id'] = $id;
-					$InstitutionSiteStaffModel->save($dataToSite);
+					if(!empty($dataToSite)){
+						$dataToSite['staff_id'] = $id;
+						$InstitutionSiteStaffModel->save($dataToSite);
+					}
 					
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
@@ -331,6 +347,10 @@ class StaffController extends StaffAppController {
 		$this->redirect(array('action' => 'index'));
 	}
 
+	public function excel() {
+		$this->Staff->excel();
+	}
+
 	public function history() {
 		$this->Navigation->addCrumb('History');
 		$staffId = $this->Session->read('Staff.id');
@@ -368,15 +388,15 @@ class StaffController extends StaffAppController {
 		$this->Navigation->addCrumb('Absence');
 		$header = __('Absence');
 		
-		$yearList = $this->SchoolYear->getYearList();
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
 		
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		}else{
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
 		
 		$monthOptions = $this->generateMonthOptions();
@@ -390,7 +410,7 @@ class StaffController extends StaffAppController {
 			$monthId = $currentMonthId;
 		}
 		
-		$absenceData = $this->InstitutionSiteStaffAbsence->getStaffAbsenceDataByMonth($staffId, $yearId, $monthId);
+		$absenceData = $this->InstitutionSiteStaffAbsence->getStaffAbsenceDataByMonth($staffId, $academicPeriodId, $monthId);
 		//pr($absenceData);
 		$data = $absenceData;
 		
@@ -401,7 +421,7 @@ class StaffController extends StaffAppController {
 		
 		$settingWeekdays = $this->getWeekdaysBySetting();
 
-		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
+		$this->set(compact('header', 'data','academicPeriodList','academicPeriodId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
 
 	public function generateAttendanceLegend(){
@@ -425,17 +445,17 @@ class StaffController extends StaffAppController {
 		return $str;
 	}
 	
-	private function getAvailableYearId($yearList) {
-		$yearId = 0;
+	private function getAvailableAcademicPeriodId($academicPeriodList) {
+		$academicPeriodId = 0;
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	public function getUniqueID() {

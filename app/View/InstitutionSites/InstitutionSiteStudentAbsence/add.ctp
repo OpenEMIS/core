@@ -30,9 +30,9 @@ $formOptions['type'] = 'file';
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('InstitutionSiteStudentAbsence', $formOptions);
 
-echo $this->Form->input('school_year_id', array(
-	'options' => $yearOptions,
-	'value' => $selectedYear,
+echo $this->Form->input('academic_period_id', array(
+	'options' => $academicPeriodOptions,
+	'value' => $selectedAcademicPeriod,
 	'onchange' => 'jsForm.change(this)',
 	'url' => $this->params['controller'] . "/$model/index"
 ));
