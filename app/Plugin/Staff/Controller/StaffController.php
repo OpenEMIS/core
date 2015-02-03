@@ -295,7 +295,9 @@ class StaffController extends StaffAppController {
 					
 					if(!empty($dataToSite)){
 						$dataToSite['staff_id'] = $id;
-						$InstitutionSiteStaffModel->save($dataToSite);
+						if (empty($staffIdSession)) {
+							$InstitutionSiteStaffModel->save($dataToSite);
+						}
 					}
 					
 					$this->Session->write($model . '.data', $this->Staff->findById($id));
@@ -305,7 +307,9 @@ class StaffController extends StaffAppController {
 				} else {
 					if(!empty($dataToSite)){
 						$dataToSite['staff_id'] = $id;
-						$InstitutionSiteStaffModel->save($dataToSite);
+						if (empty($staffIdSession)) {
+							$InstitutionSiteStaffModel->save($dataToSite);
+						}
 					}
 					
 					$this->Message->alert('general.edit.success');
