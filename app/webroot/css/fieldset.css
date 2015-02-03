@@ -128,3 +128,4 @@ fieldset.section_group .form-control {
 }
 
 fieldset .table { margin-bottom: 0; }
+fieldset.form .table { margin-bottom: 10px; }

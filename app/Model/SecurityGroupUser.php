@@ -34,9 +34,10 @@ class SecurityGroupUser extends AppModel {
 	
 	public function autocomplete($search, $exclude) {
 		$list = $this->SecurityUser->find('all', array(
-			'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
+			'fields' => array('SecurityUser.id', 'SecurityUser.username', 'SecurityUser.first_name', 'SecurityUser.last_name'),
 			'conditions' => array(
 				'OR' => array(
+					'SecurityUser.username LIKE' => $search,
 					'SecurityUser.first_name LIKE' => $search,
 					'SecurityUser.last_name LIKE' => $search
 				)
@@ -48,8 +49,8 @@ class SecurityGroupUser extends AppModel {
 		foreach($list as $obj) {
 			$user = $obj['SecurityUser'];
 			$data[] = array(
-				'label' => trim(sprintf('%s %s', $user['first_name'], $user['last_name'])),
-				'value' => array('value-id' => $user['id'], 'user-name' => trim(sprintf('%s %s', $user['first_name'], $user['last_name'])))
+				'label' => trim(sprintf('(%s) %s %s', $user['username'], $user['first_name'], $user['last_name'])),
+				'value' => array('value-id' => $user['id'], 'user-name' => trim(sprintf('(%s) %s %s', $user['username'], $user['first_name'], $user['last_name'])))
 			);
 		}
 		return $data;

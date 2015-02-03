@@ -2,6 +2,12 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
 
+$this->start('contentActions');
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
+	}
+$this->end();
+
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/StudentBehaviour/controls');
 ?>
@@ -20,14 +26,10 @@ echo $this->element('../InstitutionSites/StudentBehaviour/controls');
 			<?php 
 			foreach ($data as $obj) : 
 				$idNo = $obj['Student']['identification_no'];
-				$firstName = $obj['Student']['first_name'];
-				$middleName = $obj['Student']['middle_name'];
-				$lastName = $obj['Student']['last_name'];
-				$fullName = trim($firstName . ' ' . $middleName) . ' ' . $lastName;
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => $model, 'index', $obj['Student']['id'])) ?></td>
-					<td><?php echo trim($fullName) ?></td>
+					<td><?php echo $this->Model->getName($obj['Student']) ?></td>
 					<td><?php echo $obj['EducationGrade']['name'] ?></td>
 				</tr>
 			<?php endforeach ?>

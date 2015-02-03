@@ -9,12 +9,12 @@ $this->assign('contentHeader', __('Behaviour'));
 
 $this->start('contentActions');
 if ($_edit && $isEditable) {
-	echo $this->Html->link(__('Edit'), array('action' => 'behaviourEdit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'behaviourEdit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div class="table-responsive">

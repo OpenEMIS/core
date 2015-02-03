@@ -82,8 +82,8 @@ class Area extends AppModel {
 			$this->fields['area_level_id']['dataField'] = 'name';
 		}
 		
-		$this->Navigation->addCrumb('Areas');
-		$this->setVar('contentHeader', __('Areas'));
+		$this->Navigation->addCrumb('Areas (Education)');
+		$this->setVar('contentHeader', __('Areas (Education)'));
     }
 	
 	public function index() {
@@ -95,6 +95,7 @@ class Area extends AppModel {
 		$maxLevel = $this->AreaLevel->field('level', null, 'level DESC');
 		
 		if($area !== false) {
+			$this->contain('AreaLevel');
 			$data = $this->find('all', array(
 				'conditions' => array('parent_id' => $area[$this->alias]['id']),
 				'order' => array('order')

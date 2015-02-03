@@ -15,10 +15,14 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffHealthConsultation extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('date'));
+	public $actsAs = array(
+        'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+        'ControllerAction', 
+        'DatePicker' => array('date')
+    );
 	
 	public $belongsTo = array(
-		//'Staff',
+		'Staff.Staff',
 		'HealthConsultationType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -99,7 +103,7 @@ class StaffHealthConsultation extends StaffAppModel {
         $this->render = 'add';
     }
 
-    function setup_add_edit_form($controller, $params) {
+    function setup_add_edit_form($controller, $params, $type) {
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         
         if ($controller->request->is('post') || $controller->request->is('put')) {

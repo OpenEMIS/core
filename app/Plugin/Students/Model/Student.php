@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Student extends StudentsAppModel {
 	public $actsAs = array(
+		'Excel',
 		'Search',
 		'TrackHistory' => array('historyTable' => 'Students.StudentHistory'),
 		'CascadeDelete' => array(
@@ -37,8 +38,45 @@ class Student extends StudentsAppModel {
 			)
 		)
 	);
+
+	public $belongsTo = array(
+		'AddressArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'address_area_id'
+		),
+		'BirthplaceArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'birthplace_area_id'
+		)
+	);
 	
-	public $hasMany = array('InstitutionSiteStudentFee');
+	public $hasMany = array(
+		'Students.StudentContact',
+		'Students.StudentIdentity',
+		'Students.StudentNationality',
+		'Students.StudentLanguage',
+		'Students.StudentComment',
+		'Students.StudentSpecialNeed',
+		'Students.StudentAward',
+		'Students.StudentGuardian',
+		'Students.Programme',
+		'Students.Absence',
+		'Students.StudentBehaviour',
+		'Students.StudentExtracurricular',
+		'Students.StudentBankAccount',
+		'Students.StudentFee',
+		'InstitutionSiteStudent',
+		'InstitutionSiteClassStudent',
+		'InstitutionSiteStudentFee',
+		'Students.StudentHealth',
+		'Students.StudentHealthHistory',
+		'Students.StudentHealthFamily',
+		'Students.StudentHealthImmunization',
+		'Students.StudentHealthMedication',
+		'Students.StudentHealthAllergy',
+		'Students.StudentHealthTest',
+		'Students.StudentHealthConsultation'
+	);
 	
 	public $validate = array(
 		'first_name' => array(
@@ -132,6 +170,50 @@ class Student extends StudentsAppModel {
 		)
 	);
 
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+
+		if (CakeSession::check('Student.id')) {
+			$id = CakeSession::read('Student.id');
+			$conditions = array('Student.id' => $id);
+		}
+		return $conditions;
+	}
+	public function excelGetModels() {
+		$models = parent::excelGetModels();
+		if (CakeSession::check('Student.id')) {
+			$models = array(
+				array('model' => $this),
+				array('model' => $this->StudentContact, 'name' => 'Contacts'),
+				array('model' => $this->StudentIdentity, 'name' => 'Identities'),
+				array('model' => $this->StudentNationality, 'name' => 'Nationalities'),
+				array('model' => $this->StudentGuardian, 'name' => 'Guardians'),
+				array('model' => $this->StudentLanguage, 'name' => 'Languages'),
+				array('model' => $this->StudentComment, 'name' => 'Comments'),
+				array('model' => $this->StudentSpecialNeed, 'name' => 'Special Needs'),
+				array('model' => $this->StudentAward, 'name' => 'Awards'),
+				array('model' => $this->Programme, 'name' => 'Programmes'),
+				array('model' => $this->Absence, 'name' => 'Absences'),
+				array('model' => $this->StudentBehaviour, 'name' => 'Behaviour'),
+				array('model' => $this->InstitutionSiteClassStudent, 'name' => 'Classes'),
+				array('model' => $this->StudentExtracurricular, 'name' => 'Extracurricular'),
+				array('model' => $this->StudentBankAccount, 'name' => 'Bank Accounts'),
+				array('model' => $this->StudentFee, 'name' => 'Fees'),
+				array('model' => $this->StudentHealth, 'name' => 'Health Overview'),
+				array('model' => $this->StudentHealthHistory, 'name' => 'Health History'),
+				array('model' => $this->StudentHealthFamily, 'name' => 'Health Family'),
+				array('model' => $this->StudentHealthImmunization, 'name' => 'Immunizations'),
+				array('model' => $this->StudentHealthMedication, 'name' => 'Medications'),
+				array('model' => $this->StudentHealthAllergy, 'name' => 'Allergies'),
+				array('model' => $this->StudentHealthTest, 'name' => 'Health Tests'),
+				array('model' => $this->StudentHealthConsultation, 'name' => 'Health Consulations')
+			);
+		}
+		return $models;
+	}
+	/* End Excel Behaviour */
+
 	public function checkIfStringGotNoNumber($check) {
 		$check = array_values($check);
 		$check = $check[0];
@@ -167,6 +249,7 @@ class Student extends StudentsAppModel {
 				$this->alias . '.identification_no LIKE' => $search,
 				$this->alias . '.first_name LIKE' => $search,
 				$this->alias . '.middle_name LIKE' => $search,
+				$this->alias . '.third_name LIKE' => $search,
 				$this->alias . '.last_name LIKE' => $search
 			)
 		);
@@ -176,7 +259,7 @@ class Student extends StudentsAppModel {
 			'order' => array($this->alias . '.first_name')
 		);
 		
-		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'gender', 'identification_no', 'date_of_birth');
+		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'third_name', 'gender', 'identification_no', 'date_of_birth');
 		$data = $this->find('all', $options);
 		
 		return $data;

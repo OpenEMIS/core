@@ -18,12 +18,10 @@ class StudentBehaviour extends StudentsAppModel {
 	public $useTable = 'student_behaviours';
 	
 	public $actsAs = array(
+		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('date_of_behaviour'),
-		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a')),
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
+		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
 	);
 
 	public $validate = array(
@@ -57,33 +55,19 @@ class StudentBehaviour extends StudentsAppModel {
 			'foreignKey' => 'created_user_id',
 			'type' => 'LEFT'
 	));
-	
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'Student' => array(
-					'identification_no' => 'Student OpenEMIS ID',
-					'first_name' => '',
-					'middle_name' => '',
-					'last_name' => '',
-					'preferred_name' => ''
-				),
-				'StudentBehaviourCategory' => array(
-					'name' => 'Category'
-				),
-				'StudentBehaviour' => array(
-					'date_of_behaviour' => 'Date',
-					'title' => 'Title',
-					'description' => 'Description',
-					'action' => 'Action'
-				)
-			),
-			'fileName' => 'Report_Student_Behaviour'
-		)
-	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		if (!empty($this->controller)) { // via ControllerAction
+			$id = CakeSession::read('InstitutionSite.id');
+			$conditions = array('InstitutionSite.id' => $id);
+		} else {
+			$id = CakeSession::read('Student.id');
+			$conditions = array('Student.id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -107,7 +91,7 @@ class StudentBehaviour extends StudentsAppModel {
 				
 				$this->fields['student_name']['visible'] = true;
 				$this->fields['student_name']['type'] = 'disabled';
-				$this->fields['student_name']['value'] = trim($obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']);
+				$this->fields['student_name']['value'] = ModelHelper::getName($obj['Student']);
 				$this->fields['student_name']['order'] = 0;
 				$this->setFieldOrder('student_name', 0);
 				
@@ -133,15 +117,15 @@ class StudentBehaviour extends StudentsAppModel {
 		$this->Navigation->addCrumb('Behaviour - Students');
 	}
 	
-//	public function show($selectedYear=0, $selectedClass=0) {
+//	public function show($selectedAcademicPeriod=0, $selectedClass=0) {
 //		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-//		$yearOptions = $this->InstitutionSiteClass->getYearOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
-//		if (!empty($yearOptions)) {
-//			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
-//				$selectedYear = key($yearOptions);
+//		$academicPeriodOptions = $this->InstitutionSiteClass->getAcademicPeriodOptions(array('InstitutionSiteClass.institution_site_id' => $institutionSiteId));
+//		if (!empty($academicPeriodOptions)) {
+//			if (empty($selectedAcademicPeriod) || (!empty($selectedAcademicPeriod) && !array_key_exists($selectedAcademicPeriod, $academicPeriodOptions))) {
+//				$selectedAcademicPeriod = key($academicPeriodOptions);
 //			}
 //		}
-//		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedYear);
+//		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($institutionSiteId, $selectedAcademicPeriod);
 //		if (!empty($classOptions)) {
 //			if (empty($selectedClass) || (!empty($selectedClass) && !array_key_exists($selectedClass, $classOptions))) {
 //				$selectedClass = key($classOptions);
@@ -152,33 +136,33 @@ class StudentBehaviour extends StudentsAppModel {
 //		if (empty($data)) {
 //			$this->Message->alert('general.noData');
 //		}
-//		$this->Session->write($this->alias.'.selectedYear', $selectedYear);
+//		$this->Session->write($this->alias.'.selectedAcademicPeriod', $selectedAcademicPeriod);
 //		$this->Session->write($this->alias.'.selectedClass', $selectedClass);
-//		$this->setVar(compact('data', 'yearOptions', 'classOptions', 'selectedYear', 'selectedClass'));
+//		$this->setVar(compact('data', 'academicPeriodOptions', 'classOptions', 'selectedAcademicPeriod', 'selectedClass'));
 //	}
 	
-	public function show($selectedYear=0, $selectedSection=0) {
+	public function show($selectedAcademicPeriod=0, $selectedSection=0) {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$yearOptions = $this->InstitutionSiteSection->getYearOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
-		if (!empty($yearOptions)) {
-			if (empty($selectedYear) || (!empty($selectedYear) && !array_key_exists($selectedYear, $yearOptions))) {
-				$selectedYear = key($yearOptions);
+		$academicPeriodOptions = $this->InstitutionSiteSection->getAcademicPeriodOptions(array('InstitutionSiteSection.institution_site_id' => $institutionSiteId));
+		if (!empty($academicPeriodOptions)) {
+			if (empty($selectedAcademicPeriod) || (!empty($selectedAcademicPeriod) && !array_key_exists($selectedAcademicPeriod, $academicPeriodOptions))) {
+				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 		}
-		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedYear);
+		$sectionOptions = $this->InstitutionSiteSection->getSectionListByInstitution($institutionSiteId, $selectedAcademicPeriod);
 		if (!empty($sectionOptions)) {
 			if (empty($selectedSection) || (!empty($selectedSection) && !array_key_exists($selectedSection, $sectionOptions))) {
 				$selectedSection = key($sectionOptions);
 			}
 		}
-		$data = $this->InstitutionSiteSection->InstitutionSiteSectionStudent->getStudentsBySection($selectedSection, true);
+		$data = $this->InstitutionSiteSection->InstitutionSiteSectionStudent->getStudentsBySectionWithGrades($selectedSection, true);
 		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->Session->write($this->alias.'.selectedYear', $selectedYear);
+		$this->Session->write($this->alias.'.selectedAcademicPeriod', $selectedAcademicPeriod);
 		$this->Session->write($this->alias.'.selectedSection', $selectedSection);
-		$this->setVar(compact('data', 'yearOptions', 'sectionOptions', 'selectedYear', 'selectedSection'));
+		$this->setVar(compact('data', 'academicPeriodOptions', 'sectionOptions', 'selectedAcademicPeriod', 'selectedSection'));
 	}
 	
 	public function index($studentId = 0) {
@@ -202,9 +186,9 @@ class StudentBehaviour extends StudentsAppModel {
 				$student = $this->Student->findById($studentId);
 				$data = $this->findAllByStudentIdAndInstitutionSiteId($studentId, $institutionSiteId, array(), array('StudentBehaviour.date_of_behaviour'));
 				
-				$selectedYear = $this->Session->read($this->alias.'.selectedYear');
+				$selectedAcademicPeriod = $this->Session->read($this->alias.'.selectedAcademicPeriod');
 				$selectedClass = $this->Session->read($this->alias.'.selectedClass');
-				$this->setVar(compact('data', 'student', 'selectedYear', 'selectedClass'));
+				$this->setVar(compact('data', 'student', 'selectedAcademicPeriod', 'selectedClass'));
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => get_class($this), 'show'));
@@ -219,47 +203,5 @@ class StudentBehaviour extends StudentsAppModel {
 			$data = $this->findAllByStudentId($studentId, array(), array('StudentBehaviour.date_of_behaviour'));
 			$this->setVar(compact('data'));
 		}
-	}
-	
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-		$options = array();
-		
-		if ($index == 1) {
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Student.identification_no', 'StudentBehaviour.date_of_behaviour', 'StudentBehaviour.id');
-			$options['conditions'] = array('StudentBehaviour.institution_site_id' => $institutionSiteId);
-			
-			$this->contain(array(
-				'Student',
-				'InstitutionSite' => array('fields' => array('InstitutionSite.name')),
-				'StudentBehaviourCategory' => array('fields' => array('StudentBehaviourCategory.name'))
-			));
-		}
-		
-		$list = $this->find('all', $options);
-		$data = array();
-		
-		foreach ($list as $row) {
-			unset($row['InstitutionSite']['id']);
-			unset($row['Student']['id']);
-			unset($row['StudentBehaviourCategory']['id']);
-			$row[$this->alias]['date_of_behaviour'] = $this->formatDateByConfig($row[$this->alias]['date_of_behaviour']);
-			$data[] = $row;
-		}
-		return $data;
-	}
-
-	public function reportsGetFileName($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
 	}
 }

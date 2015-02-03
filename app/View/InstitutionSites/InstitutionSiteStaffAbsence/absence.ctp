@@ -8,7 +8,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $yearId, $weekId), array('class' => 'divider'));
+echo $this->Html->link(__('Attendance'), array('action' => $model, 'index' , $academicPeriodId, $weekId), array('class' => 'divider'));
 if ($_add) {
 	echo $this->Html->link(__('Add'), array('action' => $model, 'add'), array('class' => 'divider'));
 }
@@ -41,7 +41,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						$id = $arrItems['InstitutionSiteStaffAbsence']['id'];
 						$staff = $arrItems['Staff'];
 
-						$staffName = sprintf('%s %s %s %s', $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']);
+						$staffName = $this->Model->getName($staff);
 
 						$firstDateAbsentOriginal = $arrItems['InstitutionSiteStaffAbsence']['first_date_absent'];
 						$lastDateAbsentOriginal = $arrItems['InstitutionSiteStaffAbsence']['last_date_absent'];

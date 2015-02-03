@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright ¬© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -76,6 +76,7 @@ class NavigationComponent extends Component {
 	public function apply($controller, $action) {
 		$navigations = array();
 		$found = false;
+		$divider = '|';
 		//pr($this->navigations);
 		foreach($this->navigations as $module => $obj) {
 			foreach($obj['links'] as $links) {
@@ -83,6 +84,12 @@ class NavigationComponent extends Component {
 					if(!is_array($linkList)) continue;
 					foreach($linkList as $link => &$attr) {
 						if(!is_array($attr)) continue;
+
+						$controllerList = explode($divider, $attr['controller']);
+						if(sizeof($controllerList) > 1) {
+							$attr['controller'] = $controllerList[0];
+						}
+
 						$_controller = $attr['controller'];
 						$pattern = $attr['pattern'];
 						
@@ -124,7 +131,8 @@ class NavigationComponent extends Component {
 						foreach ($patternList as $p) {
 							$map = explode('.', $p);
 							
-							if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $map[0]), $action)) {
+							//if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $map[0]), $action)) {
+							if(!$found && in_array($controller, $controllerList) && preg_match(sprintf('/^%s/i', $map[0]), $action)) {
 								if (count($map) == 1) {
 									$found = true;
 									$attr['selected'] = true;

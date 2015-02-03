@@ -24,7 +24,7 @@ $this->end();
 $this->start('contentBody');
 
 $student = $obj['Student'];
-$studentIdName = sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']);
+$studentIdName = $this->Model->getName($student, array('openEmisId'=>true));
 
 $filesList = '';
 foreach($attachments AS $objItem){

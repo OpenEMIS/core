@@ -25,7 +25,7 @@ class ReportsNavigationComponent extends Component {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Report', true);
 		$navigationComponent->ignoreLinks($links, 'Reports');
-		return array('Reports' => array('controller' => 'Reports', 'action' => 'InstitutionGeneral', 'links' => $links));
+		return array('Reports' => array('controller' => 'Reports', 'links' => $links));
 	}
 }
 ?>

@@ -41,8 +41,8 @@ class QualityBatchReport extends QualityAppModel {
 			'offset' => null,
 			'joins' => $joins,
 			'conditions' => null,
-			'group' => array('SchoolYear.name', 'InstitutionSite.id', 'InstitutionSiteClass.id', /* 'EducationGrade.id', */ 'RubricTemplate.id', 'RubricTemplateHeader.id'),
-			'order' => array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order')
+			'group' => array('AcademicPeriod.name', 'InstitutionSite.id', 'InstitutionSiteClass.id', /* 'EducationGrade.id', */ 'RubricTemplate.id', 'RubricTemplateHeader.id'),
+			'order' => array('AcademicPeriod.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order')
 				), $InstitutionSite);
 
 
@@ -83,7 +83,7 @@ class QualityBatchReport extends QualityAppModel {
 			'joins' => $joins,
 			'conditions' => null,
 			'group' => array('InstitutionSiteClass.id', 'RubricTemplate.id'),
-			'order' => array('InstitutionSite.name', 'SchoolYear.name DESC', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id')
+			'order' => array('InstitutionSite.name', 'AcademicPeriod.name DESC', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id')
 				), $InstitutionSite);
 
 		$query = '(' . $query . ')';
@@ -98,8 +98,8 @@ class QualityBatchReport extends QualityAppModel {
 			'offset' => null,
 			'joins' => array(),
 			'conditions' => null,
-			'group' => array('Year', 'RubricId', 'InstitutionSiteId', 'GradeId'),
-			'order' => array('InstitutionName', 'Year DESC', 'Grade', 'Class')
+			'group' => array('AcademicPeriod', 'RubricId', 'InstitutionSiteId', 'GradeId'),
+			'order' => array('InstitutionName', 'AcademicPeriod DESC', 'Grade', 'Class')
 				), $InstitutionSite);
 
 
@@ -140,7 +140,7 @@ class QualityBatchReport extends QualityAppModel {
 			'joins' => $joins,
 			'conditions' => null,
 			'group' => array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateSubheader.id'),
-			'order' => array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order')
+			'order' => array('AcademicPeriod.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order')
 				), $InstitutionSite);
 
 		$query = '(' . $query . ')';
@@ -178,7 +178,7 @@ class QualityBatchReport extends QualityAppModel {
 	//QA Local Schools Report function 
 	public function getLocalSchoolDisplayFieldTable() {
 		$fields = array(
-			'SchoolYear.name AS Year',
+			'AcademicPeriod.name AS AcademicPeriod',
 			'Area.name AS Area',
 			'InstitutionSite.name AS InstitutionName',
 			'InstitutionSite.code AS InstitutionCode',
@@ -189,7 +189,7 @@ class QualityBatchReport extends QualityAppModel {
 			'InstitutionSiteClass.name AS Class',
 			'InstitutionSiteClass.id AS ClassId',
 			'FieldOptionValues.name AS StaffType',
-			'CONCAT(Staff.first_name," ",Staff.last_name) AS full_name',
+			'CONCAT(Staff.first_name," ",Staff.middle_name," ",Staff.third_name," ",Staff.last_name) AS full_name',
 			'RubricTemplate.name AS RubricName',
 			'RubricTemplate.id AS RubricId',
 			'RubricTemplateHeader.title AS RubricHeader',
@@ -237,9 +237,9 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
-				'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
 			),
 			array(
 				'table' => 'quality_institution_rubrics',
@@ -248,7 +248,7 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array(
 					'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
 					// 'QualityInstitutionRubric.rubric_template_id = RubricTemplate.id',
-					'QualityInstitutionRubric.school_year_id = SchoolYear.id',
+					'QualityInstitutionRubric.academic_period_id = AcademicPeriod.id',
 					'QualityInstitutionRubric.institution_site_id = InstitutionSite.id'
 				)
 			),
@@ -264,10 +264,10 @@ class QualityBatchReport extends QualityAppModel {
 				'type' => 'LEFT',
 				'conditions' => array(
 					'InstitutionSiteStaff.staff_id = Staff.id',
-					//'InstitutionSiteStaff.start_year <= SchoolYear.start_year',
+					//'InstitutionSiteStaff.start_year <= AcademicPeriod.start_year',
 					'InstitutionSiteStaff.institution_site_id = QualityInstitutionRubric.institution_site_id',
 					'OR' => array(
-						'InstitutionSiteStaff.end_year >= SchoolYear.end_year', 'InstitutionSiteStaff.end_year is null'
+						'InstitutionSiteStaff.end_year >= AcademicPeriod.end_year', 'InstitutionSiteStaff.end_year is null'
 					)
 				)
 			),
@@ -294,7 +294,7 @@ class QualityBatchReport extends QualityAppModel {
 			array(
 				'table' => 'quality_statuses',
 				'alias' => 'QualityStatus',
-				'conditions' => array('QualityStatus.rubric_template_id = RubricTemplate.id', 'QualityStatus.year = SchoolYear.name')
+				'conditions' => array('QualityStatus.rubric_template_id = RubricTemplate.id', 'QualityStatus.year = AcademicPeriod.name')
 			),
 			array(
 				'table' => 'rubrics_template_headers',
@@ -352,7 +352,7 @@ class QualityBatchReport extends QualityAppModel {
 
 		if ($type == 'base') {
 			$fields = array(
-				'SchoolYear.name AS Year',
+				'AcademicPeriod.name AS AcademicPeriod',
 				//'Institution.name AS InstitutionName',
 				'InstitutionSite.name AS InstitutionName',
 				'InstitutionSite.code AS InstitutionCode',
@@ -368,7 +368,7 @@ class QualityBatchReport extends QualityAppModel {
 			);
 		} else {
 			$fields = array(
-				'Year',
+				'AcademicPeriod',
 				//'InstitutionName',
 				'InstitutionName',
 				'InstitutionCode',
@@ -408,15 +408,15 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
 				'type' => 'LEFT',
-				'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
 			),
 			array(
 				'table' => 'quality_statuses',
 				'alias' => 'QualityStatus',
-				'conditions' => array('QualityStatus.year = SchoolYear.name')
+				'conditions' => array('QualityStatus.year = AcademicPeriod.name')
 			),
 			array(
 				'table' => 'rubrics_templates',
@@ -431,7 +431,7 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array(
 					'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
 					'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
-					'SchoolYear.id = QualityInstitutionRubric.school_year_id'
+					'AcademicPeriod.id = QualityInstitutionRubric.academic_period_id'
 				)
 			),
 			array(
@@ -507,15 +507,15 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array('EducationGrade.id = InstitutionSiteSectionGrade.education_grade_id')
 			),
 			array(
-				'table' => 'school_years',
-				'alias' => 'SchoolYear',
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
 				'type' => 'LEFT',
-				'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
 			),
 			array(
 				'table' => 'quality_statuses',
 				'alias' => 'QualityStatus',
-				'conditions' => array('QualityStatus.year = SchoolYear.name')
+				'conditions' => array('QualityStatus.year = AcademicPeriod.name')
 			),
 			array(
 				'table' => 'rubrics_templates',
@@ -530,7 +530,7 @@ class QualityBatchReport extends QualityAppModel {
 				'conditions' => array(
 					'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
 					'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
-					'SchoolYear.id = QualityInstitutionRubric.school_year_id'
+					'AcademicPeriod.id = QualityInstitutionRubric.academic_period_id'
 				)
 			),
 			array(
@@ -584,7 +584,7 @@ class QualityBatchReport extends QualityAppModel {
 
 		if ($type == 'base') {
 			$fields = array(
-				'SchoolYear.name AS Year',
+				'AcademicPeriod.name AS AcademicPeriod',
 				'InstitutionSite.name AS InstitutionName',
 				'InstitutionSite.code AS InstitutionCode',
 				'InstitutionSiteClass.name AS Class',
@@ -597,11 +597,11 @@ class QualityBatchReport extends QualityAppModel {
 				'RubricTemplateSubheader.id as subId',
 				'RubricTemplateItem.id AS ques',
 				'QualityInstitutionRubricAnswer.id AS selected',
-				'CONCAT(Staff.first_name," ",Staff.last_name) AS StaffName',
+				'CONCAT(Staff.first_name," ",Staff.middle_name," ",Staff.third_name," ",Staff.last_name) AS StaffName',
 			);
 		} else {
 			$fields = array(
-				'Year', 'InstitutionName', 'InstitutionCode', 'Grade', 'Class', 'StaffName', 'RubricName', 'COUNT(RubricName) AS TotalQuestions', 'COUNT(selected) AS TotalAnswered'
+				'AcademicPeriod', 'InstitutionName', 'InstitutionCode', 'Grade', 'Class', 'StaffName', 'RubricName', 'COUNT(RubricName) AS TotalQuestions', 'COUNT(selected) AS TotalAnswered'
 			);
 		}
 
@@ -611,9 +611,9 @@ class QualityBatchReport extends QualityAppModel {
 	//Batch function methods
 
 	public function generateQASchoolsReport($data) {
-		$header = array(array('Year'), array('Area'), array('Institution Name'), array('Institution Code'), array('Locality'), array('Grade'), array('Class'), array('Staff Name'), array('Staff Type'));
-		//$formatMapping = array('SchoolYear' => '','Area' => '','SchoolYear' => '','SchoolYear' => '','SchoolYear' => '','SchoolYear' => '','SchoolYear' => '',);
-		$formatMapping = array('SchoolYear' => '', 'Area' => '', 'InstitutionSite' => '', 'InstitutionSiteLocality' => '', 'EducationGrade' => '', 'InstitutionSiteClass' => '', 'Staff' => 'full_name');
+		$header = array(array('AcademicPeriod'), array('Area'), array('Institution Name'), array('Institution Code'), array('Locality'), array('Grade'), array('Class'), array('Staff Name'), array('Staff Type'));
+		//$formatMapping = array('AcademicPeriod' => '','Area' => '','AcademicPeriod' => '','AcademicPeriod' => '','AcademicPeriod' => '','AcademicPeriod' => '','AcademicPeriod' => '',);
+		$formatMapping = array('AcademicPeriod' => '', 'Area' => '', 'InstitutionSite' => '', 'InstitutionSiteLocality' => '', 'EducationGrade' => '', 'InstitutionSiteClass' => '', 'Staff' => 'full_name');
 		$rubricData = $this->processSchoolDataToCSVFormat($data, $formatMapping);
 		$processRubricData = $this->breakReportByYear($rubricData, 'yes', $header); // pr($tempArray);die;
 
@@ -840,33 +840,33 @@ class QualityBatchReport extends QualityAppModel {
 
 	public function breakReportByYear($data, $autoGenerateFirstHeader = 'no', $header = NULL) {
 		$tempArray = array();
-		$selectedYear = '';
+		$selectedAcademicPeriod = '';
 		
 		
 		foreach ($data as $obj) {
 
-			if ($obj['SchoolYear']['Year'] != $selectedYear) {
+			if ($obj['AcademicPeriod']['AcademicPeriod'] != $selectedAcademicPeriod) {
 				
 				
 				
-				$options = array('year' => $obj['SchoolYear']['Year'], 'header' => $header);
+				$options = array('academicPeriod' => $obj['AcademicPeriod']['AcademicPeriod'], 'header' => $header);
 				if (!empty($obj['EducationGrade']['GradeId'])) {
 					$options['gradeId'] = $obj['EducationGrade']['GradeId'];
 					unset($obj['EducationGrade']['GradeId']);
 				}
 
-				if (!empty($selectedYear)) {
-					//   pr($obj['SchoolYear']['name']);
+				if (!empty($selectedAcademicPeriod)) {
+					//   pr($obj['AcademicPeriod']['name']);
 					$tempArray[] = array();
 					$tempArray[] = array();
 					$tempArray[] = array();
 					$tempArray[] = array();
 					$tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['InstitutionSiteId'], $options);
-				} else if (empty($selectedYear) && $autoGenerateFirstHeader == 'yes') {
+				} else if (empty($selectedAcademicPeriod) && $autoGenerateFirstHeader == 'yes') {
 					$tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['InstitutionSiteId'], $options);
 				}
 
-				$selectedYear = $obj['SchoolYear']['Year'];
+				$selectedAcademicPeriod = $obj['AcademicPeriod']['AcademicPeriod'];
 			}
 
 			unset($obj['InstitutionSite']['InstitutionSiteId']);
@@ -1023,7 +1023,7 @@ class QualityBatchReport extends QualityAppModel {
 				'table' => 'quality_statuses',
 				'alias' => 'QualityStatus',
 				//  'type' => 'LEFT',
-				'conditions' => array(//'QualityStatus.year = SchoolYear.name',
+				'conditions' => array(//'QualityStatus.year = AcademicPeriod.name',
 					//  'QualityStatus.year = ' . $year,
 					'QualityStatus.rubric_template_id = RubricsTemplate.id')
 			),
