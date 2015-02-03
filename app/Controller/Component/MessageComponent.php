@@ -41,6 +41,7 @@ class MessageComponent extends Component {
 			'delete' => array(
 				'success' => array('type' => 'ok', 'msg' => 'The record has been deleted successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'The record is not deleted due to errors encountered.'),
+				'cannotDeleteOnlyRecord' => array('type' => 'error', 'msg' => 'Deletion failed. This feature requires at least one record.')
 			),
 			'duplicate' => array(
 				'success' => array('type' => 'ok', 'msg' => 'The record has been duplicated successfully.'),

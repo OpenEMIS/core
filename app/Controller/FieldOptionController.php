@@ -192,6 +192,16 @@ class FieldOptionController extends AppController {
 			$selectedOption = 1;
 		}
 		$obj = $this->optionList[$selectedOption];
+
+		$plugin = $obj['plugin'];
+		$code = $obj['code'];
+		if (!is_null($plugin)) {
+			$ModelClass = ClassRegistry::init($plugin.'.'.$code);
+		} else {
+			$ModelClass = ClassRegistry::init($code);
+		}
+		$allowDelete = (isset($ModelClass->allowDelete))? $ModelClass->allowDelete: false;
+
 		$this->FieldOptionValue->setParent($obj);
 		$this->model = $this->FieldOptionValue->getModel();
 		$data = $this->FieldOptionValue->getValue($selectedValue);
@@ -211,7 +221,7 @@ class FieldOptionController extends AppController {
 		$header = $this->FieldOptionValue->getHeader();
 		$fields = $this->FieldOptionValue->getValueFields();
 		$this->set('model', $this->model->alias);
-		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue'));
+		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue', 'allowDelete'));
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
@@ -261,5 +271,103 @@ class FieldOptionController extends AppController {
 		$this->doRender();
 	}
 
+	public function delete($selectedOption = 1, $selectedValue = 0) {
+		if ($selectedValue == 0) {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+
+		$obj = $this->optionList[$selectedOption];
+		$this->FieldOptionValue->setParent($obj);
+
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			// field option doesnt exist
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+		$plugin = $obj['plugin'];
+		$code = $obj['code'];
+		if (!is_null($plugin)) {
+			$ModelClass = ClassRegistry::init($plugin.'.'.$code);
+		} else {
+			$ModelClass = ClassRegistry::init($code);
+		}
+		$allowDelete = (isset($ModelClass->allowDelete))? $ModelClass->allowDelete: false;
+
+		$allFieldOptionValues = $currentOption = $ModelClass->getList(array('listOnly' => true, 'visibleOnly' => true));
+
+		if (array_key_exists($selectedValue, $allFieldOptionValues)) {
+			// unset only if field option exists in list
+			unset($allFieldOptionValues[$selectedValue]);
+		}
+
+		$this->FieldOptionValue->recursive = -1;
+		$currentFieldOptionValue = $this->FieldOptionValue->findById($selectedValue);
+
+		if(!$currentFieldOptionValue) {
+			// field option value doesnt exist
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+
+		// if no legal recordss to migrate to ... they are not allowed to delete
+		if (empty($allFieldOptionValues)) {
+			$this->Message->alert('general.delete.cannotDeleteOnlyRecord');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+
+		$listAllOtherFieldOptionValues = array();
+		foreach ($allFieldOptionValues as $key => $value) {
+			$listAllOtherFieldOptionValues[$key] = $value;
+		}
+		$modifyForeignKey = array();
+		if (array_key_exists('hasMany', $ModelClass)) {
+			$hasManyArray = $ModelClass->hasMany;
+			
+			foreach ($hasManyArray as $key => $value) {
+				$CurrModelClass = ClassRegistry::init($value['className']);
+				$foreign_key_id = Inflector::underscore($code)."_id";
+				$modifyForeignKey[$key] = $CurrModelClass->find('count',
+					array(
+						'recursive' => -1,
+						'conditions' => array(
+							$foreign_key_id => $selectedValue
+						)
+					)
+				);
+			}
+		}
+
+
+		if ($this->request->is(array('post', 'put'))) {
+			$convertValue = null;
+			if (array_key_exists('FieldOptionValue', $this->request->data)) {
+				if (array_key_exists('convert', $this->request->data['FieldOptionValue'])) {
+					$convertValue = $this->request->data['FieldOptionValue']['convert'];
+				}
+			}
+			if ($ModelClass->delete($selectedValue)) {
+				foreach ($modifyForeignKey as $key => $value) {
+					$CurrModelClass = ClassRegistry::init($key);
+					$foreign_key_id = Inflector::underscore($code)."_id";
+					
+					$CurrModelClass->updateAll(
+						array($key.'.'.$foreign_key_id => $convertValue),
+						array($key.'.'.$foreign_key_id => $selectedValue)
+					);
+				}				
+				$this->Message->alert('general.delete.success');
+				return $this->redirect(array('action' => 'index', $selectedOption));
+			}	
+		}
+		
+		$header = $this->FieldOptionValue->getHeader();
+		
+		$this->set('allOtherFieldOptionValues', $listAllOtherFieldOptionValues);
+		$this->set(compact('header', 'currentFieldOptionValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete'));
+
+		$this->Navigation->addCrumb($header);
+
+	}
 }
 

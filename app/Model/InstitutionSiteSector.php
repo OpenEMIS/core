@@ -18,7 +18,7 @@ App::uses('FieldOptionValue', 'Model');
 
 class InstitutionSiteSector extends FieldOptionValue {
 	public $useTable = 'field_option_values';
-	public $hasMany = array('InstitutionSite');
+	public $hasMany = array('InstitutionSite', 'InstitutionSiteHistory');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
