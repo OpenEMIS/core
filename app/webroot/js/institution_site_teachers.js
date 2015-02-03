@@ -18,7 +18,7 @@ $(document).ready(function() {
 });
 
 var InstitutionSiteTeachers = {
-	yearId: '#SchoolYearId',
+	periodId: '#AcademicPeriodId',
 	
 	init: function() {
 		this.attachSortOrder();
@@ -27,7 +27,7 @@ var InstitutionSiteTeachers = {
 	
 	navigate: function() {
 		var href = $('.content_wrapper > form').attr('action');
-		window.location.href = href + '/' + $(this.yearId).val();
+		window.location.href = href + '/' + $(this.periodId).val();
 	},
 	
 	attachSortOrder:function() {

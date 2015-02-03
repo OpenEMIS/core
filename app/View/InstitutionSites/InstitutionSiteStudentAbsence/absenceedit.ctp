@@ -40,7 +40,7 @@ if(isset($obj['InstitutionSiteStudentAbsence']['hidden_student_id'])){
 	$objAbsence['student_id'] = $obj['InstitutionSiteStudentAbsence']['hidden_student_id'];
 }else{
 	$objStudent = $obj['Student'];
-	$studentIdName = sprintf('%s - %s %s %s %s', $objStudent['identification_no'], $objStudent['first_name'], $objStudent['middle_name'], $objStudent['last_name'], $objStudent['preferred_name']);
+	$studentIdName = $this->Model->getName($objStudent, array('openEmisId'=>true));
 }
 
 ?>

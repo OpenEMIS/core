@@ -2,14 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 2.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-27 15:51+0800\n"
+"PO-Revision-Date: 2014-08-19 17:50:22+08:00\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ara\n"
-"X-Generator: Poedit 1.6.4\n"
 
 msgid "Home"
 msgstr "الصفحة الرئيسية"
@@ -38,7 +37,7 @@ msgstr "المعلمون"
 msgid "Staff"
 msgstr "الموظفون"
 
-msgid "REPORTS"
+msgid "Reports"
 msgstr "تقارير"
 
 msgid "Settings"
@@ -122,8 +121,8 @@ msgstr "تمّ الحذف"
 msgid "has been added to the List of"
 msgstr "تمّت الإضافة إلى قائمة"
 
-msgid "by"
-msgstr "من قبل"
+msgid "By"
+msgstr "بواسطة"
 
 msgid "Notice"
 msgstr "ملاحظة"
@@ -188,7 +187,7 @@ msgstr "قائمة الطلاب"
 msgid "Add new Student"
 msgstr "إضافة طالب جديد"
 
-msgid "DETAILS"
+msgid "Details"
 msgstr "التفاصيل"
 
 msgid "Attachments"
@@ -203,7 +202,7 @@ msgstr "المزيد"
 msgid "Additional Info"
 msgstr "معلومات إضافية"
 
-msgid "STUDENT INFORMATION"
+msgid "Student Information"
 msgstr "معلومات عن الطالب"
 
 msgid "Static fields"
@@ -215,8 +214,8 @@ msgstr "خيارات الحقل"
 msgid "National Assessments"
 msgstr "التقييمات الوطنية"
 
-msgid "ASSESSMENT"
-msgstr "التقييم"
+msgid "Assessments"
+msgstr "تقرير التقييم"
 
 msgid "Assessment Results"
 msgstr "نتائج التقييم"
@@ -305,7 +304,7 @@ msgstr "البريد الإلكتروني"
 msgid "E-mail"
 msgstr "البريد الإلكتروني"
 
-msgid "GENERAL"
+msgid "General"
 msgstr "عام"
 
 msgid "Contact"
@@ -323,8 +322,8 @@ msgstr "قائمة الموظّفين"
 msgid "Add new Staff"
 msgstr "إضافة موظّف جديد"
 
-msgid "STAFF INFORMATION"
-msgstr "معلومات عن الموظفين"
+msgid "Staff Information"
+msgstr "معلومات الموظفين"
 
 msgid "Staff Details"
 msgstr "تفاصيل الموظّفين"
@@ -344,7 +343,7 @@ msgstr "إضافة معلم جديد"
 msgid "Qualifications"
 msgstr "المؤهلات"
 
-msgid "TRAINING"
+msgid "Training"
 msgstr "التدريب"
 
 msgid "Teacher Information"
@@ -639,7 +638,7 @@ msgid "Attendance"
 msgstr "التحاق"
 
 msgid "Behaviour"
-msgstr "السلوك"
+msgstr "سلوك"
 
 msgid "Results"
 msgstr "النتائج"
@@ -728,8 +727,8 @@ msgstr "كلمات المرور غير متطابقة."
 msgid "System Information"
 msgstr "معلومات النظام"
 
-msgid "support"
-msgstr "الدعم"
+msgid "Support"
+msgstr "دعم"
 
 msgid "License"
 msgstr "الرخصة"
@@ -743,16 +742,14 @@ msgstr "الشؤون المالية"
 msgid "Total Public Expenditure"
 msgstr "إجمالي الإنفاق العام"
 
-msgid "NATIONAL DENOMINATORS"
+msgid "National Denominators"
 msgstr "القواسم الوطنية"
 
 msgid "Select"
 msgstr "اختيار"
 
 msgid "Total Public Expenditure Per Education Level"
-msgstr ""
-"إجمالي الإنفاق العام عن كل مستوى تعليميّإجمالي الإنفاق العام عن كل مستوى "
-"تعليميّ"
+msgstr "إجمالي الإنفاق العام عن كل مستوى تعليميّإجمالي الإنفاق العام عن كل مستوى تعليميّ"
 
 msgid "System"
 msgstr "النظام"
@@ -820,11 +817,8 @@ msgstr "لقد انتهت جلستك، رجاءً تسجيل الدخول مرة
 msgid "You are not an authorized user."
 msgstr "عفواً، لستَ مستخدما معتمداً لدينا"
 
-msgid ""
-"You have encountered an unexpected error. Please contact the system "
-"administrator for assistance."
-msgstr ""
-"لقد حدث خطأ غير متوقّع، يرجى الاتصال بالمسؤول عن النظام للحصول على مساعدة."
+msgid "You have encountered an unexpected error. Please contact the system administrator for assistance."
+msgstr "لقد حدث خطأ غير متوقّع، يرجى الاتصال بالمسؤول عن النظام للحصول على مساعدة."
 
 msgid "Host Unreachable"
 msgstr "المضيف غير متوفر حاليا"
@@ -940,7 +934,7 @@ msgstr "الشؤون المالية"
 msgid "Other Forms"
 msgstr "أشكال أخرى"
 
-msgid "SYSTEM SETUP"
+msgid "System Setup"
 msgstr "إعداد النظام"
 
 msgid "Administrative Boundaries"
@@ -970,7 +964,7 @@ msgstr "تعديل الجدول المخصص"
 msgid "System Configurations"
 msgstr "إعدادات النظام"
 
-msgid "Accounts & Security"
+msgid "Accounts and Security"
 msgstr "الحسابات والأمن"
 
 msgid "ACCOUNTS &amp; SECURITY"
@@ -1498,7 +1492,7 @@ msgstr "ملخص للأثاث وحالته من التعداد"
 msgid "Resource Report"
 msgstr "تقرير الموارد"
 
-msgid "Summary of resources and condition from census"
+msgid "Summary of resources and conditions from census"
 msgstr "ملخص الموارد وأحوالها من التعداد"
 
 msgid "Energy Report"
@@ -1552,8 +1546,7 @@ msgstr "قائمة الموظفين مع معلومات إضافية"
 msgid "Wheres My School Report"
 msgstr "تقرير أين تقع مدرستي"
 
-msgid ""
-"A Google Earth (KML) file containing all the location of all Institutions"
+msgid "A Google Earth (KML) file containing all the location of all Institutions"
 msgstr "ملف Google Earth (KML) يحتوي على أماكن كل مواقع المؤسسات"
 
 msgid "Year Book Report"
@@ -1592,11 +1585,8 @@ msgstr "قائمة مواقع المؤسسات التي لا تحتوي على �
 msgid "Data Discrepancy Report"
 msgstr "تقرير تناقض البيانات "
 
-msgid ""
-"List of Institutions with questionable census data compared to the previous "
-"year"
-msgstr ""
-"قائمة مواقع المؤسسات ذات بيانات تعداد مشكوكة مقارنة ببيانات العام السابق"
+msgid "List of Institutions with questionable census data compared to the previous year"
+msgstr "قائمة مواقع المؤسسات ذات بيانات تعداد مشكوكة مقارنة ببيانات العام السابق"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
 msgstr "عدد الطلاب(المقيدين) حسب النوع والسنّ والموقع والصفّ"
@@ -1628,15 +1618,8 @@ msgstr "عدد الأشخاص حسب الجنس والعمر"
 msgid "Net Enrolment Rate Report"
 msgstr "تقرير صافي معدل الالتحاق"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled who are of the official "
-"age group for a given level of education by the population for the same age "
-"group and multiply the result by 100. This indicator has dimension values of "
-"sex, locality and grade."
-msgstr ""
-"قسّم عدد التلاميذ  الملتحقين الذين هم من الفئة العمرية الرسمية لمستوى معين من "
-"التعليم على السكان من نفس الفئة العمرية، اجمع واضرب النتيجة في 100  هذا "
-"المؤشر له قِيَم البعد للجنس والمكان والصفّ"
+msgid "Divide the number of pupils (or students) enrolled who are of the official age group for a given level of education by the population for the same age group and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "قسّم عدد التلاميذ  الملتحقين الذين هم من الفئة العمرية الرسمية لمستوى معين من التعليم على السكان من نفس الفئة العمرية، اجمع واضرب النتيجة في 100  هذا المؤشر له قِيَم البعد للجنس والمكان والصفّ"
 
 msgid "Gross Enrolment Rate Report"
 msgstr "تقرير إجمالي معدّل الالتحاق "
@@ -1644,265 +1627,125 @@ msgstr "تقرير إجمالي معدّل الالتحاق "
 msgid "Net Intake Rate Report"
 msgstr "تقريرصافي معدل القبول"
 
-msgid ""
-"Divide the number of children of official primary school-entrance age who "
-"enter the first grade of primary education for the first time by the "
-"population of the same age, and multiply the result by 100. This indicator "
-"has dimension values of sex and locality."
-msgstr ""
-"قسّم عدد الأطفال في سن المدرسة الرسمية، الذين يدخلون السنة الأولى من المرحلة "
-"الابتدائية  لأوّل مرة على السكان من نفس العمر، واضرب النتيجة في 100. هذا "
-"المؤشر له قِيَم البعد عن للجنس والمكان"
+msgid "Divide the number of children of official primary school-entrance age who enter the first grade of primary education for the first time by the population of the same age, and multiply the result by 100. This indicator has dimension values of sex and locality."
+msgstr "قسّم عدد الأطفال في سن المدرسة الرسمية، الذين يدخلون السنة الأولى من المرحلة الابتدائية  لأوّل مرة على السكان من نفس العمر، واضرب النتيجة في 100. هذا المؤشر له قِيَم البعد عن للجنس والمكان"
 
 msgid "Gross Intake Rate Report"
 msgstr "تقرير معدل إجمالي القبول"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in a given level of "
-"education regardless of age by the population of the age group which "
-"officially corresponds to the given level of education, and multiply the "
-"result by 100. This indicator has dimension values of sex, locality and "
-"grade."
-msgstr ""
-"تقسيم عدد التلاميذ (أو الطلاب) المقيدين في مرحلة معينة من التعليم بغض النظر "
-"عن العمر من قبل السكان من الفئة العمرية التي تتطابق رسميا إلى مستوى معين من "
-"التعليم، وضرب الناتج في 100. هذا المؤشر له قيم البعد عن الجنس والمكان والصف"
+msgid "Divide the number of pupils (or students) enrolled in a given level of education regardless of age by the population of the age group which officially corresponds to the given level of education, and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "تقسيم عدد التلاميذ (أو الطلاب) المقيدين في مرحلة معينة من التعليم بغض النظر عن العمر من قبل السكان من الفئة العمرية التي تتطابق رسميا إلى مستوى معين من التعليم، وضرب الناتج في 100. هذا المؤشر له قيم البعد عن الجنس والمكان والصف"
 
-msgid ""
-"Divide the number of new entrants in grade 1, irrespective of age, by the "
-"population of official school-entrance age, and multiply the result by 100. "
-"This indicator has dimension values of sex, locality and grade."
-msgstr ""
-"قسّم عدد الداخلين الجدد في الصف 1، بغض النظر عن العمر، من قبل السكان في سن "
-"المدرسة الرسمية مدخل، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد "
-"من المكان والجنس والصف"
+msgid "Divide the number of new entrants in grade 1, irrespective of age, by the population of official school-entrance age, and multiply the result by 100. This indicator has dimension values of sex, locality and grade."
+msgstr "قسّم عدد الداخلين الجدد في الصف 1، بغض النظر عن العمر، من قبل السكان في سن المدرسة الرسمية مدخل، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد من المكان والجنس والصف"
 
 msgid "Repetition Rate Report"
 msgstr "تقرير معدل الإعادة"
 
-msgid ""
-"Divide the number of repeaters in a given grade in school year t+1 by the "
-"number of pupils from the same cohort enrolled in the same grade in the "
-"previous school year t . This indicator has dimension values of sex, "
-"locality, sector and grade."
-msgstr ""
-"تقسيم عدد من الراسبين في الصف في العام الدراسي نظرا T +1 من قبل عدد من "
-"التلاميذ من نفس الفوج المسجلين في الصف نفسه في مدرسة ر العام السابق. هذا "
-"المؤشر له قيم البعد بسبب الجنس أو القطاع، ومحلة الصف."
+msgid "Divide the number of repeaters in a given grade in school year t+1 by the number of pupils from the same cohort enrolled in the same grade in the previous school year t . This indicator has dimension values of sex, locality, sector and grade."
+msgstr "تقسيم عدد من الراسبين في الصف في العام الدراسي نظرا T +1 من قبل عدد من التلاميذ من نفس الفوج المسجلين في الصف نفسه في مدرسة ر العام السابق. هذا المؤشر له قيم البعد بسبب الجنس أو القطاع، ومحلة الصف."
 
 msgid "Completion Rate Report"
 msgstr "تقرير معدل التخرج"
 
-msgid ""
-"Divide the number of primary graduates, irrespective of age, by the "
-"population of theoretical primary graduation, and multiply the result by "
-"100. This indicator has dimension values of sex, locality and sector."
-msgstr ""
-"قسّم عدد خريجي المرحلة الابتدائية، بغض النظر عن السنّ، من سكان التخرج الأولية "
-"النظرية، واضرب النتيجة في 100. هذا المؤشر له قيم البعد للجنس والموقع المحلي "
-"والقطاع"
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100. This indicator has dimension values of sex, locality and sector."
+msgstr "قسّم عدد خريجي المرحلة الابتدائية، بغض النظر عن السنّ، من سكان التخرج الأولية النظرية، واضرب النتيجة في 100. هذا المؤشر له قيم البعد للجنس والموقع المحلي والقطاع"
 
 msgid "Survival Rate Report"
 msgstr "معدل البقاء تقرير"
 
-msgid ""
-"Divide the total number of pupils belonging to a school-cohort who reached "
-"each successive grade of the specified level of education by the number of "
-"pupils in the school-cohort i.e. those originally enrolled in the first "
-"grade of primary education, and multiply the result by 100. The survival "
-"rate is calculated on the basis of the reconstructed cohort method, which "
-"uses data on enrolment and repeaters for two consecutive years. This "
-"indicator has dimension values of sex, locality and sector."
-msgstr ""
-"تقسيم العدد الإجمالي للتلاميذ الذين ينتمون إلى الفوج المدرسي الذي بلغ كل صف "
-"المتتالية للمستوى المحدد من قبل التعليم عدد التلاميذ في الفوج المدرسي أي "
-"أولئك المنخرطين أصلا في الصف الأول من التعليم الابتدائي، ومضاعفة النتيجة عن "
-"طريق 100. يتم حساب معدل البقاء على قيد الحياة على أساس طريقة الفوج أعيد "
-"بناؤها، والذي يستخدم بيانات عن معدلات الالتحاق بالمدارس والراسبين لعامين "
-"متتاليين. هذا المؤشر له قيم البعد من المكان والجنس والقطاع."
+msgid "Divide the total number of pupils belonging to a school-cohort who reached each successive grade of the specified level of education by the number of pupils in the school-cohort i.e. those originally enrolled in the first grade of primary education, and multiply the result by 100. The survival rate is calculated on the basis of the reconstructed cohort method, which uses data on enrolment and repeaters for two consecutive years. This indicator has dimension values of sex, locality and sector."
+msgstr "تقسيم العدد الإجمالي للتلاميذ الذين ينتمون إلى الفوج المدرسي الذي بلغ كل صف المتتالية للمستوى المحدد من قبل التعليم عدد التلاميذ في الفوج المدرسي أي أولئك المنخرطين أصلا في الصف الأول من التعليم الابتدائي، ومضاعفة النتيجة عن طريق 100. يتم حساب معدل البقاء على قيد الحياة على أساس طريقة الفوج أعيد بناؤها، والذي يستخدم بيانات عن معدلات الالتحاق بالمدارس والراسبين لعامين متتاليين. هذا المؤشر له قيم البعد من المكان والجنس والقطاع."
 
 msgid "Transition Rate Report"
 msgstr "تقرير قيم الانتقال"
 
-msgid ""
-"Divide the number of new entrants in the first grade of the specified higher "
-"cycle or level of education by the number of pupils who were enrolled in the "
-"final grade of the preceding cycle or level of education in the previous "
-"school year, and multiply by 100. This indicator has dimension values of "
-"sex, locality, sector and grade."
-msgstr ""
-"تقسيم عدد الداخلين الجدد في الصف الأول من دورة محددة أو ارتفاع مستوى التعليم "
-"من قبل عدد من التلاميذ الذين كانوا مسجلين في الصف النهائي من دورة السابقة أو "
-"مستوى التعليم في السنة الدراسية السابقة، وتتضاعف بنسبة 100. هذا المؤشر له "
-"قيم البعد بسبب الجنس أو القطاع، ومحلة الصف."
+msgid "Divide the number of new entrants in the first grade of the specified higher cycle or level of education by the number of pupils who were enrolled in the final grade of the preceding cycle or level of education in the previous school year, and multiply by 100. This indicator has dimension values of sex, locality, sector and grade."
+msgstr "تقسيم عدد الداخلين الجدد في الصف الأول من دورة محددة أو ارتفاع مستوى التعليم من قبل عدد من التلاميذ الذين كانوا مسجلين في الصف النهائي من دورة السابقة أو مستوى التعليم في السنة الدراسية السابقة، وتتضاعف بنسبة 100. هذا المؤشر له قيم البعد بسبب الجنس أو القطاع، ومحلة الصف."
 
 msgid "Pupil Teacher Ratio Report"
 msgstr "تقرير التلميذ المعلم النسبة"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of teachers at the same level. This indicator has "
-"dimension values of locality, sector and level of education."
-msgstr ""
-"تقسيم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليميا معينا من قبل عدد من "
-"المعلمين في نفس المستوى. هذا المؤشر له قيم البعد من القطاع، محلة ومستوى "
-"التعليم"
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of teachers at the same level. This indicator has dimension values of locality, sector and level of education."
+msgstr "تقسيم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليميا معينا من قبل عدد من المعلمين في نفس المستوى. هذا المؤشر له قيم البعد من القطاع، محلة ومستوى التعليم"
 
 msgid "Pupil Class Ratio Report"
 msgstr "تقرير معدّل التلميذ  - الصف "
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of classes at the same level. This indicator has "
-"dimension values of locality and sector."
-msgstr ""
-"تقسيم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليميا معينا من قبل عدد من "
-"الطبقات في نفس المستوى. هذا المؤشر له قيم البعد من محلة والقطاع"
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of classes at the same level. This indicator has dimension values of locality and sector."
+msgstr "تقسيم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليميا معينا من قبل عدد من الطبقات في نفس المستوى. هذا المؤشر له قيم البعد من محلة والقطاع"
 
 msgid "Trained Teachers Report"
 msgstr "تقرير عن المعلمين المدربين"
 
-msgid ""
-"Divide the number of teachers of the specified level of education who have "
-"received the minimum required teacher training by the total number of "
-"teachers at the same level of education, and multiply the result by 100. "
-"This indicator has dimension values of locality, sector and level of "
-"education."
-msgstr ""
-"قسّم عدد المعلمين من المستوى المعيّن من التعليم الذين حصلوا على الحد الأدنى "
-"المطلوب لتدريب المعلمين على العدد الكلي للمعلمين في نفس المستوى من التعليم، "
-"واضرب النتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع،  ومستوى "
-"التعليم"
+msgid "Divide the number of teachers of the specified level of education who have received the minimum required teacher training by the total number of teachers at the same level of education, and multiply the result by 100. This indicator has dimension values of locality, sector and level of education."
+msgstr "قسّم عدد المعلمين من المستوى المعيّن من التعليم الذين حصلوا على الحد الأدنى المطلوب لتدريب المعلمين على العدد الكلي للمعلمين في نفس المستوى من التعليم، واضرب النتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع،  ومستوى التعليم"
 
 msgid "Gender Parity Index (Students) Report"
 msgstr "تقرير مؤشر التكافؤ بين الجنسين للطلاب"
 
-msgid ""
-"Divide the number of female students by the number of male students. This "
-"indicator has dimension values of sex, locality, sector and level of "
-"education."
-msgstr ""
-"قسّم عدد الطالبات على عدد الطلاب الذكور. هذا المؤشر له قيم البعد للجنس و "
-"الموقع المحلي والقطاع ومستوى التعليم"
+msgid "Divide the number of female students by the number of male students. This indicator has dimension values of sex, locality, sector and level of education."
+msgstr "قسّم عدد الطالبات على عدد الطلاب الذكور. هذا المؤشر له قيم البعد للجنس و الموقع المحلي والقطاع ومستوى التعليم"
 
 msgid "Female Students Report"
 msgstr "تقرير عن الطالبات"
 
-msgid ""
-"Divide the number of female tertiary students enrolled in a specified ISCED "
-"level by the total number of students (male plus female) in that level in a "
-"given academic-year, and multiply the result by 100. This indicator has "
-"dimension values of locality, sector and level of education."
-msgstr ""
-"قسّم عدد طالبات التعليم العالي المقيدات في مستوى ISCED معيّن على العدد الكلي "
-"للطلاب  (الذكور بالإضافة إلى الإناث) في هذا المستوى في عام دراسيّ معين، واضرب "
-"النتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع ومستوى التعليم"
+msgid "Divide the number of female tertiary students enrolled in a specified ISCED level by the total number of students (male plus female) in that level in a given academic-year, and multiply the result by 100. This indicator has dimension values of locality, sector and level of education."
+msgstr "قسّم عدد طالبات التعليم العالي المقيدات في مستوى ISCED معيّن على العدد الكلي للطلاب  (الذكور بالإضافة إلى الإناث) في هذا المستوى في عام دراسيّ معين، واضرب النتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع ومستوى التعليم"
 
 msgid "Female Teachers Report"
 msgstr "تقرير عن المعلّمات"
 
-msgid ""
-"Divide the total number of female teachers at a given level of education by "
-"the total number of teachers (male and female) at the same level in a given "
-"school year, and multiply by 100. This indicator has dimension values of "
-"locality, sector and level of education."
-msgstr ""
-"قسّم العدد الإجمالي للمعلمات على مستوى معين من التعليم على العدد الكلي "
-"للمعلمين (ذكور وإناث) في نفس المستوى في عام دراسي معين، واضرب نتيجة في 100. "
-"هذا المؤشر له قيم البعد للموقع المحلي والقطاع ومستوى التعليم"
+msgid "Divide the total number of female teachers at a given level of education by the total number of teachers (male and female) at the same level in a given school year, and multiply by 100. This indicator has dimension values of locality, sector and level of education."
+msgstr "قسّم العدد الإجمالي للمعلمات على مستوى معين من التعليم على العدد الكلي للمعلمين (ذكور وإناث) في نفس المستوى في عام دراسي معين، واضرب نتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع ومستوى التعليم"
 
 msgid "Private Enrolment Report"
 msgstr "تقرير الالتحاق الخاص"
 
-msgid ""
-"Divide the number of pupils (or students) enrolled in private educational "
-"institutions in a given level of education by total enrolment (public and "
-"private) at the same level of education, and multiply the result by 100. "
-"This indicator has dimension values of sex, locality and level of education."
-msgstr ""
-"قسّم عدد التلاميذ (أو الطلاب) المسجلين في المؤسسات التعليمية الخاصة في مستوى "
-"معين من التعليم على خلال الالتحاق الإجمالي (العام والخاص) على نفس المستوى من "
-"التعليم، واضرب النتيجة في 100 هذا المؤشر له قيم البعد للجنسوالموقع المحلي "
-"ومستوى التعليم"
+msgid "Divide the number of pupils (or students) enrolled in private educational institutions in a given level of education by total enrolment (public and private) at the same level of education, and multiply the result by 100. This indicator has dimension values of sex, locality and level of education."
+msgstr "قسّم عدد التلاميذ (أو الطلاب) المسجلين في المؤسسات التعليمية الخاصة في مستوى معين من التعليم على خلال الالتحاق الإجمالي (العام والخاص) على نفس المستوى من التعليم، واضرب النتيجة في 100 هذا المؤشر له قيم البعد للجنسوالموقع المحلي ومستوى التعليم"
 
 msgid "Pupil Textbook Ratio Report"
 msgstr "تقرير معدل التلميذ للكتب"
 
-msgid ""
-"Divide the total number of pupils enrolled at the specified level of "
-"education by the number of textbooks at the same level. This indicator has "
-"dimension values of locality, and sector."
-msgstr ""
-"قسّم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليمي معيَّن على عدد الكتب "
-"المدرسية في نفس المستوى. هذا المؤشر له قيم البعد للموقع المحلي والقطاع"
+msgid "Divide the total number of pupils enrolled at the specified level of education by the number of textbooks at the same level. This indicator has dimension values of locality, and sector."
+msgstr "قسّم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليمي معيَّن على عدد الكتب المدرسية في نفس المستوى. هذا المؤشر له قيم البعد للموقع المحلي والقطاع"
 
 msgid "Water Sources Report"
 msgstr "تقرير مصادر المياه"
 
-msgid ""
-"Number of water sources by type. This indicator has dimension values of "
-"locality, sector and condition."
-msgstr ""
-"عدد مصادر المياه وفقا للنوع. هذا المؤشر له قيم البعد للموقع المحلي والقطاع "
-"والوضع"
+msgid "Number of water sources by type. This indicator has dimension values of locality, sector and condition."
+msgstr "عدد مصادر المياه وفقا للنوع. هذا المؤشر له قيم البعد للموقع المحلي والقطاع والوضع"
 
 msgid "Sanitation Facilities Report"
 msgstr "تقرير مرافق الصرف الصحي"
 
-msgid ""
-"Number of sanitation facilities by type. This indicator has dimension values "
-"of locality, sector and condition."
-msgstr ""
-"عدد المرافق الصحية حسب النوع. هذا المؤشر له قِيَم البعد للموقع المحلي و "
-"والقطاع والوضع"
+msgid "Number of sanitation facilities by type. This indicator has dimension values of locality, sector and condition."
+msgstr "عدد المرافق الصحية حسب النوع. هذا المؤشر له قِيَم البعد للموقع المحلي و والقطاع والوضع"
 
 msgid "Public Expenditure per Education Level Report"
 msgstr "تقرير النفقات العامة لكلّ مستوى تعليميّ"
 
-msgid ""
-"Divide total public expenditure for each level of education in a given "
-"financial year by the total public expenditure on education for the same "
-"financial year and multiply the result by 100. "
-msgstr ""
-"قسّم إجمالي النفقات العامة على مستوى من مستويات التعليم في سنة مالية معينة "
-"على إجمالي النفقات العامة على التعليم للسنة المالية ذاتها واضرب النتيجة في "
-"100"
+msgid "Divide total public expenditure for each level of education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100. "
+msgstr "قسّم إجمالي النفقات العامة على مستوى من مستويات التعليم في سنة مالية معينة على إجمالي النفقات العامة على التعليم للسنة المالية ذاتها واضرب النتيجة في 100"
 
 msgid "Public Expenditure on Education Report"
 msgstr "تقريرالنفقات العامة على التعليم "
 
-msgid ""
-"Divide total public expenditure on education incurred by all government "
-"agencies/departments in a given financial year by the total government "
-"expenditure for the same financial year and multiply by 100."
-msgstr ""
-"قسّم إجمالي النفقات العامة على التعليم التي تتحملها جميع الجهات/ الإدارات "
-"الحكومية   في سنة مالية معينة على إجمالي الإنفاق الحكومي للسنة المالية ذاتها "
-"واضرب النتيجة في 100"
+msgid "Divide total public expenditure on education incurred by all government agencies/departments in a given financial year by the total government expenditure for the same financial year and multiply by 100."
+msgstr "قسّم إجمالي النفقات العامة على التعليم التي تتحملها جميع الجهات/ الإدارات الحكومية   في سنة مالية معينة على إجمالي الإنفاق الحكومي للسنة المالية ذاتها واضرب النتيجة في 100"
 
 msgid "Public Expenditure on Education by GNP Report"
 msgstr "تقرير النفقات العامة على التعليم  حسب إجمالي الناتج القومي"
 
-msgid ""
-"Divide total public expenditure on education in a given financial year by "
-"the Gross National Product (GNP) or Gross National Income (GNI) of the "
-"country for the corresponding year and multiply by 100."
-msgstr ""
-"قسّم إجمالي النفقات العامة على التعليم في سنة مالية معيّنة على الناتج القومي "
-"الإجمالي (GNP) أو الدخل القومي الإجمالي  للبلد للسنة المقابلة واضرب الرقم في "
-"100"
+msgid "Divide total public expenditure on education in a given financial year by the Gross National Product (GNP) or Gross National Income (GNI) of the country for the corresponding year and multiply by 100."
+msgstr "قسّم إجمالي النفقات العامة على التعليم في سنة مالية معيّنة على الناتج القومي الإجمالي (GNP) أو الدخل القومي الإجمالي  للبلد للسنة المقابلة واضرب الرقم في 100"
 
 msgid "Public Expenditure per Pupil Report"
 msgstr "تقرير النفقات العامة لكلّ تلميذ"
 
-msgid ""
-"Divide per pupil public current expenditure on each level of education in a "
-"given year by the GNI per capita for the same year and multiply by 100. This "
-"indicator has dimension values of level of education."
-msgstr ""
-"قسّم النفقات العامة الحالية لكلّ تلميذ على كل مستوى من مستويات التعليم في سنة "
-"معينة من الدخل القومي الإجمالي للفرد لنفس العام و اضرب الرقم في 100 هذا "
-"المؤشر له قيم البعد لمستوى التعليم."
+msgid "Divide per pupil public current expenditure on each level of education in a given year by the GNI per capita for the same year and multiply by 100. This indicator has dimension values of level of education."
+msgstr "قسّم النفقات العامة الحالية لكلّ تلميذ على كل مستوى من مستويات التعليم في سنة معينة من الدخل القومي الإجمالي للفرد لنفس العام و اضرب الرقم في 100 هذا المؤشر له قيم البعد لمستوى التعليم."
 
 msgid "Process"
 msgstr "عملية"
@@ -1991,18 +1834,13 @@ msgstr "إنشاء"
 msgid "Generated Files"
 msgstr "الملفات إنشاء"
 
-msgid ""
-"The system will %s the current data and restore to your previous data based "
-"on the restore point you selected."
-msgstr ""
-"سيقوم النظام بـ % البيانات الحالية واستعادة بياناتك السابقة حسب نقطة "
-"الاستعادة التي تمّ اختيارها إلى نقطة استعادة قمت بتحديده"
+msgid "The system will %s the current data and restore to your previous data based on the restore point you selected."
+msgstr "سيقوم النظام بـ % البيانات الحالية واستعادة بياناتك السابقة حسب نقطة الاستعادة التي تمّ اختيارها إلى نقطة استعادة قمت بتحديده"
 
 msgid "Please note that the system will not restore the following tables:"
 msgstr "برجاء ملاحظة أن النظام لن يستعيد الجداول التالية:"
 
-msgid ""
-"Below are the list of available backup dates, please choose a restore point."
+msgid "Below are the list of available backup dates, please choose a restore point."
 msgstr "برجاء ملاحظة أن النظام لن يستعيد الجداول التالية:"
 
 msgid "Files"
@@ -2089,13 +1927,8 @@ msgstr "رجاءً إدخال المُدة"
 msgid "Add Programme"
 msgstr "إضافة برنامج"
 
-msgid ""
-"You are able to delete this record in the database. <br><br>All related "
-"information of this record will also be deleted.<br><br>Are you sure you "
-"want to do this?"
-msgstr ""
-"بإمكانك حذف هذا السجلّ في قاعدة البيانات. <BR> <BR> جميع المعلومات المتعلقة "
-"بهذا السجل ستحذف أيضاً.. <BR> <BR> هل أنت متأكد أنك تريد القيام بهذا؟"
+msgid "You are able to delete this record in the database. <br><br>All related information of this record will also be deleted.<br><br>Are you sure you want to do this?"
+msgstr "بإمكانك حذف هذا السجلّ في قاعدة البيانات. <BR> <BR> جميع المعلومات المتعلقة بهذا السجل ستحذف أيضاً.. <BR> <BR> هل أنت متأكد أنك تريد القيام بهذا؟"
 
 msgid "Deleting attachment..."
 msgstr "جاري حذف المرفقات ..."
@@ -2197,8 +2030,7 @@ msgid "Click to dismiss"
 msgstr "انقر للإغلاق"
 
 msgid "Unable to add Areas.<br/>Please create Area Level before adding Areas."
-msgstr ""
-"غير قادر على إضافة مجالات. <BR/> برجاء إنشاء مستوى المنطقة قبل إضافة المناطق"
+msgstr "غير قادر على إضافة مجالات. <BR/> برجاء إنشاء مستوى المنطقة قبل إضافة المناطق"
 
 msgid "Saving please wait..."
 msgstr "جاري الحفظ.... يرجى الانتظار ..."
@@ -2371,12 +2203,8 @@ msgstr "الشعار"
 msgid "Data Outliers"
 msgstr "عرض البيانات"
 
-msgid ""
-"Census Numbers that have age or total of male and female numbers beyond the "
-"specified range in settings."
-msgstr ""
-"أرقام التعداد التي لها عمر أو الكلي لأعداد الذكور والإناث خارج النطاق المحدد "
-"في الإعدادات."
+msgid "Census Numbers that have age or total of male and female numbers beyond the specified range in settings."
+msgstr "أرقام التعداد التي لها عمر أو الكلي لأعداد الذكور والإناث خارج النطاق المحدد في الإعدادات."
 
 msgid "Page Orientation"
 msgstr "اتجاه الصفحة"
@@ -2447,7 +2275,7 @@ msgstr "عرض الموضوع"
 msgid "Descriptions"
 msgstr "الوصف"
 
-msgid "QUALITY"
+msgid "Quality"
 msgstr "جودة"
 
 msgid "Rubric Details"
@@ -2633,8 +2461,8 @@ msgstr "إضافة الفئة المستهدفة"
 msgid "Credit Hours"
 msgstr "الساعات المعتمدة"
 
-msgid "Mode Of Delivery"
-msgstr "وطريقة التسليم"
+msgid "Mode of Delivery"
+msgstr "طريقة التسليم"
 
 msgid "Training Provider"
 msgstr "مقدم التدريب"
@@ -2750,7 +2578,7 @@ msgstr "تفاصيل تحرير الجنسية"
 msgid "Please select a Country"
 msgstr "يرجى تحديد البلد"
 
-msgid "Sms"
+msgid "SMS"
 msgstr "الرسائل القصيرة"
 
 msgid "Messages"
@@ -2798,12 +2626,8 @@ msgstr "تحذير"
 msgid "Continue"
 msgstr "استمر"
 
-msgid ""
-"Note: Please clear the Responses page as existing responses may no longer "
-"match the updated Messages."
-msgstr ""
-"ملاحظة: يرجى مسح الصفحة الردود على أنها استجابات القائمة قد لا تتناسب مع "
-"الرسائل التي تم تحديثها"
+msgid "Note: Please clear the Responses page as existing responses may no longer match the updated Messages."
+msgstr "ملاحظة: يرجى مسح الصفحة الردود على أنها استجابات القائمة قد لا تتناسب مع الرسائل التي تم تحديثها"
 
 msgid "Do you wish to clear all records?"
 msgstr "هل ترغب في مسح كافة السجلات؟"
@@ -2940,9 +2764,7 @@ msgstr ""
 msgid "Completion Rate / Gross Primary Graduation Ratio"
 msgstr ""
 
-msgid ""
-"Divide the number of primary graduates, irrespective of age, by the "
-"population of theoretical primary graduation, and multiply the result by 100."
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100."
 msgstr ""
 
 msgid "Percentage of Trained Teachers"
@@ -2966,16 +2788,10 @@ msgstr ""
 msgid "Percentage of schools with adequate sanitation facilities"
 msgstr ""
 
-msgid ""
-"Public Expenditure as percentage of Total Public Expenditure on Education"
+msgid "Public Expenditure as percentage of Total Public Expenditure on Education"
 msgstr ""
 
-msgid ""
-"Divide public current expenditure devoted to each level of education by the "
-"total public current expenditure on education, and multiply the result by "
-"100. Divide public current expenditure on education in a given financial "
-"year by the total public expenditure on education for the same financial "
-"year and multiply the result by 100."
+msgid "Divide public current expenditure devoted to each level of education by the total public current expenditure on education, and multiply the result by 100. Divide public current expenditure on education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100."
 msgstr ""
 
 msgid "Public Expenditure as percentage of Total Government Expenditure"
@@ -3134,11 +2950,8 @@ msgstr "تقرير الغرفة"
 msgid "Summary of sanitation, gender and conditions from census"
 msgstr "ملخص عن الصرف الصحي  والنوع والأحوال من التعداد"
 
-msgid "Summary of resources and conditions from census"
-msgstr "ملخص الموارد وأحوالها من التعداد"
-
 msgid "Summary of water and conditions from census"
-msgstr "ملخص المياه وحالها من التعداد"
+msgstr "الملخص من المياه والظروف من التعداد"
 
 msgid "Clear"
 msgstr "إطلاق"
@@ -3329,31 +3142,20 @@ msgstr "تقرير المدربين بالاسم ، وبطبيعة الحال و
 msgid "Training Trainer Report"
 msgstr "تقرير تدريب مدرب"
 
-msgid ""
-"Report of Exceptions to see if a staff is enrolled in two courses at the "
-"same time or has already completed the course"
-msgstr ""
-"تقرير استثناءات لمعرفة ما إذا كان من الموظفين المسجلين في دورتين في نفس "
-"الوقت أو قد أنجزت بالفعل مسار"
+msgid "Report of Exceptions to see if a staff is enrolled in two courses at the same time or has already completed the course"
+msgstr "تقرير استثناءات لمعرفة ما إذا كان من الموظفين المسجلين في دورتين في نفس الوقت أو قد أنجزت بالفعل مسار"
 
 msgid "Training Exception Report"
 msgstr "تقرير استثناء تدريب"
 
-msgid ""
-"Report on the number of staff actually trained verses target groups for each "
-"program"
-msgstr ""
-"تقرير عن عدد الموظفين في الواقع الآيات تدريب الفئات المستهدفة لكل برنامج"
+msgid "Report on the number of staff actually trained verses target groups for each program"
+msgstr "تقرير عن عدد الموظفين في الواقع الآيات تدريب الفئات المستهدفة لكل برنامج"
 
 msgid "Training Staff Statistics Report"
 msgstr "تدريب الموظفين الاحصائيات تقرير"
 
-msgid ""
-"Report on the number of teachers actually trained verses target groups for "
-"each program"
-msgstr ""
-"تقرير عن عدد من المدرسين المدربين في الواقع الآيات الفئات المستهدفة لكل "
-"برنامج"
+msgid "Report on the number of teachers actually trained verses target groups for each program"
+msgstr "تقرير عن عدد من المدرسين المدربين في الواقع الآيات الفئات المستهدفة لكل برنامج"
 
 msgid "Training Teacher Statistic Report"
 msgstr "تقرير تدريب المعلمين الإحصائي"
@@ -3418,14 +3220,8 @@ msgstr "ملخص   الغرف و الشروط من التعداد"
 msgid "Summary of furniture and conditions from census"
 msgstr "ملخص  للأثاث و الشروط من التعداد"
 
-msgid "Summary of resources and conditions from census "
-msgstr "الملخص من الموارد و الظروف من التعداد"
-
 msgid "Summary of power and conditions from census"
 msgstr "ملخص السلطة و الظروف من التعدا"
-
-msgid "Summary of water and conditions from census "
-msgstr "الملخص من المياه والظروف من التعداد"
 
 msgid "List of Students with custom fields"
 msgstr "قائمة الطلاب مع الحقول المخصصة"
@@ -3460,7 +3256,7 @@ msgstr "الموظفين تقرير حقل مخصص"
 msgid "Standard"
 msgstr "ستاندارد"
 
-msgid "SURVEY"
+msgid "Survey"
 msgstr "المسح"
 
 msgid "New Surveys"
@@ -3478,11 +3274,8 @@ msgstr "سينك"
 msgid "Training Staff Statistic Report"
 msgstr "تدريب الموظفين إحصاء تقرير"
 
-msgid ""
-"Report on the number of teacher actually trained verses target groups for "
-"each program"
-msgstr ""
-"تقرير عن عدد من المعلمين في الواقع الآيات تدريب الفئات المستهدفة لكل برنامج"
+msgid "Report on the number of teacher actually trained verses target groups for each program"
+msgstr "تقرير عن عدد من المعلمين في الواقع الآيات تدريب الفئات المستهدفة لكل برنامج"
 
 msgid "New Staff"
 msgstr "طاقم جدي"
@@ -3520,7 +3313,7 @@ msgstr "التوظيف"
 msgid "Salary"
 msgstr "الراتب"
 
-msgid "HEALTH"
+msgid "Health"
 msgstr "الصحة"
 
 msgid "Family"
@@ -3569,7 +3362,7 @@ msgid "Listening"
 msgstr "الاستماع"
 
 msgid "Issuer"
-msgstr "المصدر"
+msgstr "المصد"
 
 msgid "Staff Label"
 msgstr "تسمية الموظفين"
@@ -3616,7 +3409,7 @@ msgstr "اليوم الأول"
 msgid "Total Days"
 msgstr "مجموع أيام"
 
-msgid "List of Behaviours"
+msgid "List of Behaviour"
 msgstr "قائمة السلوكيات"
 
 msgid "No record available"
@@ -3787,23 +3580,14 @@ msgstr "تقارير ضمان الجودة"
 msgid "Quality Assurance"
 msgstr "ضمان الجودة"
 
-msgid ""
-"Report generated at the school, FD and national level for each aspect "
-"(category) and domain (technical or administrative) "
-msgstr ""
-"تقرير ولدت في المدرسة، وFD المستوى الوطني لكل جانب (الفئة) والمجال (التقنية "
-"أو الإدارية)"
+msgid "Report generated at the school, FD and national level for each aspect (category) and domain (technical or administrative) "
+msgstr "تقرير ولدت في المدرسة، وFD المستوى الوطني لكل جانب (الفئة) والمجال (التقنية أو الإدارية)"
 
 msgid "QA Schools Report"
 msgstr "تقرير المدارس QA"
 
-msgid ""
-"Report generated by type, category, result (pass or fail) and a table with "
-"the average, minimum and maximum values and also compare results from one "
-"year to the next "
-msgstr ""
-"تقرير إنشاؤها حسب النوع، والفئة، نتيجة (نجاح أو رسوب) وطاولة مع متوسط​​، والحد "
-"الأدنى والحد الأقصى للقيم وأيضا مقارنة النتائج من سنة واحدة إلى أخرى"
+msgid "Report generated by type, category, result (pass or fail) and a table with the average, minimum and maximum values and also compare results from one year to the next "
+msgstr "تقرير إنشاؤها حسب النوع، والفئة، نتيجة (نجاح أو رسوب) وطاولة مع متوسط​​، والحد الأدنى والحد الأقصى للقيم وأيضا مقارنة النتائج من سنة واحدة إلى أخرى"
 
 msgid "QA Results Report"
 msgstr "QA نتائج تقري"
@@ -4003,12 +3787,8 @@ msgstr "السلوك - طلاب"
 msgid "*File size should not be larger than 2MB."
 msgstr "* لا ينبغي أن يكون حجم الملف أكبر من 2MB."
 
-msgid ""
-"*Maximum 5 files are permitted on single upload. Each file size should not "
-"be larger than 2MB."
-msgstr ""
-"ويسمح * الحد الأقصى 5 ملفات على تحميل واحد. لا ينبغي أن يكون حجم كل ملف أكبر "
-"من 2MB."
+msgid "*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB."
+msgstr "ويسمح * الحد الأقصى 5 ملفات على تحميل واحد. لا ينبغي أن يكون حجم كل ملف أكبر من 2MB."
 
 msgid "Result Type"
 msgstr "نتيجة نوع"
@@ -4190,41 +3970,11 @@ msgstr "تحميل متدرب نتائج"
 msgid "Duplicate Session"
 msgstr "تكرار الدورة"
 
-msgid "Reports"
-msgstr "تقارير"
-
-msgid "Support"
-msgstr "دعم"
-
-msgid "General"
-msgstr "عام"
-
-msgid "Add New Institution"
-msgstr "إضافة مؤسسة جديدة"
-
-msgid "ATTENDANCE"
-msgstr "الحضور"
-
-msgid "DATA PROCESSING"
-msgstr "معالجة البيانات"
-
-msgid "DATABASE"
-msgstr "قاعدة بيانات"
-
 msgid "Shared Reports"
 msgstr "تقارير مشتركة"
 
 msgid "My Reports"
 msgstr "تقاريري"
-
-msgid "FINANCE"
-msgstr "الشؤون المالية"
-
-msgid "Training"
-msgstr "التدريب"
-
-msgid "Graduate Year"
-msgstr "تخرج سنة"
 
 msgid "Absence"
 msgstr "غياب"
@@ -4241,9 +3991,6 @@ msgstr "سبب"
 msgid "Time"
 msgstr "وقت"
 
-msgid "Mode of Delivery"
-msgstr "طريقة التسليم"
-
 msgid "Select Image"
 msgstr "حدد صورة"
 
@@ -4253,32 +4000,185 @@ msgstr "نزع"
 msgid "Change"
 msgstr "تغيير"
 
-msgid "Add Identity"
-msgstr "إضافة الهوية"
+msgid "There is no data to be displayed."
+msgstr "لا توجد بيانات ليتم عرضها."
 
-msgid "Identity Type"
-msgstr "نوع الهوية"
+msgid "s"
+msgstr ""
 
-msgid "Evaluation Date"
-msgstr "تقييم التاريخ"
+msgid "Site Type:"
+msgstr "نوع الموقع"
 
-msgid "Rubric Template"
-msgstr "قالب الموضوع"
+msgid "Period"
+msgstr "فترة"
 
-msgid "TOTALS"
-msgstr "الإجمالي"
+msgid "Shift"
+msgstr "التحولات"
 
-msgid "BEHAVIOURS"
-msgstr "السلوكيات"
+msgid "Shift Name"
+msgstr "اسم التحولات"
 
-msgid "Details"
-msgstr "التفاصيل"
+msgid "Start Time"
+msgstr "بدء التوقيت"
 
-msgid "Quality"
-msgstr "جودة"
+msgid "End Time"
+msgstr "نهاية الوقت"
 
-msgid "Attendance - Students"
-msgstr "الحضور - طلاب"
+msgid "Shift Details"
+msgstr "تحول تفاصيل"
 
-msgid "Attendance - Staff"
-msgstr "الحضور - أعضاء هيئة التدريس"
+msgid "Edit Shift"
+msgstr "تحرير التحول"
+
+msgid "Add Shift"
+msgstr "إضافة شيفت"
+
+msgid "Add Attachment"
+msgstr "إضافة المرفقات"
+
+msgid "Please enter a File name"
+msgstr "الرجاء إدخال اسم الملف"
+
+msgid "No file was uploaded"
+msgstr "تم تحميل أي ملف"
+
+msgid "The files has been uploaded"
+msgstr "تم تحميل الملف"
+
+msgid "Attachment Details"
+msgstr "تفاصيل المرفقات"
+
+msgid "Teaching"
+msgstr "تدريس"
+
+msgid "Position Details"
+msgstr "تفاصيل الموقف"
+
+msgid "Edit Position"
+msgstr "تحرير الموقع"
+
+msgid "All Years"
+msgstr "جميع سنوات"
+
+msgid "Number:"
+msgstr "عدد:"
+
+msgid "Reset"
+msgstr "إعادة تعيين"
+
+msgid "Visualizer - Indicator"
+msgstr "متخيل - المؤشر"
+
+msgid "Unit"
+msgstr "وحدة"
+
+msgid "Step 1"
+msgstr "الخطوة 1"
+
+msgid "Step 2"
+msgstr "الخطوة 2"
+
+msgid "Step 3"
+msgstr "الخطوة 3"
+
+msgid "Step 4"
+msgstr "الخطوة 4"
+
+msgid "Step 5"
+msgstr "الخطوة 5"
+
+msgid "Step 6"
+msgstr "الخطوة 6"
+
+msgid "Step 7"
+msgstr "الخطوة 7"
+
+msgid "Step 8"
+msgstr "الخطوة 8"
+
+msgid "Step 9"
+msgstr "الخطوة 9"
+
+msgid "Dimension"
+msgstr "البعد"
+
+msgid "Review"
+msgstr "مراجعة"
+
+msgid "Visualize"
+msgstr "تصور"
+
+msgid "Indicators"
+msgstr "مؤشرات"
+
+msgid "Area ID"
+msgstr "منطقة ID"
+
+msgid "Table"
+msgstr "الجدول"
+
+msgid "Column"
+msgstr "العمود"
+
+msgid "Stacked Column"
+msgstr "العمود مكدسة"
+
+msgid "Bar"
+msgstr "شريط"
+
+msgid "Stacked Bar"
+msgstr "بار مكدسة"
+
+msgid "Line"
+msgstr "خط"
+
+msgid "Scatter"
+msgstr "مبعثرة"
+
+msgid "Pie"
+msgstr "فطيرة"
+
+msgid "Visualization"
+msgstr "التصور"
+
+msgid "Visualizer"
+msgstr "ومتخيل"
+
+msgid "List of Classes"
+msgstr "قائمة فئات"
+
+msgid "Verify"
+msgstr "تحقق"
+
+msgid "Data Entry"
+msgstr "إدخال البيانات"
+
+msgid "Estimate"
+msgstr "تقدير"
+
+msgid "Full Time Equivalent Teachers"
+msgstr "دوام كامل المعلمين النقد"
+
+msgid "Single Grade Teachers Only"
+msgstr "المعلمون درجة واحدة فقط"
+
+msgid "Single Grade Classes Only"
+msgstr "فصول الصف واحدة فقط"
+
+msgid "Multi Grade Classes"
+msgstr "فصول متعددة الدرجة"
+
+msgid "There are no classes associated with this institution site for the selected year."
+msgstr "لا توجد الطبقات المرتبطة بهذا الموقع مؤسسة للعام المحدد."
+
+msgid "There are no subjects configured in the system."
+msgstr "لا توجد مواضيع تكوينها في النظام."
+
+msgid "Overview and More"
+msgstr "نظرة عامة والمزيد"
+
+msgid "Guardians"
+msgstr "الأوصياء"
+
+msgid "Maps"
+msgstr "خرائط"

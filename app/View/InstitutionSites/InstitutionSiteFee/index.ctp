@@ -4,7 +4,7 @@ $this->assign('contentHeader', $contentHeader);
 
 $this->start('contentActions');
 	if ($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $selectedYear), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', $selectedAcademicPeriod), array('class' => 'divider'));
 	}
 $this->end();
 
@@ -25,7 +25,7 @@ $this->start('contentBody');
 				<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $programmeOptions[$obj['EducationGrade']['education_programme_id']] ?></td>
-					<td><?php echo $this->Html->link($obj['EducationGrade']['name'], array('action' => $model, 'view', $obj[$model]['id'], $selectedYear)) ?></td>
+					<td><?php echo $this->Html->link($obj['EducationGrade']['name'], array('action' => $model, 'view', $obj[$model]['id'], $selectedAcademicPeriod)) ?></td>
 					<td class="cell-number"><?php echo $obj[$model]['total'] ?></td>
 				</tr>
 				<?php endforeach ?>

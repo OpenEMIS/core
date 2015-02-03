@@ -10,14 +10,14 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Year'), __('Start Date'), __('Type'), __('Title'));
+$tableHeaders = array(__('Academic Periods'), __('Start Date'), __('Type'), __('Title'));
 $tableData = array();
 
 
 foreach($data as $obj) {
 	$row = array();
         
-        $row[] = $obj['SchoolYear']['name'];
+        $row[] = $obj['AcademicPeriod']['name'];
         $row[] = $obj['StudentExtracurricular']['start_date'] ;
         $row[] = $obj['ExtracurricularType']['name'] ;
         $row[] = $this->Html->link($obj[$model]['name'], array('action' => 'extracurricularView', $obj[$model]['id']), array('escape' => false));

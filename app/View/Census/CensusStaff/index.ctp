@@ -6,12 +6,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Staff'));
 $this->start('contentActions');
 if($_edit && $isEditable) {
-	echo $this->Html->link(__('Edit'), array('action' => 'CensusStaff', 'edit', $selectedYear), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'CensusStaff', 'edit', $selectedAcademicPeriod), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('census/year_options');
+echo $this->element('census/academic_period_options');
 ?>
 
 <div class="table-responsive">

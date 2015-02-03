@@ -20,7 +20,7 @@ class StudentsController extends StudentsAppController {
 	public $name = 'Students';
 	public $studentId;
 	public $uses = array(
-		'Area',
+		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteClass',
 		'InstitutionSiteType',
@@ -33,7 +33,7 @@ class StudentsController extends StudentsAppController {
 		'Students.StudentCustomValue',
 		'Students.StudentAssessment',
 		'Students.StudentAttendanceType',
-		'SchoolYear',
+		'AcademicPeriod',
 		'ConfigItem'
 	);
 	
@@ -75,7 +75,9 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteStudent',
 		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
-		'StudentBehaviour' => array('plugin' => 'Students')
+		'StudentBehaviour' => array('plugin' => 'Students'),
+		'Absence' => array('plugin' => 'Students'),
+		'StudentSection' => array('plugin' => 'Students')
 	);
 
 	public function beforeFilter() {
@@ -121,14 +123,24 @@ class StudentsController extends StudentsAppController {
 			$searchKey = Sanitize::escape($this->request->data['Student']['search']);
 		}
 
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$defaultIdentity = $IdentityType->find('first', array(
+			'contain' => array('FieldOption'),
+			'conditions' => array('FieldOption.code' => $IdentityType->alias),
+			'order' => array('IdentityType.default DESC')
+		));
+
 		$conditions = array(
 			'SearchKey' => $searchKey,
 			'AdvancedSearch' => $this->Session->check('Student.AdvancedSearch') ? $this->Session->read('Student.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id')
+			'userId' => $this->Auth->user('id'),
+			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$data = $this->Search->search($this->Student, $conditions);
+		$order = empty($this->params->named['sort']) ? array('Student.first_name' => 'asc') : array();
+		$data = $this->Search->search($this->Student, $conditions, $order);
+		$data = $this->Student->attachLatestInstitutionInfo($data);
 		
 		if (empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
 			if (count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
@@ -139,6 +151,7 @@ class StudentsController extends StudentsAppController {
 			$this->Message->alert('general.noData');
 		}
 		$this->set('data', $data);
+		$this->set('defaultIdentity', $defaultIdentity['IdentityType']);
 	}
 
 	public function advanced() {
@@ -228,7 +241,7 @@ class StudentsController extends StudentsAppController {
 		}
 		$data = $this->Student->findById($id);
 		$obj = $data['Student'];
-		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Student.data', $obj);
@@ -318,16 +331,18 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb(ucfirst($this->action));
 		$header = __(ucfirst($this->action));
 		$studentId = $this->Session->read('Student.id');
-		$data = array();
-		$classes = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
-
-		foreach ($classes as $row) {
-			$key = $row['InstitutionSite']['name'];
-			$data[$key][] = $row;
+		
+		$data = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
+		
+		foreach($data as $i => $obj) {
+			$classId = $obj['InstitutionSiteClassStudent']['institution_site_class_id'];
+			$data[$i]['InstitutionSiteClass']['teachers'] = ClassRegistry::init('InstitutionSiteClassStaff')->getStaffs($classId, 'list');
 		}
-		if (empty($data)) {
+		
+		if(empty($data)){
 			$this->Message->alert('general.noData');
 		}
+		
 		$this->set(compact('data', 'header'));
 	}
 
@@ -336,6 +351,10 @@ class StudentsController extends StudentsAppController {
 		$this->Student->delete($id);
 		$this->Message->alert('general.delete.success');
 		$this->redirect(array('action' => 'index'));
+	}
+
+	public function excel() {
+		$this->Student->excel();
 	}
 
 	public function history() {
@@ -348,15 +367,12 @@ class StudentsController extends StudentsAppController {
 			'order' => array('StudentHistory.created' => 'desc')
 		));
 
-		// pr($historyData);
 		$data = $this->Student->findById($studentId);
 		$data2 = array();
 		foreach ($historyData as $key => $arrVal) {
 			foreach ($arrTables as $table) {
-				//pr($arrVal);die;
 				foreach ($arrVal[$table] as $k => $v) {
 					$keyVal = ($k == 'name') ? $table . '_name' : $k;
-					//echo $k.'<br>';
 					$data2[$keyVal][$v] = $arrVal['StudentHistory']['created'];
 				}
 			}
@@ -376,94 +392,50 @@ class StudentsController extends StudentsAppController {
 			return $this->redirect(array('action' => 'index'));
 		}
 		$studentId = $this->Session->read('Student.id');
-		$years = $this->StudentAssessment->getYears($studentId);
+		$academicPeriods = $this->StudentAssessment->getAcademicPeriods($studentId);
 		$programmeGrades = $this->StudentAssessment->getProgrammeGrades($studentId);
 
-		reset($years);
+		reset($academicPeriods);
 		reset($programmeGrades);
 
 		if ($this->request->isPost()) {
-			$selectedYearId = $this->request->data['year'];
-			if (!$this->Session->check('Student.assessment.year')) {
-				$this->Session->write('Student.assessment.year', $selectedYearId);
+			$selectedAcademicPeriodId = $this->request->data['academicPeriod'];
+			if (!$this->Session->check('Student.assessment.academicPeriod')) {
+				$this->Session->write('Student.assessment.academicPeriod', $selectedAcademicPeriodId);
 			}
-			$isYearChanged = $this->Session->read('Student.assessment.year') !== $this->request->data['year'];
+			$isAcademicPeriodChanged = $this->Session->read('Student.assessment.academicPeriod') !== $this->request->data['academicPeriod'];
 			
-			$programmeGrades = $this->StudentAssessment->getProgrammeGrades($studentId, $selectedYearId);
-			$selectedProgrammeGrade = $isYearChanged ? key($programmeGrades) : $this->request->data['programmeGrade'];
+			$programmeGrades = $this->StudentAssessment->getProgrammeGrades($studentId, $selectedAcademicPeriodId);
+			$selectedProgrammeGrade = $isAcademicPeriodChanged ? key($programmeGrades) : $this->request->data['programmeGrade'];
 		} else {
-			$selectedYearId = key($years);
+			$selectedAcademicPeriodId = key($academicPeriods);
 			$selectedProgrammeGrade = key($programmeGrades);
 		}
-		$data = $this->StudentAssessment->getData($studentId, $selectedYearId, $selectedProgrammeGrade);
+		$data = $this->StudentAssessment->getData($studentId, $selectedAcademicPeriodId, $selectedProgrammeGrade);
 
-		if (empty($data) && empty($years) && empty($programmeGrades)) {
+		if (empty($data) && empty($academicPeriods) && empty($programmeGrades)) {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->set('years', $years);
-		$this->set('selectedYear', $selectedYearId);
+		$this->set('academicPeriods', $academicPeriods);
+		$this->set('selectedAcademicPeriod', $selectedAcademicPeriodId);
 		$this->set('programmeGrades', $programmeGrades);
 		$this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
 		$this->set('data', $data);
 		$this->set('header',$header);
 	}
 
-	// STUDENT ATTENDANCE PART
-	public function absence() {
-		if (!$this->Session->check('Student.id')) {
-			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
-		}
-		$studentId = $this->Session->read('Student.id');
-		//$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-		$this->Navigation->addCrumb('Absence');
-		$header = __('Absence');
-		
-		$yearList = $this->SchoolYear->getYearList();
-		
+	private function getAvailableAcademicPeriodId($academicPeriodList) {
+		$academicPeriodId = 0;
 		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if (!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		
-		$monthOptions = $this->generateMonthOptions();
-		$currentMonthId = $this->getCurrentMonthId();
-		if (isset($this->params['pass'][1])) {
-			$monthId = $this->params['pass'][1];
-			if (!array_key_exists($monthId, $monthOptions)) {
-				$monthId = $currentMonthId;
-			}
-		} else {
-			$monthId = $currentMonthId;
-		}
-		
-		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
-		$data = $absenceData;
-		
-		if (empty($data)) {
-			$this->Message->alert('general.noData');
-		}
-		
-		$settingWeekdays = $this->getWeekdaysBySetting();
-
-		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
-	}
-
-	private function getAvailableYearId($yearList) {
-		$yearId = 0;
-		if (isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
-			}
-		} else {
-			$yearId = key($yearList);
-		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	public function getUniqueID() {

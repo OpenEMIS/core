@@ -30,7 +30,7 @@ class CensusController extends AppController {
 		'InstitutionSiteProgramme',
 		'EducationCycle',
 		'EducationGrade',
-		'SchoolYear',
+		'AcademicPeriod',
 		'CensusVerification',
 		'CensusStudent',
 		'CensusAttendance',
@@ -104,17 +104,17 @@ class CensusController extends AppController {
 		$this->set('source_type', $this->source_type);
 	}
 	
-	public function getAvailableYearId($yearList) {
-		$yearId = 0;
+	public function getAvailableAcademicPeriodId($academicPeriodList) {
+		$academicPeriodId = 0;
 		if(isset($this->params['pass'][0])) {
-			$yearId = $this->params['pass'][0];
-			if(!array_key_exists($yearId, $yearList)) {
-				$yearId = key($yearList);
+			$academicPeriodId = $this->params['pass'][0];
+			if(!array_key_exists($academicPeriodId, $academicPeriodList)) {
+				$academicPeriodId = key($academicPeriodList);
 			}
 		} else {
-			$yearId = key($yearList);
+			$academicPeriodId = key($academicPeriodList);
 		}
-		return $yearId;
+		return $academicPeriodId;
 	}
 
 	public function getAvailableprogrammeId($programmeOptions) {
@@ -155,11 +155,11 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Verifications');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$data = $this->CensusVerification->getVerifications($institutionSiteId);
-		$verifiedYears = $this->SchoolYear->getYearListForVerification($institutionSiteId);
-		$unverifiedYears = $this->SchoolYear->getYearListForVerification($institutionSiteId, false);
+		$verifiedAcademicPeriods = $this->AcademicPeriod->getAcademicPeriodListForVerification($institutionSiteId);
+		$unverifiedAcademicPeriods = $this->AcademicPeriod->getAcademicPeriodListForVerification($institutionSiteId, false);
 		$this->set('data', $data);
-		$this->set('allowVerify', count($verifiedYears) > 0);
-		$this->set('allowUnverify', count($unverifiedYears) > 0);
+		$this->set('allowVerify', count($verifiedAcademicPeriods) > 0);
+		$this->set('allowUnverify', count($unverifiedAcademicPeriods) > 0);
 	}
 	
 	public function verifies() {
@@ -170,18 +170,18 @@ class CensusController extends AppController {
 				$status = $this->params['pass'][0];
 				$msg = $this->Utility->getMessage($status==1 ? 'CENSUS_VERIFY' : 'CENSUS_UNVERIFY');
 				$label = '';
-				$yearOptions = array();
+				$academicPeriodOptions = array();
 				
 				if($status==1) {
-					$label = __('Year to verify');
-					$yearOptions = $this->SchoolYear->getYearListForVerification($institutionSiteId);
+					$label = __('Academic Period to verify');
+					$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodListForVerification($institutionSiteId);
 				} else {
-					$label = __('Year to unverify');
-					$yearOptions = $this->SchoolYear->getYearListForVerification($institutionSiteId, false);
+					$label = __('Academic Period to unverify');
+					$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodListForVerification($institutionSiteId, false);
 				}
 				$this->set('msg', $msg);
 				$this->set('label', $label);
-				$this->set('yearOptions', $yearOptions);
+				$this->set('academicPeriodOptions', $academicPeriodOptions);
 			} else { // post
 				$this->autoRender = false;
 				$status = $this->params['pass'][0];
@@ -218,8 +218,8 @@ class CensusController extends AppController {
 	public function infrastructure() {
 		$this->Navigation->addCrumb('Infrastructure');
 		
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
+		$selectedAcademicPeriod = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($academicPeriodList);
 		$arrCensusInfra = array();
 		
 		$data = $this->InfrastructureCategory->find('list',array('conditions'=>array('InfrastructureCategory.visible'=>1),'order'=>'InfrastructureCategory.order'));
@@ -228,7 +228,7 @@ class CensusController extends AppController {
 
 			if(method_exists($this, $val)){
 
-				$arrCensusInfra[$val] = $this->$val($selectedYear);
+				$arrCensusInfra[$val] = $this->$val($selectedAcademicPeriod);
 				$status =  $this->InfrastructureStatus->find('list',array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $key, 'InfrastructureStatus.visible' => 1), 'order' => array('InfrastructureStatus.order')));
 				//pr($arrCensusInfra[$val]);die;
 				$arrCensusInfra[$val]['status'] = $status;
@@ -241,9 +241,9 @@ class CensusController extends AppController {
 		$genderId = $genderOptions[key($genderOptions)]['value'];
 		
 		$this->set('data',$arrCensusInfra);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('yearList', $yearList);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('selectedAcademicPeriod', $selectedAcademicPeriod);
+		$this->set('academicPeriodList', $academicPeriodList);
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedAcademicPeriod));
 		
 		$this->set('genderOptions',$genderOptions);
 		$this->set('genderId',$genderId);
@@ -255,7 +255,7 @@ class CensusController extends AppController {
 				
 		if($this->request->is('post')) {
 			//pr($this->request->data);die;
-			$yearId = $this->request->data['CensusInfrastructure']['school_year_id'];
+			$academicPeriodId = $this->request->data['CensusInfrastructure']['academic_period_id'];
 			$sanitationGender = $this->request->data['CensusSanitation']['gender'];
 			foreach($data as $InfraCategory){
 				
@@ -280,7 +280,7 @@ class CensusController extends AppController {
 							unset($this->request->data['Census'.$InfraCategory]['gender']);
 							unset($this->request->data['Census'.$InfraCategory]['material']);
 							
-							$arrVal['school_year_id'] = $yearId;
+							$arrVal['academic_period_id'] = $academicPeriodId;
 							$arrVal['institution_site_id'] = $this->institutionSiteId;
 						}
 					}
@@ -298,21 +298,21 @@ class CensusController extends AppController {
 				
 			}
 		   //pr($this->request->data);die;
-			$this->redirect(array('controller' => 'Census', 'action' => 'infrastructure', $yearId));
+			$this->redirect(array('controller' => 'Census', 'action' => 'infrastructure', $academicPeriodId));
 		}
 		
 		$arrCensusInfra = array();
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$selectedYear = $this->getAvailableYearId($yearList);
-		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
+		$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods();
+		$selectedAcademicPeriod = $this->getAvailableAcademicPeriodId($academicPeriodList);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedAcademicPeriod);
 		if(!$editable) {
-			$this->redirect(array('action' => 'infrastructure', $selectedYear));
+			$this->redirect(array('action' => 'infrastructure', $selectedAcademicPeriod));
 		} else {
 			foreach($data as $key => $val){
 				//pr($data);die;
 				if(method_exists($this, $val)){
 					
-					$arrCensusInfra[$val] = $this->$val($selectedYear);
+					$arrCensusInfra[$val] = $this->$val($selectedAcademicPeriod);
 					$status =  $this->InfrastructureStatus->find('list',array('conditions' => array('InfrastructureStatus.infrastructure_category_id' => $key, 'InfrastructureStatus.visible' => 1), 'order' => array('InfrastructureStatus.order')));
 					//pr($arrCensusInfra[$val]);die;
 					$arrCensusInfra[$val]['status'] = $status;
@@ -325,8 +325,8 @@ class CensusController extends AppController {
 			
 			//pr($arrCensusInfra);
 			$this->set('data',$arrCensusInfra);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('yearList', $yearList);
+			$this->set('selectedAcademicPeriod', $selectedAcademicPeriod);
+			$this->set('academicPeriodList', $academicPeriodList);
 			
 			$this->set('genderOptions',$genderOptions);
 			$this->set('genderId',$genderId);
@@ -344,7 +344,7 @@ class CensusController extends AppController {
 			$materialCondition = array('CensusBuilding.infrastructure_material_id'=>key($materials));
 		}
 		
-		$data =  $this->CensusBuilding->find('all',array('conditions'=>  array_merge(array('CensusBuilding.school_year_id'=>$yr,'CensusBuilding.institution_site_id'=>$this->institutionSiteId),$materialCondition)));
+		$data =  $this->CensusBuilding->find('all',array('conditions'=>  array_merge(array('CensusBuilding.academic_period_id'=>$yr,'CensusBuilding.institution_site_id'=>$this->institutionSiteId),$materialCondition)));
 		
 		$types =  $this->InfrastructureBuilding->find('list',array('conditions'=>array('InfrastructureBuilding.visible'=>1)));
 		$tmp = array();
@@ -362,7 +362,7 @@ class CensusController extends AppController {
 	
 	
 	private function resources($yr){
-		$data =  $this->CensusResource->find('all',array('conditions'=>array('CensusResource.school_year_id'=>$yr,'CensusResource.institution_site_id'=>$this->institutionSiteId)));
+		$data =  $this->CensusResource->find('all',array('conditions'=>array('CensusResource.academic_period_id'=>$yr,'CensusResource.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureResource->find('list',array('conditions'=>array('InfrastructureResource.visible'=>1)));
 		$tmp = array();
 		foreach($data as $arrV){
@@ -374,7 +374,7 @@ class CensusController extends AppController {
 	}
 	
 	private function furniture($yr){
-		$data =  $this->CensusFurniture->find('all',array('conditions'=>array('CensusFurniture.school_year_id'=>$yr,'CensusFurniture.institution_site_id'=>$this->institutionSiteId)));
+		$data =  $this->CensusFurniture->find('all',array('conditions'=>array('CensusFurniture.academic_period_id'=>$yr,'CensusFurniture.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureFurniture->find('list',array('conditions'=>array('InfrastructureFurniture.visible'=>1)));
 		$tmp = array();
 		foreach($data as $arrV){
@@ -386,7 +386,7 @@ class CensusController extends AppController {
 	}
 		
 	private function energy($yr){
-		$data =  $this->CensusEnergy->find('all',array('conditions'=>array('CensusEnergy.school_year_id'=>$yr,'CensusEnergy.institution_site_id'=>$this->institutionSiteId)));
+		$data =  $this->CensusEnergy->find('all',array('conditions'=>array('CensusEnergy.academic_period_id'=>$yr,'CensusEnergy.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureEnergy->find('list',array('conditions'=>array('InfrastructureEnergy.visible'=>1)));
 		$tmp = array();
 		foreach($data as $arrV){
@@ -397,7 +397,7 @@ class CensusController extends AppController {
 	}
 	
 	private function rooms($yr){
-		$data =  $this->CensusRoom->find('all',array('conditions'=>array('CensusRoom.school_year_id'=>$yr,'CensusRoom.institution_site_id'=>$this->institutionSiteId)));
+		$data =  $this->CensusRoom->find('all',array('conditions'=>array('CensusRoom.academic_period_id'=>$yr,'CensusRoom.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureRoom->find('list',array('conditions'=>array('InfrastructureRoom.visible'=>1)));
 		$tmp = array();
 		foreach($data as $arrV){
@@ -414,7 +414,7 @@ class CensusController extends AppController {
 			$materialCondition = array('CensusSanitation.infrastructure_material_id'=>$materialid);
 		}
 		
-		$data =  $this->CensusSanitation->find('all',array('conditions'=>  array_merge(array('CensusSanitation.school_year_id'=>$yr,'CensusSanitation.institution_site_id'=>$this->institutionSiteId),$materialCondition)));
+		$data =  $this->CensusSanitation->find('all',array('conditions'=>  array_merge(array('CensusSanitation.academic_period_id'=>$yr,'CensusSanitation.institution_site_id'=>$this->institutionSiteId),$materialCondition)));
 		$types =  $this->InfrastructureSanitation->find('list',array('conditions'=>array('InfrastructureSanitation.visible'=>1)));
 		$tmp = array();
 		foreach($data as $arrV){
@@ -431,7 +431,7 @@ class CensusController extends AppController {
 	}
 	
 	private function water($yr){
-		$data =  $this->CensusWater->find('all',array('conditions'=>array('CensusWater.school_year_id'=>$yr,'CensusWater.institution_site_id'=>$this->institutionSiteId)));
+		$data =  $this->CensusWater->find('all',array('conditions'=>array('CensusWater.academic_period_id'=>$yr,'CensusWater.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureWater->find('list',array('conditions'=>array('InfrastructureWater.visible'=>1)));
 		$tmp = array();
 		foreach($data as $arrV){

@@ -26,7 +26,7 @@ class ConfigController extends AppController {
 		'ConfigItem',
 		'ConfigItemOption',
 		'ConfigAttachment',
-		'SchoolYear',
+		'AcademicPeriod',
 		'Country',
 		'SystemProcess'
 	);

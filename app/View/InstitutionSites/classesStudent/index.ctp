@@ -12,7 +12,7 @@ if ($_edit) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../InstitutionSites/classes/controls');
+echo $this->element('../InstitutionSites/InstitutionSiteClass/controls');
 if(!empty($data)) :
 ?>
 
@@ -29,7 +29,7 @@ if(!empty($data)) :
 			<?php foreach($data as $obj) : ?>
 			<tr>
 				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 			</tr>
 			<?php endforeach ?>
 		</tbody>

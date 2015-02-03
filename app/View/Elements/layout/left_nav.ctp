@@ -27,6 +27,7 @@
 	$groupHtml = '';
 	$itemHtml = '';
 	$in = false;
+	$divider = '|';
 	foreach($_leftNavigations as $module => $obj) {
 		if(!isset($obj['display'])) continue;
 		if(is_string($module)) {
@@ -37,6 +38,9 @@
 		foreach($obj as $link) {
 			if(is_array($link)) {
 				if(!$link['display']) continue;
+
+				$controllerList = explode($divider, $link['controller']);
+				$link['controller'] = $controllerList[0];
 				
 				// hide the add existing student/staff if institution site id is not set
 				if (($link['controller'] == 'Students' && $link['action'] == 'InstitutionSiteStudent/add')
@@ -45,6 +49,15 @@
 						continue;
 					}
 				}
+				
+				
+				// hide the add new staff if institution site id is set
+				if ($link['controller'] == 'Staff' && $link['action'] == 'add') {
+					if ($this->Session->check('InstitutionSite.id')) {
+						continue;
+					}
+				}
+				
 				$controller = $link['controller'];
 				$params = (isset($link['params']) ? '/'.$link['params'] : '') . (strlen($_params)>0 ? '/'.$_params : '');
 				$url = sprintf('%s%s/%s', $this->webroot, $controller , $link['action']) . $params;

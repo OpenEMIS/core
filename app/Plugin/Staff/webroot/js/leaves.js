@@ -1,14 +1,13 @@
 
 $(document).ready(function() {
 	objStaffLeaves.init();
+	$('#StaffLeaveDateFromDay').on('change', function(){objStaffLeaves.compute_work_days();});
+	$('#StaffLeaveDateToDay').on('change', function(){objStaffLeaves.compute_work_days();});
 });
 
 var objStaffLeaves = {
 	init: function() {
-		//alert('here');
 		objStaffLeaves.compute_work_days();
-		//$(".icon_plus").unbind("click");
-		//$('.icon_plus').click(jsForm.insertNewInputFile);
 	},
 	validateFileSize: function(obj) {
 		//this.files[0].size gets the size of your file.
@@ -21,58 +20,11 @@ var objStaffLeaves = {
 
 		}
 	},
-	/*deleteFile: function(id) {
-		//	alert(getRootURL() + $('form').attr('deleteurl'));
-		var dlgId = 'deleteDlg';
-		var btn = {
-			value: i18n.General.textDelete,
-			callback: function() {
-				var maskId;
-				//var controller = $('#controller').text();
-				var url = getRootURL() + $('form').attr('deleteurl');
-				$.ajax({
-					type: 'POST',
-					dataType: 'json',
-					url: url,
-					data: {id: id},
-					beforeSend: function(jqXHR) {
-						maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
-					},
-					success: function(data, textStatus) {
-						var callback = function() {
-							var closeEvent = function() {
-								var successHandler = function() {
-									$('[file-id=' + id + ']').parent().fadeOut(600, function() {
-										$(this).remove();
-										attachments.renderTable();
-									});
-								};
-								jsAjax.result({data: data, callback: successHandler});
-							};
-							$.closeDialog({id: dlgId, onClose: closeEvent});
-						};
-						$.unmask({id: maskId, callback: callback});
-					}
-				});
-			}
-		};
-
-		var dlgOpt = {
-			id: dlgId,
-			title: i18n.Attachments.titleDeleteAttachment,
-			content: i18n.Attachments.contentDeleteAttachment,
-			buttons: [btn]
-		};
-
-		$.dialog(dlgOpt);
-	},*/
 	compute_work_days: function() {
-		/*var dateFrom = new Date($('#StaffLeaveDateFromYear').val()+'-'+ $('#StaffLeaveDateFromMonth').val()+'-'+$('#StaffLeaveDateFromDay').val());
-		 var dateTo = new Date($('#StaffLeaveDateToYear').val()+'-'+$('#StaffLeaveDateToMonth').val()+'-'+$('#StaffLeaveDateToDay').val());*/
-		var startDate = $('#StaffLeaveDateFromDay :input').val();
+		var startDate = $('#StaffLeaveDateFromDay').val();
 		var newStartDate = startDate.split("-").reverse().join("-");
 
-		var endDate = $('#StaffLeaveDateToDay :input').val();
+		var endDate = $('#StaffLeaveDateToDay').val();
 		var newEndDate = endDate.split("-").reverse().join("-");
 
 		var dateFrom = new Date(newStartDate);
@@ -96,7 +48,7 @@ var objStaffLeaves = {
 			}
 		}
 
-		$('.compute_days').val(daycount);
+		$('#StaffLeaveNumberOfDays').val(daycount);
 	},
 	errorFlag: function() {
 		var errorMsg = $('.custom-file-msg').length;

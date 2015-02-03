@@ -1,14 +1,14 @@
 <div class="row page-controls">
 	<div class="col-md-3">
 		<?php
-		if (empty($yearList)) {
-			array_push($yearList, $this->Label->get('general.noData'));
+		if (empty($academicPeriodList)) {
+			array_push($academicPeriodList, $this->Label->get('general.noData'));
 		}
-		echo $this->Form->input('school_year_id', array(
+		echo $this->Form->input('academic_period_id', array(
 			'label' => false,
 			'div' => false,
-			'options' => $yearList,
-			'value' => $yearId,
+			'options' => $academicPeriodList,
+			'value' => $academicPeriodId,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . "/$model/$action"
@@ -27,7 +27,7 @@
 			'value' => $weekId,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . "/$model/$action/$yearId/$sectionId"
+			'url' => $this->params['controller'] . "/$model/$action/$academicPeriodId/$sectionId"
 		));
 		?>
 	</div>
@@ -46,7 +46,7 @@
 			'value' => $dayId, 
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . "/$model/$action/$yearId/$sectionId/$weekId"
+			'url' => $this->params['controller'] . "/$model/$action/$academicPeriodId/$sectionId/$weekId"
 		));
 		?>
 	</div>
@@ -62,7 +62,7 @@
 			'value' => $sectionId,
 			'class' => 'form-control',
 			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . "/$model/$action/$yearId"
+			'url' => $this->params['controller'] . "/$model/$action/$academicPeriodId"
 		));
 		?>
 	</div>

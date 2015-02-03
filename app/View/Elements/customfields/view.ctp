@@ -18,15 +18,15 @@ $this->start('contentBody');
 ?>
 <div class="content_wrapper">
 	<div class="row year">
-		<div class="col-md-2"><?php echo __('Year'); ?></div>
+		<div class="col-md-2"><?php echo __('Academic Period'); ?></div>
 		<div class="col-md-3">
 			<?php
-				echo $this->Form->input('school_year_id', array(
+				echo $this->Form->input('academic_period_id', array(
 					'label' => false,
 					'div' => false,
 					'class' => 'form-control',
-					'options' => $years,
-					'default' => $selectedYear,
+					'options' => $academic_periods,
+					'default' => $selectedAcademicPeriod,
 					'onchange' => 'custom.view.changeCategory(this)',
 					'url' => $this->params['controller']. '/' . $this->action .'/'.$id 
 				));
