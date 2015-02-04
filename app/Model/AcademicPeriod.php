@@ -160,6 +160,22 @@ class AcademicPeriod extends AppModel {
 	}
 	
 	public function index() {
+		$needRecoverTree = $this->find('all',
+			array(
+				'recursive' => -1,
+				'fields' => array('id'),
+				'conditions' => array(
+					'OR' => array(
+						'lft' => null,
+						'rght' => null
+					)
+				)
+			)
+		);
+		if (!empty($needRecoverTree)) {
+			$this->recover();	
+		}
+
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
 		$paths = $parentId != 0 ? $this->getPath($parentId) : $this->findAllByParentId(0);
