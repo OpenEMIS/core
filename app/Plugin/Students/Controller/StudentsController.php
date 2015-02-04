@@ -290,15 +290,19 @@ class StudentsController extends StudentsAppController {
 					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
 					$dataToSite['student_status_id'] = $studentStatusId;
 					$dataToSite['student_id'] = $id;
-					$InstitutionSiteStudentModel->save($dataToSite);
-					
+					if (empty($studentIdSession)) {
+						$InstitutionSiteStudentModel->save($dataToSite);
+					}
+
 					$this->Session->write($model . '.data', $this->Student->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 					$this->Wizard->next();
 				} else {
 					$dataToSite['student_id'] = $id;
-					$InstitutionSiteStudentModel->save($dataToSite);
+					if (empty($studentIdSession)) {
+						$InstitutionSiteStudentModel->save($dataToSite);
+					}
 					
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
