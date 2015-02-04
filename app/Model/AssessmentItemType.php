@@ -190,144 +190,289 @@ class AssessmentItemType extends AppModel {
 	}
 	
 	public function getInstitutionAssessmentsByAcademicPeriod($institutionSiteId, $academicPeriodId) {
-		$list = $this->find('all', array(
-			'fields' => array(
-				'DISTINCT AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name', 'AssessmentItemType.description',
-				'EducationCycle.name', 'EducationProgramme.id', 'EducationProgramme.name', 
-				'EducationGrade.name', 'EducationGrade.id'
-			),
-			'recursive' => -1,
-			'joins' => array(
-				array(
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
-					'conditions' => array(
-						'InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id',
-						'InstitutionSiteSectionGrade.status = 1'
-					)
-				),
-				array(
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
-					'conditions' => array(
-						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
-						'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
-						'InstitutionSiteSection.academic_period_id' => $academicPeriodId
-					)
-				),
-				array(
-					'table' => 'institution_site_section_classes',
-					'alias' => 'InstitutionSiteSectionClass',
-					'conditions' => array(
-						'InstitutionSiteSectionClass.institution_site_section_id = InstitutionSiteSection.id',
-						'InstitutionSiteSectionClass.status = 1'
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClass.id = InstitutionSiteSectionClass.institution_site_class_id',
-					)
-				),
-				array(
-					'table' => '`education_grades_subjects`',
-					'alias' => 'EducationGradeSubject',
-					'conditions' => array(
-						'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
-						'EducationGradeSubject.visible = 1'
-					)
-				),
-				array(
-					'table' => 'assessment_items',
-					'alias' => 'AssessmentItem',
-					'conditions' => array(
-						'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
-						'AssessmentItem.education_grade_subject_id = EducationGradeSubject.id',
-						'AssessmentItem.visible = 1'
-					)
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'AssessmentItemType.education_grade_id = EducationGrade.id',
-						'EducationGrade.visible = 1'
-					)
-				),
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id',
-						'EducationProgramme.visible = 1'
-					)
-				),
-				array(
-					'table' => 'education_cycles',
-					'alias' => 'EducationCycle',
-					'conditions' => array(
-						'EducationProgramme.education_cycle_id = EducationCycle.id',
-						'EducationCycle.visible = 1'
-					)
+		$fields = array(
+			'DISTINCT AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name', 'AssessmentItemType.description',
+			'EducationCycle.name', 'EducationProgramme.id', 'EducationProgramme.name', 
+			'EducationGrade.name', 'EducationGrade.id'
+		);
+		$conditions = array(
+			'AssessmentItemType.academic_period_id' => array(0, $academicPeriodId),
+			'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId),
+			'AssessmentItemType.visible = 1'
+		);
+		$order = array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order');
+		$recursive = -1;
+				
+		$joinsSingleGrade = array(
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.education_grade_id = AssessmentItemType.education_grade_id',
+					'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
+					'InstitutionSiteSection.academic_period_id' => $academicPeriodId
 				)
 			),
-			'conditions' => array(
-				'AssessmentItemType.academic_period_id' => array(0, $academicPeriodId),
-				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId),
-				'AssessmentItemType.visible = 1'
+			array(
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_section_id = InstitutionSiteSection.id',
+					'InstitutionSiteSectionClass.status' => 1
+				)
 			),
-			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+			array(
+				'table' => 'institution_site_classes',
+				'alias' => 'InstitutionSiteClass',
+				'conditions' => array(
+					'InstitutionSiteClass.id = InstitutionSiteSectionClass.institution_site_class_id'
+				)
+			),
+			array(
+				'table' => '`education_grades_subjects`',
+				'alias' => 'EducationGradeSubject',
+				'conditions' => array(
+					'EducationGradeSubject.education_grade_id = InstitutionSiteClass.education_subject_id',
+					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
+					'EducationGradeSubject.visible = 1'
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'conditions' => array(
+					'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+					'AssessmentItem.education_grade_subject_id = EducationGradeSubject.id',
+					'AssessmentItem.visible = 1'
+				)
+			),
+			array(
+				'table' => 'education_grades',
+				'alias' => 'EducationGrade',
+				'conditions' => array(
+					'EducationGrade.id = AssessmentItemType.education_grade_id',
+					'EducationGrade.visible = 1'
+				)
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array(
+					'EducationGrade.education_programme_id = EducationProgramme.id',
+					'EducationProgramme.visible = 1'
+				)
+			),
+			array(
+				'table' => 'education_cycles',
+				'alias' => 'EducationCycle',
+				'conditions' => array(
+					'EducationProgramme.education_cycle_id = EducationCycle.id',
+					'EducationCycle.visible = 1'
+				)
+			)
+		);
+		
+		$joinsMultiGrades = array(
+			array(
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
+				'conditions' => array(
+					'InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id',
+					'InstitutionSiteSectionGrade.status = 1'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
+					'InstitutionSiteSection.education_grade_id' => NULL,
+					'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
+					'InstitutionSiteSection.academic_period_id' => $academicPeriodId
+				)
+			),
+			array(
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_section_id = InstitutionSiteSection.id',
+					'InstitutionSiteSectionClass.status' => 1
+				)
+			),
+			array(
+				'table' => 'institution_site_classes',
+				'alias' => 'InstitutionSiteClass',
+				'conditions' => array(
+					'InstitutionSiteClass.id = InstitutionSiteSectionClass.institution_site_class_id'
+				)
+			),
+			array(
+				'table' => '`education_grades_subjects`',
+				'alias' => 'EducationGradeSubject',
+				'conditions' => array(
+					'EducationGradeSubject.education_grade_id = InstitutionSiteClass.education_subject_id',
+					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
+					'EducationGradeSubject.visible = 1'
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'conditions' => array(
+					'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+					'AssessmentItem.education_grade_subject_id = EducationGradeSubject.id',
+					'AssessmentItem.visible = 1'
+				)
+			),
+			array(
+				'table' => 'education_grades',
+				'alias' => 'EducationGrade',
+				'conditions' => array(
+					'AssessmentItemType.education_grade_id = EducationGrade.id',
+					'EducationGrade.visible = 1'
+				)
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array(
+					'EducationGrade.education_programme_id = EducationProgramme.id',
+					'EducationProgramme.visible = 1'
+				)
+			),
+			array(
+				'table' => 'education_cycles',
+				'alias' => 'EducationCycle',
+				'conditions' => array(
+					'EducationProgramme.education_cycle_id = EducationCycle.id',
+					'EducationCycle.visible = 1'
+				)
+			)
+		);
+		
+		$listSingleGrade = $this->find('all', array(
+			'fields' => $fields,
+			'recursive' => $recursive,
+			'joins' => $joinsSingleGrade,
+			'conditions' => $conditions,
+			'order' => $order
 		));
 		
+		$listMultiGrades = $this->find('all', array(
+			'fields' => $fields,
+			'recursive' => $recursive,
+			'joins' => $joinsMultiGrades,
+			'conditions' => $conditions,
+			'order' => $order
+		));
+		
+		$dataSingleGrade = $this->processAssessmentsData($listSingleGrade);
+		$dataMultiGrades = $this->processAssessmentsData($listMultiGrades);
+		$data = $dataSingleGrade;
+		foreach($dataMultiGrades as $gradeId => $val){
+			foreach($val['items'] as $assessmentId => $assessment){
+				if(!isset($data[$gradeId])){
+					$data[$gradeId] = $val;
+				}else{
+					if(!isset($data[$gradeId]['items'][$assessmentId])){
+						$data[$gradeId]['items'][$assessmentId] = $assessment;
+					}
+				}
+			}
+		}
+		
+		return $data;
+	}
+	
+	private function processAssessmentsData($inputData){
 		$data = array();
-		foreach($list as $obj) {
+		foreach($inputData as $obj) {
 			$gradeName = $obj['EducationCycle']['name'] . ' - ' . $obj['EducationProgramme']['name'] . ' - ' . $obj['EducationGrade']['name'];
 			$assessment = $obj['AssessmentItemType'];
 			$gradeId = $obj['EducationGrade']['id'];
 			if(!array_key_exists($gradeId, $data)) {
 				$data[$gradeId] = array('name' => $gradeName, 'items' => array());
 			}
-			$data[$gradeId]['items'][] = array(
-				'id' => $assessment['id'],
+			$assessmentId =  $assessment['id'];
+			$data[$gradeId]['items'][$assessmentId] = array(
+				'id' => $assessmentId,
 				'code' => $assessment['code'],
 				'name' => $assessment['name'],
 				'description' => $assessment['description']
 			);
 		}
-		//pr($data);die;
+		
 		return $data;
 	}
 	
 	public function getAcademicPeriodListForAssessments($institutionSiteId) {
-		$data = $this->find('list', array(
-			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
-			'recursive' => -1,
-			'joins' => array(
-				array(
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
-					'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id')
-				),
-				array(
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
-					'conditions' => array(
-						'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
-						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId
-					)
-				),
-				array(
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'conditions' => array('InstitutionSiteSection.academic_period_id = AcademicPeriod.id')
+		$joinsSingle = array(
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.education_grade_id = AssessmentItemType.education_grade_id',
+					'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId
 				)
 			),
-			'conditions' => array(
-				'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId)
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('AcademicPeriod.id = InstitutionSiteSection.academic_period_id')
+			)
+		);
+		
+		$joinsMulti = array(
+			array(
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
+				'conditions' => array('InstitutionSiteSectionGrade.education_grade_id = AssessmentItemType.education_grade_id')
 			),
-			'order' => array('AcademicPeriod.order')
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
+					'InstitutionSiteSection.education_grade_id' => NULL,
+					'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId
+				)
+			),
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteSection.academic_period_id = AcademicPeriod.id')
+			)
+		);
+		
+		$fields = array('AcademicPeriod.id', 'AcademicPeriod.name');
+		$conditions = array(
+			'AssessmentItemType.institution_site_id' => array(0, $institutionSiteId)
+		);
+		$order = array('AcademicPeriod.order');
+		$recursive = -1;
+		
+		$dataSingleGrade = $this->find('list', array(
+			'fields' => $fields,
+			'recursive' => $recursive,
+			'joins' => $joinsSingle,
+			'conditions' => $conditions,
+			'order' => $order
 		));
+		
+		$dataMultiGrades = $this->find('list', array(
+			'fields' => $fields,
+			'recursive' => $recursive,
+			'joins' => $joinsMulti,
+			'conditions' => $conditions,
+			'order' => $order
+		));
+		
+		$data = $dataSingleGrade;
+		foreach($dataMultiGrades as $key => $value){
+			if(!array_key_exists($key, $data)){
+				$data[$key] = $value;
+			}
+		}
 
 		return $data;
 	}
