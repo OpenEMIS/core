@@ -385,3 +385,6 @@ fieldset.section_break > .profile-image {
 /* survey */
 .survey .list-group { padding-right: 0px; }
 .survey .list-group-item > span.modified { margin-right: 5px; }
+.loadingWrapper{
+	float: right;
+}
