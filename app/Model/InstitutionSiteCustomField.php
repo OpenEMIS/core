@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomField extends AppModel {
 	public $actsAs = array(
+		'Excel',
 		'CustomField' => array('module' => 'InstitutionSite'), // has to be before FieldOptionBehavior to override postAdd and postEdit
 		'FieldOption', 
 		'ControllerAction'
@@ -39,6 +40,20 @@ class InstitutionSiteCustomField extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+	
+	public function excelCustomFieldFindOptions($options) {
+		$conditions = parent::excelGetConditions();
+		
+		if (array_key_exists('InstitutionSite.id', $conditions)) {
+			$id = $conditions['InstitutionSite.id'];
+
+			$InstitutionSite = ClassRegistry::init('InstitutionSite');
+			$type = $InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $id));
+			$options['conditions'][$this->alias . '.institution_site_type_id'] = array(0, $type);
+			$options['conditions'][$this->alias . '.type'] = array(2, 3, 4, 5);
+		}
+		return $options;
+	}
 	
 	public function getSubOptions() {
 		$options = $this->InstitutionSiteType->getList();
