@@ -11,8 +11,8 @@ var QualityRubric = {
         //var selectedDate = $('#dateYear').val()+ '-'+$('#dateMonth').val()+ '-'+$('#dateDay').val();
         var academicPeriodId = $('#academicPeriodId').val();
         var rubricsTemplateId = $('#rubricsTemplateId').val();
-        var institutionSiteClassGradeId = $('#institutionSiteClassGradeId').val();
-        var institutionSiteClassId = $('#institutionSiteClassId').val();
+        var institutionSiteSectionGradeId = $('#institutionSiteSectionGradeId').val();
+        var institutionSiteSectionId = $('#institutionSiteSectionId').val();
         var institutionSitestaffId = $('#institutionSitestaffId').val();
         //var qualityTypeId = $('#qualityTypeId').val();
 
@@ -22,17 +22,17 @@ var QualityRubric = {
             case 'academicPeriodId':
                 url += '/' + academicPeriodId;
                 break;
-            case 'institutionSiteClassGradeId':
-                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId;
+            case 'institutionSiteSectionGradeId':
+                url += '/' + academicPeriodId + '/' + institutionSiteSectionGradeId;
                 break;
-            case 'institutionSiteClassId':
-                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId;
+            case 'institutionSiteSectionId':
+                url += '/' + academicPeriodId + '/' + institutionSiteSectionGradeId + '/' + institutionSiteSectionId;
                 break;
             case 'rubricsTemplateId':
-                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId;
+                url += '/' + academicPeriodId + '/' + institutionSiteSectionGradeId + '/' + institutionSiteSectionId + '/' + rubricsTemplateId;
                 break;
             case 'institutionSitestaffId':
-                url += '/' + academicPeriodId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId + '/' + institutionSitestaffId;
+                url += '/' + academicPeriodId + '/' + institutionSiteSectionGradeId + '/' + institutionSiteSectionId + '/' + rubricsTemplateId + '/' + institutionSitestaffId;
                 break;
 
         }
