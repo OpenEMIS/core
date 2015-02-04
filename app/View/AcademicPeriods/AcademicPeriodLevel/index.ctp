@@ -8,7 +8,7 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../AcademicPeriods/controls');
+echo $this->element('../AcademicPeriods/nav_tabs');
 ?>
 
 <div class="table-responsive">
