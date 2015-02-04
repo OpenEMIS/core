@@ -37,7 +37,8 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteShift',
 		'InstitutionSiteSection',
 		'InstitutionSiteClass',
-		'InstitutionSiteFee'
+		'InstitutionSiteFee',
+		'InstitutionSiteCustomValue'
 	);
 	
 	public $actsAs = array(
@@ -262,7 +263,13 @@ class InstitutionSite extends AppModel {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('InstitutionSite.id')) {
 			$models = array(
-				array('model' => $this),
+				array(
+					'model' => $this, 
+					'include' => array(
+						'header' => 'InstitutionSiteCustomField',
+						'data' => 'InstitutionSiteCustomValue'
+					)
+				),
 				array('model' => $this->InstitutionSiteBankAccount),
 				array('model' => $this->InstitutionSitePosition),
 				array('model' => $this->InstitutionSiteProgramme),
@@ -867,6 +874,28 @@ class InstitutionSite extends AppModel {
 			}
 		}
 		return $data;
+	}
+	
+	public function getValue($row, $key) {
+		$index = explode('.', $key);
+		$value = $row;
+		foreach($index as $i) {
+			if(isset($value[$i])) {
+				$value = $value[$i];
+			} else {
+				$value = '';
+				break;
+			}
+		}
+
+		$lookup = $this->excelGetFieldLookup();
+		if (!empty($lookup) && array_key_exists($key, $lookup)) {
+			$values = $lookup[$key];
+			if (strlen($value)>0 && array_key_exists($value, $values)) {
+				$value = $values[$value];
+			}
+		}
+		return 'tet';
 	}
 	
 }

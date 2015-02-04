@@ -22,6 +22,7 @@ class ExcelBehavior extends ModelBehavior {
 	public $rootFolder = 'export';
 	public $LabelHelper;
 	public $Model;
+	public $header;
 	public $limit = 500;
 	public $conditions = array();
 
@@ -125,7 +126,8 @@ class ExcelBehavior extends ModelBehavior {
 		foreach ($models as $sheet) {
 			$sheetModel = is_object($sheet['model']) ? $sheet['model'] : ClassRegistry::init($sheet['model']);
 			$sheetName = array_key_exists('name', $sheet) ? __($sheet['name']) : $sheetModel->alias;
-
+			$include = array_key_exists('include', $sheet) ? $sheet['include'] : array();
+			//pr($include);
 			if ($model->alias == $sheetModel->alias) {
 				$this->conditions = $model->excelGetConditions();
 			}
@@ -143,30 +145,35 @@ class ExcelBehavior extends ModelBehavior {
 				$sheetModel->Behaviors->load('Excel');
 			}
 
+			$header = $sheetModel->excelGetHeader($include);
+			$footer = $sheetModel->excelGetFooter();
+			//pr($header);die;
+			
 			$rowCount = 0;
 			$count = $sheetModel->excelGetCount();
 			$percentCount = intval($count / 100);
+			//pr($count);die;
 
 			$pages = ceil($count / $this->limit);
-
-			$header = $sheetModel->excelGetHeader();
-			$footer = $sheetModel->excelGetFooter();
 
 			if (is_callable($_settings['onStartSheet'])) {
 				$_settings['onStartSheet']($count, $pages);
 			}
-
+			
 			$writer->writeSheetRow($sheetName, array_values($header));
+			//pr($header);die;
 
 			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 				$data = $sheetModel->excelGetData($pageNo);
-
+//pr($data);die;
 				foreach ($data as $row) {
 					$sheetRow = array();
 					foreach ($header as $key => $label) {
 						$value = $sheetModel->getValue($row, $key);
+						//die;
 						$sheetRow[] = $value;
 					}
+					//pr($sheetRow);die;
 
 					$rowCount++;
 
@@ -180,7 +187,7 @@ class ExcelBehavior extends ModelBehavior {
 						$_settings['onAfterWrite']($rowCount, $percentCount);
 					}
 				}
-			}	
+			}
 			
 			$writer->writeSheetRow($sheetName, array(''));
 			$writer->writeSheetRow($sheetName, $footer);
@@ -202,7 +209,7 @@ class ExcelBehavior extends ModelBehavior {
 		return $this->Model->name;
 	}
 
-	public function excelGetHeader(Model $model) {
+	public function excelGetHeader(Model $model, $include) {
 		$model = $this->Model;
 		$alias = $model->alias;
 		$schema = $model->schema();
@@ -249,6 +256,12 @@ class ExcelBehavior extends ModelBehavior {
 				$header[$key] = __($label);
 			}
 		}
+		
+		// Custom Field Logic starts here
+		$header = $model->excelCustomFieldHeader($include, $header);
+		// Custom Field Logic ends here
+		
+		$this->header = $header;
 		return $header;
 	}
 
@@ -272,13 +285,25 @@ class ExcelBehavior extends ModelBehavior {
 	}
 
 	public function excelGetFindOptions(Model $model) {
-		$fields = array_keys($this->Model->excelGetHeader());
+		$fields = array_keys($this->header);
 		$conditions = $this->Model->excelGetConditions();
 		$contain = $this->getContain($fields);
 		$order = $this->Model->excelGetOrder();
-
+		
+		foreach ($fields as $key => $field) {
+			//pr($field);
+			$split = explode('.', $field);
+			//pr($split);
+			if (is_numeric($split[1])) {
+				unset($fields[$key]);
+			}
+		}
+		
+		//$fields[] = 'InstitutionSiteCustomValue.*';
+		//pr($fields);
+		
 		$options = array();
-		$options['recursive'] = 0;
+		//$options['recursive'] = 0;
 		$options['fields'] = $fields;
 		$options['contain'] = $contain;
 		$options['conditions'] = $conditions;
@@ -335,10 +360,52 @@ class ExcelBehavior extends ModelBehavior {
 		foreach ($fields as $field) {
 			$split = explode('.', $field);
 			if ($split[0] !== $this->Model->alias) {
-				$contain[$split[0]] = array('fields' => $field);
+				if (!array_key_exists($split[0], $contain)) {
+					if (count($split) > 1) {
+						if (!is_numeric($split[1])) {
+							$contain[$split[0]] = array('fields' => $field);
+						} else {
+							$contain[$split[0]] = array('fields' => $split[0] . '.*');
+						}
+					} else {
+						$contain[$split[0]] = array();
+					}
+				}
 			}
-		}
+		}//pr($contain);die;
 		return $contain;
+	}
+	
+	public function excelCustomFieldHeader(Model $model, $include, $header) {
+		$headerModel = ClassRegistry::init($include['header']);
+		$headerModel->recursive = -1;
+		
+		$options = array(
+			'conditions' => array(
+				$headerModel->alias . '.visible' => 1
+			),
+			'order' => $headerModel->alias . '.order'
+		);
+		
+		$options = $headerModel->excelCustomFieldFindOptions($options);
+		$customField = $headerModel->find('all', $options);
+		
+		foreach ($customField as $field) {
+			$id = $field[$headerModel->alias]['id'];
+			$header[$include['data']. ".$id"] = $field[$headerModel->alias]['name'];
+		}
+		//pr($customField);
+		//pr($header);
+		//pr($options);
+		//die;
+		//pr($include);
+		//pr($header);
+		//die;
+		return $header;
+	}
+	
+	public function excelCustomFieldFindOptions(Model $model, $options) {
+		return $options;
 	}
 
 	private function download($path) {
