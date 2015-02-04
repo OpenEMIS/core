@@ -20,41 +20,133 @@ class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
 		'ControllerAction2',
-		'AcademicPeriod'
+		'DatePicker' => array('start_date', 'end_date')
 	);
 	
 	public $belongsTo = array(
-		'AcademicPeriod',
 		'InstitutionSite',
 		'EducationProgramme'
 	);
+
+	public $validate = array(
+		'education_programme_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Education Programme.'
+			)
+		),
+		'start_date' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select the Start Date'
+			),
+			'ruleCompare' => array(
+				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+				'required' => true,
+				'message' => 'Please select the Start Date'
+			),
+			'ruleNotLater' => array(
+				'rule' => array('compareDate', 'end_date'),
+				'message' => 'Start Date cannot be later than End Date'
+			),
+		)
+	);
+
+	public function compareDate($field = array(), $compareField = null) {
+		$startDate = new DateTime(current($field));
+		$endDate = new DateTime($this->data[$this->name][$compareField]);
+		return $endDate >= $startDate;
+	}
 	
 	public $virtualFields = array(
 		'name' => "SELECT `education_programmes`.`name` from `education_programmes` WHERE `education_programmes`.`id` = InstitutionSiteProgramme.education_programme_id"
 	);
-
-	/* Excel Behaviour */
-	public function excelGetFieldLookup() {
-		$alias = $this->alias;
-		$lookup = array(
-			"$alias.status" => array(0 => 'Inactive', 1 => 'Active')
-		);
-		return $lookup;
-	}
-	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();
 		$this->Navigation->addCrumb('Programmes');
+
+		$params = $this->request->params;
+
+		if(isset($params['pass'][0]) && ($params['pass'][0] == 'add' || $params['pass'][0] == 'edit')) {
+			$institutionSiteId = $this->Session->read('InstitutionSite.id');
+
+			$this->fields['education_level_id']['type'] = 'select';
+			$this->fields['education_level_id']['visible'] = true;
+			$EducationLevel = ClassRegistry::init('EducationLevel');
+			$EducationLevel->contain('EducationSystem');
+			$educationLevels = $EducationLevel->find('all', array(
+				'order' => array(
+					'EducationSystem.order', 'EducationLevel.order'
+				)
+			));
+			$educationLevelOptions = array();
+			foreach ($educationLevels as $key => $obj) {
+				$educationLevelOptions[$obj['EducationLevel']['id']] = $obj['EducationSystem']['name'] . " - " . $obj['EducationLevel']['name'];
+			}
+			$this->fields['education_level_id']['options'] = $educationLevelOptions;
+			$selectedEducationLevel = key($educationLevelOptions);
+			if ($this->request->is(array('post', 'put'))) {
+				$selectedEducationLevel = $this->request->data[$this->alias]['education_level_id'];
+			} else {
+
+			}
+
+			//$this->fields['education_level_id']['default'] = 'level:' . $selectedEducationLevel;
+			//$url = $this->request->params['controller'] .'/'. $this->request->params['action'] .'/'. $this->request->params['pass'][0];
+			//$url = $params['pass'][0] == 'edit' ? $url .'/'. $this->request->params['pass'][1] : $url;
+			$this->fields['education_level_id']['attr'] = array(
+				//'url' => $url,
+				//'onchange' => 'jsForm.change(this)'
+				'onchange' => "$('#reload').click()"
+			);
+			$EducationProgramme = ClassRegistry::init('EducationProgramme');
+			$EducationProgramme->contain('EducationCycle');
+			$educationProgrammes = $EducationProgramme->find('all', array(
+				'conditions' => array(
+					'EducationCycle.education_level_id' => $selectedEducationLevel
+				),
+				'order' => array(
+					'EducationCycle.order', 'EducationProgramme.order'
+				)
+			));
+			$educationProgrammeOptions = array();
+			foreach ($educationProgrammes as $key => $obj) {
+				$educationProgrammeOptions[$obj['EducationProgramme']['id']] = $obj['EducationCycle']['name'] . " - " . $obj['EducationProgramme']['name'];
+			}
+			$this->fields['education_programme_id']['type'] = 'select';
+			$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
+
+			$this->fields['start_year']['type'] = 'hidden';
+			$this->fields['end_year']['type'] = 'hidden';
+			$this->fields['institution_site_id']['type'] = 'hidden';
+			$this->fields['institution_site_id']['value'] = $institutionSiteId;
+
+			$this->setFieldOrder('education_level_id', 1);
+			$this->setFieldOrder('education_programme_id', 2);
+			$this->setFieldOrder('start_date', 3);
+			$this->setFieldOrder('end_date', 4);
+		}
+	}
+
+	public function beforeSave($options=array()) {
+		if (array_key_exists($this->alias, $this->data)) {
+			if (array_key_exists('start_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
+				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
+			}
+			if (array_key_exists('end_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
+				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
+			}
+		}
 	}
 	
-	public function index($selectedAcademicPeriod=0) {
+	public function index() {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods(true);
-		
-		if ($selectedAcademicPeriod == 0) {
-			$selectedAcademicPeriod = key($academicPeriodOptions);
-		}
+
 		$this->contain(array(
 			'EducationProgramme' => array(
 				'fields' => array('EducationProgramme.name'),
@@ -63,75 +155,12 @@ class InstitutionSiteProgramme extends AppModel {
 		));
 		$data = $this->find('all', array(
 			'conditions' => array(
-				'InstitutionSiteProgramme.status' => 1,
-				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.academic_period_id' => $selectedAcademicPeriod
+				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 			),
 			'order' => array('EducationProgramme.order')
 		));
-		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data'));
-	}
-	
-	public function edit($selectedAcademicPeriod=0) {
-		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		if ($this->request->is('get')) {
-			$academicPeriodOptions = $this->AcademicPeriod->getAvailableAcademicPeriods(true);
-			if ($selectedAcademicPeriod == 0) {
-				$selectedAcademicPeriod = key($academicPeriodOptions);
-			}
 
-			$programKeys = array_keys($this->EducationProgramme->getProgrammeOptions());
-			$this->EducationProgramme->contain(array(
-				'EducationCycle' => array('fields' => array('EducationCycle.name')),
-				'InstitutionSiteProgramme' => array(
-					'fields' => array('InstitutionSiteProgramme.id', 'InstitutionSiteProgramme.status'),
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id' => $selectedAcademicPeriod
-					)
-				)
-			));
-			// grabbing all records first...then filtering by status = 1 and if parent is visible
-			$data = $this->EducationProgramme->find('all', array(
-				'conditions' => array('EducationProgramme.visible' => 1),
-				'order' => array('EducationProgramme.order')
-			));
-			$processedData = array();
-			foreach ($data as $key => $value) {
-				$InstitutionSiteProgrammeData = $value['InstitutionSiteProgramme'];
-				$found = false;
-				foreach ($InstitutionSiteProgrammeData as $programDataKey => $programDataVal) {
-						if ($programDataVal['status']!='0') {
-							$found = true;
-						}
-				}
-				if ($found) {
-					array_push($processedData, $value);
-					continue;
-				}
-				if (in_array($value['EducationProgramme']['id'], $programKeys)) {
-					array_push($processedData, $value);
-					continue;
-				}
-			}
-			$data = $processedData;
-
-			$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'data'));
-		} else {
-			$data = $this->request->data[$this->alias];
-			
-			foreach($data as $key => $obj) {
-				$data[$key]['academic_period_id'] = $selectedAcademicPeriod;
-				$data[$key]['institution_site_id'] = $institutionSiteId;
-			}
-			
-			if ($this->saveAll($data)) {
-				$this->Message->alert('general.edit.success');
-			} else {
-				$this->Message->alert('general.edit.failed');
-			}
-			return $this->redirect(array('action' => get_class($this), 'index', $selectedAcademicPeriod));
-		}
+		$this->setVar(compact('data'));
 	}
 	
 	public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
