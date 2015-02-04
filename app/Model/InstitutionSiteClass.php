@@ -112,9 +112,12 @@ class InstitutionSiteClass extends AppModel {
 		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
 
 		foreach ($data as $key => $value) {
-			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
+			if(!empty($value['InstitutionSiteClass']['id'])){
+				$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
+			}else{
+				unset($data[$key]);
+			}
 		}
-
 
 		$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection'));
 	}
