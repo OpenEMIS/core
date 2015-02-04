@@ -25,6 +25,26 @@ class TranslationsController extends AppController {
 		$this->Navigation->addCrumb('Translations', array('controller' => 'Translations', 'action' => 'index'));
 	}
 
+	public function beforeRender() {
+		parent::beforeRender();
+		if($this->action == 'add' || $this->action == 'edit') {
+			if (array_key_exists($this->Translation->alias, $this->request->data)) {
+				$languages = array(
+					'eng' => 'English',
+					'ara' => 'العربية',
+					'chi' => '中文',
+					'fre' => 'Français',
+					'rus' => 'русский',
+					'spa' => 'español'
+				);
+
+				foreach ($languages as $key => $language) {
+					$this->request->data[$this->Translation->alias][$key] = preg_replace('#<br\s*/?>#i', "\n", $this->request->data[$this->Translation->alias][$key]);
+				}
+			}
+		}
+	}
+
 	public function index() {
 		$this->Navigation->addCrumb('List of Translations');
 		$header = __('List of Translations');
