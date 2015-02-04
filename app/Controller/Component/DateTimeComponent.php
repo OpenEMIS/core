@@ -22,17 +22,17 @@ class DateTimeComponent extends Component {
 	 */
 	public static function getConfigDateFormat() {
 		$format = '';
-		if(isset($_SESSION['Config.DateFormat'])) {
-			$format = $_SESSION['Config.DateFormat'];
+		if(CakeSession::read('Config.DateFormat')) {
+			$format = CakeSession::read('Config.DateFormat');
 		} else {
 			$configItem = ClassRegistry::init('ConfigItem');
 			$format = $configItem->getValue('date_format');
-			$_SESSION['Config.DateFormat'] = $format;
+			CakeSession::write('Config.DateFormat', $format);
 		}
 		return $format;
 	}
         
-        public function formatDateByConfig($date) {
+    public function formatDateByConfig($date) {
 		$format = $this->getConfigDateFormat();
 		$output = null;
 		if($date == '0000-00-00' || $date == ''){ 
