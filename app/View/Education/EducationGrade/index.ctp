@@ -21,22 +21,28 @@ echo $this->element('../Education/breadcrumbs');
 			<tr>
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th><?php echo $this->Label->get('general.code'); ?></th>
-				<th class="cell-action"><?php echo $this->Label->get('general.action'); ?></th>
+				<th class="center"><?php echo $this->Label->get('general.code'); ?></th>
+				<th class="center">Number of Subjects</th>
 			</tr>
 		</thead>
 
 		<tbody>
 			<?php foreach($data as $obj) { ?>
+			<?php 
+				$subjects = array();
+				foreach($obj['EducationGradeSubject'] as $o){
+					$subjects[] = $o['EducationSubject']['name'];
+				}
+				$subjects = implode(', ', $subjects);
+			?>
 			<tr>
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
-				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'EducationGradeSubject', Inflector::underscore($model.'Id') => $obj[$model]['id'])); ?></td>
-				<td><?php echo $obj[$model]['code']; ?></td>
-				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => $model, 'view', $_condition => $conditionId, $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => $model, 'view', $_condition => $conditionId, $obj[$model]['id'])); ?></td>
+				<td class="center"><?php echo $obj[$model]['code']; ?></td>
+				<td class="center toolTip"><?php echo $this->Html->link(count($obj['EducationGradeSubject']), array('action' => $model, 'view', $_condition => $conditionId, $obj[$model]['id']), array('title' => $subjects, 'data-toggle' => 'tooltip')); ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>
 	</table>
 </div>
-
 <?php $this->end(); ?>
