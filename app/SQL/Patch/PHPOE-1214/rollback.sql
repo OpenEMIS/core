@@ -3,6 +3,7 @@
 --
 
 DROP TABLE IF EXISTS `institution_site_programmes`;
+DROP TABLE IF EXISTS `institution_site_grades`;
 
 --
 -- 2. Restore
