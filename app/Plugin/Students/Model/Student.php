@@ -75,7 +75,8 @@ class Student extends StudentsAppModel {
 		'Students.StudentHealthMedication',
 		'Students.StudentHealthAllergy',
 		'Students.StudentHealthTest',
-		'Students.StudentHealthConsultation'
+		'Students.StudentHealthConsultation',
+		'Students.StudentCustomValue'
 	);
 	
 	public $validate = array(
@@ -184,7 +185,14 @@ class Student extends StudentsAppModel {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('Student.id')) {
 			$models = array(
-				array('model' => $this),
+				array('model' => $this,
+					'include' => array(
+						'header' => 'StudentCustomField',
+						'data' => 'StudentCustomValue',
+						'dataOptions' => 'StudentCustomFieldOption',
+						'plugin' => 'Students'
+					)
+				),
 				array('model' => $this->StudentContact, 'name' => 'Contacts'),
 				array('model' => $this->StudentIdentity, 'name' => 'Identities'),
 				array('model' => $this->StudentNationality, 'name' => 'Nationalities'),

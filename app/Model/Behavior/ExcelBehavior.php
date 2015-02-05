@@ -23,6 +23,7 @@ class ExcelBehavior extends ModelBehavior {
 	public $LabelHelper;
 	public $Model;
 	public $header;
+	public $include = array();
 	public $limit = 500;
 	public $conditions = array();
 
@@ -127,7 +128,8 @@ class ExcelBehavior extends ModelBehavior {
 			$sheetModel = is_object($sheet['model']) ? $sheet['model'] : ClassRegistry::init($sheet['model']);
 			$sheetName = array_key_exists('name', $sheet) ? __($sheet['name']) : $sheetModel->alias;
 			$include = array_key_exists('include', $sheet) ? $sheet['include'] : array();
-			//pr($include);
+			$this->include = $include;
+			
 			if ($model->alias == $sheetModel->alias) {
 				$this->conditions = $model->excelGetConditions();
 			}
@@ -161,7 +163,7 @@ class ExcelBehavior extends ModelBehavior {
 			}
 			
 			$writer->writeSheetRow($sheetName, array_values($header));
-			//pr($header);die;
+			//pr($header);
 
 			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 				$data = $sheetModel->excelGetData($pageNo);
@@ -169,7 +171,7 @@ class ExcelBehavior extends ModelBehavior {
 				foreach ($data as $row) {
 					$sheetRow = array();
 					foreach ($header as $key => $label) {
-						$value = $sheetModel->getValue($row, $key);
+						$value = $sheetModel->excelGetValue($row, $key);
 						//die;
 						$sheetRow[] = $value;
 					}
@@ -258,7 +260,9 @@ class ExcelBehavior extends ModelBehavior {
 		}
 		
 		// Custom Field Logic starts here
-		$header = $model->excelCustomFieldHeader($include, $header);
+		if(!empty($include)){
+			$header = $model->excelCustomFieldHeader($include, $header);
+		}
 		// Custom Field Logic ends here
 		
 		$this->header = $header;
@@ -291,16 +295,11 @@ class ExcelBehavior extends ModelBehavior {
 		$order = $this->Model->excelGetOrder();
 		
 		foreach ($fields as $key => $field) {
-			//pr($field);
 			$split = explode('.', $field);
-			//pr($split);
 			if (is_numeric($split[1])) {
 				unset($fields[$key]);
 			}
 		}
-		
-		//$fields[] = 'InstitutionSiteCustomValue.*';
-		//pr($fields);
 		
 		$options = array();
 		//$options['recursive'] = 0;
@@ -333,26 +332,77 @@ class ExcelBehavior extends ModelBehavior {
 		return $footer;
 	}
 
-	public function getValue(Model $model, $row, $key) {
+	public function excelGetValue(Model $model, $row, $key) {
 		$index = explode('.', $key);
 		$value = $row;
 		foreach($index as $i) {
-			if(isset($value[$i])) {
-				$value = $value[$i];
-			} else {
-				$value = '';
-				break;
+			if (!is_numeric($i)) {
+				if(isset($value[$i])) {
+					$value = $value[$i];
+				} else {
+					$value = '';
+					break;
+				}
 			}
 		}
-
-		$lookup = $this->Model->excelGetFieldLookup();
-		if (!empty($lookup) && array_key_exists($key, $lookup)) {
-			$values = $lookup[$key];
-			if (strlen($value)>0 && array_key_exists($value, $values)) {
-				$value = $values[$value];
+		
+		if (!is_array($value)) {
+			$lookup = $this->Model->excelGetFieldLookup();
+			if (!empty($lookup) && array_key_exists($key, $lookup)) {
+				$values = $lookup[$key];
+				if (strlen($value)>0 && array_key_exists($value, $values)) {
+					$value = $values[$value];
+				}
 			}
+		} else { // custom field values
+			$value = $model->excelGetCustomValue($value, $key);
 		}
+		
 		return $value;
+	}
+	
+	public function excelGetCustomValue(Model $model, $data, $key) {
+		//pr($data);
+		$split = explode('.', $key);
+		$id = $split[1];
+		//$include = $this->include;
+		$headerModel = $this->include['header'];
+		$headerModelKey = Inflector::underscore($headerModel).'_id';
+		//pr($headerModelKey);
+		$values = array();
+		foreach ($data as $row) {
+			//pr($row);
+			if ($row[$headerModelKey] == $id) {
+				$headerModelObj = ClassRegistry::init($headerModel);
+				$headerModelObj->contain($this->include['dataOptions']);
+				$fieldData = $headerModelObj->findById($id);
+				//pr($fieldData);
+				if($fieldData[$headerModel]['type'] == 3 || $fieldData[$headerModel]['type'] == 4){
+					if($fieldData[$headerModel]['type'] == 3){
+						foreach($fieldData[$this->include['dataOptions']] as $option){
+							if($option['id'] == $row['value']){
+								$values[] = $option['value'];
+								break 2;
+							}
+						}
+					}else{
+						foreach($fieldData[$this->include['dataOptions']] as $option){
+							if($option['id'] == $row['value']){
+								if(!empty($option['value'])){
+									$values[] = $option['value'];
+								}
+							}
+						}
+					}
+				}else{
+					$values[] = $row['value'];
+					break;
+				}
+			}
+		}
+		
+		$values = implode('|', $values);
+		return $values;
 	}
 
 	private function getContain($fields) {
@@ -365,7 +415,14 @@ class ExcelBehavior extends ModelBehavior {
 						if (!is_numeric($split[1])) {
 							$contain[$split[0]] = array('fields' => $field);
 						} else {
-							$contain[$split[0]] = array('fields' => $split[0] . '.*');
+							$contain[$split[0]] = array();/*
+							if (!empty($this->include)) {
+								if (isset($this->include['header']) && isset($this->include['dataOptions'])) {
+									$contain[$split[0]][$this->include['header']] = array(
+										$this->include['dataOptions']
+									);
+								}
+							}*/
 						}
 					} else {
 						$contain[$split[0]] = array();
@@ -377,7 +434,12 @@ class ExcelBehavior extends ModelBehavior {
 	}
 	
 	public function excelCustomFieldHeader(Model $model, $include, $header) {
-		$headerModel = ClassRegistry::init($include['header']);
+		if(empty($include['plugin'])){
+			$headerModel = ClassRegistry::init($include['header']);
+		}else{
+			$headerModel = ClassRegistry::init(sprintf('%s.%s', $include['plugin'], $include['header']));
+		}
+		
 		$headerModel->recursive = -1;
 		
 		$options = array(
@@ -394,13 +456,7 @@ class ExcelBehavior extends ModelBehavior {
 			$id = $field[$headerModel->alias]['id'];
 			$header[$include['data']. ".$id"] = $field[$headerModel->alias]['name'];
 		}
-		//pr($customField);
-		//pr($header);
-		//pr($options);
-		//die;
-		//pr($include);
-		//pr($header);
-		//die;
+
 		return $header;
 	}
 	
