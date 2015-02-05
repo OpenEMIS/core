@@ -12,7 +12,6 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('../Areas/nav_tabs');
-echo $this->element('../Areas/controls');
 echo $this->element('../Areas/breadcrumbs');
 ?>
 
