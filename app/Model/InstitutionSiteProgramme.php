@@ -20,12 +20,23 @@ class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
 		'ControllerAction2',
-		'DatePicker' => array('start_date', 'end_date')
+		'DatePicker' => array('start_date', 'end_date'),
+		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
 	
 	public $belongsTo = array(
 		'InstitutionSite',
-		'EducationProgramme'
+		'EducationProgramme',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
 
 	public $validate = array(
@@ -70,76 +81,77 @@ class InstitutionSiteProgramme extends AppModel {
 
 		$params = $this->request->params;
 
-		if(isset($params['pass'][0]) && ($params['pass'][0] == 'add' || $params['pass'][0] == 'edit')) {
-			$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		if(isset($params['pass'][0])) {
+			if($params['pass'][0] == 'add' || $params['pass'][0] == 'edit') {
+				$institutionSiteId = $this->Session->read('InstitutionSite.id');
 
-			$this->fields['education_level_id']['type'] = 'select';
-			$this->fields['education_level_id']['visible'] = true;
-			$EducationLevel = ClassRegistry::init('EducationLevel');
-			$EducationLevel->contain('EducationSystem');
-			$educationLevels = $EducationLevel->find('all', array(
-				'order' => array(
-					'EducationSystem.order', 'EducationLevel.order'
-				)
-			));
-			$educationLevelOptions = array();
-			foreach ($educationLevels as $key => $obj) {
-				$educationLevelOptions[$obj['EducationLevel']['id']] = $obj['EducationSystem']['name'] . " - " . $obj['EducationLevel']['name'];
-			}
-			$this->fields['education_level_id']['options'] = $educationLevelOptions;
-			$selectedEducationLevel = key($educationLevelOptions);
-			if ($this->request->is(array('post', 'put'))) {
-				$selectedEducationLevel = $this->request->data[$this->alias]['education_level_id'];
-			} else {
+				$this->fields['education_level_id']['type'] = 'select';
+				$this->fields['education_level_id']['visible'] = true;
+				$EducationLevel = ClassRegistry::init('EducationLevel');
+				$EducationLevel->contain('EducationSystem');
+				$educationLevels = $EducationLevel->find('all', array(
+					'order' => array(
+						'EducationSystem.order', 'EducationLevel.order'
+					)
+				));
+				$educationLevelOptions = array();
+				foreach ($educationLevels as $key => $obj) {
+					$educationLevelOptions[$obj['EducationLevel']['id']] = $obj['EducationSystem']['name'] . " - " . $obj['EducationLevel']['name'];
+				}
+				$this->fields['education_level_id']['options'] = $educationLevelOptions;
+				$this->fields['education_level_id']['attr'] = array(
+					'onchange' => "$('#reload').click()"
+				);
 
-			}
+				$selectedEducationLevel = key($educationLevelOptions);
+				if ($this->request->is(array('post', 'put'))) {
+					$data = $this->request->data;
 
-			//$this->fields['education_level_id']['default'] = 'level:' . $selectedEducationLevel;
-			//$url = $this->request->params['controller'] .'/'. $this->request->params['action'] .'/'. $this->request->params['pass'][0];
-			//$url = $params['pass'][0] == 'edit' ? $url .'/'. $this->request->params['pass'][1] : $url;
-			$this->fields['education_level_id']['attr'] = array(
-				//'url' => $url,
-				//'onchange' => 'jsForm.change(this)'
-				'onchange' => "$('#reload').click()"
-			);
-			$EducationProgramme = ClassRegistry::init('EducationProgramme');
-			$EducationProgramme->contain('EducationCycle');
-			$educationProgrammes = $EducationProgramme->find('all', array(
-				'conditions' => array(
-					'EducationCycle.education_level_id' => $selectedEducationLevel
-				),
-				'order' => array(
-					'EducationCycle.order', 'EducationProgramme.order'
-				)
-			));
-			$educationProgrammeOptions = array();
-			foreach ($educationProgrammes as $key => $obj) {
-				$educationProgrammeOptions[$obj['EducationProgramme']['id']] = $obj['EducationCycle']['name'] . " - " . $obj['EducationProgramme']['name'];
-			}
-			$this->fields['education_programme_id']['type'] = 'select';
-			$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
+					$selectedEducationLevel = $data[$this->alias]['education_level_id'];
 
-			$this->fields['start_year']['type'] = 'hidden';
-			$this->fields['end_year']['type'] = 'hidden';
-			$this->fields['institution_site_id']['type'] = 'hidden';
-			$this->fields['institution_site_id']['value'] = $institutionSiteId;
+					if($data['submit'] == 'reload') {
+						//onchange
+					} else {
+						//actual submit
+					}
+				} else {
+					$this->fields['end_date']['attr'] = array(
+						'data-date' => ''
+					);
+				}
 
-			$this->setFieldOrder('education_level_id', 1);
-			$this->setFieldOrder('education_programme_id', 2);
-			$this->setFieldOrder('start_date', 3);
-			$this->setFieldOrder('end_date', 4);
-		}
-	}
+				$EducationProgramme = ClassRegistry::init('EducationProgramme');
+				$EducationProgramme->contain('EducationCycle');
+				$educationProgrammes = $EducationProgramme->find('all', array(
+					'conditions' => array(
+						'EducationCycle.education_level_id' => $selectedEducationLevel
+					),
+					'order' => array(
+						'EducationCycle.order', 'EducationProgramme.order'
+					)
+				));
+				$educationProgrammeOptions = array();
+				foreach ($educationProgrammes as $key => $obj) {
+					$educationProgrammeOptions[$obj['EducationProgramme']['id']] = $obj['EducationCycle']['name'] . " - " . $obj['EducationProgramme']['name'];
+				}
+				$this->fields['education_programme_id']['type'] = 'select';
+				$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
 
-	public function beforeSave($options=array()) {
-		if (array_key_exists($this->alias, $this->data)) {
-			if (array_key_exists('start_date', $this->data[$this->alias])) {
-				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
-				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
-			}
-			if (array_key_exists('end_date', $this->data[$this->alias])) {
-				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
-				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
+				$this->fields['start_year']['visible'] = false;
+				$this->fields['end_year']['visible'] = false;
+				$this->fields['institution_site_id']['type'] = 'hidden';
+				$this->fields['institution_site_id']['value'] = $institutionSiteId;
+
+				$this->setFieldOrder('education_level_id', 1);
+				$this->setFieldOrder('education_programme_id', 2);
+				$this->setFieldOrder('start_date', 3);
+				$this->setFieldOrder('end_date', 4);
+			} else if($params['pass'][0] == 'view') {
+				$this->fields['education_programme_id']['dataModel'] = 'EducationProgramme';
+				$this->fields['education_programme_id']['dataField'] = 'name';
+				$this->fields['start_year']['visible'] = false;
+				$this->fields['end_year']['visible'] = false;
+				$this->fields['institution_site_id']['visible'] = false;
 			}
 		}
 	}
