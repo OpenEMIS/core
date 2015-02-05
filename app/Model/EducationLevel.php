@@ -43,6 +43,10 @@ class EducationLevel extends AppModel {
 			)
 		)
 	);
+
+	public $virtualFields = array(
+		'_name' => "SELECT CONCAT(`EducationSystem`.`name`, ' - ', `EducationLevel`.`name`) from `education_systems` AS `EducationSystem` WHERE `EducationSystem`.`id` = `EducationLevel.education_system_id`"
+	);
 	
 	public $_condition = 'education_system_id';
 	
@@ -209,5 +213,19 @@ class EducationLevel extends AppModel {
 		}
 		
 		return $data;
+	}
+
+	public function getOptions() {
+		$this->contain('EducationSystem');
+		$list = $this->find('list', array(
+			'fields' => array(
+				'EducationLevel.id', 'EducationLevel._name'
+			),
+			'order' => array(
+				'EducationSystem.order', 'EducationLevel.order'
+			)
+		));	
+
+		return $list;
 	}
 }

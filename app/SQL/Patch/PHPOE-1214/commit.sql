@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS `institution_site_programmes` (
   `end_date` date DEFAULT NULL,
   `end_year` int(4) DEFAULT NULL,
   `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -31,4 +33,27 @@ ALTER TABLE `institution_site_programmes`
 
 
 ALTER TABLE `institution_site_programmes`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 3. New table - institution_site_grades
+--
+
+DROP TABLE IF EXISTS `institution_site_grades`;
+CREATE TABLE IF NOT EXISTS `institution_site_grades` (
+`id` int(11) NOT NULL,
+  `education_grade_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_grades`
+ ADD PRIMARY KEY (`id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `education_programme_id` (`education_grade_id`);
+
+
+ALTER TABLE `institution_site_grades`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
