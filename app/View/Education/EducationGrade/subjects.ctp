@@ -9,14 +9,14 @@
 <div class="form-group" style="padding: 10px;">
 	
 	<div class="panel panel-default">
-		<div class="panel-heading center"><?php echo __('Subjects') ?></div>
+		<div class="panel-heading center"><?php echo $this->Label->get('EducationSubject.title'); ?></div>
 
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
 					<th><?php echo $this->Label->get('general.name'); ?></th>
 					<th class="center"><?php echo $this->Label->get('general.code'); ?></th>
-					<th class="center">Hours Required</th>
+					<th class="center"><?php echo $this->Label->get('EducationGradeSubject.hours_required'); ?></th>
 					<?php echo  (!$isView) ? '<th class="cell-delete"></th>' : '';?>
 				</tr>
 			</thead>
