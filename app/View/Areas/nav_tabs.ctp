@@ -1,20 +1,20 @@
 <?php
 $options = array(
-	'Area' => array(
-		'url' => array('controller' => 'Areas', 'action' => 'Area'),
-		'text' => __('Areas (Education)')
-	),
 	'AreaLevel' => array(
 		'url' => array('controller' => 'Areas', 'action' => 'AreaLevel'),
 		'text' => __('Area Levels (Education)')
 	),
-	'AreaAdministrative' => array(
-		'url' => array('controller' => 'Areas', 'action' => 'AreaAdministrative'),
-		'text' => __('Areas (Administrative)')
+	'Area' => array(
+		'url' => array('controller' => 'Areas', 'action' => 'Area'),
+		'text' => __('Areas (Education)')
 	),
 	'AreaAdministrativeLevel' => array(
 		'url' => array('controller' => 'Areas', 'action' => 'AreaAdministrativeLevel'),
 		'text' => __('Area Levels (Administrative)')
+	),
+	'AreaAdministrative' => array(
+		'url' => array('controller' => 'Areas', 'action' => 'AreaAdministrative'),
+		'text' => __('Areas (Administrative)')
 	)
 );
 
