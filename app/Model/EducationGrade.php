@@ -93,6 +93,17 @@ class EducationGrade extends AppModel {
 		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		if($this->EducationProgramme->exists($conditionId)) {
+			$contain = array(
+				'EducationGradeSubject' => array(
+					'EducationSubject' => array(
+						'fields' => array(
+							'EducationSubject.name' 
+						)
+					),
+					'conditions'=>array('EducationGradeSubject.visible = 1')
+				)
+			);
+			$this->contain($contain);
 			$data = $this->findAllByEducationProgrammeId($conditionId, array(), array($this->alias.'.order' => 'ASC'));
 			$programmeObj = $this->EducationProgramme->findById($conditionId);
 			$levelObj = ClassRegistry::init('EducationLevel')->findById($programmeObj['EducationCycle']['education_level_id']);
@@ -145,7 +156,24 @@ class EducationGrade extends AppModel {
 		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		if($this->EducationProgramme->exists($conditionId)) {
+			$contain = array(
+				'EducationGradeSubject' => array(
+					'EducationSubject' => array(
+						'fields' => array(
+							'EducationSubject.id', 'EducationSubject.name', 'EducationSubject.code' 
+						)
+					)
+				),
+				'EducationProgramme'
+			);
+			$this->contain($contain);
 			$data = $this->findById($id);
+			$this->fields['subject'] = array(
+				'type' => 'element',
+				'element' => '../Education/EducationGrade/subjects',
+				'override' => true,
+				'visible' => true
+			);
 			$this->setVar(compact('data'));
 			$this->render = '../template/view';
 		} else {
@@ -158,17 +186,88 @@ class EducationGrade extends AppModel {
 		$params = $this->controller->params;
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		if($this->EducationProgramme->exists($conditionId)) {
+			$contain = array(
+				'EducationGradeSubject' => array(
+					'EducationSubject' => array(
+						'fields' => array(
+							'EducationSubject.id', 'EducationSubject.name', 'EducationSubject.code' 
+						)
+					)
+				),
+				'EducationProgramme'
+			);
+			$this->contain($contain);
 			$data = $this->findById($id);
-			
 			if(!empty($data)) {
+				$this->fields['subject'] = array(
+					'type' => 'element',
+					'element' => '../Education/EducationGrade/subjects',
+					'override' => true,
+					'visible' => true
+				);
+
+				$subjectOptions = $this->EducationGradeSubject->EducationSubject->getSubjectOptions();
+				$subjectOptions = $this->controller->Option->prependLabel($subjectOptions, $this->alias . '.add_subject');
+				
 				if($this->request->is(array('post', 'put'))) {
-					if ($this->save($this->request->data)) {
-						$this->Message->alert('general.edit.success');
-						return $this->redirect(array('action' => get_class($this), 'view', $this->_condition => $conditionId, $id));
+					$postData = $this->request->data;
+
+					if ($postData['submit'] == 'add') {
+						if (isset($postData[$this->alias]['education_subject_id']) && !empty($postData[$this->alias]['education_subject_id'])) {
+							$educationSubjectId = $postData[$this->alias]['education_subject_id'];
+
+							$this->EducationGradeSubject->EducationSubject->recursive = -1;
+							$subjectObj = $this->EducationGradeSubject->EducationSubject->findById($educationSubjectId);
+
+							$newRow = array(
+								'id' => false,
+								'education_subject_id' => $educationSubjectId,
+								'education_grade_id' => $id,
+			                    'hours_required' => 0,
+			                    'visible' => 1,
+								'EducationSubject' => $subjectObj['EducationSubject']
+							);
+
+							// search if the new subject was previously added before
+							foreach ($data['EducationGradeSubject'] as $row) {
+								if ($row['education_subject_id'] == $educationSubjectId) {
+									$newRow['id'] = $row['id'];
+								}
+							}
+
+							$this->request->data['EducationGradeSubject'][] = $newRow;
+							$this->request->data[$this->alias]['education_programme_id'] = $this->request->data['EducationProgramme']['id'];
+
+							unset($this->request->data[$this->alias]['education_subject_id']);
+							unset($this->request->data['submit']);
+						}
+					} else if ($postData['submit'] = 'Save') {
+						$this->EducationGradeSubject->updateAll(
+							array('EducationGradeSubject.visible' => 0),
+							array('EducationGradeSubject.education_grade_id' => $id)
+						);
+
+						// must unset $postData['EducationProgramme'] to avoid fail to save as we are not creating or updating the EducationProgramme record.
+						unset($postData['EducationProgramme']);
+						if ($this->saveAll($postData)) {
+							$this->Message->alert('general.edit.success');
+							$this->redirect(array('action' => $this->alias, 'view', $this->_condition => $conditionId, $id));
+						} else {
+							$this->Message->alert('general.edit.failed');
+						}
 					}
 				} else {
 					$this->request->data = $data;
 				}
+
+				// removing existing students from StudentOptions
+				foreach ($this->request->data['EducationGradeSubject'] as $row) {
+					if (array_key_exists($row['education_subject_id'], $subjectOptions)) {
+						unset($subjectOptions[$row['education_subject_id']]);
+					}
+				}
+
+				$this->setVar(compact('subjectOptions'));
 				$this->render = '../template/edit';
 			} else {
 				$this->Message->alert('general.notExists');
