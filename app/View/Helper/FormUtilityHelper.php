@@ -139,13 +139,7 @@ class FormUtilityHelper extends AppHelper {
 		$defaults = $this->Form->inputDefaults();
 
 		if(isset($_options['data-date'])){
-			if($_options['data-date']=='blank'){
-				$defaultDate = '';
-			} else if(strlen($_options['data-date'])>0) {
-				$defaultDate = $_options['data-date'];
-			} else {
-				$defaultDate = date('d-m-Y');
-			}
+			$defaultDate = $_options['data-date'];
 		} else {
 			$defaultDate = date('d-m-Y');
 		}
