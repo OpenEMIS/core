@@ -68,6 +68,10 @@ class EducationProgramme extends AppModel {
 			)
 		)
 	);
+
+	public $virtualFields = array(
+		'_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
+	);
 	
 	public $_condition = 'education_cycle_id';
 	
@@ -197,23 +201,6 @@ class EducationProgramme extends AppModel {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'EducationSystem'));
 		}
-	}
-	
-	public function getDurationBySiteProgramme($siteProgrammeId) {
-		$obj = $this->find('first', array(
-			'recursive' => -1,
-			'joins' => array(
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
-						'InstitutionSiteProgramme.id = ' . $siteProgrammeId
-					)
-				)
-			)
-		));
-		return $obj['EducationProgramme']['duration'];
 	}
 	
 	// Used by InstitutionSiteController->programmeAdd
@@ -386,5 +373,22 @@ class EducationProgramme extends AppModel {
 			)
 		));
 		return $data;
+	}
+
+	public function getOptionsByEducationLevelId($educationLevelId) {
+		$this->contain('EducationCycle');
+		$list = $this->find('list', array(
+			'fields' => array(
+				'EducationProgramme.id', 'EducationProgramme._name'
+			),
+			'conditions' => array(
+				'EducationCycle.education_level_id' => $educationLevelId
+			),
+			'order' => array(
+				'EducationCycle.order', 'EducationProgramme.order'
+			)
+		));
+
+		return $list;
 	}
 }
