@@ -761,29 +761,36 @@ class CustomField2Component extends Component {
 					$instanceNode = $modelNode->addChild("instance", null, NS_XF);
 					$instanceNode->addAttribute("id", $instanceId);
 						$index = 1;
+						$sectionBreakNode = $bodyNode;
 						foreach ($fields as $key => $field) {
 							if(isset($this->Group) && $key == 0) {
 								$groupNode = $instanceNode->addChild($this->Group->alias, null, NS_OE);
 									$groupNode->addAttribute("id", $field[$this->Field->alias][Inflector::underscore($this->Group->alias).'_id']);
 							}
 
-							$fieldTypeArr = array(2, 3, 5, 6); //Only support Text, Dropdown, Textarea and Number
+							if($field[$this->Field->alias]['type'] == 1) {
+								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
+								$sectionBreakNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+							}
+
+							$fieldTypeArr = array(2, 3, 4, 5, 6); //Only support 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number
 							if(in_array($field[$this->Field->alias]['type'], $fieldTypeArr)) {
 								$fieldNode = $groupNode->addChild($this->Field->alias, null, NS_OE);
 									$fieldNode->addAttribute("id", $field[$this->Field->alias]['id']);
 
 								$bindNode = $modelNode->addChild("bind", null, NS_XF);
-								$bindNode->addAttribute("nodeset", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
+								$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 								switch($field[$this->Field->alias]['type']) {
 									case 2:	//Text
 										$fieldType = 'string';
-										$textNode = $bodyNode->addChild("input", null, NS_XF);
+										$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
 										$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$textNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 										break;
 									case 3:	//Dropdown
 										$fieldType = 'integer';
-										$dropdownNode = $bodyNode->addChild("select1", null, NS_XF);
+										$dropdownNode = $sectionBreakNode->addChild("select1", null, NS_XF);
 										$dropdownNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$dropdownNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
@@ -792,15 +799,26 @@ class CustomField2Component extends Component {
 													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
 											}
 										break;
+									case 4:	//Checkbox
+										$fieldType = 'integer';
+										$checkboxNode = $sectionBreakNode->addChild("select", null, NS_XF);
+										$checkboxNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
+											$checkboxNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
+												$itemNode = $checkboxNode->addChild("item", null, NS_XF);
+													$itemNode->addChild("label", $fieldOption['value'], NS_XF);
+													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
+											}
+										break;
 									case 5:	//Textarea
 										$fieldType = 'string';
-										$textareaNode = $bodyNode->addChild("textarea", null, NS_XF);
+										$textareaNode = $sectionBreakNode->addChild("textarea", null, NS_XF);
 										$textareaNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$textareaNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 										break;
 									case 6:	//Number
 										$fieldType = 'integer';
-										$numberNode = $bodyNode->addChild("input", null, NS_XF);
+										$numberNode = $sectionBreakNode->addChild("input", null, NS_XF);
 										$numberNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$numberNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
 										break;
