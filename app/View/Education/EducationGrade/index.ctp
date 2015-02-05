@@ -22,7 +22,7 @@ echo $this->element('../Education/breadcrumbs');
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th class="center"><?php echo $this->Label->get('general.code'); ?></th>
-				<th class="center">Number of Subjects</th>
+				<th class="center"><?php echo $this->Label->get('EducationSubject.number_of_subjects'); ?></th>
 			</tr>
 		</thead>
 
