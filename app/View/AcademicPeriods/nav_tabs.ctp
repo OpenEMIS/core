@@ -1,12 +1,12 @@
 <?php
 $options = array(
-	'AcademicPeriod' => array(
-		'url' => array('controller' => 'AcademicPeriods', 'action' => 'AcademicPeriod'),
-		'text' => __('Academic Periods')
-	),
 	'AcademicPeriodLevel' => array(
 		'url' => array('controller' => 'AcademicPeriods', 'action' => 'AcademicPeriodLevel'),
 		'text' => __('Academic Period Levels')
+	),
+	'AcademicPeriod' => array(
+		'url' => array('controller' => 'AcademicPeriods', 'action' => 'AcademicPeriod'),
+		'text' => __('Academic Periods')
 	)
 );
 
