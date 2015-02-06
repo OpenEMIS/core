@@ -127,7 +127,7 @@ class InstitutionSiteStudent extends AppModel {
 					'data-date' => $date->format('d-m-Y')
 				);
 		
-				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
+				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
 				$this->fields['education_programme_id']['options'] = $programmeOptions;
 			}
 		}
@@ -257,7 +257,7 @@ class InstitutionSiteStudent extends AppModel {
 				'startDate' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y')),
 				'data-date' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y'))
 			);
-			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			
 			$submit = $this->request->data['submit'];
@@ -284,12 +284,14 @@ class InstitutionSiteStudent extends AppModel {
 					if ($count > 0) {
 						$this->Message->alert('general.exists');
 					} else {
+						/*institution_site_programme_id field under InstitutionSiteStudent eventually will be removed
 						$programmeId = $this->EducationProgramme->InstitutionSiteProgramme->field('id', array(
 							'institution_site_id' => $institutionSiteId,
 							'education_programme_id' => $data[$this->alias]['education_programme_id'],
 							'academic_period_id' => $academicPeriodId
 						));
-						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
+						$data[$this->alias]['institution_site_programme_id'] = $programmeId;*/
+						$data[$this->alias]['institution_site_programme_id'] = 0;
 						
 						$studentStatusId = $this->StudentStatus->getDefaultValue();
 						$data[$this->alias]['student_status_id'] = $studentStatusId;

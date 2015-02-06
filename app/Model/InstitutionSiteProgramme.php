@@ -20,6 +20,8 @@ class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
 		'ControllerAction2',
+		//'AcademicPeriod',
+		'InstitutionSiteProgramme',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
@@ -204,40 +206,43 @@ class InstitutionSiteProgramme extends AppModel {
 			return $this->redirect(array('action' => get_class($this)));
 		}
 	}
+
+	/*public function getConditionsByAcademicPeriodId($academicPeriodId) {
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
+		$startDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['start_date']));
+		$endDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['end_date']));
+		
+		$conditions = array();
+		$conditions['InstitutionSiteProgramme.start_date <='] = $endDate;
+		$conditions['OR'] = array(
+			'InstitutionSiteProgramme.end_date >=' => $startDate,
+			'InstitutionSiteProgramme.end_date IS NULL'
+		);
+
+		return $conditions;
+	}*/
 	
 	public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
 		$conditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
-		
+
 		if(!is_null($academicPeriodId)) {
 			$conditions['InstitutionSiteProgramme.academic_period_id'] = $academicPeriodId;
 		}
 		
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('EducationProgramme.id', 'EducationCycle.name', 'EducationProgramme.name'),
-			'joins' => array(
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
-				),
-				array(
-					'table' => 'education_cycles',
-					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
-				)
-			),
-			'conditions' => $conditions,
-			'order' => array('EducationCycle.order', 'EducationProgramme.order')
-		));
-		
+		$this->contain('EducationProgramme');
+		$options = array();
+		$options['conditions'] = $conditions;
+		$options['order'] = array('EducationProgramme.order');
+
+		$this->contain('EducationProgramme');
+		$data = $this->find('all', $options);
+
 		$list = array();
 		foreach($data as $obj) {
-			$id = $obj['EducationProgramme']['id'];
-			$cycle = $obj['EducationCycle']['name'];
-			$programme = $obj['EducationProgramme']['name'];
-			$list[$id] = $cycle . ' - ' . $programme;
+			$list[$obj['EducationProgramme']['id']] = $obj['EducationProgramme']['_name'];
 		}
+
 		return $list;
 	}
 	
@@ -245,24 +250,15 @@ class InstitutionSiteProgramme extends AppModel {
 	public function getSiteProgrammes($institutionSiteId, $academicPeriodId) {
 		$this->formatResult = true;
 
-		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-		$yearObj = $AcademicPeriod->findById($academicPeriodId);
-		$startDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['start_date']));
-		$endDate = date('Y-m-d', strtotime($yearObj['AcademicPeriod']['end_date']));
-		
-		$conditions = array();
+		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId);
 		$conditions['InstitutionSiteProgramme.institution_site_id'] = $institutionSiteId;
-		$conditions['InstitutionSiteProgramme.start_date <='] = $startDate;
-		$conditions['OR'] = array(
-			'InstitutionSiteProgramme.end_date >=' => $endDate,
-			'InstitutionSiteProgramme.end_date IS NULL'
-		);
 
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				'InstitutionSiteProgramme.id',
 				'EducationSystem.name AS education_system_name',
+				'EducationLevel.name AS education_level_name',
 				'EducationCycle.name AS education_cycle_name',
 				'EducationCycle.admission_age AS admission_age',
 				'EducationProgramme.id AS education_programme_id',
@@ -297,48 +293,15 @@ class InstitutionSiteProgramme extends AppModel {
 		return $data;
 	}
 	
-	public function getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, $withCycle=true) {
-		$data = array();
-		if($withCycle) {
-			$list = $this->getSiteProgrammes($institutionSiteId, $academicPeriodId);
-			foreach($list as &$obj) {
-				$data[$obj['education_programme_id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
-			}
-		} else {
-			$data = $this->find('list', array(
-				'recursive' => -1,
-				'fields' => array('EducationProgramme.id AS education_programme_id', 'EducationProgramme.name AS education_programme_name'),
-				'joins' => array(
-					array(
-						'table' => 'education_programmes',
-						'alias' => 'EducationProgramme',
-						'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
-					),
-					array(
-						'table' => 'education_cycles',
-						'alias' => 'EducationCycle',
-						'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
-					),
-					array(
-						'table' => 'education_levels',
-						'alias' => 'EducationLevel',
-						'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
-					),
-					array(
-						'table' => 'education_systems',
-						'alias' => 'EducationSystem',
-						'conditions' => array('EducationSystem.id = EducationLevel.education_system_id')
-					)
-				),
-				'conditions' => array(
-					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-					'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
-					'InstitutionSiteProgramme.status' => 1
-				),
-				'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
-			));
+	public function getSiteProgrammeOptions($institutionSiteId, $academicPeriodId) {
+		$list = array();
+
+		$data = $this->getSiteProgrammes($institutionSiteId, $academicPeriodId);
+		foreach($data as &$obj) {
+			$list[$obj['education_programme_id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
 		}
-		return $data;
+
+		return $list;
 	}
 	
 	// used by CensusController, classes/teachers
@@ -413,8 +376,8 @@ class InstitutionSiteProgramme extends AppModel {
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteProgramme.status' => 1
+				//'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
+				//'InstitutionSiteProgramme.status' => 1
 			),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
@@ -482,16 +445,30 @@ class InstitutionSiteProgramme extends AppModel {
 		$controller->set(compact('programmeOptions'));
 		$controller->render('/Elements/programmes/programmes_options');
 	}
-	
-	public function getInstitutionAcademicPeriodOptions($institutionSiteId) {
-		$options = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1,
-			'AcademicPeriod.parent_id >' => 0
-		);
-		$list = $this->getAcademicPeriodOptions($options);
-		
+
+	public function getAcademicPeriodOptions($conditions=array()) {
+		$startDate = $this->field('MIN(InstitutionSiteProgramme.start_date) AS min_date', $conditions);
+		$endDate = $this->field('MAX(InstitutionSiteProgramme.end_date) AS max_date', $conditions);
+		$conditions = array_merge(array('InstitutionSiteProgramme.end_date' => NULL), $conditions);
+		$options['conditions'] = $conditions;
+		$nullDate = $this->find('count', $options);
+
+		$academicPeriodConditions = array();
+		$academicPeriodConditions['AcademicPeriod.parent_id >'] = 0;
+		$academicPeriodConditions['AcademicPeriod.end_date >='] = $startDate;
+		if($nullDate == 0) {
+			$academicPeriodConditions['AcademicPeriod.start_date <='] = $endDate;
+		} else {
+			$academicPeriodConditions['AcademicPeriod.end_date >='] = $startDate;
+		}
+
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$list = $AcademicPeriod->find('list', array(
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+			'conditions' => $academicPeriodConditions,
+			'order' => array('AcademicPeriod.order')
+		));
+
 		return $list;
 	}
 }
