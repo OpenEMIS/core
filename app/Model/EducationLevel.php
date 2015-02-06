@@ -197,7 +197,7 @@ class EducationLevel extends AppModel {
 					'conditions' => array(
 						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
 						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId
+						//'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId
 					)
 				)
 			),
