@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteSectionGrade extends AppModel {
 	public $actsAs = array(
+		'InstitutionSiteProgramme'
 	);
 	
 	public $belongsTo = array(
@@ -26,18 +27,19 @@ class InstitutionSiteSectionGrade extends AppModel {
 	);
 	
 	public function getAvailableGradesForNewSection($institutionSiteId, $academicPeriodId) {
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId);
+		$conditions = array_merge(array(
+			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+		), $conditions);
+
 		$data = $this->EducationGrade->find('all', array(
 			'fields' => array('EducationProgramme.name', 'EducationGrade.name'),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
-						'InstitutionSiteProgramme.status = 1'
-					)
+					'conditions' => $conditions
 				)
 			),
 			'order' => array('EducationProgramme.order', 'EducationGrade.order')
@@ -228,19 +230,20 @@ class InstitutionSiteSectionGrade extends AppModel {
 		return $list;
 	}
 	
-	public function getInstitutionGradeOptions($institutionSiteId, $academicPeriodId) {
+	public function getInstitutionGradeOptions($institutionSiteId, $academicPeriodId) {		
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId);
+		$conditions = array_merge(array(
+			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+		), $conditions);
+
 		$data = $this->EducationGrade->find('list', array(
-			'fields' => array('EducationGrade.id', 'EducationGrade.name'),
+			'fields' => array('EducationGrade.id', 'EducationGrade._name'),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
-						'InstitutionSiteProgramme.status = 1'
-					)
+					'conditions' => $conditions
 				)
 			),
 			'order' => array('EducationGrade.order')
