@@ -28,7 +28,6 @@ class Programme extends AppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'Students.StudentStatus',
-		'InstitutionSiteProgramme',
 		'EducationProgramme',
 		'InstitutionSite',
 		'ModifiedUser' => array(
@@ -66,7 +65,7 @@ class Programme extends AppModel {
 			$this->fields['student_status_id']['labelKey'] = 'InstitutionSiteStudent';
 			$this->fields['start_year']['visible'] = false;
 			$this->fields['end_year']['visible'] = false;
-			$this->fields['institution_site_programme_id']['visible'] = false;
+			//$this->fields['institution_site_programme_id']['visible'] = false;
 			
 			if ($this->action == 'edit') {
 				$this->fields['institution_site_id']['type'] = 'disabled';
@@ -82,10 +81,17 @@ class Programme extends AppModel {
 	
 	public function afterAction() {
 		if ($this->action == 'edit') {
-			$academicPeriodId = $this->request->data['InstitutionSiteProgramme']['academic_period_id'];
-			$academicPeriodObj = $this->InstitutionSiteProgramme->AcademicPeriod->findById($academicPeriodId);
-			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
-			$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
+			$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+			$InstitutionSiteProgramme->contain();
+			$institutionSiteProgrammeObj = $InstitutionSiteProgramme->find('first', array(
+				'conditions' => array(
+					'InstitutionSiteProgramme.institution_site_id' => $this->request->data[$this->alias]['institution_site_id'],
+					'InstitutionSiteProgramme.education_programme_id' => $this->request->data[$this->alias]['education_programme_id']
+				)
+			));
+			$startDate = $institutionSiteProgrammeObj['InstitutionSiteProgramme']['start_date'];
+			$endDate = $institutionSiteProgrammeObj['InstitutionSiteProgramme']['end_date'];
+
 			$dataStartDate = $this->request->data[$this->alias]['start_date'];
 			$date = new DateTime($dataStartDate);
 			$date->add(new DateInterval('P1D')); // plus 1 day
@@ -119,6 +125,11 @@ class Programme extends AppModel {
 			'conditions' => $conditions,
 			'order' => array("$alias.start_date DESC")
 		));
+
+		if(empty($data)){
+			$this->Message->alert('general.noData');
+		}
+
 		$this->setVar('data', $data);
 	}
 }
