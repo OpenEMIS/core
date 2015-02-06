@@ -107,63 +107,39 @@ class FormUtilityHelper extends AppHelper {
 	public function datepicker($field, $options=array()) {
 		$dateFormat = 'dd-mm-yyyy';
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
-		$model=false;
-		$exp = explode('.', $field);
-		if(count($exp)>1){
-			$model = $exp[0];
-			$field = $exp[1];
-		}else{
-			foreach($this->request->data as $k => $v){
-				if(is_array($v)){
-					$model = array_key_exists($field, $v) ? $k : $model;
-				}
-			}
-		}
 		$_options = array(
 			'id' => 'date',
 			'data-date-format' => $dateFormat,
 			'data-date-autoclose' => 'true',
-			'label' => $this->Label->getLabel($model, array('field'=>$field)),
+			'label' => false,
 			'disabled' => false
 		);
 		$label = isset($options['label']) ? $options['label'] : $_options['label'];
-		unset($options['label']);
 		unset($_options['label']);
 		$disabled = isset($options['disabled']) ? $options['disabled'] : $_options['disabled'];
-		unset($options['disabled']);
 		unset($_options['disabled']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
 		$defaults = $this->Form->inputDefaults();
-
-		if(isset($_options['data-date'])){
-			$defaultDate = $_options['data-date'];
-		} else {
-			$defaultDate = date('d-m-Y');
-		}
 		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
-			'value' => $defaultDate
+			'value' => isset($_options['data-date'])?$_options['data-date']:date('d-m-Y')
 		);
 		$inputOptions = array_merge($_options, $inputOptions);
 
 		if($label !== false) {
 			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
-		
 		if($disabled !== false) {
 			$inputOptions['disabled'] = $disabled;
 		}
-		if($field == 'end_date'){
-			//pr($inputOptions);die;
-		}
 		$html = $this->Form->input($field, $inputOptions);
-		
+	
 		$_datepickerOptions = array();
 		$_datepickerOptions['id'] = $_options['id'];
 		if(!empty($_options['startDate'])){
