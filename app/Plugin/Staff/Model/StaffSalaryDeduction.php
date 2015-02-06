@@ -20,7 +20,6 @@ class StaffSalaryDeduction extends StaffAppModel {
 		'StaffSalary'
 	);
 
-
 	public $validate = array(
 		'salary_deduction_type_id' => array(
 			'ruleRequired' => array(
@@ -31,7 +30,7 @@ class StaffSalaryDeduction extends StaffAppModel {
 		),
 		'deduction_amount' => array(
 			'ruleRequired' => array(
-				'rule' => 'notEmpty',
+				'rule' => array('money'),
 				'required' => true,
 				'message' => 'Please enter a valid Deduction Amount'
 			)
