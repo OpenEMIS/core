@@ -74,7 +74,7 @@ class StaffController extends StaffAppController {
 		'leaves' => 'Staff.StaffLeave',
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
-		'salaries' => 'Staff.StaffSalary',
+		'StaffSalary' => array('plugin' => 'Staff'),
 		'training' => 'Staff.StaffTraining',
 		'report' => 'Staff.StaffReport',
 		'additional' => 'Staff.StaffCustomField',
