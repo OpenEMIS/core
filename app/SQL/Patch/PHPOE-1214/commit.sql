@@ -42,7 +42,9 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 DROP TABLE IF EXISTS `institution_site_grades`;
 CREATE TABLE IF NOT EXISTS `institution_site_grades` (
 `id` int(11) NOT NULL,
+  `status` int(1) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
+  `institution_site_programme_id` int(11) NOT NULL,
   `institution_site_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -52,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `institution_site_grades` (
 
 
 ALTER TABLE `institution_site_grades`
- ADD PRIMARY KEY (`id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `education_programme_id` (`education_grade_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `institution_site_id` (`institution_site_id`), ADD KEY `institution_site_programme_id` (`institution_site_programme_id`);
 
 
 ALTER TABLE `institution_site_grades`
