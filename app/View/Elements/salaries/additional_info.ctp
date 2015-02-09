@@ -43,7 +43,7 @@ $tableFooter = array(
 										'before' => false,
 										'between' => false
 										);
-									if ($action == 'add') $currFormOption['empty'] = __('--Select');
+									// if ($action == 'add') $currFormOption['empty'] = __('--Select');
 									echo $this->Form->input($modelName.'.' . $index . '.'.$foreignKeyName, $currFormOption); 
 									?>
 								</td>
