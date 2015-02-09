@@ -122,13 +122,6 @@ class InstitutionSiteClass extends AppModel {
 		$this->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		/*$academicPeriodConditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1,
-			'AcademicPeriod.parent_id >' => 0
-		);*/
-		//$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
 		$conditions = array(
 			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);

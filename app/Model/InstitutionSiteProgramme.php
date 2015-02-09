@@ -20,7 +20,6 @@ class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
 		'ControllerAction2',
-		//'AcademicPeriod',
 		'InstitutionSiteProgramme',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
@@ -38,6 +37,13 @@ class InstitutionSiteProgramme extends AppModel {
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
 			'foreignKey' => 'created_user_id'
+		)
+	);
+
+	public $hasMany = array(
+		'InstitutionSiteGrade' => array(
+			'className' => 'InstitutionSiteGrade',
+			'dependent' => true
 		)
 	);
 
@@ -103,15 +109,25 @@ class InstitutionSiteProgramme extends AppModel {
 				'onchange' => "$('#reload').click()"
 			);
 			$this->fields['education_programme_id']['type'] = 'select';
+			$this->fields['education_programme_id']['attr'] = array(
+				'onchange' => "$('#reload').click()"
+			);
 			$this->fields['start_year']['visible'] = false;
 			$this->fields['end_year']['visible'] = false;
 			$this->fields['institution_site_id']['type'] = 'hidden';
 			$this->fields['institution_site_id']['value'] = $institutionSiteId;
+			$this->fields['grades'] = array(
+				'type' => 'element',
+				'element' => '../InstitutionSites/InstitutionSiteProgramme/grades',
+				'visible' => true
+			);
 
 			$this->setFieldOrder('education_level_id', 1);
 			$this->setFieldOrder('education_programme_id', 2);
 			$this->setFieldOrder('start_date', 3);
 			$this->setFieldOrder('end_date', 4);
+
+			$this->setVar(compact('institutionSiteId'));
 		}
 	}
 	
@@ -137,15 +153,21 @@ class InstitutionSiteProgramme extends AppModel {
 	public function add() {
 		$EducationLevel = ClassRegistry::init('EducationLevel');
 		$educationLevelOptions = $EducationLevel->getOptions();
-		$this->fields['education_level_id']['options'] = $educationLevelOptions;
 		$selectedEducationLevel = key($educationLevelOptions);
+
+		$EducationProgramme = ClassRegistry::init('EducationProgramme');
+		$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
+		$selectedEducationProgramme = key($educationProgrammeOptions);
 
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
+
 			$selectedEducationLevel = $data[$this->alias]['education_level_id'];
+			$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
+			$selectedEducationProgramme = !empty($data[$this->alias]['education_programme_id']) ? $data[$this->alias]['education_programme_id'] : key($educationProgrammeOptions);
 
 			if($data['submit'] == 'reload') {
-
+				unset($this->request->data['InstitutionSiteGrade']);
 			} else {
 				if ($this->saveAll($data)) {
 					$this->Message->alert('general.add.success');
@@ -161,9 +183,12 @@ class InstitutionSiteProgramme extends AppModel {
 			);
 		}
 
-		$EducationProgramme = ClassRegistry::init('EducationProgramme');
-		$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
+		$EducationGrade = ClassRegistry::init('EducationGrade');
+		$educationGrades = $EducationGrade->getGradeOptions($selectedEducationProgramme, null, true);
+
+		$this->fields['education_level_id']['options'] = $educationLevelOptions;
 		$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
+		$this->setVar(compact('educationGrades'));
 
 		$this->render = 'auto';
 	}
@@ -171,19 +196,26 @@ class InstitutionSiteProgramme extends AppModel {
 	public function edit($id=0) {
 		$this->render = 'auto';
 		if ($this->exists($id)) {
-			$this->contain('EducationProgramme.EducationCycle');
+			$this->contain('EducationProgramme.EducationCycle', 'InstitutionSiteGrade');
 			$data = $this->findById($id);
+
 			$EducationLevel = ClassRegistry::init('EducationLevel');
 			$educationLevelOptions = $EducationLevel->getOptions();
-			$this->fields['education_level_id']['options'] = $educationLevelOptions;
 			$selectedEducationLevel = $data['EducationProgramme']['EducationCycle']['education_level_id'];
+
+			$EducationProgramme = ClassRegistry::init('EducationProgramme');
+			$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
+			$selectedEducationProgramme = key($educationProgrammeOptions);
 
 			if ($this->request->is(array('post', 'put'))) {
 				$data = $this->request->data;
+
 				$selectedEducationLevel = $data[$this->alias]['education_level_id'];
+				$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
+				$selectedEducationProgramme = !empty($data[$this->alias]['education_programme_id']) ? $data[$this->alias]['education_programme_id'] : key($educationProgrammeOptions);
 
 				if($data['submit'] == 'reload') {
-
+					unset($this->request->data['InstitutionSiteGrade']);
 				} else {
 					if ($this->saveAll($data)) {
 						$this->Message->alert('general.edit.success');
@@ -198,30 +230,17 @@ class InstitutionSiteProgramme extends AppModel {
 				$this->request->data = $data;
 			}
 
-			$EducationProgramme = ClassRegistry::init('EducationProgramme');
-			$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
+			$EducationGrade = ClassRegistry::init('EducationGrade');
+			$educationGrades = $EducationGrade->getGradeOptions($selectedEducationProgramme, null, true);
+
+			$this->fields['education_level_id']['options'] = $educationLevelOptions;
 			$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
+			$this->setVar(compact('educationGrades'));
 		} else {
 			$this->Message->alert('general.view.notExists');
 			return $this->redirect(array('action' => get_class($this)));
 		}
 	}
-
-	/*public function getConditionsByAcademicPeriodId($academicPeriodId) {
-		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-		$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
-		$startDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['start_date']));
-		$endDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['end_date']));
-		
-		$conditions = array();
-		$conditions['InstitutionSiteProgramme.start_date <='] = $endDate;
-		$conditions['OR'] = array(
-			'InstitutionSiteProgramme.end_date >=' => $startDate,
-			'InstitutionSiteProgramme.end_date IS NULL'
-		);
-
-		return $conditions;
-	}*/
 	
 	public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
 		$conditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);

@@ -62,6 +62,7 @@ class LabelHelper extends AppHelper {
 			'school_year' => 'School Year',
 			'location' => 'Location',
 			'grade' => 'Grade',
+			'grades' => 'Grades',
 			'history' => 'History',
 			'profile_image' => 'Profile Image',
 			'openemisId' =>'OpenEMIS ID',
