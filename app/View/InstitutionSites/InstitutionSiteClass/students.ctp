@@ -17,8 +17,9 @@
 
 			<tbody>
 			<?php 
-			foreach($this->data['InstitutionSiteClassStudent'] as $i => $obj) : 
-				if ($obj['status'] == 0) continue;
+			if (isset($this->data['InstitutionSiteClassStudent'])) :
+				foreach($this->data['InstitutionSiteClassStudent'] as $i => $obj) : 
+					if ($obj['status'] == 0) continue;
 			?>
 
 				<tr>
@@ -51,7 +52,10 @@
 					</td-->
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>
-			<?php endforeach ?>
+			<?php 
+				endforeach;
+			endif;
+			?>
 				
 			</tbody>
 		</table>
