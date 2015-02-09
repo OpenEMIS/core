@@ -454,7 +454,8 @@ class LabelHelper extends AppHelper {
 			'ara' => 'Arabic'
 		),
 		'Autocomplete' => array(
-			'no_result' => 'No records matched.'
+			'no_result' => 'No existing record.',
+			'has_result' => 'No existing record?'
 		),
 		'Datawarehouse' => array(
 			'indicator' => 'Indicator',
