@@ -31,18 +31,20 @@ class InstitutionSite extends AppModel {
 	);
 
 	public $hasMany = array(
-		'InstitutionSiteBankAccount',
-		'InstitutionSitePosition',
-		'InstitutionSiteProgramme',
-		'InstitutionSiteShift',
-		'InstitutionSiteSection',
-		'InstitutionSiteClass',
-		'InstitutionSiteFee'
+		'InstitutionSiteBankAccount' => array('dependent' => true),
+		'InstitutionSitePosition' => array('dependent' => true),
+		'InstitutionSiteProgramme' => array('dependent' => true),
+		'InstitutionSiteShift' => array('dependent' => true),
+		'InstitutionSiteSection' => array('dependent' => true),
+		'InstitutionSiteClass' => array('dependent' => true),
+		'InstitutionSiteFee' => array('dependent' => true),
+		'InstitutionSiteActivity' => array('dependent' => true)
 	);
 	
 	public $actsAs = array(
 		'Excel',
-		'TrackHistory',
+		//'TrackHistory',
+		'TrackActivity' => array('target' => 'InstitutionSiteActivity', 'key' => 'institution_site_id', 'session' => 'InstitutionSite.id'),
 		'CascadeDelete' => array(
 			'cascade' => array(
 				'InstitutionSiteAttachment',
