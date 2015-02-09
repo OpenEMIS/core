@@ -21,16 +21,29 @@ var Autocomplete = {
 	loadingWrapper: '',
 	loadingImg: '',
 	noDataMsg: '',
+	hasDataMsg: '',
+	element: '',
 	init: function() {
 		this.attachAutoComplete('.autocomplete', Autocomplete.select);
 		loadingWrapper = $('.loadingWrapper');
 		loadingImg = loadingWrapper.find('.img');
 		noDataMsg = loadingWrapper.find('.msg');
+		hasDataMsg = loadingWrapper.find('.hasDataMsg');
+		element = '';
+	},
+
+	keyup: function() {
+		if( typeof element !== 'string' ){
+			if(element.get(0).tagName.toUpperCase() === 'INPUT') {
+				element.val('');
+			} else {
+				element.html('');
+			}
+		}
 	},
 
 	select: function(event, ui) {
 		var val = ui.item.value;
-		var element;
 		for(var i in val) {
 			element = $("input[autocomplete='"+i+"']");
 			
@@ -46,17 +59,20 @@ var Autocomplete = {
 		return false;
 	},
 	
-	focus: function(event, ui) {
+	focus: function( event, ui ) {
 		this.value = ui.item.label;
+		Autocomplete.select(event, ui);
 		event.preventDefault();
 	},
 			
-	searchComplete: function( event, ui){
+	searchComplete: function( event, ui ) {
 		if(loadingImg.length === 1){
 			loadingImg.hide();
 			var recordsCount = ui.content.length;
 			if(recordsCount === 0){
 				noDataMsg.show();
+			} else {
+				hasDataMsg.show();
 			}
 		}
 	},
@@ -67,15 +83,14 @@ var Autocomplete = {
 			if(errorMessage.length > 0){
 				errorMessage.remove();
 			}
-			
-			$("input[autocomplete]").val('');
 			noDataMsg.hide();
+			hasDataMsg.hide();
 			loadingWrapper.show();
 			loadingImg.show();
 		}
 	},
 
-	attachAutoComplete: function(element, callback) {
+	attachAutoComplete: function( element, callback ) {
 		var url = getRootURL() + $(element).attr('url');
 		var length = $(element).attr('length');
 		
@@ -90,7 +105,7 @@ var Autocomplete = {
 			focus: Autocomplete.focus,
 			response: Autocomplete.searchComplete,
 			search: Autocomplete.beforeSearch
-		});
+		}).on( 'keyup', Autocomplete.keyup );
 	},
 			
 	submitForm: function(obj){
