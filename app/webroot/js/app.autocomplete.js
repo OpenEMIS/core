@@ -22,26 +22,30 @@ var Autocomplete = {
 	loadingImg: '',
 	noDataMsg: '',
 	hasDataMsg: '',
-	element: '',
+	uiItems: {},
+
 	init: function() {
 		this.attachAutoComplete('.autocomplete', Autocomplete.select);
 		loadingWrapper = $('.loadingWrapper');
 		loadingImg = loadingWrapper.find('.img');
 		noDataMsg = loadingWrapper.find('.msg');
 		hasDataMsg = loadingWrapper.find('.hasDataMsg');
-		element = '';
 	},
 
 	keyup: function() {
-		if( typeof element !== 'string' ){
-			if(element.get(0).tagName.toUpperCase() === 'INPUT') {
-				element.val('');
-			} else {
-				element.html('');
+		var val = Autocomplete.uiItems;
+		for(var i in val) {
+			target = $("input[autocomplete='"+i+"']");
+			if( typeof target !== 'string' ){
+				if(target.get(0).tagName.toUpperCase() === 'INPUT') {
+					target.val('');
+				} else {
+					target.html('');
+				}
 			}
 		}
 	},
-
+	
 	select: function(event, ui) {
 		var val = ui.item.value;
 		for(var i in val) {
@@ -56,6 +60,7 @@ var Autocomplete = {
 			}
 		}
 		this.value = ui.item.label;
+		Autocomplete.uiItems = val;
 		return false;
 	},
 	
