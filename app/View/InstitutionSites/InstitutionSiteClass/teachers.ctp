@@ -14,8 +14,9 @@
 
 			<tbody>
 			<?php 
-			foreach($this->data['InstitutionSiteClassStaff'] as $i => $obj) : 
-				if ($obj['status'] == 0) continue;
+			if (isset($this->data['InstitutionSiteClassStaff'])) :
+				foreach($this->data['InstitutionSiteClassStaff'] as $i => $obj) : 
+					if ($obj['status'] == 0) continue;
 			?>
 
 				<tr>
@@ -32,7 +33,10 @@
 					<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>
-			<?php endforeach ?>
+			<?php 
+				endforeach;
+			endif;
+			?>
 				
 			</tbody>
 		</table>
