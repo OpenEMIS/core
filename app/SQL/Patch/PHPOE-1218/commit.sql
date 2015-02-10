@@ -5,7 +5,7 @@
 UPDATE `navigations`
 SET `visible`='0' 
 WHERE `controller`='census'
-	AND `action`='infrastructure'
+	AND `action`='infrastructure';
 
 --
 -- 2. security_functions
@@ -16,4 +16,4 @@ SET `visible`='0'
 WHERE `controller`='census'
 	AND `module`='institutions'
 	AND `category`='totals'
-	AND `_view`='infrastructure'
+	AND `_view`='infrastructure';
