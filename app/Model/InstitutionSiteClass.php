@@ -328,11 +328,9 @@ class InstitutionSiteClass extends AppModel {
 						);
 
 						// search if the new student was previously added before
-						if(isset($this->request->data['InstitutionSiteClassStudent'])) {
-							foreach ($data['InstitutionSiteClassStudent'] as $row) {
-								if ($row['student_id'] == $studentId) {
-									$newRow['id'] = $row['id'];
-								}
+						foreach ($data['InstitutionSiteClassStudent'] as $row) {
+							if ($row['student_id'] == $studentId) {
+								$newRow['id'] = $row['id'];
 							}
 						}
 
@@ -352,11 +350,9 @@ class InstitutionSiteClass extends AppModel {
 						);
 
 						// search if the new student was previously added before
-						if(isset($this->request->data['InstitutionSiteClassStaff'])) {
-							foreach ($data['InstitutionSiteClassStaff'] as $row) {
-								if ($row['staff_id'] == $staffId) {
-									$newRow['id'] = $row['id'];
-								}
+						foreach ($data['InstitutionSiteClassStaff'] as $row) {
+							if ($row['staff_id'] == $staffId) {
+								$newRow['id'] = $row['id'];
 							}
 						}
 
@@ -383,20 +379,16 @@ class InstitutionSiteClass extends AppModel {
 			}
 
 			// removing existing staff from StaffOptions
-			if(isset($this->request->data['InstitutionSiteClassStaff'])) {
-				foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
-					if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
-						unset($staffOptions[$row['staff_id']]);
-					}
+			foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
+				if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
+					unset($staffOptions[$row['staff_id']]);
 				}
 			}
 
 			// removing existing students from StudentOptions
-			if(isset($this->request->data['InstitutionSiteClassStudent'])) {
-				foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
-					if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
-						unset($studentOptions[$row['student_id']]);
-					}
+			foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
+				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+					unset($studentOptions[$row['student_id']]);
 				}
 			}
 
