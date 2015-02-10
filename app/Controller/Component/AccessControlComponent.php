@@ -31,8 +31,7 @@ class AccessControlComponent extends Component {
 		'PREFERENCES' => array('index', 'account', 'accountEdit', 'password'),
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
-		'STUDENTS' => array('viewStudent'),
-		'STAFF' => array('viewStaff')
+		'REPORTS' => array('index')
 	);
 	public $operations = array('_view', '_edit', '_add', '_delete', '_execute');
 	
