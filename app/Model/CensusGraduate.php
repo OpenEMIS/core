@@ -166,7 +166,7 @@ class CensusGraduate extends AppModel {
 			}
 		}
 
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
 
@@ -208,7 +208,7 @@ class CensusGraduate extends AppModel {
 			}
 		}
 		
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		
 		$controller->set(compact('selectedAcademicPeriod', 'academicPeriodList', 'genderOptions', 'censusData', 'programmeData'));
 	}

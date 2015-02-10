@@ -39,7 +39,7 @@ class CensusTeacher extends AppModel {
 	}
 	
 	public function mergeSingleGradeData(&$class, $data) {
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		//pr($genderOptions);die;
 		//pr($class);
 		//pr($data);
@@ -214,7 +214,7 @@ class CensusTeacher extends AppModel {
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		
 		$data = array();
 		foreach($gradeList as $obj) {
@@ -497,7 +497,7 @@ class CensusTeacher extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
-			$genderOptions = $this->Gender->getList(array('listOnly' => true));
+			$genderOptions = $this->Gender->getListOnly();
 
 			$EducationLevel = ClassRegistry::init('EducationLevel');
 			$eduLevelOptions = $EducationLevel->getInstitutionLevelsByAcademicPeriod($institutionSiteId, $selectedAcademicPeriod);
@@ -537,7 +537,7 @@ class CensusTeacher extends AppModel {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 					$displayContent = false;
 				} else {
-					$genderOptions = $this->Gender->getList();
+					$genderOptions = $this->Gender->getListOnly();
 					//pr($genderOptions);die;
 
 					$EducationLevel = ClassRegistry::init('EducationLevel');

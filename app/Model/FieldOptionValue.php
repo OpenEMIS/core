@@ -141,7 +141,11 @@ class FieldOptionValue extends AppModel {
 		}
 		return $key;
 	}
-        
+
+	public function getListOnly() {
+		return $this->getList(array('listOnly' => true));
+	}
+
 	public function getList($customOptions=array()) {
 		$alias = $this->alias;
 

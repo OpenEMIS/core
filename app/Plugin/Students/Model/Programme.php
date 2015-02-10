@@ -65,7 +65,6 @@ class Programme extends AppModel {
 			$this->fields['student_status_id']['labelKey'] = 'InstitutionSiteStudent';
 			$this->fields['start_year']['visible'] = false;
 			$this->fields['end_year']['visible'] = false;
-			//$this->fields['institution_site_programme_id']['visible'] = false;
 			
 			if ($this->action == 'edit') {
 				$this->fields['institution_site_id']['type'] = 'disabled';
