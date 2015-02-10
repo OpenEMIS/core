@@ -168,6 +168,13 @@ class EducationLevel extends AppModel {
 	}
 	
 	public function getInstitutionLevelsByAcademicPeriod($institutionSiteId, $academicPeriodId){
+		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$conditions = array(
+			'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$list = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
@@ -194,11 +201,7 @@ class EducationLevel extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-						//'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId
-					)
+					'conditions' => $conditions
 				)
 			),
 			'conditions' => array('EducationLevel.visible' => 1),

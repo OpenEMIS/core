@@ -283,7 +283,7 @@ class InstitutionSiteProgramme extends AppModel {
 		$conditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
 
 		if(!is_null($academicPeriodId)) {
-			$conditions['InstitutionSiteProgramme.academic_period_id'] = $academicPeriodId;
+			$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 		}
 		
 		$this->contain('EducationProgramme');
