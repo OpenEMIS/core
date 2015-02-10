@@ -52,7 +52,7 @@ class SecurityGroupArea extends AppModel {
 		$this->formatResult = true;
 		$this->unbindModel(array('belongsTo' => array('Area')));
 		$data = $this->find('all', array(
-			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.area_level_id AS area_level_id', 'Area.name AS area_name'),
+			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.area_level_id AS area_level_id', 'Area.name AS area_name', 'Area.parent_id AS area_parent_id'),
 			'joins' => array(
 				array(
 					'table' => 'areas',
@@ -71,6 +71,34 @@ class SecurityGroupArea extends AppModel {
 		return $data;
 	}
 	
+	public function getAreasWithParents($groupId) {
+		$areas = $this->getAreas($groupId);
+		$data = array();
+		foreach( $areas as $area) {
+			$data[] = $area;
+			$level = $area['area_level_id'];
+			if($area['area_parent_id'] != -1){
+				$parentId = $area['area_parent_id'];
+				while($level > 1){
+					$parent = $this->getFormattedParentArea($parentId);
+					$data[] = $parent;
+					$parentId = $parent['area_parent_id'];
+					$level--;
+				}
+			}
+		}
+		return $data;
+	}
+
+	public function getFormattedParentArea($id){
+		$this->Area->formatResult = true;
+		$params = array(
+			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.area_level_id AS area_level_id', 'Area.name AS area_name', 'Area.parent_id AS area_parent_id'),
+			'conditions' => array('Area.id' => $id),
+		);
+		return $this->Area->find('first', $params);
+	}
+
 	public function fetchAreas($levelList, $conditions) {
 		$this->formatResult = true;
 		$list = $this->find('all', array(

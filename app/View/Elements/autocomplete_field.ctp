@@ -21,9 +21,17 @@ $inputOptions['length'] = 3;
 
 $loadingImg = $this->Html->image('icons/loader.gif', array());
 $noDataMsg = $this->Label->get('Autocomplete.no_result');
+$hasDataMsg = $this->Label->get('Autocomplete.has_result');
 $loadingHtml = '<div class="loadingWrapper"><span class="img">' . $loadingImg . '</span><span class="msg">' . $noDataMsg;
 if(isset($linkWhenNoRecords)){
 	$loadingHtml .= $linkWhenNoRecords;
+}
+$loadingHtml .= '</span><span class="hasDataMsg">';
+if(isset($controller) && ($controller=='Students' || $controller=='Staff')){
+	 $loadingHtml .= $hasDataMsg;
+	if(isset($linkWhenHasRecords)){
+		$loadingHtml .= $linkWhenHasRecords;
+	}
 }
 $loadingHtml .= '</span></div>';
 

@@ -161,7 +161,7 @@ class InstitutionSiteClass extends AppModel {
 				'order' => array('EducationSubject.order')
 			));
 
-			// need to get the section classes that are alraeady there
+			// need to get the section classes that are already there
 			$classesBySection = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
 
 			$classesBySectionBySubjectId = array();
@@ -307,7 +307,6 @@ class InstitutionSiteClass extends AppModel {
 			// retrieve all the students linked to the sections
 			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
 			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
-			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
 
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
@@ -317,23 +316,28 @@ class InstitutionSiteClass extends AppModel {
 						$studentId = $postData[$this->alias]['student_id'];
 
 						$InstitutionSiteSectionStudent->Student->recursive = -1;
-						$studentObj = $InstitutionSiteSectionStudent->Student->findById($studentId, $contain['InstitutionSiteClassStudent']['Student']['fields']);
+						$newStudentList = $studentId == -1 ? array_keys($studentOptions) : array($studentId);
 						
-						$newRow = array(
-							'student_id' => $studentId,
-							'student_category_id' => 0,
-							'status' => 1,
-							'Student' => $studentObj['Student']
-						);
+						foreach ($newStudentList as $studentId) {
+							if ($studentId == 0 || $studentId == -1) continue;
 
-						// search if the new student was previously added before
-						foreach ($data['InstitutionSiteClassStudent'] as $row) {
-							if ($row['student_id'] == $studentId) {
-								$newRow['id'] = $row['id'];
+							$studentObj = $InstitutionSiteSectionStudent->Student->findById($studentId, $contain['InstitutionSiteClassStudent']['Student']['fields']);
+							
+							$newRow = array(
+								'student_id' => $studentId,
+								'student_category_id' => 0,
+								'status' => 1,
+								'Student' => $studentObj['Student']
+							);
+
+							// search if the new student was previously added before
+							foreach ($data['InstitutionSiteClassStudent'] as $row) {
+								if ($row['student_id'] == $studentId) {
+									$newRow['id'] = $row['id'];
+								}
 							}
+							$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
 						}
-
-						$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
 						unset($this->request->data[$this->alias]['student_id']);
 					}
 					if (isset($postData[$this->alias]['staff_id']) && !empty($postData[$this->alias]['staff_id'])) {
@@ -378,18 +382,28 @@ class InstitutionSiteClass extends AppModel {
 			}
 
 			// removing existing staff from StaffOptions
-			foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
-				if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
-					unset($staffOptions[$row['staff_id']]);
+			if (isset($this->request->data['InstitutionSiteClassStaff'])) {
+				foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
+					if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
+						unset($staffOptions[$row['staff_id']]);
+					}
 				}
 			}
 
 			// removing existing students from StudentOptions
-			foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
-				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
-					unset($studentOptions[$row['student_id']]);
+			if (isset($this->request->data['InstitutionSiteClassStudent'])) {
+				foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
+					if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+						unset($studentOptions[$row['student_id']]);
+					}
 				}
 			}
+
+			if (!empty($studentOptions)) {
+				$addAllStudentLabel = '-- ' . $this->controller->Option->getLabel($this->alias . '.add_all_student') . ' --';
+				$studentOptions = $this->controller->Option->prepend($studentOptions, array('-1' => $addAllStudentLabel));
+			}
+			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
 
 			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions'));
 		} else {
