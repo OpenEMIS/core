@@ -1,7 +1,7 @@
 <div class="form-group" style="padding: 10px;">
 	
 	<div class="panel panel-default">
-		<div class="panel-heading dark-and-center"><?php echo __('Students') ?></div>
+		<div class="panel-heading dark-background"><?php echo __('Students') ?></div>
 
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
