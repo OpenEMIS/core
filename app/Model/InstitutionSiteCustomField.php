@@ -52,6 +52,17 @@ class InstitutionSiteCustomField extends AppModel {
 			$options['conditions'][$this->alias . '.institution_site_type_id'] = array(0, $type);
 			$options['conditions'][$this->alias . '.type'] = array(2, 3, 4, 5);
 		}
+		
+		if(is_array($options['order'])){
+			$tmpOrder = $options['order'][0];
+		}else{
+			$tmpOrder = $options['order'];
+			$options['order'] = array();
+		}
+		
+		$options['order'][0] = $this->alias . '.institution_site_type_id';
+		$options['order'][1] = $tmpOrder;
+		
 		return $options;
 	}
 	
