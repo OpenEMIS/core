@@ -16,22 +16,18 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class InstitutionSiteSectionGrade extends AppModel {
-	public $actsAs = array(
-		'InstitutionSiteProgramme'
-	);
-	
+class InstitutionSiteSectionGrade extends AppModel {	
 	public $belongsTo = array(
 		'EducationGrade',
 		'InstitutionSiteSection'
 	);
 	
 	public function getAvailableGradesForNewSection($institutionSiteId, $academicPeriodId) {
-		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId);
-		$conditions = array_merge(array(
+		$conditions = array(
 			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
 			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		), $conditions);
+		);
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 
 		$data = $this->EducationGrade->find('all', array(
 			'fields' => array('EducationProgramme.name', 'EducationGrade.name'),
@@ -230,12 +226,12 @@ class InstitutionSiteSectionGrade extends AppModel {
 		return $list;
 	}
 	
-	public function getInstitutionGradeOptions($institutionSiteId, $academicPeriodId) {		
-		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId);
-		$conditions = array_merge(array(
+	public function getInstitutionGradeOptions($institutionSiteId, $academicPeriodId) {
+		$conditions = array(
 			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
 			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		), $conditions);
+		);
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 
 		$data = $this->EducationGrade->find('list', array(
 			'fields' => array('EducationGrade.id', 'EducationGrade._name'),
