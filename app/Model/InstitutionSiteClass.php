@@ -142,9 +142,10 @@ class InstitutionSiteClass extends AppModel {
 			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
 			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
 			
-			$yearObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
-			$startDate = $yearObj['AcademicPeriod']['start_date'];
-			$endDate = $yearObj['AcademicPeriod']['end_date'];
+			$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+			$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
+			$startDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'start_date');
+			$endDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'end_date');
 		
 			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
@@ -327,9 +328,11 @@ class InstitutionSiteClass extends AppModel {
 						);
 
 						// search if the new student was previously added before
-						foreach ($data['InstitutionSiteClassStudent'] as $row) {
-							if ($row['student_id'] == $studentId) {
-								$newRow['id'] = $row['id'];
+						if(isset($this->request->data['InstitutionSiteClassStudent'])) {
+							foreach ($data['InstitutionSiteClassStudent'] as $row) {
+								if ($row['student_id'] == $studentId) {
+									$newRow['id'] = $row['id'];
+								}
 							}
 						}
 
@@ -349,9 +352,11 @@ class InstitutionSiteClass extends AppModel {
 						);
 
 						// search if the new student was previously added before
-						foreach ($data['InstitutionSiteClassStaff'] as $row) {
-							if ($row['staff_id'] == $staffId) {
-								$newRow['id'] = $row['id'];
+						if(isset($this->request->data['InstitutionSiteClassStaff'])) {
+							foreach ($data['InstitutionSiteClassStaff'] as $row) {
+								if ($row['staff_id'] == $staffId) {
+									$newRow['id'] = $row['id'];
+								}
 							}
 						}
 
@@ -378,16 +383,20 @@ class InstitutionSiteClass extends AppModel {
 			}
 
 			// removing existing staff from StaffOptions
-			foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
-				if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
-					unset($staffOptions[$row['staff_id']]);
+			if(isset($this->request->data['InstitutionSiteClassStaff'])) {
+				foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
+					if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
+						unset($staffOptions[$row['staff_id']]);
+					}
 				}
 			}
 
 			// removing existing students from StudentOptions
-			foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
-				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
-					unset($studentOptions[$row['student_id']]);
+			if(isset($this->request->data['InstitutionSiteClassStudent'])) {
+				foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
+					if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+						unset($studentOptions[$row['student_id']]);
+					}
 				}
 			}
 
