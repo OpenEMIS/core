@@ -218,7 +218,8 @@ class LabelHelper extends AppHelper {
 			'education_subject_id' => 'Education Subject',
 			'academic_period_id' => 'Academic Period',
 			'add_staff' => 'Add Staff',
-			'add_student' => 'Add Student'
+			'add_student' => 'Add Student',
+			'add_all_student' => 'Add All Students',
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
