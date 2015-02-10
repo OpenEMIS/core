@@ -82,18 +82,20 @@ class InstitutionSiteSectionClass extends AppModel {
 	}
 	
 	public function getAvailableGradesForNewSection($institutionSiteId, $academicPeriodId) {
+		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$conditions = array(
+			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$data = $this->EducationGrade->find('all', array(
 			'fields' => array('EducationProgramme.name', 'EducationGrade.name'),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
-						'InstitutionSiteProgramme.status = 1'
-					)
+					'conditions' => $conditions
 				)
 			),
 			'order' => array('EducationProgramme.order', 'EducationGrade.order')
