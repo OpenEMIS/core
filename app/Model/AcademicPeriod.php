@@ -130,7 +130,26 @@ class AcademicPeriod extends AppModel {
 		$this->fields['order']['visible'] = false;
 		$this->fields['available']['type'] = 'select';
 		$this->fields['available']['options'] = $this->controller->Option->get('yesno');
-		
+
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
+
+		$this->fields['visible']['type'] = 'select';
+		$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
+		$this->fields['current']['type'] = 'select';
+		$this->fields['current']['options'] = $this->controller->Option->get('yesno');
+
+		$order = 1;
+		$this->setFieldOrder('name', $order++);
+		$this->setFieldOrder('code', $order++);
+		$this->setFieldOrder('academic_period_level_id', $order++);
+		$this->setFieldOrder('start_date', $order++);
+		$this->setFieldOrder('end_date', $order++);
+		$this->setFieldOrder('school_days', $order++);
+		$this->setFieldOrder('current', $order++);
+		$this->setFieldOrder('available', $order++);
+		$this->setFieldOrder('visible', $order++);
+
 		if ($this->action == 'view') {
 			$this->fields['academic_period_level_id']['dataModel'] = 'AcademicPeriodLevel';
 			$this->fields['academic_period_level_id']['dataField'] = 'name';
@@ -160,7 +179,21 @@ class AcademicPeriod extends AppModel {
 	}
 	
 	public function index() {
-		$this->recover();
+		$needRecoverTree = $this->find('all',
+			array(
+				'recursive' => -1,
+				'fields' => array('id'),
+				'conditions' => array(
+					'OR' => array(
+						'lft' => null,
+						'rght' => null
+					)
+				)
+			)
+		);
+		if (!empty($needRecoverTree)) {
+			$this->recover();	
+		}
 
 		$params = $this->controller->params;
 		$parentId = isset($params->named['parent']) ? $params->named['parent'] : 0;
@@ -247,7 +280,8 @@ class AcademicPeriod extends AppModel {
 			}
 		}
 
-		$this->setVar(compact('fields', 'parentId', 'pathToString', 'academicPeriodLevelOptions', 'parentStartDate', 'parentEndDate'));
+		$yesnoOptions = $this->controller->Option->get('yesno');
+		$this->setVar(compact('fields', 'parentId', 'pathToString', 'academicPeriodLevelOptions', 'parentStartDate', 'parentEndDate', 'yesnoOptions'));
 	}
 	
 	public function view($id=0) {

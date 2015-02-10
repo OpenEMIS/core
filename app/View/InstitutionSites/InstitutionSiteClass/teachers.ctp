@@ -1,7 +1,7 @@
 <div class="form-group" style="padding: 10px;">
 	
 	<div class="panel panel-default">
-		<div class="panel-heading"><?php echo __('Teachers') ?></div>
+		<div class="panel-heading dark-background"><?php echo __('Teachers') ?></div>
 
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
@@ -14,8 +14,9 @@
 
 			<tbody>
 			<?php 
-			foreach($this->data['InstitutionSiteClassStaff'] as $i => $obj) : 
-				if ($obj['status'] == 0) continue;
+			if (isset($this->data['InstitutionSiteClassStaff'])) :
+				foreach($this->data['InstitutionSiteClassStaff'] as $i => $obj) : 
+					if ($obj['status'] == 0) continue;
 			?>
 
 				<tr>
@@ -32,7 +33,10 @@
 					<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>
-			<?php endforeach ?>
+			<?php 
+				endforeach;
+			endif;
+			?>
 				
 			</tbody>
 		</table>

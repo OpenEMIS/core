@@ -184,4 +184,15 @@ class SecurityUser extends AppModel {
 		);
 		return $conditions;
 	}
+
+	public function isUserCreatedByCurrentLoggedUser($currentLoggedUser, $user) {
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'SecurityUser.id' => $user,
+				'SecurityUser.created_user_id' => $currentLoggedUser
+			)
+		));
+		return $data;
+	}
 }

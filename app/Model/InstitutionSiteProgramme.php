@@ -135,7 +135,10 @@ class InstitutionSiteProgramme extends AppModel {
 	}
 	
 	public function getProgrammeOptions($institutionSiteId, $academicPeriodId=null) {
-		$conditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.status' => 1
+		);
 		
 		if(!is_null($academicPeriodId)) {
 			$conditions['InstitutionSiteProgramme.academic_period_id'] = $academicPeriodId;

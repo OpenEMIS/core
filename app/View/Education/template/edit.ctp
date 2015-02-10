@@ -13,6 +13,7 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $model, 'edit', $this->data[$model]['id'], $_condition => $conditionId));
 echo $this->Form->create($model, $formOptions);
 echo $this->element('edit');
+echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $model, 'view', $_condition => $conditionId, $this->data[$model]['id'])));
 echo $this->Form->end();
 
