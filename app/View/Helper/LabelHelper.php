@@ -171,12 +171,14 @@ class LabelHelper extends AppHelper {
 		'EducationGrade' => array(
 			'title' => 'Education Grades',
 			'name' => 'Education Grade',
-			'education_programme_id' => 'Education Programme'
+			'education_programme_id' => 'Education Programme',
+			'add_subject' => 'Add Subject'
 		),
 		'EducationSubject' => array(
 			'title' => 'Education Subjects',
 			'name' => 'Subject Name',
-			'code' => 'Subject Code'
+			'code' => 'Subject Code',
+			'number_of_subjects' => 'Number Of Subjects',
 		),
 		'EducationGradeSubject' => array(
 			'title' => 'Education Grades - Subjects',
