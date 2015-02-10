@@ -159,7 +159,12 @@ class ReportFormatBehavior extends ModelBehavior {
 		if ($date == '0000-00-00' || $date == '') {
 			$output = '';
 		} else {
-			$date = new DateTime($date);
+			try {
+				$date = new DateTime($date);
+			} catch (Exception $e) {
+			    return 'Please input a proper date.';
+			    exit(1);
+			}
 			$output = $date->format($format);
 		}
 		return $output;

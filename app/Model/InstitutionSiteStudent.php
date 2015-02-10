@@ -114,7 +114,12 @@ class InstitutionSiteStudent extends AppModel {
 				$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
 				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
 				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
-				$date = new DateTime($startDate);
+				try {
+					$date = new DateTime($startDate);
+				} catch (Exception $e) {
+				    return 'The Start Date Is Not In A Proper Format.';
+				    exit(1);
+				}
 				$date->add(new DateInterval('P1D')); // plus 1 day
 				
 				$this->fields['start_date']['attr'] = array(
