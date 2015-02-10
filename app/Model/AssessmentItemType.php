@@ -232,7 +232,7 @@ class AssessmentItemType extends AppModel {
 				'table' => '`education_grades_subjects`',
 				'alias' => 'EducationGradeSubject',
 				'conditions' => array(
-					'EducationGradeSubject.education_grade_id = InstitutionSiteClass.education_subject_id',
+					'EducationGradeSubject.education_grade_id = InstitutionSiteSection.education_grade_id',
 					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
 					'EducationGradeSubject.visible = 1'
 				)
@@ -310,7 +310,7 @@ class AssessmentItemType extends AppModel {
 				'table' => '`education_grades_subjects`',
 				'alias' => 'EducationGradeSubject',
 				'conditions' => array(
-					'EducationGradeSubject.education_grade_id = InstitutionSiteClass.education_subject_id',
+					'EducationGradeSubject.education_grade_id = InstitutionSiteSection.education_grade_id',
 					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id',
 					'EducationGradeSubject.visible = 1'
 				)
