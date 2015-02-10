@@ -8,14 +8,14 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Programme'), __('Start Date'), __('End Date'), __('Cycle'));
+$tableHeaders = array(__('Programme'), __('Level'), __('Start Date'), __('End Date'));
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();
 	$row[] = $this->Html->link($obj['EducationProgramme']['name'], array('action' => $this->action, 'view', $obj['InstitutionSiteProgramme']['id']));
+	$row[] = $obj['EducationProgramme']['EducationCycle']['EducationLevel']['name'] . ' - ' . $obj['EducationProgramme']['EducationCycle']['name'];
 	$row[] = $obj['InstitutionSiteProgramme']['start_date'];
 	$row[] = $obj['InstitutionSiteProgramme']['end_date'];
-	$row[] = $obj['EducationProgramme']['EducationCycle']['name'];
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
