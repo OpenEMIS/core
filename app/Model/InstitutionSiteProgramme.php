@@ -136,7 +136,13 @@ class InstitutionSiteProgramme extends AppModel {
 		$this->contain(array(
 			'EducationProgramme' => array(
 				'fields' => array('EducationProgramme.name'),
-				'EducationCycle' => array('fields' => array('EducationCycle.name'))
+				'EducationCycle' => array(
+					'fields' => array('EducationCycle.name'),
+					'EducationLevel' => array(
+						'fields' => array('EducationLevel.name'),
+						
+					)
+				)
 			)
 		));
 		$data = $this->find('all', array(
@@ -154,7 +160,7 @@ class InstitutionSiteProgramme extends AppModel {
 		$educationLevelOptions = $EducationLevel->getOptions();
 		$selectedEducationLevel = key($educationLevelOptions);
 
-		$EducationProgramme = ClassRegistry::init('EducationProgramme');
+		$EducationProgramme = $this->EducationProgramme;
 		$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
 		$selectedEducationProgramme = key($educationProgrammeOptions);
 
@@ -181,8 +187,7 @@ class InstitutionSiteProgramme extends AppModel {
 				'data-date' => ''
 			);
 		}
-
-		$EducationGrade = ClassRegistry::init('EducationGrade');
+		$EducationGrade = $EducationProgramme->EducationGrade;
 		$educationGrades = $EducationGrade->getGradeOptions($selectedEducationProgramme, null, true);
 
 		$this->fields['education_level_id']['options'] = $educationLevelOptions;
@@ -202,7 +207,7 @@ class InstitutionSiteProgramme extends AppModel {
 			$educationLevelOptions = $EducationLevel->getOptions();
 			$selectedEducationLevel = $data['EducationProgramme']['EducationCycle']['education_level_id'];
 
-			$EducationProgramme = ClassRegistry::init('EducationProgramme');
+			$EducationProgramme = $this->EducationProgramme;
 			$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
 			$selectedEducationProgramme = key($educationProgrammeOptions);
 
@@ -229,7 +234,7 @@ class InstitutionSiteProgramme extends AppModel {
 				$this->request->data = $data;
 			}
 
-			$EducationGrade = ClassRegistry::init('EducationGrade');
+			$EducationGrade = $EducationProgramme->EducationGrade;
 			$educationGrades = $EducationGrade->getGradeOptions($selectedEducationProgramme, null, true);
 
 			$this->fields['education_level_id']['options'] = $educationLevelOptions;

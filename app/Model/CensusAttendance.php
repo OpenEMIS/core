@@ -152,7 +152,7 @@ class CensusAttendance extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		}
 		
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		//pr($genderOptions);die;
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedAcademicPeriod);
 		
@@ -176,7 +176,7 @@ class CensusAttendance extends AppModel {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 				}
 				
-				$genderOptions = $this->Gender->getList();
+				$genderOptions = $this->Gender->getListOnly();
 				//pr($genderOptions);die;
 				
 				$controller->set(compact('genderOptions', 'data', 'selectedAcademicPeriod', 'academicPeriodList', 'schoolDays'));
@@ -206,7 +206,7 @@ class CensusAttendance extends AppModel {
 
 			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
 			$dataAcademicPeriods = $InstitutionSiteProgrammeModel->getAcademicPeriodsHaveProgrammes($institutionSiteId);
-			$genderOptions = $this->Gender->getList();
+			$genderOptions = $this->Gender->getListOnly();
 
 			foreach ($dataAcademicPeriods AS $rowAcademicPeriod) {
 				$academicPeriodId = $rowAcademicPeriod['AcademicPeriod']['id'];

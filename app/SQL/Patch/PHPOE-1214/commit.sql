@@ -1,5 +1,5 @@
 --
--- 1. Backup
+-- 1. Backup - institution_site_programmes
 --
 
 CREATE TABLE IF NOT EXISTS `1214_institution_site_programmes` LIKE `institution_site_programmes`;
@@ -59,3 +59,13 @@ ALTER TABLE `institution_site_grades`
 
 ALTER TABLE `institution_site_grades`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 4. Backup and drop columns - institution_site_students
+--
+
+CREATE TABLE IF NOT EXISTS `1214_institution_site_students` LIKE `institution_site_students`;
+
+INSERT `1214_institution_site_students` SELECT * FROM `institution_site_students`;
+
+ALTER TABLE `institution_site_students` DROP `institution_site_programme_id`;
