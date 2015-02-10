@@ -13,31 +13,27 @@
 			</thead>
 
 			<tbody>
-
-			<?php
-				if(isset($this->data['InstitutionSiteClassStaff'])) :
-					foreach($this->data['InstitutionSiteClassStaff'] as $i => $obj) : 
-						if ($obj['status'] == 0) continue;
-			?>
-					<tr>
-						<?php
-						echo $this->Form->hidden("InstitutionSiteClassStaff.$i.id");
-						echo $this->Form->hidden("InstitutionSiteClassStaff.$i.staff_id");
-						echo $this->Form->hidden("InstitutionSiteClassStaff.$i.status", array('value' => 1));
-
-						foreach ($obj['Staff'] as $field => $value) {
-							echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.$field", array('value' => $value));
-						}
-						?>
-						<td><?php echo $obj['Staff']['identification_no']; ?></td>
-						<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
-						<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
-					</tr>
-			<?php
-					endforeach;
-				endif;
+			<?php 
+			foreach($this->data['InstitutionSiteClassStaff'] as $i => $obj) : 
+				if ($obj['status'] == 0) continue;
 			?>
 
+				<tr>
+					<?php
+					echo $this->Form->hidden("InstitutionSiteClassStaff.$i.id");
+					echo $this->Form->hidden("InstitutionSiteClassStaff.$i.staff_id");
+					echo $this->Form->hidden("InstitutionSiteClassStaff.$i.status", array('value' => 1));
+
+					foreach ($obj['Staff'] as $field => $value) {
+						echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.$field", array('value' => $value));
+					}
+					?>
+					<td><?php echo $obj['Staff']['identification_no']; ?></td>
+					<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
+					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
+				</tr>
+			<?php endforeach ?>
+				
 			</tbody>
 		</table>
 
