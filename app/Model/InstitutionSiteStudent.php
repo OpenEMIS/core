@@ -144,7 +144,7 @@ class InstitutionSiteStudent extends AppModel {
 
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($institutionSiteId);
-		$statusOptions = $this->StudentStatus->getList();
+		$statusOptions = $this->StudentStatus->getList(array('listOnly' => true));
 		$conditions = array();
 
 		if ($this->Session->check($prefix . 'conditions')) {
