@@ -55,22 +55,22 @@ class StudentIdentity extends StudentsAppModel {
 				'message' => 'Please enter a valid Issue Location'
 			)
 		),
-		'expiry_date' => array(
+		'issue_date' => array(
 			'comparison' => array(
-				//'rule' => array('field_comparison', '>', 'issue_date'),
-				'rule' => array('compareDate', 'issue_date'),
+				'rule' => array('compareDate', 'expiry_date'),
 				'allowEmpty' => true,
-				'message' => 'Expiry Date must be greater than Issue Date'
+				'message' => 'Issue Date Should be Earlier Than Expiry Date'
+			)
+		),
+		'expiry_date' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Expiry Date Is Required'
 			)
 		)
 	);
 
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate < $startDate;
-	}
-	
 	function field_comparison($check1, $operator, $field2) {
 		foreach ($check1 as $key => $value1) {
 			$value2 = $this->data[$this->alias][$field2];
