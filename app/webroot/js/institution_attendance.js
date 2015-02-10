@@ -14,8 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	objInstitutionSite.init();
-	
+	InstitutionSiteAbsence.init();
+
 	if($("#studentNameAutoComplete").length === 1){
 		$("#studentNameAutoComplete").autocomplete({
 			source: function(request, response) {
@@ -88,5 +88,33 @@ $(document).ready(function() {
 			}
 		});
 	}
-	
 });
+
+var InstitutionSiteAbsence = {
+    init: function(){
+    	var str = ($('form.form-horizontal').prop('action')).split('/');
+    	var model = false;
+    	for( var i in str ){
+    		if(typeof $('#'+str[i]+'FullDayAbsent').attr('id') !== 'undefined'){
+    			model = str[i];
+    			break;
+    		}
+    	}
+    	if(model){
+	    	$('#'+model+'FullDayAbsent').on('change', function(){
+	    		InstitutionSiteAbsence.switchTime(model);
+	    	});
+    		InstitutionSiteAbsence.switchTime(model);
+    	}
+    },
+    switchTime: function(model){
+    	if(($('#'+model+'FullDayAbsent').val()).toLowerCase() === 'yes'){
+			$('#'+model+'_start_time_absent').prop('disabled', true);
+			$('#'+model+'_end_time_absent').prop('disabled', true);
+		}else{
+			$('#'+model+'_start_time_absent').prop('disabled', false);
+			$('#'+model+'_end_time_absent').prop('disabled', false);
+		}
+    }
+};
+
