@@ -317,7 +317,7 @@ class InstitutionSiteProgramme extends AppModel {
 
 		$list = array();
 		foreach($data as $obj) {
-			$list[$obj['EducationProgramme']['id']] = $obj['EducationProgramme']['_name'];
+			$list[$obj['EducationProgramme']['id']] = $obj['EducationProgramme']['cycle_programme_name'];
 		}
 
 		return $list;
