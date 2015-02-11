@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffAward extends StaffAppModel {
 	public $actsAs = array(
 		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction', 
+		'ControllerAction2',
 		'DatePicker' => array('issue_date')
 	);
 	
@@ -49,124 +49,76 @@ class StaffAward extends StaffAppModel {
 			)
 		)
 	);
+	
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Staff.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
+		}
+		$this->Navigation->addCrumb(__('Special Needs'));
 
-	public $headerDefault = 'Awards';
-	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'issue_date'),
-				array('field' => 'award', 'labelKey' => 'general.name' ),
-				array('field' => 'issuer'),
-				array('field' => 'comment'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-	
-	public function award($controller, $params) {
-		$controller->Navigation->addCrumb($this->headerDefault);
-		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
-		$header = __($this->headerDefault);
-		$controller->set(compact('header', 'data'));
+		$this->fields['staff_id']['type'] = 'hidden';
+		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+
+		$this->fields['award']['attr']['onfocus'] = 'jsForm.autocomplete(this)';
+		$this->fields['award']['attr']['autocompleteURL'] = $this->controller->name.'/'.$this->alias.'/autocompleteAward';
+
+		$this->fields['issuer']['attr']['onfocus'] = 'jsForm.autocomplete(this)';
+		$this->fields['issuer']['attr']['autocompleteURL'] = $this->controller->name.'/'.$this->alias.'/autocompleteIssuer';
 	}
 
-	public function awardView($controller, $params){
-		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$controller->set('header', __($this->headerDefault . ' Details'));
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);
-		
-		if(empty($data)){
-			$controller->Message->alert('general.noData');
-			$controller->redirect(array('action'=>'award'));
-		}
-		
-		$controller->Session->write('StaffAward.id', $id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('header', 'data', 'fields', 'id'));
+	public function index() {
+		$staffId = $this->Session->read('Staff.id');
+		$this->recursive = -1;
+		$data = $this->findAllByStaffId($staffId);
+		$this->setVar(compact('data'));
 	}
-	
-	public function awardDelete($controller, $params) {
-		return $this->remove($controller, 'award');
-	}
-	
-	public function awardAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('header', __('Add '.$this->headerDefault));
-		$this->setup_add_edit_form($controller, $params, 'add');
-	}
-	
-	public function awardEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
-		$controller->set('header', __('Edit '.$this->headerDefault));
-		$this->setup_add_edit_form($controller, $params, 'edit');
-		
-		$this->render = 'add';
-	}
-	
-	function setup_add_edit_form($controller, $params, $type){
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
-			if($this->save($controller->request->data)){
-				$controller->Message->alert('general.' . $type . '.success');
-				return $controller->redirect(array('action' => 'award'));
-			}
+
+	public function autocompleteAward() {
+		if ($this->request->is('ajax')) {
+			$this->render = false;
+			$this->layout = 'ajax';
+			$search = $this->controller->params->query['term'];
+			$data = $this->autocomplete($search, 'award');
+			return json_encode($data);
 		}
 	}
 
-	public function autocomplete($search, $type='1') {
+	public function autocompleteIssuer() {
+		if ($this->request->is('ajax')) {
+			$this->render = false;
+			$this->layout = 'ajax';
+			$search = $this->controller->params->query['term'];
+			$data = $this->autocomplete($search, 'issuer');
+			return json_encode($data);
+		}
+	}
+
+	public function autocomplete($search, $type='award') {
 		$field = 'award';
-		if($type=='2'){
+		if($type=='issuer'){
 			$field = 'issuer';
 		}
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('DISTINCT StaffAward.' . $field),
-			'conditions' => array('StaffAward.' . $field . ' LIKE' => $search
+			'fields' => array('DISTINCT '.$this->alias.'.' . $field),
+			'conditions' => array($this->alias.'.' . $field . ' LIKE' => $search
 			),
-			'order' => array('StaffAward.' . $field)
+			'order' => array($this->alias.'.' . $field)
 		));
 		
 		$data = array();
 		
 		foreach($list as $obj) {
-			$staffAwardField = $obj[$this->alias][$field];
-			
-			$data[] = array(
-				'label' => trim($staffAwardField),
-				'value' => array($field => $staffAwardField)
-			);
+			$awardField = $obj[$this->alias][$field];
+			$data[] = $awardField;
+			// $data[] = array(
+			// 	'label' => trim($staffAwardField),
+			// 	'value' => array($field => $staffAwardField)
+			// );
 		}
 
 		return $data;
-	}
-	
-	//Ajax method
-	public function awardAjaxFindAward($controller, $params) {
-		if ($controller->request->is('ajax')) {
-			$this->render = false;
-			$type = $params['pass'][0];
-			$search = $params->query['term'];
-			$data = $this->autocomplete($search, $type);
-
-			return json_encode($data);
-		}
 	}
 }

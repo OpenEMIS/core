@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentComment extends StudentsAppModel {
 	public $actsAs = array(
 		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction', 
+		'ControllerAction2', 
 		'DatePicker' => array('comment_date')
 	);
 
@@ -53,91 +53,22 @@ class StudentComment extends StudentsAppModel {
 		),
 	);
 
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'comment_date', 'type' => 'datepicker'),
-				array('field' => 'title'),
-				array('field' => 'comment', 'type' => 'textarea'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Student.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
+		}
+		$this->Navigation->addCrumb(__('Comments'));
+		$this->setVar('contentHeader', __('Comments'));
 
-	public function comments($controller, $params) {
-		$controller->Navigation->addCrumb('Comments');
-		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStudentId($controller->Session->read('Student.id'),  array(), array('StudentComment.comment_date' => 'asc'));
-
-		$controller->set('data', $data);
+		$this->fields['student_id']['type'] = 'hidden';
+		$this->fields['student_id']['value'] = $this->Session->read('Student.id');
 	}
 	
-	public function commentsAdd($controller, $params) {
-		$controller->Navigation->addCrumb(__('Add Comment'));
-		$header = __('Add Comment');
-		if ($controller->request->is('post')) {
-			$data = $controller->request->data[$this->alias];
-			$data['student_id'] = $controller->Session->read('Student.id');
-			$this->create();
-
-			if ($this->save($data)) {
-				$id = $this->getLastInsertId();
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'comments'));
-			}
-		}
-		$controller->set(compact('header'));
+	public function index() {
+		$studentId = $this->Session->read('Student.id');
+		$this->recursive = -1;
+		$data = $this->findAllByStudentId($studentId);
+		$this->setVar(compact('data'));
 	}
-
-	public function commentsView($controller, $params) {
-		$controller->Navigation->addCrumb('Comment Details');
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$data = $this->findById($id);
-
-		if (!empty($data)) {
-			$controller->Session->write($this->alias . '.id', $id);
-		} else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'comments'));
-		}
-		$fields = $this->getDisplayFields($controller);
-		$header = __('Comment Details');
-		$controller->set(compact('data', 'fields', 'header'));
-	}
-
-	public function commentsEdit($controller, $params) {
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$controller->Navigation->addCrumb('Edit Comment');
-		$header = __('Edit Comment');
-		if ($controller->request->is('get')) {
-			$obj = $this->findById($id);
-
-			if (!empty($obj)) {
-				$controller->request->data = $obj;
-			} else {
-				$controller->Message->alert('general.notExists');
-				return $controller->redirect(array('action' => 'comments'));
-			}
-		} else {
-			$commentData = $controller->request->data[$this->alias];
-			$commentData['student_id'] = $controller->Session->read('Student.id');
-
-			if ($this->save($commentData)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'commentsView', $commentData['id']));
-			}
-		}
-		$controller->set(compact('id', 'header'));
-	}
-
-	public function commentsDelete($controller, $params) {
-		return $this->remove($controller, 'comments');
-	}
-
 }
