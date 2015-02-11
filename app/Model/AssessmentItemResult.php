@@ -182,6 +182,7 @@ class AssessmentItemResult extends AppModel {
 
                 if(empty($classOptions)){
 					$controller->Message->alert('Assessment.result.noClass');
+					$itemOptions = array();
 				}else {
 					$selectedClass = isset($controller->params['pass'][2]) ? $controller->params['pass'][2] : key($classOptions);
 					$itemOptions = $this->AssessmentItem->getClassItemList($assessmentId, $selectedClass);
