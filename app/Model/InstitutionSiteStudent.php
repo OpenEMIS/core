@@ -474,7 +474,8 @@ class InstitutionSiteStudent extends AppModel {
 			'conditions' => array(
 				"$alias.institution_site_id" => $institutionSiteId,
 				"$alias.start_date <= " => $periodStartDate,
-				"$alias.end_date >= " => $periodStartDate
+				"$alias.end_date >= " => $periodStartDate,
+				'Student.id != ' => null
 			)
 		);
 
