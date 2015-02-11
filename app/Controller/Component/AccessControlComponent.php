@@ -271,13 +271,14 @@ class AccessControlComponent extends Component {
 		$access = false;
 		$controller = strtoupper($controller);
 		$currentController = $this->controller->params['controller'];
-		$currentAction = $this->getAction();//$this->controller->action;
-		
+		$currentAction = $this->getAction();
+		$controllersToCheck = array('INSTITUTIONSITES','CENSUS','QUALITY','DASHBOARDS','INSTITUTIONREPORTS');
+
 		if($this->Session->check('permissions')) {
 			$permissions = $this->Session->read('permissions');
 			$check = $permissions['check'];
 			if($this->Auth->user('super_admin')==0) {
-				if($controller == "INSTITUTIONSITES" || $controller == "CENSUS"){
+				if(in_array($controller, $controllersToCheck)){
 					if($currentController == 'Institutions' && $currentAction == 'listSites'){
 						if($passedInSiteId != 0){
 							$institutionSiteId = $passedInSiteId;
@@ -303,7 +304,6 @@ class AccessControlComponent extends Component {
 					}else{
 						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add' || $action == 'advanced')){
 							$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
-							
 						}else{
 							if($this->Session->check('InstitutionSiteId')){
 								$institutionSiteId = $this->Session->read('InstitutionSiteId');
