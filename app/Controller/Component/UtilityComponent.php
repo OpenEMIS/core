@@ -115,8 +115,11 @@ class UtilityComponent extends Component {
 		$msgList['SECURITY_ACCESS_LINKED'] = "This account has been linked to the selected user.";
 		
 		// Institution Sites
+		$msgList['SITE_NO_VIEW_ACCESS'] = "You do not have access to view the requested institution.";
+		$msgList['SITE_NO_EDIT_ACCESS'] = "You do not have access to edit the requested institution.";
+		$msgList['SITE_NO_DELETE_ACCESS'] = "You do not have access to delete the requested institution.";
 		$msgList['NO_SITES'] = "No Institution Sites";
-                $msgList['SHIFT_WITHOUT_LOCATION'] = "Please select a location.";
+        $msgList['SHIFT_WITHOUT_LOCATION'] = "Please select a location.";
 		
 		// Institution Site Classes
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
