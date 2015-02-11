@@ -142,9 +142,10 @@ class InstitutionSiteClass extends AppModel {
 			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
 			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
 			
-			$yearObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
-			$startDate = $yearObj['AcademicPeriod']['start_date'];
-			$endDate = $yearObj['AcademicPeriod']['end_date'];
+			$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+			$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
+			$startDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'start_date');
+			$endDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'end_date');
 		
 			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
@@ -531,45 +532,137 @@ class InstitutionSiteClass extends AppModel {
 	}
 	
 	public function getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId){
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name'),
-			'joins' => array(
-				array(
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
-				),
-				array(
-					'table' => 'institution_site_section_classes',
-					'alias' => 'InstitutionSiteSectionClass',
-					'conditions' => array(
-						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteSectionClass.status = 1'
-					)
-				),
-				array(
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
-					'conditions' => array(
-						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id'
-					)
-				),
-				array(
-					'table' => 'assessment_item_types',
-					'alias' => 'AssessmentItemType',
-					'conditions' => array(
-						'AssessmentItemType.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
-						'AssessmentItemType.id' => $assessmentId
-					)
+		$joinsSingleGrade = array(
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
+			),
+			array(
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+					'InstitutionSiteSectionClass.status = 1'
 				)
 			),
-			'conditions' => array(
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id'
+				)
 			),
-			'order' => array('AcademicPeriod.name, InstitutionSiteClass.name')
+			array(
+				'table' => 'assessment_item_types',
+				'alias' => 'AssessmentItemType',
+				'conditions' => array(
+					'AssessmentItemType.education_grade_id = InstitutionSiteSection.education_grade_id',
+					'AssessmentItemType.id' => $assessmentId
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'conditions' => array(
+					'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+					'AssessmentItem.visible' => 1
+				)
+			),
+			array(
+				'table' => 'education_grades_subjects',
+				'alias' => 'EducationGradeSubject',
+				'conditions' => array(
+					'EducationGradeSubject.id = AssessmentItem.education_grade_subject_id',
+					'EducationGradeSubject.visible' => 1,
+					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id'
+				)
+			)
+		);
+		
+		$joinsMultiGrades = array(
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
+			),
+			array(
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+					'InstitutionSiteSectionClass.status = 1'
+				)
+			),
+			array(
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
+				'conditions' => array(
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
+					'InstitutionSiteSection.education_grade_id' => NULL
+				)
+			),
+			array(
+				'table' => 'assessment_item_types',
+				'alias' => 'AssessmentItemType',
+				'conditions' => array(
+					'AssessmentItemType.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
+					'AssessmentItemType.id' => $assessmentId
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'conditions' => array(
+					'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+					'AssessmentItem.visible' => 1
+				)
+			),
+			array(
+				'table' => 'education_grades_subjects',
+				'alias' => 'EducationGradeSubject',
+				'conditions' => array(
+					'EducationGradeSubject.id = AssessmentItem.education_grade_subject_id',
+					'EducationGradeSubject.visible' => 1,
+					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id'
+				)
+			)
+		);
+		
+		$fields = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name');
+		$conditions = array(
+			'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteClass.academic_period_id' => $academicPeriodId
+		);
+		$order = array('AcademicPeriod.name, InstitutionSiteClass.name');
+		
+		$dataSingleGrade = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => $fields,
+			'joins' => $joinsSingleGrade,
+			'conditions' => $conditions,
+			'order' => $order
 		));
+		
+		$dataMultiGrades = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => $fields,
+			'joins' => $joinsMultiGrades,
+			'conditions' => $conditions,
+			'order' => $order
+		));
+		
+		$data = $dataSingleGrade;
+		foreach($dataMultiGrades as $row){
+			$data[] = $row;
+		}
 		
 		return $data;
 	}

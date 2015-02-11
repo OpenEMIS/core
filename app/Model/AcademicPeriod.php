@@ -345,8 +345,10 @@ class AcademicPeriod extends AppModel {
 				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
 			}
 
-			$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
-			$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
+			if (array_key_exists('start_date', $this->data[$this->alias]) && array_key_exists('end_date', $this->data[$this->alias])) {
+				$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
+				$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
+			}
 		}
 	}
 
