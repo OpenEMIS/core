@@ -26,9 +26,17 @@ echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 								if(isset($this->request->data['InstitutionSiteProgramme']['id'])) {	//edit
 									echo $this->Form->hidden('InstitutionSiteGrade.' . $i . '.id');
 								}
+								$checked = false;
+								if(isset($this->request->data['InstitutionSiteGrade'])) {
+									foreach ($this->request->data['InstitutionSiteGrade'] as $key => $obj) {
+										if($obj['status'] == 1 && $obj['education_grade_id'] == $educationGradeId) {
+											$checked = true;
+										}
+									}
+								}
 								echo $this->Form->hidden('InstitutionSiteGrade.' . $i . '.institution_site_id', array('value' => $institutionSiteId));
 								echo $this->Form->hidden('InstitutionSiteGrade.' . $i . '.education_grade_id', array('value' => $educationGradeId));
-								echo $this->Form->checkbox('InstitutionSiteGrade.' . $i . '.status', array('class' => 'icheck-input'));
+								echo $this->Form->checkbox('InstitutionSiteGrade.' . $i . '.status', array('class' => 'icheck-input', 'checked' => $checked));
 							?>
 						</td>
 						<td>

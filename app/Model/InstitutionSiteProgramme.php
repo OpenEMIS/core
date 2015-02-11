@@ -133,23 +133,39 @@ class InstitutionSiteProgramme extends AppModel {
 	public function index() {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 
-		$this->contain(array(
-			'EducationProgramme' => array(
-				'fields' => array('EducationProgramme.name'),
-				'EducationCycle' => array(
-					'fields' => array('EducationCycle.name'),
-					'EducationLevel' => array(
-						'fields' => array('EducationLevel.name'),
-						
+		$this->contain();
+		$data = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSiteProgramme.id', 'InstitutionSiteProgramme.start_date', 'InstitutionSiteProgramme.end_date',
+				'EducationLevel.name', 'EducationCycle.name', 'EducationProgramme.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id'
+					)
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationCycle.id = EducationProgramme.education_cycle_id'
+					)
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id'
 					)
 				)
-			)
-		));
-		$data = $this->find('all', array(
+			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 			),
-			'order' => array('EducationProgramme.order')
+			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
 
 		$this->setVar(compact('data'));

@@ -105,6 +105,10 @@ class CensusStaff extends AppModel {
 	//Used by Yearbook
 	public function getCountByCycleId($academicPeriodId, $cycleId) {
 		$this->formatResult = true;
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id = CensusStaff.institution_site_id'
+		);
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 		
 		$maleGenderId = $this->Gender->getIdByName('Male');
 		$femaleGenderId = $this->Gender->getIdByName('Female');
@@ -123,10 +127,7 @@ class CensusStaff extends AppModel {
 			array(
 				'table' => 'institution_site_programmes',
 				'alias' => 'InstitutionSiteProgramme',
-				'conditions' => array(
-					'InstitutionSiteProgramme.institution_site_id = CensusStaff.institution_site_id',
-					'InstitutionSiteProgramme.academic_period_id = CensusStaff.academic_period_id'
-				)
+				'conditions' => $conditions
 			),
 			array(
 				'table' => 'education_programmes',
