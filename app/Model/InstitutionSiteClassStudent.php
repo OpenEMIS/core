@@ -371,8 +371,7 @@ class InstitutionSiteClassStudent extends AppModel {
 				'table' => 'institution_site_classes',
 				'alias' => 'InstitutionSiteClass',
 				'conditions' => array(
-					'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id',
-					'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+					'InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id'
 				)
 			),
 			array(
@@ -403,19 +402,25 @@ class InstitutionSiteClassStudent extends AppModel {
 		if (!empty($assessmentId)) {
 			$join_to_assessment_item_types = array(
 				array(
-					'table' => 'institution_site_section_students',
-					'alias' => 'InstitutionSiteSectionStudent',
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
 					'conditions' => array(
-						'InstitutionSiteSectionStudent.student_id = InstitutionSiteClassStudent.student_id',
-						'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteClassStudent.institution_site_section_id',
-						'InstitutionSiteSectionStudent.status = 1'
+						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteSectionClass.status = 1'
+					)
+				),
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array(
+						'InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id'
 					)
 				),
 				array(
 					'table' => 'assessment_item_types',
 					'alias' => 'AssessmentItemType',
 					'conditions' => array(
-						'AssessmentItemType.education_grade_id = InstitutionSiteSectionStudent.education_grade_id',
+						'AssessmentItemType.education_grade_id = InstitutionSiteSection.education_grade_id',
 						'AssessmentItemType.id = ' . $assessmentId
 					)
 				)
@@ -427,7 +432,10 @@ class InstitutionSiteClassStudent extends AppModel {
 		}
 
 		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name');
-		$options['conditions'] = array('InstitutionSiteClassStudent.status = 1');
+		$options['conditions'] = array(
+			'InstitutionSiteClassStudent.status = 1',
+			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+		);
 
 		$data = $this->find('all', $options);
 
