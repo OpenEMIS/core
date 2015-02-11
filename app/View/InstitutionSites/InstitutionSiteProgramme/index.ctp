@@ -13,7 +13,7 @@ $tableData = array();
 foreach($data as $obj) {
 	$row = array();
 	$row[] = $this->Html->link($obj['EducationProgramme']['name'], array('action' => $this->action, 'view', $obj['InstitutionSiteProgramme']['id']));
-	$row[] = $obj['EducationProgramme']['EducationCycle']['EducationLevel']['name'] . ' - ' . $obj['EducationProgramme']['EducationCycle']['name'];
+	$row[] = $obj['EducationLevel']['name'] . ' - ' . $obj['EducationCycle']['name'];
 	$row[] = $obj['InstitutionSiteProgramme']['start_date'];
 	$row[] = $obj['InstitutionSiteProgramme']['end_date'];
 	$tableData[] = $row;

@@ -28,7 +28,14 @@ class InstitutionSiteStudent extends AppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'Students.StudentStatus',
-		'InstitutionSiteProgramme',
+		'InstitutionSiteProgramme' => array(
+			'className' => 'InstitutionSiteProgramme',
+			'foreignKey' => false,
+			'conditions' => array(
+				'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id',
+				'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id'
+			)
+		),
 		'EducationProgramme',
 		'InstitutionSite'
 	);

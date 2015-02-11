@@ -234,16 +234,24 @@ class InstitutionSiteSectionGrade extends AppModel {
 		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 
 		$data = $this->EducationGrade->find('list', array(
-			'fields' => array('EducationGrade.id', 'EducationGrade._name'),
+			'fields' => array('EducationGrade.id', 'EducationGrade.programme_grade_name'),
 			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = EducationGrade.education_programme_id'
+					)
+				),
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => $conditions
 				)
 			),
-			'order' => array('EducationGrade.order')
+			'order' => array('EducationProgramme.order', 'EducationGrade.order')
 		));
+
 		return $data;
 	}
 }
