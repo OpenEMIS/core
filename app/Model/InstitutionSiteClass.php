@@ -142,9 +142,10 @@ class InstitutionSiteClass extends AppModel {
 			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
 			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
 			
-			$yearObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
-			$startDate = $yearObj['AcademicPeriod']['start_date'];
-			$endDate = $yearObj['AcademicPeriod']['end_date'];
+			$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+			$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
+			$startDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'start_date');
+			$endDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'end_date');
 		
 			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
