@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffSpecialNeed extends StaffAppModel {
 	public $actsAs = array(
 		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction', 
+		'ControllerAction2', 
 		'DatePicker' => array('special_need_date')
 	);
 	
@@ -43,87 +43,24 @@ class StaffSpecialNeed extends StaffAppModel {
 			)
 		)
 	);
-	public $headerDefault = 'Special Needs';
 	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'special_need_date','labelKey' => 'general.date'),
-				array('field' => 'name', 'model' => 'SpecialNeedType','labelKey' => 'general.type' ),
-				array('field' => 'comment'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-	public function specialNeed($controller, $params) {
-		$controller->Navigation->addCrumb($this->headerDefault);
-		$header = $this->headerDefault;
-		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
-		$controller->set(compact('header', 'data'));
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Staff.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
+		}
+		$this->Navigation->addCrumb(__('Special Needs'));
+
+		$this->fields['staff_id']['type'] = 'hidden';
+		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+		$this->fields['special_need_type_id']['type'] = 'select';
+		$this->fields['special_need_type_id']['options'] = $this->SpecialNeedType->getList();
 	}
 
-	public function specialNeedView($controller, $params){
-		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$header = __($this->headerDefault . ' Details');
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);
-		
-		if(empty($data)){
-			$controller->Message->alert('general.noData');
-			$controller->redirect(array('action'=>'specialNeed'));
-		}
-		
-		$controller->Session->write('StaffSpecialNeed.id', $id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('header', 'data', 'fields', 'id'));
-	}
-	
-	public function specialNeedDelete($controller, $params) {
-		return $this->remove($controller, 'specialNeed');
-	}
-	
-	public function specialNeedAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('header', __('Add ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params, 'add');
-	}
-	
-	public function specialNeedEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
-		$controller->set('header', __('Edit ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params, 'edit');
-		$this->render = 'add';
-	}
-	
-	function setup_add_edit_form($controller, $params, $type){
-		if (!empty($controller->request->data)) {
-			$specialNeedTypeOptions = $this->SpecialNeedType->getList(array('value' => $controller->request->data['StaffSpecialNeed']['special_need_type_id']));
-		} else {
-			$specialNeedTypeOptions = $this->SpecialNeedType->getList(array('value' => 0));
-		}
-
-		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
-			if($this->save($controller->request->data)){
-				$controller->Message->alert('general.' . $type . '.success');
-				return $controller->redirect(array('action' => 'specialNeed'));
-			}
-		}
+	public function index() {
+		$staffId = $this->Session->read('Staff.id');
+		$this->contain(array('SpecialNeedType' => array('id', 'name')));
+		$data = $this->findAllByStaffId($staffId);
+		$this->setVar(compact('data'));
 	}
 }

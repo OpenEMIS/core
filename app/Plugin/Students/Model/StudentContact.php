@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentContact extends StudentsAppModel {
 	public $actsAs = array(
 		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction'
+		'ControllerAction2'
 	);
 	
 	public $belongsTo = array(
@@ -113,7 +113,7 @@ class StudentContact extends StudentsAppModel {
 					break;
 				case 5:
 					$this->validate['value'] = array('customVal' => array(
-							'rule' => 'notEmpty',
+							'rule' => 'notEmpty',	
 							'required' => true,
 							'message' => 'Please enter a valid Value'
 					));
@@ -125,164 +125,81 @@ class StudentContact extends StudentsAppModel {
 		return true;
 	}
 	
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
-	}
-	
-	public function getDisplayFields($controller) {
-		
-		$ContactOption = ClassRegistry::init('ContactOption');
-		$contactOptions = $ContactOption->findList();
-		
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'contact_option_id', 'model' => 'ContactType', 'labelKey' => 'general.type', 'type' => 'select', 'options' => $contactOptions),
-				array('field' => 'name', 'model' => 'ContactType', 'labelKey' => 'general.description'),
-				array('field' => 'value'),
-				array('field' => 'preferred', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
+	public function beforeAction() {
+		parent::beforeAction();
 
-	public function contacts($controller, $params) {
-		$controller->Navigation->addCrumb('Contacts');
-		$header = __('Contacts');
-		$studentId = $controller->Session->read('Student.id');
-		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStudentId($studentId, array(), array('ContactType.contact_option_id' => 'asc', 'StudentContact.preferred' => 'desc'));
+		$this->fields['student_id']['type'] = 'hidden';
+		$this->fields['student_id']['value'] = $this->Session->read('Student.id');
+		$this->fields['preferred']['type'] = 'select';
+		$this->fields['preferred']['options'] = $this->controller->Option->get('yesno');
 
-		$ContactOption = ClassRegistry::init('ContactOption');
-		$contactOptions = $ContactOption->getOptions();
+		$this->fields['contact_option_id']['type'] = 'select';
+		$this->fields['contact_option_id']['visible'] = true;
+		$this->fields['contact_option_id']['options'] = $this->ContactType->ContactOption->getOptions();
+		$this->fields['contact_option_id']['attr'] = array('onchange' => "$('#reload').click()");
 
-		$controller->set(compact('header', 'data', 'contactOptions'));
-	}
-
-	public function contactsAdd($controller, $params) {
-		$controller->Navigation->addCrumb(__('Add Contacts'));
-		$header = __('Add Contacts');
-		$studentId = $controller->Session->read('Student.id');
-		if ($controller->request->is('post')) {
-			$contactData = $controller->request->data['StudentContact'];
-			$this->create();
-
-			if ($this->save($contactData)) {
-				if ($contactData['preferred'] == '1') {
-					$this->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($this->getLastInsertId())))));
-				}
-				$id = $this->getLastInsertId();
-				
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'contacts'));
-			}
-		}
-
-		$ContactOption = ClassRegistry::init('ContactOption');
-		$ContactType = ClassRegistry::init('ContactType');
-		$contactOptions = $ContactOption->getOptions();
-
-		$contactOptionId = isset($params['pass'][0]) ? $params['pass'][0] : key($contactOptions);
-		$contactTypeOptions = $ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
-		$yesnoOptions = $controller->Option->get('yesno');
-		
-		$controller->set(compact('header', 'contactOptions', 'contactTypeOptions', 'contactOptionId', 'yesnoOptions', 'studentId'));
-	}
-
-	public function contactsView($controller, $params) {
-		$contactId = isset($params['pass'][0])?$params['pass'][0]:0;
-		
-		$data = $this->findById($contactId);
-
-		if (empty($data)) {
-			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action' => 'contacts'));
-		}
-
-		$controller->Navigation->addCrumb('Contact Details');
-		$header = __('Details');
-		
-		$controller->Session->write('StudentContact.id', $contactId);
-		$controller->Session->write('StudentContact.contact_type_id', $data[$this->alias]['contact_type_id']);
-		$controller->Session->write('StudentContact.contact_option_id', $data['ContactType']['contact_option_id']);
-		
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('header', 'data', 'fields'));
-	}
-
-	public function contactsEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit Contact');
-		$header = __('Edit Contacts');
-		$id = isset($params['pass'][0])?$params['pass'][0]:0; //<<-- contact id
-		$data = array();
-		if ($controller->request->is('get')) {
-			$data = $this->findById($id);
-
-			if (!empty($data)) {
-				$controller->request->data = $data;
-			}
-		} else {
-			$data = $controller->request->data[$this->alias];
-			$data['student_id'] = $controller->Session->read('Student.id');
-
-			if ($this->save($data)) {
-				if ($data['preferred'] == '1') {
-					$this->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $data['contact_option_id'], array('NOT' => array('StudentContact.id' => array($id)))));
-				}
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'contactsView', $data['id']));
-			}
-		}
-		$ContactOption = ClassRegistry::init('ContactOption');
-		
-		$contactOptions = $ContactOption->getOptions();
-		$controller->set('contactOptions', $contactOptions);
-
-		$contactOptionId = isset($params['pass'][1]) ? $params['pass'][1] : $data['ContactType']['contact_option_id'];
-		$contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
-		$yesnoOptions = $controller->Option->get('yesno');
-		$controller->set(compact('id' ,'header','contactOptions','contactTypeOptions','contactOptionId','yesnoOptions'));
-	}
-
-	public function contactsDelete($controller, $params) {
-		//return $this->remove($controller, 'contacts');
-		
-		if ($controller->Session->check($this->alias . '.id')) {
-			$id = $controller->Session->read($this->alias . '.id');
-			$contactTypeId =$controller->Session->read($this->alias.'.contact_type_id');
-			$contactOptionId =$controller->Session->read($this->alias.'.contact_option_id');
-			
-			$studentId =$controller->Session->read('Student.id');
-		
-			if($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			
-			if($contactOptionId == 1 || $contactOptionId == 4){
-				$conditions = array(
-					$this->alias . '.preferred' => 1,
-					$this->alias . '.student_id' => $studentId,
-					$this->alias.'.contact_type_id' => $contactTypeId,
-				);
-				if (!$this->hasAny($conditions)){
-					$this->recursive = -1;
-					$data = $this->findByContactTypeIdAndStudentId($contactTypeId,$studentId);
-					if(!empty($data)){
-						$data[$this->alias]['preferred'] = 1;
-						$data[$this->alias]['contact_option_id'] = $contactTypeId;
-						$this->save($data);
+		$currContactOptionID = 1;
+		if(!empty($this->request->data)) {
+			if (array_key_exists($this->alias, $this->request->data)) {
+				if (array_key_exists('contact_option_id', $this->request->data[$this->alias])) {
+					$currContactOptionID = $this->request->data[$this->alias]['contact_option_id'];
+					if (array_key_exists('submit', $this->request->data) && $this->request->data['submit'] == 'reload') {
+						unset($this->request->data[$this->alias]['contact_type_id']);
 					}
 				}
 			}
-			$controller->Session->delete($this->alias . '.id');
-			return $controller->redirect(array('action' => 'contacts'));
+		}
+		$this->fields['contact_type_id']['type'] = 'select';
+		if ($this->action == 'edit' || $this->action == 'add') {
+			$this->fields['contact_type_id']['options'] = $this->ContactType->getOptions(array('contact_option_id' => $currContactOptionID));
+		} else {
+			$this->fields['contact_type_id']['options'] = $this->ContactType->getOptions();
+		}
+		
+		$order = 0;
+		$this->setFieldOrder('contact_option_id', $order++);
+		$this->setFieldOrder('contact_type_id', $order++);
+		$this->setFieldOrder('value', $order++);
+		$this->setFieldOrder('preferred', $order++);
+	}
+
+	public function index($studentId = 0) {
+		$studentId = $this->Session->read('Student.id');
+		$this->contain(array('ContactType'));
+		$data = $this->findAllByStudentId($studentId);
+		$contactOptions = $this->ContactType->ContactOption->getOptions();
+		
+		$this->setVar(compact('data', 'contactOptions'));
+	}
+
+	public function view($id) {
+		$this->render = 'auto';
+		if ($this->exists($id)) {
+			$this->contain(array('ContactType' => array('ContactOption')));
+			$data = $this->findById($id);
+			$data[$this->alias]['contact_option_id'] = $data['ContactType']['ContactOption']['name'];
+
+			$this->Session->write($this->alias.'.id', $id);
+			$this->setVar(compact('data'));
+		} else {
+			$this->Message->alert('general.view.notExists');
+			return $this->redirect(array('action' => get_class($this)));
+		}
+	}
+
+	public function add() {
+		if (array_key_exists('submit', $this->request->data) && $this->request->data['submit'] == 'reload') {
+			$this->render = 'auto';
+		} else {
+			parent::add();
+		}
+	}
+
+	public function edit($id) {
+		if (array_key_exists('submit', $this->request->data) && $this->request->data['submit'] == 'reload') {
+			$this->render = 'auto';
+		} else {
+			parent::edit($id);
 		}
 	}
 }

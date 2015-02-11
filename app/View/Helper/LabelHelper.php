@@ -531,6 +531,102 @@ class LabelHelper extends AppHelper {
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'
+		),
+		'StudentContact' => array(
+			'title' => 'Contacts'
+		),
+		'StaffContact' => array(
+			'title' => 'Contacts'
+		),
+		'StudentIdentity' => array(
+			'title' => 'Identities',
+			'number' => 'Number',
+			'issue_date' => 'Issue Date',
+			'expiry_date' => 'Expiry Date',
+			'issue_location' => 'Issuer',
+			'identity_type_id' => 'Identity Type'
+		),
+		'StaffIdentity' => array(
+			'title' => 'Identities',
+			'number' => 'Number',
+			'issue_date' => 'Issue Date',
+			'expiry_date' => 'Expiry Date',
+			'issue_location' => 'Issuer',
+			'identity_type_id' => 'Identity Type'
+		),
+		'StudentNationality' => array(
+			'title' => 'Nationalities',
+			'comments' => 'Comments',
+			'country_id' => 'Country'
+		),
+		'StaffNationality' => array(
+			'title' => 'Nationalities',
+			'comments' => 'Comments',
+			'country_id' => 'Country'
+		),
+		'StudentLanguage' => array(
+			'title' => 'Languages',
+			'evaluation_date' => 'Evaluation Date',
+			'language_id' => 'Language',
+			'listening' => 'Listening',
+			'speaking' => 'Speaking',
+			'reading' => 'Reading',
+			'writing' => 'Writing'
+		),
+		'StaffLanguage' => array(
+			'title' => 'Languages',
+			'evaluation_date' => 'Evaluation Date',
+			'language_id' => 'Language',
+			'listening' => 'Listening',
+			'speaking' => 'Speaking',
+			'reading' => 'Reading',
+			'writing' => 'Writing'
+		),
+		'StudentComment' => array(
+			'title' => 'title',
+			'comment_date' => 'Date',
+			'comment' => 'Comment'
+		),
+		'StaffComment' => array(
+			'title' => 'title',
+			'comment_date' => 'Date',
+			'comment' => 'Comment'
+		),
+		'StudentSpecialNeed' => array(
+			'title' => 'Special Needs',
+			'special_need_type_id' => 'Type',
+			'special_need_date' => 'Date',
+			'comment' => 'Comment',
+		),
+		'StaffSpecialNeed' => array(
+			'title' => 'Special Needs',
+			'special_need_type_id' => 'Type',
+			'special_need_date' => 'Date',
+			'comment' => 'Comment',
+		),
+		'StudentAward' => array(
+			'title' => 'Awards',
+			'issue_date' => 'Issue Date',
+			'award' => 'Name',
+			'issuer' => 'Issuer',
+			'comment' => 'Comment',
+		),
+		'StaffAward' => array(
+			'title' => 'Awards',
+			'issue_date' => 'Issue Date',
+			'award' => 'Name',
+			'issuer' => 'Issuer',
+			'comment' => 'Comment',
+		),
+		'StudentContact' => array(
+			'title' => 'Contacts',
+			'contact_type_id' => 'Description',
+			'contact_option_id' => 'Type'
+		),
+		'StaffContact' => array(
+			'title' => 'Contacts',
+			'contact_type_id' => 'Description',
+			'contact_option_id' => 'Type'
 		)
 	);
 	
