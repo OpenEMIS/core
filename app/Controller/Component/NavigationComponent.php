@@ -77,12 +77,11 @@ class NavigationComponent extends Component {
 		$navigations = array();
 		$found = false;
 		$divider = '|';
-		//pr($this->navigations);
 		foreach($this->navigations as $module => $obj) {
 			foreach($obj['links'] as $links) {
 				foreach($links as $title => &$linkList) {
 					if(!is_array($linkList)) continue;
-					foreach($linkList as $link => &$attr) {
+					foreach($linkList as $link => &$attr) {					
 						if(!is_array($attr)) continue;
 
 						$controllerList = explode($divider, $attr['controller']);
@@ -96,7 +95,7 @@ class NavigationComponent extends Component {
 						// Checking access control
 						$attrAction = str_replace('/', '.', $attr['action']);
 						$check = $this->AccessControl->newCheck($_controller, $attrAction);
-						
+
 						// debug mode
 						if ($_controller == 'Students' && $attr['action'] == 'InstitutionSiteStudent/add') {
 							//pr($_controller . ' : ' . $attr['action'] . ' : ' . ($check ? 'true' : 'false'));
@@ -158,10 +157,9 @@ class NavigationComponent extends Component {
 					if(empty($this->leftNavigations)) {
 						$this->leftNavigations = $links;
 					}
-				}
-				//pr($this->leftNavigations);
+				}	
 			}
-		}//pr($this->navigations);
+		}
 	}
 	
 	public function getLinks() {
