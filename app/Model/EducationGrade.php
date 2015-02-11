@@ -54,7 +54,7 @@ class EducationGrade extends AppModel {
 	);
 
 	public $virtualFields = array(
-		'_name' => "SELECT CONCAT(`EducationProgramme`.`name`, ' - ', `EducationGrade`.`name`) from `education_programmes` AS `EducationProgramme` WHERE `EducationProgramme`.`id` = `EducationGrade.education_programme_id`"
+		'programme_grade_name' => "SELECT CONCAT(`EducationProgramme`.`name`, ' - ', `EducationGrade`.`name`) from `education_programmes` AS `EducationProgramme` WHERE `EducationProgramme`.`id` = `EducationGrade.education_programme_id`"
 	);
 	
 	public $_condition = 'education_programme_id';

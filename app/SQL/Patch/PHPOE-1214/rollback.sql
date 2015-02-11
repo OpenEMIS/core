@@ -17,4 +17,4 @@ RENAME TABLE `1214_institution_site_students` TO `institution_site_students`;
 -- 3. Drop procedure
 --
 
-DROP PROCEDURE IF EXISTS patch1214
+DROP PROCEDURE IF EXISTS patch1214;

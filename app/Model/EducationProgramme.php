@@ -70,7 +70,7 @@ class EducationProgramme extends AppModel {
 	);
 
 	public $virtualFields = array(
-		'_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
+		'cycle_programme_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
 	);
 	
 	public $_condition = 'education_cycle_id';
@@ -379,7 +379,7 @@ class EducationProgramme extends AppModel {
 		$this->contain('EducationCycle');
 		$list = $this->find('list', array(
 			'fields' => array(
-				'EducationProgramme.id', 'EducationProgramme._name'
+				'EducationProgramme.id', 'EducationProgramme.cycle_programme_name'
 			),
 			'conditions' => array(
 				'EducationCycle.education_level_id' => $educationLevelId
