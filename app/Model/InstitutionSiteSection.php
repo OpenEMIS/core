@@ -320,8 +320,9 @@ class InstitutionSiteSection extends AppModel {
 
 			$InstitutionSiteStudent = ClassRegistry::init('InstitutionSiteStudent');
 			$studentOptions = $InstitutionSiteStudent->getStudentOptions($institutionSiteId, $periodId);
+			$studentOptions = $this->attachSectionInfo($id, $studentOptions, $institutionSiteId, $periodId);
 			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
-
+			
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
 
@@ -377,6 +378,32 @@ class InstitutionSiteSection extends AppModel {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias));
 		}
+	}
+
+	public function attachSectionInfo($id, $studentOptions, $institutionSiteId, $periodId){
+		$this->contain(array(
+			'InstitutionSiteSectionStudent' => array(
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.student_id' => array_keys($studentOptions),
+					'InstitutionSiteSectionStudent.status' => 1
+				)
+			)
+		));
+		$sectionsWithStudents = $this->findAllByInstitutionSiteIdAndAcademicPeriodId($institutionSiteId, $periodId);
+		foreach($sectionsWithStudents as $sws){
+			if($sws['InstitutionSiteSection']['id'] != $id) {
+				$studentOptions[$sws['InstitutionSiteSection']['name']] = array();
+				foreach($sws['InstitutionSiteSectionStudent'] as $student){
+					$studentOptions[$sws['InstitutionSiteSection']['name']][] = array(
+						'name' => $studentOptions[$student['student_id']],
+						'value' => $student['student_id'],
+						'disabled' => true
+					);
+					unset($studentOptions[$student['student_id']]);
+				}
+			}
+		}
+		return $studentOptions;		
 	}
 
 	public function remove() {
