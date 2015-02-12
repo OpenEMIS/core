@@ -39,7 +39,7 @@ class CensusTeacher extends AppModel {
 	}
 	
 	public function mergeSingleGradeData(&$class, $data) {
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		//pr($genderOptions);die;
 		//pr($class);
 		//pr($data);
@@ -78,6 +78,11 @@ class CensusTeacher extends AppModel {
 	
 	public function getSingleGradeData($institutionSiteId, $academicPeriodId) {
 		$this->formatResult = true;
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id = CensusTeacher.institution_site_id'
+		);
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$data = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
@@ -94,11 +99,7 @@ class CensusTeacher extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = CensusTeacher.institution_site_id',
-						'InstitutionSiteProgramme.academic_period_id = CensusTeacher.academic_period_id',
-						'InstitutionSiteProgramme.status' => 1
-					)
+					'conditions' => $conditions
 				),
 				array(
 					'table' => 'education_programmes',
@@ -213,7 +214,7 @@ class CensusTeacher extends AppModel {
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		
 		$data = array();
 		foreach($gradeList as $obj) {
@@ -496,7 +497,7 @@ class CensusTeacher extends AppModel {
 			$controller->Message->alert('InstitutionSiteProgramme.noData');
 			$displayContent = false;
 		} else {
-			$genderOptions = $this->Gender->getList();
+			$genderOptions = $this->Gender->getListOnly();
 
 			$EducationLevel = ClassRegistry::init('EducationLevel');
 			$eduLevelOptions = $EducationLevel->getInstitutionLevelsByAcademicPeriod($institutionSiteId, $selectedAcademicPeriod);
@@ -536,7 +537,7 @@ class CensusTeacher extends AppModel {
 					$controller->Message->alert('InstitutionSiteProgramme.noData');
 					$displayContent = false;
 				} else {
-					$genderOptions = $this->Gender->getList();
+					$genderOptions = $this->Gender->getListOnly();
 					//pr($genderOptions);die;
 
 					$EducationLevel = ClassRegistry::init('EducationLevel');

@@ -79,12 +79,10 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('List of Sections');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);
 
 		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
-
 		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
 		
 		if (empty($periodOptions)) {
@@ -103,8 +101,11 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getInstitutionAcademicPeriodOptions($institutionSiteId);
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
+
 		if(empty($academicPeriodOptions)) {
 			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
@@ -195,7 +196,10 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getInstitutionAcademicPeriodOptions($institutionSiteId);
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
 		if(empty($academicPeriodOptions)) {
 			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
@@ -223,7 +227,6 @@ class InstitutionSiteSection extends AppModel {
 
 		if($this->request->is('post') || $this->request->is('put')) {
 			$data = $this->request->data;
-			pr($data);
 			$result = $this->saveAll($data);
 			if ($result) {
 				$this->Message->alert('general.add.success');
@@ -316,7 +319,7 @@ class InstitutionSiteSection extends AppModel {
 			);
 			// end fields setup
 
-			$categoryOptions = $this->InstitutionSiteSectionStudent->StudentCategory->getList();
+			$categoryOptions = $this->InstitutionSiteSectionStudent->StudentCategory->getListOnly();
 
 			$InstitutionSiteStudent = ClassRegistry::init('InstitutionSiteStudent');
 			$studentOptions = $InstitutionSiteStudent->getStudentOptions($institutionSiteId, $periodId);
@@ -458,22 +461,32 @@ class InstitutionSiteSection extends AppModel {
 			),
 			'order' => array('InstitutionSiteSection.name')
 		);
-		
+
 		if($gradeId!==false) {
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
-					'conditions' => array(
-						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
-						'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
-						'InstitutionSiteSectionGrade.status = 1'
+			$multiGrade = $this->field('education_grade_id', array(
+				'InstitutionSiteSection.academic_period_id' => $academicPeriodId,
+				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteSection.education_grade_id' => $gradeId
+			));
+
+			if(is_null($multiGrade)) {
+				$options['joins'] = array(
+					array(
+						'table' => 'institution_site_section_grades',
+						'alias' => 'InstitutionSiteSectionGrade',
+						'conditions' => array(
+							'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+							'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
+							'InstitutionSiteSectionGrade.status = 1'
+						)
 					)
-				)
-			);
-			$options['group'] = array('InstitutionSiteSection.id');
+				);
+				$options['group'] = array('InstitutionSiteSection.id');
+			} else {
+				$options['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
+			}
 		}
-		
+
 		$data = $this->find('list', $options);
 		return $data;
 	}
