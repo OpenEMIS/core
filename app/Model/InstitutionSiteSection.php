@@ -73,6 +73,11 @@ class InstitutionSiteSection extends AppModel {
 	
 	public function beforeAction() {
 		parent::beforeAction();
+
+		$this->setFieldOrder('academic_period_id', 1);
+		$this->setFieldOrder('name', 2);
+		$this->setFieldOrder('institution_site_shift_id', 3);
+		$this->setFieldOrder('staff_id', 4);
 	}
 	
 	public function index($selectedPeriod=0, $selectedGradeId=0) {
@@ -301,6 +306,8 @@ class InstitutionSiteSection extends AppModel {
 			$this->fields['academic_period_id']['type'] = 'disabled';
 			$this->fields['academic_period_id']['value'] = $data['AcademicPeriod']['name'];
 
+			$this->fields['name']['labelKey'] = 'InstitutionSiteSection';
+
 			$staffOptions = ClassRegistry::init('InstitutionSiteStaff')->getInstitutionSiteStaffOptions($institutionSiteId, $periodStartDate, $periodEndDate);
 			$this->fields['staff_id']['type'] = 'select';
 			$this->fields['staff_id']['options'] = $staffOptions;
@@ -310,6 +317,7 @@ class InstitutionSiteSection extends AppModel {
 			$this->fields['institution_site_shift_id']['options'] = $shiftOptions;
 
 			$this->fields['education_grade_id']['type'] = 'hidden'; // hide this field temporary
+			$this->fields['section_number']['type'] = 'hidden';
 
 			$this->fields['students'] = array(
 				'type' => 'element',
