@@ -20,7 +20,7 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $data['AcademicPeriod']['name'] ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.section') ?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.name') ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['name'] ?></div>
 </div>
 <div class="row">
