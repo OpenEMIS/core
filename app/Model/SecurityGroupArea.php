@@ -71,10 +71,33 @@ class SecurityGroupArea extends AppModel {
 		return $data;
 	}
 	
+	//need to generate user's authorised area tree with its area parents, which does not include all areas under the same parent area
+	public function buildUserAreaTree(array &$elements, $parentId = -1) {
+	    $branch = array();
+	    foreach ($elements as $element) {
+	        if ($element['area_parent_id'] == $parentId) {
+	            $children = $this->buildUserAreaTree($elements, $element['area_id']);
+	            if ($children) {
+	                $element['children'] = $children;
+	            }
+	            if(!isset($branch[$element['area_id']])) {
+	            	$branch[$element['area_id']] = $element;
+	            } else {
+	            	if((!isset($branch[$element['area_id']]['isAuthorised']) && isset($element['isAuthorised'])) || (!isset($branch[$element['area_id']]['isAuthorised']) && !isset($element['isAuthorised']))) {
+		            	$branch[$element['area_id']] = $element;
+	            	}
+	            }
+	            unset($elements[$element['area_id']]);
+	        }
+	    }
+	    return $branch;
+	}
+
 	public function getAreasWithParents($groupId) {
 		$areas = $this->getAreas($groupId);
 		$data = array();
-		foreach( $areas as $area) {
+		foreach( $areas as $area ) {
+			$area['isAuthorised'] = 1;
 			$data[] = $area;
 			$level = $area['area_level_id'];
 			if($area['area_parent_id'] != -1){
@@ -87,7 +110,8 @@ class SecurityGroupArea extends AppModel {
 				}
 			}
 		}
-		return $data;
+		//set -1 as the parent id of the first node in the tree
+		return array('-1'=>array('children'=>$this->buildUserAreaTree($data)));
 	}
 
 	public function getFormattedParentArea($id){

@@ -30,7 +30,7 @@ class AreaHandlerComponent extends Component {
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
-	}
+    }
 	
 	public function init() {
 		$this->Area = ClassRegistry::init('Area');
@@ -205,7 +205,65 @@ class AreaHandlerComponent extends Component {
         return $colInfo;
     }
 
-    public function getChildren($params=array()){
+    public function searchChildren($userAreas, &$options, &$parentAreaIsAuthorised, $parentId, $dataType) {
+        foreach($userAreas as $id=>$ua) {
+            // To reset $parentAreaIsAuthorised array if a new branch is being search
+            if (isset($ua['area_level_id'])) {
+                foreach ($parentAreaIsAuthorised as $i => $value) {
+                    if ($i == $ua['area_level_id'] || $i > $ua['area_level_id']) {
+                        $parentAreaIsAuthorised = array();
+                    }
+                }
+            }
+            // Save to $parentAreaIsAuthorised array by area level if current parent is authorised. The allAreas data will be used instead of selected few.
+            if(isset($ua['isAuthorised'])) {
+                $parentAreaIsAuthorised[$ua['area_level_id']] = $id;
+            }
+            // When parent found, get children as options and break iteration
+            if ($id == $parentId) {
+                if (isset($ua['children'])) {
+                    foreach($ua['children'] as $child) {
+                        if($dataType=='all'){
+                            $options[$child['area_id']] = array(
+                                'Area'=>array(
+                                    'id'=>$child['area_id'],
+                                    'name'=>$child['area_name'],
+                                ),
+                                'AreaLevel'=>array(
+                                    'id'=>$child['area_level_id'],
+                                    'name'=>$child['area_level_name'],
+                                ),
+                            );
+                        } else {
+                            $options[$child['area_id']] = $child['area_name'];
+                        }
+                    }
+                } else {
+                    // If parent has no children, set options as 'last' to break iteration totally since the required parent is found
+                    $options['last'] = true;
+                }
+                break;
+    
+            // if current node id is lesser than the required parentId, search deeper in the branch else go to the next branch
+            } elseif ($id < $parentId) {
+                if(isset($ua['children'])) {
+                    $results = $this->searchChildren($ua['children'], $options, $parentAreaIsAuthorised, $parentId, $dataType);
+                    $options = $results['options'];
+                    $parentAreaIsAuthorised = $results['parentAreaIsAuthorised'];
+                    if (count($options)>0) {
+                        //if options has children, break iteration
+                        break;
+                    }
+                } else {
+                    // If parent has no children, break iteration to go to the next branch
+                    break;
+                }
+            }
+        }
+        return array('options'=>$options, 'parentAreaIsAuthorised'=>$parentAreaIsAuthorised);
+    }
+
+    public function getChildren($params=array()) {
         if(isset($params['model'])){
             $model = $params['model'];
         } else {
@@ -214,54 +272,37 @@ class AreaHandlerComponent extends Component {
         if(isset($params['parentId'])){
             $parentId = $params['parentId'];
         } else {
-            $parentId = null;
+            $parentId = -1;
         }
         if(isset($params['dataType'])){
             $dataType = $params['dataType'];
         } else {
-            $dataType = -1;
+            $dataType = 'list';
         }
 
         // original search
         $allAreas = $this->{$model}->find($dataType, array(
-                    'conditions' => array(
-                        $model.'.parent_id' => $parentId,
-                        $model.'.visible' => 1
-                    ),
-                    'order' => array($model.'.order')
-                ));
+                        'conditions' => array(
+                            $model.'.parent_id' => $parentId,
+                            $model.'.visible' => 1
+                        ),
+                        'order' => array($model.'.order')
+                    ));
 
         if($model=='Area'){
             $userAreas = $this->getUserAreas(array('getWithParents' => true));
             $options = array();
-            $parentAreaIsAuthorise = false;
-            if(count($userAreas)>0){
-                foreach($userAreas as $ua) {
-                    if($ua['area_parent_id']==$parentId) {
-                        if($dataType=='all'){
-                            $options[$ua['area_id']] = array(
-                                'Area'=>array(
-                                    'id'=>$ua['area_id'],
-                                    'name'=>$ua['area_name'],
-                                ),
-                                'AreaLevel'=>array(
-                                    'id'=>$ua['area_level_id'],
-                                    'name'=>$ua['area_level_name'],
-                                ),
-                            );
-                        } else {
-                            $options[$ua['area_id']] = $ua['area_name'];
-                        }
-                    }
-                    if($ua['area_id']==$parentId && !isset($ua['id'])) {
-                        $parentAreaIsAuthorise = true;
-                    }
-                }               
+            $parentAreaIsAuthorised = array();
+            if(count($userAreas)>0) {
+                //search for area children based on user's authorised area tree
+                $results = $this->searchChildren($userAreas, $options, $parentAreaIsAuthorised, $parentId, $dataType);
+                $options = $results['options'];
+                $parentAreaIsAuthorised = $results['parentAreaIsAuthorised'];
             }
-            if($parentAreaIsAuthorise){
+            if (count($parentAreaIsAuthorised)>0) {
                 return $allAreas;
             } else {
-               return $options;
+                return $options;
             }
         }else{
             return $allAreas;
@@ -282,7 +323,7 @@ class AreaHandlerComponent extends Component {
     }
 
     protected function getUserAreas($params=array()){
-        //$params = array('parentId' => -1, 'getWithParents' => true);
+        //$params = array('getWithParents' => true);
         
         $SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
         $SecurityGroupArea = ClassRegistry::init('SecurityGroupArea');
