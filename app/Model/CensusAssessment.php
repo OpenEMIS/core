@@ -31,6 +31,11 @@ class CensusAssessment extends AppModel {
 	
 	public function getCensusData($siteId, $academicPeriodId) {
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $siteId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$InstitutionSiteProgramme->formatResult = true;
 		$list = $InstitutionSiteProgramme->find('all' , array(
 			'recursive' => -1,
@@ -85,15 +90,11 @@ class CensusAssessment extends AppModel {
 					'conditions' => array(
 						'CensusAssessment.institution_site_id = InstitutionSiteProgramme.institution_site_id',
 						'CensusAssessment.education_grade_subject_id = EducationGradeSubject.id',
-						'CensusAssessment.academic_period_id = InstitutionSiteProgramme.academic_period_id'
+						'CensusAssessment.academic_period_id' => $academicPeriodId
 					)
 				)
 			),
-			'conditions' => array(
-				'InstitutionSiteProgramme.institution_site_id' => $siteId,
-				'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteProgramme.status' => 1
-			),
+			'conditions' => $conditions,
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order', 'EducationSubject.order')
 		));
 		

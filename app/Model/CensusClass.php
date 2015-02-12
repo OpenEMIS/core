@@ -59,6 +59,11 @@ class CensusClass extends AppModel {
 	
 	public function getSingleGradeData($institutionSiteId, $academicPeriodId) {
 		$this->formatResult = true;
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id'
+		);
+		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$data = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
@@ -75,11 +80,7 @@ class CensusClass extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id',
-						'InstitutionSiteProgramme.academic_period_id = CensusClass.academic_period_id',
-						'InstitutionSiteProgramme.status' => 1
-					)
+					'conditions' => $conditions
 				),
 				array(
 					'table' => 'education_programmes',

@@ -2,19 +2,20 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 $this->start('contentActions');
-	if($_edit) {
-		echo $this->Html->link($this->Label->get('general.edit'), array('action' => $model, 'edit', $selectedAcademicPeriod), array('class' => 'divider'));
+	if($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 	}
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('templates/academic_period_options', array('url' => $model . '/index'));
-$tableHeaders = array(__('Programme'), __('Cycle'));
+$tableHeaders = array(__('Programme'), __('Level'), __('Start Date'), __('End Date'));
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();
-	$row[] = $obj['EducationProgramme']['name'];
-	$row[] = $obj['EducationProgramme']['EducationCycle']['name'];
+	$row[] = $this->Html->link($obj['EducationProgramme']['name'], array('action' => $this->action, 'view', $obj['InstitutionSiteProgramme']['id']));
+	$row[] = $obj['EducationLevel']['name'] . ' - ' . $obj['EducationCycle']['name'];
+	$row[] = $obj['InstitutionSiteProgramme']['start_date'];
+	$row[] = $obj['InstitutionSiteProgramme']['end_date'];
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
