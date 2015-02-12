@@ -16,7 +16,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo $this->Label->get('general.section') ?></th>
+				<th><?php echo $this->Label->get('InstitutionSiteSection.name') ?></th>
 				<th><?php echo $this->Label->get('InstitutionSiteSection.staff_id'); ?></th>
 				<th><?php echo $this->Label->get('general.male_students'); ?></th>
 				<th><?php echo $this->Label->get('general.female_students'); ?></th>
