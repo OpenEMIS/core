@@ -87,18 +87,12 @@ class InstitutionSiteStudent extends AppModel {
 			'value' => $this->Session->read('InstitutionSite.data.InstitutionSite.name'),
 			'visible' => true
 		);
-		$this->setFieldOrder('institution', 0);
-		
-		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-		
-		$academicPeriodOptions = $AcademicPeriod->getAcademicPeriodList();
+
 		$this->fields['year'] = array(
 			'type' => 'select',
-			'options' => $academicPeriodOptions,
 			'visible' => true,
 			'attr' => array('onchange' => "$('#reload').click()")
 		);
-		$this->setFieldOrder('year', 1);
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['student_id']['type'] = 'hidden';
@@ -108,35 +102,25 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
 		$this->fields['education_programme_id']['type'] = 'select';
+		$this->fields['institution_site_section_id'] = array(
+			'type' => 'select',
+			'visible' => true,
+			'attr' => array('onchange' => "$('#reload').click()")
+		);
+		$this->fields['education_grade_id']['type'] = 'select';
+		$this->fields['education_grade_id']['visible'] = true;
+		$this->fields['student_category_id']['type'] = 'select';
+		$this->fields['student_category_id']['visible'] = true;
 		$this->fields['student_status_id']['visible'] = false;
-		
+
+		$this->setFieldOrder('institution', 0);
+		$this->setFieldOrder('year', 1);
 		$this->setFieldOrder('education_programme_id', 2);
-		$this->setFieldOrder('start_date', 3);
-		$this->setFieldOrder('end_date', 4);
-		
-		if ($this->action == 'add') {
-			if ($this->request->is('get')) {
-				$academicPeriodId = key($academicPeriodOptions);
-				$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
-				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
-				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
-				$date = new DateTime($startDate);
-				$date->add(new DateInterval('P1D')); // plus 1 day
-				
-				$this->fields['start_date']['attr'] = array(
-					'startDate' => $startDate,
-					'endDate' => $endDate,
-					'data-date' => $startDate
-				);
-				$this->fields['end_date']['attr'] = array(
-					'startDate' => $date->format('d-m-Y'),
-					'data-date' => $date->format('d-m-Y')
-				);
-		
-				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
-				$this->fields['education_programme_id']['options'] = $programmeOptions;
-			}
-		}
+		$this->setFieldOrder('institution_site_section_id', 3);
+		$this->setFieldOrder('education_grade_id', 4);
+		$this->setFieldOrder('student_category_id', 5);
+		$this->setFieldOrder('start_date', 6);
+		$this->setFieldOrder('end_date', 7);
 	}
 	
 	public function index() {
@@ -242,11 +226,19 @@ class InstitutionSiteStudent extends AppModel {
 	public function add() {
 		$this->Navigation->addCrumb('Add existing Student');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+
 		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$academicPeriodOptions = $AcademicPeriod->getAcademicPeriodList();
+		$this->fields['year']['options'] = $academicPeriodOptions;
+
+		$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
+		$categoryOptions = $InstitutionSiteSectionStudent->StudentCategory->getList();
+		$this->fields['student_category_id']['options'] = $categoryOptions;
 		
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
 			$academicPeriodId = $data[$this->alias]['year'];
+			$selectedSectionId = $data[$this->alias]['institution_site_section_id'];
 			
 			$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
 			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
@@ -263,12 +255,14 @@ class InstitutionSiteStudent extends AppModel {
 				'startDate' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y')),
 				'data-date' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y'))
 			);
-			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
-			$this->fields['education_programme_id']['options'] = $programmeOptions;
-			
-			$submit = $this->request->data['submit'];
-			if ($submit == __('Save')) {
+
+			if ($data['submit'] == 'reload') {
+
+			} else {
 				$studentId = $data[$this->alias]['student_id'];
+				$institutionSiteSectionId = $data[$this->alias]['institution_site_section_id'];
+				$educationGradeId = $data[$this->alias]['education_grade_id'];
+				$studentCategoryId = $data[$this->alias]['student_category_id'];
 				
 				$this->set($data[$this->alias]);
 				
@@ -296,6 +290,25 @@ class InstitutionSiteStudent extends AppModel {
 							$this->Session->write('InstitutionSiteStudent.addNew', $data[$this->alias]);
 							return $this->redirect(array('controller' => 'Students', 'action' => 'add'));
 						}else{
+							if(!empty($data[$this->alias]['institution_site_section_id']) && !empty($data[$this->alias]['education_grade_id'])) {
+								$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
+
+								$institutionSiteSectionStudentId = $InstitutionSiteSectionStudent->field('id', array(
+									'InstitutionSiteSectionStudent.student_id' => $studentId,
+									'InstitutionSiteSectionStudent.institution_site_section_id' => $institutionSiteSectionId,
+									'InstitutionSiteSectionStudent.education_grade_id' => $educationGradeId
+								));
+								if($institutionSiteSectionStudentId) {
+									$autoInsertData['InstitutionSiteSectionStudent']['id'] = $institutionSiteSectionStudentId;	
+								}
+								$autoInsertData['InstitutionSiteSectionStudent']['student_id'] = $studentId;
+								$autoInsertData['InstitutionSiteSectionStudent']['institution_site_section_id'] = $institutionSiteSectionId;
+								$autoInsertData['InstitutionSiteSectionStudent']['education_grade_id'] = $educationGradeId;
+								$autoInsertData['InstitutionSiteSectionStudent']['student_category_id'] = $studentCategoryId;
+								$autoInsertData['InstitutionSiteSectionStudent']['status'] = 1;
+								$InstitutionSiteSectionStudent->save($autoInsertData);
+							}
+
 							if ($this->save($data)) {
 								$this->Message->alert('general.add.success');
 								return $this->redirect(array('action' => get_class($this)));
@@ -308,7 +321,40 @@ class InstitutionSiteStudent extends AppModel {
 					$this->Message->alert('general.add.failed');
 				}
 			}
+		} else {
+			$academicPeriodId = key($academicPeriodOptions);
+			$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
+			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
+			$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
+			$date = new DateTime($startDate);
+			$date->add(new DateInterval('P1D')); // plus 1 day
+			
+			$this->fields['start_date']['attr'] = array(
+				'startDate' => $startDate,
+				'endDate' => $endDate,
+				'data-date' => $startDate
+			);
+			$this->fields['end_date']['attr'] = array(
+				'startDate' => $date->format('d-m-Y'),
+				'data-date' => $date->format('d-m-Y')
+			);
 		}
+
+		$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
+		$this->fields['education_programme_id']['options'] = $programmeOptions;
+
+		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($academicPeriodId, $institutionSiteId);
+		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
+		$selectedSectionId = isset($selectedSectionId) && array_key_exists($selectedSectionId, $sectionOptions) ? $selectedSectionId : key($sectionOptions);
+
+		$multiGrade = $InstitutionSiteSection->field('education_grade_id', array('InstitutionSiteSection.id' => $selectedSectionId));
+		if(empty($multiGrade)) {
+			$gradeOptions = $InstitutionSiteSection->InstitutionSiteSectionGrade->getGradesBySection($selectedSectionId);
+		} else {
+			$gradeOptions = $InstitutionSiteSection->getSingleGradeBySection($selectedSectionId);
+		}
+		$this->fields['education_grade_id']['options'] = $gradeOptions;
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
@@ -471,15 +517,36 @@ class InstitutionSiteStudent extends AppModel {
 
 		$periodObj = $periodModel->findById($periodId);
 		$periodStartDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'start_date');
+		$periodEndDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'end_date');
 
 		$alias = $this->alias;
 		$options = array(
 			'contain' => array('Student'),
 			'conditions' => array(
-				"$alias.institution_site_id" => $institutionSiteId,
-				"$alias.start_date <= " => $periodStartDate,
-				"$alias.end_date >= " => $periodStartDate,
-				'Student.id != ' => null
+				$alias.'.institution_site_id = ' . $institutionSiteId,
+				'OR' => array(
+					'OR' => array(
+						array(
+							$alias.'.end_date IS NOT NULL',
+							$alias.'.start_date <= "' . $periodStartDate . '"',
+							$alias.'.end_date >= "' . $periodStartDate . '"'
+						),
+						array(
+							$alias.'.end_date IS NOT NULL',
+							$alias.'.start_date <= "' . $periodEndDate . '"',
+							$alias.'.end_date >= "' . $periodEndDate . '"'
+						),
+						array(
+							$alias.'.end_date IS NOT NULL',
+							$alias.'.start_date >= "' . $periodStartDate . '"',
+							$alias.'.end_date <= "' . $periodEndDate . '"'
+						)
+					),
+					array(
+						$alias.'.end_date IS NULL',
+						$alias.'.start_date <= "' . $periodEndDate . '"'
+					)
+				)
 			)
 		);
 

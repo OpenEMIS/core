@@ -356,7 +356,10 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
-			'education_programme_id' => 'Programme'
+			'education_programme_id' => 'Programme',
+			'institution_site_section_id' => 'Section',
+			'education_grade_id' => 'Grade',
+			'student_category_id' => 'Category'
 		),
 		'InstitutionSiteStaff' => array(
 			'staff_status_id' => 'Status',
