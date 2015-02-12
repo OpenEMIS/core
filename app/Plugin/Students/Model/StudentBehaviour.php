@@ -201,6 +201,11 @@ class StudentBehaviour extends StudentsAppModel {
 				'StudentBehaviourCategory' => array('fields' => array('StudentBehaviourCategory.name'))
 			));
 			$data = $this->findAllByStudentId($studentId, array(), array('StudentBehaviour.date_of_behaviour'));
+
+			if(empty($data)){
+				$this->Message->alert('general.noData');
+			}
+
 			$this->setVar(compact('data'));
 		}
 	}

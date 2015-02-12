@@ -28,7 +28,14 @@ class InstitutionSiteStudent extends AppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'Students.StudentStatus',
-		'InstitutionSiteProgramme',
+		'InstitutionSiteProgramme' => array(
+			'className' => 'InstitutionSiteProgramme',
+			'foreignKey' => false,
+			'conditions' => array(
+				'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id',
+				'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id'
+			)
+		),
 		'EducationProgramme',
 		'InstitutionSite'
 	);
@@ -101,7 +108,6 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
 		$this->fields['education_programme_id']['type'] = 'select';
-		$this->fields['institution_site_programme_id']['visible'] = false;
 		$this->fields['student_status_id']['visible'] = false;
 		
 		$this->setFieldOrder('education_programme_id', 2);
@@ -127,7 +133,7 @@ class InstitutionSiteStudent extends AppModel {
 					'data-date' => $date->format('d-m-Y')
 				);
 		
-				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
+				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
 				$this->fields['education_programme_id']['options'] = $programmeOptions;
 			}
 		}
@@ -257,13 +263,12 @@ class InstitutionSiteStudent extends AppModel {
 				'startDate' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y')),
 				'data-date' => (isset($data['InstitutionSiteStudent']['end_date']) ? $data['InstitutionSiteStudent']['end_date'] : $date->format('d-m-Y'))
 			);
-			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 			
 			$submit = $this->request->data['submit'];
 			if ($submit == __('Save')) {
 				$studentId = $data[$this->alias]['student_id'];
-				$data[$this->alias]['institution_site_programme_id'] = 0;
 				
 				$this->set($data[$this->alias]);
 				
@@ -284,13 +289,6 @@ class InstitutionSiteStudent extends AppModel {
 					if ($count > 0) {
 						$this->Message->alert('general.exists');
 					} else {
-						$programmeId = $this->EducationProgramme->InstitutionSiteProgramme->field('id', array(
-							'institution_site_id' => $institutionSiteId,
-							'education_programme_id' => $data[$this->alias]['education_programme_id'],
-							'academic_period_id' => $academicPeriodId
-						));
-						$data[$this->alias]['institution_site_programme_id'] = $programmeId;
-						
 						$studentStatusId = $this->StudentStatus->getDefaultValue();
 						$data[$this->alias]['student_status_id'] = $studentStatusId;
 						
@@ -397,12 +395,15 @@ class InstitutionSiteStudent extends AppModel {
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
-						'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $InstitutionSiteId
+						'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id',
+						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id'
 					)
 				)
 			),
-			'conditions' => array('InstitutionSiteStudent.student_id = ' . $studentId)
+			'conditions' => array(
+				'InstitutionSiteStudent.student_id = ' . $studentId,
+				'InstitutionSiteStudent.institution_site_id = ' . $InstitutionSiteId
+			)
 		));
 		return $data;
 	}
@@ -421,7 +422,10 @@ class InstitutionSiteStudent extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array('InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id')
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id',
+						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id'
+					)
 				));
 		if(!empty($institutionSiteId)){
 			$options['joins'][] = array(

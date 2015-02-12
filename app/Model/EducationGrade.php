@@ -17,7 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationGrade extends AppModel {
-	public $actsAs = array('ControllerAction2', 'Reorder');
+	public $actsAs = array(
+		'ControllerAction2',
+		'Reorder'
+	);
 	public $hasMany = array('EducationGradeSubject');
 	public $belongsTo = array(
 		'EducationProgramme',
@@ -48,6 +51,10 @@ class EducationGrade extends AppModel {
 				'message' => 'Please enter a name'
 			)
 		)
+	);
+
+	public $virtualFields = array(
+		'programme_grade_name' => "SELECT CONCAT(`EducationProgramme`.`name`, ' - ', `EducationGrade`.`name`) from `education_programmes` AS `EducationProgramme` WHERE `EducationProgramme`.`id` = `EducationGrade.education_programme_id`"
 	);
 	
 	public $_condition = 'education_programme_id';
@@ -281,6 +288,12 @@ class EducationGrade extends AppModel {
 	
 	// Used by InstitutionSiteFee
 	public function getGradeOptionsByInstitutionAndAcademicPeriod($institutionSiteId, $academicPeriodId, $visible = false) {
+		$institutionSiteProgrammeConditions = array(
+			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
+			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+		);
+		$institutionSiteProgrammeConditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $institutionSiteProgrammeConditions);
+
 		$conditions = array();
 		if ($visible !== false) {
 			$conditions['EducationProgramme.visible'] = 1;
@@ -293,12 +306,7 @@ class EducationGrade extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id = ' . $academicPeriodId,
-						'InstitutionSiteProgramme.status = 1'
-					)
+					'conditions' => $institutionSiteProgrammeConditions
 				)
 			),
 			'conditions' => $conditions,
