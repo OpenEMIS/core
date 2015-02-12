@@ -91,8 +91,7 @@ class InstitutionSiteClass extends AppModel {
 		$this->Navigation->addCrumb('List of Classes');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);
 		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
 		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
@@ -126,13 +125,10 @@ class InstitutionSiteClass extends AppModel {
 		$this->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodConditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1,
-			'AcademicPeriod.parent_id >' => 0
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
 		if(!empty($academicPeriodOptions)) {
 			$selectedAcademicPeriod = isset($selectedAcademicPeriod) ? $selectedAcademicPeriod : key($academicPeriodOptions);
 			

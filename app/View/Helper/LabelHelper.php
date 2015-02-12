@@ -62,6 +62,7 @@ class LabelHelper extends AppHelper {
 			'school_year' => 'School Year',
 			'location' => 'Location',
 			'grade' => 'Grade',
+			'grades' => 'Grades',
 			'history' => 'History',
 			'profile_image' => 'Profile Image',
 			'openemisId' =>'OpenEMIS ID',
@@ -211,7 +212,9 @@ class LabelHelper extends AppHelper {
 			'id_name' => 'ID / Name'
 		),
 		'InstitutionSiteProgramme' => array(
-			'title' => 'Programmes'
+			'title' => 'Programmes',
+			'education_level_id' => 'Education Levels',
+			'education_programme_id' => 'Education Programmes'
 		),
 		'InstitutionSiteClass' => array(
 			'name' => 'Class Name',
@@ -353,7 +356,10 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
-			'education_programme_id' => 'Programme'
+			'education_programme_id' => 'Programme',
+			'institution_site_section_id' => 'Section',
+			'education_grade_id' => 'Grade',
+			'student_category_id' => 'Category'
 		),
 		'InstitutionSiteStaff' => array(
 			'staff_status_id' => 'Status',

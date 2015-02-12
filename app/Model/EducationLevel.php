@@ -43,6 +43,10 @@ class EducationLevel extends AppModel {
 			)
 		)
 	);
+
+	public $virtualFields = array(
+		'system_level_name' => "SELECT CONCAT(`EducationSystem`.`name`, ' - ', `EducationLevel`.`name`) from `education_systems` AS `EducationSystem` WHERE `EducationSystem`.`id` = `EducationLevel.education_system_id`"
+	);
 	
 	public $_condition = 'education_system_id';
 	
@@ -164,6 +168,13 @@ class EducationLevel extends AppModel {
 	}
 	
 	public function getInstitutionLevelsByAcademicPeriod($institutionSiteId, $academicPeriodId){
+		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$conditions = array(
+			'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$list = $this->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
@@ -190,11 +201,7 @@ class EducationLevel extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-						'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId
-					)
+					'conditions' => $conditions
 				)
 			),
 			'conditions' => array('EducationLevel.visible' => 1),
@@ -209,5 +216,19 @@ class EducationLevel extends AppModel {
 		}
 		
 		return $data;
+	}
+
+	public function getOptions() {
+		$this->contain('EducationSystem');
+		$list = $this->find('list', array(
+			'fields' => array(
+				'EducationLevel.id', 'EducationLevel.system_level_name'
+			),
+			'order' => array(
+				'EducationSystem.order', 'EducationLevel.order'
+			)
+		));
+		
+		return $list;
 	}
 }
