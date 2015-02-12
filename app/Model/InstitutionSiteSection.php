@@ -79,12 +79,10 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('List of Sections');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);
 
 		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
-
 		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
 		
 		if (empty($periodOptions)) {
@@ -103,8 +101,11 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getInstitutionAcademicPeriodOptions($institutionSiteId);
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
+
 		if(empty($academicPeriodOptions)) {
 			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));
@@ -195,7 +196,10 @@ class InstitutionSiteSection extends AppModel {
 		$this->Navigation->addCrumb('Add Section');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getInstitutionAcademicPeriodOptions($institutionSiteId);
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
 		if(empty($academicPeriodOptions)) {
 			$this->Message->alert('InstitutionSite.noProgramme');
 			return $this->redirect(array('action' => 'InstitutionSiteSection', 'index'));

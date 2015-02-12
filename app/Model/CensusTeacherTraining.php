@@ -54,6 +54,11 @@ class CensusTeacherTraining extends AppModel {
 		
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
 		$InstitutionSiteProgramme->formatResult = true;
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$list = $InstitutionSiteProgramme->find('all' , array(
 			'recursive' => -1,
 			'fields' => array(
@@ -100,10 +105,7 @@ class CensusTeacherTraining extends AppModel {
 					)
 				)
 			),
-			'conditions' => array(
-				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.status' => 1
-			),
+			'conditions' => $conditions,
 			'order' => array('EducationLevel.order')
 		));
 		

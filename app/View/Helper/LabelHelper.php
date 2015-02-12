@@ -62,6 +62,7 @@ class LabelHelper extends AppHelper {
 			'school_year' => 'School Year',
 			'location' => 'Location',
 			'grade' => 'Grade',
+			'grades' => 'Grades',
 			'history' => 'History',
 			'profile_image' => 'Profile Image',
 			'openemisId' =>'OpenEMIS ID',
@@ -211,7 +212,9 @@ class LabelHelper extends AppHelper {
 			'id_name' => 'ID / Name'
 		),
 		'InstitutionSiteProgramme' => array(
-			'title' => 'Programmes'
+			'title' => 'Programmes',
+			'education_level_id' => 'Education Levels',
+			'education_programme_id' => 'Education Programmes'
 		),
 		'InstitutionSiteClass' => array(
 			'name' => 'Class Name',
