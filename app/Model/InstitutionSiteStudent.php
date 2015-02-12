@@ -121,30 +121,6 @@ class InstitutionSiteStudent extends AppModel {
 		$this->setFieldOrder('student_category_id', 5);
 		$this->setFieldOrder('start_date', 6);
 		$this->setFieldOrder('end_date', 7);
-		
-		/*if ($this->action == 'add') {
-			if ($this->request->is('get')) {
-				$academicPeriodId = key($academicPeriodOptions);
-				$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
-				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
-				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
-				$date = new DateTime($startDate);
-				$date->add(new DateInterval('P1D')); // plus 1 day
-				
-				$this->fields['start_date']['attr'] = array(
-					'startDate' => $startDate,
-					'endDate' => $endDate,
-					'data-date' => $startDate
-				);
-				$this->fields['end_date']['attr'] = array(
-					'startDate' => $date->format('d-m-Y'),
-					'data-date' => $date->format('d-m-Y')
-				);
-		
-				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
-				$this->fields['education_programme_id']['options'] = $programmeOptions;
-			}
-		}*/
 	}
 	
 	public function index() {
@@ -364,16 +340,20 @@ class InstitutionSiteStudent extends AppModel {
 			);
 		}
 
-
 		$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
 		$this->fields['education_programme_id']['options'] = $programmeOptions;
 
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 		$sectionOptions = $InstitutionSiteSection->getSectionOptions($academicPeriodId, $institutionSiteId);
 		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
-		$selectedSectionId = isset($selectedSectionId) ? $selectedSectionId : key($sectionOptions);
+		$selectedSectionId = isset($selectedSectionId) && array_key_exists($selectedSectionId, $sectionOptions) ? $selectedSectionId : key($sectionOptions);
 
-		$gradeOptions = $InstitutionSiteSection->getSingleGradeBySection($selectedSectionId);
+		$multiGrade = $InstitutionSiteSection->field('education_grade_id', array('InstitutionSiteSection.id' => $selectedSectionId));
+		if(empty($multiGrade)) {
+			$gradeOptions = $InstitutionSiteSection->InstitutionSiteSectionGrade->getGradesBySection($selectedSectionId);
+		} else {
+			$gradeOptions = $InstitutionSiteSection->getSingleGradeBySection($selectedSectionId);
+		}
 		$this->fields['education_grade_id']['options'] = $gradeOptions;
 	}
 	
