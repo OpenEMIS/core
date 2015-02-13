@@ -32,16 +32,18 @@ class SecurityGroupUser extends AppModel {
 	    )
 	);
 	
-	public function autocomplete($search, $exclude) {
+	public function autocomplete($search, $exclude=array(), $conditions=array()) {
+		$conditions = array_merge(array(
+			'OR' => array(
+				'SecurityUser.username LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search
+			)
+		), $conditions);
+
 		$list = $this->SecurityUser->find('all', array(
 			'fields' => array('SecurityUser.id', 'SecurityUser.username', 'SecurityUser.first_name', 'SecurityUser.last_name'),
-			'conditions' => array(
-				'OR' => array(
-					'SecurityUser.username LIKE' => $search,
-					'SecurityUser.first_name LIKE' => $search,
-					'SecurityUser.last_name LIKE' => $search
-				)
-			),
+			'conditions' => $conditions,
 			'order' => array('SecurityUser.first_name', 'SecurityUser.last_name')
 		));
 		

@@ -22,17 +22,20 @@ class SecurityGroupArea extends AppModel {
 		'Area'
 	);
 	
-	public function autocomplete($search, $exclude) {
+	public function autocomplete($search, $exclude=array(), $conditions=array()) {
+		$conditions = array_merge(array(
+			'OR' => array(
+				'Area.name LIKE' => $search,
+				'Area.code LIKE' => $search,
+				'AreaLevel.name LIKE' => $search
+			),
+			'Area.id NOT' => $exclude
+		), $conditions);
+
+		$this->Area->contain('AreaLevel');
 		$list = $this->Area->find('all', array(
 			'fields' => array('Area.id', 'Area.code', 'Area.name', 'AreaLevel.name'),
-			'conditions' => array(
-				'OR' => array(
-					'Area.name LIKE' => $search,
-					'Area.code LIKE' => $search,
-					'AreaLevel.name LIKE' => $search
-				),
-				'Area.id NOT' => $exclude
-			),
+			'conditions' => $conditions,
 			'order' => array('AreaLevel.level', 'Area.order')
 		));
 		
