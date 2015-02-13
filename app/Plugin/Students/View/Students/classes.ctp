@@ -39,11 +39,11 @@ foreach($data as $key => $classes){
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 			<tr>
-				<td><?php echo $obj['AcademicPeriod']['name']; ?></td>
-				<td><?php echo $obj['InstitutionSite']['name']; ?></td>
+				<td><?php echo $obj['InstitutionSiteClass']['AcademicPeriod']['name']; ?></td>
+				<td><?php echo $obj['InstitutionSiteClass']['InstitutionSite']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSiteClass']['name']; ?></td>
-				<td><?php echo $obj['EducationSubject']['name']; ?></td>
+				<td><?php echo $obj['InstitutionSiteClass']['EducationSubject']['name']; ?></td>
 				<td><?php 
 				foreach($obj['InstitutionSiteClass']['teachers'] as $teacher){
 					echo $teacher . '<br>';
