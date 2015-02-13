@@ -25,6 +25,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'InstitutionSiteClass',
+		'InstitutionSiteSection',
 		'EducationGrade'
 	);
 	
@@ -160,47 +161,18 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId) {
-		$fields = array("$this->alias.*", 'AcademicPeriod.name', 'InstitutionSite.name', 'InstitutionSiteSection.*', 'InstitutionSiteClass.*', 'EducationSubject.name');
-		
-		$joins = array(
-			array(
-				'table' => 'institution_site_sections',
-				'alias' => 'InstitutionSiteSection',
-				'conditions' => array(
-					'InstitutionSiteSection.id = InstitutionSiteClassStudent.institution_site_section_id'
-				)
-			),
-			array(
-				'table' => 'institution_site_classes',
-				'alias' => 'InstitutionSiteClass',
-				'conditions' => array('InstitutionSiteClass.id = InstitutionSiteClassStudent.institution_site_class_id')
-			),
-			array(
-				'table' => 'institution_sites',
-				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.id = InstitutionSiteClass.institution_site_id')
-			),
-			array(
-					'table' => 'education_subjects',
-					'alias' => 'EducationSubject',
-					'conditions' => array(
-						"EducationSubject.id = InstitutionSiteClass.education_subject_id"
-					)
-			),
-			array(
-				'table' => 'academic_periods',
-				'alias' => 'AcademicPeriod',
-				'conditions' => array('AcademicPeriod.id = InstitutionSiteClass.academic_period_id')
-			)
-		);
-		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
 
+		$this->contain(array(
+			'InstitutionSiteClass'=>array(
+				'InstitutionSite.name',
+				'AcademicPeriod.name',
+				'EducationSubject.name'
+			),
+			'InstitutionSiteSection'=>array(),
+		));
+		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
 		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => $fields,
-			'joins' => $joins,
 			'conditions' => $conditions,
-			'order' => array('AcademicPeriod.order')
 		));
 		
 		return $data;
