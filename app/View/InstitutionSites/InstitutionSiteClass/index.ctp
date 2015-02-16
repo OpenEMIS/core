@@ -35,7 +35,9 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/controls', array()
 					$staffNames = array();
 					if (!empty($obj[$model]['InstitutionSiteClassStaff'])) {
 						foreach ($obj[$model]['InstitutionSiteClassStaff'] as $staff) {
-							array_push($staffNames, ModelHelper::getName($staff['Staff']));
+							if($staff['status'] == 1) {
+								array_push($staffNames, ModelHelper::getName($staff['Staff']));
+							}
 						}
 					}
 					echo implode(', <br>', $staffNames)
