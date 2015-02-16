@@ -69,9 +69,7 @@ class InstitutionSitesController extends AppController {
 		'FileUploader',
 		'AreaHandler',
 		'Alert',
-		'Activity' => array(
-			'model' => 'InstitutionSiteActivity',
-		)
+		'Activity' => array('model' => 'InstitutionSiteActivity')
 	);
 	
 	public $modules = array(

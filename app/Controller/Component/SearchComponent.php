@@ -27,7 +27,7 @@ class SearchComponent extends Component {
 		if ($request->is(array('post', 'put'))) {
 			$search = Sanitize::escape(trim($request->data[$alias]['search']));
 
-			if (is_callable(array($model, 'getSearchConditions'))) {
+			if (method_exists($model, 'getSearchConditions')) {
 				$conditions = array_merge($conditions, $model->getSearchConditions($search));
 			} else {
 				$schema = $model->schema();
@@ -42,7 +42,7 @@ class SearchComponent extends Component {
 				$this->Session->write($alias.'.search.limit', $limit);
 			}
 		} else {
-			if (is_callable(array($model, 'getSearchConditions'))) {
+			if (method_exists($model, 'getSearchConditions')) {
 				$conditions = array_merge($conditions, $model->getSearchConditions($search));
 			} else {
 				$schema = $model->schema();

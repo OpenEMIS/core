@@ -14,16 +14,18 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class ActivityBehavior extends ModelBehavior {
+App::uses('AppModel', 'Model');
+
+class ActivityModel extends AppModel {
 	// used by SearchComponent
-	public function getSearchConditions(Model $model, $search) {
+	public function getSearchConditions($search) {
 		$search = '%' . $search . '%';
 		$conditions['OR'] = array(
-			$model->alias . '.model LIKE' => $search,
-			$model->alias . '.field LIKE' => $search,
-			$model->alias . '.old_value LIKE' => $search,
-			$model->alias . '.new_value LIKE' => $search,
-			$model->alias . '.created LIKE' => $search,
+			$this->alias . '.model LIKE' => $search,
+			$this->alias . '.field LIKE' => $search,
+			$this->alias . '.old_value LIKE' => $search,
+			$this->alias . '.new_value LIKE' => $search,
+			$this->alias . '.created LIKE' => $search,
 			'ModifiedUser.first_name LIKE' => $search,
 			'ModifiedUser.last_name LIKE' => $search
 		);
