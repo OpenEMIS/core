@@ -334,7 +334,7 @@ class EducationGrade extends AppModel {
 		}
 		
 		if($onlyVisible) {
-			$conditions['EducationGrade.visible'] = 1;
+			$conditions['EducationGrade.visible'] = $onlyVisible;
 		}
 		
 		$options = array(
