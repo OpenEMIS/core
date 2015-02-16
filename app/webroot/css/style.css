@@ -205,7 +205,8 @@ input.default { width: 240px; }
 .custom_field .field_value textarea { width: 98.5%; }
 
 .panel-heading { font-weight: bold; font-size: 14px; color: #666 !important; }
-.panel-heading.dark-background
+.row .panel-default .panel-heading,
+.form-group .panel-default .panel-heading
 { background-color: #DFDFDF;}
 
 /* Custom Fields */
