@@ -6,6 +6,7 @@ class ActivityComponent extends Component {
 	public $model;
 	public $components = array('Navigation', 'Session', 'Message');
 	
+	// Is called before the controller's beforeFilter method.
 	public function initialize(Controller $controller) {
 		$this->controller = $controller;
 		$this->model = $this->settings['model'];
@@ -13,14 +14,14 @@ class ActivityComponent extends Component {
 	
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Controller $controller) {
-		//pr($controller->action);die;
 		if ($controller->action == 'history') {
+			$controller->request->params['action'] = 'ComponentAction';
 			$this->activity();
 		}
 	}
 	
+	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public function beforeRender(Controller $controller) {
-		
 	}
 
 	public function activity() {
