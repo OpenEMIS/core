@@ -14,10 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('ActivityModel', 'Model');
 
-class InstitutionSiteActivity extends AppModel {
-	public $actsAs = array('Activity');
+class InstitutionSiteActivity extends ActivityModel {
     public $belongsTo = array(
 		'InstitutionSite',
 		'ModifiedUser' => array(

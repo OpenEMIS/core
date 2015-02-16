@@ -60,6 +60,8 @@ class AppController extends Controller {
 		'Message',
 		'Option'
 	);
+
+	public function ComponentAction() {} // redirect logic to functions in Component
 	
 	public function beforeFilter() {
 		if($this->Auth->loggedIn()) {

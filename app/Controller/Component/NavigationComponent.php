@@ -34,13 +34,14 @@ class NavigationComponent extends Component {
 	}
 	
 	//called after Controller::beforeFilter()
-	public function startup(Controller $controller) {}
-	
-	//called after Controller::beforeRender()
-	public function beforeRender(Controller $controller) {
+	public function startup(Controller $controller) {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
+	}
+	
+	//called after Controller::beforeRender()
+	public function beforeRender(Controller $controller) {
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
