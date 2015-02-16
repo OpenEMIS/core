@@ -48,6 +48,8 @@
 	background-color: #FFFFFF;
 	z-index: 9999;
 }
+/* to show autocomplete results on top of footer instead of below footer */
+.ui-autocomplete { z-index:99999 !important; }
 
 .rtl #header .logo { margin-right: 5px; float: right !important; }
 .rtl #header h1 { padding-right: 20px; }

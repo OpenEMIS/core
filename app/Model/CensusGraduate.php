@@ -34,6 +34,11 @@ class CensusGraduate extends AppModel {
 	
 	public function getCensusData($siteId, $academicPeriodId) {
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $siteId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$InstitutionSiteProgramme->formatResult = true;
 		$list = $InstitutionSiteProgramme->find('all' , array(
 			'recursive' => -1,
@@ -81,15 +86,11 @@ class CensusGraduate extends AppModel {
 					'conditions' => array(
 						'CensusGraduate.education_programme_id = InstitutionSiteProgramme.education_programme_id',
 						'CensusGraduate.institution_site_id = InstitutionSiteProgramme.institution_site_id',
-						'CensusGraduate.academic_period_id = InstitutionSiteProgramme.academic_period_id'
+						'CensusGraduate.academic_period_id' => $academicPeriodId
 					)
 				)
 			),
-			'conditions' => array(
-				'InstitutionSiteProgramme.institution_site_id' => $siteId,
-				'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteProgramme.status' => 1
-			),
+			'conditions' => $conditions,
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
 		
@@ -165,7 +166,7 @@ class CensusGraduate extends AppModel {
 			}
 		}
 
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 
 		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
 
@@ -207,7 +208,7 @@ class CensusGraduate extends AppModel {
 			}
 		}
 		
-		$genderOptions = $this->Gender->getList();
+		$genderOptions = $this->Gender->getListOnly();
 		
 		$controller->set(compact('selectedAcademicPeriod', 'academicPeriodList', 'genderOptions', 'censusData', 'programmeData'));
 	}
