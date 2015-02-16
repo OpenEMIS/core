@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class StudentBankAccount extends AppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction'
 	);
 

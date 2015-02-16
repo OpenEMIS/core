@@ -46,7 +46,7 @@ class InstitutionSiteClassStaff extends AppModel {
 	
 	public function classesStaff($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		$data = $this->findAllByInstitutionSiteClassIdAndStatus($id, 1, array(), array('Staff.first_name ASC'));
+		$data = $this->findAllByInstitutionSiteClassIdAndStatus($id, 1, array(), array('SecurityUser.first_name ASC'));
 		if(empty($data)) {
 			$controller->Message->alert('general.noData');
 		}
@@ -59,7 +59,7 @@ class InstitutionSiteClassStaff extends AppModel {
 			$data = $this->Staff->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 'Staff.identification_no',
+					'Staff.id', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.openemis_no',
 					'InstitutionSiteClassStaff.id', 'InstitutionSiteClassStaff.status', 'InstitutionSiteClass.id'
 				),
 				'joins' => array(
@@ -128,10 +128,10 @@ class InstitutionSiteClassStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => 0,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'
 			),
 			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 
 		if ($mode == 'list') {
@@ -150,7 +150,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'
 			),
 			'joins' => array(
 				array(
@@ -167,7 +167,7 @@ class InstitutionSiteClassStaff extends AppModel {
 					'conditions' => array('Staff.id = InstitutionSiteClassStaff.staff_id')
 				),
 			),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		$list = array();
 		foreach ($data as $obj) {
@@ -181,7 +181,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'
 			),
 			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId, 'AcademicPeriod.id' => $academicPeriodId),
 			'joins' => array(
@@ -207,7 +207,7 @@ class InstitutionSiteClassStaff extends AppModel {
 					)
 				)
 			),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		$this->bindModel(array('belongsTo' => array('InstitutionSiteClass')));
 		if ($mode == 'list') {

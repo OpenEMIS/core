@@ -24,41 +24,41 @@ $obj = @$data['Staff'];
 		<div class="row">
 			<div class="label"><?php echo __('OpenEMIS ID'); ?>
             <?php if($autoid!=''){ ?>
-            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
+            <?php echo $this->Form->input('SecurityUser.openemis_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
             <?php } ?>
             </div>
             <div class="value">
             <?php if($autoid!=''){ ?>
             	 <?php echo $autoid; ?>
             <?php }else{ ?>
-                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_identification');")) ?>
+                <?php echo $this->Form->input('SecurityUser.openemis_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_identification');")) ?>
             	<input type="hidden" name="validate_staff_identification" id="validate_staff_identification"/>
             <?php } ?>
             </div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.first_name'); ?></div>
 		</div>
                 <div class="row">
 			<div class="label"><?php echo __('Middle Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('middle_name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.middle_name'); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Third Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('third_name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.third_name'); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.last_name'); ?></div>
 		</div>
         <div class="row">
 			<div class="label"><?php echo __('Preferred Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('preferred_name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.preferred_name'); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
-			<div class="value"><?php echo $this->Form->input('gender', array('options'=>$gender));  ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.gender', array('options'=>$gender));  ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Date Of Birth'); ?></div>
@@ -71,7 +71,7 @@ $obj = @$data['Staff'];
                 <div class="row">
 		    <div class="label"><?php echo __('Profile Image'); ?> </div>
 		    <div class="value">
-		        <?php echo $this->Form->input('photo_content', array('type' => 'file', 'class' => 'form-error'));?>
+		        <?php echo $this->Form->input('SecurityUser.photo_content', array('type' => 'file', 'class' => 'form-error'));?>
 		        <?php echo $this->Form->hidden('reset_image', array('value'=>'0')); ?>
 		        <span id="resetDefault" class="icon_delete"></span>
 		        <?php echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : ''; ?>
@@ -93,11 +93,11 @@ $obj = @$data['Staff'];
 		<legend><?php echo __('Address'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Address'); ?></div>
-			<div class="value"><?php echo $this->Form->input('address', array('type' => 'textarea', 'onkeyup' => 'utility.charLimit(this)')); ?></div>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.address', array('type' => 'textarea', 'onkeyup' => 'utility.charLimit(this)')); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');")) ?>
+			<div class="value"><?php echo $this->Form->input('SecurityUser.postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');")) ?>
             <input type="hidden" name="validate_staff_postal_code" id="validate_staff_postal_code"/>
             </div>
 		</div>

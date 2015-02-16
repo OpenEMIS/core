@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentComment extends StudentsAppModel {
+	public $useTable = 'user_comments';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('comment_date')
 	);
@@ -61,14 +62,14 @@ class StudentComment extends StudentsAppModel {
 		$this->Navigation->addCrumb(__('Comments'));
 		$this->setVar('contentHeader', __('Comments'));
 
-		$this->fields['student_id']['type'] = 'hidden';
-		$this->fields['student_id']['value'] = $this->Session->read('Student.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Student.security_user_id');
 	}
 	
 	public function index() {
-		$studentId = $this->Session->read('Student.id');
+		$securityUserId = $this->Session->read('Student.security_user_id');
 		$this->recursive = -1;
-		$data = $this->findAllByStudentId($studentId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$this->setVar(compact('data'));
 	}
 }

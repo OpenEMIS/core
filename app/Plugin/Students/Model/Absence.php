@@ -20,7 +20,7 @@ class Absence extends AppModel {
 	public $useTable = 'institution_site_student_absences';
 	
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		),

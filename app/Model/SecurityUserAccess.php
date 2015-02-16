@@ -52,13 +52,13 @@ class SecurityUserAccess extends AppModel {
 			$table = $obj['table_name'];
 			$id = $obj['table_id'];
 			$user = $modules[$table]->find('first', array(
-				'fields' => array('first_name', 'middle_name', 'third_name', 'last_name', 'identification_no'),
+				'fields' => array('first_name', 'middle_name', 'third_name', 'last_name', 'openemis_no'),
 				'recursive' => -1,
 				'conditions' => array($table . '.id' => $id)
 			));
 			if($user) {
 				$obj['name'] = ModelHelper::getName($user[$table]);
-				$obj['identification_no'] = $user[$table]['identification_no'];
+				$obj['openemis_no'] = $user[$table]['openemis_no'];
 			}
 		}
 		return $data;

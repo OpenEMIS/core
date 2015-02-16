@@ -17,7 +17,103 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityUser extends AppModel {
+	public $belongsTo = array(
+		'AddressArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'address_area_id'
+		),
+		'BirthplaceArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'birthplace_area_id'
+		)
+	);
+	public $hasMany = array(
+		'Student',
+		'Staff'
+	);
 	public $validate = array(
+		'first_name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid First Name'
+			),
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid First Name'
+			)
+		),
+		'middle_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Middle Name'
+			)
+		),
+		'third_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Third Name'
+			)
+		),
+		'last_name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Last Name'
+			),
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Last Name'
+			)
+		),
+		'preferred_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Preferred Name'
+			)
+		),
+		'openemis_no' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid OpenEMIS ID'
+			),
+			// 'ruleUnique' => array(
+   //      		'rule' => 'isUnique',
+   //      		'required' => true,
+   //      		'message' => 'Please enter a unique OpenEMIS ID'
+		 //    )
+		),
+		'gender' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', 'not equal', '0'),
+				'required' => true,
+				'message' => 'Please select a Gender'
+			)
+		),
+		'address' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Address'
+			)
+		),
+		'date_of_birth' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Date of Birth'
+			),
+			'ruleCompare' => array(
+				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+				'required' => true,
+				'message' => 'Please select a Date of Birth'
+			),
+			'ruleCompare' => array(
+				'rule' => 'compareBirthDate',
+				'message' => 'Date of Birth cannot be future date'
+			)
+		),
 		'username' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -38,20 +134,6 @@ class SecurityUser extends AppModel {
 				'message' => 'Password must be at least 6 characters'
 			)
 		),
-		'first_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid First Name'
-			)
-		),
-		'last_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Last Name'
-			)
-		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
@@ -60,6 +142,24 @@ class SecurityUser extends AppModel {
 			)
 		)
 	);
+
+	public function checkIfStringGotNoNumber($check) {
+		$check = array_values($check);
+		$check = $check[0];
+		return !preg_match('#[0-9]#',$check);
+	}
+
+	public function compareBirthDate() {
+		if(!empty($this->data[$this->alias]['date_of_birth'])) {
+			$birthDate = $this->data[$this->alias]['date_of_birth'];
+			$birthTimestamp = strtotime($birthDate);
+			$todayDate=date("Y-m-d");
+			$todayTimestamp = strtotime($todayDate);
+
+			return $todayTimestamp >= $birthTimestamp;
+		}
+		return true;
+	}
 	
 	public function getStatus() {
 		return array(0 => __('Inactive', true), 1 => __('Active', true));
@@ -141,7 +241,7 @@ class SecurityUser extends AppModel {
 			$data = $this->find('first', array(
 				'recursive' => -1,
 				'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
-				'conditions' => array('SecurityUser.identification_no' => $search, 'SecurityUser.super_admin <>' => 1),
+				'conditions' => array('SecurityUser.openemis_no' => $search, 'SecurityUser.super_admin <>' => 1),
 				'order' => array('SecurityUser.first_name')
 			));
 		} else {
@@ -151,7 +251,7 @@ class SecurityUser extends AppModel {
 			$conditions = array(
 				'SecurityUser.super_admin <>' => 1,
 				'OR' => array(
-					'SecurityUser.identification_no LIKE' => $search,
+					'openemis_no LIKE' => $search,
 					'SecurityUser.first_name LIKE' => $search,
 					'SecurityUser.last_name LIKE' => $search
 				)

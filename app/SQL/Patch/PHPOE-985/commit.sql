@@ -15,6 +15,16 @@ INSERT 985_security_users SELECT * FROM security_users WHERE NOT EXISTS (SELECT 
 ALTER TABLE `security_users` ADD `middle_name` VARCHAR(100) NULL DEFAULT NULL AFTER `first_name`;
 ALTER TABLE `security_users` ADD `third_name` VARCHAR(100) NULL DEFAULT NULL AFTER `middle_name`;
 ALTER TABLE `security_users` ADD `preferred_name` VARCHAR(100) NULL DEFAULT NULL AFTER `last_name`;
+ALTER TABLE `security_users` ADD `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female' AFTER `preferred_name`;
+
+ALTER TABLE `security_users` ADD `date_of_birth` date NOT NULL AFTER `gender`;
+ALTER TABLE `security_users` ADD `date_of_death` date DEFAULT NULL AFTER `date_of_birth`;
+
+
+  -- `date_of_birth` date NOT NULL,
+  -- `date_of_death` date DEFAULT NULL,
+
+
 ALTER TABLE `security_users` ADD `address` text AFTER `preferred_name`;
 ALTER TABLE `security_users` ADD `postal_code` varchar(20) NULL DEFAULT NULL AFTER `address`;
 ALTER TABLE `security_users` ADD `address_area_id` int(11) DEFAULT '0' AFTER `postal_code`;
@@ -62,7 +72,65 @@ UPDATE security_functions SET _view = 'StaffComment|StaffComment.index|StaffComm
 UPDATE security_functions SET _view = 'StaffSpecialNeed|StaffSpecialNeed.index|StaffSpecialNeed.view', _edit = '_view:StaffSpecialNeed.edit', _add = '_view:StaffSpecialNeed.add', _delete = '_view:StaffSpecialNeed.remove', _execute = '_view:StaffSpecialNeed.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
 UPDATE security_functions SET _view = 'StaffAward|StaffAward.index|StaffAward.view', _edit = '_view:StaffAward.edit', _add = '_view:StaffAward.add', _delete = '_view:StaffAward.remove', _execute = '_view:StaffAward.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
 
--- create new tables to combined tables
+-- backup student and staff tables
+CREATE TABLE IF NOT EXISTS 985_students LIKE students;
+INSERT 985_students SELECT * FROM students WHERE NOT EXISTS (SELECT * FROM 985_students);
+CREATE TABLE IF NOT EXISTS 985_staff LIKE staff;
+INSERT 985_staff SELECT * FROM staff WHERE NOT EXISTS (SELECT * FROM 985_staff);
+
+-- student and staff migration to security_users
+ALTER TABLE `students` ADD `security_user_id` INT NULL DEFAULT NULL AFTER `photo_content`;
+ALTER TABLE `staff` ADD `security_user_id` INT NULL DEFAULT NULL AFTER `photo_content`;
+
+ALTER TABLE `security_users` ADD `985_student_id` INT NULL COMMENT '985 for migration' AFTER `id`, ADD UNIQUE (`985_student_id`) ;
+ALTER TABLE `security_users` ADD `985_staff_id` INT NULL COMMENT '985 for migration' AFTER `id`, ADD UNIQUE (`985_staff_id`) ;
+
+INSERT INTO security_users (985_student_id, openemis_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death ) SELECT id, identification_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death FROM students;
+
+INSERT INTO security_users (985_staff_id, openemis_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death ) SELECT id, identification_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death FROM staff;
+
+
+-- link up tables
+UPDATE security_users INNER JOIN students ON security_users.985_student_id = students.id SET students.security_user_id = security_users.id WHERE security_users.985_student_id IS NOT null; 
+-- SELECT security_users.id, students.id AS student_id, security_users.985_student_id, students.security_user_id FROM security_users INNER JOIN students on security_users.985_student_id = students.id WHERE security_users.985_student_id IS NOT null;
+
+UPDATE security_users INNER JOIN staff ON security_users.985_staff_id = staff.id SET staff.security_user_id = security_users.id WHERE security_users.985_staff_id IS NOT null;
+-- SELECT security_users.id, staff.id AS staff_id, security_users.985_staff_id, staff.security_user_id FROM security_users INNER JOIN staff on security_users.985_staff_id = staff.id WHERE security_users.985_staff_id IS NOT null;
+
+-- remove unneeded fields from student and staff
+ALTER TABLE `students` DROP identification_no;
+ALTER TABLE `students` DROP first_name;
+ALTER TABLE `students` DROP middle_name;
+ALTER TABLE `students` DROP third_name;
+ALTER TABLE `students` DROP last_name;
+ALTER TABLE `students` DROP preferred_name;
+ALTER TABLE `students` DROP gender;
+ALTER TABLE `students` DROP address;
+ALTER TABLE `students` DROP postal_code;
+ALTER TABLE `students` DROP address_area_id;
+ALTER TABLE `students` DROP birthplace_area_id;
+ALTER TABLE `students` DROP photo_name;
+ALTER TABLE `students` DROP photo_content;
+ALTER TABLE `students` DROP date_of_birth;
+ALTER TABLE `students` DROP date_of_death;
+
+ALTER TABLE `staff` DROP identification_no;
+ALTER TABLE `staff` DROP first_name;
+ALTER TABLE `staff` DROP middle_name;
+ALTER TABLE `staff` DROP third_name;
+ALTER TABLE `staff` DROP last_name;
+ALTER TABLE `staff` DROP preferred_name;
+ALTER TABLE `staff` DROP gender;
+ALTER TABLE `staff` DROP address;
+ALTER TABLE `staff` DROP postal_code;
+ALTER TABLE `staff` DROP address_area_id;
+ALTER TABLE `staff` DROP birthplace_area_id;
+ALTER TABLE `staff` DROP photo_name;
+ALTER TABLE `staff` DROP photo_content;
+ALTER TABLE `staff` DROP date_of_birth;
+ALTER TABLE `staff` DROP date_of_death;
+
+-- create new tables to combined detail tables
 CREATE TABLE IF NOT EXISTS user_identities LIKE student_identities;
 CREATE TABLE IF NOT EXISTS user_nationalities LIKE student_nationalities;
 CREATE TABLE IF NOT EXISTS user_languages LIKE student_languages;
@@ -79,5 +147,340 @@ ALTER TABLE user_special_needs CHANGE `student_id` `security_user_id` INT(11) NO
 ALTER TABLE user_awards CHANGE `student_id` `security_user_id` INT(11) NOT NULL;
 ALTER TABLE user_contacts CHANGE `student_id` `security_user_id` INT(11) NOT NULL;
 
+-- migration of new detail tables
+SELECT * FROM student_identities
+INNER JOIN students ON student_identities.student_id = students.id;
 
 
+INSERT INTO user_identities (
+identity_type_id, 
+number, 
+issue_date, 
+expiry_date, 
+issue_location, 
+comments, 
+security_user_id, 
+modified_user_id, 
+modified, 
+created_user_id, 
+created
+   ) 
+	SELECT 
+		student_identities.identity_type_id,
+		student_identities.number,
+		student_identities.issue_date,
+		student_identities.expiry_date,
+		student_identities.issue_location,
+		student_identities.comments,
+		students.security_user_id,
+		student_identities.modified_user_id,
+		student_identities.modified,
+		student_identities.created_user_id,
+		student_identities.created
+	FROM student_identities
+		INNER JOIN students ON student_identities.student_id = students.id;
+
+INSERT INTO user_identities (
+identity_type_id, 
+number, 
+issue_date, 
+expiry_date, 
+issue_location, 
+comments, 
+security_user_id, 
+modified_user_id, 
+modified, 
+created_user_id, 
+created
+   ) 
+	SELECT 
+		staff_identities.identity_type_id,
+		staff_identities.number,
+		staff_identities.issue_date,
+		staff_identities.expiry_date,
+		staff_identities.issue_location,
+		staff_identities.comments,
+		staff.security_user_id,
+		staff_identities.modified_user_id,
+		staff_identities.modified,
+		staff_identities.created_user_id,
+		staff_identities.created
+	FROM staff_identities
+		INNER JOIN staff ON staff_identities.staff_id = staff.id;
+
+INSERT INTO user_nationalities (
+country_id,
+comments,
+security_user_id,
+modified_user_id,
+modified,
+created_user_id,
+created
+   ) 
+	SELECT 
+		student_nationalities.country_id,
+		student_nationalities.comments,
+		students.security_user_id,
+		student_nationalities.modified_user_id,
+		student_nationalities.modified,
+		student_nationalities.created_user_id,
+		student_nationalities.created
+	FROM student_nationalities
+		INNER JOIN students ON student_nationalities.student_id = students.id;
+
+INSERT INTO user_nationalities (
+country_id,
+comments,
+security_user_id,
+modified_user_id,
+modified,
+created_user_id,
+created
+   ) 
+	SELECT 
+		staff_nationalities.country_id,
+		staff_nationalities.comments,
+		staff.security_user_id,
+		staff_nationalities.modified_user_id,
+		staff_nationalities.modified,
+		staff_nationalities.created_user_id,
+		staff_nationalities.created
+	FROM staff_nationalities
+		INNER JOIN staff ON staff_nationalities.staff_id = staff.id;
+
+INSERT INTO user_languages (
+evaluation_date,
+language_id,
+listening,
+speaking,
+reading,
+writing,
+security_user_id,
+modified_user_id,
+modified,
+created_user_id,
+created
+   ) 
+	SELECT 
+		student_languages.evaluation_date,
+		student_languages.language_id,
+		student_languages.listening,
+		student_languages.speaking,
+		student_languages.reading,
+		student_languages.writing,
+		students.security_user_id,
+		student_languages.modified_user_id,
+		student_languages.modified,
+		student_languages.created_user_id,
+		student_languages.created
+	FROM student_languages
+		INNER JOIN students ON student_languages.student_id = students.id;
+
+INSERT INTO user_languages (
+evaluation_date,
+language_id,
+listening,
+speaking,
+reading,
+writing,
+security_user_id,
+modified_user_id,
+modified,
+created_user_id,
+created
+   ) 
+	SELECT 
+		staff_languages.evaluation_date,
+		staff_languages.language_id,
+		staff_languages.listening,
+		staff_languages.speaking,
+		staff_languages.reading,
+		staff_languages.writing,
+		staff.security_user_id,
+		staff_languages.modified_user_id,
+		staff_languages.modified,
+		staff_languages.created_user_id,
+		staff_languages.created
+	FROM staff_languages
+		INNER JOIN staff ON staff_languages.staff_id = staff.id;
+
+INSERT INTO user_comments (
+		title,
+		comment,
+		comment_date,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		student_comments.title,
+		student_comments.comment,
+		student_comments.comment_date,
+		students.security_user_id,
+		student_comments.modified_user_id,
+		student_comments.modified,
+		student_comments.created_user_id,
+		student_comments.created
+	FROM student_comments
+		INNER JOIN students ON student_comments.student_id = students.id;
+
+INSERT INTO user_comments (
+		title,
+		comment,
+		comment_date,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		staff_comments.title,
+		staff_comments.comment,
+		staff_comments.comment_date,
+		staff.security_user_id,
+		staff_comments.modified_user_id,
+		staff_comments.modified,
+		staff_comments.created_user_id,
+		staff_comments.created
+	FROM staff_comments
+		INNER JOIN staff ON staff_comments.staff_id = staff.id;
+
+INSERT INTO user_special_needs (
+		special_need_type_id,
+		special_need_date,
+		comment,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		student_special_needs.special_need_type_id,
+		student_special_needs.special_need_date,
+		student_special_needs.comment,
+		students.security_user_id,
+		student_special_needs.modified_user_id,
+		student_special_needs.modified,
+		student_special_needs.created_user_id,
+		student_special_needs.created
+	FROM student_special_needs
+		INNER JOIN students ON student_special_needs.student_id = students.id;
+
+INSERT INTO user_special_needs (
+		special_need_type_id,
+		special_need_date,
+		comment,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		staff_special_needs.special_need_type_id,
+		staff_special_needs.special_need_date,
+		staff_special_needs.comment,
+		staff.security_user_id,
+		staff_special_needs.modified_user_id,
+		staff_special_needs.modified,
+		staff_special_needs.created_user_id,
+		staff_special_needs.created
+	FROM staff_special_needs
+		INNER JOIN staff ON staff_special_needs.staff_id = staff.id;
+
+
+INSERT INTO user_awards (
+		issue_date,
+		award,
+		issuer,
+		comment,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		student_awards.issue_date,
+		student_awards.award,
+		student_awards.issuer,
+		student_awards.comment,
+		students.security_user_id,
+		student_awards.modified_user_id,
+		student_awards.modified,
+		student_awards.created_user_id,
+		student_awards.created
+	FROM student_awards
+		INNER JOIN students ON student_awards.student_id = students.id;
+
+INSERT INTO user_awards (
+		issue_date,
+		award,
+		issuer,
+		comment,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		staff_awards.issue_date,
+		staff_awards.award,
+		staff_awards.issuer,
+		staff_awards.comment,
+		staff.security_user_id,
+		staff_awards.modified_user_id,
+		staff_awards.modified,
+		staff_awards.created_user_id,
+		staff_awards.created
+	FROM staff_awards
+		INNER JOIN staff ON staff_awards.staff_id = staff.id;
+
+INSERT INTO user_contacts (
+		contact_type_id,
+		value,
+		preferred,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		student_contacts.contact_type_id,
+		student_contacts.value,
+		student_contacts.preferred,
+		students.security_user_id,
+		student_contacts.modified_user_id,
+		student_contacts.modified,
+		student_contacts.created_user_id,
+		student_contacts.created
+	FROM student_contacts
+		INNER JOIN students ON student_contacts.student_id = students.id;
+
+INSERT INTO user_contacts (
+		contact_type_id,
+		value,
+		preferred,
+		security_user_id,
+		modified_user_id,
+		modified,
+		created_user_id,
+		created
+   ) 
+	SELECT 
+		staff_contacts.contact_type_id,
+		staff_contacts.value,
+		staff_contacts.preferred,
+		staff.security_user_id,
+		staff_contacts.modified_user_id,
+		staff_contacts.modified,
+		staff_contacts.created_user_id,
+		staff_contacts.created
+	FROM staff_contacts
+		INNER JOIN staff ON staff_contacts.staff_id = staff.id;

@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffHealthHistory extends StaffAppModel {
 	//public $useTable = 'staff_health_histories';
 	public $actsAs = array(
-        'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+        'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
         'ControllerAction'
     );
 	

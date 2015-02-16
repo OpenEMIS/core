@@ -40,7 +40,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 				echo $this->Form->hidden($model . '.' . $count . '.section_id', array('value' => $sectionId));
 				?>
 				<tr>
-					<td><?php echo $studentObj['identification_no']; ?></td>
+					<td><?php echo $studentObj['openemis_no']; ?></td>
 					<td><?php echo $studentName; ?></td>
 					<?php
 					$absenceType = 0;

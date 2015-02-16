@@ -79,7 +79,7 @@ class InstitutionSiteStaff extends AppModel {
 		1 => array(
 			'fields' => array(
 				'Staff' => array(
-					'identification_no' => 'OpenEMIS ID',
+					'openemis_no' => 'OpenEMIS ID',
 					'first_name' => 'First Name',
 					'middle_name' => 'Middle Name',
 					'third_name' => 'Third Name',
@@ -230,19 +230,19 @@ class InstitutionSiteStaff extends AppModel {
 		if (!empty($searchField)) {
 			$search = '%' . $searchField . '%';
 			$conditions['OR'] = array(
-				'Staff.identification_no LIKE' => $search,
-				'Staff.first_name LIKE' => $search,
-				'Staff.middle_name LIKE' => $search,
-				'Staff.third_name LIKE' => $search,
-				'Staff.last_name LIKE' => $search,
+				'SecurityUser.openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
 				'Staff.preferred_name LIKE' => $search
 			);
 		} else {
-			unset($conditions['OR']['Staff.identification_no LIKE']);
-			unset($conditions['OR']['Staff.first_name LIKE']);
-			unset($conditions['OR']['Staff.middle_name LIKE']);
-			unset($conditions['OR']['Staff.third_name LIKE']);
-			unset($conditions['OR']['Staff.last_name LIKE']);
+			unset($conditions['OR']['SecurityUser.openemis_no LIKE']);
+			unset($conditions['OR']['SecurityUser.first_name LIKE']);
+			unset($conditions['OR']['SecurityUser.middle_name LIKE']);
+			unset($conditions['OR']['SecurityUser.third_name LIKE']);
+			unset($conditions['OR']['SecurityUser.last_name LIKE']);
 			unset($conditions['OR']['Staff.preferred_name LIKE']);
 		}
 		
@@ -356,10 +356,9 @@ class InstitutionSiteStaff extends AppModel {
 			
 			$data = array();
 			foreach ($list as $obj) {
-				$info = $obj['Staff'];
 				$data[] = array(
-					'label' => ModelHelper::getName($info, array('openEmisId'=>true)),
-					'value' => array('staff_id' => $info['id']) 
+					'label' => ModelHelper::getName($obj['SecurityUser'], array('openEmisId'=>true)),
+					'value' => array('staff_id' => $obj['Staff']['id']) 
 				);
 			}
 			return json_encode($data);
@@ -371,25 +370,50 @@ class InstitutionSiteStaff extends AppModel {
 		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
 			$identityConditions[] = 'StaffIdentity.identity_type_id = '.$conditions['defaultIdentity'];
 		}
-		$joins[] = array(
-			'table' => 'staff_identities',
-			'alias' => 'StaffIdentity',
-			'type' => 'LEFT',
-			'conditions' => $identityConditions,
-		);
+
 		unset($conditions['defaultIdentity']);
 
 		if (isset($extra['sort']) && isset($extra['direction'])) {
 			$order = array($extra['sort'] => $extra['direction']);
 		}
 		
-		$data = $this->find('all', array(
-			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 
-				'InstitutionSitePosition.position_no', 'InstitutionSitePosition.staff_position_title_id',
-				'StaffStatus.name', 'InstitutionSiteStaff.start_date',
-				'StaffIdentity.number',
+		// change to manual joins because apparently paginate cannot handle deep association sorting
+		$joins = array(
+			array(
+				'table' => 'staff',
+				'alias' => 'Staff',
+				'type' => 'inner',
+				'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
 			),
+			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'type' => 'inner',
+				'conditions' => array('SecurityUser.id = Staff.security_user_id')
+			),
+			array(
+				'table' => 'staff_identities',
+				'alias' => 'StaffIdentity',
+				'type' => 'LEFT',
+				'conditions' => $identityConditions,
+			), 
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StaffStatus',
+				'type' => 'LEFT',
+				'conditions' => array('StaffStatus.id = InstitutionSiteStaff.staff_status_id')
+			),
+			array(
+				'table' => 'institution_site_positions',
+				'alias' => 'InstitutionSitePosition',
+				'type' => 'LEFT',
+				'conditions' => array('InstitutionSitePosition.id = InstitutionSiteStaff.institution_site_position_id')
+			)
+		);
+
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteStaff.*, Staff.*', 'SecurityUser.*', 'StaffIdentity.number', 'StaffStatus.name', 'InstitutionSitePosition.staff_position_title_id'),
 			'joins' => $joins,
 			'conditions' => $conditions,
 			'limit' => $limit,
@@ -466,7 +490,7 @@ class InstitutionSiteStaff extends AppModel {
 		$data = $this->find('first', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.third_name AS third_name', 'Staff.last_name AS last_name',
+				'SecurityUser.first_name AS first_name', 'SecurityUser.middle_name AS middle_name', 'SecurityUser.third_name AS third_name', 'SecurityUser.last_name AS last_name',
 				'InstitutionSite.name AS institution_site_name'
 			),
 			'conditions' => array(
@@ -605,7 +629,7 @@ class InstitutionSiteStaff extends AppModel {
 
 		$options['recursive'] = -1;
 		$options['fields'] = array('DISTINCT Staff.id', 'Staff.*');
-		$options['order'] = array('Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name', 'Staff.preferred_name');
+		$options['order'] = array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'Staff.preferred_name');
 		$options['joins'] = array(
 			array(
 				'table' => 'staff',
@@ -614,12 +638,12 @@ class InstitutionSiteStaff extends AppModel {
 		));
 		$options['conditions'] = array(
 			'OR' => array(
-				'Staff.first_name LIKE' => $search,
-				'Staff.middle_name LIKE' => $search,
-				'Staff.third_name LIKE' => $search,
-				'Staff.last_name LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
 				'Staff.preferred_name LIKE' => $search,
-				'Staff.identification_no LIKE' => $search
+				'SecurityUser.openemis_no LIKE' => $search
 			)
 		);
 
@@ -661,11 +685,11 @@ class InstitutionSiteStaff extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'DISTINCT Staff.id',
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Staff.preferred_name'
 			),
 			'joins' => array(
@@ -735,8 +759,8 @@ class InstitutionSiteStaff extends AppModel {
 
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name',
-				'Staff.third_name', 'Staff.last_name', 'Staff.gender'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name',
+				'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender'
 			),
 			'conditions' => array(
 				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
@@ -747,7 +771,7 @@ class InstitutionSiteStaff extends AppModel {
 				)
 			),
 			'group' => array('Staff.id'),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		return $data;
 	}
@@ -766,7 +790,7 @@ class InstitutionSiteStaff extends AppModel {
 			$options = array();
 			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Staff.first_name');
+			$options['order'] = array('SecurityUser.first_name');
 			$options['group'] = array('Staff.id');
 
 			$options['joins'] = array(
@@ -904,7 +928,7 @@ class InstitutionSiteStaff extends AppModel {
 					)
 				),
 				'conditions' => array('InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId),
-				'order' => array('Staff.first_name')
+				'order' => array('SecurityUser.first_name')
 					)
 			);
 

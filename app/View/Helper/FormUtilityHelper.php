@@ -168,7 +168,12 @@ class FormUtilityHelper extends AppHelper {
 		if($field == 'end_date'){
 			//pr($inputOptions);die;
 		}
-		$html = $this->Form->input($field, $inputOptions);
+
+		if ($model) {
+			$html = $this->Form->input($model.'.'.$field, $inputOptions);
+		} else {
+			$html = $this->Form->input($field, $inputOptions);
+		}
 		
 		$_datepickerOptions = array();
 		$_datepickerOptions['id'] = $_options['id'];

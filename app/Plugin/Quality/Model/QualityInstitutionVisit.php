@@ -21,7 +21,7 @@ class QualityInstitutionVisit extends QualityAppModel {
     public $actsAs = array(
         'Excel' => array(
             'header' => array(
-                'Staff' => array('identification_no', 'first_name', 'last_name'),
+                'Staff' => array('openemis_no', 'first_name', 'last_name'),
                 'Evaluator' => array('first_name', 'last_name'),
             )
         ),
@@ -141,10 +141,10 @@ class QualityInstitutionVisit extends QualityAppModel {
 		$options['fields'] = array(
 			'QualityInstitutionVisit.id',
 			'QualityInstitutionVisit.date',
-			'Staff.first_name',
-            'Staff.middle_name',
-			'Staff.third_name',
-			'Staff.last_name',
+			'SecurityUser.first_name',
+            'SecurityUser.middle_name',
+			'SecurityUser.third_name',
+			'SecurityUser.last_name',
 			'EducationGrade.name',
 			'InstitutionSiteSection.name',
 			

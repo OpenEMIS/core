@@ -23,18 +23,18 @@ class SearchBehavior extends ModelBehavior {
 		
 		$conditions = array(
 			'OR' => array(
-				$class . '.identification_no LIKE' => $search,
-				$class . '.first_name LIKE' => $search,
-				$class . '.middle_name LIKE' => $search,
-				$class . '.third_name LIKE' => $search,
-				$class . '.last_name LIKE' => $search,
-				$class . '.preferred_name LIKE' => $search
+				'SecurityUser.openemis_id LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
+				'SecurityUser.preferred_name LIKE' => $search
 			)
 		);
 		$options = array(
 			'recursive' => -1,
 			'conditions' => $conditions,
-			'order' => array($class . '.first_name')
+			'order' => array('SecurityUser.first_name')
 		);
 		$count = $model->find('count', $options);
 		$data = false;
@@ -49,7 +49,6 @@ class SearchBehavior extends ModelBehavior {
 		$class = $model->alias;
 		$dbo = $model->getDataSource();
 		$query = $dbo->buildStatement(array(
-			//'fields' => array('NULL', $class.'.id', $class.'.first_name', $class.'.last_name', $class.'.gender', $class.'.date_of_birth', $class.'.address_area_id'),
 			'fields' => array($class.'.id'),
 			'table' => $dbo->fullTableName($model),
 			'alias' => $class,
@@ -268,17 +267,17 @@ class SearchBehavior extends ModelBehavior {
 		if(strlen($params['SearchKey']) != 0) {
 			$search = "%".$params['SearchKey']."%";
 			$conditions['OR'] = array(
-				$class . '.first_name LIKE' => $search,
-				$class . '.middle_name LIKE' => $search,
-				$class . '.third_name LIKE' => $search,
-				$class . '.last_name LIKE' => $search,
-				$class . '.preferred_name LIKE' => $search,
-				$class . '.identification_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
+				'SecurityUser.preferred_name LIKE' => $search,
+				'SecurityUser.openemis_id LIKE' => $search,
 				$class . 'History.first_name LIKE' => $search,
 				$class . 'History.middle_name LIKE' => $search,
 				$class . 'History.third_name LIKE' => $search,
 				$class . 'History.last_name LIKE' => $search,
-				$class . 'History.identification_no LIKE' => $search
+				$class . 'History.openemis_no LIKE' => $search
 			);
 		}
 
@@ -372,13 +371,13 @@ class SearchBehavior extends ModelBehavior {
 		$isSuperAdmin = $conditions['isSuperAdmin'];
 		$class = $model->alias;
 		$fields = array(
-			$class.'.id', $class.'.identification_no',
-			$class.'.first_name', $class.'.middle_name', $class.'.third_name', $class.'.last_name', $class.'.preferred_name',
+			$class.'.id', 'SecurityUser.openemis_no',
+			'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name',
 			$class.'Identity.number'
 		);
 		
 		if(strlen($conditions['SearchKey']) != 0) {
-			$fields[] = $class.'History.identification_no AS history_identification_no';
+			$fields[] = $class.'History.openemis_no AS openemis_no';
 			$fields[] = $class.'History.first_name AS history_first_name';
 			$fields[] = $class.'History.middle_name AS history_middle_name';
 			$fields[] = $class.'History.third_name AS history_third_name';
@@ -387,11 +386,14 @@ class SearchBehavior extends ModelBehavior {
 
 		$joins = array();
 		$data = array();
+		$contain = (array_key_exists('contain', $extra))? $extra['contain']:array();
+		
 		// if super admin
 		if($isSuperAdmin) {
 			$data = $model->find('all', array(
 				'recursive' => -1,
 				'fields' => $fields,
+				'contain' => $contain,
 				'joins' => $this->paginateJoins($model, $joins, $conditions),
 				'conditions' => $this->paginateConditions($model, $conditions),
 				'limit' => $limit,

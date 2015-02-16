@@ -18,7 +18,7 @@ class StudentGuardian extends StudentsAppModel {
 	public $actsAs = array(
 		'Excel' => array(
 			'header' => array(
-				'Student' => array('identification_no', 'first_name', 'last_name'),
+				'Student' => array('openemis_no', 'first_name', 'last_name'),
 				'Guardian' => array('first_name', 'middle_name', 'last_name', 'email', 'home_phone', 'mobile_phone')
 			)
 		),

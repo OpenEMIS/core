@@ -569,7 +569,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 			
 			//$options['contain'] = array('QualityInstitutionRubric' => array('full_name'));
 			
-			$this->virtualFields['full_name'] = "CONCAT(Staff.first_name,' ',Staff.middle_name,' ',Staff.third_name,' ',Staff.last_name)";
+			$this->virtualFields['full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.middle_name,' ',SecurityUser.third_name,' ',SecurityUser.last_name)";
 			$data = $this->find('all', $options);
 			
 			$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');

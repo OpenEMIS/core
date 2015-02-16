@@ -53,7 +53,7 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 
 <fieldset class="section_break">
 	<legend><?php echo __('General'); ?></legend>
-	<?php echo $this->Form->input('identification_no', array('value' => $data['identification_no'])); ?>
+	<?php echo $this->Form->input('openemis_no', array('value' => $data['openemis_no'])); ?>
 	<?php echo $this->Form->input('first_name', array('value' => $data['first_name'])); ?>
 	<?php echo $this->Form->input('last_name', array('value' => $data['last_name'])); ?>
 </fieldset>
@@ -102,7 +102,7 @@ echo $this->Form->hidden('id', array('value' => $data['id']));
 		<tbody class="table_body">
 			<?php foreach($data['access'] as $obj) { ?>
 				<tr class="table_row">
-					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['identification_no']; ?></td>
+					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['openemis_no']; ?></td>
 					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['name']; ?></td>
 					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['table_name']; ?></td>
 				</tr>

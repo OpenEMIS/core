@@ -22,12 +22,12 @@ $this->start('contentBody');
 		<div class="row">
             <div class="col-md-2"><?php echo __('OpenEMIS ID'); ?></div>
             <div class="col-md-6"><?php //pr($data); ?>
-				<span><?php echo $data['Student']['identification_no']; ?></span>
-				<?php if(@sizeof($data2['identification_no'])>0){ // && ( sizeof($data2['identification_no']) != 1 && array_key_exists($data['Student']['identification_no'], $data2['identification_no']) ) ) { ?>
+				<span><?php echo $data['SecurityUser']['openemis_no']; ?></span>
+				<?php if(@sizeof($data2['openemis_no'])>0){ // && ( sizeof($data2['openemis_no']) != 1 && array_key_exists($data['SecurityUser']['openemis_no'], $data2['openemis_no']) ) ) { ?>
 				<div class="table">
 					<div class="table_body">
-						<?php $ctr = 1; foreach($data2['identification_no'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['identification_no'] == $val) continue; ?>
+						<?php $ctr = 1; foreach($data2['openemis_no'] as $val => $time):?>
+						<?php if($ctr == 1 && $data['SecurityUser']['openemis_no'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
@@ -41,12 +41,12 @@ $this->start('contentBody');
 		<div class="row">
 			<div class="col-md-2"><?php echo __('First Name'); ?></div>
 			<div class="col-md-6">
-				<span><?php echo $data['Student']['first_name']; ?></span>
+				<span><?php echo $data['SecurityUser']['first_name']; ?></span>
 				<?php if(@sizeof($data2['first_name'])>0){ ?>
 				<div class="table">
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['first_name'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['first_name'] == $val) continue; ?>
+						<?php if($ctr == 1 && $data['SecurityUser']['first_name'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
@@ -60,12 +60,12 @@ $this->start('contentBody');
         <div class="row">
 			<div class="col-md-2"><?php echo __('Middle Name'); ?></div>
 			<div class="col-md-6">
-				<span><?php echo $data['Student']['middle_name']; ?></span>
+				<span><?php echo $data['SecurityUser']['middle_name']; ?></span>
 				<?php if(@sizeof($data2['middle_name'])>0){ ?>
 				<div class="table">
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['middle_name'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['middle_name'] == $val) continue; ?>
+						<?php if($ctr == 1 && $data['SecurityUser']['middle_name'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
@@ -79,12 +79,12 @@ $this->start('contentBody');
 		<div class="row">
 			<div class="col-md-2"><?php echo __('Third Name'); ?></div>
 			<div class="col-md-6">
-				<span><?php echo $data['Student']['third_name']; ?></span>
+				<span><?php echo $data['SecurityUser']['third_name']; ?></span>
 				<?php if(@sizeof($data2['third_name'])>0){ ?>
 				<div class="table">
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['third_name'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['third_name'] == $val) continue; ?>
+						<?php if($ctr == 1 && $data['SecurityUser']['third_name'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
@@ -98,12 +98,12 @@ $this->start('contentBody');
 		<div class="row">
 			<div class="col-md-2"><?php echo __('Last Name'); ?></div>
 			<div class="col-md-6">
-				<span><?php echo $data['Student']['last_name']; ?></span>
+				<span><?php echo $data['SecurityUser']['last_name']; ?></span>
 				<?php if(@sizeof($data2['last_name'])>0){ ?>
 				<div class="table">
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['last_name'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['last_name'] == $val) continue; ?>
+						<?php if($ctr == 1 && $data['SecurityUser']['last_name'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>

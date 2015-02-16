@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffContact extends StaffAppModel {
+	public $useTable = 'user_contacts';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2'
 	);
 	
@@ -128,8 +129,8 @@ class StaffContact extends StaffAppModel {
 	public function beforeAction() {
 		parent::beforeAction();
 
-		$this->fields['staff_id']['type'] = 'hidden';
-		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->controller->Option->get('yesno');
 
@@ -164,9 +165,9 @@ class StaffContact extends StaffAppModel {
 	}
 
 	public function index($staffId = 0) {
-		$staffId = $this->Session->read('Staff.id');
+		$securityUserId = $this->Session->read('Staff.security_user_id');
 		$this->contain(array('ContactType'));
-		$data = $this->findAllByStaffId($staffId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$contactOptions = $this->ContactType->ContactOption->getOptions();
 		
 		$this->setVar(compact('data', 'contactOptions'));

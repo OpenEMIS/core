@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffLanguage extends StaffAppModel {
+	public $useTable = 'user_languages';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('evaluation_date')
 	);
@@ -78,8 +79,8 @@ class StaffLanguage extends StaffAppModel {
 		}
 		$this->Navigation->addCrumb(__('Languages'));
 
-		$this->fields['staff_id']['type'] = 'hidden';
-		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
 		$this->fields['language_id']['type'] = 'select';
 		$this->fields['language_id']['options'] = $this->Language->getList();
 
@@ -98,9 +99,9 @@ class StaffLanguage extends StaffAppModel {
 	}
 	
 	public function index() {
-		$staffId = $this->Session->read('Staff.id');
+		$securityUserId = $this->Session->read('Staff.security_user_id');
 		$this->contain(array('Language' => array('id', 'name')));
-		$data = $this->findAllByStaffId($staffId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$this->setVar(compact('data'));
 	}
 }

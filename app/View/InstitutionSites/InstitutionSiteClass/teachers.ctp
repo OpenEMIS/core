@@ -28,7 +28,7 @@
 						echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.$field", array('value' => $value));
 					}
 					?>
-					<td><?php echo $obj['Staff']['identification_no']; ?></td>
+					<td><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>

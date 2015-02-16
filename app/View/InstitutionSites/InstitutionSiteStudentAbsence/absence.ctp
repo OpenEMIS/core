@@ -58,7 +58,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 				?>
 				<tr>
 					<td><?php echo $dateStr; ?></td>
-					<td><?php echo $this->Html->link($arrItems['Student']['identification_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
+					<td><?php echo $this->Html->link($arrItems['SecurityUser']['openemis_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
 					<td><?php echo $studentName; ?></td>
 					<td><?php echo $arrItems['InstitutionSiteStudentAbsence']['absence_type']; ?></td>
 				</tr>

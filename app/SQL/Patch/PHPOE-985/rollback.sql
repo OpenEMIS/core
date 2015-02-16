@@ -7,25 +7,6 @@ UPDATE navigations SET navigations.order = @prevAwardsOrder + 1 WHERE title = 'M
 UPDATE navigations SET navigations.order = @prevAwardsOrder + 2 WHERE title = 'Licenses';
 UPDATE navigations SET header = 'General' WHERE title = 'Memberships' OR title = 'Licenses';
 
-
-
-
-
-
--- security user edit
-ALTER TABLE `security_users` DROP `middle_name`;
-ALTER TABLE `security_users` DROP `third_name`;
-ALTER TABLE `security_users` DROP `preferred_name`;
-ALTER TABLE `security_users` DROP `address`;
-ALTER TABLE `security_users` DROP `postal_code`;
-ALTER TABLE `security_users` DROP `address_area_id`;
-ALTER TABLE `security_users` DROP `birthplace_area_id`;
-ALTER TABLE `security_users` DROP `photo_name`;
-ALTER TABLE `security_users` DROP `photo_content`;
-ALTER TABLE `security_users` CHANGE `username` `username` VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
-ALTER TABLE `security_users` CHANGE `password` `password` VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
-ALTER TABLE `security_users` CHANGE `openemis_no` `identification_no` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
-
 -- navigations for controller2
 UPDATE navigations SET action = 'contacts', pattern = 'contacts' WHERE title = 'Contacts' AND header = 'GENERAL' AND controller = 'Students';
 UPDATE navigations SET action = 'identities', pattern = 'identities' WHERE title = 'Identities' AND header = 'GENERAL' AND controller = 'Students';
@@ -64,10 +45,19 @@ UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_v
 UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
 
 -- create new tables to combined tables
-DROP TABLE UserIdentity;
-DROP TABLE UserNationality;
-DROP TABLE UserLanguage;
-DROP TABLE UserComment;
-DROP TABLE UserSpecialNeed;
-DROP TABLE UserAward;
-DROP TABLE UserContact;
+DROP TABLE user_identities;
+DROP TABLE user_nationalities;
+DROP TABLE user_languages;
+DROP TABLE user_comments;
+DROP TABLE user_special_needs;
+DROP TABLE user_awards;
+DROP TABLE user_contacts;
+
+DROP TABLE students;
+RENAME TABLE 985_students TO students;
+DROP TABLE staff;
+RENAME TABLE 985_staff TO staff;
+DROP TABLE security_users;
+RENAME TABLE 985_security_users TO security_users;
+
+

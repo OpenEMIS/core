@@ -32,7 +32,7 @@
 						echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.Student.$field", array('value' => $value));
 					}
 					?>
-					<td><?php echo $obj['Student']['identification_no']; ?></td>
+					<td><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo ModelHelper::getName($obj['Student']) ?></td>
 					<td><?php echo $this->Model->getGender($obj['Student']['gender']) ?></td>
 					<td><?php echo $this->Utility->formatDate($obj['Student']['date_of_birth']); ?></td>

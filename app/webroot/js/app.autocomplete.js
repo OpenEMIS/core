@@ -68,7 +68,7 @@ var Autocomplete = {
 				errorMessage.remove();
 			}
 			
-			$("input[autocomplete]").val('');
+			// $("input[autocomplete]").val('');
 			noDataMsg.hide();
 			loadingWrapper.show();
 			loadingImg.show();

@@ -246,8 +246,8 @@ class InstitutionSiteSection extends AppModel {
 					'InstitutionSiteSectionStudent' => array(
 						'Student' => array(
 							'fields' => array(
-								'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-								'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+								'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
+								'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
 							)
 						)
 					)
@@ -278,8 +278,8 @@ class InstitutionSiteSection extends AppModel {
 				'InstitutionSiteSectionStudent' => array(
 					'Student' => array(
 						'fields' => array(
-							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+							'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
+							'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
 						)
 					)
 				)
@@ -455,7 +455,7 @@ class InstitutionSiteSection extends AppModel {
 		$options = array(
 			'fields' => array(
 				'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
-				'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name',
+				'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name',
 				'EducationGrade.name'
 			),
 			'contain' => array('Staff', 'EducationGrade'),

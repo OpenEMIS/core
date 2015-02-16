@@ -119,7 +119,7 @@ class InstitutionSiteStudentFee extends AppModel {
 			),
 			'contain' => array(
 				'InstitutionSiteSection',
-				'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
+				'Student' => array('fields' => array('id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
 			),
 			'joins' => array(
 				array(
@@ -145,7 +145,7 @@ class InstitutionSiteStudentFee extends AppModel {
 				'InstitutionSiteSectionStudent.education_grade_id' => $selectedGrade
 			),
 			'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
-			'order' => array('Student.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		
 		if (empty($data)) {
@@ -213,7 +213,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$data[$alias]['programme'] = $fees['EducationGrade']['EducationProgramme']['name'];
 		$data[$alias]['grade'] = $fees['EducationGrade']['name'];
 		$data[$alias]['student_id'] = $student['Student']['id'];
-		$data[$alias]['openemisId'] = $student['Student']['identification_no'];
+		$data[$alias]['openemisId'] = $student['SecurityUser']['openemis_no'];
 		$data[$alias]['name'] = ModelHelper::getName($student['Student']);
 		$data[$alias]['institution_site_fee_id'] = $fees['InstitutionSiteFee']['id'];
 		$data[$alias]['total_fee'] = $fees['InstitutionSiteFee']['total'];
@@ -265,7 +265,7 @@ class InstitutionSiteStudentFee extends AppModel {
 						'fields' => array('EducationGrade.name'),
 						'EducationProgramme' => array('fields' => array('EducationProgramme.name'))
 					),
-					'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
+					'Student' => array('fields' => array('id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
 				),
 				'joins' => array(
 					array(
@@ -297,7 +297,7 @@ class InstitutionSiteStudentFee extends AppModel {
 					)
 				),
 				'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
-				'order' => array('AcademicPeriod.name', 'EducationGrade.order', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name')
+				'order' => array('AcademicPeriod.name', 'EducationGrade.order', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name')
 			));
 			
 			$csvData = array();
@@ -307,11 +307,11 @@ class InstitutionSiteStudentFee extends AppModel {
 				$row[] = $obj['AcademicPeriod']['name'];
 				$row[] = $obj['EducationGrade']['EducationProgramme']['name'];
 				$row[] = $obj['EducationGrade']['name'];
-				$row[] = $obj['Student']['identification_no'];
-				$row[] = $obj['Student']['first_name'];
-				$row[] = $obj['Student']['middle_name'];
-				$row[] = $obj['Student']['third_name'];
-				$row[] = $obj['Student']['last_name'];
+				$row[] = $obj['SecurityUser']['openemis_no'];
+				$row[] = $obj['SecurityUser']['first_name'];
+				$row[] = $obj['SecurityUser']['middle_name'];
+				$row[] = $obj['SecurityUser']['third_name'];
+				$row[] = $obj['SecurityUser']['last_name'];
 				$row[] = number_format($obj['InstitutionSiteFee']['total'], 2);
 				$row[] = number_format($obj[0]['paid'], 2);
 				$row[] = number_format($obj['InstitutionSiteFee']['total'] - $obj[0]['paid'], 2);
