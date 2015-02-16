@@ -161,20 +161,35 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	// used by StudentController.classes
 	public function getListOfClassByStudent($studentId) {
-
+		$InstitutionSiteSectionClass = ClassRegistry::init('InstitutionSiteSectionClass');
 		$this->contain(array(
 			'InstitutionSiteClass'=>array(
 				'InstitutionSite.name',
 				'AcademicPeriod.name',
 				'EducationSubject.name'
 			),
-			'InstitutionSiteSection'=>array(),
+			'InstitutionSiteSection',
 		));
 		$conditions = array($this->alias . '.student_id' => $studentId, $this->alias . '.status' => 1);
 		$data = $this->find('all', array(
 			'conditions' => $conditions,
 		));
-		
+		foreach ($data as $k=>$v) {
+			if ($v[$this->alias]['institution_site_section_id']==0) {
+				$section = $InstitutionSiteSectionClass->find('first', array(
+					'fields' => array('InstitutionSiteSection.*'),
+					'conditions'=>array(
+						'InstitutionSiteSectionClass.institution_site_class_id' => $v[$this->alias]['institution_site_class_id'],
+						'InstitutionSiteSectionClass.status' => 1
+					),
+					'order' => 'InstitutionSiteSectionClass.id DESC'
+				));
+				if ($section) {
+					$data[$k][$this->alias]['institution_site_section_id'] = $section['InstitutionSiteSection']['id'];
+					$data[$k]['InstitutionSiteSection'] = $section['InstitutionSiteSection'];
+				}
+			}
+		}
 		return $data;
 	}
 	
