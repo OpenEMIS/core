@@ -20,7 +20,8 @@ class SurveyQuestionsController extends SurveysAppController {
 		'Surveys.SurveyQuestionChoice',
 		'Surveys.SurveyTableRow',
 		'Surveys.SurveyTableColumn',
-		'Surveys.SurveyTemplate'
+		'Surveys.SurveyTemplate',
+		'Surveys.SurveyResponse'
 	);
 
 	public $components = array(
@@ -104,6 +105,10 @@ class SurveyQuestionsController extends SurveysAppController {
 
     public function download($format="xform", $id=0, $output=true) {
     	return $this->CustomField2->download($format, $id, $output);
+    }
+
+    public function upload($id=0) {
+    	$this->CustomField2->upload($id);
     }
 }
 ?>
