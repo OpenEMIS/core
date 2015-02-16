@@ -183,7 +183,6 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
-				pr($data);die;
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
