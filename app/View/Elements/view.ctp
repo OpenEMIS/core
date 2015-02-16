@@ -36,7 +36,7 @@ foreach ($fields as $key => $field) {
 			
 			switch ($fieldType) {
 				case 'disabled':
-					$value = $field['value'];
+					$value = isset($field['value']) ? $field['value'] : $value;
 					break;
 					
 				case 'select':

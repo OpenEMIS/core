@@ -39,7 +39,7 @@ echo $this->element('census/academic_period_options');
 				$subTotal = 0;
 				?>
 				<tr>
-					<td><?php echo $catName['name']; ?></td>
+					<td><?php echo $catName; ?></td>
 					<?php
 					foreach ($genderOptions AS $genderId => $genderName):
 						?>

@@ -331,6 +331,24 @@ fieldset.section_break > .profile-image {
 
 .table th { text-align: right; }
 
+th:after,
+ul#breadcrumb li:after,
+h1:after,
+h1 span:after,
+h2:after,
+h2 span:after,
+h3:after,
+h3 span:after,
+label:after,
+div.panel-heading:after,
+select:after,
+select > option:after 
+{ content: 'i';visibility: hidden; }
+div#accordion div.panel-heading:after{ content: ''; }
+
+/* InstitutionSiteStudent/index.ctp */
+.table .section-info > span { float: right; }
+
 /* #search */
 .rtl .input-group-addon:first-child { border-right: 1px solid #ccc; }
 
