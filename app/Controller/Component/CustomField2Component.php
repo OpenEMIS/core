@@ -40,7 +40,7 @@ class CustomField2Component extends Component {
 			$this->controller->set('Custom_' . $key, $base);
 		}
 		$this->controller->set('viewType', $this->settings['viewType']);
-		$this->Auth->allow('listing', 'download');
+		$this->Auth->allow('listing', 'download', 'upload');
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
@@ -740,6 +740,19 @@ class CustomField2Component extends Component {
 			fclose($df);
 			return ob_get_clean();
 		}
+    }
+
+    public function upload($id=0) {
+    	$this->controller->autoRender = false;
+		if ($this->controller->request->is(array('post', 'put'))) {
+    		$data = $this->controller->request->data;
+	    	$data['survey_template_id'] = $id;
+
+	    	if ($this->controller->SurveyResponse->saveAll($data)) {
+			} else {
+				$this->log($this->controller->SurveyResponse->validationErrors, 'debug');
+			}
+    	}
     }
 
     public function getXML($instanceId, $title, $fields) {
