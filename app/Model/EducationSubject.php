@@ -72,4 +72,21 @@ class EducationSubject extends AppModel {
 		$data = $this->find('all', array('order' => $this->alias.'.order'));
 		$this->setVar(compact('data'));
 	}
+
+	// used by EducationGrade.edit
+	public function getSubjectOptions() {
+		$options = array(
+			'conditions' => array(
+				"EducationSubject.visible" => 1,
+			)
+		);
+		$list = $this->find('all', $options);
+		$data = array();
+		foreach ($list as $obj) {
+			$subjectObj = $obj['EducationSubject'];
+			$data[$subjectObj['id']] = $subjectObj['code'].' - '.$subjectObj['name'];
+		}
+		return $data;
+	}
+
 }
