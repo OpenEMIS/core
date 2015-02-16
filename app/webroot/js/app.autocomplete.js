@@ -21,16 +21,33 @@ var Autocomplete = {
 	loadingWrapper: '',
 	loadingImg: '',
 	noDataMsg: '',
+	hasDataMsg: '',
+	uiItems: {},
+
 	init: function() {
 		this.attachAutoComplete('.autocomplete', Autocomplete.select);
 		loadingWrapper = $('.loadingWrapper');
 		loadingImg = loadingWrapper.find('.img');
 		noDataMsg = loadingWrapper.find('.msg');
+		hasDataMsg = loadingWrapper.find('.hasDataMsg');
 	},
 
+	keyup: function() {
+		var val = Autocomplete.uiItems;
+		for(var i in val) {
+			target = $("input[autocomplete='"+i+"']");
+			if( typeof target !== 'string' ){
+				if(target.get(0).tagName.toUpperCase() === 'INPUT') {
+					target.val('');
+				} else {
+					target.html('');
+				}
+			}
+		}
+	},
+	
 	select: function(event, ui) {
 		var val = ui.item.value;
-		var element;
 		for(var i in val) {
 			element = $("input[autocomplete='"+i+"']");
 			
@@ -43,20 +60,24 @@ var Autocomplete = {
 			}
 		}
 		this.value = ui.item.label;
+		Autocomplete.uiItems = val;
 		return false;
 	},
 	
-	focus: function(event, ui) {
+	focus: function( event, ui ) {
 		this.value = ui.item.label;
+		Autocomplete.select(event, ui);
 		event.preventDefault();
 	},
 			
-	searchComplete: function( event, ui){
+	searchComplete: function( event, ui ) {
 		if(loadingImg.length === 1){
 			loadingImg.hide();
 			var recordsCount = ui.content.length;
 			if(recordsCount === 0){
 				noDataMsg.show();
+			} else {
+				hasDataMsg.show();
 			}
 		}
 	},
@@ -67,15 +88,14 @@ var Autocomplete = {
 			if(errorMessage.length > 0){
 				errorMessage.remove();
 			}
-			
-			// $("input[autocomplete]").val('');
 			noDataMsg.hide();
+			hasDataMsg.hide();
 			loadingWrapper.show();
 			loadingImg.show();
 		}
 	},
 
-	attachAutoComplete: function(element, callback) {
+	attachAutoComplete: function( element, callback ) {
 		var url = getRootURL() + $(element).attr('url');
 		var length = $(element).attr('length');
 		
@@ -90,7 +110,7 @@ var Autocomplete = {
 			focus: Autocomplete.focus,
 			response: Autocomplete.searchComplete,
 			search: Autocomplete.beforeSearch
-		});
+		}).on( 'keyup', Autocomplete.keyup );
 	},
 			
 	submitForm: function(obj){

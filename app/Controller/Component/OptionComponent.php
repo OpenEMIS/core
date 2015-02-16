@@ -70,4 +70,8 @@ class OptionComponent extends Component {
 	public function prependLabel($list, $code) {
 		return $this->prepend($list, '-- ' . $this->LabelHelper->get($code) . ' --');
 	}
+
+	public function getLabel($code) {
+		return $this->LabelHelper->get($code);
+	}
 }

@@ -85,6 +85,7 @@ class Position extends AppModel {
 	}
 	
 	public function afterAction() {
+
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
 			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
@@ -99,8 +100,6 @@ class Position extends AppModel {
 			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
 			$this->fields['institution_site_position_id']['type'] = 'disabled';
 			$this->fields['institution_site_position_id']['value'] = $name;
-
-			$this->request->data['Position']['end_date'] = (strlen($data['Position']['end_date'])>0) ? $data['Position']['end_date'] : 'blank' ;
 			
 			$positionId = $this->request->data['InstitutionSitePosition']['id'];
 			$startDate = $this->request->data['Position']['start_date'];

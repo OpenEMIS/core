@@ -20,7 +20,7 @@ $this->start('contentBody');
 	<div class="col-md-6"><?php echo $data['AcademicPeriod']['name'] ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('general.section') ?></div>
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.name') ?></div>
 	<div class="col-md-6"><?php echo $data[$model]['name'] ?></div>
 </div>
 <div class="row">
@@ -48,7 +48,7 @@ $this->start('contentBody');
 
 <div class="row">
 	<div class="panel panel-default">
-		<div class="panel-heading"><?php echo __('Students') ?></div>
+		<div class="panel-heading dark-background"><?php echo __('Students') ?></div>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>

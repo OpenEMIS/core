@@ -29,7 +29,7 @@ echo $this->Form->input('academic_period_id', array(
 	'label' => $labelOptions
 ));
 
-$labelOptions['text'] = $this->Label->get('general.section');
+$labelOptions['text'] = $this->Label->get('InstitutionSiteSection.name');
 echo $this->Form->input('name', array('label' => $labelOptions));
 
 $labelOptions['text'] = $this->Label->get('InstitutionSiteSection.institution_site_shift_id');
