@@ -316,6 +316,9 @@ class InstitutionSiteClass extends AppModel {
 						$InstitutionSiteSectionStudent->Student->recursive = -1;
 						$newStudentList = $studentId == -1 ? array_keys($studentOptions) : array($studentId);
 						
+						if (count($newStudentList) > 1) {
+							$this->request->data['InstitutionSiteClassStudent'] = array();
+						}
 						foreach ($newStudentList as $studentId) {
 							if ($studentId == 0 || $studentId == -1) continue;
 
