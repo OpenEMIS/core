@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentContact extends StudentsAppModel {
+	public $useTable = 'user_contacts';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2'
 	);
 	
@@ -128,8 +129,8 @@ class StudentContact extends StudentsAppModel {
 	public function beforeAction() {
 		parent::beforeAction();
 
-		$this->fields['student_id']['type'] = 'hidden';
-		$this->fields['student_id']['value'] = $this->Session->read('Student.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Student.security_user_id');
 		$this->fields['preferred']['type'] = 'select';
 		$this->fields['preferred']['options'] = $this->controller->Option->get('yesno');
 
@@ -164,9 +165,9 @@ class StudentContact extends StudentsAppModel {
 	}
 
 	public function index($studentId = 0) {
-		$studentId = $this->Session->read('Student.id');
+		$securityUserId = $this->Session->read('Student.security_user_id');
 		$this->contain(array('ContactType'));
-		$data = $this->findAllByStudentId($studentId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$contactOptions = $this->ContactType->ContactOption->getOptions();
 		
 		$this->setVar(compact('data', 'contactOptions'));

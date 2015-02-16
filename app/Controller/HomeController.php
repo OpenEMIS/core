@@ -181,7 +181,7 @@ class HomeController extends AppController {
 				$tableName = str_ireplace('history','', $tableName);
 				$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
 				$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
-				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['su']['first_name'].' '.$vrec['su']['last_name'];
 				$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
 			}
 		}

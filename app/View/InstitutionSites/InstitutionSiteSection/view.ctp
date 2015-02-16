@@ -66,7 +66,7 @@ $this->start('contentBody');
 					if ($obj['status'] == 0) continue;
 				?>
 						<tr>
-							<td><?php echo $obj['Student']['identification_no'] ?></td>
+							<td><?php echo $obj['SecurityUser']['openemis_no'] ?></td>
 							<td><?php echo ModelHelper::getName($obj['Student']) ?></td>
 							<td><?php echo $obj['Student']['gender'] ?></td>
 							<td><?php echo $obj['Student']['date_of_birth'] ?></td>

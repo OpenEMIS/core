@@ -64,7 +64,7 @@ echo $this->Form->end();
 			$params = sprintf('%s/%s/%s/', $userId, $id, $name);
 			?>
 			<tr>
-				<td><?php echo $obj['identification_no']; ?></td>
+				<td><?php echo $obj['openemis_no']; ?></td>
 				<td><?php echo $obj['name']; ?></td>
 				<td><?php echo $obj['table_name']; ?></td>
 				<td>

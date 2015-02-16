@@ -144,7 +144,7 @@ class StaffController extends StaffAppController {
 			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$order = empty($this->params->named['sort']) ? array('Staff.first_name' => 'asc') : array();
+		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
 		$data = $this->Search->search($this->Staff, $conditions, $order);
 		$data = $this->Staff->attachLatestInstitutionInfo($data);
 		
@@ -243,13 +243,14 @@ class StaffController extends StaffAppController {
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
-		$this->Staff->recursive = 0;
+		$this->Staff->contain(array('SecurityUser'));
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
 		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);
+		$this->Session->write('Student.security_user_id', $obj['security_user_id']);
 		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
 		$this->set('data', $data);
@@ -280,8 +281,25 @@ class StaffController extends StaffAppController {
 			$this->Staff->set($data);
 			$addressAreaId = $this->request->data[$model]['address_area_id'];
 			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
+
+			if (array_key_exists($model, $data)) {
+				if (array_key_exists('birthplace_area_id', $data[$model])) {
+					if (!array_key_exists('SecurityUser', $data)) {
+						$data['SecurityUser'] = array();
+					}
+					$data['SecurityUser']['birthplace_area_id'] = $data[$model]['birthplace_area_id'];
+					unset($data[$model]['birthplace_area_id']);
+				}
+				if (array_key_exists('address_area_id', $data[$model])) {
+					if (!array_key_exists('SecurityUser', $data)) {
+						$data['SecurityUser'] = array();
+					}
+					$data['SecurityUser']['address_area_id'] = $data[$model]['address_area_id'];
+					unset($data[$model]['birthplace_area_id']);
+				}
+			}
 			
-			if ($this->Staff->validates() && $this->Staff->save()) {
+			if ($this->Staff->validates() && $this->Staff->saveAll($data)) {
 				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
 				$InstitutionSiteStaffModel->validator()->remove('search');
 				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
@@ -300,6 +318,7 @@ class StaffController extends StaffAppController {
 						}
 					}
 					
+					$this->Staff->contain(array('SecurityUser'));
 					$this->Session->write($model . '.data', $this->Staff->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
@@ -320,10 +339,11 @@ class StaffController extends StaffAppController {
 			}
 		} else {
 			if (!empty($id)) {
+				$this->Staff->contain(array('SecurityUser'));
 				$data = $this->Staff->findById($id);
 				$this->request->data = $data;
-				$addressAreaId = $this->request->data['Staff']['address_area_id'];
-				$birthplaceAreaId = $this->request->data['Staff']['birthplace_area_id'];
+				$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
+				$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
 			}
 		}
 		$genderOptions = $this->Option->get('gender');
@@ -364,6 +384,7 @@ class StaffController extends StaffAppController {
 			'conditions' => array('StaffHistory.staff_id' => $staffId),
 			'order' => array('StaffHistory.created' => 'desc')
 		));
+		$this->Staff->contain(array('SecurityUser'));
 		$data = $this->Staff->findById($staffId);
 		$data2 = array();
 		foreach ($historyData as $key => $arrVal) {

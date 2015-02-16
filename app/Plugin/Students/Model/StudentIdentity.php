@@ -15,14 +15,22 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentIdentity extends StudentsAppModel {
+	public $useTable = 'user_identities';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('issue_date', 'expiry_date')
 	);
 
 	public $belongsTo = array(
 		'Students.Student',
+		'Student' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+
 		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -87,16 +95,16 @@ class StudentIdentity extends StudentsAppModel {
 		}
 		$this->Navigation->addCrumb(__('Identities'));
 
-		$this->fields['student_id']['type'] = 'hidden';
-		$this->fields['student_id']['value'] = $this->Session->read('Student.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Student.security_user_id');
 		$this->fields['identity_type_id']['type'] = 'select';
 		$this->fields['identity_type_id']['options'] = $this->IdentityType->getList();
 	}
 
 	public function index() {
-		$studentId = $this->Session->read('Student.id');
+		$securityUserId = $this->Session->read('Student.security_user_id');
 		$this->contain(array('IdentityType' => array('id', 'name')));
-		$data = $this->findAllByStudentId($studentId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$this->setVar(compact('data'));
 	}
 }

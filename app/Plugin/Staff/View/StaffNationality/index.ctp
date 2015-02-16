@@ -24,7 +24,7 @@ $this->start('contentBody');
 			<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['Country']['name'], array('action' => $model, 'view', $obj[$model]['id'])) ?></td>
-					<td><?php echo $this->Utility->formatDate($obj[$model]['comments']) ?></td>
+					<td><?php echo $obj[$model]['comments'] ?></td>
 				</tr>
 			<?php endforeach ?>
 		</tbody>

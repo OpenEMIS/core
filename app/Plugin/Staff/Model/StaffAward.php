@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffAward extends StaffAppModel {
+	public $useTable = 'user_awards';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('issue_date')
 	);
@@ -57,8 +58,8 @@ class StaffAward extends StaffAppModel {
 		}
 		$this->Navigation->addCrumb(__('Special Needs'));
 
-		$this->fields['staff_id']['type'] = 'hidden';
-		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
 
 		$this->fields['award']['attr']['onfocus'] = 'jsForm.autocomplete(this)';
 		$this->fields['award']['attr']['autocompleteURL'] = $this->controller->name.'/'.$this->alias.'/autocompleteAward';
@@ -68,9 +69,9 @@ class StaffAward extends StaffAppModel {
 	}
 
 	public function index() {
-		$staffId = $this->Session->read('Staff.id');
+		$securityUserId = $this->Session->read('Staff.security_user_id');
 		$this->recursive = -1;
-		$data = $this->findAllByStaffId($staffId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$this->setVar(compact('data'));
 	}
 

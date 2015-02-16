@@ -381,10 +381,11 @@ class AssessmentItemResult extends AppModel {
 				$dataRow = array();
 
 				$StudentObj = $row['Student'];
+				$SecurityUserObj = $row['SecurityUser'];
 				$studentId = $StudentObj['id'];
-				$dataRow[] = $StudentObj['identification_no'];
-				$dataRow[] = $StudentObj['first_name'];
-				$dataRow[] = $StudentObj['last_name'];
+				$dataRow[] = $SecurityUserObj['openemis_no'];
+				$dataRow[] = $SecurityUserObj['first_name'];
+				$dataRow[] = $SecurityUserObj['last_name'];
 
 				foreach($subjectOptions as $subjectId => $subjectName){
 					if(isset($checkList[$classId][$studentId][$subjectId])){

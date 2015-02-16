@@ -59,7 +59,7 @@ class SecurityGroupUser extends AppModel {
 	public function getUsers($groupId) {
 		$roles = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),		
+			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),		
 			'joins' => array(
 				array(
 					'table' => 'security_roles',

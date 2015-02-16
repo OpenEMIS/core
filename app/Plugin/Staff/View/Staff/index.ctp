@@ -18,8 +18,8 @@ $model = 'Staff';
 	<table class="table table-striped table-hover table-bordered table-sortable">
 		<thead>
 			<tr>
-				<th><?php echo $this->Paginator->sort('identification_no', __('OpenEMIS ID')) ?></th>
-				<th><?php echo $this->Paginator->sort('first_name', __('Name')) ?></th>
+				<th><?php echo $this->Paginator->sort('SecurityUser.openemis_no', __('OpenEMIS ID')) ?></th>
+				<th><?php echo $this->Paginator->sort('SecurityUser.first_name', __('Name')) ?></th>
 				<th><?php echo $this->Paginator->sort('StaffIdentity.number', __($defaultIdentity['name'])) ?></th>
 				<th>School Name</th>
 				<th>Status</th>
@@ -30,8 +30,9 @@ $model = 'Staff';
 		<?php 
 			foreach ($data as $obj):
 				$id = $obj[$model]['id'];
-				$identificationNo = $this->Utility->highlight($search, $obj[$model]['identification_no']);
-				$name = $this->Utility->highlight($search, $this->Model->getName($obj[$model]));
+				$identificationNo = $this->Utility->highlight($search, $obj[
+					'SecurityUser']['openemis_no']);
+				$name = $this->Utility->highlight($search, $this->Model->getName($obj['SecurityUser']));
 				$name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
 				$identity = (isset($obj['StaffIdentity'])) ? $obj['StaffIdentity']['number'] : '';
 				$schoolName = (isset($obj['InstitutionSite'])) ? $obj['InstitutionSite']['name'] : '';

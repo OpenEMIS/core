@@ -212,16 +212,16 @@ class InstitutionSiteClass extends AppModel {
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'fields' => array(
-							'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
-							'Staff.third_name', 'Staff.last_name', 'Staff.gender', 'Staff.date_of_birth'
+							'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
+							'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
 						)
 					)
 				),
 				'InstitutionSiteClassStudent' => array(
 					'Student' => array(
 						'fields' => array(
-							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+							'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
+							'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
 						)
 					)
 				)
@@ -248,16 +248,16 @@ class InstitutionSiteClass extends AppModel {
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'fields' => array(
-							'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
-							'Staff.third_name', 'Staff.last_name', 'Staff.gender', 'Staff.date_of_birth'
+							'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
+							'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
 						)
 					)
 				),
 				'InstitutionSiteClassStudent' => array(
 					'Student' => array(
 						'fields' => array(
-							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+							'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
+							'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
 						)
 					)
 				)

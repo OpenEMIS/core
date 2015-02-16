@@ -29,7 +29,7 @@ class Staff extends StaffAppModel {
 			)
 		),
 		'CustomReport',
-		'DatePicker' => array('date_of_birth'),
+		'DatePicker' => array('SecurityUser.date_of_birth'),
 		'FileUpload' => array(
 			array(
 				'name' => 'photo_name',
@@ -41,14 +41,7 @@ class Staff extends StaffAppModel {
 	);
 
 	public $belongsTo = array(
-		'AddressArea' => array(
-			'className' => 'Area',
-			'foreignKey' => 'address_area_id'
-		),
-		'BirthplaceArea' => array(
-			'className' => 'Area',
-			'foreignKey' => 'birthplace_area_id'
-		)
+		'SecurityUser'
 	);
 
 	public $hasMany = array(
@@ -99,96 +92,6 @@ class Staff extends StaffAppModel {
 	);
 
 	public $validate = array(
-		'first_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid First Name'
-			),
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid First Name'
-			)
-		),
-		'middle_name' => array(
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Middle Name'
-			)
-		),
-
-		'third_name' => array(
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Third Name'
-			)
-		),
-		'last_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Last Name'
-			),
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Last Name'
-			)
-		),
-		'preferred_name' => array(
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Preferred Name'
-			)
-		),
-		'identification_no' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid OpenEMIS ID'
-			),
-			'ruleUnique' => array(
-        		'rule' => 'isUnique',
-        		'required' => true,
-        		'message' => 'Please enter a unique OpenEMIS ID'
-		    )
-		),
-		'email' => array(
-			'ruleRequired' => array(
-				'rule' => 'email',
-				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
-			)
-		),
-		'gender' => array(
-			'ruleRequired' => array(
-				'rule' => array('comparison', 'not equal', '0'),
-				'required' => true,
-				'message' => 'Please select a Gender'
-			)
-		),
-		'address' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Address'
-			)
-		),
-		'date_of_birth' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a Date of Birth'
-			),
-			'ruleCompare' => array(
-				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-				'required' => true,
-				'message' => 'Please select a Date of Birth'
-			),
-			'ruleCompare' => array(
-				'rule' => 'compareBirthDate',
-				'message' => 'Date of Birth cannot be future date'
-			)
-		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
@@ -197,12 +100,6 @@ class Staff extends StaffAppModel {
 			)
 		)
 	);
-
-	public function checkIfStringGotNoNumber($check) {
-		$check = array_values($check);
-		$check = $check[0];
-		return !preg_match('#[0-9]#',$check);
-	}
 
 	/* Excel Behaviour */
 	public function excelGetConditions() {
@@ -245,20 +142,9 @@ class Staff extends StaffAppModel {
 		return $models;
 	}
 	/* End Excel Behaviour */
-
-	public function compareBirthDate() {
-		if(!empty($this->data[$this->alias]['date_of_birth'])) {
-			$birthDate = $this->data[$this->alias]['date_of_birth'];
-			$birthTimestamp = strtotime($birthDate);
-			$todayDate=date("Y-m-d");
-			$todayTimestamp = strtotime($todayDate);
-
-			return $todayTimestamp >= $birthTimestamp;
-		}
-		return true;
-	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$extra['contain'] = array('SecurityUser');
 		return $this->getPaginate($conditions, $fields, $order, $limit, $page, $recursive, $extra);
 	}
 	
@@ -272,20 +158,27 @@ class Staff extends StaffAppModel {
 		
 		$conditions = array(
 			'OR' => array(
-				$this->alias . '.identification_no LIKE' => $search,
-				$this->alias . '.first_name LIKE' => $search,
-				$this->alias . '.middle_name LIKE' => $search,
-				$this->alias . '.third_name LIKE' => $search,
-				$this->alias . '.last_name LIKE' => $search
+				'openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search
 			)
 		);
 		$options = array(
 			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Staff.security_user_id')
+				)
+			),
 			'conditions' => $conditions,
-			'order' => array($this->alias . '.first_name')
+			'order' => array('SecurityUser.first_name')
 		);
 		
-		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'third_name', 'gender', 'identification_no', 'date_of_birth');
+		$options['fields'] = array('id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.gender', 'SecurityUser.openemis_no', 'SecurityUser.date_of_birth');
 		$data = $this->find('all', $options);
 		
 		return $data;
