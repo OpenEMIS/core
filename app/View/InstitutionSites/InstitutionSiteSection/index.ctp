@@ -16,7 +16,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo $this->Label->get('general.section') ?></th>
+				<th><?php echo $this->Label->get('InstitutionSiteSection.name') ?></th>
 				<th><?php echo $this->Label->get('InstitutionSiteSection.staff_id'); ?></th>
 				<th><?php echo $this->Label->get('general.male_students'); ?></th>
 				<th><?php echo $this->Label->get('general.female_students'); ?></th>
@@ -32,7 +32,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 					<td class="cell-number"><?php echo !empty($obj[$model]['gender']['M']) ? $obj[$model]['gender']['M'] : 0; ?></td>
 					<td class="cell-number"><?php echo !empty($obj[$model]['gender']['F']) ? $obj[$model]['gender']['F'] : 0; ?></td>
 					<td class="cell-number">
-						<?php echo $this->Html->link($obj[$model]['classes'], array('action' => 'InstitutionSiteClass', 'index', $obj[$model]['id']), array('escape' => false)); ?>
+						<?php echo $this->Html->link($obj[$model]['classes'], array('action' => 'InstitutionSiteClass', 'index', $selectedPeriod, $obj[$model]['id']), array('escape' => false)); ?>
 					</td>
 				</tr>
 			<?php endforeach ?>

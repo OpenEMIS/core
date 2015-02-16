@@ -80,13 +80,11 @@ class AppController extends Controller {
 		$path = 'webroot/version';
 		
 		$version = '';
-		if ($this->Session->check('System.version')) {
+		if(file_exists(APP.$path)) {
+			$version = file_get_contents(APP.$path);
+			$this->Session->write('System.version', $version);
+		}elseif ($this->Session->check('System.version')) {
 			$version = $this->Session->read('System.version');
-		} else {
-			if(file_exists(APP.$path)) {
-				$version = file_get_contents(APP.$path);
-				$this->Session->write('System.version', $version);
-			}
 		}
 		return $version;
 	}

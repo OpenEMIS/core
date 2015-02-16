@@ -60,6 +60,7 @@ class Student extends StudentsAppModel {
 		'Students.StudentFee',
 		'InstitutionSiteStudent',
 		'InstitutionSiteClassStudent',
+		'InstitutionSiteSectionStudent',
 		'InstitutionSiteStudentFee',
 		'Students.StudentHealth',
 		'Students.StudentHealthHistory',

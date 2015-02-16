@@ -84,6 +84,57 @@ class SecurityGroup extends AppModel {
 		$params = $this->controller->params;
 		$index = $params->query['index'];
 		$exclude = isset($params->query['exclude']) ? $params->query['exclude'] : array();
+
+		$conditions = array();
+		if($type == 0 || $type == 1) {
+			$authUserId = $this->Session->read('Auth.User.id');
+			$superAdmin = $this->SecurityGroupUser->SecurityUser->field('super_admin', array('SecurityUser.id' => $authUserId));
+			if($superAdmin) {
+			} else {
+				$this->SecurityGroupArea->contain();
+				$securityGroupAreas = $this->SecurityGroupArea->find('all', array(
+					'fields' => array(
+						'SecurityGroupArea.area_id'
+					),
+					'joins' => array(
+						array(
+							'table' => 'security_group_users',
+							'alias' => 'SecurityGroupUser',
+							'conditions' => array(
+								'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id',
+								'SecurityGroupUser.security_user_id' => $authUserId
+							)
+						)
+					),
+					'group' => array(
+						'SecurityGroupUser.security_user_id', 'SecurityGroupArea.area_id'
+					)
+				));
+
+				$Area = ClassRegistry::init('Area');
+				$Area->contain();
+				if(empty($securityGroupAreas)) {
+					$areaId = $Area->field('lft', array('Area.parent_id' => -1));
+					$left = $Area->field('lft', array('Area.id' => $areaId));
+					$right = $Area->field('rght', array('Area.id' => $areaId));
+					$conditions['AND']['OR'][] = array(
+						'Area.lft <' => $left,
+						'Area.rght >' => $right,
+					);
+				} else {
+					foreach ($securityGroupAreas as $key => $obj) {
+						$areaId = $obj['SecurityGroupArea']['area_id'];
+						$left = $Area->field('lft', array('Area.id' => $areaId));
+						$right = $Area->field('rght', array('Area.id' => $areaId));
+						$tmp[$areaId] = $left . ' - ' . $right;
+						$conditions['AND']['OR'][] = array(
+							'Area.lft >=' => $left,
+							'Area.rght <=' => $right,
+						);
+					}
+				}
+			}
+		}
 		
 		$models = array(
 			array('SecurityGroupArea', 'area_id'),
@@ -93,6 +144,7 @@ class SecurityGroup extends AppModel {
 		
 		$attr = $models[$type];
 		$this->Session->write($this->alias.'.autocomplete.exclude.'.$attr[0], $exclude);
+		$this->Session->write($this->alias.'.autocomplete.conditions.'.$attr[0], $conditions);
 		
 		if ($attr[0] == 'SecurityGroupUser') {
 			$groupIds = array(-1, 0);
@@ -114,7 +166,11 @@ class SecurityGroup extends AppModel {
 		if ($this->Session->check($this->alias.'.autocomplete.exclude.'.$model)) {
 			$exclude = $this->Session->read($this->alias.'.autocomplete.exclude.'.$model);
 		}
-		$data = $this->{$model}->autocomplete($search, $exclude);
+		$conditions = array();
+		if ($this->Session->check($this->alias.'.autocomplete.conditions.'.$model)) {
+			$conditions = $this->Session->read($this->alias.'.autocomplete.conditions.'.$model);
+		}
+		$data = $this->{$model}->autocomplete($search, $exclude, $conditions);
 		return json_encode($data);
 	}
 

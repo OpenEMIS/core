@@ -204,5 +204,99 @@ class AreaHandlerComponent extends Component {
 
         return $colInfo;
     }
+
+    public function getChildren($params=array()){
+        if(isset($params['model'])){
+            $model = $params['model'];
+        } else {
+            $model = 'Area';
+        }
+        if(isset($params['parentId'])){
+            $parentId = $params['parentId'];
+        } else {
+            $parentId = null;
+        }
+        if(isset($params['dataType'])){
+            $dataType = $params['dataType'];
+        } else {
+            $dataType = -1;
+        }
+
+        // original search
+        $allAreas = $this->{$model}->find($dataType, array(
+                    'conditions' => array(
+                        $model.'.parent_id' => $parentId,
+                        $model.'.visible' => 1
+                    ),
+                    'order' => array($model.'.order')
+                ));
+
+        if($model=='Area'){
+            $userAreas = $this->getUserAreas(array('getWithParents' => true));
+            $options = array();
+            $parentAreaIsAuthorise = false;
+            if(count($userAreas)>0){
+                foreach($userAreas as $ua) {
+                    if($ua['area_parent_id']==$parentId) {
+                        if($dataType=='all'){
+                            $options[$ua['area_id']] = array(
+                                'Area'=>array(
+                                    'id'=>$ua['area_id'],
+                                    'name'=>$ua['area_name'],
+                                ),
+                                'AreaLevel'=>array(
+                                    'id'=>$ua['area_level_id'],
+                                    'name'=>$ua['area_level_name'],
+                                ),
+                            );
+                        } else {
+                            $options[$ua['area_id']] = $ua['area_name'];
+                        }
+                    }
+                    if($ua['area_id']==$parentId && !isset($ua['id'])) {
+                        $parentAreaIsAuthorise = true;
+                    }
+                }               
+            }
+            if($parentAreaIsAuthorise){
+                return $allAreas;
+            } else {
+               return $options;
+            }
+        }else{
+            return $allAreas;
+        }
+    }
+
+    public function getDefaultAreaId($model){
+        $areaId = null;
+        if($model=='Area'){
+            $userAreas = $this->getUserAreas(array('getWithParents' => false));
+            if(count($userAreas)>0){
+                foreach($userAreas as $ua){
+                    $areaId = !$areaId ? $ua['area_id'] : (($ua['area_id']<$areaId) ? $ua['area_id'] : $areaId);
+                }
+            }
+        }
+        return $areaId;
+    }
+
+    protected function getUserAreas($params=array()){
+        //$params = array('parentId' => -1, 'getWithParents' => true);
+        
+        $SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+        $SecurityGroupArea = ClassRegistry::init('SecurityGroupArea');
+        if(AuthComponent::user('id')){
+            $userId = AuthComponent::user('id');
+        }else{
+            $userId = 0;
+        }
+        $groupId = $SecurityGroupUser->getGroupIdsByUserId($userId);
+        if(isset($params['getWithParents']) && $params['getWithParents']){
+            return $SecurityGroupArea->getAreasWithParents($groupId);
+        } else {
+            return $SecurityGroupArea->getAreas($groupId);
+        }
+    }
 }
 ?>

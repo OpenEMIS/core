@@ -62,6 +62,7 @@ class LabelHelper extends AppHelper {
 			'school_year' => 'School Year',
 			'location' => 'Location',
 			'grade' => 'Grade',
+			'grades' => 'Grades',
 			'history' => 'History',
 			'profile_image' => 'Profile Image',
 			'openemisId' =>'OpenEMIS ID',
@@ -171,12 +172,14 @@ class LabelHelper extends AppHelper {
 		'EducationGrade' => array(
 			'title' => 'Education Grades',
 			'name' => 'Education Grade',
-			'education_programme_id' => 'Education Programme'
+			'education_programme_id' => 'Education Programme',
+			'add_subject' => 'Add Subject'
 		),
 		'EducationSubject' => array(
 			'title' => 'Education Subjects',
 			'name' => 'Subject Name',
-			'code' => 'Subject Code'
+			'code' => 'Subject Code',
+			'number_of_subjects' => 'Number Of Subjects',
 		),
 		'EducationGradeSubject' => array(
 			'title' => 'Education Grades - Subjects',
@@ -209,7 +212,9 @@ class LabelHelper extends AppHelper {
 			'id_name' => 'ID / Name'
 		),
 		'InstitutionSiteProgramme' => array(
-			'title' => 'Programmes'
+			'title' => 'Programmes',
+			'education_level_id' => 'Education Levels',
+			'education_programme_id' => 'Education Programmes'
 		),
 		'InstitutionSiteClass' => array(
 			'name' => 'Class Name',
@@ -218,7 +223,8 @@ class LabelHelper extends AppHelper {
 			'education_subject_id' => 'Education Subject',
 			'academic_period_id' => 'Academic Period',
 			'add_staff' => 'Add Staff',
-			'add_student' => 'Add Student'
+			'add_student' => 'Add Student',
+			'add_all_student' => 'Add All Students',
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -350,7 +356,10 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
-			'education_programme_id' => 'Programme'
+			'education_programme_id' => 'Programme',
+			'institution_site_section_id' => 'Section',
+			'education_grade_id' => 'Grade',
+			'student_category_id' => 'Category'
 		),
 		'InstitutionSiteStaff' => array(
 			'staff_status_id' => 'Status',
@@ -454,7 +463,8 @@ class LabelHelper extends AppHelper {
 			'ara' => 'Arabic'
 		),
 		'Autocomplete' => array(
-			'no_result' => 'No records matched.'
+			'no_result' => 'No existing record.',
+			'has_result' => 'No existing record?'
 		),
 		'Datawarehouse' => array(
 			'indicator' => 'Indicator',

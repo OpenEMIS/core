@@ -84,17 +84,13 @@ class SearchBehavior extends ModelBehavior {
 			$joins[] = array(
 				'table' => 'institution_site_programmes',
 				'alias' => 'InstitutionSiteProgramme',
-				'conditions' => array('InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id')
+				'conditions' => array(
+					'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id',
+					'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id'
+				)
 			);
-			$obj = 'InstitutionSiteProgramme';
-		} /*else if($class==='Teacher') { // joins for Teachers
-			$joins[] = array(
-				'table' => 'institution_site_teachers',
-				'alias' => 'InstitutionSiteTeacher',
-				'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
-			);
-			$obj = 'InstitutionSiteTeacher';
-		} */else if($class==='Staff') { // joins for Staff
+			$obj = 'InstitutionSiteStudent';
+		} else if($class==='Staff') { // joins for Staff
 			$joins[] = array(
 				'table' => 'institution_site_staff',
 				'alias' => 'InstitutionSiteStaff',
