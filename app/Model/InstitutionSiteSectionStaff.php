@@ -47,9 +47,9 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'DISTINCT Staff.identification_no',
-				'Staff.first_name', 'Staff.last_name',
-				'Staff.middle_name', 'Staff.third_name'
+				'DISTINCT SecurityUser.openemis_no',
+				'SecurityUser.first_name', 'SecurityUser.last_name',
+				'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
 			'joins' => array(
 				array(
@@ -62,7 +62,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 				'InstitutionSiteSectionStaff.institution_site_section_id' => $id,
 				'InstitutionSiteSectionStaff.status' => 1
 			),
-			'order' => array('Staff.first_name ASC')
+			'order' => array('SecurityUser.first_name ASC')
 		));
 		if(empty($data)) {
 			$this->Message->alert('general.noData');
@@ -76,7 +76,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$data = $this->Staff->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.third_name', 'Staff.identification_no',
+					'Staff.id', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.last_name', 'SecurityUser.third_name', 'SecurityUser.openemis_no',
 					'InstitutionSiteSectionStaff.id', 'InstitutionSiteSectionStaff.status', 'InstitutionSiteSection.id'
 				),
 				'joins' => array(
@@ -146,10 +146,10 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => 0,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
 			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 
 		if ($mode == 'list') {
@@ -168,7 +168,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
 			'joins' => array(
 				array(
@@ -185,12 +185,12 @@ class InstitutionSiteSectionStaff extends AppModel {
 					'conditions' => array('Staff.id = InstitutionSiteSectionStaff.staff_id')
 				),
 			),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		$list = array();
 		foreach ($data as $obj) {
 			$id = $obj['Staff']['id'];
-			$teacherName = $obj['Staff']['first_name'] . ' ' . $obj['Staff']['middle_name'] . ' ' . $obj['Staff']['third_name'] . ' ' . $obj['Staff']['last_name'];
+			$teacherName = $obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['middle_name'] . ' ' . $obj['SecurityUser']['third_name'] . ' ' . $obj['SecurityUser']['last_name'];
 			$list[$id] = ModelHelper::getName($obj['Staff']);
 		}
 		return $list;
@@ -200,7 +200,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSiteSection')));
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
 			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $classId, 'AcademicPeriod.id' => $academicPeriodId),
 			'joins' => array(
@@ -226,7 +226,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 					)
 				)
 			),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		$this->bindModel(array('belongsTo' => array('InstitutionSiteSection')));
 		if ($mode == 'list') {

@@ -25,7 +25,7 @@ $this->start('contentBody');
 		<tbody>
 			<?php 
 			foreach ($data as $obj) :
-				$idNo = $obj['Staff']['identification_no'];
+				$idNo = $obj['SecurityUser']['openemis_no'];
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => $model, 'index', $obj['Staff']['id'])) ?></td>

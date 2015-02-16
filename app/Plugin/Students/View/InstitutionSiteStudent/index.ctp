@@ -63,8 +63,8 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 	<table class="table table-striped table-hover table-bordered table-sortable">
 		<thead>
 			<tr>
-				<th><?php echo $this->Paginator->sort('Student.identification_no', __('OpenEMIS ID')) ?></th>
-				<th><?php echo $this->Paginator->sort('Student.first_name', __('Name')) ?></th>
+				<th><?php echo $this->Paginator->sort('SecurityUser.openemis_no', __('OpenEMIS ID')) ?></th>
+				<th><?php echo $this->Paginator->sort('SecurityUser.first_name', __('Name')) ?></th>
 				<th><?php echo $this->Paginator->sort('StudentIdentity.number', __($defaultIdentity['name'])) ?></th>
 				<th class="section-info">
 					<span>Programme</span>
@@ -79,13 +79,13 @@ echo $this->element('layout/search', array('model' => $model, 'placeholder' => '
 		<?php 
 			foreach ($data as $obj):
 				$id = $obj['Student']['id'];
-				$identificationNo = $this->Utility->highlight($search, $obj['Student']['identification_no']);
-	            $name = $this->Utility->highlight($search, $this->Model->getNameWithHistory($obj['Student']));
+				$openemisNo = $this->Utility->highlight($search, $obj['SecurityUser']['openemis_no']);
+	            $name = $this->Utility->highlight($search, $this->Model->getNameWithHistory($obj['SecurityUser']));
 	            $name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
 				$identity = (isset($obj['StudentIdentity'])) ? $obj['StudentIdentity']['number'] : '';
 		?>
 			<tr>
-				<td><?php echo $identificationNo; ?></td>
+				<td><?php echo $openemisNo; ?></td>
 				<td><?php echo $name; ?></td>
 				<td><?php echo $identity; ?></td>
 				<td class="section-info">

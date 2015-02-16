@@ -25,7 +25,7 @@ echo $this->element('../InstitutionSites/StudentBehaviour/controls');
 		<tbody>
 			<?php 
 			foreach ($data as $obj) : 
-				$idNo = $obj['Student']['identification_no'];
+				$idNo = $obj['SecurityUser']['openemis_no'];
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => $model, 'index', $obj['Student']['id'])) ?></td>

@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffComment extends StaffAppModel {
+	public $useTable = 'user_comments';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('comment_date')
 	);
@@ -61,14 +62,14 @@ class StaffComment extends StaffAppModel {
 		$this->Navigation->addCrumb(__('Comments'));
 		$this->setVar('contentHeader', __('Comments'));
 
-		$this->fields['staff_id']['type'] = 'hidden';
-		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
 	}
 	
 	public function index() {
-		$staffId = $this->Session->read('Staff.id');
+		$securityUserId = $this->Session->read('Staff.security_user_id');
 		$this->recursive = -1;
-		$data = $this->findAllByStaffId($staffId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$this->setVar(compact('data'));
 	}
 }

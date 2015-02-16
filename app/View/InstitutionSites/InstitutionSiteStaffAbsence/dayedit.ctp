@@ -39,7 +39,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 				echo $this->Form->hidden($model . '.' . $count . '.staff_id', array('value' => $staffId));
 				?>
 				<tr>
-					<td><?php echo $staffObj['identification_no']; ?></td>
+					<td><?php echo $staffObj['openemis_no']; ?></td>
 					<td><?php echo $staffName; ?></td>
 					<?php
 					$absenceType = 0;

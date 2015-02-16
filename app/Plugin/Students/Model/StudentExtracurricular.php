@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StudentExtracurricular extends StudentsAppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction', 'DatePicker' => array('start_date', 'end_date')
 	);
 	public $belongsTo = array(

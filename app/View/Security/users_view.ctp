@@ -48,7 +48,7 @@ $this->start('contentBody');
 	<legend><?php echo __('General'); ?></legend>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Identification No'); ?></div>
-		<div class="col-md-4"><?php echo $data['identification_no']; ?></div>
+		<div class="col-md-4"><?php echo $data['openemis_no']; ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('First Name'); ?></div>
@@ -110,7 +110,7 @@ $this->start('contentBody');
 		<tbody class="table_body">
 			<?php foreach($data['access'] as $obj) { ?>
 				<tr class="table_row">
-					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['identification_no']; ?></td>
+					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['openemis_no']; ?></td>
 					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['name']; ?></td>
 					<td class="table_cell"><?php echo $obj['SecurityUserAccess']['table_name']; ?></td>
 				</tr>

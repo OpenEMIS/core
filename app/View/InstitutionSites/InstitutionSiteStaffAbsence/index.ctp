@@ -43,7 +43,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						$staffName = $this->Model->getName($staffObj);
 						?>
 						<tr>
-							<td><?php echo $staffObj['identification_no']; ?></td>
+							<td><?php echo $staffObj['openemis_no']; ?></td>
 							<td><?php echo $staffName; ?></td>
 							<?php
 							foreach ($weekDayIndex as $index):

@@ -33,7 +33,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 				$staffName = $this->Model->getName($staffObj);
 				?>
 				<tr>
-					<td><?php echo $staffObj['identification_no']; ?></td>
+					<td><?php echo $staffObj['openemis_no']; ?></td>
 					<td><?php echo $staffName; ?></td>
 					<?php
 					if (isset($absenceCheckList[$staffId][$selectedDateDigit])) {

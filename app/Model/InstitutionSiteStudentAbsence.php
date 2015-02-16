@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudentAbsence extends AppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		),
@@ -722,11 +722,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					'InstitutionSiteStudentAbsence.start_time_absent', 
 					'InstitutionSiteStudentAbsence.end_time_absent', 
 					'Student.id',
-					'Student.identification_no',
-					'Student.first_name',
-					'Student.middle_name',
-					'Student.third_name',
-					'Student.last_name',
+					'SecurityUser.openemis_no',
+					'SecurityUser.first_name',
+					'SecurityUser.middle_name',
+					'SecurityUser.third_name',
+					'SecurityUser.last_name',
 					'StudentAbsenceReason.id',
 					'StudentAbsenceReason.name'
 				),
@@ -930,11 +930,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				'InstitutionSiteStudentAbsence.start_time_absent', 
 				'InstitutionSiteStudentAbsence.end_time_absent', 
 				
-				'Student.identification_no',
-				'Student.first_name',
-				'Student.middle_name',
-				'Student.third_name',
-				'Student.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Student.preferred_name',
 				
 				'InstitutionSiteStudentAbsence.absence_type', 
@@ -942,7 +942,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				'InstitutionSiteStudentAbsence.comment'
 			);
 
-			$options['order'] = array('AcademicPeriod.name', 'InstitutionSiteStudentAbsence.first_date_absent', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name');
+			$options['order'] = array('AcademicPeriod.name', 'InstitutionSiteStudentAbsence.first_date_absent', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name');
 			//$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
 			
 			$options['joins'] = array(
@@ -985,7 +985,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				$tempRow[] = $absence['start_time_absent'];
 				$tempRow[] = $absence['end_time_absent'];
 				
-				$tempRow[] = $student['identification_no'];
+				$tempRow[] = $student['openemis_no'];
 				$tempRow[] = $student['first_name'];
 				$tempRow[] = $student['middle_name'];
 				$tempRow[] = $student['third_name'];

@@ -63,7 +63,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						?>
 						<tr>
 							<td><?php echo $dateStr; ?></td>
-							<td><?php echo $this->Html->link($arrItems['Staff']['identification_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
+							<td><?php echo $this->Html->link($arrItems['SecurityUser']['openemis_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
 
 							<td><?php echo $staffName; ?></td>
 							<td><?php echo $arrItems['InstitutionSiteStaffAbsence']['absence_type']; ?></td>

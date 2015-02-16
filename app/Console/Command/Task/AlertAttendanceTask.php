@@ -1,3 +1,4 @@
+
 <?php
 
 /*
@@ -85,7 +86,7 @@ class AlertAttendanceTask extends AlertTask {
 			$this->log('data:', 'alert_processes');
 			$this->log($data, 'alert_processes');
 			
-			$studentData = $this->Student->findById($studentId, array('Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name'));
+			$studentData = $this->Student->findById($studentId, array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'));
 			
 			$this->log('studentData:', 'alert_processes');
 			$this->log($studentData, 'alert_processes');
@@ -103,7 +104,7 @@ class AlertAttendanceTask extends AlertTask {
 					$this->AlertLog->create();
 					
 					$message .= '<p>' . __('Student') . ': ';
-					$message .= ModelHelper::getName($student) . ' (' . $student['identification_no'] . ')';
+					$message .= ModelHelper::getName($student) . ' (' . $student['openemis_no'] . ')';
 					$message .= '<br/>' . __('Institution') . ': ';
 					$message .= $InstitutionSite['name'] . ' (' . $InstitutionSite['code'] . ')';
 					$message .= '</p>';
@@ -203,7 +204,7 @@ class AlertAttendanceTask extends AlertTask {
 		if(!empty($roleIds) && !empty($studentIds)){
 			$data = $this->SecurityRole->find('all', array(
 				'recursive' => -1,
-				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'Student.identification_no', 'Student.first_name', 'Student.last_name'),
+				'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.email', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),
 				'joins' => array(
 					array(
 						'table' => 'security_groups',

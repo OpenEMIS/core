@@ -15,8 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffSpecialNeed extends StaffAppModel {
+	public $useTable = 'user_special_needs';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('special_need_date')
 	);
@@ -51,16 +52,16 @@ class StaffSpecialNeed extends StaffAppModel {
 		}
 		$this->Navigation->addCrumb(__('Special Needs'));
 
-		$this->fields['staff_id']['type'] = 'hidden';
-		$this->fields['staff_id']['value'] = $this->Session->read('Staff.id');
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
 		$this->fields['special_need_type_id']['type'] = 'select';
 		$this->fields['special_need_type_id']['options'] = $this->SpecialNeedType->getList();
 	}
 
 	public function index() {
-		$staffId = $this->Session->read('Staff.id');
+		$securityUserId = $this->Session->read('Staff.security_user_id');
 		$this->contain(array('SpecialNeedType' => array('id', 'name')));
-		$data = $this->findAllByStaffId($staffId);
+		$data = $this->findAllBySecurityUserId($securityUserId);
 		$this->setVar(compact('data'));
 	}
 }

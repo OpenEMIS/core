@@ -625,11 +625,11 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'InstitutionSiteStaffAbsence.start_time_absent', 
 				'InstitutionSiteStaffAbsence.end_time_absent', 
 				'Staff.id',
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Staff.preferred_name',
 				'StaffAbsenceReason.id',
 				'StaffAbsenceReason.name'
@@ -762,11 +762,11 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'InstitutionSiteStaffAbsence.staff_id',
 				'InstitutionSiteStaffAbsence.staff_absence_reason_id', 
 				'Staff.id',
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Staff.preferred_name',
 				'StaffAbsenceReason.name',
 				'CreatedUser.*', 
@@ -852,18 +852,18 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'InstitutionSiteStaffAbsence.start_time_absent', 
 				'InstitutionSiteStaffAbsence.end_time_absent', 
 				
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Staff.preferred_name',
 				
 				'InstitutionSiteStaffAbsence.absence_type', 
 				'StaffAbsenceReason.name',
 				'InstitutionSiteStaffAbsence.comment'
 			);
-			$options['order'] = array('InstitutionSiteStaffAbsence.first_date_absent', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name');
+			$options['order'] = array('InstitutionSiteStaffAbsence.first_date_absent', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name');
 			$options['conditions'] = array('InstitutionSiteStaffAbsence.institution_site_id' => $institutionSiteId);
 			
 			$this->unbindModel(array('belongsTo' => array('InstitutionSite', 'ModifiedUser', 'CreatedUser')));
@@ -884,7 +884,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				$tempRow[] = $absence['start_time_absent'];
 				$tempRow[] = $absence['end_time_absent'];
 				
-				$tempRow[] = $staff['identification_no'];
+				$tempRow[] = $staff['openemis_no'];
 				$tempRow[] = $staff['first_name'];
 				$tempRow[] = $staff['middle_name'];
 				$tempRow[] = $staff['third_name'];

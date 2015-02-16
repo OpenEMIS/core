@@ -18,7 +18,7 @@ class StaffBehaviour extends StaffAppModel {
 	public $useTable = 'staff_behaviours';
 	
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('date_of_behaviour'),
 		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
@@ -128,7 +128,7 @@ class StaffBehaviour extends StaffAppModel {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
 		$this->InstitutionSiteStaff->contain(array(
-			'Staff' => array('fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name')),
+			'Staff' => array('fields' => array('Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name')),
 			'StaffType' => array('fields' => array('StaffType.name')),
 			'StaffStatus' => array('fields' => array('StaffStatus.name'))
 		));
