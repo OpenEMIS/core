@@ -183,7 +183,6 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
-
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
@@ -242,6 +241,7 @@ class InstitutionSiteClass extends AppModel {
 			$contain = array(
 				'AcademicPeriod',
 				'EducationSubject',
+				'InstitutionSiteSectionClass',
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'fields' => array(
@@ -260,7 +260,7 @@ class InstitutionSiteClass extends AppModel {
 				)
 			);
 			$this->contain($contain);
-			$data = $this->findById($id);//pr($data);
+			$data = $this->findById($id);
 			$contentHeader = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($contentHeader);
 			
@@ -300,10 +300,11 @@ class InstitutionSiteClass extends AppModel {
 				'fields' => array('id', 'InstitutionSiteSectionClass.institution_site_section_id'), 
 				'conditions' => array('InstitutionSiteSectionClass.institution_site_class_id' => $id)
 			));
-
+			$selectedSectionId = isset($data['InstitutionSiteSectionClass'][0]) ? $data['InstitutionSiteSectionClass'][0]['institution_site_section_id'] : key($sectionIds) ;
+			
 			// retrieve all the students linked to the sections
 			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
+			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions($selectedSectionId);
 
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
@@ -323,6 +324,7 @@ class InstitutionSiteClass extends AppModel {
 							$newRow = array(
 								'student_id' => $studentId,
 								'student_category_id' => 0,
+								'institution_site_section_id' => $selectedSectionId,
 								'status' => 1,
 								'Student' => $studentObj['Student']
 							);
@@ -367,7 +369,8 @@ class InstitutionSiteClass extends AppModel {
 					);
 					$this->InstitutionSiteClassStudent->updateAll(
 						array('InstitutionSiteClassStudent.status' => 0),
-						array('InstitutionSiteClassStudent.institution_site_class_id' => $id)
+						array('InstitutionSiteClassStudent.institution_site_class_id' => $id),
+						array('InstitutionSiteClassStudent.institution_site_section_id' => $selectedSectionId)
 					);
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
@@ -402,7 +405,7 @@ class InstitutionSiteClass extends AppModel {
 			}
 			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
 
-			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions'));
+			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions', 'selectedSectionId'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias));
