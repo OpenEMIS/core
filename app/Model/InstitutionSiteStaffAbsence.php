@@ -145,7 +145,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
 				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 				
-				if($todayDate >= $academicPeriodObj['AcademicPeriod']['start_date'] && $todayDate <= $academicPeriodObj['AcademicPeriod']['end_date']){
+				if(strtotime($todayDate) >= strtotime($startDate) && strtotime($todayDate) <= strtotime($endDate)){
 					$dataStartDate = $todayDateFormatted;
 					$dataEndDate = $todayDateFormatted;
 				}else{
