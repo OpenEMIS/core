@@ -4,7 +4,7 @@ class ControllerActionComponent extends Component {
 	private $model = null;
 	private $triggerFrom = 'Controller';
 	private $currentAction;
-	private $defaultActions = array('add', 'view', 'edit', 'delete');
+	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove');
 	public $autoRender = true;
 
 	public $components = array('Session', 'Message');
@@ -27,14 +27,6 @@ class ControllerActionComponent extends Component {
 			if (in_array($action, $this->defaultActions)) { // default actions
 				$this->currentAction = $controller->request->params['action'];
 				$controller->request->params['action'] = 'ComponentAction';
-				call_user_func_array(array($this, $action), $controller->params->pass);
-				if ($this->autoRender) {
-					$page = $action;
-					if ($action == 'add') {
-						$page = 'edit';
-					}
-					$controller->render('../Elements/templates/' . $page);
-				}
 			} else { // check if it's a model action
 				foreach ($controller->uses as $model) {
 					$split = explode('.', $model);
@@ -60,12 +52,28 @@ class ControllerActionComponent extends Component {
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public function beforeRender(Controller $controller) {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
-			uasort($this->model->fields, array($this, 'sortFields'));
 			$controller->request->params['action'] = $this->currentAction;
+			uasort($this->model->fields, array($this, 'sortFields'));
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
-
 		}
+	}
+
+	public function processAction() {
+		$paramsPass = $this->controller->params->pass;
+		$result = call_user_func_array(array($this, $this->currentAction), $paramsPass);
+
+		if ($this->autoRender) {
+			$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
+			$this->controller->render('../Elements/ControllerAction/' . $view . '_template');
+		}
+	}
+
+	public function index() {
+		$model = $this->model;
+		$model->contain();
+		$data = $model->find('all');
+		$this->controller->set('data', $data);
 	}
 
 	public function view($id=0) {
@@ -81,6 +89,30 @@ class ControllerActionComponent extends Component {
 				$action = get_class($model);
 			}
 			return $this->controller->redirect(array('action' => $action));
+		}
+	}
+
+	public function add() {
+		$model = $this->model;
+		if ($this->controller->request->is(array('post', 'put'))) {
+			$model->create();
+			if ($model->saveAll($this->controller->request->data)) {
+				$this->Message->alert('general.add.success');
+				$pass = $this->controller->params->pass;
+				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
+
+				$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
+				if ($this->triggerFrom == 'Model') {
+					unset($pass[0]);
+					$action = array('action' => get_class($model));
+					$action[] = isset($params['back']) ? $params['back'] : 'index';
+				}
+				$action = array_merge($action, $pass);
+				return $this->controller->redirect($action);
+			} else {
+				$this->log($model->validationErrors, 'debug');
+				$this->Message->alert('general.add.failed');
+			}
 		}
 	}
 
@@ -116,6 +148,32 @@ class ControllerActionComponent extends Component {
 				$action = get_class($model);
 			}
 			return $this->controller->redirect(array('action' => $action));
+		}
+	}
+
+	public function remove() {
+		$model = $this->model;
+		if ($this->Session->check($model->alias . '.id')) {
+			$id = $this->Session->read($model->alias . '.id');
+			if($model->delete($id)) {
+				$this->Message->alert('general.delete.success');
+			} else {
+				$this->log($model->validationErrors, 'debug');
+				$this->Message->alert('general.delete.failed');
+			}
+			$this->Session->delete($model->alias . '.id');
+			$pass = $this->controller->params->pass;
+			$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
+
+			$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
+			if ($this->triggerFrom == 'Model') {
+				unset($pass[0]);
+				$action = array('action' => get_class($model));
+				$action[] = isset($params['back']) ? $params['back'] : 'index';
+			}
+			
+			$action = array_merge($action, $pass);
+			return $this->controller->redirect($action);
 		}
 	}
 
