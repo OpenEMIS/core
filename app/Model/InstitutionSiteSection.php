@@ -35,9 +35,15 @@ class InstitutionSiteSection extends AppModel {
 		)
 	);
 	public $hasMany = array(
-		'InstitutionSiteSectionClass',
-		'InstitutionSiteSectionStudent',
-		'InstitutionSiteSectionGrade'
+		'InstitutionSiteSectionClass' => array(
+			'dependent' => true // for cascade deletes
+		),
+		'InstitutionSiteSectionStudent' => array(
+			'dependent' => true // for cascade deletes
+		),
+		'InstitutionSiteSectionGrade' => array(
+			'dependent' => true // for cascade deletes
+		)
 	);
 	
 	public $validate = array(
@@ -415,16 +421,6 @@ class InstitutionSiteSection extends AppModel {
 			}
 		}
 		return $studentOptions;		
-	}
-
-	public function remove() {
-		$this->autoRender = false;
-		$id = $this->Session->read($this->alias.'.id');
-		$obj = $this->findById($id);
-
-		$this->delete($id);
-		$this->Message->alert('general.delete.success');
-		$this->redirect(array('action' => $this->alias, 'index', $obj[$this->alias]['academic_period_id']));
 	}
 
 	public function getGradeOptions($sectionId) {
