@@ -18,7 +18,8 @@ class StaffCustomField extends StaffAppModel {
 	public $actsAs = array(
 		'CustomField' => array('module' => 'Staff'),
 		'FieldOption',
-		'ControllerAction'
+		'ControllerAction',
+		'Excel'
 	);
 	
 	public $belongsTo = array(
@@ -43,6 +44,11 @@ class StaffCustomField extends StaffAppModel {
 		parent::beforeAction($controller, $params);
 		$controller->Navigation->addCrumb('More');
 		$controller->set('header', __('More'));
+	}
+	
+	public function excelCustomFieldFindOptions($options) {
+		$options['conditions'][$this->alias . '.type'] = array(2, 3, 4, 5);
+		return $options;
 	}
 	
 	public function getOptionFields($controller) {
