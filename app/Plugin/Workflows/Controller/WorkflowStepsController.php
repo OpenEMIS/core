@@ -14,17 +14,17 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class WorkflowsController extends WorkflowsAppController {
+class WorkflowStepsController extends WorkflowsAppController {
 	public $components = array(
-		'ControllerAction' => array('model' => 'Workflows.Workflow')
+		'ControllerAction' => array('model' => 'Workflows.WorkflowStep')
 	);
 
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Workflows');
-		$this->set('contentHeader', 'Workflows');
-		$this->Workflow->fields['code']['hyperlink'] = true;
+		$this->Navigation->addCrumb('Workflows', array('plugin' => 'Workflows', 'controller' => 'Workflows', 'action' => 'index'));
+		$this->Navigation->addCrumb('Steps');
+		$this->set('contentHeader', 'Workflow Steps');
 	}
 }

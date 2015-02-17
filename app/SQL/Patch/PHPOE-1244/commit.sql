@@ -1,25 +1,9 @@
 --
--- 1. Backup
+-- 1. New table - wf_workflows
 --
 
-CREATE TABLE IF NOT EXISTS 1244_workflows LIKE workflows;
-CREATE TABLE IF NOT EXISTS 1244_workflow_steps LIKE workflow_steps;
-CREATE TABLE IF NOT EXISTS 1244_workflow_logs LIKE workflow_logs;
-
-INSERT 1244_workflows SELECT * FROM workflows;
-INSERT 1244_workflow_steps SELECT * FROM workflow_steps;
-INSERT 1244_workflow_logs SELECT * FROM workflow_logs;
-
-DROP TABLE IF EXISTS workflows;
-DROP TABLE IF EXISTS workflow_steps;
-DROP TABLE IF EXISTS workflow_logs;
-
---
--- 2. New table - workflows
---
-
-DROP TABLE IF EXISTS `workflows`;
-CREATE TABLE IF NOT EXISTS `workflows` (
+DROP TABLE IF EXISTS `wf_workflows`;
+CREATE TABLE IF NOT EXISTS `wf_workflows` (
 `id` int(11) NOT NULL,
   `code` varchar(60) NOT NULL,
   `name` varchar(100) NOT NULL,
@@ -30,22 +14,22 @@ CREATE TABLE IF NOT EXISTS `workflows` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `workflows`
+ALTER TABLE `wf_workflows`
  ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `workflows`
+ALTER TABLE `wf_workflows`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 3. New table - workflow_steps
+-- 2. New table - wf_workflow_steps
 --
 
-DROP TABLE IF EXISTS `workflow_steps`;
-CREATE TABLE IF NOT EXISTS `workflow_steps` (
+DROP TABLE IF EXISTS `wf_workflow_steps`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_steps` (
 `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `workflow_id` int(11) NOT NULL,
+  `wf_workflow_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -53,42 +37,42 @@ CREATE TABLE IF NOT EXISTS `workflow_steps` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `workflow_steps`
+ALTER TABLE `wf_workflow_steps`
  ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `workflow_steps`
+ALTER TABLE `wf_workflow_steps`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 4. New table - workflow_step_roles
+-- 3. New table - wf_workflow_step_roles
 --
 
-DROP TABLE IF EXISTS `workflow_step_roles`;
-CREATE TABLE IF NOT EXISTS `workflow_step_roles` (
+DROP TABLE IF EXISTS `wf_workflow_step_roles`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_step_roles` (
 `id` int(11) NOT NULL,
-  `workflow_step_id` int(11) NOT NULL,
+  `wf_workflow_step_id` int(11) NOT NULL,
   `security_role_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `workflow_step_roles`
+ALTER TABLE `wf_workflow_step_roles`
  ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `workflow_step_roles`
+ALTER TABLE `wf_workflow_step_roles`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 5. New table - workflow_actions
+-- 4. New table - wf_workflow_actions
 --
 
-DROP TABLE IF EXISTS `workflow_actions`;
-CREATE TABLE IF NOT EXISTS `workflow_actions` (
+DROP TABLE IF EXISTS `wf_workflow_actions`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_actions` (
 `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `next_workflow_step_id` int(11) NOT NULL,
-  `workflow_step_id` int(11) NOT NULL,
+  `next_wf_workflow_step_id` int(11) NOT NULL,
+  `wf_workflow_step_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -96,24 +80,24 @@ CREATE TABLE IF NOT EXISTS `workflow_actions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `workflow_actions`
+ALTER TABLE `wf_workflow_actions`
  ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `workflow_actions`
+ALTER TABLE `wf_workflow_actions`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 6. New table - workflow_logs
+-- 5. New table - wf_workflow_logs
 --
 
-DROP TABLE IF EXISTS `workflow_logs`;
-CREATE TABLE IF NOT EXISTS `workflow_logs` (
+DROP TABLE IF EXISTS `wf_workflow_logs`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_logs` (
 `id` int(11) NOT NULL,
   `reference_table` varchar(200) NOT NULL,
   `reference_id` int(11) NOT NULL,
   `comments` text NOT NULL,
-  `workflow_step_id` int(11) NOT NULL,
+  `wf_workflow_step_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -121,15 +105,15 @@ CREATE TABLE IF NOT EXISTS `workflow_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `workflow_logs`
+ALTER TABLE `wf_workflow_logs`
  ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `workflow_logs`
+ALTER TABLE `wf_workflow_logs`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 7. navigations
+-- 6. navigations
 --
 
 SET @orderOfQualityStatus := 0;
@@ -204,7 +188,7 @@ NULL , 'Administration', 'Workflows', 'WorkflowLogs', 'Workflows', 'Logs', 'inde
 );
 
 --
--- 8. security_functions
+-- 7. security_functions
 --
 
 SET @orderOfQualityStatus := 0;
