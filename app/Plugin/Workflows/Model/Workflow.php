@@ -15,6 +15,8 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class Workflow extends WorkflowsAppModel {
+	public $useTable = 'wf_workflows';
+
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -26,9 +28,5 @@ class Workflow extends WorkflowsAppModel {
 			'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
 			'foreignKey' => 'created_user_id'
 		)
-	);
-
-	public $hasMany = array(
-		'Workflows.WorkflowSteps'
 	);
 }

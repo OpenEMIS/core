@@ -2,22 +2,14 @@
 -- 1. Drop new tables
 --
 
-DROP TABLE IF EXISTS `workflows`;
-DROP TABLE IF EXISTS `workflow_steps`;
-DROP TABLE IF EXISTS `workflow_step_roles`;
-DROP TABLE IF EXISTS `workflow_actions`;
-DROP TABLE IF EXISTS `workflow_logs`;
+DROP TABLE IF EXISTS `wf_workflows`;
+DROP TABLE IF EXISTS `wf_workflow_steps`;
+DROP TABLE IF EXISTS `wf_workflow_step_roles`;
+DROP TABLE IF EXISTS `wf_workflow_actions`;
+DROP TABLE IF EXISTS `wf_workflow_logs`;
 
 --
--- 2. Restore
---
-
-RENAME TABLE 1244_workflows TO workflows;
-RENAME TABLE 1244_workflow_steps TO workflow_steps;
-RENAME TABLE 1244_workflow_logs TO workflow_logs;
-
---
--- 3. navigations
+-- 2. navigations
 --
 
 DELETE FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Workflows' AND `title` LIKE 'Workflows';
@@ -30,7 +22,7 @@ SELECT `order` INTO @orderOfQualityStatus FROM `navigations` WHERE `module` LIKE
 UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` > @orderOfQualityStatus;
 
 --
--- 4. security_functions
+-- 3. security_functions
 --
 
 DELETE FROM `security_functions` WHERE `controller` LIKE 'Workflows' AND `category` LIKE 'Workflows' AND `name` LIKE 'Workflows';
