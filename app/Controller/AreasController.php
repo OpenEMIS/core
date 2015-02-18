@@ -31,13 +31,6 @@ class AreasController extends AppController {
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
-		
-		$areaOptions = array(
-			'Area' => __('Areas (Education)'),
-			'AreaLevel' => __('Area Levels (Education)'),
-			'AreaAdministrative' => __('Areas (Administrative)'),
-			'AreaAdministrativeLevel' => __('Area Levels (Administrative)')
-		);
 
 		if (!$this->request->is('ajax')) {
 			$areas = array('Area', 'AreaAdministrative');
@@ -55,10 +48,7 @@ class AreasController extends AppController {
 			}
 		}
 		
-		if(array_key_exists($this->action, $areaOptions)) {
-			$this->set('selectedAction', $this->action);
-		}
-		$this->set('areaOptions', $areaOptions);
+		$this->set('selectedAction', $this->action);
 	}
 	
 	public function recover($i) {

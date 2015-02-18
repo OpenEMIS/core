@@ -11,7 +11,7 @@ if ($_edit && count($data) > 1) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('../AcademicPeriods/controls');
+echo $this->element('../AcademicPeriods/nav_tabs');
 echo $this->element('../AcademicPeriods/breadcrumbs');
 ?>
 
