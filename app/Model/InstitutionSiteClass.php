@@ -308,9 +308,9 @@ class InstitutionSiteClass extends AppModel {
 
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
-				$this->removeExistingStudents($studentOptions);
-
+				
 				if ($postData['submit'] == 'add') {
+					$this->removeExistingStudents($studentOptions);
 					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
@@ -331,12 +331,15 @@ class InstitutionSiteClass extends AppModel {
 							);
 
 							// search if the new student was previously added before
-							foreach ($data['InstitutionSiteClassStudent'] as $row) {
-								if ($row['student_id'] == $studentId) {
-									$newRow['id'] = $row['id'];
+							if (isset($data['InstitutionSiteClassStudent'])) {
+								foreach ($data['InstitutionSiteClassStudent'] as $row) {
+									if ($row['student_id'] == $studentId) {
+										$newRow['id'] = $row['id'];
+									}
 								}
 							}
 							$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
+							unset($studentOptions[$studentId]);
 						}
 						unset($this->request->data[$this->alias]['student_id']);
 					}
