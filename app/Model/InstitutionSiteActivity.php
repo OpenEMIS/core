@@ -26,7 +26,8 @@ class InstitutionSiteActivity extends ActivityModel {
 		)
 	);
 
-	public function getConditions() {
+    // Used in ActivityComponent
+	public function getConditionsForActivity() {
 		$id = CakeSession::read('InstitutionSite.id');
 		$conditions = array($this->alias . '.institution_site_id' => $id);
 		return $conditions;
