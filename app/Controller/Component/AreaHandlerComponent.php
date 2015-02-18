@@ -21,7 +21,7 @@ class AreaHandlerComponent extends Component {
     public $AreaAdministrative;
     public $AreaAdministrativeLevel;
 	
-	//public $components = array('Auth', 'Session');
+	public $components = array('Auth', 'Session');
 	public function __construct(ComponentCollection $collection, $settings = array()) {
 		parent::__construct($collection, $settings);
 		$this->init();
@@ -231,7 +231,7 @@ class AreaHandlerComponent extends Component {
                     'order' => array($model.'.order')
                 ));
 
-        if($model=='Area'){
+        if ($model=='Area' && $this->Auth->user('super_admin') == 0) {
             $userAreas = $this->getUserAreas(array('getWithParents' => true));
             $options = array();
             $parentAreaIsAuthorise = false;
