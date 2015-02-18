@@ -67,10 +67,14 @@ class InstitutionSiteCustomField extends AppModel {
 	}
 	
 	public function getSubOptions() {
-		$options = $this->InstitutionSiteType->getList();
-		array_unshift($options, __('All'));
-		return $options;
-	}
+        $list = $this->InstitutionSiteType->getListOnly();
+        $options = array(0 => __('All'));
+
+        foreach ($list as $key => $value) {
+            $options[$key] = $value;
+        }
+        return $options;
+    }
 	
 	public function getOptionFields($controller) {
 		parent::getOptionFields($controller);
