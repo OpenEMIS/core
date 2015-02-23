@@ -20,6 +20,7 @@ class StudentsController extends StudentsAppController {
 	public $name = 'Students';
 	public $studentId;
 	public $uses = array(
+		'SecurityUser',
 		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteClass',
@@ -239,7 +240,7 @@ class StudentsController extends StudentsAppController {
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
-		$this->Student->contain(array('SecurityUser'));
+		$this->Student->contain(array('SecurityUser' => array('Gender')));
 		$data = $this->Student->findById($id);
 		$obj = $data['Student'];
 		$name = ModelHelper::getName($obj);
@@ -258,13 +259,13 @@ class StudentsController extends StudentsAppController {
 	}
 	
 	public function edit() {
-		$model = 'Student';
+		$model = 'SecurityUser';
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
 		$studentIdSession = $this->Session->read('Student.id');
 		if (!empty($studentIdSession)) {
-			$id = $this->Session->read($model . '.id');
+			$id = $this->Session->read('Student.id');
 			$this->Student->id = $id;
 			$this->Navigation->addCrumb('Edit');
 		} else {
@@ -275,28 +276,25 @@ class StudentsController extends StudentsAppController {
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$this->Student->set($data);
-			$addressAreaId = $this->request->data[$model]['address_area_id'];
-			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 
-			if (array_key_exists($model, $data)) {
-				if (array_key_exists('birthplace_area_id', $data[$model])) {
-					if (!array_key_exists('SecurityUser', $data)) {
-						$data['SecurityUser'] = array();
+			if (array_key_exists('Student', $data)) {
+				if (array_key_exists('birthplace_area_id', $data['Student'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
 					}
-					$data['SecurityUser']['birthplace_area_id'] = $data[$model]['birthplace_area_id'];
-					unset($data[$model]['birthplace_area_id']);
+					$data[$model]['birthplace_area_id'] = $data['Student']['birthplace_area_id'];
+					unset($data['Student']['birthplace_area_id']);
 				}
-				if (array_key_exists('address_area_id', $data[$model])) {
-					if (!array_key_exists('SecurityUser', $data)) {
-						$data['SecurityUser'] = array();
+				if (array_key_exists('address_area_id', $data['Student'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
 					}
-					$data['SecurityUser']['address_area_id'] = $data[$model]['address_area_id'];
-					unset($data[$model]['birthplace_area_id']);
+					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
+					unset($data['Student']['birthplace_area_id']);
 				}
 			}
 
-			if ($this->Student->validates() && $this->Student->saveAll($data)) {
+			if ($this->SecurityUser->saveAll($data)) {
 				$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
 				$InstitutionSiteStudentModel->validator()->remove('search');
 				$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
@@ -313,7 +311,7 @@ class StudentsController extends StudentsAppController {
 					if (empty($studentIdSession)) {
 						$InstitutionSiteStudentModel->save($dataToSite);
 					}
-					$this->Staff->contain(array('SecurityUser'));
+					$this->Staff->contain(array('SecurityUser'=>array('Gender')));
 					$this->Session->write($model . '.data', $this->Student->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
@@ -332,17 +330,17 @@ class StudentsController extends StudentsAppController {
 			}
 		} else {
 			if (!empty($id)) {
-				$this->Student->contain(array('SecurityUser'));
-				$data = $this->Student->findById($id);
+				$this->SecurityUser->contain('Gender', 'Student');
+				$security_user_id = $this->Session->read('Student.security_user_id');
+				$data = $this->SecurityUser->findById($security_user_id);
 				$this->request->data = $data;
 				$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
 				$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
 			}
 		}
-		$genderOptions = $this->Option->get('gender');
+		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('student_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);

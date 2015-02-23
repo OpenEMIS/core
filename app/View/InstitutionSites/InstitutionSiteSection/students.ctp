@@ -28,14 +28,19 @@
 					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.status", array('value' => 1));
 					echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.education_grade_id", array('value' => !empty($this->data[$model]['education_grade_id']) ? $this->data[$model]['education_grade_id'] : 0));
 
-					foreach ($obj['Student'] as $field => $value) {
-						echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.Student.$field", array('value' => $value));
+					foreach ($obj['Student']['SecurityUser'] as $field => $value) {
+						if ($field == 'Gender') {
+							echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.Student.SecurityUser.$field.name", array('value' => $value['name'])); 
+							continue;
+						} else {
+							echo $this->Form->hidden("InstitutionSiteSectionStudent.$i.Student.SecurityUser.$field", array('value' => $value));	
+						}
 					}
 					?>
-					<td><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
-					<td><?php echo ModelHelper::getName($obj['Student']) ?></td>
-					<td><?php echo $this->Model->getGender($obj['Student']['gender']) ?></td>
-					<td><?php echo $this->Utility->formatDate($obj['Student']['date_of_birth']); ?></td>
+					<td><?php echo $obj['Student']['SecurityUser']['openemis_no']; ?></td>
+					<td><?php echo ModelHelper::getName($obj['Student']['SecurityUser']) ?></td>
+					<td><?php echo $this->Model->getGender($obj['Student']['SecurityUser']['Gender']['name']) ?></td>
+					<td><?php echo $this->Utility->formatDate($obj['Student']['SecurityUser']['date_of_birth']); ?></td>
 					<td>
 						<?php
 						echo $this->Form->input("InstitutionSiteSectionStudent.$i.student_category_id", array(

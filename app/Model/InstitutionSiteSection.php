@@ -253,9 +253,12 @@ class InstitutionSiteSection extends AppModel {
 					'InstitutionSiteShift', 'EducationGrade', 'Staff', 
 					'InstitutionSiteSectionStudent' => array(
 						'Student' => array(
-							'fields' => array(
-								'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
-								'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
+							'SecurityUser' => array(
+								'fields' => array(
+									'openemis_no', 'first_name', 'middle_name', 
+									'third_name', 'last_name', 'gender_id', 'date_of_birth'
+								),
+								'Gender' => array('name')
 							)
 						)
 					)
@@ -263,7 +266,6 @@ class InstitutionSiteSection extends AppModel {
 			);
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
-
 			$sectionName = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
@@ -285,15 +287,20 @@ class InstitutionSiteSection extends AppModel {
 				'Staff', 
 				'InstitutionSiteSectionStudent' => array(
 					'Student' => array(
-						'fields' => array(
-							'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
-							'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender', 'SecurityUser.date_of_birth'
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'gender_id', 'date_of_birth'
+							),
+							'Gender' => array('name')
 						)
 					)
 				)
 			);
 			$this->contain($contain);
+
 			$data = $this->findById($id);
+
 			$contentHeader = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($contentHeader);
 
@@ -336,13 +343,27 @@ class InstitutionSiteSection extends AppModel {
 			
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
-
 				if ($postData['submit'] == 'add') {
 					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
 						$InstitutionSiteStudent->Student->recursive = -1;
-						$studentObj = $InstitutionSiteStudent->Student->findById($studentId, $contain['InstitutionSiteSectionStudent']['Student']['fields']);
+						$studentObj = $InstitutionSiteStudent->find(
+							'first', 
+							array(
+								'contain' => array(
+									'Student' => array(
+										'SecurityUser' => array(
+											'fields' => $contain['InstitutionSiteSectionStudent']['Student']['SecurityUser']['fields'],
+											'Gender' => array('name')
+										)
+									)
+								),
+								'conditions' => array(
+									'Student.id' => $studentId
+								)
+							)
+						);
 						
 						$newRow = array(
 							'student_id' => $studentId,
@@ -350,14 +371,12 @@ class InstitutionSiteSection extends AppModel {
 							'status' => 1,
 							'Student' => $studentObj['Student']
 						);
-
 						// search if the new student was previously added before
 						foreach ($data['InstitutionSiteSectionStudent'] as $row) {
 							if ($row['student_id'] == $studentId) {
 								$newRow['id'] = $row['id'];
 							}
 						}
-
 						$this->request->data['InstitutionSiteSectionStudent'][] = $newRow;
 
 						unset($this->request->data[$this->alias]['student_id']);
@@ -501,12 +520,18 @@ class InstitutionSiteSection extends AppModel {
 	
 	public function getListOfSections($periodId, $institutionSiteId, $gradeId=0) {
 		$options = array(
-			'fields' => array(
-				'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
-				'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name',
-				'EducationGrade.name'
+			'contain' => array(
+				'Staff' => array(
+					'fields'=> array('id'),
+					'SecurityUser' => array(
+						'fields'=> array('id', 'first_name', 'middle_name', 'third_name', 'last_name'),
+						'Gender' => array(
+							'fields' => array('name')
+						)
+					)
+				), 
+				'EducationGrade' => array('name')
 			),
-			'contain' => array('Staff', 'EducationGrade'),
 			'conditions' => array(
 				'InstitutionSiteSection.academic_period_id' => $periodId,
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
@@ -519,8 +544,8 @@ class InstitutionSiteSection extends AppModel {
 
 			// need to include multi grade search
 		}
-
-		$data = $this->find('all', $options);
+		$data = $this->find('all', 
+			$options);
 		
 		foreach($data as $i => $obj) {
 			$id = $obj[$this->alias]['id'];

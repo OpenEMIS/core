@@ -21,6 +21,7 @@ class StaffController extends StaffAppController {
 	public $staffId;
 	public $staffObj;
 	public $uses = array(
+		'SecurityUser',
 		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteType',
@@ -243,14 +244,14 @@ class StaffController extends StaffAppController {
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
-		$this->Staff->contain(array('SecurityUser'));
+		$this->Staff->contain(array('SecurityUser' => array('Gender')));
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
 		$name = ModelHelper::getName($obj);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);
-		$this->Session->write('Student.security_user_id', $obj['security_user_id']);
+		$this->Session->write('Staff.security_user_id', $obj['security_user_id']);
 		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
 		$this->set('data', $data);
@@ -262,13 +263,13 @@ class StaffController extends StaffAppController {
 	}
 
 	public function edit() {
-		$model = 'Staff';
+		$model = 'SecurityUser';
 		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
 		$staffIdSession = $this->Session->read('Staff.id');
 		if (!empty($staffIdSession)) {
-			$id = $this->Session->read($model . '.id');
+			$id = $this->Session->read('Staff.id');
 			$this->Staff->id = $id;
 			$this->Navigation->addCrumb('Edit');
 		} else {
@@ -278,28 +279,25 @@ class StaffController extends StaffAppController {
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$this->Staff->set($data);
-			$addressAreaId = $this->request->data[$model]['address_area_id'];
-			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 
-			if (array_key_exists($model, $data)) {
-				if (array_key_exists('birthplace_area_id', $data[$model])) {
-					if (!array_key_exists('SecurityUser', $data)) {
-						$data['SecurityUser'] = array();
+			if (array_key_exists('Staff', $data)) {
+				if (array_key_exists('birthplace_area_id', $data['Staff'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
 					}
-					$data['SecurityUser']['birthplace_area_id'] = $data[$model]['birthplace_area_id'];
-					unset($data[$model]['birthplace_area_id']);
+					$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
+					unset($data['Staff']['birthplace_area_id']);
 				}
-				if (array_key_exists('address_area_id', $data[$model])) {
-					if (!array_key_exists('SecurityUser', $data)) {
-						$data['SecurityUser'] = array();
+				if (array_key_exists('address_area_id', $data['Staff'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
 					}
-					$data['SecurityUser']['address_area_id'] = $data[$model]['address_area_id'];
-					unset($data[$model]['birthplace_area_id']);
+					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
+					unset($data['Staff']['birthplace_area_id']);
 				}
 			}
-			
-			if ($this->Staff->validates() && $this->Staff->saveAll($data)) {
+
+			if ($this->SecurityUser->saveAll($data)) {
 				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
 				$InstitutionSiteStaffModel->validator()->remove('search');
 				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
@@ -339,17 +337,17 @@ class StaffController extends StaffAppController {
 			}
 		} else {
 			if (!empty($id)) {
-				$this->Staff->contain(array('SecurityUser'));
-				$data = $this->Staff->findById($id);
+				$this->SecurityUser->contain('Gender', 'Staff');
+				$security_user_id = $this->Session->read('Staff.security_user_id');
+				$data = $this->SecurityUser->findById($security_user_id);
 				$this->request->data = $data;
 				$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
 				$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
 			}
 		}
-		$genderOptions = $this->Option->get('gender');
+		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('staff_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);

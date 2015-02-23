@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffComment extends StaffAppModel {
 	public $useTable = 'user_comments';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('comment_date')
 	);
 
 	public $belongsTo = array(
-		'Staff.Staff',
+		'SecurityUser',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -67,9 +67,9 @@ class StaffComment extends StaffAppModel {
 	}
 	
 	public function index() {
-		$securityUserId = $this->Session->read('Staff.security_user_id');
+		$userId = $this->Session->read('Staff.security_user_id');
 		$this->recursive = -1;
-		$data = $this->findAllBySecurityUserId($securityUserId);
+		$data = $this->findAllBySecurityUserId($userId);
 		$this->setVar(compact('data'));
 	}
 }

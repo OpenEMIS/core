@@ -27,30 +27,12 @@ class Student extends StudentsAppModel {
 		),
 		'CustomReport' => array(
 			'_default' => array('photo_name', 'photo_content')
-		),
-		'DatePicker' => array('SecurityUser.date_of_birth'),
-		'FileUpload' => array(
-			array(
-				'name' => 'photo_name',
-				'content' => 'photo_content',
-				'size' => '1MB',
-				'allowEmpty' => true
-			)
 		)
 	);
 
-	public $belongsTo = array(
-		'SecurityUser'
-	);
+	public $belongsTo = array('SecurityUser');
 	
 	public $hasMany = array(
-		'Students.StudentContact',
-		'Students.StudentIdentity',
-		'Students.StudentNationality',
-		'Students.StudentLanguage',
-		'Students.StudentComment',
-		'Students.StudentSpecialNeed',
-		'Students.StudentAward',
 		'Students.StudentGuardian',
 		'Students.Programme',
 		'Students.Absence',
@@ -73,13 +55,6 @@ class Student extends StudentsAppModel {
 	);
 	
 	public $validate = array(
-		'email' => array(
-			'ruleRequired' => array(
-				'rule' => 'email',
-				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
-			)
-		)
 	);
 
 	/* Excel Behaviour */

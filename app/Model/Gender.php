@@ -14,11 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('FieldOptionValue', 'Model');
-
-class Gender extends FieldOptionValue {
-	public $useTable = 'field_option_values';
-	public $hasMany = array('CensusBehaviour', 'CensusTeacher','CensusTeacherTraining', 'CensusAttendance','CensusStudent', 'CensusTeacherFte', 'CensusStaff','CensusSanitation','CensusGraduate');
+class Gender extends AppModel {
+	public $hasMany = array('SecurityUser', 'CensusBehaviour', 'CensusTeacher','CensusTeacherTraining', 'CensusAttendance','CensusStudent', 'CensusTeacherFte', 'CensusStaff','CensusSanitation','CensusGraduate');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -33,4 +30,12 @@ class Gender extends FieldOptionValue {
 			'type' => 'LEFT'
 		)
 	);
+
+	public function getList() {
+		return $this->find('list', 
+			array(
+				'order' => 'order asc'
+			)
+		);
+	}
 }
