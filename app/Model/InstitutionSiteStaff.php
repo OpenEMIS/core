@@ -459,7 +459,7 @@ class InstitutionSiteStaff extends AppModel {
 		$data = array();
 		foreach ($list as $obj) {
 			$staffObj = $obj['Staff'];
-			$data[$staffObj['id']] = ModelHelper::getName($staffObj, array('openEmisId' => true));
+			$data[$staffObj['id']] = ModelHelper::getName($obj['SecurityUser'], array('openEmisId' => true));
 		}
 		return $data;
 	}
@@ -660,7 +660,7 @@ class InstitutionSiteStaff extends AppModel {
 		foreach($staffData as $row){
 			$staff = $row['Staff'];
 			$staffId = $staff['id'];
-			$staffName = ModelHelper::getName($staff);
+			$staffName = ModelHelper::getName($row['SecurityUser']);
 			$options[$staffId] = $staffName;
 		}
 		
@@ -671,19 +671,26 @@ class InstitutionSiteStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'DISTINCT Staff.id',
-				'SecurityUser.openemis_no',
-				'SecurityUser.first_name',
-				'SecurityUser.middle_name',
-				'SecurityUser.third_name',
-				'SecurityUser.last_name',
-				'Staff.preferred_name'
+				'DISTINCT Staff.id', 'Staff.security_user_id', 
+				'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name',
+				'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name'
 			),
+			// 'contain' => array('Staff'=>array('SecurityUser')),
 			'joins' => array(
+
 				array(
 					'table' => 'staff',
 					'alias' => 'Staff',
-					'conditions' => array('InstitutionSiteStaff.Staff_id = Staff.id')
+					'conditions' => array(
+						'InstitutionSiteStaff.staff_id = Staff.id'
+					)
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array(
+						'Staff.security_user_id = SecurityUser.id'
+					)
 				)
 			),
 			'conditions' => array(
@@ -713,7 +720,6 @@ class InstitutionSiteStaff extends AppModel {
 				)
 			)
 		));
-
 		return $data;
 	}
 	
@@ -922,7 +928,7 @@ class InstitutionSiteStaff extends AppModel {
 
 			$r = 0;
 			foreach ($data AS $row) {
-				$row['Staff']['gender'] = $this->formatGender($row['Staff']['gender']);
+				$row['Staff']['gender'] = $this->formatGender($row['Staff']);
 				$row['Staff']['date_of_birth'] = $this->formatDateByConfig($row['Staff']['date_of_birth']);
 
 

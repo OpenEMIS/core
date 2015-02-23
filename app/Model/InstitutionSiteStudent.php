@@ -536,7 +536,7 @@ class InstitutionSiteStudent extends AppModel {
 
 		$alias = $this->alias;
 		$options = array(
-			'contain' => array('Student'),
+			'contain' => array('Student' => array('SecurityUser')),
 			'conditions' => array(
 				$alias.'.institution_site_id = ' . $institutionSiteId,
 				'OR' => array(
@@ -569,7 +569,7 @@ class InstitutionSiteStudent extends AppModel {
 		$data = array();
 		foreach ($list as $obj) {
 			$studentObj = $obj['Student'];
-			$data[$studentObj['id']] = ModelHelper::getName($studentObj, array('openEmisId' => true));
+			$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
 		}
 		return $data;
 	}

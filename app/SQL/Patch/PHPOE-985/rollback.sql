@@ -60,4 +60,4 @@ RENAME TABLE 985_staff TO staff;
 DROP TABLE security_users;
 RENAME TABLE 985_security_users TO security_users;
 
-
+DROP TABLE genders;

@@ -17,12 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffNationality extends StaffAppModel {
 	public $useTable = 'user_nationalities';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2'
 	);
 	
 	public $belongsTo = array(
-		'Staff.Staff',
+		'SecurityUser',
 		'Country',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -57,9 +57,9 @@ class StaffNationality extends StaffAppModel {
 	}
 	
 	public function index() {
-		$securityUserId = $this->Session->read('Staff.security_user_id');
+		$userId = $this->Session->read('Staff.security_user_id');
 		$this->contain(array('Country' => array('id', 'name')));
-		$data = $this->findAllBySecurityUserId($securityUserId);
+		$data = $this->findAllBySecurityUserId($userId);
 		$this->setVar(compact('data'));
 	}
 }

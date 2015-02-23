@@ -53,7 +53,7 @@ $userObj = $data['SecurityUser'];
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Gender'); ?></div>
-		<div class="col-md-6"><?php echo $this->Utility->formatGender($userObj['gender']); ?></div>
+		<div class="col-md-6"><?php echo $this->Utility->formatGender($userObj); ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Date Of Birth'); ?></div>

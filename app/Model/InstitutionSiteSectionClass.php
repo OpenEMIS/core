@@ -113,9 +113,12 @@ class InstitutionSiteSectionClass extends AppModel {
 					'EducationSubject',
 					'InstitutionSiteClassStaff' => array(
 						'Staff' => array(
-							'fields' => array(
-								'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 
-								'SecurityUser.third_name', 'SecurityUser.last_name'
+							'SecurityUser' => array(
+								'fields' => array(
+									'openemis_no', 'first_name', 'middle_name', 
+									'third_name', 'last_name'
+								),
+								'Gender' => array('name')
 							)
 						)
 					)

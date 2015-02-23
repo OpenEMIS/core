@@ -1,4 +1,3 @@
-
 <?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
@@ -29,7 +28,11 @@ class InstitutionSiteSectionStudent extends AppModel {
 	public function getStudentOptions($sectionId) {
 		$alias = $this->alias;
 		$options = array(
-			'contain' => array('Student'),
+			'contain' => array(
+				'Student' => array(
+					'SecurityUser'
+				)
+			),
 			'conditions' => array(
 				"$alias.institution_site_section_id" => $sectionId
 			)
@@ -39,7 +42,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$data = array();
 		foreach ($list as $obj) {
 			$studentObj = $obj['Student'];
-			$data[$studentObj['id']] = ModelHelper::getName($studentObj, array('openEmisId' => true));
+			$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
 		}
 		return $data;
 	}
@@ -109,19 +112,40 @@ class InstitutionSiteSectionStudent extends AppModel {
 
 		$gender = array('M' => 0, 'F' => 0);
 		$studentConditions = array('Student.id = InstitutionSiteSectionStudent.student_id');
-		
-		foreach ($gender as $i => $val) {
-			$studentConditions[1] = sprintf("SecurityUser.gender = '%s'", $i);
-			$joins[0]['conditions'] = $studentConditions;
-			$gender[$i] = $this->find('count', array(
-				'recursive' => -1, 
-				'joins' => $joins,
+
+		$data = $this->find(
+			'all',
+			array(
+				'recursive' => -1,
+				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(DISTINCT SecurityUser.gender_id) as counter'),
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array('Student.security_user_id = SecurityUser.id')
+					),
+					array(
+						'table' => 'genders',
+						'alias' => 'Gender',
+						'conditions' => array('SecurityUser.gender_id = Gender.id')
+					)
+				),
 				'conditions' => array(
-					'InstitutionSiteSectionStudent.status = 1',
 					'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
-				)
-			));
+				),
+			)
+		);
+
+		foreach ($data as $key => $value) {
+			if ($value['Gender']['name'] == 'Male') $gender['M'] = $value[0]['counter'];
+			if ($value['Gender']['name'] == 'Female') $gender['F'] = $value[0]['counter'];
 		}
+
 		return $gender;
 	}
 
@@ -131,7 +155,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 			'fields' => array(
 				'DISTINCT SecurityUser.openemis_no',
 				'Student.id', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 
-				'SecurityUser.gender', 'SecurityUser.date_of_birth',
+				'Gender.name', 'SecurityUser.date_of_birth',
 				'StudentCategory.name'
 			),
 			'joins' => array(
@@ -139,6 +163,16 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'table' => 'students',
 					'alias' => 'Student',
 					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('Student.security_user_id = SecurityUser.id')
+				),
+				array(
+					'table' => 'genders',
+					'alias' => 'Gender',
+					'conditions' => array('SecurityUser.gender_id = Gender.id')
 				),
 				array(
 					'table' => 'field_option_values',
@@ -170,7 +204,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'SecurityUser.middle_name',
 				'SecurityUser.third_name',
 				'SecurityUser.last_name',
-				'Student.preferred_name'
+				'SecurityUser.preferred_name'
 			);
 		
 		if($showGrade){
@@ -195,7 +229,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'SecurityUser.first_name',
 				'SecurityUser.middle_name',
 				'SecurityUser.last_name',
-				'Student.preferred_name'
+				'SecurityUser.preferred_name'
 			),
 			'joins' => array(
 				array(
@@ -221,7 +255,14 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'table' => 'students',
 					'alias' => 'Student',
 					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
-				)
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array(
+						'Student.security_user_id = SecurityUser.id'
+					)
+				),
 			),
 			'conditions' => array(
 				'InstitutionSiteClassStudent.institution_site_class_id' => $classId,
@@ -230,11 +271,11 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'SecurityUser.last_name LIKE' => $search,
 					'SecurityUser.third_name LIKE' => $search,
 					'SecurityUser.middle_name LIKE' => $search,
-					'Student.preferred_name LIKE' => $search,
+					'SecurityUser.preferred_name LIKE' => $search,
 					'SecurityUser.openemis_no LIKE' => $search
 				)
 			),
-			'order' => array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'Student.preferred_name')
+			'order' => array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name')
 		));
 
 		$data = array();
@@ -358,7 +399,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'SecurityUser.middle_name',
 				'SecurityUser.third_name',
 				'SecurityUser.last_name',
-				'Student.preferred_name'
+				'SecurityUser.preferred_name'
 			),
 			'joins' => array(
 				array(
@@ -366,6 +407,13 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'alias' => 'Student',
 					'conditions' => array(
 						'InstitutionSiteSectionStudent.student_id = Student.id'
+					)
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array(
+						'Student.security_user_id = SecurityUser.id'
 					)
 				),
 				array(
@@ -387,22 +435,22 @@ class InstitutionSiteSectionStudent extends AppModel {
 					'alias' => 'InstitutionSiteStudent',
 					'conditions' => array(
 						'InstitutionSiteSectionStudent.student_id = InstitutionSiteStudent.student_id',
-						'InstitutionSiteSection.institution_site_id = InstitutionSiteStudent.institution_site_id',
-						'EducationGrade.education_programme_id = InstitutionSiteStudent.education_programme_id',
-						'OR' => array(
-							array(
-								'InstitutionSiteStudent.start_date <= "' . $startDate . '"',
-								'InstitutionSiteStudent.end_date >= "' . $startDate . '"'
-							),
-							array(
-								'InstitutionSiteStudent.start_date <= "' . $endDate . '"',
-								'InstitutionSiteStudent.end_date >= "' . $endDate . '"'
-							),
-							array(
-								'InstitutionSiteStudent.start_date >= "' . $startDate . '"',
-								'InstitutionSiteStudent.end_date <= "' . $endDate . '"'
-							)
-						)
+						// 'InstitutionSiteSection.institution_site_id = InstitutionSiteStudent.institution_site_id',
+						// 'EducationGrade.education_programme_id = InstitutionSiteStudent.education_programme_id',
+						// 'OR' => array(
+						// 	array(
+						// 		'InstitutionSiteStudent.start_date <= "' . $startDate . '"',
+						// 		'InstitutionSiteStudent.end_date >= "' . $startDate . '"'
+						// 	),
+						// 	array(
+						// 		'InstitutionSiteStudent.start_date <= "' . $endDate . '"',
+						// 		'InstitutionSiteStudent.end_date >= "' . $endDate . '"'
+						// 	),
+						// 	array(
+						// 		'InstitutionSiteStudent.start_date >= "' . $startDate . '"',
+						// 		'InstitutionSiteStudent.end_date <= "' . $endDate . '"'
+						// 	)
+						// )
 					)
 				)
 			),
@@ -410,7 +458,6 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
 			)
 		));
-		
 		return $data;
 	}
 }

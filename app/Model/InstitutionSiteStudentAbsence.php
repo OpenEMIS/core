@@ -413,6 +413,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				$selectedAcademicPeriod = key($academicPeriodOptions);
 			}
 		}
+
 		
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
@@ -450,7 +451,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$studentOptions = array();
 		foreach ($list as $obj) {
 			$student = $obj['Student'];
-			$studentOptions[$student['id']] = ModelHelper::getName($student, array('openEmisId'=>true));
+			$studentOptions[$student['id']] = ModelHelper::getName($obj['SecurityUser'], array('openEmisId'=>true));
 		}
 		$this->fields['student_id']['type'] = 'select';
 		$this->fields['student_id']['options'] = $studentOptions;
@@ -556,7 +557,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		
 		$InstitutionSiteSectionStudentModel = ClassRegistry::init('InstitutionSiteSectionStudent');
-		
 		$studentList = $InstitutionSiteSectionStudentModel->getSectionStudents($sectionId, $startDate, $endDate);
 		if(empty($studentList)){
 			$this->Message->alert('general.noData');
@@ -716,22 +716,28 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		$data = $this->find('all',
 			array(
-				'fields' => array(
-					'InstitutionSiteStudentAbsence.id', 
-					'InstitutionSiteStudentAbsence.absence_type', 
-					'InstitutionSiteStudentAbsence.first_date_absent', 
-					'InstitutionSiteStudentAbsence.last_date_absent', 
-					'InstitutionSiteStudentAbsence.full_day_absent', 
-					'InstitutionSiteStudentAbsence.start_time_absent', 
-					'InstitutionSiteStudentAbsence.end_time_absent', 
-					'Student.id',
-					'SecurityUser.openemis_no',
-					'SecurityUser.first_name',
-					'SecurityUser.middle_name',
-					'SecurityUser.third_name',
-					'SecurityUser.last_name',
-					'StudentAbsenceReason.id',
-					'StudentAbsenceReason.name'
+				// 'fields' => array(
+				// 	'InstitutionSiteStudentAbsence.id', 
+				// 	'InstitutionSiteStudentAbsence.absence_type', 
+				// 	'InstitutionSiteStudentAbsence.first_date_absent', 
+				// 	'InstitutionSiteStudentAbsence.last_date_absent', 
+				// 	'InstitutionSiteStudentAbsence.full_day_absent', 
+				// 	'InstitutionSiteStudentAbsence.start_time_absent', 
+				// 	'InstitutionSiteStudentAbsence.end_time_absent', 
+				// 	'Student.id',
+				// 	'SecurityUser.openemis_no',
+				// 	'SecurityUser.first_name',
+				// 	'SecurityUser.middle_name',
+				// 	'SecurityUser.third_name',
+				// 	'SecurityUser.last_name',
+				// 	'StudentAbsenceReason.id',
+				// 	'StudentAbsenceReason.name'
+				// ),
+				'contain' => array(
+					'Student' => array(
+						'fields' => array('id'),
+						'SecurityUser' => array('openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name')),
+					'StudentAbsenceReason'
 				),
 				'conditions' => $conditions,
 				'order' => array('InstitutionSiteStudentAbsence.first_date_absent', 'InstitutionSiteStudentAbsence.last_date_absent'),

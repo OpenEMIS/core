@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentIdentity extends StudentsAppModel {
 	public $useTable = 'user_identities';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('issue_date', 'expiry_date')
 	);
 
 	public $belongsTo = array(
-		'Students.Student',
+		'SecurityUser',
 		'Student' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -102,9 +102,9 @@ class StudentIdentity extends StudentsAppModel {
 	}
 
 	public function index() {
-		$securityUserId = $this->Session->read('Student.security_user_id');
+		$userId = $this->Session->read('Student.security_user_id');
 		$this->contain(array('IdentityType' => array('id', 'name')));
-		$data = $this->findAllBySecurityUserId($securityUserId);
+		$data = $this->findAllBySecurityUserId($userId);
 		$this->setVar(compact('data'));
 	}
 }

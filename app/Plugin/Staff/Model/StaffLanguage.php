@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffLanguage extends StaffAppModel {
 	public $useTable = 'user_languages';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('evaluation_date')
 	);
 
 	public $belongsTo = array(
-		'Staff.Staff',
+		'SecurityUser',
 		'Language',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -99,9 +99,9 @@ class StaffLanguage extends StaffAppModel {
 	}
 	
 	public function index() {
-		$securityUserId = $this->Session->read('Staff.security_user_id');
+		$userId = $this->Session->read('Staff.security_user_id');
 		$this->contain(array('Language' => array('id', 'name')));
-		$data = $this->findAllBySecurityUserId($securityUserId);
+		$data = $this->findAllBySecurityUserId($userId);
 		$this->setVar(compact('data'));
 	}
 }

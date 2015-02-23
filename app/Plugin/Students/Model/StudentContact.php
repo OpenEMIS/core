@@ -17,12 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentContact extends StudentsAppModel {
 	public $useTable = 'user_contacts';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
 		'ControllerAction2'
 	);
 	
 	public $belongsTo = array(
-		'Students.Student',
+		'SecurityUser',
 		'ContactType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -164,10 +164,10 @@ class StudentContact extends StudentsAppModel {
 		$this->setFieldOrder('preferred', $order++);
 	}
 
-	public function index($studentId = 0) {
-		$securityUserId = $this->Session->read('Student.security_user_id');
+	public function index() {
+		$userId = $this->Session->read('Student.security_user_id');
 		$this->contain(array('ContactType'));
-		$data = $this->findAllBySecurityUserId($securityUserId);
+		$data = $this->findAllBySecurityUserId($userId);
 		$contactOptions = $this->ContactType->ContactOption->getOptions();
 		
 		$this->setVar(compact('data', 'contactOptions'));

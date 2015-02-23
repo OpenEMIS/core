@@ -28,30 +28,12 @@ class Staff extends StaffAppModel {
 				'Staff.StaffCustomValue'
 			)
 		),
-		'CustomReport',
-		'DatePicker' => array('SecurityUser.date_of_birth'),
-		'FileUpload' => array(
-			array(
-				'name' => 'photo_name',
-				'content' => 'photo_content',
-				'size' => '1MB',
-				'allowEmpty' => true
-			)
-		)
+		'CustomReport'
 	);
 
-	public $belongsTo = array(
-		'SecurityUser'
-	);
+	public $belongsTo = array('SecurityUser');
 
 	public $hasMany = array(
-		'Staff.StaffContact',
-		'Staff.StaffIdentity',
-		'Staff.StaffNationality',
-		'Staff.StaffLanguage',
-		'Staff.StaffComment',
-		'Staff.StaffSpecialNeed',
-		'Staff.StaffAward',
 		'Staff.StaffMembership',
 		'Staff.StaffLicense',
 		'Staff.StaffQualification',
@@ -92,13 +74,6 @@ class Staff extends StaffAppModel {
 	);
 
 	public $validate = array(
-		'email' => array(
-			'ruleRequired' => array(
-				'rule' => 'email',
-				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
-			)
-		)
 	);
 
 	/* Excel Behaviour */
