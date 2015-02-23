@@ -211,24 +211,43 @@ class InstitutionSiteClassStudent extends AppModel {
 		$joins = array(
 			array('table' => 'students', 'alias' => 'Student')
 		);
-		
-		$conditions = array(
-			'InstitutionSiteClassStudent.institution_site_class_id = ' . $classId,
-			'InstitutionSiteClassStudent.status = 1' 
-		);
 
 		$gender = array('M' => 0, 'F' => 0);
 		$studentConditions = array('Student.id = InstitutionSiteClassStudent.student_id');
-		
-		foreach ($gender as $i => $val) {
-			$studentConditions[1] = sprintf("SecurityUser.gender = '%s'", $i);
-			$joins[0]['conditions'] = $studentConditions;
-			$gender[$i] = $this->find('count', array(
-				'recursive' => -1, 
-				'joins' => $joins, 
-				'conditions' => $conditions
-			));
+
+		$data = $this->find(
+			'all',
+			array(
+				'recursive' => -1,
+				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(DISTINCT SecurityUser.gender_id) as counter'),
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array('Student.security_user_id = SecurityUser.id')
+					),
+					array(
+						'table' => 'genders',
+						'alias' => 'Gender',
+						'conditions' => array('SecurityUser.gender_id = Gender.id')
+					)
+				),
+				'conditions' => array(
+					'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+				),
+			)
+		);
+
+		foreach ($data as $key => $value) {
+			if ($value['Gender']['name'] == 'Male') $gender['M'] = $value[0]['counter'];
+			if ($value['Gender']['name'] == 'Female') $gender['F'] = $value[0]['counter'];
 		}
+
 		return $gender;
 	}
 	

@@ -17,7 +17,19 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityUser extends AppModel {
+	public $actsAs = array(
+		'DatePicker' => array('date_of_birth'),
+		'FileUpload' => array(
+			array(
+				'name' => 'photo_name',
+				'content' => 'photo_content',
+				'size' => '1MB',
+				'allowEmpty' => true
+			)
+		)
+	);
 	public $belongsTo = array(
+		'Gender',
 		'AddressArea' => array(
 			'className' => 'Area',
 			'foreignKey' => 'address_area_id'
@@ -84,9 +96,9 @@ class SecurityUser extends AppModel {
    //      		'message' => 'Please enter a unique OpenEMIS ID'
 		 //    )
 		),
-		'gender' => array(
+		'gender_id' => array(
 			'ruleRequired' => array(
-				'rule' => array('comparison', 'not equal', '0'),
+				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please select a Gender'
 			)

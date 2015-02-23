@@ -484,3 +484,25 @@ INSERT INTO user_contacts (
 		staff_contacts.created
 	FROM staff_contacts
 		INNER JOIN staff ON staff_contacts.staff_id = staff.id;
+
+
+-- create gender table
+CREATE TABLE `genders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(10) NOT NULL,
+  `order` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
+
+INSERT INTO `genders` (`id`, `name`, `order`) VALUES
+(1, 'Male', 1),
+(2, 'Female', 2);
+
+-- migration of gender
+ALTER TABLE `security_users` ADD `gender_id` TINYINT NOT NULL AFTER `gender`;
+UPDATE security_users SET gender_id = 1 WHERE gender = "M";
+UPDATE security_users SET gender_id = 2 WHERE gender = "F";
+ALTER TABLE `security_users` DROP `gender`;
+
+
+
