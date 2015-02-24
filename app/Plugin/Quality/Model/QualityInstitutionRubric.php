@@ -297,7 +297,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 
 		//Process staff
 		$InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
-		$staffOptions = $InstitutionSiteSectionStaff->getStaffsInClassAcademicPeriod($selectedSectionId, $selectedAcademicPeriodId, 'list');
+		$staffOptions = $InstitutionSiteSectionStaff->getStaffsInSectionAcademicPeriod($selectedSectionId, $selectedAcademicPeriodId, 'list');
 		$selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
 		$selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
 

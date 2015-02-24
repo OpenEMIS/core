@@ -243,6 +243,35 @@ class SecurityController extends AppController {
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
 			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
+
+			$data['UserContact'] = $this->SecurityUser->UserContact->findAllBySecurityUserId($userId);
+
+			$ContactType = ClassRegistry::init('ContactType');
+			$ContactOption = ClassRegistry::init('ContactOption');
+			$contactOptions = $ContactOption->getOptions();
+
+			foreach ($data['UserContact'] as $key => $value) {
+				$data['UserContact'][$key] = array_merge($data['UserContact'][$key], 
+					$ContactType->find(
+						'first',
+						array(
+							'recursive' => -1,
+							'fields' => array('ContactType.id', 'ContactType.name', 'ContactType.contact_option_id'),
+							'conditions' => array('ContactType.id' => $value['UserContact']['contact_type_id'])
+						)
+					)
+				);
+				$data['UserContact'][$key] = array_merge($data['UserContact'][$key], 
+					$ContactOption->find(
+						'first',
+						array(
+							'recursive' => -1,
+							'fields' => array('ContactOption.id', 'ContactOption.name'),
+							'conditions' => array('ContactOption.id' => $data['UserContact'][$key]['ContactType']['contact_option_id'])
+						)
+					)
+				);
+			}
 			
 			$allowEdit = false;
 			if($this->Auth->user('super_admin')==1) {
@@ -254,6 +283,7 @@ class SecurityController extends AppController {
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
+			$this->set('contactOptions', $contactOptions);
 			$this->Navigation->addCrumb($data['first_name'] . ' ' . $data['last_name']);
 		} else {
 			$this->redirect(array('action' => 'users'));

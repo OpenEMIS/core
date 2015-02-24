@@ -56,7 +56,7 @@ echo $this->Form->create($model, $formOptions);
 		echo $this->Form->input('last_name');
 		echo $this->Form->input('preferred_name');
 		echo $this->Form->input('gender_id', array('options' => $genderOptions));
-		$tempDob = isset($this->data['SecurityUser']['date_of_birth']) ? array('data-date' => $this->data['SecurityUser']['date_of_birth']) : array();
+		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
 		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
 		
 		$imgOptions = array();

@@ -505,4 +505,56 @@ UPDATE security_users SET gender_id = 2 WHERE gender = "F";
 ALTER TABLE `security_users` DROP `gender`;
 
 
+-- migrate and remove telephone, email from security users 
+
+-- need to pull from contact options
+SELECT id INTO @email_contact_option_id FROM contact_options WHERE name = 'Email';
+INSERT INTO user_contacts (
+preferred,
+contact_type_id, 
+value, 
+security_user_id, 
+modified_user_id,
+modified,
+created_user_id,
+created
+) SELECT 
+0,
+@email_contact_option_id,
+email, 
+id, 
+modified_user_id,
+modified,
+created_user_id,
+created 
+FROM security_users WHERE email IS NOT NULL AND email <> '';
+
+SELECT id INTO @telephone_contact_option_id FROM contact_options WHERE name = 'Phone';
+INSERT INTO user_contacts (
+preferred,
+contact_type_id, 
+value, 
+security_user_id, 
+modified_user_id,
+modified,
+created_user_id,
+created
+) SELECT 
+0,
+@telephone_contact_option_id,
+telephone, 
+id, 
+modified_user_id,
+modified,
+created_user_id,
+created 
+FROM security_users WHERE telephone IS NOT NULL AND telephone <> '';
+
+-- removing of data that helps migration
+ALTER TABLE `security_users` DROP `985_staff_id`;
+ALTER TABLE `security_users` DROP `985_student_id`;
+ALTER TABLE `security_users` DROP `telephone`;
+ALTER TABLE `security_users` DROP `email`;
+
+
 

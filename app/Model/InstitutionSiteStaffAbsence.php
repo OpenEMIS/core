@@ -380,7 +380,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$staffOptions = array();
 		foreach ($list as $obj) {
 			$staff = $obj['Staff'];
-			$staffOptions[$staff['id']] = ModelHelper::getName($staff, array('openEmisId'=>true));
+			$staffOptions[$staff['id']] = ModelHelper::getName($obj['SecurityUser'], array('openEmisId'=>true));
 		}
 		$this->fields['staff_id']['type'] = 'select';
 		$this->fields['staff_id']['options'] = $staffOptions;
@@ -615,26 +615,14 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		
 		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
-		$conditions[] = 'YEAR(InstitutionSiteStaffAbsence.first_date_absent) = "' . $academicPeriod . '"';
+		// $conditions[] = 'YEAR(InstitutionSiteStaffAbsence.first_date_absent) = "' . $academicPeriod . '"';
 
 		$data = $this->find('all', array(
-			'fields' => array(
-				'DISTINCT InstitutionSiteStaffAbsence.id', 
-				'InstitutionSiteStaffAbsence.absence_type', 
-				'InstitutionSiteStaffAbsence.first_date_absent', 
-				'InstitutionSiteStaffAbsence.last_date_absent', 
-				'InstitutionSiteStaffAbsence.full_day_absent', 
-				'InstitutionSiteStaffAbsence.start_time_absent', 
-				'InstitutionSiteStaffAbsence.end_time_absent', 
-				'Staff.id',
-				'SecurityUser.openemis_no',
-				'SecurityUser.first_name',
-				'SecurityUser.middle_name',
-				'SecurityUser.third_name',
-				'SecurityUser.last_name',
-				'Staff.preferred_name',
-				'StaffAbsenceReason.id',
-				'StaffAbsenceReason.name'
+			'contain' => array(
+				'Staff' => array(
+					'fields' => array('id'),
+					'SecurityUser' => array('openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name')),
+				'StaffAbsenceReason'
 			),
 			'conditions' => $conditions,
 			'order' => array('InstitutionSiteStaffAbsence.first_date_absent', 'InstitutionSiteStaffAbsence.last_date_absent')

@@ -712,27 +712,10 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
-		//$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"';
+		$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"';
 
 		$data = $this->find('all',
 			array(
-				// 'fields' => array(
-				// 	'InstitutionSiteStudentAbsence.id', 
-				// 	'InstitutionSiteStudentAbsence.absence_type', 
-				// 	'InstitutionSiteStudentAbsence.first_date_absent', 
-				// 	'InstitutionSiteStudentAbsence.last_date_absent', 
-				// 	'InstitutionSiteStudentAbsence.full_day_absent', 
-				// 	'InstitutionSiteStudentAbsence.start_time_absent', 
-				// 	'InstitutionSiteStudentAbsence.end_time_absent', 
-				// 	'Student.id',
-				// 	'SecurityUser.openemis_no',
-				// 	'SecurityUser.first_name',
-				// 	'SecurityUser.middle_name',
-				// 	'SecurityUser.third_name',
-				// 	'SecurityUser.last_name',
-				// 	'StudentAbsenceReason.id',
-				// 	'StudentAbsenceReason.name'
-				// ),
 				'contain' => array(
 					'Student' => array(
 						'fields' => array('id'),
