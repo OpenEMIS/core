@@ -12,14 +12,14 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Date'), __('Grade'), __('Class'), __('Staff'));
+$tableHeaders = array(__('Date'), __('Grade'), __('Section'), __('Staff'));
 $tableData = array();
 foreach ($data as $obj) {
 	$staffName = $this->Model->getName($obj['Staff']);
 	$row = array();
 	$row[] = $obj[$model]['date'];
 	$row[] = $obj['EducationGrade']['name'];
-	$row[] = $this->Html->link($obj['InstitutionSiteClass']['name'], array('controller' => $this->params['controller'], 'action' => 'qualityVisitView', $obj[$model]['id']), array('escape' => false));
+	$row[] = $this->Html->link($obj['InstitutionSiteSection']['name'], array('controller' => $this->params['controller'], 'action' => 'qualityVisitView', $obj[$model]['id']), array('escape' => false));
 	$row[] = $staffName;
 
 	$tableData[] = $row;
