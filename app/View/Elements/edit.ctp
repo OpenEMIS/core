@@ -77,7 +77,8 @@ foreach($fields as $key => $field) {
 				
 			case 'element':
 				$element = $field['element'];
-				echo $this->element($element);
+				$elementData = (array_key_exists('data', $field))? $field['data']: array();
+				echo $this->element($element, $elementData);
 				break;
 				
 			case 'image':
