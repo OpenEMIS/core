@@ -40,8 +40,15 @@ class SecurityUser extends AppModel {
 		)
 	);
 	public $hasMany = array(
-		'Student',
-		'Staff'
+		'Students.Student',
+		'Staff.Staff',
+		'UserIdentity',
+		'UserNationality',
+		'UserLanguage',
+		'UserComment',
+		'UserSpecialNeed',
+		'UserAward',
+		'UserContact'
 	);
 	public $validate = array(
 		'first_name' => array(
@@ -90,11 +97,11 @@ class SecurityUser extends AppModel {
 				'required' => true,
 				'message' => 'Please enter a valid OpenEMIS ID'
 			),
-			// 'ruleUnique' => array(
-   //      		'rule' => 'isUnique',
-   //      		'required' => true,
-   //      		'message' => 'Please enter a unique OpenEMIS ID'
-		 //    )
+			'ruleUnique' => array(
+        		'rule' => 'isUnique',
+        		'required' => true,
+        		'message' => 'Please enter a unique OpenEMIS ID'
+		    )
 		),
 		'gender_id' => array(
 			'ruleRequired' => array(

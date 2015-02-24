@@ -191,56 +191,48 @@ class InstitutionSiteSectionStudent extends AppModel {
 	}
 	
 	public function getStudentsBySectionWithGrades($sectionId, $showGrade = false) {
-		$options['conditions'] = array(
-			'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
-			'InstitutionSiteSectionStudent.status = 1'
-		);
+		// $options['conditions'] = array(
+		// 	'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+		// 	'InstitutionSiteSectionStudent.status = 1'
+		// );
 		
-		//$options['recursive'] =-1;
-		$options['fields'] = array(
-				'DISTINCT Student.id',
-				'SecurityUser.openemis_no',
-				'SecurityUser.first_name',
-				'SecurityUser.middle_name',
-				'SecurityUser.third_name',
-				'SecurityUser.last_name',
-				'SecurityUser.preferred_name'
-			);
+		// //$options['recursive'] =-1;
+		// $options['fields'] = array(
+		// 		'DISTINCT Student.id',
+		// 		'SecurityUser.openemis_no',
+		// 		'SecurityUser.first_name',
+		// 		'SecurityUser.middle_name',
+		// 		'SecurityUser.third_name',
+		// 		'SecurityUser.last_name',
+		// 		'SecurityUser.preferred_name'
+		// 	);
 		
-		if($showGrade){
-			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteSection')));
-			$options['fields'][] = 'EducationGrade.name';
-		}
-		else{
-			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteSection','EducationGrade')));
-		}
+		// if($showGrade){
+		// 	$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteSection')));
+		// 	$options['fields'][] = 'EducationGrade.name';
+		// }
+		// else{
+		// 	$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteSection','EducationGrade')));
+		// }
 		
-		$data = $this->find('all', $options);
-		
-		/*$conditions = array(
-			'InstitutionSiteClassStudent.institution_site_class_id' => $sectionId
-		);
+		// $data = $this->find('all', $options);
 
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'DISTINCT Student.id',
-				'SecurityUser.openemis_no',
-				'SecurityUser.first_name',
-				'SecurityUser.middle_name',
-				'SecurityUser.last_name',
-				'SecurityUser.preferred_name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+		$data = $this->find('all', 
+			array(
+				'recursive' => -1,
+				'contain' => array(
+					'Student' => array(
+						'SecurityUser' => array('id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name')
+					), 
+					'EducationGrade' => array('name')
+				),
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+					'InstitutionSiteSectionStudent.status = 1'
 				)
-			),
-			'conditions' => $conditions
-		));
-*/
+			)
+		);
+		
 		return $data;
 	}
 	

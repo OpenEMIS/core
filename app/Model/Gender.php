@@ -32,6 +32,11 @@ class Gender extends AppModel {
 	);
 
 	public function getList() {
+		// this is a separate function from field options and there is no need to have separate functions - so both functions do the same thing
+		return $this->getListOnly();
+	}
+
+	public function getListOnly() {
 		return $this->find('list', 
 			array(
 				'order' => 'order asc'

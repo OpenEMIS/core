@@ -127,13 +127,23 @@ class StaffBehaviour extends StaffAppModel {
 	public function show() {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$this->InstitutionSiteStaff->contain(array(
-			'Staff' => array('fields' => array('Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name')),
-			'StaffType' => array('fields' => array('StaffType.name')),
-			'StaffStatus' => array('fields' => array('StaffStatus.name'))
-		));
-		
-		$data = $this->InstitutionSiteStaff->findAllByInstitutionSiteId($institutionSiteId);
+		$data = $this->InstitutionSiteStaff->find('all',
+			array(
+				'fields' => array('DISTINCT InstitutionSiteStaff.staff_id'),
+				'contain' => array(
+					'Staff' => array(
+						'fields' => array('InstitutionSiteStaff.id'),
+						'SecurityUser' => array('openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name')
+					),
+					'StaffType' => array('name'), 
+					'StaffStatus' => array('name')
+				),
+				'group' => array('InstitutionSiteStaff.staff_id'),
+				'conditions' => array(
+					'InstitutionSiteStaff.institution_site_id' => $institutionSiteId
+				)
+			)
+		);
 		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
