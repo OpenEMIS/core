@@ -56,12 +56,6 @@ class StaffHealthMedication extends StaffAppModel {
 		)
 	);
 		
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate >= $startDate;
-	}
-	
 	public function getDisplayFields($controller) {
         $fields = array(
             'model' => $this->alias,

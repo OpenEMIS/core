@@ -57,12 +57,6 @@ class StaffExtracurricular extends StaffAppModel {
 		)
 	);
 	
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate > $startDate;
-	}
-	
 	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
 		$data = $this->find('list', array(
