@@ -282,7 +282,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedGradeId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedGradeId;
 		$selectedGradeId = empty($selectedGradeId) ? 0 : $selectedGradeId;
 
-		//Process Class
+		//Process Section
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriodId, $institutionSiteId, $selectedGradeId);
 		$selectedSectionId = !empty($selectedSectionId) ? $selectedSectionId : key($sectionOptions);
@@ -296,8 +296,19 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedRubricId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedRubricId;
 
 		//Process staff
-		$InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
-		$staffOptions = $InstitutionSiteSectionStaff->getStaffsInClassAcademicPeriod($selectedSectionId, $selectedAcademicPeriodId, 'list');
+		$this->InstitutionSiteSection->contain('Staff');
+		$staffs = $this->InstitutionSiteSection->find('all', array(
+			'fields' => array(
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+			),
+			'conditions' => array('InstitutionSiteSection.id' => $selectedSectionId, 'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriodId),
+			'order' => array('Staff.first_name')
+		));
+		$staffOptions = array();
+		foreach ($staffs as $obj) {
+			$id = $obj['Staff']['id'];
+			$staffOptions[$id] = ModelHelper::getName($obj['Staff']);
+		}
 		$selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
 		$selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
 
