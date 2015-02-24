@@ -541,6 +541,14 @@ class LabelHelper extends AppHelper {
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'
+		),
+		'StaffSalary' => array(
+			'title' => 'Salary',
+			'additions' => 'Additions',
+			'deductions' => 'Deductions',
+			'gross' => 'Gross',
+			'net' => 'Net',
+			'salary_date' => 'Date'
 		)
 	);
 	
