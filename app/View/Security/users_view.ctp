@@ -62,14 +62,7 @@ $this->start('contentBody');
 
 <fieldset class="section_break">
 	<legend><?php echo __('Contact'); ?></legend>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Telephone'); ?></div>
-		<div class="col-md-4"><?php echo $data['telephone']; ?></div>
-	</div>
-	<div class="row">
-		<div class="col-md-3"><?php echo __('Email'); ?></div>
-		<div class="col-md-4"><?php echo $data['email']; ?></div>
-	</div>
+	<?php echo $this->element('contact/contactTable'); ?>
 </fieldset>
 
 <fieldset class="section_break">

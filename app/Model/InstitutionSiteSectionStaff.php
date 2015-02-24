@@ -196,13 +196,13 @@ class InstitutionSiteSectionStaff extends AppModel {
 		return $list;
 	}
 
-	public function getStaffsInClassAcademicPeriod($classId, $academicPeriodId, $mode = 'all') {
-		$this->unbindModel(array('belongsTo' => array('InstitutionSiteSection')));
+	public function getStaffsInSectionAcademicPeriod($sectionId, $academicPeriodId, $mode = 'all') {
 		$data = $this->find('all', array(
+			'recursive' => -1,
 			'fields' => array(
 				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
-			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $classId, 'AcademicPeriod.id' => $academicPeriodId),
+			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId, 'AcademicPeriod.id' => $academicPeriodId),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_sections',
@@ -224,6 +224,16 @@ class InstitutionSiteSectionStaff extends AppModel {
 							'InstitutionSiteStaff.end_year >= AcademicPeriod.end_year', 'InstitutionSiteStaff.end_year is null'
 						)
 					)
+				),
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('Staff.security_user_id = SecurityUser.id')
 				)
 			),
 			'order' => array('SecurityUser.first_name')

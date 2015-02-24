@@ -115,11 +115,17 @@ class InstitutionSiteStudentFee extends AppModel {
 			'fields' => array(
 				'InstitutionSiteFee.id',
 				'InstitutionSiteFee.total',
-				'SUM(StudentFee.amount) AS paid'
+				'SUM(StudentFee.amount) AS paid',
+				'Student.id',
+				'SecurityUser.id',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name'
 			),
 			'contain' => array(
-				'InstitutionSiteSection',
-				'Student' => array('fields' => array('id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
+				'InstitutionSiteSection'
 			),
 			'joins' => array(
 				array(
@@ -137,6 +143,16 @@ class InstitutionSiteStudentFee extends AppModel {
 						'StudentFee.institution_site_fee_id = InstitutionSiteFee.id',
 						'StudentFee.student_id = InstitutionSiteSectionStudent.student_id'
 					)
+				),
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('Student.security_user_id = SecurityUser.id')
 				)
 			),
 			'conditions' => array(

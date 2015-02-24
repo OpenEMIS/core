@@ -89,7 +89,6 @@ class StudentsController extends StudentsAppController {
 		$actions = array('index', 'advanced');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Students');
-			//$this->Session->delete('Student');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
 			$studentId = $this->Session->read('Student.id');
@@ -253,12 +252,12 @@ class StudentsController extends StudentsAppController {
 		$this->set('data', $data);
 	}
 	
-	public function add() {
+	public function old_add() {
 		$this->Wizard->start();
 		return $this->redirect(array('action' => 'edit'));
 	}
 	
-	public function edit() {
+	public function old_edit() {
 		$model = 'SecurityUser';
 		$id = null;
 		$addressAreaId = false;
@@ -338,6 +337,128 @@ class StudentsController extends StudentsAppController {
 				$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
 			}
 		}
+		$genderOptions = $this->SecurityUser->Gender->getList();
+		$dataMask = $this->ConfigItem->getValue('student_identification');
+		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+		$this->set('autoid', $this->getUniqueID());
+		$this->set('arrIdNo', $arrIdNo);
+		$this->set('genderOptions', $genderOptions);
+		$this->set('data', $data);
+		$this->set('model', $model);
+		$this->set('addressAreaId', $addressAreaId);
+		$this->set('birthplaceAreaId', $birthplaceAreaId);
+	}
+
+	public function edit() {
+		$this->Navigation->addCrumb('Edit');
+		$model = 'SecurityUser';
+		
+		if (!$this->Session->check('Student.id')) {
+			return $this->redirect(array('action' => 'index'));
+		} 
+		$studentIdSession = $this->Session->read('Student.id');
+		$this->Student->id = $studentIdSession;
+
+		if ($this->SecurityUser->exists($studentIdSession)) {
+			if ($this->request->is(array('post', 'put'))) {
+				$data = $this->request->data;
+
+				if ($this->SecurityUser->saveAll($data)) {
+					$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
+					$InstitutionSiteStudentModel->validator()->remove('search');
+					$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
+
+					$dataToSite['student_id'] = $studentIdSession;
+					if (empty($studentIdSession)) {
+						$InstitutionSiteStudentModel->save($dataToSite);
+					}
+					
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => 'view'));
+				} else {
+					$this->log($this->validationErrors, 'debug');
+					$this->Message->alert('general.edit.failed');
+				}
+
+				$this->Session->delete('InstitutionSiteStudent.addNew');
+
+			} else {
+				$security_user_id = $this->Session->read('Student.security_user_id');
+				$this->SecurityUser->contain('Gender');
+				$data = $this->SecurityUser->findById($security_user_id);
+				$this->request->data = $data;
+				$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
+				$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
+			}
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index'));
+		}
+
+		$genderOptions = $this->SecurityUser->Gender->getList();
+		$dataMask = $this->ConfigItem->getValue('student_identification');
+		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+		$this->set('autoid', $this->getUniqueID());
+		$this->set('arrIdNo', $arrIdNo);
+		$this->set('genderOptions', $genderOptions);
+		$this->set('data', $data);
+		$this->set('model', $model);
+		$this->set('addressAreaId', $addressAreaId);
+		$this->set('birthplaceAreaId', $birthplaceAreaId);
+	}
+
+	public function add() {
+		$this->Wizard->start();
+		$model = 'SecurityUser';
+		$this->Navigation->addCrumb('Add');
+		$this->bodyTitle = __('New Student');
+
+		$addressAreaId = false;
+		$birthplaceAreaId = false;
+
+		$data = array();
+		if ($this->request->is(array('post', 'put'))) {
+			$this->request->data['Student'] = array();
+			$data = $this->request->data;
+
+			$this->SecurityUser->create();
+			if ($this->SecurityUser->saveAll($data)) {
+				$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
+				$InstitutionSiteStudentModel->validator()->remove('search');
+				$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
+
+				$securityUserId = $this->SecurityUser->getLastInsertId();
+				$this->Student->create();
+				$this->Student->save(array('security_user_id' => $securityUserId));
+
+				if ($this->Wizard->isActive()) {
+					$this->Message->alert('Student.add.success');
+					$id = $this->Student->getLastInsertId();
+					$this->Session->write('Student.id', $id);
+					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
+					$dataToSite['student_status_id'] = $studentStatusId;
+					$dataToSite['student_id'] = $id;
+					$InstitutionSiteStudentModel->save($dataToSite);
+					$this->Session->write('Student.data', $this->Student->findById($id));
+					$this->Session->write('Student.security_user_id', $securityUserId);
+					// unset wizard so it will not auto redirect from WizardComponent
+					unset($this->request->data['wizard']['next']);
+
+					$this->Wizard->next();
+				} else {
+					$dataToSite['student_id'] = $id;
+					$InstitutionSiteStudentModel->save($dataToSite);
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => 'view'));
+				}
+				
+				$this->Session->delete('InstitutionSiteStudent.addNew');
+			} else {
+				$this->log($this->validationErrors, 'debug');
+				$this->Message->alert('general.add.failed');
+			}
+		}
+
 		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('student_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
