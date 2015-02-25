@@ -144,9 +144,9 @@ class InstitutionSiteSection extends AppModel {
 
 		$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedAcademicPeriod);
 
-		$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
-		$startDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['start_date']));
-		$endDate = date('Y-m-d', strtotime($academicPeriodObj['AcademicPeriod']['end_date']));
+		$academicPeriodObj = $this->AcademicPeriod->findById($selectedAcademicPeriod);
+		$startDate = $this->AcademicPeriod->getDate($academicPeriodObj['AcademicPeriod'], 'start_date');
+        $endDate = $this->AcademicPeriod->getDate($academicPeriodObj['AcademicPeriod'], 'end_date');
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 		$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
 
@@ -230,9 +230,9 @@ class InstitutionSiteSection extends AppModel {
 		$InstitutionSiteShiftModel->createInstitutionDefaultShift($institutionSiteId, $selectedAcademicPeriod);
 		$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($institutionSiteId, $selectedAcademicPeriod);
 
-		$academicPeriodObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
-		$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
-		$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
+		$academicPeriodObj = $this->AcademicPeriod->findById($selectedAcademicPeriod);
+		$startDate = $this->AcademicPeriod->getDate($academicPeriodObj['AcademicPeriod'], 'start_date');
+        $endDate = $this->AcademicPeriod->getDate($academicPeriodObj['AcademicPeriod'], 'end_date');
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 		$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
 
