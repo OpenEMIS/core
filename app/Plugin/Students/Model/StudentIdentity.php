@@ -41,6 +41,8 @@ class StudentIdentity extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	// please note that this is being used in student and staff add; validator()->remove('issue_location') for partial validation insertion
 	public $validate = array(
 		'identity_type_id' => array(
 			'ruleRequired' => array(
