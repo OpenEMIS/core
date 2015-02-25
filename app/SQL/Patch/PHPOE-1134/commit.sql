@@ -5,11 +5,6 @@ UPDATE navigations SET pattern = CONCAT(pattern, '|delete')  WHERE controller = 
 -- deactivate student gender
 UPDATE field_options SET visible = 0 WHERE code = 'Gender' AND name = 'Gender' AND parent = 'Student';
 
--- TODO: don't need to alter history table since we are going to drop it
-ALTER TABLE `institution_site_history` ADD `institution_site_sector_id` INT NOT NULL AFTER `institution_site_status_id`;
-ALTER TABLE `institution_site_history` ADD `institution_site_provider_id` INT NOT NULL AFTER `institution_site_sector_id`;
-ALTER TABLE `institution_site_history` ADD `institution_site_gender_id` INT NOT NULL AFTER `institution_site_provider_id`;
-
 -- need to add plugin column
 ALTER TABLE `field_options` ADD `plugin` VARCHAR(50) NULL DEFAULT NULL AFTER `id`;
 UPDATE field_options SET plugin = 'Students' WHERE parent = 'Student';
