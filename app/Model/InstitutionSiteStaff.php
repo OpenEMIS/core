@@ -20,6 +20,7 @@ class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
 	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	public $actsAs = array(
+		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))),
 		'Search',
 		'ControllerAction2', 
 		'DatePicker' => array('start_date', 'end_date'),
