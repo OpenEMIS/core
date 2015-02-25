@@ -31,13 +31,14 @@ class InstitutionSite extends AppModel {
 	);
 
 	public $hasMany = array(
-		'InstitutionSiteBankAccount' => array('dependent' => true),
-		'InstitutionSitePosition' => array('dependent' => true),
-		'InstitutionSiteProgramme' => array('dependent' => true),
-		'InstitutionSiteShift' => array('dependent' => true),
-		'InstitutionSiteSection' => array('dependent' => true),
-		'InstitutionSiteClass' => array('dependent' => true),
-		'InstitutionSiteFee' => array('dependent' => true),
+		'InstitutionSiteBankAccount',
+		'InstitutionSitePosition',
+		'InstitutionSiteProgramme',
+		'InstitutionSiteShift',
+		'InstitutionSiteSection',
+		'InstitutionSiteClass',
+		'InstitutionSiteFee',
+		'InstitutionSiteCustomValue',
 		'InstitutionSiteActivity' => array('dependent' => true)
 	);
 	
@@ -264,7 +265,14 @@ class InstitutionSite extends AppModel {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('InstitutionSite.id')) {
 			$models = array(
-				array('model' => $this),
+				array(
+					'model' => $this, 
+					'include' => array(
+						'header' => 'InstitutionSiteCustomField',
+						'data' => 'InstitutionSiteCustomValue',
+						'dataOptions' => 'InstitutionSiteCustomFieldOption'
+					)
+				),
 				array('model' => $this->InstitutionSiteBankAccount),
 				array('model' => $this->InstitutionSitePosition),
 				array('model' => $this->InstitutionSiteProgramme),
@@ -870,5 +878,5 @@ class InstitutionSite extends AppModel {
 		}
 		return $data;
 	}
-	
+
 }
