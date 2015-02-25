@@ -114,7 +114,7 @@ class StudentHealthMedication extends StudentsAppModel {
 
 	public function healthMedicationDelete($controller, $params) {
 		if ($controller->Session->check('StudentHealthMedication.id')) {
-			$id = $controller->Session->read('StudentHealthMedicationId');
+			$id = $controller->Session->read('StudentHealthMedication.id');
 			if ($this->delete($id)) {
 				$controller->Message->alert('general.delete.success');
 			} else {

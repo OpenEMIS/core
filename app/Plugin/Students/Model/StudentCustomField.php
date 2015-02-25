@@ -18,7 +18,8 @@ class StudentCustomField extends StudentsAppModel {
 	public $actsAs = array(
 		'CustomField' => array('module' => 'Student'),
 		'FieldOption',
-		'ControllerAction'
+		'ControllerAction',
+		'Excel'
 	);
 	
 	public $belongsTo = array(
@@ -43,6 +44,11 @@ class StudentCustomField extends StudentsAppModel {
 		parent::beforeAction($controller, $params);
 		$controller->Navigation->addCrumb('More');
 		$controller->set('header', __('More'));
+	}
+	
+	public function excelCustomFieldFindOptions($options) {
+		$options['conditions'][$this->alias . '.type'] = array(2, 3, 4, 5);
+		return $options;
 	}
 	
 	public function getOptionFields($controller) {
