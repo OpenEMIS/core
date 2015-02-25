@@ -15,9 +15,9 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'delete',$selectedOption,$selectedValue));
 $labelOptions = $formOptions['inputDefaults']['label'];
-echo $this->Form->create('FieldOptionValue', $formOptions);
+echo $this->Form->create($model, $formOptions);
 
-echo 'From: '.$currentFieldOptionValue['FieldOptionValue']['name'].'<br>';
+echo 'From: '.$currentFieldOptionValue[$model]['name'].'<br>';
 
 echo $this->Form->input('convert', array(
 	'class' => 'form-control',
