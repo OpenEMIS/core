@@ -30,7 +30,8 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$options = array(
 			'contain' => array('Student'),
 			'conditions' => array(
-				"$alias.institution_site_section_id" => $sectionId
+				"$alias.institution_site_section_id" => $sectionId,
+				"$alias.status" => 1
 			)
 		);
 

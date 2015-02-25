@@ -182,6 +182,7 @@ class CensusTextbook extends AppModel {
 			$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods(true, 'DESC');
 			$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);
 			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
+
 			if (!$editable) {
 				$controller->redirect(array('action' => 'textbooks', $selectedAcademicPeriod));
 			} else {
