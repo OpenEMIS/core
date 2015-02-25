@@ -151,7 +151,6 @@ class RestSurveyComponent extends Component {
     public function schools() {
     	$query = $this->controller->request->query;
     	$token = $query['token'];
-    	//$templateIds = $query['ids'];
     	$templateIds = explode(",", $query['ids']);
     	$limit = isset($query['limit']) ? $query['limit'] : 10;
 
@@ -183,18 +182,20 @@ class RestSurveyComponent extends Component {
 				}
 			}
 
-			$list[] = array(
-				'id' => $key,
-				'name' => $institutionSite,
-				'templates' => $templates
-			);
+			if (!empty($templates)) {
+				$list[] = array(
+					'id' => $key,
+					'name' => $institutionSite,
+					'templates' => $templates
+				);
+			}
 		}
 
 		$this->Session->write('InstitutionSite.id', $institutionSiteId);
 		$result['list'] = $list;
 		$result['periods'] = $academicPeriods;
 
-    	return json_encode($result);
+    	return json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
     public function getXForms($instanceId, $id) {
