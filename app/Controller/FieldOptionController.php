@@ -294,8 +294,10 @@ class FieldOptionController extends AppController {
 			$ModelClass = ClassRegistry::init($code);
 		}
 		$allowDelete = (isset($ModelClass->allowDelete))? $ModelClass->allowDelete: false;
-
-		// TODO: should redirect with proper error message if delete is not allowed
+		if (!$allowDelete) {
+			$this->Message->alert('general.delete.failed');
+			return $this->redirect(array('action' => 'view', $selectedOption, $selectedValue));
+		}
 
 		$allFieldOptionValues = $ModelClass->getList(array('listOnly' => true, 'visibleOnly' => true));
 
@@ -335,17 +337,15 @@ class FieldOptionController extends AppController {
 
 		if ($this->request->is(array('post', 'put'))) {
 			$convertValue = $this->request->data[$model]['convert'];
-			// TODO: update the values first before deleting the old value
+			foreach ($modifyForeignKey as $key => $value) {
+				$CurrModelClass = ClassRegistry::init($key);
+				$foreignKeyId = Inflector::underscore($code)."_id";
+				$CurrModelClass->updateAll(
+					array($key.'.'.$foreignKeyId => $convertValue),
+					array($key.'.'.$foreignKeyId => $selectedValue)
+				);
+			}
 			if ($ModelClass->delete($selectedValue)) {
-				foreach ($modifyForeignKey as $key => $value) {
-					$CurrModelClass = ClassRegistry::init($key);
-					$foreignKeyId = Inflector::underscore($code)."_id";
-					
-					$CurrModelClass->updateAll(
-						array($key.'.'.$foreignKeyId => $convertValue),
-						array($key.'.'.$foreignKeyId => $selectedValue)
-					);
-				}				
 				$this->Message->alert('general.delete.success');
 				return $this->redirect(array('action' => 'index', $selectedOption));
 			}
