@@ -136,7 +136,7 @@ class Student extends StudentsAppModel {
 			'order' => array('SecurityUser.first_name')
 		);
 		
-		$options['fields'] = array('id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.gender', 'SecurityUser.openemis_no', 'SecurityUser.date_of_birth');
+		$options['fields'] = array('id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.openemis_no', 'SecurityUser.date_of_birth');
 		$data = $this->find('all', $options);
 		
 		return $data;

@@ -116,6 +116,11 @@ class MessageComponent extends Component {
 				'success' => array('type' => 'ok', 'msg' => 'New student has been created.')
 			)
 		),
+		'Staff' => array(
+			'add' => array(
+				'success' => array('type' => 'ok', 'msg' => 'New staff has been created.')
+			)
+		),
 		'Census' => array(
 			'noSubjects' => array('type' => 'warn', 'msg' => 'There are no subjects configured in the system.')
 		),
