@@ -48,7 +48,21 @@ class SecurityUser extends AppModel {
 		'UserComment',
 		'UserSpecialNeed',
 		'UserAward',
-		'UserContact'
+		'UserContact',
+		'Students.StudentIdentity',
+		'Students.StudentNationality',
+		'Students.StudentLanguage',
+		'Students.StudentComment',
+		'Students.StudentSpecialNeed',
+		'Students.StudentAward',
+		'Students.StudentContact',
+		'Staff.StaffIdentity',
+		'Staff.StaffNationality',
+		'Staff.StaffLanguage',
+		'Staff.StaffComment',
+		'Staff.StaffSpecialNeed',
+		'Staff.StaffAward',
+		'Staff.StaffContact'
 	);
 	public $validate = array(
 		'first_name' => array(

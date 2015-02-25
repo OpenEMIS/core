@@ -557,4 +557,7 @@ ALTER TABLE `security_users` DROP `telephone`;
 ALTER TABLE `security_users` DROP `email`;
 
 
+-- need to make menu appear for student/add
+ UPDATE navigations set pattern = replace(pattern , '^edit$|','^edit$|^add$|') WHERE module = 'Student' AND plugin = 'Students' AND controller = 'Students' AND header = 'General' AND title = 'Overview';
 
+ 

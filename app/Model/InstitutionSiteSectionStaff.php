@@ -144,9 +144,26 @@ class InstitutionSiteSectionStaff extends AppModel {
 	// used by InstitutionSite.classesEdit/classesView
 	public function getStaffs($sectionId, $mode = 'all') {
 		$data = $this->find('all', array(
-			'recursive' => 0,
+			'recursive' => -1,
 			'fields' => array(
 				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = InstitutionSiteSectionStaff.staff_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Staff.security_user_id')
+				),
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array('InstitutionSiteSection.id = InstitutionSiteSectionStaff.institution_site_section_id')
+				)
 			),
 			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId),
 			'order' => array('SecurityUser.first_name')

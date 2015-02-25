@@ -11,7 +11,7 @@ echo $this->Html->script('config', false);
 
 $this->extend('/Elements/layout/container');
 
-$this->assign('contentId', 'student');
+$this->assign('contentId', 'student');	
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
 if (!$WizardMode) {
@@ -46,10 +46,23 @@ echo $this->Form->create($model, $formOptions);
 			if ($this->Session->check('Student.id')) {
 				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel));
 			} else {
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid));
+				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
 			}
 		}
 		
+
+		$selectAndTxtOptions = array(
+			'label' => __('Identity'),
+			'selectOptions' => $identityTypeOptions,
+			'selectId' => 'StudentIdentity.0.identity_type_id',
+			'txtId' => 'StudentIdentity.0.number',
+			'txtPlaceHolder' => __('Identity Number')
+		);
+
+		echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+
+		echo $this->Form->input('StudentNationality.0.country_id', array('Label' => __('Nationality'), 'options' => $nationalityOptions));
+
 		echo $this->Form->input('first_name');
 		echo $this->Form->input('middle_name');
 		echo $this->Form->input('third_name');
@@ -98,10 +111,10 @@ echo $this->Form->create($model, $formOptions);
 </fieldset>
 
 <?php 
-if (!$WizardMode) {
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
-} else {
+if (isset($WizardMode) && $WizardMode) {
 	echo $this->FormUtility->getWizardButtons($WizardButtons);
+} else {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
 }
 echo $this->Form->end();
 $this->end();
