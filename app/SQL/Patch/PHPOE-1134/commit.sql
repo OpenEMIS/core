@@ -29,7 +29,8 @@ UPDATE field_options SET plugin = NULL WHERE code = 'TrainingRequirement';
 UPDATE field_options SET plugin = NULL WHERE code = 'TrainingStatus';
 
 
--- TODO: alter field_options.old_id to be nullable
+-- alter field_options.old_id to be nullable
+ALTER TABLE `field_options` CHANGE `old_id` `old_id` INT(11) NULL DEFAULT NULL;
 
 -- reinsert country
 SELECT MAX(field_options.order) INTO @highestOrder FROM field_options;
