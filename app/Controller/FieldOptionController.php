@@ -277,14 +277,15 @@ class FieldOptionController extends AppController {
 			return $this->redirect(array('action' => 'index', $selectedOption));
 		}
 
-		$obj = $this->optionList[$selectedOption];
-		$this->FieldOptionValue->setParent($obj);
-
 		if(!array_key_exists($selectedOption, $this->optionList)) {
 			// field option doesnt exist
 			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index', $selectedOption));
+			return $this->redirect(array('action' => 'index'));
 		}
+
+		$obj = $this->optionList[$selectedOption];
+		$this->FieldOptionValue->setParent($obj);
+
 		$plugin = $obj['plugin'];
 		$code = $obj['code'];
 		if (!is_null($plugin)) {
@@ -294,77 +295,66 @@ class FieldOptionController extends AppController {
 		}
 		$allowDelete = (isset($ModelClass->allowDelete))? $ModelClass->allowDelete: false;
 
-		$allFieldOptionValues = $currentOption = $ModelClass->getList(array('listOnly' => true, 'visibleOnly' => true));
+		// TODO: should redirect with proper error message if delete is not allowed
+
+		$allFieldOptionValues = $ModelClass->getList(array('listOnly' => true, 'visibleOnly' => true));
 
 		if (array_key_exists($selectedValue, $allFieldOptionValues)) {
 			// unset only if field option exists in list
 			unset($allFieldOptionValues[$selectedValue]);
-		}
-
-		$this->FieldOptionValue->recursive = -1;
-		$currentFieldOptionValue = $this->FieldOptionValue->findById($selectedValue);
-
-		if(!$currentFieldOptionValue) {
-			// field option value doesnt exist
+		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index', $selectedOption));
 		}
 
-		// if no legal recordss to migrate to ... they are not allowed to delete
+		$model = $ModelClass->alias;
+		$ModelClass->recursive = -1;
+		$currentFieldOptionValue = $ModelClass->findById($selectedValue);
+
+		// if no legal records to migrate to ... they are not allowed to delete
 		if (empty($allFieldOptionValues)) {
 			$this->Message->alert('general.delete.cannotDeleteOnlyRecord');
-			return $this->redirect(array('action' => 'index', $selectedOption));
+			return $this->redirect(array('action' => 'view', $selectedOption, $selectedValue));
 		}
 
-		$listAllOtherFieldOptionValues = array();
-		foreach ($allFieldOptionValues as $key => $value) {
-			$listAllOtherFieldOptionValues[$key] = $value;
-		}
 		$modifyForeignKey = array();
-		if (array_key_exists('hasMany', $ModelClass)) {
-			$hasManyArray = $ModelClass->hasMany;
-			
-			foreach ($hasManyArray as $key => $value) {
-				$CurrModelClass = ClassRegistry::init($value['className']);
-				$foreign_key_id = Inflector::underscore($code)."_id";
-				$modifyForeignKey[$key] = $CurrModelClass->find('count',
-					array(
-						'recursive' => -1,
-						'conditions' => array(
-							$foreign_key_id => $selectedValue
-						)
+		$hasManyArray = $ModelClass->hasMany;
+		
+		foreach ($hasManyArray as $key => $value) {
+			$CurrModelClass = ClassRegistry::init($value['className']);
+			$foreignKeyId = Inflector::underscore($code)."_id";
+			$modifyForeignKey[$key] = $CurrModelClass->find('count',
+				array(
+					'recursive' => -1,
+					'conditions' => array(
+						$CurrModelClass->alias . '.' .$foreignKeyId => $selectedValue
 					)
-				);
-			}
+				)
+			);
 		}
-
 
 		if ($this->request->is(array('post', 'put'))) {
-			$convertValue = null;
-			if (array_key_exists('FieldOptionValue', $this->request->data)) {
-				if (array_key_exists('convert', $this->request->data['FieldOptionValue'])) {
-					$convertValue = $this->request->data['FieldOptionValue']['convert'];
-				}
-			}
+			$convertValue = $this->request->data[$model]['convert'];
+			// TODO: update the values first before deleting the old value
 			if ($ModelClass->delete($selectedValue)) {
 				foreach ($modifyForeignKey as $key => $value) {
 					$CurrModelClass = ClassRegistry::init($key);
-					$foreign_key_id = Inflector::underscore($code)."_id";
+					$foreignKeyId = Inflector::underscore($code)."_id";
 					
 					$CurrModelClass->updateAll(
-						array($key.'.'.$foreign_key_id => $convertValue),
-						array($key.'.'.$foreign_key_id => $selectedValue)
+						array($key.'.'.$foreignKeyId => $convertValue),
+						array($key.'.'.$foreignKeyId => $selectedValue)
 					);
 				}				
 				$this->Message->alert('general.delete.success');
 				return $this->redirect(array('action' => 'index', $selectedOption));
-			}	
+			}
 		}
 		
 		$header = $this->FieldOptionValue->getHeader();
 		
-		$this->set('allOtherFieldOptionValues', $listAllOtherFieldOptionValues);
-		$this->set(compact('header', 'currentFieldOptionValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete'));
+		$this->set('allOtherFieldOptionValues', $allFieldOptionValues);
+		$this->set(compact('header', 'currentFieldOptionValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete', 'model'));
 
 		$this->Navigation->addCrumb($header);
 

@@ -5,6 +5,7 @@ UPDATE navigations SET pattern = CONCAT(pattern, '|delete')  WHERE controller = 
 -- deactivate student gender
 UPDATE field_options SET visible = 0 WHERE code = 'Gender' AND name = 'Gender' AND parent = 'Student';
 
+-- TODO: don't need to alter history table since we are going to drop it
 ALTER TABLE `institution_site_history` ADD `institution_site_sector_id` INT NOT NULL AFTER `institution_site_status_id`;
 ALTER TABLE `institution_site_history` ADD `institution_site_provider_id` INT NOT NULL AFTER `institution_site_sector_id`;
 ALTER TABLE `institution_site_history` ADD `institution_site_gender_id` INT NOT NULL AFTER `institution_site_provider_id`;
@@ -32,6 +33,8 @@ UPDATE field_options SET plugin = NULL WHERE code = 'TrainingProvider';
 UPDATE field_options SET plugin = NULL WHERE code = 'TrainingRequirement';
 UPDATE field_options SET plugin = NULL WHERE code = 'TrainingStatus';
 
+
+-- TODO: alter field_options.old_id to be nullable
 
 -- reinsert country
 SELECT MAX(field_options.order) INTO @highestOrder FROM field_options;
