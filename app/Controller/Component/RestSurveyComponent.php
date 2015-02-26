@@ -139,6 +139,7 @@ class RestSurveyComponent extends Component {
     public function upload() {
 		if ($this->controller->request->is(array('post', 'put'))) {
     		$data = $this->controller->request->data;
+    		$this->log($data, 'debug');
     		$jsonResponse = $data['response'];
 			
 	    	$xmlResponse = json_decode($jsonResponse, true);
