@@ -467,28 +467,18 @@ class InstitutionSiteSection extends AppModel {
 		);
 
 		if($gradeId!==false) {
-			$multiGrade = $this->field('education_grade_id', array(
-				'InstitutionSiteSection.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteSection.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteSection.education_grade_id' => $gradeId
-			));
-
-			if(is_null($multiGrade)) {
-				$options['joins'] = array(
-					array(
-						'table' => 'institution_site_section_grades',
-						'alias' => 'InstitutionSiteSectionGrade',
-						'conditions' => array(
-							'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
-							'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
-							'InstitutionSiteSectionGrade.status = 1'
-						)
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array(
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+						'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteSectionGrade.status = 1'
 					)
-				);
-				$options['group'] = array('InstitutionSiteSection.id');
-			} else {
-				$options['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
-			}
+				)
+			);
+			$options['group'] = array('InstitutionSiteSection.id');
 		}
 
 		$data = $this->find('list', $options);
