@@ -70,7 +70,8 @@ class Staff extends StaffAppModel {
 			'dependent' => true
 		),
 		'InstitutionSiteStaff',
-		'StaffIdentity'
+		'StaffIdentity',
+		'Staff.StaffCustomValue'
 	);
 
 	public $validate = array(
@@ -90,7 +91,14 @@ class Staff extends StaffAppModel {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('Staff.id')) {
 			$models = array(
-				array('model' => $this),
+				array('model' => $this,
+					'include' => array(
+						'header' => 'StaffCustomField',
+						'data' => 'StaffCustomValue',
+						'dataOptions' => 'StaffCustomFieldOption',
+						'plugin' => 'Staff'
+					)
+				),
 				array('model' => $this->StaffContact, 'name' => 'Contacts'),
 				//array('model' => $this->StaffIdentity, 'name' => 'Identities'), -- not working due to unknown reasons
 				array('model' => $this->StaffNationality, 'name' => 'Nationalities'),

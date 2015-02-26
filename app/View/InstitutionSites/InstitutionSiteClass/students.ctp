@@ -26,6 +26,7 @@
 					<?php
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.id");
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.student_id");
+					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.institution_site_section_id", array('value' => $selectedSectionId));
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.status", array('value' => 1));
 
 					foreach ($obj['Student'] as $field => $value) {
