@@ -136,14 +136,93 @@ class RestSurveyComponent extends Component {
 		}
     }
 
-    public function upload($id=0) {
+    public function upload() {
 		if ($this->controller->request->is(array('post', 'put'))) {
     		$data = $this->controller->request->data;
-	    	$data['survey_template_id'] = $id;
+    		$jsonResponse = $data['response'];
+			
+	    	$xmlResponse = json_decode($jsonResponse, true);
+	    	$xmlResponse['response'] = str_replace("xf:", "", $xmlResponse['response']);
+	    	$xmlResponse['response'] = str_replace("oe:", "", $xmlResponse['response']);
 
-	    	if ($this->controller->SurveyResponse->saveAll($data)) {
+	    	$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse['response'];
+    		$xml = new SimpleXMLElement($xmlstr);
+
+			$surveyTemplateId = $xml->SurveyTemplate->attributes()->id->__toString();
+    		$institutionSiteId = $xml->SurveyTemplate->InstitutionSite->__toString();
+    		$academicPeriodId = $xml->SurveyTemplate->AcademicPeriod->__toString();
+    		$surveyStatus = 2; //completed
+
+			$surveyData = array();
+    		$surveyData['InstitutionSiteSurveyNew'] = array(
+    			'survey_template_id' => $surveyTemplateId,
+    			'institution_site_id' => $institutionSiteId,
+    			'academic_period_id' => $academicPeriodId,
+    			'status' => $surveyStatus
+    		);
+
+    		$questions = $xml->SurveyTemplate->SurveyQuestion;
+
+			$arrFieldName = array(
+				2 => 'text_value',
+				3 => 'int_value',
+				4 => 'int_value',
+				5 => 'textarea_value',
+				6 => 'int_value'
+			);
+    		$SurveyQuestion = ClassRegistry::init('SurveyQuestion');
+
+    		foreach ($questions as $question) {
+    			$questionId = $question->attributes()->id->__toString();
+    			$answerValue = $question->__toString();
+
+    			if (!empty($answerValue)) {
+	    			$fieldType = $SurveyQuestion->field('type', array('SurveyQuestion.id' => $questionId));
+	    			$fieldName = $arrFieldName[$fieldType];
+
+	    			if ($fieldType == 2 || $fieldType == 3 || $fieldType == 5 || $fieldType == 6) {
+	    				$answer = array(
+		    				'institution_site_id' => $institutionSiteId,
+		    				'survey_status' => $surveyStatus,
+		    				'survey_question_id' => $questionId,
+		    				'type' => $fieldType,
+		    				$fieldName => $answerValue
+		    			);
+		    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
+	    			} else if ($fieldType == 4) {
+	    				$checkboxValues = explode(" ", $answerValue);
+						foreach ($checkboxValues as $key => $checkboxValue) {
+							$answer = array(
+			    				'institution_site_id' => $institutionSiteId,
+			    				'survey_status' => $surveyStatus,
+			    				'survey_question_id' => $questionId,
+			    				'answer_number' => ++$key,
+			    				'type' => $fieldType,
+			    				$fieldName => $checkboxValue
+			    			);
+			    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
+						}
+	    			}
+	    		}
+    		}
+
+			$InstitutionSiteSurveyNew = ClassRegistry::init('InstitutionSiteSurveyNew');
+			$InstitutionSiteSurveyAnswer = ClassRegistry::init('InstitutionSiteSurveyAnswer');
+			$surveyId = $InstitutionSiteSurveyNew->field('id', array(
+				'InstitutionSiteSurveyNew.survey_template_id' => $surveyTemplateId,
+    			'InstitutionSiteSurveyNew.institution_site_id' => $institutionSiteId,
+    			'InstitutionSiteSurveyNew.academic_period_id' => $academicPeriodId
+			));
+			if ($surveyId) {
+				$InstitutionSiteSurveyNew->deleteAll(array('InstitutionSiteSurveyNew.id' => $surveyId));
+				$InstitutionSiteSurveyAnswer->deleteAll(array(
+					'InstitutionSiteSurveyAnswer.institution_site_survey_id' => $surveyId
+				), false);
+			}
+
+			if ($InstitutionSiteSurveyNew->saveAll($surveyData)) {
 			} else {
-				$this->log($this->controller->SurveyResponse->validationErrors, 'debug');
+				$this->log($InstitutionSiteSurveyNew->validationErrors, 'debug');
 			}
     	}
     }
