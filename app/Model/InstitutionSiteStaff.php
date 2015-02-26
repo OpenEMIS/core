@@ -141,6 +141,14 @@ class InstitutionSiteStaff extends AppModel {
 			'fileName' => 'Report_Staff_List'
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$id = CakeSession::read('InstitutionSite.id');
+		$conditions = array('InstitutionSite.id' => $id);
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function beforeSave($options = array()) {
 		$alias = $this->alias;
