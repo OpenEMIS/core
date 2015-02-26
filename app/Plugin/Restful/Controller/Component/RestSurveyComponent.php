@@ -163,7 +163,8 @@ class RestSurveyComponent extends Component {
     			'survey_template_id' => $surveyTemplateId,
     			'institution_site_id' => $institutionSiteId,
     			'academic_period_id' => $academicPeriodId,
-    			'status' => $surveyStatus
+    			'status' => $surveyStatus,
+    			'created_user_id' => 1
     		);
 
     		$questions = $xml->SurveyTemplate->SurveyQuestion;
@@ -191,7 +192,8 @@ class RestSurveyComponent extends Component {
 		    				'survey_status' => $surveyStatus,
 		    				'survey_question_id' => $questionId,
 		    				'type' => $fieldType,
-		    				$fieldName => $answerValue
+		    				$fieldName => $answerValue,
+		    				'created_user_id' => 1
 		    			);
 		    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
 	    			} else if ($fieldType == 4) {
@@ -203,7 +205,8 @@ class RestSurveyComponent extends Component {
 			    				'survey_question_id' => $questionId,
 			    				'answer_number' => ++$key,
 			    				'type' => $fieldType,
-			    				$fieldName => $checkboxValue
+			    				$fieldName => $checkboxValue,
+			    				'created_user_id' => 1
 			    			);
 			    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
 						}
