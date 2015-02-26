@@ -30,7 +30,7 @@ class StaffSalaryAddition extends StaffAppModel {
 		),
 		'addition_amount' => array(
 			'ruleRequired' => array(
-				'rule' => 'notEmpty',
+				'rule' => array('money'),
 				'required' => true,
 				'message' => 'Please enter a valid Addition Amount'
 			)
