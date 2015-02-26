@@ -122,34 +122,6 @@ class InstitutionSiteStudent extends AppModel {
 		$this->setFieldOrder('start_date', 6);
 		$this->setFieldOrder('end_date', 7);
 		
-		if ($this->action == 'add') {
-			if ($this->request->is('get')) {
-				$academicPeriodId = key($academicPeriodOptions);
-				$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
-				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
-				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
-				try {
-					$date = new DateTime($startDate);
-				} catch (Exception $e) {
-				    return 'The Start Date Is Not In A Proper Format.';
-				    exit(1);
-				}
-				$date->add(new DateInterval('P1D')); // plus 1 day
-				
-				$this->fields['start_date']['attr'] = array(
-					'startDate' => $startDate,
-					'endDate' => $endDate,
-					'data-date' => $startDate
-				);
-				$this->fields['end_date']['attr'] = array(
-					'startDate' => $date->format('d-m-Y'),
-					'data-date' => $date->format('d-m-Y')
-				);
-		
-				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId, true);
-				$this->fields['education_programme_id']['options'] = $programmeOptions;
-			}
-		}
 	}
 	
 	public function index() {
