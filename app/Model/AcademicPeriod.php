@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class AcademicPeriod extends AppModel {
 	public $actsAs = array(
 		'Tree',
-		'Reorder',
+		'Reorder' => array('parentKey' => 'academic_period_level_id'),
 		'CustomReport',
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date')

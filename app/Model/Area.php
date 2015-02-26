@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class Area extends AppModel {
 	public $actsAs = array(
 		'Tree',
-		'Reorder',
+		'Reorder' => array('parentKey' => 'area_level_id'),
 		'CustomReport',
 		'ControllerAction2'
 	);
