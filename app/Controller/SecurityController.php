@@ -239,38 +239,40 @@ class SecurityController extends AppController {
 		if(isset($this->params['pass'][0])) {
 			$userId = $this->params['pass'][0];
 			$this->Session->write('SecurityUserId', $userId);
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
-
-			$data['UserContact'] = $this->SecurityUser->UserContact->findAllBySecurityUserId($userId);
-
-			$ContactType = ClassRegistry::init('ContactType');
-			$ContactOption = ClassRegistry::init('ContactOption');
-			$contactOptions = $ContactOption->getOptions();
-
-			foreach ($data['UserContact'] as $key => $value) {
-				$data['UserContact'][$key] = array_merge($data['UserContact'][$key], 
-					$ContactType->find(
-						'first',
-						array(
-							'recursive' => -1,
-							'fields' => array('ContactType.id', 'ContactType.name', 'ContactType.contact_option_id'),
-							'conditions' => array('ContactType.id' => $value['UserContact']['contact_type_id'])
+			$data = $this->SecurityUser->find(
+				'first', 
+				array(
+					'contain' => array(
+						'UserContact' => array(
+							'fields'=> array('id', 'value', 'preferred'),
+							'ContactType' => array(
+								'fields'=> array('id', 'name'),	
+								'ContactOption' => array('fields'=> array('id', 'name'))
+							)
+						),
+						'SecurityGroupUser' => array(
+							'SecurityGroup' => array('fields'=> array('id', 'name')),
+							'SecurityRole' => array('fields'=> array('id', 'name'))
+						),
+						'SecurityUserAccess' => array(
+							'fields' => array('table_name', 'security_user_id')
 						)
+					),
+					'conditions' => array('SecurityUser.id' => $userId)
+				)
+			);
+
+			// manually getting security user data because table has no 'id'
+			foreach ($data['SecurityUserAccess'] as $key => $value) {
+				$test = $this->SecurityUser->find(
+					'first',
+					array(
+						'recursive' => -1,
+						'fields' => array('id', 'first_name', 'middle_name', 'third_name', 'last_name', 'openemis_no'),
+						'conditions' => array('id' => $value['security_user_id'])
 					)
 				);
-				$data['UserContact'][$key] = array_merge($data['UserContact'][$key], 
-					$ContactOption->find(
-						'first',
-						array(
-							'recursive' => -1,
-							'fields' => array('ContactOption.id', 'ContactOption.name'),
-							'conditions' => array('ContactOption.id' => $data['UserContact'][$key]['ContactType']['contact_option_id'])
-						)
-					)
-				);
+				$data['SecurityUserAccess'][$key] = array_merge($data['SecurityUserAccess'][$key], $test);
 			}
 			
 			$allowEdit = false;
@@ -283,8 +285,9 @@ class SecurityController extends AppController {
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
-			$this->set('contactOptions', $contactOptions);
-			$this->Navigation->addCrumb($data['first_name'] . ' ' . $data['last_name']);
+
+			
+			$this->Navigation->addCrumb(ModelHelper::getName($data['SecurityUser']));
 		} else {
 			$this->redirect(array('action' => 'users'));
 		}
@@ -294,11 +297,43 @@ class SecurityController extends AppController {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		if(isset($this->params['pass'][0])) {
 			$userId = $this->params['pass'][0];
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
-			$name = $data['first_name'] . ' ' . $data['last_name'];
+
+			$data = $this->SecurityUser->find(
+				'first', 
+				array(
+					'contain' => array(
+						'UserContact' => array(
+							'fields'=> array('id', 'value', 'preferred'),
+							'ContactType' => array(
+								'fields'=> array('id', 'name'),	
+								'ContactOption' => array('fields'=> array('id', 'name'))
+							)
+						),
+						'SecurityGroupUser' => array(
+							'SecurityGroup' => array('fields'=> array('id', 'name')),
+							'SecurityRole' => array('fields'=> array('id', 'name'))
+						),
+						'SecurityUserAccess' => array(
+							'fields' => array('table_name', 'security_user_id')
+						)
+					),
+					'conditions' => array('SecurityUser.id' => $userId)
+				)
+			);
+
+			// manually getting security user data because table has no 'id'
+			foreach ($data['SecurityUserAccess'] as $key => $value) {
+				$test = $this->SecurityUser->find(
+					'first',
+					array(
+						'recursive' => -1,
+						'fields' => array('id', 'first_name', 'middle_name', 'third_name', 'last_name', 'openemis_no'),
+						'conditions' => array('id' => $value['security_user_id'])
+					)
+				);
+				$data['SecurityUserAccess'][$key] = array_merge($data['SecurityUserAccess'][$key], $test);
+			}
+
 			$allowEdit = false;
 			if($this->Auth->user('super_admin')==1) {
 				$allowEdit = true;
@@ -311,6 +346,7 @@ class SecurityController extends AppController {
 				$this->redirect(array('action' => 'users'));
 			} else {
 				if($this->request->is('post') || $this->request->is('put')) {
+					pr($this->request->data);
 					$postData = $this->data['SecurityUser'];
 					
 					if($this->SecurityUser->doValidate($postData)) {
@@ -319,11 +355,19 @@ class SecurityController extends AppController {
 						$this->redirect(array('action' => 'usersView', $userId));
 					} else {
 						$data = array_merge($data, $postData);
+						
 					}
+				} else {
+					$this->request->data = $data;
 				}
-				$this->set('data', $data);
+
+				// need to handle contact options
+				$contactTypeOptions = $this->SecurityUser->UserContact->ContactType->getOptions();
+				$contactOptionOptions = $this->SecurityUser->UserContact->ContactType->ContactOption->getOptions();
+
+				$this->set(compact('data', 'contactTypeOptions', 'contactOptionOptions'));
 				$this->set('statusOptions', $this->SecurityUser->getStatus());
-				$this->Navigation->addCrumb($name);
+				$this->Navigation->addCrumb(ModelHelper::getName($data['SecurityUser']));
 			}
 		} else {
 			$this->redirect(array('action' => 'users'));

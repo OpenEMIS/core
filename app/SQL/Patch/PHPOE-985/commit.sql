@@ -505,10 +505,13 @@ UPDATE security_users SET gender_id = 2 WHERE gender = "F";
 ALTER TABLE `security_users` DROP `gender`;
 
 
--- migrate and remove telephone, email from security users 
-
 -- need to pull from contact options
 SELECT id INTO @email_contact_option_id FROM contact_options WHERE name = 'Email';
+SELECT id INTO @telephone_contact_option_id FROM contact_options WHERE name = 'Phone';
+
+UPDATE user_contacts SET preferred = 0 WHERE contact_type_id = @email_contact_option_id AND security_user_id IN (SELECT id FROM security_users WHERE email IS NOT NULL AND email <> '');
+UPDATE user_contacts SET preferred = 0 WHERE contact_type_id = @telephone_contact_option_id AND security_user_id IN (SELECT id FROM security_users WHERE telephone IS NOT NULL AND telephone <> '');
+
 INSERT INTO user_contacts (
 preferred,
 contact_type_id, 
@@ -519,7 +522,7 @@ modified,
 created_user_id,
 created
 ) SELECT 
-0,
+1,
 @email_contact_option_id,
 email, 
 id, 
@@ -529,7 +532,7 @@ created_user_id,
 created 
 FROM security_users WHERE email IS NOT NULL AND email <> '';
 
-SELECT id INTO @telephone_contact_option_id FROM contact_options WHERE name = 'Phone';
+
 INSERT INTO user_contacts (
 preferred,
 contact_type_id, 
@@ -540,7 +543,7 @@ modified,
 created_user_id,
 created
 ) SELECT 
-0,
+1,
 @telephone_contact_option_id,
 telephone, 
 id, 
@@ -558,6 +561,33 @@ ALTER TABLE `security_users` DROP `email`;
 
 
 -- need to make menu appear for student/add
- UPDATE navigations set pattern = replace(pattern , '^edit$|','^edit$|^add$|') WHERE module = 'Student' AND plugin = 'Students' AND controller = 'Students' AND header = 'General' AND title = 'Overview';
+UPDATE navigations set pattern = replace(pattern , '^edit$|','^edit$|^add$|') WHERE module = 'Student' AND plugin = 'Students' AND controller = 'Students' AND header = 'General' AND title = 'Overview';
+UPDATE navigations set pattern = replace(pattern , '^edit$|','^edit$|^add$|') WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header = 'General' AND title = 'Overview';
 
- 
+-- Updating census gender_ids
+SELECT id INTO @fieldGenderMale FROM field_option_values WHERE field_option_id IN (SELECT id FROM field_options WHERE code = 'Gender') AND name = 'Male';
+SELECT id INTO @fieldGenderFemale FROM field_option_values WHERE field_option_id IN (SELECT id FROM field_options WHERE code = 'Gender') AND name = 'Female';
+SELECT id INTO @newGenderMale FROM genders WHERE name = 'Male';
+SELECT id INTO @newGenderFemale FROM genders WHERE name = 'Female';
+
+UPDATE census_students SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_attendances SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_behaviours SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_graduates SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_teachers SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_teacher_fte SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_teacher_training SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+UPDATE census_sanitations SET gender_id = @newGenderMale WHERE gender_id = @fieldGenderMale;
+
+UPDATE census_students SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_attendances SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_behaviours SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_graduates SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_teachers SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_teacher_fte SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_teacher_training SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+UPDATE census_sanitations SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
+
+
+
+

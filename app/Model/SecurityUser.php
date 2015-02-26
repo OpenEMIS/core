@@ -62,7 +62,11 @@ class SecurityUser extends AppModel {
 		'Staff.StaffComment',
 		'Staff.StaffSpecialNeed',
 		'Staff.StaffAward',
-		'Staff.StaffContact'
+		'Staff.StaffContact',
+		'SecurityGroupUser',
+		'SecurityUserAccess'
+
+
 	);
 	public $validate = array(
 		'first_name' => array(
@@ -326,6 +330,30 @@ class SecurityUser extends AppModel {
 				'SecurityUser.created_user_id' => $currentLoggedUser
 			)
 		));
+		return $data;
+	}
+
+	public function autocomplete($search) {
+		$search = '%' . $search . '%';
+		
+		$conditions = array(
+			'OR' => array(
+				'SecurityUser.openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search
+			)
+		);
+		$options = array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array('SecurityUser.first_name')
+		);
+		
+		$options['fields'] = array('id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.openemis_no', 'SecurityUser.date_of_birth');
+		$data = $this->find('all', $options);
+		
 		return $data;
 	}
 }

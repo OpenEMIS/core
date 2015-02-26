@@ -4,7 +4,7 @@ echo $this->Html->script('security', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('User Access'));
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'usersEdit', $data['id']), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => 'usersEdit', $data['SecurityUser']['id']), array('class' => 'divider'));
 $this->end();
 $this->assign('contentId', 'users');
 $this->assign('contentClass', 'edit details');
@@ -35,7 +35,7 @@ echo $this->Form->hidden('table_id', array(
 	'autocomplete' => 'table_id',
 	'id' => 'hiddenAutocompleteId'
 ));
-echo $this->Form->hidden('security_user_id', array('value' => $data['id']));
+echo $this->Form->hidden('security_user_id', array('value' => $data['SecurityUser']['id']));
 ?>
 <div class="form-group">
 	<div class="col-md-offset-4">
@@ -56,19 +56,20 @@ echo $this->Form->end();
 	</thead>
 	<tbody>
 		<?php
-		foreach ($data['access'] as $row) {
-			$obj = $row['SecurityUserAccess'];
-			$userId = $obj['security_user_id'];
-			$id = $obj['table_id'];
-			$name = $obj['table_name'];
-			$params = sprintf('%s/%s/%s/', $userId, $id, $name);
+		
+		foreach ($data['SecurityUserAccess'] as $key => $value) {
+			$userObj = $value['SecurityUser'];
+			$userId = $value['security_user_id'];
+			$id = $value['table_id'];
+			$tableName = $value['table_name'];
+			$params = sprintf('%s/%s/%s/', $userId, $id, $tableName);
 			?>
 			<tr>
-				<td><?php echo $obj['openemis_no']; ?></td>
-				<td><?php echo $obj['name']; ?></td>
-				<td><?php echo $obj['table_name']; ?></td>
+				<td><?php echo $userObj['openemis_no']; ?></td>
+				<td><?php echo $this->Model->getName($userObj); ?></td>
+				<td><?php echo $tableName; ?></td>
 				<td>
-					<?php echo $this->Html->link('<span class="icon_delete"></span>', array('action' => 'SecurityUserAccess', 'delete',$userId, $id, $name), array('escape' => false, 'onclick' => 'return jsForm.confirmDelete(this)')); ?>
+					<?php echo $this->Html->link('<span class="icon_delete"></span>', array('action' => 'SecurityUserAccess', 'delete',$userId, $id, $tableName), array('escape' => false, 'onclick' => 'return jsForm.confirmDelete(this)')); ?>
 
 				</td>
 			</tr>
