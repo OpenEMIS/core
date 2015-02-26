@@ -31,6 +31,12 @@ class CensusTextbook extends AppModel {
 	
 	public function getCensusData($siteId, $academicPeriodId, $programmeId, $gradeId) {
 		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $siteId,
+			'InstitutionSiteProgramme.id' => $programmeId
+		);
+		$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
 		$InstitutionSiteProgramme->formatResult = true;
 		$list = $InstitutionSiteProgramme->find('all' , array(
 			'recursive' => -1,
@@ -91,16 +97,11 @@ class CensusTextbook extends AppModel {
 					'conditions' => array(
 						'CensusTextbook.institution_site_id = InstitutionSiteProgramme.institution_site_id',
 						'CensusTextbook.education_grade_subject_id = EducationGradeSubject.id',
-						'CensusTextbook.academic_period_id = InstitutionSiteProgramme.academic_period_id'
+						'CensusTextbook.academic_period_id' => $academicPeriodId
 					)
 				)
 			),
-			'conditions' => array(
-				'InstitutionSiteProgramme.institution_site_id' => $siteId,
-				'InstitutionSiteProgramme.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteProgramme.id' => $programmeId,
-				'InstitutionSiteProgramme.status' => 1
-			),
+			'conditions' => $conditions,
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order', 'EducationSubject.order')
 		));
 		
@@ -181,6 +182,7 @@ class CensusTextbook extends AppModel {
 			$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods(true, 'DESC');
 			$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);
 			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedAcademicPeriod);
+
 			if (!$editable) {
 				$controller->redirect(array('action' => 'textbooks', $selectedAcademicPeriod));
 			} else {

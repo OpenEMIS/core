@@ -145,7 +145,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
 				$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 				
-				if($todayDate >= $academicPeriodObj['AcademicPeriod']['start_date'] && $todayDate <= $academicPeriodObj['AcademicPeriod']['end_date']){
+				if(strtotime($todayDate) >= strtotime($startDate) && strtotime($todayDate) <= strtotime($endDate)){
 					$dataStartDate = $todayDateFormatted;
 					$dataEndDate = $todayDateFormatted;
 				}else{
@@ -198,6 +198,8 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			
 			$this->setFieldOrder('full_day_absent', 1);
 			$this->setFieldOrder('staff_absence_reason_id', 9);
+			$customJs = array('institution_attendance');
+			$this->setVar('params', array('js'=> $customJs));
 		}else if ($this->action == 'add') {
 			$this->setFieldOrder('full_day_absent', 2);
 			$this->setFieldOrder('staff_absence_reason_id', 11);
@@ -348,7 +350,6 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->render = 'auto';
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		
 		$academicPeriodOptions = $this->fields['academic_period_id']['options'];
 		$selectedAcademicPeriod = 0;
 		if (!empty($academicPeriodOptions)) {
@@ -385,7 +386,8 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->fields['staff_id']['options'] = $staffOptions;
 		$this->setFieldOrder('staff_id', 1);
 		
-		$this->setVar('params', array('back' => 'absence'));
+		$customJs = array('institution_attendance');
+		$this->setVar('params', array('back' => 'absence', 'js'=> $customJs));
 		$this->setVar(compact('fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'academicPeriodOptions', 'selectedAcademicPeriod', 'staffOptions'));
 	}
 

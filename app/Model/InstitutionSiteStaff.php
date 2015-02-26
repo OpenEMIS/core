@@ -426,25 +426,12 @@ class InstitutionSiteStaff extends AppModel {
 
 	// used by InstitutionSiteClass.edit
 	public function getStaffOptions($institutionSiteId, $periodId) {
-		$periodModel = ClassRegistry::init('AcademicPeriod');
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$periodObj = $AcademicPeriod->findById($periodId);
+		$periodStartDate = $AcademicPeriod->getDate($periodObj['AcademicPeriod'], 'start_date');
+		$periodEndDate = $AcademicPeriod->getDate($periodObj['AcademicPeriod'], 'end_date');
 
-		$periodObj = $periodModel->findById($periodId);
-		$periodStartDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'start_date');
-
-		$alias = $this->alias;
-		$options = array(
-			'contain' => array('Staff'),
-			'conditions' => array(
-				"$alias.institution_site_id" => $institutionSiteId,
-				"$alias.start_date <= " => $periodStartDate,
-				'OR' => array(
-					"$alias.end_date IS NULL",
-					"$alias.end_date >= " => $periodStartDate
-				)
-			)
-		);
-
-		$list = $this->find('all', $options);
+		$list = $this->getStaffByInstitutionSite($institutionSiteId, $periodStartDate, $periodEndDate);
 		$data = array();
 		foreach ($list as $obj) {
 			$staffObj = $obj['Staff'];

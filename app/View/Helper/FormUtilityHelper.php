@@ -107,69 +107,39 @@ class FormUtilityHelper extends AppHelper {
 	public function datepicker($field, $options=array()) {
 		$dateFormat = 'dd-mm-yyyy';
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
-		$model=false;
-		$exp = explode('.', $field);
-		if(count($exp)>1){
-			$model = $exp[0];
-			$field = $exp[1];
-		}else{
-			foreach($this->request->data as $k => $v){
-				if(is_array($v)){
-					$model = array_key_exists($field, $v) ? $k : $model;
-				}
-			}
-		}
 		$_options = array(
 			'id' => 'date',
 			'data-date-format' => $dateFormat,
 			'data-date-autoclose' => 'true',
-			'label' => $this->Label->getLabel($model, array('field'=>$field)),
+			'label' => false,
 			'disabled' => false
 		);
 		$label = isset($options['label']) ? $options['label'] : $_options['label'];
-		unset($options['label']);
 		unset($_options['label']);
 		$disabled = isset($options['disabled']) ? $options['disabled'] : $_options['disabled'];
-		unset($options['disabled']);
 		unset($_options['disabled']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
 		$defaults = $this->Form->inputDefaults();
-
-		if(isset($_options['data-date'])){
-			if($_options['data-date']=='blank'){
-				$defaultDate = '';
-			} else if(strlen($_options['data-date'])>0) {
-				$defaultDate = $_options['data-date'];
-			} else {
-				$defaultDate = date('d-m-Y');
-			}
-		} else {
-			$defaultDate = date('d-m-Y');
-		}
 		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
-			'value' => $defaultDate
+			'value' => isset($_options['data-date'])?$_options['data-date']:date('d-m-Y')
 		);
 		$inputOptions = array_merge($_options, $inputOptions);
 
 		if($label !== false) {
 			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
-		
 		if($disabled !== false) {
 			$inputOptions['disabled'] = $disabled;
 		}
-		if($field == 'end_date'){
-			//pr($inputOptions);die;
-		}
 		$html = $this->Form->input($field, $inputOptions);
-		
+	
 		$_datepickerOptions = array();
 		$_datepickerOptions['id'] = $_options['id'];
 		if(!empty($_options['startDate'])){
@@ -246,26 +216,8 @@ class FormUtilityHelper extends AppHelper {
 
 		$controller = $_options['controller'];
 		$model = $_options['model'];
-		$areaId = null;
-		if($model=='Area'){
-			$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
-			$SecurityGroupArea = ClassRegistry::init('SecurityGroupArea');
-			if(AuthComponent::user('id')){
-				$userId = AuthComponent::user('id');
-			}else{
-				$userId = 0;
-			}
-			$groupId = $SecurityGroupUser->getGroupIdsByUserId($userId);
-			$userAreas = $SecurityGroupArea->getAreas($groupId);
-			if(count($userAreas)>0){
-				foreach($userAreas as $ua){
-					$areaId = !$areaId ? $ua['area_id'] : (($ua['area_id']<$areaId) ? $ua['area_id'] : $areaId);
-				}
-			}
-		}
-		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : (($areaId) ? $areaId : null);
-
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : $AreaHandler->getDefaultAreaId($model);
 		
 		$html = '';
 		$worldId = $AreaHandler->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
@@ -276,17 +228,8 @@ class FormUtilityHelper extends AppHelper {
 		$inputOptions = $inputDefaults;
 		if (!empty($path)) {
 			foreach($path as $i => $obj) {
-				// $options = $AreaHandler->getChildren($model, $obj[$model]['parent_id']);
-				$options = $AreaHandler->{$model}->find('list', array(
-					'conditions' => array(
-						$model.'.parent_id' => $obj[$model]['parent_id'],
-						$model.'.visible' => 1
-					),
-					'order' => array($model.'.order')
-				));
-
-				if($obj[$model]['parent_id'] == -1 || ($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
-				} else {
+				$options = $AreaHandler->getChildren(array('model'=>$model, 'parentId'=>$obj[$model]['parent_id'], 'dataType'=>'list'));
+				if($obj[$model]['parent_id'] > 0 && !($model == 'AreaAdministrative' && $obj[$model]['parent_id'] == $worldId)) {
 					$options = array(
 						$obj[$model]['parent_id'] => $this->Label->get('Area.select')
 					) + $options;
@@ -297,22 +240,6 @@ class FormUtilityHelper extends AppHelper {
 				if(count($path) != 1) {
 					$inputOptions['default'] = $obj[$model]['id'];
 					$inputOptions['value'] = $obj[$model]['id'];
-
-					/*
-					if($i < count($path) - 1) {
-						$options = array($obj[$model]['id'] => $obj[$model]['name']);
-					}else{
-						if(isset($userAreas)&&count($userAreas)>0){
-							$options = array();
-							foreach($userAreas as $ua){
-								$options[$ua['area_id']] = $ua['area_name'];
-							}				
-						}
-						$options = array($this->Label->get('Area.select')) + $options;
-					}
-				}else{
-					$options = array($this->Label->get('Area.select')) + $options;	
-					*/
 				} else {
 					$inputOptions['default'] = $worldId;
 					$inputOptions['value'] = $worldId;

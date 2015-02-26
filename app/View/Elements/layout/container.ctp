@@ -38,4 +38,11 @@ if(isset($timepicker) && !empty($timepicker)) {
 	echo $this->Html->script('plugins/timepicker/bootstrap-timepicker', array('inline' => false));
 	echo $this->element('layout/timepicker');
 }
+if (isset($params)) {
+	if (isset($params['js'])) {
+		foreach($params['js'] as $js) {
+			$this->Html->script($js, array('inline' => false));
+		}
+	}
+}
 ?>

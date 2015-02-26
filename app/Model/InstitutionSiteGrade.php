@@ -14,6 +14,21 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class Survey extends SurveysAppModel {
+App::uses('AppModel', 'Model');
+
+class InstitutionSiteGrade extends AppModel {
+	public $belongsTo = array(
+		'InstitutionSiteProgramme',
+		'EducationGrade',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 }
-?>

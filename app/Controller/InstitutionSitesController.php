@@ -247,7 +247,6 @@ class InstitutionSitesController extends AppController {
 		$instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
 		$dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
 		$types = $this->InstitutionSiteType->getList();
-		//pr(array($customfields));
 		$this->set("customfields",array($customfields));
 		$this->set('types',  $types);		
 		$this->set('typeSelected',  $sitetype);
@@ -257,6 +256,7 @@ class InstitutionSitesController extends AppController {
 
 	public function view($id = 0) {
 		$data = array();
+
 		if ($id != 0) {
 			$data = $this->InstitutionSite->findById($id);
 			if ($data) {
@@ -267,7 +267,7 @@ class InstitutionSitesController extends AppController {
 			} else {
 				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 			}
-		} else if ($this->Session->check('InstitutionSite.id')){
+		} else if ($this->Session->check('InstitutionSite.id')) {
 			$id = $this->Session->read('InstitutionSite.id');
 			$data = $this->InstitutionSite->findById($id);
 			$this->Session->write('InstitutionSite.data', $data);
@@ -275,15 +275,20 @@ class InstitutionSitesController extends AppController {
 		} else {
 			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 		}
-		$this->institutionSiteId = $id;
-		$this->institutionSiteObj = $data;
-		
-		$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
-		$this->bodyTitle = $name;
-		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
-		$this->Navigation->addCrumb('Overview');
-		
-		$this->set('data', $data);
+		if($this->checkUserAccess($id, 'view')) {
+			$this->institutionSiteId = $id;
+			$this->institutionSiteObj = $data;
+			
+			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
+			$this->bodyTitle = $name;
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
+			$this->Navigation->addCrumb('Overview');
+			
+			$this->set('data', $data);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SITE_NO_VIEW_ACCESS'), array('type' => 'warn'));
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
 	}
 
 	public function viewMap($id = false) {
@@ -306,42 +311,47 @@ class InstitutionSitesController extends AppController {
 		$this->InstitutionSite->id = $id;
 		$data = $this->InstitutionSite->findById($id);
 		
-		if ($this->request->is(array('post', 'put'))) {
-			$dateOpened = $this->request->data['InstitutionSite']['date_opened'];
-			$dateClosed = $this->request->data['InstitutionSite']['date_closed'];
-			if(!empty($dateOpened)) {
-				$this->request->data['InstitutionSite']['year_opened'] = date('Y', strtotime($dateOpened));
+		if($this->checkUserAccess($id, 'edit')) {
+			if ($this->request->is(array('post', 'put'))) {
+				$dateOpened = $this->request->data['InstitutionSite']['date_opened'];
+				$dateClosed = $this->request->data['InstitutionSite']['date_closed'];
+				if(!empty($dateOpened)) {
+					$this->request->data['InstitutionSite']['year_opened'] = date('Y', strtotime($dateOpened));
+				}
+				if(!empty($dateClosed)) {
+					$this->request->data['InstitutionSite']['year_closed'] = date('Y', strtotime($dateClosed));
+				}
+				$this->request->data['InstitutionSite']['latitude'] = trim($this->request->data['InstitutionSite']['latitude']);
+				$this->request->data['InstitutionSite']['longitude'] = trim($this->request->data['InstitutionSite']['longitude']);
+				$this->InstitutionSite->set($this->request->data);
+				
+				if ($this->InstitutionSite->validates()) {
+					$result = $this->InstitutionSite->save($this->request->data);
+					$this->Message->alert('general.edit.success');
+					$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view'));	
+				}
+				$data = $this->request->data;
+			} else {
+				$this->request->data = $data;
+	            $this->request->data['InstitutionSite']['area_id_select'] = $data['InstitutionSite']['area_id'];
+	            $this->request->data['InstitutionSite']['area_administrative_id_select'] = $data['InstitutionSite']['area_administrative_id'];
 			}
-			if(!empty($dateClosed)) {
-				$this->request->data['InstitutionSite']['year_closed'] = date('Y', strtotime($dateClosed));
-			}
-			$this->request->data['InstitutionSite']['latitude'] = trim($this->request->data['InstitutionSite']['latitude']);
-			$this->request->data['InstitutionSite']['longitude'] = trim($this->request->data['InstitutionSite']['longitude']);
-			$this->InstitutionSite->set($this->request->data);
+			$dataMask = $this->ConfigItem->getValue('institution_site_code');
+			$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 			
-			if ($this->InstitutionSite->validates()) {
-				$result = $this->InstitutionSite->save($this->request->data);
-				$this->Message->alert('general.edit.success');
-				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view'));	
-			}
-			$data = $this->request->data;
-		} else {
-			$this->request->data = $data;
-            $this->request->data['InstitutionSite']['area_id_select'] = $data['InstitutionSite']['area_id'];
-            $this->request->data['InstitutionSite']['area_administrative_id_select'] = $data['InstitutionSite']['area_administrative_id'];
-		}
-		$dataMask = $this->ConfigItem->getValue('institution_site_code');
-		$arrCode = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-		
-		$statusOptions = $this->InstitutionSite->InstitutionSiteStatus->getList(array('value' => $data['InstitutionSite']['institution_site_status_id']));
-		$localityOptions = $this->InstitutionSite->InstitutionSiteLocality->getList(array('value' => $data['InstitutionSite']['institution_site_locality_id']));
-		$ownershipOptions = $this->InstitutionSite->InstitutionSiteOwnership->getList(array('value' => $data['InstitutionSite']['institution_site_ownership_id']));
-		$typeOptions = $this->InstitutionSite->InstitutionSiteType->getList(array('value' => $data['InstitutionSite']['institution_site_type_id']));
-		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList(array('value' => $data['InstitutionSite']['institution_site_provider_id']));
-		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList(array('value' => $data['InstitutionSite']['institution_site_sector_id']));
-		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList(array('value' => $data['InstitutionSite']['institution_site_gender_id']));
+			$statusOptions = $this->InstitutionSite->InstitutionSiteStatus->getList(array('value' => $data['InstitutionSite']['institution_site_status_id']));
+			$localityOptions = $this->InstitutionSite->InstitutionSiteLocality->getList(array('value' => $data['InstitutionSite']['institution_site_locality_id']));
+			$ownershipOptions = $this->InstitutionSite->InstitutionSiteOwnership->getList(array('value' => $data['InstitutionSite']['institution_site_ownership_id']));
+			$typeOptions = $this->InstitutionSite->InstitutionSiteType->getList(array('value' => $data['InstitutionSite']['institution_site_type_id']));
+			$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList(array('value' => $data['InstitutionSite']['institution_site_provider_id']));
+			$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList(array('value' => $data['InstitutionSite']['institution_site_sector_id']));
+			$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList(array('value' => $data['InstitutionSite']['institution_site_gender_id']));
 
-		$this->set(compact('data', 'arrCode', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
+			$this->set(compact('data', 'arrCode', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SITE_NO_EDIT_ACCESS'), array('type' => 'warn'));
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}		
 	}
 
 	public function add() {
@@ -398,16 +408,22 @@ class InstitutionSitesController extends AppController {
 	}
 
 	public function delete() {
-		$id = $this->Session->read('InstitutionSiteId');
-		$name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
-		//$this->InstitutionSite->delete($id);
-		if($this->InstitutionSite->delete($id)){
-			$this->Utility->alert($name . ' have been deleted successfully.');
-		}else{
-			//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
-		}
+		$id = $this->Session->read('InstitutionSite.id');
 		
-		$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		if($this->checkUserAccess($id, 'delete')) {
+			$name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
+			//$this->InstitutionSite->delete($id);
+			if($this->InstitutionSite->delete($id)){
+				$this->Utility->alert($name . ' have been deleted successfully.');
+			}else{
+				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
+			}
+			
+			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SITE_NO_DELETE_ACCESS'), array('type' => 'warn'));
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
 	}
 
 	public function excel() {
@@ -840,4 +856,14 @@ class InstitutionSitesController extends AppController {
 
 		return $days;
 	}
+
+	public function checkUserAccess($institutionSiteId, $action) {
+		if ($institutionSiteId != 0 || $this->Session->check('InstitutionSite.id')) {
+			$institutionSiteId = ($institutionSiteId != 0) ? $institutionSiteId : $this->Session->read('InstitutionSite.id');
+			return $this->AccessControl->newCheck('InstitutionSites', $action, $institutionSiteId);
+		} else {
+			return false;
+		}
+	}
+
 }

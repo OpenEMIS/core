@@ -22,16 +22,19 @@ class SecurityGroupInstitutionSite extends AppModel {
 		'InstitutionSite'
 	);
 	
-	public function autocomplete($search, $exclude) {
+	public function autocomplete($search, $exclude=array(), $conditions=array()) {
+		$conditions = array_merge(array(
+			'OR' => array(
+				'InstitutionSite.code LIKE' => $search,
+				'InstitutionSite.name LIKE' => $search
+			),
+			'InstitutionSite.id NOT' => $exclude
+		), $conditions);
+
+		$this->InstitutionSite->contain('Area');
 		$list = $this->InstitutionSite->find('all', array(
 			'fields' => array('InstitutionSite.id', 'InstitutionSite.code', 'InstitutionSite.name'),
-			'conditions' => array(
-				'OR' => array(
-					'InstitutionSite.code LIKE' => $search,
-					'InstitutionSite.name LIKE' => $search
-				),
-				'InstitutionSite.id NOT' => $exclude
-			),
+			'conditions' => $conditions,
 			'order' => array('InstitutionSite.name')
 		));
 		

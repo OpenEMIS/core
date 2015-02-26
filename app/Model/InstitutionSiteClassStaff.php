@@ -130,7 +130,10 @@ class InstitutionSiteClassStaff extends AppModel {
 			'fields' => array(
 				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'
 			),
-			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId),
+			'conditions' => array(
+				'InstitutionSiteClassStaff.institution_site_class_id' => $classId,
+				'InstitutionSiteClassStaff.status' => 1
+			),
 			'order' => array('Staff.first_name')
 		));
 
