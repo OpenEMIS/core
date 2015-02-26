@@ -185,8 +185,14 @@ class InstitutionSiteProgramme extends AppModel {
 
 			$selectedEducationLevel = $data[$this->alias]['education_level_id'];
 			$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
-			$selectedEducationProgramme = !empty($data[$this->alias]['education_programme_id']) ? $data[$this->alias]['education_programme_id'] : key($educationProgrammeOptions);
-
+			
+			$dataSelectedProgramme = !empty($data[$this->alias]['education_programme_id']) ? $data[$this->alias]['education_programme_id'] : false;
+			if ($dataSelectedProgramme) {
+				$selectedEducationProgramme = array_key_exists($dataSelectedProgramme, $educationProgrammeOptions) ? $dataSelectedProgramme : key($educationProgrammeOptions);
+			} else {
+				$selectedEducationProgramme = key($educationProgrammeOptions);
+			}
+			
 			if($data['submit'] == 'reload') {
 				unset($this->request->data['InstitutionSiteGrade']);
 			} else {
@@ -225,19 +231,25 @@ class InstitutionSiteProgramme extends AppModel {
 
 			$EducationProgramme = $this->EducationProgramme;
 			$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
-			$selectedEducationProgramme = key($educationProgrammeOptions);
+			$selectedEducationProgramme = $data['EducationProgramme']['id'];
 
 			if ($this->request->is(array('post', 'put'))) {
-				$data = $this->request->data;
+				$postData = $this->request->data;
 
-				$selectedEducationLevel = $data[$this->alias]['education_level_id'];
+				$selectedEducationLevel = $postData[$this->alias]['education_level_id'];
 				$educationProgrammeOptions = $EducationProgramme->getOptionsByEducationLevelId($selectedEducationLevel);
-				$selectedEducationProgramme = !empty($data[$this->alias]['education_programme_id']) ? $data[$this->alias]['education_programme_id'] : key($educationProgrammeOptions);
 
-				if($data['submit'] == 'reload') {
+				$dataSelectedProgramme = !empty($postData[$this->alias]['education_programme_id']) ? $postData[$this->alias]['education_programme_id'] : false;
+				if ($dataSelectedProgramme) {
+					$selectedEducationProgramme = array_key_exists($dataSelectedProgramme, $educationProgrammeOptions) ? $dataSelectedProgramme : key($educationProgrammeOptions);
+				} else {
+					$selectedEducationProgramme = key($educationProgrammeOptions);
+				}
+
+				if($postData['submit'] == 'reload') {
 					unset($this->request->data['InstitutionSiteGrade']);
 				} else {
-					if ($this->saveAll($data)) {
+					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
 						return $this->redirect(array('action' => get_class($this), 'view', $this->id));
 					} else {

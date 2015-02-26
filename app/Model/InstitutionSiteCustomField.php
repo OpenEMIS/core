@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomField extends AppModel {
 	public $actsAs = array(
+		'Excel',
 		'CustomField' => array('module' => 'InstitutionSite'), // has to be before FieldOptionBehavior to override postAdd and postEdit
 		'FieldOption', 
 		'ControllerAction'
@@ -40,11 +41,40 @@ class InstitutionSiteCustomField extends AppModel {
 		)
 	);
 	
-	public function getSubOptions() {
-		$options = $this->InstitutionSiteType->getList();
-		array_unshift($options, __('All'));
+	public function excelCustomFieldFindOptions($options) {
+		$conditions = parent::excelGetConditions();
+		
+		if (array_key_exists('InstitutionSite.id', $conditions)) {
+			$id = $conditions['InstitutionSite.id'];
+
+			$InstitutionSite = ClassRegistry::init('InstitutionSite');
+			$type = $InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $id));
+			$options['conditions'][$this->alias . '.institution_site_type_id'] = array(0, $type);
+			$options['conditions'][$this->alias . '.type'] = array(2, 3, 4, 5);
+		}
+		
+		if(is_array($options['order'])){
+			$tmpOrder = $options['order'][0];
+		}else{
+			$tmpOrder = $options['order'];
+			$options['order'] = array();
+		}
+		
+		$options['order'][0] = $this->alias . '.institution_site_type_id';
+		$options['order'][1] = $tmpOrder;
+		
 		return $options;
 	}
+	
+	public function getSubOptions() {
+        $list = $this->InstitutionSiteType->getListOnly();
+        $options = array(0 => __('All'));
+
+        foreach ($list as $key => $value) {
+            $options[$key] = $value;
+        }
+        return $options;
+    }
 	
 	public function getOptionFields($controller) {
 		parent::getOptionFields($controller);
