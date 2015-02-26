@@ -257,7 +257,7 @@ class InstitutionSiteProgramme extends AppModel {
 			$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
 			$this->setVar(compact('educationGrades'));
 		} else {
-			$this->Message->alert('general.view.notExists');
+			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this)));
 		}
 	}

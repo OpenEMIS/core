@@ -116,7 +116,7 @@ class Student extends StudentsAppModel {
 		
 		$conditions = array(
 			'OR' => array(
-				'openemis_no LIKE' => $search,
+				'SecurityUser.openemis_no LIKE' => $search,
 				'SecurityUser.first_name LIKE' => $search,
 				'SecurityUser.middle_name LIKE' => $search,
 				'SecurityUser.third_name LIKE' => $search,

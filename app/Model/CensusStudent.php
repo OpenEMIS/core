@@ -96,7 +96,7 @@ class CensusStudent extends AppModel {
 			),
 			'joins' => array(
 				array(
-					'table' => 'field_option_values',
+					'table' => 'genders',
 					'alias' => 'Gender',
 					'conditions' => array(
 						'CensusStudent.gender_id = Gender.id'
