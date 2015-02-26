@@ -531,6 +531,11 @@ class LabelHelper extends AppHelper {
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'
+		),
+		'FieldOption' => array(
+			'module' => 'Module',
+			'records' => 'No of records',
+			'apply' => 'Apply To'
 		)
 	);
 	

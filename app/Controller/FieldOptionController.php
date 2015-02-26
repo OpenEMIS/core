@@ -336,7 +336,7 @@ class FieldOptionController extends AppController {
 		}
 
 		if ($this->request->is(array('post', 'put'))) {
-			$convertValue = $this->request->data[$model]['convert'];
+			$convertValue = $this->request->data[$model]['convert_to'];
 			foreach ($modifyForeignKey as $key => $value) {
 				$CurrModelClass = ClassRegistry::init($key);
 				$foreignKeyId = Inflector::underscore($code)."_id";
