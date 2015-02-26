@@ -237,7 +237,11 @@ class FieldOptionController extends AppController {
 			$this->set(compact('conditionId', 'selectedSubOption'));
 		}
 
+		$currentValues = $this->FieldOptionValue->getValue($selectedValue);
 		if ($this->request->is(array('post', 'put'))) {
+			if (isset($currentValues[$model->alias]['type'])) {
+				$this->request->data[$model->alias]['type'] = $currentValues[$model->alias]['type'];
+			}
 			if ($model->postEdit($this) === false) {
 				if ($this->FieldOptionValue->saveValue($this->request->data)) {
 					$redirect = array('action' => 'view', $selectedOption, $selectedValue);

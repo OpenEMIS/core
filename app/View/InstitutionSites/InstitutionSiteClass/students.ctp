@@ -26,6 +26,7 @@
 					<?php
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.id");
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.student_id");
+					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.institution_site_section_id", array('value' => $selectedSectionId));
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.status", array('value' => 1));
 					//echo $this->Form->hidden("InstitutionSiteClassStudent.$i.education_grade_id", array('value' => !empty($this->data[$model]['education_grade_id']) ? $this->data[$model]['education_grade_id'] : 0));
 

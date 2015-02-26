@@ -54,12 +54,12 @@ class SchoolYear extends AppModel {
 			$result = $this->find('list', array(
 				'fields' => array('SchoolYear.id', 'SchoolYear.name'),
 				'conditions' => array('SchoolYear.visible' => 1),
-				'order' => array('SchoolYear.name ' . $order)
+				'order' => array('SchoolYear.order ' . $order)
 			));
 		} else {
 			$result = $this->find('all', array(
 				'conditions' => array('SchoolYear.visible' => 1),
-				'order' => array('SchoolYear.name ' . $order)
+				'order' => array('SchoolYear.order ' . $order)
 			));
 		}
 		return $result;
@@ -157,7 +157,7 @@ class SchoolYear extends AppModel {
 		$data = $this->find('list', array(
 			'fields' => array('SchoolYear.id', 'SchoolYear.name'),
 			'conditions' => $conditions,
-			'order' => 'SchoolYear.name'
+			'order' => 'SchoolYear.order'
 		));
 		return $data;
 	}
