@@ -37,7 +37,8 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteShift',
 		'InstitutionSiteSection',
 		'InstitutionSiteClass',
-		'InstitutionSiteFee'
+		'InstitutionSiteFee',
+		'InstitutionSiteCustomValue'
 	);
 	
 	public $actsAs = array(
@@ -262,7 +263,14 @@ class InstitutionSite extends AppModel {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('InstitutionSite.id')) {
 			$models = array(
-				array('model' => $this),
+				array(
+					'model' => $this, 
+					'include' => array(
+						'header' => 'InstitutionSiteCustomField',
+						'data' => 'InstitutionSiteCustomValue',
+						'dataOptions' => 'InstitutionSiteCustomFieldOption'
+					)
+				),
 				array('model' => $this->InstitutionSiteBankAccount),
 				array('model' => $this->InstitutionSitePosition),
 				array('model' => $this->InstitutionSiteProgramme),
@@ -868,5 +876,5 @@ class InstitutionSite extends AppModel {
 		}
 		return $data;
 	}
-	
+
 }

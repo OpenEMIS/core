@@ -183,7 +183,6 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
-
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
@@ -248,6 +247,7 @@ class InstitutionSiteClass extends AppModel {
 			$contain = array(
 				'AcademicPeriod',
 				'EducationSubject',
+				'InstitutionSiteSectionClass',
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'SecurityUser' => array(
@@ -272,7 +272,7 @@ class InstitutionSiteClass extends AppModel {
 				)
 			);
 			$this->contain($contain);
-			$data = $this->findById($id);//pr($data);
+			$data = $this->findById($id);
 			$contentHeader = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($contentHeader);
 			
@@ -313,17 +313,18 @@ class InstitutionSiteClass extends AppModel {
 				'fields' => array('id', 'InstitutionSiteSectionClass.institution_site_section_id'), 
 				'conditions' => array('InstitutionSiteSectionClass.institution_site_class_id' => $id)
 			));
-
+			$selectedSectionId = isset($data['InstitutionSiteSectionClass'][0]) ? $data['InstitutionSiteSectionClass'][0]['institution_site_section_id'] : key($sectionIds) ;
+			
 			// retrieve all the students linked to the sections
 			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
-			// redirect dies here
 
+			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
 
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
-
+				
 				if ($postData['submit'] == 'add') {
+					$this->removeExistingStudents($studentOptions);
 					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
@@ -353,17 +354,21 @@ class InstitutionSiteClass extends AppModel {
 							$newRow = array(
 								'student_id' => $studentId,
 								'student_category_id' => 0,
+								'institution_site_section_id' => $selectedSectionId,
 								'status' => 1,
 								'Student' => $studentObj['Student']
 							);
 
 							// search if the new student was previously added before
-							foreach ($data['InstitutionSiteClassStudent'] as $row) {
-								if ($row['student_id'] == $studentId) {
-									$newRow['id'] = $row['id'];
+							if (isset($data['InstitutionSiteClassStudent'])) {
+								foreach ($data['InstitutionSiteClassStudent'] as $row) {
+									if ($row['student_id'] == $studentId) {
+										$newRow['id'] = $row['id'];
+									}
 								}
 							}
 							$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
+							unset($studentOptions[$studentId]);
 						}
 						unset($this->request->data[$this->alias]['student_id']);
 					}
@@ -412,7 +417,8 @@ class InstitutionSiteClass extends AppModel {
 					);
 					$this->InstitutionSiteClassStudent->updateAll(
 						array('InstitutionSiteClassStudent.status' => 0),
-						array('InstitutionSiteClassStudent.institution_site_class_id' => $id)
+						array('InstitutionSiteClassStudent.institution_site_class_id' => $id),
+						array('InstitutionSiteClassStudent.institution_site_section_id' => $selectedSectionId)
 					);
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
@@ -421,6 +427,7 @@ class InstitutionSiteClass extends AppModel {
 				}
 			} else {
 				$this->request->data = $data;
+				$this->removeExistingStudents($studentOptions);
 			}
 
 			// removing existing staff from StaffOptions
@@ -432,25 +439,28 @@ class InstitutionSiteClass extends AppModel {
 				}
 			}
 
-			// removing existing students from StudentOptions
-			if (isset($this->request->data['InstitutionSiteClassStudent'])) {
-				foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
-					if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
-						unset($studentOptions[$row['student_id']]);
-					}
-				}
-			}
-
+			
 			if (!empty($studentOptions)) {
 				$addAllStudentLabel = '-- ' . $this->controller->Option->getLabel($this->alias . '.add_all_student') . ' --';
 				$studentOptions = $this->controller->Option->prepend($studentOptions, array('-1' => $addAllStudentLabel));
 			}
 			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
 
-			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions'));
+			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions', 'selectedSectionId'));
 		} else {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => $this->alias));
+		}
+	}
+
+	protected function removeExistingStudents(&$studentOptions) {
+		// removing existing students from StudentOptions
+		if (isset($this->request->data['InstitutionSiteClassStudent'])) {
+			foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
+				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
+					unset($studentOptions[$row['student_id']]);
+				}
+			}
 		}
 	}
 
