@@ -1,7 +1,7 @@
 <div class="form-group" style="padding: 10px;">
 	
 	<div class="panel panel-default">
-		<div class="panel-heading"><?php echo __('Students') ?></div>
+		<div class="panel-heading dark-background"><?php echo __('Students') ?></div>
 
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
@@ -17,14 +17,16 @@
 
 			<tbody>
 			<?php 
-			foreach($this->data['InstitutionSiteClassStudent'] as $i => $obj) : 
-				if ($obj['status'] == 0) continue;
+			if (isset($this->data['InstitutionSiteClassStudent'])) :
+				foreach($this->data['InstitutionSiteClassStudent'] as $i => $obj) : 
+					if ($obj['status'] == 0) continue;
 			?>
 
 				<tr>
 					<?php
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.id");
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.student_id");
+					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.institution_site_section_id", array('value' => $selectedSectionId));
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.status", array('value' => 1));
 					//echo $this->Form->hidden("InstitutionSiteClassStudent.$i.education_grade_id", array('value' => !empty($this->data[$model]['education_grade_id']) ? $this->data[$model]['education_grade_id'] : 0));
 
@@ -51,7 +53,10 @@
 					</td-->
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>
-			<?php endforeach ?>
+			<?php 
+				endforeach;
+			endif;
+			?>
 				
 			</tbody>
 		</table>

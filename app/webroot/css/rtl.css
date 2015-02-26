@@ -331,6 +331,24 @@ fieldset.section_break > .profile-image {
 
 .table th { text-align: right; }
 
+th:after,
+ul#breadcrumb li:after,
+h1:after,
+h1 span:after,
+h2:after,
+h2 span:after,
+h3:after,
+h3 span:after,
+label:after,
+div.panel-heading:after,
+select:after,
+select > option:after 
+{ content: 'i';visibility: hidden; }
+div#accordion div.panel-heading:after{ content: ''; }
+
+/* InstitutionSiteStudent/index.ctp */
+.table .section-info > span { float: right; }
+
 /* #search */
 .rtl .input-group-addon:first-child { border-right: 1px solid #ccc; }
 
@@ -385,3 +403,79 @@ fieldset.section_break > .profile-image {
 /* survey */
 .survey .list-group { padding-right: 0px; }
 .survey .list-group-item > span.modified { margin-right: 5px; }
+.loadingWrapper{
+	float: right;
+}
+
+
+/* .fuelux is for reports generation pages layout */
+.fuelux .wizard > .steps {
+    list-style: outside none none;
+    padding: 0px;
+    margin: 0px;
+    width: 100%;
+}
+.fuelux .wizard > .steps li:first-child {
+    border-radius: 0px 0px 0px 0px;
+    padding-right: 10px;
+}
+.fuelux .wizard > .steps li.active {
+    background: none repeat scroll 0% 0% #F1F6FC;
+    color: #3A87AD;
+    cursor: default;
+}
+.fuelux .wizard > .steps li {
+    float: right;
+    margin: 0px;
+    padding: 0px 20px 0px 30px;
+    height: 46px;
+    line-height: 46px;
+    position: relative;
+    background: none repeat scroll 0% 0% #EDEDED;
+    color: #999;
+    font-size: 16px;
+    cursor: not-allowed;
+}
+.fuelux .wizard .steps > li { font-size: 12px !important; }
+.fuelux .wizard > .steps li .badge { margin-left: 8px; }
+.fuelux .wizard > .steps.previous-disabled li.complete:hover .chevron:before { border-left-color: #f3f4f5; }
+.fuelux .wizard > .steps li .chevron {
+  border: 24px solid transparent;
+  border-right: 14px solid #d4d4d4;
+  border-left: 0;
+  display: inline-table;
+  position: absolute;
+  right: 100%;
+  top: -1px;
+  z-index: 1;
+}
+.fuelux .wizard > .steps li .chevron:before {
+  border: 24px solid transparent;
+  border-right: 14px solid #ededed;
+  border-left: 0;
+  content: "";
+  display: block;
+  position: absolute;
+  right: -1px;
+  top: 0;
+}
+.fuelux .wizard > .steps li.complete:hover .chevron:before {
+  border-right: 14px solid #e7eff8;
+  border-left: 0;
+}
+.fuelux .wizard > .steps li.complete .chevron:before {
+  border-right: 14px solid #f3f4f5;
+  border-left: 0;
+}
+.fuelux .wizard > .steps li.active .chevron:before {
+	border-right: 14px solid #f1f6fc;
+	border-left: 0;
+}
+.fuelux .wizard > .actions {
+    position: relative;
+    float: left;
+    border-left: none;
+    border-right: 1px solid #D4D4D4;
+}
+.fuelux .wizard > .actions .glyphicon-arrow-left:before { content:"\e092"; }
+.fuelux .wizard > .actions .glyphicon-arrow-right:before { content:"\e091"; }

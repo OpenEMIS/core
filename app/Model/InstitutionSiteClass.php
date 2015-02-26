@@ -91,8 +91,7 @@ class InstitutionSiteClass extends AppModel {
 		$this->Navigation->addCrumb('List of Classes');
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		$conditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);
 		$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
 		$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
@@ -112,9 +111,12 @@ class InstitutionSiteClass extends AppModel {
 		$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
 
 		foreach ($data as $key => $value) {
-			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
+			if(!empty($value['InstitutionSiteClass']['id'])){
+				$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
+			}else{
+				unset($data[$key]);
+			}
 		}
-
 
 		$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection'));
 	}
@@ -123,13 +125,10 @@ class InstitutionSiteClass extends AppModel {
 		$this->Navigation->addCrumb('Add Class');
 		
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
-		$academicPeriodConditions = array(
-			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-			'InstitutionSiteProgramme.status' => 1,
-			'AcademicPeriod.available' => 1,
-			'AcademicPeriod.parent_id >' => 0
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
 		);
-		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($academicPeriodConditions);
+		$academicPeriodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
 		if(!empty($academicPeriodOptions)) {
 			$selectedAcademicPeriod = isset($selectedAcademicPeriod) ? $selectedAcademicPeriod : key($academicPeriodOptions);
 			
@@ -139,9 +138,10 @@ class InstitutionSiteClass extends AppModel {
 			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
 			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
 			
-			$yearObj = ClassRegistry::init('AcademicPeriod')->findById($selectedAcademicPeriod);
-			$startDate = $yearObj['AcademicPeriod']['start_date'];
-			$endDate = $yearObj['AcademicPeriod']['end_date'];
+			$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+			$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
+			$startDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'start_date');
+			$endDate = $AcademicPeriod->getDate($yearObj['AcademicPeriod'], 'end_date');
 		
 			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 			$staffOptions = $InstitutionSiteStaff->getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate);
@@ -158,7 +158,7 @@ class InstitutionSiteClass extends AppModel {
 				'order' => array('EducationSubject.order')
 			));
 
-			// need to get the section classes that are alraeady there
+			// need to get the section classes that are already there
 			$classesBySection = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
 
 			$classesBySectionBySubjectId = array();
@@ -183,7 +183,6 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
-
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
@@ -242,6 +241,7 @@ class InstitutionSiteClass extends AppModel {
 			$contain = array(
 				'AcademicPeriod',
 				'EducationSubject',
+				'InstitutionSiteSectionClass',
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
 						'fields' => array(
@@ -260,7 +260,7 @@ class InstitutionSiteClass extends AppModel {
 				)
 			);
 			$this->contain($contain);
-			$data = $this->findById($id);//pr($data);
+			$data = $this->findById($id);
 			$contentHeader = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($contentHeader);
 			
@@ -300,37 +300,47 @@ class InstitutionSiteClass extends AppModel {
 				'fields' => array('id', 'InstitutionSiteSectionClass.institution_site_section_id'), 
 				'conditions' => array('InstitutionSiteSectionClass.institution_site_class_id' => $id)
 			));
-
+			$selectedSectionId = isset($data['InstitutionSiteSectionClass'][0]) ? $data['InstitutionSiteSectionClass'][0]['institution_site_section_id'] : key($sectionIds) ;
+			
 			// retrieve all the students linked to the sections
 			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
-			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
+			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions($selectedSectionId);
 
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
-
+				
 				if ($postData['submit'] == 'add') {
+					$this->removeExistingStudents($studentOptions);
 					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
 						$InstitutionSiteSectionStudent->Student->recursive = -1;
-						$studentObj = $InstitutionSiteSectionStudent->Student->findById($studentId, $contain['InstitutionSiteClassStudent']['Student']['fields']);
+						$newStudentList = $studentId == -1 ? array_keys($studentOptions) : array($studentId);
 						
-						$newRow = array(
-							'student_id' => $studentId,
-							'student_category_id' => 0,
-							'status' => 1,
-							'Student' => $studentObj['Student']
-						);
+						foreach ($newStudentList as $studentId) {
+							if ($studentId == 0 || $studentId == -1) continue;
 
-						// search if the new student was previously added before
-						foreach ($data['InstitutionSiteClassStudent'] as $row) {
-							if ($row['student_id'] == $studentId) {
-								$newRow['id'] = $row['id'];
+							$studentObj = $InstitutionSiteSectionStudent->Student->findById($studentId, $contain['InstitutionSiteClassStudent']['Student']['fields']);
+							
+							$newRow = array(
+								'student_id' => $studentId,
+								'student_category_id' => 0,
+								'institution_site_section_id' => $selectedSectionId,
+								'status' => 1,
+								'Student' => $studentObj['Student']
+							);
+
+							// search if the new student was previously added before
+							if (isset($data['InstitutionSiteClassStudent'])) {
+								foreach ($data['InstitutionSiteClassStudent'] as $row) {
+									if ($row['student_id'] == $studentId) {
+										$newRow['id'] = $row['id'];
+									}
+								}
 							}
+							$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
+							unset($studentOptions[$studentId]);
 						}
-
-						$this->request->data['InstitutionSiteClassStudent'][] = $newRow;
 						unset($this->request->data[$this->alias]['student_id']);
 					}
 					if (isset($postData[$this->alias]['staff_id']) && !empty($postData[$this->alias]['staff_id'])) {
@@ -363,7 +373,8 @@ class InstitutionSiteClass extends AppModel {
 					);
 					$this->InstitutionSiteClassStudent->updateAll(
 						array('InstitutionSiteClassStudent.status' => 0),
-						array('InstitutionSiteClassStudent.institution_site_class_id' => $id)
+						array('InstitutionSiteClassStudent.institution_site_class_id' => $id),
+						array('InstitutionSiteClassStudent.institution_site_section_id' => $selectedSectionId)
 					);
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
@@ -372,26 +383,40 @@ class InstitutionSiteClass extends AppModel {
 				}
 			} else {
 				$this->request->data = $data;
+				$this->removeExistingStudents($studentOptions);
 			}
 
 			// removing existing staff from StaffOptions
-			foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
-				if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
-					unset($staffOptions[$row['staff_id']]);
+			if (isset($this->request->data['InstitutionSiteClassStaff'])) {
+				foreach ($this->request->data['InstitutionSiteClassStaff'] as $row) {
+					if ($row['status'] == 1 && array_key_exists($row['staff_id'], $staffOptions)) {
+						unset($staffOptions[$row['staff_id']]);
+					}
 				}
 			}
 
-			// removing existing students from StudentOptions
+			
+			if (!empty($studentOptions)) {
+				$addAllStudentLabel = '-- ' . $this->controller->Option->getLabel($this->alias . '.add_all_student') . ' --';
+				$studentOptions = $this->controller->Option->prepend($studentOptions, array('-1' => $addAllStudentLabel));
+			}
+			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
+
+			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions', 'selectedSectionId'));
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => $this->alias));
+		}
+	}
+
+	protected function removeExistingStudents(&$studentOptions) {
+		// removing existing students from StudentOptions
+		if (isset($this->request->data['InstitutionSiteClassStudent'])) {
 			foreach ($this->request->data['InstitutionSiteClassStudent'] as $row) {
 				if ($row['status'] == 1 && array_key_exists($row['student_id'], $studentOptions)) {
 					unset($studentOptions[$row['student_id']]);
 				}
 			}
-
-			$this->setVar(compact('contentHeader', 'categoryOptions', 'staffOptions', 'studentOptions'));
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => $this->alias));
 		}
 	}
 
@@ -514,45 +539,137 @@ class InstitutionSiteClass extends AppModel {
 	}
 	
 	public function getClassesByYearAssessment($institutionSiteId, $academicPeriodId, $assessmentId){
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name'),
-			'joins' => array(
-				array(
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
-				),
-				array(
-					'table' => 'institution_site_section_classes',
-					'alias' => 'InstitutionSiteSectionClass',
-					'conditions' => array(
-						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteSectionClass.status = 1'
-					)
-				),
-				array(
-					'table' => 'institution_site_section_grades',
-					'alias' => 'InstitutionSiteSectionGrade',
-					'conditions' => array(
-						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id'
-					)
-				),
-				array(
-					'table' => 'assessment_item_types',
-					'alias' => 'AssessmentItemType',
-					'conditions' => array(
-						'AssessmentItemType.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
-						'AssessmentItemType.id' => $assessmentId
-					)
+		$joinsSingleGrade = array(
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
+			),
+			array(
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+					'InstitutionSiteSectionClass.status = 1'
 				)
 			),
-			'conditions' => array(
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.academic_period_id' => $academicPeriodId
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.id = InstitutionSiteSectionClass.institution_site_section_id'
+				)
 			),
-			'order' => array('AcademicPeriod.name, InstitutionSiteClass.name')
+			array(
+				'table' => 'assessment_item_types',
+				'alias' => 'AssessmentItemType',
+				'conditions' => array(
+					'AssessmentItemType.education_grade_id = InstitutionSiteSection.education_grade_id',
+					'AssessmentItemType.id' => $assessmentId
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'conditions' => array(
+					'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+					'AssessmentItem.visible' => 1
+				)
+			),
+			array(
+				'table' => 'education_grades_subjects',
+				'alias' => 'EducationGradeSubject',
+				'conditions' => array(
+					'EducationGradeSubject.id = AssessmentItem.education_grade_subject_id',
+					'EducationGradeSubject.visible' => 1,
+					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id'
+				)
+			)
+		);
+		
+		$joinsMultiGrades = array(
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'conditions' => array('InstitutionSiteClass.academic_period_id = AcademicPeriod.id')
+			),
+			array(
+				'table' => 'institution_site_section_classes',
+				'alias' => 'InstitutionSiteSectionClass',
+				'conditions' => array(
+					'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClass.id',
+					'InstitutionSiteSectionClass.status = 1'
+				)
+			),
+			array(
+				'table' => 'institution_site_section_grades',
+				'alias' => 'InstitutionSiteSectionGrade',
+				'conditions' => array(
+					'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSectionClass.institution_site_section_id'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'conditions' => array(
+					'InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id',
+					'InstitutionSiteSection.education_grade_id' => NULL
+				)
+			),
+			array(
+				'table' => 'assessment_item_types',
+				'alias' => 'AssessmentItemType',
+				'conditions' => array(
+					'AssessmentItemType.education_grade_id = InstitutionSiteSectionGrade.education_grade_id',
+					'AssessmentItemType.id' => $assessmentId
+				)
+			),
+			array(
+				'table' => 'assessment_items',
+				'alias' => 'AssessmentItem',
+				'conditions' => array(
+					'AssessmentItem.assessment_item_type_id = AssessmentItemType.id',
+					'AssessmentItem.visible' => 1
+				)
+			),
+			array(
+				'table' => 'education_grades_subjects',
+				'alias' => 'EducationGradeSubject',
+				'conditions' => array(
+					'EducationGradeSubject.id = AssessmentItem.education_grade_subject_id',
+					'EducationGradeSubject.visible' => 1,
+					'EducationGradeSubject.education_subject_id = InstitutionSiteClass.education_subject_id'
+				)
+			)
+		);
+		
+		$fields = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name');
+		$conditions = array(
+			'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteClass.academic_period_id' => $academicPeriodId
+		);
+		$order = array('AcademicPeriod.name, InstitutionSiteClass.name');
+		
+		$dataSingleGrade = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => $fields,
+			'joins' => $joinsSingleGrade,
+			'conditions' => $conditions,
+			'order' => $order
 		));
+		
+		$dataMultiGrades = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => $fields,
+			'joins' => $joinsMultiGrades,
+			'conditions' => $conditions,
+			'order' => $order
+		));
+		
+		$data = $dataSingleGrade;
+		foreach($dataMultiGrades as $row){
+			$data[] = $row;
+		}
 		
 		return $data;
 	}

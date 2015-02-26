@@ -30,15 +30,7 @@ class AcademicPeriodsController extends AppController {
 		$this->Navigation->addCrumb('Administration', array('controller' => 'AcademicPeriods', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Academic Periods', array('controller' => 'AcademicPeriods', 'action' => 'index'));
 		
-		$academicPeriodOptions = array(
-			'AcademicPeriod' => __('Academic Periods'),
-			'AcademicPeriodLevel' => __('Academic Period Levels')
-		);
-		
-		if(array_key_exists($this->action, $academicPeriodOptions)) {
-			$this->set('selectedAction', $this->action);
-		}
-		$this->set('academicPeriodOptions', $academicPeriodOptions);
+		$this->set('selectedAction', $this->action);
 	}
 	
 	public function recover($i) {

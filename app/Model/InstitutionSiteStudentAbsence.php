@@ -158,7 +158,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
 			$endDate = $academicPeriodObj['AcademicPeriod']['end_date'];
 			
-			if($todayDate >= $startDate && $todayDate <= $endDate){
+			if(strtotime($todayDate) >= strtotime($startDate) && strtotime($todayDate) <= strtotime($endDate)){
 				$dataStartDate = $todayDateFormatted;
 				$dataEndDate = $todayDateFormatted;
 			}else{
@@ -226,6 +226,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			);
 			$this->fields['institution_site_section_id']['type'] = 'hidden';
 			$this->request->data = $data;
+			$customJs = array('institution_attendance');
+			$this->setVar('params', array('js'=> $customJs));
 		}
 		$this->setFieldOrder('full_day_absent', 2);
 		parent::afterAction();
@@ -454,7 +456,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$this->fields['student_id']['options'] = $studentOptions;
 		$this->setFieldOrder('student_id', 3);
 		
-		$this->setVar('params', array('back' => 'absence'));
+		$customJs = array('institution_attendance');
+		$this->setVar('params', array('back' => 'absence', 'js'=> $customJs));
 		$this->setVar(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'sectionOptions', 'studentOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'sectionId'));
 	}
 

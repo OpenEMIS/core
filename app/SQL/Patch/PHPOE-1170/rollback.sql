@@ -1,1 +1,0 @@
-UPDATE `navigations` SET `visible` = 0, `title` = 'Add new Staff' WHERE `module` LIKE 'Staff' AND `plugin` LIKE 'Staff' AND `title` LIKE 'Add Staff' AND `action` LIKE 'add';

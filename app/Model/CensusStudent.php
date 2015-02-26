@@ -394,7 +394,7 @@ class CensusStudent extends AppModel {
 
 		$academicPeriodList = $this->AcademicPeriod->getAcademicPeriodList();
 		$selectedAcademicPeriod = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($academicPeriodList);
-		$categoryList = $controller->StudentCategory->getList();
+		$categoryList = $controller->StudentCategory->getListOnly();
 
 		$selectedCategory = sizeof($categoryList) > 0 ? key($categoryList) : 0;
 		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedAcademicPeriod);
@@ -432,7 +432,7 @@ class CensusStudent extends AppModel {
 
 		$academicPeriodList = $this->AcademicPeriod->getAvailableAcademicPeriods(); // check for empty academic period list
 		$selectedAcademicPeriod = $controller->getAvailableAcademicPeriodId($academicPeriodList);
-		$categoryList = $this->StudentCategory->getList();
+		$categoryList = $this->StudentCategory->getListOnly();
 
 		$selectedCategory = !empty($categoryList) ? key($categoryList) : 0;
 		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedAcademicPeriod);
@@ -759,14 +759,14 @@ class CensusStudent extends AppModel {
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $academicPeriodId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 		
-		$maleFemaleOptions = $this->Gender->getList();
+		$maleFemaleOptions = $this->Gender->getListOnly();
 
 		foreach ($maleFemaleOptions as $key => $value) {
-			if ($value['name'] == 'Male') {
-				$maleGenderId = $value['value'];
+			if ($value == 'Male') {
+				$maleGenderId = $key;
 			}
-			if ($value['name'] == 'Female') {
-				$femaleGenderId = $value['value'];
+			if ($value == 'Female') {
+				$femaleGenderId = $key;
 			}
 		}
 
