@@ -15,6 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class ReorderBehavior extends ModelBehavior {
+	public function setup(Model $Model, $settings = array()) {
+		if (!isset($this->settings[$Model->alias])) {
+			$this->settings[$Model->alias] = array();
+		}
+		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array) $settings);
+	}
+
 	public function moveOrder(Model $model, $data, $conditions=array()) {
 		$id = $data[$model->alias]['id'];
 		$idField = $model->alias . '.id';
@@ -54,6 +61,35 @@ class ReorderBehavior extends ModelBehavior {
 			));
 			$order = 1;
 			foreach($list as $id => $name) {
+				$model->id = $id;
+				$model->saveField('order', $order++);
+			}
+		}
+	}
+
+	public function afterSave(Model $model, $created, $options = array()) {
+		// retain ordering of those with valid order value, new record and records with order = 0 will be at the bottom
+		if ($created) {
+			if ($this->settings[$model->alias]['parentKey']) {
+				$parentKey = $this->settings[$model->alias]['parentKey'];
+				$parentId = $model->controller->request->data[$model->alias][$parentKey];
+				$conditions = array( $parentKey => $parentId );
+			} else {
+				$conditions = array();
+			}
+			$listWithOrders = $model->find('list', array(
+				'conditions' => array_merge($conditions, array( 'order !=' => 0)),
+				'order' => array($model->alias . '.order')
+			));
+			$listWithoutOrders = $model->find('list', array(
+				'conditions' => array_merge($conditions, array( 'order' => 0)),
+			));
+			$order = 1;
+			foreach($listWithOrders as $id => $name) {
+				$model->id = $id;
+				$model->saveField('order', $order++);
+			}
+			foreach($listWithoutOrders as $id => $name) {
 				$model->id = $id;
 				$model->saveField('order', $order++);
 			}

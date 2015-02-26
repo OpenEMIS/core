@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AssessmentItemType extends AppModel {
-	public $actsAs = array('Reorder');
+	public $actsAs = array('Reorder' => array('parentKey' => 'education_grade_id'));
 	
 	public $type = array(
 		'NON_OFFICIAL' => 0,
