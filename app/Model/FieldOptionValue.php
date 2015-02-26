@@ -141,7 +141,11 @@ class FieldOptionValue extends AppModel {
 		}
 		return $key;
 	}
-        
+
+	public function getListOnly() {
+		return $this->getList(array('listOnly' => true));
+	}
+
 	public function getList($customOptions=array()) {
 		$alias = $this->alias;
 
@@ -170,6 +174,12 @@ class FieldOptionValue extends AppModel {
 			$options['conditions'] = array_merge($options['conditions'], $customOptions['conditions']);
 		}
 		
+		if (array_key_exists('value', $customOptions)) {
+			$selected = $customOptions['value'];
+		} else {
+			$selected = false;
+		}
+
 		$optionData = $this->find('all',$options);
 
 		$result = array();
@@ -185,8 +195,8 @@ class FieldOptionValue extends AppModel {
 					array(
 						'name' => $name, 
 						'value' => $value[$alias]['id'],
-						'obsolete' => ($value[$alias]['visible']!='0')?false:true,
-						'selected' => ($value[$alias]['default']!='0')?true:false
+						'obsolete' => ($value[$alias]['visible']!='0') ? false : true,
+						'selected' => ($selected && $selected==$value[$alias]['id']) ? true : ((!$selected && $value[$alias]['default']!='0') ? true : false)
 					)
 				);
 			}

@@ -18,7 +18,7 @@ App::uses('AppController', 'Controller');
 
 class AreasController extends AppController {
 	public $uses = array('Area', 'AreaLevel', 'AreaAdministrative', 'AreaAdministrativeLevel');
-	
+	public $components = array('AreaHandler');
 	public $modules = array(
 		'Area',
 		'AreaLevel',
@@ -31,32 +31,24 @@ class AreasController extends AppController {
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
-		
-		$areaOptions = array(
-			'Area' => __('Areas (Education)'),
-			'AreaLevel' => __('Area Levels (Education)'),
-			'AreaAdministrative' => __('Areas (Administrative)'),
-			'AreaAdministrativeLevel' => __('Area Levels (Administrative)')
-		);
 
-		$areas = array('Area', 'AreaAdministrative');
-		foreach ($areas as $key => $area) {
-			$orphanConditions = array();
-	        $orphanConditions['conditions']['OR'] = array(
-				$this->{$area}->alias.'.lft' => NULL,
-				$this->{$area}->alias.'.rght' => NULL
-	        );
-	        $this->{$area}->contain();
-	        $orphans = $this->{$area}->find('all', $orphanConditions);
-	        if(!empty($orphans)) {
-				$this->recover($key);
-	        }
+		if (!$this->request->is('ajax')) {
+			$areas = array('Area', 'AreaAdministrative');
+			foreach ($areas as $key => $area) {
+				$orphanConditions = array();
+		        $orphanConditions['conditions']['OR'] = array(
+					$this->{$area}->alias.'.lft' => NULL,
+					$this->{$area}->alias.'.rght' => NULL
+		        );
+		        $this->{$area}->contain();
+		        $orphans = $this->{$area}->find('all', $orphanConditions);
+		        if(!empty($orphans)) {
+					$this->recover($key);
+		        }
+			}
 		}
 		
-		if(array_key_exists($this->action, $areaOptions)) {
-			$this->set('selectedAction', $this->action);
-		}
-		$this->set('areaOptions', $areaOptions);
+		$this->set('selectedAction', $this->action);
 	}
 	
 	public function recover($i) {
@@ -66,9 +58,7 @@ class AreasController extends AppController {
 		$nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
 		$shellCmd = sprintf($nohup, $cmd, APP);
 		$this->log($shellCmd, 'debug');
-		//pr($shellCmd);
 		$pid = exec($shellCmd);
-		//pr($pid);
 	}
 	
 	public function index() {
@@ -81,13 +71,7 @@ class AreasController extends AppController {
 		$levelModel = $levelModels[$model];
 		if($parentId > 0) {
 			$worldId = $this->{$model}->field($model.'.id', array($model.'.parent_id' => -1));
-			$data = $this->{$model}->find('all', array(
-				'conditions' => array(
-					$model.'.parent_id' => $parentId,
-					$model.'.visible' => 1
-				),
-				'order' => array($model.'.order')
-			));
+			$data = $this->AreaHandler->getChildren(array('model'=>$model, 'parentId'=>$parentId, 'dataType'=>'all'));
 			$this->set(compact('data', 'model', 'levelModel', 'parentId', 'worldId'));
 		}
 	}
