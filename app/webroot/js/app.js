@@ -192,6 +192,21 @@ var jsForm = {
 		
 		this.prentMultiSubmit();
 	},
+
+	compute: function(obj) {
+		var total = 0;
+		$("input[data-compute-variable=true]").each(
+			function() {
+				switch ($(this).attr('data-compute-operand')) {
+					case 'plus': total += parseFloat($(this).val()) || 0; break;
+					case 'minus': total -= parseFloat($(this).val()) || 0;break;
+				}
+				// console.log($(this).attr('data-compute-operand')+ ': '+(parseFloat($(this).val()) || 0));
+			}
+		);
+		// console.log('total: '+ parseFloat(total).toFixed(2));
+		$("[data-compute-target=true]").val(parseFloat(total).toFixed(2));
+	},
 	
 	goto: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url');

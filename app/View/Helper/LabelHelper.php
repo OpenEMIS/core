@@ -543,10 +543,14 @@ class LabelHelper extends AppHelper {
 			'error' => 'Please contact the administrator for assistance.'
 		),
 		'StudentContact' => array(
-			'title' => 'Contacts'
+			'title' => 'Contacts',
+			'contact_type_id' => 'Description',
+			'contact_option_id' => 'Type'
 		),
 		'StaffContact' => array(
-			'title' => 'Contacts'
+			'title' => 'Contacts',
+			'contact_type_id' => 'Description',
+			'contact_option_id' => 'Type'
 		),
 		'StudentIdentity' => array(
 			'title' => 'Identities',
@@ -628,15 +632,13 @@ class LabelHelper extends AppHelper {
 			'issuer' => 'Issuer',
 			'comment' => 'Comment',
 		),
-		'StudentContact' => array(
-			'title' => 'Contacts',
-			'contact_type_id' => 'Description',
-			'contact_option_id' => 'Type'
-		),
-		'StaffContact' => array(
-			'title' => 'Contacts',
-			'contact_type_id' => 'Description',
-			'contact_option_id' => 'Type'
+		'StaffSalary' => array(
+			'title' => 'Salary',
+			'additions' => 'Additions',
+			'deductions' => 'Deductions',
+			'gross' => 'Gross',
+			'net' => 'Net',
+			'salary_date' => 'Date'
 		)
 	);
 	
