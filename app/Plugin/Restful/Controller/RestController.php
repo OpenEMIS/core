@@ -23,7 +23,7 @@ class RestController extends RestfulAppController {
 
 	public $components = array(
 		'Paginator',
-        'RestSurvey' => array(
+        'Restful.RestSurvey' => array(
             'models' => array(
                 'Module' => 'Surveys.SurveyModule',
                 'Group' => 'Surveys.SurveyTemplate',
