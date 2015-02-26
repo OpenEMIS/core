@@ -15,7 +15,7 @@
 					<?php 
 					for($i=0; $i<$numberOfSections; $i++) :
 					$letter = $this->Utility->getColumnLetter($startingSectionNumber);
-					$defaultName = sprintf('%s-%s', $grade['EducationGrade']['name'], $letter);
+					$defaultName = !empty($grade) ? sprintf('%s-%s', $grade['EducationGrade']['name'], $letter) : "";
 					?>
 					<tr>
 						<td><?php 
