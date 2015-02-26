@@ -183,7 +183,7 @@ class StudentContact extends StudentsAppModel {
 			$this->Session->write($this->alias.'.id', $id);
 			$this->setVar(compact('data'));
 		} else {
-			$this->Message->alert('general.view.notExists');
+			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this)));
 		}
 	}

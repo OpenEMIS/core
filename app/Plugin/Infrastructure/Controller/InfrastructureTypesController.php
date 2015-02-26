@@ -81,7 +81,7 @@ class InfrastructureTypesController extends InfrastructureAppController {
 			
 			$this->set(compact('data', 'level'));
 		} else {
-			$this->Message->alert('general.view.notExists');
+			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index'));
 		}
 	}

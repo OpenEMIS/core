@@ -47,6 +47,30 @@ UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:co
 UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
 UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
 
+-- Updating census gender_ids
+SELECT id INTO @fieldGenderMale FROM field_option_values WHERE field_option_id IN (SELECT id FROM field_options WHERE code = 'Gender') AND name = 'Male';
+SELECT id INTO @fieldGenderFemale FROM field_option_values WHERE field_option_id IN (SELECT id FROM field_options WHERE code = 'Gender') AND name = 'Female';
+SELECT id INTO @newGenderMale FROM genders WHERE name = 'Male';
+SELECT id INTO @newGenderFemale FROM genders WHERE name = 'Female';
+
+UPDATE census_students SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_attendances SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_behaviours SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_graduates SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_teachers SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_teacher_fte SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_teacher_training SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_sanitations SET gender_id = @fieldGenderMale WHERE gender_id = @newGenderMale;
+UPDATE census_students SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_attendances SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_behaviours SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_graduates SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_teachers SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_teacher_fte SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_teacher_training SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+UPDATE census_sanitations SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+
+
 -- create new tables to combined tables
 DROP TABLE user_identities;
 DROP TABLE user_nationalities;
