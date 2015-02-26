@@ -139,14 +139,18 @@ class RestSurveyComponent extends Component {
     public function upload() {
 		if ($this->controller->request->is(array('post', 'put'))) {
     		$data = $this->controller->request->data;
+            $this->log('Data:', 'debug');
     		$this->log($data, 'debug');
-    		$jsonResponse = $data['response'];
+    		$xmlResponse = $data['response'];
 			
-	    	$xmlResponse = json_decode($jsonResponse, true);
-	    	$xmlResponse['response'] = str_replace("xf:", "", $xmlResponse['response']);
-	    	$xmlResponse['response'] = str_replace("oe:", "", $xmlResponse['response']);
+            $this->log('XML Response', 'debug');
+            $this->log($xmlResponse, 'debug');
+	    	$xmlResponse = str_replace("xf:", "", $xmlResponse);
+	    	$xmlResponse = str_replace("oe:", "", $xmlResponse);
 
-	    	$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse['response'];
+	    	$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
+            $this->log('XML String:', 'debug');
+            $this->log($xmlstr, 'debug');
     		$xml = new SimpleXMLElement($xmlstr);
 
 			$surveyTemplateId = $xml->SurveyTemplate->attributes()->id->__toString();
