@@ -69,7 +69,7 @@ class AcademicPeriod extends AppModel {
 				'message' => 'Please enter a valid start date.'
 			),
 			'ruleNotLater' => array(
-				'rule' => array('compareDate', 'end_date'),
+				'rule' => array('compareDate', 'end_date', true),
 				'message' => 'Start Date cannot be later than End Date.'
 			)
 		),
@@ -81,12 +81,6 @@ class AcademicPeriod extends AppModel {
 			)
 		)
 	);
-
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate >= $startDate;
-	}
 
 	public function checkParentPeriodStartDate() {
 		$startDateExists = array_key_exists('start_date', $this->data[$this->alias])&&$this->data[$this->alias]['start_date']&&$this->data[$this->alias]['start_date']!='';

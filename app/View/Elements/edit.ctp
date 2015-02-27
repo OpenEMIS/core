@@ -59,10 +59,7 @@ foreach($fields as $key => $field) {
 				break;
 
 			case 'string':
-				$options['type'] = 'string';
-				if (array_key_exists('length', $field)) {
-					$options['maxlength'] = $field['length'];
-				}
+				$options['type'] = 'text';
 				break;
 				
 			case 'text':
@@ -77,7 +74,8 @@ foreach($fields as $key => $field) {
 				
 			case 'element':
 				$element = $field['element'];
-				echo $this->element($element);
+				$elementData = (array_key_exists('data', $field))? $field['data']: array();
+				echo $this->element($element, $elementData);
 				break;
 				
 			case 'image':

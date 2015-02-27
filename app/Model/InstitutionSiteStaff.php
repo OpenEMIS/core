@@ -149,12 +149,6 @@ class InstitutionSiteStaff extends AppModel {
 		return parent::beforeSave($options);
 	}
 
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate >= $startDate;
-	}
-	
 	public function getFields($options = array()) {
 		$this->fields = parent::getFields($options);
 		$this->fields['institution_site_id']['labelKey'] = 'InstitutionSite';
