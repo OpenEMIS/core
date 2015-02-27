@@ -29,4 +29,10 @@ class WorkflowStep extends WorkflowsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	public $hasMany = array(
+        'WorkflowAction' => array(
+            'className' => 'Workflows.WorkflowAction'
+        )
+    );
 }
