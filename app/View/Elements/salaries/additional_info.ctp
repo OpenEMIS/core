@@ -51,13 +51,14 @@ $tableFooter = array(
 									<?php
 									echo $this->Form->input($modelName.'.' . $index . '.amount', array(
 										'type' => 'string',
-										'maxlength' => 11,
+										'maxlength' => 9,
 										'div' => false,
 										'class' => 'form-control '.$name.'_amount',
 										'label' => false,
 										'computeType' => 'total_salary_'.$name.'s',
 										'onkeypress' => 'return utility.floatCheck(event)',
 										'onkeyup' => 'jsTable.computeTotal(this); jsForm.compute(this); ',
+										'onfocus' => '$(this).select();',
 										'before' => false,
 										'between' => false, 
 										'data-compute-variable' => "true", 
