@@ -60,6 +60,7 @@ $tableFooter = array(
 										'computeType' => 'total_salary_'.$name.'s',
 										'onkeypress' => 'return utility.floatCheck(event)',
 										'onkeyup' => 'jsTable.computeTotal(this); jsForm.compute(this); ',
+										'allowNull' => true,
 										'onfocus' => '$(this).select();',
 										'before' => false,
 										'between' => false, 
