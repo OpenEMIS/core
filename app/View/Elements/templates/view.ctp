@@ -14,7 +14,7 @@ $this->start('contentActions');
 	}
 
 	// Back link
-	$actionParams = $_triggerFrom == 'Controller' ? array('action' => $this->action) : array('action' => $model);
+	$actionParams = $_triggerFrom == 'Controller' ? array('action' => 'index') : array('action' => $model);
 	if (isset($params)) {
 		if (isset($params['back'])) {
 			if (is_array($params['back'])) {
@@ -52,7 +52,7 @@ $this->start('contentActions');
 	// Delete link
 	$actionParams = array();
 	if ($_triggerFrom == 'Controller') {
-		$actionParams = array('action' => 'delete');
+		$actionParams = array('action' => 'remove');
 	} else {
 		$actionParams = array('action' => $model);
 		$actionParams[] = 'remove';
@@ -67,6 +67,6 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-	echo $this->element('layout/view2');
+	echo $this->element('view');
 $this->end();
 ?>

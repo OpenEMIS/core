@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
-		'ControllerAction2',
+		//'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
@@ -90,7 +90,7 @@ class InstitutionSiteProgramme extends AppModel {
 	);
 	
 	public function beforeAction() {
-		parent::beforeAction();
+		//parent::beforeAction();
 		$this->Navigation->addCrumb('Programmes');
 
 		if($this->action == 'view') {
@@ -126,7 +126,7 @@ class InstitutionSiteProgramme extends AppModel {
 			$this->setFieldOrder('start_date', 3);
 			$this->setFieldOrder('end_date', 4);
 
-			$this->setVar(compact('institutionSiteId'));
+			$this->controller->set(compact('institutionSiteId'));
 		}
 	}
 	
@@ -168,7 +168,7 @@ class InstitutionSiteProgramme extends AppModel {
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
 
-		$this->setVar(compact('data'));
+		$this->controller->set(compact('data'));
 	}
 
 	public function add() {
@@ -214,7 +214,7 @@ class InstitutionSiteProgramme extends AppModel {
 
 		$this->fields['education_level_id']['options'] = $educationLevelOptions;
 		$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
-		$this->setVar(compact('educationGrades'));
+		$this->controller->set(compact('educationGrades'));
 
 		$this->render = 'auto';
 	}
@@ -267,7 +267,7 @@ class InstitutionSiteProgramme extends AppModel {
 
 			$this->fields['education_level_id']['options'] = $educationLevelOptions;
 			$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
-			$this->setVar(compact('educationGrades'));
+			$this->controller->set(compact('educationGrades'));
 		} else {
 			$this->Message->alert('general.view.notExists');
 			return $this->redirect(array('action' => get_class($this)));

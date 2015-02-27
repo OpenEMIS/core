@@ -12,9 +12,10 @@ $this->start('contentActions');
 			}
 		}
 	}
-	
-	$actionParams = array('action' => $model);
-	if ($action == 'add') {
+
+	// Back link
+	$actionParams = $_triggerFrom == 'Controller' ? array('action' => 'index') : array('action' => $model);
+	if ($this->action == 'add') {
 		if (isset($params)) {
 			if (isset($params['back'])) {
 				$actionParams[] = $params['back'];
@@ -23,19 +24,22 @@ $this->start('contentActions');
 			}
 			$actionParams = array_merge($actionParams, $paramValues);
 		}
-	} else if ($action == 'edit') {
-		$actionParams[] = 'view';
+	} else if ($this->action == 'edit') {
+		if ($_triggerFrom == 'Controller') {
+			$actionParams['action'] = 'view';
+		}
 		$actionParams[] = $this->request->data[$model]['id'];
 		if (isset($params)) {
 			$actionParams = array_merge($actionParams, $paramValues);
 		}
 	}
+
 	echo $this->Html->link($this->Label->get('general.back'), $actionParams, array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
-	$formAction = array('action' => $model, $action);
-	if ($action == 'edit') {
+	$formAction = $_triggerFrom == 'Controller' ? array('action' => $this->action) : array('action' => $model, $this->action);
+	if ($this->action == 'edit') {
 		$formAction[] = $this->request->data[$model]['id'];
 	} 
 	if (isset($params)) {
