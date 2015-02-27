@@ -26,6 +26,7 @@ $tableFooter = array(
 							break;
 						}
 						$index = 0;
+						$totalAmount = 0;
 						foreach ($data as $key => $value) {
 							?>
 							<tr>
@@ -49,15 +50,17 @@ $tableFooter = array(
 								</td>
 								<td>
 									<?php
+									$totalAmount += $value['amount'];
 									echo $this->Form->input($modelName.'.' . $index . '.amount', array(
 										'type' => 'string',
-										'maxlength' => 11,
+										'maxlength' => 9,
 										'div' => false,
 										'class' => 'form-control '.$name.'_amount',
 										'label' => false,
 										'computeType' => 'total_salary_'.$name.'s',
 										'onkeypress' => 'return utility.floatCheck(event)',
 										'onkeyup' => 'jsTable.computeTotal(this); jsForm.compute(this); ',
+										'onfocus' => '$(this).select();',
 										'before' => false,
 										'between' => false, 
 										'data-compute-variable' => "true", 
@@ -78,7 +81,7 @@ $tableFooter = array(
 						<tfoot>
 							<tr>
 								<td class="cell-number">Total</td>
-								<td class="total_salary_<?php echo $name; ?>s cell-number">0</td>
+								<td class="total_salary_<?php echo $name; ?>s cell-number"><?php echo $totalAmount; ?></td>
 								<td/>
 							</tr>
 						</tfoot>
