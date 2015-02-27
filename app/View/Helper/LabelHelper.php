@@ -225,6 +225,7 @@ class LabelHelper extends AppHelper {
 			'add_staff' => 'Add Staff',
 			'add_student' => 'Add Student',
 			'add_all_student' => 'Add All Students',
+			'all_sections_select' => 'All Sections',
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -356,10 +357,13 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
+			'academic_period_id' => 'Academic Period',
 			'education_programme_id' => 'Programme',
-			'institution_site_section_id' => 'Section',
 			'education_grade_id' => 'Grade',
-			'student_category_id' => 'Category'
+			'institution_site_section_id' => 'Section',
+			'student_category_id' => 'Category',
+			'select_grade' => 'Select Grade',
+			'select_section' => 'Select Section'
 		),
 		'InstitutionSiteStaff' => array(
 			'staff_status_id' => 'Status',
