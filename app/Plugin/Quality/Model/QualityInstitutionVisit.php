@@ -224,7 +224,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
 
-                        $evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+                        $evaluatorName = trim($data['Evaluator']['first_name'] . ' ' . $data['Evaluator']['last_name']);
                        
 
                     }
@@ -269,7 +269,7 @@ class QualityInstitutionVisit extends QualityAppModel {
 
             //  pr($postData);
         }
-        $selectedDate = !empty($selectedDate) ? $selectedDate : '';
+        $selectedDate = !empty($selectedDate) ? $selectedDate : date('d-m-Y');
         $selectedDate = !empty($params['pass'][0 + $paramsLocateCounter]) ? $params['pass'][0 + $paramsLocateCounter] : $selectedDate;
 
         $AcademicPeriod = ClassRegistry::init('AcademicPeriod');
@@ -313,8 +313,19 @@ class QualityInstitutionVisit extends QualityAppModel {
 
         $staffOptions = array();
         if (!empty($sectionOptions)) {
-            $InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
-            $staffOptions = $InstitutionSiteSectionStaff->getstaffs($selectedSectionId, 'list');
+            $this->InstitutionSiteSection->contain('Staff');
+            $staffs = $this->InstitutionSiteSection->find('all', array(
+                'fields' => array(
+                    'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+                ),
+                'conditions' => array('InstitutionSiteSection.id' => $selectedSectionId, 'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriodId),
+                'order' => array('Staff.first_name')
+            ));
+            $staffOptions = array();
+            foreach ($staffs as $obj) {
+                $id = $obj['Staff']['id'];
+                $staffOptions[$id] = ModelHelper::getName($obj['Staff']);
+            }
             $selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
             $selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
         }

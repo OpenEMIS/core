@@ -217,6 +217,7 @@ class SecurityController extends AppController {
 		$this->Session->write('login.token', $this->SecurityUser->createToken());
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
 		$this->Session->write('footer', $this->ConfigItem->getWebFooter());
+		$this->DateTime->getConfigDateFormat();
 	}
 	
 	public function users() {

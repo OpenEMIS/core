@@ -121,6 +121,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->setFieldOrder('student_category_id', 5);
 		$this->setFieldOrder('start_date', 6);
 		$this->setFieldOrder('end_date', 7);
+		
 	}
 	
 	public function index() {
