@@ -21,3 +21,6 @@ ALTER TABLE `staff_salaries` CHANGE `gross_salary` `gross_salary` DECIMAL(20,2) 
 ALTER TABLE `staff_salaries` CHANGE `additions` `additions` DECIMAL(20,2) NOT NULL;
 ALTER TABLE `staff_salaries` CHANGE `deductions` `deductions` DECIMAL(20,2) NOT NULL;
 ALTER TABLE `staff_salaries` CHANGE `net_salary` `net_salary` DECIMAL(20,2) NOT NULL;
+
+ALTER TABLE `staff_salary_additions` CHANGE `amount` `amount` DECIMAL(11,2) NOT NULL DEFAULT '0';
+ALTER TABLE `staff_salary_deductions` CHANGE `amount` `amount` DECIMAL(11,2) NOT NULL DEFAULT '0';
