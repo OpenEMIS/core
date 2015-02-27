@@ -72,8 +72,7 @@ class StaffSalary extends StaffAppModel {
 		$this->setFieldOrder('deductions', 5);
 		$this->setFieldOrder('comment', 6);
 		$this->fields['gross_salary']['type'] = 'string';
-		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus');
-		$this->fields['net_salary']['type'] = 'string';
+		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
 		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 	}
 
