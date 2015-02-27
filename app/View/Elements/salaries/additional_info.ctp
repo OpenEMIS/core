@@ -26,6 +26,7 @@ $tableFooter = array(
 							break;
 						}
 						$index = 0;
+						$totalAmount = 0;
 						foreach ($data as $key => $value) {
 							?>
 							<tr>
@@ -49,6 +50,7 @@ $tableFooter = array(
 								</td>
 								<td>
 									<?php
+									$totalAmount += $value['amount'];
 									echo $this->Form->input($modelName.'.' . $index . '.amount', array(
 										'type' => 'string',
 										'maxlength' => 9,
@@ -79,7 +81,7 @@ $tableFooter = array(
 						<tfoot>
 							<tr>
 								<td class="cell-number">Total</td>
-								<td class="total_salary_<?php echo $name; ?>s cell-number">0</td>
+								<td class="total_salary_<?php echo $name; ?>s cell-number"><?php echo $totalAmount; ?></td>
 								<td/>
 							</tr>
 						</tfoot>
