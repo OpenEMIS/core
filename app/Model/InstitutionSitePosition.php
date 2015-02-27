@@ -208,7 +208,12 @@ class InstitutionSitePosition extends AppModel {
 			$staffFields['staff_status_id']['options'] = $this->InstitutionSiteStaff->StaffStatus->getList();
 			$staffFields['FTE']['visible'] = false;
 			
-			$date = new DateTime($startDate);
+			try {
+				$date = new DateTime($startDate);
+			} catch (Exception $e) {
+			    return 'The Start Date Is Not In A Proper Format.';
+			    exit(1);
+			}
 			$date->add(new DateInterval('P1D')); // plus 1 day
 			$staffFields['end_date']['attr'] = array(
 				'startDate' => $date->format('d-m-Y'),

@@ -51,12 +51,6 @@ class StaffMembership extends StaffAppModel {
 	);
 	public $headerDefault = 'Memberships';
 	
-	public function compareDate($field = array(), $compareField = null) {
-        $startDate = new DateTime(current($field));
-        $endDate = new DateTime($this->data[$this->name][$compareField]);
-        return $endDate >= $startDate;
-    }
-	
 	public function beforeAction($controller, $action) {
         $controller->set('model', $this->alias);
     }

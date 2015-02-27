@@ -71,10 +71,11 @@ foreach ($fields as $key => $field) {
 					
 				case 'element':
 					$element = $field['element'];
+					$elementData = (array_key_exists('data', $field))? $field['data']: array();
 					if (array_key_exists('class', $field)) {
 						$class = $field['class'];
-					}
-					$value = $this->element($element);
+					};
+					$value = $this->element($element, $elementData);
 					break;
 					
 				case 'date':
