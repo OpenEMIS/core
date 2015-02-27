@@ -60,7 +60,10 @@ foreach($fields as $key => $field) {
 
 			case 'string':
 				$options['type'] = 'string';
-				if (array_key_exists('length', $field)) {
+				if (array_key_exists('attr', $field) && array_key_exists('maxlength', $field['attr'])) {
+					// if coder set it as an attr. do not override it
+					$options['maxlength'] = $field['attr']['maxlength'];
+				} else if (array_key_exists('length', $field)) {
 					$options['maxlength'] = $field['length'];
 				}
 				break;
