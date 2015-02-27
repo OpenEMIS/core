@@ -14,8 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class Workflow extends WorkflowsAppModel {
-	public $useTable = 'wf_workflows';
+class WorkflowAction extends WorkflowsAppModel {
+	public $useTable = 'wf_workflow_actions';
 
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -29,10 +29,4 @@ class Workflow extends WorkflowsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-
-	public $hasMany = array(
-        'WorkflowStep' => array(
-            'className' => 'Workflows.WorkflowStep'
-        )
-    );
 }

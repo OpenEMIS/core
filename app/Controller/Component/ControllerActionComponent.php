@@ -1,5 +1,6 @@
 <?php
 class ControllerActionComponent extends Component {
+	private $plugin;
 	private $controller;
 	private $model = null;
 	private $triggerFrom = 'Controller';
@@ -11,12 +12,11 @@ class ControllerActionComponent extends Component {
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(Controller $controller) {
-		$this->controller = $controller;
+		$this->controller =& $controller;
 		if (isset($this->settings['model'])) {
 			$model = $this->getModel($this->settings['model']);
 			$this->model = $controller->{$model['model']};
 			$this->getFields($this->model);
-			$controller->set('model', $this->model->alias);
 		}
 	}
 
@@ -30,22 +30,39 @@ class ControllerActionComponent extends Component {
 			} else { // check if it's a model action
 				foreach ($controller->uses as $model) {
 					$split = explode('.', $model);
-					$plugin = null;
+					$this->plugin = null;
 					$modelClass = $model;
 					if (count($split) > 1) {
-						$plugin = $split[0];
+						$this->plugin = $split[0];
 						$modelClass = $split[1];
 					}
 
 					if ($action === $modelClass) { // model class found
-						$paramPass = 'index';
-						pr($controller->params->pass);die;
+						$paramPass = $controller->params->pass;
+						$currentAction = 'index';
+						if (!empty($paramPass)) {
+							$currentAction = array_shift($paramPass);
+						}
+						$this->model = $controller->{$modelClass};
+						$this->currentAction = $currentAction;
+						$controller->request->params['action'] = 'ComponentAction';
+						$this->initComponentsForModel();
+						$this->getFields($this->model);
+						if (method_exists($this->model, 'beforeAction')) {
+							$this->model->beforeAction();
+						}
+						$this->triggerFrom = 'Model';
+						break;
+						//pr('test');die;
+						//pr($controller->params->pass);die;
 						//if (method_exists())
 					}
-					$this->triggerFrom = 'Model';
 				}
 			}
-			
+		}
+
+		if (!empty($this->model)) {
+			$controller->set('model', $this->model->alias);
 		}
 	}
 
@@ -56,12 +73,42 @@ class ControllerActionComponent extends Component {
 			uasort($this->model->fields, array($this, 'sortFields'));
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
+
+			if ($this->triggerFrom == 'Model' && method_exists($this->model, 'afterAction')) {
+				$this->model->afterAction();
+			}
 		}
+	}
+
+	private function initComponentsForModel() {
+		$this->model->controller = $this->controller;
+		$this->model->request = $this->controller->request;
+		$this->model->Navigation = $this->controller->Navigation;
+		$this->model->Session = $this->controller->Session;
+		$this->model->Message = $this->controller->Message;
+		$this->model->ControllerAction = $this;
+		$this->model->action = $this->currentAction;
+		$this->model->setVar = null;
 	}
 
 	public function processAction() {
 		$paramsPass = $this->controller->params->pass;
-		$result = call_user_func_array(array($this, $this->currentAction), $paramsPass);
+
+		$result = null;
+		if ($this->triggerFrom == 'Controller') {
+			$result = call_user_func_array(array($this, $this->currentAction), $paramsPass);
+		} else if ($this->triggerFrom == 'Model') {
+			$result = call_user_func_array(array($this->model, $this->currentAction), $paramsPass);
+			if (empty($this->plugin)) {
+				$path = APP . 'View' . DS . $this->controller->name . DS;
+				$ctp = $this->model->alias . DS . $this->currentAction;
+				if (file_exists($path . DS . $ctp . '.ctp')) {
+					$this->controller->render($ctp);
+				}
+			} else {
+
+			}
+		}
 
 		if ($this->autoRender) {
 			$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;

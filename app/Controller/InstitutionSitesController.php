@@ -59,6 +59,7 @@ class InstitutionSitesController extends AppController {
 	
 	public $helpers = array('Paginator', 'Model');
 	public $components = array(
+		'ControllerAction',
 		'Mpdf',
 		'Paginator',
 		'FileAttachment' => array(
@@ -83,7 +84,7 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
 		'InstitutionSitePosition',
-		'InstitutionSiteProgramme',
+		//'InstitutionSiteProgramme',
 		'InstitutionSiteStudentAttendance',
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
