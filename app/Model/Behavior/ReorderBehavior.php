@@ -72,7 +72,7 @@ class ReorderBehavior extends ModelBehavior {
 		if ($created) {
 			if ($this->settings[$model->alias]['parentKey']) {
 				$parentKey = $this->settings[$model->alias]['parentKey'];
-				$parentId = $model->controller->request->data[$model->alias][$parentKey];
+				$parentId = $model->data[$model->alias][$parentKey];
 				$conditions = array( $parentKey => $parentId );
 			} else {
 				$conditions = array();
