@@ -436,10 +436,12 @@ class InstitutionSiteSection extends AppModel {
 		if (!empty($data['EducationGrade']['id'])) {
 			$list[$data['EducationGrade']['id']] = $data['EducationGrade']['name'];
 		} else {
-			foreach ($data['InstitutionSiteSectionGrade'] as $obj) {
-				$id = $obj['EducationGrade']['id'];
-				$name = $obj['EducationGrade']['name'];
-				$list[$id] = $name;
+			if (!empty($data['InstitutionSiteSectionGrade'])) {
+				foreach ($data['InstitutionSiteSectionGrade'] as $obj) {
+					$id = $obj['EducationGrade']['id'];
+					$name = $obj['EducationGrade']['name'];
+					$list[$id] = $name;
+				}
 			}
 		}
 		return $list;
