@@ -17,7 +17,7 @@
 }
 
 #header .logo img { width: 82px; padding: 5px; }
-#header h1 { margin: 0px; padding: 35px 0 0 20px; font-size: 28px; display: inline-block; }
+#header h1 { margin: 0px; padding: 35px 0 0 20px; font-size: 28px; display: inline-block; color: #fff !important; }
 
 #header .fa-lg { font-size: 18px; }
 
@@ -48,8 +48,6 @@
 	background-color: #FFFFFF;
 	z-index: 9999;
 }
-/* to show autocomplete results on top of footer instead of below footer */
-.ui-autocomplete { z-index:99999 !important; }
 
 .rtl #header .logo { margin-right: 5px; float: right !important; }
 .rtl #header h1 { padding-right: 20px; }
@@ -61,9 +59,3 @@
 .rtl .header-side-nav .dropdown-menu { left: 0; right: auto; }
 .rtl .header-side-nav .dropdown-menu a span { margin-left: 0; margin-right: 5px; }
 .rtl .product-list .dropdown-menu { right: auto; left: 0; }
-
-/* forcing the copyright notice text direction to always be from left to right */
-#footer > span.copyright-notice{direction: ltr;}
-#footer > span.copyright-notice[dir]{unicode-bidi: bidi-override;}
-
-
