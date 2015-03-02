@@ -18,7 +18,13 @@ App::uses('FieldOptionValue', 'Model');
 
 class InstitutionSiteLocality extends FieldOptionValue {
 	public $useTable = 'field_option_values';
-	public $hasMany = array('InstitutionSite','InstitutionSiteHistory');
+	public $hasMany = array(
+		'InstitutionSite' => array(
+			// foreignKey value can be set at runtime. Done at TrackActivityBehaviour.
+			//'foreignKey' => 'institution_site_locality_id',
+		),
+		'InstitutionSiteHistory'
+	);
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
