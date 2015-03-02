@@ -134,6 +134,13 @@ class LabelHelper extends AppHelper {
 			'skip' => 'Skip',
 			'addmore' => 'Add More'
 		),
+		'Activity' => array(
+			'field' => 'Field',
+			'old_value' => 'Old value',
+			'new_value' => 'New value',
+			'created_user_id' => 'Modified by',
+			'created' => 'Modified on'
+		),
 		'Area' => array(
 			'name' => 'Area',
 			'area_level_id' => 'Area Level (Education)',
@@ -199,6 +206,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Institution'
 		),
 		'InstitutionSite' => array(
+			'module' => 'Institution',
 			'institution_site_provider_id' => 'Provider',
 			'institution_site_sector_id' => 'Sector',
 			'institution_site_type_id' => 'Type',
