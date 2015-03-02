@@ -54,11 +54,12 @@ class TrackActivityBehavior extends ModelBehavior {
 
 								// check if related model's table is actually field_option_values by reading its useTable instance
 								if (is_object($relatedModel) && $relatedModel->useTable=='field_option_values') {
-
-									// foreignKey value has to be related model's name instead of field_option_values_id which does not exists in $model's column
-									$relatedModel->hasMany[$model->alias]['foreignKey'] = $field;
+									// foreignKey value has to be related model's name instead of field_option_value_id which does not exists in $model's column
+									// Update all hasMany relation foreignKey so as to avoid undefined column name error when extracting data 
+									foreach ($relatedModel->hasMany as $modelKey=>$modelValue) {
+										$relatedModel->hasMany[$modelKey]['foreignKey'] = $field;
+									}
 								}
-		
 								$obj['field'] = $field;
 								
 								$allData = array('old'=>$oldData, 'new'=>$data);
