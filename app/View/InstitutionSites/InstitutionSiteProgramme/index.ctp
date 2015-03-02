@@ -12,7 +12,7 @@ $tableHeaders = array(__('Programme'), __('Level'), __('Start Date'), __('End Da
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();
-	$row[] = $this->Html->link($obj['EducationProgramme']['name'], array('action' => $this->action, 'view', $obj['InstitutionSiteProgramme']['id']));
+	$row[] = $this->Html->link($obj['EducationProgramme']['name'], array('action' => $model, 'view', $obj['InstitutionSiteProgramme']['id']));
 	$row[] = $obj['EducationLevel']['name'] . ' - ' . $obj['EducationCycle']['name'];
 	$row[] = $obj['InstitutionSiteProgramme']['start_date'];
 	$row[] = $obj['InstitutionSiteProgramme']['end_date'];
