@@ -77,8 +77,11 @@ class TrackActivityBehavior extends ModelBehavior {
 											$obj[$allDataKey.'_value'] = ($allDataValue[$model->alias][$field]) ? $allDataValue[$model->alias][$field] : ' ';
 										}
 									} else {
-										// log if relation is missing
-										$this->log($field." is not defined in belongsTo ".$model, 'debug');
+										// check if field is supposed to be a foreignKey
+										if (substr_count($field, '_id')>0) {
+											// log if relation is missing
+											$this->log($field." is not defined in belongsTo ".$model->alias." @ TrackActivityBehaviour beforeSave()", 'debug');
+										}
 										$obj[$allDataKey.'_value'] = ($allDataValue[$model->alias][$field]) ? $allDataValue[$model->alias][$field] : ' ';
 									}
 								}
