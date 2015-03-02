@@ -28,7 +28,7 @@
 	margin-top: 5px;
 }
 
-.header-side-nav .username { margin-top: 10px; margin-right: 10px; float: left; font-style: italic; }
+.header-side-nav .username { margin-top: 10px; margin-right: 10px; float: left; font-style: italic; font-size: 12px !important; }
 .header-side-nav a { color: #FFFFFF; outline: 0; }
 .header-side-nav a:hover { text-decoration: none; }
 .header-side-nav > a .fa { margin-left: 10px; }
