@@ -28,7 +28,7 @@ class ValidationBehavior extends ModelBehavior {
 		try {
 		    $startDate = new DateTime(current($field));
 		} catch (Exception $e) {
-		    return 'Please input a proper date.';
+		    return 'Please input a proper date';
 		    exit(1);
 		}
 		if($compareField) {
@@ -48,4 +48,14 @@ class ValidationBehavior extends ModelBehavior {
         }
     }
     
+	public function checkDateInput($value) {
+		try {
+		    $date = new DateTime($value);
+		} catch (Exception $e) {
+		    return 'Please input a proper date';
+		    exit(1);
+		}
+		return true;		
+	}
+
 }
