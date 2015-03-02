@@ -33,7 +33,7 @@ class TrackActivityBehavior extends ModelBehavior {
 		if (!empty($model->id)) { // edit operation
 			$model->recursive = -1;
 		    $oldData = $model->findById($model->id);
-		    $data = $model->data[$model->alias];
+		    $data = $model->data;
 		    $schema = $model->schema();
 		    
 		    $ActivityModel = ClassRegistry::init($this->settings[$model->alias]['target']);
@@ -45,45 +45,54 @@ class TrackActivityBehavior extends ModelBehavior {
 
 			if ($oldData) {
 				foreach ($oldData[$model->alias] as $field => $value) {
-			    	if (!in_array($field, $this->exclude) && array_key_exists($field, $data)) {
+			    	if (!in_array($field, $this->exclude) && array_key_exists($field, $data[$model->alias])) {
 			    		if (array_key_exists($field, $schema) && !in_array($schema[$field]['type'], $this->excludeType)) {
-
-			    			if ($oldData[$model->alias][$field] != $data[$field]) {
+			    			if ($oldData[$model->alias][$field] != $data[$model->alias][$field]) {
 			    			
-				    			$split = explode('_', $field);
-								unset($split[count($split)-1]);
-								$relatedModelName = implode('', array_map('ucwords', $split));
-								
+				    			$relatedModelName = Inflector::camelize(str_replace('_id', '', $field));
 								$relatedModel = $model->{$relatedModelName};
 
 								// check if related model's table is actually field_option_values by reading its useTable instance
 								if (is_object($relatedModel) && $relatedModel->useTable=='field_option_values') {
+
 									// foreignKey value has to be related model's name instead of field_option_values_id which does not exists in $model's column
-									if (isset($relatedModel->hasMany[$model->alias])) {
-										$relatedModel->hasMany[$model->alias]['foreignKey'] = $field;
-									}
+									$relatedModel->hasMany[$model->alias]['foreignKey'] = $field;
 								}
 		
 								$obj['field'] = $field;
 								
-								// if related model exists, get related data
-								$relatedData = is_object($relatedModel) ? $relatedModel->findById($oldData[$model->alias][$field]) : false;
+								$allData = array('old'=>$oldData, 'new'=>$data);
+								foreach ($allData as $allDataKey=>$allDataValue) {
 
-								// if related data exists, get the name value instead of its id number. Else set the value as an empty space since old_value column does not except null
-								$obj['old_value'] = ($relatedData && isset($relatedData[$relatedModelName]['name'])) ? $relatedData[$relatedModelName]['name'] : (($oldData[$model->alias][$field]) ? $oldData[$model->alias][$field] : ' ');
-								
+									// if related model exists, get related data
+									if (is_object($relatedModel)) {
+										$relatedData = $relatedModel->findById($allDataValue[$model->alias][$field]);
 
-								$relatedData = is_object($relatedModel) ? $relatedModel->findById($data[$field]) : false;
-								$obj['new_value'] = ($relatedData && isset($relatedData[$relatedModelName]['name'])) ? $relatedData[$relatedModelName]['name'] : (($data[$field]) ? $data[$field] : ' ');
+										// if related data exists, get the name value instead of its id number.
+										if ($relatedData && isset($relatedData[$relatedModelName]['name'])) {
+											$obj[$allDataKey.'_value'] = $relatedData[$relatedModelName]['name'];
+										} else {
+
+											// Else set the value as an empty space since old_value and new_value column do not except null
+											$obj[$allDataKey.'_value'] = ($allDataValue[$model->alias][$field]) ? $allDataValue[$model->alias][$field] : ' ';
+										}
+									} else {
+										// log if relation is missing
+										$this->log($field." is not defined in belongsTo ".$model, 'debug');
+										$obj[$allDataKey.'_value'] = ($allDataValue[$model->alias][$field]) ? $allDataValue[$model->alias][$field] : ' ';
+									}
+								}
 
 								$obj['operation'] = 'edit';
 								$ActivityModel->create();
 								$ActivityModel->save($obj);
+
 				            }
 			    		}
 			    	}
 			    }
 			}
+
 		}
 		return true;
 	}
