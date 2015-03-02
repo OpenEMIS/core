@@ -19,7 +19,6 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
-		//'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
@@ -90,7 +89,6 @@ class InstitutionSiteProgramme extends AppModel {
 	);
 	
 	public function beforeAction() {
-		//parent::beforeAction();
 		$this->Navigation->addCrumb('Programmes');
 
 		if($this->action == 'view') {
@@ -198,7 +196,7 @@ class InstitutionSiteProgramme extends AppModel {
 			} else {
 				if ($this->saveAll($data)) {
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => get_class($this), 'index'));
+					return $this->controller->redirect(array('action' => get_class($this), 'index'));
 				} else {
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
@@ -215,12 +213,9 @@ class InstitutionSiteProgramme extends AppModel {
 		$this->fields['education_level_id']['options'] = $educationLevelOptions;
 		$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
 		$this->controller->set(compact('educationGrades'));
-
-		$this->render = 'auto';
 	}
 
-	public function edit($id=0) {
-		$this->render = 'auto';
+	public function edit($id=0) {		
 		if ($this->exists($id)) {
 			$this->contain('EducationProgramme.EducationCycle', 'InstitutionSiteGrade');
 			$data = $this->findById($id);
@@ -251,7 +246,7 @@ class InstitutionSiteProgramme extends AppModel {
 				} else {
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
-						return $this->redirect(array('action' => get_class($this), 'view', $this->id));
+						return $this->controller->redirect(array('action' => get_class($this), 'view', $this->id));
 					} else {
 						$this->log($this->validationErrors, 'debug');
 						$this->Message->alert('general.edit.failed');
@@ -270,7 +265,7 @@ class InstitutionSiteProgramme extends AppModel {
 			$this->controller->set(compact('educationGrades'));
 		} else {
 			$this->Message->alert('general.view.notExists');
-			return $this->redirect(array('action' => get_class($this)));
+			return $this->controller->redirect(array('action' => get_class($this)));
 		}
 	}
 
