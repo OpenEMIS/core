@@ -167,6 +167,22 @@ class StaffSalary extends StaffAppModel {
 			);
 	}
 
+	private function _addDefaultValueForEmptyAmts($currData) {
+		// cake seems unable to create new data entries with 'empty' values via saveAll and default them to MySQL table defaults... so....
+		if (array_key_exists('StaffSalaryAddition', $currData)) {
+			foreach ($currData['StaffSalaryAddition'] as $key => $value) {
+				$currData['StaffSalaryAddition'][$key]['amount'] = (!empty($value['amount']))? $value['amount']: 0;
+			}
+		}
+		if (array_key_exists('StaffSalaryDeduction', $currData)) {
+			foreach ($currData['StaffSalaryDeduction'] as $key => $value) {
+				$currData['StaffSalaryDeduction'][$key]['amount'] = (!empty($value['amount']))? $value['amount']: 0;
+			}
+		}
+		
+		return $currData;
+	}
+
 	public function add() {
 		if ($this->Session->check('Staff.id')) {
 			$staffId = $this->Session->read('Staff.id');
@@ -184,6 +200,7 @@ class StaffSalary extends StaffAppModel {
 		if ($this->request->is(array('post', 'put'))) {
 			if (array_key_exists('submit', $this->request->data)) {
 				if ($this->request->data['submit'] == 'Save') {
+					$this->request->data = $this->_addDefaultValueForEmptyAmts($this->request->data);
 					parent::add();
 				}
 				if ($this->request->data['submit'] == 'addition') {
@@ -259,6 +276,7 @@ class StaffSalary extends StaffAppModel {
 			
 			if ($this->request->is(array('post', 'put'))) {
 				if ($this->request->data['submit'] == 'Save') {
+					$this->request->data = $this->_addDefaultValueForEmptyAmts($this->request->data);
 					if ($this->saveAll($this->request->data)) {
 						$this->Message->alert('general.edit.success');
 						$action = array('action' => $this->alias, 'view', $staffSalaryId);
