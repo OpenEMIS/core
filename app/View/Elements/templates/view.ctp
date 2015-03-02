@@ -12,9 +12,8 @@ $this->start('contentActions');
 			}
 		}
 	}
-
-	// Back link
-	$actionParams = $_triggerFrom == 'Controller' ? array('action' => 'index') : array('action' => $model);
+	
+	$actionParams = array('action' => $model);
 	if (isset($params)) {
 		if (isset($params['back'])) {
 			if (is_array($params['back'])) {
@@ -28,16 +27,8 @@ $this->start('contentActions');
 		$actionParams = array_merge($actionParams, $paramValues);
 	}
 	echo $this->Html->link($this->Label->get('general.back'), $actionParams, array('class' => 'divider'));
-
-	// Edit link
-	$actionParams = array();
-	if ($_triggerFrom == 'Controller') {
-		$actionParams = array('action' => 'edit');
-	} else {
-		$actionParams = array('action' => $model);
-		$actionParams[] = 'edit';
-	}
-	
+	$actionParams = array('action' => $model);
+	$actionParams[] = 'edit';
 	if (isset($data[$model]['id'])) {
 		$actionParams[] = $data[$model]['id'];
 	}
@@ -49,15 +40,8 @@ $this->start('contentActions');
 		echo $this->Html->link($this->Label->get('general.edit'), $actionParams, array('class' => 'divider'));
 	}
 	
-	// Delete link
-	$actionParams = array();
-	if ($_triggerFrom == 'Controller') {
-		$actionParams = array('action' => 'remove');
-	} else {
-		$actionParams = array('action' => $model);
-		$actionParams[] = 'remove';
-	}
-	
+	$actionParams = array('action' => $model);
+	$actionParams[] = 'remove';
 	if (isset($params)) {
 		$actionParams = array_merge($actionParams, $paramValues);
 	}
