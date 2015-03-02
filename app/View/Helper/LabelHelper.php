@@ -327,10 +327,14 @@ class LabelHelper extends AppHelper {
 			'processing' => 'Processing'
 		),
 		'Student' => array(
+			'module' => 'Student',
 			'identification_no' => 'OpenEMIS ID',
 			'first_name' => 'First Name',
 			'last_name' => 'Last Name',
 			'add_existing' => 'Add existing Student'
+		),
+		'Staff' => array(
+			'module' => 'Staff',
 		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
