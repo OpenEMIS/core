@@ -33,12 +33,14 @@ class StudentsController extends StudentsAppController {
 		'Students.StudentCustomValue',
 		'Students.StudentAssessment',
 		'Students.StudentAttendanceType',
+		'Students.Programme',
 		'AcademicPeriod',
 		'ConfigItem'
 	);
 	
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
+		'ControllerAction',
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'Students.StudentAttachment',
@@ -73,7 +75,6 @@ class StudentsController extends StudentsAppController {
 		'additional' => 'Students.StudentCustomField',
 		// new ControllerAction
 		'InstitutionSiteStudent',
-		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'Absence' => array('plugin' => 'Students'),

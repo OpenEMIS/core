@@ -1,10 +1,28 @@
 <?php
+/*
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+
+OpenEMIS
+Open Education Management Information System
+
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+
+ControllerActionComponent - Version 1.0
+*/
+
 class ControllerActionComponent extends Component {
 	private $plugin;
 	private $controller;
 	private $model = null;
 	private $triggerFrom = 'Controller';
 	private $currentAction;
+	private $paramsPass;
 	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove');
 	public $autoRender = true;
 
@@ -15,6 +33,7 @@ class ControllerActionComponent extends Component {
 		$this->controller =& $controller;
 		if (isset($this->settings['model'])) {
 			$model = $this->getModel($this->settings['model']);
+			$this->plugin = $model['plugin'];
 			$this->model = $controller->{$model['model']};
 			$this->getFields($this->model);
 		}
@@ -23,46 +42,36 @@ class ControllerActionComponent extends Component {
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Controller $controller) {
 		$action = $controller->action;
+		$this->paramsPass = $controller->params->pass;
+
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
 				$this->currentAction = $controller->request->params['action'];
 				$controller->request->params['action'] = 'ComponentAction';
 			} else { // check if it's a model action
-				foreach ($controller->uses as $model) {
-					$split = explode('.', $model);
-					$this->plugin = null;
-					$modelClass = $model;
-					if (count($split) > 1) {
-						$this->plugin = $split[0];
-						$modelClass = $split[1];
-					}
+				foreach ($controller->uses as $modelName) {
+					$model = $this->getModel($modelName);
+					$modelClass = $model['model'];
 
 					if ($action === $modelClass) { // model class found
-						$paramPass = $controller->params->pass;
 						$currentAction = 'index';
-						if (!empty($paramPass)) {
-							$currentAction = array_shift($paramPass);
+						if (!empty($this->paramsPass)) {
+							$currentAction = array_shift($this->paramsPass);
 						}
+						$this->plugin = $model['plugin'];
 						$this->model = $controller->{$modelClass};
+						$this->getFields($this->model);
 						$this->currentAction = $currentAction;
 						$controller->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
-						$this->getFields($this->model);
 						if (method_exists($this->model, 'beforeAction')) {
 							$this->model->beforeAction();
 						}
 						$this->triggerFrom = 'Model';
 						break;
-						//pr('test');die;
-						//pr($controller->params->pass);die;
-						//if (method_exists())
 					}
 				}
 			}
-		}
-
-		if (!empty($this->model)) {
-			$controller->set('model', $this->model->alias);
 		}
 	}
 
@@ -70,13 +79,13 @@ class ControllerActionComponent extends Component {
 	public function beforeRender(Controller $controller) {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
 			$controller->request->params['action'] = $this->currentAction;
-			uasort($this->model->fields, array($this, 'sortFields'));
-			$controller->set('_fields', $this->model->fields);
-			$controller->set('_triggerFrom', $this->triggerFrom);
-
 			if ($this->triggerFrom == 'Model' && method_exists($this->model, 'afterAction')) {
 				$this->model->afterAction();
 			}
+			uasort($this->model->fields, array($this, 'sortFields'));
+			$controller->set('model', $this->model->alias);	//I want to use _model instead, more consistent
+			$controller->set('_fields', $this->model->fields);
+			$controller->set('_triggerFrom', $this->triggerFrom);
 		}
 	}
 
@@ -92,21 +101,30 @@ class ControllerActionComponent extends Component {
 	}
 
 	public function processAction() {
-		$paramsPass = $this->controller->params->pass;
-
 		$result = null;
 		if ($this->triggerFrom == 'Controller') {
-			$result = call_user_func_array(array($this, $this->currentAction), $paramsPass);
+			$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
+			$ctpFolder = $this->controller->name;
 		} else if ($this->triggerFrom == 'Model') {
-			$result = call_user_func_array(array($this->model, $this->currentAction), $paramsPass);
-			if (empty($this->plugin)) {
-				$path = APP . 'View' . DS . $this->controller->name . DS;
-				$ctp = $this->model->alias . DS . $this->currentAction;
-				if (file_exists($path . DS . $ctp . '.ctp')) {
-					$this->controller->render($ctp);
-				}
+			if (method_exists($this->model, $this->currentAction)) {
+				$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
 			} else {
+				$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
+			}
+			$ctpFolder = $this->model->alias;
+		}
 
+		if (empty($this->plugin)) {
+			$path = APP . 'View' . DS . $this->controller->name . DS;
+		} else {
+			$path = APP . 'Plugin' . DS . $this->plugin . DS . 'View' . DS;
+		}
+		$ctp = $ctpFolder . DS . $this->currentAction;
+
+		if (file_exists($path . DS . $ctp . '.ctp')) {
+			if ($this->autoRender) {
+				$this->autoRender = false;
+				$this->controller->render($ctp);
 			}
 		}
 

@@ -1,4 +1,6 @@
 <?php
+//ControllerActionComponent - Version 1.0
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 

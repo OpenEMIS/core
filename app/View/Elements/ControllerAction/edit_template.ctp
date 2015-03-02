@@ -1,4 +1,6 @@
 <?php
+//ControllerActionComponent - Version 1.0
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 
@@ -27,6 +29,8 @@ $this->start('contentActions');
 	} else if ($this->action == 'edit') {
 		if ($_triggerFrom == 'Controller') {
 			$actionParams['action'] = 'view';
+		} else {
+			$actionParams[] = 'view';
 		}
 		$actionParams[] = $this->request->data[$model]['id'];
 		if (isset($params)) {
