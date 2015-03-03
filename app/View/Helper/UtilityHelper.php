@@ -501,7 +501,16 @@ class UtilityHelper extends AppHelper {
 		if($date == '0000-00-00' || $date == ''){ 
 			$output = '';
 		}else{
-			$date = new DateTime($date);
+			try {
+				$date = new DateTime($date);
+			} catch (Exception $e) {
+			    if($echo) {
+					echo 'The Date Is Not In A Proper Format.';
+				} else {
+					return 'The Date Is Not In A Proper Format.';
+				}
+			    exit(1);
+			}
 			$output = $date->format($format);
 		}
 		if($echo) {

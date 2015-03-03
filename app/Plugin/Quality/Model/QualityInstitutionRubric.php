@@ -282,7 +282,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedGradeId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedGradeId;
 		$selectedGradeId = empty($selectedGradeId) ? 0 : $selectedGradeId;
 
-		//Process Class
+		//Process Section
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriodId, $institutionSiteId, $selectedGradeId);
 		$selectedSectionId = !empty($selectedSectionId) ? $selectedSectionId : key($sectionOptions);
@@ -296,8 +296,34 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedRubricId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedRubricId;
 
 		//Process staff
-		$InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
-		$staffOptions = $InstitutionSiteSectionStaff->getStaffsInSectionAcademicPeriod($selectedSectionId, $selectedAcademicPeriodId, 'list');
+		$staffs = $this->InstitutionSiteSection->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = InstitutionSiteSection.staff_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Staff.security_user_id')
+				),
+			),
+			'conditions' => array('InstitutionSiteSection.id' => $selectedSectionId, 'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriodId),
+			'order' => array('SecurityUser.first_name')
+		));
+
+		$staffOptions = array();
+		foreach ($staffs as $obj) {
+			$id = $obj['Staff']['id'];
+			$staffOptions[$id] = ModelHelper::getName($obj['SecurityUser']);
+		}
+
+
 		$selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
 		$selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
 
