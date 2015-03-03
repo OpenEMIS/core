@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.01
+ControllerActionComponent - Version 1.0.2
 */
 
 class ControllerActionComponent extends Component {
@@ -22,15 +22,21 @@ class ControllerActionComponent extends Component {
 	private $model = null;
 	private $triggerFrom = 'Controller';
 	private $currentAction;
+	private $ctpFolder;
 	private $paramsPass;
 	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove');
 	public $autoRender = true;
+	public $autoProcess = true;
 
 	public $components = array('Session', 'Message');
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
+		$this->paramsPass = $controller->params->pass;
+		$this->currentAction = $controller->action;
+		$this->ctpFolder = $controller->name;
+
 		if (isset($this->settings['model'])) {
 			$model = $this->getModel($this->settings['model']);
 			$this->plugin = $model['plugin'];
@@ -42,9 +48,6 @@ class ControllerActionComponent extends Component {
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Controller $controller) {
 		$action = $controller->action;
-		$this->paramsPass = $controller->params->pass;
-		$this->currentAction = $action;
-
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
 				$controller->request->params['action'] = 'ComponentAction';
@@ -62,6 +65,7 @@ class ControllerActionComponent extends Component {
 						$this->model = $controller->{$modelClass};
 						$this->getFields($this->model);
 						$this->currentAction = $currentAction;
+						$this->ctpFolder = $this->model->alias;
 						$controller->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
 						if (method_exists($this->model, 'beforeAction')) {
@@ -83,7 +87,8 @@ class ControllerActionComponent extends Component {
 				$this->model->afterAction();
 			}
 			uasort($this->model->fields, array($this, 'sortFields'));
-			$controller->set('model', $this->model->alias);	//I want to use _model instead, more consistent
+			$controller->set('model', $this->model->alias);
+			$controller->set('action', $this->currentAction);
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
 		}
@@ -102,24 +107,28 @@ class ControllerActionComponent extends Component {
 
 	public function processAction() {
 		$result = null;
-		if ($this->triggerFrom == 'Controller') {
-			$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
-			$ctpFolder = $this->controller->name;
-		} else if ($this->triggerFrom == 'Model') {
-			if (method_exists($this->model, $this->currentAction)) {
-				$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
-			} else {
+		if ($this->autoProcess) {
+			if ($this->triggerFrom == 'Controller') {
 				$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
+			} else if ($this->triggerFrom == 'Model') {
+				if (method_exists($this->model, $this->currentAction)) {
+					$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
+				} else {
+					$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
+				}
 			}
-			$ctpFolder = $this->model->alias;
 		}
 
+		$this->render();
+	}
+
+	public function render() {
 		if (empty($this->plugin)) {
 			$path = APP . 'View' . DS . $this->controller->name . DS;
 		} else {
 			$path = APP . 'Plugin' . DS . $this->plugin . DS . 'View' . DS;
 		}
-		$ctp = $ctpFolder . DS . $this->currentAction;
+		$ctp = $this->ctpFolder . DS . $this->currentAction;
 
 		if (file_exists($path . DS . $ctp . '.ctp')) {
 			if ($this->autoRender) {
@@ -166,12 +175,13 @@ class ControllerActionComponent extends Component {
 				$pass = $this->controller->params->pass;
 				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
-				$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
+				$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
 				if ($this->triggerFrom == 'Model') {
 					unset($pass[0]);
 					$action = array('action' => get_class($model));
-					$action[] = isset($params['back']) ? $params['back'] : 'index';
+					$action[] = isset($params['back']) ? $params['back'] : 'view';
 				}
+				$action[] = $model->getLastInsertID();
 				$action = array_merge($action, $pass);
 				return $this->controller->redirect($action);
 			} else {
