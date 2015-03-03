@@ -24,7 +24,9 @@ class ActivityComponent extends Component {
 	
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public function beforeRender(Controller $controller) {
-		$controller->request->params['action'] = $this->currentAction;
+		if ($controller->action == 'history') {
+			$controller->request->params['action'] = $this->currentAction;
+		}
 	}
 
 	public function activity() {
