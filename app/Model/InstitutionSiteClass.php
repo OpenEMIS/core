@@ -101,8 +101,7 @@ class InstitutionSiteClass extends AppModel {
 		}
 
 		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
-		$sectionOptionsData = $InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId);
-		$sectionOptions = $this->controller->Option->prependLabel($sectionOptionsData, 'InstitutionSiteClass.all_sections_select');
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId);
 		$selectedSection = $this->checkIdInOptions($selectedSection, $sectionOptions);
 
 		if (empty($sectionOptions)) {
