@@ -10,18 +10,18 @@ if($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Academic Period'), __('Name'), __('Class'), __('Staff'));
+$tableHeaders = array(__('Academic Period'), __('Name'), __('Section'), __('Staff'));
 $tableData = array();
 foreach ($data as $obj) {
 	$staffName = $this->Model->getName($obj['Staff']);
 	$row = array();
 	$row[] = $obj['AcademicPeriod']['name'];
 	$row[] = $this->Html->link($obj['RubricsTemplate']['name'], array('action' => 'qualityRubricView', $obj[$model]['id']), array('escape' => false));
-	$row[] = $obj['InstitutionSiteClass']['name'];
+	$row[] = $obj['InstitutionSiteSection']['name'];
 	$row[] = $staffName;
 
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
 
-$this->end(); ?>  
+$this->end(); ?>

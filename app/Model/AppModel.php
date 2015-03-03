@@ -43,8 +43,8 @@ class AppModel extends Model {
 	public $request;
 	public $action;
 	public $fields;
-	
-	public $actsAs = array('Containable');
+
+	public $actsAs = array('Containable', 'Validation');
 
 	public function checkUnique($ignoredData, $fields, $or = true) {
 		return $this->isUnique($fields, $or);

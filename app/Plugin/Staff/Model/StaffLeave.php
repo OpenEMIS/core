@@ -41,13 +41,7 @@ class StaffLeave extends StaffAppModel {
 			)
 		)
 	);
-	
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate > $startDate;
-	}
-	
+		
 	public function checkOverlapDates($field = array()) {
 		$data = $this->data[$this->name];
 		$startDate = $data['date_from'];
