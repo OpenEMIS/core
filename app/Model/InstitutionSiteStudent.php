@@ -468,63 +468,6 @@ class InstitutionSiteStudent extends AppModel {
 		));
 		return $data;
 	}
-	
-	// used by InstitutionSiteStudentAbsence
-	public function getAutoCompleteList($search,  $institutionSiteId = NULL, $limit = NULL) {
-		$search = sprintf('%%%s%%', $search);
-		
-		$options['recursive'] = -1;
-		$options['fields'] = array('DISTINCT Student.id', 'Student.*');
-		$options['joins'] = array(array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id'
-					)
-				));
-		if(!empty($institutionSiteId)){
-			$options['joins'][] = array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id',
-						'InstitutionSite.id' => $institutionSiteId
-					)
-				);
-		}
-		$options['conditions'] = array(
-				'OR' => array(
-					'SecurityUser.first_name LIKE' => $search,
-					'SecurityUser.middle_name LIKE' => $search,
-					'SecurityUser.third_name LIKE' => $search,
-					'SecurityUser.last_name LIKE' => $search,
-					'Student.preferred_name LIKE' => $search,
-					'openemis_no LIKE' => $search
-				)
-			);
-		$options['order'] = array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'Student.preferred_name');
-		if(!empty($limit)){
-			$options['limit'] = $limit;
-		}
-		
-		$list = $this->find('all', $options);
-	
-		$data = array();
-		foreach ($list as $obj) {
-			$student = $obj['Student'];
-			$data[] = array(
-				'label' => ModelHelper::getName($student, array('openEmisId'=>true, 'preferred'=>true)),
-				'value' => $student['id']
-			);
-		}
-		return $data;
-	}
 
 	// used by InstitutionSiteSection.edit
 	public function getStudentOptions($institutionSiteId, $periodId) {

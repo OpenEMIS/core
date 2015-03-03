@@ -588,6 +588,19 @@ UPDATE census_teacher_fte SET gender_id = @newGenderFemale WHERE gender_id = @fi
 UPDATE census_teacher_training SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
 UPDATE census_sanitations SET gender_id = @newGenderFemale WHERE gender_id = @fieldGenderFemale;
 
+-- for security / user to controlleractions2
+UPDATE navigations SET action = 'SecurityUser', pattern = 'SecurityUser|SecurityUserAccess.view' WHERE action = 'users' AND module = 'Administration' AND controller = 'Security'AND title = 'Users';
+
+
+-- update security for users
+UPDATE security_functions SET _view = 'SecurityUser|SecurityUser.index', _edit = NULL, _add = NULL WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
+UPDATE security_functions SET _view = 'SecurityUser.view', _edit = '_view:SecurityUser.edit|SecurityUserLogin.edit', _add = '_view:SecurityUser.add'WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
+
+
+
+
+
+
 
 
 

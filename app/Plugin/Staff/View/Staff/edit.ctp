@@ -40,13 +40,13 @@ echo $this->Form->create($model, $formOptions);
 		}
 		
 		if ($autoid=='') {
-			$arrIdNo = array_merge(array('label' => $openEmisIdLabel),$arrIdNo);
+			$arrIdNo = array_merge(array('label' => $openEmisIdLabel, 'readOnly' => true),$arrIdNo);
 			echo $this->Form->input('openemis_no', $arrIdNo);
 		} else {
 			if ($this->Session->check('Staff.id')) { 
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel));
+				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
 			} else {
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid));
+				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
 			}
 		}
 		

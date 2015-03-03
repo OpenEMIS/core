@@ -70,7 +70,6 @@ class Staff extends StaffAppModel {
 			'dependent' => true
 		),
 		'InstitutionSiteStaff',
-		'StaffIdentity',
 		'Staff.StaffCustomValue'
 	);
 

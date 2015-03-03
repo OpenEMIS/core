@@ -86,12 +86,12 @@ class StudentBehaviour extends StudentsAppModel {
 			if ($this->Session->check($this->alias.'.studentId')) {
 				$studentId = $this->Session->read($this->alias.'.studentId');
 				
-				$this->Student->contain();
+				$this->Student->contain('SecurityUser');
 				$obj = $this->Student->findById($studentId);
 				
 				$this->fields['student_name']['visible'] = true;
 				$this->fields['student_name']['type'] = 'disabled';
-				$this->fields['student_name']['value'] = ModelHelper::getName($obj['Student']);
+				$this->fields['student_name']['value'] = ModelHelper::getName($obj['SecurityUser']);
 				$this->fields['student_name']['order'] = 0;
 				$this->setFieldOrder('student_name', 0);
 				

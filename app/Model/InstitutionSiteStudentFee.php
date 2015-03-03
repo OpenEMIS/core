@@ -174,7 +174,7 @@ class InstitutionSiteStudentFee extends AppModel {
 	// Also used by Students.StudentFee.view
 	public function viewPayments($studentId, $institutionSiteFeeId) {
 		$alias = $this->alias;
-		$this->Student->contain();
+		$this->Student->contain('SecurityUser');
 		$student = $this->Student->findById($studentId);
 		$this->InstitutionSiteFee->contain(array(
 			'AcademicPeriod' => array('fields' => array('name')),
@@ -230,7 +230,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$data[$alias]['grade'] = $fees['EducationGrade']['name'];
 		$data[$alias]['student_id'] = $student['Student']['id'];
 		$data[$alias]['openemisId'] = $student['SecurityUser']['openemis_no'];
-		$data[$alias]['name'] = ModelHelper::getName($student['Student']);
+		$data[$alias]['name'] = ModelHelper::getName($student['Student']['SecurityUser']);
 		$data[$alias]['institution_site_fee_id'] = $fees['InstitutionSiteFee']['id'];
 		$data[$alias]['total_fee'] = $fees['InstitutionSiteFee']['total'];
 		$data[$alias]['outstanding'] = number_format($outstanding, 2);

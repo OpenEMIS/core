@@ -291,44 +291,6 @@ class InstitutionSiteClassStudent extends AppModel {
 */
 		return $data;
 	}
-	
-	public function getAutoCompleteList($search, $classId) {
-		$search = sprintf('%%%s%%', $search);
-
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT Student.id', 'Student.*'),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteClassStudent.institution_site_class_id' => $classId,
-				'OR' => array(
-					'SecurityUser.first_name LIKE' => $search,
-					'SecurityUser.last_name LIKE' => $search,
-					'SecurityUser.middle_name LIKE' => $search,
-					'SecurityUser.third_name LIKE' => $search,
-					'SecurityUser.preferred_name LIKE' => $search,
-					'openemis_no LIKE' => $search
-				)
-			),
-			'order' => array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name')
-		));
-
-		$data = array();
-		foreach ($list as $obj) {
-			$student = $obj['Student'];
-			$data[] = array(
-				'label' => ModelHelper::getName($student, array('openEmisId'=>true)),
-				'value' => $student['id']
-			);
-		}
-		return $data;
-	}
 
 	public function isStudentInClass($institutionSiteId, $classId, $studentId) {
 		$data = $this->find('all', array(

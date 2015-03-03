@@ -111,9 +111,6 @@ echo $this->Form->hidden('id', array('value' => $data['SecurityUser']['id']));
 	</div>
 </fieldset>
 
-<div class="controls">
-	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'usersView'), array('class' => 'btn_cancel btn_left')); ?>
-</div>
+<?php echo $this->FormUtility->getFormButtons(array('reloadBtn' => true, 'cancelURL' => array('action' => 'usersView', $data['SecurityUser']['id']))); ?>
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>

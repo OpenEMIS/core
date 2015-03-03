@@ -610,49 +610,6 @@ class InstitutionSiteStaff extends AppModel {
 		return $filterFTEOptions;
 	}
 	
-	// used by InstitutionSiteStaffAbsence
-	public function getAutoCompleteList($search, $institutionSiteId = NULL, $limit = NULL) {
-		$search = sprintf('%%%s%%', $search);
-
-		$options['recursive'] = -1;
-		$options['fields'] = array('DISTINCT Staff.id', 'Staff.*');
-		$options['order'] = array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'Staff.preferred_name');
-		$options['joins'] = array(
-			array(
-				'table' => 'staff',
-				'alias' => 'Staff',
-				'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
-		));
-		$options['conditions'] = array(
-			'OR' => array(
-				'SecurityUser.first_name LIKE' => $search,
-				'SecurityUser.middle_name LIKE' => $search,
-				'SecurityUser.third_name LIKE' => $search,
-				'SecurityUser.last_name LIKE' => $search,
-				'Staff.preferred_name LIKE' => $search,
-				'SecurityUser.openemis_no LIKE' => $search
-			)
-		);
-
-		if (!empty($institutionSiteId)) {
-			$options['conditions']['InstitutionSiteStaff.institution_site_id'] = $institutionSiteId;
-		}
-		if (!empty($limit)) {
-			$options['limit'] = $limit;
-		}
-		$list = $this->find('all', $options);
-
-		$data = array();
-		foreach ($list as $obj) {
-			$staff = $obj['Staff'];
-			$data[] = array(
-				'label' => ModelHelper::getName($staff, array('openEmisId'=>true, 'preferred' => true)),
-				'value' => $staff['id']
-			);
-		}
-		return $data;
-	}
-	
 	public function getInstitutionSiteStaffOptions($institutionSiteId, $startDate, $endDate){
 		$staffData = $this->getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate);
 		
@@ -730,42 +687,6 @@ class InstitutionSiteStaff extends AppModel {
 		
 		$data = $this->getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate);
 		
-		return $data;
-	}
-
-	public function getStaffSelectList($year, $institutionSiteId, $classId) {
-		// Filtering section
-
-		$InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
-		$staffsExclude = $InstitutionSiteClassStaff->getStaffs($classId);
-		$ids = '';
-		foreach ($staffsExclude as $obj) {
-			$ids .= $obj['Staff']['id'] . ',';
-		}
-		$ids = rtrim($ids, ',');
-		if ($ids != '') {
-			$conditions = 'Staff.id NOT IN (' . $ids . ')';
-		} else {
-			$conditions = '';
-		}
-		// End filtering
-
-		$data = $this->find('all', array(
-			'fields' => array(
-				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name',
-				'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.gender'
-			),
-			'conditions' => array(
-				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteStaff.start_year <=' => $year,
-				'OR' => array(
-					'InstitutionSiteStaff.end_year >=' => $year,
-					'InstitutionSiteStaff.end_year IS NULL'
-				)
-			),
-			'group' => array('Staff.id'),
-			'order' => array('SecurityUser.first_name')
-		));
 		return $data;
 	}
 	

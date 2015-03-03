@@ -241,11 +241,13 @@ class StudentsController extends StudentsAppController {
 		}
 		$this->Student->contain(array('SecurityUser' => array('Gender')));
 		$data = $this->Student->findById($id);
+		
 		$obj = $data['Student'];
-		$name = ModelHelper::getName($obj);
+		$name = ModelHelper::getName($data['SecurityUser']);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Student.data', $obj);
+		$this->Session->write('Student.user.data', $data['SecurityUser']);
 		$this->Session->write('Student.security_user_id', $obj['security_user_id']);
 		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
@@ -409,8 +411,8 @@ class StudentsController extends StudentsAppController {
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
-		$this->set('nationalityOptions', $nationalityOptions);
-		$this->set('identityTypeOptions', $identityTypeOptions);
+		// $this->set('nationalityOptions', $nationalityOptions);
+		// $this->set('identityTypeOptions', $identityTypeOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);
 		$this->set('addressAreaId', $addressAreaId);

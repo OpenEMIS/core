@@ -35,13 +35,13 @@ class StudentSection extends AppModel {
 		$this->Navigation->addCrumb('Sections');
 		$alias = $this->alias;
 		$studentId = $this->Session->read('Student.id');
-
+		
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				"$this->alias.*", 'AcademicPeriod.name', 'InstitutionSite.name',
 				'InstitutionSiteSection.name', 'EducationGrade.id', 'EducationGrade.name',
-				'Staff.*'
+				'Staff.*', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name'
 			),
 			'joins' => array(
 				array(
@@ -80,6 +80,13 @@ class StudentSection extends AppModel {
 					'conditions' => array(
 						"Staff.id = InstitutionSiteSection.staff_id"
 					)
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array(
+						"SecurityUser.id = Staff.security_user_id"
+					)
 				)
 			),
 			'conditions' => array(
@@ -97,7 +104,7 @@ class StudentSection extends AppModel {
 				$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSection->getSingleGradeBySection($sectionId);
 			}
 			
-			$data[$i]['Staff']['staff_name'] = ModelHelper::getName($obj['Staff']);
+			$data[$i]['Staff']['staff_name'] = ModelHelper::getName($obj['SecurityUser']);
 		}
 		
 		if(empty($data)){

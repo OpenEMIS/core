@@ -23,6 +23,10 @@ class PreferencesController extends AppController {
 		'SecurityGroupUser'
 	);
 
+	public $modules = array(
+		'SecurityUserLogin'
+	);
+
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Preferences';
@@ -37,31 +41,68 @@ class PreferencesController extends AppController {
 		$this->Navigation->addCrumb('Account');
 		$header = __('Account');
 		$userId = $this->Auth->user('id');
-		$this->SecurityUser->id = $userId;
-		$obj = $this->SecurityUser->read();
 
-		$obj['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-		$this->set(compact('obj','header'));
+		$data = $this->SecurityUser->find(
+			'first',
+			array(
+				'contain' => array(
+					'UserContact' => array(
+						'fields' => array('id', 'value', 'preferred'),
+						'ContactType' => array(
+							'fields' => array('id', 'name'),
+							'ContactOption' => array('fields' => array('id', 'name'))
+						)
+					),
+					'SecurityGroupUser' => array(
+						'SecurityGroup' => array('fields'=> array('id', 'name')),
+						'SecurityRole' => array('fields'=> array('id', 'name'))
+					)
+				),
+				'conditions' => array(
+					'id' => $userId
+				)
+			)
+		);
+
+		$this->set(compact('data','header'));
 	}
 	
 	public function accountEdit() {
 		$this->Navigation->addCrumb('Account');
 		$header = __('Account');
 		$userId = $this->Auth->user('id');
-		$this->SecurityUser->formatResult = true;
-		$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 		
-		$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
+		$data = $this->SecurityUser->find(
+			'first',
+			array(
+				'contain' => array(
+					'UserContact' => array(
+						'fields' => array('id', 'value', 'preferred'),
+						'ContactType' => array(
+							'fields' => array('id', 'name'),
+							'ContactOption' => array('fields' => array('id', 'name'))
+						)
+					),
+					'SecurityGroupUser' => array(
+						'SecurityGroup' => array('fields'=> array('id', 'name')),
+						'SecurityRole' => array('fields'=> array('id', 'name'))
+					)
+				),
+				'conditions' => array(
+					'id' => $userId
+				)
+			)	
+		);
+		
 		if($this->request->is('post') || $this->request->is('put')) {
-			$postData = $this->data['SecurityUser'];
-			if($this->SecurityUser->doValidate($postData)) {
-				$name = $postData['first_name'] . ' ' . $postData['last_name'];
+			if($this->SecurityUser->save($this->data)) {
+				$name = ModelHelper::getName($this->data['SecurityUser']);
 				$this->Utility->alert($name . ' '.__('has been updated successfully.'));
-				$this->Session->write('Auth.User', array_merge($this->Auth->user(), $postData));
+				$this->Session->write('Auth.User', array_merge($this->Auth->user(), $this->data['SecurityUser']));
 				$this->redirect(array('action' => 'account'));
-			} else {
-				$data = array_merge($data, $postData);
-			}
+			} 
+		} else {
+			$this->request->data = $data;
 		}
 		$this->set(compact('data', 'header'));
 		$this->set('statusOptions', $this->SecurityUser->status);
