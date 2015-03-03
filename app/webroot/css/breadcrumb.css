@@ -12,7 +12,7 @@
 
 #breadcrumb li {
 	float: left;
-	display: inline-block;
+	display: inline-table;
     list-style-type: none;
     padding-left: 10px;
 }
