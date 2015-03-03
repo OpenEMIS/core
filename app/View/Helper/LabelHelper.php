@@ -541,6 +541,12 @@ class LabelHelper extends AppHelper {
 		),
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'
+		),
+		'WorkflowStep' => array(
+			'wf_workflow_id' => 'Workflow',
+			'actions' => 'Actions',
+			'next_step' => 'Next Step',
+			'select_step' => 'Select Step'
 		)
 	);
 	
