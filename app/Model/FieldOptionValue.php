@@ -32,6 +32,7 @@ class FieldOptionValue extends AppModel {
 		)
 	);
 	public $parent = null;
+	public $allowDelete = true;
 	
 	public function setParent($obj) {
 		$this->parent = $obj;

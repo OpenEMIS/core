@@ -192,6 +192,16 @@ class FieldOptionController extends AppController {
 			$selectedOption = 1;
 		}
 		$obj = $this->optionList[$selectedOption];
+
+		$plugin = $obj['plugin'];
+		$code = $obj['code'];
+		if (!is_null($plugin)) {
+			$ModelClass = ClassRegistry::init($plugin.'.'.$code);
+		} else {
+			$ModelClass = ClassRegistry::init($code);
+		}
+		$allowDelete = (isset($ModelClass->allowDelete))? $ModelClass->allowDelete: false;
+
 		$this->FieldOptionValue->setParent($obj);
 		$this->model = $this->FieldOptionValue->getModel();
 		$data = $this->FieldOptionValue->getValue($selectedValue);
@@ -211,7 +221,7 @@ class FieldOptionController extends AppController {
 		$header = $this->FieldOptionValue->getHeader();
 		$fields = $this->FieldOptionValue->getValueFields();
 		$this->set('model', $this->model->alias);
-		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue'));
+		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue', 'allowDelete'));
 		$this->Navigation->addCrumb($header);
 		$this->doRender();
 	}
@@ -265,5 +275,93 @@ class FieldOptionController extends AppController {
 		$this->doRender();
 	}
 
+	public function delete($selectedOption = 1, $selectedValue = 0) {
+		if ($selectedValue == 0) {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			// field option doesnt exist
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index'));
+		}
+
+		$obj = $this->optionList[$selectedOption];
+		$this->FieldOptionValue->setParent($obj);
+
+		$plugin = $obj['plugin'];
+		$code = $obj['code'];
+		if (!is_null($plugin)) {
+			$ModelClass = ClassRegistry::init($plugin.'.'.$code);
+		} else {
+			$ModelClass = ClassRegistry::init($code);
+		}
+		$allowDelete = (isset($ModelClass->allowDelete))? $ModelClass->allowDelete: false;
+		if (!$allowDelete) {
+			$this->Message->alert('general.delete.failed');
+			return $this->redirect(array('action' => 'view', $selectedOption, $selectedValue));
+		}
+
+		$allFieldOptionValues = $ModelClass->getList(array('listOnly' => true, 'visibleOnly' => true));
+
+		if (array_key_exists($selectedValue, $allFieldOptionValues)) {
+			// unset only if field option exists in list
+			unset($allFieldOptionValues[$selectedValue]);
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+
+		$model = $ModelClass->alias;
+		$ModelClass->recursive = -1;
+		$currentFieldOptionValue = $ModelClass->findById($selectedValue);
+
+		// if no legal records to migrate to ... they are not allowed to delete
+		if (empty($allFieldOptionValues)) {
+			$this->Message->alert('general.delete.cannotDeleteOnlyRecord');
+			return $this->redirect(array('action' => 'view', $selectedOption, $selectedValue));
+		}
+
+		$modifyForeignKey = array();
+		$hasManyArray = $ModelClass->hasMany;
+		
+		foreach ($hasManyArray as $key => $value) {
+			$CurrModelClass = ClassRegistry::init($value['className']);
+			$foreignKeyId = Inflector::underscore($code)."_id";
+			$modifyForeignKey[$key] = $CurrModelClass->find('count',
+				array(
+					'recursive' => -1,
+					'conditions' => array(
+						$CurrModelClass->alias . '.' .$foreignKeyId => $selectedValue
+					)
+				)
+			);
+		}
+
+		if ($this->request->is(array('post', 'put'))) {
+			$convertValue = $this->request->data[$model]['convert_to'];
+			foreach ($modifyForeignKey as $key => $value) {
+				$CurrModelClass = ClassRegistry::init($key);
+				$foreignKeyId = Inflector::underscore($code)."_id";
+				$CurrModelClass->updateAll(
+					array($key.'.'.$foreignKeyId => $convertValue),
+					array($key.'.'.$foreignKeyId => $selectedValue)
+				);
+			}
+			if ($ModelClass->delete($selectedValue)) {
+				$this->Message->alert('general.delete.success');
+				return $this->redirect(array('action' => 'index', $selectedOption));
+			}
+		}
+		
+		$header = $this->FieldOptionValue->getHeader();
+		
+		$this->set('allOtherFieldOptionValues', $allFieldOptionValues);
+		$this->set(compact('header', 'currentFieldOptionValue', 'modifyForeignKey', 'selectedOption', 'selectedValue', 'allowDelete', 'model'));
+
+		$this->Navigation->addCrumb($header);
+
+	}
 }
 
