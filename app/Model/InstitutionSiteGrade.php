@@ -31,4 +31,65 @@ class InstitutionSiteGrade extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	public function getInstitutionSiteGradeOptions($institutionSiteId, $academicPeriodId, $listOnly=true) {
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+		);
+		$conditions = $this->InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
+		$data = $this->find('all', array(
+			'contain' => array(
+				'EducationGrade',
+				'InstitutionSiteProgramme' => array(
+					'conditions' => $conditions
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteGrade.institution_site_programme_id = InstitutionSiteProgramme.id',
+				'InstitutionSiteGrade.status' => 1
+			),
+			'order' => array('EducationGrade.education_programme_id', 'EducationGrade.order')
+		));
+
+		if($listOnly) {
+			$list = array();
+			foreach ($data as $key => $obj) {
+				$list[$obj['EducationGrade']['id']] = $obj['EducationGrade']['programme_grade_name'];
+			}
+
+			return $list;
+		} else {
+			return $data;
+		}
+	}
+
+	public function getGradeOptions($institutionSiteId, $academicPeriodId, $programmeId=0) {
+		$conditions = array(
+			'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+			'InstitutionSiteProgramme.education_programme_id' => $programmeId
+		);
+		$conditions = $this->InstitutionSiteProgramme->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
+		$data = $this->find('all', array(
+			'contain' => array(
+				'EducationGrade',
+				'InstitutionSiteProgramme' => array(
+					'conditions' => $conditions
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteGrade.institution_site_programme_id = InstitutionSiteProgramme.id',
+				'InstitutionSiteGrade.status' => 1
+			),
+			'order' => array('EducationGrade.education_programme_id', 'EducationGrade.order')
+		));
+
+		$list = array();
+		foreach ($data as $key => $obj) {
+			$list[$obj['EducationGrade']['id']] = $obj['EducationGrade']['name'];
+		}
+
+		return $list;
+	}
 }
