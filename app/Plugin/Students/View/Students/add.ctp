@@ -44,24 +44,23 @@ echo $this->Form->create($model, $formOptions);
 			echo $this->Form->input('openemis_no', $arrIdNo);
 		} else {
 			if ($this->Session->check('Student.id')) {
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel));
+				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
 			} else {
 				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
 			}
-		}
-		
+		}		
 
-		$selectAndTxtOptions = array(
-			'label' => __('Identity'),
-			'selectOptions' => $identityTypeOptions,
-			'selectId' => 'StudentIdentity.0.identity_type_id',
-			'txtId' => 'StudentIdentity.0.number',
-			'txtPlaceHolder' => __('Identity Number')
-		);
+		// $selectAndTxtOptions = array(
+		// 	'label' => __('Identity'),
+		// 	'selectOptions' => $identityTypeOptions,
+		// 	'selectId' => 'StudentIdentity.0.identity_type_id',
+		// 	'txtId' => 'StudentIdentity.0.number',
+		// 	'txtPlaceHolder' => __('Identity Number')
+		// );
 
-		echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+		// echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
 
-		echo $this->Form->input('StudentNationality.0.country_id', array('Label' => __('Nationality'), 'options' => $nationalityOptions));
+		// echo $this->Form->input('StudentNationality.0.country_id', array('Label' => __('Nationality'), 'options' => $nationalityOptions));
 
 		echo $this->Form->input('first_name');
 		echo $this->Form->input('middle_name');

@@ -352,7 +352,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $staffOptions = array();
         if (!empty($sectionOptions)) {
             $InstitutionSiteSectionStaff = ClassRegistry::init('InstitutionSiteSectionStaff');
-            $staffOptions = $InstitutionSiteSectionStaff->getstaffs($selectedSectionId, 'list');
+            $staffOptions = $InstitutionSiteSectionStaff->getStaffs($selectedSectionId, 'list');
             $selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
             $selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
         }

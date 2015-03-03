@@ -180,7 +180,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
-			$data[$this->alias]['staff_id'] = ModelHelper::getName($data['Staff']);
+			$data[$this->alias]['staff_id'] = ModelHelper::getName($data['Staff']['SecurityUser']);
 			$this->controller->viewVars['data'] = $data;
 			$this->setFieldOrder('staff_id', 0);
 			$this->setVar('params', array('back' => $this->Session->read('InstitutionSiteStaffAbsence.backLink')));
@@ -191,7 +191,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$data = $this->request->data;
 			$this->fields['staff_id']['type'] = 'hidden';
 			$this->fields['staff']['type'] = 'disabled';
-			$this->fields['staff']['value'] = ModelHelper::getName($data['Staff']);
+			$this->fields['staff']['value'] = ModelHelper::getName($data['Staff']['SecurityUser']);
 			$this->fields['staff']['order'] = 0;
 			$this->fields['staff']['visible'] = true;
 			$this->request->data = $data;
@@ -206,6 +206,16 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 		
 		parent::afterAction();
+	}
+
+	public function view($id) {
+		$this->contain(array('Staff'=>array('SecurityUser'=>array('fields'=>array('first_name','middle_name','third_name','last_name','preferred_name')))));
+		parent::view($id);
+	}
+
+	public function edit($id) {
+		$this->contain(array('Staff'=>array('SecurityUser'=>array('fields'=>array('first_name','middle_name','third_name','last_name','preferred_name')))));
+		parent::edit($id);
 	}
 	
 	public function index($academicPeriodId=0, $weekId=null, $dayId=null){

@@ -479,41 +479,6 @@ class InstitutionSiteClass extends AppModel {
 		return $obj;
 	}
 	
-	public function getListOfClasses($academicPeriodId, $institutionSiteId, $institutionSiteSectionId) {
-		$classes = $this->find('all', array(
-			'recursive' => -1,
-			'contain' => array(
-				'InstitutionSiteClassStaff' => array('id','status','staff_id'),
-				'EducationSubject' => array('name')
-			),
-			'conditions' => array(
-				'InstitutionSiteClass.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
-		));
-		
-		$data = array();
-		foreach ($classes as $key => $value) {
-			$currId = $value['InstitutionSiteClass']['id'];
-			$data[$currId] = array(
-				'name' => $value['InstitutionSiteClass']['name'],
-				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($currId),
-				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($currId)
-			);
-			
-			foreach ($value['InstitutionSiteClassStaff'] as $key2 => $value2) {
-				$this->InstitutionSiteClassStaff->Staff->recursive = -1;
-				$currStaffData = $this->InstitutionSiteClassStaff->Staff->findById($classes[$key]['InstitutionSiteClassStaff'][$key2]['staff_id']);
-				$currStaffData = $currStaffData['Staff'];
-				$classes[$key]['InstitutionSiteClassStaff'][$key2] = ModelHelper::getName($currStaffData);
-			}
-			$data[$currId]['staffName'] = $classes[$key]['InstitutionSiteClassStaff'];
-			$data[$currId]['educationSubjectName'] = (array_key_exists('name', $value['EducationSubject']))? $value['EducationSubject']['name']: '';
-		}
-		return $data;
-	}
-	
 	public function getClassOptions($academicPeriodId, $institutionSiteId, $gradeId=false) {
 		$options = array(
 			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),

@@ -26,7 +26,8 @@ class SecurityUser extends AppModel {
 				'size' => '1MB',
 				'allowEmpty' => true
 			)
-		)
+		),
+		'ControllerAction2'
 	);
 	public $belongsTo = array(
 		'Gender',
@@ -65,14 +66,11 @@ class SecurityUser extends AppModel {
 		'Staff.StaffContact',
 		'SecurityGroupUser',
 		'SecurityUserAccess'
-
-
 	);
 	public $validate = array(
 		'first_name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please enter a valid First Name'
 			),
 			'ruleCheckIfStringGotNoNumber' => array(
@@ -95,7 +93,6 @@ class SecurityUser extends AppModel {
 		'last_name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please enter a valid Last Name'
 			),
 			'ruleCheckIfStringGotNoNumber' => array(
@@ -112,38 +109,32 @@ class SecurityUser extends AppModel {
 		'openemis_no' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please enter a valid OpenEMIS ID'
 			),
 			'ruleUnique' => array(
-        		'rule' => 'isUnique',
-        		'required' => true,
+        		'rule' => 'isUniqueOpenemisNo',
         		'message' => 'Please enter a unique OpenEMIS ID'
 		    )
 		),
 		'gender_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please select a Gender'
 			)
 		),
 		'address' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please enter a valid Address'
 			)
 		),
 		'date_of_birth' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please select a Date of Birth'
 			),
 			'ruleCompare' => array(
 				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-				'required' => true,
 				'message' => 'Please select a Date of Birth'
 			),
 			'ruleCompare' => array(
@@ -162,23 +153,98 @@ class SecurityUser extends AppModel {
 			)
 		),
 		'password' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'message' => 'Please enter a valid password'
+			'ruleAuthenticate' => array(
+				'rule' => 'authenticate', // changePassword ('new password', retyped password) // validate behaviour
+				'on' => 'update',
+				'message' => 'Incorrect password.'
 			),
 			'ruleMinLength' => array(
 				'rule' => array('minLength', 6),
+				'on' => 'create',
+				'allowEmpty' => true,
+				'message' => 'Password must be at least 6 characters'
+			)
+
+			// older
+			// 'ruleRequired' => array(
+			// 	'rule' => 'notEmpty',
+			// 	'message' => 'Please enter a valid password'
+			// ),
+			// 'ruleMinLength' => array(
+			// 	'rule' => array('minLength', 6),
+			// 	'message' => 'Password must be at least 6 characters'
+			// )
+
+		),
+		'newPassword' => array(
+			'ruleChangePassword' => array(
+				'rule' => 'notEmpty',
+				'on' => 'update',
+				'message' => 'Please enter your new password'
+			),
+			'ruleMinLength' => array(
+				'rule' => array('minLength', 6),
+				'on' => 'update',
 				'message' => 'Password must be at least 6 characters'
 			)
 		),
-		'email' => array(
-			'ruleRequired' => array(
-				'rule' => 'email',
-				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
+		'retypeNewPassword' => array(
+			'ruleChangePassword' => array(
+				'rule' => 'notEmpty',
+				'on' => 'update',
+				'message' => 'Please confirm your new password'
+			),
+			'ruleCompare' => array(
+				'rule' => 'comparePasswords',
+				'on' => 'update',
+				'message' => 'Both passwords do not match'
 			)
 		)
 	);
+
+	public function authenticate() {
+		$username = AuthComponent::user('username');
+		// pr($this->data);
+		// pr($username);
+		// pr($this->data[$this->alias]['password']);
+		$password = AuthComponent::password($this->data[$this->alias]['password']);
+		// pr($password);
+		$count = $this->find('count', array('recursive' => -1, 'conditions' => array('username' => $username, 'password' => $password)));
+		// pr($count);
+		return $count==1;
+	}
+
+	public function comparePasswords() {
+		if(strcmp($this->data[$this->alias]['newPassword'], $this->data[$this->alias]['retypeNewPassword']) == 0 ) {
+			$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['newPassword']);
+			return true;
+		}
+		return false;
+	}
+
+	public function isUniqueOpenemisNo($check) {
+		$currentUserId = null;
+		if (array_key_exists('SecurityUser', $this->data)) {
+			if (array_key_exists('id', $this->data['SecurityUser'])) {
+				$currentUserId = $this->data['SecurityUser']['id'];
+			}
+		}
+		$conditions = array('SecurityUser.openemis_no' => $check['openemis_no']);
+
+		if (!empty($currentUserId)) {
+			$conditions['NOT'] = array('SecurityUser.id' => $currentUserId);
+		}
+
+		$isUnique = $this->find(
+			'count',
+			array(	
+				'conditions' => $conditions
+			)
+		);
+		$isUnique = ($isUnique==0)? true: false;
+
+		return $isUnique;
+	}
 
 	public function checkIfStringGotNoNumber($check) {
 		$check = array_values($check);
@@ -233,11 +299,145 @@ class SecurityUser extends AppModel {
 	}
 	
 	public function beforeSave($options = array()) {
-		if (isset($this->data[$this->alias]['password'])) {
-			$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
-		}
 		parent::beforeSave();
+		if (!$this->id && !isset($this->data[$this->alias][$this->primaryKey])) {
+			// insert
+			if (array_key_exists('password', $this->data[$this->alias])) {
+				$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
+			}
+		} else {
+			// edit - already handled in authenticate no action required
+		}
 		return true;
+	}
+
+	public function beforeAction() {
+		parent::beforeAction();
+
+		if (in_array($this->action,array('view', 'edit'))) {
+			$this->fields['nav_tabs'] = array(
+				'type' => 'element',
+				'element' => '../Security/SecurityUser/nav_tabs',
+				'override' => true,
+				'visible' => true
+			);
+		}
+
+		$this->fields['id']['type'] = 'hidden';
+		$this->fields['username']['type'] = 'hidden';
+		$this->fields['password']['type'] = 'hidden';
+		$this->fields['address_area_id']['type'] = 'hidden';
+		$this->fields['birthplace_area_id']['type'] = 'hidden';
+		$this->fields['date_of_death']['type'] = 'hidden';
+		$this->fields['super_admin']['type'] = 'hidden';
+		$this->fields['photo_name']['type'] = 'hidden';
+		$this->fields['photo_content']['type'] = 'hidden';
+		$this->fields['gender_id']['type'] = 'select';
+		$this->fields['gender_id']['options'] = $this->Gender->getList();
+		$this->fields['status']['type'] = 'select';
+		$this->fields['status']['options'] = $this->getStatus();
+		$this->fields['last_login']['type'] = 'hidden';
+		$this->fields['openemis_no']['attr']['readonly'] = true;
+
+		$this->fields['UserContact'] = array(
+			'type' => 'element',
+			'element' => '../UserContact/viewContact',
+			'class' => 'col-md-8',
+			'visible' => true
+		);
+		$this->fields['SecurityGroupUser'] = array(
+			'type' => 'element',
+			'element' => '../Security/SecurityGroup/security_user',
+			'class' => 'col-md-8',
+			'visible' => true,
+		);
+
+		$order = 0;
+		$this->setFieldOrder('nav_tabs', $order++);
+		$this->setFieldOrder('openemis_no', $order++);
+		$this->setFieldOrder('first_name', $order++);
+		$this->setFieldOrder('middle_name', $order++);
+		$this->setFieldOrder('third_name', $order++);
+		$this->setFieldOrder('last_name', $order++);
+		$this->setFieldOrder('preferred_name', $order++);
+		$this->setFieldOrder('address', $order++);
+		$this->setFieldOrder('postal_code', $order++);
+		$this->setFieldOrder('gender_id', $order++);
+		$this->setFieldOrder('date_of_birth', $order++);
+		$this->setFieldOrder('status', $order++);
+		$this->setFieldOrder('UserContact', $order++);
+		$this->setFieldOrder('SecurityGroupUser', $order++);
+		$this->setFieldOrder('modified_user_id', $order++);
+		$this->setFieldOrder('modified', $order++);
+		$this->setFieldOrder('created_user_id', $order++);
+		$this->setFieldOrder('created', $order++);
+	}
+
+	public function index() {
+		$this->Navigation->addCrumb('Users');
+
+		$conditions = array('SecurityUser.super_admin' => 0);
+
+		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
+		$data = $this->controller->Search->search($this, $conditions, $order);
+		
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
+		$this->setVar('data', $data);
+	}
+
+	public function view($id) {
+		if ($this->exists($id)) {
+			$data = $this->find(
+				'first',
+				array(
+
+					'contain' => array(
+						'UserContact' => array(
+							'fields'=> array('id', 'value', 'preferred'),
+							'ContactType' => array(
+								'fields'=> array('id', 'name'),	
+								'ContactOption' => array('fields'=> array('id', 'name'))
+							)
+						),
+						'SecurityGroupUser' => array(
+							'SecurityUser',
+							'SecurityGroup' => array('fields'=> array('id', 'name')),
+							'SecurityRole' => array('fields'=> array('id', 'name'))
+						)
+					),
+					'conditions' => array('SecurityUser.id' => $id)
+				)
+			);
+
+			$this->fields['UserContact']['data'] = array('data' => $data['UserContact']);
+			$elementData = array(
+				'data' => array(
+					'SecurityUser' => array(
+						'SecurityGroupUser' => $data['SecurityGroupUser']
+					)
+				)
+			);
+			$this->fields['SecurityGroupUser']['data'] = $elementData;
+
+			$this->Session->write('User.id', $id);
+		}
+		parent::view($id);
+	}
+
+	public function edit($id) {
+		unset($this->fields['UserContact']);
+		unset($this->fields['SecurityGroupUser']);
+		parent::edit($id);
+	}
+
+	public function add() {
+		unset($this->fields['UserContact']);
+		unset($this->fields['SecurityGroupUser']);
+
+		$this->fields['openemis_no']['value'] = $this->getUniqueID();
+		parent::add();
 	}
 
 	public function createToken() {
@@ -354,4 +554,37 @@ class SecurityUser extends AppModel {
 		
 		return $data;
 	}
+
+	public function getUniqueID() {
+		$generate_no = '';
+		$str = $this->find('first', array('order' => array('SecurityUser.id DESC'), 'limit' => 1, 'fields' => 'SecurityUser.id'));
+		// $prefix = $this->ConfigItem->find('first', array('limit' => 1,
+		// 	'fields' => 'ConfigItem.value',
+		// 	'conditions' => array(
+		// 		'ConfigItem.name' => 'student_prefix'
+		// 	)
+		// ));
+		// $prefix = explode(",", $prefix['ConfigItem']['value']);
+
+		// if ($prefix[1] > 0) {
+        $id = 0;
+        if (!empty($str)) {
+            $id = $str['SecurityUser']['id'];
+        }
+        $id = $id + 1;
+		if (strlen($id) < 6) {
+			$str = str_pad($id, 6, "0", STR_PAD_LEFT);
+		} else {
+			$str = $id;
+		}
+		// Get two random number
+		$rnd1 = rand(0, 9);
+		$rnd2 = rand(0, 9);
+		// $generate_no = $prefix[0] . $str . $rnd1 . $rnd2;
+		$generate_no = $str . $rnd1 . $rnd2;
+		// }
+
+		return $generate_no;
+	}
+
 }

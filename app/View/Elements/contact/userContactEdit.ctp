@@ -11,7 +11,7 @@
 		</thead>
 
 		<tbody class="table_body">
-			<?php foreach ($data['UserContact'] as $key => $value) { ?>
+			<?php foreach ($this->request->data['UserContact'] as $key => $value) { ?>
 			<tr class="table_row">
 				<td class="table_cell">
 					<?php 
@@ -51,7 +51,7 @@
 							<?php echo $this->Form->checkbox('UserContact.' . $key . '.preferred', array('class' => 'icheck-input')); ?>
 						</td>
 						<td>
-							<span class="icon_delete" title="' . $this->Label->get('general.delete') . '" onClick=""></span>Salary.deleteDeduction(this)
+							<span class="icon_delete" title="<?php echo $this->Label->get('general.delete'); ?>" onClick="$(this).closest('tr').remove()"></span>
 						</td>
 						
 					</tr>
@@ -59,17 +59,9 @@
 				</tbody>
 			</table>
 		</div>
-		<?php 
-		$addIconData = array(
-			'onclick' => 'Salary.addAddition(this)',
-			'url' => 'Staff/salariesAjaxAdditionAdd'
-		);
-		if (isset($addIconData)) {
-			$addIconDefaultSetting = array('class' => 'void icon_plus', 'addIconURL' => $addIconData['url']);
-
-			if (isset($addIconData['onclick'])) {
-				$addIconDefaultSetting['onclick'] = $addIconData['onclick'];
-			}
-			echo $this->Html->link($this->Label->get('general.add'), array(), $addIconDefaultSetting);
-		}
+		<?php
+			echo $this->Html->link($this->Label->get('general.add'), array(), array('onclick' => "$('#reload').val('Add').click();", 'class' => 'void icon_plus'));	
+			
 		 ?>
+
+

@@ -173,44 +173,12 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = ModelHelper::getName($obj['Staff']);
+				$list[$id] = ModelHelper::getName($obj['SecurityUser']);
 			}
 			return $list;
 		} else {
 			return $data;
 		}
-	}
-
-	public function getStaffsByInstitutionSiteId($institutionSiteId) {
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
-					'conditions' => array(
-						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteSection.id = InstitutionSiteSectionStaff.institution_site_section_id'
-					)
-				),
-				array(
-					'table' => 'staff',
-					'alias' => 'Staff',
-					'conditions' => array('Staff.id = InstitutionSiteSectionStaff.staff_id')
-				),
-			),
-			'order' => array('SecurityUser.first_name')
-		));
-		$list = array();
-		foreach ($data as $obj) {
-			$id = $obj['Staff']['id'];
-			$teacherName = $obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['middle_name'] . ' ' . $obj['SecurityUser']['third_name'] . ' ' . $obj['SecurityUser']['last_name'];
-			$list[$id] = ModelHelper::getName($obj['Staff']);
-		}
-		return $list;
 	}
 
 	public function getStaffsInSectionAcademicPeriod($sectionId, $academicPeriodId, $mode = 'all') {
@@ -260,7 +228,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = ModelHelper::getName($obj['Staff']);
+				$list[$id] = ModelHelper::getName($obj['SecurityUser']);
 			}
 			return $list;
 		} else {

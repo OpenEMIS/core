@@ -427,7 +427,12 @@ class LabelHelper extends AppHelper {
 			'security_group_id' => 'Group'
 		),
 		'SecurityUser' => array(
-			'name' => 'User'
+			'title' => 'User',
+			'name' => 'User',
+			'username' => 'User Name',
+			'gender_id' => 'Gender',
+			'SecurityGroupUser' => 'Group',
+			'openemis_no' => 'OpenEMIS ID'
 		),
 		
 		'InstitutionSiteFee' => array(
@@ -639,6 +644,12 @@ class LabelHelper extends AppHelper {
 			'gross' => 'Gross',
 			'net' => 'Net',
 			'salary_date' => 'Date'
+		),
+		'SecurityUserLogin' => array(
+			'title' => 'User',
+			'password' => 'Current Password',
+			'newPassword' => 'New Password',
+			'retypeNewPassword' => 'Retype New Password',
 		)
 	);
 	

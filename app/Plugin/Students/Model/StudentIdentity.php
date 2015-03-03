@@ -24,13 +24,6 @@ class StudentIdentity extends StudentsAppModel {
 
 	public $belongsTo = array(
 		'SecurityUser',
-		'Student' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-
 		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
