@@ -15,6 +15,11 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WorkflowStepsController extends WorkflowsAppController {
+	public $uses = array(
+		'Workflows.WorkflowStep',
+		'Workflows.Workflow'
+	);
+
 	public $components = array(
 		'ControllerAction' => array('model' => 'Workflows.WorkflowStep')
 	);
@@ -26,5 +31,80 @@ class WorkflowStepsController extends WorkflowsAppController {
 		$this->Navigation->addCrumb('Workflows', array('plugin' => 'Workflows', 'controller' => 'Workflows', 'action' => 'index'));
 		$this->Navigation->addCrumb('Steps');
 		$this->set('contentHeader', 'Workflow Steps');
+
+		$this->WorkflowStep->fields['actions'] = array(
+			'type' => 'element',
+			'element' => '../../Plugin/Workflows/View/WorkflowSteps/actions',
+			'visible' => true
+		);
+		$this->WorkflowStep->setFieldOrder('actions', 3);
+
+		if ($this->action == 'view') {
+			$this->WorkflowStep->fields['wf_workflow_id']['dataModel'] = 'Workflow';
+			$this->WorkflowStep->fields['wf_workflow_id']['dataField'] = 'name';
+
+			$workflowSteps = $this->WorkflowStep->find('list');
+			$this->set('workflowSteps', $workflowSteps);
+		} else if($this->action == 'add' || $this->action == 'edit') {
+			$this->WorkflowStep->fields['wf_workflow_id']['type'] = 'select';
+			$workflowOptions = $this->Workflow->find('list');
+			$this->WorkflowStep->fields['wf_workflow_id']['options'] = $workflowOptions;
+
+			$pass = $this->request->params['pass'];
+			$workflowStepId = isset($pass[0]) ? $pass[0] : 0;
+			$workflowStepData = $this->WorkflowStep->find('list', array(
+				'conditions' => array(
+					'NOT' => array(
+						'WorkflowStep.id' => $workflowStepId
+					)
+				)
+			));
+			$workflowStepOptions = $this->Option->prependLabel($workflowStepData, 'WorkflowStep.select_step');
+
+			if ($this->request->is(array('post', 'put'))) {
+				$data = $this->request->data;
+
+				if($data['submit'] == 'WorkflowAction') {
+					$this->request->data['WorkflowAction'][] =array(
+						'name' => '',
+						'next_wf_workflow_step_id' => 0,
+						'visible' => 1
+					);
+					$this->ControllerAction->autoProcess = false;
+					$this->ControllerAction->render();
+				} else {
+					$this->ControllerAction->autoProcess = true;
+					$this->ControllerAction->processAction();
+				}
+			}
+
+			$this->set('workflowStepOptions', $workflowStepOptions);
+		}
+	}
+
+	public function index() {
+		$named = $this->params->named;
+
+		$workflows = $this->Workflow->find('list');
+		$selectedWorkflow = isset($named['workflow']) ? $named['workflow'] : key($workflows);
+
+		$workflowOptions = array();
+		foreach ($workflows as $key => $workflow) {
+			$workflowOptions['workflow:' . $key] = $workflow;
+		}
+
+		$this->WorkflowStep->contain('Workflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep');
+    	$data = $this->WorkflowStep->find('all', array(
+			'conditions' => array(
+				'WorkflowStep.wf_workflow_id' => $selectedWorkflow
+			),
+			'order' => array(
+				'Workflow.code', 'Workflow.name'
+			)
+		));
+
+		$this->set('workflowOptions', $workflowOptions);
+		$this->set('selectedWorkflow', $selectedWorkflow);
+		$this->set('data', $data);
 	}
 }

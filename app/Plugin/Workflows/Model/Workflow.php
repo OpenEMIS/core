@@ -32,7 +32,8 @@ class Workflow extends WorkflowsAppModel {
 
 	public $hasMany = array(
         'WorkflowStep' => array(
-            'className' => 'Workflows.WorkflowStep'
+            'className' => 'Workflows.WorkflowStep',
+			'dependent' => true
         )
     );
 }

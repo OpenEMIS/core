@@ -18,6 +18,14 @@ class WorkflowAction extends WorkflowsAppModel {
 	public $useTable = 'wf_workflow_actions';
 
 	public $belongsTo = array(
+		'WorkflowStep' => array(
+            'className' => 'Workflows.WorkflowStep',
+            'foreignKey' => 'wf_workflow_step_id'
+        ),
+        'NextWorkflowStep' => array(
+            'className' => 'Workflows.WorkflowStep',
+            'foreignKey' => 'next_wf_workflow_step_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
