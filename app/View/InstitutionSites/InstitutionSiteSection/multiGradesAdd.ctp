@@ -56,7 +56,7 @@ echo $this->Form->input('staff_id', array(
 				</thead>
 				
 				<tbody>
-					<?php 
+					<?php
 					$i = 0;
 					foreach($grades as $obj) :
 					?>
@@ -67,7 +67,7 @@ echo $this->Form->input('staff_id', array(
 							echo $this->Form->checkbox('InstitutionSiteSectionGrade.' . $i++ . '.status', array('class' => 'icheck-input'));
 							?>
 						</td>
-						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+						<td><?php echo $obj['InstitutionSiteProgramme']['name']; ?></td>
 						<td><?php echo $obj['EducationGrade']['name']; ?></td>
 					</tr>
 					<?php endforeach; ?>
