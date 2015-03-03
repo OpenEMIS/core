@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0
+ControllerActionComponent - Version 1.01
 */
 
 class ControllerActionComponent extends Component {
@@ -43,10 +43,10 @@ class ControllerActionComponent extends Component {
 	public function startup(Controller $controller) {
 		$action = $controller->action;
 		$this->paramsPass = $controller->params->pass;
+		$this->currentAction = $action;
 
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
-				$this->currentAction = $controller->request->params['action'];
 				$controller->request->params['action'] = 'ComponentAction';
 			} else { // check if it's a model action
 				foreach ($controller->uses as $modelName) {
