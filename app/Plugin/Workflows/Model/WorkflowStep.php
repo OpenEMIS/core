@@ -18,6 +18,10 @@ class WorkflowStep extends WorkflowsAppModel {
 	public $useTable = 'wf_workflow_steps';
 
 	public $belongsTo = array(
+		'Workflow' => array(
+            'className' => 'Workflows.Workflow',
+            'foreignKey' => 'wf_workflow_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
@@ -32,7 +36,8 @@ class WorkflowStep extends WorkflowsAppModel {
 
 	public $hasMany = array(
         'WorkflowAction' => array(
-            'className' => 'Workflows.WorkflowAction'
+            'className' => 'Workflows.WorkflowAction',
+			'dependent' => true
         )
     );
 }

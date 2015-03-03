@@ -71,6 +71,7 @@ DROP TABLE IF EXISTS `wf_workflow_actions`;
 CREATE TABLE IF NOT EXISTS `wf_workflow_actions` (
 `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
   `next_wf_workflow_step_id` int(11) NOT NULL,
   `wf_workflow_step_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
