@@ -247,10 +247,11 @@ class StaffController extends StaffAppController {
 		$this->Staff->contain(array('SecurityUser' => array('Gender')));
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
-		$name = ModelHelper::getName($obj);
+		$name = ModelHelper::getName($data['SecurityUser']);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);
+		$this->Session->write('Staff.user.data', $data['SecurityUser']);
 		$this->Session->write('Staff.security_user_id', $obj['security_user_id']);
 		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
@@ -363,6 +364,10 @@ class StaffController extends StaffAppController {
 				}
 			}
 			
+			$StaffNationality = ClassRegistry::init('Staff.StaffNationality');
+			$StaffNationality->set($this->request->data);
+			
+			$this->SecurityUser->StaffIdentity->validator()->remove('issue_location');
 
 			$this->SecurityUser->create();
 			if ($this->SecurityUser->saveAll($data)) {

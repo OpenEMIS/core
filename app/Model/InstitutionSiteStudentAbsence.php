@@ -193,7 +193,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
 			$sectionId = $data[$this->alias]['institution_site_section_id'];
-			$data[$this->alias]['student_id'] = ModelHelper::getName($data['Student']);
+			$data[$this->alias]['student_id'] = ModelHelper::getName($data['Student']['SecurityUser']);
 			$data[$this->alias]['institution_site_section_id'] = $this->InstitutionSiteSection->field('InstitutionSiteSection.name', array('InstitutionSiteSection.id' => $sectionId));
 			$this->controller->viewVars['data'] = $data;
 			$this->setFieldOrder('institution_site_section_id', 0);
@@ -215,7 +215,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$this->fields['student']['visible'] = true;
 
 			if ($this->request->is('get')) {
-				$this->fields['student']['value'] = ModelHelper::getName($data['Student']);
+				$this->fields['student']['value'] = ModelHelper::getName($data['Student']['SecurityUser']);
 			} else {
 				$this->fields['student']['value'] = $this->request->data[$this->alias]['studentName'];
 			}
@@ -231,6 +231,16 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		$this->setFieldOrder('full_day_absent', 2);
 		parent::afterAction();
+	}
+
+	public function view($id) {
+		$this->contain(array('Student'=>array('SecurityUser'=>array('fields'=>array('first_name','middle_name','third_name','last_name','preferred_name')))));
+		parent::view($id);
+	}
+
+	public function edit($id) {
+		$this->contain(array('Student'=>array('SecurityUser'=>array('fields'=>array('first_name','middle_name','third_name','last_name','preferred_name')))));
+		parent::edit($id);
 	}
 	
 	public function index($academicPeriodId=0, $sectionId=null, $weekId=null, $dayId=null) {

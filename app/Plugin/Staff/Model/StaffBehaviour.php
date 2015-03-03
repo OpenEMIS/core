@@ -92,12 +92,12 @@ class StaffBehaviour extends StaffAppModel {
 				}
 			}
 			if(isset($staffId)) {
-				$this->Staff->contain();
+				$this->Staff->contain('SecurityUser');
 				$obj = $this->Staff->findById($staffId);
 				
 				$this->fields['staff_name']['visible'] = true;
 				$this->fields['staff_name']['type'] = 'disabled';
-				$this->fields['staff_name']['value'] = ModelHelper::getName($obj['Staff']);
+				$this->fields['staff_name']['value'] = ModelHelper::getName($obj['SecurityUser']);
 				$this->fields['staff_name']['order'] = 0;
 				$this->setFieldOrder('staff_name', 0);
 				

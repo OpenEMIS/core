@@ -46,6 +46,8 @@ UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:
 UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Comments';
 UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
 UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
+UPDATE security_functions SET _view = 'users', _edit = NULL, _add = NULL WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
+UPDATE security_functions SET _view = 'usersView', _edit = '_view:usersEdit|usersAccess', _add = '_view:usersAdd' WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
 
 -- Updating census gender_ids
 SELECT id INTO @fieldGenderMale FROM field_option_values WHERE field_option_id IN (SELECT id FROM field_options WHERE code = 'Gender') AND name = 'Male';
@@ -70,6 +72,7 @@ UPDATE census_teacher_fte SET gender_id = @fieldGenderFemale WHERE gender_id = @
 UPDATE census_teacher_training SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 UPDATE census_sanitations SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 
+UPDATE navigations SET action = 'users', pattern = 'users|SecurityUserAccess.view'WHERE action = 'SecurityUser' AND module = 'Administration' AND controller = 'Security' AND title = 'Users';
 
 -- create new tables to combined tables
 DROP TABLE user_identities;
@@ -88,3 +91,5 @@ DROP TABLE security_users;
 RENAME TABLE 985_security_users TO security_users;
 
 DROP TABLE genders;
+
+
