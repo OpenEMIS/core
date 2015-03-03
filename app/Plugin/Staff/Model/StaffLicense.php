@@ -56,15 +56,15 @@ class StaffLicense extends StaffAppModel {
 				'message' => 'Please enter a valid License Number.'
 			)
 		),
+		'issue_date' => array(
+			'ruleNotLater' => array(
+				'rule' => array('compareDate', 'expiry_date'),
+				'message' => 'Issue Date cannot be later than Expiry Date'
+			),
+		)
 	);
 
 	public $headerDefault = 'Licenses';
-	
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate >= $startDate;
-	}
 	
 	public function getDisplayFields($controller) {
 		$fields = array(

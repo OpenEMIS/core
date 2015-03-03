@@ -75,10 +75,10 @@ if (!empty($this->data[$model]['id'])) {
 		if ($type == 'add') {
 			echo $this->Form->input('institution_site_section_id', array('id' => 'institutionSiteSectionId', 'options' => $sectionOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
 		} else {
-			if (isset($classOptions[$this->data['QualityInstitutionRubric']['institution_site_section_id']])) {
-				echo $classOptions[$this->data['QualityInstitutionRubric']['institution_site_section_id']];
+			if (isset($sectionOptions[$this->data['QualityInstitutionRubric']['institution_site_section_id']])) {
+				echo $sectionOptions[$this->data['QualityInstitutionRubric']['institution_site_section_id']];
 			} else {
-				echo $classOptions[0];
+				echo $sectionOptions[0];
 			}
 		}
 		?>
