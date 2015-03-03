@@ -136,7 +136,7 @@ class InstitutionSiteClass extends AppModel {
 			
 			$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
-			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
+			$selectedSection = isset($selectedSection) && $selectedSection != 0 ? $selectedSection : key($sectionOptions);
 			
 			$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 			$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
