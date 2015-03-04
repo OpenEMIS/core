@@ -1,10 +1,11 @@
 -- reversing: need to make menu appear for student/add 
 UPDATE navigations set pattern = replace(pattern,'^edit$|^add$|' , '^edit$|') WHERE module = 'Student' AND plugin = 'Students' AND controller = 'Students' AND header = 'General' AND title = 'Overview';
+UPDATE navigations set pattern = replace(pattern,'^edit$|^add$|' , '^edit$|') WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header = 'General' AND title = 'Overview';
 
 -- Move the Memberships and Licenses menu items in the Staff module from General
 SELECT MIN(navigations.order) into @prevMembershipOrder FROM navigations WHERE title = 'Memberships' OR title = 'Licenses';
 UPDATE navigations SET navigations.order = navigations.order - 2 WHERE navigations.order >= @prevMembershipOrder;
-SELECT MIN(navigations.order) into @prevAwardsOrder FROM navigations WHERE title = 'Awards';
+SELECT MIN(navigations.order) into @prevAwardsOrder FROM navigations WHERE module = 'Staff' AND title = 'Awards';
 UPDATE navigations SET navigations.order = navigations.order + 2 WHERE navigations.order > @prevAwardsOrder;
 UPDATE navigations SET navigations.order = @prevAwardsOrder + 1 WHERE title = 'Memberships';
 UPDATE navigations SET navigations.order = @prevAwardsOrder + 2 WHERE title = 'Licenses';
@@ -25,13 +26,14 @@ UPDATE navigations SET action = 'languages', pattern = 'languages' WHERE title =
 UPDATE navigations SET action = 'comments', pattern = 'comments' WHERE title = 'Comments' AND header = 'GENERAL' AND controller = 'Staff';
 UPDATE navigations SET action = 'specialNeed', pattern = '^specialNeed' WHERE title = 'Special Needs' AND header = 'GENERAL' AND controller = 'Staff';
 UPDATE navigations SET action = 'award', pattern = '^award' WHERE title = 'Awards' AND header = 'GENERAL' AND controller = 'Staff';
+UPDATE navigations SET action = 'users', pattern = 'users|SecurityUserAccess.view' WHERE action = 'SecurityUser' AND module = 'Administration' AND controller = 'Security' AND title = 'Users';
+UPDATE navigations SET action = 'password', pattern = 'password' WHERE action = 'SecurityUserLogin' AND module = 'Preferences' AND controller = 'Preferences' AND title = 'Password';
 
 -- ~~comment related sql
 ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
 ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
 
-
---Security functions must be handled to converted modules
+-- Security functions must be handled to converted modules
 UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
 UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
 UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Nationalities';
@@ -72,7 +74,6 @@ UPDATE census_teacher_fte SET gender_id = @fieldGenderFemale WHERE gender_id = @
 UPDATE census_teacher_training SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 UPDATE census_sanitations SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 
-UPDATE navigations SET action = 'users', pattern = 'users|SecurityUserAccess.view'WHERE action = 'SecurityUser' AND module = 'Administration' AND controller = 'Security' AND title = 'Users';
 
 -- create new tables to combined tables
 DROP TABLE user_identities;

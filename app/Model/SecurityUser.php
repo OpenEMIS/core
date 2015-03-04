@@ -153,8 +153,9 @@ class SecurityUser extends AppModel {
 			)
 		),
 		'password' => array(
-			'ruleAuthenticate' => array(
-				'rule' => 'authenticate', // changePassword ('new password', retyped password) // validate behaviour
+			'ruleChangePassword' => array(
+				'rule' => array('changePassword',false),
+				 // authenticate changePassword ('new password', retyped password) // validate behaviour
 				'on' => 'update',
 				'message' => 'Incorrect password.'
 			),
@@ -164,17 +165,6 @@ class SecurityUser extends AppModel {
 				'allowEmpty' => true,
 				'message' => 'Password must be at least 6 characters'
 			)
-
-			// older
-			// 'ruleRequired' => array(
-			// 	'rule' => 'notEmpty',
-			// 	'message' => 'Please enter a valid password'
-			// ),
-			// 'ruleMinLength' => array(
-			// 	'rule' => array('minLength', 6),
-			// 	'message' => 'Password must be at least 6 characters'
-			// )
-
 		),
 		'newPassword' => array(
 			'ruleChangePassword' => array(
@@ -201,18 +191,6 @@ class SecurityUser extends AppModel {
 			)
 		)
 	);
-
-	public function authenticate() {
-		$username = AuthComponent::user('username');
-		// pr($this->data);
-		// pr($username);
-		// pr($this->data[$this->alias]['password']);
-		$password = AuthComponent::password($this->data[$this->alias]['password']);
-		// pr($password);
-		$count = $this->find('count', array('recursive' => -1, 'conditions' => array('username' => $username, 'password' => $password)));
-		// pr($count);
-		return $count==1;
-	}
 
 	public function comparePasswords() {
 		if(strcmp($this->data[$this->alias]['newPassword'], $this->data[$this->alias]['retypeNewPassword']) == 0 ) {
