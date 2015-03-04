@@ -21,7 +21,7 @@ class Staff extends StaffAppModel {
 		'Excel',
 		'Search',
 		'UserAccess',
-		'TrackHistory' => array('historyTable' => 'Staff.StaffHistory'),
+		'TrackActivity' => array('target' => 'Staff.StaffActivity', 'key' => 'staff_id', 'session' => 'Staff.id'),
 		'CascadeDelete' => array(
 			'cascade' => array(
 				'Staff.StaffAttachment',
@@ -48,6 +48,8 @@ class Staff extends StaffAppModel {
 		'Staff.StaffHealthAllergy',
 		'Staff.StaffHealthTest',
 		'Staff.StaffHealthConsultation',
+		//'Staff.StaffActivity' => array('dependent' => true),
+		'StaffActivity' => array('dependent' => true),
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
 			'foreignKey' => 'staff_id',
