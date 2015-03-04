@@ -28,6 +28,7 @@ class StaffController extends StaffAppController {
 		'InstitutionSiteStaff',
 		'Staff.InstitutionSiteStaff',
 		'Staff.Staff',
+		'Staff.StaffActivity',
 		'Staff.StaffHistory',
 		'Staff.StaffCustomField',
 		'Staff.StaffCustomFieldOption',
@@ -46,7 +47,8 @@ class StaffController extends StaffAppController {
 	public $components = array(
 		'Paginator',
 		'FileUploader',
-		'Wizard'
+		'Wizard',
+		'Activity' => array('model' => 'StaffActivity')
 	);
 	public $modules = array(
 		'healthHistory' => 'Staff.StaffHealthHistory',
@@ -434,35 +436,7 @@ class StaffController extends StaffAppController {
 	public function excel() {
 		$this->Staff->excel();
 	}
-
-	public function history() {
-		$this->Navigation->addCrumb('History');
-		$staffId = $this->Session->read('Staff.id');
-		
-		$arrTables = array('StaffHistory');
-		$historyData = $this->StaffHistory->find('all', array(
-			'conditions' => array('StaffHistory.staff_id' => $staffId),
-			'order' => array('StaffHistory.created' => 'desc')
-		));
-		$this->Staff->contain(array('SecurityUser'));
-		$data = $this->Staff->findById($staffId);
-		$data2 = array();
-		foreach ($historyData as $key => $arrVal) {
-			foreach ($arrTables as $table) {
-				foreach ($arrVal[$table] as $k => $v) {
-					$keyVal = ($k == 'name') ? $table . '_name' : $k;
-					$data2[$keyVal][$v] = $arrVal['StaffHistory']['created'];
-				}
-			}
-		}
-		if (empty($data2)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
-		}
-
-		$this->set('data', $data);
-		$this->set('data2', $data2);
-	}
-
+	
 	// Staff ATTENDANCE PART
 	public function absence() {
 		$staffId = $this->Session->read('Staff.id');
@@ -496,7 +470,6 @@ class StaffController extends StaffAppController {
 		}
 		
 		$absenceData = $this->InstitutionSiteStaffAbsence->getStaffAbsenceDataByMonth($staffId, $academicPeriodId, $monthId);
-		//pr($absenceData);
 		$data = $absenceData;
 		
 		if (empty($data)) {

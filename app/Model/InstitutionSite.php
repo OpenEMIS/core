@@ -38,12 +38,14 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteSection',
 		'InstitutionSiteClass',
 		'InstitutionSiteFee',
-		'InstitutionSiteCustomValue'
+		'InstitutionSiteCustomValue',
+		'InstitutionSiteActivity' => array('dependent' => true)
 	);
 	
 	public $actsAs = array(
 		'Excel',
-		'TrackHistory',
+		//'TrackHistory',
+		'TrackActivity' => array('target' => 'InstitutionSiteActivity', 'key' => 'institution_site_id', 'session' => 'InstitutionSite.id'),
 		'CascadeDelete' => array(
 			'cascade' => array(
 				'InstitutionSiteAttachment',

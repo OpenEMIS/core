@@ -134,6 +134,13 @@ class LabelHelper extends AppHelper {
 			'skip' => 'Skip',
 			'addmore' => 'Add More'
 		),
+		'Activity' => array(
+			'field' => 'Field',
+			'old_value' => 'Old value',
+			'new_value' => 'New value',
+			'created_user_id' => 'Modified by',
+			'created' => 'Modified on'
+		),
 		'Area' => array(
 			'name' => 'Area',
 			'area_level_id' => 'Area Level (Education)',
@@ -199,6 +206,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Institution'
 		),
 		'InstitutionSite' => array(
+			'module' => 'Institution',
 			'institution_site_provider_id' => 'Provider',
 			'institution_site_sector_id' => 'Sector',
 			'institution_site_type_id' => 'Type',
@@ -224,7 +232,7 @@ class LabelHelper extends AppHelper {
 			'academic_period_id' => 'Academic Period',
 			'add_staff' => 'Add Staff',
 			'add_student' => 'Add Student',
-			'add_all_student' => 'Add All Students',
+			'add_all_student' => 'Add All Students'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -319,10 +327,14 @@ class LabelHelper extends AppHelper {
 			'processing' => 'Processing'
 		),
 		'Student' => array(
+			'module' => 'Student',
 			'openemis_no' => 'OpenEMIS ID',
 			'first_name' => 'First Name',
 			'last_name' => 'Last Name',
 			'add_existing' => 'Add existing Student'
+		),
+		'Staff' => array(
+			'module' => 'Staff',
 		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
@@ -356,10 +368,13 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteStudent' => array(
 			'student_status_id' => 'Status',
+			'academic_period_id' => 'Academic Period',
 			'education_programme_id' => 'Programme',
-			'institution_site_section_id' => 'Section',
 			'education_grade_id' => 'Grade',
-			'student_category_id' => 'Category'
+			'institution_site_section_id' => 'Section',
+			'student_category_id' => 'Category',
+			'select_grade' => 'Select Grade',
+			'select_section' => 'Select Section'
 		),
 		'InstitutionSiteStaff' => array(
 			'staff_status_id' => 'Status',
