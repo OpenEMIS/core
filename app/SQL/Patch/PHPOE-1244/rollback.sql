@@ -14,12 +14,11 @@ DROP TABLE IF EXISTS `wf_workflow_logs`;
 
 DELETE FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Workflows' AND `title` LIKE 'Workflows';
 DELETE FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Workflows' AND `title` LIKE 'Steps';
-DELETE FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Workflows' AND `title` LIKE 'Logs';
 
 SET @orderOfQualityStatus := 0;
 SELECT `order` INTO @orderOfQualityStatus FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Quality' AND `title` LIKE 'Status';
 
-UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` > @orderOfQualityStatus;
+UPDATE `navigations` SET `order` = `order` - 2 WHERE `order` > @orderOfQualityStatus;
 
 --
 -- 3. security_functions
@@ -27,9 +26,8 @@ UPDATE `navigations` SET `order` = `order` - 3 WHERE `order` > @orderOfQualitySt
 
 DELETE FROM `security_functions` WHERE `controller` LIKE 'Workflows' AND `category` LIKE 'Workflows' AND `name` LIKE 'Workflows';
 DELETE FROM `security_functions` WHERE `controller` LIKE 'WorkflowSteps' AND `category` LIKE 'Workflows' AND `name` LIKE 'WorkflowSteps';
-DELETE FROM `security_functions` WHERE `controller` LIKE 'WorkflowLogs' AND `category` LIKE 'Workflows' AND `name` LIKE 'WorkflowLogs';
 
 SET @orderOfQualityStatus := 0;
 SELECT `order` INTO @orderOfQualityStatus FROM `security_functions` WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Quality' AND `category` LIKE 'Quality' AND `name` LIKE 'Status';
 
-UPDATE `security_functions` SET `order` = `order` - 3 WHERE `order` > @orderOfQualityStatus;
+UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` > @orderOfQualityStatus;

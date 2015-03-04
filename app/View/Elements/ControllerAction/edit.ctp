@@ -1,5 +1,5 @@
 <?php
-//ControllerActionComponent - Version 1.0.2
+//ControllerActionComponent - Version 1.0.3
 // Requires FormUtilityHelper and LabelHelper
 
 $formDefaults = $this->FormUtility->getFormDefaults();
@@ -152,13 +152,26 @@ foreach ($displayFields as $_field => $attr) {
 				$attr['label'] = $label;
 				echo $this->FormUtility->timepicker($fieldName, $attr);
 				break;
+
 			case 'file':
 				echo $this->element('layout/attachment');
 				break;
+
 			case 'file_upload';
 				$attr = array('field' => $_field);
 				echo $this->element('layout/attachment_upload', $attr);
 				break;
+
+			case 'chosen_select':
+				echo $this->Html->css('../js/plugins/chosen/chosen.min', 'stylesheet', array('inline' => false));
+				echo $this->Html->script('plugins/chosen/chosen.jquery.min', array('inline' => false));
+				$options['options'] = isset($attr['options']) ? $attr['options'] : array();
+				$options['class'] = 'chosen-select';
+				$options['multiple'] = true;
+				$options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
+				$fieldName = $attr['id'];
+				break;
+
 			default:
 				break;
 			
