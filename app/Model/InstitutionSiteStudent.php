@@ -303,24 +303,7 @@ class InstitutionSiteStudent extends AppModel {
 							$this->Session->write('InstitutionSiteStudent.addNew', $data[$this->alias]);
 							return $this->redirect(array('controller' => 'Students', 'action' => 'add'));
 						}else{
-							if($selectedSectionId != 0) {
-								$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-
-								$institutionSiteSectionStudentId = $InstitutionSiteSectionStudent->field('id', array(
-									'InstitutionSiteSectionStudent.student_id' => $studentId,
-									'InstitutionSiteSectionStudent.education_grade_id' => $selectedGradeId,
-									'InstitutionSiteSectionStudent.institution_site_section_id' => $selectedSectionId
-								));
-								if($institutionSiteSectionStudentId) {
-									$autoInsertData['InstitutionSiteSectionStudent']['id'] = $institutionSiteSectionStudentId;	
-								}
-								$autoInsertData['InstitutionSiteSectionStudent']['student_id'] = $studentId;
-								$autoInsertData['InstitutionSiteSectionStudent']['education_grade_id'] = $selectedGradeId;
-								$autoInsertData['InstitutionSiteSectionStudent']['institution_site_section_id'] = $selectedSectionId;
-								$autoInsertData['InstitutionSiteSectionStudent']['student_category_id'] = $selectedStudentCategoryId;
-								$autoInsertData['InstitutionSiteSectionStudent']['status'] = 1;
-								$InstitutionSiteSectionStudent->save($autoInsertData);
-							}
+							ClassRegistry::init('InstitutionSiteSectionStudent')->autoInsertSectionStudent($data['InstitutionSiteStudent']);
 
 							if ($this->save($data)) {
 								$this->Message->alert('general.add.success');
