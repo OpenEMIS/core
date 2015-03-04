@@ -218,7 +218,10 @@ class ExcelBehavior extends ModelBehavior {
 
 		$header = array();
 		$exclude = array('id', 'photo_name', 'file_name', 'modified_user_id', 'modified', 'created_user_id', 'created');
-
+		if (isset($this->settings[$alias]['exclude'])) {
+			$exclude = array_merge($exclude, $this->settings[$alias]['exclude']);
+		}
+		
 		if (array_key_exists('header', $this->settings[$alias])) {
 			$appendedHeader = $this->settings[$alias]['header'];
 			foreach ($appendedHeader as $module => $fields) {
@@ -258,6 +261,7 @@ class ExcelBehavior extends ModelBehavior {
 				$header[$key] = __($label);
 			}
 		}
+		//pr($header);die;
 		
 		// Custom Field Logic starts here
 		if(!empty($include)){
@@ -271,6 +275,7 @@ class ExcelBehavior extends ModelBehavior {
 
 	public function excelGetData(Model $model, $page=false) {
 		$options = $this->Model->excelGetFindOptions();
+		pr($options);
 
 		if ($page !== false) {
 			$options['offset'] = $page * $this->limit;
@@ -278,6 +283,7 @@ class ExcelBehavior extends ModelBehavior {
 		}
 		
 		$data = $this->Model->find('all', $options);
+		pr($data);
 		return $data;
 	}
 
