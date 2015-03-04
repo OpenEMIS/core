@@ -23,7 +23,6 @@ class SecurityUserLogin extends SecurityUser {
 	
 	public function beforeAction() {
 		parent::beforeAction();
-		$this->fields['currentPassword'] = array();
 		$this->fields['newPassword'] = array();
 		$this->fields['retypeNewPassword'] = array();
 		$this->fields['username']['type'] = 'string';
@@ -51,13 +50,31 @@ class SecurityUserLogin extends SecurityUser {
 		$this->setVar('selectedAction', $this->alias);
 	}
 
-	public function view($id) {
-		$this->redirect(array('controller' => 'Security', 'action' => 'SecurityUser', 'view', $id));
+	public function index() {
+		$this->redirect(array('action' => 'SecurityUserLogin', 'edit'));
 	}
 
-	public function edit($id) {
+	public function view($id) {
+		if ($this->controller->name == 'Security') {
+			$this->redirect(array('action' => 'SecurityUser', 'view', $id));
+		} else if ($this->controller->name == 'Preferences') {
+			$this->redirect(array('action' => 'account'));
+		}
+	}
 
-		$this->fields['password']['visible'] = true;
+	public function edit($id=null) {
+		if ($this->controller->name == 'Security') {
+			$this->fields['password']['visible'] = false;
+			$this->validate['password']['ruleChangePassword']['rule'] = array('changePassword', true);
+		} else if ($this->controller->name == 'Preferences') {
+			if (array_key_exists('nav_tabs', $this->fields)) {
+				unset($this->fields['nav_tabs']);
+			}
+			$id = AuthComponent::user('id');
+			$this->fields['username']['attr']['readonly'] = true;
+			$this->fields['password']['visible'] = true;
+			$this->setVar('contentHeader', 'Password');
+		}
 		$this->fields['password']['value'] = '';
 		parent::edit($id);
 	}

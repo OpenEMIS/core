@@ -56,7 +56,7 @@ UPDATE navigations SET action = 'StaffAward', pattern = 'StaffAward' WHERE title
 ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATE NOT NULL;
 ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATE NOT NULL;
 
---Security functions must be handled to converted modules
+-- Security functions must be handled to converted modules
 UPDATE security_functions SET _view = 'StudentContact|StudentContact.index|StudentContact.view', _edit = '_view:StudentContact.edit', _add = '_view:StudentContact.add', _delete = '_view:StudentContact.remove', _execute = '_view:StudentContact.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
 UPDATE security_functions SET _view = 'StudentIdentity|StudentIdentity.index|StudentIdentity.view', _edit = '_view:StudentIdentity.edit', _add = '_view:StudentIdentity.add', _delete = '_view:StudentIdentity.remove', _execute = '_view:StudentIdentity.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
 UPDATE security_functions SET _view = 'StudentNationality|StudentNationality.index|StudentNationality.view', _edit = '_view:StudentNationality.edit', _add = '_view:StudentNationality.add', _delete = '_view:StudentNationality.remove', _execute = '_view:StudentNationality.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Nationalities';
@@ -597,10 +597,7 @@ UPDATE security_functions SET _view = 'SecurityUser|SecurityUser.index', _edit =
 UPDATE security_functions SET _view = 'SecurityUser.view', _edit = '_view:SecurityUser.edit|SecurityUserLogin.edit', _add = '_view:SecurityUser.add'WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
 
 
-
-
-
-
+UPDATE navigations SET action = 'SecurityUserLogin', pattern = 'SecurityUserLogin' WHERE action = 'password' AND module = 'Preferences' AND controller = 'Preferences' AND title = 'Password';
 
 
 

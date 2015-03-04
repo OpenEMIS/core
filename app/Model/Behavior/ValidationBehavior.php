@@ -26,26 +26,40 @@ class ValidationBehavior extends ModelBehavior {
 	public function compareDate(Model $model, $field = array(), $compareField = null, $equals = false) {
 		$alias = $model->alias;
 		try {
-		    $startDate = new DateTime(current($field));
+			$startDate = new DateTime(current($field));
 		} catch (Exception $e) {
-		    return 'Please input a proper date.';
-		    exit(1);
+			return 'Please input a proper date.';
+			exit(1);
 		}
 		if($compareField) {
 			try {
-			    $endDate = new DateTime($model->data[$alias][$compareField]);
+				$endDate = new DateTime($model->data[$alias][$compareField]);
 			} catch (Exception $e) {
-			    return 'Please input a proper date on '.(ucwords(str_replace('_', ' ', $compareField)));
-			    exit(1);
+				return 'Please input a proper date on '.(ucwords(str_replace('_', ' ', $compareField)));
+				exit(1);
 			}
 			if($equals){
-	        	return $endDate >= $startDate;
-        	} else {
-            	return $endDate > $startDate;
-        	}
-        } else {
-        	return true;
-        }
-    }
-    
+				return $endDate >= $startDate;
+			} else {
+				return $endDate > $startDate;
+			}
+		} else {
+			return true;
+		}
+	}
+
+	public function changePassword(Model $model, $field, $allowChangeAll) {
+		$username = array_key_exists('username', $model->data[$model->alias])? $model->data[$model->alias]['username']: null;
+		$password = array_key_exists('password', $model->data[$model->alias])? $model->data[$model->alias]['password']: null;
+
+		if (!$allowChangeAll) {
+			if (AuthComponent::user('id') != $model->data[$model->alias]['id']) {
+				die('illegal');
+			}
+		} 
+
+		$password = AuthComponent::password($password);
+		$count = $model->find('count', array('recursive' => -1, 'conditions' => array('username' => $username, 'password' => $password)));
+		return $count==1;
+	}	
 }
