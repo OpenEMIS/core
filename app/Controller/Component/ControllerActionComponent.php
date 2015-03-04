@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.2
+ControllerActionComponent - Version 1.0.3
 */
 
 class ControllerActionComponent extends Component {

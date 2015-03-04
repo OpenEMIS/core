@@ -3,6 +3,7 @@
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
+					<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
 					<th><?php echo $this->Label->get('general.name'); ?></th>
 					<th><?php echo $this->Label->get('WorkflowStep.next_step'); ?></th>
 				</tr>
@@ -10,8 +11,14 @@
 			<tbody>
 				<?php foreach ($data['WorkflowAction'] as $obj) : ?>
 				<tr>
+					<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
 					<td><?php echo $obj['name'] ?></td>
-					<td><?php echo $workflowSteps[$obj['next_wf_workflow_step_id']]; ?></td>
+					<td>
+						<?php
+							$nextWorkflowStepName = isset($workflowSteps[$obj['next_wf_workflow_step_id']]) ? $workflowSteps[$obj['next_wf_workflow_step_id']] : '';
+							echo $nextWorkflowStepName;
+						?>
+					</td>
 				</tr>
 				<?php endforeach ?>
 			</tbody>
@@ -56,7 +63,7 @@
 							<?php endif ?>
 								<td>
 									<?php
-										//to handle add new Field Option in edit mode
+										//to handle add new rows in edit mode
 										if(isset($this->request->data['WorkflowAction'][$key]['id'])) {
 											echo $this->Form->hidden("WorkflowAction.$key.id");
 										}
@@ -66,7 +73,6 @@
 								<td>
 									<?php
 										echo $this->Form->input("WorkflowAction.$key.next_wf_workflow_step_id", array('options' => $workflowStepOptions, 'label' => false, 'div' => false, 'between' => false, 'after' => false));
-										//echo $this->Form->hidden("WorkflowAction.$key.next_wf_workflow_step_id");
 									?>
 								</td>
 							<?php if ($this->action == 'add') : ?>

@@ -40,4 +40,28 @@ class WorkflowStep extends WorkflowsAppModel {
 			'dependent' => true
         )
     );
+
+     public $hasAndBelongsToMany = array(
+		'SecurityRole' => array(
+			'className' => 'SecurityRole',
+			'joinTable' => 'wf_workflow_step_roles',
+			'associationForeignKey' => 'security_role_id',
+			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
+			'order' => array('SecurityRole.order')
+		)
+	);
+
+    public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('name', 'wf_workflow_id'), false),
+	            'message' => 'This name is already exists in the system'
+	        )
+		)
+	);
 }

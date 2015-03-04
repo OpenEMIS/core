@@ -120,7 +120,7 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 SET @orderOfQualityStatus := 0;
 SELECT `order` INTO @orderOfQualityStatus FROM `navigations` WHERE `module` LIKE 'Administration' AND `header` LIKE 'Quality' AND `title` LIKE 'Status';
 
-UPDATE `navigations` SET `order` = `order` + 3 WHERE `order` > @orderOfQualityStatus;
+UPDATE `navigations` SET `order` = `order` + 2 WHERE `order` > @orderOfQualityStatus;
 
 SET @orderOfQualityStatus := @orderOfQualityStatus + 1;
 
@@ -166,28 +166,6 @@ VALUES (
 NULL , 'Administration', 'Workflows', 'WorkflowSteps', 'Workflows', 'Steps', 'index', 'index|view|edit|add|delete', '33', '0', @orderOfQualityStatus, '1', '1', '0000-00-00 00:00:00'
 );
 
-SET @orderOfQualityStatus := @orderOfQualityStatus + 1;
-
-INSERT INTO `navigations` (
-`id` ,
-`module` ,
-`plugin` ,
-`controller` ,
-`header` ,
-`title` ,
-`action` ,
-`pattern` ,
-`parent` ,
-`is_wizard` ,
-`order` ,
-`visible` ,
-`created_user_id` ,
-`created`
-)
-VALUES (
-NULL , 'Administration', 'Workflows', 'WorkflowLogs', 'Workflows', 'Logs', 'index', 'index|view|edit|add|delete', '33', '0', @orderOfQualityStatus, '1', '1', '0000-00-00 00:00:00'
-);
-
 --
 -- 7. security_functions
 --
@@ -195,7 +173,7 @@ NULL , 'Administration', 'Workflows', 'WorkflowLogs', 'Workflows', 'Logs', 'inde
 SET @orderOfQualityStatus := 0;
 SELECT `order` INTO @orderOfQualityStatus FROM `security_functions` WHERE `controller` LIKE 'Quality' AND `category` LIKE 'Quality' AND `name` LIKE 'Status';
 
-UPDATE `security_functions` SET `order` = `order` + 3 WHERE `order` > @orderOfQualityStatus;
+UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` > @orderOfQualityStatus;
 
 SET @orderOfQualityStatus := @orderOfQualityStatus + 1;
 
@@ -241,27 +219,4 @@ INSERT INTO `security_functions` (
 )
 VALUES (
 NULL , 'WorkflowSteps', 'WorkflowSteps', 'Administration', 'Workflows', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfQualityStatus, '1', '1', '0000-00-00 00:00:00'
-);
-
-SET @orderOfQualityStatus := @orderOfQualityStatus + 1;
-
-INSERT INTO `security_functions` (
-`id` ,
-`name` ,
-`controller` ,
-`module` ,
-`category` ,
-`parent_id` ,
-`_view` ,
-`_edit` ,
-`_add` ,
-`_delete` ,
-`_execute` ,
-`order` ,
-`visible` ,
-`created_user_id` ,
-`created`
-)
-VALUES (
-NULL , 'WorkflowLogs', 'WorkflowLogs', 'Administration', 'Workflows', '-1', 'index|view', '_view:edit', '_view:add', '_view:delete', NULL , @orderOfQualityStatus, '1', '1', '0000-00-00 00:00:00'
 );

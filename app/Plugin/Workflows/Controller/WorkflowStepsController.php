@@ -32,16 +32,27 @@ class WorkflowStepsController extends WorkflowsAppController {
 		$this->Navigation->addCrumb('Steps');
 		$this->set('contentHeader', 'Workflow Steps');
 
+		$this->WorkflowStep->fields['security_roles'] = array(
+			'type' => 'chosen_select',
+			'id' => 'SecurityRole.SecurityRole',
+			'placeholder' => __('Select security roles'),
+			'visible' => true
+		);
+		$this->WorkflowStep->setFieldOrder('security_roles', 3);
+
 		$this->WorkflowStep->fields['actions'] = array(
 			'type' => 'element',
 			'element' => '../../Plugin/Workflows/View/WorkflowSteps/actions',
 			'visible' => true
 		);
-		$this->WorkflowStep->setFieldOrder('actions', 3);
+		$this->WorkflowStep->setFieldOrder('actions', 4);
 
 		if ($this->action == 'view') {
 			$this->WorkflowStep->fields['wf_workflow_id']['dataModel'] = 'Workflow';
 			$this->WorkflowStep->fields['wf_workflow_id']['dataField'] = 'name';
+
+			$this->WorkflowStep->fields['security_roles']['dataModel'] = 'SecurityRole';
+			$this->WorkflowStep->fields['security_roles']['dataField'] = 'name';
 
 			$workflowSteps = $this->WorkflowStep->find('list');
 			$this->set('workflowSteps', $workflowSteps);
@@ -49,6 +60,9 @@ class WorkflowStepsController extends WorkflowsAppController {
 			$this->WorkflowStep->fields['wf_workflow_id']['type'] = 'select';
 			$workflowOptions = $this->Workflow->find('list');
 			$this->WorkflowStep->fields['wf_workflow_id']['options'] = $workflowOptions;
+
+			$securityRoleOptions = $this->WorkflowStep->SecurityRole->find('list');
+			$this->WorkflowStep->fields['security_roles']['options'] = $securityRoleOptions;
 
 			$pass = $this->request->params['pass'];
 			$workflowStepId = isset($pass[0]) ? $pass[0] : 0;
@@ -71,11 +85,20 @@ class WorkflowStepsController extends WorkflowsAppController {
 						'visible' => 1
 					);
 					$this->ControllerAction->autoProcess = false;
-					$this->ControllerAction->render();
 				} else {
+					if (isset($data['WorkflowAction'])) {
+						foreach ($data['WorkflowAction'] as $key => $obj) {
+							if (!isset($obj['id']) && empty($obj['name'])) {
+								unset($data['WorkflowAction'][$key]);
+							}
+						}
+					}
+					$this->request->data = $data;
+
 					$this->ControllerAction->autoProcess = true;
-					$this->ControllerAction->processAction();
 				}
+
+				$this->ControllerAction->processAction();
 			}
 
 			$this->set('workflowStepOptions', $workflowStepOptions);
@@ -93,7 +116,7 @@ class WorkflowStepsController extends WorkflowsAppController {
 			$workflowOptions['workflow:' . $key] = $workflow;
 		}
 
-		$this->WorkflowStep->contain('Workflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep');
+		$this->WorkflowStep->contain('Workflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep', 'SecurityRole');
     	$data = $this->WorkflowStep->find('all', array(
 			'conditions' => array(
 				'WorkflowStep.wf_workflow_id' => $selectedWorkflow
