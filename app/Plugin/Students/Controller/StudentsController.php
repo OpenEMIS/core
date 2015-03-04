@@ -28,7 +28,7 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteStudentAbsence',
 		'InstitutionSiteClassStudent',
 		'Students.Student',
-		'Students.StudentHistory',
+		'Students.StudentActivity',
 		'Students.StudentCustomField',
 		'Students.StudentCustomFieldOption',
 		'Students.StudentCustomValue',
@@ -47,7 +47,8 @@ class StudentsController extends StudentsAppController {
 		),
 		'FileUploader',
 		'AccessControl',
-		'Wizard'
+		'Wizard',
+		'Activity' => array('model' => 'StudentActivity')
 	);
 	
 	public $modules = array(
@@ -447,35 +448,6 @@ class StudentsController extends StudentsAppController {
 
 	public function excel() {
 		$this->Student->excel();
-	}
-
-	public function history() {
-		$this->Navigation->addCrumb('History');
-
-		$arrTables = array('StudentHistory');
-		$studentId = $this->Session->read('Student.id');
-		$historyData = $this->StudentHistory->find('all', array(
-			'conditions' => array('StudentHistory.student_id' => $studentId),
-			'order' => array('StudentHistory.created' => 'desc')
-		));
-
-		$this->Staff->contain(array('SecurityUser'));
-		$data = $this->Student->findById($studentId);
-		$data2 = array();
-		foreach ($historyData as $key => $arrVal) {
-			foreach ($arrTables as $table) {
-				foreach ($arrVal[$table] as $k => $v) {
-					$keyVal = ($k == 'name') ? $table . '_name' : $k;
-					$data2[$keyVal][$v] = $arrVal['StudentHistory']['created'];
-				}
-			}
-		}
-		if (empty($data2)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
-		}
-
-		$this->set('data', $data);
-		$this->set('data2', $data2);
 	}
 
 	public function assessments() {
