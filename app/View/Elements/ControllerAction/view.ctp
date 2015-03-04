@@ -1,5 +1,5 @@
 <?php
-//ControllerActionComponent - Version 1.0.2
+//ControllerActionComponent - Version 1.0.3
 // Requires FormUtilityHelper and LabelHelper
 
 $formDefaults = $this->FormUtility->getFormDefaults();
@@ -14,7 +14,7 @@ $_labelClass = array('col-md-3'); // default bootstrap class for labels
 $_valueCol = '<div class="%s">%s</div>';
 $_valueClass = array('col-md-6'); // default bootstrap class for values
 
-$allowTypes = array('element', 'disabled');
+$allowTypes = array('element', 'disabled', 'chosen_select');
 
 $displayFields = $_fields;
 
@@ -63,7 +63,8 @@ foreach ($displayFields as $_field => $attr) {
 			if (array_key_exists('dataModel', $_fieldAttr) && array_key_exists('dataField', $_fieldAttr)) {
 				$dataModel = $_fieldAttr['dataModel'];
 				$dataField = $_fieldAttr['dataField'];
-				$value = $data[$dataModel][$dataField];
+				//$value = $data[$dataModel][$dataField];
+				$value = isset($data[$dataModel][$dataField]) ? $data[$dataModel][$dataField] : '';
 			} else if (isset($data[$_fieldModel][$_field])) {
 				$value = $data[$_fieldModel][$_field];
 			}
@@ -113,6 +114,12 @@ foreach ($displayFields as $_field => $attr) {
 					
 				case 'date':
 					$value = $this->Utility->formatDate($value, null, false);
+					break;
+
+				case 'chosen_select':
+					$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
+					$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
+					$value = $this->element('ControllerAction/chosen_select', $_fieldAttr);
 					break;
 				
 				case 'modified_user_id':

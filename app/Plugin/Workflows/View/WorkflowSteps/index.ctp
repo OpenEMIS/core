@@ -33,9 +33,10 @@ $this->start('contentBody');
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo __('Name'); ?></th>
-				<th><?php echo __('Actions'); ?></th>
-				<th><?php echo __('Workflow'); ?></th>
+				<th><?php echo $this->Label->get('general.name'); ?></th>
+				<th><?php echo $this->Label->get('WorkflowStep.security_roles'); ?></th>
+				<th><?php echo $this->Label->get('WorkflowStep.actions'); ?></th>
+				<th><?php echo $this->Label->get('WorkflowStep.wf_workflow_id'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -44,9 +45,24 @@ $this->start('contentBody');
 					<td><?php echo $this->Html->link($obj['WorkflowStep']['name'], array('action' => 'view', $obj['WorkflowStep']['id'])); ?></td>
 					<td>
 						<?php
-							foreach ($obj['WorkflowAction'] as $action) {
-								echo $action['name'] . " - " . $action['NextWorkflowStep']['name'] . "<BR>";
+							$securityRoles = array();
+							foreach ($obj['SecurityRole'] as $securityRole) {
+								$securityRoles[] = $securityRole['name'];
 							}
+							echo implode('<br>', $securityRoles);
+						?>
+					</td>
+					<td>
+						<?php
+							$workflowActions = array();
+							foreach ($obj['WorkflowAction'] as $workflowAction) {
+								$workflowActionName = isset($workflowAction['name']) ? $workflowAction['name'] : '';
+								$nextWorkflowStepName = isset($workflowAction['NextWorkflowStep']['name']) ? $workflowAction['NextWorkflowStep']['name'] : '';
+								if ($workflowAction['visible'] == 1) {
+									$workflowActions[] = $workflowActionName . " - " . $nextWorkflowStepName;
+								}
+							}
+							echo implode('<br>', $workflowActions);
 						?>
 					</td>
 					<td><?php echo $obj['Workflow']['name']; ?></td>

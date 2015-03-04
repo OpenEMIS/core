@@ -36,4 +36,25 @@ class Workflow extends WorkflowsAppModel {
 			'dependent' => true
         )
     );
+
+    public $validate = array(
+		'code' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a code'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('code'), false),
+	            'message' => 'This code is already exists in the system'
+	        )
+		),
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			)
+		)
+	);
 }
