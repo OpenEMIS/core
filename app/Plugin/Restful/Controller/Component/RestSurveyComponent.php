@@ -287,6 +287,7 @@ class RestSurveyComponent extends Component {
 
     public function getXForms($instanceId, $id) {
 		$title = $this->Group->field('name', array($this->Group->alias.'.id' => $id));
+		$title = htmlspecialchars($title, ENT_QUOTES);
 
     	$fieldContains = array();
 		$fieldContains = isset($this->FieldOption) ? array_merge(array($this->FieldOption->alias), $fieldContains) : $fieldContains;
@@ -352,7 +353,7 @@ class RestSurveyComponent extends Component {
 							if($field[$this->Field->alias]['type'] == 1) {
 								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
 								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
-								$sectionBreakNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+								$sectionBreakNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 							}
 
 							$fieldTypeArr = array(2, 3, 4, 5, 6); //Only support 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number
@@ -367,16 +368,16 @@ class RestSurveyComponent extends Component {
 										$fieldType = 'string';
 										$textNode = $sectionBreakNode->addChild("input", null, NS_XF);
 										$textNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
-											$textNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											$textNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 										break;
 									case 3:	//Dropdown
 										$fieldType = 'integer';
 										$dropdownNode = $sectionBreakNode->addChild("select1", null, NS_XF);
 										$dropdownNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
-											$dropdownNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											$dropdownNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
 												$itemNode = $dropdownNode->addChild("item", null, NS_XF);
-													$itemNode->addChild("label", $fieldOption['value'], NS_XF);
+													$itemNode->addChild("label", htmlspecialchars($fieldOption['value'], ENT_QUOTES), NS_XF);
 													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
 											}
 										break;
@@ -384,10 +385,10 @@ class RestSurveyComponent extends Component {
 										$fieldType = 'integer';
 										$checkboxNode = $sectionBreakNode->addChild("select", null, NS_XF);
 										$checkboxNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
-											$checkboxNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											$checkboxNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
 												$itemNode = $checkboxNode->addChild("item", null, NS_XF);
-													$itemNode->addChild("label", $fieldOption['value'], NS_XF);
+													$itemNode->addChild("label", htmlspecialchars($fieldOption['value'], ENT_QUOTES), NS_XF);
 													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
 											}
 										break;
@@ -395,13 +396,13 @@ class RestSurveyComponent extends Component {
 										$fieldType = 'string';
 										$textareaNode = $sectionBreakNode->addChild("textarea", null, NS_XF);
 										$textareaNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
-											$textareaNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											$textareaNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 										break;
 									case 6:	//Number
 										$fieldType = 'integer';
 										$numberNode = $sectionBreakNode->addChild("input", null, NS_XF);
 										$numberNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
-											$numberNode->addChild("label", $field[$this->Field->alias]['name'], NS_XF);
+											$numberNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 										break;
 								}
 
