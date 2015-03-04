@@ -52,5 +52,10 @@ if(!empty($data)) {
 	}
 } else {
 ?>
-	<span class="alert" type="<?php echo $this->Utility->alertType['warn']; ?>"><?php echo __('No subject available in this grade.'); ?></span>
+
+<tr>
+	<td colspan="5">
+		<span class="alert" type="<?php echo $this->Utility->alertType['warn']; ?>"><?php echo __('No subject available in this grade.'); ?></span>
+	</td>
+</tr>
 <?php } ?>
