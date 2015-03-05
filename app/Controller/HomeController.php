@@ -49,6 +49,7 @@ class HomeController extends AppController {
 	}
 	
 	public function index() {
+		$this->redirect(array('controller' => 'InstitutionSites'));
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();

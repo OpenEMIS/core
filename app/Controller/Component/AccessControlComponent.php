@@ -363,7 +363,7 @@ class AccessControlComponent extends Component {
 		$controller = $this->controller->params['controller'];
 		$action = $this->getAction();// $this->controller->action;
 				
-		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
+		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view' || $action == 'dashboard')){
 			return;
 		}
 		
