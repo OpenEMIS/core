@@ -150,7 +150,10 @@ class EducationGradeSubject extends AppModel {
 					'EducationGradeSubject.id', 'EducationGradeSubject.education_grade_id', 
 					'EducationGradeSubject.education_subject_id', 'EducationSubject.code', 'EducationSubject.name'
 				),
-				'conditions' => array('EducationGradeSubject.education_grade_id' => $gradeIds),
+				'conditions' => array(
+					'EducationGradeSubject.education_grade_id' => $gradeIds,
+					'EducationGradeSubject.visible' => 1
+				),
 				'order' => array('EducationSubject.order')
 			)
 		);
