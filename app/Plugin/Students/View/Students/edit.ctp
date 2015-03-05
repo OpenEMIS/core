@@ -45,6 +45,20 @@ echo $this->Form->create($model, $formOptions);
 				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel, 'value' => $autoid));
 			}
 		}
+
+		if (isset($nationalityOptions)) {
+			echo $this->Form->input('StudentNationality.0.country_id', array('Label' => __('Nationality'), 'options' => $nationalityOptions, 'onchange' => "$('#reload').val('changeNationality').click()"));
+		}
+		if (isset($identityTypeOptions)) {
+			$selectAndTxtOptions = array(
+				'label' => __('Identity'),
+				'selectOptions' => $identityTypeOptions,
+				'selectId' => 'StudentIdentity.0.identity_type_id',
+				'txtId' => 'StudentIdentity.0.number',
+				'txtPlaceHolder' => __('Identity Number')
+			);
+			echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+		}
 		
 		echo $this->Form->input('first_name');
 		echo $this->Form->input('middle_name');

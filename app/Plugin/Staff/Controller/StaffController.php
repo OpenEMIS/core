@@ -258,7 +258,13 @@ class StaffController extends StaffAppController {
 	}
 	
 	public function add() {
-		$this->Wizard->start();
+		$wizardOptions = array(
+			'exclude' => array(
+				array('module' => 'Staff', 'title' => 'Identities'),
+				array('module' => 'Staff', 'title' => 'Nationalities'),
+			)
+		);
+		$this->Wizard->start($wizardOptions);
 		return $this->redirect(array('action' => 'edit'));
 	}
 
@@ -279,46 +285,50 @@ class StaffController extends StaffAppController {
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$this->Staff->set($data);
 			$addressAreaId = $this->request->data[$model]['address_area_id'];
 			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			
-			if ($this->Staff->validates() && $this->Staff->save()) {
-				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
-				$InstitutionSiteStaffModel->validator()->remove('search');
-				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
-				
-				if ($this->Wizard->isActive()) {
-					if (is_null($id)) {
-						$this->Message->alert('general.add.success');
-						$id = $this->Staff->getLastInsertId();
-						$this->Session->write($model . '.id', $id);
-					}
+			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
+				unset($this->request->data['StaffIdentity']);
+				$data = $this->request->data;
+			} else {
+				if ($this->Staff->saveAll($data)) {
+					$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
+					$InstitutionSiteStaffModel->validator()->remove('search');
+					$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
 					
-					if(!empty($dataToSite)){
-						$dataToSite['staff_id'] = $id;
-						if (empty($staffIdSession)) {
-							$InstitutionSiteStaffModel->save($dataToSite);
+					if ($this->Wizard->isActive()) {
+						if (is_null($id)) {
+							$this->Message->alert('general.add.success');
+							$id = $this->Staff->getLastInsertId();
+							$this->Session->write($model . '.id', $id);
 						}
-					}
-					
-					$this->Session->write($model . '.data', $this->Staff->findById($id));
-					// unset wizard so it will not auto redirect from WizardComponent
-					unset($this->request->data['wizard']['next']);
-					$this->Wizard->next();
-				} else {
-					if(!empty($dataToSite)){
-						$dataToSite['staff_id'] = $id;
-						if (empty($staffIdSession)) {
-							$InstitutionSiteStaffModel->save($dataToSite);
+						
+						if(!empty($dataToSite)){
+							$dataToSite['staff_id'] = $id;
+							if (empty($staffIdSession)) {
+								$InstitutionSiteStaffModel->save($dataToSite);
+							}
 						}
+						
+						$this->Session->write($model . '.data', $this->Staff->findById($id));
+						// unset wizard so it will not auto redirect from WizardComponent
+						unset($this->request->data['wizard']['next']);
+						$this->Wizard->next();
+					} else {
+						if(!empty($dataToSite)){
+							$dataToSite['staff_id'] = $id;
+							if (empty($staffIdSession)) {
+								$InstitutionSiteStaffModel->save($dataToSite);
+							}
+						}
+						
+						$this->Message->alert('general.edit.success');
+						return $this->redirect(array('action' => 'view'));
 					}
 					
-					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => 'view'));
+					$this->Session->delete('InstitutionSiteStaff.addNew');
 				}
-				
-				$this->Session->delete('InstitutionSiteStaff.addNew');
 			}
 		} else {
 			if (!empty($id)) {
@@ -331,6 +341,23 @@ class StaffController extends StaffAppController {
 		$genderOptions = $this->Option->get('gender');
 		$dataMask = $this->ConfigItem->getValue('staff_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+
+		if ($this->Wizard->isActive()) {
+			$Country = ClassRegistry::init('Country');
+			$nationalityOptions = $Country->getOptions();
+
+			$identityTypeOption = array();
+			if (array_key_exists('StaffNationality', $this->request->data)) {
+				$identityTypeOption = $this->request->data['StaffNationality'][0];
+			} else {
+				$first_key = key($nationalityOptions);
+				$identityTypeOption = array('country_id' => $first_key);
+				
+			}
+			$identityTypeOptions = ClassRegistry::init('IdentityType')->getList($identityTypeOption);
+			$this->set('nationalityOptions', $nationalityOptions);
+			$this->set('identityTypeOptions', $identityTypeOptions);
+		}
 
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('arrIdNo', $arrIdNo);
