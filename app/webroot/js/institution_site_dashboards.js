@@ -1,4 +1,3 @@
-<?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
@@ -14,15 +13,18 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+$(document).ready(function() {
+	institution_site_dashboards.init();
+});
 
-class CensusSanitation extends AppModel {
-    public $belongsTo = array(
-		'InfrastructureSanitation', 
-		'InfrastructureMaterial',
-		'SanitationGender' => array(
-			'className' => 'SanitationGender',
-			'foreignKey' => 'gender_id'
-		)
-	);
+var institution_site_dashboards = {
+	init: function() {
+		groups = $('div[id^=container]');
+
+		$.each($('div[id^=container]'), function(key, group) {
+			json = $(group).html();
+			obj = JSON.parse(json);
+			$(group).highcharts(obj);
+		});
+	}
 }
