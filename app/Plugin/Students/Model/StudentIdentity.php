@@ -51,7 +51,6 @@ class StudentIdentity extends StudentsAppModel {
 		'issue_location' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Please enter a valid Issue Location'
 			)
 		),
@@ -65,7 +64,6 @@ class StudentIdentity extends StudentsAppModel {
 		'expiry_date' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
 				'message' => 'Expiry Date Is Required'
 			)
 		)

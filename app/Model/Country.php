@@ -20,6 +20,7 @@ class Country extends AppModel {
 	public $actsAs = array('FieldOption');
 	public $hasMany = array('StaffNationality', 'StudentNationality', 'TeacherNationality');
 	public $belongsTo = array(
+		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -34,6 +35,10 @@ class Country extends AppModel {
 		)
 	);
 
+	public function getListOnly() {
+		return $this->getList(array('listOnly' => true));
+	}
+
 	public function getOptions($type='id'){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('Country.order')));
 		$list = array();
@@ -43,4 +48,13 @@ class Country extends AppModel {
 
 		return $list;
 	}
+
+	public function getOptionFields() {
+		parent::getOptionFields();
+		$this->fields['identity_type_id']['type'] = 'select';
+		$this->fields['identity_type_id']['options'] = $this->IdentityType->getList();
+		$this->setFieldOrder('identity_type_id', 2);
+		return $this->fields;
+	}
+
 }

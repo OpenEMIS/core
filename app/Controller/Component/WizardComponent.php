@@ -225,8 +225,25 @@ class WizardComponent extends Component {
 		return count($links);
 	}
 	
-	public function start() {
+	public function start($options = array()) {
+		if (array_key_exists('exclude', $options)) $exclude = $options['exclude'];
+
 		$links = $this->getLinks($this->module);
+
+		if (isset($exclude)) {
+			$newLinks = array();
+			foreach ($links as $key => $value) {
+				$found = false; 
+				foreach ($exclude as $ckey => $cond) {
+					if (sizeOf(array_uintersect_assoc($value['Navigation'], $cond, "strcmp")) == sizeOf($cond)) {
+						$found = true; break;
+					}
+				}
+				if (!$found) $newLinks[] = $value;
+			}
+		}
+		$links = $newLinks;
+
 		$personnelId = $this->Session->read($this->module.'.id');
 		$this->Session->delete($this->module);
 		$this->Session->write($this->module . '.wizard.links', $links);
