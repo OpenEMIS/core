@@ -101,7 +101,37 @@ class InstitutionSiteStudent extends AppModel {
 	
 	public function excelGetFindOptions(){
 		$options = parent::excelGetFindOptions();
+		$options['recursive'] = -1;
 		$options['joins'] = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'conditions' => array(
+					'Student.id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array(
+					'InstitutionSite.id = InstitutionSiteStudent.institution_site_id'
+				)
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array(
+					'EducationProgramme.id = InstitutionSiteStudent.education_programme_id'
+				)
+			),
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StudentStatus',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'StudentStatus.id = InstitutionSiteStudent.student_status_id'
+				)
+			),
 			array(
 				'table' => 'institution_site_section_students',
 				'alias' => 'InstitutionSiteSectionStudent',
@@ -145,6 +175,7 @@ class InstitutionSiteStudent extends AppModel {
 			),
 		);
 		unset($options['contain']);
+		$options['order'] = array('Student.identification_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
 		
 		return $options;
 	}
