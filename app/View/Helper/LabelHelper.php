@@ -567,6 +567,12 @@ class LabelHelper extends AppHelper {
 			'gross' => 'Gross',
 			'net' => 'Net',
 			'salary_date' => 'Date'
+		),
+		'StudentStatus' => array(
+			'name' => 'Status'
+		),
+		'StudentCategory' => array(
+			'name' => 'Category'
 		)
 	);
 	
