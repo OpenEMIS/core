@@ -59,6 +59,24 @@ class RestSurveyComponent extends Component {
 			$groupsConditions = array();
 		}
 
+		//Start of joining SurveyStatus table
+		$todayDate = date('Y-m-d');
+		$todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
+		$this->controller->paginate['joins'] = array(
+			array(
+				'table' => 'survey_statuses',
+				'alias' => 'SurveyStatus',
+				'type' => 'INNER',
+				'conditions' => array(
+					'SurveyStatus.'.Inflector::underscore($this->Group->alias).'_id = ' .$this->Group->alias.'.id',
+					'SurveyStatus.date_disabled >=' => $todayTimestamp
+				)
+		));
+		$this->controller->paginate['group'] = array(
+			$this->Group->alias.'.id'
+		);
+		//End of joining SurveyStatus table
+
 		$this->controller->paginate['conditions'] = $groupsConditions;
     	$this->controller->paginate['order'] = array(
     		$this->Group->alias.'.name' => 'asc'
@@ -70,7 +88,7 @@ class RestSurveyComponent extends Component {
 		$this->controller->Paginator->settings = $this->controller->paginate;
 
 		try {
-			$templates = $this->controller->Paginator->paginate($this->Group->alias);
+			$templates = $this->controller->Paginator->paginate($this->Group->alias);pr($templates);
 
 			$result = array();
 			if(!empty($templates)) {
