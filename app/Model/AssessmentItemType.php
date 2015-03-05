@@ -554,7 +554,10 @@ class AssessmentItemType extends AppModel {
 				array(
 					'table' => 'education_grades_subjects',
 					'alias' => 'EducationGradeSubject',
-					'conditions' => array('EducationGradeSubject.education_grade_id = AssessmentItemType.education_grade_id')
+					'conditions' => array(
+						'EducationGradeSubject.education_grade_id = AssessmentItemType.education_grade_id',
+						'EducationGradeSubject.visible = 1'
+					)
 				),
 				array(
 					'table' => 'education_subjects',

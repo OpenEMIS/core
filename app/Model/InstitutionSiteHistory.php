@@ -20,9 +20,6 @@ class InstitutionSiteHistory extends AppModel {
 	public $useTable = 'institution_site_history';
         public $belongsTo = array(
 		// 'Institution',
-        'InstitutionSiteSector',
-        'InstitutionSiteProvider',
-		'InstitutionSiteStatus',
 		'InstitutionSiteLocality',
 		'Area',
 		'InstitutionSiteOwnership',
