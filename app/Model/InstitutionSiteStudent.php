@@ -15,14 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 App::uses('Sanitize', 'Utility');
 App::uses('AppModel', 'Model');
-App::uses('LabelHelper', 'View/Helper');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
-		'Excel' => array(
-			'header' => array('Student' => array('identification_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth')),
-			'exclude' => array('start_date', 'start_year', 'end_date', 'end_year')
-		),
+		'Excel',
 		'Search',
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
@@ -83,10 +79,6 @@ class InstitutionSiteStudent extends AppModel {
 	}
 	
 	public function excelGetHeader($include){
-		$header = parent::excelGetHeader($include);
-		//pr($header);
-		$header = array();
-		
 		$fields = array(
 			'Student.identification_no',
 			'Student.first_name',
@@ -103,16 +95,7 @@ class InstitutionSiteStudent extends AppModel {
 			'StudentCategory.name'
 		);
 		
-		$LabelHelper = new LabelHelper(new View());
-		foreach($fields as $field){
-			$label = $LabelHelper->get($field);
-			if ($label === false) {
-				$label = $field;
-			}
-			$header[$field] = $label;
-		}
-		//pr($header);
-		//$header = $fields;
+		$header = $this->setHeader($fields);
 		return $header;
 	}
 	
@@ -162,8 +145,6 @@ class InstitutionSiteStudent extends AppModel {
 			),
 		);
 		unset($options['contain']);
-		unset($options['fields']);
-		//pr($options);
 		
 		return $options;
 	}
