@@ -564,6 +564,11 @@ class LabelHelper extends AppHelper {
 			'gross' => 'Gross',
 			'net' => 'Net',
 			'salary_date' => 'Date'
+		),
+		'FieldOption' => array(
+			'module' => 'Module',
+			'records' => 'No of records',
+			'apply' => 'Apply To'
 		)
 	);
 	
