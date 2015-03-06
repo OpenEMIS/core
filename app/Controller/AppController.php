@@ -56,7 +56,7 @@ class AppController extends Controller {
 		'AccessControl',
 		'Search',
 		'Utility',		
-		//'Workflow',
+		'Workflow',
 		'Message',
 		'Option'
 	);
