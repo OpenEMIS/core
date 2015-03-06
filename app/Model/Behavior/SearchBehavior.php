@@ -228,26 +228,38 @@ class SearchBehavior extends ModelBehavior {
 			}
 			if($advanced['Search']['identity'] > 0 || $advanced['Search']['identity_type_id'] > 0) { // search by area and all its children
 
-				$joinConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
+				$joinConditions[] = $class.'Identity.security_user_id = SecurityUser.id';
 				$joinConditions[$class.'Identity.number'] = $advanced['Search']['identity'];
 				
 				if($advanced['Search']['identity_type_id'] > 0) { 
 					$joinConditions[$class.'Identity.identity_type_id'] = $advanced['Search']['identity_type_id'];
 				}
 				$joins[] = array(
-					'table' => strtolower($class).'_identities',
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array($class.'.security_user_id = SecurityUser.id')
+				);
+				$joins[] = array(
+					'table' => 'user_identities',
 					'alias' => $class.'Identity',
 					'conditions' => $joinConditions
 				);
 			}
 		}else{
 			if($class==='Student'||$class==='Staff'){
-				$identityConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
+				$identityConditions[] = $class.'Identity.security_user_id = SecurityUser.id';
 				if(isset($params['defaultIdentity'])&&strlen($params['defaultIdentity']>0)) {
 					$identityConditions[] = $class.'Identity.identity_type_id = '.$params['defaultIdentity'];
 				}
+
 				$joins[] = array(
-					'table' => strtolower($class).'_identities',
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array($class.'.security_user_id = SecurityUser.id')
+				);
+
+				$joins[] = array(
+					'table' => 'user_identities',
 					'alias' => $class.'Identity',
 					'type' => 'LEFT',
 					'conditions' => $identityConditions,
@@ -383,7 +395,6 @@ class SearchBehavior extends ModelBehavior {
 		$joins = array();
 		$data = array();
 		$contain = (array_key_exists('contain', $extra))? $extra['contain']:array();
-		
 		// if super admin
 		if($isSuperAdmin) {
 			$data = $model->find('all', array(
@@ -471,14 +482,19 @@ class SearchBehavior extends ModelBehavior {
 				$mainTable = $mainClass;
 				$field = $mainTable . '.id';
 
-				$joinConditions[] = $mainClass.'Identity.'.strtolower($mainClass).'_id = '.$mainClass.'.id';
+				$joinConditions[] = $mainClass.'Identity.security_user_id = SecurityUser.id';
 				$joinConditions[$mainClass.'Identity.number'] = $arrAdvanced['Search']['identity'];
 				
 				if($params['Search']['identity_type_id'] > 0) { 
 					$joinConditions[$mainClass.'Identity.identity_type_id'] = $arrAdvanced['Search']['identity_type_id'];
 				}
 				$joins[] = array(
-					'table' => strtolower($mainClass).'_identities',
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array($class.'.security_user_id = SecurityUser.id')
+				);
+				$joins[] = array(
+					'table' => 'user_identities',
 					'alias' => $mainClass.'Identity',
 					'conditions' => $joinConditions
 				);

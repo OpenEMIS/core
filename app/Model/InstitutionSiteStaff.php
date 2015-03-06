@@ -360,7 +360,7 @@ class InstitutionSiteStaff extends AppModel {
 	}
 
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$identityConditions[] = 'StaffIdentity.staff_id = InstitutionSiteStaff.staff_id';
+		$identityConditions[] = 'StaffIdentity.security_user_id = SecurityUser.id';
 		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
 			$identityConditions[] = 'StaffIdentity.identity_type_id = '.$conditions['defaultIdentity'];
 		}
@@ -386,7 +386,7 @@ class InstitutionSiteStaff extends AppModel {
 				'conditions' => array('SecurityUser.id = Staff.security_user_id')
 			),
 			array(
-				'table' => 'staff_identities',
+				'table' => 'user_identities',
 				'alias' => 'StaffIdentity',
 				'type' => 'LEFT',
 				'conditions' => $identityConditions,
@@ -766,7 +766,7 @@ class InstitutionSiteStaff extends AppModel {
 					'conditions' => array('InstitutionSiteStaff.staff_id = StaffContact.staff_id')
 				),
 				array(
-					'table' => 'staff_identities',
+					'table' => 'user_identities',
 					'alias' => 'StaffIdentity',
 					'type' => 'left',
 					'conditions' => array('InstitutionSiteStaff.staff_id = StaffIdentity.staff_id')

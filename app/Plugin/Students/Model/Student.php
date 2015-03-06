@@ -112,7 +112,6 @@ class Student extends StudentsAppModel {
 	/* End Excel Behaviour */
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$extra['contain'] = array('SecurityUser');
 		return $this->getPaginate($conditions, $fields, $order, $limit, $page, $recursive, $extra);
 	}
 	
