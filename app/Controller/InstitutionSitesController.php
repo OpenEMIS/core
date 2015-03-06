@@ -305,8 +305,6 @@ class InstitutionSitesController extends AppController {
 			$maxYear = $periodResult['max_year'];
 
 			$years = array();
-			$maleStudents = array();
-			$femaleStudents = array();
 			$data = array();
 
 			for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
@@ -367,7 +365,7 @@ class InstitutionSitesController extends AppController {
 			$highChartData['chart']['type'] = 'column';
 			$highChartData['chart']['borderWidth'] = 1;
 			$highChartData['title']['text'] = __('Number of Students By Year');
-			$highChartData['xAxis']['title']['text'] = __('Education Grades');
+			$highChartData['xAxis']['title']['text'] = __('Years');
 			$highChartData['yAxis']['title']['text'] = __('Total Students');
 			$highChartData['xAxis']['categories'] = $categories;
 			$highChartData['series'] = $series;
@@ -379,7 +377,7 @@ class InstitutionSitesController extends AppController {
 			$currentYearId = $this->AcademicPeriod->getCurrent();
 			$currentYear = $this->AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
 
-			$this->InstitutionSiteSectionStudent->formatResult = true;
+			//$this->InstitutionSiteSectionStudent->formatResult = true;
 			$studentByGrades = $this->InstitutionSiteSectionStudent->find('all', array(
 				'fields' => array(
 					'EducationGrade.id', 'EducationGrade.name', 'Student.gender', 'COUNT(InstitutionSiteSectionStudent.id) AS total'
@@ -397,35 +395,39 @@ class InstitutionSitesController extends AppController {
 			));
 
 			$grades = array();
-			$maleStudents = array();
-			$femaleStudents = array();
+			$data = array();
 			foreach ($studentByGrades as $key => $studentByGrade) {
-				$gradeId = $studentByGrade['id'];
-				$gradeName = $studentByGrade['name'];
-				$gradeGender = $studentByGrade['gender'];
-				$gradeTotal = $studentByGrade['total'];
+				$gradeId = $studentByGrade['EducationGrade']['id'];
+				$gradeName = $studentByGrade['EducationGrade']['name'];
+				$gradeGender = $studentByGrade['Student']['gender'];
+				$gradeTotal = $studentByGrade[0]['total'];
 
 				$grades[$gradeId] = $gradeName;
-				if ($gradeGender == 'M') {
-					$maleStudents[$gradeId] = $gradeTotal;
-				} else if ($gradeGender == 'F') {
-					$femaleStudents[$gradeId] = $gradeTotal;
+				if (!array_key_exists($gradeId, $data)) {
+					$data[$gradeId] = array('M' => 0, 'F' => 0);
+				}
+				$data[$gradeId][$gradeGender] = $gradeTotal;
+			}
+
+			$categories = array();
+			$series = array(
+				array('name' => __('Male'), 'data' => array()),
+				array('name' => __('Female'), 'data' => array())
+			);
+
+			foreach ($data as $grade => $genderTotals) {
+				if (!in_array($grade, $categories)) {
+					$categories[] = $grades[$grade];
+				}
+
+				foreach ($genderTotals as $gender => $total) {
+					if ($gender == 'M') {
+						$series[0]['data'][] = $total;
+					} else {
+						$series[1]['data'][] = $total;
+					}
 				}
 			}
-
-			foreach ($grades as $key => $grade) {
-				$maleStudents[$key] = isset($maleStudents[$key]) ? $maleStudents[$key] : 0;
-				$femaleStudents[$key] = isset($femaleStudents[$key]) ? $femaleStudents[$key] : 0;
-			}
-			ksort($grades);
-			ksort($maleStudents);
-			ksort($femaleStudents);
-
-			$categories = array_values($grades);
-			$series[0]['name'] = __('Male');
-			$series[0]['data'] = array_values($maleStudents);
-			$series[1]['name'] = __('Female');
-			$series[1]['data'] = array_values($femaleStudents);
 
 			$highChartData = array();
 			$highChartData['chart']['type'] = 'column';
@@ -438,31 +440,6 @@ class InstitutionSitesController extends AppController {
 			
 			$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
 			$highChartDatas[] = $json_highChartData;
-
-
-			/*{
-		        chart: {
-		            type: 'column'
-		        },
-		        title: {
-		            text: 'Students By Grade'
-		        },
-		        xAxis: {
-		            categories: ['Grade 5', 'Grade 6']
-		        },
-		        yAxis: {
-		            title: {
-		                text: 'Students'
-		            }
-		        },
-		        series: [{
-		            name: 'Male',
-		            data: [1, 3]
-		        }, {
-		            name: 'Female',
-		            data: [2, 2]
-		        }]
-		    }*/
 			
 			$this->set('contentHeader', $contentHeader);
 			$this->set('highChartDatas', $highChartDatas);
