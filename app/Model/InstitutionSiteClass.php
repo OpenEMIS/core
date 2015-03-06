@@ -83,11 +83,13 @@ class InstitutionSiteClass extends AppModel {
 					$sectionId = $this->data['InstitutionSiteClass']['institution_site_section_id'];
 					$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
 					$sectionStudentData = $InstitutionSiteSectionStudent->find(
-						'all',
+						'list',
 						array(
 							'recursive' => -1,
+							'fields' => array('InstitutionSiteSectionStudent.id', 'InstitutionSiteSectionStudent.student_id'),
 							'conditions' => array(
-								'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
+								'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+								'InstitutionSiteSectionStudent.status' => 1
 							)
 						)
 					);
@@ -95,16 +97,14 @@ class InstitutionSiteClass extends AppModel {
 					foreach ($sectionStudentData as $key => $value) {
 						$classStudentData[] = array('InstitutionSiteClassStudent' => 
 							array(
-								'status' => $value['InstitutionSiteSectionStudent']['status'],
-								'student_id' => $value['InstitutionSiteSectionStudent']['student_id'],
-								'student_category_id' => $value['InstitutionSiteSectionStudent']['student_category_id'],
+								'status' => 1,
+								'student_id' => $value,
 								'institution_site_class_id' => $this->getInsertID(),
-								'institution_site_section_id' => $value['InstitutionSiteSectionStudent']['institution_site_section_id'],
-								'education_grade_id' => $value['InstitutionSiteSectionStudent']['education_grade_id'],
+								'institution_site_section_id' => $sectionId
 							)
 						);
 					}
-					$this->InstitutionSiteClassStudent->create();
+					
 					$this->InstitutionSiteClassStudent->saveMany($classStudentData);
 				}
         	}
@@ -354,7 +354,6 @@ class InstitutionSiteClass extends AppModel {
 							
 							$newRow = array(
 								'student_id' => $studentId,
-								'student_category_id' => 0,
 								'institution_site_section_id' => $selectedSectionId,
 								'status' => 1,
 								'Student' => $studentObj['Student']
