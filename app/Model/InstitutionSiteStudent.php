@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))),
+		'Excel',
 		'Search',
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
@@ -76,6 +76,108 @@ class InstitutionSiteStudent extends AppModel {
 		$id = CakeSession::read('InstitutionSite.id');
 		$conditions = array('InstitutionSite.id' => $id);
 		return $conditions;
+	}
+	
+	public function excelGetHeader($include){
+		$fields = array(
+			'Student.identification_no',
+			'Student.first_name',
+			'Student.middle_name',
+			'Student.third_name',
+			'Student.last_name',
+			'Student.date_of_birth',
+			'StudentStatus.name',
+			'InstitutionSite.name',
+			'EducationProgramme.name',
+			'AcademicPeriod.name',
+			'InstitutionSiteSection.name',
+			'EducationGrade.name',
+			'StudentCategory.name'
+		);
+		
+		$header = $this->setHeader($fields);
+		return $header;
+	}
+	
+	public function excelGetFindOptions(){
+		$options = parent::excelGetFindOptions();
+		$options['recursive'] = -1;
+		$options['joins'] = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'conditions' => array(
+					'Student.id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array(
+					'InstitutionSite.id = InstitutionSiteStudent.institution_site_id'
+				)
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array(
+					'EducationProgramme.id = InstitutionSiteStudent.education_programme_id'
+				)
+			),
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StudentStatus',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'StudentStatus.id = InstitutionSiteStudent.student_status_id'
+				)
+			),
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.student_id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StudentCategory',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'StudentCategory.id = InstitutionSiteSectionStudent.student_category_id'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'InstitutionSiteSection.institution_site_id = InstitutionSiteStudent.institution_site_id',
+					'InstitutionSiteSection.id = InstitutionSiteSectionStudent.institution_site_section_id'
+				)
+			),
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'AcademicPeriod.id = InstitutionSiteSection.academic_period_id'
+				)
+			),
+			array(
+				'table' => 'education_grades',
+				'alias' => 'EducationGrade',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'EducationGrade.id = InstitutionSiteSection.education_grade_id'
+				)
+			),
+		);
+		unset($options['contain']);
+		$options['order'] = array('Student.identification_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
+		
+		return $options;
 	}
 	/* End Excel Behaviour */
 	

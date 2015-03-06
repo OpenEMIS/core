@@ -331,7 +331,10 @@ class LabelHelper extends AppHelper {
 			'identification_no' => 'OpenEMIS ID',
 			'first_name' => 'First Name',
 			'last_name' => 'Last Name',
-			'add_existing' => 'Add existing Student'
+			'add_existing' => 'Add existing Student',
+			'third_name' => 'Third Name',
+			'date_of_birth' => 'Birth Date',
+			'middle_name' => 'Middle Name'
 		),
 		'Staff' => array(
 			'module' => 'Staff',
@@ -576,6 +579,12 @@ class LabelHelper extends AppHelper {
 			'actions' => 'Actions',
 			'next_step' => 'Next Step',
 			'select_step' => 'Select Step'
+		),
+		'StudentStatus' => array(
+			'name' => 'Status'
+		),
+		'StudentCategory' => array(
+			'name' => 'Category'
 		)
 	);
 	
