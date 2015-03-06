@@ -18,7 +18,7 @@ UPDATE navigations SET action = 'nationalities', pattern = 'nationalities' WHERE
 UPDATE navigations SET action = 'languages', pattern = 'languages' WHERE title = 'Languages' AND header = 'GENERAL' AND controller = 'Students';
 UPDATE navigations SET action = 'comments', pattern = 'comments' WHERE title = 'Comments' AND header = 'GENERAL' AND controller = 'Students';
 UPDATE navigations SET action = 'specialNeed', pattern = '^specialNeed' WHERE title = 'Special Needs' AND header = 'GENERAL' AND controller = 'Students';
-UPDATE navigations SET action = 'award', pattern = '^atAward' WHERE title = 'Awards' AND header = 'GENERAL' AND controller = 'Students';
+UPDATE navigations SET action = 'award', pattern = '^award' WHERE title = 'Awards' AND header = 'GENERAL' AND controller = 'Students';
 UPDATE navigations SET action = 'contacts', pattern = 'contacts' WHERE title = 'Contacts' AND header = 'GENERAL' AND controller = 'Staff';
 UPDATE navigations SET action = 'identities', pattern = 'identities' WHERE title = 'Identities' AND header = 'GENERAL' AND controller = 'Staff';
 UPDATE navigations SET action = 'nationalities', pattern = 'nationalities' WHERE title = 'Nationalities' AND header = 'GENERAL' AND controller = 'Staff';
