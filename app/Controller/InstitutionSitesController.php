@@ -31,7 +31,6 @@ class InstitutionSitesController extends AppController {
 		'EducationProgramme',
 		'InstitutionSite',
 		'InstitutionSiteActivity',
-		'InstitutionSiteClass',
 		'InstitutionSiteClassSubject',
 		'InstitutionSiteClassStudent',
 		'InstitutionSiteCustomField',
@@ -75,10 +74,6 @@ class InstitutionSitesController extends AppController {
 	
 	public $modules = array(
 		'bankAccounts' => 'InstitutionSiteBankAccount',
-		'classesSubject' => 'InstitutionSiteClassSubject',
-		'classesStudent' => 'InstitutionSiteClassStudent',
-		'classesStaff' => 'InstitutionSiteClassStaff',
-		'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
@@ -92,6 +87,7 @@ class InstitutionSitesController extends AppController {
 		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'InstitutionSiteStaffAttendance',
 		'InstitutionSiteStaffAbsence',
+		'InstitutionSiteClass',
 		'InstitutionSiteSection',
 		'InstitutionSiteSectionStudent',
 		'InstitutionSiteSectionStaff',
