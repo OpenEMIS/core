@@ -2,7 +2,6 @@
 echo $this->Html->script('/HighCharts/js/highcharts', false);
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
 echo $this->Html->script('institution_site_dashboards', false);
-echo $this->Html->script('institution_attendance', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
@@ -10,9 +9,6 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-?>
-<?php
-	pr($highChartDatas);
 ?>
 
 <?php foreach ($highChartDatas as $key => $highChartData) : ?>
