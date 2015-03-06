@@ -61,7 +61,9 @@ class AppController extends Controller {
 		'Option'
 	);
 
-	public function ComponentAction() {} // redirect logic to functions in Component
+	public function ComponentAction() { // Redirect logic to functions in Component or Model
+		return $this->ControllerAction->processAction();
+	}
 	
 	public function beforeFilter() {
 		if($this->Auth->loggedIn()) {
@@ -94,7 +96,7 @@ class AppController extends Controller {
 	public function beforeRender() {
 		$this->set('bodyTitle', $this->bodyTitle);
 	}
-	
+
 	public function invokeAction(CakeRequest $request) {
 		try {
 			// intercept for ControllerAction behavior
