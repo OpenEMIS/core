@@ -371,7 +371,7 @@ class InstitutionSiteStudent extends AppModel {
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$identityConditions[] = 'StudentIdentity.student_id = InstitutionSiteStudent.student_id';
+		$identityConditions[] = 'StudentIdentity.security_user_id = SecurityUser.id';
 		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
 			$identityConditions[] = 'StudentIdentity.identity_type_id = '.$conditions['defaultIdentity'];
 		}
@@ -397,7 +397,7 @@ class InstitutionSiteStudent extends AppModel {
 				'conditions' => array('SecurityUser.id = Student.security_user_id')
 			),
 			array(
-				'table' => 'student_identities',
+				'table' => 'user_identities',
 				'alias' => 'StudentIdentity',
 				'type' => 'LEFT',
 				'conditions' => $identityConditions,
