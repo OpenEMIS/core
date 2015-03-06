@@ -10,7 +10,7 @@ $this->start('contentActions');
 		    echo $this->Html->link(__('Reorder'), array('action' => 'reorder', 'module' => $selectedModule, 'group' => $selectedGroup), array('class' => 'divider'));
 		}
 		echo $this->Html->link(__('Preview'), array('action' => 'preview', 'module' => $selectedModule, 'group' => $selectedGroup), array('class' => 'divider'));
-		echo $this->Html->link(__('Download'), array('action' => 'download', 'xform', $selectedGroup, 0), array('class' => 'divider'));
+		echo $this->Html->link(__('Download'), array('plugin' => 'Restful', 'controller' => 'Rest', 'action' => 'survey', 'download', 'xform', $selectedGroup, 0), array('class' => 'divider'));
 	}
 $this->end();
 
