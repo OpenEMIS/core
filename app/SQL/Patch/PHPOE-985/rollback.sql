@@ -29,10 +29,6 @@ UPDATE navigations SET action = 'award', pattern = '^award' WHERE title = 'Award
 UPDATE navigations SET action = 'users', pattern = 'users|SecurityUserAccess.view' WHERE action = 'SecurityUser' AND module = 'Administration' AND controller = 'Security' AND title = 'Users';
 UPDATE navigations SET action = 'password', pattern = 'password' WHERE action = 'SecurityUserLogin' AND module = 'Preferences' AND controller = 'Preferences' AND title = 'Password';
 
--- ~~comment related sql
-ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
-ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
-
 -- Security functions must be handled to converted modules
 UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
 UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
@@ -73,6 +69,23 @@ UPDATE census_teachers SET gender_id = @fieldGenderFemale WHERE gender_id = @new
 UPDATE census_teacher_fte SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 UPDATE census_teacher_training SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 UPDATE census_sanitations SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
+
+RENAME TABLE 985_student_identities TO student_identities;
+RENAME TABLE 985_student_nationalities TO student_nationalities;
+RENAME TABLE 985_student_languages TO student_languages;
+RENAME TABLE 985_student_comments TO student_comments;
+RENAME TABLE 985_student_special_needs TO student_special_needs;
+RENAME TABLE 985_student_awards TO student_awards;
+RENAME TABLE 985_student_contacts TO student_contacts;
+RENAME TABLE 985_staff_identities TO staff_identities;
+RENAME TABLE 985_staff_nationalities TO staff_nationalities;
+RENAME TABLE 985_staff_languages TO staff_languages;
+RENAME TABLE 985_staff_comments TO staff_comments;
+RENAME TABLE 985_staff_special_needs TO staff_special_needs;
+RENAME TABLE 985_staff_awards TO staff_awards;
+RENAME TABLE 985_staff_contacts TO staff_contacts;
+ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
+ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
 
 
 -- create new tables to combined tables
