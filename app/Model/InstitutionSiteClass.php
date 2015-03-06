@@ -78,6 +78,35 @@ class InstitutionSiteClass extends AppModel {
 				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
 				$this->InstitutionSiteSectionClass->create();
         		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
+        		// addClassStudent
+				if (array_key_exists('InstitutionSiteClass', $this->data)) {
+					$sectionId = $this->data['InstitutionSiteClass']['institution_site_section_id'];
+					$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
+					$sectionStudentData = $InstitutionSiteSectionStudent->find(
+						'all',
+						array(
+							'recursive' => -1,
+							'conditions' => array(
+								'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
+							)
+						)
+					);
+					$classStudentData = array();
+					foreach ($sectionStudentData as $key => $value) {
+						$classStudentData[] = array('InstitutionSiteClassStudent' => 
+							array(
+								'status' => $value['InstitutionSiteSectionStudent']['status'],
+								'student_id' => $value['InstitutionSiteSectionStudent']['student_id'],
+								'student_category_id' => $value['InstitutionSiteSectionStudent']['student_category_id'],
+								'institution_site_class_id' => $this->getInsertID(),
+								'institution_site_section_id' => $value['InstitutionSiteSectionStudent']['institution_site_section_id'],
+								'education_grade_id' => $value['InstitutionSiteSectionStudent']['education_grade_id'],
+							)
+						);
+					}
+					$this->InstitutionSiteClassStudent->create();
+					$this->InstitutionSiteClassStudent->saveMany($classStudentData);
+				}
         	}
         }
         return true;
@@ -183,6 +212,7 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
+
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
