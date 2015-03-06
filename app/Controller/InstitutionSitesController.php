@@ -20,6 +20,7 @@ App::uses('Sanitize', 'Utility');
 class InstitutionSitesController extends AppController {
 	public $institutionSiteId;
 	public $institutionSiteObj;
+	private $indexPage;
 	public $uses = array(
 		'Area',
 		'AreaLevel',
@@ -55,7 +56,8 @@ class InstitutionSitesController extends AppController {
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
-		'InstitutionSiteStudentAbsence'
+		'InstitutionSiteStudentAbsence',
+		'InstitutionSiteSectionStudent'
 	);
 	
 	public $helpers = array('Paginator', 'Model');
@@ -69,7 +71,8 @@ class InstitutionSitesController extends AppController {
 		'FileUploader',
 		'AreaHandler',
 		'Alert',
-		'Activity' => array('model' => 'InstitutionSiteActivity')
+		'Activity' => array('model' => 'InstitutionSiteActivity'),
+		'HighCharts.HighCharts'
 	);
 	
 	public $modules = array(
@@ -105,13 +108,12 @@ class InstitutionSitesController extends AppController {
 		parent::beforeFilter();
 
 		$this->Auth->allow('viewMap', 'siteProfile');
-
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-
+		$this->indexPage = 'dashboard';
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
-		} else if ($this->action === 'view'){
-			
+		} else if ($this->action === 'view' || $this->action === 'dashboard') {
+
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
 				$this->layout = 'profile';
@@ -124,7 +126,7 @@ class InstitutionSitesController extends AppController {
 				
 				if($this->action !== 'advanced'){
 					$this->bodyTitle = $institutionSiteName;
-					$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+					$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 				}
 				
 			} else {
@@ -164,7 +166,7 @@ class InstitutionSitesController extends AppController {
 
 		// for resetting institution site id
 		if (!$this->AccessControl->check($this->params['controller'], 'add') && count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
-			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));
+			return $this->redirect(array('action' => $this->indexPage, $data[0]['InstitutionSite']['id']));
 		} else {
 			$this->Session->delete('InstitutionSite.id');
 		}
@@ -256,9 +258,222 @@ class InstitutionSitesController extends AppController {
 		$this->render('/Elements/customfields/search');
 	}
 
+	public function dashboard($id = 0) {
+		$data = array();
+		if ($id != 0) {
+			$data = $this->InstitutionSite->findById($id);
+			if ($data) {
+				$this->Session->write('InstitutionSiteId', $id); // deprecated
+				$this->Session->write('InstitutionSite.id', $id); // writing to session using array dot notation
+				$this->Session->write('InstitutionSite.data', $data);
+				$this->Session->write('InstitutionSiteObj', $data); // deprecated
+			} else {
+				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			}
+		} else if ($this->Session->check('InstitutionSite.id')) {
+			$id = $this->Session->read('InstitutionSite.id');
+			$data = $this->InstitutionSite->findById($id);
+			$this->Session->write('InstitutionSite.data', $data);
+			$this->Session->write('InstitutionSiteObj', $data);
+		} else {
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
+
+		if($this->checkUserAccess($id, 'dashboard')) {
+			$this->institutionSiteId = $id;
+			$this->institutionSiteObj = $data;
+			
+			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
+			$this->bodyTitle = $name;
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
+			$this->Navigation->addCrumb('Dashboard');
+			$contentHeader = __('Dashboard');
+
+			$highChartDatas = array();
+
+			//Students By Year
+			$this->InstitutionSiteStudent->formatResult = true;
+			$periodResult = $this->InstitutionSiteStudent->find('first', array(
+				'fields' => array(
+					'MIN(InstitutionSiteStudent.start_year) as min_year', 'MAX(InstitutionSiteStudent.end_year) as max_year'
+				),
+				'conditions' => array(
+					'InstitutionSiteStudent.institution_site_id' => $id
+				)
+			));
+			$minYear = $periodResult['min_year'];
+			$maxYear = $periodResult['max_year'];
+
+			$years = array();
+			$maleStudents = array();
+			$femaleStudents = array();
+			$data = array();
+
+			for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
+				$years[$currentYear] = $currentYear;
+
+				$studentsByYearConditions = array('InstitutionSiteStudent.institution_site_id' => $id, 'Student.gender IS NOT NULL');
+				$studentsByYearConditions['OR'] = array(
+					array(
+						'InstitutionSiteStudent.end_year IS NOT NULL',
+						'InstitutionSiteStudent.start_year <= "' . $currentYear . '"',
+						'InstitutionSiteStudent.end_year >= "' . $currentYear . '"'
+					)
+				);
+
+				$this->InstitutionSiteStudent->contain('Student');
+				$studentsByYear = $this->InstitutionSiteStudent->find('all', array(
+					'fields' => array(
+						'Student.gender', 'COUNT(InstitutionSiteStudent.id) AS total'
+					),
+					'conditions' => $studentsByYearConditions,
+					'group' => array(
+						'Student.gender'
+					)
+				));
+
+				if (!array_key_exists($currentYear, $data)) {
+					$data[$currentYear] = array('M' => 0, 'F' => 0);
+				}
+				foreach ($studentsByYear as $key => $studentByYear) {
+					$yearGender = isset($studentByYear['Student']['gender']) ? $studentByYear['Student']['gender'] : null;
+					$yearTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
+
+					$data[$currentYear][$yearGender] = $yearTotal;
+				}
+			}
+
+			$categories = array();
+			$series = array(
+				array('name' => __('Male'), 'data' => array()),
+				array('name' => __('Female'), 'data' => array())
+			);
+
+			foreach ($data as $year => $genderTotals) {
+				if (!in_array($year, $categories)) {
+					$categories[] = $year;
+				}
+
+				foreach ($genderTotals as $gender => $total) {
+					if ($gender == 'M') {
+						$series[0]['data'][] = $total;
+					} else {
+						$series[1]['data'][] = $total;
+					}
+				}
+			}
+
+			$highChartData = array();
+			$highChartData['chart']['type'] = 'column';
+			$highChartData['chart']['borderWidth'] = 1;
+			$highChartData['title']['text'] = __('Number of Students By Year');
+			$highChartData['xAxis']['title']['text'] = __('Education Grades');
+			$highChartData['yAxis']['title']['text'] = __('Total Students');
+			$highChartData['xAxis']['categories'] = $categories;
+			$highChartData['series'] = $series;
+			
+			$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
+			$highChartDatas[] = $json_highChartData;
+
+			//Students By Grade for current year
+			$currentYearId = $this->AcademicPeriod->getCurrent();
+			$currentYear = $this->AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
+
+			$this->InstitutionSiteSectionStudent->formatResult = true;
+			$studentByGrades = $this->InstitutionSiteSectionStudent->find('all', array(
+				'fields' => array(
+					'EducationGrade.id', 'EducationGrade.name', 'Student.gender', 'COUNT(InstitutionSiteSectionStudent.id) AS total'
+				),
+				'conditions' => array(
+					'InstitutionSiteSection.institution_site_id' => $id,
+					'InstitutionSiteSection.academic_period_id' => $currentYearId
+				),
+				'group' => array(
+					'EducationGrade.id', 'Student.gender'
+				),
+				'order' => array(
+					'EducationGrade.order'
+				)
+			));
+
+			$grades = array();
+			$maleStudents = array();
+			$femaleStudents = array();
+			foreach ($studentByGrades as $key => $studentByGrade) {
+				$gradeId = $studentByGrade['id'];
+				$gradeName = $studentByGrade['name'];
+				$gradeGender = $studentByGrade['gender'];
+				$gradeTotal = $studentByGrade['total'];
+
+				$grades[$gradeId] = $gradeName;
+				if ($gradeGender == 'M') {
+					$maleStudents[$gradeId] = $gradeTotal;
+				} else if ($gradeGender == 'F') {
+					$femaleStudents[$gradeId] = $gradeTotal;
+				}
+			}
+
+			foreach ($grades as $key => $grade) {
+				$maleStudents[$key] = isset($maleStudents[$key]) ? $maleStudents[$key] : 0;
+				$femaleStudents[$key] = isset($femaleStudents[$key]) ? $femaleStudents[$key] : 0;
+			}
+			ksort($grades);
+			ksort($maleStudents);
+			ksort($femaleStudents);
+
+			$categories = array_values($grades);
+			$series[0]['name'] = __('Male');
+			$series[0]['data'] = array_values($maleStudents);
+			$series[1]['name'] = __('Female');
+			$series[1]['data'] = array_values($femaleStudents);
+
+			$highChartData = array();
+			$highChartData['chart']['type'] = 'column';
+			$highChartData['chart']['borderWidth'] = 1;
+			$highChartData['title']['text'] = __('Number of Students By Grade for Year ') . $currentYear;
+			$highChartData['xAxis']['title']['text'] = __('Education Grades');
+			$highChartData['yAxis']['title']['text'] = __('Total Students');
+			$highChartData['xAxis']['categories'] = $categories;
+			$highChartData['series'] = $series;
+			
+			$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
+			$highChartDatas[] = $json_highChartData;
+
+
+			/*{
+		        chart: {
+		            type: 'column'
+		        },
+		        title: {
+		            text: 'Students By Grade'
+		        },
+		        xAxis: {
+		            categories: ['Grade 5', 'Grade 6']
+		        },
+		        yAxis: {
+		            title: {
+		                text: 'Students'
+		            }
+		        },
+		        series: [{
+		            name: 'Male',
+		            data: [1, 3]
+		        }, {
+		            name: 'Female',
+		            data: [2, 2]
+		        }]
+		    }*/
+			
+			$this->set('contentHeader', $contentHeader);
+			$this->set('highChartDatas', $highChartDatas);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SITE_NO_VIEW_ACCESS'), array('type' => 'warn'));
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
+	}
+
 	public function view($id = 0) {
 		$data = array();
-
 		if ($id != 0) {
 			$data = $this->InstitutionSite->findById($id);
 			if ($data) {
@@ -283,7 +498,7 @@ class InstitutionSitesController extends AppController {
 			
 			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
 			$this->bodyTitle = $name;
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 			$this->Navigation->addCrumb('Overview');
 			
 			$this->set('data', $data);
@@ -330,7 +545,7 @@ class InstitutionSitesController extends AppController {
 				if ($this->InstitutionSite->validates()) {
 					$result = $this->InstitutionSite->save($this->request->data);
 					$this->Message->alert('general.edit.success');
-					$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view'));	
+					$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 				}
 				$data = $this->request->data;
 			} else {
@@ -377,7 +592,7 @@ class InstitutionSitesController extends AppController {
 				
 				$institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
-				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view', $institutionSiteId));
+				$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage, $institutionSiteId));
 			}
 			$areaId = $this->request->data['InstitutionSite']['area_id'];
 			$areaAdministrativeId = $this->request->data['InstitutionSite']['area_administrative_id'];
@@ -418,6 +633,7 @@ class InstitutionSitesController extends AppController {
 			if($this->InstitutionSite->delete($id)){
 				$this->Utility->alert($name . ' have been deleted successfully.');
 			}else{
+				$this->log($this->InstitutionSite->validationErrors, 'debug');
 				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
 			}
 			
