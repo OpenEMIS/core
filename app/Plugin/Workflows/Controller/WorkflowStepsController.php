@@ -16,12 +16,12 @@ have received a copy of the GNU General Public License along with this program. 
 
 class WorkflowStepsController extends WorkflowsAppController {
 	public $uses = array(
-		'Workflows.WorkflowStep',
-		'Workflows.Workflow'
+		'Workflows.WfWorkflowStep',
+		'Workflows.WfWorkflow'
 	);
 
 	public $components = array(
-		'ControllerAction' => array('model' => 'Workflows.WorkflowStep')
+		'ControllerAction' => array('model' => 'Workflows.WfWorkflowStep')
 	);
 
 	public function beforeFilter() {
@@ -31,54 +31,47 @@ class WorkflowStepsController extends WorkflowsAppController {
 		$this->Navigation->addCrumb('Workflows', array('plugin' => 'Workflows', 'controller' => 'Workflows', 'action' => 'index'));
 		$this->Navigation->addCrumb('Steps');
 		$this->set('contentHeader', 'Workflow Steps');
-
-		$this->WorkflowStep->fields['security_roles'] = array(
+		$this->WfWorkflowStep->fields['security_roles'] = array(
 			'type' => 'chosen_select',
 			'id' => 'SecurityRole.SecurityRole',
 			'placeholder' => __('Select security roles'),
 			'visible' => true
 		);
-		$this->WorkflowStep->setFieldOrder('security_roles', 3);
-
-		$this->WorkflowStep->fields['actions'] = array(
+		$this->ControllerAction->setFieldOrder('security_roles', 3);
+		$this->WfWorkflowStep->fields['actions'] = array(
 			'type' => 'element',
 			'element' => '../../Plugin/Workflows/View/WorkflowSteps/actions',
 			'visible' => true
 		);
-		$this->WorkflowStep->setFieldOrder('actions', 4);
+		$this->ControllerAction->setFieldOrder('actions', 4);
 
 		if ($this->action == 'view') {
-			$this->WorkflowStep->fields['wf_workflow_id']['dataModel'] = 'Workflow';
-			$this->WorkflowStep->fields['wf_workflow_id']['dataField'] = 'name';
+			$this->WfWorkflowStep->fields['wf_workflow_id']['dataModel'] = 'Workflow';
+			$this->WfWorkflowStep->fields['wf_workflow_id']['dataField'] = 'name';
 
-			$this->WorkflowStep->fields['security_roles']['dataModel'] = 'SecurityRole';
-			$this->WorkflowStep->fields['security_roles']['dataField'] = 'name';
+			$this->WfWorkflowStep->fields['security_roles']['dataModel'] = 'SecurityRole';
+			$this->WfWorkflowStep->fields['security_roles']['dataField'] = 'name';
 
-			$workflowSteps = $this->WorkflowStep->find('list');
+			$workflowSteps = $this->WfWorkflowStep->find('list');
 			$this->set('workflowSteps', $workflowSteps);
 		} else if($this->action == 'add' || $this->action == 'edit') {
-			$this->WorkflowStep->fields['wf_workflow_id']['type'] = 'select';
-			$workflowOptions = $this->Workflow->find('list');
-			$this->WorkflowStep->fields['wf_workflow_id']['options'] = $workflowOptions;
+			$this->WfWorkflowStep->fields['wf_workflow_id']['type'] = 'select';
+			$this->WfWorkflowStep->fields['wf_workflow_id']['attr'] = array('onchange' => "$('#reload').click()");
+			$workflowOptions = $this->WfWorkflow->find('list');
+			$selectedWorkflowId = key($workflowOptions);
+			$this->WfWorkflowStep->fields['wf_workflow_id']['options'] = $workflowOptions;
 
-			$securityRoleOptions = $this->WorkflowStep->SecurityRole->find('list');
-			$this->WorkflowStep->fields['security_roles']['options'] = $securityRoleOptions;
-
-			$pass = $this->request->params['pass'];
-			$workflowStepId = isset($pass[0]) ? $pass[0] : 0;
-			$workflowStepData = $this->WorkflowStep->find('list', array(
-				'conditions' => array(
-					'NOT' => array(
-						'WorkflowStep.id' => $workflowStepId
-					)
-				)
-			));
-			$workflowStepOptions = $this->Option->prependLabel($workflowStepData, 'WorkflowStep.select_step');
+			$securityRoleOptions = $this->WfWorkflowStep->SecurityRole->find('list');
+			$this->WfWorkflowStep->fields['security_roles']['options'] = $securityRoleOptions;
 
 			if ($this->request->is(array('post', 'put'))) {
 				$data = $this->request->data;
+				$selectedWorkflowId = $data['WfWorkflowStep']['wf_workflow_id'];
+				$selectedWorkflowStepId = $data['WfWorkflowStep']['id'];
 
-				if($data['submit'] == 'WorkflowAction') {
+				if($data['submit'] == 'reload') {
+					$this->ControllerAction->autoProcess = false;
+				} else if($data['submit'] == 'WorkflowAction') {
 					$this->request->data['WorkflowAction'][] =array(
 						'name' => '',
 						'next_wf_workflow_step_id' => 0,
@@ -99,7 +92,21 @@ class WorkflowStepsController extends WorkflowsAppController {
 				}
 
 				$this->ControllerAction->processAction();
+			} else {
+				$pass = $this->request->params['pass'];
+				$selectedWorkflowStepId = isset($pass[0]) ? $pass[0] : 0;
+				$selectedWorkflowId = $this->WfWorkflowStep->field('wf_workflow_id', array('WfWorkflowStep.id' => $selectedWorkflowStepId));
 			}
+
+			$workflowStepData = $this->WfWorkflowStep->find('list', array(
+				'conditions' => array(
+					'WfWorkflowStep.wf_workflow_id' => $selectedWorkflowId,
+					'NOT' => array(
+						'WfWorkflowStep.id' => $selectedWorkflowStepId
+					)
+				)
+			));
+			$workflowStepOptions = $this->Option->prependLabel($workflowStepData, 'WorkflowStep.select_step');
 
 			$this->set('workflowStepOptions', $workflowStepOptions);
 		}
@@ -108,7 +115,7 @@ class WorkflowStepsController extends WorkflowsAppController {
 	public function index() {
 		$named = $this->params->named;
 
-		$workflows = $this->Workflow->find('list');
+		$workflows = $this->WfWorkflow->find('list');
 		$selectedWorkflow = isset($named['workflow']) ? $named['workflow'] : key($workflows);
 
 		$workflowOptions = array();
@@ -116,13 +123,13 @@ class WorkflowStepsController extends WorkflowsAppController {
 			$workflowOptions['workflow:' . $key] = $workflow;
 		}
 
-		$this->WorkflowStep->contain('Workflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep', 'SecurityRole');
-    	$data = $this->WorkflowStep->find('all', array(
+		$this->WfWorkflowStep->contain('WfWorkflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep', 'SecurityRole');
+    	$data = $this->WfWorkflowStep->find('all', array(
 			'conditions' => array(
-				'WorkflowStep.wf_workflow_id' => $selectedWorkflow
+				'WfWorkflowStep.wf_workflow_id' => $selectedWorkflow
 			),
 			'order' => array(
-				'Workflow.code', 'Workflow.name'
+				'WfWorkflow.code', 'WfWorkflow.name'
 			)
 		));
 

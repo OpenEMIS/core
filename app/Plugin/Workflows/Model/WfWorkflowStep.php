@@ -14,10 +14,14 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class Workflow extends WorkflowsAppModel {
-	public $useTable = 'wf_workflows';
+class WfWorkflowStep extends WorkflowsAppModel {
+	public $useTable = 'wf_workflow_steps';
 
 	public $belongsTo = array(
+		'WfWorkflow' => array(
+            'className' => 'Workflows.WfWorkflow',
+            'foreignKey' => 'wf_workflow_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
@@ -31,30 +35,33 @@ class Workflow extends WorkflowsAppModel {
 	);
 
 	public $hasMany = array(
-        'WorkflowStep' => array(
-            'className' => 'Workflows.WorkflowStep',
+        'WorkflowAction' => array(
+            'className' => 'Workflows.WorkflowAction',
 			'dependent' => true
         )
     );
 
+     public $hasAndBelongsToMany = array(
+		'SecurityRole' => array(
+			'className' => 'SecurityRole',
+			'joinTable' => 'wf_workflow_step_roles',
+			'associationForeignKey' => 'security_role_id',
+			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
+			'order' => array('SecurityRole.order')
+		)
+	);
+
     public $validate = array(
-		'code' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a code'
-			),
-			'unique' => array(
-	            'rule' => array('checkUnique', array('code'), false),
-	            'message' => 'This code is already exists in the system'
-	        )
-		),
 		'name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a name'
-			)
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('name', 'wf_workflow_id'), false),
+	            'message' => 'This name is already exists in the system'
+	        )
 		)
 	);
 }
