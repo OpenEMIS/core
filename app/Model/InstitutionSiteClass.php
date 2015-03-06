@@ -520,7 +520,8 @@ class InstitutionSiteClass extends AppModel {
 		foreach($data AS $row){
 			$class = $row['InstitutionSiteClass'];
 			$schoolYear = $row['AcademicPeriod'];
-			$result[$class['id']] = $schoolYear['name'] . ' - ' . $class['name'];
+			$section = $row['InstitutionSiteSection'];
+			$result[$class['id']] = $schoolYear['name'] . ' - ' . $section['name'] . ' - ' . $class['name'];
 		}
 		
 		return $result;
@@ -643,7 +644,7 @@ class InstitutionSiteClass extends AppModel {
 			)
 		);
 		
-		$fields = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name');
+		$fields = array('InstitutionSiteClass.id', 'InstitutionSiteClass.name', 'AcademicPeriod.name', 'InstitutionSiteSection.name');
 		$conditions = array(
 			'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
 			'InstitutionSiteClass.academic_period_id' => $academicPeriodId
