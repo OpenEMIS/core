@@ -24,6 +24,13 @@
 .chosen-container { font-size: 11px !important; }
 /* end jquery chosen */
 
+/* to show autocomplete results on top of footer instead of below footer */
+.ui-autocomplete { z-index:99999 !important; }
+
+/* forcing the copyright notice text direction to always be from left to right */
+#footer > span.copyright-notice{direction: ltr;}
+#footer > span.copyright-notice[dir]{unicode-bidi: bidi-override;}
+
 /* fuelux */
 .fuelux .wizard .steps > li { font-size: 12px !important; }
 /* end fuelux override */
@@ -205,7 +212,8 @@ input.default { width: 240px; }
 .custom_field .field_value textarea { width: 98.5%; }
 
 .panel-heading { font-weight: bold; font-size: 14px; color: #666 !important; }
-.panel-heading.dark-background
+.row .panel-default .panel-heading,
+.form-group .panel-default .panel-heading
 { background-color: #DFDFDF;}
 
 /* Custom Fields */

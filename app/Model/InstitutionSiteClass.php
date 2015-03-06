@@ -78,6 +78,35 @@ class InstitutionSiteClass extends AppModel {
 				$institutionSiteSectionClassData['institution_site_class_id'] = $this->getInsertID();
 				$this->InstitutionSiteSectionClass->create();
         		$this->InstitutionSiteSectionClass->save($institutionSiteSectionClassData);
+        		// addClassStudent
+				if (array_key_exists('InstitutionSiteClass', $this->data)) {
+					$sectionId = $this->data['InstitutionSiteClass']['institution_site_section_id'];
+					$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
+					$sectionStudentData = $InstitutionSiteSectionStudent->find(
+						'list',
+						array(
+							'recursive' => -1,
+							'fields' => array('InstitutionSiteSectionStudent.id', 'InstitutionSiteSectionStudent.student_id'),
+							'conditions' => array(
+								'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+								'InstitutionSiteSectionStudent.status' => 1
+							)
+						)
+					);
+					$classStudentData = array();
+					foreach ($sectionStudentData as $key => $value) {
+						$classStudentData[] = array('InstitutionSiteClassStudent' => 
+							array(
+								'status' => 1,
+								'student_id' => $value,
+								'institution_site_class_id' => $this->getInsertID(),
+								'institution_site_section_id' => $sectionId
+							)
+						);
+					}
+					
+					$this->InstitutionSiteClassStudent->saveMany($classStudentData);
+				}
         	}
         }
         return true;
@@ -136,7 +165,7 @@ class InstitutionSiteClass extends AppModel {
 			
 			$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 			$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedAcademicPeriod, $institutionSiteId);
-			$selectedSection = isset($selectedSection) ? $selectedSection : key($sectionOptions);
+			$selectedSection = isset($selectedSection) && $selectedSection != 0 ? $selectedSection : key($sectionOptions);
 			
 			$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 			$yearObj = $AcademicPeriod->findById($selectedAcademicPeriod);
@@ -183,6 +212,7 @@ class InstitutionSiteClass extends AppModel {
 						'status' => 1
 					);
 				}
+
 				$result = $this->saveAll($data, array('addClassStudent' => true));
 				if ($result) {
 					$this->Message->alert('general.add.success');
@@ -324,7 +354,6 @@ class InstitutionSiteClass extends AppModel {
 							
 							$newRow = array(
 								'student_id' => $studentId,
-								'student_category_id' => 0,
 								'institution_site_section_id' => $selectedSectionId,
 								'status' => 1,
 								'Student' => $studentObj['Student']

@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.3
+ControllerActionComponent - Version 1.0.5
 */
 
 class ControllerActionComponent extends Component {
@@ -107,19 +107,21 @@ class ControllerActionComponent extends Component {
 
 	public function processAction() {
 		$result = null;
-		if ($this->autoProcess) {
-			if ($this->triggerFrom == 'Controller') {
-				$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
-			} else if ($this->triggerFrom == 'Model') {
-				if (method_exists($this->model, $this->currentAction)) {
-					$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
-				} else {
+		if (in_array($this->currentAction, $this->defaultActions)) {
+			if ($this->autoProcess) {
+				if ($this->triggerFrom == 'Controller') {
 					$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
+				} else if ($this->triggerFrom == 'Model') {
+					if (method_exists($this->model, $this->currentAction)) {
+						$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
+					} else {
+						$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
+					}
 				}
 			}
-		}
 
-		$this->render();
+			$this->render();
+		}
 	}
 
 	public function render() {
@@ -298,7 +300,7 @@ class ControllerActionComponent extends Component {
 	}
 	
 	public function setFieldOrder($field, $order) {
-		$fields = $this->fields;
+		$fields = $this->model->fields;
 		$found = false;
 		$count = 0;
 		foreach ($fields as $key => $obj) {
@@ -320,8 +322,8 @@ class ControllerActionComponent extends Component {
 			}
 		}
 		$fields[$field]['order'] = $order;
-		uasort($fields, array($this->alias, 'sortFields'));
-		$this->fields = $fields;
+		uasort($fields, array($this, 'sortFields'));
+		$this->model->fields = $fields;
 	}
 	
 	public static function sortFields($a, $b) {

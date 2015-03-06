@@ -169,6 +169,7 @@ CakePlugin::load('DevInfo6');
 CakePlugin::load(array('Datawarehouse' => array('routes' => true)));
 CakePlugin::load(array('Alerts' => array('routes' => true)));
 CakePlugin::load(array('Infrastructure' => array('routes' => true)));
+CakePlugin::load(array('Restful' => array('routes' => true)));
 
 // Custom Reports
 Configure::write('ReportManager.displayForeignKeys', 0);
