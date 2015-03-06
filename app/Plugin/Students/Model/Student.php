@@ -18,7 +18,7 @@ class Student extends StudentsAppModel {
 	public $actsAs = array(
 		'Excel',
 		'Search',
-		'TrackHistory' => array('historyTable' => 'Students.StudentHistory'),
+		'TrackActivity' => array('target' => 'Students.StudentActivity', 'key' => 'student_id', 'session' => 'Student.id'),
 		'CascadeDelete' => array(
 			'cascade' => array(
 				'Students.StudentAttachment',
@@ -77,7 +77,9 @@ class Student extends StudentsAppModel {
 		'Students.StudentHealthAllergy',
 		'Students.StudentHealthTest',
 		'Students.StudentHealthConsultation',
-		'Students.StudentCustomValue'
+		'Students.StudentCustomValue',
+		//'Students.StudentActivity' => array('dependent' => true)
+		'StudentActivity' => array('dependent' => true)
 	);
 	
 	public $validate = array(

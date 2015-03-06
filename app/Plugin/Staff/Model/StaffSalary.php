@@ -16,7 +16,7 @@
  */
 
 class StaffSalary extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('salary_date'));
+	public $actsAs = array('ControllerAction2', 'DatePicker' => array('salary_date'));
 	public $belongsTo = array(
 		'Staff.Staff',
 		'ModifiedUser' => array(
@@ -48,215 +48,308 @@ class StaffSalary extends StaffAppModel {
 		),
 		'gross_salary' => array(
 			'ruleRequired' => array(
-				'rule' => 'notEmpty',
+				'rule' => array('money'),
 				'required' => true,
 				'message' => 'Please enter a valid Gross Salary'
 			)
 		),
 		'net_salary' => array(
 			'ruleRequired' => array(
-				'rule' => 'notEmpty',
+				'rule' => array('money'),
 				'required' => true,
 				'message' => 'Please enter a valid Net Salary'
 			)
 		)
 	);
 
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
+	public function beforeAction() {
+		parent::beforeAction();
+		$this->fields['staff_id']['type'] = 'hidden';
+		$this->setFieldOrder('salary_date', 1);
+		$this->setFieldOrder('gross_salary', 2);
+		$this->setFieldOrder('net_salary', 3);
+		$this->setFieldOrder('additions', 4);
+		$this->setFieldOrder('deductions', 5);
+		$this->setFieldOrder('comment', 6);
+		$this->fields['gross_salary']['type'] = 'string';
+		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
+		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 	}
 
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'EmploymentType', 'labelKey' => 'general.type'),
-				array('field' => 'employment_date'),
-				array('field' => 'comment'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
+	public function beforeSave($options=array()) {
+		$totalAddition = 0;
+		if (array_key_exists('StaffSalaryAddition', $this->data)) {
+			foreach ($this->data['StaffSalaryAddition'] as $key => $value) {
+				$totalAddition += $value['StaffSalaryAddition']['amount'];
+			}
+		}
+		$totalDeduction = 0;
+		if (array_key_exists('StaffSalaryDeduction', $this->data)) {
+			foreach ($this->data['StaffSalaryDeduction'] as $key => $value) {
+				$totalDeduction += $value['StaffSalaryDeduction']['amount'];
+			}
+		}
+		if (array_key_exists($this->alias, $this->data)) {
+			$this->data[$this->alias]['additions'] = $totalAddition;
+			$this->data[$this->alias]['deductions'] = $totalDeduction;
+		}
 	}
 
-	public function salaries($controller, $params) {
-		$controller->Navigation->addCrumb(__('Salary'));
-		$header = __('Salary');
+	public function index() {
+		$this->Navigation->addCrumb(__('Salary'));
+
+		if ($this->Session->check('Staff.id')) {
+			$staffId = $this->Session->read('Staff.id');
+		}
 		$this->recursive = -1;
-		$data = $this->findAllByStaffId($controller->staffId);
-		$controller->set(compact('header', 'data'));
+		$data = $this->findAllByStaffId($staffId);
+		$this->setVar(compact('header', 'data'));
 	}
 
-	public function salariesAdd($controller, $params) {
-		$controller->Navigation->addCrumb(__('Add Salary'));
-		$controller->set('header', __('Add Salary'));
-		$this->setup_add_edit_form($controller, $params);
+	public function view($staffSalaryId = null) {
+		$this->Navigation->addCrumb(__('Salary'));
+
+		parent::view($staffSalaryId);
+		if ($this->exists($staffSalaryId)) {
+			$data = $this->find('first',
+				array(
+					'recursive' => -1,
+					'contain' => array('StaffSalaryAddition', 'StaffSalaryDeduction'),
+					'conditions' => array($this->alias.'.id' => $staffSalaryId)
+				)
+			);
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => $this->alias));
+		}
+
+		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
+		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
+
+		// data massage
+		if (array_key_exists('StaffSalaryAddition', $data)) {
+			foreach ($data['StaffSalaryAddition'] as $key => $value) {
+				$data['StaffSalaryAddition'][$key]['amount'] = $value['amount'];
+				$data['StaffSalaryAddition'][$key]['type_id'] = $value['salary_addition_type_id'];
+			}
+		}
+		if (array_key_exists('StaffSalaryDeduction', $data)) {
+			foreach ($data['StaffSalaryDeduction'] as $key => $value) {
+				$data['StaffSalaryDeduction'][$key]['amount'] = $value['amount'];
+				$data['StaffSalaryDeduction'][$key]['type_id'] = $value['salary_deduction_type_id'];
+			}
+		}
+
+		$this->fields['additions'] = array(
+				'type' => 'element',
+				'element' => 'salaries/viewAddDeduct',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'title' => __('Additions'),
+					'data' => (array_key_exists('StaffSalaryAddition', $data))? $data['StaffSalaryAddition']: array(),
+					'options' => $SalaryAdditionType->getList(array('visibleOnly' => false, 'listOnly' => true)),
+					'totalAmt' => $data['StaffSalary']['additions'],
+				)	
+			);
+
+		$this->fields['deductions'] = array(
+				'type' => 'element',
+				'element' => 'salaries/viewAddDeduct',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'title' => __('Deductions'),
+					'data' => (array_key_exists('StaffSalaryDeduction', $data))? $data['StaffSalaryDeduction']: array(),
+					'options' => $SalaryDeductionType->getList(array('visibleOnly' => false, 'listOnly' => true)),
+					'totalAmt' => $data['StaffSalary']['deductions']
+				)
+			);
 	}
 
-	function setup_add_edit_form($controller, $params) {
-		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-		if ($controller->request->is(array('post', 'put'))) {
-			$controller->request->data['StaffSalary']['staff_id'] = $controller->staffId;
-			
-			$deletedAdditionId = array();
-			$deletedDeductionId = array();
-			
-			//Calculate total addition amount
-			$totalAdditionAmount = 0;
-			if (!empty($controller->request->data['StaffSalaryAddition'])) {
-				foreach ($controller->request->data['StaffSalaryAddition'] as $key => $additionAmount) {
-					$totalAdditionAmount += $additionAmount['addition_amount'];
-					
-					if(empty($additionAmount['addition_amount'])){
-						unset($controller->request->data['StaffSalaryAddition'][$key] );
-						continue;
-					}
-					
-					if(!empty($additionAmount['id'])){
-						$deletedAdditionId[] =$additionAmount['id'];
-					}
-					
-				}
+	private function _addDefaultValueForEmptyAmts($currData) {
+		// cake seems unable to create new data entries with 'empty' values via saveAll and default them to MySQL table defaults... so....
+		if (array_key_exists('StaffSalaryAddition', $currData)) {
+			foreach ($currData['StaffSalaryAddition'] as $key => $value) {
+				$currData['StaffSalaryAddition'][$key]['amount'] = (!empty($value['amount']))? $value['amount']: 0;
 			}
-			$controller->request->data['StaffSalary']['additions'] = empty($totalAdditionAmount)? NULL : $totalAdditionAmount;
+		}
+		if (array_key_exists('StaffSalaryDeduction', $currData)) {
+			foreach ($currData['StaffSalaryDeduction'] as $key => $value) {
+				$currData['StaffSalaryDeduction'][$key]['amount'] = (!empty($value['amount']))? $value['amount']: 0;
+			}
+		}
+		
+		return $currData;
+	}
 
-			//Calculate total deduction amount
-			$totalDeductionAmount = 0;
-			if (!empty($controller->request->data['StaffSalaryDeduction'])) {
-				foreach ($controller->request->data['StaffSalaryDeduction'] as $key => $deductionAmount) {
-					$totalDeductionAmount += $deductionAmount['deduction_amount'];
-					if(empty($deductionAmount['deduction_amount'])){
-						unset($controller->request->data['StaffSalaryDeduction'][$key] );	
-						continue;
+	public function add() {
+		if ($this->Session->check('Staff.id')) {
+			$staffId = $this->Session->read('Staff.id');
+			$this->fields['staff_id']['value'] = $staffId;
+		} else {
+			return $this->redirect(array('action' => $this->alias));
+		}
+		$this->render = 'auto';
+		$this->Navigation->addCrumb(__('Add Salary'));
+		$this->setVar('contentHeader', __('Add Salary'));
+
+		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
+		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
+
+		if ($this->request->is(array('post', 'put'))) {
+			if (array_key_exists('submit', $this->request->data)) {
+				if ($this->request->data['submit'] == 'Save') {
+					$this->request->data = $this->_addDefaultValueForEmptyAmts($this->request->data);
+					parent::add();
+				}
+				if ($this->request->data['submit'] == 'addition') {
+					$newRow = array(
+						'amount' => 0,
+						'salary_addition_type_id' => 0
+					);
+					$this->request->data['StaffSalaryAddition'][] = $newRow;
+				}
+				if ($this->request->data['submit'] == 'deduction') {
+					$newRow = array(
+						'amount' => 0,
+						'salary_deduction_type_id' => 0
+					);
+					$this->request->data['StaffSalaryDeduction'][] = $newRow;
+				}
+			}
+		}
+		$data = $this->request->data;
+
+		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+
+		$tableHeaders = array(__('Type'), __('Amount'), '&nbsp;');
+		$this->fields['additions'] = array(
+				'type' => 'element',
+				'element' => 'salaries/additional_info',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'title' => __('Additions'),
+					'name' => 'addition',
+					'data' => (array_key_exists('StaffSalaryAddition', $data))? $data['StaffSalaryAddition']: array(),
+					'options' => $SalaryAdditionType->getList(array('visibleOnly' => false, 'listOnly' => true)),
+					'tableHeaders' => $tableHeaders,
+					'modelName' => 'StaffSalaryAddition',
+					'foreignKeyName' => 'salary_addition_type_id',
+				),
+				'onkeyup' => 'jsForm.compute(this)'
+			);
+
+		$this->fields['deductions'] = array(
+				'type' => 'element',
+				'element' => 'salaries/additional_info',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'title' => __('Deductions'),
+					'name' => 'deduction',
+					'data' => (array_key_exists('StaffSalaryDeduction', $data))? $data['StaffSalaryDeduction']: array(),
+					'options' => $SalaryDeductionType->getList(array('visibleOnly' => false, 'listOnly' => true)),
+					'tableHeaders' => $tableHeaders,
+					'modelName' => 'StaffSalaryDeduction',
+					'foreignKeyName' => 'salary_deduction_type_id',
+				),
+				'onkeyup' => 'jsForm.compute(this)'
+			);
+	}
+
+	public function edit($staffSalaryId = null) {
+		$this->Navigation->addCrumb(__('Edit Salary'));
+		$this->setVar('contentHeader', __('Edit Salary'));
+
+		$this->render = 'auto';
+		if ($this->exists($staffSalaryId)) {
+			$data = $this->find('first',
+				array(
+					'recursive' => -1,
+					'contain' => array('StaffSalaryAddition', 'StaffSalaryDeduction'),
+					'conditions' => array($this->alias.'.id' => $staffSalaryId)
+				)
+			);
+			
+			if ($this->request->is(array('post', 'put'))) {
+				if ($this->request->data['submit'] == 'Save') {
+					$this->request->data = $this->_addDefaultValueForEmptyAmts($this->request->data);
+					if ($this->saveAll($this->request->data)) {
+						$this->Message->alert('general.edit.success');
+						$action = array('action' => $this->alias, 'view', $staffSalaryId);
+						return $this->redirect($action);
+					} else {
+
+						$this->log($this->validationErrors, 'debug');
+						$this->Message->alert('general.edit.failed');
 					}
-					
-					if(!empty($deductionAmount['id'])){
-						$deletedDeductionId[] = $deductionAmount['id'];
-					}
 				}
-			}
-			$controller->request->data['StaffSalary']['deductions'] = empty($totalDeductionAmount)? NULL : $totalDeductionAmount;
-			
-			//Check which item has been remove from the view
-			$currentAdditionList = $this->StaffSalaryAddition->find('list', array('conditions' => array('StaffSalaryAddition.staff_salary_id' => $id)));
-			$currentDeductionList = $this->StaffSalaryDeduction->find('list', array('conditions' => array('StaffSalaryDeduction.staff_salary_id' => $id)));
-			
-			foreach($currentAdditionList as $itemId){
-				if(!in_array($itemId, $deletedAdditionId )){
-					$this->StaffSalaryAddition->delete($itemId);
+				if ($this->request->data['submit'] == 'addition') {
+					$newRow = array(
+						'amount' => 0,
+						'salary_addition_type_id' => 0
+					);
+					$this->request->data['StaffSalaryAddition'][] = $newRow;
 				}
-			}
-			
-			foreach($currentDeductionList as $itemId){
-				if(!in_array($itemId, $deletedDeductionId )){
-					$this->StaffSalaryDeduction->delete($itemId);
+				if ($this->request->data['submit'] == 'deduction') {
+					$newRow = array(
+						'amount' => 0,
+						'salary_deduction_type_id' => 0
+					);
+					$this->request->data['StaffSalaryDeduction'][] = $newRow;
 				}
-			}
-			
-			if ($this->saveAll($controller->request->data)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'salaries'));
-			} else {
+
 				
-			}
-		} else {
-			//$this->recursive = -1;
-			$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser', 'CreatedUser')));
-			$data = $this->findById($id);
-			if (!empty($data)) {
-				$controller->request->data = $data;
-			}
-		}
-
-		$visible = true;
-		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
-		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
-
-		if (!empty($controller->request->data)) {
-			$existingValuesStaffSalaryAddition = array();
-			if(isset($controller->request->data['StaffSalaryAddition'])){
-				foreach ($controller->request->data['StaffSalaryAddition'] as $key => $value) {
-					array_push($existingValuesStaffSalaryAddition, $value['salary_addition_type_id']);
-				}
-			}
-
-			$existingValuesStaffSalaryDeduction = array();
-			if(isset($controller->request->data['StaffSalaryDeduction'])){
-				foreach ($controller->request->data['StaffSalaryDeduction'] as $key => $value) {
-					array_push($existingValuesStaffSalaryDeduction, $value['salary_deduction_type_id']);
-				}
-			}
-			
-			$additionOptions = $SalaryAdditionType->getList(array('value' => $existingValuesStaffSalaryAddition));
-			$deductionOptions = $SalaryDeductionType->getList(array('value' => $existingValuesStaffSalaryDeduction));
-		} else {
-			$additionOptions = $SalaryAdditionType->getList(array('value' => 0));
-			$deductionOptions = $SalaryDeductionType->getList(array('value' => 0));
-		}
-
-		$controller->set(compact('additionOptions', 'deductionOptions'));
-	}
-
-	public function salariesView($controller, $params) {
-		$controller->Navigation->addCrumb('Salary Details');
-		$header = __('Salary Details');
-		$id = $params['pass'][0];
-		$salaryObj = $this->findById($id); //('all', array('conditions' => array('StaffSalary.id' => $salaryId)));
-		if (empty($salaryObj)) {
-			$controller->Message->alert('general.noData');
-			$controller->redirect(array('action' => 'employments'));
-		}
-
-		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
-		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
-		$visible = true;
-		$additionOptions = $SalaryAdditionType->getList(array('listOnly'=>true));
-		$deductionOptions = $SalaryDeductionType->getList(array('listOnly'=>true));
-
-		$controller->Session->write('StaffSalaryId', $id);
-		$controller->set(compact('header', 'salaryObj', 'id', 'additionOptions', 'deductionOptions'));
-	}
-
-	public function salariesEdit($controller, $params) {
-		$controller->Navigation->addCrumb(__('Edit Salary'));
-		$controller->set('header', __('Edit Salary'));
-		$this->setup_add_edit_form($controller, $params);
-		$this->render = 'add';
-	}
-
-	public function salariesAjaxAdditionAdd($controller, $params) {
-		$index = $controller->request->data['index'];
-
-		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
-		$categories = $SalaryAdditionType->getList(array('value' => 0));
-
-		$controller->set(compact('categories', 'index'));
-	}
-
-	public function salariesAjaxDeductionAdd($controller, $params) {
-		$index = $controller->request->data['index'];
-		
-		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
-		$categories = $SalaryDeductionType->getList(array('value' => 0));
-		
-		$controller->set(compact('categories', 'index'));
-	}
-
-	public function salariesDelete($controller, $params) {
-		if ($controller->Session->check('StaffId') && $controller->Session->check('StaffSalaryId')) {
-			$id = $controller->Session->read('StaffSalaryId');
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
 			} else {
-				$controller->Message->alert('general.delete.failed');
+				$this->request->data = $data;
 			}
-			$controller->Session->delete('StaffSalaryId');
-			return $controller->redirect(array('action' => 'salaries'));
+		} else {
+			$this->Message->alert('general.view.notExists');
+			return $this->redirect(array('action' => $this->alias));
 		}
-	}
+		
+		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
+		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
 
+		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+		$tableHeaders = array(__('Type'), __('Amount'), '&nbsp;');
+		$this->fields['additions'] = array(
+				'type' => 'element',
+				'element' => 'salaries/additional_info',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'title' => __('Additions'),
+					'name' => 'addition',
+					'data' => (array_key_exists('StaffSalaryAddition', $this->request->data))? $this->request->data['StaffSalaryAddition']: array(),
+					'options' => $SalaryAdditionType->getList(array('visibleOnly' => false, 'listOnly' => true)),
+					'tableHeaders' => $tableHeaders,
+					'modelName' => 'StaffSalaryAddition',
+					'foreignKeyName' => 'salary_addition_type_id',
+					'onkeyup' => 'jsForm.compute(this)',
+				)	
+			);
+
+		$this->fields['deductions'] = array(
+				'type' => 'element',
+				'element' => 'salaries/additional_info',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'title' => __('Deductions'),
+					'name' => 'deduction',
+					'data' => (array_key_exists('StaffSalaryDeduction', $this->request->data))? $this->request->data['StaffSalaryDeduction']: array(),
+					'options' => $SalaryDeductionType->getList(array('visibleOnly' => false, 'listOnly' => true)),
+					'tableHeaders' => $tableHeaders,
+					'modelName' => 'StaffSalaryDeduction',
+					'foreignKeyName' => 'salary_deduction_type_id',
+					'onkeyup' => 'jsForm.compute(this)',
+				)
+			);
+
+	}
 }

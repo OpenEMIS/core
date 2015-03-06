@@ -374,6 +374,9 @@ class ConfigController extends AppController {
 					if(strtolower($data['ConfigItem']['option_type'])=='language' && strtolower($data['ConfigItem']['type'])=='system'){
 						$lang = $data['ConfigItem']['value'];
 						$this->Session->write('configItem.language', $lang);
+					} else if(strtolower($data['ConfigItem']['option_type'])=='date_format' && strtolower($data['ConfigItem']['type'])=='system'){
+						$format = $data['ConfigItem']['value'];
+						$this->Session->write('Config.DateFormat', $format);
 					}
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));

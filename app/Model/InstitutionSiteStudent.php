@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))),
+		'Excel',
 		'Search',
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
@@ -77,6 +77,108 @@ class InstitutionSiteStudent extends AppModel {
 		$conditions = array('InstitutionSite.id' => $id);
 		return $conditions;
 	}
+	
+	public function excelGetHeader($include){
+		$fields = array(
+			'Student.identification_no',
+			'Student.first_name',
+			'Student.middle_name',
+			'Student.third_name',
+			'Student.last_name',
+			'Student.date_of_birth',
+			'StudentStatus.name',
+			'InstitutionSite.name',
+			'EducationProgramme.name',
+			'AcademicPeriod.name',
+			'InstitutionSiteSection.name',
+			'EducationGrade.name',
+			'StudentCategory.name'
+		);
+		
+		$header = $this->setHeader($fields);
+		return $header;
+	}
+	
+	public function excelGetFindOptions(){
+		$options = parent::excelGetFindOptions();
+		$options['recursive'] = -1;
+		$options['joins'] = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'conditions' => array(
+					'Student.id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array(
+					'InstitutionSite.id = InstitutionSiteStudent.institution_site_id'
+				)
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array(
+					'EducationProgramme.id = InstitutionSiteStudent.education_programme_id'
+				)
+			),
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StudentStatus',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'StudentStatus.id = InstitutionSiteStudent.student_status_id'
+				)
+			),
+			array(
+				'table' => 'institution_site_section_students',
+				'alias' => 'InstitutionSiteSectionStudent',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'InstitutionSiteSectionStudent.student_id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StudentCategory',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'StudentCategory.id = InstitutionSiteSectionStudent.student_category_id'
+				)
+			),
+			array(
+				'table' => 'institution_site_sections',
+				'alias' => 'InstitutionSiteSection',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'InstitutionSiteSection.institution_site_id = InstitutionSiteStudent.institution_site_id',
+					'InstitutionSiteSection.id = InstitutionSiteSectionStudent.institution_site_section_id'
+				)
+			),
+			array(
+				'table' => 'academic_periods',
+				'alias' => 'AcademicPeriod',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'AcademicPeriod.id = InstitutionSiteSection.academic_period_id'
+				)
+			),
+			array(
+				'table' => 'education_grades',
+				'alias' => 'EducationGrade',
+				'type' => 'LEFT',
+				'conditions' => array(
+					'EducationGrade.id = InstitutionSiteSection.education_grade_id'
+				)
+			),
+		);
+		unset($options['contain']);
+		$options['order'] = array('Student.identification_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
+		
+		return $options;
+	}
 	/* End Excel Behaviour */
 	
 	public function beforeAction() {
@@ -88,7 +190,7 @@ class InstitutionSiteStudent extends AppModel {
 			'visible' => true
 		);
 
-		$this->fields['year'] = array(
+		$this->fields['academic_period_id'] = array(
 			'type' => 'select',
 			'visible' => true,
 			'attr' => array('onchange' => "$('#reload').click()")
@@ -101,26 +203,31 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['student_status_id']['options'] = $this->StudentStatus->getList();
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
-		$this->fields['education_programme_id']['type'] = 'select';
-		$this->fields['institution_site_section_id'] = array(
+		$this->fields['education_programme_id'] = array(
 			'type' => 'select',
 			'visible' => true,
 			'attr' => array('onchange' => "$('#reload').click()")
 		);
-		$this->fields['education_grade_id']['type'] = 'select';
-		$this->fields['education_grade_id']['visible'] = true;
+		$this->fields['education_grade_id'] = array(
+			'type' => 'select',
+			'visible' => true,
+			'attr' => array('onchange' => "$('#reload').click()")
+		);
+		$this->fields['institution_site_section_id']['type'] = 'select';
+		$this->fields['institution_site_section_id']['visible'] = true;
 		$this->fields['student_category_id']['type'] = 'select';
 		$this->fields['student_category_id']['visible'] = true;
 		$this->fields['student_status_id']['visible'] = false;
 
 		$this->setFieldOrder('institution', 0);
-		$this->setFieldOrder('year', 1);
+		$this->setFieldOrder('academic_period_id', 1);
 		$this->setFieldOrder('education_programme_id', 2);
-		$this->setFieldOrder('institution_site_section_id', 3);
-		$this->setFieldOrder('education_grade_id', 4);
+		$this->setFieldOrder('education_grade_id', 3);
+		$this->setFieldOrder('institution_site_section_id', 4);
 		$this->setFieldOrder('student_category_id', 5);
 		$this->setFieldOrder('start_date', 6);
 		$this->setFieldOrder('end_date', 7);
+		
 	}
 	
 	public function index() {
@@ -229,7 +336,10 @@ class InstitutionSiteStudent extends AppModel {
 
 		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
 		$academicPeriodOptions = $AcademicPeriod->getAcademicPeriodList();
-		$this->fields['year']['options'] = $academicPeriodOptions;
+		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+
+		$InstitutionSiteGrade = ClassRegistry::init('InstitutionSiteGrade');
+		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
 
 		$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
 		$categoryOptions = $InstitutionSiteSectionStudent->StudentCategory->getList();
@@ -237,8 +347,12 @@ class InstitutionSiteStudent extends AppModel {
 		
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$academicPeriodId = $data[$this->alias]['year'];
+			$academicPeriodId = $data[$this->alias]['academic_period_id'];
+			$selectedProgrammeId = $data[$this->alias]['education_programme_id'];
+			$selectedGradeId = $data[$this->alias]['education_grade_id'];
 			$selectedSectionId = $data[$this->alias]['institution_site_section_id'];
+			$selectedStudentCategoryId = $data[$this->alias]['student_category_id'];
+			$studentId = $data[$this->alias]['student_id'];
 			
 			$academicPeriodObj = $AcademicPeriod->findById($academicPeriodId);
 			$startDate = $academicPeriodObj['AcademicPeriod']['start_date'];
@@ -257,13 +371,14 @@ class InstitutionSiteStudent extends AppModel {
 			);
 
 			if ($data['submit'] == 'reload') {
+				$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
+				$this->fields['education_programme_id']['options'] = $programmeOptions;
+				$selectedProgrammeId = isset($selectedProgrammeId) && array_key_exists($selectedProgrammeId, $programmeOptions) ? $selectedProgrammeId : key($programmeOptions);
 
+				$gradeOptions = $InstitutionSiteGrade->getGradeOptions($institutionSiteId, $academicPeriodId, $selectedProgrammeId);
+				$gradeOptions = $this->controller->Option->prependLabel($gradeOptions, 'InstitutionSiteStudent.select_grade');
+				$selectedGradeId = isset($selectedGradeId) && array_key_exists($selectedGradeId, $gradeOptions) ? $selectedGradeId : key($gradeOptions);
 			} else {
-				$studentId = $data[$this->alias]['student_id'];
-				$institutionSiteSectionId = $data[$this->alias]['institution_site_section_id'];
-				$educationGradeId = $data[$this->alias]['education_grade_id'];
-				$studentCategoryId = $data[$this->alias]['student_category_id'];
-				
 				$this->set($data[$this->alias]);
 				
 				if(isset($data['new'])){
@@ -276,7 +391,7 @@ class InstitutionSiteStudent extends AppModel {
 						'conditions' => array(
 							$this->alias . '.institution_site_id' => $institutionSiteId, 
 							$this->alias . '.student_id' => $studentId,
-							$this->alias . '.education_programme_id' => $data[$this->alias]['education_programme_id']
+							$this->alias . '.education_programme_id' => $selectedProgrammeId
 						)
 					));
 					
@@ -290,21 +405,21 @@ class InstitutionSiteStudent extends AppModel {
 							$this->Session->write('InstitutionSiteStudent.addNew', $data[$this->alias]);
 							return $this->redirect(array('controller' => 'Students', 'action' => 'add'));
 						}else{
-							if(!empty($data[$this->alias]['institution_site_section_id']) && !empty($data[$this->alias]['education_grade_id'])) {
+							if($selectedSectionId != 0) {
 								$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
 
 								$institutionSiteSectionStudentId = $InstitutionSiteSectionStudent->field('id', array(
 									'InstitutionSiteSectionStudent.student_id' => $studentId,
-									'InstitutionSiteSectionStudent.institution_site_section_id' => $institutionSiteSectionId,
-									'InstitutionSiteSectionStudent.education_grade_id' => $educationGradeId
+									'InstitutionSiteSectionStudent.education_grade_id' => $selectedGradeId,
+									'InstitutionSiteSectionStudent.institution_site_section_id' => $selectedSectionId
 								));
 								if($institutionSiteSectionStudentId) {
 									$autoInsertData['InstitutionSiteSectionStudent']['id'] = $institutionSiteSectionStudentId;	
 								}
 								$autoInsertData['InstitutionSiteSectionStudent']['student_id'] = $studentId;
-								$autoInsertData['InstitutionSiteSectionStudent']['institution_site_section_id'] = $institutionSiteSectionId;
-								$autoInsertData['InstitutionSiteSectionStudent']['education_grade_id'] = $educationGradeId;
-								$autoInsertData['InstitutionSiteSectionStudent']['student_category_id'] = $studentCategoryId;
+								$autoInsertData['InstitutionSiteSectionStudent']['education_grade_id'] = $selectedGradeId;
+								$autoInsertData['InstitutionSiteSectionStudent']['institution_site_section_id'] = $selectedSectionId;
+								$autoInsertData['InstitutionSiteSectionStudent']['student_category_id'] = $selectedStudentCategoryId;
 								$autoInsertData['InstitutionSiteSectionStudent']['status'] = 1;
 								$InstitutionSiteSectionStudent->save($autoInsertData);
 							}
@@ -338,23 +453,23 @@ class InstitutionSiteStudent extends AppModel {
 				'startDate' => $date->format('d-m-Y'),
 				'data-date' => $date->format('d-m-Y')
 			);
+
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
+			$this->fields['education_programme_id']['options'] = $programmeOptions;
+			$selectedProgrammeId = key($programmeOptions);
+			
+			$gradeOptions = $InstitutionSiteGrade->getGradeOptions($institutionSiteId, $academicPeriodId, $selectedProgrammeId);
+			$gradeOptions = $this->controller->Option->prependLabel($gradeOptions, 'InstitutionSiteStudent.select_grade');
+			$selectedGradeId = key($gradeOptions);
+
+			$sectionOptions = $InstitutionSiteSection->getSectionOptions($academicPeriodId, $institutionSiteId, $selectedGradeId);
 		}
 
-		$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($institutionSiteId, $academicPeriodId);
-		$this->fields['education_programme_id']['options'] = $programmeOptions;
-
-		$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
-		$sectionOptions = $InstitutionSiteSection->getSectionOptions($academicPeriodId, $institutionSiteId);
-		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
-		$selectedSectionId = isset($selectedSectionId) && array_key_exists($selectedSectionId, $sectionOptions) ? $selectedSectionId : key($sectionOptions);
-
-		$multiGrade = $InstitutionSiteSection->field('education_grade_id', array('InstitutionSiteSection.id' => $selectedSectionId));
-		if(empty($multiGrade)) {
-			$gradeOptions = $InstitutionSiteSection->InstitutionSiteSectionGrade->getGradesBySection($selectedSectionId);
-		} else {
-			$gradeOptions = $InstitutionSiteSection->getSingleGradeBySection($selectedSectionId);
-		}
 		$this->fields['education_grade_id']['options'] = $gradeOptions;
+		
+		$sectionOptions = $InstitutionSiteSection->getSectionOptions($academicPeriodId, $institutionSiteId, $selectedGradeId);
+		$sectionOptions = $this->controller->Option->prependLabel($sectionOptions, 'InstitutionSiteStudent.select_section');
+		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {

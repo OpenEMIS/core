@@ -26,7 +26,7 @@ class SearchComponent extends Component {
 		
 		if ($request->is(array('post', 'put'))) {
 			$search = Sanitize::escape(trim($request->data[$alias]['search']));
-			
+
 			if (method_exists($model, 'getSearchConditions')) {
 				$conditions = array_merge($conditions, $model->getSearchConditions($search));
 			} else {

@@ -63,7 +63,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'message' => 'Please select First Date Absent'
 			),
 			'ruleNotLater' => array(
-				'rule' => array('compareDate', 'last_date_absent'),
+				'rule' => array('compareDate', 'last_date_absent', true),
 				'message' => 'First Date Absent cannot be later than Last Date Absent'
 			)
 		),
@@ -82,12 +82,6 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			)
 		)
 	);
-	
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime(current($field));
-		$endDate = new DateTime($this->data[$this->name][$compareField]);
-		return $endDate >= $startDate;
-	}
 	
 	public function beforeAction() {
 		parent::beforeAction();
@@ -613,9 +607,11 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			);
 		}
 		
-		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
-		$conditions[] = 'YEAR(InstitutionSiteStaffAbsence.first_date_absent) = "' . $academicPeriod . '"';
+		/* Commented instead of delete due to the need to re-work the logic using AcademicPeriod date range.*/ 
+		/* As of 26 Feb 2015, all statements that call this function are able to provide $startDate and $endDate*/ 
+		//$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		//$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
+		//$conditions[] = 'YEAR(InstitutionSiteStaffAbsence.first_date_absent) >= "' . $academicPeriod['start_date'] . '"';
 
 		$data = $this->find('all', array(
 			'fields' => array(
