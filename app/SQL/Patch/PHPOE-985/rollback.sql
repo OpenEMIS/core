@@ -84,6 +84,7 @@ RENAME TABLE 985_staff_comments TO staff_comments;
 RENAME TABLE 985_staff_special_needs TO staff_special_needs;
 RENAME TABLE 985_staff_awards TO staff_awards;
 RENAME TABLE 985_staff_contacts TO staff_contacts;
+
 ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
 ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
 
