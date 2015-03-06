@@ -18,8 +18,9 @@ class WorkflowStepRole extends WorkflowsAppModel {
 	public $useTable = 'wf_workflow_step_roles';
 
 	public $belongsTo = array(
-		'WorkflowStep' => array(
-            'className' => 'Workflows.WorkflowStep',
+		'WfWorkflowStep' => array(
+            'className' => 'Workflows.WfWorkflowStep'
+        ),
 		'SecurityRole' => array(
 			'className' => 'SecurityRole',
 			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order')

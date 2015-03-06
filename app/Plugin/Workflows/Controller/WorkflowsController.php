@@ -15,8 +15,12 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WorkflowsController extends WorkflowsAppController {
+	public $uses = array(
+		'Workflows.WfWorkflow'
+	);
+
 	public $components = array(
-		'ControllerAction' => array('model' => 'Workflows.Workflow')
+		'ControllerAction' => array('model' => 'Workflows.WfWorkflow')
 	);
 
 	public function beforeFilter() {
@@ -25,6 +29,6 @@ class WorkflowsController extends WorkflowsAppController {
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Workflows');
 		$this->set('contentHeader', 'Workflows');
-		$this->Workflow->fields['code']['hyperlink'] = true;
+		$this->WfWorkflow->fields['code']['hyperlink'] = true;
 	}
 }

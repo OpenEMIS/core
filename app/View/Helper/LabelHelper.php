@@ -548,6 +548,9 @@ class LabelHelper extends AppHelper {
 			'actions' => 'Actions',
 			'next_step' => 'Next Step',
 			'select_step' => 'Select Step'
+		),
+		'WfWorkflowStep' => array(
+			'wf_workflow_id' => 'Workflow'
 		)
 	);
 	

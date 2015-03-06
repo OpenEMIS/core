@@ -42,7 +42,7 @@ $this->start('contentBody');
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['WorkflowStep']['name'], array('action' => 'view', $obj['WorkflowStep']['id'])); ?></td>
+					<td><?php echo $this->Html->link($obj['WfWorkflowStep']['name'], array('action' => 'view', $obj['WfWorkflowStep']['id'])); ?></td>
 					<td>
 						<?php
 							$securityRoles = array();
@@ -65,7 +65,7 @@ $this->start('contentBody');
 							echo implode('<br>', $workflowActions);
 						?>
 					</td>
-					<td><?php echo $obj['Workflow']['name']; ?></td>
+					<td><?php echo $obj['WfWorkflow']['name']; ?></td>
 				</tr>
 			<?php endforeach ?>
 		</tbody>
