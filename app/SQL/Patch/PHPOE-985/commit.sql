@@ -147,22 +147,6 @@ ALTER TABLE user_special_needs CHANGE `student_id` `security_user_id` INT(11) NO
 ALTER TABLE user_awards CHANGE `student_id` `security_user_id` INT(11) NOT NULL;
 ALTER TABLE user_contacts CHANGE `student_id` `security_user_id` INT(11) NOT NULL;
 
-
-RENAME TABLE student_identities TO 985_student_identities;
-RENAME TABLE student_nationalities TO 985_student_nationalities;
-RENAME TABLE student_languages TO 985_student_languages;
-RENAME TABLE student_comments TO 985_student_comments;
-RENAME TABLE student_special_needs TO 985_student_special_needs;
-RENAME TABLE student_awards TO 985_student_awards;
-RENAME TABLE student_contacts TO 985_student_contacts;
-RENAME TABLE staff_identities TO 985_staff_identities;
-RENAME TABLE staff_nationalities TO 985_staff_nationalities;
-RENAME TABLE staff_languages TO 985_staff_languages;
-RENAME TABLE staff_comments TO 985_staff_comments;
-RENAME TABLE staff_special_needs TO 985_staff_special_needs;
-RENAME TABLE staff_awards TO 985_staff_awards;
-RENAME TABLE staff_contacts TO 985_staff_contacts;
-
 -- migration of new detail tables
 SELECT * FROM student_identities
 INNER JOIN students ON student_identities.student_id = students.id;
@@ -617,3 +601,17 @@ UPDATE navigations SET action = 'SecurityUserLogin', pattern = 'SecurityUserLogi
 
 
 
+RENAME TABLE student_identities TO 985_student_identities;
+RENAME TABLE student_nationalities TO 985_student_nationalities;
+RENAME TABLE student_languages TO 985_student_languages;
+RENAME TABLE student_comments TO 985_student_comments;
+RENAME TABLE student_special_needs TO 985_student_special_needs;
+RENAME TABLE student_awards TO 985_student_awards;
+RENAME TABLE student_contacts TO 985_student_contacts;
+RENAME TABLE staff_identities TO 985_staff_identities;
+RENAME TABLE staff_nationalities TO 985_staff_nationalities;
+RENAME TABLE staff_languages TO 985_staff_languages;
+RENAME TABLE staff_comments TO 985_staff_comments;
+RENAME TABLE staff_special_needs TO 985_staff_special_needs;
+RENAME TABLE staff_awards TO 985_staff_awards;
+RENAME TABLE staff_contacts TO 985_staff_contacts;
