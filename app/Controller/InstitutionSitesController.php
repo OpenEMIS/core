@@ -30,7 +30,7 @@ class InstitutionSitesController extends AppController {
 		'EducationGradeSubject',
 		'EducationProgramme',
 		'InstitutionSite',
-		'InstitutionSiteClass',
+		'InstitutionSiteActivity',
 		'InstitutionSiteClassSubject',
 		'InstitutionSiteClassStudent',
 		'InstitutionSiteCustomField',
@@ -68,15 +68,12 @@ class InstitutionSitesController extends AppController {
 		),
 		'FileUploader',
 		'AreaHandler',
-		'Alert'
+		'Alert',
+		'Activity' => array('model' => 'InstitutionSiteActivity')
 	);
 	
 	public $modules = array(
 		'bankAccounts' => 'InstitutionSiteBankAccount',
-		'classesSubject' => 'InstitutionSiteClassSubject',
-		'classesStudent' => 'InstitutionSiteClassStudent',
-		'classesStaff' => 'InstitutionSiteClassStaff',
-		'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
@@ -90,6 +87,7 @@ class InstitutionSitesController extends AppController {
 		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'InstitutionSiteStaffAttendance',
 		'InstitutionSiteStaffAbsence',
+		'InstitutionSiteClass',
 		'InstitutionSiteSection',
 		'InstitutionSiteSectionStudent',
 		'InstitutionSiteSectionStaff',
@@ -435,75 +433,6 @@ class InstitutionSitesController extends AppController {
 		$search = $this->params->query['term'];
 		$result = $this->InstitutionSite->getAutoCompleteList($search);
 		return json_encode($result);
-	}
-
-	public function history() {
-		$this->Navigation->addCrumb('History');
-
-		$arrTables = array('InstitutionSiteHistory', 'InstitutionSiteStatus', 'InstitutionSiteType', 'InstitutionSiteOwnership', 'InstitutionSiteLocality', 'Area');
-		$historyData = $this->InstitutionSiteHistory->find('all', array('conditions' => array('InstitutionSiteHistory.institution_site_id' => $this->institutionSiteId), 'order' => array('InstitutionSiteHistory.created' => 'desc')));
-		//pr($historyData);
-		$data2 = array();
-		foreach ($historyData as $key => $arrVal) {
-
-			foreach ($arrTables as $table) {
-				//pr($arrVal);die;
-				foreach ($arrVal[$table] as $k => $v) {
-					$keyVal = ($k == 'name') ? $table . '_name' : $k;
-					$keyVal = ($k == 'code') ? $table . '_code' : $keyVal;
-					//echo $k.'<br>';
-					$data2[$keyVal][$v] = $arrVal['InstitutionSiteHistory']['created'];
-				}
-			}
-		}
-
-		if (empty($data2)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
-		} else {
-			$adminarealevels = $this->AreaAdministrativeLevel->find('list', array('recursive' => 0));
-			$arrEducation = array();
-			foreach ($data2['area_administrative_id'] as $val => $time) {
-				if ($val > 0) {
-					$adminarea = $this->AreaHandler->getAreatoParent($val, array('AreaAdministrative', 'AreaAdministrativeLevel'));
-					$adminarea = array_reverse($adminarea);
-
-					$arrVal = '';
-					foreach ($adminarealevels as $levelid => $levelName) {
-						$areaVal = array('id' => '0', 'name' => 'a');
-						foreach ($adminarea as $arealevelid => $arrval) {
-							if ($arrval['level_id'] == $levelid) {
-								$areaVal = $arrval;
-								$arrVal .= ($areaVal['name'] == 'a' ? '' : $areaVal['name']) . ' (' . $levelName . ') ' . ',';
-								continue;
-							}
-						}
-					}
-					$arrEducation[] = array('val' => str_replace(',', ' &rarr; ', rtrim($arrVal, ',')), 'time' => $time);
-				}
-			}
-
-			$myData = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
-			$adminarea = $this->AreaHandler->getAreatoParent($myData['InstitutionSite']['area_administrative_id'], array('AreaAdministrative', 'AreaAdministrativeLevel'));
-			$adminarea = array_reverse($adminarea);
-			$arrVal = '';
-			foreach ($adminarealevels as $levelid => $levelName) {
-				$areaVal = array('id' => '0', 'name' => 'a');
-				foreach ($adminarea as $arealevelid => $arrval) {
-					if ($arrval['level_id'] == $levelid) {
-						$areaVal = $arrval;
-						$arrVal .= ($areaVal['name'] == 'a' ? '' : $areaVal['name']) . ' (' . $levelName . ') ' . ',';
-						continue;
-					}
-				}
-			}
-			$arrEducationVal = str_replace(',', ' &rarr; ', rtrim($arrVal, ','));
-			$this->set('arrEducation', $arrEducation);
-			$this->set('arrEducationVal', $arrEducationVal);
-		}
-		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
-		$this->set('data', $data);
-		$this->set('data2', $data2);
-		$this->set('id', $this->institutionSiteId);
 	}
 
 	private function getAvailableAcademicPeriodId($academicPeriodList) {

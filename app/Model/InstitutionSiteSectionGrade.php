@@ -21,28 +21,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 		'EducationGrade',
 		'InstitutionSiteSection'
 	);
-	
-	public function getAvailableGradesForNewSection($institutionSiteId, $academicPeriodId) {
-		$conditions = array(
-			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		);
-		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 
-		$data = $this->EducationGrade->find('all', array(
-			'fields' => array('EducationProgramme.name', 'EducationGrade.name'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => $conditions
-				)
-			),
-			'order' => array('EducationProgramme.order', 'EducationGrade.order')
-		));
-		return $data;
-	}
-	
 	// used by InstitutionSite classes
 	public function getGradesBySection($sectionId) {
 		$this->unbindModel(array('belongsTo' => array('EducationGrade')));
@@ -141,17 +120,6 @@ class InstitutionSiteSectionGrade extends AppModel {
 		return $list;
 	}
 	
-	public function getInstitutionSiteGradeOptions($institutionSiteId, $year = null) {
-		$data = $this->getInstitutionSiteGradesData($institutionSiteId, $year);
-		$list = array();
-		foreach($data as $obj) {
-			$id = $obj['EducationGrade']['id'];
-			$gradeName = $obj['EducationGrade']['name'];
-			$list[$id] = $gradeName;
-		}
-		return $list;
-	}
-	
 	public function getInstitutionSiteGradesData($institutionSiteId, $year = null) {
 		$conditions = array('InstitutionSiteSection.id = InstitutionSiteSectionGrade.institution_site_section_id', 'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId); 
 		if(!is_null($year)){
@@ -224,34 +192,5 @@ class InstitutionSiteSectionGrade extends AppModel {
 			$list['InstitutionSiteSectionGrade']['grade_name'] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
 		//}
 		return $list;
-	}
-	
-	public function getInstitutionGradeOptions($institutionSiteId, $academicPeriodId) {
-		$conditions = array(
-			'InstitutionSiteProgramme.education_programme_id = EducationGrade.education_programme_id',
-			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		);
-		$conditions = ClassRegistry::init('InstitutionSiteProgramme')->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
-
-		$data = $this->EducationGrade->find('list', array(
-			'fields' => array('EducationGrade.id', 'EducationGrade.programme_grade_name'),
-			'joins' => array(
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = EducationGrade.education_programme_id'
-					)
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => $conditions
-				)
-			),
-			'order' => array('EducationProgramme.order', 'EducationGrade.order')
-		));
-
-		return $data;
 	}
 }

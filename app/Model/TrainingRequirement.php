@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('FieldOptionValue', 'Model');
 
 class TrainingRequirement extends FieldOptionValue {
+	public $allowDelete = false;
 	public $useTable = 'field_option_values';
 	public $belongsTo = array(
 		'ModifiedUser' => array(
