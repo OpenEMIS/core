@@ -72,7 +72,8 @@ class InstitutionSitesController extends AppController {
 		'AreaHandler',
 		'Alert',
 		'Activity' => array('model' => 'InstitutionSiteActivity'),
-		'HighCharts.HighCharts'
+		'HighCharts.HighCharts',
+		'HighCharts2.HighCharts2'
 	);
 	
 	public $modules = array(
@@ -305,8 +306,7 @@ class InstitutionSitesController extends AppController {
 			$maxYear = $periodResult['max_year'];
 
 			$years = array();
-			$data = array();
-
+			$dataSet = array();
 			for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
 				$years[$currentYear] = $currentYear;
 
@@ -330,54 +330,33 @@ class InstitutionSitesController extends AppController {
 					)
 				));
 
-				if (!array_key_exists($currentYear, $data)) {
-					$data[$currentYear] = array('M' => 0, 'F' => 0);
+				if (!array_key_exists($currentYear, $dataSet)) {
+					$dataSet[$currentYear] = array('M' => 0, 'F' => 0);
 				}
 				foreach ($studentsByYear as $key => $studentByYear) {
 					$yearGender = isset($studentByYear['Student']['gender']) ? $studentByYear['Student']['gender'] : null;
 					$yearTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
 
-					$data[$currentYear][$yearGender] = $yearTotal;
+					$dataSet[$currentYear][$yearGender] = $yearTotal;
 				}
 			}
 
-			$categories = array();
-			$series = array(
-				array('name' => __('Male'), 'data' => array()),
-				array('name' => __('Female'), 'data' => array())
+			$mapping = array(
+				'xAxis' => array('M' => __('Male'), 'F' => __('Female')),
+				'yAxis' => $years
 			);
-
-			foreach ($data as $year => $genderTotals) {
-				if (!in_array($year, $categories)) {
-					$categories[] = $year;
-				}
-
-				foreach ($genderTotals as $gender => $total) {
-					if ($gender == 'M') {
-						$series[0]['data'][] = $total;
-					} else {
-						$series[1]['data'][] = $total;
-					}
-				}
-			}
-
-			$highChartData = array();
-			$highChartData['chart']['type'] = 'column';
-			$highChartData['chart']['borderWidth'] = 1;
-			$highChartData['title']['text'] = __('Number of Students By Year');
-			$highChartData['xAxis']['title']['text'] = __('Years');
-			$highChartData['yAxis']['title']['text'] = __('Total Students');
-			$highChartData['xAxis']['categories'] = $categories;
-			$highChartData['series'] = $series;
-			
-			$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
-			$highChartDatas[] = $json_highChartData;
+			$options = array();
+			$options['chart']['type'] = 'column';
+			$options['chart']['borderWidth'] = 1;
+			$options['title']['text'] = __('Number of Students By Year');
+			$options['xAxis']['title']['text'] = __('Years');
+			$options['yAxis']['title']['text'] = __('Total Students');
+			$highChartDatas[] = $this->HighCharts2->getHighChartData($dataSet, $options, $mapping);
 
 			//Students By Grade for current year
 			$currentYearId = $this->AcademicPeriod->getCurrent();
 			$currentYear = $this->AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
 
-			//$this->InstitutionSiteSectionStudent->formatResult = true;
 			$studentByGrades = $this->InstitutionSiteSectionStudent->find('all', array(
 				'fields' => array(
 					'EducationGrade.id', 'EducationGrade.name', 'Student.gender', 'COUNT(InstitutionSiteSectionStudent.id) AS total'
@@ -395,7 +374,7 @@ class InstitutionSitesController extends AppController {
 			));
 
 			$grades = array();
-			$data = array();
+			$dataSet = array();
 			foreach ($studentByGrades as $key => $studentByGrade) {
 				$gradeId = $studentByGrade['EducationGrade']['id'];
 				$gradeName = $studentByGrade['EducationGrade']['name'];
@@ -403,43 +382,82 @@ class InstitutionSitesController extends AppController {
 				$gradeTotal = $studentByGrade[0]['total'];
 
 				$grades[$gradeId] = $gradeName;
-				if (!array_key_exists($gradeId, $data)) {
-					$data[$gradeId] = array('M' => 0, 'F' => 0);
+				if (!array_key_exists($gradeId, $dataSet)) {
+					$dataSet[$gradeId] = array('M' => 0, 'F' => 0);
 				}
-				$data[$gradeId][$gradeGender] = $gradeTotal;
+				$dataSet[$gradeId][$gradeGender] = $gradeTotal;
 			}
 
-			$categories = array();
-			$series = array(
-				array('name' => __('Male'), 'data' => array()),
-				array('name' => __('Female'), 'data' => array())
+			$mapping = array(
+				'xAxis' => array('M' => __('Male'), 'F' => __('Female')),
+				'yAxis' => $grades
 			);
+			$options = array();
+			$options['chart']['type'] = 'column';
+			$options['chart']['borderWidth'] = 1;
+			$options['title']['text'] = __('Number of Students By Grade for Year ') . $currentYear;
+			$options['xAxis']['title']['text'] = __('Education Grades');
+			$options['yAxis']['title']['text'] = __('Total Students');
+			$highChartDatas[] = $this->HighCharts2->getHighChartData($dataSet, $options, $mapping);
 
-			foreach ($data as $grade => $genderTotals) {
-				if (!in_array($grade, $categories)) {
-					$categories[] = $grades[$grade];
-				}
+			//Staffs By Position for current year
+			$currentYearId = $this->AcademicPeriod->getCurrent();
+			$currentYear = $this->AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
 
-				foreach ($genderTotals as $gender => $total) {
-					if ($gender == 'M') {
-						$series[0]['data'][] = $total;
-					} else {
-						$series[1]['data'][] = $total;
-					}
+			$staffsByPositionConditions = array('InstitutionSiteStaff.institution_site_id' => $id, 'Staff.gender IS NOT NULL');
+			$staffsByPositionConditions['OR'] = array(
+				'OR' => array(
+					array(
+						'InstitutionSiteStaff.end_year IS NOT NULL',
+						'InstitutionSiteStaff.start_year <= "' . $currentYear . '"',
+						'InstitutionSiteStaff.end_year >= "' . $currentYear . '"'
+					)
+				),
+				array(
+					'InstitutionSiteStaff.end_year IS NULL',
+					'InstitutionSiteStaff.start_year <= "' . $currentYear . '"'
+				)
+			);
+			$staffByPositions = $this->InstitutionSiteStaff->find('all', array(
+				'fields' => array(
+					'InstitutionSitePosition.type', 'Staff.gender', 'COUNT(InstitutionSiteStaff.id) AS total'
+				),
+				'conditions' => $staffsByPositionConditions,
+				'group' => array(
+					'InstitutionSitePosition.type', 'Staff.gender'
+				),
+				'order' => array(
+					'InstitutionSitePosition.type'
+				)
+			));
+
+			$positionTypes = array(
+				0 => __('Non-Teaching'),
+				1 => __('Teaching')
+			);
+			$dataSet = array();
+			foreach ($staffByPositions as $key => $staffByPosition) {
+				$positionType = $staffByPosition['InstitutionSitePosition']['type'];
+				$positionGender = $staffByPosition['Staff']['gender'];
+				$positionTotal = $staffByPosition[0]['total'];
+
+				if (!array_key_exists($positionType, $dataSet)) {
+					$dataSet[$positionType] = array('M' => 0, 'F' => 0);
 				}
+				$dataSet[$positionType][$positionGender] = $positionTotal;
 			}
 
-			$highChartData = array();
-			$highChartData['chart']['type'] = 'column';
-			$highChartData['chart']['borderWidth'] = 1;
-			$highChartData['title']['text'] = __('Number of Students By Grade for Year ') . $currentYear;
-			$highChartData['xAxis']['title']['text'] = __('Education Grades');
-			$highChartData['yAxis']['title']['text'] = __('Total Students');
-			$highChartData['xAxis']['categories'] = $categories;
-			$highChartData['series'] = $series;
-			
-			$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
-			$highChartDatas[] = $json_highChartData;
+			$mapping = array(
+				'xAxis' => array('M' => __('Male'), 'F' => __('Female')),
+				'yAxis' => $positionTypes
+			);
+			$options = array();
+			$options['chart']['type'] = 'column';
+			$options['chart']['borderWidth'] = 1;
+			$options['title']['text'] = __('Number of Staffs By Type for Year ') . $currentYear;
+			$options['xAxis']['title']['text'] = __('Position Type');
+			$options['yAxis']['title']['text'] = __('Total Staffs');
+			$highChartDatas[] = $this->HighCharts2->getHighChartData($dataSet, $options, $mapping);
 			
 			$this->set('contentHeader', $contentHeader);
 			$this->set('highChartDatas', $highChartDatas);
