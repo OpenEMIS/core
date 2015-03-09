@@ -11,19 +11,26 @@ $this->end();
 $this->start('contentBody');
 ?>
 
-<?php foreach ($highChartDatas as $key => $highChartData) : ?>
-	<?php if ($key == 0) : ?>
+<?php
+	$index = 1;
+	foreach ($highChartDatas as $key => $highChartData) :
+?>
+	<?php if ($index == 1) : ?>
 		<div class="form-group">
 	<?php endif ?>
-			<div id="container<?php echo $key;?>" class="col-md-6"><?php echo $highChartData; ?></div>
-	<?php if ($key % 2 == 1) : ?>
+			<div id="container<?php echo $index;?>" class="col-md-6"><?php echo $highChartData; ?></div>
+	<?php if ($index % 2 == 0) : ?>
 		</div>
+		<div class="row"></div>
 		<div class="form-group">
 	<?php endif ?>
-	<?php if ($key == count($highChartDatas)) : ?>
+	<?php if ($index == count($highChartDatas) + 1) : ?>
 		</div>
 	<?php endif ?>
-<?php endforeach ?>
+<?php
+	$index++;
+	endforeach;
+?>
 
 <?php
 $this->end();
