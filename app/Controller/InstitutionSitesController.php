@@ -53,8 +53,7 @@ class InstitutionSitesController extends AppController {
 		'Staff.StaffCategory',
 		'SecurityGroupUser',
 		'SecurityGroupArea',
-		'InstitutionSiteShift',
-		'InstitutionSiteStudentAbsence'
+		'InstitutionSiteShift'
 	);
 	
 	public $helpers = array('Paginator', 'Model');
