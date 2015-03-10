@@ -40,7 +40,7 @@ class AppController extends Controller {
 	public $uses = array('ConfigItem', 'SecurityUser');
 	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility', 'Model');
 	public $components = array(
-		'DebugKit.Toolbar',
+		'DebugKit.Toolbar' => array('panels' => array('variables' => false, 'history' => false, 'timer' => false, 'include' => false, 'log' => false)),
 		'RequestHandler',
 		'Session',
 		'DateTime',
