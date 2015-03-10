@@ -36,7 +36,6 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteCustomField',
 		'InstitutionSiteCustomFieldOption',
 		'InstitutionSiteCustomValue',
-		'InstitutionSiteHistory',
 		'InstitutionSiteOwnership',
 		'InstitutionSiteLocality',
 		'InstitutionSiteSector',
