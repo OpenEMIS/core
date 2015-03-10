@@ -19,9 +19,9 @@ $(document).ready(function() {
 
 var institution_site_dashboards = {
 	init: function() {
-		groups = $('div[id^=container]');
+		groups = $('.highchart');
 
-		$.each($('div[id^=container]'), function(key, group) {
+		$.each($('.highchart'), function(key, group) {
 			json = $(group).html();
 			obj = JSON.parse(json);
 			$(group).highcharts(obj);
