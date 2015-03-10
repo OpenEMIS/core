@@ -18,7 +18,7 @@ class StudentBehaviour extends StudentsAppModel {
 	public $useTable = 'student_behaviours';
 	
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('date_of_behaviour'),
 		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))

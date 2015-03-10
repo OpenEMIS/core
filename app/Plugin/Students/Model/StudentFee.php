@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StudentFee extends StudentsAppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction2'
 	);
 	
