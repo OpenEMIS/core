@@ -28,8 +28,18 @@ class InstitutionSiteStaff extends AppModel {
 			'supportedFormats' => array('csv')
 		),
 		'DatePicker' => array('start_date', 'end_date'),
-		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
+		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year'),
+		'HighChart' => array(
+			'number_of_staff_by_position' => array(
+				'_function' => 'getNumberOfStaffByPosition',
+				'title' => array('text' => 'Number of Staffs By Type'),
+				'chart' => array('type' => 'column', 'borderWidth' => 1),
+				'xAxis' => array('title' => array('text' => 'Position Type')),
+				'yAxis' => array('title' => array('text' => 'Total Staffs'))
+			)
+		)
 	);
+
 	public $validate = array(
 		'search' => array(
 			'ruleRequired' => array(
@@ -964,4 +974,68 @@ class InstitutionSiteStaff extends AppModel {
 		return $this->reportMapping[$index]['fileName'];
 	}
 
+	public function getNumberOfStaffByPosition($params=array()) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
+		$_conditions = array();
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStaff.'.$key] = $value;
+		}
+
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
+
+		//$staffsByPositionConditions = array('InstitutionSiteStaff.institution_site_id' => $id, 'Staff.gender IS NOT NULL');
+		$staffsByPositionConditions = array('Staff.gender IS NOT NULL');
+		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+		$staffsByPositionConditions['OR'] = array(
+			'OR' => array(
+				array(
+					'InstitutionSiteStaff.end_year IS NOT NULL',
+					'InstitutionSiteStaff.start_year <= "' . $currentYear . '"',
+					'InstitutionSiteStaff.end_year >= "' . $currentYear . '"'
+				)
+			),
+			array(
+				'InstitutionSiteStaff.end_year IS NULL',
+				'InstitutionSiteStaff.start_year <= "' . $currentYear . '"'
+			)
+		);
+		$staffByPositions = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSitePosition.type', 'Staff.gender', 'COUNT(InstitutionSiteStaff.id) AS total'
+			),
+			'conditions' => $staffsByPositionConditions,
+			'group' => array(
+				'InstitutionSitePosition.type', 'Staff.gender'
+			),
+			'order' => array(
+				'InstitutionSitePosition.type'
+			)
+		));
+
+		$positionTypes = array(
+			0 => __('Non-Teaching'),
+			1 => __('Teaching')
+		);
+		$dataSet = array(
+			'M' => array('name' => __('Male'), 'data' => array()),
+			'F' => array('name' => __('Female'), 'data' => array())
+		);
+		foreach ($staffByPositions as $key => $staffByPosition) {
+			$positionType = $staffByPosition['InstitutionSitePosition']['type'];
+			$staffGender = $staffByPosition['Staff']['gender'];
+			$StaffTotal = $staffByPosition[0]['total'];
+
+			if (!array_key_exists($positionType, $dataSet['M']['data'])) {
+				$dataSet['M']['data'][$positionType] = 0;
+			}
+			if (!array_key_exists($positionType, $dataSet['F']['data'])) {
+				$dataSet['F']['data'][$positionType] = 0;
+			}
+			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+		}
+
+		return $dataSet;
+	}
 }
