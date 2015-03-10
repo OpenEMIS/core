@@ -1,4 +1,5 @@
 <?php
+echo $this->Html->css('highchart-override', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/HighCharts/js/highcharts', false);
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
 echo $this->Html->script('institution_site_dashboards', false);
@@ -11,26 +12,11 @@ $this->end();
 $this->start('contentBody');
 ?>
 
-<?php
-	$index = 1;
-	foreach ($highChartDatas as $key => $highChartData) :
-?>
-	<?php if ($index == 1) : ?>
-		<div class="form-group">
-	<?php endif ?>
-			<div id="container<?php echo $index;?>" class="col-md-6"><?php echo $highChartData; ?></div>
-	<?php if ($index % 2 == 0) : ?>
-		</div>
-		<div class="row"></div>
-		<div class="form-group">
-	<?php endif ?>
-	<?php if ($index == count($highChartDatas) + 1) : ?>
-		</div>
-	<?php endif ?>
-<?php
-	$index++;
-	endforeach;
-?>
+<div class="row institution-dashboard">
+	<?php foreach ($highChartDatas as $key => $highChartData) : ?>
+		<div class="highchart col-md-6"><?php echo $highChartData; ?></div>
+	<?php endforeach ?>
+</div>
 
 <?php
 $this->end();
