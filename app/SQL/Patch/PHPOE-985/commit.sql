@@ -8,8 +8,8 @@ UPDATE navigations SET navigations.order = @prevSalaryOrder + 2 WHERE title = 'L
 UPDATE navigations SET header = 'Details' WHERE title = 'Memberships' OR title = 'Licenses';
 
 -- security_users backup
-CREATE TABLE IF NOT EXISTS 985_security_users LIKE security_users;
-INSERT 985_security_users SELECT * FROM security_users WHERE NOT EXISTS (SELECT * FROM 985_security_users);
+CREATE TABLE IF NOT EXISTS z_985_security_users LIKE security_users;
+INSERT z_985_security_users SELECT * FROM security_users WHERE NOT EXISTS (SELECT * FROM z_985_security_users);
 
 -- security_users user edit
 ALTER TABLE `security_users` ADD `middle_name` VARCHAR(100) NULL DEFAULT NULL AFTER `first_name`;
@@ -73,29 +73,29 @@ UPDATE security_functions SET _view = 'StaffSpecialNeed|StaffSpecialNeed.index|S
 UPDATE security_functions SET _view = 'StaffAward|StaffAward.index|StaffAward.view', _edit = '_view:StaffAward.edit', _add = '_view:StaffAward.add', _delete = '_view:StaffAward.remove', _execute = '_view:StaffAward.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
 
 -- backup student and staff tables
-CREATE TABLE IF NOT EXISTS 985_students LIKE students;
-INSERT 985_students SELECT * FROM students WHERE NOT EXISTS (SELECT * FROM 985_students);
-CREATE TABLE IF NOT EXISTS 985_staff LIKE staff;
-INSERT 985_staff SELECT * FROM staff WHERE NOT EXISTS (SELECT * FROM 985_staff);
+CREATE TABLE IF NOT EXISTS z_985_students LIKE students;
+INSERT z_985_students SELECT * FROM students WHERE NOT EXISTS (SELECT * FROM z_985_students);
+CREATE TABLE IF NOT EXISTS z_985_staff LIKE staff;
+INSERT z_985_staff SELECT * FROM staff WHERE NOT EXISTS (SELECT * FROM z_985_staff);
 
 -- student and staff migration to security_users
 ALTER TABLE `students` ADD `security_user_id` INT NULL DEFAULT NULL AFTER `photo_content`;
 ALTER TABLE `staff` ADD `security_user_id` INT NULL DEFAULT NULL AFTER `photo_content`;
 
-ALTER TABLE `security_users` ADD `985_student_id` INT NULL COMMENT '985 for migration' AFTER `id`, ADD UNIQUE (`985_student_id`) ;
-ALTER TABLE `security_users` ADD `985_staff_id` INT NULL COMMENT '985 for migration' AFTER `id`, ADD UNIQUE (`985_staff_id`) ;
+ALTER TABLE `security_users` ADD `z_985_student_id` INT NULL COMMENT '985 for migration' AFTER `id`, ADD UNIQUE (`z_985_student_id`) ;
+ALTER TABLE `security_users` ADD `z_985_staff_id` INT NULL COMMENT '985 for migration' AFTER `id`, ADD UNIQUE (`z_985_staff_id`) ;
 
-INSERT INTO security_users (985_student_id, openemis_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death ) SELECT id, identification_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death FROM students;
+INSERT INTO security_users (z_985_student_id, openemis_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death ) SELECT id, identification_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death FROM students;
 
-INSERT INTO security_users (985_staff_id, openemis_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death ) SELECT id, identification_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death FROM staff;
+INSERT INTO security_users (z_985_staff_id, openemis_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death ) SELECT id, identification_no, first_name, middle_name, third_name, last_name, preferred_name, gender, address, postal_code, address_area_id, birthplace_area_id, photo_name, photo_content, modified_user_id, modified, created_user_id, created, date_of_birth, date_of_death FROM staff;
 
 
 -- link up tables
-UPDATE security_users INNER JOIN students ON security_users.985_student_id = students.id SET students.security_user_id = security_users.id WHERE security_users.985_student_id IS NOT null; 
--- SELECT security_users.id, students.id AS student_id, security_users.985_student_id, students.security_user_id FROM security_users INNER JOIN students on security_users.985_student_id = students.id WHERE security_users.985_student_id IS NOT null;
+UPDATE security_users INNER JOIN students ON security_users.z_985_student_id = students.id SET students.security_user_id = security_users.id WHERE security_users.z_985_student_id IS NOT null; 
+-- SELECT security_users.id, students.id AS student_id, security_users.z_985_student_id, students.security_user_id FROM security_users INNER JOIN students on security_users.z_985_student_id = students.id WHERE security_users.z_985_student_id IS NOT null;
 
-UPDATE security_users INNER JOIN staff ON security_users.985_staff_id = staff.id SET staff.security_user_id = security_users.id WHERE security_users.985_staff_id IS NOT null;
--- SELECT security_users.id, staff.id AS staff_id, security_users.985_staff_id, staff.security_user_id FROM security_users INNER JOIN staff on security_users.985_staff_id = staff.id WHERE security_users.985_staff_id IS NOT null;
+UPDATE security_users INNER JOIN staff ON security_users.z_985_staff_id = staff.id SET staff.security_user_id = security_users.id WHERE security_users.z_985_staff_id IS NOT null;
+-- SELECT security_users.id, staff.id AS staff_id, security_users.z_985_staff_id, staff.security_user_id FROM security_users INNER JOIN staff on security_users.z_985_staff_id = staff.id WHERE security_users.z_985_staff_id IS NOT null;
 
 -- remove unneeded fields from student and staff
 ALTER TABLE `students` DROP identification_no;
@@ -554,8 +554,8 @@ created
 FROM security_users WHERE telephone IS NOT NULL AND telephone <> '';
 
 -- removing of data that helps migration
-ALTER TABLE `security_users` DROP `985_staff_id`;
-ALTER TABLE `security_users` DROP `985_student_id`;
+ALTER TABLE `security_users` DROP `z_985_staff_id`;
+ALTER TABLE `security_users` DROP `z_985_student_id`;
 ALTER TABLE `security_users` DROP `telephone`;
 ALTER TABLE `security_users` DROP `email`;
 
@@ -601,17 +601,17 @@ UPDATE navigations SET action = 'SecurityUserLogin', pattern = 'SecurityUserLogi
 
 
 
-RENAME TABLE student_identities TO 985_student_identities;
-RENAME TABLE student_nationalities TO 985_student_nationalities;
-RENAME TABLE student_languages TO 985_student_languages;
-RENAME TABLE student_comments TO 985_student_comments;
-RENAME TABLE student_special_needs TO 985_student_special_needs;
-RENAME TABLE student_awards TO 985_student_awards;
-RENAME TABLE student_contacts TO 985_student_contacts;
-RENAME TABLE staff_identities TO 985_staff_identities;
-RENAME TABLE staff_nationalities TO 985_staff_nationalities;
-RENAME TABLE staff_languages TO 985_staff_languages;
-RENAME TABLE staff_comments TO 985_staff_comments;
-RENAME TABLE staff_special_needs TO 985_staff_special_needs;
-RENAME TABLE staff_awards TO 985_staff_awards;
-RENAME TABLE staff_contacts TO 985_staff_contacts;
+RENAME TABLE student_identities TO z_985_student_identities;
+RENAME TABLE student_nationalities TO z_985_student_nationalities;
+RENAME TABLE student_languages TO z_985_student_languages;
+RENAME TABLE student_comments TO z_985_student_comments;
+RENAME TABLE student_special_needs TO z_985_student_special_needs;
+RENAME TABLE student_awards TO z_985_student_awards;
+RENAME TABLE student_contacts TO z_985_student_contacts;
+RENAME TABLE staff_identities TO z_985_staff_identities;
+RENAME TABLE staff_nationalities TO z_985_staff_nationalities;
+RENAME TABLE staff_languages TO z_985_staff_languages;
+RENAME TABLE staff_comments TO z_985_staff_comments;
+RENAME TABLE staff_special_needs TO z_985_staff_special_needs;
+RENAME TABLE staff_awards TO z_985_staff_awards;
+RENAME TABLE staff_contacts TO z_985_staff_contacts;

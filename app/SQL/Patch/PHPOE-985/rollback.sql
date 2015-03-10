@@ -70,20 +70,20 @@ UPDATE census_teacher_fte SET gender_id = @fieldGenderFemale WHERE gender_id = @
 UPDATE census_teacher_training SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 UPDATE census_sanitations SET gender_id = @fieldGenderFemale WHERE gender_id = @newGenderFemale;
 
-RENAME TABLE 985_student_identities TO student_identities;
-RENAME TABLE 985_student_nationalities TO student_nationalities;
-RENAME TABLE 985_student_languages TO student_languages;
-RENAME TABLE 985_student_comments TO student_comments;
-RENAME TABLE 985_student_special_needs TO student_special_needs;
-RENAME TABLE 985_student_awards TO student_awards;
-RENAME TABLE 985_student_contacts TO student_contacts;
-RENAME TABLE 985_staff_identities TO staff_identities;
-RENAME TABLE 985_staff_nationalities TO staff_nationalities;
-RENAME TABLE 985_staff_languages TO staff_languages;
-RENAME TABLE 985_staff_comments TO staff_comments;
-RENAME TABLE 985_staff_special_needs TO staff_special_needs;
-RENAME TABLE 985_staff_awards TO staff_awards;
-RENAME TABLE 985_staff_contacts TO staff_contacts;
+RENAME TABLE z_985_student_identities TO student_identities;
+RENAME TABLE z_985_student_nationalities TO student_nationalities;
+RENAME TABLE z_985_student_languages TO student_languages;
+RENAME TABLE z_985_student_comments TO student_comments;
+RENAME TABLE z_985_student_special_needs TO student_special_needs;
+RENAME TABLE z_985_student_awards TO student_awards;
+RENAME TABLE z_985_student_contacts TO student_contacts;
+RENAME TABLE z_985_staff_identities TO staff_identities;
+RENAME TABLE z_985_staff_nationalities TO staff_nationalities;
+RENAME TABLE z_985_staff_languages TO staff_languages;
+RENAME TABLE z_985_staff_comments TO staff_comments;
+RENAME TABLE z_985_staff_special_needs TO staff_special_needs;
+RENAME TABLE z_985_staff_awards TO staff_awards;
+RENAME TABLE z_985_staff_contacts TO staff_contacts;
 
 ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
 ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATETIME NOT NULL;
@@ -99,11 +99,11 @@ DROP TABLE user_awards;
 DROP TABLE user_contacts;
 
 DROP TABLE students;
-RENAME TABLE 985_students TO students;
+RENAME TABLE z_985_students TO students;
 DROP TABLE staff;
-RENAME TABLE 985_staff TO staff;
+RENAME TABLE z_985_staff TO staff;
 DROP TABLE security_users;
-RENAME TABLE 985_security_users TO security_users;
+RENAME TABLE z_985_security_users TO security_users;
 
 DROP TABLE genders;
 
