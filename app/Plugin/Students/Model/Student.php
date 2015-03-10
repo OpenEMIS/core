@@ -16,7 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Student extends StudentsAppModel {
 	public $actsAs = array(
-		'Excel',
+		'Excel' => array('header' => array(
+			'SecurityUser' => array('username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'status')
+			)
+		),
+		// 'openemis_no', 'first_name', 'last_name'
 		'Search',
 		'TrackActivity' => array('target' => 'Students.StudentActivity', 'key' => 'student_id', 'session' => 'Student.id'),
 		'CascadeDelete' => array(
@@ -70,26 +74,39 @@ class Student extends StudentsAppModel {
 		}
 		return $conditions;
 	}
+
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$areaList = ClassRegistry::init('Area')->find('list',array('fields' => array('id', 'name')));
+		$lookup = array(
+			'SecurityUser.status' => $this->SecurityUser->getStatus(),
+			'SecurityUser.gender_id' => $this->SecurityUser->Gender->getList(),
+			'SecurityUser.address_area_id' => $areaList,
+			'SecurityUser.birthplace_area_id' => $areaList,
+		);
+		return $lookup;
+	}
+	
 	public function excelGetModels() {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('Student.id')) {
 			$models = array(
-				array('model' => $this,
+				array('model' => $this/*,
 					'include' => array(
 						'header' => 'StudentCustomField',
 						'data' => 'StudentCustomValue',
 						'dataOptions' => 'StudentCustomFieldOption',
 						'plugin' => 'Students'
-					)
+					)*/
 				),
-				array('model' => $this->StudentContact, 'name' => 'Contacts'),
-				array('model' => $this->StudentIdentity, 'name' => 'Identities'),
-				array('model' => $this->StudentNationality, 'name' => 'Nationalities'),
-				array('model' => $this->StudentGuardian, 'name' => 'Guardians'),
-				array('model' => $this->StudentLanguage, 'name' => 'Languages'),
-				array('model' => $this->StudentComment, 'name' => 'Comments'),
-				array('model' => $this->StudentSpecialNeed, 'name' => 'Special Needs'),
-				array('model' => $this->StudentAward, 'name' => 'Awards'),
+				array('model' => ClassRegistry::init('Students.StudentContact'), 'name' => 'Contacts'),
+				array('model' => ClassRegistry::init('Students.StudentIdentity'), 'name' => 'Identities'),
+				array('model' => ClassRegistry::init('Students.StudentNationality'), 'name' => 'Nationalities'),
+				array('model' => ClassRegistry::init('Students.StudentLanguage'), 'name' => 'Languages'),
+				array('model' => ClassRegistry::init('Students.StudentComment'), 'name' => 'Comments'),
+				array('model' => ClassRegistry::init('Students.StudentSpecialNeed'), 'name' => 'Special Needs'),
+				array('model' => ClassRegistry::init('Students.StudentAward'), 'name' => 'Awards'),
+				array('model' => ClassRegistry::init('Students.StudentGuardian'), 'name' => 'Guardians'),
 				array('model' => $this->Programme, 'name' => 'Programmes'),
 				array('model' => $this->Absence, 'name' => 'Absences'),
 				array('model' => $this->StudentBehaviour, 'name' => 'Behaviour'),

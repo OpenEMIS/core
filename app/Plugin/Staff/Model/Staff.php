@@ -18,7 +18,7 @@ class Staff extends StaffAppModel {
 	public $useTable = 'staff';
 
 	public $actsAs = array(
-		'Excel',
+		'Excel' => array('header' => array('SecurityUser' => array('username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'status'))),
 		'Search',
 		'UserAccess',
 		'TrackActivity' => array('target' => 'Staff.StaffActivity', 'key' => 'staff_id', 'session' => 'Staff.id'),
@@ -88,25 +88,38 @@ class Staff extends StaffAppModel {
 		}
 		return $conditions;
 	}
+
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$areaList = ClassRegistry::init('Area')->find('list',array('fields' => array('id', 'name')));
+		$lookup = array(
+			'SecurityUser.status' => $this->SecurityUser->getStatus(),
+			'SecurityUser.gender_id' => $this->SecurityUser->Gender->getList(),
+			'SecurityUser.address_area_id' => $areaList,
+			'SecurityUser.birthplace_area_id' => $areaList,
+		);
+		return $lookup;
+	}
+
 	public function excelGetModels() {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('Staff.id')) {
 			$models = array(
 				array('model' => $this,
-					'include' => array(
-						'header' => 'StaffCustomField',
-						'data' => 'StaffCustomValue',
-						'dataOptions' => 'StaffCustomFieldOption',
-						'plugin' => 'Staff'
-					)
+					// 'include' => array(
+					// 	'header' => 'StaffCustomField',
+					// 	'data' => 'StaffCustomValue',
+					// 	'dataOptions' => 'StaffCustomFieldOption',
+					// 	'plugin' => 'Staff'
+					// )
 				),
-				array('model' => $this->StaffContact, 'name' => 'Contacts'),
-				//array('model' => $this->StaffIdentity, 'name' => 'Identities'), -- not working due to unknown reasons
-				array('model' => $this->StaffNationality, 'name' => 'Nationalities'),
-				array('model' => $this->StaffLanguage, 'name' => 'Languages'),
-				array('model' => $this->StaffComment, 'name' => 'Comments'),
-				array('model' => $this->StaffSpecialNeed, 'name' => 'Special Needs'),
-				array('model' => $this->StaffAward, 'name' => 'Awards'),
+				array('model' => ClassRegistry::init('Staff.StaffContact'), 'name' => 'Contacts'),
+				array('model' => ClassRegistry::init('Staff.StaffIdentity'), 'name' => 'Identities'),
+				array('model' => ClassRegistry::init('Staff.StaffNationality'), 'name' => 'Nationalities'),
+				array('model' => ClassRegistry::init('Staff.StaffLanguage'), 'name' => 'Languages'),
+				array('model' => ClassRegistry::init('Staff.StaffComment'), 'name' => 'Comments'),
+				array('model' => ClassRegistry::init('Staff.StaffSpecialNeed'), 'name' => 'Special Needs'),
+				array('model' => ClassRegistry::init('Staff.StaffAward'), 'name' => 'Awards'),
 				array('model' => $this->StaffMembership, 'name' => 'Membership'),
 				array('model' => $this->StaffLicense, 'name' => 'Licenses'),
 				array('model' => $this->StaffQualification, 'name' => 'Qualifications'),

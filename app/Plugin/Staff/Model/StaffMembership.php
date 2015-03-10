@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StaffMembership extends StaffAppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction',
 		'DatePicker' => array('issue_date', 'expiry_date')
 	);
@@ -50,6 +50,18 @@ class StaffMembership extends StaffAppModel {
         )
 	);
 	public $headerDefault = 'Memberships';
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+
+		if (CakeSession::check('Staff.id')) {
+			$id = CakeSession::read('Staff.id');
+			$conditions = array('Staff.id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function beforeAction($controller, $action) {
         $controller->set('model', $this->alias);

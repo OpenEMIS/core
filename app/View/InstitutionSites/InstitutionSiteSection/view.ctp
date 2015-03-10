@@ -43,7 +43,7 @@ $this->start('contentBody');
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteSection.staff_id') ?></div>
-	<div class="col-md-6"><?php echo ModelHelper::getName($data['Staff']) ?></div>
+	<div class="col-md-6"><?php echo ModelHelper::getName($data['Staff']['SecurityUser']) ?></div>
 </div>
 
 <div class="row">

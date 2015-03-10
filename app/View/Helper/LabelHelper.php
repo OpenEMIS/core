@@ -444,10 +444,22 @@ class LabelHelper extends AppHelper {
 		'SecurityUser' => array(
 			'title' => 'User',
 			'name' => 'User',
-			'username' => 'User Name',
-			'gender_id' => 'Gender',
 			'SecurityGroupUser' => 'Group',
-			'openemis_no' => 'OpenEMIS ID'
+			'username' => 'User Name', 
+			'openemis_no' => 'Openemis ID', 
+			'first_name' => 'First Name', 
+			'middle_name' => 'Middle Name', 
+			'third_name' => 'Third Name', 
+			'last_name' => 'Last Name', 
+			'preferred_name' => 'Preferred Name', 
+			'address' => 'Address', 
+			'postal_code' => 'Postal Code', 
+			'address_area_id' => 'Address Area', 
+			'birthplace_area_id' => 'Birthplace Area', 
+			'gender_id' => 'Gender', 
+			'date_of_birth' => 'Date Of Birth', 
+			'date_of_death' => 'Date Of Death', 
+			'status' => 'Status'
 		),
 		
 		'InstitutionSiteFee' => array(
@@ -617,7 +629,7 @@ class LabelHelper extends AppHelper {
 			'writing' => 'Writing'
 		),
 		'StudentComment' => array(
-			'title' => 'title',
+			'title' => 'Title',
 			'comment_date' => 'Date',
 			'comment' => 'Comment'
 		),

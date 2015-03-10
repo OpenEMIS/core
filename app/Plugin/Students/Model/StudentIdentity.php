@@ -83,6 +83,17 @@ class StudentIdentity extends StudentsAppModel {
 		return true;
 	}
 
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Student.security_user_id')) {
+			$id = CakeSession::read('Student.security_user_id');
+			$conditions = array($this->alias.'.security_user_id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
+
 	public function beforeAction() {
 		parent::beforeAction();
 		if (!$this->Session->check('Student.id')) {
