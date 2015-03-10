@@ -122,4 +122,44 @@ class InstitutionSiteClassStaff extends AppModel {
 			return $controller->redirect(array('action' => $this->_action));
 		}
 	}
+
+	// used by InstitutionSite.classesEdit/classesView
+	public function getStaffs($classId, $mode = 'all') {
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = InstitutionSiteClassStaff.staff_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Staff.security_user_id')
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array('InstitutionSiteClass.id = InstitutionSiteClassStaff.institution_site_class_id')
+				)
+			),
+			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId),
+			'order' => array('SecurityUser.first_name')
+		));
+
+		if ($mode == 'list') {
+			$list = array();
+			foreach ($data as $obj) {
+				$id = $obj['Staff']['id'];
+				$list[$id] = ModelHelper::getName($obj['SecurityUser']);
+			}
+			return $list;
+		} else {
+			return $data;
+		}
+	}
 }

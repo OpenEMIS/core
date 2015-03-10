@@ -81,6 +81,17 @@ class StaffIdentity extends StaffAppModel {
 		return true;
 	}
 
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Staff.security_user_id')) {
+			$id = CakeSession::read('Staff.security_user_id');
+			$conditions = array($this->alias.'.security_user_id' => $id);
+		}
+		return $conditions;
+	}
+	/* Excel Behaviour */
+
 	public function beforeAction() {
 		parent::beforeAction();
 		if (!$this->Session->check('Staff.id')) {

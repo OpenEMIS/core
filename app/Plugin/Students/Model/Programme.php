@@ -19,7 +19,7 @@ class Programme extends AppModel {
 	public $useTable = 'institution_site_students';
 	
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('openemis_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
@@ -41,6 +41,18 @@ class Programme extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+
+		if (CakeSession::check('Student.id')) {
+			$id = CakeSession::read('Student.id');
+			$conditions = array('Student.id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function beforeAction() {
 		parent::beforeAction();

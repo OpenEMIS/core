@@ -256,7 +256,16 @@ class InstitutionSiteSection extends AppModel {
 		if ($this->exists($id)) {
 			$this->contain(array(
 					'ModifiedUser', 'CreatedUser', 'AcademicPeriod', 
-					'InstitutionSiteShift', 'EducationGrade', 'Staff', 
+					'InstitutionSiteShift', 'EducationGrade', 
+					'Staff' => array(
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'gender_id', 'date_of_birth'
+							),
+							'Gender' => array('name')
+						)
+					), 
 					'InstitutionSiteSectionStudent' => array(
 						'Student' => array(
 							'SecurityUser' => array(
@@ -276,7 +285,6 @@ class InstitutionSiteSection extends AppModel {
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
 			$categoryOptions = $this->InstitutionSiteSectionStudent->StudentCategory->getList(array('listOnly' => true));
-			
 			$this->setVar(compact('data', 'grades', 'categoryOptions'));
 		} else {
 			$this->Message->alert('general.notExists');

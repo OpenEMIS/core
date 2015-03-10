@@ -18,7 +18,7 @@ class StudentGuardian extends StudentsAppModel {
 	public $actsAs = array(
 		'Excel' => array(
 			'header' => array(
-				'Student' => array('openemis_no', 'first_name', 'last_name'),
+				'Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),
 				'Guardian' => array('first_name', 'middle_name', 'last_name', 'email', 'home_phone', 'mobile_phone')
 			)
 		),
@@ -49,6 +49,16 @@ class StudentGuardian extends StudentsAppModel {
 		)
 	);
 
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Student.id')) {
+			$id = CakeSession::read('Student.id');
+			$conditions = array($this->alias.'.student_id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function getGuardian($guardianId, $studentId) {
 		$this->unbindModel(array('belongsTo' => array('Guardian')));
