@@ -30,12 +30,11 @@ class InstitutionSiteStaff extends AppModel {
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year'),
 		'HighChart' => array(
-			'number_of_staff_by_position' => array(
-				'_function' => 'getNumberOfStaffByPosition',
-				'title' => array('text' => 'Number of Staffs By Type'),
+			'number_of_staff' => array(
+				'_function' => 'getNumberOfStaff',
 				'chart' => array('type' => 'column', 'borderWidth' => 1),
 				'xAxis' => array('title' => array('text' => 'Position Type')),
-				'yAxis' => array('title' => array('text' => 'Total Staffs'))
+				'yAxis' => array('title' => array('text' => 'Total'))
 			)
 		)
 	);
@@ -974,7 +973,7 @@ class InstitutionSiteStaff extends AppModel {
 		return $this->reportMapping[$index]['fileName'];
 	}
 
-	public function getNumberOfStaffByPosition($params=array()) {
+	public function getNumberOfStaff($params=array()) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
 		$_conditions = array();
 		foreach ($conditions as $key => $value) {
@@ -1036,6 +1035,10 @@ class InstitutionSiteStaff extends AppModel {
 			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
 		}
 
-		return $dataSet;
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($positionTypes);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
 	}
 }
