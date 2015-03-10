@@ -26,10 +26,9 @@ class InstitutionSiteStudent extends AppModel {
 		'HighChart' => array(
 			'number_of_students_by_year' => array(
 				'_function' => 'getNumberOfStudentsByYear',
-				'title' => array('text' => 'Number of Students By Year'),
 				'chart' => array('type' => 'column', 'borderWidth' => 1),
 				'xAxis' => array('title' => array('text' => 'Years')),
-				'yAxis' => array('title' => array('text' => 'Total Students'))
+				'yAxis' => array('title' => array('text' => 'Total'))
 			)
 		)
 	);
@@ -643,7 +642,8 @@ class InstitutionSiteStudent extends AppModel {
 			}
 		}
 
-		return $dataSet;
+		$params['dataSet'] = $dataSet;
+
+		return $params;
 	}
 }
-

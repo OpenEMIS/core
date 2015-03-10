@@ -21,10 +21,9 @@ class InstitutionSiteSectionStudent extends AppModel {
 		'HighChart' => array(
 			'number_of_students_by_grade' => array(
 				'_function' => 'getNumberOfStudentsByGrade',
-				'title' => array('text' => 'Number of Students By Grade'),
 				'chart' => array('type' => 'column', 'borderWidth' => 1),
 				'xAxis' => array('title' => array('text' => 'Education Grades')),
-				'yAxis' => array('title' => array('text' => 'Total Students'))
+				'yAxis' => array('title' => array('text' => 'Total'))
 			)
 		)
 	);
@@ -474,6 +473,10 @@ class InstitutionSiteSectionStudent extends AppModel {
 			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
 		}
 
-		return $dataSet;
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($grades);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
 	}
 }

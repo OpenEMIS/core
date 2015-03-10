@@ -23,16 +23,21 @@ class HighChartBehavior extends ModelBehavior {
 	}
 
 	public function getHighChart(Model $model, $chart, $params = array()) {
+		$function = $this->settings[$model->alias][$chart]['_function'];
+		$params = call_user_func_array(array($model, $function), array($params));
+
+		if (!empty($params['dataSet'])) {
+			$dataSet = $params['dataSet'];
+		}
+
 		$options = array();
 		if (!empty($params['options'])) {
 			$options = $params['options'];
 		}
 		$_options = $this->settings[$model->alias][$chart];
+		$_options['title'] = array('text' => Inflector::humanize($chart));
 		unset($_options['_function']);
-		$options = array_merge($_options, $options);
-
-		$function = $this->settings[$model->alias][$chart]['_function'];
-		$dataSet = call_user_func_array(array($model, $function), array($params));
+		$options = array_replace_recursive($_options, $options);
 
 		if (!empty($dataSet)) {
 			if (empty($options['xAxis']['categories'])) {
