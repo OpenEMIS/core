@@ -53,7 +53,7 @@ class HomeController extends AppController {
 	}
 	
 	public function index() {
-		$this->redirect(array('action' => 'dashboard'));
+		//$this->redirect(array('action' => 'dashboard'));
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
@@ -96,161 +96,9 @@ class HomeController extends AppController {
 		$highChartDatas = array();
 		$highChartDatas[] = $this->InstitutionSiteStudent->getHighChart('number_of_students_by_year');
 		$highChartDatas[] = $this->InstitutionSiteSectionStudent->getHighChart('number_of_students_by_grade');
-		$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff_by_position');
+		$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff');
 
 		$this->set('highChartDatas', $highChartDatas);
-		/*
-		//Students By Year
-		$this->InstitutionSiteStudent->formatResult = true;
-		$periodResult = $this->InstitutionSiteStudent->find('first', array(
-			'fields' => array(
-				'MIN(InstitutionSiteStudent.start_year) as min_year', 'MAX(InstitutionSiteStudent.end_year) as max_year'
-			)
-		));
-		$minYear = $periodResult['min_year'];
-		$maxYear = $periodResult['max_year'];
-
-		$years = array();
-		$data = array();
-
-		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
-			$years[$currentYear] = $currentYear;
-
-			$studentsByYearConditions = array('Student.gender IS NOT NULL');
-			$studentsByYearConditions['OR'] = array(
-				array(
-					'InstitutionSiteStudent.end_year IS NOT NULL',
-					'InstitutionSiteStudent.start_year <= "' . $currentYear . '"',
-					'InstitutionSiteStudent.end_year >= "' . $currentYear . '"'
-				)
-			);
-
-			$this->InstitutionSiteStudent->contain('Student');
-			$studentsByYear = $this->InstitutionSiteStudent->find('all', array(
-				'fields' => array(
-					'Student.gender', 'COUNT(InstitutionSiteStudent.id) AS total'
-				),
-				'conditions' => $studentsByYearConditions,
-				'group' => array(
-					'Student.gender'
-				)
-			));
-
-			if (!array_key_exists($currentYear, $data)) {
-				$data[$currentYear] = array('M' => 0, 'F' => 0);
-			}
-			foreach ($studentsByYear as $key => $studentByYear) {
-				$yearGender = isset($studentByYear['Student']['gender']) ? $studentByYear['Student']['gender'] : null;
-				$yearTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
-
-				$data[$currentYear][$yearGender] = $yearTotal;
-			}
-		}
-
-		$categories = array();
-		$series = array(
-			array('name' => __('Male'), 'data' => array()),
-			array('name' => __('Female'), 'data' => array())
-		);
-
-		foreach ($data as $year => $genderTotals) {
-			if (!in_array($year, $categories)) {
-				$categories[] = $year;
-			}
-
-			foreach ($genderTotals as $gender => $total) {
-				if ($gender == 'M') {
-					$series[0]['data'][] = $total;
-				} else {
-					$series[1]['data'][] = $total;
-				}
-			}
-		}
-
-		$highChartData = array();
-		$highChartData['chart']['type'] = 'column';
-		$highChartData['chart']['borderWidth'] = 1;
-		$highChartData['title']['text'] = __('Number of Students By Year');
-		$highChartData['xAxis']['title']['text'] = __('Years');
-		$highChartData['yAxis']['title']['text'] = __('Total Students');
-		$highChartData['xAxis']['categories'] = $categories;
-		$highChartData['series'] = $series;
-		
-		$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
-		$highChartDatas[] = $json_highChartData;
-		*/
-
-		/*
-		//Students By Grade for current year
-		$currentYearId = $this->AcademicPeriod->getCurrent();
-		$currentYear = $this->AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
-
-		//$this->InstitutionSiteSectionStudent->formatResult = true;
-		$studentByGrades = $this->InstitutionSiteSectionStudent->find('all', array(
-			'fields' => array(
-				'EducationGrade.id', 'EducationGrade.name', 'Student.gender', 'COUNT(InstitutionSiteSectionStudent.id) AS total'
-			),
-			'conditions' => array(
-				'InstitutionSiteSection.academic_period_id' => $currentYearId
-			),
-			'group' => array(
-				'EducationGrade.id', 'Student.gender'
-			),
-			'order' => array(
-				'EducationGrade.order'
-			)
-		));
-
-		$grades = array();
-		$data = array();
-		foreach ($studentByGrades as $key => $studentByGrade) {
-			$gradeId = $studentByGrade['EducationGrade']['id'];
-			$gradeName = $studentByGrade['EducationGrade']['name'];
-			$gradeGender = $studentByGrade['Student']['gender'];
-			$gradeTotal = $studentByGrade[0]['total'];
-
-			$grades[$gradeId] = $gradeName;
-			if (!array_key_exists($gradeId, $data)) {
-				$data[$gradeId] = array('M' => 0, 'F' => 0);
-			}
-			$data[$gradeId][$gradeGender] = $gradeTotal;
-		}
-
-		$categories = array();
-		$series = array(
-			array('name' => __('Male'), 'data' => array()),
-			array('name' => __('Female'), 'data' => array())
-		);
-
-		foreach ($data as $grade => $genderTotals) {
-			if (!in_array($grade, $categories)) {
-				$categories[] = $grades[$grade];
-			}
-
-			foreach ($genderTotals as $gender => $total) {
-				if ($gender == 'M') {
-					$series[0]['data'][] = $total;
-				} else {
-					$series[1]['data'][] = $total;
-				}
-			}
-		}
-
-		$highChartData = array();
-		$highChartData['chart']['type'] = 'column';
-		$highChartData['chart']['borderWidth'] = 1;
-		$highChartData['title']['text'] = __('Number of Students By Grade for Year ') . $currentYear;
-		$highChartData['xAxis']['title']['text'] = __('Education Grades');
-		$highChartData['yAxis']['title']['text'] = __('Total Students');
-		$highChartData['xAxis']['categories'] = $categories;
-		$highChartData['series'] = $series;
-		
-		$json_highChartData = json_encode($highChartData, JSON_NUMERIC_CHECK);
-		$highChartDatas[] = $json_highChartData;
-		$highChartDatas[] = $json_highChartData;
-
-		$this->set('highChartDatas', $highChartDatas);
-		*/
 	}
 	
 	public function support() {
