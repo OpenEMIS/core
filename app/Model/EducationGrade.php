@@ -199,7 +199,8 @@ class EducationGrade extends AppModel {
 						'fields' => array(
 							'EducationSubject.id', 'EducationSubject.name', 'EducationSubject.code' 
 						)
-					)
+					),
+					'conditions' => array('EducationGradeSubject.visible' => 1)
 				),
 				'EducationProgramme'
 			);
@@ -248,7 +249,7 @@ class EducationGrade extends AppModel {
 							unset($this->request->data[$this->alias]['education_subject_id']);
 							unset($this->request->data['submit']);
 						}
-					} else if ($postData['submit'] = 'Save') {
+					} else if ($postData['submit'] == 'Save') {
 						$this->EducationGradeSubject->updateAll(
 							array('EducationGradeSubject.visible' => 0),
 							array('EducationGradeSubject.education_grade_id' => $id)
