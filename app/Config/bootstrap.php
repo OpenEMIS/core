@@ -157,6 +157,7 @@ CakePlugin::load(array('Staff' => array('routes' => true)));
 CakePlugin::load(array('Reports' => array('routes' => true)));
 CakePlugin::load(array('Database' => array('routes' => true)));
 CakePlugin::load(array('Surveys' => array('routes' => true)));
+CakePlugin::load(array('Workflows' => array('routes' => true)));
 CakePlugin::load(array('Sms' => array('routes' => true)));
 CakePlugin::load(array('Quality' => array('routes' => true)));
 CakePlugin::load(array('Training' => array('routes' => true)));
@@ -168,6 +169,7 @@ CakePlugin::load('DevInfo6');
 CakePlugin::load(array('Datawarehouse' => array('routes' => true)));
 CakePlugin::load(array('Alerts' => array('routes' => true)));
 CakePlugin::load(array('Infrastructure' => array('routes' => true)));
+CakePlugin::load(array('Restful' => array('routes' => true)));
 
 // Custom Reports
 Configure::write('ReportManager.displayForeignKeys', 0);

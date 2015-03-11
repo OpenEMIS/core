@@ -331,7 +331,10 @@ class LabelHelper extends AppHelper {
 			'openemis_no' => 'OpenEMIS ID',
 			'first_name' => 'First Name',
 			'last_name' => 'Last Name',
-			'add_existing' => 'Add existing Student'
+			'add_existing' => 'Add existing Student',
+			'third_name' => 'Third Name',
+			'date_of_birth' => 'Birth Date',
+			'middle_name' => 'Middle Name'
 		),
 		'Staff' => array(
 			'module' => 'Staff',
@@ -677,7 +680,28 @@ class LabelHelper extends AppHelper {
 			'title' => 'User',
 			'password' => 'Current Password',
 			'newPassword' => 'New Password',
-			'retypeNewPassword' => 'Retype New Password',
+			'retypeNewPassword' => 'Retype New Password'
+		),
+		'FieldOption' => array(
+			'module' => 'Module',
+			'records' => 'No of records',
+			'apply' => 'Apply To'
+		),
+		'WorkflowStep' => array(
+			'wf_workflow_id' => 'Workflow',
+			'security_roles' => 'Security Roles',
+			'actions' => 'Actions',
+			'next_step' => 'Next Step',
+			'select_step' => 'Select Step'
+		),
+		'WfWorkflowStep' => array(
+			'wf_workflow_id' => 'Workflow'
+		),
+		'StudentStatus' => array(
+			'name' => 'Status'
+		),
+		'StudentCategory' => array(
+			'name' => 'Category'
 		)
 	);
 	

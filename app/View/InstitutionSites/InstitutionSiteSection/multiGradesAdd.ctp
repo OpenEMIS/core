@@ -14,7 +14,7 @@ $this->end();
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/InstitutionSiteSection/tabs', array());
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'add', $selectedAcademicPeriod));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'multiGradesAdd', $selectedAcademicPeriod));
 $labelOptions = $formOptions['inputDefaults']['label'];
 
 echo $this->Form->create($model, $formOptions);

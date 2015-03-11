@@ -55,7 +55,6 @@ class Programme extends AppModel {
 	/* End Excel Behaviour */
 	
 	public function beforeAction() {
-		parent::beforeAction();
 		$studentId = $this->Session->read('Student.id');
 		if (!is_null($studentId)) {
 			$this->Navigation->addCrumb('Programmes');
@@ -84,9 +83,9 @@ class Programme extends AppModel {
 			}
 			
 			$contentHeader = __('Programmes');
-			$this->setVar(compact('contentHeader'));
+			$this->controller->set(compact('contentHeader'));
 		} else {
-			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
+			return $this->controller->redirect(array('controller' => 'Students', 'action' => 'index'));
 		}
 	}
 	
@@ -118,7 +117,6 @@ class Programme extends AppModel {
 				'data-date' => $dataEndDate
 			);
 		}
-		parent::afterAction();
 	}
 	
 	public function index() {
@@ -141,6 +139,6 @@ class Programme extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->setVar('data', $data);
+		$this->controller->set('data', $data);
 	}
 }

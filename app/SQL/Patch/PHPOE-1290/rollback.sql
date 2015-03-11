@@ -1,0 +1,2 @@
+DROP table institution_site_class_students;
+RENAME table 1290_institution_site_class_students TO institution_site_class_students;

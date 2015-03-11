@@ -39,6 +39,15 @@ class ExcelBehavior extends ModelBehavior {
 	public function setModel(Model $model, $newModel) {
 		$this->Model = $newModel;
 	}
+	
+	public function setHeader(Model $model, $newHeader) {
+		$header = array();
+		foreach($newHeader as $field) {
+			$header[$field] = $this->getLabel($field);
+		}
+		$this->header = $header;
+		return $this->header;
+	}
 
 	public function excel(Model $model, $format='xlsx', $settings=array()) {
 		$this->Model = $model;
@@ -220,7 +229,10 @@ class ExcelBehavior extends ModelBehavior {
 
 		$header = array();
 		$exclude = array('id', 'photo_name', 'file_name', 'modified_user_id', 'modified', 'created_user_id', 'created');
-
+		if (isset($this->settings[$alias]['exclude'])) {
+			$exclude = array_merge($exclude, $this->settings[$alias]['exclude']);
+		}
+		
 		if (array_key_exists('header', $this->settings[$alias])) {
 			$appendedHeader = $this->settings[$alias]['header'];
 			foreach ($appendedHeader as $module => $fields) {
@@ -229,11 +241,7 @@ class ExcelBehavior extends ModelBehavior {
 					// handle deep associations
 					$split = explode('.', $key);
 					$labelKey = $split[count($split)-2].'.'.$split[count($split)-1];
-					$label = $this->LabelHelper->get($labelKey);
-					if ($label === false) {
-						$label = $key;
-					}
-					$header[$key] = __($label);
+					$header[$key] = $this->getLabel($labelKey);
 				}
 			}
 		}
@@ -256,13 +264,10 @@ class ExcelBehavior extends ModelBehavior {
 				} else {
 					$key = $alias.'.'.$field;
 				}
-				$label = $this->LabelHelper->get($key);
-				if ($label === false) {
-					$label = $key;
-				}
-				$header[$key] = __($label);
+				$header[$key] = $this->getLabel($key);
 			}
 		}
+		//pr($header);die;
 		
 		// Custom Field Logic starts here
 		if(!empty($include)){
@@ -276,6 +281,7 @@ class ExcelBehavior extends ModelBehavior {
 
 	public function excelGetData(Model $model, $page=false) {
 		$options = $this->Model->excelGetFindOptions();
+		//pr($options);
 
 		if ($page !== false) {
 			$options['offset'] = $page * $this->limit;
@@ -289,7 +295,7 @@ class ExcelBehavior extends ModelBehavior {
 		$data = $this->Model->find('all', $options);
 		// pr($options);
 		// pr($data);
-
+		
 		// remove fields from main model that are not required
 		$fieldNames = array();
 		foreach ($fields as $key => $value) {
@@ -305,7 +311,6 @@ class ExcelBehavior extends ModelBehavior {
 				}
 			}
 		}
-
 		return $data;
 	}
 
@@ -504,6 +509,14 @@ class ExcelBehavior extends ModelBehavior {
 	
 	public function excelCustomFieldFindOptions(Model $model, $options) {
 		return $options;
+	}
+	
+	public function getLabel($key) {
+		$label = $this->LabelHelper->get($key);
+		if ($label === false) {
+			$label = $key;
+		}
+		return __($label);
 	}
 
 	private function download($path) {
