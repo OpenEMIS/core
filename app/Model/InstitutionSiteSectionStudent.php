@@ -408,4 +408,30 @@ class InstitutionSiteSectionStudent extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function autoInsertSectionStudent($data) {
+		$studentId = $data['student_id'];
+		$selectedGradeId = $data['education_grade_id'];
+		$selectedSectionId = $data['institution_site_section_id'];
+		$selectedStudentCategoryId = $data['student_category_id'];
+
+		if($selectedSectionId != 0) {
+			$institutionSiteSectionStudentId = $this->field('id', array(
+				'InstitutionSiteSectionStudent.student_id' => $studentId,
+				'InstitutionSiteSectionStudent.education_grade_id' => $selectedGradeId,
+				'InstitutionSiteSectionStudent.institution_site_section_id' => $selectedSectionId
+			));
+			if($institutionSiteSectionStudentId) {
+				$autoInsertData['InstitutionSiteSectionStudent']['id'] = $institutionSiteSectionStudentId;	
+			}
+
+			$autoInsertData['InstitutionSiteSectionStudent']['student_id'] = $studentId;
+			$autoInsertData['InstitutionSiteSectionStudent']['education_grade_id'] = $selectedGradeId;
+			$autoInsertData['InstitutionSiteSectionStudent']['institution_site_section_id'] = $selectedSectionId;
+			$autoInsertData['InstitutionSiteSectionStudent']['student_category_id'] = $selectedStudentCategoryId;
+			$autoInsertData['InstitutionSiteSectionStudent']['status'] = 1;
+
+			$this->save($autoInsertData);
+		}
+	}
 }

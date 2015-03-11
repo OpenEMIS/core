@@ -19,7 +19,6 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteProgramme extends AppModel {
 	public $actsAs = array(
 		'Excel',
-		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
@@ -90,7 +89,6 @@ class InstitutionSiteProgramme extends AppModel {
 	);
 	
 	public function beforeAction() {
-		parent::beforeAction();
 		$this->Navigation->addCrumb('Programmes');
 
 		if($this->action == 'view') {
@@ -126,7 +124,7 @@ class InstitutionSiteProgramme extends AppModel {
 			$this->setFieldOrder('start_date', 3);
 			$this->setFieldOrder('end_date', 4);
 
-			$this->setVar(compact('institutionSiteId'));
+			$this->controller->set(compact('institutionSiteId'));
 		}
 	}
 	
@@ -168,7 +166,7 @@ class InstitutionSiteProgramme extends AppModel {
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
 
-		$this->setVar(compact('data'));
+		$this->controller->set(compact('data'));
 	}
 
 	public function add() {
@@ -198,7 +196,7 @@ class InstitutionSiteProgramme extends AppModel {
 			} else {
 				if ($this->saveAll($data)) {
 					$this->Message->alert('general.add.success');
-					return $this->redirect(array('action' => get_class($this), 'index'));
+					return $this->controller->redirect(array('action' => get_class($this), 'index'));
 				} else {
 					$this->log($this->validationErrors, 'debug');
 					$this->Message->alert('general.add.failed');
@@ -214,13 +212,10 @@ class InstitutionSiteProgramme extends AppModel {
 
 		$this->fields['education_level_id']['options'] = $educationLevelOptions;
 		$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
-		$this->setVar(compact('educationGrades'));
-
-		$this->render = 'auto';
+		$this->controller->set(compact('educationGrades'));
 	}
 
-	public function edit($id=0) {
-		$this->render = 'auto';
+	public function edit($id=0) {		
 		if ($this->exists($id)) {
 			$this->contain('EducationProgramme.EducationCycle', 'InstitutionSiteGrade');
 			$data = $this->findById($id);
@@ -251,7 +246,7 @@ class InstitutionSiteProgramme extends AppModel {
 				} else {
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
-						return $this->redirect(array('action' => get_class($this), 'view', $this->id));
+						return $this->controller->redirect(array('action' => get_class($this), 'view', $this->id));
 					} else {
 						$this->log($this->validationErrors, 'debug');
 						$this->Message->alert('general.edit.failed');
@@ -267,10 +262,10 @@ class InstitutionSiteProgramme extends AppModel {
 
 			$this->fields['education_level_id']['options'] = $educationLevelOptions;
 			$this->fields['education_programme_id']['options'] = $educationProgrammeOptions;
-			$this->setVar(compact('educationGrades'));
+			$this->controller->set(compact('educationGrades'));
 		} else {
 			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => get_class($this)));
+			return $this->controller->redirect(array('action' => get_class($this)));
 		}
 	}
 
