@@ -376,18 +376,49 @@ class EducationProgramme extends AppModel {
 	}
 
 	public function getOptionsByEducationLevelId($educationLevelId) {
-		$this->contain('EducationCycle');
 		$list = $this->find('list', array(
+			'contain' => 'EducationCycle',
 			'fields' => array(
 				'EducationProgramme.id', 'EducationProgramme.cycle_programme_name'
 			),
 			'conditions' => array(
-				'EducationCycle.education_level_id' => $educationLevelId
+				'EducationCycle.education_level_id' => $educationLevelId,
+				'EducationCycle.visible' => 1,
+				'EducationProgramme.visible' => 1,
 			),
 			'order' => array(
 				'EducationCycle.order', 'EducationProgramme.order'
 			)
 		));
+
+		$hidden = array();
+		$buffer = $this->find('list', array(
+			'contain' => 'EducationCycle',
+			'fields' => array(
+				'EducationProgramme.id', 'EducationProgramme.cycle_programme_name'
+			),
+			'conditions' => array(
+				'EducationCycle.education_level_id' => $educationLevelId,
+				'OR' => array(
+					'EducationProgramme.visible' => 0,
+					'EducationCycle.visible' => 0
+				)
+			),
+			'order' => array(
+				'EducationCycle.order', 'EducationProgramme.order'
+			)
+		));
+		foreach ($buffer as $k => $v) {
+			$hidden[] = array(
+				'name'=>$v,
+				'value'=>$k,
+				'disabled' => '1'
+			);
+		}
+		if (count($hidden) > 0) {
+			$key = __('Disabled Programmes');
+			$list[$key] = $hidden;
+		}
 
 		return $list;
 	}
