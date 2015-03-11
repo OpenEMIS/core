@@ -26,6 +26,7 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteClass',
 		'InstitutionSiteType',
 		'InstitutionSiteStudentAbsence',
+		'InstitutionSiteSectionStudent',
 		'InstitutionSiteClassStudent',
 		'Students.Student',
 		'Students.StudentActivity',
@@ -34,12 +35,14 @@ class StudentsController extends StudentsAppController {
 		'Students.StudentCustomValue',
 		'Students.StudentAssessment',
 		'Students.StudentAttendanceType',
+		'Students.Programme',
 		'AcademicPeriod',
 		'ConfigItem'
 	);
 	
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
+		'ControllerAction',
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'Students.StudentAttachment',
@@ -75,7 +78,6 @@ class StudentsController extends StudentsAppController {
 		'additional' => 'Students.StudentCustomField',
 		// new ControllerAction
 		'InstitutionSiteStudent',
-		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'Absence' => array('plugin' => 'Students'),
@@ -383,9 +385,14 @@ class StudentsController extends StudentsAppController {
 					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
 					$dataToSite['student_status_id'] = $studentStatusId;
 					$dataToSite['student_id'] = $id;
-					$InstitutionSiteStudentModel->save($dataToSite);
-					$this->Session->write('Student.data', $this->Student->findById($id));
-					$this->Session->write('Student.security_user_id', $securityUserId);
+					if (empty($studentIdSession)) {
+						$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
+						$InstitutionSiteStudentModel->save($dataToSite);
+					}
+
+					$this->Session->write($model . '.data', $this->Student->findById($id));
+					$this->Session->write($model . '.security_user_id', $securityUserId);
+					
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 

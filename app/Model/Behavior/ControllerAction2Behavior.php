@@ -26,6 +26,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 	
 	public function afterAction(Model $model) {
 		$model->controller->set('fields', $model->fields);
+		$model->controller->set('_triggerFrom', 'Model');
 	}
 	
 	public function processAction(Model $model, $controller) {

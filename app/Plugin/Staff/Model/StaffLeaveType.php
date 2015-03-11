@@ -18,7 +18,7 @@ App::uses('FieldOptionValue', 'Model');
 
 class StaffLeaveType extends FieldOptionValue {
 	public $useTable = 'field_option_values';
-	public $hasMany = 'Staff.LeaveStatus';
+	public $hasMany = array('Staff.StaffLeave');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
