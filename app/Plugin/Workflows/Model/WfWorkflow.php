@@ -18,6 +18,10 @@ class WfWorkflow extends WorkflowsAppModel {
 	public $useTable = 'wf_workflows';
 
 	public $belongsTo = array(
+		'WorkflowModel' => array(
+            'className' => 'Workflows.WorkflowModel',
+            'foreignKey' => 'wf_workflow_model_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
@@ -55,6 +59,17 @@ class WfWorkflow extends WorkflowsAppModel {
 				'required' => true,
 				'message' => 'Please enter a name'
 			)
+		),
+		'wf_workflow_model_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a form'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('wf_workflow_model_id'), false),
+	            'message' => 'This form is already exists in the system'
+	        )
 		)
 	);
 }
