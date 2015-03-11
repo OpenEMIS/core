@@ -24,8 +24,6 @@ class StaffController extends StaffAppController {
 		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteType',
-		'InstitutionSiteStaff',
-		'Staff.InstitutionSiteStaff',
 		'Staff.Staff',
 		'Staff.StaffActivity',
 		'Staff.StaffHistory',
@@ -33,6 +31,7 @@ class StaffController extends StaffAppController {
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomValue',
 		'Staff.StaffAttendance',
+		'Staff.StaffLeave',
 		'AcademicPeriod',
 		'ConfigItem',
 		'SalaryAdditionType',
@@ -40,10 +39,12 @@ class StaffController extends StaffAppController {
 		'TrainingCourse',
 		'Staff.StaffAttendanceType',
 		'InstitutionSiteStaffAbsence',
-		'Staff.StaffTrainingSelfStudy',
+		'Staff.StaffTrainingSelfStudy'
 	);
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
+		'ControllerAction',
+		'Workflow2',
 		'Paginator',
 		'FileUploader',
 		'Wizard',
@@ -73,7 +74,6 @@ class StaffController extends StaffAppController {
 		'comments' => 'Staff.StaffComment',
 		'attachments' => 'Staff.StaffAttachment',
 		'qualifications' => 'Staff.StaffQualification',
-		'leaves' => 'Staff.StaffLeave',
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
 		'StaffSalary' => array('plugin' => 'Staff'),
