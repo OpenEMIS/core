@@ -106,12 +106,12 @@ class Staff extends StaffAppModel {
 		if (CakeSession::check('Staff.id')) {
 			$models = array(
 				array('model' => $this,
-					// 'include' => array(
-					// 	'header' => 'StaffCustomField',
-					// 	'data' => 'StaffCustomValue',
-					// 	'dataOptions' => 'StaffCustomFieldOption',
-					// 	'plugin' => 'Staff'
-					// )
+					'include' => array(
+						'header' => 'StaffCustomField',
+						'data' => 'StaffCustomValue',
+						'dataOptions' => 'StaffCustomFieldOption',
+						'plugin' => 'Staff'
+					)
 				),
 				array('model' => ClassRegistry::init('Staff.StaffContact'), 'name' => 'Contacts'),
 				array('model' => ClassRegistry::init('Staff.StaffIdentity'), 'name' => 'Identities'),

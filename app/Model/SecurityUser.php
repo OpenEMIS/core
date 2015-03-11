@@ -38,6 +38,14 @@ class SecurityUser extends AppModel {
 		'BirthplaceArea' => array(
 			'className' => 'Area',
 			'foreignKey' => 'birthplace_area_id'
+		),
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
 		)
 	);
 	public $hasMany = array(
@@ -302,12 +310,12 @@ class SecurityUser extends AppModel {
 		}
 
 		$this->fields['id']['type'] = 'hidden';
-		$this->fields['username']['type'] = 'hidden';
-		$this->fields['password']['type'] = 'hidden';
+		$this->fields['username']['visible'] = false;
+		$this->fields['password']['visible'] = false;
 		$this->fields['address_area_id']['type'] = 'hidden';
 		$this->fields['birthplace_area_id']['type'] = 'hidden';
 		$this->fields['date_of_death']['type'] = 'hidden';
-		$this->fields['super_admin']['type'] = 'hidden';
+		$this->fields['super_admin']['visible'] = false;
 		$this->fields['photo_name']['type'] = 'hidden';
 		$this->fields['photo_content']['type'] = 'hidden';
 		$this->fields['gender_id']['type'] = 'select';

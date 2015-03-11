@@ -444,7 +444,8 @@ class LabelHelper extends AppHelper {
 		'SecurityUser' => array(
 			'title' => 'User',
 			'name' => 'User',
-			'SecurityGroupUser' => 'Group',
+			'SecurityGroupUser' => 'Groups',
+			'UserContact' => 'Contacts',
 			'username' => 'User Name', 
 			'openemis_no' => 'Openemis ID', 
 			'first_name' => 'First Name', 
@@ -634,7 +635,7 @@ class LabelHelper extends AppHelper {
 			'comment' => 'Comment'
 		),
 		'StaffComment' => array(
-			'title' => 'title',
+			'title' => 'Title',
 			'comment_date' => 'Date',
 			'comment' => 'Comment'
 		),

@@ -4,7 +4,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
 $this->start('contentActions');
-	if ($_accessControl->check($this->params['controller'], $model, 'add')) {
+	if ($_add) {
 		echo $this->Html->link(__('Add'), array('action' => $model, 'add'), array('class' => 'divider'));
 	}
 $this->end();

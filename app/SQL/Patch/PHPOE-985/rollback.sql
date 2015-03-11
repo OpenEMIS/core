@@ -11,6 +11,15 @@ UPDATE navigations SET navigations.order = @prevAwardsOrder + 1 WHERE title = 'M
 UPDATE navigations SET navigations.order = @prevAwardsOrder + 2 WHERE title = 'Licenses';
 UPDATE navigations SET header = 'General' WHERE title = 'Memberships' OR title = 'Licenses';
 
+-- need to handle for security_functions too
+SELECT MIN(security_functions.order) into @prevMembershipOrder FROM security_functions WHERE name = 'Memberships' OR name = 'Licenses';
+UPDATE security_functions SET security_functions.order = security_functions.order - 2 WHERE security_functions.order >= @prevMembershipOrder;
+SELECT MIN(security_functions.order) into @prevAwardsOrder FROM security_functions WHERE module = 'Staff' AND name = 'Awards';
+UPDATE security_functions SET security_functions.order = security_functions.order + 2 WHERE security_functions.order > @prevAwardsOrder;
+UPDATE security_functions SET security_functions.order = @prevAwardsOrder + 1 WHERE name = 'Memberships';
+UPDATE security_functions SET security_functions.order = @prevAwardsOrder + 2 WHERE name = 'Licenses';
+UPDATE security_functions SET category = 'General' WHERE name = 'Memberships' OR name = 'Licenses';
+
 -- navigations for controller2
 UPDATE navigations SET action = 'contacts', pattern = 'contacts' WHERE title = 'Contacts' AND header = 'GENERAL' AND controller = 'Students';
 UPDATE navigations SET action = 'identities', pattern = 'identities' WHERE title = 'Identities' AND header = 'GENERAL' AND controller = 'Students';
@@ -30,22 +39,30 @@ UPDATE navigations SET action = 'users', pattern = 'users|SecurityUserAccess.vie
 UPDATE navigations SET action = 'password', pattern = 'password' WHERE action = 'SecurityUserLogin' AND module = 'Preferences' AND controller = 'Preferences' AND title = 'Password';
 
 -- Security functions must be handled to converted modules
-UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
-UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
-UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Nationalities';
-UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:languagesEdit', _add = '_view:languagesAdd', _delete = '_view:languagesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Languages';
-UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Comments';
-UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
-UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
-UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
-UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
-UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Nationalities';
-UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:languagesEdit', _add = '_view:languagesAdd', _delete = '_view:languagesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Languages';
-UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Comments';
-UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
-UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
+UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Contacts';
+UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Identities';
+UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Nationalities';
+UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:languagesEdit', _add = '_view:languagesAdd', _delete = '_view:languagesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Languages';
+UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Comments';
+UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Needs';
+UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Awards';
+UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Contacts';
+UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Identities';
+UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Nationalities';
+UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:languagesEdit', _add = '_view:languagesAdd', _delete = '_view:languagesDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Languages';
+UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Comments';
+UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Needs';
+UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Awards';
+
+-- update security for users
+SELECT security_functions.order INTO @securityUserOrder from security_functions WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
+UPDATE security_functions SET security_functions.order = security_functions.order + 1 WHERE security_functions.order >= @securityUserOrder;
+INSERT security_functions SELECT * FROM z_985_security_functions WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
 UPDATE security_functions SET _view = 'users', _edit = NULL, _add = NULL WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
 UPDATE security_functions SET _view = 'usersView', _edit = '_view:usersEdit|usersAccess', _add = '_view:usersAdd' WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
+
+
+
 
 -- Updating census gender_ids
 SELECT id INTO @fieldGenderMale FROM field_option_values WHERE field_option_id IN (SELECT id FROM field_options WHERE code = 'Gender') AND name = 'Male';
