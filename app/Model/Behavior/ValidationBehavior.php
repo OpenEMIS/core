@@ -54,7 +54,7 @@ class ValidationBehavior extends ModelBehavior {
 
 		if (!$allowChangeAll) {
 			if (AuthComponent::user('id') != $model->data[$model->alias]['id']) {
-				die('illegal');
+				die('illegal cp');
 			}
 		} 
 

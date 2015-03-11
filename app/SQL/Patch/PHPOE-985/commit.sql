@@ -7,6 +7,15 @@ UPDATE navigations SET navigations.order = @prevSalaryOrder + 1 WHERE title = 'M
 UPDATE navigations SET navigations.order = @prevSalaryOrder + 2 WHERE title = 'Licenses';
 UPDATE navigations SET header = 'Details' WHERE title = 'Memberships' OR title = 'Licenses';
 
+-- need to handle for security_functions too
+SELECT MIN(security_functions.order) into @prevMembershipOrder FROM security_functions WHERE name = 'Memberships' OR name = 'Licenses';
+UPDATE security_functions SET security_functions.order = security_functions.order - 2 WHERE security_functions.order >= @prevMembershipOrder;
+SELECT MIN(security_functions.order) into @prevSalaryOrder FROM security_functions WHERE name = 'Salary';
+UPDATE security_functions SET security_functions.order = security_functions.order + 2 WHERE security_functions.order > @prevSalaryOrder;
+UPDATE security_functions SET security_functions.order = @prevSalaryOrder + 1 WHERE name = 'Memberships';
+UPDATE security_functions SET security_functions.order = @prevSalaryOrder + 2 WHERE name = 'Licenses';
+UPDATE security_functions SET category = 'Details' WHERE name = 'Memberships' OR name = 'Licenses';
+
 -- security_users backup
 CREATE TABLE IF NOT EXISTS z_985_security_users LIKE security_users;
 INSERT z_985_security_users SELECT * FROM security_users WHERE NOT EXISTS (SELECT * FROM z_985_security_users);
@@ -57,20 +66,21 @@ ALTER TABLE `student_comments` CHANGE `comment_date` `comment_date` DATE NOT NUL
 ALTER TABLE `staff_comments` CHANGE `comment_date` `comment_date` DATE NOT NULL;
 
 -- Security functions must be handled to converted modules
-UPDATE security_functions SET _view = 'StudentContact|StudentContact.index|StudentContact.view', _edit = '_view:StudentContact.edit', _add = '_view:StudentContact.add', _delete = '_view:StudentContact.remove', _execute = '_view:StudentContact.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
-UPDATE security_functions SET _view = 'StudentIdentity|StudentIdentity.index|StudentIdentity.view', _edit = '_view:StudentIdentity.edit', _add = '_view:StudentIdentity.add', _delete = '_view:StudentIdentity.remove', _execute = '_view:StudentIdentity.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
-UPDATE security_functions SET _view = 'StudentNationality|StudentNationality.index|StudentNationality.view', _edit = '_view:StudentNationality.edit', _add = '_view:StudentNationality.add', _delete = '_view:StudentNationality.remove', _execute = '_view:StudentNationality.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Nationalities';
-UPDATE security_functions SET _view = 'StudentLanguage|StudentLanguage.index|StudentLanguage.view', _edit = '_view:StudentLanguage.edit', _add = '_view:StudentLanguage.add', _delete = '_view:StudentLanguage.remove', _execute = '_view:StudentLanguage.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Languages';
-UPDATE security_functions SET _view = 'StudentComment|StudentComment.index|StudentComment.view', _edit = '_view:StudentComment.edit', _add = '_view:StudentComment.add', _delete = '_view:StudentComment.remove', _execute = '_view:StudentComment.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Comments';
-UPDATE security_functions SET _view = 'StudentSpecialNeed|StudentSpecialNeed.index|StudentSpecialNeed.view', _edit = '_view:StudentSpecialNeed.edit', _add = '_view:StudentSpecialNeed.add', _delete = '_view:StudentSpecialNeed.remove', _execute = '_view:StudentSpecialNeed.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
-UPDATE security_functions SET _view = 'StudentAward|StudentAward.index|StudentAward.view', _edit = '_view:StudentAward.edit', _add = '_view:StudentAward.add', _delete = '_view:StudentAward.remove', _execute = '_view:StudentAward.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
-UPDATE security_functions SET _view = 'StaffContact|StaffContact.index|StaffContact.view', _edit = '_view:StaffContact.edit', _add = '_view:StaffContact.add', _delete = '_view:StaffContact.remove', _execute = '_view:StaffContact.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Contacts';
-UPDATE security_functions SET _view = 'StaffIdentity|StaffIdentity.index|StaffIdentity.view', _edit = '_view:StaffIdentity.edit', _add = '_view:StaffIdentity.add', _delete = '_view:StaffIdentity.remove', _execute = '_view:StaffIdentity.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Identities';
-UPDATE security_functions SET _view = 'StaffNationality|StaffNationality.index|StaffNationality.view', _edit = '_view:StaffNationality.edit', _add = '_view:StaffNationality.add', _delete = '_view:StaffNationality.remove', _execute = '_view:StaffNationality.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Nationalities';
-UPDATE security_functions SET _view = 'StaffLanguage|StaffLanguage.index|StaffLanguage.view', _edit = '_view:StaffLanguage.edit', _add = '_view:StaffLanguage.add', _delete = '_view:StaffLanguage.remove', _execute = '_view:StaffLanguage.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Languages';
-UPDATE security_functions SET _view = 'StaffComment|StaffComment.index|StaffComment.view', _edit = '_view:StaffComment.edit', _add = '_view:StaffComment.add', _delete = '_view:StaffComment.remove', _execute = '_view:StaffComment.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Comments';
-UPDATE security_functions SET _view = 'StaffSpecialNeed|StaffSpecialNeed.index|StaffSpecialNeed.view', _edit = '_view:StaffSpecialNeed.edit', _add = '_view:StaffSpecialNeed.add', _delete = '_view:StaffSpecialNeed.remove', _execute = '_view:StaffSpecialNeed.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Needs';
-UPDATE security_functions SET _view = 'StaffAward|StaffAward.index|StaffAward.view', _edit = '_view:StaffAward.edit', _add = '_view:StaffAward.add', _delete = '_view:StaffAward.remove', _execute = '_view:StaffAward.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'Details' AND name = 'Awards';
+UPDATE security_functions SET _view = 'StudentContact|StudentContact.index|StudentContact.view', _edit = '_view:StudentContact.edit', _add = '_view:StudentContact.add', _delete = '_view:StudentContact.remove', _execute = '_view:StudentContact.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Contacts';
+UPDATE security_functions SET _view = 'StudentIdentity|StudentIdentity.index|StudentIdentity.view', _edit = '_view:StudentIdentity.edit', _add = '_view:StudentIdentity.add', _delete = '_view:StudentIdentity.remove', _execute = '_view:StudentIdentity.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Identities';
+UPDATE security_functions SET _view = 'StudentNationality|StudentNationality.index|StudentNationality.view', _edit = '_view:StudentNationality.edit', _add = '_view:StudentNationality.add', _delete = '_view:StudentNationality.remove', _execute = '_view:StudentNationality.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Nationalities';
+UPDATE security_functions SET _view = 'StudentLanguage|StudentLanguage.index|StudentLanguage.view', _edit = '_view:StudentLanguage.edit', _add = '_view:StudentLanguage.add', _delete = '_view:StudentLanguage.remove', _execute = '_view:StudentLanguage.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Languages';
+UPDATE security_functions SET _view = 'StudentComment|StudentComment.index|StudentComment.view', _edit = '_view:StudentComment.edit', _add = '_view:StudentComment.add', _delete = '_view:StudentComment.remove', _execute = '_view:StudentComment.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Comments';
+UPDATE security_functions SET _view = 'StudentSpecialNeed|StudentSpecialNeed.index|StudentSpecialNeed.view', _edit = '_view:StudentSpecialNeed.edit', _add = '_view:StudentSpecialNeed.add', _delete = '_view:StudentSpecialNeed.remove', _execute = '_view:StudentSpecialNeed.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Needs';
+UPDATE security_functions SET _view = 'StudentAward|StudentAward.index|StudentAward.view', _edit = '_view:StudentAward.edit', _add = '_view:StudentAward.add', _delete = '_view:StudentAward.remove', _execute = '_view:StudentAward.excel' WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Awards';
+UPDATE security_functions SET _view = 'StaffContact|StaffContact.index|StaffContact.view', _edit = '_view:StaffContact.edit', _add = '_view:StaffContact.add', _delete = '_view:StaffContact.remove', _execute = '_view:StaffContact.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Contacts';
+UPDATE security_functions SET _view = 'StaffIdentity|StaffIdentity.index|StaffIdentity.view', _edit = '_view:StaffIdentity.edit', _add = '_view:StaffIdentity.add', _delete = '_view:StaffIdentity.remove', _execute = '_view:StaffIdentity.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Identities';
+UPDATE security_functions SET _view = 'StaffNationality|StaffNationality.index|StaffNationality.view', _edit = '_view:StaffNationality.edit', _add = '_view:StaffNationality.add', _delete = '_view:StaffNationality.remove', _execute = '_view:StaffNationality.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Nationalities';
+UPDATE security_functions SET _view = 'StaffLanguage|StaffLanguage.index|StaffLanguage.view', _edit = '_view:StaffLanguage.edit', _add = '_view:StaffLanguage.add', _delete = '_view:StaffLanguage.remove', _execute = '_view:StaffLanguage.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Languages';
+UPDATE security_functions SET _view = 'StaffComment|StaffComment.index|StaffComment.view', _edit = '_view:StaffComment.edit', _add = '_view:StaffComment.add', _delete = '_view:StaffComment.remove', _execute = '_view:StaffComment.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Comments';
+UPDATE security_functions SET _view = 'StaffSpecialNeed|StaffSpecialNeed.index|StaffSpecialNeed.view', _edit = '_view:StaffSpecialNeed.edit', _add = '_view:StaffSpecialNeed.add', _delete = '_view:StaffSpecialNeed.remove', _execute = '_view:StaffSpecialNeed.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Needs';
+UPDATE security_functions SET _view = 'StaffAward|StaffAward.index|StaffAward.view', _edit = '_view:StaffAward.edit', _add = '_view:StaffAward.add', _delete = '_view:StaffAward.remove', _execute = '_view:StaffAward.excel' WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Awards';
+
 
 -- backup student and staff tables
 CREATE TABLE IF NOT EXISTS z_985_students LIKE students;
@@ -491,6 +501,8 @@ CREATE TABLE `genders` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(10) NOT NULL,
   `order` int(11) NOT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
 
@@ -593,13 +605,16 @@ UPDATE navigations SET action = 'SecurityUser', pattern = 'SecurityUser|Security
 
 
 -- update security for users
-UPDATE security_functions SET _view = 'SecurityUser|SecurityUser.index', _edit = NULL, _add = NULL WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
-UPDATE security_functions SET _view = 'SecurityUser.view', _edit = '_view:SecurityUser.edit|SecurityUserLogin.edit', _add = '_view:SecurityUser.add'WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
+CREATE TABLE IF NOT EXISTS z_985_security_functions LIKE security_functions;
+INSERT z_985_security_functions SELECT * FROM security_functions WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration' AND NOT EXISTS (SELECT * FROM z_985_security_functions);
+DELETE FROM security_functions WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
+UPDATE security_functions SET _view = 'SecurityUser|SecurityUser.index|SecurityUser.view', _edit = '_view:SecurityUser.edit|SecurityUserLogin.edit', _add = '_view:SecurityUser.add' WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
 
+SELECT security_functions.order INTO @securityUserOrder from security_functions WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
+UPDATE security_functions SET security_functions.order = security_functions.order - 1 WHERE security_functions.order >= @securityUserOrder;
+-- select name, security_functions.order from security_functions where security_functions.order > 155 order by security_functions.order
 
 UPDATE navigations SET action = 'SecurityUserLogin', pattern = 'SecurityUserLogin' WHERE action = 'password' AND module = 'Preferences' AND controller = 'Preferences' AND title = 'Password';
-
-
 
 RENAME TABLE student_identities TO z_985_student_identities;
 RENAME TABLE student_nationalities TO z_985_student_nationalities;

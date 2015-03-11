@@ -91,13 +91,13 @@ class Student extends StudentsAppModel {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('Student.id')) {
 			$models = array(
-				array('model' => $this/*,
+				array('model' => $this,
 					'include' => array(
 						'header' => 'StudentCustomField',
 						'data' => 'StudentCustomValue',
 						'dataOptions' => 'StudentCustomFieldOption',
 						'plugin' => 'Students'
-					)*/
+					)
 				),
 				array('model' => ClassRegistry::init('Students.StudentContact'), 'name' => 'Contacts'),
 				array('model' => ClassRegistry::init('Students.StudentIdentity'), 'name' => 'Identities'),
