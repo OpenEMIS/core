@@ -44,11 +44,11 @@ class StaffController extends StaffAppController {
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
 		'ControllerAction',
-		'Workflow2',
 		'Paginator',
 		'FileUploader',
 		'Wizard',
-		'Activity' => array('model' => 'StaffActivity')
+		'Activity' => array('model' => 'StaffActivity'),
+		'Workflow2'
 	);
 	public $modules = array(
 		'healthHistory' => 'Staff.StaffHealthHistory',
