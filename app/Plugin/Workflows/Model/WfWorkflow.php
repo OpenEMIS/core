@@ -15,12 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WfWorkflow extends WorkflowsAppModel {
-	public $useTable = 'wf_workflows';
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflows';
 
 	public $belongsTo = array(
 		'WorkflowModel' => array(
             'className' => 'Workflows.WorkflowModel',
-            'foreignKey' => 'wf_workflow_model_id'
+            'foreignKey' => 'workflow_model_id'
         ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -37,6 +38,7 @@ class WfWorkflow extends WorkflowsAppModel {
 	public $hasMany = array(
         'WfWorkflowStep' => array(
             'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'workflow_id',
 			'dependent' => true
         )
     );
@@ -60,14 +62,14 @@ class WfWorkflow extends WorkflowsAppModel {
 				'message' => 'Please enter a name'
 			)
 		),
-		'wf_workflow_model_id' => array(
+		'workflow_model_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a form'
 			),
 			'unique' => array(
-	            'rule' => array('checkUnique', array('wf_workflow_model_id'), false),
+	            'rule' => array('checkUnique', array('workflow_model_id'), false),
 	            'message' => 'This form is already exists in the system'
 	        )
 		)

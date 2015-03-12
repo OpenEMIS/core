@@ -15,11 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WorkflowModel extends WorkflowsAppModel {
-	public $useTable = 'wf_workflow_models';
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflow_models';
 
 	public $hasMany = array(
         'WfWorkflow' => array(
             'className' => 'Workflows.WfWorkflow',
+            'foreignKey' => 'workflow_model_id',
 			'dependent' => true
         )
     );

@@ -577,17 +577,17 @@ class LabelHelper extends AppHelper {
 			'apply' => 'Apply To'
 		),
 		'WfWorkflow' => array(
-			'wf_workflow_model_id' => 'Form',
+			'workflow_model_id' => 'Form',
 		),
 		'WorkflowStep' => array(
-			'wf_workflow_id' => 'Workflow',
+			'workflow_id' => 'Workflow',
 			'security_roles' => 'Security Roles',
 			'actions' => 'Actions',
 			'next_step' => 'Next Step',
 			'select_step' => 'Select Step'
 		),
 		'WfWorkflowStep' => array(
-			'wf_workflow_id' => 'Workflow'
+			'workflow_id' => 'Workflow'
 		),
 		'StudentStatus' => array(
 			'name' => 'Status'
