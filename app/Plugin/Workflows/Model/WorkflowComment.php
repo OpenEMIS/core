@@ -14,14 +14,14 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class WfWorkflowStep extends WorkflowsAppModel {
+class WorkflowComment extends WorkflowsAppModel {
 	public $tablePrefix = 'wf_';
-	public $useTable = 'workflow_steps';
+	public $useTable = 'workflow_comments';
 
 	public $belongsTo = array(
-		'WfWorkflow' => array(
-            'className' => 'Workflows.WfWorkflow',
-            'foreignKey' => 'workflow_id'
+        'WfWorkflowLog' => array(
+            'className' => 'Workflows.WfWorkflowLog',
+            'foreignKey' => 'workflow_log_id'
         ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -32,39 +32,6 @@ class WfWorkflowStep extends WorkflowsAppModel {
 			'className' => 'SecurityUser',
 			'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
 			'foreignKey' => 'created_user_id'
-		)
-	);
-
-	public $hasMany = array(
-        'WorkflowAction' => array(
-            'className' => 'Workflows.WorkflowAction',
-            'foreignKey' => 'workflow_step_id',
-			'dependent' => true
-        )
-    );
-
-     public $hasAndBelongsToMany = array(
-		'SecurityRole' => array(
-			'className' => 'SecurityRole',
-			'joinTable' => 'wf_workflow_step_roles',
-			'foreignKey' => 'workflow_step_id',
-			'associationForeignKey' => 'security_role_id',
-			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
-			'order' => array('SecurityRole.order')
-		)
-	);
-
-    public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a name'
-			),
-			'unique' => array(
-	            'rule' => array('checkUnique', array('name', 'workflow_id'), false),
-	            'message' => 'This name is already exists in the system'
-	        )
 		)
 	);
 }

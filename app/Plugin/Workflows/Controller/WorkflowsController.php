@@ -32,18 +32,18 @@ class WorkflowsController extends WorkflowsAppController {
 		$this->set('contentHeader', 'Workflows');
 		$this->WfWorkflow->fields['code']['hyperlink'] = true;
 
-		if ($this->action == 'index' || $this->action == 'view') {
-			$this->WfWorkflow->fields['wf_workflow_model_id']['dataModel'] = 'WorkflowModel';
-			$this->WfWorkflow->fields['wf_workflow_model_id']['dataField'] = 'model';
+		if ($this->action == 'view') {
+			$this->WfWorkflow->fields['workflow_model_id']['dataModel'] = 'WorkflowModel';
+			$this->WfWorkflow->fields['workflow_model_id']['dataField'] = 'model';
 		} else if($this->action == 'add' || $this->action == 'edit') {
-			$this->WfWorkflow->fields['wf_workflow_model_id']['type'] = 'select';
+			$this->WfWorkflow->fields['workflow_model_id']['type'] = 'select';
 			$workflowModelOptions = $this->WorkflowModel->find('list', array(
 				'fields' => array(
 					'WorkflowModel.id', 'WorkflowModel.model'
 				),
 			));
 			$selectedWorkflowModelId = key($workflowModelOptions);
-			$this->WfWorkflow->fields['wf_workflow_model_id']['options'] = $workflowModelOptions;
+			$this->WfWorkflow->fields['workflow_model_id']['options'] = $workflowModelOptions;
 		}
 	}
 }

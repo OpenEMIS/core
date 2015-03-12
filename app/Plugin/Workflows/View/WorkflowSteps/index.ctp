@@ -16,7 +16,7 @@ $this->start('contentBody');
 		$baseUrl = $this->params['controller'] . '/' . $this->request->action;
 
 		if(isset($workflowOptions)) {
-			echo $this->Form->input('wf_workflow_id', array(
+			echo $this->Form->input('workflow_id', array(
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $workflowOptions,
@@ -36,7 +36,7 @@ $this->start('contentBody');
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('WorkflowStep.security_roles'); ?></th>
 				<th><?php echo $this->Label->get('WorkflowStep.actions'); ?></th>
-				<th><?php echo $this->Label->get('WorkflowStep.wf_workflow_id'); ?></th>
+				<th><?php echo $this->Label->get('WorkflowStep.workflow_id'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
