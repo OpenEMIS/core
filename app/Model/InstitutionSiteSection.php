@@ -336,7 +336,7 @@ class InstitutionSiteSection extends AppModel {
 			$categoryOptions = $this->InstitutionSiteSectionStudent->StudentCategory->getListOnly();
 
 			$InstitutionSiteStudent = ClassRegistry::init('InstitutionSiteStudent');
-			$studentOptions = $InstitutionSiteStudent->getStudentOptions($institutionSiteId, $periodId);
+			$studentOptions = $InstitutionSiteStudent->getStudentOptions($institutionSiteId, $periodId, $id);
 			$studentOptions = $this->attachSectionInfo($id, $studentOptions, $institutionSiteId, $periodId);
 			$studentOptions = $this->controller->Option->prependLabel($studentOptions, $this->alias . '.add_student');
 			
@@ -668,5 +668,28 @@ class InstitutionSiteSection extends AppModel {
 			$list[$id] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
 		}
 		return $list;
+	}
+
+	public function getGradesBySection($sectionId) {
+		// this is to be the only method to be called to get grades from section... 
+		// to cater for single grade and multi grade sections being stored in 2 places
+		$sectionData = $this->find(
+			'first',
+			array(
+				'contain' => array(
+					'EducationGrade'
+				),
+				'conditions' => array(
+					'InstitutionSiteSection.id' => $sectionId
+				)
+			)
+		);
+
+		if(empty($sectionData['EducationGrade']['id'])){
+			$data = $this->InstitutionSiteSectionGrade->getGradesBySection($sectionId);
+		}else{
+			$data = $this->getSingleGradeBySection($sectionId);
+		}
+		return $data;
 	}
 }
