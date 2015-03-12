@@ -17,9 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 class Workflow2Component extends Component {
 	private $controller;
 	private $model = null;
+	private $triggerFrom = 'Controller';
 	private $currentAction;	
 	private $fields;
 	public $WfWorkflow;
+	public $WfWorkflowStep;
+	public $WfWorkflowLog;
 
 	public $components = array('Session', 'Message', 'Auth');
 	public function __construct(ComponentCollection $collection, $settings = array()) {
@@ -28,7 +31,9 @@ class Workflow2Component extends Component {
 	}
 
 	public function init() {
-		$this->WfWorkflow = ClassRegistry::init('WfWorkflow');
+		$this->WfWorkflow = ClassRegistry::init(array('class' => 'Workflows.WfWorkflow', 'alias' => 'WfWorkflow'));
+		$this->WfWorkflowStep = ClassRegistry::init(array('class' => 'Workflows.WfWorkflowStep', 'alias' => 'WfWorkflowStep'));
+		$this->WfWorkflowLog = ClassRegistry::init(array('class' => 'Workflows.WfWorkflowLog', 'alias' => 'WfWorkflowLog'));
 	}
 
 	// Is called before the controller's beforeFilter method.
@@ -38,7 +43,6 @@ class Workflow2Component extends Component {
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Controller $controller) {
-
 	}
 
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
@@ -47,31 +51,103 @@ class Workflow2Component extends Component {
 		$this->currentAction = !empty($this->controller->viewVars['action'])? $this->controller->viewVars['action'] : null;
 
 		if ($this->currentAction == 'view') {
-			$result = $this->WfWorkflow->find('first', array(
-				'joins' => array(
-					array(
-						'table' => 'wf_workflow_models',
-						'alias' => 'WorkflowModel',
-						'conditions' => array(
-							'WorkflowModel.id = WfWorkflow.wf_workflow_model_id',
-							'WorkflowModel.model' => $this->model
-						)
-					)
+			$this->WfWorkflow->contain('WorkflowModel');
+			$workflows = $this->WfWorkflow->find('first', array(
+				'conditions' => array(
+					'WorkflowModel.model' => $this->model
 				)
 			));
 			
-			if ($result) {
-				$controller->set('_edit', false);
-				$controller->set('_add', false);
-				$controller->set('_delete', false);
-
+			if ($workflows) {
 				$this->fields = !empty($this->controller->viewVars['_fields'])? $this->controller->viewVars['_fields'] : null;
+				$this->triggerFrom = !empty($this->controller->viewVars['_triggerFrom'])? $this->controller->viewVars['_triggerFrom'] : $this->triggerFrom;
+
+				$pass = $this->controller->params->pass;
+				if ($this->triggerFrom == 'Controller') {
+					$modelReference = $pass[0];
+				} else if ($this->triggerFrom == 'Model') {
+					unset($pass[0]);
+					$modelReference = $pass[1];
+				}
+
+				if ($this->controller->request->is(array('post', 'put'))) {
+					$data = $this->controller->request->data;
+					if ($this->WfWorkflowLog->saveAll($data)) {
+					} else {
+						$this->log($this->WfWorkflowLog->validationErrors, 'debug');
+					}
+				}
+
+				$buttons = array();
+				$tabs = array();
+				$this->WfWorkflowLog->contain('PrevWorkflowStep', 'WfWorkflowStep');
+				$workflowLogs = $this->WfWorkflowLog->find('first', array(
+					'conditions' => array(
+						'WfWorkflowLog.model' => $this->model,
+						'WfWorkflowLog.model_reference' => $modelReference
+					),
+					'order' => array(
+						'WfWorkflowLog.created DESC'
+					)
+				));
+
+				$options = array();
+				if ($workflowLogs) {
+					$workflowId = $workflowLogs['WfWorkflowStep']['workflow_id'];
+					$workflowStepId = $workflowLogs['WfWorkflowStep']['id'];
+					
+					$options['conditions'] = array(
+						'WfWorkflowStep.workflow_id' => $workflowId,
+						'WfWorkflowStep.id' => $workflowStepId
+					);
+				} else {
+					$workflowId = $workflows['WfWorkflow']['id'];
+					$options['conditions'] = array(
+						'WfWorkflowStep.workflow_id' => $workflowId,
+						'WfWorkflowStep.editable' => 0
+					);
+				}
+
+				$this->WfWorkflowStep->contain('WorkflowAction', 'SecurityRole');
+				$workflowSteps = $this->WfWorkflowStep->find('first', $options);
+
+				$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+				$userId = $this->Auth->user('id');
+				$roles = $SecurityGroupUser->getRolesByUserId($userId);
+
+				$workflowStepId = $workflowSteps['WfWorkflowStep']['id'];
+				$workflowStepName = $workflowSteps['WfWorkflowStep']['name'];
+				$workflowActions = !empty($workflowSteps['WorkflowAction']) ? $workflowSteps['WorkflowAction'] : array();
+				foreach ($workflowActions as $key => $workflowAction) {
+					$buttons[$key] = array(
+						'text' => $workflowAction['name'],
+						'value' => $workflowAction['next_workflow_step_id']
+					);
+				}
+
+				$data['WfWorkflowLog']['model'] = $this->model;
+				$data['WfWorkflowLog']['model_reference'] = $modelReference;
+				$data['WfWorkflowLog']['prev_workflow_step_id'] = $workflowStepId;
+				$this->controller->request->data = $data;
+
 				$this->fields['workflows'] = array(
 					'type' => 'element',
 					'element' => '../Elements/workflows',
+					'label' => false,
+					'valueClass' => 'col-md-12',
 					'visible' => true
 				);
+
+				$tabs = array('Comments', 'Transitions');
+
+				$controller->set('_edit', false);
+				$controller->set('_add', false);
+				$controller->set('_delete', false);
+				$controller->set('_execute', false);
 				$controller->set('_fields', $this->fields);
+				$controller->set('workflowStepName', $workflowStepName);
+				$controller->set('buttons', $buttons);
+				$controller->set('tabs', $tabs);
 			}
 		}
 	}
