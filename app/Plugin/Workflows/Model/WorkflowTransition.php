@@ -14,11 +14,19 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class WorkflowComment extends WorkflowsAppModel {
+class WorkflowTransition extends WorkflowsAppModel {
 	public $tablePrefix = 'wf_';
-	public $useTable = 'workflow_comments';
+	public $useTable = 'workflow_transitions';
 
 	public $belongsTo = array(
+        'PrevWorkflowStep' => array(
+            'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'prev_workflow_step_id'
+        ),
+		'WfWorkflowStep' => array(
+            'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'workflow_step_id'
+        ),
         'WorkflowRecord' => array(
             'className' => 'Workflows.WorkflowRecord',
             'foreignKey' => 'workflow_record_id'
@@ -32,16 +40,6 @@ class WorkflowComment extends WorkflowsAppModel {
 			'className' => 'SecurityUser',
 			'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
 			'foreignKey' => 'created_user_id'
-		)
-	);
-
-    public $validate = array(
-		'comment' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a comment'
-			)
 		)
 	);
 }
