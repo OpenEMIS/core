@@ -171,15 +171,6 @@ class SecurityGroup extends AppModel {
 			$conditions = $this->Session->read($this->alias.'.autocomplete.conditions.'.$model);
 		}
 		
-		$isSuperUser = $controller->Auth->user('super_admin')==1;
-		$userId = $isSuperUser ? false : $controller->Auth->user('id');
-		
-		if($model == 'SecurityGroupArea'){
-			
-		}else if($model == 'SecurityGroupInstitutionSite'){
-			
-		}
-		
 		$data = $this->{$model}->autocomplete($search, $exclude, $conditions);
 		return json_encode($data);
 	}
