@@ -8,17 +8,17 @@ if (isset($params)) {
 	}
 }
 
-$formAction = $_triggerFrom == 'Controller' ? array('action' => $this->action) : array('action' => $model, $this->action);
-$formAction[] = $this->request->data['WfWorkflowLog']['model_reference'];
+$formAction = $_triggerFrom == 'Controller' ? array('action' => $this->action) : array('action' => $this->action, $action);
+$formAction[] = $this->request->data['WorkflowRecord']['model_reference'];
+
 if (isset($params)) {
 	$formAction = array_merge($formAction, $paramValues);
 }
 //pr($this->request->data);
 $formOptions = $this->FormUtility->getFormOptions($formAction);
 echo $this->Form->create($model, $formOptions);
-echo $this->Form->hidden('WfWorkflowLog.model');
-echo $this->Form->hidden('WfWorkflowLog.model_reference');
-echo $this->Form->hidden('WfWorkflowLog.prev_workflow_step_id');
+echo $this->Form->hidden('WorkflowTransition.prev_workflow_step_id');
+echo $this->Form->hidden('WorkflowTransition.workflow_record_id');
 ?>
 
 <hr />
@@ -30,7 +30,7 @@ echo $this->Form->hidden('WfWorkflowLog.prev_workflow_step_id');
 <div class="row">
 	<div class="btn-group">
 		<?php foreach ($buttons as $key => $button) : ?>
-			<button type="submit" class="btn btn-default btn-sm" role="button" name="WfWorkflowLog[workflow_step_id]" value="<?php echo $button['value']; ?>"><?php echo $button['text']; ?></button>
+			<button type="submit" class="btn btn-default btn-sm" role="button" name="WorkflowTransition[workflow_step_id]" value="<?php echo $button['value']; ?>"><?php echo $button['text']; ?></button>
 		<?php endforeach ?>
 	</div>
 </div>

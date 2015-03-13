@@ -16,7 +16,7 @@
 						<?php echo $transition['WfWorkflowStep']['name']; ?>
 					</td>
 					<td><?php echo $transition['CreatedUser']['first_name'] ." ". $transition['CreatedUser']['last_name']; ?></td>
-					<td><?php echo $transition['WfWorkflowLog']['created']; ?></td>
+					<td><?php echo $transition['WorkflowTransition']['created']; ?></td>
 				</tr>
 			<?php endforeach ?>
 		</tbody>

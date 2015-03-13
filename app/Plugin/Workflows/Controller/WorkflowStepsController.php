@@ -34,7 +34,7 @@ class WorkflowStepsController extends WorkflowsAppController {
 
 		$this->ControllerAction->setFieldOrder('name', 1);
 		$this->ControllerAction->setFieldOrder('workflow_id', 2);
-		$this->WfWorkflowStep->fields['editable']['visible'] = false;
+		$this->WfWorkflowStep->fields['stage']['visible'] = false;
 
 		$this->WfWorkflowStep->fields['security_roles'] = array(
 			'type' => 'chosen_select',
