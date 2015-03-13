@@ -20,7 +20,6 @@ class Programme extends AppModel {
 	
 	public $actsAs = array(
 		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
 		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
 	);
@@ -43,7 +42,6 @@ class Programme extends AppModel {
 	);
 	
 	public function beforeAction() {
-		parent::beforeAction();
 		$studentId = $this->Session->read('Student.id');
 		if (!is_null($studentId)) {
 			$this->Navigation->addCrumb('Programmes');
@@ -72,9 +70,9 @@ class Programme extends AppModel {
 			}
 			
 			$contentHeader = __('Programmes');
-			$this->setVar(compact('contentHeader'));
+			$this->controller->set(compact('contentHeader'));
 		} else {
-			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
+			return $this->controller->redirect(array('controller' => 'Students', 'action' => 'index'));
 		}
 	}
 	
@@ -106,7 +104,6 @@ class Programme extends AppModel {
 				'data-date' => $dataEndDate
 			);
 		}
-		parent::afterAction();
 	}
 	
 	public function index() {
@@ -129,6 +126,6 @@ class Programme extends AppModel {
 			$this->Message->alert('general.noData');
 		}
 
-		$this->setVar('data', $data);
+		$this->controller->set('data', $data);
 	}
 }

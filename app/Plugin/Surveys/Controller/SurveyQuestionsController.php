@@ -24,7 +24,6 @@ class SurveyQuestionsController extends SurveysAppController {
 	);
 
 	public $components = array(
-		'Paginator',
 		'CustomField2' => array(
 			'models' => array(
 				'Module' => 'Surveys.SurveyModule',
@@ -37,11 +36,6 @@ class SurveyQuestionsController extends SurveysAppController {
 			'viewType' => 'list'
 		)
 	);
-
-	public $paginate = array(
-        'limit' => 20,
-        'contain' => array()
-    );
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -96,14 +90,6 @@ class SurveyQuestionsController extends SurveysAppController {
 
     public function preview() {
     	$this->CustomField2->preview();
-    }
-
-    public function listing() {
-		return $this->CustomField2->listing();
-    }
-
-    public function download($format="xform", $id=0, $output=true) {
-    	return $this->CustomField2->download($format, $id, $output);
     }
 }
 ?>

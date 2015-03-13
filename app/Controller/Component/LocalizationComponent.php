@@ -24,7 +24,7 @@ class LocalizationComponent extends Component {
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
-		$this->Cookie->name = Inflector::underscore($controller->_productName) . '_COOKIE';
+		$this->Cookie->name = str_replace(' ', '_', $controller->_productName) . '_COOKIE';
 		$this->Cookie->time = 3600 * 24 * 30; // expires after one month
 
 		$languageOptions = array(
