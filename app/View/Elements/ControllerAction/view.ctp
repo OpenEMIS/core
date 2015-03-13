@@ -9,10 +9,10 @@ $row = '<div class="%s">%s</div>';
 $_rowClass = array('row');
 
 $_labelCol = '<div class="%s">%s</div>';
-$_labelClass = array('col-md-3'); // default bootstrap class for labels
+$_labelClass = 'col-md-3'; // default bootstrap class for labels
 
 $_valueCol = '<div class="%s">%s</div>';
-$_valueClass = array('col-md-6'); // default bootstrap class for values
+$_valueClass = 'col-md-6'; // default bootstrap class for values
 
 $allowTypes = array('element', 'disabled', 'chosen_select');
 
@@ -142,20 +142,20 @@ foreach ($displayFields as $_field => $attr) {
 				$_rowClass[] = $_fieldAttr['rowClass'];
 			}
 			if (!empty($_fieldAttr['labelClass'])) {
-				$_labelClass[] = $_fieldAttr['labelClass'];
+				$_labelClass = $_fieldAttr['labelClass'];
 			}
 			if (!empty($_fieldAttr['valueClass'])) {
-				$_valueClass[] = $_fieldAttr['valueClass'];
+				$_valueClass = $_fieldAttr['valueClass'];
 			}
 
-			$valueClass = implode(' ', $_valueClass);
+			$valueClass = $_valueClass;
 			$rowClass = implode(' ', $_rowClass);
 
 			if ($_fieldAttr['label']) {
-				$labelClass = implode(' ', $_labelClass);
+				$labelClass = $_labelClass;
 				$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, $label, $valueClass, $value);
 			} else { // no label
-				$rowContent = sprintf($valueCol, $valueClass, $value);
+				$rowContent = sprintf($_valueCol, $valueClass, $value);
 			}
 			$html .= sprintf($row, $rowClass, $rowContent);
 		} else {
