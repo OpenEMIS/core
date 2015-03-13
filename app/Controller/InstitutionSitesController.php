@@ -32,13 +32,11 @@ class InstitutionSitesController extends AppController {
 		'EducationProgramme',
 		'InstitutionSite',
 		'InstitutionSiteActivity',
-		'InstitutionSiteClass',
 		'InstitutionSiteClassSubject',
 		'InstitutionSiteClassStudent',
 		'InstitutionSiteCustomField',
 		'InstitutionSiteCustomFieldOption',
 		'InstitutionSiteCustomValue',
-		'InstitutionSiteHistory',
 		'InstitutionSiteOwnership',
 		'InstitutionSiteLocality',
 		'InstitutionSiteSector',
@@ -56,12 +54,12 @@ class InstitutionSitesController extends AppController {
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
-		'InstitutionSiteStudentAbsence',
 		'InstitutionSiteSectionStudent'
 	);
 	
 	public $helpers = array('Paginator', 'Model');
 	public $components = array(
+		'ControllerAction',
 		'Mpdf',
 		'Paginator',
 		'FileAttachment' => array(
@@ -77,10 +75,6 @@ class InstitutionSitesController extends AppController {
 	
 	public $modules = array(
 		'bankAccounts' => 'InstitutionSiteBankAccount',
-		'classesSubject' => 'InstitutionSiteClassSubject',
-		'classesStudent' => 'InstitutionSiteClassStudent',
-		'classesStaff' => 'InstitutionSiteClassStaff',
-		'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
@@ -88,13 +82,13 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
 		'InstitutionSitePosition',
-		'InstitutionSiteProgramme',
 		'InstitutionSiteStudentAttendance',
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'InstitutionSiteStaffAttendance',
 		'InstitutionSiteStaffAbsence',
+		'InstitutionSiteClass',
 		'InstitutionSiteSection',
 		'InstitutionSiteSectionStudent',
 		'InstitutionSiteSectionStaff',
