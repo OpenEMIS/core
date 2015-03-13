@@ -23,6 +23,7 @@ class Workflow2Component extends Component {
 	public $WfWorkflow;
 	public $WfWorkflowStep;
 	public $WfWorkflowLog;
+	public $WorkflowComment;
 
 	public $components = array('Session', 'Message', 'Auth');
 	public function __construct(ComponentCollection $collection, $settings = array()) {
@@ -34,6 +35,7 @@ class Workflow2Component extends Component {
 		$this->WfWorkflow = ClassRegistry::init(array('class' => 'Workflows.WfWorkflow', 'alias' => 'WfWorkflow'));
 		$this->WfWorkflowStep = ClassRegistry::init(array('class' => 'Workflows.WfWorkflowStep', 'alias' => 'WfWorkflowStep'));
 		$this->WfWorkflowLog = ClassRegistry::init(array('class' => 'Workflows.WfWorkflowLog', 'alias' => 'WfWorkflowLog'));
+		$this->WorkflowComment = ClassRegistry::init(array('class' => 'Workflows.WorkflowComment', 'alias' => 'WorkflowComment'));
 	}
 
 	// Is called before the controller's beforeFilter method.
@@ -70,16 +72,67 @@ class Workflow2Component extends Component {
 					$modelReference = $pass[1];
 				}
 
+				$buttons = array();
+				$tabs = array();
+				$tabs['comment'] = array('name' => 'Comments', 'class' => '');
+				$tabs['transition'] = array('name' => 'Transitions', 'class' => '');
+				$selectedTab = key($tabs);
+
 				if ($this->controller->request->is(array('post', 'put'))) {
 					$data = $this->controller->request->data;
-					if ($this->WfWorkflowLog->saveAll($data)) {
+
+					if (!empty($data['submit'])) {
+						if($data['submit'] == 'add') {
+							unset($data['WfWorkflowLog']);
+
+							if (!empty($data['WorkflowComment']['workflow_log_id'])) {
+								if ($this->WorkflowComment->saveAll($data)) {
+								} else {
+									$this->log($this->WorkflowComment->validationErrors, 'debug');
+								}
+							}
+						} else if($data['submit'] == 'comment') {
+							$selectedTab = $data['submit'];
+						} else if($data['submit'] == 'transition') {
+							$selectedTab = $data['submit'];
+						}
 					} else {
-						$this->log($this->WfWorkflowLog->validationErrors, 'debug');
+						unset($data['WorkflowComment']);
+						if ($this->WfWorkflowLog->saveAll($data)) {
+						} else {
+							$this->log($this->WfWorkflowLog->validationErrors, 'debug');
+						}
 					}
 				}
 
-				$buttons = array();
-				$tabs = array();
+				if ($selectedTab == 'comment') {
+					$this->WorkflowComment->contain('WfWorkflowLog', 'CreatedUser');
+					$comments = $this->WorkflowComment->find('all', array(
+						'conditions' => array(
+							'WfWorkflowLog.model' => $this->model,
+							'WfWorkflowLog.model_reference' => $modelReference
+						),
+						'order' => array(
+							'WorkflowComment.created ASC'
+						)
+					));
+
+					$controller->set('comments', $comments);
+				} else if ($selectedTab == 'transition') {
+					$this->WfWorkflowLog->contain('PrevWorkflowStep', 'WfWorkflowStep', 'CreatedUser');
+					$transitions = $this->WfWorkflowLog->find('all', array(
+						'conditions' => array(
+							'WfWorkflowLog.model' => $this->model,
+							'WfWorkflowLog.model_reference' => $modelReference
+						),
+						'order' => array(
+							'WfWorkflowLog.created ASC'
+						)
+					));
+
+					$controller->set('transitions', $transitions);
+				}
+
 				$this->WfWorkflowLog->contain('PrevWorkflowStep', 'WfWorkflowStep');
 				$workflowLogs = $this->WfWorkflowLog->find('first', array(
 					'conditions' => array(
@@ -100,6 +153,8 @@ class Workflow2Component extends Component {
 						'WfWorkflowStep.workflow_id' => $workflowId,
 						'WfWorkflowStep.id' => $workflowStepId
 					);
+
+					$newData['WorkflowComment']['workflow_log_id'] = $workflowLogs['WfWorkflowLog']['id'];
 				} else {
 					$workflowId = $workflows['WfWorkflow']['id'];
 					$options['conditions'] = array(
@@ -125,20 +180,20 @@ class Workflow2Component extends Component {
 					);
 				}
 
-				$data['WfWorkflowLog']['model'] = $this->model;
-				$data['WfWorkflowLog']['model_reference'] = $modelReference;
-				$data['WfWorkflowLog']['prev_workflow_step_id'] = $workflowStepId;
-				$this->controller->request->data = $data;
+				$tabs[$selectedTab]['class'] = 'active';
+
+				$newData['WfWorkflowLog']['model'] = $this->model;
+				$newData['WfWorkflowLog']['model_reference'] = $modelReference;
+				$newData['WfWorkflowLog']['prev_workflow_step_id'] = $workflowStepId;
+				$this->controller->request->data = $newData;
 
 				$this->fields['workflows'] = array(
 					'type' => 'element',
-					'element' => '../Elements/workflows',
+					'element' => '../Workflow/index',
 					'label' => false,
 					'valueClass' => 'col-md-12',
 					'visible' => true
 				);
-
-				$tabs = array('Comments', 'Transitions');
 
 				$controller->set('_edit', false);
 				$controller->set('_add', false);
@@ -148,6 +203,7 @@ class Workflow2Component extends Component {
 				$controller->set('workflowStepName', $workflowStepName);
 				$controller->set('buttons', $buttons);
 				$controller->set('tabs', $tabs);
+				$controller->set('selectedTab', $selectedTab);
 			}
 		}
 	}
