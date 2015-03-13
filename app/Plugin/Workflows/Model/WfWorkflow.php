@@ -74,4 +74,21 @@ class WfWorkflow extends WorkflowsAppModel {
 	        )
 		)
 	);
+
+	public function afterSave($created, $options = Array()) {
+		$workflowId = $this->data['WfWorkflow']['id'];
+		$workflowSteps = $this->WfWorkflowStep->findByWorkflowId($workflowId);
+
+		if (empty($workflowSteps)) {
+			$data = array();
+			$data[0]['WfWorkflowStep']['name'] = 'Open';
+			$data[0]['WfWorkflowStep']['stage'] = 0;
+			$data[0]['WfWorkflowStep']['workflow_id'] = $workflowId;
+			$data[1]['WfWorkflowStep']['name'] = 'Closed';
+			$data[1]['WfWorkflowStep']['stage'] = 1;
+			$data[1]['WfWorkflowStep']['workflow_id'] = $workflowId;
+
+			$this->WfWorkflowStep->saveAll($data);
+		}
+	}
 }
