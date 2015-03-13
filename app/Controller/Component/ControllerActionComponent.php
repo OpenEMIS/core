@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.5
+ControllerActionComponent - Version 1.0.6
 */
 
 class ControllerActionComponent extends Component {
@@ -82,16 +82,61 @@ class ControllerActionComponent extends Component {
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public function beforeRender(Controller $controller) {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
-			$controller->request->params['action'] = $this->currentAction;
-			if ($this->triggerFrom == 'Model' && method_exists($this->model, 'afterAction')) {
-				$this->model->afterAction();
+			$action = $this->currentAction;
+
+			if ($this->triggerFrom == 'Controller') {
+				
+				
+			} else if ($this->triggerFrom == 'Model') {
+				$action = $this->model->alias;
+				if (method_exists($this->model, 'afterAction')) {
+					$this->model->afterAction();
+				}
 			}
+			$controller->request->params['action'] = $action;
+
 			uasort($this->model->fields, array($this, 'sortFields'));
 			$controller->set('model', $this->model->alias);
 			$controller->set('action', $this->currentAction);
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
+
+			$this->initButtons();
 		}
+	}
+
+	private function initButtons() {
+		$controller = $this->controller;
+
+		$named = $controller->request->params['named'];
+		$pass = $controller->request->params['pass'];
+
+		$buttons = array();
+
+		foreach ($this->defaultActions as $action) {
+			$actionUrl = array('action' => $action);
+
+			if ($this->triggerFrom == 'Model') {
+				$actionUrl['action'] = $this->model->alias;
+			}
+			$actionUrl = array_merge($actionUrl, $named, $pass);
+			$buttons[$action] = array('url' => $actionUrl);
+		}
+
+		$backBtn = array('action' => 'index');
+
+		if ($this->triggerFrom == 'Model') {
+			$backBtn['action'] = $this->model->alias;
+		}
+
+		if ($this->currentAction == 'view' || $this->currentAction == 'add') {
+			
+		} else if ($this->currentAction == 'edit') {
+			$backBtn = array('action' => 'view');
+		}
+		$backBtn = array_merge($backBtn, $named, $pass);
+		$buttons['back'] = array('url' => $backBtn);
+		$controller->set('_buttons', $buttons);
 	}
 
 	private function initComponentsForModel() {
