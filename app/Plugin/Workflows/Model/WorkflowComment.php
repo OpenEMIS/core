@@ -34,4 +34,14 @@ class WorkflowComment extends WorkflowsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+    public $validate = array(
+		'comment' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a comment'
+			)
+		)
+	);
 }
