@@ -40,7 +40,7 @@ $this->start('contentBody');
     </div>
     <div class="row">
         <div class="col-md-3"><?php echo __('Gender'); ?></div>
-        <div class="col-md-6"><?php echo $this->Utility->formatGender($dataGuardian['gender']); ?></div>
+        <div class="col-md-6"><?php echo $this->Utility->formatGender($dataGuardian); ?></div>
     </div>
     <div class="row">
         <div class="col-md-3"><?php echo __('Mobile Phone'); ?></div>

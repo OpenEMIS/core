@@ -42,10 +42,12 @@ class SecurityController extends AppController {
 	);
 	
 	public $modules = array(
+		'SecurityUser',
 		'SecurityGroup',
 		'permissions' => 'SecurityRoleFunction',
 		'roles' => 'SecurityRole',
-		'SecurityUserAccess'
+		'SecurityUserAccess',
+		'SecurityUserLogin'
 	);
 	
 	public function beforeFilter() {
@@ -209,10 +211,6 @@ class SecurityController extends AppController {
 		$this->redirect($redirect);
 	}
 	
-	public function index() {
-		$this->redirect(array('action' => 'users'));
-	}
-	
 	public function registerSession() {
 		$this->Session->write('login.token', $this->SecurityUser->createToken());
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
@@ -220,103 +218,185 @@ class SecurityController extends AppController {
 		$this->DateTime->getConfigDateFormat();
 	}
 	
-	public function users() {
-		$this->Navigation->addCrumb('Users');
+	// public function users() {
+	// 	$this->Navigation->addCrumb('Users');
 
-		$conditions = array('SecurityUser.super_admin' => 0);
+	// 	$conditions = array('SecurityUser.super_admin' => 0);
 
-		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
-		$data = $this->Search->search($this->SecurityUser, $conditions, $order);
+	// 	$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
+	// 	$data = $this->Search->search($this->SecurityUser, $conditions, $order);
 		
-		if (empty($data)) {
-			$this->Message->alert('general.noData');
-		}
-		$this->set('data', $data);
-	}
+	// 	if (empty($data)) {
+	// 		$this->Message->alert('general.noData');
+	// 	}
+	// 	$this->set('data', $data);
+	// }
 	
-	public function usersView() {
-		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
+	// public function usersView() {
+	// 	$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		
-		if(isset($this->params['pass'][0])) {
-			$userId = $this->params['pass'][0];
-			$this->Session->write('SecurityUserId', $userId);
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
+	// 	if(isset($this->params['pass'][0])) {
+	// 		$userId = $this->params['pass'][0];
+	// 		$this->Session->write('SecurityUserId', $userId);
+	// 		$data = $this->SecurityUser->find(
+	// 			'first', 
+	// 			array(
+	// 				'contain' => array(
+	// 					'UserContact' => array(
+	// 						'fields'=> array('id', 'value', 'preferred'),
+	// 						'ContactType' => array(
+	// 							'fields'=> array('id', 'name'),	
+	// 							'ContactOption' => array('fields'=> array('id', 'name'))
+	// 						)
+	// 					),
+	// 					'SecurityGroupUser' => array(
+	// 						'SecurityGroup' => array('fields'=> array('id', 'name')),
+	// 						'SecurityRole' => array('fields'=> array('id', 'name'))
+	// 					),
+	// 					'SecurityUserAccess' => array(
+	// 						'fields' => array('table_name', 'security_user_id')
+	// 					)
+	// 				),
+	// 				'conditions' => array('SecurityUser.id' => $userId)
+	// 			)
+	// 		);
+
+	// 		// manually getting security user data because table has no 'id'
+	// 		foreach ($data['SecurityUserAccess'] as $key => $value) {
+	// 			$test = $this->SecurityUser->find(
+	// 				'first',
+	// 				array(
+	// 					'recursive' => -1,
+	// 					'fields' => array('id', 'first_name', 'middle_name', 'third_name', 'last_name', 'openemis_no'),
+	// 					'conditions' => array('id' => $value['security_user_id'])
+	// 				)
+	// 			);
+	// 			$data['SecurityUserAccess'][$key] = array_merge($data['SecurityUserAccess'][$key], $test);
+	// 		}
 			
-			$allowEdit = false;
-			if($this->Auth->user('super_admin')==1) {
-				// if the user himself is a super admin, then allow edit
-				$allowEdit = true;
-			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
-				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-				$allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
-			}
-			$this->set('data', $data);
-			$this->set('allowEdit', $allowEdit);
-			$this->Navigation->addCrumb($data['first_name'] . ' ' . $data['last_name']);
-		} else {
-			$this->redirect(array('action' => 'users'));
-		}
-	}
+	// 		$allowEdit = false;
+	// 		if($this->Auth->user('super_admin')==1) {
+	// 			// if the user himself is a super admin, then allow edit
+	// 			$allowEdit = true;
+	// 		} else if($this->Auth->user('super_admin')==$data['super_admin']) {
+	// 			//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+	// 			$allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+	// 		}
+	// 		$this->set('data', $data);
+	// 		$this->set('allowEdit', $allowEdit);
+
+			
+	// 		$this->Navigation->addCrumb(ModelHelper::getName($data['SecurityUser']));
+	// 	} else {
+	// 		$this->redirect(array('action' => 'users'));
+	// 	}
+	// }
 	
-	public function usersEdit() {
-		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
-		if(isset($this->params['pass'][0])) {
-			$userId = $this->params['pass'][0];
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
-			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$allowEdit = false;
-			if($this->Auth->user('super_admin')==1) {
-				$allowEdit = true;
-			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
-				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-				$allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
-			}
+	// public function usersEdit() {
+	// 	$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
+	// 	if(isset($this->params['pass'][0])) {
+	// 		$userId = $this->params['pass'][0];
+
+	// 		$data = $this->SecurityUser->find(
+	// 			'first', 
+	// 			array(
+	// 				'contain' => array(
+	// 					'UserContact' => array(
+	// 						'fields'=> array('id', 'value', 'preferred'),
+	// 						'ContactType' => array(
+	// 							'fields'=> array('id', 'name'),	
+	// 							'ContactOption' => array('fields'=> array('id', 'name'))
+	// 						)
+	// 					),
+	// 					'SecurityGroupUser' => array(
+	// 						'SecurityGroup' => array('fields'=> array('id', 'name')),
+	// 						'SecurityRole' => array('fields'=> array('id', 'name'))
+	// 					),
+	// 					'SecurityUserAccess' => array(
+	// 						'fields' => array('table_name', 'security_user_id')
+	// 					)
+	// 				),
+	// 				'conditions' => array('SecurityUser.id' => $userId)
+	// 			)
+	// 		);
+
+	// 		// manually getting security user data because table has no 'id'
+	// 		foreach ($data['SecurityUserAccess'] as $key => $value) {
+	// 			$test = $this->SecurityUser->find(
+	// 				'first',
+	// 				array(
+	// 					'recursive' => -1,
+	// 					'fields' => array('id', 'first_name', 'middle_name', 'third_name', 'last_name', 'openemis_no'),
+	// 					'conditions' => array('id' => $value['security_user_id'])
+	// 				)
+	// 			);
+	// 			$data['SecurityUserAccess'][$key] = array_merge($data['SecurityUserAccess'][$key], $test);
+	// 		}
+
+	// 		$allowEdit = false;
+	// 		if($this->Auth->user('super_admin')==1) {
+	// 			$allowEdit = true;
+	// 		} else if($this->Auth->user('super_admin')==$data['super_admin']) {
+	// 			//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+	// 			$allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+	// 		}
 			
-			if(!$allowEdit) {
-				$this->redirect(array('action' => 'users'));
-			} else {
-				if($this->request->is('post') || $this->request->is('put')) {
-					$postData = $this->data['SecurityUser'];
+	// 		if(!$allowEdit) {
+	// 			$this->redirect(array('action' => 'users'));
+	// 		} else {
+	// 			if($this->request->is('post') || $this->request->is('put')) {
+	// 				if ($this->request->data['submit'] == 'Add') {
+						
+
+	// 					// add an additional row to userContact
+	// 					$newRow = array(
+	// 						'value' => '',
+	// 						'preferred' => 1
+	// 					);
+	// 					$this->request->data['UserContact'][] = $newRow;
+
+	// 				} else if ($this->request->data['submit'] == 'Save') {
+	// 					$postData = $this->data['SecurityUser'];
 					
-					if($this->SecurityUser->doValidate($postData)) {
-						$name = $postData['first_name'] . ' ' . $postData['last_name'];
-						$this->Utility->alert($name . ' has been updated successfully.');
-						$this->redirect(array('action' => 'usersView', $userId));
-					} else {
-						$data = array_merge($data, $postData);
-					}
-				}
-				$this->set('data', $data);
-				$this->set('statusOptions', $this->SecurityUser->getStatus());
-				$this->Navigation->addCrumb($name);
-			}
-		} else {
-			$this->redirect(array('action' => 'users'));
-		}
-	}
+	// 					if($this->SecurityUser->doValidate($postData)) {
+	// 						$name = $postData['first_name'] . ' ' . $postData['last_name'];
+	// 						$this->Utility->alert($name . ' has been updated successfully.');
+	// 						$this->redirect(array('action' => 'usersView', $userId));
+	// 					} 
+	// 				}
+	// 			} else {
+	// 				$this->request->data = $data;
+	// 			}
+
+	// 			// need to handle contact options
+	// 			$contactTypeOptions = $this->SecurityUser->UserContact->ContactType->getOptions();
+	// 			$contactOptionOptions = $this->SecurityUser->UserContact->ContactType->ContactOption->getOptions();
+
+	// 			$this->set(compact('data', 'contactTypeOptions', 'contactOptionOptions'));
+	// 			$this->set('statusOptions', $this->SecurityUser->getStatus());
+	// 			$this->Navigation->addCrumb(ModelHelper::getName($data['SecurityUser']));
+	// 		}
+	// 	} else {
+	// 		$this->redirect(array('action' => 'users'));
+	// 	}
+	// }
 	
-	public function usersAdd() {
-		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
-		$this->Navigation->addCrumb('Add User');
+	// public function usersAdd() {
+	// 	$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
+	// 	$this->Navigation->addCrumb('Add User');
 		
-		if($this->request->is('post')) {
-			$data = $this->data;
-			$this->SecurityUser->set($data);
-			if($this->SecurityUser->validates()) {
-				$result =  $this->SecurityUser->save($data);
-				$userId = $result['SecurityUser']['id'];
-				$name = trim($data['SecurityUser']['first_name'] . ' ' . $data['SecurityUser']['last_name']);
-				$this->Utility->alert($name . ' has been added successfully.');
-				$this->redirect(array('action' => 'usersView', $userId));
-			}
-		}
-	}
+	// 	if($this->request->is('post')) {
+	// 		$data = $this->data;
+	// 		$this->SecurityUser->set($data);
+	// 		if($this->SecurityUser->validates()) {
+	// 			$result =  $this->SecurityUser->save($data);
+	// 			$userId = $result['SecurityUser']['id'];
+	// 			$name = trim($data['SecurityUser']['first_name'] . ' ' . $data['SecurityUser']['last_name']);
+	// 			$this->Utility->alert($name . ' has been added successfully.');
+	// 			$this->redirect(array('action' => 'usersView', $userId));
+	// 		}
+	// 	}
+	// }
 	
 	public function usersSearch() {
 		$searchString = $this->params->query['searchString'];

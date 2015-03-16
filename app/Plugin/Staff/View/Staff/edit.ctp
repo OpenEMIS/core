@@ -1,4 +1,4 @@
-<?php
+	<?php
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
@@ -34,15 +34,19 @@ echo $this->Form->create($model, $formOptions);
 	<?php 
 		$openEmisIdLabel = $labelOptions;
 		$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
+
+		if (isset($this->data[$model]['id'])) {
+			echo $this->Form->hidden('id', array('value' => $this->data[$model]['id']));
+		}
 		
 		if ($autoid=='') {
-			$arrIdNo = array_merge(array('label' => $openEmisIdLabel),$arrIdNo);
-			echo $this->Form->input('identification_no', $arrIdNo);
+			$arrIdNo = array_merge(array('label' => $openEmisIdLabel, 'readOnly' => true),$arrIdNo);
+			echo $this->Form->input('openemis_no', $arrIdNo);
 		} else {
 			if ($this->Session->check('Staff.id')) { 
-				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
+				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
 			} else {
-				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel, 'value' => $autoid));
+				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
 			}
 		}
 		
@@ -51,8 +55,8 @@ echo $this->Form->create($model, $formOptions);
 		echo $this->Form->input('third_name');
 		echo $this->Form->input('last_name');
 		echo $this->Form->input('preferred_name');
-		echo $this->Form->input('gender', array('options' => $genderOptions));
-		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
+		echo $this->Form->input('gender_id', array('options' => $genderOptions));
+		$tempDob = isset($this->data['SecurityUser']['date_of_birth']) ? array('data-date' => $this->data['SecurityUser']['date_of_birth']) : array();
 		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
 		
 		$imgOptions = array();
@@ -60,8 +64,8 @@ echo $this->Form->create($model, $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if (isset($this->data[$model]['photo_name']) && isset($this->data[$model]['photo_content'])) {
-			$imgOptions['src'] = $this->Image->getBase64($this->data[$model]['photo_name'], $this->data[$model]['photo_content']);
+		if (isset($this->data['SecurityUser']['photo_name']) && isset($this->data['SecurityUser']['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data['SecurityUser']['photo_name'], $this->data['SecurityUser']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
@@ -78,7 +82,7 @@ echo $this->Form->create($model, $formOptions);
 	<?php 
 		echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)'));
 		echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');"));
-		$tempPostCode = isset($this->data[$model]['postal_code'])?$this->data[$model]['postal_code'] : '';
+		$tempPostCode = isset($this->data['SecurityUser']['postal_code'])?$this->data['SecurityUser']['postal_code'] : '';
 		echo $this->Form->hidden(null, array('id'=>'validate_staff_postal_code', 'name' => 'validate_staff_postal_code', 'value' => $tempPostCode));
 	?>
 </fieldset>

@@ -62,8 +62,8 @@ $this->start('contentBody');
 					if ($obj['status'] == 0) continue;
 				?>
 						<tr>
-							<td><?php echo $obj['Staff']['identification_no'] ?></td>
-							<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
+							<td><?php echo $obj['Staff']['SecurityUser']['openemis_no'] ?></td>
+							<td><?php echo ModelHelper::getName($obj['Staff']['SecurityUser']) ?></td>
 						</tr>
 				<?php endforeach ?>
 			</tbody>
@@ -91,10 +91,10 @@ $this->start('contentBody');
 					if ($obj['status'] == 0) continue;
 				?>
 						<tr>
-							<td><?php echo $obj['Student']['identification_no'] ?></td>
-							<td><?php echo ModelHelper::getName($obj['Student']) ?></td>
-							<td><?php echo $obj['Student']['gender'] ?></td>
-							<td><?php echo $obj['Student']['date_of_birth'] ?></td>
+							<td><?php echo $obj['Student']['SecurityUser']['openemis_no'] ?></td>
+							<td><?php echo ModelHelper::getName($obj['Student']['SecurityUser']) ?></td>
+							<td><?php echo $obj['Student']['SecurityUser']['Gender']['name'] ?></td>
+							<td><?php echo $obj['Student']['SecurityUser']['date_of_birth'] ?></td>
 							<!--td><?php echo $categoryOptions[$obj['student_category_id']] ?></td-->
 						</tr>
 				<?php endforeach ?>

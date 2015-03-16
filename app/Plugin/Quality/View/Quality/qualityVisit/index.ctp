@@ -15,7 +15,7 @@ $this->start('contentBody');
 $tableHeaders = array(__('Date'), __('Grade'), __('Section'), __('Staff'));
 $tableData = array();
 foreach ($data as $obj) {
-	$staffName = $this->Model->getName($obj['Staff']);
+	$staffName = $this->Model->getName($obj['Staff']['SecurityUser']);
 	$row = array();
 	$row[] = $obj[$model]['date'];
 	$row[] = $obj['EducationGrade']['name'];

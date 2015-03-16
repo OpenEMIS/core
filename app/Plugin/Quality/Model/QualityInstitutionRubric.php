@@ -296,19 +296,34 @@ class QualityInstitutionRubric extends QualityAppModel {
 		$selectedRubricId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedRubricId;
 
 		//Process staff
-		$this->InstitutionSiteSection->contain('Staff');
 		$staffs = $this->InstitutionSiteSection->find('all', array(
+			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = InstitutionSiteSection.staff_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Staff.security_user_id')
+				),
 			),
 			'conditions' => array('InstitutionSiteSection.id' => $selectedSectionId, 'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriodId),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
+
 		$staffOptions = array();
 		foreach ($staffs as $obj) {
 			$id = $obj['Staff']['id'];
-			$staffOptions[$id] = ModelHelper::getName($obj['Staff']);
+			$staffOptions[$id] = ModelHelper::getName($obj['SecurityUser']);
 		}
+
+
 		$selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
 		$selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
 
@@ -580,7 +595,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 			
 			//$options['contain'] = array('QualityInstitutionRubric' => array('full_name'));
 			
-			$this->virtualFields['full_name'] = "CONCAT(Staff.first_name,' ',Staff.middle_name,' ',Staff.third_name,' ',Staff.last_name)";
+			$this->virtualFields['full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.middle_name,' ',SecurityUser.third_name,' ',SecurityUser.last_name)";
 			$data = $this->find('all', $options);
 			
 			$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
