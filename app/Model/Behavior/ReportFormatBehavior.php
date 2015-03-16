@@ -171,7 +171,8 @@ class ReportFormatBehavior extends ModelBehavior {
 	}
 	
 	public function formatGender($value) {
-		return ($value == 'F') ? __('Female') : __('Male');
+		return (array_key_exists('Gender', $value) && array_key_exists('name', $value['Gender']))? __($value['Gender']['name']): '';
+		// return ($value == 'F') ? __('Female') : __('Male');
 	}
 
 }

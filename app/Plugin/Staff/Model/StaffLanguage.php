@@ -15,14 +15,15 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffLanguage extends StaffAppModel {
+	public $useTable = 'user_languages';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction', 
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
+		'ControllerAction2', 
 		'DatePicker' => array('evaluation_date')
 	);
 
 	public $belongsTo = array(
-		'Staff.Staff',
+		'SecurityUser',
 		'Language',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -70,103 +71,48 @@ class StaffLanguage extends StaffAppModel {
 			)
 		),
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Staff.security_user_id')) {
+			$id = CakeSession::read('Staff.security_user_id');
+			$conditions = array($this->alias.'.security_user_id' => $id);
+		}
+		return $conditions;
+	}
+	/* Excel Behaviour */
+
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Staff.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
+		}
+		$this->Navigation->addCrumb(__('Languages'));
+
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
+		$this->fields['language_id']['type'] = 'select';
+		$this->fields['language_id']['options'] = $this->Language->getList();
+
+		$gradeOptions = array();
+		for ($i = 0; $i < 6; $i++) {
+			$gradeOptions[$i] = $i;
+		}
+		$this->fields['listening']['type'] = 'select';
+		$this->fields['listening']['options'] = $gradeOptions;
+		$this->fields['speaking']['type'] = 'select';
+		$this->fields['speaking']['options'] = $gradeOptions;
+		$this->fields['reading']['type'] = 'select';
+		$this->fields['reading']['options'] = $gradeOptions;
+		$this->fields['writing']['type'] = 'select';
+		$this->fields['writing']['options'] = $gradeOptions;
+	}
 	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'evaluation_date'),
-				array('field' => 'name', 'model' => 'Language', 'labelKey' => 'general.type'),
-				array('field' => 'listening'),
-				array('field' => 'speaking'),
-				array('field' => 'reading'),
-				array('field' => 'writing'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-
-	public function languages($controller, $params) {
-		$controller->Navigation->addCrumb('Languages');
-		$header = __('Languages');
-		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser','CreatedUser')));
-		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
-		$controller->set(compact('data', 'header'));
-	}
-
-	public function languagesAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add Languages');
-		$header = __('Add Languages');
-		if ($controller->request->is(array('post', 'put'))) {
-			$data = $controller->request->data[$this->alias];
-			$data['staff_id'] = $controller->Session->read('Staff.id');
-			$this->create();
-			
-			if ($this->save($data)) {
-				$id = $this->getLastInsertId();
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'languages'));
-			}
-		}
-		$gradeOptions = array();
-		for ($i = 0; $i < 6; $i++) {
-			$gradeOptions[$i] = $i;
-		}
-		$languageOptions = $this->Language->getList(array('value' => 0));
-		$controller->set(compact('header', 'gradeOptions','languageOptions'));
-	}
-
-	public function languagesView($controller, $params) {
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$controller->Navigation->addCrumb('Language Details');
-		$header = __('Language Details');
-		$data = $this->findById($id);
-
-		if (empty($data)) {
-			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action' => 'languages'));
-		}
-		$controller->Session->write('StaffLanguage.id', $id);
-
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('header', 'data', 'fields', 'id'));
-	}
-
-	public function languagesEdit($controller, $params) {
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$controller->Navigation->addCrumb('Edit Language');
-		$header = __('Edit Language');
-
-		if ($controller->request->is('post') || $controller->request->is('put')) {
-			$languageData = $controller->request->data[$this->alias];
-			$languageData['staff_id'] = $controller->Session->read('Staff.id');
-
-			if ($this->save($languageData)) {
-				$controller->Message->alert('general.edit.success');
-				return $controller->redirect(array('action' => 'languagesView', $id));
-			}
-		} else {
-			$data = $this->findById($id);
-			if (empty($data)) {
-				return $controller->redirect(array('action' => 'languages'));
-			}
-			$controller->request->data = $data;
-		}
-
-		$gradeOptions = array();
-		for ($i = 0; $i < 6; $i++) {
-			$gradeOptions[$i] = $i;
-		}
-		$languageOptions = $this->Language->getList(array('value' => $controller->request->data['StaffLanguage']['language_id']));
-		$controller->set(compact('id', 'header', 'gradeOptions', 'languageOptions'));
-	}
-
-	public function languagesDelete($controller, $params) {
-		return $this->remove($controller, 'languages');
+	public function index() {
+		$userId = $this->Session->read('Staff.security_user_id');
+		$this->contain(array('Language' => array('id', 'name')));
+		$data = $this->findAllBySecurityUserId($userId);
+		$this->setVar(compact('data'));
 	}
 }

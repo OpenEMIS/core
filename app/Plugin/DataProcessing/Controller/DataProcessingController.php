@@ -863,7 +863,7 @@ class DataProcessingController extends DataProcessingAppController {
             ));
             $subquery = '';
             $i = 1;
-            $fields = "'Staff.identification_no as OpenEmisID', 'Staff.first_name As FirstName', 'Staff.last_name As LastName', 'StaffPositionTitle.name As Position'";
+            $fields = "'SecurityUser.openemis_no as OpenEmisID', 'SecurityUser.first_name As FirstName', 'SecurityUser.last_name As LastName', 'StaffPositionTitle.name As Position'";
             $templateFields = 'FirstName,LastName,Position';
             $joins = "
                 array(
@@ -908,7 +908,7 @@ class DataProcessingController extends DataProcessingAppController {
             $query .= '$data = $this->Staff->find(\'all\', 
             array(\'fields\' => array(' . $fields . '),
             \'joins\' => array(' . $joins. '),
-            \'order\' => array(\'Staff.first_name\'),
+            \'order\' => array(\'SecurityUser.first_name\'),
              \'group\' => array(\'Staff.id\', \'InsitutionSiteStaff.staff_position_title_id\'),
             {cond}
             ));';
