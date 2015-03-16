@@ -7,7 +7,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-	$formAction = $_triggerFrom == 'Controller' ? array('action' => $this->action) : array('action' => $model, $this->action);
+	$formAction = $_triggerFrom == 'Controller' ? array('action' => $action) : array('action' => $model, $action);
 	if ($this->action == 'edit') {
 		$formAction[] = $this->request->data[$model]['id'];
 	} 
