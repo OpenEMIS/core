@@ -32,7 +32,7 @@ echo $this->element("../InstitutionSites/$model/controls");
 				$studentName = $this->Model->getName($studentObj);
 				?>
 				<tr>
-					<td><?php echo $studentObj['identification_no']; ?></td>
+					<td><?php echo $studentObj['openemis_no']; ?></td>
 					<td><?php echo $studentName; ?></td>
 					<?php
 					foreach ($weekDayIndex as $index):

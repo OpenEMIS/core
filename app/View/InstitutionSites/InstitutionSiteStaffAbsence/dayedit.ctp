@@ -33,13 +33,13 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			foreach ($staffList as $staff):
 				$staffObj = $staff['Staff'];
 				$staffId = $staffObj['id'];
-				$staffName = $this->Model->getName($staffObj);
+				$staffName = $this->Model->getName($staff['SecurityUser']);
 				$additionalReasonOptionFieldData = array();
 
 				echo $this->Form->hidden($model . '.' . $count . '.staff_id', array('value' => $staffId));
 				?>
 				<tr>
-					<td><?php echo $staffObj['identification_no']; ?></td>
+					<td><?php echo $staff['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $staffName; ?></td>
 					<?php
 					$absenceType = 0;

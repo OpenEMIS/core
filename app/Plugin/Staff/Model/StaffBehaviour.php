@@ -18,7 +18,7 @@ class StaffBehaviour extends StaffAppModel {
 	public $useTable = 'staff_behaviours';
 	
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction2', 
 		'DatePicker' => array('date_of_behaviour'),
 		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
@@ -92,12 +92,12 @@ class StaffBehaviour extends StaffAppModel {
 				}
 			}
 			if(isset($staffId)) {
-				$this->Staff->contain();
+				$this->Staff->contain('SecurityUser');
 				$obj = $this->Staff->findById($staffId);
 				
 				$this->fields['staff_name']['visible'] = true;
 				$this->fields['staff_name']['type'] = 'disabled';
-				$this->fields['staff_name']['value'] = ModelHelper::getName($obj['Staff']);
+				$this->fields['staff_name']['value'] = ModelHelper::getName($obj['SecurityUser']);
 				$this->fields['staff_name']['order'] = 0;
 				$this->setFieldOrder('staff_name', 0);
 				
@@ -127,13 +127,23 @@ class StaffBehaviour extends StaffAppModel {
 	public function show() {
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		
-		$this->InstitutionSiteStaff->contain(array(
-			'Staff' => array('fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name')),
-			'StaffType' => array('fields' => array('StaffType.name')),
-			'StaffStatus' => array('fields' => array('StaffStatus.name'))
-		));
-		
-		$data = $this->InstitutionSiteStaff->findAllByInstitutionSiteId($institutionSiteId);
+		$data = $this->InstitutionSiteStaff->find('all',
+			array(
+				'fields' => array('DISTINCT InstitutionSiteStaff.staff_id'),
+				'contain' => array(
+					'Staff' => array(
+						'fields' => array('InstitutionSiteStaff.id'),
+						'SecurityUser' => array('openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name')
+					),
+					'StaffType' => array('name'), 
+					'StaffStatus' => array('name')
+				),
+				'group' => array('InstitutionSiteStaff.staff_id'),
+				'conditions' => array(
+					'InstitutionSiteStaff.institution_site_id' => $institutionSiteId
+				)
+			)
+		);
 		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');

@@ -326,7 +326,7 @@ class WizardComponent extends Component {
 			$url['action'] = $navigation['action'];
 		} else {
 			if($navigation['action'] != 'additional'){
-				$url['action'] = $navigation['action'] . ucfirst($action);
+				$url['action'] = $navigation['action'] . '/' . $action;
 			}else{
 				$url['action'] = $navigation['action'] . 'Edit';
 			}	

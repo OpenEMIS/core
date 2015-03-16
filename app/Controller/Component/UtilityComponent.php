@@ -274,7 +274,7 @@ class UtilityComponent extends Component {
 	}
 	
 	public function formatGender($value) {
-		return ($value == 'F') ? __('Female') : __('Male');
+		return (array_key_exists('Gender', $value) && array_key_exists('name', $value['Gender']))? __($value['Gender']['name']): '';
 	}
 	
 	public function unshiftArray(&$origArray, $newArray) {

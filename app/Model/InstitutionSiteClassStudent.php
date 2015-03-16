@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteClassStudent extends AppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction'
 	);
 	
@@ -58,8 +58,8 @@ class InstitutionSiteClassStudent extends AppModel {
 			$data = $this->find('all', array(
 				'recursive' => -1,
 				'fields' => array(
-					'DISTINCT Student.identification_no',
-					'Student.first_name', 'Student.last_name', 'Student.middle_name', 'Student.third_name'
+					'DISTINCT openemis_no',
+					'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
 				),
 				'joins' => array(
 					array(
@@ -82,7 +82,7 @@ class InstitutionSiteClassStudent extends AppModel {
 					'InstitutionSiteClassStudent.institution_site_section_id' => $selectedSection,
 					'InstitutionSiteClassStudent.status' => 1
 				),
-				'order' => array('Student.first_name ASC')
+				'order' => array('SecurityUser.first_name ASC')
 			));
 			if(empty($data)) {
 				$controller->Message->alert('general.noData');
@@ -103,7 +103,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			$data = $this->Student->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Student.id', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.identification_no',
+					'Student.id', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.openemis_no',
 					'InstitutionSiteClassStudent.id', 'InstitutionSiteClassStudent.institution_site_section_id', 'InstitutionSiteClassStudent.status'
 				),
 				'joins' => array(
@@ -198,24 +198,43 @@ class InstitutionSiteClassStudent extends AppModel {
 		$joins = array(
 			array('table' => 'students', 'alias' => 'Student')
 		);
-		
-		$conditions = array(
-			'InstitutionSiteClassStudent.institution_site_class_id = ' . $classId,
-			'InstitutionSiteClassStudent.status = 1' 
-		);
 
 		$gender = array('M' => 0, 'F' => 0);
 		$studentConditions = array('Student.id = InstitutionSiteClassStudent.student_id');
-		
-		foreach ($gender as $i => $val) {
-			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
-			$joins[0]['conditions'] = $studentConditions;
-			$gender[$i] = $this->find('count', array(
-				'recursive' => -1, 
-				'joins' => $joins, 
-				'conditions' => $conditions
-			));
+
+		$data = $this->find(
+			'all',
+			array(
+				'recursive' => -1,
+				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(DISTINCT SecurityUser.gender_id) as counter'),
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array('Student.security_user_id = SecurityUser.id')
+					),
+					array(
+						'table' => 'genders',
+						'alias' => 'Gender',
+						'conditions' => array('SecurityUser.gender_id = Gender.id')
+					)
+				),
+				'conditions' => array(
+					'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+				),
+			)
+		);
+
+		foreach ($data as $key => $value) {
+			if ($value['Gender']['name'] == 'Male') $gender['M'] = $value[0]['counter'];
+			if ($value['Gender']['name'] == 'Female') $gender['F'] = $value[0]['counter'];
 		}
+
 		return $gender;
 	}
 	
@@ -228,12 +247,12 @@ class InstitutionSiteClassStudent extends AppModel {
 		//$options['recursive'] =-1;
 		$options['fields'] = array(
 				'DISTINCT Student.id',
-				'Student.identification_no',
-				'Student.first_name',
-				'Student.middle_name',
-				'Student.third_name',
-				'Student.last_name',
-				'Student.preferred_name'
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
+				'SecurityUser.preferred_name'
 			);
 		
 		if($showGrade){
@@ -254,11 +273,11 @@ class InstitutionSiteClassStudent extends AppModel {
 			'recursive' => -1,
 			'fields' => array(
 				'DISTINCT Student.id',
-				'Student.identification_no',
-				'Student.first_name',
-				'Student.middle_name',
-				'Student.last_name',
-				'Student.preferred_name'
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.last_name',
+				'SecurityUser.preferred_name'
 			),
 			'joins' => array(
 				array(
@@ -270,44 +289,6 @@ class InstitutionSiteClassStudent extends AppModel {
 			'conditions' => $conditions
 		));
 */
-		return $data;
-	}
-	
-	public function getAutoCompleteList($search, $classId) {
-		$search = sprintf('%%%s%%', $search);
-
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT Student.id', 'Student.*'),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteClassStudent.institution_site_class_id' => $classId,
-				'OR' => array(
-					'Student.first_name LIKE' => $search,
-					'Student.last_name LIKE' => $search,
-					'Student.middle_name LIKE' => $search,
-					'Student.third_name LIKE' => $search,
-					'Student.preferred_name LIKE' => $search,
-					'Student.identification_no LIKE' => $search
-				)
-			),
-			'order' => array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.preferred_name')
-		));
-
-		$data = array();
-		foreach ($list as $obj) {
-			$student = $obj['Student'];
-			$data[] = array(
-				'label' => ModelHelper::getName($student, array('openEmisId'=>true)),
-				'value' => $student['id']
-			);
-		}
 		return $data;
 	}
 
@@ -342,7 +323,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		$options['recursive'] = -1;
 		
 		$options['fields'] = array(
-			'DISTINCT Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
+			'DISTINCT Student.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.last_name',
 			'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
 			'AssessmentResultType.name', 'InstitutionSiteClass.academic_period_id',
 			'AssessmentItem.min', 'AssessmentItem.max', 'AssessmentResultType.name'
@@ -433,7 +414,7 @@ class InstitutionSiteClassStudent extends AppModel {
 		$options['recursive'] = -1;
 		
 		$options['fields'] = array(
-			'DISTINCT Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name'
+			'DISTINCT Student.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.last_name'
 		);
 
 		$options['joins'] = array(
@@ -461,7 +442,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			)
 		);
 		
-		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name');
+		$options['order'] = array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.last_name');
 
 		$options['conditions'] = array(
 			'InstitutionSiteClassStudent.status = 1',
