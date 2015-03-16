@@ -73,7 +73,7 @@ class StaffLeave extends StaffAppModel {
 		$this->ControllerAction->setFieldOrder('number_of_days', 5);
 		$this->ControllerAction->setFieldOrder('comments', 6);
 
-		if ($this->action == 'view') {
+		if ($this->action == 'index' || $this->action == 'view') {
 			$this->fields['staff_leave_type_id']['dataModel'] = 'StaffLeaveType';
 			$this->fields['staff_leave_type_id']['dataField'] = 'name';
 			$this->fields['leave_status_id']['dataModel'] = 'LeaveStatus';
@@ -98,6 +98,12 @@ class StaffLeave extends StaffAppModel {
 		$this->controller->FileUploader->fileModel = 'StaffLeaveAttachment';
 		$this->controller->FileUploader->allowEmptyUpload = true;
 		$this->controller->FileUploader->additionalFileType();
+	}
+
+	public function index() {
+		$staffId = $this->controller->Session->read('Staff.id');
+		$data = $this->findAllByStaffId($staffId, array('StaffLeave.*', 'StaffLeaveType.name', 'LeaveStatus.name'), array('StaffLeave.date_from'));
+		$this->controller->set(compact('data'));
 	}
 
 	public function leaves($controller, $params) {
