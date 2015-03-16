@@ -159,7 +159,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	background-repeat: no-repeat;
 }
 .left_nav .panel-title .accordion-toggle:hover{
-	background-color:#5B8BAF;
+	background-color:#6699CC;
 	color:#ffffff;
 	background-position: right -76px;
 }
