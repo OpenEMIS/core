@@ -98,9 +98,13 @@ class WorkflowStepsController extends WorkflowsAppController {
 
 				$this->ControllerAction->processAction();
 			} else {
+				$named = $this->request->params['named'];
+				$selectedWorkflowId = isset($named['workflow']) ? $named['workflow'] : $selectedWorkflowId;
+
 				$pass = $this->request->params['pass'];
 				$selectedWorkflowStepId = isset($pass[0]) ? $pass[0] : 0;
-				$selectedWorkflowId = $this->WfWorkflowStep->field('workflow_id', array('WfWorkflowStep.id' => $selectedWorkflowStepId));
+
+				$this->request->data['WfWorkflowStep']['workflow_id'] = $selectedWorkflowId;
 			}
 
 			$workflowStepData = $this->WfWorkflowStep->find('list', array(
