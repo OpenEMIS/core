@@ -103,7 +103,8 @@ ALTER TABLE `wf_workflow_transitions` DROP `reference_id`;
 ALTER TABLE `wf_workflow_transitions` DROP `comments`;
 ALTER TABLE `wf_workflow_transitions` CHANGE `wf_workflow_step_id` `workflow_step_id` INT(11) NOT NULL;
 ALTER TABLE `wf_workflow_transitions` ADD `prev_workflow_step_id` INT(11) NOT NULL AFTER `id`;
-ALTER TABLE `wf_workflow_transitions` ADD `workflow_record_id` INT(11) NOT NULL AFTER `workflow_step_id`;
+ALTER TABLE `wf_workflow_transitions` ADD `workflow_action_id` INT(11) NOT NULL AFTER `workflow_step_id`;
+ALTER TABLE `wf_workflow_transitions` ADD `workflow_record_id` INT(11) NOT NULL AFTER `workflow_action_id`;
 
 --
 -- 9. Navigations

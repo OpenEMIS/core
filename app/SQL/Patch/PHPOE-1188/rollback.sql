@@ -42,6 +42,7 @@ ALTER TABLE `wf_workflow_logs` ADD `reference_id` INT(11) NOT NULL AFTER `refere
 ALTER TABLE `wf_workflow_logs` ADD `comments` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `reference_id`;
 ALTER TABLE `wf_workflow_logs` CHANGE `workflow_step_id` `wf_workflow_step_id` INT(11) NOT NULL;
 ALTER TABLE `wf_workflow_logs` DROP `prev_workflow_step_id`;
+ALTER TABLE `wf_workflow_logs` DROP `workflow_action_id`;
 ALTER TABLE `wf_workflow_logs` DROP `workflow_record_id`;
 
 --
