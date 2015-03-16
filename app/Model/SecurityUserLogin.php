@@ -31,6 +31,9 @@ class SecurityUserLogin extends SecurityUser {
 			$this->fields['newPassword'][$key] = $value;
 			$this->fields['retypeNewPassword'][$key] = $value;
 		}
+		$this->fields['username']['visible'] = true;
+		$this->fields['newPassword']['visible'] = true;
+		$this->fields['retypeNewPassword']['visible'] = true;
 
 		$this->fields['id']['type'] = 'hidden';
 		foreach ($this->fields as $key => $value) {
