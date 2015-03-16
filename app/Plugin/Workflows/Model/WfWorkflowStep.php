@@ -40,6 +40,11 @@ class WfWorkflowStep extends WorkflowsAppModel {
             'className' => 'Workflows.WorkflowAction',
             'foreignKey' => 'workflow_step_id',
 			'dependent' => true
+        ),
+		'WorkflowRecord' => array(
+            'className' => 'Workflows.WorkflowRecord',
+            'foreignKey' => 'workflow_step_id',
+			'dependent' => true
         )
     );
 
