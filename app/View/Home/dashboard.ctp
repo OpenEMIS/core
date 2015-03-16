@@ -33,13 +33,28 @@ echo $this->element('alert');
 				</table>
 			</div>
 		</div>
+
 		<div id="news" class="col-md-4">
 			<div style="padding: 0px 20px 0px 20px; border: 1px solid grey">
-				<h5><?php echo __('Global News / Updates'); ?></h5>
-				<table class="table table-striped table-hover table-bordered">
-					<tbody class="table_body">
-					</tbody>
-				</table>
+				<h5><?php echo __('Notices'); ?></h5>
+				<div style='overflow:auto;height:320px'>
+					<table class="table table-striped table-hover table-bordered">
+						<tbody class="table_body">
+						<?php 
+						foreach ($noticeData as $key => $value) {
+							?>
+							<tr>
+								<td>
+									<?php echo $this->Utility->formatDate($value['Notices']['created']) ?>: 
+									<?php echo $value['Notices']['message'] ?>
+								</td>
+							</tr>
+							<?php 
+						} 
+						?>
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 </div>
