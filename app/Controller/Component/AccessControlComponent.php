@@ -27,7 +27,7 @@ class AccessControlComponent extends Component {
 	private $userId;
 	
 	public $ignoreList = array(
-		'HOME' => array('index', 'support', 'systemInfo', 'license', 'partners'),
+		'HOME' => array('index', 'support', 'systemInfo', 'license', 'partners', 'dashboard'),
 		'PREFERENCES' => array('index', 'account', 'accountEdit', 'password'),
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),

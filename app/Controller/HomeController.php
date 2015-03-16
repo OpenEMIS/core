@@ -53,7 +53,7 @@ class HomeController extends AppController {
 	}
 	
 	public function index() {
-		// $this->redirect(array('action' => 'dashboard'));
+		$this->redirect(array('action' => 'dashboard'));
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
