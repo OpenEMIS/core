@@ -588,6 +588,10 @@ class LabelHelper extends AppHelper {
 		),
 		'StudentCategory' => array(
 			'name' => 'Category'
+		),
+		'Notice' => array(
+			'title' => 'Notices',	
+			'created' => 'Date'
 		)
 	);
 	
