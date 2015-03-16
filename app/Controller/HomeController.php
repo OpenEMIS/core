@@ -53,7 +53,7 @@ class HomeController extends AppController {
 	}
 	
 	public function index() {
-		//$this->redirect(array('action' => 'dashboard'));
+		// $this->redirect(array('action' => 'dashboard'));
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
@@ -98,6 +98,14 @@ class HomeController extends AppController {
 		$highChartDatas[] = $this->InstitutionSiteSectionStudent->getHighChart('number_of_students_by_grade');
 		$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff');
 
+		$noticeData = ClassRegistry::init('Notices')->find(
+			'all',
+			array(
+				'order by created desc'
+			)
+		);
+
+		$this->set('noticeData', $noticeData);
 		$this->set('highChartDatas', $highChartDatas);
 	}
 	
