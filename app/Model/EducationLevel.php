@@ -232,6 +232,9 @@ class EducationLevel extends AppModel {
 				'EducationSystem.visible' => 1
 			)
 		));
+		if (empty($list)) {
+   			$list = array('0' => __('-- No Data --'));
+   		}
 
 		$hidden = array();
 		$buffer = $this->find('list', array(
