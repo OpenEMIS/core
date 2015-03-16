@@ -32,7 +32,7 @@ class WorkflowsController extends WorkflowsAppController {
 		$this->set('contentHeader', 'Workflows');
 		$this->WfWorkflow->fields['code']['hyperlink'] = true;
 
-		if ($this->action == 'view') {
+		if ($this->action == 'index' || $this->action == 'view') {
 			$this->WfWorkflow->fields['workflow_model_id']['dataModel'] = 'WorkflowModel';
 			$this->WfWorkflow->fields['workflow_model_id']['dataField'] = 'model';
 		} else if($this->action == 'add' || $this->action == 'edit') {

@@ -5,7 +5,6 @@
 		<span aria-hidden="true" class="glyphicon glyphicon-minus"></span>
 		<i><?php echo $comment['WorkflowComment']['created']; ?></i>
 		<span class="action_pullright">
-			<!--a href="#" onclick="$('#reload').val('edit').click();return false;"><span aria-hidden="true" class="glyphicon glyphicon-pencil"></span></a-->
 			<?php if ($comment['WorkflowComment']['created_user_id'] == $userId) : ?>
 				<a href="#" onclick="$('#WorkflowCommentId').val('<?php echo $comment['WorkflowComment']['id']; ?>');$('#reload').val('delete').click();return false;"><span aria-hidden="true" class="glyphicon glyphicon-trash"></span></a>
 			<?php endif ?>

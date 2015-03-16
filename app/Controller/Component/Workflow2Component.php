@@ -52,9 +52,7 @@ class Workflow2Component extends Component {
 		$this->model = !empty($this->controller->viewVars['model'])? $this->controller->viewVars['model'] : null;
 		$this->currentAction = !empty($this->controller->viewVars['action'])? $this->controller->viewVars['action'] : null;
 
-		//workflow only available for view
 		if ($this->currentAction == 'view') {
-			//check if workflow is setup for the model
 			$this->WfWorkflow->contain('WorkflowModel');
 			$workflows = $this->WfWorkflow->find('first', array(
 				'conditions' => array(
@@ -98,32 +96,28 @@ class Workflow2Component extends Component {
 
 				if ($this->controller->request->is(array('post', 'put'))) {
 					$data = $this->controller->request->data;
+					$selectedTab = $data['Workflow']['selected_tab'];
+					unset($data['Workflow']);
 					$submit = false;
 
-					if (!empty($data['submit'])) {
-						if($data['submit'] == 'add') {
-							unset($data['WorkflowTransition']);
-							
-							if ($this->WorkflowComment->saveAll($data)) {
-							} else {
-								$this->log($this->WorkflowComment->validationErrors, 'debug');
-							}
-							$submit = true;
-						} else if($data['submit'] == 'edit') {
-
-						} else if($data['submit'] == 'delete') {
-							$workflowCommentId = $data['WorkflowComment']['id'];
-
-							$this->WorkflowComment->deleteAll(array(
-								'WorkflowComment.id' => $workflowCommentId
-							), false);
-							$submit = true;
-						} else if($data['submit'] == 'comment') {
-							$selectedTab = $data['submit'];
-						} else if($data['submit'] == 'transition') {
-							$selectedTab = $data['submit'];
+					if($data['submit'] == 'add') {
+						unset($data['WorkflowTransition']);
+						
+						if ($this->WorkflowComment->saveAll($data)) {
+						} else {
+							$this->log($this->WorkflowComment->validationErrors, 'debug');
 						}
-					} else {
+						$submit = true;
+					} else if($data['submit'] == 'edit') {
+
+					} else if($data['submit'] == 'delete') {
+						$workflowCommentId = $data['WorkflowComment']['id'];
+
+						$this->WorkflowComment->deleteAll(array(
+							'WorkflowComment.id' => $workflowCommentId
+						), false);
+						$submit = true;
+					} else if($data['submit'] == 'WorkflowTransition') {
 						unset($data['WorkflowComment']);
 
 						$this->WorkflowRecord->updateAll(
@@ -144,8 +138,12 @@ class Workflow2Component extends Component {
 						unset($redirect['pass']);
 						unset($redirect['named']);
 						unset($redirect['isAjax']);
+						$redirect['selected'] = $selectedTab;
 						return $controller->redirect($redirect);
 					}
+				} else {
+					$named = $controller->request->params['named'];
+					$selectedTab = isset($named['selected']) ? $named['selected'] : $selectedTab;
 				}
 
 				$tabs[$selectedTab]['class'] = 'active';
@@ -162,6 +160,7 @@ class Workflow2Component extends Component {
 				$requestData['WorkflowComment']['workflow_record_id'] = $workflowRecordId;
 				$requestData['WorkflowTransition']['prev_workflow_step_id'] = $workflowStepId;
 				$requestData['WorkflowTransition']['workflow_record_id'] = $workflowRecordId;
+				$requestData['Workflow']['selected_tab'] = $selectedTab;
 				$this->controller->request->data = $requestData;
 
 				$this->fields['workflows'] = array(
@@ -225,6 +224,7 @@ class Workflow2Component extends Component {
 
 		foreach ($workflowActions as $key => $workflowAction) {
 			$buttons[$key] = array(
+				'id' => $workflowAction['id'],
 				'text' => $workflowAction['name'],
 				'value' => $workflowAction['next_workflow_step_id']
 			);
@@ -248,7 +248,7 @@ class Workflow2Component extends Component {
 	}
 
 	public function getTransitionByWorkflowRecordId($workflowRecordId) {		
-		$this->WorkflowTransition->contain('PrevWorkflowStep', 'WfWorkflowStep', 'CreatedUser');
+		$this->WorkflowTransition->contain('PrevWorkflowStep', 'WfWorkflowStep', 'WorkflowAction', 'CreatedUser');
 		$transitions = $this->WorkflowTransition->find('all', array(
 			'conditions' => array(
 				'WorkflowTransition.workflow_record_id' => $workflowRecordId

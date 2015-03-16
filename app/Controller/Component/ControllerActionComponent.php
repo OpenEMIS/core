@@ -192,8 +192,9 @@ class ControllerActionComponent extends Component {
 
 	public function index() {
 		$model = $this->model;
-		$model->contain();
-		$data = $model->find('all');
+		$data = $model->find('all', array(
+			'recursive' => 0
+		));
 		$this->controller->set('data', $data);
 	}
 

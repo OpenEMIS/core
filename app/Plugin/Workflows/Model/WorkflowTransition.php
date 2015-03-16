@@ -27,6 +27,10 @@ class WorkflowTransition extends WorkflowsAppModel {
             'className' => 'Workflows.WfWorkflowStep',
             'foreignKey' => 'workflow_step_id'
         ),
+        'WorkflowAction' => array(
+            'className' => 'Workflows.WorkflowAction',
+            'foreignKey' => 'workflow_action_id'
+        ),
         'WorkflowRecord' => array(
             'className' => 'Workflows.WorkflowRecord',
             'foreignKey' => 'workflow_record_id'
