@@ -110,6 +110,9 @@ class ControllerActionComponent extends Component {
 
 		$named = $controller->request->params['named'];
 		$pass = $controller->request->params['pass'];
+		if ($this->triggerFrom == 'Model') {
+			unset($pass[0]);
+		}
 
 		$buttons = array();
 
@@ -118,24 +121,24 @@ class ControllerActionComponent extends Component {
 
 			if ($this->triggerFrom == 'Model') {
 				$actionUrl['action'] = $this->model->alias;
+				$actionUrl[] = $action;
 			}
 			$actionUrl = array_merge($actionUrl, $named, $pass);
 			$buttons[$action] = array('url' => $actionUrl);
 		}
 
-		$backBtn = array('action' => 'index');
+		$backAction = 'index';
+		if ($this->currentAction == 'edit') {
+			$backAction = 'view';
+		}
 
+		$backUrl = array('action' => $backAction);
 		if ($this->triggerFrom == 'Model') {
-			$backBtn['action'] = $this->model->alias;
+			$backUrl['action'] = $this->model->alias;
+			$backUrl[] = $backAction;
 		}
-
-		if ($this->currentAction == 'view' || $this->currentAction == 'add') {
-			
-		} else if ($this->currentAction == 'edit') {
-			$backBtn = array('action' => 'view');
-		}
-		$backBtn = array_merge($backBtn, $named, $pass);
-		$buttons['back'] = array('url' => $backBtn);
+		$backUrl = array_merge($backUrl, $named, $pass);
+		$buttons['back'] = array('url' => $backUrl);
 		$controller->set('_buttons', $buttons);
 	}
 
