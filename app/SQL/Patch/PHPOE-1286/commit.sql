@@ -22,3 +22,10 @@ CREATE TABLE `notices` (
 
 SELECT MAX(security_functions.order) INTO @lastOrder from security_functions WHERE visible = 1;
 INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('Notices', 'Notices', 'Administration', 'Notices', -1, 'index|view', '_view:edit', '_view:add', '_view:delete', NULL, @lastOrder + 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+
+
+-- remove dashboard_notice
+CREATE TABLE IF NOT EXISTS z_1286_config_items LIKE config_items;
+INSERT INTO z_1286_config_items SELECT * FROM config_items WHERE name = 'dashboard_notice' AND NOT EXISTS (SELECT * FROM z_1286_config_items);
+
+DELETE from config_items WHERE name = 'dashboard_notice';

@@ -74,7 +74,6 @@ class HomeController extends AppController {
 		}
 		$this->logtimer('End Attachment');
 		$this->logtimer('Start Notice');
-		$this->set('message', $this->ConfigItem->getNotice());
 		$this->logtimer('End Notice');
 		$this->logtimer('Start Adaptation');
 		$this->set('adaptation', $this->ConfigItem->getAdaptation());

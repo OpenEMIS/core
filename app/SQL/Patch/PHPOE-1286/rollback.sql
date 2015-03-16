@@ -9,3 +9,6 @@ DELETE FROM navigations WHERE title = 'Notices';
 DROP TABLE notices;
 
 DELETE FROM navigations WHERE name = 'Notices';
+
+-- remove dashboard_notice rollback
+INSERT INTO config_items SELECT * FROM z_1286_config_items WHERE name = 'dashboard_notice' AND NOT EXISTS (SELECT * FROM config_items WHERE name = 'dashboard_notice');

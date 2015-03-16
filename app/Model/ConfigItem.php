@@ -236,15 +236,6 @@ class ConfigItem extends AppModel {
 		return $this->field('default_value', array('name' => $name));
 	}
 
-	public function getNotice(){
-
-		$notice = $this->getValue('dashboard_notice');
-		$default_notice = $this->getDefaultValue('dashboard_notice');
-
-		return (is_null($notice) || empty($notice))? $default_notice:$notice;
-	}
-
-
 	public function editDashboardImage($x=null, $y=null){
 		$isUpdated = false;
 		if(is_null($x) || is_null($y)){
