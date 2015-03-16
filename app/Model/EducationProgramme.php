@@ -390,6 +390,9 @@ class EducationProgramme extends AppModel {
 				'EducationCycle.order', 'EducationProgramme.order'
 			)
 		));
+		if (empty($list)) {
+   			$list = array('0' => __('-- No Data --'));
+   		}
 
 		$hidden = array();
 		$buffer = $this->find('list', array(
