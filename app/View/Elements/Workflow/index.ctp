@@ -44,7 +44,7 @@ echo $this->Form->hidden('WorkflowTransition.workflow_record_id');
 </div>
 
 <?php
-echo $this->element('../Workflow/' . $selectedTab);
+echo $this->element('/Workflow/' . $selectedTab);
 echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 echo $this->Form->end();
 ?>

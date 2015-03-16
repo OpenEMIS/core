@@ -19,6 +19,10 @@ class WorkflowRecord extends WorkflowsAppModel {
 	public $useTable = 'workflow_records';
 
 	public $belongsTo = array(
+		'WfWorkflowStep' => array(
+            'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'workflow_step_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
