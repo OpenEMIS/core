@@ -23,10 +23,11 @@ class NoticesController extends AppController {
 
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->Navigation->addCrumb('Notices', array('controller' => 'Notices', 'action' => 'index', 'plugin' => false));
+		
 		$this->bodyTitle = 'Notices';
 		
 		if ($this->action == 'index') {
+			$this->Navigation->addCrumb('Notices');
 			$this->Notice->fields['created']['labelKey'] = 'Notice';
 			$this->Notice->fields['created']['visible'] = true;
 			$this->Notice->fields['created']['hyperlink'] = true;
@@ -34,7 +35,9 @@ class NoticesController extends AppController {
 			$order = 1;
 			$this->Notice->setFieldOrder('created', $order++);
 			$this->Notice->setFieldOrder('message', $order++);
+		} else {
+			$this->Navigation->addCrumb('Notices', array('controller' => 'Notices', 'action' => 'index', 'plugin' => false));
+			$this->Navigation->addCrumb(ucfirst($this->action));
 		}
 	}
-
 }
