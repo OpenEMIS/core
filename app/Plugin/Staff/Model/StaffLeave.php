@@ -64,6 +64,8 @@ class StaffLeave extends StaffAppModel {
 	}
 
 	public function beforeAction() {
+		$this->Navigation->addCrumb('Leave');
+
 		$this->fields['staff_leave_type_id']['hyperlink'] = true;
 
 		$this->ControllerAction->setFieldOrder('staff_leave_type_id', 1);

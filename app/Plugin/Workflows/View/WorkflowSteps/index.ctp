@@ -3,8 +3,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 
 $this->start('contentActions');
-if ($_add) {
-    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'workflow' => $selectedWorkflow), array('class' => 'divider'));
+if(!empty($workflowOptions)) {
+	if ($_add) {
+	    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'workflow' => $selectedWorkflow), array('class' => 'divider'));
+	}
 }
 $this->end();
 
@@ -12,9 +14,8 @@ $this->start('contentBody');
 ?>
 <div class="row page-controls">
 	<?php
-		$baseUrl = $this->params['controller'] . '/' . $this->request->action;
-
-		if(isset($workflowOptions)) {
+		if(!empty($workflowOptions)) {
+			$baseUrl = $this->params['controller'] . '/' . $this->request->action;
 			echo $this->Form->input('workflow_id', array(
 				'class' => 'form-control',
 				'label' => false,

@@ -5,6 +5,7 @@
 DROP TABLE IF EXISTS `wf_workflow_models`;
 CREATE TABLE IF NOT EXISTS `wf_workflow_models` (
 `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
   `model` varchar(200) NOT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
@@ -18,17 +19,109 @@ ALTER TABLE `wf_workflow_models`
 ALTER TABLE `wf_workflow_models`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
-INSERT INTO `tst_openemis_core`.`wf_workflow_models` (`id`, `model`, `created_user_id`, `created`) VALUES (NULL, 'StaffLeave', '1', '0000-00-00 00:00:00');
+INSERT INTO `wf_workflow_models` (`id`, `name`, `model`, `created_user_id`, `created`) VALUES (NULL, 'Staff Leave', 'StaffLeave', '1', '0000-00-00 00:00:00');
 
 --
--- 2. New table - wf_workflow_records
+-- 2. New table - wf_workflows
+--
+
+DROP TABLE IF EXISTS `wf_workflows`;
+CREATE TABLE IF NOT EXISTS `wf_workflows` (
+`id` int(11) NOT NULL,
+  `code` varchar(60) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `workflow_model_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `wf_workflows`
+ ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `wf_workflows`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 3. New table - wf_workflow_steps
+--
+
+DROP TABLE IF EXISTS `wf_workflow_steps`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_steps` (
+`id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `stage` int(1) DEFAULT NULL COMMENT '0 -> Open, 1 -> Closed',
+  `workflow_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `wf_workflow_steps`
+ ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `wf_workflow_steps`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 4. New table - wf_workflow_actions
+--
+
+DROP TABLE IF EXISTS `wf_workflow_actions`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_actions` (
+`id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `next_workflow_step_id` int(11) NOT NULL,
+  `workflow_step_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `wf_workflow_actions`
+ ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `wf_workflow_actions`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 5. New table - wf_workflow_step_roles
+--
+
+DROP TABLE IF EXISTS `wf_workflow_step_roles`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_step_roles` (
+`id` int(11) NOT NULL,
+  `workflow_step_id` int(11) NOT NULL,
+  `security_role_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `wf_workflow_step_roles`
+ ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `wf_workflow_step_roles`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 6. New table - wf_workflow_records
 --
 
 DROP TABLE IF EXISTS `wf_workflow_records`;
 CREATE TABLE IF NOT EXISTS `wf_workflow_records` (
 `id` int(11) NOT NULL,
-  `model` varchar(200) NOT NULL,
   `model_reference` int(11) NOT NULL,
+  `workflow_model_id` int(11) NOT NULL,
   `workflow_step_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -45,7 +138,7 @@ ALTER TABLE `wf_workflow_records`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 3. New table - wf_workflow_comments
+-- 7. New table - wf_workflow_comments
 --
 
 DROP TABLE IF EXISTS `wf_workflow_comments`;
@@ -68,52 +161,44 @@ ALTER TABLE `wf_workflow_comments`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 4. Alter table wf_workflows
+-- 8. New table - wf_workflow_transitions
 --
 
-ALTER TABLE `wf_workflows` ADD `workflow_model_id` INT(11) NOT NULL AFTER `name`;
+DROP TABLE IF EXISTS `wf_workflow_transitions`;
+CREATE TABLE IF NOT EXISTS `wf_workflow_transitions` (
+`id` int(11) NOT NULL,
+  `prev_workflow_step_id` int(11) NOT NULL,
+  `workflow_step_id` int(11) NOT NULL,
+  `workflow_action_id` int(11) NOT NULL,
+  `workflow_record_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `wf_workflow_transitions`
+ ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `wf_workflow_transitions`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 5. Alter table wf_workflow_steps
+-- 9. Drop unused table - wf_workflow_logs
 --
 
-ALTER TABLE `wf_workflow_steps` CHANGE `wf_workflow_id` `workflow_id` INT(11) NOT NULL;
-ALTER TABLE `wf_workflow_steps` ADD `stage` INT(1) NULL DEFAULT NULL COMMENT '0 -> Open, 1 -> Closed' AFTER `name`;
+DROP TABLE IF EXISTS `wf_workflow_logs`;
 
 --
--- 6. Alter table wf_workflow_actions
---
-
-ALTER TABLE `wf_workflow_actions` CHANGE `wf_workflow_step_id` `workflow_step_id` INT(11) NOT NULL;
-ALTER TABLE `wf_workflow_actions` CHANGE `next_wf_workflow_step_id` `next_workflow_step_id` INT(11) NOT NULL;
-
---
--- 7. Alter table wf_workflow_step_roles
---
-
-ALTER TABLE `wf_workflow_step_roles` CHANGE `wf_workflow_step_id` `workflow_step_id` INT(11) NOT NULL;
-
---
--- 8. Alter table wf_workflow_logs -> wf_workflow_transitions
---
-
-RENAME TABLE `wf_workflow_logs` TO `wf_workflow_transitions`;
-ALTER TABLE `wf_workflow_transitions` DROP `reference_table`;
-ALTER TABLE `wf_workflow_transitions` DROP `reference_id`;
-ALTER TABLE `wf_workflow_transitions` DROP `comments`;
-ALTER TABLE `wf_workflow_transitions` CHANGE `wf_workflow_step_id` `workflow_step_id` INT(11) NOT NULL;
-ALTER TABLE `wf_workflow_transitions` ADD `prev_workflow_step_id` INT(11) NOT NULL AFTER `id`;
-ALTER TABLE `wf_workflow_transitions` ADD `workflow_action_id` INT(11) NOT NULL AFTER `workflow_step_id`;
-ALTER TABLE `wf_workflow_transitions` ADD `workflow_record_id` INT(11) NOT NULL AFTER `workflow_action_id`;
-
---
--- 9. Navigations
+-- 10. Navigations
 --
 
 UPDATE `navigations` SET `action` = 'StaffLeave', `pattern` = 'StaffLeave' WHERE `controller` = 'Staff' AND `header` = 'Details' AND `title` = 'Leave';
 
 --
--- 10. Security Functions
+-- 11. Security Functions
 --
 
 UPDATE `security_functions` SET `_view` = 'StaffLeave|StaffLeave.index', `_edit` = '_view:StaffLeave.edit' , `_add` = '_view:StaffLeave.add', `_delete` = '_view:StaffLeave.delete' WHERE `controller` = 'Staff' AND `module` = 'Staff' AND `category` = 'Details' AND `name` = 'Leave';
