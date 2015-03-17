@@ -97,7 +97,8 @@ class Position extends AppModel {
 		} else if ($this->action == 'edit') {
 			$data = $this->request->data;
 			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
-			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
+			$this->InstitutionSitePosition->StaffPositionTitle->id = $titleId;
+			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name');
 			$this->fields['institution_site_position_id']['type'] = 'disabled';
 			$this->fields['institution_site_position_id']['value'] = $name;
 			

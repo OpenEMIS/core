@@ -8,6 +8,9 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
+	if (isset($staffFields['staff_name'])) {
+		$staffFields['staff_name']['value'] = $this->Model->getName($staffFields['staff_name']['value']);
+	}
 	$formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'staffEdit', $staffId));
 	$labelDefault = $formOptions;
 	echo $this->Form->create($model, $formOptions);
