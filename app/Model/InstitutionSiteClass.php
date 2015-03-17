@@ -402,8 +402,10 @@ class InstitutionSiteClass extends AppModel {
 					);
 					$this->InstitutionSiteClassStudent->updateAll(
 						array('InstitutionSiteClassStudent.status' => 0),
-						array('InstitutionSiteClassStudent.institution_site_class_id' => $id),
-						array('InstitutionSiteClassStudent.institution_site_section_id' => $selectedSectionId)
+						array(
+							'InstitutionSiteClassStudent.institution_site_class_id' => $id,
+							'InstitutionSiteClassStudent.institution_site_section_id' => $selectedSectionId
+						)
 					);
 					if ($this->saveAll($postData)) {
 						$this->Message->alert('general.edit.success');
