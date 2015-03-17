@@ -46,6 +46,23 @@ class Translation extends AppModel {
 		)
 	);
 
+	public function beforeSave($options=array()) {
+		if (array_key_exists($this->alias, $this->data)) {
+			$languages = array(
+				'eng' => 'English',
+				'ara' => 'العربية',
+				'chi' => '中文',
+				'fre' => 'Français',
+				'rus' => 'русский',
+				'spa' => 'español'
+			);
+
+			foreach ($languages as $key => $language) {
+				$this->data[$this->alias][$key] = str_replace(array("\r\n", "\r", "\n"), "<br>", $this->data[$this->alias][$key]);
+			}
+		}
+	}
+
 	// used by SearchComponent
 	public function getSearchConditions($search) {
 		$search = '%' . $search . '%';
