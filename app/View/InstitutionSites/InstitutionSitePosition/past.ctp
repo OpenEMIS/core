@@ -9,7 +9,7 @@
 					<th><?php echo $this->Label->get('date.start'); ?></th>
 					<th><?php echo $this->Label->get('date.end'); ?></th>
 					<th><?php echo $this->Label->get('general.status'); ?></th>
-					<th>FTE</th>
+					<th><?php echo $this->Label->get('InstitutionSiteStudent.fte'); ?></th>
 				</tr>
 			</thead>
 	
