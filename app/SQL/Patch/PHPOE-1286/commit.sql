@@ -3,9 +3,10 @@ SELECT navigations.order INTO @sysconfigOrder FROM navigations WHERE title = 'Sy
 
 UPDATE navigations SET navigations.order = navigations.order+1 WHERE navigations.order> @sysconfigOrder;
 
-INSERT INTO `navigations` (`module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`) VALUES ('Administration', NULL, 'Notices', 'System Setup', 'Notices', 'index', 'index|view|edit|add', NULL, @adminBoundaryId, 0, @sysconfigOrder+1, 1, 1);
+INSERT INTO `navigations` (`module`, `plugin`, `controller`, `header`, `title`, `action`, `pattern`, `attributes`, `parent`, `is_wizard`, `order`, `visible`, `created_user_id`, `created`) VALUES ('Administration', NULL, 'Notices', 'System Setup', 'Notices', 'index', 'index|view|edit|add', NULL, @adminBoundaryId, 0, @sysconfigOrder+1, 1, 1, '0000-00-00 00:00:00');
 
--- SELECT * FROM `navigations` WHERE `module` LIKE 'Administration' ORDER BY `navigations`.`order` ASC
+-- SELECT * FROM `navigations` WHERE `module` LIKE 'Administration' ORDER BY `navigations`.`order` ASC;
+-- SELECT * FROM `navigations` WHERE navigations.order >53;
 
 
 
