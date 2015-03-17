@@ -104,8 +104,19 @@ class Workflow2Component extends Component {
 					$submit = false;
 
 					if($data['submit'] == 'add') {
+						unset($data['WorkflowCommentEdit']);
 						unset($data['WorkflowTransition']);
 
+						if ($this->WorkflowComment->saveAll($data)) {
+						} else {
+							$this->log($this->WorkflowComment->validationErrors, 'debug');
+						}
+						$submit = true;
+					} else if($data['submit'] == 'edit') {
+						$data['WorkflowComment'] = $data['WorkflowCommentEdit'];
+						unset($data['WorkflowCommentEdit']);
+						unset($data['WorkflowTransition']);
+						
 						if ($this->WorkflowComment->saveAll($data)) {
 						} else {
 							$this->log($this->WorkflowComment->validationErrors, 'debug');
@@ -120,6 +131,7 @@ class Workflow2Component extends Component {
 						$submit = true;
 					} else if($data['submit'] == 'WorkflowTransition') {
 						unset($data['WorkflowComment']);
+						unset($data['WorkflowCommentEdit']);
 
 						$this->WorkflowRecord->updateAll(
 						    array('WorkflowRecord.workflow_step_id' => $data['WorkflowTransition']['workflow_step_id']),
@@ -236,7 +248,7 @@ class Workflow2Component extends Component {
 	}
 
 	public function getCommentByWorkflowRecordId($workflowRecordId) {
-		$this->WorkflowComment->contain('CreatedUser');
+		$this->WorkflowComment->contain('ModifiedUser', 'CreatedUser');
 		$comments = $this->WorkflowComment->find('all', array(
 			'conditions' => array(
 				'WorkflowComment.workflow_record_id' => $workflowRecordId
