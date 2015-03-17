@@ -7,7 +7,7 @@
 					<th><?php echo $this->Label->get('general.openemisId'); ?></th>
 					<th><?php echo $this->Label->get('general.name'); ?></th>
 					<th><?php echo $this->Label->get('date.start'); ?></th>
-					<th>FTE</th>
+					<th><?php echo $this->Label->get('InstitutionSiteStudent.fte'); ?></th>
 				</tr>
 			</thead>
 	
@@ -30,6 +30,15 @@
 				</tr>
 				<?php endforeach ?>
 			</tbody>
+
+			<tfoot>
+				<tr>
+					<td class="spacer"></td>
+					<td class="spacer"></td>
+					<td><?php echo $this->Label->get('InstitutionSiteStudent.total_fte'); ?></td>
+					<td><?php echo $totalCurrentFTE;?></td>
+				</tr>
+			</tfoot>
 		</table>
 	</div>
 </fieldset>
