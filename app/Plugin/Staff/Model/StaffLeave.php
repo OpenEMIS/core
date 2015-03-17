@@ -39,6 +39,13 @@ class StaffLeave extends StaffAppModel {
 				'rule' => array('checkOverlapDates'),
 				'message' => 'Leave have been selected for this date. Please choose a different date'
 			)
+		),
+		'number_of_days' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the number of days'
+			)
 		)
 	);
 		
