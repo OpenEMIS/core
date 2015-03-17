@@ -328,8 +328,8 @@ class StudentsController extends StudentsAppController {
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);
-		$this->set('addressAreaId', $addressAreaId);
-		$this->set('birthplaceAreaId', $birthplaceAreaId);
+		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
 
 	public function add() {
@@ -423,8 +423,8 @@ class StudentsController extends StudentsAppController {
 		// $this->set('identityTypeOptions', $identityTypeOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);
-		$this->set('addressAreaId', $addressAreaId);
-		$this->set('birthplaceAreaId', $birthplaceAreaId);
+		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
 
 	public function classes() {
