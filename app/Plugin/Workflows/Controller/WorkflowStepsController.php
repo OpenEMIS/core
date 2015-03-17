@@ -132,6 +132,10 @@ class WorkflowStepsController extends WorkflowsAppController {
 			$workflowOptions['workflow:' . $key] = $workflow;
 		}
 
+		if (empty($workflowOptions)) {
+			$this->Message->alert('WorkflowStep.noWorkflow');
+		}
+
 		$this->WfWorkflowStep->contain('WfWorkflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep', 'SecurityRole');
     	$data = $this->WfWorkflowStep->find('all', array(
 			'conditions' => array(

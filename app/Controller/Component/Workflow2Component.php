@@ -22,6 +22,7 @@ class Workflow2Component extends Component {
 	private $fields;
 	private $workflowId;
 	private $workflowRecordId;
+	private $workflowModelId;
 	private $modelReference;
 	public $WfWorkflow;
 	public $WfWorkflowStep;
@@ -65,6 +66,7 @@ class Workflow2Component extends Component {
 				$this->triggerFrom = !empty($this->controller->viewVars['_triggerFrom'])? $this->controller->viewVars['_triggerFrom'] : $this->triggerFrom;
 				$userId = $this->Auth->user('id');
 				$this->workflowId = $workflows['WfWorkflow']['id'];
+				$this->workflowModelId = $workflows['WfWorkflow']['workflow_model_id'];
 
 				$pass = $this->controller->params->pass;
 				if ($this->triggerFrom == 'Controller') {
@@ -92,24 +94,23 @@ class Workflow2Component extends Component {
 					'comment' => array('name' => 'Comments', 'class' => ''),
 					'transition' => array('name' => 'Transitions', 'class' => '')
 				);
-				$selectedTab = key($tabs);
+
+				if (!$this->Session->check('Workflow.selected_tab')) {
+					$this->Session->write('Workflow.selected_tab', key($tabs));
+				}
 
 				if ($this->controller->request->is(array('post', 'put'))) {
 					$data = $this->controller->request->data;
-					$selectedTab = $data['Workflow']['selected_tab'];
-					unset($data['Workflow']);
 					$submit = false;
 
 					if($data['submit'] == 'add') {
 						unset($data['WorkflowTransition']);
-						
+
 						if ($this->WorkflowComment->saveAll($data)) {
 						} else {
 							$this->log($this->WorkflowComment->validationErrors, 'debug');
 						}
 						$submit = true;
-					} else if($data['submit'] == 'edit') {
-
 					} else if($data['submit'] == 'delete') {
 						$workflowCommentId = $data['WorkflowComment']['id'];
 
@@ -130,6 +131,8 @@ class Workflow2Component extends Component {
 							$this->log($this->WorkflowTransition->validationErrors, 'debug');
 						}
 						$submit = true;
+					} else if($data['submit'] == 'comment' || $data['submit'] == 'transition') {
+						$this->Session->write('Workflow.selected_tab', $data['submit']);
 					}
 
 					if ($submit) {
@@ -138,12 +141,12 @@ class Workflow2Component extends Component {
 						unset($redirect['pass']);
 						unset($redirect['named']);
 						unset($redirect['isAjax']);
-						$redirect['selected'] = $selectedTab;
 						return $controller->redirect($redirect);
 					}
-				} else {
-					$named = $controller->request->params['named'];
-					$selectedTab = isset($named['selected']) ? $named['selected'] : $selectedTab;
+				}
+
+				if ($this->Session->check('Workflow.selected_tab')) {
+					$selectedTab = $this->Session->read('Workflow.selected_tab');
 				}
 
 				$tabs[$selectedTab]['class'] = 'active';
@@ -160,7 +163,6 @@ class Workflow2Component extends Component {
 				$requestData['WorkflowComment']['workflow_record_id'] = $workflowRecordId;
 				$requestData['WorkflowTransition']['prev_workflow_step_id'] = $workflowStepId;
 				$requestData['WorkflowTransition']['workflow_record_id'] = $workflowRecordId;
-				$requestData['Workflow']['selected_tab'] = $selectedTab;
 				$this->controller->request->data = $requestData;
 
 				$this->fields['workflows'] = array(
@@ -187,7 +189,7 @@ class Workflow2Component extends Component {
 
 	public function getWorkflowRecordId() {
 		$workflowRecordId = $this->WorkflowRecord->field('id', array(
-			'WorkflowRecord.model' => $this->model,
+			'WorkflowRecord.workflow_model_id' => $this->workflowModelId,
 			'WorkflowRecord.model_reference' => $this->modelReference
 		));
 
@@ -197,13 +199,13 @@ class Workflow2Component extends Component {
 				'WfWorkflowStep.stage' => 0
 			));
 
-			$tmpData['WorkflowRecord']['model'] = $this->model;
+			$tmpData['WorkflowRecord']['workflow_model_id'] = $this->workflowModelId;
 			$tmpData['WorkflowRecord']['model_reference'] = $this->modelReference;
 			$tmpData['WorkflowRecord']['workflow_step_id'] = $workflowStepId;
 
 			if ($this->WorkflowRecord->saveAll($tmpData)) {
 				$workflowRecordId = $this->WorkflowRecord->field('id', array(
-					'WorkflowRecord.model' => $this->model,
+					'WorkflowRecord.workflow_model_id' => $this->workflowModelId,
 					'WorkflowRecord.model_reference' => $this->modelReference
 				));
 			} else {
@@ -211,7 +213,7 @@ class Workflow2Component extends Component {
 			}
 		}
 
-		$this->Session->write('WorkflowRecordId', $workflowRecordId);
+		$this->Session->write('Workflow.WorkflowRecordId', $workflowRecordId);
 		return $workflowRecordId;
 	}
 
