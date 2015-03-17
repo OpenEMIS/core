@@ -25,6 +25,7 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteClass',
 		'InstitutionSiteType',
 		'InstitutionSiteStudentAbsence',
+		'InstitutionSiteSectionStudent',
 		'InstitutionSiteClassStudent',
 		'Students.Student',
 		'Students.StudentActivity',
@@ -293,6 +294,7 @@ class StudentsController extends StudentsAppController {
 					$dataToSite['student_status_id'] = $studentStatusId;
 					$dataToSite['student_id'] = $id;
 					if (empty($studentIdSession)) {
+						$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
 						$InstitutionSiteStudentModel->save($dataToSite);
 					}
 
