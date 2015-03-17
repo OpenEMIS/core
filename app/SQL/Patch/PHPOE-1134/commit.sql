@@ -36,3 +36,8 @@ ALTER TABLE `field_options` CHANGE `old_id` `old_id` INT(11) NULL DEFAULT NULL;
 SELECT MAX(field_options.order) INTO @highestOrder FROM field_options;
 INSERT INTO `field_options` (`code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('Country', 'Countries', 'Others', '{"model":"Country"}', @highestOrder+1, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
 
+UPDATE `security_functions` SET 
+`_delete` = '_view:delete' 
+WHERE `controller` = 'FieldOption'
+AND `module` = 'Administration';
+
