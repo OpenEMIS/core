@@ -29,7 +29,6 @@ class StaffController extends StaffAppController {
 		'Staff.InstitutionSiteStaff',
 		'Staff.Staff',
 		'Staff.StaffActivity',
-		'Staff.StaffHistory',
 		'Staff.StaffCustomField',
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomValue',

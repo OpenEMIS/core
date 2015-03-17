@@ -630,3 +630,12 @@ RENAME TABLE staff_comments TO z_985_staff_comments;
 RENAME TABLE staff_special_needs TO z_985_staff_special_needs;
 RENAME TABLE staff_awards TO z_985_staff_awards;
 RENAME TABLE staff_contacts TO z_985_staff_contacts;
+
+
+
+-- testing on feature-985 branch - 17 March 2015
+-- need to change student and staff history identification_no to openemis_no
+RENAME TABLE student_history TO z_985_student_history;
+RENAME TABLE staff_history TO z_985_staff_history;
+RENAME TABLE institution_site_history TO z_985_institution_site_history;
+
