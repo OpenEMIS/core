@@ -14,15 +14,27 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+App::uses('AppController', 'Controller');
 
-class CensusSanitation extends AppModel {
-    public $belongsTo = array(
-		'InfrastructureSanitation', 
-		'InfrastructureMaterial',
-		'SanitationGender' => array(
-			'className' => 'SanitationGender',
-			'foreignKey' => 'gender_id'
-		)
+class NoticesController extends AppController {
+	public $components = array(
+		'ControllerAction' => array('model' => 'Notice')
 	);
+
+	public function beforeFilter() {
+		parent::beforeFilter();
+		$this->Navigation->addCrumb('Notices', array('controller' => 'Notices', 'action' => 'index', 'plugin' => false));
+		$this->bodyTitle = 'Notices';
+		
+		if ($this->action == 'index') {
+			$this->Notice->fields['created']['labelKey'] = 'Notice';
+			$this->Notice->fields['created']['visible'] = true;
+			$this->Notice->fields['created']['hyperlink'] = true;
+			$this->Notice->fields['created']['displayFormat'] = 'date';
+			$order = 1;
+			$this->Notice->setFieldOrder('created', $order++);
+			$this->Notice->setFieldOrder('message', $order++);
+		}
+	}
+
 }

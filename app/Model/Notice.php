@@ -14,15 +14,16 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
-
-class CensusSanitation extends AppModel {
-    public $belongsTo = array(
-		'InfrastructureSanitation', 
-		'InfrastructureMaterial',
-		'SanitationGender' => array(
-			'className' => 'SanitationGender',
-			'foreignKey' => 'gender_id'
+class Notice extends Appmodel {
+	
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
 		)
 	);
 }
