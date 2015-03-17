@@ -40,7 +40,11 @@ class HomeController extends AppController {
 		'Staff.Staff',
 		'InstitutionSiteHistory',
 		'Students.StudentHistory',
-		'Staff.StaffHistory'
+		'Staff.StaffHistory',
+		'InstitutionSiteStudent',
+		'InstitutionSiteStaff',
+		'AcademicPeriod',
+		'InstitutionSiteSectionStudent'
 	);
 	
 	private function logtimer($str=''){
@@ -49,6 +53,7 @@ class HomeController extends AppController {
 	}
 	
 	public function index() {
+		$this->redirect(array('action' => 'dashboard'));
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
@@ -69,11 +74,38 @@ class HomeController extends AppController {
 		}
 		$this->logtimer('End Attachment');
 		$this->logtimer('Start Notice');
-		$this->set('message', $this->ConfigItem->getNotice());
 		$this->logtimer('End Notice');
 		$this->logtimer('Start Adaptation');
 		$this->set('adaptation', $this->ConfigItem->getAdaptation());
 		$this->logtimer('End Adaptation');
+	}
+
+	public function dashboard() {
+		foreach($this->tableCounts['Added'] as $key => $val){
+			$rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
+			$total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
+		}
+		$this->set('tableCounts', $total);
+		$this->set('SeparateThousandsFormat', array(
+			'before' => '',
+			'places' => 0,
+			'thousands' => ',',
+		));
+
+		$highChartDatas = array();
+		$highChartDatas[] = $this->InstitutionSiteStudent->getHighChart('number_of_students_by_year');
+		$highChartDatas[] = $this->InstitutionSiteSectionStudent->getHighChart('number_of_students_by_grade');
+		$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff');
+
+		$noticeData = ClassRegistry::init('Notices')->find(
+			'all',
+			array(
+				'order by created desc'
+			)
+		);
+
+		$this->set('noticeData', $noticeData);
+		$this->set('highChartDatas', $highChartDatas);
 	}
 	
 	public function support() {
