@@ -38,10 +38,20 @@ class WorkflowsController extends WorkflowsAppController {
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->WfWorkflow->fields['workflow_model_id']['type'] = 'select';
 
+			$selectedWorkflowId = null;
+			if ($this->request->is(array('post', 'put'))) {
+			} else {
+				$pass = $this->request->params['pass'];
+				$selectedWorkflowId = isset($pass[0]) ? $pass[0] : 0;
+			}
+
 			$workflowIds = $this->WfWorkflow->find('list', array(
 				'fields' => array(
 					'WfWorkflow.workflow_model_id', 'WfWorkflow.workflow_model_id'
-				)
+				),
+				'conditions' => array(
+					'NOT' => array('WfWorkflow.id' => $selectedWorkflowId)
+				),
 			));
 
 			$workflowModelOptions = $this->WorkflowModel->find('list', array(
