@@ -158,8 +158,7 @@ ALTER TABLE user_awards CHANGE `student_id` `security_user_id` INT(11) NOT NULL;
 ALTER TABLE user_contacts CHANGE `student_id` `security_user_id` INT(11) NOT NULL;
 
 -- migration of new detail tables
-SELECT * FROM student_identities
-INNER JOIN students ON student_identities.student_id = students.id;
+-- SELECT * FROM student_identities INNER JOIN students ON student_identities.student_id = students.id;
 
 
 INSERT INTO user_identities (
@@ -497,6 +496,7 @@ INSERT INTO user_contacts (
 
 
 -- create gender table
+DROP TABLE IF EXISTS `genders`;
 CREATE TABLE `genders` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(10) NOT NULL,
@@ -504,14 +504,14 @@ CREATE TABLE `genders` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
 
-INSERT INTO `genders` (`id`, `name`, `order`) VALUES
-(1, 'Male', 1),
-(2, 'Female', 2);
+INSERT INTO `genders` (`id`, `name`, `order`, `created_user_id`, `created`) VALUES
+(1, 'Male', 1, 1, NOW()),
+(2, 'Female', 2, 1, NOW());
 
 -- migration of gender
-ALTER TABLE `security_users` ADD `gender_id` TINYINT NOT NULL AFTER `gender`;
+ALTER TABLE `security_users` ADD `gender_id` INT(1) NOT NULL AFTER `gender`;
 UPDATE security_users SET gender_id = 1 WHERE gender = "M";
 UPDATE security_users SET gender_id = 2 WHERE gender = "F";
 ALTER TABLE `security_users` DROP `gender`;
