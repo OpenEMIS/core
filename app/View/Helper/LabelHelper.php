@@ -576,15 +576,15 @@ class LabelHelper extends AppHelper {
 			'records' => 'No of records',
 			'apply' => 'Apply To'
 		),
-		'WfWorkflow' => array(
-			'workflow_model_id' => 'Form',
-		),
 		'WorkflowStep' => array(
 			'workflow_id' => 'Workflow',
 			'security_roles' => 'Security Roles',
 			'actions' => 'Actions',
 			'next_step' => 'Next Step',
 			'select_step' => 'Select Step'
+		),
+		'WfWorkflow' => array(
+			'workflow_model_id' => 'Form',
 		),
 		'WfWorkflowStep' => array(
 			'workflow_id' => 'Workflow'

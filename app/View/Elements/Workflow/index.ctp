@@ -40,14 +40,13 @@ echo $this->Form->hidden('WorkflowTransition.workflow_record_id');
 <div class="row">
 	<ul class="nav nav-tabs">
 		<?php foreach ($tabs as $key => $tab) : ?>
-			<li class="<?php echo $tab['class']; ?>"><a href="#" onclick="$('#WorkflowSelectedTab').val('<?php echo $key; ?>');$('#reload').click();return false;"><?php echo $tab['name']; ?></a></li>
+			<li class="<?php echo $tab['class']; ?>"><a href="#" onclick="$('#reload').val('<?php echo $key; ?>').click();return false;"><?php echo $tab['name']; ?></a></li>
 		<?php endforeach ?>
 	</ul>
 </div>
 
 <?php
 echo $this->element('/Workflow/' . $selectedTab);
-echo $this->Form->hidden('Workflow.selected_tab');
 echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 echo $this->Form->end();
 ?>

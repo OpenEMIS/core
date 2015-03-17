@@ -37,11 +37,25 @@ class WorkflowsController extends WorkflowsAppController {
 			$this->WfWorkflow->fields['workflow_model_id']['dataField'] = 'model';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->WfWorkflow->fields['workflow_model_id']['type'] = 'select';
+
+			$workflowIds = $this->WfWorkflow->find('list', array(
+				'fields' => array(
+					'WfWorkflow.workflow_model_id', 'WfWorkflow.workflow_model_id'
+				)
+			));
+
 			$workflowModelOptions = $this->WorkflowModel->find('list', array(
 				'fields' => array(
-					'WorkflowModel.id', 'WorkflowModel.model'
+					'WorkflowModel.id', 'WorkflowModel.name'
 				),
+				'conditions' => array(
+					'NOT' => array('WorkflowModel.id' => $workflowIds)
+				),
+				'order' => array(
+					'WorkflowModel.name'
+				)
 			));
+
 			$selectedWorkflowModelId = key($workflowModelOptions);
 			$this->WfWorkflow->fields['workflow_model_id']['options'] = $workflowModelOptions;
 		}

@@ -32,6 +32,7 @@ class StaffController extends StaffAppController {
 		'Staff.StaffCustomValue',
 		'Staff.StaffAttendance',
 		'Staff.StaffLeave',
+		'Staff.StaffBehaviour',
 		'AcademicPeriod',
 		'ConfigItem',
 		'SalaryAdditionType',
@@ -83,7 +84,6 @@ class StaffController extends StaffAppController {
 		// new ControllerAction
 		'InstitutionSiteStaff',
 		'Position' => array('plugin' => 'Staff'),
-		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'StaffClass' => array('plugin' => 'Staff'),
 		'StaffSection' => array('plugin' => 'Staff')
 	);
