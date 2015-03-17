@@ -34,7 +34,7 @@ class WorkflowsController extends WorkflowsAppController {
 
 		if ($this->action == 'index' || $this->action == 'view') {
 			$this->WfWorkflow->fields['workflow_model_id']['dataModel'] = 'WorkflowModel';
-			$this->WfWorkflow->fields['workflow_model_id']['dataField'] = 'model';
+			$this->WfWorkflow->fields['workflow_model_id']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->WfWorkflow->fields['workflow_model_id']['type'] = 'select';
 
