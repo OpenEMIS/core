@@ -19,7 +19,6 @@ class StaffBehaviour extends StaffAppModel {
 	
 	public $actsAs = array(
 		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction2', 
 		'DatePicker' => array('date_of_behaviour'),
 		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
 	);
@@ -71,8 +70,6 @@ class StaffBehaviour extends StaffAppModel {
 	/* End Excel Behaviour */
 	
 	public function beforeAction() {
-		parent::beforeAction();
-		
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $this->Session->read('InstitutionSite.id');
 		$this->fields['staff_action_category_id']['type'] = 'hidden';
@@ -91,7 +88,7 @@ class StaffBehaviour extends StaffAppModel {
 					$staffId = $this->Session->read('Staff.id');
 				}
 			}
-			if(isset($staffId)) {
+			if (isset($staffId)) {
 				$this->Staff->contain();
 				$obj = $this->Staff->findById($staffId);
 				
@@ -105,7 +102,7 @@ class StaffBehaviour extends StaffAppModel {
 				$this->fields['staff_id']['value'] = $staffId;
 			} else {
 				$this->Message->alert('general.notExists');
-				return $this->redirect(array('action' => get_class($this), 'show'));
+				return $this->controller->redirect(array('action' => get_class($this), 'show'));
 			}
 		}
 		
@@ -138,7 +135,10 @@ class StaffBehaviour extends StaffAppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('data'));
+		$this->controller->set(compact('data'));
+
+		$this->ControllerAction->autoRender = false;
+		$this->controller->render('../../../../View/InstitutionSites/StaffBehaviour/show');
 	}
 	
 	public function index($staffId = 0) {
@@ -149,7 +149,7 @@ class StaffBehaviour extends StaffAppModel {
 				if ($this->Session->check($this->alias.'.staffId')) {
 					$staffId = $this->Session->read($this->alias.'.staffId');
 				} else {
-					return $this->redirect(array('action' => get_class($this), 'show'));
+					return $this->controller->redirect(array('action' => get_class($this), 'show'));
 				}
 			}
 			
@@ -162,10 +162,10 @@ class StaffBehaviour extends StaffAppModel {
 				$staff = $this->Staff->findById($staffId);
 				$data = $this->findAllByStaffIdAndInstitutionSiteId($staffId, $institutionSiteId, array(), array('StaffBehaviour.date_of_behaviour'));
 				
-				$this->setVar(compact('data', 'staff'));
+				$this->controller->set(compact('data', 'staff'));
 			} else {
 				$this->Message->alert('general.notExists');
-				return $this->redirect(array('action' => get_class($this), 'show'));
+				return $this->controller->redirect(array('action' => get_class($this), 'show'));
 			}
 		} else {
 			$staffId = $this->Session->read('Staff.id');
@@ -175,7 +175,7 @@ class StaffBehaviour extends StaffAppModel {
 				'StaffBehaviourCategory' => array('fields' => array('StaffBehaviourCategory.name'))
 			));
 			$data = $this->findAllByStaffId($staffId, array(), array('StaffBehaviour.date_of_behaviour'));
-			$this->setVar(compact('data'));
+			$this->controller->set(compact('data'));
 		}
 	}
 }
