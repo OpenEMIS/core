@@ -15,9 +15,14 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WfWorkflow extends WorkflowsAppModel {
-	public $useTable = 'wf_workflows';
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflows';
 
 	public $belongsTo = array(
+		'WorkflowModel' => array(
+            'className' => 'Workflows.WorkflowModel',
+            'foreignKey' => 'workflow_model_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
@@ -33,6 +38,7 @@ class WfWorkflow extends WorkflowsAppModel {
 	public $hasMany = array(
         'WfWorkflowStep' => array(
             'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'workflow_id',
 			'dependent' => true
         )
     );
@@ -55,6 +61,34 @@ class WfWorkflow extends WorkflowsAppModel {
 				'required' => true,
 				'message' => 'Please enter a name'
 			)
+		),
+		'workflow_model_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a form'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('workflow_model_id'), false),
+	            'message' => 'This form is already exists in the system'
+	        )
 		)
 	);
+
+	public function afterSave($created, $options = Array()) {
+		$workflowId = $this->data['WfWorkflow']['id'];
+		$workflowSteps = $this->WfWorkflowStep->findByWorkflowId($workflowId);
+
+		if (empty($workflowSteps)) {
+			$data = array();
+			$data[0]['WfWorkflowStep']['name'] = 'Open';
+			$data[0]['WfWorkflowStep']['stage'] = 0;
+			$data[0]['WfWorkflowStep']['workflow_id'] = $workflowId;
+			$data[1]['WfWorkflowStep']['name'] = 'Closed';
+			$data[1]['WfWorkflowStep']['stage'] = 1;
+			$data[1]['WfWorkflowStep']['workflow_id'] = $workflowId;
+
+			$this->WfWorkflowStep->saveAll($data);
+		}
+	}
 }

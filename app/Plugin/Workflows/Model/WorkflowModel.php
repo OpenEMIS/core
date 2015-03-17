@@ -14,17 +14,15 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class WorkflowLogsController extends WorkflowsAppController {
-		public $components = array(
-		'ControllerAction' => array('model' => 'Workflows.WorkflowLog')
-	);
+class WorkflowModel extends WorkflowsAppModel {
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflow_models';
 
-	public function beforeFilter() {
-		parent::beforeFilter();
-		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Workflows', array('plugin' => 'Workflows', 'controller' => 'Workflows', 'action' => 'index'));
-		$this->Navigation->addCrumb('Logs');
-		$this->set('contentHeader', 'Workflow Logs');
-	}
+	public $hasMany = array(
+        'WfWorkflow' => array(
+            'className' => 'Workflows.WfWorkflow',
+            'foreignKey' => 'workflow_model_id',
+			'dependent' => true
+        )
+    );
 }
