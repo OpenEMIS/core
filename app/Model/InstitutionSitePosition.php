@@ -166,6 +166,12 @@ class InstitutionSitePosition extends AppModel {
 			);
 			$this->InstitutionSiteStaff->recursive = 0;
 			$current = $this->InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndEndDate($id, null, $fields, array('InstitutionSiteStaff.start_date'));
+			$totalCurrentFTE = '0.00';
+			if (count($current)>0) {
+				foreach ($current as $c) {
+					$totalCurrentFTE = number_format((floatVal($totalCurrentFTE) + floatVal($c['InstitutionSiteStaff']['FTE'])),2);
+				}
+			}
 			$past = $this->InstitutionSiteStaff->find('all', array(
 				'fields' => $fields,
 				'conditions' => array(
@@ -174,7 +180,7 @@ class InstitutionSitePosition extends AppModel {
 				),
 				'order' => array('InstitutionSiteStaff.start_date')
 			));
-			$this->setVar(compact('current', 'past'));
+			$this->setVar(compact('current', 'totalCurrentFTE', 'past'));
 		}
 		parent::afterAction();
 	}
@@ -206,7 +212,12 @@ class InstitutionSitePosition extends AppModel {
 			$staffFields['start_date']['value'] = $startDate;
 			$staffFields['staff_status_id']['type'] = 'select';
 			$staffFields['staff_status_id']['options'] = $this->InstitutionSiteStaff->StaffStatus->getList();
-			$staffFields['FTE']['visible'] = false;
+			$staffFields['FTE']['visible'] = true;
+			$staffFields['FTE']['type'] = 'disabled';
+			$staffFields['staff_name']['type'] = 'disabled';
+			$staffFields['staff_name']['visible'] = true;
+			// pass the whole staff object to view so that we can use ModelHelper to show the name by its getName() 
+			$staffFields['staff_name']['value'] = $staff['Staff'];
 			
 			try {
 				$date = new DateTime($startDate);
@@ -220,6 +231,31 @@ class InstitutionSitePosition extends AppModel {
 				'data-date' => empty($endDate) ? '' : $date->format('d-m-Y')
 			);
 			
+			// customise field inputs order to follow Staff/Position/edit UI
+			$omitChangeOrder = array('FTE','staff_name','start_date','end_date');
+			$staffFields['FTE']['order'] = 4;
+			$staffFields['start_date']['order'] = 5;
+			$staffFields['end_date']['order'] = 6;
+			$order = 0;
+			$staffFields['staff_name']['order'] = $order;
+			// adjust field inputs order
+			foreach ($staffFields as $key=>$value) {
+				$order++;
+				if (!in_array($key, $omitChangeOrder)) {
+					foreach ($omitChangeOrder as $oco) {
+						if ($order==$staffFields[$oco]['order']) {
+							$order++;
+						}
+					}
+					$staffFields[$key]['order'] = $order;
+				}
+			}
+			// re-order fields array according to their 'order' values//
+			// this code only works on PHP5.3 and above
+			uasort($staffFields, function($a, $b) {
+			    return $a['order'] - $b['order'];
+			});
+
 			if ($this->request->is(array('post', 'put'))) {
 				$data = $this->request->data;
 				//$data['InstitutionSiteStaff']['FTE'] = !empty($data['InstitutionSiteStaff']['FTE']) ? ($data['InstitutionSiteStaff']['FTE'] / 100) : NULL;
@@ -227,7 +263,6 @@ class InstitutionSitePosition extends AppModel {
 				
 				$this->InstitutionSiteStaff->validator()->remove('search');
 				$this->InstitutionSiteStaff->validator()->remove('FTE');
-				//pr($data);
 				if ($this->InstitutionSiteStaff->save($data)) {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => $this->alias, 'view', $id));
