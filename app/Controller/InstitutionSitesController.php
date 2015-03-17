@@ -413,6 +413,7 @@ class InstitutionSitesController extends AppController {
 				$this->Utility->alert($name . ' have been deleted successfully.');
 			}else{
 				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
+				$this->Message->alert('general.delete.failed');
 			}
 			
 			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
