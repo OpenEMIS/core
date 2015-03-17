@@ -124,4 +124,9 @@ RENAME TABLE z_985_security_users TO security_users;
 
 DROP TABLE genders;
 
+-- testing on feature-985 branch - 17 March 2015
+-- need to change student and staff history identification_no to openemis_no
+RENAME TABLE z_985_student_history TO student_history;
+RENAME TABLE z_985_staff_history TO staff_history;
+RENAME TABLE z_985_institution_site_history TO institution_site_history;
 
