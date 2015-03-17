@@ -390,8 +390,8 @@ class StudentsController extends StudentsAppController {
 						$InstitutionSiteStudentModel->save($dataToSite);
 					}
 
-					$this->Session->write($model . '.data', $this->Student->findById($id));
-					$this->Session->write($model . '.security_user_id', $securityUserId);
+					$this->Session->write('Student.data', $this->Student->findById($id));
+					$this->Session->write('Student.security_user_id', $securityUserId);
 					
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
