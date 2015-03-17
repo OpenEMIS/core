@@ -30,7 +30,7 @@ $model = 'InstitutionSite';
 			foreach ($data as $obj):
 				$id = $obj['InstitutionSite']['id'];
 				$code = $this->Utility->highlight($search, $obj[$model]['code']);
-				$name = $this->Utility->highlight($search, $obj[$model]['name'].((isset($obj['InstitutionSiteHistory']['name']))?'<br>'.$obj['InstitutionSiteHistory']['name']:''));
+				$name = $this->Utility->highlight($search, $obj[$model]['name']);
 		?>
 			<tr>
 				<td><?php echo $code; ?></td>

@@ -27,9 +27,6 @@ class HomeController extends AppController {
 			'Staff' => 'staff'
 		),
 		'Edited' => array(
-			'InstitutionSiteHistory' => 'institution_site_history',
-			'StudentHistory' => 'student_history',
-			'StaffHistory' => 'staff_history'
 		)
 	);
 	public $uses = array(
@@ -38,9 +35,6 @@ class HomeController extends AppController {
 		'InstitutionSite',
 		'Students.Student',
 		'Staff.Staff',
-		'InstitutionSiteHistory',
-		'Students.StudentHistory',
-		'Staff.StaffHistory'
 	);
 	
 	private function logtimer($str=''){
