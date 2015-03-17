@@ -13,9 +13,10 @@ echo $this->element('alert');
 </div>
 
 <div class="row">
-		<div id="workbench" class="col-md-8">
-			<div style="padding: 0px 20px 0px 20px; border: 1px solid grey">
-				<h5><?php echo __('Workbench'); ?></h5>
+	<div id="workbench" class="col-md-8">
+		<div style="padding: 0px 20px 0px 20px; border: 1px solid grey">
+			<h5><?php echo __('Workbench'); ?></h5>
+			<div style='overflow:auto;height:320px'>
 				<table class="table table-striped table-hover table-bordered">
 					<thead class="table_head">
 						<tr>
@@ -33,30 +34,31 @@ echo $this->element('alert');
 				</table>
 			</div>
 		</div>
+	</div>
 
-		<div id="news" class="col-md-4">
-			<div style="padding: 0px 20px 0px 20px; border: 1px solid grey">
-				<h5><?php echo __('Notices'); ?></h5>
-				<div style='overflow:auto;height:320px'>
-					<table class="table table-striped table-hover table-bordered">
-						<tbody class="table_body">
-						<?php 
-						foreach ($noticeData as $key => $value) {
-							?>
-							<tr>
-								<td>
-									<?php echo $this->Utility->formatDate($value['Notices']['created']) ?>: 
-									<?php echo $value['Notices']['message'] ?>
-								</td>
-							</tr>
-							<?php 
-						} 
+	<div id="news" class="col-md-4">
+		<div style="padding: 0px 20px 0px 20px; border: 1px solid grey">
+			<h5><?php echo __('Notices'); ?></h5>
+			<div style='overflow:auto;height:320px'>
+				<table class="table table-striped table-hover table-bordered">
+					<tbody class="table_body">
+					<?php 
+					foreach ($noticeData as $key => $value) {
 						?>
-						</tbody>
-					</table>
-				</div>
+						<tr>
+							<td>
+								<?php echo $this->Utility->formatDate($value['Notices']['created']) ?>: 
+								<?php echo $value['Notices']['message'] ?>
+							</td>
+						</tr>
+						<?php 
+					} 
+					?>
+					</tbody>
+				</table>
 			</div>
 		</div>
+	</div>
 </div>
 
 <hr>
