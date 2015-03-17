@@ -155,21 +155,23 @@ class ControllerActionComponent extends Component {
 
 	public function processAction() {
 		$result = null;
-		if (in_array($this->currentAction, $this->defaultActions)) {
-			if ($this->autoProcess) {
-				if ($this->triggerFrom == 'Controller') {
+		if ($this->autoProcess) {
+			if ($this->triggerFrom == 'Controller') {
+				if (in_array($this->currentAction, $this->defaultActions)) {
 					$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
-				} else if ($this->triggerFrom == 'Model') {
-					if (method_exists($this->model, $this->currentAction)) {
-						$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
-					} else {
+				}
+			} else if ($this->triggerFrom == 'Model') {
+				if (method_exists($this->model, $this->currentAction)) {
+					$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
+				} else {
+					if (in_array($this->currentAction, $this->defaultActions)) {
 						$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
 					}
 				}
 			}
-
-			$this->render();
 		}
+
+		$this->render();
 	}
 
 	public function render() {
@@ -223,7 +225,8 @@ class ControllerActionComponent extends Component {
 			$model->create();
 			if ($model->saveAll($this->controller->request->data)) {
 				$this->Message->alert('general.add.success');
-				$pass = $this->controller->params->pass;
+				$named = $this->controller->params['named'];
+				$pass = $this->controller->params['pass'];
 				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 				$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
@@ -233,7 +236,7 @@ class ControllerActionComponent extends Component {
 					$action[] = isset($params['back']) ? $params['back'] : 'view';
 				}
 				$action[] = $model->getLastInsertID();
-				$action = array_merge($action, $pass);
+				$action = array_merge($action, $named, $pass);
 				return $this->controller->redirect($action);
 			} else {
 				$this->log($model->validationErrors, 'debug');
@@ -250,15 +253,18 @@ class ControllerActionComponent extends Component {
 			if ($this->controller->request->is(array('post', 'put'))) {
 				if ($model->saveAll($this->controller->request->data)) {
 					$this->Message->alert('general.edit.success');
-					$pass = $this->controller->params->pass;
+					$named = $this->controller->params['named'];
+					$pass = $this->controller->params['pass'];
+					$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
-					$action = array('action' => 'view');
+					$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
 					if ($this->triggerFrom == 'Model') {
 						unset($pass[0]);
-						$action = array('action' => get_class($model), 'view');
+						$action = array('action' => get_class($model));
+						$action[] = isset($params['back']) ? $params['back'] : 'view';
 					}
 					
-					$action = array_merge($action, $pass);
+					$action = array_merge($action, $named, $pass);
 					return $this->controller->redirect($action);
 				} else {
 					$this->log($model->validationErrors, 'debug');
@@ -288,7 +294,8 @@ class ControllerActionComponent extends Component {
 				$this->Message->alert('general.delete.failed');
 			}
 			$this->Session->delete($model->alias . '.id');
-			$pass = $this->controller->params->pass;
+			$named = $this->controller->params['named'];
+			$pass = $this->controller->params['pass'];
 			$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 			$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
@@ -298,7 +305,7 @@ class ControllerActionComponent extends Component {
 				$action[] = isset($params['back']) ? $params['back'] : 'index';
 			}
 			
-			$action = array_merge($action, $pass);
+			$action = array_merge($action, $named, $pass);
 			return $this->controller->redirect($action);
 		}
 	}

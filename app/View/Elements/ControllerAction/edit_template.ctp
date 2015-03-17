@@ -7,12 +7,9 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-	$formAction = $_triggerFrom == 'Controller' ? array('action' => $action) : array('action' => $model, $action);
+	$formAction = $_buttons['add']['url'];
 	if ($this->action == 'edit') {
-		$formAction[] = $this->request->data[$model]['id'];
-	} 
-	if (isset($params)) {
-		$formAction = array_merge($formAction, $paramValues);
+		$formAction = $_buttons['edit']['url'];
 	}
 	$formOptions = $this->FormUtility->getFormOptions($formAction);
 	echo $this->Form->create($model, $formOptions);
