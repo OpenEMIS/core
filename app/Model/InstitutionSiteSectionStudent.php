@@ -436,7 +436,11 @@ class InstitutionSiteSectionStudent extends AppModel {
 		$currentYearId = $AcademicPeriod->getCurrent();
 		$currentYear = $AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
 
-		$studentsByGradeConditions = array('InstitutionSiteSection.academic_period_id' => $currentYearId);
+		$studentsByGradeConditions = array(
+			'InstitutionSiteSectionStudent.status' => 1,
+			'InstitutionSiteSection.academic_period_id' => $currentYearId,
+			'EducationGrade.id IS NOT NULL'
+		);
 		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
 		$studentByGrades = $this->find('all', array(
 			'fields' => array(
