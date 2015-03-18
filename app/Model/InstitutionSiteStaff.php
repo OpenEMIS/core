@@ -984,7 +984,6 @@ class InstitutionSiteStaff extends AppModel {
 		$currentYearId = $AcademicPeriod->getCurrent();
 		$currentYear = $AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
 
-		//$staffsByPositionConditions = array('InstitutionSiteStaff.institution_site_id' => $id, 'Staff.gender IS NOT NULL');
 		$staffsByPositionConditions = array('Staff.gender IS NOT NULL');
 		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
 		$staffsByPositionConditions['OR'] = array(
@@ -1021,6 +1020,11 @@ class InstitutionSiteStaff extends AppModel {
 			'M' => array('name' => __('Male'), 'data' => array()),
 			'F' => array('name' => __('Female'), 'data' => array())
 		);
+		foreach ($dataSet as $key => $obj) {
+			foreach ($positionTypes as $id => $name) {
+				$dataSet[$key]['data'][$id] = 0;
+			}
+		}
 		foreach ($staffByPositions as $key => $staffByPosition) {
 			$positionType = $staffByPosition['InstitutionSitePosition']['type'];
 			$staffGender = $staffByPosition['Staff']['gender'];
