@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class Notice extends Appmodel {
-	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -26,4 +25,16 @@ class Notice extends Appmodel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	public function afterFind($results, $primary=false) {
+		foreach ($results as $key => $value) {
+			if (array_key_exists('Notice', $value)) {
+				if (array_key_exists('message', $results[$key]['Notice'])) {
+					$results[$key]['Notice']['message'] = nl2br($results[$key]['Notice']['message']);
+				}
+				
+			}
+		}
+		return $results;
+	}
 }

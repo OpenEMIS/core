@@ -30,3 +30,5 @@ CREATE TABLE IF NOT EXISTS z_1286_config_items LIKE config_items;
 INSERT INTO z_1286_config_items SELECT * FROM config_items WHERE name = 'dashboard_notice' AND NOT EXISTS (SELECT * FROM z_1286_config_items);
 
 DELETE from config_items WHERE name = 'dashboard_notice';
+
+ALTER TABLE `notices` CHANGE `message` `message` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
