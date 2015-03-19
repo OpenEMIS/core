@@ -51,7 +51,7 @@ class WorkflowStepsController extends WorkflowsAppController {
 		$this->ControllerAction->setFieldOrder('actions', 4);
 
 		if ($this->action == 'view') {
-			$this->WfWorkflowStep->fields['workflow_id']['dataModel'] = 'Workflow';
+			$this->WfWorkflowStep->fields['workflow_id']['dataModel'] = 'WfWorkflow';
 			$this->WfWorkflowStep->fields['workflow_id']['dataField'] = 'name';
 
 			$this->WfWorkflowStep->fields['security_roles']['dataModel'] = 'SecurityRole';
