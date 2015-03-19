@@ -40,6 +40,8 @@ class WorkflowsController extends WorkflowsAppController {
 
 			$selectedWorkflowId = null;
 			if ($this->request->is(array('post', 'put'))) {
+				$data = $this->request->data;
+				$selectedWorkflowId = $data['WfWorkflow']['id'];
 			} else {
 				$pass = $this->request->params['pass'];
 				$selectedWorkflowId = isset($pass[0]) ? $pass[0] : 0;
