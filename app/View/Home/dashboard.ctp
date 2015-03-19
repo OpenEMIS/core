@@ -45,8 +45,8 @@ echo $this->element('alert');
 							?>
 							<tr>
 								<td>
-									<?php echo $this->Utility->formatDate($value['Notices']['created']) ?>: 
-									<?php echo $value['Notices']['message'] ?>
+									<?php echo $this->Utility->formatDate($value['Notice']['created']) ?>: 
+									<?php echo $value['Notice']['message'] ?>
 								</td>
 							</tr>
 							<?php 
