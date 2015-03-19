@@ -202,3 +202,10 @@ UPDATE `navigations` SET `action` = 'StaffLeave', `pattern` = 'StaffLeave' WHERE
 --
 
 UPDATE `security_functions` SET `_view` = 'StaffLeave|StaffLeave.index', `_edit` = '_view:StaffLeave.edit' , `_add` = '_view:StaffLeave.add', `_delete` = '_view:StaffLeave.delete' WHERE `controller` = 'Staff' AND `module` = 'Staff' AND `category` = 'Details' AND `name` = 'Leave';
+
+--
+-- 12. Update Security Functions for (v2.3.8)
+--
+
+UPDATE `security_functions` SET `_delete` = '_view:remove' WHERE `controller` = 'Workflows' AND `module` = 'Administration' AND `category` = 'Workflows' AND `name` = 'Workflows';
+UPDATE `security_functions` SET `_delete` = '_view:remove' WHERE `controller` = 'WorkflowSteps' AND `module` = 'Administration' AND `category` = 'Workflows' AND `name` = 'WorkflowSteps';
