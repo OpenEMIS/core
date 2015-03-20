@@ -97,7 +97,7 @@ class HomeController extends AppController {
 		$highChartDatas[] = $this->InstitutionSiteSectionStudent->getHighChart('number_of_students_by_grade');
 		$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff');
 
-		$noticeData = ClassRegistry::init('Notices')->find(
+		$noticeData = ClassRegistry::init('Notice')->find(
 			'all',
 			array(
 				'order by created desc'
