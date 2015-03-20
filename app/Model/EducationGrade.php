@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class EducationGrade extends AppModel {
 	public $actsAs = array(
 		'ControllerAction2',
-		'Reorder'
+		'Reorder' => array('parentKey' => 'education_programme_id')
 	);
 	public $hasMany = array('EducationGradeSubject');
 	public $belongsTo = array(
