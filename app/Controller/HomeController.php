@@ -100,7 +100,7 @@ class HomeController extends AppController {
 		$noticeData = ClassRegistry::init('Notice')->find(
 			'all',
 			array(
-				'order by created desc'
+				'order' => array('Notice.created desc')
 			)
 		);
 
