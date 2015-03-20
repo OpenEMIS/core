@@ -2,7 +2,7 @@
 -- 1. Navigations
 --
 
-UPDATE `navigations` SET `plugin` = 'Quality', `controller` = 'QualityRubrics', `action` = 'index' , `pattern` = 'index|RubricTemplate|RubricSection|RubricCriteria' WHERE `module` = 'Administration' AND `controller` = 'Quality' AND `header` = 'Quality' AND `title` = 'Rubrics';
+UPDATE `navigations` SET `plugin` = 'Quality', `controller` = 'QualityRubrics', `action` = 'index' , `pattern` = 'index|RubricTemplate|RubricTemplateOption|RubricSection|RubricCriteria' WHERE `module` = 'Administration' AND `controller` = 'Quality' AND `header` = 'Quality' AND `title` = 'Rubrics';
 UPDATE `navigations` SET `plugin` = 'Quality', `controller` = 'QualityStatuses', `action` = 'index' , `pattern` = 'index|view|edit|add|delete' WHERE `module` = 'Administration' AND `controller` = 'Quality' AND `header` = 'Quality' AND `title` = 'Status';
 
 --

@@ -17,13 +17,17 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 		<thead>
 			<tr>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
-				<th><?php echo $this->Label->get('RubricSection.rubric_template_id'); ?></th>
+				<th><?php echo $this->Label->get('RubricTemplateOption.weighting'); ?></th>
+				<th><?php echo $this->Label->get('RubricTemplateOption.color'); ?></th>
+				<th><?php echo $this->Label->get('RubricTemplateOption.rubric_template_id'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['RubricSection']['name'], array('action' => $model, 'view', $obj['RubricSection']['id'])); ?></td>
+					<td><?php echo $this->Html->link($obj['RubricTemplateOption']['name'], array('action' => $model, 'view', $obj['RubricTemplateOption']['id'])); ?></td>
+					<td><?php echo $obj['RubricTemplateOption']['weighting']; ?></td>
+					<td><?php echo $obj['RubricTemplateOption']['color']; ?></td>
 					<td><?php echo $obj['RubricTemplate']['name']; ?></td>
 				</tr>
 			<?php endforeach ?>
