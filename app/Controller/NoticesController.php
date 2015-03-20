@@ -40,4 +40,21 @@ class NoticesController extends AppController {
 			$this->Navigation->addCrumb(ucfirst($this->action));
 		}
 	}
+
+	public function index() {
+		$data = $this->Notice->find('all', 
+			array(
+				'order' => array('Notice.created desc')
+			)
+		);
+		$this->set('data', $data);
+		$this->ControllerAction->render();
+	}
+
+	public function edit($id) {
+		$this->Notice->overrideNltobr = true;
+		$this->ControllerAction->edit($id);
+		$this->ControllerAction->render();
+	}
+
 }
