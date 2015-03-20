@@ -635,6 +635,19 @@ var jsForm = {
 				}
 			});
 		});
+	},
+
+	doCopy: function(src, target){
+		src.find(':input[type=hidden][data-field]').each(function(){
+			var srcName = $(this).attr('data-field');
+			var srcValue = $(this).val();
+			target.find(':input[data-field]').each(function(){
+				var targetName = $(this).attr('data-field');
+				if(srcName == targetName) {
+					$(this).val(srcValue);
+				}
+			});
+		});
 	}
 };
 
@@ -761,5 +774,3 @@ var utils = {
 		w.print();
 	}
 }
-
-
