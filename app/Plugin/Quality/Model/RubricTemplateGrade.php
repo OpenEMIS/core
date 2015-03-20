@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class RubricTemplateGrade extends QualityAppModel {
 	public $belongsTo = array(
+		'EducationGrade',
 		'RubricTemplate' => array(
             'className' => 'Quality.RubricTemplate',
             'foreignKey' => 'rubric_template_id'
