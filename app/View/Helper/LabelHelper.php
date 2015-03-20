@@ -592,10 +592,19 @@ class LabelHelper extends AppHelper {
 		'RubricTemplate' => array(
 			'weighting_type' => 'Weighting',
 			'security_roles' => 'Security Roles',
-			'grades' => 'Grades'
+			'grades' => 'Grades',
+			'options' => 'Options'
 		),
 		'RubricTemplateGrade' => array(
 			'select_grade' => 'Select Grade'
+		),
+		'RubricTemplateOption' => array(
+			'rubric_template_id' => 'Template',
+			'weighting' => 'Weighting',
+			'color' => 'Color'
+		),
+		'RubricSection' => array(
+			'rubric_template_id' => 'Template'
 		)
 	);
 	

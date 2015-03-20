@@ -33,4 +33,93 @@ class RubricTemplateOption extends QualityAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+    public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('name', 'rubric_template_id'), false),
+	            'message' => 'This name is already exists in the system'
+	        )
+		),
+		'weighting' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a weighting'
+			)
+		),
+		'color' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a color'
+			)
+		)
+	);
+
+	public function beforeAction() {
+		$this->Navigation->addCrumb('Templates Options');
+		$named = $this->controller->params->named;
+		
+		$rubricTemplateOptions = $this->RubricTemplate->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplateOptions);
+
+		$this->fields['color'] = array(
+			'type' => 'element',
+			'element' => '../../Plugin/Quality/View/RubricTemplateOption/color',
+			'visible' => true
+		);
+		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
+
+		if ($this->action == 'index') {
+
+		} else if ($this->action == 'view') {
+
+		} else if($this->action == 'add' || $this->action == 'edit') {
+			$this->fields['rubric_template_id']['type'] = 'select';
+			$this->fields['rubric_template_id']['options'] = $rubricTemplateOptions;
+
+			if ($this->request->is(array('post', 'put'))) {
+			} else {
+				$this->request->data['RubricTemplateOption']['rubric_template_id'] = $selectedRubricTemplate;
+			}
+		}
+
+		$this->controller->set('contentHeader', __('Templates Options'));
+		$contentHeader = __('Templates Options');
+		$this->controller->set(compact('contentHeader', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+	}
+
+	public function index() {
+		$named = $this->controller->params->named;
+
+		$rubricTemplates = $this->RubricTemplate->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplates);
+
+		$rubricTemplateOptions = array();
+		foreach ($rubricTemplates as $key => $rubricTemplate) {
+			$rubricTemplateOptions['template:' . $key] = $rubricTemplate;
+		}
+
+		$this->contain('RubricTemplate');
+		$data = $this->find('all', array(
+			'conditions' => array(
+				'RubricTemplateOption.rubric_template_id' => $selectedRubricTemplate
+			),
+			'order' => array(
+				'RubricTemplateOption.order', 'RubricTemplateOption.name'
+			)
+		));
+
+		$this->controller->set(compact('data', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+	}
 }

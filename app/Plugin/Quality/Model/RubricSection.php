@@ -34,9 +34,75 @@ class RubricSection extends QualityAppModel {
 		)
 	);
 
-	public function beforeAction() {
-		$this->Navigation->addCrumb('Rubrics Sections');
+    public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('name', 'rubric_template_id'), false),
+	            'message' => 'This name is already exists in the system'
+	        )
+		)
+	);
 
-		$this->controller->set('contentHeader', __('Rubrics Sections'));
+	public function beforeAction() {
+		$this->Navigation->addCrumb('Sections');
+		$named = $this->controller->params->named;
+		
+		$rubricTemplateOptions = $this->RubricTemplate->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplateOptions);
+
+		$this->fields['order']['visible'] = false;
+		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
+
+		if ($this->action == 'index') {
+			$this->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
+			$this->fields['rubric_template_id']['dataField'] = 'name';
+		} else if ($this->action == 'view') {
+			$this->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
+			$this->fields['rubric_template_id']['dataField'] = 'name';
+		} else if($this->action == 'add' || $this->action == 'edit') {
+			$this->fields['rubric_template_id']['type'] = 'select';
+			$this->fields['rubric_template_id']['options'] = $rubricTemplateOptions;
+
+			if ($this->request->is(array('post', 'put'))) {
+			} else {
+				$this->request->data['RubricSection']['rubric_template_id'] = $selectedRubricTemplate;
+			}
+		}
+
+		$contentHeader = __('Sections');
+		$this->controller->set(compact('contentHeader', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+	}
+
+	public function index() {
+		$named = $this->controller->params->named;
+
+		$rubricTemplates = $this->RubricTemplate->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplates);
+
+		$rubricTemplateOptions = array();
+		foreach ($rubricTemplates as $key => $rubricTemplate) {
+			$rubricTemplateOptions['template:' . $key] = $rubricTemplate;
+		}
+
+		$this->contain('RubricTemplate');
+		$data = $this->find('all', array(
+			'conditions' => array(
+				'RubricSection.rubric_template_id' => $selectedRubricTemplate
+			),
+			'order' => array(
+				'RubricSection.order', 'RubricSection.name'
+			)
+		));
+
+		$this->controller->set(compact('data', 'rubricTemplateOptions', 'selectedRubricTemplate'));
 	}
 }
