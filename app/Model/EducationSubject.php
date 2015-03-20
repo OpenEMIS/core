@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationSubject extends AppModel {
-	public $actsAs = array('ControllerAction2', 'Reorder');
+	public $actsAs = array('ControllerAction2', 'Reorder' => array('parentKey' => false));
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
