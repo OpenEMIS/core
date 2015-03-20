@@ -340,8 +340,11 @@ class LabelHelper extends AppHelper {
 			'module' => 'Staff',
 		),
 		'StaffLeave' => array(
+			'title' => 'Leave',
+			'staff_leave_type_id' => 'Staff Leave Type',
+			'leave_status_id' => 'Leave Status',
 			'date_from' => 'First Day',
-			'date_to' => 'Last Day',
+			'date_to' => 'Last Day'
 		),
 		'StaffTraining' => array(
 			'course_title' => 'Course Title',
@@ -574,20 +577,27 @@ class LabelHelper extends AppHelper {
 			'apply' => 'Apply To'
 		),
 		'WorkflowStep' => array(
-			'wf_workflow_id' => 'Workflow',
+			'workflow_id' => 'Workflow',
 			'security_roles' => 'Security Roles',
 			'actions' => 'Actions',
 			'next_step' => 'Next Step',
 			'select_step' => 'Select Step'
 		),
+		'WfWorkflow' => array(
+			'workflow_model_id' => 'Form',
+		),
 		'WfWorkflowStep' => array(
-			'wf_workflow_id' => 'Workflow'
+			'workflow_id' => 'Workflow'
 		),
 		'StudentStatus' => array(
 			'name' => 'Status'
 		),
 		'StudentCategory' => array(
 			'name' => 'Category'
+		),
+		'Notice' => array(
+			'title' => 'Notices',	
+			'created' => 'Date'
 		)
 	);
 	

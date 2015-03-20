@@ -15,7 +15,7 @@
 					<td><?php echo $obj['name'] ?></td>
 					<td>
 						<?php
-							$nextWorkflowStepName = isset($workflowSteps[$obj['next_wf_workflow_step_id']]) ? $workflowSteps[$obj['next_wf_workflow_step_id']] : '';
+							$nextWorkflowStepName = isset($workflowSteps[$obj['next_workflow_step_id']]) ? $workflowSteps[$obj['next_workflow_step_id']] : '';
 							echo $nextWorkflowStepName;
 						?>
 					</td>
@@ -72,7 +72,7 @@
 								</td>
 								<td>
 									<?php
-										echo $this->Form->input("WorkflowAction.$key.next_wf_workflow_step_id", array('options' => $workflowStepOptions, 'label' => false, 'div' => false, 'between' => false, 'after' => false));
+										echo $this->Form->input("WorkflowAction.$key.next_workflow_step_id", array('options' => $workflowStepOptions, 'label' => false, 'div' => false, 'between' => false, 'after' => false));
 									?>
 								</td>
 							<?php if ($this->action == 'add') : ?>

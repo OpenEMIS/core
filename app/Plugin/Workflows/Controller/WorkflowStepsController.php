@@ -31,6 +31,11 @@ class WorkflowStepsController extends WorkflowsAppController {
 		$this->Navigation->addCrumb('Workflows', array('plugin' => 'Workflows', 'controller' => 'Workflows', 'action' => 'index'));
 		$this->Navigation->addCrumb('Steps');
 		$this->set('contentHeader', 'Workflow Steps');
+
+		$this->ControllerAction->setFieldOrder('name', 1);
+		$this->ControllerAction->setFieldOrder('workflow_id', 2);
+		$this->WfWorkflowStep->fields['stage']['visible'] = false;
+
 		$this->WfWorkflowStep->fields['security_roles'] = array(
 			'type' => 'chosen_select',
 			'id' => 'SecurityRole.SecurityRole',
@@ -46,8 +51,8 @@ class WorkflowStepsController extends WorkflowsAppController {
 		$this->ControllerAction->setFieldOrder('actions', 4);
 
 		if ($this->action == 'view') {
-			$this->WfWorkflowStep->fields['wf_workflow_id']['dataModel'] = 'Workflow';
-			$this->WfWorkflowStep->fields['wf_workflow_id']['dataField'] = 'name';
+			$this->WfWorkflowStep->fields['workflow_id']['dataModel'] = 'WfWorkflow';
+			$this->WfWorkflowStep->fields['workflow_id']['dataField'] = 'name';
 
 			$this->WfWorkflowStep->fields['security_roles']['dataModel'] = 'SecurityRole';
 			$this->WfWorkflowStep->fields['security_roles']['dataField'] = 'name';
@@ -55,18 +60,18 @@ class WorkflowStepsController extends WorkflowsAppController {
 			$workflowSteps = $this->WfWorkflowStep->find('list');
 			$this->set('workflowSteps', $workflowSteps);
 		} else if($this->action == 'add' || $this->action == 'edit') {
-			$this->WfWorkflowStep->fields['wf_workflow_id']['type'] = 'select';
-			$this->WfWorkflowStep->fields['wf_workflow_id']['attr'] = array('onchange' => "$('#reload').click()");
+			$this->WfWorkflowStep->fields['workflow_id']['type'] = 'select';
+			$this->WfWorkflowStep->fields['workflow_id']['attr'] = array('onchange' => "$('#reload').click()");
 			$workflowOptions = $this->WfWorkflow->find('list');
 			$selectedWorkflowId = key($workflowOptions);
-			$this->WfWorkflowStep->fields['wf_workflow_id']['options'] = $workflowOptions;
+			$this->WfWorkflowStep->fields['workflow_id']['options'] = $workflowOptions;
 
 			$securityRoleOptions = $this->WfWorkflowStep->SecurityRole->find('list');
 			$this->WfWorkflowStep->fields['security_roles']['options'] = $securityRoleOptions;
 
 			if ($this->request->is(array('post', 'put'))) {
 				$data = $this->request->data;
-				$selectedWorkflowId = $data['WfWorkflowStep']['wf_workflow_id'];
+				$selectedWorkflowId = $data['WfWorkflowStep']['workflow_id'];
 				$selectedWorkflowStepId = $data['WfWorkflowStep']['id'];
 
 				if($data['submit'] == 'reload') {
@@ -74,7 +79,7 @@ class WorkflowStepsController extends WorkflowsAppController {
 				} else if($data['submit'] == 'WorkflowAction') {
 					$this->request->data['WorkflowAction'][] =array(
 						'name' => '',
-						'next_wf_workflow_step_id' => 0,
+						'next_workflow_step_id' => 0,
 						'visible' => 1
 					);
 					$this->ControllerAction->autoProcess = false;
@@ -93,14 +98,18 @@ class WorkflowStepsController extends WorkflowsAppController {
 
 				$this->ControllerAction->processAction();
 			} else {
+				$named = $this->request->params['named'];
+				$selectedWorkflowId = isset($named['workflow']) ? $named['workflow'] : $selectedWorkflowId;
+
 				$pass = $this->request->params['pass'];
 				$selectedWorkflowStepId = isset($pass[0]) ? $pass[0] : 0;
-				$selectedWorkflowId = $this->WfWorkflowStep->field('wf_workflow_id', array('WfWorkflowStep.id' => $selectedWorkflowStepId));
+
+				$this->request->data['WfWorkflowStep']['workflow_id'] = $selectedWorkflowId;
 			}
 
 			$workflowStepData = $this->WfWorkflowStep->find('list', array(
 				'conditions' => array(
-					'WfWorkflowStep.wf_workflow_id' => $selectedWorkflowId,
+					'WfWorkflowStep.workflow_id' => $selectedWorkflowId,
 					'NOT' => array(
 						'WfWorkflowStep.id' => $selectedWorkflowStepId
 					)
@@ -123,10 +132,14 @@ class WorkflowStepsController extends WorkflowsAppController {
 			$workflowOptions['workflow:' . $key] = $workflow;
 		}
 
+		if (empty($workflowOptions)) {
+			$this->Message->alert('WorkflowStep.noWorkflow');
+		}
+
 		$this->WfWorkflowStep->contain('WfWorkflow', 'WorkflowAction', 'WorkflowAction.NextWorkflowStep', 'SecurityRole');
     	$data = $this->WfWorkflowStep->find('all', array(
 			'conditions' => array(
-				'WfWorkflowStep.wf_workflow_id' => $selectedWorkflow
+				'WfWorkflowStep.workflow_id' => $selectedWorkflow
 			),
 			'order' => array(
 				'WfWorkflow.code', 'WfWorkflow.name'

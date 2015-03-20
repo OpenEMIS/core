@@ -28,8 +28,17 @@ class InstitutionSiteStaff extends AppModel {
 			'supportedFormats' => array('csv')
 		),
 		'DatePicker' => array('start_date', 'end_date'),
-		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
+		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year'),
+		'HighChart' => array(
+			'number_of_staff' => array(
+				'_function' => 'getNumberOfStaff',
+				'chart' => array('type' => 'column', 'borderWidth' => 1),
+				'xAxis' => array('title' => array('text' => 'Position Type')),
+				'yAxis' => array('title' => array('text' => 'Total'))
+			)
+		)
 	);
+
 	public $validate = array(
 		'search' => array(
 			'ruleRequired' => array(
@@ -964,4 +973,76 @@ class InstitutionSiteStaff extends AppModel {
 		return $this->reportMapping[$index]['fileName'];
 	}
 
+	public function getNumberOfStaff($params=array()) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
+		$_conditions = array();
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStaff.'.$key] = $value;
+		}
+
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
+
+		$staffsByPositionConditions = array('Staff.gender IS NOT NULL');
+		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+		$staffsByPositionConditions['OR'] = array(
+			'OR' => array(
+				array(
+					'InstitutionSiteStaff.end_year IS NOT NULL',
+					'InstitutionSiteStaff.start_year <= "' . $currentYear . '"',
+					'InstitutionSiteStaff.end_year >= "' . $currentYear . '"'
+				)
+			),
+			array(
+				'InstitutionSiteStaff.end_year IS NULL',
+				'InstitutionSiteStaff.start_year <= "' . $currentYear . '"'
+			)
+		);
+		$staffByPositions = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSitePosition.type', 'Staff.gender', 'COUNT(InstitutionSiteStaff.id) AS total'
+			),
+			'conditions' => $staffsByPositionConditions,
+			'group' => array(
+				'InstitutionSitePosition.type', 'Staff.gender'
+			),
+			'order' => array(
+				'InstitutionSitePosition.type'
+			)
+		));
+
+		$positionTypes = array(
+			0 => __('Non-Teaching'),
+			1 => __('Teaching')
+		);
+		$dataSet = array(
+			'M' => array('name' => __('Male'), 'data' => array()),
+			'F' => array('name' => __('Female'), 'data' => array())
+		);
+		foreach ($dataSet as $key => $obj) {
+			foreach ($positionTypes as $id => $name) {
+				$dataSet[$key]['data'][$id] = 0;
+			}
+		}
+		foreach ($staffByPositions as $key => $staffByPosition) {
+			$positionType = $staffByPosition['InstitutionSitePosition']['type'];
+			$staffGender = $staffByPosition['Staff']['gender'];
+			$StaffTotal = $staffByPosition[0]['total'];
+
+			if (!array_key_exists($positionType, $dataSet['M']['data'])) {
+				$dataSet['M']['data'][$positionType] = 0;
+			}
+			if (!array_key_exists($positionType, $dataSet['F']['data'])) {
+				$dataSet['F']['data'][$positionType] = 0;
+			}
+			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($positionTypes);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
+	}
 }

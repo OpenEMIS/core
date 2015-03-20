@@ -14,18 +14,26 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class WorkflowAction extends WorkflowsAppModel {
+class WorkflowTransition extends WorkflowsAppModel {
 	public $tablePrefix = 'wf_';
-	public $useTable = 'workflow_actions';
+	public $useTable = 'workflow_transitions';
 
 	public $belongsTo = array(
+        'PrevWorkflowStep' => array(
+            'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'prev_workflow_step_id'
+        ),
 		'WfWorkflowStep' => array(
             'className' => 'Workflows.WfWorkflowStep',
             'foreignKey' => 'workflow_step_id'
         ),
-        'NextWorkflowStep' => array(
-            'className' => 'Workflows.WfWorkflowStep',
-            'foreignKey' => 'next_workflow_step_id'
+        'WorkflowAction' => array(
+            'className' => 'Workflows.WorkflowAction',
+            'foreignKey' => 'workflow_action_id'
+        ),
+        'WorkflowRecord' => array(
+            'className' => 'Workflows.WorkflowRecord',
+            'foreignKey' => 'workflow_record_id'
         ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
