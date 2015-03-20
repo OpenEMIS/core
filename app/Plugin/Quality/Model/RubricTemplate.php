@@ -17,6 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class RubricTemplate extends QualityAppModel {
+	private $weightingType = array(
+		1 => array('id' => 1, 'name' => 'Points'),
+		2 => array('id' => 2, 'name' => 'Percentage')
+	);
+
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -55,8 +60,34 @@ class RubricTemplate extends QualityAppModel {
 		)
 	);
 
+    public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			),
+			'unique' => array(
+	            'rule' => array('checkUnique', array('name'), false),
+	            'message' => 'This name is already exists in the system'
+	        )
+		),
+		'pass_mark' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a pass mark'
+			)
+		)
+	);
+
 	public function beforeAction() {
-		$this->Navigation->addCrumb('Rubrics Templates');
+		$this->Navigation->addCrumb('Templates');
+
+		$weightingTypeOptions = array();
+		foreach ($this->weightingType as $key => $weightingType) {
+			$weightingTypeOptions[$weightingType['id']] = __($weightingType['name']);
+		}
 
 		$this->fields['security_roles'] = array(
 			'type' => 'chosen_select',
@@ -74,6 +105,9 @@ class RubricTemplate extends QualityAppModel {
 		$this->ControllerAction->setFieldOrder('grades', 6);
 
 		if ($this->action == 'view') {
+			$this->fields['weighting_type']['dataModel'] = 'WeightingType';
+			$this->fields['weighting_type']['dataField'] = 'name';
+
 			$this->fields['security_roles']['dataModel'] = 'SecurityRole';
 			$this->fields['security_roles']['dataField'] = 'name';
 
@@ -84,7 +118,6 @@ class RubricTemplate extends QualityAppModel {
 			));
 			$this->controller->set('educationGrades', $educationGrades);
 		} else if($this->action == 'add' || $this->action == 'edit') {
-			$weightingTypeOptions = array(1 => __('Points'), 2 => __('Percentage'));
 			$this->fields['weighting_type']['type'] = 'select';
 			$this->fields['weighting_type']['options'] = $weightingTypeOptions;
 
@@ -123,14 +156,21 @@ class RubricTemplate extends QualityAppModel {
 
 					$this->ControllerAction->autoProcess = true;
 				}
-			} else {
-
 			}
 
 			$this->controller->set('educationGradeOptions', $educationGradeOptions);
 		}
 
-		$this->controller->set('contentHeader', __('Rubrics Templates'));
+		$this->controller->set('contentHeader', __('Templates'));
+	}
+
+	public function afterAction() {
+		if ($this->action == 'view') {
+			$data = $this->controller->viewVars['data'];
+			$weightingTypeId = $data['RubricTemplate']['weighting_type'];
+			$data['WeightingType'] = $this->weightingType[$weightingTypeId];
+			$this->controller->set('data', $data);
+		}
 	}
 
 	public function index() {

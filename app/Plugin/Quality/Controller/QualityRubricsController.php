@@ -18,7 +18,8 @@ class QualityRubricsController extends QualityAppController {
 	public $uses = array(
 		'Quality.RubricTemplate',
 		'Quality.RubricSection',
-		'Quality.RubricCriteria'
+		'Quality.RubricCriteria',
+		'Quality.RubricTemplateOption'
 	);
 
 	public $components = array(

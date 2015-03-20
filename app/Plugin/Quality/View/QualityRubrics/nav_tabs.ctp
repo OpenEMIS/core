@@ -11,6 +11,10 @@ $options = array(
 	'RubricCriteria' => array(
 		'url' => array('controller' => 'QualityRubrics', 'action' => 'RubricCriteria'),
 		'text' => __('Criterias')
+	),
+	'RubricTemplateOption' => array(
+		'url' => array('controller' => 'QualityRubrics', 'action' => 'RubricTemplateOption'),
+		'text' => __('Options')
 	)
 );
 

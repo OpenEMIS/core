@@ -38,8 +38,8 @@ class RubricCriteria extends QualityAppModel {
     );
 
 	public function beforeAction() {
-		$this->Navigation->addCrumb('Rubrics Criterias');
+		$this->Navigation->addCrumb('Criterias');
 
-		$this->controller->set('contentHeader', __('Rubrics Criterias'));
+		$this->controller->set('contentHeader', __('Criterias'));
 	}
 }

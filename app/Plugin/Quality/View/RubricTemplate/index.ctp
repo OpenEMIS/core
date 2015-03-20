@@ -7,7 +7,7 @@ if ($_add) {
 }
 $this->end();
 
-$this->start('contentBody');//pr($data);
+$this->start('contentBody');
 echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
 ?>
 
