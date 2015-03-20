@@ -58,7 +58,8 @@ DROP TABLE IF EXISTS `rubric_template_grades`;
 CREATE TABLE IF NOT EXISTS `rubric_template_grades` (
 `id` int(11) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
-  `rubrics_template_id` int(11) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `rubric_template_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -67,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `rubric_template_grades` (
 
 
 ALTER TABLE `rubric_template_grades`
- ADD PRIMARY KEY (`id`), ADD KEY `education_grade_id` (`education_grade_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
 
 
 ALTER TABLE `rubric_template_grades`
@@ -112,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `rubric_template_roles` (
 
 
 ALTER TABLE `rubric_template_roles`
- ADD PRIMARY KEY (`id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `security_role_id` (`security_role_id`);
 
 
 ALTER TABLE `rubric_template_roles`
@@ -185,7 +186,7 @@ CREATE TABLE IF NOT EXISTS `rubric_criteria_options` (
 
 
 ALTER TABLE `rubric_criteria_options`
- ADD PRIMARY KEY (`id`), ADD KEY `rubrics_template_column_info_id` (`rubric_template_option_id`), ADD KEY `rubric_template_item_id` (`rubric_criteria_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_option_id` (`rubric_template_option_id`), ADD KEY `rubric_criteria_id` (`rubric_criteria_id`);
 
 
 ALTER TABLE `rubric_criteria_options`
@@ -211,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `quality_statuses` (
 
 
 ALTER TABLE `quality_statuses`
- ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
 
 
 ALTER TABLE `quality_statuses`
