@@ -16,12 +16,12 @@
 			$baseUrl = $baseUrl . '/template:' . $selectedRubricTemplate;
 		}
 
-		if(!empty($groupOptions)) {
-			echo $this->Form->input($Custom_Group.'_id', array(
+		if(!empty($rubricSectionOptions)) {
+			echo $this->Form->input('rubric_section_id', array(
 				'class' => 'form-control',
 				'label' => false,
-				'options' => $groupOptions,
-				'default' => 'group:' . $selectedGroup,
+				'options' => $rubricSectionOptions,
+				'default' => 'section:' . $selectedRubricSection,
 				'div' => 'col-md-3',
 				'url' => $baseUrl,
 				'onchange' => 'jsForm.change(this)'

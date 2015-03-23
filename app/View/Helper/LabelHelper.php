@@ -605,6 +605,11 @@ class LabelHelper extends AppHelper {
 		),
 		'RubricSection' => array(
 			'rubric_template_id' => 'Template'
+		),
+		'RubricCriteria' => array(
+			'rubric_section_id' => 'Section',
+			'type' => 'Type',
+			'criterias' => 'Options'
 		)
 	);
 	

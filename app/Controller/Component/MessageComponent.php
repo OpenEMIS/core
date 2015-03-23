@@ -181,6 +181,12 @@ class MessageComponent extends Component {
 				'success' => array('type' => 'ok', 'msg' => 'Survey record has been rejected successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'Survey record is not rejected due to errors encountered.')
 			)
+		),
+		'RubricTemplate' => array(
+			'noTemplate' => array('type' => 'warn', 'msg' => 'There are no templates.')
+		),
+		'RubricSection' => array(
+			'noSection' => array('type' => 'warn', 'msg' => 'There are no sections.')
 		)
 	);
 	

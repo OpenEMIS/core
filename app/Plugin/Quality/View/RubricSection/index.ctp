@@ -2,8 +2,10 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-if ($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
+if (!empty($selectedRubricTemplate)) {
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', 'template' => $selectedRubricTemplate), array('class' => 'divider'));
+	}
 }
 $this->end();
 
@@ -21,12 +23,14 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 			</tr>
 		</thead>
 		<tbody>
-			<?php foreach ($data as $obj) : ?>
-				<tr>
-					<td><?php echo $this->Html->link($obj['RubricSection']['name'], array('action' => $model, 'view', $obj['RubricSection']['id'])); ?></td>
-					<td><?php echo $obj['RubricTemplate']['name']; ?></td>
-				</tr>
-			<?php endforeach ?>
+			<?php if (!empty($data)) : ?>
+				<?php foreach ($data as $obj) : ?>
+					<tr>
+						<td><?php echo $this->Html->link($obj['RubricSection']['name'], array('action' => $model, 'view', $obj['RubricSection']['id'])); ?></td>
+						<td><?php echo $obj['RubricTemplate']['name']; ?></td>
+					</tr>
+				<?php endforeach ?>
+			<?php endif ?>
 		</tbody>
 	</table>
 </div>
