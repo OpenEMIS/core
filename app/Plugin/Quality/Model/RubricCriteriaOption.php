@@ -18,6 +18,10 @@ App::uses('AppModel', 'Model');
 
 class RubricCriteriaOption extends QualityAppModel {
 	public $belongsTo = array(
+		'RubricTemplateOption' => array(
+            'className' => 'Quality.RubricTemplateOption',
+            'foreignKey' => 'rubric_template_option_id'
+        ),
 		'RubricCriteria' => array(
             'className' => 'Quality.RubricCriteria',
             'foreignKey' => 'rubric_criteria_id'
@@ -31,6 +35,16 @@ class RubricCriteriaOption extends QualityAppModel {
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
 			'foreignKey' => 'created_user_id'
+		)
+	);
+
+    public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a name'
+			)
 		)
 	);
 }

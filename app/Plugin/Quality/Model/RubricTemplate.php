@@ -152,8 +152,28 @@ class RubricTemplate extends QualityAppModel {
 						}
 					}
 
-					$this->request->data = $data;
+					if ($this->action == 'add') {
+						$data['RubricTemplateOption'][0] = array(
+							'name' => 'Good',
+							'weighting' => 3,
+							'color' => '00ff00',
+							'order' => 1
+						);
+						$data['RubricTemplateOption'][1] = array(
+							'name' => 'Normal',
+							'weighting' => 2,
+							'color' => '000ff0',
+							'order' => 2
+						);
+						$data['RubricTemplateOption'][2] = array(
+							'name' => 'Bad',
+							'weighting' => 1,
+							'color' => 'ff0000',
+							'order' => 3
+						);
+					}
 
+					$this->request->data = $data;
 					$this->ControllerAction->autoProcess = true;
 				}
 			}
