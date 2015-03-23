@@ -93,16 +93,20 @@ class RubricSection extends QualityAppModel {
 			$rubricTemplateOptions['template:' . $key] = $rubricTemplate;
 		}
 
-		$this->contain('RubricTemplate');
-		$data = $this->find('all', array(
-			'conditions' => array(
-				'RubricSection.rubric_template_id' => $selectedRubricTemplate
-			),
-			'order' => array(
-				'RubricSection.order', 'RubricSection.name'
-			)
-		));
+		if (empty($rubricTemplateOptions)) {
+			$this->controller->Message->alert('RubricTemplate.noTemplate');
+		} else {
+			$this->contain('RubricTemplate');
+			$data = $this->find('all', array(
+				'conditions' => array(
+					'RubricSection.rubric_template_id' => $selectedRubricTemplate
+				),
+				'order' => array(
+					'RubricSection.order', 'RubricSection.name'
+				)
+			));
 
-		$this->controller->set(compact('data', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+			$this->controller->set(compact('data', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+		}
 	}
 }
