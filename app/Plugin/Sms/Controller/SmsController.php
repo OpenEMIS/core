@@ -212,18 +212,22 @@ class SmsController extends SmsAppController {
         $this->Navigation->addCrumb(__('Add Question'));
         if($this->request->is('post')) { // save
            $data = $this->data['SmsMessage'];
+		   $originalOrder = $data['original_order'];
+		   unset($data['original_order']);
+		   pr($data);
             $this->SmsMessage->create();
             if($this->SmsMessage->save($data)){
-                if($data['original_order'] != $data['order']){
-                    $this->SmsMessage->updateAll(
-                        array('SmsMessage.order' => $data['original_order']),
-                        array('SmsMessage.order' => $data['order'], array('NOT'=>array('SmsMessage.id'=>array($this->SmsMessage->getLastInsertId()))))
-                    );
-                }
-                
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'messages'));
-            }
+//                if($data['original_order'] != $data['order']){
+//                    $this->SmsMessage->updateAll(
+//                        array('SmsMessage.order' => $data['original_order']),
+//                        array('SmsMessage.order' => $data['order'], array('NOT'=>array('SmsMessage.id'=>array($this->SmsMessage->getLastInsertId()))))
+//                    );
+//                }
+                //$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('controller' => 'Sms', 'action' => 'messages'));
+			}
+			
+			$this->redirect(array('controller' => 'Sms', 'action' => 'messages'));
         }
 
         $orders = $this->SmsMessage->find('count');
