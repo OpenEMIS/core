@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffLeave extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('date_from', 'date_to'));
+	public $actsAs = array('DatePicker' => array('date_from', 'date_to'));
 	public $belongsTo = array(
 		'Staff.StaffLeaveType',
 		'Staff.LeaveStatus',
@@ -38,6 +38,13 @@ class StaffLeave extends StaffAppModel {
 			'ruleNoOverlap' => array(
 				'rule' => array('checkOverlapDates'),
 				'message' => 'Leave have been selected for this date. Please choose a different date'
+			)
+		),
+		'number_of_days' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the number of days'
 			)
 		)
 	);
@@ -62,36 +69,52 @@ class StaffLeave extends StaffAppModel {
 		$check = $this->find('all', array('recursive' => -1, 'conditions' => $conditions));
 		return empty($check);
 	}
-	
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
-		$controller->FileUploader->fileVar = 'files';
-		$controller->FileUploader->fileModel = 'StaffLeaveAttachment';
-		$controller->FileUploader->allowEmptyUpload = true;
-		$controller->FileUploader->additionalFileType();
+
+	public function beforeAction() {
+		$this->Navigation->addCrumb('Leave');
+
+		$this->fields['staff_leave_type_id']['hyperlink'] = true;
+
+		$this->ControllerAction->setFieldOrder('staff_leave_type_id', 1);
+		$this->ControllerAction->setFieldOrder('leave_status_id', 2);
+		$this->ControllerAction->setFieldOrder('date_from', 3);
+		$this->ControllerAction->setFieldOrder('date_to', 4);
+		$this->ControllerAction->setFieldOrder('number_of_days', 5);
+		$this->ControllerAction->setFieldOrder('comments', 6);
+
+		if ($this->action == 'index' || $this->action == 'view') {
+			$this->fields['staff_leave_type_id']['dataModel'] = 'StaffLeaveType';
+			$this->fields['staff_leave_type_id']['dataField'] = 'name';
+			$this->fields['leave_status_id']['dataModel'] = 'LeaveStatus';
+			$this->fields['leave_status_id']['dataField'] = 'name';
+			$this->fields['staff_id']['visible'] = false;
+		} else if($this->action == 'add' || $this->action == 'edit') {
+			$this->fields['staff_leave_type_id']['type'] = 'select';
+			$staffLeaveTypeOptions = $this->StaffLeaveType->getListOnly();
+			$this->fields['staff_leave_type_id']['options'] = $staffLeaveTypeOptions;
+
+			$this->fields['leave_status_id']['type'] = 'select';
+			$leaveStatusOptions = $this->LeaveStatus->getListOnly();
+			$this->fields['leave_status_id']['options'] = $leaveStatusOptions;
+
+			$staffId = $this->controller->Session->read('Staff.id');
+			$this->fields['staff_id']['type'] = 'hidden';
+			$this->fields['staff_id']['value'] = $staffId;
+		}
+
+		$this->controller->set('model', $this->alias);
+		$this->controller->FileUploader->fileVar = 'files';
+		$this->controller->FileUploader->fileModel = 'StaffLeaveAttachment';
+		$this->controller->FileUploader->allowEmptyUpload = true;
+		$this->controller->FileUploader->additionalFileType();
 	}
-	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'StaffLeaveType', 'labelKey' => 'general.type'),
-				array('field' => 'name', 'model' => 'LeaveStatus', 'labelKey' => 'general.status'),
-				array('field' => 'date_from'),
-				array('field' => 'date_to'),
-				array('field' => 'comments'),
-				array('field' => 'number_of_days'),
-				array('field' => 'file_name', 'model' => 'StaffLeaveAttachment', 'labelKey' => 'general.attachments', 'multi_records' => true, 'type' => 'files', 'url' => array('action' => 'leavesAttachmentsDownload')),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
+
+	public function index() {
+		$staffId = $this->controller->Session->read('Staff.id');
+		$data = $this->findAllByStaffId($staffId, array('StaffLeave.*', 'StaffLeaveType.name', 'LeaveStatus.name'), array('StaffLeave.date_from'));
+		$this->controller->set(compact('data'));
 	}
-	
+
 	public function leaves($controller, $params) {
 		$controller->Navigation->addCrumb('Leaves');
 		$header = __('Leaves');
