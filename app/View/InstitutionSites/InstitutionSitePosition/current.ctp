@@ -33,9 +33,7 @@
 
 			<tfoot>
 				<tr>
-					<td class="spacer"></td>
-					<td class="spacer"></td>
-					<td><?php echo $this->Label->get('InstitutionSiteStudent.total_fte'); ?></td>
+					<td colspan="3" class="side-label"><?php echo $this->Label->get('InstitutionSiteStudent.total_fte'); ?></td>
 					<td><?php echo $totalCurrentFTE;?></td>
 				</tr>
 			</tfoot>

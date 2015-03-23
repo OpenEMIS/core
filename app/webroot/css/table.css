@@ -10,7 +10,7 @@
 .table thead th { font-size: 11px; }
 .table td { font-size: 11px; }
 .table a { color: #007CBE; }
-.table tfoot td.spacer { border-right-color: transparent; }
+.table tfoot td.side-label { text-align: right; }
 .action { margin-left: 5px; }
 .cell-number { text-align: right; }
 .cell-visible { width: 70px; text-align: center; }
