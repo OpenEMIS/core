@@ -182,7 +182,8 @@ class InstitutionSiteClass extends AppModel {
 				'fields' => array('EducationSubject.id', 'EducationSubject.name'),
 				'contain' => array('EducationSubject'),
 				'conditions' => array(
-					'EducationGradeSubject.education_grade_id' => array_keys($gradeData)
+					'EducationGradeSubject.education_grade_id' => array_keys($gradeData),
+					'EducationGradeSubject.visible' => 1
 				),
 				'order' => array('EducationSubject.order')
 			));
