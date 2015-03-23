@@ -27,7 +27,7 @@ class AccessControlComponent extends Component {
 	private $userId;
 	
 	public $ignoreList = array(
-		'HOME' => array('index', 'support', 'systemInfo', 'license', 'partners'),
+		'HOME' => array('index', 'support', 'systemInfo', 'license', 'partners', 'dashboard'),
 		'PREFERENCES' => array('index', 'account', 'accountEdit', 'password'),
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
@@ -59,6 +59,7 @@ class AccessControlComponent extends Component {
 		if(!$controller->request->is('ajax')) {
 			$this->checkAccess();
 		}
+        $this->apply();
 	}
 	
 	//called after Controller::beforeFilter()
@@ -66,7 +67,6 @@ class AccessControlComponent extends Component {
 	
 	//called after Controller::beforeRender()
 	public function beforeRender(Controller $controller) {
-		$this->apply();
 		$controller->set('_accessControl', $this);
 	}
 	
@@ -93,7 +93,7 @@ class AccessControlComponent extends Component {
 	public function getAction() {
 		$action = $this->controller->action;
 		$module = null;
-		if (in_array($action, $this->controller->modules)) {
+		if (in_array($action, $this->controller->modules) || in_array($action, $this->controller->uses)) {
 			$module = $action;
 		}/* else if (array_key_exists($action, $this->controller->modules)) {
 			$module = $action;
@@ -200,7 +200,7 @@ class AccessControlComponent extends Component {
 		//$action = explode('.', $action);
 		//$action = count($action) == 1 ? $action[0] : $action[1];
 		
-		$permissions = $this->Session->read('permissions');
+        $permissions = $this->Session->read('permissions');
 		$apply = $permissions['apply'];
 		
 		if($this->Auth->user('super_admin')==1) {
@@ -363,7 +363,7 @@ class AccessControlComponent extends Component {
 		$controller = $this->controller->params['controller'];
 		$action = $this->getAction();// $this->controller->action;
 				
-		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
+		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view' || $action == 'dashboard')){
 			return;
 		}
 		

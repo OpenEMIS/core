@@ -15,12 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WfWorkflowStep extends WorkflowsAppModel {
-	public $useTable = 'wf_workflow_steps';
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflow_steps';
 
 	public $belongsTo = array(
 		'WfWorkflow' => array(
             'className' => 'Workflows.WfWorkflow',
-            'foreignKey' => 'wf_workflow_id'
+            'foreignKey' => 'workflow_id'
         ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -37,6 +38,12 @@ class WfWorkflowStep extends WorkflowsAppModel {
 	public $hasMany = array(
         'WorkflowAction' => array(
             'className' => 'Workflows.WorkflowAction',
+            'foreignKey' => 'workflow_step_id',
+			'dependent' => true
+        ),
+		'WorkflowRecord' => array(
+            'className' => 'Workflows.WorkflowRecord',
+            'foreignKey' => 'workflow_step_id',
 			'dependent' => true
         )
     );
@@ -45,6 +52,7 @@ class WfWorkflowStep extends WorkflowsAppModel {
 		'SecurityRole' => array(
 			'className' => 'SecurityRole',
 			'joinTable' => 'wf_workflow_step_roles',
+			'foreignKey' => 'workflow_step_id',
 			'associationForeignKey' => 'security_role_id',
 			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
 			'order' => array('SecurityRole.order')
@@ -59,7 +67,7 @@ class WfWorkflowStep extends WorkflowsAppModel {
 				'message' => 'Please enter a name'
 			),
 			'unique' => array(
-	            'rule' => array('checkUnique', array('name', 'wf_workflow_id'), false),
+	            'rule' => array('checkUnique', array('name', 'workflow_id'), false),
 	            'message' => 'This name is already exists in the system'
 	        )
 		)

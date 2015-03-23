@@ -48,6 +48,14 @@ foreach ($data as $key => $obj) {
 			} else if (isset($obj[$_fieldModel][$_field])) {
 				$value = $obj[$_fieldModel][$_field];
 			}
+			
+			if (array_key_exists('displayFormat', $attr)) {
+				switch ($attr['displayFormat']) {
+					case 'date':
+						$value = $this->Utility->formatDate($value, null, false);
+						break;
+				}
+			}
 
 			if ($attr['hyperlink']) {
 				$actionParams = $_triggerFrom == 'Controller' ? array('action' => 'view') : array('action' => $model, 'view');

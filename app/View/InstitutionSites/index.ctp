@@ -34,7 +34,7 @@ $model = 'InstitutionSite';
 		?>
 			<tr>
 				<td><?php echo $code; ?></td>
-				<td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
+				<td><?php echo $this->Html->link($name, array('action' => 'dashboard', $id), array('escape' => false)); ?></td>
                 <td><?php echo $obj['Area']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSiteType']['name']; ?></td>
 			</tr>

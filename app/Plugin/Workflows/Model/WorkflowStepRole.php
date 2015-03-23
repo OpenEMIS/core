@@ -15,11 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WorkflowStepRole extends WorkflowsAppModel {
-	public $useTable = 'wf_workflow_step_roles';
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflow_step_roles';
 
 	public $belongsTo = array(
 		'WfWorkflowStep' => array(
-            'className' => 'Workflows.WfWorkflowStep'
+            'className' => 'Workflows.WfWorkflowStep',
+            'foreignKey' => 'workflow_step_id'
         ),
 		'SecurityRole' => array(
 			'className' => 'SecurityRole',

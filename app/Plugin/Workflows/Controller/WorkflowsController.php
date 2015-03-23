@@ -16,7 +16,8 @@ have received a copy of the GNU General Public License along with this program. 
 
 class WorkflowsController extends WorkflowsAppController {
 	public $uses = array(
-		'Workflows.WfWorkflow'
+		'Workflows.WfWorkflow',
+		'Workflows.WorkflowModel'
 	);
 
 	public $components = array(
@@ -30,5 +31,47 @@ class WorkflowsController extends WorkflowsAppController {
 		$this->Navigation->addCrumb('Workflows');
 		$this->set('contentHeader', 'Workflows');
 		$this->WfWorkflow->fields['code']['hyperlink'] = true;
+
+		if ($this->action == 'index' || $this->action == 'view') {
+			$this->WfWorkflow->fields['workflow_model_id']['dataModel'] = 'WorkflowModel';
+			$this->WfWorkflow->fields['workflow_model_id']['dataField'] = 'name';
+		} else if($this->action == 'add' || $this->action == 'edit') {
+			$this->WfWorkflow->fields['workflow_model_id']['type'] = 'select';
+
+			$selectedWorkflowId = null;
+			if ($this->request->is(array('post', 'put'))) {
+				$data = $this->request->data;
+				$selectedWorkflowId = $data['WfWorkflow']['id'];
+			} else {
+				$pass = $this->request->params['pass'];
+				$selectedWorkflowId = isset($pass[0]) ? $pass[0] : 0;
+			}
+
+			$workflowConditions = array();
+			if ($this->action == 'edit') {
+				$workflowConditions['NOT'] = array('WfWorkflow.id' => $selectedWorkflowId);
+			}
+			$workflowIds = $this->WfWorkflow->find('list', array(
+				'fields' => array(
+					'WfWorkflow.workflow_model_id', 'WfWorkflow.workflow_model_id'
+				),
+				'conditions' => $workflowConditions
+			));
+
+			$workflowModelOptions = $this->WorkflowModel->find('list', array(
+				'fields' => array(
+					'WorkflowModel.id', 'WorkflowModel.name'
+				),
+				'conditions' => array(
+					'NOT' => array('WorkflowModel.id' => $workflowIds)
+				),
+				'order' => array(
+					'WorkflowModel.name'
+				)
+			));
+
+			$selectedWorkflowModelId = key($workflowModelOptions);
+			$this->WfWorkflow->fields['workflow_model_id']['options'] = $workflowModelOptions;
+		}
 	}
 }

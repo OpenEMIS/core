@@ -22,7 +22,15 @@ class InstitutionSiteStudent extends AppModel {
 		'Search',
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
-		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year')
+		'Year' => array('start_date' => 'start_year', 'end_date' => 'end_year'),
+		'HighChart' => array(
+			'number_of_students_by_year' => array(
+				'_function' => 'getNumberOfStudentsByYear',
+				'chart' => array('type' => 'column', 'borderWidth' => 1),
+				'xAxis' => array('title' => array('text' => 'Years')),
+				'yAxis' => array('title' => array('text' => 'Total'))
+			)
+		)
 	);
 	
 	public $belongsTo = array(
@@ -614,5 +622,95 @@ class InstitutionSiteStudent extends AppModel {
 		}
 		return $data;
 	}
-}
 
+	public function getNumberOfStudentsByYear($params=array()) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
+		$_conditions = array();
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteStudent.'.$key] = $value;
+		}
+
+		$this->formatResult = true;
+		$periodConditions = $_conditions;
+		$periodResult = $this->find('first', array(
+			'fields' => array(
+				'MIN(InstitutionSiteStudent.start_year) as min_year', 'MAX(InstitutionSiteStudent.end_year) as max_year'
+			),
+			'conditions' => $periodConditions
+		));
+		$minYear = $periodResult['min_year'];
+		$maxYear = $periodResult['max_year'];
+
+		$years = array();
+		$dataSet = array(
+			'Male' => array('name' => __('Male'), 'data' => array()),
+			'Female' => array('name' => __('Female'), 'data' => array())
+		);
+
+		$studentsByYearConditions = array('Gender.name IS NOT NULL');
+		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
+
+		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
+			$years[$currentYear] = $currentYear;
+			$studentsByYearConditions['OR'] = array(
+				array(
+					'InstitutionSiteStudent.end_year IS NOT NULL',
+					'InstitutionSiteStudent.start_year <= "' . $currentYear . '"',
+					'InstitutionSiteStudent.end_year >= "' . $currentYear . '"'
+				)
+			);
+
+			
+			$studentsByYear = $this->find('all', array(
+				'contain' => array(),
+				'fields' => array(
+					'SecurityUser.first_name', 'Gender.name', 'COUNT(InstitutionSiteStudent.id) AS total'
+				),
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array(
+							'InstitutionSiteStudent.student_id = Student.id'
+						)
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array(
+							'Student.security_user_id = SecurityUser.id'
+						)
+					),
+					array(
+						'table' => 'genders',
+						'alias' => 'Gender',
+						'conditions' => array(
+							'SecurityUser.gender_id = Gender.id'
+						)
+					)
+				),
+				'conditions' => $studentsByYearConditions,
+				'group' => array(
+					'Gender.name'
+				)
+			));
+
+			if (!array_key_exists($currentYear, $dataSet['Male']['data'])) {
+				$dataSet['Male']['data'][$currentYear] = 0;
+			}
+			if (!array_key_exists($currentYear, $dataSet['Female']['data'])) {
+				$dataSet['Female']['data'][$currentYear] = 0;
+			}
+			foreach ($studentsByYear as $key => $studentByYear) {
+				$studentGender = isset($studentByYear['Student']['gender']) ? $studentByYear['Student']['gender'] : null;
+				$studentTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
+
+				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
+			}
+		}
+
+		$params['dataSet'] = $dataSet;
+
+		return $params;
+	}
+}
