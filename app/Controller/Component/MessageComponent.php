@@ -186,6 +186,9 @@ class MessageComponent extends Component {
 				'success' => array('type' => 'ok', 'msg' => 'Survey record has been rejected successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'Survey record is not rejected due to errors encountered.')
 			)
+		),
+		'WorkflowStep' => array(
+			'noWorkflow' => array('type' => 'warn', 'msg' => 'There are no workflows')
 		)
 	);
 	

@@ -14,15 +14,15 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+class WorkflowModel extends WorkflowsAppModel {
+	public $tablePrefix = 'wf_';
+	public $useTable = 'workflow_models';
 
-class CensusSanitation extends AppModel {
-    public $belongsTo = array(
-		'InfrastructureSanitation', 
-		'InfrastructureMaterial',
-		'SanitationGender' => array(
-			'className' => 'SanitationGender',
-			'foreignKey' => 'gender_id'
-		)
-	);
+	public $hasMany = array(
+        'WfWorkflow' => array(
+            'className' => 'Workflows.WfWorkflow',
+            'foreignKey' => 'workflow_model_id',
+			'dependent' => true
+        )
+    );
 }

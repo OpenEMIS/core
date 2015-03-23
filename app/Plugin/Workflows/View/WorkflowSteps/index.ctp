@@ -3,9 +3,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model.title")));
 
 $this->start('contentActions');
-if ($_add) {
-	$actionParams = $_triggerFrom == 'Controller' ? array('action' => 'add') : array('action' => $model, 'add');
-    echo $this->Html->link($this->Label->get('general.add'), $actionParams, array('class' => 'divider'));
+if(!empty($workflowOptions)) {
+	if ($_add) {
+	    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'workflow' => $selectedWorkflow), array('class' => 'divider'));
+	}
 }
 $this->end();
 
@@ -13,10 +14,9 @@ $this->start('contentBody');
 ?>
 <div class="row page-controls">
 	<?php
-		$baseUrl = $this->params['controller'] . '/' . $this->request->action;
-
-		if(isset($workflowOptions)) {
-			echo $this->Form->input('wf_workflow_id', array(
+		if(!empty($workflowOptions)) {
+			$baseUrl = $this->params['controller'] . '/' . $this->request->action;
+			echo $this->Form->input('workflow_id', array(
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $workflowOptions,
@@ -36,13 +36,13 @@ $this->start('contentBody');
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('WorkflowStep.security_roles'); ?></th>
 				<th><?php echo $this->Label->get('WorkflowStep.actions'); ?></th>
-				<th><?php echo $this->Label->get('WorkflowStep.wf_workflow_id'); ?></th>
+				<th><?php echo $this->Label->get('WorkflowStep.workflow_id'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['WfWorkflowStep']['name'], array('action' => 'view', $obj['WfWorkflowStep']['id'])); ?></td>
+					<td><?php echo $this->Html->link($obj['WfWorkflowStep']['name'], array('action' => 'view', $obj['WfWorkflowStep']['id'], 'workflow' => $selectedWorkflow)); ?></td>
 					<td>
 						<?php
 							$securityRoles = array();

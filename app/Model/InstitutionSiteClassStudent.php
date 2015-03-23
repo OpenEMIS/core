@@ -25,8 +25,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	public $belongsTo = array(
 		'Students.Student',
 		'InstitutionSiteClass',
-		'InstitutionSiteSection',
-		'EducationGrade'
+		'InstitutionSiteSection'
 	);
 	
 	public $_action = 'classesStudent';

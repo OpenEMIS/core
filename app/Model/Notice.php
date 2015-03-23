@@ -14,17 +14,31 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class WorkflowLogsController extends WorkflowsAppController {
-		public $components = array(
-		'ControllerAction' => array('model' => 'Workflows.WorkflowLog')
+class Notice extends Appmodel {
+	public $overrideNltobr = false;
+
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
 	);
 
-	public function beforeFilter() {
-		parent::beforeFilter();
-		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
-		$this->Navigation->addCrumb('Workflows', array('plugin' => 'Workflows', 'controller' => 'Workflows', 'action' => 'index'));
-		$this->Navigation->addCrumb('Logs');
-		$this->set('contentHeader', 'Workflow Logs');
+	public function afterFind($results, $primary=false) {
+		if (!$this->overrideNltobr) {
+			foreach ($results as $key => $value) {
+				if (array_key_exists('Notice', $value)) {
+					if (array_key_exists('message', $results[$key]['Notice'])) {
+						$results[$key]['Notice']['message'] = nl2br($results[$key]['Notice']['message']);
+					}
+				}
+			}
+			$this->overrideNltobr = false;
+		}
+		return $results;
 	}
 }

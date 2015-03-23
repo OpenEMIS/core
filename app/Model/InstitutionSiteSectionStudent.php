@@ -17,6 +17,17 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteSectionStudent extends AppModel {
+	public $actsAs = array(
+		'HighChart' => array(
+			'number_of_students_by_grade' => array(
+				'_function' => 'getNumberOfStudentsByGrade',
+				'chart' => array('type' => 'column', 'borderWidth' => 1),
+				'xAxis' => array('title' => array('text' => 'Education Grades')),
+				'yAxis' => array('title' => array('text' => 'Total'))
+			)
+		)
+	);
+
 	public $belongsTo = array(
 		'Students.Student',
 		'Students.StudentCategory',
@@ -409,6 +420,105 @@ class InstitutionSiteSectionStudent extends AppModel {
 		return $data;
 	}
 	
+	public function getNumberOfStudentsByGrade($params=array()) {
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
+		$_conditions = array();
+		foreach ($conditions as $key => $value) {
+			$_conditions['InstitutionSiteSection.'.$key] = $value;
+		}
+
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$currentYearId = $AcademicPeriod->getCurrent();
+		$currentYear = $AcademicPeriod->field('name', array('AcademicPeriod.id' => $currentYearId));
+
+		$studentsByGradeConditions = array(
+			'InstitutionSiteSectionStudent.status' => 1,
+			'InstitutionSiteSection.academic_period_id' => $currentYearId,
+			'EducationGrade.id IS NOT NULL',
+			'Gender.name IS NOT NULL'
+		);
+		$studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
+		$studentByGrades = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSiteSection.institution_site_id', 'EducationGrade.id', 'EducationGrade.name', 'Gender.name', 'COUNT(InstitutionSiteSectionStudent.id) AS total'
+			),
+			'contain' => array(),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'InstitutionSiteSectionStudent.education_grade_id = EducationGrade.id'
+					)
+				),
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array(
+						'InstitutionSiteSectionStudent.institution_site_section_id = InstitutionSiteSection.id'
+					)
+				),
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array(
+						'InstitutionSiteSectionStudent.student_id = Student.id'
+					)
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array(
+						'Student.security_user_id = SecurityUser.id'
+					)
+				),
+				array(
+					'table' => 'genders',
+					'alias' => 'Gender',
+					'conditions' => array(
+						'SecurityUser.gender_id = Gender.id'
+					)
+				)
+			),
+			'conditions' => $studentsByGradeConditions,
+			'group' => array(
+				'InstitutionSiteSection.institution_site_id', 'EducationGrade.id', 'Gender.name'
+			),
+			'order' => array(
+				'EducationGrade.order'
+			)
+		));
+
+
+		$grades = array();
+		$dataSet = array(
+			'M' => array('name' => __('Male'), 'data' => array()),
+			'F' => array('name' => __('Female'), 'data' => array())
+		);
+
+		foreach ($studentByGrades as $key => $studentByGrade) {
+			$gradeId = $studentByGrade['EducationGrade']['id'];
+			$gradeName = $studentByGrade['EducationGrade']['name'];
+			$gradeGender = $studentByGrade['Gender']['name'];
+			$gradeTotal = $studentByGrade[0]['total'];
+
+			$grades[$gradeId] = $gradeName;
+			if (!array_key_exists($gradeId, $dataSet['M']['data'])) {
+				$dataSet['M']['data'][$gradeId] = 0;
+			}
+			if (!array_key_exists($gradeId, $dataSet['F']['data'])) {
+				$dataSet['F']['data'][$gradeId] = 0;
+			}
+			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+		}
+
+		$params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
+		$params['options']['xAxis']['categories'] = array_values($grades);
+		$params['dataSet'] = $dataSet;
+
+		return $params;
+	}
+
 	public function autoInsertSectionStudent($data) {
 		$studentId = $data['student_id'];
 		$selectedGradeId = $data['education_grade_id'];
