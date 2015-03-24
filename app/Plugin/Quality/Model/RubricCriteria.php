@@ -121,6 +121,9 @@ class RubricCriteria extends QualityAppModel {
 				$this->request->data['RubricCriteria']['rubric_section_id'] = $selectedSection;
 				$this->request->data['RubricCriteria']['type'] = $selectedCriteriaType;
 			}
+		} else if ($this->action == 'reorder' || $this->action == 'moveOrder') {
+			$conditions = array('RubricCriteria.rubric_section_id' => $selectedSection);
+			$this->controller->set(compact('conditions'));
 		}
 
 		$contentHeader = __('Criterias');
