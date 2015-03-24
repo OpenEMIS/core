@@ -9,7 +9,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ($rubricCriteriaOptions as $obj) : ?>
+				<?php foreach ($criteriaOptions as $obj) : ?>
 				<tr>
 					<td><?php echo ($obj['RubricTemplateOption']['name']); ?></td>
 					<td><?php echo ($obj['RubricCriteriaOption']['name']); ?></td>
@@ -32,8 +32,8 @@
 					</tr>
 				</thead>
 				<tbody>
-					<?php if (!empty($rubricTemplateOptions)) : ?>
-						<?php foreach ($rubricTemplateOptions as $obj) : ?>
+					<?php if (!empty($templateOptions)) : ?>
+						<?php foreach ($templateOptions as $obj) : ?>
 							<tr>
 								<td>
 									<?php

@@ -2,10 +2,14 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-if (!empty($selectedRubricSection)) {
+if (!empty($selectedSection)) {
 	if ($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', 'template' => $selectedRubricTemplate, 'section' => $selectedRubricSection), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add', 'template' => $selectedTemplate, 'section' => $selectedSection), array('class' => 'divider'));
 	}
+	if ($_edit) {
+	    echo $this->Html->link($this->Label->get('general.reorder'), array('action' => $model, 'reorder', 'template' => $selectedTemplate, 'section' => $selectedSection), array('class' => 'divider'));
+	}
+	echo $this->Html->link($this->Label->get('general.preview'), array('action' => $model, 'preview', 'template' => $selectedTemplate, 'section' => $selectedSection), array('class' => 'divider'));
 }
 $this->end();
 
