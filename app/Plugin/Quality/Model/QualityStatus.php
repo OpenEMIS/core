@@ -24,6 +24,10 @@ class QualityStatus extends QualityAppModel {
             'className' => 'Quality.RubricTemplate',
             'foreignKey' => 'rubric_template_id'
         ),
+        'AcademicPeriod' => array(
+            'className' => 'AcademicPeriod',
+            'foreignKey' => 'academic_period_id'
+        ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -33,6 +37,23 @@ class QualityStatus extends QualityAppModel {
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
 			'foreignKey' => 'created_user_id'
+		)
+	);
+
+    public $validate = array(
+		'rubric_template_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a template'
+			)
+		),
+		'academic_period_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select an academic period'
+			)
 		)
 	);
 }
