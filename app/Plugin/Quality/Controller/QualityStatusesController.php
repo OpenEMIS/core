@@ -17,7 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class QualityStatusesController extends QualityAppController {
 	public $uses = array(
 		'Quality.QualityStatus',
-		'Quality.RubricTemplate'
+		'Quality.RubricTemplate',
+		'AcademicPeriod'
 	);
 
 	public $components = array(
@@ -31,14 +32,26 @@ class QualityStatusesController extends QualityAppController {
 		$this->Navigation->addCrumb('Quality', array('controller' => 'QualityStatuses', 'action' => 'index', 'plugin' => 'Quality'));
 		$this->Navigation->addCrumb('Status');
 		$this->set('contentHeader', 'Status');
+		$this->QualityStatus->fields['rubric_template_id']['hyperlink'] = true;
 
-		if ($this->action == 'view') {
-			$this->QualityStatus->fields['rubric_template_id']['dataModel'] = 'RubricsTemplate';
+		$this->QualityStatus->fields['status']['visible'] = false;
+		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
+		$this->ControllerAction->setFieldOrder('academic_period_id', 2);
+
+		if ($this->action == 'index' || $this->action == 'view') {
+			$this->QualityStatus->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
 			$this->QualityStatus->fields['rubric_template_id']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['academic_period_id']['dataModel'] = 'AcademicPeriod';
+			$this->QualityStatus->fields['academic_period_id']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
-			$rubricTemplateOptions = $this->RubricTemplate->find('list');
+			$templateOptions = $this->RubricTemplate->find('list');
 			$this->QualityStatus->fields['rubric_template_id']['type'] = 'select';
-			$this->QualityStatus->fields['rubric_template_id']['options'] = $rubricTemplateOptions;
+			$this->QualityStatus->fields['rubric_template_id']['options'] = $templateOptions;
+
+			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
+			$this->QualityStatus->fields['academic_period_id']['type'] = 'select';
+			$this->QualityStatus->fields['academic_period_id']['options'] = $academicPeriodOptions;
 		}
 	}
 }
