@@ -610,6 +610,10 @@ class LabelHelper extends AppHelper {
 			'rubric_section_id' => 'Section',
 			'type' => 'Type',
 			'criterias' => 'Options'
+		),
+		'QualityStatus' => array(
+			'rubric_template_id' => 'Template',
+			'academic_period_id' => 'Academic Period'
 		)
 	);
 	
