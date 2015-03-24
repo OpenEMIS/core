@@ -34,6 +34,13 @@ class RubricSection extends QualityAppModel {
 		)
 	);
 
+	public $hasMany = array(
+        'RubricCriteria' => array(
+            'className' => 'Quality.RubricCriteria',
+			'dependent' => true
+        )
+    );
+
     public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
@@ -105,7 +112,7 @@ class RubricSection extends QualityAppModel {
 					'RubricSection.rubric_template_id' => $selectedTemplate
 				),
 				'order' => array(
-					'RubricSection.order', 'RubricSection.name'
+					'RubricSection.order', 'RubricSection.id'
 				)
 			));
 

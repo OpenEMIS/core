@@ -123,7 +123,7 @@ class RubricTemplateOption extends QualityAppModel {
 					'RubricTemplateOption.rubric_template_id' => $selectedTemplate
 				),
 				'order' => array(
-					'RubricTemplateOption.order', 'RubricTemplateOption.name'
+					'RubricTemplateOption.order', 'RubricTemplateOption.id'
 				)
 			));
 

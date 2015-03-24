@@ -599,12 +599,12 @@ class LabelHelper extends AppHelper {
 			'select_grade' => 'Select Grade'
 		),
 		'RubricTemplateOption' => array(
-			'rubric_template_id' => 'Template',
+			'rubric_template_id' => 'Rubric Template',
 			'weighting' => 'Weighting',
 			'color' => 'Color'
 		),
 		'RubricSection' => array(
-			'rubric_template_id' => 'Template'
+			'rubric_template_id' => 'Rubric Template'
 		),
 		'RubricCriteria' => array(
 			'rubric_section_id' => 'Section',
@@ -612,7 +612,7 @@ class LabelHelper extends AppHelper {
 			'criterias' => 'Options'
 		),
 		'QualityStatus' => array(
-			'rubric_template_id' => 'Template',
+			'rubric_template_id' => 'Rubric Template',
 			'academic_period_id' => 'Academic Period'
 		)
 	);
