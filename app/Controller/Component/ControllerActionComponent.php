@@ -356,6 +356,7 @@ class ControllerActionComponent extends Component {
 
 		$data = $this->controller->request->data;
 		$conditions = isset($this->controller->viewVars['conditions']) ? $this->controller->viewVars['conditions'] : array();
+		$this->fixOrder($conditions);
 
 		$id = $data[$model->alias]['id'];
 		$idField = $model->alias.'.id';
@@ -364,8 +365,7 @@ class ControllerActionComponent extends Component {
 		$order = $model->field('order', array('id' => $id));
 		$idConditions = array_merge(array($idField => $id), $conditions);
 		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
-		
-		$this->fixOrder($conditions);
+
 		if($move === 'up') {
 			$model->updateAll(array($orderField => $order-1), $idConditions);
 			$updateConditions[$orderField] = $order-1;
