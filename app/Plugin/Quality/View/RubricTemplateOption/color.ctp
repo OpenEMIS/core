@@ -10,6 +10,7 @@
 	<div class="form-group">
 		<label class="col-md-3 control-label"><?php echo $this->Label->get('RubricTemplateOption.color');?></label>
 		<div class="col-md-6">
+			<input type="color" value="#ff0000" onchange="clickColor(0, -1, -1, 5)" class="form-control" id="html5colorpicker">
 			<div id="colorSelector">
 				<div style="background-color:#<?php echo $selectedColor; ?>"></div>
 			</div>
