@@ -66,10 +66,10 @@ class RubricTemplateOption extends QualityAppModel {
 		$this->Navigation->addCrumb('Templates Options');
 		$named = $this->controller->params->named;
 		
-		$rubricTemplateOptions = $this->RubricTemplate->find('list', array(
+		$templateOptions = $this->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplateOptions);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templateOptions);
 
 		$this->fields['color'] = array(
 			'type' => 'element',
@@ -84,17 +84,17 @@ class RubricTemplateOption extends QualityAppModel {
 
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['rubric_template_id']['type'] = 'select';
-			$this->fields['rubric_template_id']['options'] = $rubricTemplateOptions;
+			$this->fields['rubric_template_id']['options'] = $templateOptions;
 
 			if ($this->request->is(array('post', 'put'))) {
 			} else {
-				$this->request->data['RubricTemplateOption']['rubric_template_id'] = $selectedRubricTemplate;
+				$this->request->data['RubricTemplateOption']['rubric_template_id'] = $selectedTemplate;
 			}
 		}
 
 		$this->controller->set('contentHeader', __('Templates Options'));
 		$contentHeader = __('Templates Options');
-		$this->controller->set(compact('contentHeader', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+		$this->controller->set(compact('contentHeader', 'templateOptions', 'selectedTemplate'));
 	}
 
 	public function index() {
@@ -103,27 +103,27 @@ class RubricTemplateOption extends QualityAppModel {
 		$rubricTemplates = $this->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplates);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplates);
 
-		$rubricTemplateOptions = array();
+		$templateOptions = array();
 		foreach ($rubricTemplates as $key => $rubricTemplate) {
-			$rubricTemplateOptions['template:' . $key] = $rubricTemplate;
+			$templateOptions['template:' . $key] = $rubricTemplate;
 		}
 
-		if (empty($rubricTemplateOptions)) {
+		if (empty($templateOptions)) {
 			$this->controller->Message->alert('RubricTemplate.noTemplate');
 		} else {
 			$this->contain('RubricTemplate');
 			$data = $this->find('all', array(
 				'conditions' => array(
-					'RubricTemplateOption.rubric_template_id' => $selectedRubricTemplate
+					'RubricTemplateOption.rubric_template_id' => $selectedTemplate
 				),
 				'order' => array(
 					'RubricTemplateOption.order', 'RubricTemplateOption.name'
 				)
 			));
 
-			$this->controller->set(compact('data', 'rubricTemplateOptions', 'selectedRubricTemplate'));
+			$this->controller->set(compact('data', 'templateOptions', 'selectedTemplate'));
 		}
 	}
 }

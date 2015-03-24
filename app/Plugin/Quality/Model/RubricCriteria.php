@@ -64,18 +64,18 @@ class RubricCriteria extends QualityAppModel {
 		$this->Navigation->addCrumb('Criterias');
 		$named = $this->controller->params->named;
 
-		$rubricTemplateOptions = $this->RubricSection->RubricTemplate->find('list', array(
+		$templateOptions = $this->RubricSection->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplateOptions);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templateOptions);
 
-		$rubricSectionOptions = $this->RubricSection->find('list', array(
+		$sectionOptions = $this->RubricSection->find('list', array(
 			'conditions' => array(
-				'RubricSection.rubric_template_id' => $selectedRubricTemplate
+				'RubricSection.rubric_template_id' => $selectedTemplate
 			),
 			'order' => array('RubricSection.order', 'RubricSection.name')
 		));
-		$selectedRubricSection = isset($named['section']) ? $named['section'] : key($rubricSectionOptions);
+		$selectedSection = isset($named['section']) ? $named['section'] : key($sectionOptions);
 
 		$criteriaTypeOptions = array();
 		foreach ($this->criteriaType as $key => $criteriaType) {
@@ -103,7 +103,7 @@ class RubricCriteria extends QualityAppModel {
 			$this->fields['type']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['rubric_section_id']['type'] = 'select';
-			$this->fields['rubric_section_id']['options'] = $rubricSectionOptions;
+			$this->fields['rubric_section_id']['options'] = $sectionOptions;
 
 			$this->fields['type']['type'] = 'select';
 			$this->fields['type']['options'] = $criteriaTypeOptions;
@@ -118,7 +118,7 @@ class RubricCriteria extends QualityAppModel {
 					$this->ControllerAction->autoProcess = true;
 				}
 			} else {
-				$this->request->data['RubricCriteria']['rubric_section_id'] = $selectedRubricSection;
+				$this->request->data['RubricCriteria']['rubric_section_id'] = $selectedSection;
 				$this->request->data['RubricCriteria']['type'] = $selectedCriteriaType;
 			}
 		}
@@ -141,54 +141,54 @@ class RubricCriteria extends QualityAppModel {
 				unset($this->fields['criterias']);
 			} else if ($selectedCriteriaType == 2) {
 				$this->RubricCriteriaOption->contain('RubricTemplateOption');
-				$rubricCriteriaOptions = $this->RubricCriteriaOption->find('all', array(
+				$criteriaOptions = $this->RubricCriteriaOption->find('all', array(
 					'conditions' => array(
 						'RubricCriteriaOption.rubric_criteria_id' => $selectedCriteriaId
 					),
 					'order' => array('RubricTemplateOption.order', 'RubricTemplateOption.name')
 				));
 
-				$this->controller->set(compact('rubricCriteriaOptions'));
+				$this->controller->set(compact('criteriaOptions'));
 			}
 		} else if ($this->action == 'add' || $this->action == 'edit') {
 			$data = $this->request->data;
 
-			$selectedRubricSection = $data['RubricCriteria']['rubric_section_id'];
+			$selectedSection = $data['RubricCriteria']['rubric_section_id'];
 			$selectedCriteriaType = $data['RubricCriteria']['type'];
-			$selectedRubricTemplate = $this->RubricSection->field('rubric_template_id', array('RubricSection.id' => $selectedRubricSection));
+			$selectedTemplate = $this->RubricSection->field('rubric_template_id', array('RubricSection.id' => $selectedSection));
 
 			if ($selectedCriteriaType == 1) {	//1-> Section Break, 2 -> Dropdown
 				unset($this->fields['criterias']);
 			} else if ($selectedCriteriaType == 2) {
 				$this->RubricCriteriaOption->RubricTemplateOption->contain();
-				$rubricTemplateOptions = $this->RubricCriteriaOption->RubricTemplateOption->find('all', array(
+				$templateOptions = $this->RubricCriteriaOption->RubricTemplateOption->find('all', array(
 					'conditions' => array(
-						'RubricTemplateOption.rubric_template_id' => $selectedRubricTemplate
+						'RubricTemplateOption.rubric_template_id' => $selectedTemplate
 					),
 					'order' => array('RubricTemplateOption.order', 'RubricTemplateOption.name')
 				));
 
-				$this->controller->set(compact('rubricTemplateOptions'));
+				$this->controller->set(compact('templateOptions'));
 
-				$rubricCriteriaOptions = array();
-				foreach ($rubricTemplateOptions as $key => $obj) {
-					$rubricTemplateOptionId = $obj['RubricTemplateOption']['id'];
-				    $rubricCriteriaOptions[$rubricTemplateOptionId] = array(
+				$criteriaOptions = array();
+				foreach ($templateOptions as $key => $obj) {
+					$templateOptionId = $obj['RubricTemplateOption']['id'];
+				    $criteriaOptions[$templateOptionId] = array(
 				    	'name' => '',
-				    	'rubric_template_option_id' => $rubricTemplateOptionId
+				    	'rubric_template_option_id' => $templateOptionId
 				    );
 				}
 
 				if (!empty($data['RubricCriteriaOption'])) {
 					foreach ($data['RubricCriteriaOption'] as $key => $obj) {
-						$rubricTemplateOptionId = $obj['rubric_template_option_id'];
-						if (array_key_exists($rubricTemplateOptionId, $rubricCriteriaOptions)) {
-							$rubricCriteriaOptions[$rubricTemplateOptionId] = $obj;
+						$templateOptionId = $obj['rubric_template_option_id'];
+						if (array_key_exists($templateOptionId, $criteriaOptions)) {
+							$criteriaOptions[$templateOptionId] = $obj;
 						}
 					}
 				}
 
-				$this->request->data['RubricCriteriaOption'] = $rubricCriteriaOptions;
+				$this->request->data['RubricCriteriaOption'] = $criteriaOptions;
 			}
 		}
 	}
@@ -196,49 +196,112 @@ class RubricCriteria extends QualityAppModel {
 	public function index() {
 		$named = $this->controller->params->named;
 
-		$rubricTemplates = $this->RubricSection->RubricTemplate->find('list', array(
+		$templates = $this->RubricSection->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedRubricTemplate = isset($named['template']) ? $named['template'] : key($rubricTemplates);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templates);
 
-		$rubricTemplateOptions = array();
-		foreach ($rubricTemplates as $key => $rubricTemplate) {
-			$rubricTemplateOptions['template:' . $key] = $rubricTemplate;
+		$templateOptions = array();
+		foreach ($templates as $key => $template) {
+			$templateOptions['template:' . $key] = $template;
 		}
 
-		if (empty($rubricTemplateOptions)) {
+		if (empty($templateOptions)) {
 			$this->controller->Message->alert('RubricTemplate.noTemplate');
 		} else {
-			$rubricSections = $this->RubricSection->find('list', array(
+			$sections = $this->RubricSection->find('list', array(
 				'conditions' => array(
-					'RubricSection.rubric_template_id' => $selectedRubricTemplate
+					'RubricSection.rubric_template_id' => $selectedTemplate
 				),
 				'order' => array('RubricSection.order', 'RubricSection.name')
 			));
-			$selectedRubricSection = isset($named['section']) ? $named['section'] : key($rubricSections);
+			$selectedSection = isset($named['section']) ? $named['section'] : key($sections);
 
-			$rubricSectionOptions = array();
-			foreach ($rubricSections as $key => $rubricSection) {
-				$rubricSectionOptions['section:' . $key] = $rubricSection;
+			$sectionOptions = array();
+			foreach ($sections as $key => $section) {
+				$sectionOptions['section:' . $key] = $section;
 			}
 
-			if (empty($rubricSectionOptions)) {
+			if (empty($sectionOptions)) {
 				$this->controller->Message->alert('RubricSection.noSection');
 			} else {
 				$this->contain('RubricSection', 'RubricCriteriaOption');
 				$data = $this->find('all', array(
 					'conditions' => array(
-						'RubricCriteria.rubric_section_id' => $selectedRubricSection
+						'RubricCriteria.rubric_section_id' => $selectedSection
 					),
 					'order' => array(
 						'RubricCriteria.order', 'RubricCriteria.name'
 					)
 				));
 
-				$this->controller->set(compact('data', 'rubricSectionOptions', 'selectedRubricSection'));
+				$this->controller->set(compact('data', 'sectionOptions', 'selectedSection'));
 			}
 
-			$this->controller->set(compact('rubricTemplateOptions', 'selectedRubricTemplate'));
+			$this->controller->set(compact('templateOptions', 'selectedTemplate'));
+		}
+	}
+
+	public function preview() {
+		$named = $this->controller->params->named;
+
+		$templates = $this->RubricSection->RubricTemplate->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templates);
+
+		$templateOptions = array();
+		foreach ($templates as $key => $template) {
+			$templateOptions['template:' . $key] = $template;
+		}
+
+		if (empty($templateOptions)) {
+			$this->controller->Message->alert('RubricTemplate.noTemplate');
+		} else {
+			$sections = $this->RubricSection->find('list', array(
+				'conditions' => array(
+					'RubricSection.rubric_template_id' => $selectedTemplate
+				),
+				'order' => array('RubricSection.order', 'RubricSection.name')
+			));
+			$selectedSection = isset($named['section']) ? $named['section'] : key($sections);
+
+			$sectionOptions = array();
+			foreach ($sections as $key => $section) {
+				$sectionOptions['section:' . $key] = $section;
+			}
+
+			if (empty($sectionOptions)) {
+				$this->controller->Message->alert('RubricSection.noSection');
+			} else {
+				$this->RubricCriteriaOption->RubricTemplateOption->contain();
+				$rubricTemplateOptionData = $this->RubricCriteriaOption->RubricTemplateOption->find('all', array(
+					'conditions' => array(
+						'RubricTemplateOption.rubric_template_id' => $selectedTemplate
+					),
+					'order' => array('RubricTemplateOption.order', 'RubricTemplateOption.name')
+				));
+				$rubricTemplateOptions = array();
+				foreach ($rubricTemplateOptionData as $key => $obj) {
+					$rubricTemplateOptions[$obj['RubricTemplateOption']['id']] = $obj['RubricTemplateOption'];
+				}
+
+				$rubricTemplateOptionCount = sizeof($rubricTemplateOptions);
+
+				$this->contain('RubricCriteriaOption');
+				$data = $this->find('all', array(
+					'conditions' => array(
+						'RubricCriteria.rubric_section_id' => $selectedSection
+					),
+					'order' => array(
+						'RubricCriteria.order', 'RubricCriteria.name'
+					)
+				));
+
+				$this->controller->set(compact('data', 'rubricTemplateOptions', 'rubricTemplateOptionCount', 'sectionOptions', 'selectedSection'));
+			}
+
+			$this->controller->set(compact('templateOptions', 'selectedTemplate'));
 		}
 	}
 }
