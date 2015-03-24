@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.5
+ControllerActionComponent - Version 1.0.7
 */
 
 class ControllerActionComponent extends Component {
@@ -24,7 +24,7 @@ class ControllerActionComponent extends Component {
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
-	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove');
+	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove', 'reorder', 'moveOrder');
 	public $autoRender = true;
 	public $autoProcess = true;
 
@@ -82,16 +82,64 @@ class ControllerActionComponent extends Component {
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public function beforeRender(Controller $controller) {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
-			$controller->request->params['action'] = $this->currentAction;
-			if ($this->triggerFrom == 'Model' && method_exists($this->model, 'afterAction')) {
-				$this->model->afterAction();
+			$action = $this->currentAction;
+
+			if ($this->triggerFrom == 'Controller') {
+				
+				
+			} else if ($this->triggerFrom == 'Model') {
+				$action = $this->model->alias;
+				if (method_exists($this->model, 'afterAction')) {
+					$this->model->afterAction();
+				}
 			}
+			$controller->request->params['action'] = $action;
+
 			uasort($this->model->fields, array($this, 'sortFields'));
 			$controller->set('model', $this->model->alias);
 			$controller->set('action', $this->currentAction);
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
+
+			$this->initButtons();
 		}
+	}
+
+	private function initButtons() {
+		$controller = $this->controller;
+
+		$named = $controller->request->params['named'];
+		$pass = $controller->request->params['pass'];
+		if ($this->triggerFrom == 'Model') {
+			unset($pass[0]);
+		}
+
+		$buttons = array();
+
+		foreach ($this->defaultActions as $action) {
+			$actionUrl = array('action' => $action);
+
+			if ($this->triggerFrom == 'Model') {
+				$actionUrl['action'] = $this->model->alias;
+				$actionUrl[] = $action;
+			}
+			$actionUrl = array_merge($actionUrl, $named, $pass);
+			$buttons[$action] = array('url' => $actionUrl);
+		}
+
+		$backAction = 'index';
+		if ($this->currentAction == 'edit') {
+			$backAction = 'view';
+		}
+
+		$backUrl = array('action' => $backAction);
+		if ($this->triggerFrom == 'Model') {
+			$backUrl['action'] = $this->model->alias;
+			$backUrl[] = $backAction;
+		}
+		$backUrl = array_merge($backUrl, $named, $pass);
+		$buttons['back'] = array('url' => $backUrl);
+		$controller->set('_buttons', $buttons);
 	}
 
 	private function initComponentsForModel() {
@@ -107,21 +155,23 @@ class ControllerActionComponent extends Component {
 
 	public function processAction() {
 		$result = null;
-		if (in_array($this->currentAction, $this->defaultActions)) {
-			if ($this->autoProcess) {
-				if ($this->triggerFrom == 'Controller') {
+		if ($this->autoProcess) {
+			if ($this->triggerFrom == 'Controller') {
+				if (in_array($this->currentAction, $this->defaultActions)) {
 					$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
-				} else if ($this->triggerFrom == 'Model') {
-					if (method_exists($this->model, $this->currentAction)) {
-						$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
-					} else {
+				}
+			} else if ($this->triggerFrom == 'Model') {
+				if (method_exists($this->model, $this->currentAction)) {
+					$result = call_user_func_array(array($this->model, $this->currentAction), $this->paramsPass);
+				} else {
+					if (in_array($this->currentAction, $this->defaultActions)) {
 						$result = call_user_func_array(array($this, $this->currentAction), $this->paramsPass);
 					}
 				}
 			}
-
-			$this->render();
 		}
+
+		$this->render();
 	}
 
 	public function render() {
@@ -147,8 +197,9 @@ class ControllerActionComponent extends Component {
 
 	public function index() {
 		$model = $this->model;
-		$model->contain();
-		$data = $model->find('all');
+		$data = $model->find('all', array(
+			'recursive' => 0
+		));
 		$this->controller->set('data', $data);
 	}
 
@@ -174,7 +225,8 @@ class ControllerActionComponent extends Component {
 			$model->create();
 			if ($model->saveAll($this->controller->request->data)) {
 				$this->Message->alert('general.add.success');
-				$pass = $this->controller->params->pass;
+				$named = $this->controller->params['named'];
+				$pass = $this->controller->params['pass'];
 				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 				$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
@@ -184,7 +236,7 @@ class ControllerActionComponent extends Component {
 					$action[] = isset($params['back']) ? $params['back'] : 'view';
 				}
 				$action[] = $model->getLastInsertID();
-				$action = array_merge($action, $pass);
+				$action = array_merge($action, $named, $pass);
 				return $this->controller->redirect($action);
 			} else {
 				$this->log($model->validationErrors, 'debug');
@@ -201,15 +253,18 @@ class ControllerActionComponent extends Component {
 			if ($this->controller->request->is(array('post', 'put'))) {
 				if ($model->saveAll($this->controller->request->data)) {
 					$this->Message->alert('general.edit.success');
-					$pass = $this->controller->params->pass;
+					$named = $this->controller->params['named'];
+					$pass = $this->controller->params['pass'];
+					$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
-					$action = array('action' => 'view');
+					$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
 					if ($this->triggerFrom == 'Model') {
 						unset($pass[0]);
-						$action = array('action' => get_class($model), 'view');
+						$action = array('action' => get_class($model));
+						$action[] = isset($params['back']) ? $params['back'] : 'view';
 					}
 					
-					$action = array_merge($action, $pass);
+					$action = array_merge($action, $named, $pass);
 					return $this->controller->redirect($action);
 				} else {
 					$this->log($model->validationErrors, 'debug');
@@ -239,7 +294,8 @@ class ControllerActionComponent extends Component {
 				$this->Message->alert('general.delete.failed');
 			}
 			$this->Session->delete($model->alias . '.id');
-			$pass = $this->controller->params->pass;
+			$named = $this->controller->params['named'];
+			$pass = $this->controller->params['pass'];
 			$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 			$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
@@ -249,8 +305,105 @@ class ControllerActionComponent extends Component {
 				$action[] = isset($params['back']) ? $params['back'] : 'index';
 			}
 			
-			$action = array_merge($action, $pass);
+			$action = array_merge($action, $named, $pass);
 			return $this->controller->redirect($action);
+		}
+	}
+
+	public function reorder() {
+		$model = $this->model;
+		$conditions = isset($this->controller->viewVars['conditions']) ? $this->controller->viewVars['conditions'] : array();
+
+		$model->contain();
+		$data = $model->find('all', array(
+			'conditions' => $conditions,
+			'order' => array(
+				$model->alias.'.order', 
+				$model->alias.'.id'
+			)
+		));
+
+		$named = $this->controller->params['named'];
+		$pass = $this->controller->params['pass'];
+		$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
+
+		$actionUrl = array('action' => isset($params['move']) ? $params['move'] : 'moveOrder');
+		if ($this->triggerFrom == 'Model') {
+			unset($pass[0]);
+			$actionUrl = array('action' => get_class($model));
+			$actionUrl[] = isset($params['move']) ? $params['move'] : 'moveOrder';
+		}
+
+		$actionUrl = array_merge($actionUrl, $named, $pass);
+		$this->controller->set(compact('data', 'actionUrl'));
+	}
+
+	public function moveOrder() {
+		$model = $this->model;
+
+		$named = $this->controller->params['named'];
+		$pass = $this->controller->params['pass'];
+		$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
+
+		$actionUrl = array('action' => isset($params['order']) ? $params['order'] : 'reorder');
+		if ($this->triggerFrom == 'Model') {
+			unset($pass[0]);
+			$actionUrl = array('action' => get_class($model));
+			$actionUrl[] = isset($params['order']) ? $params['order'] : 'reorder';
+		}
+
+		$actionUrl = array_merge($actionUrl, $named, $pass);
+
+		$data = $this->controller->request->data;
+		$conditions = isset($this->controller->viewVars['conditions']) ? $this->controller->viewVars['conditions'] : array();
+
+		$id = $data[$model->alias]['id'];
+		$idField = $model->alias.'.id';
+		$orderField = $model->alias.'.order';
+		$move = $data[$model->alias]['move'];
+		$order = $model->field('order', array('id' => $id));
+		$idConditions = array_merge(array($idField => $id), $conditions);
+		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
+		
+		$this->fixOrder($conditions);
+		if($move === 'up') {
+			$model->updateAll(array($orderField => $order-1), $idConditions);
+			$updateConditions[$orderField] = $order-1;
+			$model->updateAll(array($orderField => $order), $updateConditions);
+		} else if($move === 'down') {
+			$model->updateAll(array($orderField => $order+1), $idConditions);
+			$updateConditions[$orderField] = $order+1;
+			$model->updateAll(array($orderField => $order), $updateConditions);
+		} else if($move === 'first') {
+			$model->updateAll(array($orderField => 1), $idConditions);
+			$updateConditions[$orderField . ' <'] = $order;
+			$model->updateAll(array($orderField => $orderField . ' + 1'), $updateConditions);
+		} else if($move === 'last') {
+			$count = $model->find('count', array('conditions' => $conditions));
+			$model->updateAll(array($orderField => $count), $idConditions);
+			$updateConditions[$orderField . ' >'] = $order;
+			$model->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
+		}
+
+		return $this->controller->redirect($actionUrl);
+    }
+
+    public function fixOrder($conditions) {
+    	$model = $this->model;
+		$count = $model->find('count', array('conditions' => $conditions));
+		if($count > 0) {
+			$list = $model->find('list', array(
+				'conditions' => $conditions,
+				'order' => array(
+					$model->alias.'.order',
+					$model->alias.'.id'
+				)
+			));
+			$order = 1;
+			foreach($list as $id => $name) {
+				$model->id = $id;
+				$model->saveField('order', $order++);
+			}
 		}
 	}
 
