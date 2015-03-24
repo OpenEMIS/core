@@ -89,6 +89,7 @@ class RubricTemplateOption extends QualityAppModel {
 			if ($this->request->is(array('post', 'put'))) {
 			} else {
 				$this->request->data['RubricTemplateOption']['rubric_template_id'] = $selectedTemplate;
+				$this->request->data['RubricTemplateOption']['color'] = "#ff00ff";
 			}
 		}
 

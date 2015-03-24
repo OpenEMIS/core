@@ -33,7 +33,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 					<tr>
 						<td><?php echo $this->Html->link($obj['RubricTemplateOption']['name'], array('action' => $model, 'view', $obj['RubricTemplateOption']['id'])); ?></td>
 						<td><?php echo $obj['RubricTemplateOption']['weighting']; ?></td>
-						<td><?php echo $obj['RubricTemplateOption']['color']; ?></td>
+						<td style="background-color: <?php echo $obj['RubricTemplateOption']['color']; ?>;"></td>
 						<td><?php echo $obj['RubricTemplate']['name']; ?></td>
 					</tr>
 				<?php endforeach ?>
