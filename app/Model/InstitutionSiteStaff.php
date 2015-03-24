@@ -595,6 +595,9 @@ class InstitutionSiteStaff extends AppModel {
 			}*/
 		}
 
+		if (count($filterFTEOptions)==0) {
+			$filterFTEOptions = array(''=>__('No available FTE'));
+		}
 		return $filterFTEOptions;
 	}
 	
