@@ -31,7 +31,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 			<?php if (!empty($data)) : ?>
 				<?php foreach ($data as $obj) : ?>
 					<tr>
-						<td><?php echo $this->Html->link($obj['RubricTemplateOption']['name'], array('action' => $model, 'view', $obj['RubricTemplateOption']['id'])); ?></td>
+						<td><?php echo $this->Html->link($obj['RubricTemplateOption']['name'], array('action' => $model, 'view', $obj['RubricTemplateOption']['id'], 'template' => $selectedTemplate)); ?></td>
 						<td><?php echo $obj['RubricTemplateOption']['weighting']; ?></td>
 						<td style="background-color: <?php echo $obj['RubricTemplateOption']['color']; ?>;"></td>
 						<td><?php echo $obj['RubricTemplate']['name']; ?></td>

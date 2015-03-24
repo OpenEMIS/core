@@ -234,7 +234,7 @@ class RubricCriteria extends QualityAppModel {
 						'RubricCriteria.rubric_section_id' => $selectedSection
 					),
 					'order' => array(
-						'RubricCriteria.order', 'RubricCriteria.name'
+						'RubricCriteria.order', 'RubricCriteria.id'
 					)
 				));
 

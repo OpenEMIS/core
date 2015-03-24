@@ -29,7 +29,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 			<?php if (!empty($data)) : ?>
 				<?php foreach ($data as $obj) : ?>
 					<tr>
-						<td><?php echo $this->Html->link($obj['RubricSection']['name'], array('action' => $model, 'view', $obj['RubricSection']['id'])); ?></td>
+						<td><?php echo $this->Html->link($obj['RubricSection']['name'], array('action' => $model, 'view', $obj['RubricSection']['id'], 'template' => $selectedTemplate)); ?></td>
 						<td><?php echo $obj['RubricTemplate']['name']; ?></td>
 					</tr>
 				<?php endforeach ?>

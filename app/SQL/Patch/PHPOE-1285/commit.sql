@@ -106,7 +106,7 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 DROP TABLE IF EXISTS `rubric_template_roles`;
 CREATE TABLE IF NOT EXISTS `rubric_template_roles` (
-`id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `rubric_template_id` int(11) NOT NULL,
   `security_role_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -114,10 +114,6 @@ CREATE TABLE IF NOT EXISTS `rubric_template_roles` (
 
 ALTER TABLE `rubric_template_roles`
  ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `security_role_id` (`security_role_id`);
-
-
-ALTER TABLE `rubric_template_roles`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- 8. New table - rubric_sections
