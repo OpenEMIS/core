@@ -1,4 +1,5 @@
 <?php
+echo $this->Html->script('/Quality/js/rubric', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
@@ -16,7 +17,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 	<table class="table table-bordered">
 		<tbody>
 			<?php if (!empty($data)) : ?>
-				<?php foreach ($data as $obj) : ?>
+				<?php foreach ($data as $key => $obj) : ?>
 					<?php if ($obj['RubricCriteria']['type'] == 1) : ?>
 						<tr>
 							<td><strong><?php echo __('Header'); ?></strong></td>
@@ -40,16 +41,21 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 								<td><?php echo $rubricTemplateOption['name']; ?></td>
 							<?php endforeach ?>				
 						</tr>
-						<tr>
+						<tr class="criteriaRow<? echo $key; ?>">
 							<td><?php echo $obj['RubricCriteria']['name']; ?></td>
-							<?php foreach ($rubricTemplateOptions as $key => $rubricTemplateOption) : ?>
+							<?php foreach ($rubricTemplateOptions as $rubricTemplateOption) : ?>
 								<?php
-									$bgColor = 'white';
-									$highlightBgColor = "#" . $rubricTemplateOption['color'];
-									$criteriaOptionName = isset($criteriaOptions[$key]['name']) ? $criteriaOptions[$key]['name'] : __('N.A.');
+									$templateOptionId = $rubricTemplateOption['id'];
+									$bgColor = $rubricTemplateOption['color'];
+									$criteriaOptionName = isset($criteriaOptions[$templateOptionId]['name']) ? $criteriaOptions[$templateOptionId]['name'] : __('N.A.');
 								?>
-								<td onmouseout='$(this).css("background-color", "<?php echo $bgColor; ?>");' onmouseover='$(this).css("background-color", "<?php echo $highlightBgColor; ?>");'><?php echo $criteriaOptionName; ?></td>
-							<?php endforeach ?>				
+								<td class="criteriaCell" style="cursor: pointer;" onclick="Rubric.changeBgColor(this);">
+									<?php
+										echo $criteriaOptionName;
+										echo $this->Form->hidden("row".$key.".cell".$templateOptionId.".bgColor", array('class' => 'criteriaCell', 'value' => $bgColor));
+									?>
+								</td>
+							<?php endforeach ?>
 						</tr>
 						<tr>
 							<td class="active"></td>
