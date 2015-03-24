@@ -74,6 +74,9 @@ class RubricSection extends QualityAppModel {
 			} else {
 				$this->request->data['RubricSection']['rubric_template_id'] = $selectedTemplate;
 			}
+		} else if ($this->action == 'reorder' || $this->action == 'moveOrder') {
+			$conditions = array('RubricSection.rubric_template_id' => $selectedTemplate);
+			$this->controller->set(compact('conditions'));
 		}
 
 		$contentHeader = __('Sections');
