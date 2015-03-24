@@ -1,39 +1,18 @@
 <?php if ($action == 'view') : ?>
-
+	<div class="table-responsive">
+		<table class="table table-bordered" style="width: 50%;">
+			<tbody>
+				<tr>
+					<td style="background-color: <?php echo $data['RubricTemplateOption']['color']; ?>;"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 <?php else : ?>
-	<?php
-		$selectedColor  = 'ff00ff';
-		echo $this->Html->css('/Quality/css/colorpicker', 'stylesheet', array('inline' => false));
-		echo $this->Html->script('/Quality/js/colorpicker', false);
-	?>
-
 	<div class="form-group">
 		<label class="col-md-3 control-label"><?php echo $this->Label->get('RubricTemplateOption.color');?></label>
 		<div class="col-md-6">
-			<input type="color" value="#ff0000" onchange="clickColor(0, -1, -1, 5)" class="form-control" id="html5colorpicker">
-			<div id="colorSelector">
-				<div style="background-color:#<?php echo $selectedColor; ?>"></div>
-			</div>
-			<?php echo $this->Form->hidden('color', array('id' => 'newColorPick')); ?>
+			<?php echo $this->Form->input('color', array('type' => 'color', 'onchange' => 'clickColor(0, -1, -1, 5);', 'style' => 'width: 50%;', 'label' => false, 'div' => false, 'between' => false, 'after' => false)); ?>
 		</div>
 	</div>
-
-	<script type="text/javascript">
-		$('#colorSelector').ColorPicker({
-			//flat: true
-			color: '#<?php echo $selectedColor; ?>',
-			onShow: function(colpkr) {
-				$(colpkr).fadeIn(500);
-				return false;
-			},
-			onHide: function(colpkr) {
-				$(colpkr).fadeOut(500);
-				return false;
-			},
-			onChange: function(hsb, hex, rgb) {
-				$('#colorSelector div').css('backgroundColor', '#' + hex);
-				$('#newColorPick').val(hex);
-			}
-		});
-	</script>
 <?php endif ?>
