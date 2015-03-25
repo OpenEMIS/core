@@ -32,22 +32,25 @@ class SmsMessage extends SmsAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Message'
-			)
+			),
+			'lengthValidate' => array(
+            	'rule'=>array('lengthValidate')
+            )
         )
 	);
 
 
-//	function lengthValidate($field) {
-//		$configItem = ClassRegistry::init('ConfigItem');
-//		$configMsgLength = $configItem->getValue('sms_content_length');
-//		
-//		$msgValue = $this->data[$this->alias]['message'];
-//		if(strlen($msgValue) > $configMsgLength){
-//			$errorMsg = sprintf('Message should not exceed %d characters.', $configMsgLength);
-//			$this->validator()->getField('message')->getRule('lengthValidate')->message = $errorMsg;
-//			return false;
-//		}else{
-//			return true;
-//		} 
-//    }
+	function lengthValidate($field) {
+		$configItem = ClassRegistry::init('ConfigItem');
+		$configMsgLength = $configItem->getValue('sms_content_length');
+		
+		$msgValue = $this->data[$this->alias]['message'];
+		if(strlen($msgValue) > $configMsgLength){
+			$errorMsg = sprintf('Message should not exceed %d characters.', $configMsgLength);
+			$this->validator()->getField('message')->getRule('lengthValidate')->message = $errorMsg;
+			return false;
+		}else{
+			return true;
+		} 
+    }
 }
