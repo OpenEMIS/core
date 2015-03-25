@@ -52,7 +52,9 @@ class InstitutionSitesController extends AppController {
 		'Staff.StaffCategory',
 		'SecurityGroupUser',
 		'SecurityGroupArea',
-		'InstitutionSiteShift'
+		'InstitutionSiteShift',
+		'InstitutionSiteQualityRubric',
+		'InstitutionSiteQualityVisit'
 	);
 	
 	public $helpers = array('Paginator', 'Model');

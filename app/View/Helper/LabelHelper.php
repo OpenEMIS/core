@@ -614,6 +614,14 @@ class LabelHelper extends AppHelper {
 		'QualityStatus' => array(
 			'rubric_template_id' => 'Rubric Template',
 			'academic_period_id' => 'Academic Period'
+		),
+		'InstitutionSiteQualityVisit' => array(
+			'academic_period_id' => 'Academic Period',
+			'education_grade_id' => 'Grade',
+			'institution_site_section_id' => 'Section',
+			'institution_site_class_id' => 'Class',
+			'staff_id' => 'Staff',
+			'quality_visit_type_id' => 'Visit Type'
 		)
 	);
 	
