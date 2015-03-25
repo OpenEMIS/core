@@ -201,6 +201,10 @@ class Staff extends StaffAppModel {
 		)
 	);
 
+	public $virtualFields = array(
+	    'name' => 'CONCAT(Staff.first_name, " ", Staff.last_name)'
+	);
+
 	public function checkIfStringGotNoNumber($check) {
 		$check = array_values($check);
 		$check = $check[0];
