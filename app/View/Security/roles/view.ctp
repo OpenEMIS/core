@@ -6,6 +6,7 @@ $this->start('contentActions');
 $params = array('action' => 'roles');
 if (isset($selectedGroup)) {
 	$params[] = $selectedGroup;
+	$params['action'] = 'rolesUserDefined';
 }
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 if($_edit) {

@@ -98,11 +98,30 @@ class SecurityRole extends AppModel {
 			$userRoles = $this->getRoles($selectedGroup);
 		}
 		
-		$controller->set('isSuperUser', $isSuperUser);
-		$controller->set('systemRoles', $systemRoles);
-		$controller->set('userRoles', $userRoles);
-		$controller->set('groupOptions', $groupOptions);
-		$controller->set('selectedGroup', $selectedGroup);
+		$currentTab = 'System Defined Roles';
+		$controller->set(compact('isSuperUser', 'systemRoles', 'userRoles', 'groupOptions', 'selectedGroup', 'currentTab'));
+	}
+	
+	public function rolesUserDefined($controller, $params) {
+		$systemRoles = $this->getRoles(array(0, -1));
+		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		$userId = $controller->Auth->user('id');
+		$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
+		$userRoles = array();
+		$selectedGroup = 0;
+		
+		if(!empty($groupOptions)) {
+			if(isset($params['pass'][0])) {
+				$groupId = $params['pass'][0];
+				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
+			} else {
+				$selectedGroup = key($groupOptions);
+			}
+			$userRoles = $this->getRoles($selectedGroup);
+		}
+		
+		$currentTab = 'User Defined Roles';
+		$controller->set(compact('isSuperUser', 'systemRoles', 'userRoles', 'groupOptions', 'selectedGroup', 'currentTab'));
 	}
 	
 	public function rolesView($controller, $params) {
@@ -150,6 +169,14 @@ class SecurityRole extends AppModel {
 	}
 	
 	public function rolesAdd($controller, $params) {
+		$roleType = 'system_defined';
+		if(isset($params['pass'][0])) {
+			$type = $params['pass'][0];
+			if($type == 'user_defined'){
+				$roleType = $type;
+			}
+		}
+		
 		if ($controller->request->is(array('post', 'put'))) {
 			$data = $controller->request->data;
 			$data[$this->alias]['order'] = $this->find('count');
@@ -159,6 +186,7 @@ class SecurityRole extends AppModel {
 				return $controller->redirect(array('action' => 'rolesView', $result[$this->alias]['id']));
 			}
 		}
+		$controller->set(compact('roleType'));
 	}
 	
 	public function getGroupAdministratorRole() {
@@ -320,5 +348,36 @@ class SecurityRole extends AppModel {
 		));
 		
 		return $data;
+	}
+	
+	public function roles_reorder($controller, $params) {
+		$this->Navigation->addCrumb('Levels');
+		
+		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
+		$conditions = array('InfrastructureLevel.parent_id' => $parentId);
+		
+		$data = $this->InfrastructureLevel->find('all', array(
+			'conditions' => $conditions, 
+			'order' => array('InfrastructureLevel.order')
+		));
+		
+		$breadcrumbs = array();
+		$this->generatebreadcrumbs($parentId, $breadcrumbs);
+		$breadcrumbs = array_reverse($breadcrumbs);
+		
+		$currentTab = 'Levels';
+		
+		$this->set(compact('data', 'parentId', 'breadcrumbs', 'currentTab'));
+	}
+	
+	public function roles_move($controller, $params) {
+		$this->autoRender = false;
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			$conditions = array('InfrastructureLevel.parent_id' => $this->params->named['parent_id']);
+			$this->InfrastructureLevel->moveOrder($data, $conditions);
+			$redirect = array('action' => 'reorder', 'parent_id' => $this->params->named['parent_id']);
+			return $this->redirect($redirect);
+		}
 	}
 }
