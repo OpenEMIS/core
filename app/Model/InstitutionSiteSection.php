@@ -494,10 +494,15 @@ class InstitutionSiteSection extends AppModel {
 			$multiGradeOptions['group'] = array('InstitutionSiteSection.id');
 		}
 
-		$singleGradeData = $this->find('list', $singleGradeOptions);
-		$multiGradeData = $this->find('list', $multiGradeOptions);
-		$data = array_replace($singleGradeData, $multiGradeData);
+		if($gradeId!==false && is_null($gradeId)) {
+			$singleGradeData = array();
+			$multiGradeData = array();
+		} else {
+			$singleGradeData = $this->find('list', $singleGradeOptions);
+			$multiGradeData = $this->find('list', $multiGradeOptions);
+		}
 
+		$data = array_replace($singleGradeData, $multiGradeData);
 		return $data;
 	}
 	
@@ -532,7 +537,7 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getSectionListByInstitution($institutionSiteId, $academicPeriodId=0) {
+	public function getSectionListByInstitution($institutionSiteId, $academicPeriodId=0, $gradeId=0) {
 		$options = array();
 		$options['fields'] = array('InstitutionSiteSection.id', 'InstitutionSiteSection.name');
 		$options['order'] = array('InstitutionSiteSection.name');
@@ -540,6 +545,10 @@ class InstitutionSiteSection extends AppModel {
 		
 		if (!empty($academicPeriodId)) {
 			$options['conditions']['InstitutionSiteSection.academic_period_id'] = $academicPeriodId;
+		}
+
+		if (!empty($gradeId)) {			
+			$options['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
 		}
 		
 		$data = $this->find('list', $options);

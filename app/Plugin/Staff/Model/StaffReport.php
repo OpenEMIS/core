@@ -56,7 +56,7 @@ class StaffReport extends StaffAppModel {
             'FileName' => 'Report_Staff_Quality_Assurance'
         ),
         'Visit Report' => array(
-            'Model' => 'QualityInstitutionVisit',
+            'Model' => 'InstitutionSiteQualityVisit',
             'fields' => array(
                 'AcademicPeriod' => array(
                     'name' => 'Academic Period'
@@ -74,7 +74,7 @@ class StaffReport extends StaffAppModel {
                 'QualityVisitTypes' => array(
                     'name' => 'Quality Type'
                 ),
-                'QualityInstitutionVisit' => array(
+                'InstitutionSiteQualityVisit' => array(
                     'date' => 'Visit Date',
                     'comment' => 'Comment',
 					'staff_full_name' => 'Staff Name',
