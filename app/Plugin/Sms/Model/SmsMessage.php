@@ -34,7 +34,8 @@ class SmsMessage extends SmsAppModel {
 				'message' => 'Please enter a valid Message'
 			),
 			'lengthValidate' => array(
-            	'rule'=>array('lengthValidate')
+            	'rule'=>array('lengthValidate'),
+				'message' => 'Please enter a Message within maximum length'
             )
         )
 	);
@@ -46,8 +47,6 @@ class SmsMessage extends SmsAppModel {
 		
 		$msgValue = $this->data[$this->alias]['message'];
 		if(strlen($msgValue) > $configMsgLength){
-			$errorMsg = sprintf('Message should not exceed %d characters.', $configMsgLength);
-			$this->validator()->getField('message')->getRule('lengthValidate')->message = $errorMsg;
 			return false;
 		}else{
 			return true;
