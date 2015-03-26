@@ -199,35 +199,25 @@ class InstitutionSiteQualityVisit extends AppModel {
 			$classOptions = !empty($classOptions) ? $classOptions : array('0' => __('No Data'));
 			$staffOptions = !empty($staffOptions) ? $staffOptions : array('0' => __('No Data'));
 
-			$this->fields['academic_period_id']['attr'] = array(
-				'type' => 'select',
-				'options' => $academicPeriodOptions,
-				'onchange' => "$('#reload').click()"
-			);
+			$this->fields['academic_period_id']['type'] = 'select';
+			$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+			$this->fields['academic_period_id']['attr'] = array('onchange' => "$('#reload').click()");
 
-			$this->fields['education_grade_id']['attr'] = array(
-				'type' => 'select',
-				'options' => $gradeOptions,
-				'onchange' => "$('#reload').click()"
-			);
+			$this->fields['education_grade_id']['type'] = 'select';
+			$this->fields['education_grade_id']['options'] = $gradeOptions;
+			$this->fields['education_grade_id']['attr'] = array('onchange' => "$('#reload').click()");
 
-			$this->fields['institution_site_section_id']['attr'] = array(
-				'type' => 'select',
-				'options' => $sectionOptions,
-				'onchange' => "$('#reload').click()"
-			);
+			$this->fields['institution_site_section_id']['type'] = 'select';
+			$this->fields['institution_site_section_id']['options'] = $sectionOptions;
+			$this->fields['institution_site_section_id']['attr'] = array('onchange' => "$('#reload').click()");
 
-			$this->fields['institution_site_class_id']['attr'] = array(
-				'type' => 'select',
-				'options' => $classOptions,
-				'onchange' => "$('#reload').click()"
-			);
+			$this->fields['institution_site_class_id']['type'] = 'select';
+			$this->fields['institution_site_class_id']['options'] = $classOptions;
+			$this->fields['institution_site_class_id']['attr'] = array('onchange' => "$('#reload').click()");
 
-			$this->fields['staff_id']['attr'] = array(
-				'type' => 'select',
-				'options' => $staffOptions,
-				'onchange' => "$('#reload').click()"
-			);
+			$this->fields['staff_id']['type'] = 'select';
+			$this->fields['staff_id']['options'] = $staffOptions;
+			$this->fields['staff_id']['attr'] = array('onchange' => "$('#reload').click()");
 		}
 
 		$contentHeader = __('Visits');
@@ -280,11 +270,11 @@ class InstitutionSiteQualityVisit extends AppModel {
 				$classOptions = !empty($classOptions) ? $classOptions : array('0' => __('No Data'));
 				$staffOptions = !empty($staffOptions) ? $staffOptions : array('0' => __('No Data'));
 
-				$this->fields['academic_period_id']['attr']['options'] = $academicPeriodOptions;
-				$this->fields['education_grade_id']['attr']['options'] = $gradeOptions;
-				$this->fields['institution_site_section_id']['attr']['options'] = $sectionOptions;
-				$this->fields['institution_site_class_id']['attr']['options'] = $classOptions;
-				$this->fields['staff_id']['attr']['options'] = $staffOptions;
+				$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+				$this->fields['education_grade_id']['options'] = $gradeOptions;
+				$this->fields['institution_site_section_id']['options'] = $sectionOptions;
+				$this->fields['institution_site_class_id']['options'] = $classOptions;
+				$this->fields['staff_id']['options'] = $staffOptions;
 			}
 		}
 	}
