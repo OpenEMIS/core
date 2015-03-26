@@ -14,6 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
+App::uses('AppModel', 'Model');
+
 class QualityStatusPeriod extends QualityAppModel {
 	public $belongsTo = array(
 		'QualityStatus' => array(
