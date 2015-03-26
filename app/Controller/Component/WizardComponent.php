@@ -325,7 +325,7 @@ class WizardComponent extends Component {
 		} else if ($index == -1) {
 			$url['action'] = $navigation['action'];
 		} else {
-			if($navigation['action'] != 'additional'){
+			if (!in_array($navigation['action'], array('additional', 'attachments'))) {
 				$url['action'] = $navigation['action'] . '/' . $action;
 			}else{
 				$url['action'] = $navigation['action'] . 'Edit';
