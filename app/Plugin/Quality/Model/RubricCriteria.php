@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class RubricCriteria extends QualityAppModel {
 	private $criteriaType = array(
 		1 => array('id' => 1, 'name' => 'Section Break'),
-		2 => array('id' => 2, 'name' => 'Dropdown')
+		2 => array('id' => 2, 'name' => 'Criteria')
 	);
 
 	public $belongsTo = array(
@@ -61,7 +61,6 @@ class RubricCriteria extends QualityAppModel {
 	);
 
 	public function beforeAction() {
-		$this->Navigation->addCrumb('Criterias');
 		$named = $this->controller->params->named;
 
 		$templateOptions = $this->RubricSection->RubricTemplate->find('list', array(
@@ -76,6 +75,19 @@ class RubricCriteria extends QualityAppModel {
 			'order' => array('RubricSection.order', 'RubricSection.name')
 		));
 		$selectedSection = isset($named['section']) ? $named['section'] : key($sectionOptions);
+
+		if ($this->action == 'reorder') {
+			$this->Navigation->addCrumb('Criterias', array('controller' => 'QualityRubrics', 'action' => 'RubricCriteria', 'index', 'template' => $selectedTemplate, 'section' => $selectedSection, 'plugin' => false));
+			$this->Navigation->addCrumb('Reorder');
+			$contentHeader = __('Criterias - Reorder');
+		} else if ($this->action == 'preview') {
+			$this->Navigation->addCrumb('Criterias', array('controller' => 'QualityRubrics', 'action' => 'RubricCriteria', 'index', 'template' => $selectedTemplate, 'section' => $selectedSection, 'plugin' => false));
+			$this->Navigation->addCrumb('Preview');
+			$contentHeader = __('Criterias - Preview');
+		} else {
+			$this->Navigation->addCrumb('Criterias');
+			$contentHeader = __('Criterias');
+		}
 
 		$criteriaTypeOptions = array();
 		foreach ($this->criteriaType as $key => $criteriaType) {
@@ -126,7 +138,6 @@ class RubricCriteria extends QualityAppModel {
 			$this->controller->set(compact('conditions'));
 		}
 
-		$contentHeader = __('Criterias');
 		$this->controller->set(compact('contentHeader', 'criteriaTypeOptions'));
 	}
 

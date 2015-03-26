@@ -23,6 +23,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 			<tr>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('RubricSection.rubric_template_id'); ?></th>
+				<th><?php echo $this->Label->get('RubricSection.no_of_criterias'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -31,6 +32,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
 					<tr>
 						<td><?php echo $this->Html->link($obj['RubricSection']['name'], array('action' => $model, 'view', $obj['RubricSection']['id'], 'template' => $selectedTemplate)); ?></td>
 						<td><?php echo $obj['RubricTemplate']['name']; ?></td>
+						<td><?php echo $obj['RubricSection']['no_of_criterias']; ?></td>
 					</tr>
 				<?php endforeach ?>
 			<?php endif ?>
