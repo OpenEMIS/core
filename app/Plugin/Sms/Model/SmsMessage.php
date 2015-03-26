@@ -47,6 +47,8 @@ class SmsMessage extends SmsAppModel {
 		
 		$msgValue = $this->data[$this->alias]['message'];
 		if(strlen($msgValue) > $configMsgLength){
+			$errorMsg = sprintf('Message length can not exceed %d characters.', $configMsgLength);
+			$this->validator()->getField('message')->getRule('lengthValidate')->message = $errorMsg;
 			return false;
 		}else{
 			return true;

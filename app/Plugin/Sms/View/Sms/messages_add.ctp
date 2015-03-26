@@ -19,7 +19,7 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 echo $this->Form->create('SmsMessage', $formOptions);
 ?>
 <?php echo $this->Form->input('original_order', array('type'=>'hidden', 'default'=>$defaultOrder)); ?>
-<?php echo $this->Form->input('message', array('type'=>'textarea', 'maxlength'=>"160")); ?>
+<?php echo $this->Form->input('message', array('type'=>'textarea')); ?>
 <?php echo $this->Form->input('enabled', array('options'=>array('1'=>__('Yes'), '0'=>__('No')), 'default'=>1)); ?>
 <?php echo $this->Form->input('order', array('options'=>$orderOptions, 'default'=>$defaultOrder)); ?>
 
