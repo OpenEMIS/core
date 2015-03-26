@@ -312,7 +312,7 @@ class InstitutionSiteStudent extends AppModel {
 		if (!empty($searchField)) {
 			$search = '%' . $searchField . '%';
 			$conditions['OR'] = array(
-				'openemis_no LIKE' => $search,
+				'SecurityUser.openemis_no LIKE' => $search,
 				'SecurityUser.first_name LIKE' => $search,
 				'SecurityUser.middle_name LIKE' => $search,
 				'SecurityUser.third_name LIKE' => $search,
@@ -327,7 +327,6 @@ class InstitutionSiteStudent extends AppModel {
 			$params = $this->Session->read('Student.AdvancedSearch');
 			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
 		}
-
 		$this->Session->write($prefix . 'conditions', $conditions);
 		$data = $this->controller->Search->search($this, $conditions);
 
@@ -463,6 +462,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
 	}
 	
+	// I do not think this is being used.... search uses student->paginate
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$identityConditions[] = 'StudentIdentity.security_user_id = SecurityUser.id';
 		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
