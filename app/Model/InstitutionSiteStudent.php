@@ -88,12 +88,12 @@ class InstitutionSiteStudent extends AppModel {
 	
 	public function excelGetHeader($include){
 		$fields = array(
-			'Student.identification_no',
-			'Student.first_name',
-			'Student.middle_name',
-			'Student.third_name',
-			'Student.last_name',
-			'Student.date_of_birth',
+			'SecurityUser.openemis_no',
+			'SecurityUser.first_name',
+			'SecurityUser.middle_name',
+			'SecurityUser.third_name',
+			'SecurityUser.last_name',
+			'SecurityUser.date_of_birth',
 			'StudentStatus.name',
 			'InstitutionSite.name',
 			'EducationProgramme.name',
@@ -116,6 +116,13 @@ class InstitutionSiteStudent extends AppModel {
 				'alias' => 'Student',
 				'conditions' => array(
 					'Student.id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'conditions' => array(
+					'SecurityUser.id = Student.security_user_id'
 				)
 			),
 			array(
@@ -183,7 +190,7 @@ class InstitutionSiteStudent extends AppModel {
 			),
 		);
 		unset($options['contain']);
-		$options['order'] = array('Student.identification_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
+		$options['order'] = array('SecurityUser.openemis_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
 		
 		return $options;
 	}
@@ -532,7 +539,30 @@ class InstitutionSiteStudent extends AppModel {
 		*	Must be unset to avoid mysql unknown column error when querying InstitutionSiteStudent table.
 		*/
 		unset($conditions['defaultIdentity']);
-		$count = $this->find('count', array('conditions' => $conditions, 'group' => array('Student.id'),));
+
+		$count = $this->find(
+			'count',
+			array(
+				'recursive' => -1,
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'type' => 'inner',
+						'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'type' => 'inner',
+						'conditions' => array('SecurityUser.id = Student.security_user_id')
+					),
+				),
+				'conditions' => $conditions, 
+				'group' => array('Student.id')
+			)
+		);
+
 		return $count;
 	}
 	

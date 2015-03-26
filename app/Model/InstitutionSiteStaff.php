@@ -20,7 +20,7 @@ class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
 	public $fteOptions = array(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'))),
 		'Search',
 		'ControllerAction2', 
 		'DatePicker' => array('start_date', 'end_date'),
@@ -247,7 +247,7 @@ class InstitutionSiteStaff extends AppModel {
 				'SecurityUser.middle_name LIKE' => $search,
 				'SecurityUser.third_name LIKE' => $search,
 				'SecurityUser.last_name LIKE' => $search,
-				'Staff.preferred_name LIKE' => $search
+				'SecurityUser.preferred_name LIKE' => $search
 			);
 		} else {
 			unset($conditions['OR']['SecurityUser.openemis_no LIKE']);
@@ -255,7 +255,7 @@ class InstitutionSiteStaff extends AppModel {
 			unset($conditions['OR']['SecurityUser.middle_name LIKE']);
 			unset($conditions['OR']['SecurityUser.third_name LIKE']);
 			unset($conditions['OR']['SecurityUser.last_name LIKE']);
-			unset($conditions['OR']['Staff.preferred_name LIKE']);
+			unset($conditions['OR']['SecurityUser.preferred_name LIKE']);
 		}
 		
 		if($this->Session->check('Staff.AdvancedSearch')){
@@ -456,7 +456,30 @@ class InstitutionSiteStaff extends AppModel {
 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
 		unset($conditions['defaultIdentity']);
-		$count = $this->find('count', array('conditions' => $conditions));
+
+		$count = $this->find(
+			'count',
+			array(
+				'recursive' => -1,
+				'joins' => array(
+					array(
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'type' => 'inner',
+						'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'type' => 'inner',
+						'conditions' => array('SecurityUser.id = Staff.security_user_id')
+					),
+				),
+				'conditions' => $conditions, 
+				'group' => array('Staff.id')
+			)
+		);
+
 		return $count;
 	}
 
