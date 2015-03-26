@@ -23,7 +23,7 @@ class SearchBehavior extends ModelBehavior {
 		
 		$conditions = array(
 			'OR' => array(
-				'SecurityUser.openemis_id LIKE' => $search,
+				'SecurityUser.openemis_no LIKE' => $search,
 				'SecurityUser.first_name LIKE' => $search,
 				'SecurityUser.middle_name LIKE' => $search,
 				'SecurityUser.third_name LIKE' => $search,
@@ -199,18 +199,6 @@ class SearchBehavior extends ModelBehavior {
 	
 	public function paginateJoins(Model $model, $joins, $params) {
 		$class = $model->alias;
-		$obj = Inflector::singularize(Inflector::tableize($class));
-		$table = $obj . '_history';
-		$alias = $class . 'History';
-		$id = $obj . '_id';
-		if(strlen($params['SearchKey']) != 0) {	
-			$joins[] = array(
-				'table' => $table,
-				'alias' => $alias,
-				'type' => 'LEFT',
-				'conditions' => array(sprintf('%s.%s = %s.id', $alias, $id, $class))
-			);
-		}
 
 		if(!is_null($params['AdvancedSearch'])) {
 			$advanced = $params['AdvancedSearch'];
@@ -280,12 +268,7 @@ class SearchBehavior extends ModelBehavior {
 				'SecurityUser.third_name LIKE' => $search,
 				'SecurityUser.last_name LIKE' => $search,
 				'SecurityUser.preferred_name LIKE' => $search,
-				'SecurityUser.openemis_id LIKE' => $search,
-				$class . 'History.first_name LIKE' => $search,
-				$class . 'History.middle_name LIKE' => $search,
-				$class . 'History.third_name LIKE' => $search,
-				$class . 'History.last_name LIKE' => $search,
-				$class . 'History.openemis_no LIKE' => $search
+				'SecurityUser.openemis_no LIKE' => $search
 			);
 		}
 
@@ -383,14 +366,6 @@ class SearchBehavior extends ModelBehavior {
 			'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name',
 			$class.'Identity.number'
 		);
-		
-		if(strlen($conditions['SearchKey']) != 0) {
-			$fields[] = $class.'History.openemis_no AS openemis_no';
-			$fields[] = $class.'History.first_name AS history_first_name';
-			$fields[] = $class.'History.middle_name AS history_middle_name';
-			$fields[] = $class.'History.third_name AS history_third_name';
-			$fields[] = $class.'History.last_name AS history_last_name';
-		}
 
 		$joins = array();
 		$data = array();
