@@ -106,7 +106,7 @@ class RubricSection extends QualityAppModel {
 		if (empty($templateOptions)) {
 			$this->controller->Message->alert('RubricTemplate.noTemplate');
 		} else {
-			$this->contain('RubricTemplate');
+			$this->contain('RubricTemplate', 'RubricCriteria');
 			$data = $this->find('all', array(
 				'conditions' => array(
 					'RubricSection.rubric_template_id' => $selectedTemplate
@@ -115,6 +115,19 @@ class RubricSection extends QualityAppModel {
 					'RubricSection.order', 'RubricSection.id'
 				)
 			));
+
+			$result = array();
+			foreach ($data as $key => $obj) {
+				$count = 0;
+				foreach ($obj['RubricCriteria'] as $rubricCriteria) {
+					if($rubricCriteria['type'] == 2) {
+						$count++;
+					}
+				}
+				$obj['RubricSection']['no_of_criterias'] = $count;
+				$result[$key] = $obj;
+			}
+			$data = $result;
 
 			$this->controller->set(compact('data', 'templateOptions', 'selectedTemplate'));
 		}

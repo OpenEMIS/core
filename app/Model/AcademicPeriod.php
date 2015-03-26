@@ -492,4 +492,19 @@ class AcademicPeriod extends AppModel {
 		$data = $this->findByName($academicPeriod);	
 		return $data['AcademicPeriod']['id'];
 	}
+
+	public function getAcademicPeriodByLevel($selectedPeriodLevel=0) {
+		$list = $this->find('list', array(
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+			'conditions' => array(
+				'AcademicPeriod.academic_period_level_id' => $selectedPeriodLevel,
+				'AcademicPeriod.available' => 1,
+				'AcademicPeriod.visible >' => 0,
+				'AcademicPeriod.parent_id >' => 0
+			),
+			'order' => array('AcademicPeriod.order ASC')
+		));
+
+		return $list;
+	}
 }

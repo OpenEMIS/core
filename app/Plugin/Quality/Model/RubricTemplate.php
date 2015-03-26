@@ -54,6 +54,7 @@ class RubricTemplate extends QualityAppModel {
 		'SecurityRole' => array(
 			'className' => 'SecurityRole',
 			'joinTable' => 'rubric_template_roles',
+			'foreignKey' => 'rubric_template_id',
 			'associationForeignKey' => 'security_role_id',
 			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
 			'order' => array('SecurityRole.order')
@@ -104,7 +105,9 @@ class RubricTemplate extends QualityAppModel {
 		);
 		$this->ControllerAction->setFieldOrder('grades', 6);
 
-		if ($this->action == 'view') {
+		if ($this->action == 'index') {
+			$this->controller->set('weightingTypeOptions', $weightingTypeOptions);
+		} else if ($this->action == 'view') {
 			$this->fields['weighting_type']['dataModel'] = 'WeightingType';
 			$this->fields['weighting_type']['dataField'] = 'name';
 

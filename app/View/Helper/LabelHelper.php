@@ -590,7 +590,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Category'
 		),
 		'RubricTemplate' => array(
-			'weighting_type' => 'Weighting',
+			'weighting_type' => 'Weighting Type',
 			'security_roles' => 'Security Roles',
 			'grades' => 'Grades',
 			'options' => 'Options'
@@ -604,7 +604,8 @@ class LabelHelper extends AppHelper {
 			'color' => 'Color'
 		),
 		'RubricSection' => array(
-			'rubric_template_id' => 'Rubric Template'
+			'rubric_template_id' => 'Rubric Template',
+			'no_of_criterias' => 'No of Criterias'
 		),
 		'RubricCriteria' => array(
 			'rubric_section_id' => 'Section',
@@ -613,7 +614,7 @@ class LabelHelper extends AppHelper {
 		),
 		'QualityStatus' => array(
 			'rubric_template_id' => 'Rubric Template',
-			'academic_period_id' => 'Academic Period'
+			'academic_period_level_id' => 'Academic Period Level'
 		),
 		'InstitutionSiteQualityVisit' => array(
 			'academic_period_id' => 'Academic Period',
@@ -622,7 +623,15 @@ class LabelHelper extends AppHelper {
 			'institution_site_class_id' => 'Class',
 			'staff_id' => 'Staff',
 			'quality_visit_type_id' => 'Visit Type'
-		)
+		),
+		'InstitutionSiteQualityRubric' => array(
+			'rubric_template_id' => 'Rubric Template',
+			'academic_period_id' => 'Academic Period',
+			'education_grade_id' => 'Grade',
+			'institution_site_section_id' => 'Section',
+			'institution_site_class_id' => 'Class',
+			'staff_id' => 'Staff'
+		)		
 	);
 	
 	public function get($code) {

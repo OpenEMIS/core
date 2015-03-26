@@ -16,6 +16,8 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
 		<thead>
 			<tr>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
+				<th><?php echo $this->Label->get('general.description'); ?></th>
+				<th><?php echo $this->Label->get('RubricTemplate.weighting_type'); ?></th>
 				<th><?php echo $this->Label->get('RubricTemplate.security_roles'); ?></th>
 				<th><?php echo $this->Label->get('RubricTemplate.grades'); ?></th>
 			</tr>
@@ -24,6 +26,8 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
 			<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['RubricTemplate']['name'], array('action' => $model, 'view', $obj['RubricTemplate']['id'])); ?></td>
+					<td><?php echo $obj['RubricTemplate']['description']; ?></td>
+					<td><?php echo $weightingTypeOptions[$obj['RubricTemplate']['weighting_type']]; ?></td>
 					<td>
 						<?php
 							$securityRoles = array();
