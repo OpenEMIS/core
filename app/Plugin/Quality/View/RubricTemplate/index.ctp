@@ -19,7 +19,7 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
 				<th><?php echo $this->Label->get('general.description'); ?></th>
 				<th><?php echo $this->Label->get('RubricTemplate.weighting_type'); ?></th>
 				<th><?php echo $this->Label->get('RubricTemplate.security_roles'); ?></th>
-				<th><?php echo $this->Label->get('RubricTemplate.grades'); ?></th>
+				<th><?php echo $this->Label->get('RubricTemplate.education_grades'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -39,13 +39,11 @@ echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
 					</td>
 					<td>
 						<?php
-							$rubricTemplateGrades = array();
-							foreach ($obj['RubricTemplateGrade'] as $rubricTemplateGrade) {
-								if ($rubricTemplateGrade['visible'] == 1) {
-									$rubricTemplateGrades[] = $rubricTemplateGrade['EducationGrade']['name'];
-								}
+							$educationGrades = array();
+							foreach ($obj['EducationGrade'] as $educationGrade) {
+								$educationGrades[] = $educationGrade['programme_grade_name'];
 							}
-							echo implode(', ', $rubricTemplateGrades);
+							echo implode('<br>', $educationGrades);
 						?>
 					</td>
 				</tr>
