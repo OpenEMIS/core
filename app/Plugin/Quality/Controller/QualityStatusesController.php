@@ -18,6 +18,7 @@ class QualityStatusesController extends QualityAppController {
 	public $uses = array(
 		'Quality.QualityStatus',
 		'Quality.RubricTemplate',
+		'AcademicPeriodLevel',
 		'AcademicPeriod'
 	);
 
@@ -35,23 +36,65 @@ class QualityStatusesController extends QualityAppController {
 		$this->QualityStatus->fields['rubric_template_id']['hyperlink'] = true;
 
 		$this->QualityStatus->fields['status']['visible'] = false;
+		$this->QualityStatus->fields['academic_periods'] = array(
+			'type' => 'chosen_select',
+			'id' => 'AcademicPeriod.AcademicPeriod',
+			'placeholder' => __('Select academic periods'),
+			'visible' => true
+		);
 		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
-		$this->ControllerAction->setFieldOrder('academic_period_id', 2);
+		$this->ControllerAction->setFieldOrder('academic_period_level_id', 2);
+		$this->ControllerAction->setFieldOrder('academic_periods', 3);
 
-		if ($this->action == 'index' || $this->action == 'view') {
+		if ($this->action == 'index') {
+			$this->QualityStatus->fields['academic_periods']['visible'] = false;
 			$this->QualityStatus->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
 			$this->QualityStatus->fields['rubric_template_id']['dataField'] = 'name';
 
-			$this->QualityStatus->fields['academic_period_id']['dataModel'] = 'AcademicPeriod';
-			$this->QualityStatus->fields['academic_period_id']['dataField'] = 'name';
+			$this->QualityStatus->fields['academic_period_level_id']['dataModel'] = 'AcademicPeriodLevel';
+			$this->QualityStatus->fields['academic_period_level_id']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['academic_periods']['dataModel'] = 'AcademicPeriod';
+			$this->QualityStatus->fields['academic_periods']['dataField'] = 'name';
+		} else if ($this->action == 'view') {
+			$this->QualityStatus->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
+			$this->QualityStatus->fields['rubric_template_id']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['academic_period_level_id']['dataModel'] = 'AcademicPeriodLevel';
+			$this->QualityStatus->fields['academic_period_level_id']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['academic_periods']['dataModel'] = 'AcademicPeriod';
+			$this->QualityStatus->fields['academic_periods']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$templateOptions = $this->RubricTemplate->find('list');
 			$this->QualityStatus->fields['rubric_template_id']['type'] = 'select';
 			$this->QualityStatus->fields['rubric_template_id']['options'] = $templateOptions;
 
-			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
-			$this->QualityStatus->fields['academic_period_id']['type'] = 'select';
-			$this->QualityStatus->fields['academic_period_id']['options'] = $academicPeriodOptions;
+			$periodLevelOptions = $this->AcademicPeriodLevel->find('list', array(
+				'fields' => array('AcademicPeriodLevel.id', 'AcademicPeriodLevel.name'),
+				'order' => array('AcademicPeriodLevel.level'),
+			));
+			$this->QualityStatus->fields['academic_period_level_id']['type'] = 'select';
+			$this->QualityStatus->fields['academic_period_level_id']['options'] = $periodLevelOptions;
+			$this->QualityStatus->fields['academic_period_level_id']['attr'] = array(
+				'onchange' => "$('#reload').click()"
+			);
+
+			if ($this->request->is(array('post', 'put'))) {
+				$data = $this->request->data;
+				$selectedPeriodLevel = $data['QualityStatus']['academic_period_level_id'];
+
+				if ($data['submit'] == 'reload') {
+					$this->ControllerAction->autoProcess = false;
+				} else {
+					$this->ControllerAction->autoProcess = true;
+				}
+			} else {
+				$selectedPeriodLevel = key($periodLevelOptions);
+			}
+
+			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodByLevel($selectedPeriodLevel);
+			$this->QualityStatus->fields['academic_periods']['options'] = $academicPeriodOptions;
 		}
 	}
 }

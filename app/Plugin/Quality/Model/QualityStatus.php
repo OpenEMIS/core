@@ -20,13 +20,10 @@ class QualityStatus extends QualityAppModel {
 	);
 
 	public $belongsTo = array(
+		'AcademicPeriodLevel',
 		'RubricTemplate' => array(
             'className' => 'Quality.RubricTemplate',
             'foreignKey' => 'rubric_template_id'
-        ),
-        'AcademicPeriod' => array(
-            'className' => 'AcademicPeriod',
-            'foreignKey' => 'academic_period_id'
         ),
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -40,19 +37,30 @@ class QualityStatus extends QualityAppModel {
 		)
 	);
 
+	public $hasAndBelongsToMany = array(
+		'AcademicPeriod' => array(
+			'className' => 'AcademicPeriod',
+			'joinTable' => 'quality_status_periods',
+			'foreignKey' => 'quality_status_id',
+			'associationForeignKey' => 'academic_period_id',
+			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order'),
+			'order' => array('AcademicPeriod.order')
+		)
+	);
+
     public $validate = array(
 		'rubric_template_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select a template'
+				'message' => 'Please select a rubric template.'
 			)
 		),
-		'academic_period_id' => array(
+		'academic_period_level_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select an academic period'
+				'message' => 'Please select an academic period level.'
 			)
 		)
 	);

@@ -63,7 +63,7 @@ class RubricTemplateOption extends QualityAppModel {
 	);
 
 	public function beforeAction() {
-		$this->Navigation->addCrumb('Templates Options');
+		$this->Navigation->addCrumb('Template Options');
 		$named = $this->controller->params->named;
 		
 		$templateOptions = $this->RubricTemplate->find('list', array(
@@ -71,6 +71,7 @@ class RubricTemplateOption extends QualityAppModel {
 		));
 		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templateOptions);
 
+		$this->fields['order']['visible'] = false;
 		$this->fields['color'] = array(
 			'type' => 'element',
 			'element' => '../../Plugin/Quality/View/RubricTemplateOption/color',
@@ -81,7 +82,8 @@ class RubricTemplateOption extends QualityAppModel {
 		if ($this->action == 'index') {
 
 		} else if ($this->action == 'view') {
-
+			$this->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
+			$this->fields['rubric_template_id']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['rubric_template_id']['type'] = 'select';
 			$this->fields['rubric_template_id']['options'] = $templateOptions;
@@ -96,8 +98,7 @@ class RubricTemplateOption extends QualityAppModel {
 			$this->controller->set(compact('conditions'));
 		}
 
-		$this->controller->set('contentHeader', __('Templates Options'));
-		$contentHeader = __('Templates Options');
+		$contentHeader = __('Template Options');
 		$this->controller->set(compact('contentHeader', 'templateOptions', 'selectedTemplate'));
 	}
 
