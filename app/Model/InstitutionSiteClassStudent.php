@@ -335,6 +335,11 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array('Student.id = InstitutionSiteClassStudent.student_id')
 			),
 			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'conditions' => array('SecurityUser.id = Student.security_user_id')
+			),
+			array(
 				'table' => 'institution_site_classes',
 				'alias' => 'InstitutionSiteClass',
 				'conditions' => array(
@@ -398,7 +403,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			$options['joins'] = $options_joins;
 		}
 
-		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name');
+		$options['order'] = array('SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name');
 		$options['conditions'] = array(
 			'InstitutionSiteClassStudent.status = 1',
 			'InstitutionSiteClassStudent.institution_site_class_id' => $classId

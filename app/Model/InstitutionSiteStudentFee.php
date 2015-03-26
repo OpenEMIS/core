@@ -230,7 +230,7 @@ class InstitutionSiteStudentFee extends AppModel {
 		$data[$alias]['grade'] = $fees['EducationGrade']['name'];
 		$data[$alias]['student_id'] = $student['Student']['id'];
 		$data[$alias]['openemisId'] = $student['SecurityUser']['openemis_no'];
-		$data[$alias]['name'] = ModelHelper::getName($student['Student']['SecurityUser']);
+		$data[$alias]['name'] = ModelHelper::getName($student['SecurityUser']);
 		$data[$alias]['institution_site_fee_id'] = $fees['InstitutionSiteFee']['id'];
 		$data[$alias]['total_fee'] = $fees['InstitutionSiteFee']['total'];
 		$data[$alias]['outstanding'] = number_format($outstanding, 2);

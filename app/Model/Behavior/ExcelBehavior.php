@@ -178,7 +178,6 @@ class ExcelBehavior extends ModelBehavior {
 
 			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 				$data = $sheetModel->excelGetData($pageNo);
-//pr($data);die;
 				foreach ($data as $row) {
 					$sheetRow = array();
 					foreach ($header as $key => $label) {
@@ -290,11 +289,12 @@ class ExcelBehavior extends ModelBehavior {
 
 		// removing fields and handling it later because fields and contain will not be able to generate exactly the data required
 		$fields = $options['fields'];
-		unset($options['fields']);
-
+		
+		if (array_key_exists('contain', $options)) {
+			unset($options['fields']);
+		}
+		
 		$data = $this->Model->find('all', $options);
-		// pr($options);
-		// pr($data);
 		
 		// remove fields from main model that are not required
 		$fieldNames = array();
