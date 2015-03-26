@@ -67,23 +67,14 @@ MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 DROP TABLE IF EXISTS `rubric_template_grades`;
 CREATE TABLE IF NOT EXISTS `rubric_template_grades` (
-`id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `rubric_template_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
+  `rubric_template_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 ALTER TABLE `rubric_template_grades`
- ADD PRIMARY KEY (`id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
-
-
-ALTER TABLE `rubric_template_grades`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `education_grade_id` (`education_grade_id`);
 
 --
 -- 6. New table - rubric_template_options
@@ -208,8 +199,8 @@ CREATE TABLE IF NOT EXISTS `quality_statuses` (
 `id` int(11) NOT NULL,
   `date_enabled` date NOT NULL,
   `date_disabled` date NOT NULL,
-  `status` int(2) NOT NULL DEFAULT '1',
-  `academic_period_id` int(11) NOT NULL,
+  `status` int(1) NOT NULL DEFAULT '1',
+  `academic_period_level_id` int(11) NOT NULL,
   `rubric_template_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -219,14 +210,29 @@ CREATE TABLE IF NOT EXISTS `quality_statuses` (
 
 
 ALTER TABLE `quality_statuses`
- ADD PRIMARY KEY (`id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `academic_period_level_id` (`academic_period_level_id`), ADD KEY `rubric_template_id` (`rubric_template_id`);
 
 
 ALTER TABLE `quality_statuses`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 12. New table - institution_site_quality_rubrics
+-- 12. New table - quality_status_periods
+--
+
+DROP TABLE IF EXISTS `quality_status_periods`;
+CREATE TABLE IF NOT EXISTS `quality_status_periods` (
+  `id` char(36) NOT NULL,
+  `academic_period_id` int(11) NOT NULL,
+  `quality_status_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `quality_status_periods`
+ ADD PRIMARY KEY (`id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `quality_status_id` (`quality_status_id`);
+
+--
+-- 13. New table - institution_site_quality_rubrics
 --
 
 DROP TABLE IF EXISTS `institution_site_quality_rubrics`;
@@ -255,7 +261,7 @@ ALTER TABLE `institution_site_quality_rubrics`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 13. New table - institution_site_quality_rubric_answers
+-- 14. New table - institution_site_quality_rubric_answers
 --
 
 DROP TABLE IF EXISTS `institution_site_quality_rubric_answers`;
@@ -280,7 +286,7 @@ ALTER TABLE `institution_site_quality_rubric_answers`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 14. New table - institution_site_quality_visits
+-- 15. New table - institution_site_quality_visits
 --
 
 DROP TABLE IF EXISTS `institution_site_quality_visits`;

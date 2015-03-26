@@ -123,16 +123,7 @@ class SurveyStatusesController extends SurveysAppController {
 			$this->request->data['SurveyStatus']['date_disabled'] = $todayDate;
 		}
 
-		$academicPeriodOptions = $this->AcademicPeriod->find('list', array(
-			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
-			'conditions' => array(
-				'AcademicPeriod.academic_period_level_id' => $selectedAcademicPeriodLevel,
-				'AcademicPeriod.available' => 1,
-				'AcademicPeriod.visible >' => 0,
-				'AcademicPeriod.parent_id >' => 0
-			),
-			'order' => array('AcademicPeriod.order ASC')
-		));
+		$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodByLevel($selectedAcademicPeriodLevel);
 
 		$this->set('templateOptions', $templateOptions);
 		$this->set('academicPeriodLevelOptions', $academicPeriodLevelOptions);
@@ -173,16 +164,7 @@ class SurveyStatusesController extends SurveysAppController {
 			}
 
 			$selectedAcademicPeriodLevel = $data['SurveyStatus']['academic_period_level_id'];
-			$academicPeriodOptions = $this->AcademicPeriod->find('list', array(
-				'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
-				'conditions' => array(
-					'AcademicPeriod.academic_period_level_id' => $selectedAcademicPeriodLevel,
-					'AcademicPeriod.available' => 1,
-					'AcademicPeriod.visible >' => 0,
-					'AcademicPeriod.parent_id >' => 0
-				),
-				'order' => array('AcademicPeriod.order ASC')
-			));
+			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodByLevel($selectedAcademicPeriodLevel);
 
 			$this->set('templateOptions', $templateOptions);
 			$this->set('academicPeriodLevelOptions', $academicPeriodLevelOptions);

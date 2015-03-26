@@ -30,6 +30,7 @@ DROP TABLE IF EXISTS `rubric_sections`;
 DROP TABLE IF EXISTS `rubric_criterias`;
 DROP TABLE IF EXISTS `rubric_criteria_options`;
 DROP TABLE IF EXISTS `quality_statuses`;
+DROP TABLE IF EXISTS `quality_status_periods`;
 
 DROP TABLE IF EXISTS `institution_site_quality_rubrics`;
 DROP TABLE IF EXISTS `institution_site_quality_rubric_answers`;

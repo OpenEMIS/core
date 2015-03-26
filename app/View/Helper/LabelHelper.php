@@ -592,7 +592,7 @@ class LabelHelper extends AppHelper {
 		'RubricTemplate' => array(
 			'weighting_type' => 'Weighting Type',
 			'security_roles' => 'Security Roles',
-			'grades' => 'Grades',
+			'education_grades' => 'Education Grades',
 			'options' => 'Options'
 		),
 		'RubricTemplateGrade' => array(

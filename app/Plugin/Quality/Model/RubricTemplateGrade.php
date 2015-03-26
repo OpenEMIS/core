@@ -18,20 +18,13 @@ App::uses('AppModel', 'Model');
 
 class RubricTemplateGrade extends QualityAppModel {
 	public $belongsTo = array(
-		'EducationGrade',
 		'RubricTemplate' => array(
             'className' => 'Quality.RubricTemplate',
             'foreignKey' => 'rubric_template_id'
         ),
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id'
+		'EducationGrade' => array(
+			'className' => 'EducationGrade',
+			'fields' => array('EducationGrade.id', 'EducationGrade.programme_grade_name', 'EducationGrade.programme_order')
 		)
 	);
 }
