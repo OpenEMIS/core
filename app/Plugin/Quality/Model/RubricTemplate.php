@@ -43,6 +43,10 @@ class RubricTemplate extends QualityAppModel {
         'RubricSection' => array(
             'className' => 'Quality.RubricSection',
 			'dependent' => true
+        ),
+        'QualityStatus' => array(
+            'className' => 'Quality.QualityStatus',
+			'dependent' => true
         )
     );
 
