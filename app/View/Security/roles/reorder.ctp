@@ -1,15 +1,22 @@
 <?php 
 echo $this->Html->script('field.option', false);
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Levels'));
+$this->assign('contentHeader', __('Reorder'));
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'index', 'parent_id' => $parentId), array('class' => 'divider'));
+$params = array('action' => 'roles');
+if (isset($selectedGroup)) {
+	$params[] = $selectedGroup;
+	$params['action'] = 'rolesUserDefined';
+}
+echo $this->Html->link(__('Back'), $params, array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('nav_tabs');
 
-$formOptions = array('controller' => 'InfrastructureLevels', 'action' => 'move', 'parent_id' => $parentId, 'plugin' => false);
+$formOptions = array('action' => 'rolesReorder');
+if (isset($selectedGroup)) {
+	$formParams['group_id'] = $selectedGroup;
+}
 
 echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formOptions));
 echo $this->Form->hidden('id', array('class' => 'option-id'));
@@ -30,14 +37,15 @@ echo $this->Form->end();
 		<tbody>
 			<?php 
 			$index = 1;
-			foreach ($data as $obj) : 
+			//pr($roles);
+			foreach ($roles as $obj) : 
 			?>
-			<tr row-id="<?php echo $obj[$model]['id']; ?>">
-				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
-				<td><?php echo $obj[$model]['name']; ?></td>
+			<tr row-id="<?php echo $obj['id']; ?>">
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
+				<td><?php echo $obj['name']; ?></td>
 				<td class="action">
 					<?php
-					$size = count($data);
+					$size = count($roles);
 					echo $this->element('layout/reorder', compact('index', 'size'));
 					$index++;
 					?>
