@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class InfrastructureLevel extends InfrastructureAppModel {
-	public $actsAs = array('Reorder');
+	public $actsAs = array('Reorder' => array('parentKey' => 'parent_id'));
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(

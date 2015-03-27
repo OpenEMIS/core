@@ -44,10 +44,7 @@ class Position extends AppModel {
 	
 	public function beforeSave($options = array()) {
 		$alias = $this->alias;
-		
-		//pr($this->data);die;
-		$this->data['Position']['FTE'] = $this->data['Position']['FTE'] / 100;
-		
+		$this->data['Position']['FTE'] = $this->data['Position']['FTE'] / 100;		
 		return parent::beforeSave($options);
 	}
 	
@@ -97,7 +94,7 @@ class Position extends AppModel {
 		} else if ($this->action == 'edit') {
 			$data = $this->request->data;
 			$titleId = $data['InstitutionSitePosition']['staff_position_title_id'];
-			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', $titleId);
+			$name = $this->InstitutionSitePosition->StaffPositionTitle->field('name', array('id'=>$titleId));
 			$this->fields['institution_site_position_id']['type'] = 'disabled';
 			$this->fields['institution_site_position_id']['value'] = $name;
 			

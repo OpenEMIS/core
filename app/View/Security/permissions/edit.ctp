@@ -47,7 +47,44 @@ foreach($permissions as $module => $func) {
 				<td><?php echo __($obj['name']); ?></td>
 				<?php
 				foreach($_operations as $op) {
-					echo $this->FormUtility->getPermissionInput($this->Form, $fieldName, $op, $obj[$op]);
+					$optionValue =  $obj[$op];
+					if(!$isSuperUser){
+						if($op != '_execute'){
+							if(isset($permissionLookup[$obj['security_function_id']])){
+								$operationLevel = $operationsLookup[$op]['level'];
+								if($permissionLookup[$obj['security_function_id']] < $operationLevel){
+									if($obj[$op] == 1){
+										$optionValue = 2;
+									}else if($obj[$op] == 0){
+										$optionValue = null;
+									}
+								}
+							}else{
+								if($obj[$op] == 1){
+									$optionValue = 2;
+								}else if($obj[$op] == 0){
+									$optionValue = null;
+								}
+							}
+						}else{
+							if(isset($permissionLookup[$obj['security_function_id']])){
+								if($permissionLookup[$obj['security_function_id']] != 5){
+									if($obj[$op] == 1){
+										$optionValue = 2;
+									}else if($obj[$op] == 0){
+										$optionValue = null;
+									}
+								}
+							}else{
+								if($obj[$op] == 1){
+									$optionValue = 2;
+								}else if($obj[$op] == 0){
+									$optionValue = null;
+								}
+							}
+						}
+					}
+					echo $this->FormUtility->getPermissionInput($this->Form, $fieldName, $op, $optionValue);
 				}
 				?>
 			</tr>

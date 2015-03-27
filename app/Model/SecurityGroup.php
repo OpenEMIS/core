@@ -170,6 +170,7 @@ class SecurityGroup extends AppModel {
 		if ($this->Session->check($this->alias.'.autocomplete.conditions.'.$model)) {
 			$conditions = $this->Session->read($this->alias.'.autocomplete.conditions.'.$model);
 		}
+		
 		$data = $this->{$model}->autocomplete($search, $exclude, $conditions);
 		return json_encode($data);
 	}
