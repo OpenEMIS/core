@@ -350,24 +350,34 @@ class SecurityRole extends AppModel {
 		return $data;
 	}
 	
-	public function roles_reorder($controller, $params) {
-		$this->Navigation->addCrumb('Levels');
+	public function rolesReorder($controller, $params) {
+		$type = $params['pass'][0];
+		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		$userId = $controller->Auth->user('id');
+		$roles = array();
+		$groupOptions = array();
+		$selectedGroup = 0;
 		
-		$parentId = isset($this->params->named['parent_id']) ? $this->params->named['parent_id'] : 0;
-		$conditions = array('InfrastructureLevel.parent_id' => $parentId);
+		if($type == 'user_defined'){
+			$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
+
+			if(!empty($groupOptions)) {
+				if(isset($params['pass'][1])) {
+					$groupId = $params['pass'][1];
+					$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
+				} else {
+					$selectedGroup = key($groupOptions);
+				}
+				$roles = $this->getRoles($selectedGroup);
+			}
 		
-		$data = $this->InfrastructureLevel->find('all', array(
-			'conditions' => $conditions, 
-			'order' => array('InfrastructureLevel.order')
-		));
-		
-		$breadcrumbs = array();
-		$this->generatebreadcrumbs($parentId, $breadcrumbs);
-		$breadcrumbs = array_reverse($breadcrumbs);
-		
-		$currentTab = 'Levels';
-		
-		$this->set(compact('data', 'parentId', 'breadcrumbs', 'currentTab'));
+			$contentHeader = 'User Defined Roles';
+		}else{
+			$contentHeader = 'System Defined Roles';
+			$roles = $this->getRoles(array(0, -1));
+		}
+
+		$controller->set(compact('isSuperUser', 'roles', 'groupOptions', 'selectedGroup', 'contentHeader'));
 	}
 	
 	public function roles_move($controller, $params) {
