@@ -152,7 +152,8 @@ class InstitutionSiteStudent extends AppModel {
 				'alias' => 'InstitutionSiteSectionStudent',
 				'type' => 'LEFT',
 				'conditions' => array(
-					'InstitutionSiteSectionStudent.student_id = InstitutionSiteStudent.student_id'
+					'InstitutionSiteSectionStudent.student_id = InstitutionSiteStudent.student_id',
+					'InstitutionSiteSectionStudent.status' => 1
 				)
 			),
 			array(
