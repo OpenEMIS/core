@@ -34,8 +34,7 @@ class SmsMessage extends SmsAppModel {
 				'message' => 'Please enter a valid Message'
 			),
 			'lengthValidate' => array(
-            	'rule'=>array('lengthValidate'),
-				'message' => 'Please enter a Message within maximum length'
+            	'rule'=>array('lengthValidate')
             )
         )
 	);
