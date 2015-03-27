@@ -130,3 +130,6 @@ RENAME TABLE z_985_student_history TO student_history;
 RENAME TABLE z_985_staff_history TO staff_history;
 RENAME TABLE z_985_institution_site_history TO institution_site_history;
 
+-- need to fix for wrongful sql data for add new staff (rollback)
+UPDATE navigations SET title = 'Add Staff', visible = 1 WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header IS NULL AND action = 'add' LIMIT 1;
+-- select * from navigations where id = 88;

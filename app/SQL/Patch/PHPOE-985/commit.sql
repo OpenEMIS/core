@@ -639,3 +639,6 @@ RENAME TABLE student_history TO z_985_student_history;
 RENAME TABLE staff_history TO z_985_staff_history;
 RENAME TABLE institution_site_history TO z_985_institution_site_history;
 
+-- need to fix for wrongful sql data for add new staff
+UPDATE navigations SET title = 'Add New Staff', visible = 0 WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header IS NULL AND action = 'add' LIMIT 1; 
+-- select * from navigations where id = 88;
