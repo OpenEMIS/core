@@ -107,7 +107,27 @@ class InstitutionSitesController extends AppController {
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
+			$pass = $this->request->params['pass'];
+			$siteId = isset($pass[0]) ? $pass[0] : 0;
 
+			if ($siteId != 0) {
+				$data = $this->InstitutionSite->findById($siteId);
+				if ($data) {
+					$this->Session->write('InstitutionSiteId', $siteId); // deprecated
+					$this->Session->write('InstitutionSite.id', $siteId); // writing to session using array dot notation
+					$this->Session->write('InstitutionSite.data', $data);
+					$this->Session->write('InstitutionSiteObj', $data); // deprecated
+				} else {
+					return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+				}
+			} else if ($this->Session->check('InstitutionSite.id')) {
+				$siteId = $this->Session->read('InstitutionSite.id');
+				$data = $this->InstitutionSite->findById($siteId);
+				$this->Session->write('InstitutionSite.data', $data);
+				$this->Session->write('InstitutionSiteObj', $data);
+			} else {
+				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			}
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
 				$this->layout = 'profile';
@@ -252,25 +272,12 @@ class InstitutionSitesController extends AppController {
 		$this->render('/Elements/customfields/search');
 	}
 
-	public function dashboard($id = 0) {
-		$data = array();
+	public function dashboard($id=0) {
 		if ($id != 0) {
-			$data = $this->InstitutionSite->findById($id);
-			if ($data) {
-				$this->Session->write('InstitutionSiteId', $id); // deprecated
-				$this->Session->write('InstitutionSite.id', $id); // writing to session using array dot notation
-				$this->Session->write('InstitutionSite.data', $data);
-				$this->Session->write('InstitutionSiteObj', $data); // deprecated
-			} else {
-				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-			}
+			$data = $this->Session->read('InstitutionSite.data');
 		} else if ($this->Session->check('InstitutionSite.id')) {
 			$id = $this->Session->read('InstitutionSite.id');
-			$data = $this->InstitutionSite->findById($id);
-			$this->Session->write('InstitutionSite.data', $data);
-			$this->Session->write('InstitutionSiteObj', $data);
-		} else {
-			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			$data = $this->Session->read('InstitutionSite.data');
 		}
 
 		if($this->checkUserAccess($id, 'dashboard')) {
@@ -311,25 +318,13 @@ class InstitutionSitesController extends AppController {
 	}
 
 	public function view($id = 0) {
-		$data = array();
 		if ($id != 0) {
-			$data = $this->InstitutionSite->findById($id);
-			if ($data) {
-				$this->Session->write('InstitutionSiteId', $id); // deprecated
-				$this->Session->write('InstitutionSite.id', $id); // writing to session using array dot notation
-				$this->Session->write('InstitutionSite.data', $data);
-				$this->Session->write('InstitutionSiteObj', $data); // deprecated
-			} else {
-				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-			}
+			$data = $this->Session->read('InstitutionSite.data');
 		} else if ($this->Session->check('InstitutionSite.id')) {
 			$id = $this->Session->read('InstitutionSite.id');
-			$data = $this->InstitutionSite->findById($id);
-			$this->Session->write('InstitutionSite.data', $data);
-			$this->Session->write('InstitutionSiteObj', $data);
-		} else {
-			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			$data = $this->Session->read('InstitutionSite.data');
 		}
+
 		if($this->checkUserAccess($id, 'view')) {
 			$this->institutionSiteId = $id;
 			$this->institutionSiteObj = $data;
