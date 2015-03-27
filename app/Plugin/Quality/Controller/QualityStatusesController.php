@@ -32,9 +32,8 @@ class QualityStatusesController extends QualityAppController {
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Quality', array('controller' => 'QualityStatuses', 'action' => 'index', 'plugin' => 'Quality'));
 		$this->Navigation->addCrumb('Status');
-		$this->set('contentHeader', 'Status');
-		$this->QualityStatus->fields['rubric_template_id']['hyperlink'] = true;
 
+		$this->QualityStatus->fields['rubric_template_id']['hyperlink'] = true;
 		$this->QualityStatus->fields['status']['visible'] = false;
 		$this->QualityStatus->fields['academic_periods'] = array(
 			'type' => 'chosen_select',
@@ -95,6 +94,38 @@ class QualityStatusesController extends QualityAppController {
 
 			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodByLevel($selectedPeriodLevel);
 			$this->QualityStatus->fields['academic_periods']['options'] = $academicPeriodOptions;
+		}
+
+		$this->set('contentHeader', 'Status');
+	}
+
+	public function index() {
+		$named = $this->params->named;
+
+		$templates = $this->RubricTemplate->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templates);
+
+		$templateOptions = array();
+		foreach ($templates as $key => $rubricTemplate) {
+			$templateOptions['template:' . $key] = $rubricTemplate;
+		}
+
+		if (empty($templateOptions)) {
+			$this->Message->alert('RubricTemplate.noTemplate');
+		} else {
+			$this->QualityStatus->contain('RubricTemplate', 'AcademicPeriodLevel', 'AcademicPeriod');
+			$data = $this->QualityStatus->find('all', array(
+				'conditions' => array(
+					'QualityStatus.rubric_template_id' => $selectedTemplate
+				),
+				'order' => array(
+					'QualityStatus.date_disabled', 'QualityStatus.date_enabled'
+				)
+			));
+
+			$this->set(compact('data', 'templateOptions', 'selectedTemplate'));
 		}
 	}
 }
