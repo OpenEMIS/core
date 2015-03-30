@@ -6,14 +6,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if($_add) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'rolesAdd', 'user_defined'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'rolesAdd', 'user_defined', $selectedGroup), array('class' => 'divider'));
 }
 if ($_edit && count($userRoles) > 1) {
-	$params = array('action' => 'rolesReorder', 'user_defined');
-	if (isset($selectedGroup)) {
-		$params[] = $selectedGroup;
-	}
-	echo $this->Html->link($this->Label->get('general.reorder'), $params, array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'rolesReorder', 'user_defined', $selectedGroup), array('class' => 'divider'));
 }
 $this->end();
 

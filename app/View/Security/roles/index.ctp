@@ -5,11 +5,11 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if($_add && $isSuperUser) {
-	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'rolesAdd'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'rolesAdd', 'system_defined'), array('class' => 'divider'));
 }
 
 if ($_edit && count($systemRoles) > 1) {
-	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'roles_reorder'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), array('action' => 'rolesReorder', 'system_defined'), array('class' => 'divider'));
 }
 $this->end();
 
