@@ -5,9 +5,9 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 $params = array('action' => 'roles');
-if (isset($selectedGroup)) {
+if (!empty($selectedGroup) && $selectedGroup != -1) {
 	$params[] = $selectedGroup;
-	$params['action'] = 'roles_user_defined';
+	$params['action'] = 'RolesUserDefined';
 }
 echo $this->Html->link(__('Back'), $params, array('class' => 'divider'));
 if($_edit && $allowEdit) {
