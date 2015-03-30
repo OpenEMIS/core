@@ -4,7 +4,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Reorder'));
 $this->start('contentActions');
 $params = array('action' => 'roles');
-if (isset($selectedGroup)) {
+if (!empty($selectedGroup)) {
 	$params[] = $selectedGroup;
 	$params['action'] = 'rolesUserDefined';
 }
@@ -13,11 +13,10 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = array('action' => 'rolesReorder');
+$formOptions = array('controller' => 'Security', 'action' => 'rolesMove');
 if (isset($selectedGroup)) {
-	$formParams['group_id'] = $selectedGroup;
+	$formOptions['security_group_id'] = $selectedGroup;
 }
-
 echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formOptions));
 echo $this->Form->hidden('id', array('class' => 'option-id'));
 echo $this->Form->hidden('move', array('class' => 'option-move'));

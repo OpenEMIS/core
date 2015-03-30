@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityRole extends AppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Reorder');
 	public $belongsTo = array('SecurityGroup');
 	public $hasMany = array('SecurityRoleFunction', 'SecurityGroupUser');
 	
@@ -83,27 +83,12 @@ class SecurityRole extends AppModel {
 	public function roles($controller, $params) {
 		$systemRoles = $this->getRoles(array(0, -1));
 		$isSuperUser = $controller->Auth->user('super_admin')==1;
-		$userId = $controller->Auth->user('id');
-		$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
-		$userRoles = array();
-		$selectedGroup = 0;
-		
-		if(!empty($groupOptions)) {
-			if(isset($params['pass'][0])) {
-				$groupId = $params['pass'][0];
-				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
-			} else {
-				$selectedGroup = key($groupOptions);
-			}
-			$userRoles = $this->getRoles($selectedGroup);
-		}
 		
 		$currentTab = 'System Defined Roles';
-		$controller->set(compact('isSuperUser', 'systemRoles', 'userRoles', 'groupOptions', 'selectedGroup', 'currentTab'));
+		$controller->set(compact('isSuperUser', 'systemRoles', 'currentTab'));
 	}
 	
 	public function rolesUserDefined($controller, $params) {
-		$systemRoles = $this->getRoles(array(0, -1));
 		$isSuperUser = $controller->Auth->user('super_admin')==1;
 		$userId = $controller->Auth->user('id');
 		$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
@@ -111,7 +96,7 @@ class SecurityRole extends AppModel {
 		$selectedGroup = 0;
 		
 		if(!empty($groupOptions)) {
-			if(isset($params['pass'][0])) {
+			if(!empty($params['pass'][0])) {
 				$groupId = $params['pass'][0];
 				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
 			} else {
@@ -121,7 +106,7 @@ class SecurityRole extends AppModel {
 		}
 		
 		$currentTab = 'User Defined Roles';
-		$controller->set(compact('isSuperUser', 'systemRoles', 'userRoles', 'groupOptions', 'selectedGroup', 'currentTab'));
+		$controller->set(compact('isSuperUser', 'userRoles', 'groupOptions', 'selectedGroup', 'currentTab'));
 	}
 	
 	public function rolesView($controller, $params) {
@@ -170,10 +155,16 @@ class SecurityRole extends AppModel {
 	
 	public function rolesAdd($controller, $params) {
 		$roleType = 'system_defined';
+		$selectedGroup = 0;
+		
 		if(isset($params['pass'][0])) {
 			$type = $params['pass'][0];
 			if($type == 'user_defined'){
 				$roleType = $type;
+			}
+			
+			if(isset($params['pass'][1])) {
+				$selectedGroup = $params['pass'][1];
 			}
 		}
 		
@@ -186,7 +177,7 @@ class SecurityRole extends AppModel {
 				return $controller->redirect(array('action' => 'rolesView', $result[$this->alias]['id']));
 			}
 		}
-		$controller->set(compact('roleType'));
+		$controller->set(compact('roleType', 'selectedGroup'));
 	}
 	
 	public function getGroupAdministratorRole() {
@@ -362,7 +353,7 @@ class SecurityRole extends AppModel {
 			$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
 
 			if(!empty($groupOptions)) {
-				if(isset($params['pass'][1])) {
+				if(!empty($params['pass'][1])) {
 					$groupId = $params['pass'][1];
 					$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
 				} else {
@@ -380,14 +371,21 @@ class SecurityRole extends AppModel {
 		$controller->set(compact('isSuperUser', 'roles', 'groupOptions', 'selectedGroup', 'contentHeader'));
 	}
 	
-	public function roles_move($controller, $params) {
-		$this->autoRender = false;
-		if ($this->request->is(array('post', 'put'))) {
-			$data = $this->request->data;
-			$conditions = array('InfrastructureLevel.parent_id' => $this->params->named['parent_id']);
-			$this->InfrastructureLevel->moveOrder($data, $conditions);
-			$redirect = array('action' => 'reorder', 'parent_id' => $this->params->named['parent_id']);
-			return $this->redirect($redirect);
+	public function rolesMove($controller, $params) {
+		$controller->autoRender = false;
+		if ($controller->request->is(array('post', 'put'))) {
+			$data = $controller->request->data;
+			if(!empty($controller->params->named['security_group_id'])){
+				$conditions = array('SecurityRole.security_group_id' => $controller->params->named['security_group_id']);
+				$redirect = array('action' => 'rolesReorder', 'user_defined', $controller->params->named['security_group_id']);
+			}else{
+				$conditions = array('SecurityRole.security_group_id' => array(-1, 0));
+				$redirect = array('action' => 'rolesReorder', 'system_defined');
+			}
+			
+			$this->moveOrder($data, $conditions);
+			
+			return $controller->redirect($redirect);
 		}
 	}
 }
