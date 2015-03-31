@@ -489,12 +489,13 @@ class InstitutionSiteSectionStudent extends AppModel {
 			)
 		));
 
-
 		$grades = array();
-		$dataSet = array(
-			'M' => array('name' => __('Male'), 'data' => array()),
-			'F' => array('name' => __('Female'), 'data' => array())
-		);
+		
+		$genderOptions = ClassRegistry::init('Gender')->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => array());
+		}
 
 		foreach ($studentByGrades as $key => $studentByGrade) {
 			$gradeId = $studentByGrade['EducationGrade']['id'];
@@ -503,11 +504,11 @@ class InstitutionSiteSectionStudent extends AppModel {
 			$gradeTotal = $studentByGrade[0]['total'];
 
 			$grades[$gradeId] = $gradeName;
-			if (!array_key_exists($gradeId, $dataSet['M']['data'])) {
-				$dataSet['M']['data'][$gradeId] = 0;
-			}
-			if (!array_key_exists($gradeId, $dataSet['F']['data'])) {
-				$dataSet['F']['data'][$gradeId] = 0;
+
+			foreach ($dataSet as $dkey => $dvalue) {
+				if (!array_key_exists($gradeId, $dataSet[$dkey]['data'])) {
+					$dataSet[$dkey]['data'][$gradeId] = 0;
+				}
 			}
 			$dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
 		}

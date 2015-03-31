@@ -10,10 +10,10 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-?>
+?>SecurityUser
 
 <fieldset class="section_group">
-	<legend><?php echo $this->Model->getName($student['Student']) ?></legend>
+	<legend><?php echo $this->Model->getName($student['SecurityUser']) ?></legend>
 	
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">

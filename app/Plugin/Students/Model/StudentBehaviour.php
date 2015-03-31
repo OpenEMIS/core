@@ -162,6 +162,7 @@ class StudentBehaviour extends StudentsAppModel {
 		}
 		$this->Session->write($this->alias.'.selectedAcademicPeriod', $selectedAcademicPeriod);
 		$this->Session->write($this->alias.'.selectedSection', $selectedSection);
+		
 		$this->setVar(compact('data', 'academicPeriodOptions', 'sectionOptions', 'selectedAcademicPeriod', 'selectedSection'));
 	}
 	
@@ -182,7 +183,7 @@ class StudentBehaviour extends StudentsAppModel {
 				$this->contain(array(
 					'StudentBehaviourCategory' => array('fields' => array('StudentBehaviourCategory.name'))
 				));
-				$this->Student->contain();
+				$this->Student->contain('SecurityUser');
 				$student = $this->Student->findById($studentId);
 				$data = $this->findAllByStudentIdAndInstitutionSiteId($studentId, $institutionSiteId, array(), array('StudentBehaviour.date_of_behaviour'));
 				

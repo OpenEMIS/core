@@ -1021,10 +1021,11 @@ class InstitutionSiteStaff extends AppModel {
 			0 => __('Non-Teaching'),
 			1 => __('Teaching')
 		);
-		$dataSet = array(
-			'Male' => array('name' => __('Male'), 'data' => array()),
-			'Female' => array('name' => __('Female'), 'data' => array())
-		);
+		$genderOptions = ClassRegistry::init('Gender')->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => array());
+		}
 		foreach ($dataSet as $key => $obj) {
 			foreach ($positionTypes as $id => $name) {
 				$dataSet[$key]['data'][$id] = 0;
@@ -1035,11 +1036,10 @@ class InstitutionSiteStaff extends AppModel {
 			$staffGender = $staffByPosition['Gender']['name'];
 			$StaffTotal = $staffByPosition[0]['total'];
 
-			if (!array_key_exists($positionType, $dataSet['Male']['data'])) {
-				$dataSet['Male']['data'][$positionType] = 0;
-			}
-			if (!array_key_exists($positionType, $dataSet['Female']['data'])) {
-				$dataSet['Female']['data'][$positionType] = 0;
+			foreach ($dataSet as $dkey => $dvalue) {
+				if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+					$dataSet[$dkey]['data'][$positionType] = 0;
+				}
 			}
 			$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
 		}

@@ -71,6 +71,8 @@ class StaffBehaviour extends StaffAppModel {
 	/* End Excel Behaviour */
 	
 	public function beforeAction() {
+		parent::beforeAction();
+
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $this->Session->read('InstitutionSite.id');
 		$this->fields['staff_action_category_id']['type'] = 'hidden';
@@ -147,10 +149,7 @@ class StaffBehaviour extends StaffAppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->controller->set(compact('data'));
-
-		$this->ControllerAction->autoRender = false;
-		$this->controller->render('../../../../View/InstitutionSites/StaffBehaviour/show');
+		$this->setVar(compact('data'));
 	}
 	
 	public function index($staffId = 0) {
@@ -170,7 +169,7 @@ class StaffBehaviour extends StaffAppModel {
 				$this->contain(array(
 					'StaffBehaviourCategory' => array('fields' => array('StaffBehaviourCategory.name'))
 				));
-				$this->Staff->contain();
+				$this->Staff->contain('SecurityUser');
 				$staff = $this->Staff->findById($staffId);
 				$data = $this->findAllByStaffIdAndInstitutionSiteId($staffId, $institutionSiteId, array(), array('StaffBehaviour.date_of_behaviour'));
 				
