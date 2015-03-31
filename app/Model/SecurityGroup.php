@@ -147,11 +147,66 @@ class SecurityGroup extends AppModel {
 		$this->Session->write($this->alias.'.autocomplete.conditions.'.$attr[0], $conditions);
 		
 		if ($attr[0] == 'SecurityGroupUser') {
-			$groupIds = array(-1, 0);
-			if ($id != 0) {
-				$groupIds[] = $id;
+			$authUserId = $this->Session->read('Auth.User.id');
+			$superAdmin = $this->SecurityGroupUser->SecurityUser->field('super_admin', array('SecurityUser.id' => $authUserId));
+			
+			if(!$superAdmin) {
+				$userSystemRole = $this->SecurityGroupUser->find('first', array(
+					'conditions' => array(
+						'SecurityGroupUser.security_user_id' => $authUserId,
+						'SecurityRole.security_group_id' => array(-1, 0)
+					),
+					'order' => array('SecurityRole.order')
+				));
+				$systemRoles = array();
+				if(!empty($userSystemRole)){
+					$highestSystemRole = $userSystemRole['SecurityRole']['order'];
+					$systemRoles = $this->SecurityRole->find('list', array(
+						'conditions' => array(
+							'SecurityRole.security_group_id' => array(-1, 0),
+							'SecurityRole.order > ' => $highestSystemRole
+						)
+					));
+				}
+				
+				if(!empty($id)){
+					$userGroupRole = $this->SecurityGroupUser->find('first', array(
+						'conditions' => array(
+							'SecurityGroupUser.security_user_id' => $authUserId,
+							'SecurityRole.security_group_id' => $id
+						),
+						'order' => array('SecurityRole.order')
+					));
+					
+					$groupRoles = array();
+					if(!empty($userGroupRole)){
+						$highestGroupRole = $userGroupRole['SecurityRole']['order'];
+						$groupRoles = $this->SecurityRole->find('list', array(
+							'conditions' => array(
+								'SecurityRole.security_group_id' => $id,
+								'SecurityRole.order > ' => $highestGroupRole
+							)
+						));
+					}
+					
+					$roleOptions = $systemRoles;
+					foreach($groupRoles as $id => $name){
+						$roleOptions[$id] = $name;
+					}
+				}else{
+					$roleOptions = $systemRoles;
+				}
+			}else{
+				$groupIds = array(-1, 0);
+				if ($id != 0) {
+					$groupIds[] = $id;
+				}
+				$roleOptions = $this->SecurityRole->find('list', array('conditions' => array('security_group_id' => $groupIds)));
 			}
-			$roleOptions = $this->SecurityRole->find('list', array('conditions' => array('security_group_id' => $groupIds)));
+			
+			if(empty($roleOptions)){
+				$roleOptions = $this->controller->Option->prependLabel($roleOptions, 'general.noData');
+			}
 			$this->setVar('roleOptions', $roleOptions);
 		}
 		
