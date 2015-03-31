@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.7
+ControllerActionComponent - Version 1.0.8
 */
 
 class ControllerActionComponent extends Component {
@@ -312,8 +312,11 @@ class ControllerActionComponent extends Component {
 
 	public function reorder() {
 		$model = $this->model;
-		$conditions = isset($this->controller->viewVars['conditions']) ? $this->controller->viewVars['conditions'] : array();
+		$named = $this->controller->params['named'];
+		$pass = $this->controller->params['pass'];
+		$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
 		$model->contain();
 		$data = $model->find('all', array(
 			'conditions' => $conditions,
@@ -322,10 +325,6 @@ class ControllerActionComponent extends Component {
 				$model->alias.'.id'
 			)
 		));
-
-		$named = $this->controller->params['named'];
-		$pass = $this->controller->params['pass'];
-		$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 		$actionUrl = array('action' => isset($params['move']) ? $params['move'] : 'moveOrder');
 		if ($this->triggerFrom == 'Model') {

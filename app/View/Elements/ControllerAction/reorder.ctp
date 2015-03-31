@@ -1,5 +1,5 @@
 <?php
-//ControllerActionComponent - Version 1.0.1
+//ControllerActionComponent - Version 1.0.2
 // Requires FormUtilityHelper and LabelHelper
 	if(isset($data)) {
 		$formParams = array('plugin' => $this->params->plugin, 'controller' => $this->params['controller']);
@@ -8,6 +8,22 @@
 			echo $this->Form->hidden('id', array('class' => 'option-id'));
 			echo $this->Form->hidden('move', array('class' => 'option-move'));
 		echo $this->Form->end();
+	}
+
+	if (isset($tabsElement)) {
+		if (empty($this->params['plugin'])) {
+			echo $this->element($tabsElement);
+		} else {
+			echo $this->element($tabsElement, array(), array('plugin' => $this->params['plugin']));
+		}
+	}
+
+	if (isset($controlsElement)) {
+		if (empty($this->params['plugin'])) {
+			echo $this->element($controlsElement);
+		} else {
+			echo $this->element($controlsElement, array(), array('plugin' => $this->params['plugin']));
+		}
 	}
 ?>
 
