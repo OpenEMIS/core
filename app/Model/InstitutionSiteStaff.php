@@ -161,9 +161,11 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function beforeSave($options = array()) {
 		$alias = $this->alias;
-		
-		$this->data[$alias]['FTE'] = $this->data[$alias]['FTE'] / 100;
-		
+
+		if (isset($this->data[$alias]['FTE'])) {
+			$this->data[$alias]['FTE'] = $this->data[$alias]['FTE'] / 100;
+		}
+			
 		return parent::beforeSave($options);
 	}
 
