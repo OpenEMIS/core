@@ -58,7 +58,7 @@ $this->start('contentBody');
 			<?php foreach ($data as $obj) { ?>
 				<tr>
 					<td><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
-					<td><?php echo $this->Model->getName($obj['Student']); ?></td>
+					<td><?php echo $this->Model->getName($obj['SecurityUser']); ?></td>
 					<td class="center">
 						<?php
 						$marks = $obj[$model]['marks'];

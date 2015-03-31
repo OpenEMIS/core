@@ -206,8 +206,13 @@ class StudentGuardian extends StudentsAppModel {
 	}
 	
 	public function guardiansView($controller, $params) {
+		$genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+
 		$guardianId = $controller->params['pass'][0];
 		$guardianObj = $this->getGuardian($guardianId, $controller->Session->read('Student.id'));
+		if (array_key_exists('gender', $guardianObj['Guardian'])) {
+			$guardianObj['Guardian']['gender_name'] = (array_key_exists($guardianObj['Guardian']['gender'], $genderOptions))? $genderOptions[$guardianObj['Guardian']['gender']]:'';
+		}
 
 		if (!empty($guardianObj)) {
 			$controller->Navigation->addCrumb('Guardian Details');

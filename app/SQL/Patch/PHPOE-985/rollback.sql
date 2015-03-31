@@ -44,14 +44,14 @@ UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_vie
 UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Nationalities';
 UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:languagesEdit', _add = '_view:languagesAdd', _delete = '_view:languagesDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Languages';
 UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Comments';
-UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Needs';
+UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Special Needs';
 UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Students' AND module = 'Students' AND category = 'General' AND name = 'Awards';
 UPDATE security_functions SET _view = 'contacts|contactsView', _edit = '_view:contactsEdit', _add = '_view:contactsAdd', _delete = '_view:contactsDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Contacts';
 UPDATE security_functions SET _view = 'identities|identitiesView', _edit = '_view:identitiesEdit', _add = '_view:identitiesAdd', _delete = '_view:identitiesDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Identities';
 UPDATE security_functions SET _view = 'nationalities|nationalitiesView', _edit = '_view:nationalitiesEdit', _add = '_view:nationalitiesAdd', _delete = '_view:nationalitiesDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Nationalities';
 UPDATE security_functions SET _view = 'languages|languagesView', _edit = '_view:languagesEdit', _add = '_view:languagesAdd', _delete = '_view:languagesDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Languages';
 UPDATE security_functions SET _view = 'comments|commentsView', _edit = '_view:commentsEdit', _add = '_view:commentsAdd', _delete = '_view:commentsDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Comments';
-UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Needs';
+UPDATE security_functions SET _view = 'specialNeed|specialNeedView', _edit = '_view:specialNeedEdit', _add = '_view:specialNeedAdd', _delete = '_view:specialNeedDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Special Needs';
 UPDATE security_functions SET _view = 'award|awardView', _edit = '_view:awardEdit', _add = '_view:awardAdd', _delete = '_view:awardDelete', _execute = NULL WHERE controller = 'Staff' AND module = 'Staff' AND category = 'General' AND name = 'Awards';
 
 -- update security for users
@@ -130,6 +130,7 @@ RENAME TABLE z_985_student_history TO student_history;
 RENAME TABLE z_985_staff_history TO staff_history;
 RENAME TABLE z_985_institution_site_history TO institution_site_history;
 
+-- no longer needed
 -- need to fix for wrongful sql data for add new staff (rollback)
-UPDATE navigations SET title = 'Add Staff', visible = 1 WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header IS NULL AND action = 'add' LIMIT 1;
+-- UPDATE navigations SET title = 'Add Staff', visible = 1 WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header IS NULL AND action = 'add' LIMIT 1;
 -- select * from navigations where id = 88;
