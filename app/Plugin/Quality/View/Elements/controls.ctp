@@ -1,6 +1,6 @@
 <div class="row page-controls">
 	<?php
-		$baseUrl = $this->params['controller'] . '/' . $model . '/' . $action;
+		$baseUrl = $_triggerFrom == 'Controller' ? $this->params['controller'] . '/' . $action : $this->params['controller'] . '/' . $model . '/' . $action;
 
 		if(!empty($templateOptions)) {
 			echo $this->Form->input('rubric_template_id', array(

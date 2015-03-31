@@ -59,10 +59,15 @@ class RubricSection extends QualityAppModel {
 		$this->Navigation->addCrumb('Sections');
 		$named = $this->controller->params->named;
 		
-		$templateOptions = $this->RubricTemplate->find('list', array(
+		$templates = $this->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templateOptions);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templates);
+
+		$templateOptions = array();
+		foreach ($templates as $key => $template) {
+			$templateOptions['template:' . $key] = $template;
+		}
 
 		$this->fields['order']['visible'] = false;
 		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
@@ -75,15 +80,15 @@ class RubricSection extends QualityAppModel {
 			$this->fields['rubric_template_id']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['rubric_template_id']['type'] = 'select';
-			$this->fields['rubric_template_id']['options'] = $templateOptions;
+			$this->fields['rubric_template_id']['options'] = $templates;
 
 			if ($this->request->is(array('post', 'put'))) {
 			} else {
 				$this->request->data['RubricSection']['rubric_template_id'] = $selectedTemplate;
 			}
 		} else if ($this->action == 'reorder' || $this->action == 'moveOrder') {
-			$conditions = array('RubricSection.rubric_template_id' => $selectedTemplate);
-			$this->controller->set(compact('conditions'));
+			$params['conditions'] = array('RubricSection.rubric_template_id' => $selectedTemplate);
+			$this->controller->set(compact('params'));
 		}
 
 		$contentHeader = __('Sections');

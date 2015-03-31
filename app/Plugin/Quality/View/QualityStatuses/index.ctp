@@ -8,7 +8,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('/../../Plugin/Quality/View/QualityStatuses/controls');
+echo $this->element($controlsElement, array(), array('plugin' => $this->params['plugin']));
 ?>
 
 <div class="table-responsive">

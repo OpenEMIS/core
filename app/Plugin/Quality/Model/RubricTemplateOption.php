@@ -66,10 +66,15 @@ class RubricTemplateOption extends QualityAppModel {
 		$this->Navigation->addCrumb('Template Options');
 		$named = $this->controller->params->named;
 		
-		$templateOptions = $this->RubricTemplate->find('list', array(
+		$templates = $this->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templateOptions);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templates);
+
+		$templateOptions = array();
+		foreach ($templates as $key => $template) {
+			$templateOptions['template:' . $key] = $template;
+		}
 
 		$this->fields['order']['visible'] = false;
 		$this->fields['color'] = array(
@@ -86,7 +91,7 @@ class RubricTemplateOption extends QualityAppModel {
 			$this->fields['rubric_template_id']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['rubric_template_id']['type'] = 'select';
-			$this->fields['rubric_template_id']['options'] = $templateOptions;
+			$this->fields['rubric_template_id']['options'] = $templates;
 
 			if ($this->request->is(array('post', 'put'))) {
 			} else {
@@ -94,8 +99,8 @@ class RubricTemplateOption extends QualityAppModel {
 				$this->request->data['RubricTemplateOption']['color'] = "#ff00ff";
 			}
 		} else if ($this->action == 'reorder' || $this->action == 'moveOrder') {
-			$conditions = array('RubricTemplateOption.rubric_template_id' => $selectedTemplate);
-			$this->controller->set(compact('conditions'));
+			$params['conditions'] = array('RubricTemplateOption.rubric_template_id' => $selectedTemplate);
+			$this->controller->set(compact('params'));
 		}
 
 		$contentHeader = __('Template Options');
