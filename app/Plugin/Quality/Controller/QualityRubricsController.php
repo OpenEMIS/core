@@ -31,8 +31,13 @@ class QualityRubricsController extends QualityAppController {
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Quality', array('controller' => 'QualityRubrics', 'action' => 'index', 'plugin' => 'Quality'));
+		
+		$tabsElement = 'nav_tabs';
+		$controlsElement = 'controls';
 
 		$this->set('selectedAction', $this->action);
+		$this->set('tabsElement', $tabsElement);
+		$this->set('controlsElement', $controlsElement);
 	}
 
 	public function index() {

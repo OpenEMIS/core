@@ -63,18 +63,28 @@ class RubricCriteria extends QualityAppModel {
 	public function beforeAction() {
 		$named = $this->controller->params->named;
 
-		$templateOptions = $this->RubricSection->RubricTemplate->find('list', array(
+		$templates = $this->RubricSection->RubricTemplate->find('list', array(
 			'order' => array('RubricTemplate.name')
 		));
-		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templateOptions);
+		$selectedTemplate = isset($named['template']) ? $named['template'] : key($templates);
 
-		$sectionOptions = $this->RubricSection->find('list', array(
+		$templateOptions = array();
+		foreach ($templates as $key => $template) {
+			$templateOptions['template:' . $key] = $template;
+		}
+
+		$sections = $this->RubricSection->find('list', array(
 			'conditions' => array(
 				'RubricSection.rubric_template_id' => $selectedTemplate
 			),
 			'order' => array('RubricSection.order', 'RubricSection.name')
 		));
-		$selectedSection = isset($named['section']) ? $named['section'] : key($sectionOptions);
+		$selectedSection = isset($named['section']) ? $named['section'] : key($sections);
+
+		$sectionOptions = array();
+		foreach ($sections as $key => $section) {
+			$sectionOptions['section:' . $key] = $section;
+		}
 
 		if ($this->action == 'reorder') {
 			$this->Navigation->addCrumb('Criterias', array('controller' => 'QualityRubrics', 'action' => 'RubricCriteria', 'index', 'template' => $selectedTemplate, 'section' => $selectedSection, 'plugin' => false));
@@ -115,7 +125,7 @@ class RubricCriteria extends QualityAppModel {
 			$this->fields['type']['dataField'] = 'name';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['rubric_section_id']['type'] = 'select';
-			$this->fields['rubric_section_id']['options'] = $sectionOptions;
+			$this->fields['rubric_section_id']['options'] = $sections;
 
 			$this->fields['type']['type'] = 'select';
 			$this->fields['type']['options'] = $criteriaTypeOptions;
@@ -134,11 +144,11 @@ class RubricCriteria extends QualityAppModel {
 				$this->request->data['RubricCriteria']['type'] = $selectedCriteriaType;
 			}
 		} else if ($this->action == 'reorder' || $this->action == 'moveOrder') {
-			$conditions = array('RubricCriteria.rubric_section_id' => $selectedSection);
-			$this->controller->set(compact('conditions'));
+			$params['conditions'] = array('RubricCriteria.rubric_section_id' => $selectedSection);
+			$this->controller->set(compact('params'));
 		}
 
-		$this->controller->set(compact('contentHeader', 'criteriaTypeOptions'));
+		$this->controller->set(compact('contentHeader', 'templateOptions', 'selectedTemplate', 'sectionOptions', 'selectedSection', 'criteriaTypeOptions'));
 	}
 
 	public function afterAction() {

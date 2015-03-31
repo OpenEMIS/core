@@ -95,8 +95,11 @@ class QualityStatusesController extends QualityAppController {
 			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodByLevel($selectedPeriodLevel);
 			$this->QualityStatus->fields['academic_periods']['options'] = $academicPeriodOptions;
 		}
+		
+		$controlsElement = 'controls';
 
 		$this->set('contentHeader', 'Status');
+		$this->set('controlsElement', $controlsElement);
 	}
 
 	public function index() {
