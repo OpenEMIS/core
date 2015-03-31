@@ -649,7 +649,9 @@ class InstitutionSiteStudent extends AppModel {
 		$data = array();
 		foreach ($list as $obj) {
 			$studentObj = $obj['Student'];
-			$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
+			if (array_key_exists('SecurityUser', $studentObj)) {
+				$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
+			}
 		}
 		return $data;
 	}
@@ -673,10 +675,12 @@ class InstitutionSiteStudent extends AppModel {
 		$maxYear = $periodResult['max_year'];
 
 		$years = array();
-		$dataSet = array(
-			'Male' => array('name' => __('Male'), 'data' => array()),
-			'Female' => array('name' => __('Female'), 'data' => array())
-		);
+
+		$genderOptions = ClassRegistry::init('Gender')->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => array());
+		}
 
 		$studentsByYearConditions = array('Gender.name IS NOT NULL');
 		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
@@ -726,22 +730,21 @@ class InstitutionSiteStudent extends AppModel {
 				)
 			));
 
-			if (!array_key_exists($currentYear, $dataSet['Male']['data'])) {
-				$dataSet['Male']['data'][$currentYear] = 0;
+ 			foreach ($dataSet as $key => $value) {
+ 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
+ 					$dataSet[$key]['data'][$currentYear] = 0;
+ 				}				
 			}
-			if (!array_key_exists($currentYear, $dataSet['Female']['data'])) {
-				$dataSet['Female']['data'][$currentYear] = 0;
-			}
-			foreach ($studentsByYear as $key => $studentByYear) {
-				$studentGender = isset($studentByYear['Student']['gender']) ? $studentByYear['Student']['gender'] : null;
-				$studentTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
 
+			foreach ($studentsByYear as $key => $studentByYear) {
+				$studentGender = isset($studentByYear['Gender']['name']) ? $studentByYear['Gender']['name'] : null;
+				$studentTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
 				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
 			}
 		}
 
 		$params['dataSet'] = $dataSet;
-
+		
 		return $params;
 	}
 }

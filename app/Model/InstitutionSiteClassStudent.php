@@ -428,6 +428,11 @@ class InstitutionSiteClassStudent extends AppModel {
 				'conditions' => array('Student.id = InstitutionSiteClassStudent.student_id')
 			),
 			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'conditions' => array('SecurityUser.id = Student.security_user_id')
+			),
+			array(
 				'table' => 'institution_site_section_students',
 				'alias' => 'InstitutionSiteSectionStudent',
 				'conditions' => array(
