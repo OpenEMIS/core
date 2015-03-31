@@ -2,7 +2,7 @@
 /* CSS Document */
 
 #software_title{
-	color:#5b8baf;
+	color:#6699CC;
 	font-size:24px;
 	font-weight:bold;
 	margin:2px 10px 10px;
@@ -10,7 +10,7 @@
 /*banner */
 #banner{
 	height: 346px;
-	background-image: url(../img/banner_bg);
+	background-image: url(../img/banner_bg.jpg);
 	background-repeat: repeat-x;
 	background-position: left top;
 	margin:0 -10px;
