@@ -119,7 +119,17 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->fields['absence_type']['options'] = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		
 		$this->fields['staff_absence_reason_id']['type'] = 'select';
-		$this->fields['staff_absence_reason_id']['options'] = $this->StaffAbsenceReason->getList();
+
+		// If action is view, show the names of absence reason even for reasons set as hidden; else the reason id will be shown instead
+		// For PHPOE-1303
+		if ($this->action == 'view') {
+			$customOptions = array();
+		} else {
+			$customOptions = array('visibleOnly'=>1);
+		}
+		//
+
+		$this->fields['staff_absence_reason_id']['options'] = $this->StaffAbsenceReason->getList($customOptions);
 		
 		$this->fields['institution_site_id']['type'] = 'hidden';
 		$this->fields['institution_site_id']['value'] = $institutionSiteId;
@@ -584,8 +594,8 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 
 		$absenceTypeList = $this->controller->getDayViewAttendanceOptions();
-		$absenceReasonList = $this->StaffAbsenceReason->getList();
-
+		$customOptions = array('visibleOnly'=>1);
+		$absenceReasonList = $this->StaffAbsenceReason->getList($customOptions);
 		$this->setVar(compact('academicPeriodList', 'academicPeriodId', 'weekList', 'weekId', 'dayId', 'header', 'weekDayIndex', 'selectedDateDigit', 'selectedDate', 'weekDayList', 'staffList', 'absenceCheckList','absenceTypeList', 'absenceReasonList'));
 	}
 
