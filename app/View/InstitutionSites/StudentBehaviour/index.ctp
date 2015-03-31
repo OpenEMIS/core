@@ -10,7 +10,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
-?>SecurityUser
+?>
 
 <fieldset class="section_group">
 	<legend><?php echo $this->Model->getName($student['SecurityUser']) ?></legend>
