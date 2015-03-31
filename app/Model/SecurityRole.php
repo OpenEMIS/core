@@ -75,20 +75,26 @@ class SecurityRole extends AppModel {
 	
 	public function beforeAction($controller, $action) {
         parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb('Roles');
 		$controller->set('header', __('Roles'));
 		$controller->set('fields', $this->getDisplayFields($controller));
     }
 	
 	public function roles($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$systemRoles = $this->getRoles(array(0, -1));
 		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		if(!$isSuperUser){
+			return $controller->redirect(array('action' => 'rolesUserDefined'));
+		}
 		
 		$currentTab = 'System Defined Roles';
 		$controller->set(compact('isSuperUser', 'systemRoles', 'currentTab'));
 	}
 	
 	public function rolesUserDefined($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$isSuperUser = $controller->Auth->user('super_admin')==1;
 		$userId = $controller->Auth->user('id');
 		$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
@@ -110,6 +116,8 @@ class SecurityRole extends AppModel {
 	}
 	
 	public function rolesView($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
 		if ($this->exists($id)) {
 			$data = $this->findById($id);
@@ -127,6 +135,8 @@ class SecurityRole extends AppModel {
 	}
 	
 	public function rolesEdit($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
 		if ($this->exists($id)) {
 			$data = $this->findById($id);
@@ -154,6 +164,8 @@ class SecurityRole extends AppModel {
 	}
 	
 	public function rolesAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$roleType = 'system_defined';
 		$selectedGroup = 0;
 		
@@ -361,14 +373,28 @@ class SecurityRole extends AppModel {
 				}
 				$roles = $this->getRoles($selectedGroup);
 			}
-		
+			
+			$controller->Navigation->addCrumb('User Defined Roles', array('action' => 'rolesUserDefined', $selectedGroup));
+			
 			$contentHeader = 'User Defined Roles';
+			$currentTab = 'User Defined Roles';
 		}else{
+			if(!$isSuperUser){
+				return $controller->redirect(array('action' => 'rolesReorder', 'user_defined', $selectedGroup));
+			}
+			
+			$controller->Navigation->addCrumb('User Defined Roles', array('action' => 'roles'));
+			
 			$contentHeader = 'System Defined Roles';
 			$roles = $this->getRoles(array(0, -1));
+			$currentTab = 'System Defined Roles';
 		}
+		
+		$controller->Navigation->addCrumb('Reorder');
+		
+		$page = 'reorder';
 
-		$controller->set(compact('isSuperUser', 'roles', 'groupOptions', 'selectedGroup', 'contentHeader'));
+		$controller->set(compact('isSuperUser', 'roles', 'groupOptions', 'selectedGroup', 'contentHeader', 'page', 'currentTab'));
 	}
 	
 	public function rolesMove($controller, $params) {

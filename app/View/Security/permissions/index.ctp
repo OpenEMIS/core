@@ -7,7 +7,7 @@ $this->start('contentActions');
 $params = array('action' => 'roles');
 if (!empty($selectedGroup) && $selectedGroup != -1) {
 	$params[] = $selectedGroup;
-	$params['action'] = 'RolesUserDefined';
+	$params['action'] = 'rolesUserDefined';
 }
 echo $this->Html->link(__('Back'), $params, array('class' => 'divider'));
 if($_edit && $allowEdit) {
