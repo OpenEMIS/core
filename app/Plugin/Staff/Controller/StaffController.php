@@ -258,96 +258,28 @@ class StaffController extends StaffAppController {
 		$this->Navigation->addCrumb('Overview');
 		$this->set('data', $data);
 	}
-	
-	public function edit() {
-		$this->Navigation->addCrumb('Edit');
-		$model = 'SecurityUser';
-		
-		if (!$this->Session->check('Staff.id')) {
-			return $this->redirect(array('action' => 'index'));
-		} 
-		$staffIdSession = $this->Session->read('Staff.id');
-		$this->Staff->id = $staffIdSession;
-
-		if ($this->SecurityUser->exists($staffIdSession)) {
-			if ($this->request->is(array('post', 'put'))) {
-				$data = $this->request->data;
-
-				if (array_key_exists('Staff', $data)) {
-					if (array_key_exists('birthplace_area_id', $data['Staff'])) {
-						if (!array_key_exists($model, $data)) {
-							$data[$model] = array();
-						}
-						$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
-						unset($data['Staff']['birthplace_area_id']);
-					}
-					if (array_key_exists('address_area_id', $data['Staff'])) {
-						if (!array_key_exists($model, $data)) {
-							$data[$model] = array();
-						}
-						$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-						unset($data['Staff']['birthplace_area_id']);
-					}
-				}
-
-				if ($this->SecurityUser->saveAll($data)) {
-					$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
-					$InstitutionSiteStaffModel->validator()->remove('search');
-					$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
-
-					$dataToSite['staff_id'] = $staffIdSession;
-					if (empty($staffIdSession)) {
-						$InstitutionSiteStaffModel->save($dataToSite);
-					}
-					
-					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => 'view'));
-				} else {
-					$this->log($this->validationErrors, 'debug');
-					$this->Message->alert('general.edit.failed');
-				}
-
-				$this->Session->delete('InstitutionSiteStaff.addNew');
-
-			} else {
-				$security_user_id = $this->Session->read('Staff.security_user_id');
-				$this->SecurityUser->contain('Gender');
-				$data = $this->SecurityUser->findById($security_user_id);
-				$this->request->data = $data;
-				$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
-				$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
-			}
-		} else {
-			$this->Message->alert('general.notExists');
-			return $this->redirect(array('action' => 'index'));
-		}
-
-		$genderOptions = $this->SecurityUser->Gender->getList();
-		$dataMask = $this->ConfigItem->getValue('staff_identification');
-		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-		$this->set('autoid', $this->getUniqueID());
-		$this->set('arrIdNo', $arrIdNo);
-		$this->set('genderOptions', $genderOptions);
-		$this->set('data', $data);
-		$this->set('model', $model);
-		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
-		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
-	}
 
 	public function add() {
 		$this->Wizard->start();
+		return $this->redirect(array('action' => 'edit'));
+	}
+
+	public function edit() {
 		$model = 'SecurityUser';
-		$this->Navigation->addCrumb('Add');
-		$this->bodyTitle = __('New Staff');
+		$id = null;
 
-		$addressAreaId = false;
-		$birthplaceAreaId = false;
+		$staffIdSession = $this->Session->read('Staff.id');	
 
+		if (!empty($staffIdSession)) {
+			$this->Navigation->addCrumb('Edit');
+		} else {
+			$this->Navigation->addCrumb('Add');
+			$this->bodyTitle = __('New Staff');
+		}
+		
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
-			$this->request->data['Staff'] = array();
 			$data = $this->request->data;
-
 			if (array_key_exists('Staff', $data)) {
 				if (array_key_exists('birthplace_area_id', $data['Staff'])) {
 					if (!array_key_exists($model, $data)) {
@@ -365,52 +297,52 @@ class StaffController extends StaffAppController {
 				}
 			}
 			
-			$StaffNationality = ClassRegistry::init('Staff.StaffNationality');
-			$StaffNationality->set($this->request->data);
-			
-			$this->SecurityUser->StaffIdentity->validator()->remove('issue_location');
-
-			$this->SecurityUser->create();
-			if ($this->SecurityUser->saveAll($data)) {
+			if ($this->SecurityUser->save($data)) {
 				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
 				$InstitutionSiteStaffModel->validator()->remove('search');
 				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
 
-				$securityUserId = $this->SecurityUser->getLastInsertId();
-				$this->Staff->create();
-				$this->Staff->save(array('security_user_id' => $securityUserId));
-
 				if ($this->Wizard->isActive()) {
-					$this->Message->alert('Staff.add.success');
-					$id = $this->Staff->getLastInsertId();
-					$this->Session->write('Staff.id', $id);
+					$securityUserId = $this->SecurityUser->getLastInsertId();
+					$this->Staff->create();
+					$this->Staff->save(array('security_user_id' => $securityUserId));
+					if (is_null($id)) {
+						$this->Message->alert('Staff.add.success');
+						$id = $this->Staff->getLastInsertId();
+						$this->Session->write('Staff.id', $id);
+					}
 					$staffStatusId = $InstitutionSiteStaffModel->StaffStatus->getDefaultValue();
 					$dataToSite['staff_status_id'] = $staffStatusId;
 					$dataToSite['staff_id'] = $id;
-					$InstitutionSiteStaffModel->save($dataToSite);
+
+					if (empty($staffIdSession)) {
+						$InstitutionSiteStaffModel->save($dataToSite);
+					}
+
 					$this->Session->write('Staff.data', $this->Staff->findById($id));
 					$this->Session->write('Staff.security_user_id', $securityUserId);
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
-
 					$this->Wizard->next();
 				} else {
-					$dataToSite['staff_id'] = $id;
-					$InstitutionSiteStaffModel->save($dataToSite);
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}
 				
 				$this->Session->delete('InstitutionSiteStaff.addNew');
-			} else {
-				$this->log($this->validationErrors, 'debug');
-				$this->Message->alert('general.add.failed');
+			}
+		} else {
+			if (!empty($staffIdSession)) {
+				$data = $this->Staff->findById($staffIdSession);
+				$this->request->data = $data;
+				$addressAreaId = $this->request->data[$model]['address_area_id'];
+				$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			}
 		}
-
 		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('staff_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
@@ -419,6 +351,169 @@ class StaffController extends StaffAppController {
 		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
 		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
+
+
+	
+	// public function edit() {
+	// 	$this->Navigation->addCrumb('Edit');
+	// 	$model = 'SecurityUser';
+		
+	// 	if (!$this->Session->check('Staff.id')) {
+	// 		return $this->redirect(array('action' => 'index'));
+	// 	} 
+	// 	$staffIdSession = $this->Session->read('Staff.id');
+	// 	$this->Staff->id = $staffIdSession;
+
+	// 	if ($this->SecurityUser->exists($staffIdSession)) {
+	// 		if ($this->request->is(array('post', 'put'))) {
+	// 			$data = $this->request->data;
+
+	// 			if (array_key_exists('Staff', $data)) {
+	// 				if (array_key_exists('birthplace_area_id', $data['Staff'])) {
+	// 					if (!array_key_exists($model, $data)) {
+	// 						$data[$model] = array();
+	// 					}
+	// 					$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
+	// 					unset($data['Staff']['birthplace_area_id']);
+	// 				}
+	// 				if (array_key_exists('address_area_id', $data['Staff'])) {
+	// 					if (!array_key_exists($model, $data)) {
+	// 						$data[$model] = array();
+	// 					}
+	// 					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
+	// 					unset($data['Staff']['birthplace_area_id']);
+	// 				}
+	// 			}
+
+	// 			if ($this->SecurityUser->saveAll($data)) {
+	// 				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
+	// 				$InstitutionSiteStaffModel->validator()->remove('search');
+	// 				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
+
+	// 				$dataToSite['staff_id'] = $staffIdSession;
+	// 				if (empty($staffIdSession)) {
+	// 					$InstitutionSiteStaffModel->save($dataToSite);
+	// 				}
+					
+	// 				$this->Message->alert('general.edit.success');
+	// 				return $this->redirect(array('action' => 'view'));
+	// 			} else {
+	// 				$this->log($this->validationErrors, 'debug');
+	// 				$this->Message->alert('general.edit.failed');
+	// 			}
+
+	// 			$this->Session->delete('InstitutionSiteStaff.addNew');
+
+	// 		} else {
+	// 			$security_user_id = $this->Session->read('Staff.security_user_id');
+	// 			$this->SecurityUser->contain('Gender');
+	// 			$data = $this->SecurityUser->findById($security_user_id);
+	// 			$this->request->data = $data;
+	// 			$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
+	// 			$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
+	// 		}
+	// 	} else {
+	// 		$this->Message->alert('general.notExists');
+	// 		return $this->redirect(array('action' => 'index'));
+	// 	}
+
+	// 	$genderOptions = $this->SecurityUser->Gender->getList();
+	// 	$dataMask = $this->ConfigItem->getValue('staff_identification');
+	// 	$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+	// 	$this->set('autoid', $this->getUniqueID());
+	// 	$this->set('arrIdNo', $arrIdNo);
+	// 	$this->set('genderOptions', $genderOptions);
+	// 	$this->set('data', $data);
+	// 	$this->set('model', $model);
+	// 	$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+	// 	$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
+	// }
+
+	// public function add() {
+	// 	$this->Wizard->start();
+	// 	$model = 'SecurityUser';
+	// 	$this->Navigation->addCrumb('Add');
+	// 	$this->bodyTitle = __('New Staff');
+
+	// 	$addressAreaId = false;
+	// 	$birthplaceAreaId = false;
+
+	// 	$data = array();
+	// 	if ($this->request->is(array('post', 'put'))) {
+	// 		$this->request->data['Staff'] = array();
+	// 		$data = $this->request->data;
+
+	// 		if (array_key_exists('Staff', $data)) {
+	// 			if (array_key_exists('birthplace_area_id', $data['Staff'])) {
+	// 				if (!array_key_exists($model, $data)) {
+	// 					$data[$model] = array();
+	// 				}
+	// 				$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
+	// 				unset($data['Staff']['birthplace_area_id']);
+	// 			}
+	// 			if (array_key_exists('address_area_id', $data['Staff'])) {
+	// 				if (!array_key_exists($model, $data)) {
+	// 					$data[$model] = array();
+	// 				}
+	// 				$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
+	// 				unset($data['Staff']['birthplace_area_id']);
+	// 			}
+	// 		}
+			
+	// 		$StaffNationality = ClassRegistry::init('Staff.StaffNationality');
+	// 		$StaffNationality->set($this->request->data);
+			
+	// 		$this->SecurityUser->StaffIdentity->validator()->remove('issue_location');
+
+	// 		$this->SecurityUser->create();
+	// 		if ($this->SecurityUser->saveAll($data)) {
+	// 			$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
+	// 			$InstitutionSiteStaffModel->validator()->remove('search');
+	// 			$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
+
+	// 			$securityUserId = $this->SecurityUser->getLastInsertId();
+	// 			$this->Staff->create();
+	// 			$this->Staff->save(array('security_user_id' => $securityUserId));
+
+	// 			if ($this->Wizard->isActive()) {
+	// 				$this->Message->alert('Staff.add.success');
+	// 				$id = $this->Staff->getLastInsertId();
+	// 				$this->Session->write('Staff.id', $id);
+	// 				$staffStatusId = $InstitutionSiteStaffModel->StaffStatus->getDefaultValue();
+	// 				$dataToSite['staff_status_id'] = $staffStatusId;
+	// 				$dataToSite['staff_id'] = $id;
+	// 				$InstitutionSiteStaffModel->save($dataToSite);
+	// 				$this->Session->write('Staff.data', $this->Staff->findById($id));
+	// 				$this->Session->write('Staff.security_user_id', $securityUserId);
+	// 				// unset wizard so it will not auto redirect from WizardComponent
+	// 				unset($this->request->data['wizard']['next']);
+
+	// 				$this->Wizard->next();
+	// 			} else {
+	// 				$dataToSite['staff_id'] = $id;
+	// 				$InstitutionSiteStaffModel->save($dataToSite);
+	// 				$this->Message->alert('general.edit.success');
+	// 				return $this->redirect(array('action' => 'view'));
+	// 			}
+				
+	// 			$this->Session->delete('InstitutionSiteStaff.addNew');
+	// 		} else {
+	// 			$this->log($this->validationErrors, 'debug');
+	// 			$this->Message->alert('general.add.failed');
+	// 		}
+	// 	}
+
+	// 	$genderOptions = $this->SecurityUser->Gender->getList();
+	// 	$dataMask = $this->ConfigItem->getValue('staff_identification');
+	// 	$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+	// 	$this->set('autoid', $this->getUniqueID());
+	// 	$this->set('arrIdNo', $arrIdNo);
+	// 	$this->set('genderOptions', $genderOptions);
+	// 	$this->set('data', $data);
+	// 	$this->set('model', $model);
+	// 	$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+	// 	$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
+	// }
 
 	public function delete() {
 		$id = $this->Session->read('Staff.id');

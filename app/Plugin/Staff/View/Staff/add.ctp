@@ -1,4 +1,4 @@
-	<?php
+<!-- 	<?php
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
@@ -106,3 +106,4 @@ if (isset($WizardMode) && $WizardMode) {
 echo $this->Form->end();
 $this->end();
 ?>
+ -->
