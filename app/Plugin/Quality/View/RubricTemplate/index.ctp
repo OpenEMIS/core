@@ -8,7 +8,7 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
+echo $this->element($tabsElement, array(), array('plugin' => $this->params['plugin']));
 ?>
 
 <div class="table-responsive">

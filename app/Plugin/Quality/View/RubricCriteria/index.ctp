@@ -14,8 +14,8 @@ if (!empty($selectedSection)) {
 $this->end();
 
 $this->start('contentBody');
-echo $this->element('/../../Plugin/Quality/View/QualityRubrics/nav_tabs');
-echo $this->element('/../../Plugin/Quality/View/QualityRubrics/controls');
+echo $this->element($tabsElement, array(), array('plugin' => $this->params['plugin']));
+echo $this->element($controlsElement, array(), array('plugin' => $this->params['plugin']));
 ?>
 
 <div class="table-responsive">
