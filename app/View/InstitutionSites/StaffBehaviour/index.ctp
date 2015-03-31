@@ -3,9 +3,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get("$model.title"));
 
 $this->start('contentActions');
+	$named = $this->params['named'];
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'show'), array('class' => 'divider'));
 	if($_add) {
-		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.add'), array_merge(array('action' => $model, 'add'), $named), array('class' => 'divider'));
 	}
 $this->end();
 
@@ -29,7 +30,7 @@ $this->start('contentBody');
 				<?php foreach ($data as $obj) : ?>
 					<tr>
 						<td><?php echo $this->Utility->formatDate($obj[$model]['date_of_behaviour']) ?></td>
-						<td><?php echo $this->Html->link($obj[$model]['title'], array('action' => $model, 'view', $obj[$model]['id'])) ?></td>
+						<td><?php echo $this->Html->link($obj[$model]['title'], array_merge(array('action' => $model, 'view', $obj[$model]['id']), $named)) ?></td>
 						<td><?php echo $obj['StaffBehaviourCategory']['name'] ?></td>
 					</tr>
 				<?php endforeach ?>
