@@ -9,7 +9,7 @@ SELECT MIN(navigations.order) into @prevAwardsOrder FROM navigations WHERE modul
 UPDATE navigations SET navigations.order = navigations.order + 2 WHERE navigations.order > @prevAwardsOrder;
 UPDATE navigations SET navigations.order = @prevAwardsOrder + 1 WHERE title = 'Memberships';
 UPDATE navigations SET navigations.order = @prevAwardsOrder + 2 WHERE title = 'Licenses';
-UPDATE navigations SET header = 'General' WHERE title = 'Memberships' OR title = 'Licenses';
+UPDATE navigations SET header = 'General', is_wizard = 1 WHERE title = 'Memberships' OR title = 'Licenses';
 
 -- need to handle for security_functions too
 SELECT MIN(security_functions.order) into @prevMembershipOrder FROM security_functions WHERE name = 'Memberships' OR name = 'Licenses';

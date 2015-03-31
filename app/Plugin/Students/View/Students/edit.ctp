@@ -41,21 +41,21 @@ echo $this->Form->create($model, $formOptions);
 		
 		if ($autoid=='') {
 			$arrIdNo = array_merge(array('label' => $openEmisIdLabel, 'readOnly' => true),$arrIdNo);
-			echo $this->Form->input('openemis_no', $arrIdNo);
+			echo $this->Form->input('SecurityUser.openemis_no', $arrIdNo);
 		} else {
 			if ($this->Session->check('Student.id')) {
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
+				echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
 			} else {
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
+				echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
 			}
 		}
 		
-		echo $this->Form->input('first_name');
-		echo $this->Form->input('middle_name');
-		echo $this->Form->input('third_name');
-		echo $this->Form->input('last_name');
-		echo $this->Form->input('preferred_name');
-		echo $this->Form->input('gender_id', array('options' => $genderOptions));
+		echo $this->Form->input('SecurityUser.first_name');
+		echo $this->Form->input('SecurityUser.middle_name');
+		echo $this->Form->input('SecurityUser.third_name');
+		echo $this->Form->input('SecurityUser.last_name');
+		echo $this->Form->input('SecurityUser.preferred_name');
+		echo $this->Form->input('SecurityUser.gender_id', array('options' => $genderOptions));
 		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
 		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
 		
@@ -80,8 +80,8 @@ echo $this->Form->create($model, $formOptions);
 <fieldset class="section_break">
 	<legend><?php echo __('Address'); ?></legend>
 	<?php 
-		echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)'));
-		echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_postal_code');"));
+		echo $this->Form->input('SecurityUser.address', array('onkeyup' => 'utility.charLimit(this)'));
+		echo $this->Form->input('SecurityUser.postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_postal_code');"));
 		$tempPostCode = isset($this->data[$model]['postal_code'])?$this->data[$model]['postal_code'] : '';
 		echo $this->Form->hidden(null, array('id'=>'validate_student_postal_code', 'name' => 'validate_student_postal_code', 'value' => $tempPostCode));
 	?>

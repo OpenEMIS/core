@@ -5,7 +5,7 @@ SELECT MIN(navigations.order) into @prevSalaryOrder FROM navigations WHERE title
 UPDATE navigations SET navigations.order = navigations.order + 2 WHERE navigations.order > @prevSalaryOrder;
 UPDATE navigations SET navigations.order = @prevSalaryOrder + 1 WHERE title = 'Memberships';
 UPDATE navigations SET navigations.order = @prevSalaryOrder + 2 WHERE title = 'Licenses';
-UPDATE navigations SET header = 'Details' WHERE title = 'Memberships' OR title = 'Licenses';
+UPDATE navigations SET header = 'Details', is_wizard = 0 WHERE title = 'Memberships' OR title = 'Licenses';
 
 -- need to handle for security_functions too
 SELECT MIN(security_functions.order) into @prevMembershipOrder FROM security_functions WHERE name = 'Memberships' OR name = 'Licenses';
@@ -608,7 +608,7 @@ UPDATE navigations SET action = 'SecurityUser', pattern = 'SecurityUser|Security
 CREATE TABLE IF NOT EXISTS z_985_security_functions LIKE security_functions;
 INSERT z_985_security_functions SELECT * FROM security_functions WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration' AND NOT EXISTS (SELECT * FROM z_985_security_functions);
 DELETE FROM security_functions WHERE name = 'List of Users' AND controller = 'Security' AND module = 'Administration';
-UPDATE security_functions SET _view = 'SecurityUser|SecurityUser.index|SecurityUser.view', _edit = '_view:SecurityUser.edit|SecurityUserLogin.edit', _add = '_view:SecurityUser.add' WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
+UPDATE security_functions SET _view = 'SecurityUser|SecurityUser.index|SecurityUser.view|SecurityUserLogin.view', _edit = '_view:SecurityUser.edit|SecurityUserLogin.edit', _add = '_view:SecurityUser.add' WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
 
 SELECT security_functions.order INTO @securityUserOrder from security_functions WHERE name = 'Users' AND controller = 'Security' AND module = 'Administration';
 UPDATE security_functions SET security_functions.order = security_functions.order - 1 WHERE security_functions.order >= @securityUserOrder;
