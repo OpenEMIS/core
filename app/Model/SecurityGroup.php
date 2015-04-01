@@ -165,7 +165,8 @@ class SecurityGroup extends AppModel {
 						'conditions' => array(
 							'SecurityRole.security_group_id' => array(-1, 0),
 							'SecurityRole.order > ' => $highestSystemRole
-						)
+						),
+						'order' => array('SecurityRole.order')
 					));
 				}
 				
@@ -185,7 +186,15 @@ class SecurityGroup extends AppModel {
 							'conditions' => array(
 								'SecurityRole.security_group_id' => $id,
 								'SecurityRole.order > ' => $highestGroupRole
-							)
+							),
+							'order' => array('SecurityRole.order')
+						));
+					}else{
+						$groupRoles = $this->SecurityRole->find('list', array(
+							'conditions' => array(
+								'SecurityRole.security_group_id' => $id
+							),
+							'order' => array('SecurityRole.order')
 						));
 					}
 					
