@@ -182,7 +182,27 @@ class SecurityRole extends AppModel {
 		
 		if ($controller->request->is(array('post', 'put'))) {
 			$data = $controller->request->data;
-			$data[$this->alias]['order'] = $this->find('count');
+			$dataGroupId = $data['SecurityRole']['security_group_id'];
+			
+			if($dataGroupId == 0){
+				$maxOrderArr = $this->find('first', array(
+					'fields' => array('MAX(SecurityRole.order) AS max_order'), 
+					'conditions' => array('SecurityRole.security_group_id' => array(-1, 0)),
+					'order' => array('SecurityRole.order DESC')
+				));
+				$newOrder = (empty($maxOrderArr[0]['max_order']) ? 0 : $maxOrderArr[0]['max_order']) + 1;
+			}else if($dataGroupId > 0){
+				$maxOrderArr = $this->find('first', array(
+					'fields' => array('MAX(SecurityRole.order) AS max_order'), 
+					'conditions' => array('SecurityRole.security_group_id' => $dataGroupId),
+					'order' => array('SecurityRole.order DESC')
+				));
+				$newOrder = (empty($maxOrderArr[0]['max_order']) ? 0 : $maxOrderArr[0]['max_order']) + 1;
+			}else{
+				$newOrder = $this->find('count');
+			}
+			
+			$data[$this->alias]['order'] = $newOrder;
 			$result = $this->save($data);
 			if ($result) {
 				$controller->Message->alert('general.add.success');
