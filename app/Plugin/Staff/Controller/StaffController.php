@@ -343,7 +343,7 @@ class StaffController extends StaffAppController {
 		$dataMask = $this->ConfigItem->getValue('staff_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 
-		$this->set('autoid', $this->getUniqueID());
+		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model'=>'Staff'));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
@@ -351,169 +351,6 @@ class StaffController extends StaffAppController {
 		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
 		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
-
-
-	
-	// public function edit() {
-	// 	$this->Navigation->addCrumb('Edit');
-	// 	$model = 'SecurityUser';
-		
-	// 	if (!$this->Session->check('Staff.id')) {
-	// 		return $this->redirect(array('action' => 'index'));
-	// 	} 
-	// 	$staffIdSession = $this->Session->read('Staff.id');
-	// 	$this->Staff->id = $staffIdSession;
-
-	// 	if ($this->SecurityUser->exists($staffIdSession)) {
-	// 		if ($this->request->is(array('post', 'put'))) {
-	// 			$data = $this->request->data;
-
-	// 			if (array_key_exists('Staff', $data)) {
-	// 				if (array_key_exists('birthplace_area_id', $data['Staff'])) {
-	// 					if (!array_key_exists($model, $data)) {
-	// 						$data[$model] = array();
-	// 					}
-	// 					$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
-	// 					unset($data['Staff']['birthplace_area_id']);
-	// 				}
-	// 				if (array_key_exists('address_area_id', $data['Staff'])) {
-	// 					if (!array_key_exists($model, $data)) {
-	// 						$data[$model] = array();
-	// 					}
-	// 					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-	// 					unset($data['Staff']['birthplace_area_id']);
-	// 				}
-	// 			}
-
-	// 			if ($this->SecurityUser->saveAll($data)) {
-	// 				$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
-	// 				$InstitutionSiteStaffModel->validator()->remove('search');
-	// 				$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
-
-	// 				$dataToSite['staff_id'] = $staffIdSession;
-	// 				if (empty($staffIdSession)) {
-	// 					$InstitutionSiteStaffModel->save($dataToSite);
-	// 				}
-					
-	// 				$this->Message->alert('general.edit.success');
-	// 				return $this->redirect(array('action' => 'view'));
-	// 			} else {
-	// 				$this->log($this->validationErrors, 'debug');
-	// 				$this->Message->alert('general.edit.failed');
-	// 			}
-
-	// 			$this->Session->delete('InstitutionSiteStaff.addNew');
-
-	// 		} else {
-	// 			$security_user_id = $this->Session->read('Staff.security_user_id');
-	// 			$this->SecurityUser->contain('Gender');
-	// 			$data = $this->SecurityUser->findById($security_user_id);
-	// 			$this->request->data = $data;
-	// 			$addressAreaId = $this->request->data['SecurityUser']['address_area_id'];
-	// 			$birthplaceAreaId = $this->request->data['SecurityUser']['birthplace_area_id'];
-	// 		}
-	// 	} else {
-	// 		$this->Message->alert('general.notExists');
-	// 		return $this->redirect(array('action' => 'index'));
-	// 	}
-
-	// 	$genderOptions = $this->SecurityUser->Gender->getList();
-	// 	$dataMask = $this->ConfigItem->getValue('staff_identification');
-	// 	$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-	// 	$this->set('autoid', $this->getUniqueID());
-	// 	$this->set('arrIdNo', $arrIdNo);
-	// 	$this->set('genderOptions', $genderOptions);
-	// 	$this->set('data', $data);
-	// 	$this->set('model', $model);
-	// 	$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
-	// 	$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
-	// }
-
-	// public function add() {
-	// 	$this->Wizard->start();
-	// 	$model = 'SecurityUser';
-	// 	$this->Navigation->addCrumb('Add');
-	// 	$this->bodyTitle = __('New Staff');
-
-	// 	$addressAreaId = false;
-	// 	$birthplaceAreaId = false;
-
-	// 	$data = array();
-	// 	if ($this->request->is(array('post', 'put'))) {
-	// 		$this->request->data['Staff'] = array();
-	// 		$data = $this->request->data;
-
-	// 		if (array_key_exists('Staff', $data)) {
-	// 			if (array_key_exists('birthplace_area_id', $data['Staff'])) {
-	// 				if (!array_key_exists($model, $data)) {
-	// 					$data[$model] = array();
-	// 				}
-	// 				$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
-	// 				unset($data['Staff']['birthplace_area_id']);
-	// 			}
-	// 			if (array_key_exists('address_area_id', $data['Staff'])) {
-	// 				if (!array_key_exists($model, $data)) {
-	// 					$data[$model] = array();
-	// 				}
-	// 				$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-	// 				unset($data['Staff']['birthplace_area_id']);
-	// 			}
-	// 		}
-			
-	// 		$StaffNationality = ClassRegistry::init('Staff.StaffNationality');
-	// 		$StaffNationality->set($this->request->data);
-			
-	// 		$this->SecurityUser->StaffIdentity->validator()->remove('issue_location');
-
-	// 		$this->SecurityUser->create();
-	// 		if ($this->SecurityUser->saveAll($data)) {
-	// 			$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
-	// 			$InstitutionSiteStaffModel->validator()->remove('search');
-	// 			$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
-
-	// 			$securityUserId = $this->SecurityUser->getLastInsertId();
-	// 			$this->Staff->create();
-	// 			$this->Staff->save(array('security_user_id' => $securityUserId));
-
-	// 			if ($this->Wizard->isActive()) {
-	// 				$this->Message->alert('Staff.add.success');
-	// 				$id = $this->Staff->getLastInsertId();
-	// 				$this->Session->write('Staff.id', $id);
-	// 				$staffStatusId = $InstitutionSiteStaffModel->StaffStatus->getDefaultValue();
-	// 				$dataToSite['staff_status_id'] = $staffStatusId;
-	// 				$dataToSite['staff_id'] = $id;
-	// 				$InstitutionSiteStaffModel->save($dataToSite);
-	// 				$this->Session->write('Staff.data', $this->Staff->findById($id));
-	// 				$this->Session->write('Staff.security_user_id', $securityUserId);
-	// 				// unset wizard so it will not auto redirect from WizardComponent
-	// 				unset($this->request->data['wizard']['next']);
-
-	// 				$this->Wizard->next();
-	// 			} else {
-	// 				$dataToSite['staff_id'] = $id;
-	// 				$InstitutionSiteStaffModel->save($dataToSite);
-	// 				$this->Message->alert('general.edit.success');
-	// 				return $this->redirect(array('action' => 'view'));
-	// 			}
-				
-	// 			$this->Session->delete('InstitutionSiteStaff.addNew');
-	// 		} else {
-	// 			$this->log($this->validationErrors, 'debug');
-	// 			$this->Message->alert('general.add.failed');
-	// 		}
-	// 	}
-
-	// 	$genderOptions = $this->SecurityUser->Gender->getList();
-	// 	$dataMask = $this->ConfigItem->getValue('staff_identification');
-	// 	$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-	// 	$this->set('autoid', $this->getUniqueID());
-	// 	$this->set('arrIdNo', $arrIdNo);
-	// 	$this->set('genderOptions', $genderOptions);
-	// 	$this->set('data', $data);
-	// 	$this->set('model', $model);
-	// 	$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
-	// 	$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
-	// }
 
 	public function delete() {
 		$id = $this->Session->read('Staff.id');
@@ -608,37 +445,6 @@ class StaffController extends StaffAppController {
 			$academicPeriodId = key($academicPeriodList);
 		}
 		return $academicPeriodId;
-	}
-
-	public function getUniqueID() {
-		$generate_no = '';
-		$str = $this->Staff->find('first', array('order' => array('Staff.id DESC'), 'limit' => 1, 'fields' => 'Staff.id'));
-		$prefix = $this->ConfigItem->find('first', array('limit' => 1,
-			'fields' => 'ConfigItem.value',
-			'conditions' => array(
-				'ConfigItem.name' => 'staff_prefix'
-			)
-		));
-		$prefix = explode(",", $prefix['ConfigItem']['value']);
-
-		if ($prefix[1] > 0) {
-            $id = 0;
-            if (!empty($str)) {
-                $id = $str['Staff']['id'];
-            }
-            $id = $id + 1;
-			if (strlen($id) < 6) {
-				$str = str_pad($id, 6, "0", STR_PAD_LEFT);
-			}else{
-				$str = $id;
-			}
-			// Get two random number
-			$rnd1 = rand(0, 9);
-			$rnd2 = rand(0, 9);
-			$generate_no = $prefix[0] . $str . $rnd1 . $rnd2;
-		}
-
-		return $generate_no;
 	}
 
 	
