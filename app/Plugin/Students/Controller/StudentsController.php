@@ -342,7 +342,7 @@ class StudentsController extends StudentsAppController {
 		$dataMask = $this->ConfigItem->getValue('student_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 
-		$this->set('autoid', $this->getUniqueID());
+		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model' => 'Student')));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);

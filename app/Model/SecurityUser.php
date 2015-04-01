@@ -309,6 +309,22 @@ class SecurityUser extends AppModel {
 			);
 		}
 
+		if (in_array($this->action,array('add'))) {
+			$this->fields['openemis_no'] = array(
+				'type' => 'element',
+				'element' => 'form/text_multiple',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'fieldName' => 'openemis_no',
+					'prefixAttr' => array('maxlength' => 5),
+					'suffixAttr' => array('value' => $this->controller->Utility->getUniqueOpenemisId(), 'readonly' => 'readonly'),
+				)
+			);
+		} else {
+			$this->fields['openemis_no']['attr']['readonly'] = true;
+		}
+
 		$this->fields['id']['type'] = 'hidden';
 		$this->fields['username']['visible'] = false;
 		$this->fields['password']['visible'] = false;
@@ -322,8 +338,7 @@ class SecurityUser extends AppModel {
 		$this->fields['gender_id']['options'] = $this->Gender->getList();
 		$this->fields['status']['type'] = 'select';
 		$this->fields['status']['options'] = $this->getStatus();
-		$this->fields['last_login']['type'] = 'hidden';
-		$this->fields['openemis_no']['attr']['readonly'] = true;
+		$this->fields['last_login']['type'] = 'hidden';		
 
 		$this->fields['UserContact'] = array(
 			'type' => 'element',
@@ -422,7 +437,11 @@ class SecurityUser extends AppModel {
 		unset($this->fields['UserContact']);
 		unset($this->fields['SecurityGroupUser']);
 
-		$this->fields['openemis_no']['value'] = $this->getUniqueID();
+		if ($this->request->is(array('post', 'put'))) {
+			if (array_key_exists('openemis_no_suffix', $this->request->data['SecurityUser'])) {
+				$this->request->data['SecurityUser']['openemis_no'] = $this->request->data['SecurityUser']['openemis_no_prefix'].$this->request->data['SecurityUser']['openemis_no_suffix'];
+			}
+		}
 		parent::add();
 	}
 
@@ -540,37 +559,4 @@ class SecurityUser extends AppModel {
 		
 		return $data;
 	}
-
-	public function getUniqueID() {
-		$generate_no = '';
-		$str = $this->find('first', array('order' => array('SecurityUser.id DESC'), 'limit' => 1, 'fields' => 'SecurityUser.id'));
-		// $prefix = $this->ConfigItem->find('first', array('limit' => 1,
-		// 	'fields' => 'ConfigItem.value',
-		// 	'conditions' => array(
-		// 		'ConfigItem.name' => 'student_prefix'
-		// 	)
-		// ));
-		// $prefix = explode(",", $prefix['ConfigItem']['value']);
-
-		// if ($prefix[1] > 0) {
-        $id = 0;
-        if (!empty($str)) {
-            $id = $str['SecurityUser']['id'];
-        }
-        $id = $id + 1;
-		if (strlen($id) < 6) {
-			$str = str_pad($id, 6, "0", STR_PAD_LEFT);
-		} else {
-			$str = $id;
-		}
-		// Get two random number
-		$rnd1 = rand(0, 9);
-		$rnd2 = rand(0, 9);
-		// $generate_no = $prefix[0] . $str . $rnd1 . $rnd2;
-		$generate_no = $str . $rnd1 . $rnd2;
-		// }
-
-		return $generate_no;
-	}
-
 }

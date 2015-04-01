@@ -501,3 +501,14 @@ select.topSelectControl{
 	margin-bottom: 8px;
 }
 
+.input-size-half {
+	float:left !important;
+	width:69%;	
+	display:inline-block;
+	clear:none!important
+}
+
+.input-size-half.space {
+	width:29%;
+	margin-right: 7px;
+}
