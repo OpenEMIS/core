@@ -16,15 +16,15 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class RubricTemplateGrade extends QualityAppModel {
+class QualityStatusRole extends QualityAppModel {
 	public $belongsTo = array(
-		'RubricTemplate' => array(
-            'className' => 'Quality.RubricTemplate',
-            'foreignKey' => 'rubric_template_id'
+		'QualityStatus' => array(
+            'className' => 'Quality.QualityStatus',
+            'foreignKey' => 'quality_status_id'
         ),
-		'EducationGrade' => array(
-			'className' => 'EducationGrade',
-			'fields' => array('EducationGrade.id', 'EducationGrade.programme_grade_name', 'EducationGrade.programme_order')
+		'SecurityRole' => array(
+			'className' => 'SecurityRole',
+			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order')
 		)
 	);
 }

@@ -19,7 +19,9 @@ class QualityStatusesController extends QualityAppController {
 		'Quality.QualityStatus',
 		'Quality.RubricTemplate',
 		'AcademicPeriodLevel',
-		'AcademicPeriod'
+		'AcademicPeriod',
+		'SecurityRole',
+		'EducationProgramme'
 	);
 
 	public $components = array(
@@ -41,9 +43,24 @@ class QualityStatusesController extends QualityAppController {
 			'placeholder' => __('Select academic periods'),
 			'visible' => true
 		);
+		$this->QualityStatus->fields['security_roles'] = array(
+			'type' => 'chosen_select',
+			'id' => 'SecurityRole.SecurityRole',
+			'placeholder' => __('Select security roles'),
+			'visible' => true
+		);
+		$this->QualityStatus->fields['education_programmes'] = array(
+			'type' => 'chosen_select',
+			'id' => 'EducationProgramme.EducationProgramme',
+			'placeholder' => __('Select education programmes'),
+			'visible' => true
+		);
+
 		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 		$this->ControllerAction->setFieldOrder('academic_period_level_id', 2);
 		$this->ControllerAction->setFieldOrder('academic_periods', 3);
+		$this->ControllerAction->setFieldOrder('security_roles', 4);
+		$this->ControllerAction->setFieldOrder('education_programmes', 5);
 
 		if ($this->action == 'index') {
 			$this->QualityStatus->fields['academic_periods']['visible'] = false;
@@ -55,6 +72,13 @@ class QualityStatusesController extends QualityAppController {
 
 			$this->QualityStatus->fields['academic_periods']['dataModel'] = 'AcademicPeriod';
 			$this->QualityStatus->fields['academic_periods']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['security_roles']['dataModel'] = 'SecurityRole';
+			$this->QualityStatus->fields['security_roles']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['education_programmes']['dataModel'] = 'EducationProgramme';
+			$this->QualityStatus->fields['education_programmes']['dataField'] = 'name';
+			$this->QualityStatus->fields['education_programmes']['dataSeparator'] = '<br>';
 		} else if ($this->action == 'view') {
 			$this->QualityStatus->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
 			$this->QualityStatus->fields['rubric_template_id']['dataField'] = 'name';
@@ -64,6 +88,13 @@ class QualityStatusesController extends QualityAppController {
 
 			$this->QualityStatus->fields['academic_periods']['dataModel'] = 'AcademicPeriod';
 			$this->QualityStatus->fields['academic_periods']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['security_roles']['dataModel'] = 'SecurityRole';
+			$this->QualityStatus->fields['security_roles']['dataField'] = 'name';
+
+			$this->QualityStatus->fields['education_programmes']['dataModel'] = 'EducationProgramme';
+			$this->QualityStatus->fields['education_programmes']['dataField'] = 'name';
+			$this->QualityStatus->fields['education_programmes']['dataSeparator'] = '<br>';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$templateOptions = $this->RubricTemplate->find('list');
 			$this->QualityStatus->fields['rubric_template_id']['type'] = 'select';
@@ -94,6 +125,16 @@ class QualityStatusesController extends QualityAppController {
 
 			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodByLevel($selectedPeriodLevel);
 			$this->QualityStatus->fields['academic_periods']['options'] = $academicPeriodOptions;
+
+			$securityRoleOptions = $this->SecurityRole->find('list');
+			$this->QualityStatus->fields['security_roles']['options'] = $securityRoleOptions;
+
+			$educationProgrammeOptions = $this->EducationProgramme->find('list', array(
+				'order' => array(
+					'EducationProgramme.order'
+				)
+			));
+			$this->QualityStatus->fields['education_programmes']['options'] = $educationProgrammeOptions;
 		}
 		
 		$controlsElement = 'controls';
@@ -118,7 +159,7 @@ class QualityStatusesController extends QualityAppController {
 		if (empty($templateOptions)) {
 			$this->Message->alert('RubricTemplate.noTemplate');
 		} else {
-			$this->QualityStatus->contain('RubricTemplate', 'AcademicPeriodLevel', 'AcademicPeriod');
+			$this->QualityStatus->contain('RubricTemplate', 'AcademicPeriodLevel', 'AcademicPeriod', 'SecurityRole', 'EducationProgramme');
 			$data = $this->QualityStatus->find('all', array(
 				'conditions' => array(
 					'QualityStatus.rubric_template_id' => $selectedTemplate

@@ -18,6 +18,8 @@ echo $this->element($controlsElement, array(), array('plugin' => $this->params['
 				<th><?php echo $this->Label->get('QualityStatus.rubric_template_id'); ?></th>
 				<th><?php echo $this->Label->get('QualityStatus.academic_period_level_id'); ?></th>
 				<th><?php echo $this->Label->get('general.academic_period'); ?></th>
+				<th><?php echo $this->Label->get('QualityStatus.security_roles'); ?></th>
+				<th><?php echo $this->Label->get('QualityStatus.education_programmes'); ?></th>
 				<th><?php echo $this->Label->get('QualityStatus.date_enabled'); ?></th>
 				<th><?php echo $this->Label->get('QualityStatus.date_disabled'); ?></th>
 			</tr>
@@ -35,6 +37,24 @@ echo $this->element($controlsElement, array(), array('plugin' => $this->params['
 									$academicPeriods[] = $academicPeriod['name'];
 								}
 								echo implode(', ', $academicPeriods);
+							?>
+						</td>
+						<td>
+							<?php
+								$securityRoles = array();
+								foreach ($obj['SecurityRole'] as $securityRole) {
+									$securityRoles[] = $securityRole['name'];
+								}
+								echo implode(', ', $securityRoles);
+							?>
+						</td>
+						<td>
+							<?php
+								$educationProgrammes = array();
+								foreach ($obj['EducationProgramme'] as $educationProgramme) {
+									$educationProgrammes[] = $educationProgramme['name'];
+								}
+								echo implode('<br>', $educationProgrammes);
 							?>
 						</td>
 						<td><?php echo $obj['QualityStatus']['date_enabled']; ?></td>

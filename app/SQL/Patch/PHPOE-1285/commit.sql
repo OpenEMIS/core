@@ -62,22 +62,7 @@ ALTER TABLE `rubric_templates`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 5. New table - rubric_template_grades
---
-
-DROP TABLE IF EXISTS `rubric_template_grades`;
-CREATE TABLE IF NOT EXISTS `rubric_template_grades` (
-  `id` char(36) NOT NULL,
-  `education_grade_id` int(11) NOT NULL,
-  `rubric_template_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `rubric_template_grades`
- ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `education_grade_id` (`education_grade_id`);
-
---
--- 6. New table - rubric_template_options
+-- 5. New table - rubric_template_options
 --
 
 DROP TABLE IF EXISTS `rubric_template_options`;
@@ -103,22 +88,7 @@ ALTER TABLE `rubric_template_options`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 7. New table - rubric_template_roles
---
-
-DROP TABLE IF EXISTS `rubric_template_roles`;
-CREATE TABLE IF NOT EXISTS `rubric_template_roles` (
-  `id` char(36) NOT NULL,
-  `rubric_template_id` int(11) NOT NULL,
-  `security_role_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `rubric_template_roles`
- ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `security_role_id` (`security_role_id`);
-
---
--- 8. New table - rubric_sections
+-- 6. New table - rubric_sections
 --
 
 DROP TABLE IF EXISTS `rubric_sections`;
@@ -142,7 +112,7 @@ ALTER TABLE `rubric_sections`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 9. New table - rubric_criterias
+-- 7. New table - rubric_criterias
 --
 
 DROP TABLE IF EXISTS `rubric_criterias`;
@@ -167,7 +137,7 @@ ALTER TABLE `rubric_criterias`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 10. New table - rubric_criteria_options
+-- 8. New table - rubric_criteria_options
 --
 
 DROP TABLE IF EXISTS `rubric_criteria_options`;
@@ -191,7 +161,7 @@ ALTER TABLE `rubric_criteria_options`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 11. New table - quality_statuses
+-- 9. New table - quality_statuses
 --
 
 DROP TABLE IF EXISTS `quality_statuses`;
@@ -217,7 +187,7 @@ ALTER TABLE `quality_statuses`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 12. New table - quality_status_periods
+-- 10. New table - quality_status_periods
 --
 
 DROP TABLE IF EXISTS `quality_status_periods`;
@@ -230,6 +200,36 @@ CREATE TABLE IF NOT EXISTS `quality_status_periods` (
 
 ALTER TABLE `quality_status_periods`
  ADD PRIMARY KEY (`id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `quality_status_id` (`quality_status_id`);
+
+--
+-- 11. New table - quality_status_programmes
+--
+
+DROP TABLE IF EXISTS `quality_status_programmes`;
+CREATE TABLE IF NOT EXISTS `quality_status_programmes` (
+  `id` char(36) NOT NULL,
+  `education_programme_id` int(11) NOT NULL,
+  `quality_status_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `quality_status_programmes`
+ ADD PRIMARY KEY (`id`), ADD KEY `education_programme_id` (`education_programme_id`), ADD KEY `quality_status_id` (`quality_status_id`);
+
+--
+-- 12. New table - quality_status_roles
+--
+
+DROP TABLE IF EXISTS `quality_status_roles`;
+CREATE TABLE IF NOT EXISTS `quality_status_roles` (
+  `id` char(36) NOT NULL,
+  `quality_status_id` int(11) NOT NULL,
+  `security_role_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `quality_status_roles`
+ ADD PRIMARY KEY (`id`), ADD KEY `quality_status_id` (`quality_status_id`), ADD KEY `security_role_id` (`security_role_id`);
 
 --
 -- 13. New table - institution_site_quality_rubrics

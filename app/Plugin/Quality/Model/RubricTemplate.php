@@ -50,25 +50,6 @@ class RubricTemplate extends QualityAppModel {
         )
     );
 
-    public $hasAndBelongsToMany = array(
-		'EducationGrade' => array(
-			'className' => 'EducationGrade',
-			'joinTable' => 'rubric_template_grades',
-			'foreignKey' => 'rubric_template_id',
-			'associationForeignKey' => 'education_grade_id',
-			'fields' => array('EducationGrade.id', 'EducationGrade.programme_grade_name', 'EducationGrade.programme_order'),
-			'order' => array('EducationGrade.programme_order', 'EducationGrade.order')
-		),
-		'SecurityRole' => array(
-			'className' => 'SecurityRole',
-			'joinTable' => 'rubric_template_roles',
-			'foreignKey' => 'rubric_template_id',
-			'associationForeignKey' => 'security_role_id',
-			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
-			'order' => array('SecurityRole.order')
-		)
-	);
-
     public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
@@ -98,50 +79,14 @@ class RubricTemplate extends QualityAppModel {
 			$weightingTypeOptions[$weightingType['id']] = __($weightingType['name']);
 		}
 
-		$this->fields['security_roles'] = array(
-			'type' => 'chosen_select',
-			'id' => 'SecurityRole.SecurityRole',
-			'placeholder' => __('Select security roles'),
-			'visible' => true
-		);
-		$this->ControllerAction->setFieldOrder('security_roles', 5);
-
-		$this->fields['education_grades'] = array(
-			'type' => 'chosen_select',
-			'id' => 'EducationGrade.EducationGrade',
-			'placeholder' => __('Select education grades'),
-			'visible' => true
-		);
-		$this->ControllerAction->setFieldOrder('education_grades', 6);
-
 		if ($this->action == 'index') {
 			$this->controller->set('weightingTypeOptions', $weightingTypeOptions);
 		} else if ($this->action == 'view') {
 			$this->fields['weighting_type']['dataModel'] = 'WeightingType';
 			$this->fields['weighting_type']['dataField'] = 'name';
-
-			$this->fields['security_roles']['dataModel'] = 'SecurityRole';
-			$this->fields['security_roles']['dataField'] = 'name';
-
-			$this->fields['education_grades']['dataModel'] = 'EducationGrade';
-			$this->fields['education_grades']['dataField'] = 'programme_grade_name';
-			$this->fields['education_grades']['dataSeparator'] = '<br>';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['weighting_type']['type'] = 'select';
 			$this->fields['weighting_type']['options'] = $weightingTypeOptions;
-
-			$securityRoleOptions = $this->SecurityRole->find('list');
-			$this->fields['security_roles']['options'] = $securityRoleOptions;
-
-			$educationGradeOptions = $this->EducationGrade->find('list', array(
-				'fields' => array(
-					'EducationGrade.id', 'EducationGrade.programme_grade_name'
-				),
-				'order' => array(
-					'EducationGrade.programme_order', 'EducationGrade.order'
-				)
-			));
-			$this->fields['education_grades']['options'] = $educationGradeOptions;
 
 			if ($this->request->is(array('post', 'put'))) {
 				$data = $this->request->data;
@@ -189,7 +134,7 @@ class RubricTemplate extends QualityAppModel {
 	}
 
 	public function index() {
-		$this->contain('SecurityRole', 'EducationGrade');
+		$this->contain();
 		$data = $this->find('all');
 		$this->controller->set('data', $data);
 	}

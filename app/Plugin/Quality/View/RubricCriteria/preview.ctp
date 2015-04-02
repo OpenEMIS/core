@@ -17,9 +17,16 @@ echo $this->element($controlsElement, array(), array('plugin' => $this->params['
 	<table class="table table-bordered">
 		<tbody>
 			<?php if (!empty($data)) : ?>
+				<?php
+					$headerOrder = 0;
+					$criteriaOrder = 0;
+				?>
 				<?php foreach ($data as $key => $obj) : ?>
+					<?php $sectionOrder = $obj['RubricSection']['order']; ?>
 					<?php if ($obj['RubricCriteria']['type'] == 1) : ?>
+						<?php $criteriaOrder = 0; ?>
 						<tr>
+							<td><?php echo $sectionOrder . "." . ++$headerOrder; ?></td>
 							<td><strong><?php echo __('Header'); ?></strong></td>
 							<td colspan="<?php echo $rubricTemplateOptionCount; ?>"><?php echo $obj['RubricCriteria']['name']; ?></td>
 						</tr>
@@ -32,6 +39,7 @@ echo $this->element($controlsElement, array(), array('plugin' => $this->params['
 							}
 						?>
 						<tr>
+							<td class="active" rowspan="5"><?php echo $sectionOrder . "." . $headerOrder . "." . ++$criteriaOrder; ?></td>
 							<td class="active"><strong><?php echo __('Criteria'); ?></strong></td>
 							<td class="active" align="center" colspan="<?php echo $rubricTemplateOptionCount; ?>"><?php echo __('Descriptors') ?></td>
 						</tr>
