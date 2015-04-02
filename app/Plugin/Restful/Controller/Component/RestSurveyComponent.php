@@ -14,7 +14,10 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
+define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
+define("NS_EV", "http://www.w3.org/2001/xml-events");
+define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
 define("NS_OE", "https://www.openemis.org");
 App::uses('Xml', 'Utility');
 
@@ -309,8 +312,8 @@ class RestSurveyComponent extends Component {
 
     	$fieldContains = array();
 		$fieldContains = isset($this->FieldOption) ? array_merge(array($this->FieldOption->alias), $fieldContains) : $fieldContains;
-		//$fieldContains = isset($this->TableColumn) ? array_merge(array($this->TableColumn->alias), $fieldContains) : $fieldContains;
-		//$fieldContains = isset($this->TableRow) ? array_merge(array($this->TableRow->alias), $fieldContains) : $fieldContains;
+		$fieldContains = isset($this->TableColumn) ? array_merge(array($this->TableColumn->alias), $fieldContains) : $fieldContains;
+		$fieldContains = isset($this->TableRow) ? array_merge(array($this->TableRow->alias), $fieldContains) : $fieldContains;
 		$this->Field->contain($fieldContains);
 		$fields = $this->Field->find('all', array(
 			'conditions' => array(
@@ -325,18 +328,18 @@ class RestSurveyComponent extends Component {
 
 		$xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
     				<html
-    					xmlns="http://www.w3.org/1999/xhtml"
-    					xmlns:xf="' .NS_XF. '"
-	    				xmlns:ev="http://www.w3.org/2001/xml-events"
-	    				xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	    				xmlns:oe="' .NS_OE. '">
+    					xmlns="' . NS_XHTML . '"
+    					xmlns:xf="' . NS_XF . '"
+    					xmlns:ev="' . NS_EV . '"
+    					xmlns:xsd="' . NS_XSD . '"
+	    				xmlns:oe="' . NS_OE . '">
 					</html>';
 
     	$xml = new SimpleXMLElement($xmlstr);
 
-		$headNode = $xml->addChild("head");
-		$bodyNode = $xml->addChild("body");
-			$headNode->addChild("title", $title);
+		$headNode = $xml->addChild("head", null, NS_XHTML);
+		$bodyNode = $xml->addChild("body", null, NS_XHTML);
+			$headNode->addChild("title", $title, NS_XHTML);
 				$modelNode = $headNode->addChild("model", null, NS_XF);
 					$instanceNode = $modelNode->addChild("instance", null, NS_XF);
 					$instanceNode->addAttribute("id", $instanceId);
@@ -368,19 +371,17 @@ class RestSurveyComponent extends Component {
 							$textNode->addChild("label", "Academic Period", NS_XF);
 
 						foreach ($fields as $key => $field) {
-							if($field[$this->Field->alias]['type'] == 1) {
+							if($field[$this->Field->alias]['type'] == 1 || $field[$this->Field->alias]['type'] == 7) {
 								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
 								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
 								$sectionBreakNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 							}
 
-							$fieldTypeArr = array(2, 3, 4, 5, 6); //Only support 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number
+							$fieldTypeArr = array(2, 3, 4, 5, 6, 7); //Only support 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number, 7 -> Table
 							if(in_array($field[$this->Field->alias]['type'], $fieldTypeArr)) {
 								$fieldNode = $groupNode->addChild($this->Field->alias, null, NS_OE);
 									$fieldNode->addAttribute("id", $field[$this->Field->alias]['id']);
 
-								$bindNode = $modelNode->addChild("bind", null, NS_XF);
-								$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 								switch($field[$this->Field->alias]['type']) {
 									case 2:	//Text
 										$fieldType = 'string';
@@ -393,7 +394,7 @@ class RestSurveyComponent extends Component {
 										$dropdownNode = $sectionBreakNode->addChild("select1", null, NS_XF);
 										$dropdownNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$dropdownNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
-											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
+											foreach ($field[$this->FieldOption->alias] as $fieldOption) {
 												$itemNode = $dropdownNode->addChild("item", null, NS_XF);
 													$itemNode->addChild("label", htmlspecialchars($fieldOption['value'], ENT_QUOTES), NS_XF);
 													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
@@ -404,7 +405,7 @@ class RestSurveyComponent extends Component {
 										$checkboxNode = $sectionBreakNode->addChild("select", null, NS_XF);
 										$checkboxNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$checkboxNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
-											foreach ($field[$this->FieldOption->alias] as $k => $fieldOption) {
+											foreach ($field[$this->FieldOption->alias] as $fieldOption) {
 												$itemNode = $checkboxNode->addChild("item", null, NS_XF);
 													$itemNode->addChild("label", htmlspecialchars($fieldOption['value'], ENT_QUOTES), NS_XF);
 													$itemNode->addChild("value", $fieldOption['id'], NS_XF);
@@ -422,13 +423,57 @@ class RestSurveyComponent extends Component {
 										$numberNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$numberNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 										break;
+									case 7:	//Table
+										$fieldType = false;
+
+										$tableNode = $sectionBreakNode->addChild("table", null, NS_XHTML);
+										$tableNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
+											$tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
+											$tableHeader->addChild("th", null, NS_XHTML);
+											$tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
+												$xformRepeat = $tableBody->addChild("repeat", null, NS_XF);
+												$xformRepeat->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]"."/".$this->TableRow->alias);
+													$tbodyRow = $xformRepeat->addChild("tr", null, NS_XHTML);
+														$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
+															$tbodyCell = $tbodyColumn->addChild("output", null, NS_XF);
+																$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]"."/".$this->TableColumn->alias."0");
+
+										foreach ($field[$this->TableRow->alias] as $row => $tableRow) {
+											$rowNode = $fieldNode->addChild($this->TableRow->alias, null, NS_OE);
+											$rowNode->addAttribute("id", $tableRow['id']);
+												$colIndex = 0;
+
+												$columnNode = $rowNode->addChild($this->TableColumn->alias . $colIndex, htmlspecialchars($tableRow['name'], ENT_QUOTES), NS_OE);
+												$columnNode->addAttribute("id", $colIndex);
+												foreach ($field[$this->TableColumn->alias] as $col => $tableColumn) {
+													$colIndex++;
+													$columnNode = $rowNode->addChild($this->TableColumn->alias . $colIndex, null, NS_OE);
+													$columnNode->addAttribute("id", $tableColumn['id']);
+													if ($row == 0) {
+														$tableHeader->addChild("th", htmlspecialchars($tableColumn['name'], ENT_QUOTES), NS_XHTML);
+														$tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
+															$tbodyCell = $tbodyColumn->addChild("input", null, NS_XF);
+																$tbodyCell->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]"."/".$this->TableColumn->alias.$colIndex);
+
+														$bindNode = $modelNode->addChild("bind", null, NS_XF);
+														$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]"."/".$this->TableColumn->alias.$colIndex);
+														$bindNode->addAttribute("type", 'integer');
+														$bindNode->addAttribute("required", 'true()');
+													}
+												}
+										}
+										break;
 								}
 
-								$bindNode->addAttribute("type", $fieldType);
-								if($field[$this->Field->alias]['is_mandatory']) {
-									$bindNode->addAttribute("required", 'true()');
-								} else {
-									$bindNode->addAttribute("required", 'false()');
+								if ($fieldType) {
+									$bindNode = $modelNode->addChild("bind", null, NS_XF);
+									$bindNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
+									$bindNode->addAttribute("type", $fieldType);
+									if($field[$this->Field->alias]['is_mandatory']) {
+										$bindNode->addAttribute("required", 'true()');
+									} else {
+										$bindNode->addAttribute("required", 'false()');
+									}
 								}
 
 								$index++;
