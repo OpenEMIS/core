@@ -23,14 +23,14 @@ UPDATE `security_functions` SET `controller` = 'Quality', `_view` = 'qualityVisi
 --
 
 DROP TABLE IF EXISTS `rubric_templates`;
-DROP TABLE IF EXISTS `rubric_template_grades`;
 DROP TABLE IF EXISTS `rubric_template_options`;
-DROP TABLE IF EXISTS `rubric_template_roles`;
 DROP TABLE IF EXISTS `rubric_sections`;
 DROP TABLE IF EXISTS `rubric_criterias`;
 DROP TABLE IF EXISTS `rubric_criteria_options`;
 DROP TABLE IF EXISTS `quality_statuses`;
 DROP TABLE IF EXISTS `quality_status_periods`;
+DROP TABLE IF EXISTS `quality_status_programmes`;
+DROP TABLE IF EXISTS `quality_status_roles`;
 
 DROP TABLE IF EXISTS `institution_site_quality_rubrics`;
 DROP TABLE IF EXISTS `institution_site_quality_rubric_answers`;

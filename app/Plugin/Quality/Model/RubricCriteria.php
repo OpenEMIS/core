@@ -312,7 +312,7 @@ class RubricCriteria extends QualityAppModel {
 
 				$rubricTemplateOptionCount = sizeof($rubricTemplateOptions);
 
-				$this->contain('RubricCriteriaOption');
+				$this->contain('RubricSection', 'RubricCriteriaOption');
 				$data = $this->find('all', array(
 					'conditions' => array(
 						'RubricCriteria.rubric_section_id' => $selectedSection

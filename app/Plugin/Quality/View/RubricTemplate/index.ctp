@@ -18,8 +18,7 @@ echo $this->element($tabsElement, array(), array('plugin' => $this->params['plug
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('general.description'); ?></th>
 				<th><?php echo $this->Label->get('RubricTemplate.weighting_type'); ?></th>
-				<th><?php echo $this->Label->get('RubricTemplate.security_roles'); ?></th>
-				<th><?php echo $this->Label->get('RubricTemplate.education_grades'); ?></th>
+				<th><?php echo $this->Label->get('RubricTemplate.pass_mark'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -28,24 +27,7 @@ echo $this->element($tabsElement, array(), array('plugin' => $this->params['plug
 					<td><?php echo $this->Html->link($obj['RubricTemplate']['name'], array('action' => $model, 'view', $obj['RubricTemplate']['id'])); ?></td>
 					<td><?php echo $obj['RubricTemplate']['description']; ?></td>
 					<td><?php echo $weightingTypeOptions[$obj['RubricTemplate']['weighting_type']]; ?></td>
-					<td>
-						<?php
-							$securityRoles = array();
-							foreach ($obj['SecurityRole'] as $securityRole) {
-								$securityRoles[] = $securityRole['name'];
-							}
-							echo implode(', ', $securityRoles);
-						?>
-					</td>
-					<td>
-						<?php
-							$educationGrades = array();
-							foreach ($obj['EducationGrade'] as $educationGrade) {
-								$educationGrades[] = $educationGrade['programme_grade_name'];
-							}
-							echo implode('<br>', $educationGrades);
-						?>
-					</td>
+					<td><?php echo $obj['RubricTemplate']['pass_mark']; ?></td>
 				</tr>
 			<?php endforeach ?>
 		</tbody>
