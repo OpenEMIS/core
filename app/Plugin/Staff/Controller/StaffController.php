@@ -343,7 +343,7 @@ class StaffController extends StaffAppController {
 		$dataMask = $this->ConfigItem->getValue('staff_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 
-		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model'=>'Staff'));
+		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model'=>'Staff')));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
