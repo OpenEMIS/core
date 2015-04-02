@@ -152,6 +152,28 @@ class AcademicPeriod extends AppModel {
 		$this->Navigation->addCrumb('Academic Periods');
 		$this->setVar('contentHeader', __('Academic Periods'));
     }
+	
+	public function beforeSave($options=array()) {
+		if (array_key_exists($this->alias, $this->data)) {
+			if (array_key_exists('start_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
+				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
+			}
+			if (array_key_exists('end_date', $this->data[$this->alias])) {
+				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
+				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
+			}
+
+			if (array_key_exists('start_date', $this->data[$this->alias]) && array_key_exists('end_date', $this->data[$this->alias])) {
+				$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
+				$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
+			}
+			
+			if(isset($this->data[$this->alias]['current']) && $this->data[$this->alias]['current'] == 1){
+				$this->updateAll(array('AcademicPeriod.current' => 0), true);
+			}
+		}
+	}
 
     public function getOptionFields() {
 		parent::getOptionFields();
@@ -326,24 +348,6 @@ class AcademicPeriod extends AppModel {
 		}
 
 		$this->setVar(compact('parentStartDate', 'parentEndDate'));
-	}
-
-	public function beforeSave($options=array()) {
-		if (array_key_exists($this->alias, $this->data)) {
-			if (array_key_exists('start_date', $this->data[$this->alias])) {
-				$this->data[$this->alias]['start_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['start_date']));
-				$this->data[$this->alias]['start_year'] = date("Y",strtotime($this->data[$this->alias]['start_date']));
-			}
-			if (array_key_exists('end_date', $this->data[$this->alias])) {
-				$this->data[$this->alias]['end_date'] = date("Y-m-d", strtotime($this->data[$this->alias]['end_date']));
-				$this->data[$this->alias]['end_year'] = date("Y",strtotime($this->data[$this->alias]['end_date']));
-			}
-
-			if (array_key_exists('start_date', $this->data[$this->alias]) && array_key_exists('end_date', $this->data[$this->alias])) {
-				$datediff = strtotime($this->data[$this->alias]['end_date']) - strtotime($this->data[$this->alias]['start_date']);
-				$this->data[$this->alias]['school_days'] = floor($datediff/(60*60*24))+1;
-			}
-		}
 	}
 
 	public function getName($id) {
