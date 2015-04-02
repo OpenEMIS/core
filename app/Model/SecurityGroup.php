@@ -154,7 +154,8 @@ class SecurityGroup extends AppModel {
 				$userSystemRole = $this->SecurityGroupUser->find('first', array(
 					'conditions' => array(
 						'SecurityGroupUser.security_user_id' => $authUserId,
-						'SecurityRole.security_group_id' => array(-1, 0)
+						'SecurityRole.security_group_id' => array(-1, 0),
+						'SecurityRole.visible' => 1
 					),
 					'order' => array('SecurityRole.order')
 				));
@@ -164,7 +165,8 @@ class SecurityGroup extends AppModel {
 					$systemRoles = $this->SecurityRole->find('list', array(
 						'conditions' => array(
 							'SecurityRole.security_group_id' => array(-1, 0),
-							'SecurityRole.order > ' => $highestSystemRole
+							'SecurityRole.order > ' => $highestSystemRole,
+							'SecurityRole.visible' => 1
 						),
 						'order' => array('SecurityRole.order')
 					));
@@ -174,7 +176,8 @@ class SecurityGroup extends AppModel {
 					$userGroupRole = $this->SecurityGroupUser->find('first', array(
 						'conditions' => array(
 							'SecurityGroupUser.security_user_id' => $authUserId,
-							'SecurityRole.security_group_id' => $id
+							'SecurityRole.security_group_id' => $id,
+							'SecurityRole.visible' => 1
 						),
 						'order' => array('SecurityRole.order')
 					));
@@ -185,14 +188,16 @@ class SecurityGroup extends AppModel {
 						$groupRoles = $this->SecurityRole->find('list', array(
 							'conditions' => array(
 								'SecurityRole.security_group_id' => $id,
-								'SecurityRole.order > ' => $highestGroupRole
+								'SecurityRole.order > ' => $highestGroupRole,
+								'SecurityRole.visible' => 1
 							),
 							'order' => array('SecurityRole.order')
 						));
 					}else{
 						$groupRoles = $this->SecurityRole->find('list', array(
 							'conditions' => array(
-								'SecurityRole.security_group_id' => $id
+								'SecurityRole.security_group_id' => $id,
+								'SecurityRole.visible' => 1
 							),
 							'order' => array('SecurityRole.order')
 						));
@@ -210,7 +215,10 @@ class SecurityGroup extends AppModel {
 				if ($id != 0) {
 					$groupIds[] = $id;
 				}
-				$roleOptions = $this->SecurityRole->find('list', array('conditions' => array('security_group_id' => $groupIds)));
+				$roleOptions = $this->SecurityRole->find('list', array(
+					'conditions' => array('SecurityRole.security_group_id' => $groupIds, 'SecurityRole.visible' => 1),
+					'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
+				));
 			}
 			
 			if(empty($roleOptions)){
