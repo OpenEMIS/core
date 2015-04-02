@@ -38,16 +38,11 @@ echo $this->Form->create($model, $formOptions);
 		if (isset($this->data[$model]['id'])) {
 			echo $this->Form->hidden('id', array('value' => $this->data[$model]['id']));
 		}
-		
-		if ($autoid=='') {
-			$arrIdNo = array_merge(array('label' => $openEmisIdLabel, 'readOnly' => true),$arrIdNo);
-			echo $this->Form->input('SecurityUser.openemis_no', $arrIdNo);
+
+		if ($this->Session->check('Student.id')) {
+			echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
 		} else {
-			if ($this->Session->check('Student.id')) {
-				echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
-			} else {
-				echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
-			}
+			echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
 		}
 		
 		echo $this->Form->input('SecurityUser.first_name');
