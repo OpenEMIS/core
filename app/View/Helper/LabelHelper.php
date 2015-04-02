@@ -591,8 +591,7 @@ class LabelHelper extends AppHelper {
 		),
 		'RubricTemplate' => array(
 			'weighting_type' => 'Weighting Type',
-			'security_roles' => 'Security Roles',
-			'education_grades' => 'Education Grades',
+			'pass_mark' => 'Pass Mark',
 			'options' => 'Options'
 		),
 		'RubricTemplateGrade' => array(
@@ -615,6 +614,8 @@ class LabelHelper extends AppHelper {
 		'QualityStatus' => array(
 			'rubric_template_id' => 'Rubric Template',
 			'academic_period_level_id' => 'Academic Period Level',
+			'security_roles' => 'Security Roles',
+			'education_programmes' => 'Education Programmes',
 			'date_enabled' => 'Date Enabled',
 			'date_disabled' => 'Date Disabled'
 		),

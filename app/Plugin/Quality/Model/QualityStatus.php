@@ -47,6 +47,22 @@ class QualityStatus extends QualityAppModel {
 			'associationForeignKey' => 'academic_period_id',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order'),
 			'order' => array('AcademicPeriod.order')
+		),
+		'EducationProgramme' => array(
+			'className' => 'EducationProgramme',
+			'joinTable' => 'quality_status_programmes',
+			'foreignKey' => 'quality_status_id',
+			'associationForeignKey' => 'education_programme_id',
+			'fields' => array('EducationProgramme.id', 'EducationProgramme.name', 'EducationProgramme.order'),
+			'order' => array('EducationProgramme.order')
+		),
+		'SecurityRole' => array(
+			'className' => 'SecurityRole',
+			'joinTable' => 'quality_status_roles',
+			'foreignKey' => 'quality_status_id',
+			'associationForeignKey' => 'security_role_id',
+			'fields' => array('SecurityRole.id', 'SecurityRole.name', 'SecurityRole.order'),
+			'order' => array('SecurityRole.order')
 		)
 	);
 
