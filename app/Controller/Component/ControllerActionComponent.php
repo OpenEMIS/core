@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.8
+ControllerActionComponent - Version 1.0.9
 */
 
 class ControllerActionComponent extends Component {
@@ -354,7 +354,7 @@ class ControllerActionComponent extends Component {
 		$actionUrl = array_merge($actionUrl, $named, $pass);
 
 		$data = $this->controller->request->data;
-		$conditions = isset($this->controller->viewVars['conditions']) ? $this->controller->viewVars['conditions'] : array();
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
 		$this->fixOrder($conditions);
 
 		$id = $data[$model->alias]['id'];
