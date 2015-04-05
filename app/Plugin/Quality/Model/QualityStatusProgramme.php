@@ -24,7 +24,7 @@ class QualityStatusProgramme extends QualityAppModel {
         ),
 		'EducationProgramme' => array(
 			'className' => 'EducationProgramme',
-			'fields' => array('EducationProgramme.id', 'EducationProgramme.name', 'EducationProgramme.order')
+			'fields' => array('EducationProgramme.id', 'EducationProgramme.cycle_programme_name', 'EducationProgramme.cycle_order', 'EducationProgramme.order')
 		)
 	);
 }

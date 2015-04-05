@@ -236,11 +236,13 @@ ALTER TABLE `quality_status_roles`
 --
 
 DROP TABLE IF EXISTS `institution_site_quality_rubrics`;
-CREATE TABLE IF NOT EXISTS `institution_site_quality_rubrics` (
+CREATE TABLE `institution_site_quality_rubrics` (
 `id` int(11) NOT NULL,
+  `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Draft, 2 -> Completed',
   `comment` text,
   `rubric_template_id` int(11) NOT NULL,
   `academic_period_id` int(11) NOT NULL,
+  `education_programme_id` int(11) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
   `institution_site_section_id` int(11) NOT NULL,
   `institution_site_class_id` int(11) NOT NULL,
@@ -254,7 +256,7 @@ CREATE TABLE IF NOT EXISTS `institution_site_quality_rubrics` (
 
 
 ALTER TABLE `institution_site_quality_rubrics`
- ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `institution_site_section_id` (`institution_site_section_id`), ADD KEY `institution_site_class_id` (`institution_site_class_id`), ADD KEY `staff_id` (`staff_id`), ADD KEY `institution_site_id` (`institution_site_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `education_programme_id` (`education_programme_id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `institution_site_section_id` (`institution_site_section_id`), ADD KEY `institution_site_class_id` (`institution_site_class_id`), ADD KEY `staff_id` (`staff_id`), ADD KEY `institution_site_id` (`institution_site_id`);
 
 
 ALTER TABLE `institution_site_quality_rubrics`
