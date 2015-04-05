@@ -23,6 +23,7 @@ class InstitutionSiteQualityRubric extends AppModel {
             'foreignKey' => 'rubric_template_id'
         ),
         'AcademicPeriod',
+        'EducationProgramme',
 		'EducationGrade',
 		'InstitutionSiteSection',
 		'InstitutionSiteClass',
@@ -47,207 +48,29 @@ class InstitutionSiteQualityRubric extends AppModel {
     );
 
 	public function beforeAction() {
-		$this->Navigation->addCrumb('Rubrics');
+		$named = $this->controller->request->params['named'];
+		$selectedAction = isset($named['status']) ? $named['status'] : 0;
 
-		$this->fields['evaluator']['type'] = 'string';
-		$this->fields['evaluator']['visible'] = true;
-		$this->fields['evaluator']['attr'] = array(
-			'disabled' => 'disabled'
-		);
-
-		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
-		$this->ControllerAction->setFieldOrder('academic_period_id', 2);
-		$this->ControllerAction->setFieldOrder('education_grade_id', 3);
-		$this->ControllerAction->setFieldOrder('institution_site_section_id', 4);
-		$this->ControllerAction->setFieldOrder('institution_site_class_id', 5);
-		$this->ControllerAction->setFieldOrder('staff_id', 6);
-		$this->ControllerAction->setFieldOrder('evaluator', 7);
-
-		if($this->action == 'index') {
-			$this->fields['rubric_template_id']['hyperlink'] = true;
-
-			$this->fields['institution_site_section_id']['visible'] = false;
-			$this->fields['evaluator']['visible'] = false;
-			$this->fields['comment']['visible'] = false;
-			$this->fields['institution_site_id']['visible'] = false;
-
-			$this->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
-			$this->fields['rubric_template_id']['dataField'] = 'name';
-
-			$this->fields['academic_period_id']['dataModel'] = 'AcademicPeriod';
-			$this->fields['academic_period_id']['dataField'] = 'name';
-
-			$this->fields['education_grade_id']['dataModel'] = 'EducationGrade';
-			$this->fields['education_grade_id']['dataField'] = 'name';
-
-			$this->fields['institution_site_class_id']['dataModel'] = 'InstitutionSiteClass';
-			$this->fields['institution_site_class_id']['dataField'] = 'name';
-
-			$this->fields['staff_id']['dataModel'] = 'Staff';
-			$this->fields['staff_id']['dataField'] = 'name';
-		} else if($this->action == 'view') {
-			$this->fields['institution_site_id']['visible'] = false;
-
-			$this->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
-			$this->fields['rubric_template_id']['dataField'] = 'name';
-
-			$this->fields['academic_period_id']['dataModel'] = 'AcademicPeriod';
-			$this->fields['academic_period_id']['dataField'] = 'name';
-
-			$this->fields['education_grade_id']['dataModel'] = 'EducationGrade';
-			$this->fields['education_grade_id']['dataField'] = 'name';
-
-			$this->fields['institution_site_section_id']['dataModel'] = 'InstitutionSiteSection';
-			$this->fields['institution_site_section_id']['dataField'] = 'name';
-
-			$this->fields['institution_site_class_id']['dataModel'] = 'InstitutionSiteClass';
-			$this->fields['institution_site_class_id']['dataField'] = 'name';
-
-			$this->fields['staff_id']['dataModel'] = 'Staff';
-			$this->fields['staff_id']['dataField'] = 'name';
-		} else if($this->action == 'add' || $this->action == 'edit') {
-			$institutionSiteId = $this->Session->read('InstitutionSite.id');
-			$this->fields['institution_site_id']['type'] = 'hidden';
-			$this->fields['institution_site_id']['value'] = $institutionSiteId;
-
-			if ($this->request->is(array('post', 'put'))) {
-				$data = $this->request->data;
-				$selectedTemplate = $data['InstitutionSiteQualityRubric']['rubric_template_id'];
-				$selectedPeriod = $data['InstitutionSiteQualityRubric']['academic_period_id'];
-				$selectedGrade = $data['InstitutionSiteQualityRubric']['education_grade_id'];
-				$selectedSection = $data['InstitutionSiteQualityRubric']['institution_site_section_id'];
-				$selectedClass = $data['InstitutionSiteQualityRubric']['institution_site_class_id'];
-
-				if ($data['submit'] == 'reload') {
-					$this->ControllerAction->autoProcess = false;
-				} else {
-					$this->ControllerAction->autoProcess = true;
-				}
-			} else {
-				$selectedTemplate = null;
-				$selectedPeriod = null;
-				$selectedGrade = null;
-				$selectedSection = null;
-				$selectedClass = null;
-			}
-
-			$templateOptions = $this->getTemplateOptions();
-			$selectedTemplate = array_key_exists($selectedTemplate, $templateOptions) ? $selectedTemplate : key($templateOptions);
-
-			$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
-			$selectedPeriod = array_key_exists($selectedPeriod, $academicPeriodOptions) ? $selectedPeriod : key($academicPeriodOptions);
-
-			$gradeOptions = ClassRegistry::init('InstitutionSiteGrade')->getInstitutionSiteGradeOptions($institutionSiteId, $selectedPeriod);
-			$selectedGrade = array_key_exists($selectedGrade, $gradeOptions) ? $selectedGrade : key($gradeOptions);
-
-			$sectionOptions = $this->InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId, $selectedGrade);
-			$selectedSection = array_key_exists($selectedSection, $sectionOptions) ? $selectedSection : key($sectionOptions);
-			
-			$classOptions = $this->InstitutionSiteClass->InstitutionSiteSectionClass->getClassOptions($selectedSection);
-			$selectedClass = array_key_exists($selectedClass, $classOptions) ? $selectedClass : key($classOptions);
-
-			$staffOptions = ClassRegistry::init('InstitutionSiteClassStaff')->getStaffs($selectedClass, 'list');
-
-			$templateOptions = !empty($templateOptions) ? $templateOptions : array('0' => __('No Data'));
-			$academicPeriodOptions = !empty($academicPeriodOptions) ? $academicPeriodOptions : array('0' => __('No Data'));
-			$gradeOptions = !empty($gradeOptions) ? $gradeOptions : array('0' => __('No Data'));
-			$sectionOptions = !empty($sectionOptions) ? $sectionOptions : array('0' => __('No Data'));
-			$classOptions = !empty($classOptions) ? $classOptions : array('0' => __('No Data'));
-			$staffOptions = !empty($staffOptions) ? $staffOptions : array('0' => __('No Data'));
-
-			$this->fields['rubric_template_id']['type'] = 'select';
-			$this->fields['rubric_template_id']['options'] = $templateOptions;
-			$this->fields['rubric_template_id']['attr'] = array('onchange' => "$('#reload').click()");
-
-			$this->fields['academic_period_id']['type'] = 'select';
-			$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-			$this->fields['academic_period_id']['attr'] = array('onchange' => "$('#reload').click()");
-
-			$this->fields['education_grade_id']['type'] = 'select';
-			$this->fields['education_grade_id']['options'] = $gradeOptions;
-			$this->fields['education_grade_id']['attr'] = array('onchange' => "$('#reload').click()");
-
-			$this->fields['institution_site_section_id']['type'] = 'select';
-			$this->fields['institution_site_section_id']['options'] = $sectionOptions;
-			$this->fields['institution_site_section_id']['attr'] = array('onchange' => "$('#reload').click()");
-
-			$this->fields['institution_site_class_id']['type'] = 'select';
-			$this->fields['institution_site_class_id']['options'] = $classOptions;
-			$this->fields['institution_site_class_id']['attr'] = array('onchange' => "$('#reload').click()");
-
-			$this->fields['staff_id']['type'] = 'select';
-			$this->fields['staff_id']['options'] = $staffOptions;
-			$this->fields['staff_id']['attr'] = array('onchange' => "$('#reload').click()");
-		}
+		$tabsElement = '../InstitutionSites/InstitutionSiteQualityRubric/nav_tabs';
 
 		$contentHeader = __('Rubrics');
-		$this->controller->set(compact('contentHeader'));
-	}
-
-	public function afterAction() {
-		if ($this->action == 'view') {
-			$data = $this->controller->viewVars['data'];
-			$evaluatorName = trim($data['CreatedUser']['first_name']) . ' ' . trim($data['CreatedUser']['last_name']);
-			$data['InstitutionSiteQualityRubric']['evaluator'] = $evaluatorName;
-			$this->controller->set('data', $data);
-		} else if ($this->action == 'add') {
-			$loginUser = $this->controller->Session->read('Auth.User');
-			$evaluatorName = trim($loginUser['first_name']) . ' ' . trim($loginUser['last_name']);
-			$this->request->data['InstitutionSiteQualityRubric']['evaluator'] = $evaluatorName;
-		} else if ($this->action == 'edit') {
-			$data = $this->request->data;
-			$selectedTemplate = $data['InstitutionSiteQualityRubric']['rubric_template_id'];
-			$selectedPeriod = $data['InstitutionSiteQualityRubric']['academic_period_id'];
-			$selectedGrade = $data['InstitutionSiteQualityRubric']['education_grade_id'];
-			$selectedSection = $data['InstitutionSiteQualityRubric']['institution_site_section_id'];
-			$selectedClass = $data['InstitutionSiteQualityRubric']['institution_site_class_id'];
-
-			$this->contain('CreatedUser');
-			$createdUser = $this->findById($data['InstitutionSiteQualityRubric']['id']);
-			$evaluatorName = trim($createdUser['CreatedUser']['first_name']) . ' ' . trim($createdUser['CreatedUser']['last_name']);
-			$this->request->data['InstitutionSiteQualityRubric']['evaluator'] = $evaluatorName;
-
-			if ($this->request->is(array('post', 'put'))) {
-			} else {
-				$institutionSiteId = $this->Session->read('InstitutionSite.id');
-				$templateOptions = $this->getTemplateOptions();
-				$selectedTemplate = array_key_exists($selectedTemplate, $templateOptions) ? $selectedTemplate : key($templateOptions);
-
-				$academicPeriodOptions = $this->AcademicPeriod->getAcademicPeriodList();
-				$selectedPeriod = array_key_exists($selectedPeriod, $academicPeriodOptions) ? $selectedPeriod : key($academicPeriodOptions);
-
-				$gradeOptions = ClassRegistry::init('InstitutionSiteGrade')->getInstitutionSiteGradeOptions($institutionSiteId, $selectedPeriod);
-				$selectedGrade = array_key_exists($selectedGrade, $gradeOptions) ? $selectedGrade : key($gradeOptions);
-
-				$sectionOptions = $this->InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId, $selectedGrade);
-				$selectedSection = array_key_exists($selectedSection, $sectionOptions) ? $selectedSection : key($sectionOptions);
-				
-				$classOptions = $this->InstitutionSiteClass->InstitutionSiteSectionClass->getClassOptions($selectedSection);
-				$selectedClass = array_key_exists($selectedClass, $classOptions) ? $selectedClass : key($classOptions);
-
-				$staffOptions = ClassRegistry::init('InstitutionSiteClassStaff')->getStaffs($selectedClass, 'list');
-
-				$templateOptions = !empty($templateOptions) ? $templateOptions : array('0' => __('No Data'));
-				$academicPeriodOptions = !empty($academicPeriodOptions) ? $academicPeriodOptions : array('0' => __('No Data'));
-				$gradeOptions = !empty($gradeOptions) ? $gradeOptions : array('0' => __('No Data'));
-				$sectionOptions = !empty($sectionOptions) ? $sectionOptions : array('0' => __('No Data'));
-				$classOptions = !empty($classOptions) ? $classOptions : array('0' => __('No Data'));
-				$staffOptions = !empty($staffOptions) ? $staffOptions : array('0' => __('No Data'));
-
-				$this->fields['rubric_template_id']['options'] = $templateOptions;
-				$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-				$this->fields['education_grade_id']['options'] = $gradeOptions;
-				$this->fields['institution_site_section_id']['options'] = $sectionOptions;
-				$this->fields['institution_site_class_id']['options'] = $classOptions;
-				$this->fields['staff_id']['options'] = $staffOptions;
-			}
-		}
+		$this->controller->set(compact('contentHeader', 'tabsElement', 'selectedAction'));
 	}
 
 	public function index() {
+		$this->Navigation->addCrumb('Rubrics');
+
+		$named = $this->controller->params->named;
+		$status = isset($named['status']) ? $named['status'] : 0;
 		$todayDate = date("Y-m-d");
-		$status = 0;
 		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+		$userId = $this->Session->read('Auth.User.id');
+		$SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+		$securityRoles = $SecurityGroupUser->getRolesByUserId($userId);
+		$userRoles = array();
+		foreach ($securityRoles as $key => $securityRole) {
+			$userRoles[$securityRole['SecurityRole']['id']] = $securityRole['SecurityRole']['id'];
+		}
 
 		// Find all templates
 		$this->RubricTemplate->contain();
@@ -258,106 +81,258 @@ class InstitutionSiteQualityRubric extends AppModel {
 		));
 
 		$QualityStatus = $this->RubricTemplate->QualityStatus;
-
+		$InstitutionSiteProgramme = $this->EducationProgramme->InstitutionSiteProgramme;
+		$InstitutionSiteGrade = $this->EducationProgramme->InstitutionSiteProgramme->InstitutionSiteGrade;
+		$InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
+		$InstitutionSiteSectionClass = ClassRegistry::init('InstitutionSiteSectionClass');
+		
 		// for each template, find available quality statuses
 		foreach ($templates as $i => $template) {
-			$options = array();
 			$templateId = $template['RubricTemplate']['id'];
 			$QualityStatus->contain('AcademicPeriod');
-			$statuses = $QualityStatus->find('list', array(
+			$qualityStatuses = $QualityStatus->find('list', array(
+				'joins' => array(
+					array(
+						'table' => 'quality_status_roles',
+						'alias' => 'QualityStatusRole',
+						'conditions' => array(
+							'QualityStatusRole.quality_status_id = QualityStatus.id',
+							'QualityStatusRole.security_role_id' => $userRoles
+						)
+					)
+				),
 				'conditions' => array(
 					'QualityStatus.rubric_template_id' => $templateId,
 					'QualityStatus.date_disabled >=' => $todayDate
 				)
 			));
 
-			$fields = array('AcademicPeriod.id', 'AcademicPeriod.name', 'QualityStatus.date_disabled');
-
-			// get all available periods based on status and template
-			$joins = array(
-				array(
-					'table' => 'quality_status_periods',
-					'alias' => 'QualityStatusPeriod',
-					'conditions' => array(
-						'QualityStatusPeriod.academic_period_id = AcademicPeriod.id',
-						'QualityStatusPeriod.quality_status_id' => $statuses,
+			foreach ($qualityStatuses as $qualityStatus) {
+				$periods = $QualityStatus->AcademicPeriod->find('all', array(
+					'fields' => array(
+						'AcademicPeriod.id', 'AcademicPeriod.name', 'QualityStatus.date_disabled'
+					),
+					'joins' => array(
+						array(
+							'table' => 'quality_status_periods',
+							'alias' => 'QualityStatusPeriod',
+							'conditions' => array(
+								'QualityStatusPeriod.academic_period_id = AcademicPeriod.id',
+								'QualityStatusPeriod.quality_status_id' => $qualityStatus
+							)
+						),
+						array(
+							'table' => 'quality_statuses',
+							'alias' => 'QualityStatus',
+							'conditions' => array(
+								'QualityStatus.id = QualityStatusPeriod.quality_status_id'
+							)
+						)
+					),
+					'group' => array(
+						'AcademicPeriod.id'
 					)
-				),
-				array(
-					'table' => 'quality_statuses',
-					'alias' => 'QualityStatus',
-					'conditions' => array(
-						'QualityStatus.id = QualityStatusPeriod.quality_status_id'
+				));
+
+				$programmeIds = $QualityStatus->EducationProgramme->find('list', array(
+					'fields' => array(
+						'EducationProgramme.id', 'EducationProgramme.id'
+					),
+					'joins' => array(
+						array(
+							'table' => 'quality_status_programmes',
+							'alias' => 'QualityStatusProgramme',
+							'conditions' => array(
+								'QualityStatusProgramme.education_programme_id = EducationProgramme.id',
+								'QualityStatusProgramme.quality_status_id' => $qualityStatus
+							)
+						),
+						array(
+							'table' => 'quality_statuses',
+							'alias' => 'QualityStatus',
+							'conditions' => array(
+								'QualityStatus.id = QualityStatusProgramme.quality_status_id'
+							)
+						)
+					),
+					'group' => array(
+						'EducationProgramme.id'
 					)
-				)
-			);
-	
-			$existingPeriods = array();
-			$existingPeriodsOptions = array(
-				'fields' => array('AcademicPeriod.id'),
-				'conditions' => array(
-					'institution_site_id' => $institutionSiteId
-				)
-			);
-			$existingPeriodsOptions['conditions'][$this->alias . '.rubric_template_id'] = $templateId;
-			
-			$this->contain('AcademicPeriod');
+				));
 
-			// if it's a new Rubric, exclude periods from draft or complete
-			if ($status == 0) { // Quality New
-				$existingPeriodsOptions['conditions'][$this->alias . '.status'] = array(1, 2);
-			} else if ($status == 1 || $status == 2) { // Survey Draft / Completed
-				$existingPeriodsOptions['conditions'][$this->alias . '.status'] = $status;
-				$fields[] = $model->alias . '.id';
-				$fields[] = $model->alias . '.modified';
-				$fields[] = $model->alias . '.created';
-				$joinConditions = array(
-					'institution_site_id' => $institutionSiteId
-				);
-				$joinConditions[] = $this->alias . '.academic_period_id = AcademicPeriod.id';
-				$joinConditions[] = $this->alias . '.rubric_template_id = ' . $templateId;
-				$joinConditions[] = $this->alias . '.status = ' . $status;
+				foreach ($periods as $period) {
+					$periodId = $period['AcademicPeriod']['id'];
 
-				// Joining the main table to get the modified and created date
-				$joins[] = array(
-					'table' => $this->useTable,
-					'alias' => $this->alias,
-					'conditions' => $joinConditions
-				);
-			}
+					$conditions = array(
+						'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+						'InstitutionSiteProgramme.education_programme_id' => $programmeIds
+					);
+					$conditions = $InstitutionSiteProgramme->getConditionsByAcademicPeriodId($periodId, $conditions);
 
-			$existingPeriods = $this->find('list', $existingPeriodsOptions);
-			$conditions = array();
-			if (!empty($existingPeriods)) {
-				if ($status == 0) {
-					$conditions['NOT']['AcademicPeriod.id'] = $existingPeriods;
-				} else if ($status == 1 || $status == 2) {
-					$conditions['AcademicPeriod.id'] = $existingPeriods;
+					$siteGrades = $InstitutionSiteGrade->find('all', array(
+						'contain' => array(
+							'EducationGrade',
+							'InstitutionSiteProgramme' => array(
+								'conditions' => $conditions
+							)
+						),
+						'conditions' => array(
+							'InstitutionSiteGrade.institution_site_programme_id = InstitutionSiteProgramme.id',
+							'InstitutionSiteGrade.status' => 1
+						),
+						'order' => array('EducationGrade.education_programme_id', 'EducationGrade.order')
+					));
+
+					$gradeIds = array();
+					foreach ($siteGrades as $siteGradeId => $siteGrade) {
+						$gradeIds[$siteGrade['EducationGrade']['id']] = $siteGrade['EducationGrade']['id'];
+					}
+
+					$siteClasses = array();
+					if ($gradeIds) {
+						$siteClasses = $InstitutionSiteSectionClass->find('all', array(
+							'contain' => array(
+								'InstitutionSiteClass', 'InstitutionSiteSection.EducationGrade', 'InstitutionSiteSection.EducationGrade.EducationProgramme'
+							),
+							'conditions' => array(
+								'InstitutionSiteSection.education_grade_id' => $gradeIds
+							),
+							'group' => array(
+								'InstitutionSiteSection.id', 'InstitutionSiteClass.id'
+							),
+							'order' => array(
+								'InstitutionSiteSection.name', 'InstitutionSiteClass.name'
+							)
+						));
+					}
+
+					if (!empty($siteClasses)) {
+						foreach ($siteClasses as $siteClass) {
+							$classes = array();
+							$classes['AcademicPeriod']['id'] = $periodId;
+							$classes['AcademicPeriod']['name'] = $period['AcademicPeriod']['name'];
+							$classes['EducationProgramme']['id'] = $siteClass['InstitutionSiteSection']['EducationGrade']['EducationProgramme']['id'];
+							$classes['EducationProgramme']['name'] = $siteClass['InstitutionSiteSection']['EducationGrade']['EducationProgramme']['name'];
+							$classes['EducationProgramme']['cycle_programme_name'] = $siteClass['InstitutionSiteSection']['EducationGrade']['EducationProgramme']['cycle_programme_name'];
+							$classes['EducationGrade']['id'] = $siteClass['InstitutionSiteSection']['EducationGrade']['id'];
+							$classes['EducationGrade']['name'] = $siteClass['InstitutionSiteSection']['EducationGrade']['name'];
+							$classes['InstitutionSiteSection']['id'] = $siteClass['InstitutionSiteSection']['id'];
+							$classes['InstitutionSiteSection']['name'] = $siteClass['InstitutionSiteSection']['name'];
+							$classes['InstitutionSiteClass']['id'] = $siteClass['InstitutionSiteClass']['id'];
+							$classes['InstitutionSiteClass']['name'] = $siteClass['InstitutionSiteClass']['name'];
+							$classes['QualityStatus']['date_disabled'] = $period['QualityStatus']['date_disabled'];
+							$templates[$i]['InstitutionSiteClass'][] = $classes;
+						}
+					} else {
+						//unset($templates[$i]);
+					}
 				}
-			}
-
-			$options['fields'] = $fields;
-			$options['joins'] = $joins;
-			$options['conditions'] = $conditions;
-			$options['group'] = array('AcademicPeriod.id');
-			$options['order'] = array('QualityStatus.date_disabled');
-			$periods = $QualityStatus->AcademicPeriod->find('all', $options);
-			if (!empty($periods)) {
-				$templates[$i]['AcademicPeriod'] = $periods;
-			} else {
-				unset($templates[$i]);
 			}
 		}
 
+		$contentHeader = __('Rubrics');
 		$data = $templates;
-		$this->controller->set(compact('data'));
+		$this->controller->set(compact('contentHeader', 'data'));
 	}
 
-	public function getTemplateOptions() {
-		$result = $this->RubricTemplate->find('list', array(
-			'order' => array('RubricTemplate.name')
+	public function listSection() {
+		$named = $this->controller->params->named;
+		$selectedTemplate = isset($named['template']) ? $named['template'] : 0;
+		$selectedPeriod = isset($named['period']) ? $named['period'] : 0;
+		$selectedProgramme = isset($named['programme']) ? $named['programme'] : 0;
+		$selectedGrade = isset($named['grade']) ? $named['grade'] : 0;
+		$selectedSection = isset($named['section']) ? $named['section'] : 0;
+		$selectedClass = isset($named['class']) ? $named['class'] : 0;
+		$selectedStatus = isset($named['status']) ? $named['status'] : 0;
+
+		$this->Navigation->addCrumb('Rubrics', array('controller' => 'InstitutionSites', 'action' => $this->alias, 'index', 'status' => $selectedStatus, 'plugin' => false));
+		$this->Navigation->addCrumb('Add');
+		
+		$this->RubricTemplate->RubricSection->contain();
+		$data = $this->RubricTemplate->RubricSection->find('all', array(
+			'conditions' => array(
+				'RubricSection.rubric_template_id' => $selectedTemplate
+			),
+			'order' => array(
+				'RubricSection.order'
+			)
 		));
 
-		return $result;
+		$contentHeader = $this->RubricTemplate->field('name', $selectedTemplate);
+		$this->controller->set(compact('contentHeader', 'data', 'selectedStatus'));
+	}
+
+	public function edit($id=0) {
+		$named = $this->controller->params->named;
+
+		$selectedTemplate = isset($named['template']) ? $named['template'] : 0;
+		$selectedPeriod = isset($named['period']) ? $named['period'] : 0;
+		$selectedProgramme = isset($named['programme']) ? $named['programme'] : 0;
+		$selectedGrade = isset($named['grade']) ? $named['grade'] : 0;
+		$selectedSection = isset($named['section']) ? $named['section'] : 0;
+		$selectedClass = isset($named['class']) ? $named['class'] : 0;
+		$selectedStatus = isset($named['status']) ? $named['status'] : 0;
+		$institutionSiteId = $this->Session->read('InstitutionSite.id');
+
+		$editUrl = array('action' => $this->alias, 'edit');
+		$editUrl = array_merge($editUrl, $named);
+
+		$backUrl = array('controller' => 'InstitutionSites', 'action' => $this->alias, 'listSection', 'plugin' => false);
+		$backUrl = array_merge($backUrl, $named);
+		$this->Navigation->addCrumb('Rubrics', $backUrl);
+		$this->Navigation->addCrumb('Details');
+
+		$this->RubricTemplate->RubricTemplateOption->contain();
+		$rubricTemplateOptionData = $this->RubricTemplate->RubricTemplateOption->find('all', array(
+			'conditions' => array(
+				'RubricTemplateOption.rubric_template_id' => $selectedTemplate
+			),
+			'order' => array('RubricTemplateOption.order', 'RubricTemplateOption.name')
+		));
+		$rubricTemplateOptions = array();
+		foreach ($rubricTemplateOptionData as $key => $obj) {
+			$rubricTemplateOptions[$obj['RubricTemplateOption']['id']] = $obj['RubricTemplateOption'];
+		}
+
+		$rubricTemplateOptionCount = sizeof($rubricTemplateOptions);
+
+		$this->RubricTemplate->RubricSection->RubricCriteria->contain('RubricSection', 'RubricCriteriaOption');
+		$data = $this->RubricTemplate->RubricSection->RubricCriteria->find('all', array(
+			'conditions' => array(
+				'RubricCriteria.rubric_section_id' => $id
+			),
+			'order' => array(
+				'RubricCriteria.order'
+			)
+		));
+
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			unset($data['criteria']);
+
+			if ($this->saveAll($data)) {
+				$this->Message->alert('general.add.success');
+				return $this->controller->redirect($backUrl);
+			} else {
+				$this->log($his->validationErrors, 'debug');
+				$this->Message->alert('general.add.failed');
+			}
+		} else {
+			$newData = array();
+			$newData['InstitutionSiteQualityRubric']['status'] = $selectedStatus;
+			$newData['InstitutionSiteQualityRubric']['comment'] = '';
+			$newData['InstitutionSiteQualityRubric']['rubric_template_id'] = $selectedTemplate;
+			$newData['InstitutionSiteQualityRubric']['academic_period_id'] = $selectedPeriod;
+			$newData['InstitutionSiteQualityRubric']['education_programme_id'] = $selectedProgramme;
+			$newData['InstitutionSiteQualityRubric']['education_grade_id'] = $selectedGrade;
+			$newData['InstitutionSiteQualityRubric']['institution_site_section_id'] = $selectedSection;
+			$newData['InstitutionSiteQualityRubric']['institution_site_class_id'] = $selectedClass;
+			$newData['InstitutionSiteQualityRubric']['staff_id'] = 0;
+			$newData['InstitutionSiteQualityRubric']['institution_site_id'] = $institutionSiteId;
+			$this->request->data = $newData;
+		}
+
+		$contentHeader = $this->RubricTemplate->field('name', $selectedTemplate) . " - " . $this->RubricTemplate->RubricSection->field('name', $id);
+		$this->controller->set(compact('contentHeader', 'data', 'rubricTemplateOptions', 'rubricTemplateOptionCount', 'editUrl', 'backUrl'));
 	}
 }

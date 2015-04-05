@@ -77,7 +77,7 @@ class QualityStatusesController extends QualityAppController {
 			$this->QualityStatus->fields['security_roles']['dataField'] = 'name';
 
 			$this->QualityStatus->fields['education_programmes']['dataModel'] = 'EducationProgramme';
-			$this->QualityStatus->fields['education_programmes']['dataField'] = 'name';
+			$this->QualityStatus->fields['education_programmes']['dataField'] = 'cycle_programme_name';
 			$this->QualityStatus->fields['education_programmes']['dataSeparator'] = '<br>';
 		} else if ($this->action == 'view') {
 			$this->QualityStatus->fields['rubric_template_id']['dataModel'] = 'RubricTemplate';
@@ -93,7 +93,7 @@ class QualityStatusesController extends QualityAppController {
 			$this->QualityStatus->fields['security_roles']['dataField'] = 'name';
 
 			$this->QualityStatus->fields['education_programmes']['dataModel'] = 'EducationProgramme';
-			$this->QualityStatus->fields['education_programmes']['dataField'] = 'name';
+			$this->QualityStatus->fields['education_programmes']['dataField'] = 'cycle_programme_name';
 			$this->QualityStatus->fields['education_programmes']['dataSeparator'] = '<br>';
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$templateOptions = $this->RubricTemplate->find('list');
@@ -130,8 +130,11 @@ class QualityStatusesController extends QualityAppController {
 			$this->QualityStatus->fields['security_roles']['options'] = $securityRoleOptions;
 
 			$educationProgrammeOptions = $this->EducationProgramme->find('list', array(
+				'fields' => array(
+					'EducationProgramme.id', 'EducationProgramme.cycle_programme_name'
+				),
 				'order' => array(
-					'EducationProgramme.order'
+					'EducationProgramme.cycle_order', 'EducationProgramme.order'
 				)
 			));
 			$this->QualityStatus->fields['education_programmes']['options'] = $educationProgrammeOptions;

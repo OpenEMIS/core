@@ -138,4 +138,12 @@ class RubricTemplate extends QualityAppModel {
 		$data = $this->find('all');
 		$this->controller->set('data', $data);
 	}
+
+	public function getTemplateOptions() {
+		$result = $this->find('list', array(
+			'order' => array('RubricTemplate.name')
+		));
+
+		return $result;
+	}
 }
