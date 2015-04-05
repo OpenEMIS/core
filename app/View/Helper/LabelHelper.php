@@ -590,6 +590,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Category'
 		),
 		'RubricTemplate' => array(
+			'name' => 'Rubric Template',
 			'weighting_type' => 'Weighting Type',
 			'pass_mark' => 'Pass Mark',
 			'options' => 'Options'
@@ -603,6 +604,7 @@ class LabelHelper extends AppHelper {
 			'color' => 'Color'
 		),
 		'RubricSection' => array(
+			'name' => 'Rubric Section',
 			'rubric_template_id' => 'Rubric Template',
 			'no_of_criterias' => 'No of Criterias'
 		),
@@ -628,8 +630,10 @@ class LabelHelper extends AppHelper {
 			'quality_visit_type_id' => 'Visit Type'
 		),
 		'InstitutionSiteQualityRubric' => array(
+			'status' => 'Status',
 			'rubric_template_id' => 'Rubric Template',
 			'academic_period_id' => 'Academic Period',
+			'education_programme_id' => 'Programme',
 			'education_grade_id' => 'Grade',
 			'institution_site_section_id' => 'Section',
 			'institution_site_class_id' => 'Class',

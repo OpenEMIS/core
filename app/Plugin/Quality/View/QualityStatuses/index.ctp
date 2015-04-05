@@ -52,7 +52,7 @@ echo $this->element($controlsElement, array(), array('plugin' => $this->params['
 							<?php
 								$educationProgrammes = array();
 								foreach ($obj['EducationProgramme'] as $educationProgramme) {
-									$educationProgrammes[] = $educationProgramme['name'];
+									$educationProgrammes[] = $educationProgramme['cycle_programme_name'];
 								}
 								echo implode('<br>', $educationProgrammes);
 							?>

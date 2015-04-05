@@ -70,7 +70,8 @@ class EducationProgramme extends AppModel {
 	);
 
 	public $virtualFields = array(
-		'cycle_programme_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
+		'cycle_programme_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`",
+		'cycle_order' => "SELECT `EducationCycle`.`order` from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
 	);
 	
 	public $_condition = 'education_cycle_id';
