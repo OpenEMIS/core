@@ -8,6 +8,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
+echo $this->element($tabsElement, array(), array());
 	$formOptions = $this->FormUtility->getFormOptions($editUrl);
 	echo $this->Form->create($model, $formOptions);
 	if(isset($this->request->data['InstitutionSiteQualityRubric']['id'])) {

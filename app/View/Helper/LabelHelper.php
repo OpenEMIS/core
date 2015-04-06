@@ -633,7 +633,6 @@ class LabelHelper extends AppHelper {
 			'status' => 'Status',
 			'rubric_template_id' => 'Rubric Template',
 			'academic_period_id' => 'Academic Period',
-			'education_programme_id' => 'Programme',
 			'education_grade_id' => 'Grade',
 			'institution_site_section_id' => 'Section',
 			'institution_site_class_id' => 'Class',
