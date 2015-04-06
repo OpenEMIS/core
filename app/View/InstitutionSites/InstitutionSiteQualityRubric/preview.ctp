@@ -1,12 +1,12 @@
 <div class="table-responsive">
 	<table class="table table-bordered">
 		<tbody>
-			<?php if (!empty($data)) : ?>
+			<?php if (!empty($rubricCriterias)) : ?>
 				<?php
 					$headerOrder = 0;
 					$criteriaOrder = 0;
 				?>
-				<?php foreach ($data as $key => $obj) : ?>
+				<?php foreach ($rubricCriterias as $obj) : ?>
 					<?php $sectionOrder = $obj['RubricSection']['order']; ?>
 					<?php if ($obj['RubricCriteria']['type'] == 1) : ?>
 						<?php $criteriaOrder = 0; ?>
@@ -34,28 +34,45 @@
 								<td><?php echo $rubricTemplateOption['name']; ?></td>
 							<?php endforeach ?>				
 						</tr>
-						<tr class="criteriaRow<? echo $key; ?>">
+						<tr class="criteriaRow">
 							<td>
 								<?php
+									$criteriaAnswerId = 0;
+									$rubricSectionId = $obj['RubricCriteria']['rubric_section_id'];
+									$rubricCriteriaId = $obj['RubricCriteria']['id'];
 									echo $obj['RubricCriteria']['name'];
-									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$key.rubric_section_id", array('value' => $obj['RubricCriteria']['rubric_section_id']));
-									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$key.rubric_criteria_id", array('value' => $obj['RubricCriteria']['id']));
-									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$key.rubric_criteria_option_id", array('class' => 'criteriaAnswer'));
+									if(isset($this->request->data['InstitutionSiteQualityRubricAnswer'][$rubricCriteriaId])) {
+										echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.id");
+										$criteriaAnswerId = $this->request->data['InstitutionSiteQualityRubricAnswer'][$rubricCriteriaId]['rubric_criteria_option_id'];
+									}
+									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.rubric_section_id", array('value' => $rubricSectionId));
+									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.rubric_criteria_id", array('value' => $rubricCriteriaId));
+									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.rubric_criteria_option_id", array('class' => 'criteriaAnswer'));
 								?>
 							</td>
 							<?php foreach ($rubricTemplateOptions as $rubricTemplateOption) : ?>
 								<?php
 									$templateOptionId = $rubricTemplateOption['id'];
-									$bgColor = $rubricTemplateOption['color'];
 									$criteriaOptionId = isset($criteriaOptions[$templateOptionId]['id']) ? $criteriaOptions[$templateOptionId]['id'] : 0;
 									$criteriaOptionName = isset($criteriaOptions[$templateOptionId]['name']) ? $criteriaOptions[$templateOptionId]['name'] : __('N.A.');
 								?>
-								<td class="criteriaCell" style="cursor: pointer;" onclick="$(this).parents().children('td').find('input[type=hidden].criteriaAnswer').val(<?php echo $criteriaOptionId; ?>);Rubric.changeBgColor(this);">
-									<?php
-										echo $criteriaOptionName;
-										echo $this->Form->hidden("criteria.row".$key.".cell".$templateOptionId.".bgColor", array('class' => 'criteriaCell', 'value' => $bgColor));
-									?>
-								</td>
+								<?php if ($selectedAction == 0 || $selectedAction == 1) : ?>
+									<?php $bgColor = $rubricTemplateOption['color']; ?>
+									<td id="criteriaOption<?php echo $criteriaOptionId; ?>" class="criteriaCell" style="cursor: pointer;" onclick="$(this).parents().children('td').find('input[type=hidden].criteriaAnswer').val(<?php echo $criteriaOptionId; ?>);InstitutionSiteQualityRubric.changeBgColor(this);">
+										<?php
+											echo $criteriaOptionName;
+											echo $this->Form->hidden("criteria.row".$rubricCriteriaId.".cell".$templateOptionId.".bgColor", array('class' => 'criteriaCell', 'value' => $bgColor));
+										?>
+									</td>
+								<?php else : ?>
+									<?php $bgColor = $criteriaAnswerId == $criteriaOptionId ? $rubricTemplateOption['color'] : 'white'; ?>
+									<td style="background-color: <?php echo $bgColor; ?>;">
+										<?php
+											echo $criteriaOptionName;
+											echo $this->Form->hidden("criteria.row".$rubricCriteriaId.".cell".$templateOptionId.".bgColor", array('class' => 'criteriaCell', 'value' => $bgColor));
+										?>
+									</td>
+								<?php endif ?>
 							<?php endforeach ?>
 						</tr>
 						<tr>
@@ -66,7 +83,7 @@
 							<td></td>
 							<?php foreach ($rubricTemplateOptions as $rubricTemplateOption) : ?>
 								<td><?php echo $rubricTemplateOption['weighting']; ?></td>
-							<?php endforeach ?>				
+							<?php endforeach ?>
 						</tr>
 					<?php endif ?>
 				<?php endforeach ?>

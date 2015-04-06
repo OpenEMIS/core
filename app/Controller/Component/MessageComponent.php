@@ -187,7 +187,13 @@ class MessageComponent extends Component {
 		),
 		'RubricSection' => array(
 			'noSection' => array('type' => 'warn', 'msg' => 'There are no sections.')
-		)
+		),
+		'InstitutionSiteQualityRubric' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Quality rubric record has been saved to draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Quality rubric record has been submitted successfully.')
+			)
+		),
 	);
 	
 	public function get($code) {

@@ -24,7 +24,14 @@ echo $this->element($tabsElement, array(), array());
 					<span class="middot">&middot;</span>
 					<span><?php echo $this->Label->get('InstitutionSiteQualityRubric.institution_site_class_id'); ?></span>
 				</th>
-				<th><?php echo __('Completed By') ?></th>
+				<?php if ($selectedAction == 0) : ?>
+					<th><?php echo __('To Be Completed By') ?></th>
+				<?php elseif ($selectedAction == 1) : ?>
+					<th><?php echo __('Last Modified On') ?></th>
+					<th><?php echo __('To Be Completed By') ?></th>
+				<?php elseif ($selectedAction == 2) : ?>
+					<th><?php echo __('Completed On') ?></th>
+				<?php endif ?>
 			</tr>
 		</thead>
 		<tbody>
@@ -57,7 +64,14 @@ echo $this->element($tabsElement, array(), array());
 								<span class="middot">&middot;</span>
 								<span><?php echo $class['InstitutionSiteClass']['name']; ?></span>
 							</td>
-							<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
+							<?php if ($selectedAction == 0) : ?>
+								<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
+							<?php elseif ($selectedAction == 1) : ?>
+								<td></td>
+								<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
+							<?php elseif ($selectedAction == 2) : ?>
+								<td></td>
+							<?php endif ?>
 						</tr>
 					<?php endforeach ?>
 				<?php endif ?>
