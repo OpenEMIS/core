@@ -11,6 +11,7 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
+echo $this->element($tabsElement, array(), array());
 ?>
 
 <div class="table-responsive">
