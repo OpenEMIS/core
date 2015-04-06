@@ -242,7 +242,6 @@ CREATE TABLE `institution_site_quality_rubrics` (
   `comment` text,
   `rubric_template_id` int(11) NOT NULL,
   `academic_period_id` int(11) NOT NULL,
-  `education_programme_id` int(11) NOT NULL,
   `education_grade_id` int(11) NOT NULL,
   `institution_site_section_id` int(11) NOT NULL,
   `institution_site_class_id` int(11) NOT NULL,
@@ -256,7 +255,7 @@ CREATE TABLE `institution_site_quality_rubrics` (
 
 
 ALTER TABLE `institution_site_quality_rubrics`
- ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `education_programme_id` (`education_programme_id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `institution_site_section_id` (`institution_site_section_id`), ADD KEY `institution_site_class_id` (`institution_site_class_id`), ADD KEY `staff_id` (`staff_id`), ADD KEY `institution_site_id` (`institution_site_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `rubric_template_id` (`rubric_template_id`), ADD KEY `academic_period_id` (`academic_period_id`), ADD KEY `education_grade_id` (`education_grade_id`), ADD KEY `institution_site_section_id` (`institution_site_section_id`), ADD KEY `institution_site_class_id` (`institution_site_class_id`), ADD KEY `staff_id` (`staff_id`), ADD KEY `institution_site_id` (`institution_site_id`);
 
 
 ALTER TABLE `institution_site_quality_rubrics`

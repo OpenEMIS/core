@@ -14,11 +14,7 @@ echo $this->element($tabsElement, array(), array());
 			<tr>
 				<th><?php echo $this->Label->get('InstitutionSiteQualityRubric.rubric_template_id'); ?></th>
 				<th><?php echo $this->Label->get('InstitutionSiteQualityRubric.academic_period_id'); ?></th>
-				<th class="section-info">
-					<span><?php echo $this->Label->get('InstitutionSiteQualityRubric.education_programme_id'); ?></span>
-					<span class="middot">&middot;</span>
-					<span><?php echo $this->Label->get('InstitutionSiteQualityRubric.education_grade_id'); ?></span>
-				</th>
+				<th><?php echo $this->Label->get('InstitutionSiteQualityRubric.education_grade_id'); ?></th>
 				<th class="section-info">
 					<span><?php echo $this->Label->get('InstitutionSiteQualityRubric.institution_site_section_id'); ?></span>
 					<span class="middot">&middot;</span>
@@ -45,7 +41,6 @@ echo $this->element($tabsElement, array(), array());
 										'action' => $model, 'listSection',
 										'template' => $obj['RubricTemplate']['id'],
 										'period' => $class['AcademicPeriod']['id'],
-										'programme' => $class['EducationProgramme']['id'],
 										'grade' => $class['EducationGrade']['id'],
 										'section' => $class['InstitutionSiteSection']['id'],
 										'class' => $class['InstitutionSiteClass']['id'],
@@ -54,11 +49,7 @@ echo $this->element($tabsElement, array(), array());
 								?>
 							</td>
 							<td><?php echo $class['AcademicPeriod']['name']; ?></td>
-							<td class="section-info">
-								<span><?php echo $class['EducationProgramme']['name']; ?></span>
-								<span class="middot">&middot;</span>
-								<span><?php echo $class['EducationGrade']['name']; ?></span>
-							</td>
+							<td><?php echo $class['EducationGrade']['programme_grade_name']; ?></td>
 							<td class="section-info">
 								<span><?php echo $class['InstitutionSiteSection']['name']; ?></span>
 								<span class="middot">&middot;</span>

@@ -23,7 +23,6 @@ class InstitutionSiteQualityRubric extends AppModel {
             'foreignKey' => 'rubric_template_id'
         ),
         'AcademicPeriod',
-        'EducationProgramme',
 		'EducationGrade',
 		'InstitutionSiteSection',
 		'InstitutionSiteClass',
@@ -81,8 +80,8 @@ class InstitutionSiteQualityRubric extends AppModel {
 		));
 
 		$QualityStatus = $this->RubricTemplate->QualityStatus;
-		$InstitutionSiteProgramme = $this->EducationProgramme->InstitutionSiteProgramme;
-		$InstitutionSiteGrade = $this->EducationProgramme->InstitutionSiteProgramme->InstitutionSiteGrade;
+		$InstitutionSiteProgramme = $this->EducationGrade->EducationProgramme->InstitutionSiteProgramme;
+		$InstitutionSiteGrade = $this->EducationGrade->EducationProgramme->InstitutionSiteProgramme->InstitutionSiteGrade;
 		$InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
 		$InstitutionSiteSectionClass = ClassRegistry::init('InstitutionSiteSectionClass');
 		
@@ -231,7 +230,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 						if ($findClasses) {
 							$siteClasses = $InstitutionSiteSectionClass->find('all', array(
 								'contain' => array(
-									'InstitutionSiteClass', 'InstitutionSiteSection.EducationGrade', 'InstitutionSiteSection.EducationGrade.EducationProgramme'
+									'InstitutionSiteClass', 'InstitutionSiteSection.EducationGrade'
 								),
 								'conditions' => $conditions,
 								'group' => array(
@@ -249,10 +248,8 @@ class InstitutionSiteQualityRubric extends AppModel {
 							$classes = array();
 							$classes['AcademicPeriod']['id'] = $periodId;
 							$classes['AcademicPeriod']['name'] = $period['AcademicPeriod']['name'];
-							$classes['EducationProgramme']['id'] = $siteClass['InstitutionSiteSection']['EducationGrade']['EducationProgramme']['id'];
-							$classes['EducationProgramme']['name'] = $siteClass['InstitutionSiteSection']['EducationGrade']['EducationProgramme']['name'];
 							$classes['EducationGrade']['id'] = $siteClass['InstitutionSiteSection']['EducationGrade']['id'];
-							$classes['EducationGrade']['name'] = $siteClass['InstitutionSiteSection']['EducationGrade']['name'];
+							$classes['EducationGrade']['programme_grade_name'] = $siteClass['InstitutionSiteSection']['EducationGrade']['programme_grade_name'];
 							$classes['InstitutionSiteSection']['id'] = $siteClass['InstitutionSiteSection']['id'];
 							$classes['InstitutionSiteSection']['name'] = $siteClass['InstitutionSiteSection']['name'];
 							$classes['InstitutionSiteClass']['id'] = $siteClass['InstitutionSiteClass']['id'];
@@ -276,7 +273,6 @@ class InstitutionSiteQualityRubric extends AppModel {
 		$named = $this->controller->params->named;
 		$selectedTemplate = isset($named['template']) ? $named['template'] : 0;
 		$selectedPeriod = isset($named['period']) ? $named['period'] : 0;
-		$selectedProgramme = isset($named['programme']) ? $named['programme'] : 0;
 		$selectedGrade = isset($named['grade']) ? $named['grade'] : 0;
 		$selectedSection = isset($named['section']) ? $named['section'] : 0;
 		$selectedClass = isset($named['class']) ? $named['class'] : 0;
@@ -307,7 +303,6 @@ class InstitutionSiteQualityRubric extends AppModel {
 			$id = $this->field('id', array(
 				$this->alias.'.rubric_template_id' => $selectedTemplate,
 				$this->alias.'.academic_period_id' => $selectedPeriod,
-				$this->alias.'.education_programme_id' => $selectedProgramme,
 				$this->alias.'.education_grade_id' => $selectedGrade,
 				$this->alias.'.institution_site_section_id' => $selectedSection,
 				$this->alias.'.institution_site_class_id' => $selectedClass,
@@ -349,7 +344,6 @@ class InstitutionSiteQualityRubric extends AppModel {
 
 		$selectedTemplate = isset($named['template']) ? $named['template'] : 0;
 		$selectedPeriod = isset($named['period']) ? $named['period'] : 0;
-		$selectedProgramme = isset($named['programme']) ? $named['programme'] : 0;
 		$selectedGrade = isset($named['grade']) ? $named['grade'] : 0;
 		$selectedSection = isset($named['section']) ? $named['section'] : 0;
 		$selectedClass = isset($named['class']) ? $named['class'] : 0;
@@ -392,7 +386,6 @@ class InstitutionSiteQualityRubric extends AppModel {
 				$newData['InstitutionSiteQualityRubric']['comment'] = '';
 				$newData['InstitutionSiteQualityRubric']['rubric_template_id'] = $selectedTemplate;
 				$newData['InstitutionSiteQualityRubric']['academic_period_id'] = $selectedPeriod;
-				$newData['InstitutionSiteQualityRubric']['education_programme_id'] = $selectedProgramme;
 				$newData['InstitutionSiteQualityRubric']['education_grade_id'] = $selectedGrade;
 				$newData['InstitutionSiteQualityRubric']['institution_site_section_id'] = $selectedSection;
 				$newData['InstitutionSiteQualityRubric']['institution_site_class_id'] = $selectedClass;
@@ -405,7 +398,6 @@ class InstitutionSiteQualityRubric extends AppModel {
 					'conditions' => array(
 						'InstitutionSiteQualityRubric.rubric_template_id' => $selectedTemplate,
 						'InstitutionSiteQualityRubric.academic_period_id' => $selectedPeriod,
-						'InstitutionSiteQualityRubric.education_programme_id' => $selectedProgramme,
 						'InstitutionSiteQualityRubric.education_grade_id' => $selectedGrade,
 						'InstitutionSiteQualityRubric.institution_site_section_id' => $selectedSection,
 						'InstitutionSiteQualityRubric.institution_site_class_id' => $selectedClass,
@@ -454,7 +446,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 	public function remove() {
 		if ($this->Session->check($this->alias . '.id')) {
 			$id = $this->Session->read($this->alias . '.id');
-			$status = $this->field('status', $id);
+			$status = $this->field('status', array('InstitutionSiteQualityRubric.id' => $id));
 
 			if ($status == 1) {
 				if($this->delete($id)) {
@@ -464,15 +456,8 @@ class InstitutionSiteQualityRubric extends AppModel {
 					$this->Message->alert('general.delete.failed');
 				}
 			} else if ($status == 2) {
-				$result = $this->updateAll(
-				    array(
-				    	$this->alias.'.status' => 1
-				    ),
-				    array(
-				    	$this->alias.'.id' => $id
-				    )
-				);
-				if($result) {
+				$this->id = $id;
+				if($this->saveField('status', 1)) {
 					$this->Message->alert('general.delete.success');
 				} else {
 					$this->log($this->validationErrors, 'debug');
