@@ -371,9 +371,14 @@ class RestSurveyComponent extends Component {
 							$textNode->addChild("label", "Academic Period", NS_XF);
 
 						foreach ($fields as $key => $field) {
-							if($field[$this->Field->alias]['type'] == 1 || $field[$this->Field->alias]['type'] == 7) {
+							if ($field[$this->Field->alias]['type'] == 1) {
 								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
 								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
+								$sectionBreakNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
+							} else if ($field[$this->Field->alias]['type'] == 7) {
+								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
+								$sectionBreakNode->addAttribute("oe-type", "table");
 								$sectionBreakNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 							}
 
