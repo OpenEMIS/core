@@ -32,40 +32,47 @@ echo $this->element($tabsElement, array(), array());
 		</thead>
 		<tbody>
 			<?php foreach ($data as $obj) : ?>
-				<?php if (isset($obj['InstitutionSiteClass'])) : ?>
-					<?php foreach ($obj['InstitutionSiteClass'] as $class) : ?>
-						<tr>
-							<td>
+				<?php foreach ($obj['InstitutionSiteClass'] as $class) : ?>
+					<tr>
+						<td>
+							<?php if ($selectedAction == 0) : ?>
 								<?php
 									echo $this->Html->link($obj['RubricTemplate']['name'], array(
 										'action' => $model, 'listSection',
 										'template' => $obj['RubricTemplate']['id'],
 										'period' => $class['AcademicPeriod']['id'],
 										'grade' => $class['EducationGrade']['id'],
-										'section' => $class['InstitutionSiteSection']['id'],
-										'class' => $class['InstitutionSiteClass']['id'],
+										'siteSection' => $class['InstitutionSiteSection']['id'],
+										'siteClass' => $class['InstitutionSiteClass']['id'],
 										'status' => $selectedAction
 									));
 								?>
-							</td>
-							<td><?php echo $class['AcademicPeriod']['name']; ?></td>
-							<td><?php echo $class['EducationGrade']['programme_grade_name']; ?></td>
-							<td class="section-info">
-								<span><?php echo $class['InstitutionSiteSection']['name']; ?></span>
-								<span class="middot">&middot;</span>
-								<span><?php echo $class['InstitutionSiteClass']['name']; ?></span>
-							</td>
-							<?php if ($selectedAction == 0) : ?>
-								<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
-							<?php elseif ($selectedAction == 1) : ?>
-								<td></td>
-								<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
-							<?php elseif ($selectedAction == 2) : ?>
-								<td></td>
+							<?php else : ?>
+								<?php
+									echo $this->Html->link($obj['RubricTemplate']['name'], array(
+										'action' => $model, 'listSection', $class['InstitutionSiteQualityRubric']['id'],
+										'status' => $selectedAction
+									));
+								?>
 							<?php endif ?>
-						</tr>
-					<?php endforeach ?>
-				<?php endif ?>
+						</td>
+						<td><?php echo $class['AcademicPeriod']['name']; ?></td>
+						<td><?php echo $class['EducationGrade']['programme_grade_name']; ?></td>
+						<td class="section-info">
+							<span><?php echo $class['InstitutionSiteSection']['name']; ?></span>
+							<span class="middot">&middot;</span>
+							<span><?php echo $class['InstitutionSiteClass']['name']; ?></span>
+						</td>
+						<?php if ($selectedAction == 0) : ?>
+							<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
+						<?php elseif ($selectedAction == 1) : ?>
+							<td><?php echo !empty($class['InstitutionSiteQualityRubric']['modified']) ? $class['InstitutionSiteQualityRubric']['modified'] : $class['InstitutionSiteQualityRubric']['created']; ?></td>
+							<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
+						<?php elseif ($selectedAction == 2) : ?>
+							<td><?php echo !empty($class['InstitutionSiteQualityRubric']['modified']) ? $class['InstitutionSiteQualityRubric']['modified'] : $class['InstitutionSiteQualityRubric']['created']; ?></td>
+						<?php endif ?>
+					</tr>
+				<?php endforeach ?>
 			<?php endforeach ?>
 		</tbody>
 	</table>

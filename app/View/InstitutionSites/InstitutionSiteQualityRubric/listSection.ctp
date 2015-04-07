@@ -2,7 +2,7 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', 'status' => $selectedStatus), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', 'status' => $selectedAction), array('class' => 'divider'));
 	if($_delete) {
 		if ($selectedAction == 1) {
 			echo $this->Html->link($this->Label->get('general.delete'), array('action' => $model, 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
@@ -43,14 +43,19 @@ echo $this->element($tabsElement, array(), array());
 			</tr>
 		</thead>
 		<tbody>
-			<?php $named = $this->request->params['named']; ?>
+			<?php
+				$named = $this->request->params['named'];
+				$pass = $this->request->params['pass'];
+				unset($pass[0]);
+			?>
 			<?php foreach ($data as $key => $obj) : ?>
 				<tr>
 					<td><?php echo $obj['RubricSection']['order']; ?></td>
 					<td>
 						<?php
-							$actionUrl = array('action' => $model, 'edit', $obj['RubricSection']['id']);
-							echo $this->Html->link($obj['RubricSection']['name'], array_merge($actionUrl, $named));
+							$actionUrl = array('action' => $model, 'edit', 'section' => $obj['RubricSection']['id']);
+							$actionUrl = array_merge($actionUrl, $named, $pass);
+							echo $this->Html->link($obj['RubricSection']['name'], $actionUrl);
 						?>
 					</td>
 					<td>
