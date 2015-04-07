@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppController', 'Controller');
 App::uses('Sanitize', 'Utility');
+App::import('Vendor', 'php-excel-reader/excel_reader2');
 
 class InstitutionSitesController extends AppController {
 	public $institutionSiteId;
@@ -104,7 +105,7 @@ class InstitutionSitesController extends AppController {
 		$this->Auth->allow('viewMap', 'siteProfile');
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 		$this->indexPage = 'dashboard';
-		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
+		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch' || $this->action === 'import' || $this->action === 'importProcess') {
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 
@@ -851,6 +852,76 @@ class InstitutionSitesController extends AppController {
 		} else {
 			return false;
 		}
+	}
+	
+	public function import(){
+		if ($this->request->is(array('post', 'put'))) {
+			if(!empty($this->request->data['InstitutionSite']['excel'])){
+				$fielObj = $this->request->data['InstitutionSite']['excel'];
+				if($fielObj['error'] == 0){
+					$uploaded = $fielObj['tmp_name'];
+					$content = new Spreadsheet_Excel_Reader($uploaded, true);
+					$data = $content->dumptoarray();
+					//pr($data);die;
+					foreach($data as $key => $row){
+						if($key == 1){continue;}
+
+						$formattedRow = $this->formatExcelRow($row);
+						//pr($formattedRow);
+						$this->InstitutionSite->set($formattedRow);
+						$this->InstitutionSite->validator()->remove('area_id_select');
+						if ($this->InstitutionSite->validates()) {
+							if($this->InstitutionSite->save($formattedRow)){
+								pr('success');
+							}else{
+								pr('Saving Failed');
+							}
+						}else{
+							$this->log($this->InstitutionSite->validationErrors, 'debug');
+							pr('Validation Failed');
+						}
+					}
+				}
+			}
+		}
+		$model = 'InstitutionSite';
+		$this->set(compact('data', 'model')); 
+	}
+	
+	private function formatExcelRow($row){
+		$newRow = array();
+		
+		$newRow['name'] = $row[1];
+		$newRow['alternative_name'] = $row[2];
+		$newRow['code'] = $row[3];
+		$newRow['address'] = $row[4];
+		$newRow['postal_code'] = $row[5];
+		$newRow['contact_person'] = $row[6];
+		$newRow['telephone'] = $row[7];
+		$newRow['fax'] = $row[8];
+		$newRow['email'] = $row[9];
+		$newRow['website'] = $row[10];
+		$newRow['date_opened'] = $row[11];
+		$newRow['year_opened'] = $row[12];
+		$newRow['date_closed'] = $row[13];
+		$newRow['year_closed'] = $row[14];
+		$newRow['longitude'] = $row[15];
+		$newRow['latitude'] = $row[16];
+		$newRow['area_id'] = $row[17];
+		$newRow['area_administrative_id'] = $row[18];
+		$newRow['institution_site_locality_id'] = $row[19];
+		$newRow['institution_site_type_id'] = $row[20];
+		$newRow['institution_site_ownership_id'] = $row[21];
+		$newRow['institution_site_status_id'] = $row[22];
+		$newRow['institution_site_sector_id'] = $row[23];
+		$newRow['institution_site_provider_id'] = $row[24];
+		$newRow['institution_site_gender_id'] = $row[25];
+		
+		return $newRow;
+	}
+	
+	public function importProcess(){
+		
 	}
 
 }
