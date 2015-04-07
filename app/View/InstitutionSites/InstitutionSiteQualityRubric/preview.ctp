@@ -40,7 +40,10 @@
 									$criteriaAnswerId = 0;
 									$rubricSectionId = $obj['RubricCriteria']['rubric_section_id'];
 									$rubricCriteriaId = $obj['RubricCriteria']['id'];
-									echo $obj['RubricCriteria']['name'];
+
+									$fieldName = "InstitutionSiteQualityRubricAnswer.".$rubricCriteriaId.".rubric_criteria_option_id";
+									$error = $this->Form->isFieldError($fieldName) ? $this->Form->error($fieldName) : '';
+
 									if(isset($this->request->data['InstitutionSiteQualityRubricAnswer'][$rubricCriteriaId])) {
 										echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.id");
 										$criteriaAnswerId = $this->request->data['InstitutionSiteQualityRubricAnswer'][$rubricCriteriaId]['rubric_criteria_option_id'];
@@ -49,6 +52,8 @@
 									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.rubric_criteria_id", array('value' => $rubricCriteriaId));
 									echo $this->Form->hidden("InstitutionSiteQualityRubricAnswer.$rubricCriteriaId.rubric_criteria_option_id", array('class' => 'criteriaAnswer'));
 								?>
+								<div><?php echo $obj['RubricCriteria']['name']; ?></div>
+								<?php echo $error; ?>
 							</td>
 							<?php foreach ($rubricTemplateOptions as $rubricTemplateOption) : ?>
 								<?php

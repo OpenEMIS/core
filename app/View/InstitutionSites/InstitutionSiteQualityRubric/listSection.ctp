@@ -3,9 +3,21 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => $model, 'index', 'status' => $selectedStatus), array('class' => 'divider'));
-	if ($selectedAction == 1 || $selectedAction == 2) {
-		if($_delete) {
-		    echo $this->Html->link($this->Label->get('general.delete'), array('action' => $model, 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	if($_delete) {
+		if ($selectedAction == 1) {
+			echo $this->Html->link($this->Label->get('general.delete'), array('action' => $model, 'remove'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		} else if ($selectedAction == 2) {
+			echo $this->Html->link(
+				$this->Label->get('general.reject'),
+				array('action' => 'InstitutionSiteQualityRubric', 'remove'),
+				array(
+					'class' => 'divider',
+					'onclick' => 'return jsForm.confirmDelete(this)',
+					'data-title' => __('Reject Confirmation'),
+					'data-content' => __('You are about to reject this quality rubric.<br><br>Are you sure you want to do this?'),
+					'data-button-text' => $this->Label->get('general.reject')
+				)
+			);
 		}
 	}
 $this->end();
