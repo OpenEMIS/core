@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class EducationGradeSubject extends AppModel {
 	public $useTable = 'education_grades_subjects';
-	public $actsAs = array('ControllerAction2', 'Reorder' => array('parentKey' => 'education_grade_id'));
+	public $actsAs = array('ControllerAction2');
 	public $belongsTo = array(
 		'EducationGrade',
 		'EducationSubject',
