@@ -108,6 +108,7 @@ class LabelHelper extends AppHelper {
 			'levels' => 'Levels',
 			'types' => 'Types',
 			'custom_fields' => 'Custom Fields',
+			'import' => 'Import'
 		),
 		'date' => array(
 			'start' => 'Start Date',
