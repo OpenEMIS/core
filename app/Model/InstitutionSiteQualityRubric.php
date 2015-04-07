@@ -192,7 +192,8 @@ class InstitutionSiteQualityRubric extends AppModel {
 						$options = array();
 						$fields = array(
 							'InstitutionSiteSection.id', 'InstitutionSiteSection.name', 'InstitutionSiteClass.id', 'InstitutionSiteClass.name',
-							'EducationGrade.id', 'EducationGrade.name', 'EducationProgramme.id', 'EducationProgramme.name'
+							'EducationGrade.id', 'EducationGrade.name', 'EducationProgramme.id', 'EducationProgramme.name',
+							'Staff.id', 'Staff.first_name', 'Staff.last_name'
 						);
 						$joins = array(
 							array(
@@ -223,6 +224,22 @@ class InstitutionSiteQualityRubric extends AppModel {
 								'alias' => 'InstitutionSiteClass',
 								'conditions' => array(
 									'InstitutionSiteClass.id = InstitutionSiteSectionClass.institution_site_class_id'
+								)
+							),
+							array(
+								'type' => 'LEFT',
+								'table' => 'institution_site_class_staff',
+								'alias' => 'InstitutionSiteClassStaff',
+								'conditions' => array(
+									'InstitutionSiteClassStaff.institution_site_class_id = InstitutionSiteClass.id'
+								)
+							),
+							array(
+								'type' => 'LEFT',
+								'table' => 'staff',
+								'alias' => 'Staff',
+								'conditions' => array(
+									'Staff.id = InstitutionSiteClassStaff.staff_id'
 								)
 							)
 						);
@@ -304,8 +321,6 @@ class InstitutionSiteQualityRubric extends AppModel {
 							$classes = $siteClass;
 							$classes['AcademicPeriod']['id'] = $periodId;
 							$classes['AcademicPeriod']['name'] = $period['AcademicPeriod']['name'];
-							$classes['EducationGrade']['id'] = $siteClass['EducationGrade']['id'];
-							$classes['EducationGrade']['programme_grade_name'] = $siteClass['EducationProgramme']['name'] . " - " . $siteClass['EducationGrade']['name'];
 							$classes['QualityStatus']['date_disabled'] = $period['QualityStatus']['date_disabled'];
 							$templates[$i]['InstitutionSiteClass'][] = $classes;
 						}
@@ -325,7 +340,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 		$this->controller->set(compact('contentHeader', 'data'));
 	}
 
-	public function listSection($id=0) {
+	public function view($id=0) {
 		$named = $this->controller->params->named;
 		$status = isset($named['status']) ? $named['status'] : 0;
 
@@ -335,18 +350,86 @@ class InstitutionSiteQualityRubric extends AppModel {
 			$selectedGrade = isset($named['grade']) ? $named['grade'] : 0;
 			$selectedSiteSection = isset($named['siteSection']) ? $named['siteSection'] : 0;
 			$selectedSiteClass = isset($named['siteClass']) ? $named['siteClass'] : 0;
-		} else {
-			$result = $this->find('first', array(
+			$selectedStaff = isset($named['staff']) ? $named['staff'] : 0;
+			$data = array();
+			$result = $this->RubricTemplate->find('first', array(
 				'contain' => array(),
+				'fields' => array(
+					'RubricTemplate.id', 'RubricTemplate.name'
+				),
+				'conditions' => array('RubricTemplate.id' => $selectedTemplate)
+			));
+			$data['RubricTemplate'] = $result['RubricTemplate'];
+			$result = $this->AcademicPeriod->find('first', array(
+				'contain' => array(),
+				'fields' => array(
+					'AcademicPeriod.id', 'AcademicPeriod.name'
+				),
+				'conditions' => array('AcademicPeriod.id' => $selectedPeriod)
+			));
+			$data['AcademicPeriod'] = $result['AcademicPeriod'];
+			$result = $this->EducationGrade->find('first', array(
+				'contain' => array('EducationProgramme'),
+				'fields' => array(
+					'EducationGrade.id', 'EducationGrade.name', 'EducationProgramme.id', 'EducationProgramme.name'
+				),
+				'conditions' => array('EducationGrade.id' => $selectedGrade)
+			));
+			$data['EducationGrade'] = $result['EducationGrade'];
+			$data['EducationProgramme'] = $result['EducationProgramme'];
+			$result = $this->InstitutionSiteSection->find('first', array(
+				'contain' => array(),
+				'fields' => array(
+					'InstitutionSiteSection.id', 'InstitutionSiteSection.name'
+				),
+				'conditions' => array('InstitutionSiteSection.id' => $selectedSiteSection)
+			));
+			$data['InstitutionSiteSection'] = $result['InstitutionSiteSection'];
+			$result = $this->InstitutionSiteClass->find('first', array(
+				'contain' => array(),
+				'fields' => array(
+					'InstitutionSiteClass.id', 'InstitutionSiteClass.name'
+				),
+				'conditions' => array('InstitutionSiteClass.id' => $selectedSiteClass)
+			));
+			$data['InstitutionSiteClass'] = $result['InstitutionSiteClass'];
+			$result = $this->Staff->find('first', array(
+				'contain' => array(),
+				'fields' => array(
+					'Staff.id', 'Staff.first_name', 'Staff.last_name'
+				),
+				'conditions' => array('Staff.id' => $selectedStaff)
+			));
+			$data['Staff'] = $result['Staff'];
+		} else {
+			$data = $this->find('first', array(
+				'fields' => array(
+					'RubricTemplate.id', 'RubricTemplate.name',
+					'AcademicPeriod.id', 'AcademicPeriod.name',
+					'EducationGrade.id', 'EducationGrade.name',
+					'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
+					'InstitutionSiteClass.id', 'InstitutionSiteClass.name',
+					'Staff.id', 'Staff.first_name', 'Staff.last_name'
+				),
+				'contain' => array('RubricTemplate', 'AcademicPeriod', 'EducationGrade', 'EducationGrade.EducationProgramme', 'InstitutionSiteSection', 'InstitutionSiteClass', 'Staff'),
 				'conditions' => array(
 					'InstitutionSiteQualityRubric.id' => $id
 				)
 			));
-			$selectedTemplate = $result['InstitutionSiteQualityRubric']['rubric_template_id'];
-			$selectedPeriod = $result['InstitutionSiteQualityRubric']['academic_period_id'];
-			$selectedGrade = $result['InstitutionSiteQualityRubric']['education_grade_id'];
-			$selectedSiteSection = $result['InstitutionSiteQualityRubric']['institution_site_section_id'];
-			$selectedSiteClass = $result['InstitutionSiteQualityRubric']['institution_site_class_id'];
+			$selectedTemplate = $data['RubricTemplate']['id'];
+			$selectedPeriod = $data['AcademicPeriod']['id'];
+			$selectedGrade = $data['EducationGrade']['id'];
+			$selectedSiteSection = $data['InstitutionSiteSection']['id'];
+			$selectedSiteClass = $data['InstitutionSiteClass']['id'];
+			$selectedStaff = $data['Staff']['id'];
+			$result = $this->EducationGrade->find('first', array(
+				'contain' => array('EducationProgramme'),
+				'fields' => array(
+					'EducationGrade.id', 'EducationGrade.name', 'EducationProgramme.id', 'EducationProgramme.name'
+				),
+				'conditions' => array('EducationGrade.id' => $selectedGrade)
+			));
+			$data['EducationProgramme'] = $result['EducationProgramme'];
 			$this->Session->write($this->alias.'.id', $id);
 		}
 
@@ -360,7 +443,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 		}
 		
 		$this->RubricTemplate->RubricSection->contain('RubricCriteria');
-		$data = $this->RubricTemplate->RubricSection->find('all', array(
+		$rubricSections = $this->RubricTemplate->RubricSection->find('all', array(
 			'conditions' => array(
 				'RubricSection.rubric_template_id' => $selectedTemplate
 			),
@@ -369,8 +452,8 @@ class InstitutionSiteQualityRubric extends AppModel {
 			)
 		));
 
-		$result = array();
-		foreach ($data as $key => $obj) {
+		$tmp = array();
+		foreach ($rubricSections as $key => $obj) {
 			$count = 0;
 			foreach ($obj['RubricCriteria'] as $rubricCriteria) {
 				if($rubricCriteria['type'] == 2) {
@@ -388,9 +471,10 @@ class InstitutionSiteQualityRubric extends AppModel {
 			));
 			$obj['RubricSection']['no_of_answers'] = $answer;
 
-			$result[$key] = $obj;
+			$tmp[$key] = $obj;
 		}
-		$data = $result;
+		
+		$data['RubricSection'] = $tmp;
 
 		$contentHeader = $this->RubricTemplate->field('name', $selectedTemplate);
 		$this->controller->set(compact('contentHeader', 'data', 'selectedStatus'));
@@ -408,6 +492,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 			$selectedGrade = isset($named['grade']) ? $named['grade'] : 0;
 			$selectedSiteSection = isset($named['siteSection']) ? $named['siteSection'] : 0;
 			$selectedSiteClass = isset($named['siteClass']) ? $named['siteClass'] : 0;
+			$selectedStaff = isset($named['staff']) ? $named['staff'] : 0;
 			$institutionSiteId = $this->Session->read('InstitutionSite.id');
 		} else {
 			$result = $this->find('first', array(
@@ -423,7 +508,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 		$editUrl = array('action' => $this->alias, 'edit');
 		$editUrl = array_merge($editUrl, $named, $pass);
 
-		$backUrl = array('controller' => 'InstitutionSites', 'action' => $this->alias, 'listSection', 'plugin' => false);
+		$backUrl = array('controller' => 'InstitutionSites', 'action' => $this->alias, 'view', 'plugin' => false);
 		$backUrl = array_merge($backUrl, $named, $pass);
 
 		$this->Navigation->addCrumb('Rubrics', $backUrl);
@@ -438,7 +523,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 			if ($this->saveAll($data)) {
 				if ($status == 1) {
 					$this->Message->alert('InstitutionSiteQualityRubric.save.draft');
-					$redirectUrl = array('action' => $this->alias, 'listSection', $this->id, 'status' => $status);
+					$redirectUrl = array('action' => $this->alias, 'view', $this->id, 'status' => $status);
 					return $this->controller->redirect($redirectUrl);
 				} else if ($status == 2) {
 					$templateId = $this->field('rubric_template_id', array('InstitutionSiteQualityRubric.id' => $this->id));
@@ -458,7 +543,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 						$this->Message->alert('InstitutionSiteQualityRubric.save.failed');
 						$status = 1;
 						$this->saveField('status', $status);
-						$redirectUrl = array('action' => $this->alias, 'listSection', $this->id, 'status' => $status);
+						$redirectUrl = array('action' => $this->alias, 'view', $this->id, 'status' => $status);
 						return $this->controller->redirect($redirectUrl);
 					} else {
 						$this->Message->alert('InstitutionSiteQualityRubric.save.final');
@@ -479,7 +564,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 				$data['InstitutionSiteQualityRubric']['education_grade_id'] = $selectedGrade;
 				$data['InstitutionSiteQualityRubric']['institution_site_section_id'] = $selectedSiteSection;
 				$data['InstitutionSiteQualityRubric']['institution_site_class_id'] = $selectedSiteClass;
-				$data['InstitutionSiteQualityRubric']['staff_id'] = 0;
+				$data['InstitutionSiteQualityRubric']['staff_id'] = $selectedStaff;
 				$data['InstitutionSiteQualityRubric']['institution_site_id'] = $institutionSiteId;
 				$this->request->data = $data;
 			} else if ($selectedStatus == 1 || $selectedStatus == 2) {
