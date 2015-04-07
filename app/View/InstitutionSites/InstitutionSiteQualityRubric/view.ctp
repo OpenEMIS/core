@@ -41,7 +41,7 @@ echo $this->element($tabsElement, array(), array());
 		<span><?php echo $this->Label->get('InstitutionSiteQualityRubric.education_grade_id'); ?></span>
 	</div>
 	<div class="col-md-6">
-		<span><?php echo $data['EducationProgramme']['name']; ?></span>
+		<span><?php echo $data['EducationGrade']['EducationProgramme']['name']; ?></span>
 		<span class="middot">&middot;</span>
 		<span><?php echo $data['EducationGrade']['name']; ?></span>
 	</div>
@@ -60,7 +60,7 @@ echo $this->element($tabsElement, array(), array());
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteQualityRubric.staff_id') ?></div>
-	<div class="col-md-6"><?php echo $data['Staff']['first_name'] . " " . $data['Staff']['last_name']; ?></div>
+	<div class="col-md-6"><?php echo $data['Staff']['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteQualityRubric.rubric_sections') ?></div>
