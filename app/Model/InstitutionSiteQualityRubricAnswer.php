@@ -33,4 +33,22 @@ class InstitutionSiteQualityRubricAnswer extends AppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	public $validate = array(
+		'rubric_criteria_option_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				 'message' => 'Please select a criteria option.'
+			)
+		)
+	);
+
+	public function beforeValidate($options=array()) {
+		if ($this->InstitutionSiteQualityRubric->data[$this->InstitutionSiteQualityRubric->alias]['status'] == 1) {
+			$this->validator()->remove('rubric_criteria_option_id');
+		}
+
+		return true;
+	}
 }
