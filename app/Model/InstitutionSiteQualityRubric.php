@@ -372,8 +372,28 @@ class InstitutionSiteQualityRubric extends AppModel {
 					$backUrl['status'] = $status;
 					return $this->controller->redirect($backUrl);
 				} else if ($status == 2) {
-					$this->Message->alert('InstitutionSiteQualityRubric.save.final');
-					return $this->controller->redirect(array('action' => $this->alias, 'index', 'status' => $status));
+					$templateId = $this->field('rubric_template_id', array('InstitutionSiteQualityRubric.id' => $this->id));
+					$criteria = $this->RubricTemplate->RubricSection->RubricCriteria->find('count', array(
+						'conditions' => array(
+							'RubricCriteria.type' => 2,
+							'RubricSection.rubric_template_id' => $templateId
+						)
+					));
+					$answer = $this->InstitutionSiteQualityRubricAnswer->find('count', array(
+						'conditions' => array(
+							'InstitutionSiteQualityRubricAnswer.institution_site_quality_rubric_id' => $this->id
+						)
+					));
+					if ($criteria != $answer) {
+						$this->Message->alert('InstitutionSiteQualityRubric.save.failed');
+						$status = 1;
+						$this->saveField('status', $status);
+						$backUrl['status'] = $status;
+						return $this->controller->redirect($backUrl);
+					} else {
+						$this->Message->alert('InstitutionSiteQualityRubric.save.final');
+						return $this->controller->redirect(array('action' => $this->alias, 'index', 'status' => $status));
+					}
 				}
 			} else {
 				$this->log($this->validationErrors, 'debug');
@@ -458,10 +478,10 @@ class InstitutionSiteQualityRubric extends AppModel {
 			} else if ($status == 2) {
 				$this->id = $id;
 				if($this->saveField('status', 1)) {
-					$this->Message->alert('general.delete.success');
+					$this->Message->alert('InstitutionSiteQualityRubric.reject.success');
 				} else {
 					$this->log($this->validationErrors, 'debug');
-					$this->Message->alert('general.delete.failed');
+					$this->Message->alert('InstitutionSiteQualityRubric.reject.failed');
 				}
 			}
 
