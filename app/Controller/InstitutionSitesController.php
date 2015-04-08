@@ -71,7 +71,8 @@ class InstitutionSitesController extends AppController {
 		'AreaHandler',
 		'Alert',
 		'Activity' => array('model' => 'InstitutionSiteActivity'),
-		'HighCharts.HighCharts'
+		'HighCharts.HighCharts',
+		'PhpExcel'
 	);
 	
 	public $modules = array(
@@ -105,10 +106,12 @@ class InstitutionSitesController extends AppController {
 		$this->Auth->allow('viewMap', 'siteProfile');
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 		$this->indexPage = 'dashboard';
-		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch' || $this->action === 'import' || $this->action === 'importProcess') {
+		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
-
+			
+		} else if ($this->action === 'import' || $this->action === 'importProcess'){
+			
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
 				$this->layout = 'profile';
@@ -857,67 +860,140 @@ class InstitutionSitesController extends AppController {
 	public function import(){
 		if ($this->request->is(array('post', 'put'))) {
 			if(!empty($this->request->data['InstitutionSite']['excel'])){
+				$header = $this->getExcelHeader();
 				$fielObj = $this->request->data['InstitutionSite']['excel'];
 				if($fielObj['error'] == 0){
 					$uploaded = $fielObj['tmp_name'];
-					$content = new Spreadsheet_Excel_Reader($uploaded, true);
-					$data = $content->dumptoarray();
-					//pr($data);die;
-					foreach($data as $key => $row){
+					//$content = new Spreadsheet_Excel_Reader($uploaded, true);
+					//$contentArr = $content->dumptoarray();
+					
+					$content = array();
+					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
+					$sheets = $objPHPExcel->getWorksheetIterator();
+					$firstSheetOnly = false;
+					foreach($sheets as $sheet){
+						if(!$firstSheetOnly){
+							$highestRow         = $sheet->getHighestRow(); // e.g. 10
+							$highestColumn      = $sheet->getHighestColumn(); // e.g 'F'
+							$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
+							for ($row = 1; $row <= $highestRow; ++ $row) {
+								$tempRow = array();
+								 for ($col = 0; $col < $highestColumnIndex; ++ $col) {
+									 $cell = $sheet->getCellByColumnAndRow($col, $row);
+									 $val = $cell->getValue();
+									 $tempRow[] = $val;
+								 }
+								 $content[] = $tempRow;
+							}
+						}
+						
+						$firstSheetOnly = true;
+					}
+					pr($content);die;
+					
+					$data = array();
+					$dataFailed = array();
+					$totalRows = count($contentArr) - 1;
+					$totalFailed = 0;
+					//pr($contentArr);die;
+					foreach($contentArr as $key => $row){
 						if($key == 1){continue;}
 
 						$formattedRow = $this->formatExcelRow($row);
 						//pr($formattedRow);
+						$data[] = $formattedRow;
 						$this->InstitutionSite->set($formattedRow);
 						$this->InstitutionSite->validator()->remove('area_id_select');
 						if ($this->InstitutionSite->validates()) {
-							if($this->InstitutionSite->save($formattedRow)){
-								pr('success');
-							}else{
-								pr('Saving Failed');
-							}
+//							if($this->InstitutionSite->save($formattedRow)){
+//								pr('success');
+//							}else{
+//								pr('Saving Failed');
+//							}
 						}else{
+							$dataFailed[] = array('error' => $this->InstitutionSite->validationErrors, 'data' => $formattedRow);
+							$totalFailed ++;
 							$this->log($this->InstitutionSite->validationErrors, 'debug');
-							pr('Validation Failed');
+							
 						}
 					}
+					
+					$this->set(compact('data', 'totalRows', 'header', 'dataFailed'));
 				}
 			}
 		}
+		//pr($data);die;
 		$model = 'InstitutionSite';
-		$this->set(compact('data', 'model')); 
+		$this->set(compact('model'));
 	}
 	
 	private function formatExcelRow($row){
 		$newRow = array();
 		
-		$newRow['name'] = $row[1];
-		$newRow['alternative_name'] = $row[2];
-		$newRow['code'] = $row[3];
-		$newRow['address'] = $row[4];
-		$newRow['postal_code'] = $row[5];
-		$newRow['contact_person'] = $row[6];
-		$newRow['telephone'] = $row[7];
-		$newRow['fax'] = $row[8];
-		$newRow['email'] = $row[9];
-		$newRow['website'] = $row[10];
-		$newRow['date_opened'] = $row[11];
-		$newRow['year_opened'] = $row[12];
-		$newRow['date_closed'] = $row[13];
-		$newRow['year_closed'] = $row[14];
-		$newRow['longitude'] = $row[15];
-		$newRow['latitude'] = $row[16];
-		$newRow['area_id'] = $row[17];
-		$newRow['area_administrative_id'] = $row[18];
-		$newRow['institution_site_locality_id'] = $row[19];
-		$newRow['institution_site_type_id'] = $row[20];
-		$newRow['institution_site_ownership_id'] = $row[21];
-		$newRow['institution_site_status_id'] = $row[22];
-		$newRow['institution_site_sector_id'] = $row[23];
-		$newRow['institution_site_provider_id'] = $row[24];
-		$newRow['institution_site_gender_id'] = $row[25];
+		$mapping = $this->getExcelMapping();
+		foreach($mapping as $key => $value){
+			$newKey = $key + 1;
+			$column = $value['column'];
+			$newRow[$column] = $row[$newKey];
+		}
 		
 		return $newRow;
+	}
+	
+	private function getExcelHeader(){
+		$model = 'InstitutionSite';
+		$header = array();
+		
+		$mapping = $this->getExcelMapping();
+		foreach($mapping as $key => $value){
+			$label = $this->Option->getLabel(sprintf('%s.%s', $model, $value['column']));
+			if(!empty($label)){
+				$headerCol = $label;
+			}else if(!empty($value['header'])){
+				$headerCol = __($value['header']);
+			}else{
+				$headerCol = Inflector::humanize($value['column']);
+			}
+			$header[] = $headerCol;
+		}
+		
+		return $header;
+	}
+	
+	private function getExcelMapping(){
+		$mapping = array(
+			array('column' => 'name'),
+			array('column' => 'alternative_name'),
+			array('column' => 'code'),
+			array('column' => 'address'),
+			array('column' => 'postal_code'),
+			array('column' => 'contact_person'),
+			array('column' => 'telephone'),
+			array('column' => 'fax'),
+			array('column' => 'email'),
+			array('column' => 'website'),
+			array('column' => 'date_opened'),
+			array('column' => 'year_opened'),
+			array('column' => 'date_closed'),
+			array('column' => 'year_closed'),
+			array('column' => 'longitude'),
+			array('column' => 'latitude'),
+			array('column' => 'area_id'),
+			array('column' => 'area_administrative_id', 'header' => ''),
+			array('column' => 'institution_site_locality_id', 'header' => ''),
+			array('column' => 'institution_site_type_id', 'header' => ''),
+			array('column' => 'institution_site_ownership_id', 'header' => ''),
+			array('column' => 'institution_site_status_id', 'header' => ''),
+			array('column' => 'institution_site_sector_id', 'header' => ''),
+			array('column' => 'institution_site_provider_id', 'header' => ''),
+			array('column' => 'institution_site_gender_id', 'header' => '')
+		);
+		
+		return $mapping;
+	}
+	
+	public function generateExcelTemplate(){
+		
 	}
 	
 	public function importProcess(){
