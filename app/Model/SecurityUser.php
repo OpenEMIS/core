@@ -155,7 +155,11 @@ class SecurityUser extends AppModel {
 				'rule' => 'notEmpty',
 				'message' => 'Please enter a valid username'
 			),
-			'ruleUnique' => array(
+            'ruleNoSpaces' => array(
+                'rule' => '/^[a-z0-9]{3,}$/i',  
+                'message' => 'Only letters and integers are allowed'
+            ),
+            'ruleUnique' => array(
 				'rule' => 'isUnique',
 				'message' => 'This username is already in use.'
 			)
