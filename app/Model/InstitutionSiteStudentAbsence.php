@@ -714,9 +714,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$conditions['InstitutionSiteStudentAbsence.first_date_absent <='] = $endDate;
 		$conditions['InstitutionSiteStudentAbsence.last_date_absent >='] = $startDate;
 		
-		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
-		$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"';
+		/* Commented instead of delete due to the need to re-work the logic using AcademicPeriod date range.*/ 
+		/* As of 26 Feb 2015, all statements that call this function are able to provide $startDate and $endDate*/ 
+		// $AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		// $academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
+		// $conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"';
 
 		$data = $this->find('all',
 			array(
