@@ -29,10 +29,10 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($studentList as $student):
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = $this->Model->getName($studentObj);
+				$studentName = $this->Model->getName($student['SecurityUser']);
 				?>
 				<tr>
-					<td><?php echo $studentObj['openemis_no']; ?></td>
+					<td><?php echo $student['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $studentName; ?></td>
 					<?php
 					foreach ($weekDayIndex as $index):
