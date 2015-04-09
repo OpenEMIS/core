@@ -18,7 +18,8 @@ class RestController extends RestfulAppController {
 	public $uses = array(
         'Surveys.SurveyTemplate',
         'Surveys.SurveyQuestion',
-        'Surveys.SurveyResponse'
+        'Surveys.SurveyResponse',
+        'SecurityRestSession'
 	);
 
 	public $components = array(
@@ -43,8 +44,38 @@ class RestController extends RestfulAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 
-		$this->Auth->allow();
-	}
+        $this->Auth->allow('auth', 'token');
+
+        if ($this->action == 'survey') {
+            $pass = $this->params->pass;
+            $action = null;
+
+            if (!empty($pass)) {
+                $action = array_shift($pass);
+            }
+            if (!is_null($action) && !in_array($action, $this->RestSurvey->allowedActions)) {
+                // actions require authentication
+                // if authentication is required, check for access token, and if it exists.
+                $this->autoRender = false;
+
+                $accessToken    = '';
+                if($this->request->is('post')) {
+                    $accessToken    = $this->data['SecurityRestSession']['access_token'];
+                    $confirm = $this->SecurityRestSession->find('first', array(
+                        'conditions' => array(
+                            'SecurityRestSession.access_token' => $accessToken,
+                        )
+                    ));
+                    if (count($confirm) != 1) {
+                        $json = array('message' => 'Missing Token');          
+                    } else {
+                        $json = array('message' => 'Valid Token');
+                    }
+                    echo json_encode($json);
+                }
+            }
+        }
+    }
 
 	public function survey() {
         $this->autoRender = false;
@@ -59,5 +90,104 @@ class RestController extends RestfulAppController {
         } else {
             return false;
         }
+    }
+        
+    public function auth() {
+
+        $this->autoRender = false;
+        
+
+        $username   = '';
+        $password   = '';
+        
+        // We check if request came from a post form (this is an assumption!)
+        if($this->request->is('post')) {
+            $this->Session->write('login.username', $username);
+            $this->Session->write('login.password', $password);
+            
+            // do the login..
+            $result = $this->Auth->login();
+            
+            
+        }
+        if (isset($result) && $result == true) {
+            
+            // get all the user details if login is successful.
+            $userID = $this->Auth->user('id');
+            $accessToken = sha1(time() . $userID);
+            $refreshToken = sha1(time());
+            $json = array('message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken);         
+            
+            // set the values, and save the data
+            $startDate = time() + 3600; // current time + one hour
+            $expiryTime = date('Y-m-d H:i:s', $startDate);
+            $saveData = array(
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
+                'expiry_date' => $expiryTime
+            );
+            
+            $this->SecurityRestSession->save($saveData);
+            
+            // return the json data
+            echo json_encode($json);
+            
+        } else {
+            
+            // if the login is wrong, show the error message.
+            $json = array('message' => 'failure');          
+            echo json_encode($json);
+        }
+    }
+    
+    public function token() {
+        $this->autoRender = false;
+        
+        $accessToken    = '';
+        $refreshToken   = '';
+    
+        if($this->request->is('post')) {
+            
+            $accessToken    = $this->data['SecurityRestSession']['access_token'];
+            $refreshToken   = $this->data['SecurityRestSession']['refresh_token'];
+            
+            $search = $this->SecurityRestSession->find('first', array(
+                'conditions' => array(
+                    'SecurityRestSession.access_token' => $accessToken,
+                    'SecurityRestSession.refresh_token' => $refreshToken
+                )
+            ));
+            
+            // check if the record actually exists. if it does, do the update, else just return fail.
+            // we check if the expiry time has already passed. if it has passed, return error.
+            if (count($search) == 1) {
+                $current    = time();
+                // strtotime might not be the cleanest way of doing it.
+                $expiry     = strtotime($search['SecurityRestSession']['expiry_date']);
+
+                if ($current < $expiry) {
+                    $userID     = $search['SecurityRestSession']['created_user_id'];
+                    $accessToken = sha1(time() . $userID);
+                    $startDate = time() + 3600; // current time + one hour
+                    $expiryTime = date('Y-m-d H:i:s', $startDate);
+
+                    $saveData = array(
+                        'access_token' => $accessToken,
+                        'expiry_date' => $expiryTime
+                    );
+
+                    $message = array('message' => 'success', 'access_token' => $accessToken);         
+
+                    $this->SecurityRestSession->id = $search['SecurityRestSession']['id'];
+                    $this->SecurityRestSession->save($saveData);
+
+                } else {
+                    throw new BadRequestException('Custom error message', 408);
+                }
+            } else {
+                $message = array('message' => 'failure');         
+            }
+            echo json_encode($message);
+        }        
     }
 }

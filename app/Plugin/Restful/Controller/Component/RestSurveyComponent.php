@@ -20,6 +20,8 @@ App::uses('Xml', 'Utility');
 
 class RestSurveyComponent extends Component {
 	private $controller;
+    
+    public $allowedActions = array('listing', 'schools', 'download');
 
 	public $components = array(
 		'Session', 'Message', 'Auth',
