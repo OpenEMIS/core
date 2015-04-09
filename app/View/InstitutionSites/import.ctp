@@ -5,6 +5,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Import Institutions'));
 $this->start('contentActions');
+	echo $this->Html->link($this->Label->get('general.download_template'), array('action' => 'importTemplate'), array('class' => 'divider'));
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index'), array('class' => 'divider'));
 $this->end();
 
@@ -17,7 +18,7 @@ $formOptions['id'] = $model;
 $formOptions['type'] = 'file';
 echo $this->Form->create($model, $formOptions);
 
-if(empty($data)):
+if(empty($uploadedName)):
 ?>
 <div class="form-group fileupload fileupload-new" data-provides="fileupload">
 	<label class="col-md-3 control-label"><?php echo __('Select Excel'); ?></label>
@@ -51,13 +52,15 @@ if(empty($data)):
 <?php 
 else:
 ?>
+<p><?php echo $uploadedName; ?></p>
 <p>Total Rows: <?php echo $totalRows; ?></p>
+<p>Total Rows Imported: <?php echo $totalSuccess; ?></p>
 <p>Total Validation Failed: <?php echo count($dataFailed); ?></p>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered table-sortable">
 		<thead>
 			<tr>
-<!--				<th><?php echo __('Error'); ?></th>-->
+				<th><?php echo __('Row Number'); ?></th>
 				<?php 
 				foreach($header as $col):
 					echo sprintf('<th>%s</th>', $col);
@@ -71,7 +74,7 @@ else:
 			foreach($dataFailed as $row):
 			?>
 			<tr>
-<!--				<td><?php echo __('Error'); ?></td>-->
+				<td><?php echo $row['row_number']; ?></td>
 				<?php 
 				foreach($row['data'] as $col):
 					echo sprintf('<td>%s</td>', $col);
@@ -91,11 +94,10 @@ endif;
 <div class="form-group">
 	<div class="col-md-offset-4">
 	<?php 
-	if(empty($data)){
+	if(empty($uploadedName)){
 		echo $this->Form->submit($this->Label->get('general.import'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left'));
 	}else{
-		echo $this->Form->submit($this->Label->get('general.proceed'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'import'), array('class' => 'btn_cancel btn_left'));
 	}
 	?>
