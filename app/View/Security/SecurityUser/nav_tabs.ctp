@@ -9,7 +9,7 @@ if (array_key_exists($model, $data)) {
 }
 $options = array(
 	'SecurityUser' => array(
-		'url' => array('controller' => 'Security', 'action' => 'SecurityUser'),
+		'url' => array('controller' => 'Security', 'action' => 'SecurityUser', 'view', $id),
 		'text' => __('General')
 	),
 	'SecurityUserLogin' => array(
