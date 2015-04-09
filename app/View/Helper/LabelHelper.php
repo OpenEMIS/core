@@ -109,7 +109,10 @@ class LabelHelper extends AppHelper {
 			'types' => 'Types',
 			'custom_fields' => 'Custom Fields',
 			'import' => 'Import',
-			'proceed' => 'Proceed'
+			'proceed' => 'Proceed',
+			'template' => 'Template',
+			'InstitutionSite' => 'Institution',
+			'download_template' => 'Download Template'
 		),
 		'date' => array(
 			'start' => 'Start Date',
