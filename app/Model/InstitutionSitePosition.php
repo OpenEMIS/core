@@ -245,8 +245,19 @@ class InstitutionSitePosition extends AppModel {
 			$this->recursive = 0;
 			$position = $this->findById($id);
 			$this->InstitutionSiteStaff->recursive = 0;
-			$staff = $this->InstitutionSiteStaff->findById($staffId);
-			
+			// $staff = $this->InstitutionSiteStaff->findById($staffId);
+
+			$staff = $this->InstitutionSiteStaff->find('first', 
+				array(
+					'contain' => array(
+						'Staff' => array('SecurityUser')
+					),
+					'conditions' => array(
+						'InstitutionSiteStaff.id' => $staffId
+					)
+				)
+			);
+
 			$startDate = $staff['InstitutionSiteStaff']['start_date'];
 			$endDate = $staff['InstitutionSiteStaff']['end_date'];
 			$staffFields = $this->InstitutionSiteStaff->getFields();
@@ -262,7 +273,7 @@ class InstitutionSitePosition extends AppModel {
 			$staffFields['staff_name']['type'] = 'disabled';
 			$staffFields['staff_name']['visible'] = true;
 			// pass the whole staff object to view so that we can use ModelHelper to show the name by its getName() 
-			$staffFields['staff_name']['value'] = $staff['Staff'];
+			$staffFields['staff_name']['value'] = $staff['Staff']['SecurityUser'];
 			
 			try {
 				$date = new DateTime($startDate);
