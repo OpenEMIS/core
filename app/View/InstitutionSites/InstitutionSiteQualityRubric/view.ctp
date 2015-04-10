@@ -60,7 +60,7 @@ echo $this->element($tabsElement, array(), array());
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteQualityRubric.staff_id') ?></div>
-	<div class="col-md-6"><?php echo $data['SecurityUser']['first_name'] . " " . $data['SecurityUser']['last_name']; ?></div>
+	<div class="col-md-6"><?php echo $data['Staff']['SecurityUser']['first_name'] . " " . $data['Staff']['SecurityUser']['last_name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteQualityRubric.rubric_sections') ?></div>
