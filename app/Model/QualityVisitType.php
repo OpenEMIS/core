@@ -18,7 +18,7 @@ App::uses('FieldOptionValue', 'Model');
 
 class QualityVisitType extends FieldOptionValue {
 	public $useTable = 'field_option_values';
-	public $hasMany = array('QualityInstitutionVisit');
+	public $hasMany = array('InstitutionSiteQualityVisit');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',

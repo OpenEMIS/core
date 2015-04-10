@@ -78,6 +78,16 @@ class Staff extends StaffAppModel {
 	public $validate = array(
 	);
 
+	public $virtualFields = array(
+	    'name' => 'CONCAT(Staff.first_name, " ", Staff.last_name)'
+	);
+
+	public function checkIfStringGotNoNumber($check) {
+		$check = array_values($check);
+		$check = $check[0];
+		return !preg_match('#[0-9]#',$check);
+	}
+
 	/* Excel Behaviour */
 	public function excelGetConditions() {
 		$conditions = array();

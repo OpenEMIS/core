@@ -9,6 +9,22 @@ $this->start('contentActions');
 $this->end();
 
 $this->start('contentBody');
+	if (isset($tabsElement)) {
+		if (empty($this->params['plugin'])) {
+			echo $this->element($tabsElement);
+		} else {
+			echo $this->element($tabsElement, array(), array('plugin' => $this->params['plugin']));
+		}
+	}
+
+	if (isset($controlsElement)) {
+		if (empty($this->params['plugin'])) {
+			echo $this->element($controlsElement);
+		} else {
+			echo $this->element($controlsElement, array(), array('plugin' => $this->params['plugin']));
+		}
+	}
+
 	echo $this->element('ControllerAction/index');
 $this->end();
 ?>
