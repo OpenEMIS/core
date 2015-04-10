@@ -21,18 +21,18 @@ class StaffController extends StaffAppController {
 	public $staffId;
 	public $staffObj;
 	public $uses = array(
+		'SecurityUser',
 		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteType',
-		'InstitutionSiteStaff',
-		'Staff.InstitutionSiteStaff',
 		'Staff.Staff',
 		'Staff.StaffActivity',
-		'Staff.StaffHistory',
 		'Staff.StaffCustomField',
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomValue',
 		'Staff.StaffAttendance',
+		'Staff.StaffLeave',
+		'Staff.StaffBehaviour',
 		'AcademicPeriod',
 		'ConfigItem',
 		'SalaryAdditionType',
@@ -40,14 +40,16 @@ class StaffController extends StaffAppController {
 		'TrainingCourse',
 		'Staff.StaffAttendanceType',
 		'InstitutionSiteStaffAbsence',
-		'Staff.StaffTrainingSelfStudy',
+		'Staff.StaffTrainingSelfStudy'
 	);
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
+		'ControllerAction',
 		'Paginator',
 		'FileUploader',
 		'Wizard',
-		'Activity' => array('model' => 'StaffActivity')
+		'Activity' => array('model' => 'StaffActivity'),
+		'Workflow2'
 	);
 	public $modules = array(
 		'healthHistory' => 'Staff.StaffHealthHistory',
@@ -58,22 +60,21 @@ class StaffController extends StaffAppController {
 		'healthTest' => 'Staff.StaffHealthTest',
 		'healthConsultation' => 'Staff.StaffHealthConsultation',
 		'health' => 'Staff.StaffHealth',
-		'specialNeed' => 'Staff.StaffSpecialNeed',
-		'award' => 'Staff.StaffAward',
+		'StaffSpecialNeed' => array('plugin' => 'Staff'),
+		'StaffAward' => array('plugin' => 'Staff'),
 		'membership' => 'Staff.StaffMembership',
 		'license' => 'Staff.StaffLicense',
 		'trainingNeed' => 'Staff.StaffTrainingNeed',
 		'trainingResult' => 'Staff.StaffTrainingResult',
 		'trainingSelfStudy' => 'Staff.StaffTrainingSelfStudy',
-		'contacts' => 'Staff.StaffContact',
-		'identities' => 'Staff.StaffIdentity',
-		'nationalities' => 'Staff.StaffNationality',
-		'languages' => 'Staff.StaffLanguage',
+		'StaffContact' => array('plugin' => 'Staff'),
+		'StaffIdentity' => array('plugin' => 'Staff'),
+		'StaffNationality' => array('plugin' => 'Staff'),
+		'StaffLanguage' => array('plugin' => 'Staff'),
 		'bankAccounts' => 'Staff.StaffBankAccount',
-		'comments' => 'Staff.StaffComment',
+		'StaffComment' => array('plugin' => 'Staff'),
 		'attachments' => 'Staff.StaffAttachment',
 		'qualifications' => 'Staff.StaffQualification',
-		'leaves' => 'Staff.StaffLeave',
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
 		'StaffSalary' => array('plugin' => 'Staff'),
@@ -83,7 +84,6 @@ class StaffController extends StaffAppController {
 		// new ControllerAction
 		'InstitutionSiteStaff',
 		'Position' => array('plugin' => 'Staff'),
-		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'StaffClass' => array('plugin' => 'Staff'),
 		'StaffSection' => array('plugin' => 'Staff')
 	);
@@ -146,7 +146,7 @@ class StaffController extends StaffAppController {
 			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$order = empty($this->params->named['sort']) ? array('Staff.first_name' => 'asc') : array();
+		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
 		$data = $this->Search->search($this->Staff, $conditions, $order);
 		$data = $this->Staff->attachLatestInstitutionInfo($data);
 		
@@ -245,18 +245,20 @@ class StaffController extends StaffAppController {
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
-		$this->Staff->recursive = 0;
+		$this->Staff->contain(array('SecurityUser' => array('Gender')));
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
-		$name = ModelHelper::getName($obj);
+		$name = ModelHelper::getName($data['SecurityUser']);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Staff.data', $obj);
+		$this->Session->write('Staff.user.data', $data['SecurityUser']);
+		$this->Session->write('Staff.security_user_id', $obj['security_user_id']);
 		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
 		$this->set('data', $data);
 	}
-	
+
 	public function add() {
 		$wizardOptions = array(
 			'exclude' => array(
@@ -269,76 +271,92 @@ class StaffController extends StaffAppController {
 	}
 
 	public function edit() {
-		$model = 'Staff';
+		$model = 'SecurityUser';
 		$id = null;
-		$addressAreaId = false;
-		$birthplaceAreaId = false;
-		$staffIdSession = $this->Session->read('Staff.id');
+
+		$staffIdSession = $this->Session->read('Staff.id');	
+
 		if (!empty($staffIdSession)) {
-			$id = $this->Session->read($model . '.id');
-			$this->Staff->id = $id;
 			$this->Navigation->addCrumb('Edit');
 		} else {
 			$this->Navigation->addCrumb('Add');
 			$this->bodyTitle = __('New Staff');
 		}
+		
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$addressAreaId = $this->request->data[$model]['address_area_id'];
-			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
-			
+			if (array_key_exists('Staff', $data)) {
+				if (array_key_exists('birthplace_area_id', $data['Staff'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
+					}
+					$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
+					unset($data['Staff']['birthplace_area_id']);
+				}
+				if (array_key_exists('address_area_id', $data['Staff'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
+					}
+					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
+					unset($data['Staff']['birthplace_area_id']);
+				}
+			}
+
 			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
 				unset($this->request->data['StaffIdentity']);
 				$data = $this->request->data;
-			} else {
-				if ($this->Staff->saveAll($data)) {
+			} else {				
+				if ($this->SecurityUser->saveAll($data)) {
 					$InstitutionSiteStaffModel = ClassRegistry::init('InstitutionSiteStaff');
 					$InstitutionSiteStaffModel->validator()->remove('search');
 					$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
-					
+
 					if ($this->Wizard->isActive()) {
+						$securityUserId = $this->SecurityUser->getLastInsertId();
+						$this->Staff->create();
+						$this->Staff->save(array('security_user_id' => $securityUserId));
 						if (is_null($id)) {
-							$this->Message->alert('general.add.success');
+							$this->Message->alert('Staff.add.success');
 							$id = $this->Staff->getLastInsertId();
-							$this->Session->write($model . '.id', $id);
+							$this->Session->write('Staff.id', $id);
 						}
-						
-						if(!empty($dataToSite)){
-							$dataToSite['staff_id'] = $id;
-							if (empty($staffIdSession)) {
-								$InstitutionSiteStaffModel->save($dataToSite);
-							}
+						$staffStatusId = $InstitutionSiteStaffModel->StaffStatus->getDefaultValue();
+						$dataToSite['staff_status_id'] = $staffStatusId;
+						$dataToSite['staff_id'] = $id;
+
+						if (empty($staffIdSession)) {
+							$InstitutionSiteStaffModel->save($dataToSite);
 						}
-						
-						$this->Session->write($model . '.data', $this->Staff->findById($id));
+
+						$this->Session->write('Staff.data', $this->Staff->findById($id));
+						$this->Session->write('Staff.security_user_id', $securityUserId);
 						// unset wizard so it will not auto redirect from WizardComponent
 						unset($this->request->data['wizard']['next']);
 						$this->Wizard->next();
 					} else {
-						if(!empty($dataToSite)){
-							$dataToSite['staff_id'] = $id;
-							if (empty($staffIdSession)) {
-								$InstitutionSiteStaffModel->save($dataToSite);
-							}
-						}
-						
 						$this->Message->alert('general.edit.success');
 						return $this->redirect(array('action' => 'view'));
 					}
-					
-					$this->Session->delete('InstitutionSiteStaff.addNew');
 				}
 			}
 		} else {
-			if (!empty($id)) {
-				$data = $this->Staff->findById($id);
+			if (!empty($staffIdSession)) {
+				$data = $this->Staff->findById($staffIdSession);
 				$this->request->data = $data;
-				$addressAreaId = $this->request->data['Staff']['address_area_id'];
-				$birthplaceAreaId = $this->request->data['Staff']['birthplace_area_id'];
 			}
 		}
-		$genderOptions = $this->Option->get('gender');
+
+		if (array_key_exists($model, $data)) {
+			if (array_key_exists('address_area_id', $data[$model])) {
+				$addressAreaId = $data[$model]['address_area_id'];
+			}
+			if (array_key_exists('birthplace_area_id', $data[$model])) {
+				$birthplaceAreaId = $data[$model]['birthplace_area_id'];	
+			}	
+		}
+
+		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('staff_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 
@@ -359,13 +377,13 @@ class StaffController extends StaffAppController {
 			$this->set('identityTypeOptions', $identityTypeOptions);
 		}
 
-		$this->set('autoid', $this->getUniqueID());
+		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model'=>'Staff')));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);
-		$this->set('addressAreaId', $addressAreaId);
-		$this->set('birthplaceAreaId', $birthplaceAreaId);
+		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
 
 	public function delete() {
@@ -383,7 +401,7 @@ class StaffController extends StaffAppController {
 	public function excel() {
 		$this->Staff->excel();
 	}
-
+	
 	// Staff ATTENDANCE PART
 	public function absence() {
 		$staffId = $this->Session->read('Staff.id');
@@ -461,37 +479,6 @@ class StaffController extends StaffAppController {
 			$academicPeriodId = key($academicPeriodList);
 		}
 		return $academicPeriodId;
-	}
-
-	public function getUniqueID() {
-		$generate_no = '';
-		$str = $this->Staff->find('first', array('order' => array('Staff.id DESC'), 'limit' => 1, 'fields' => 'Staff.id'));
-		$prefix = $this->ConfigItem->find('first', array('limit' => 1,
-			'fields' => 'ConfigItem.value',
-			'conditions' => array(
-				'ConfigItem.name' => 'staff_prefix'
-			)
-		));
-		$prefix = explode(",", $prefix['ConfigItem']['value']);
-
-		if ($prefix[1] > 0) {
-            $id = 0;
-            if (!empty($str)) {
-                $id = $str['Staff']['id'];
-            }
-            $id = $id + 1;
-			if (strlen($id) < 6) {
-				$str = str_pad($id, 6, "0", STR_PAD_LEFT);
-			}else{
-				$str = $id;
-			}
-			// Get two random number
-			$rnd1 = rand(0, 9);
-			$rnd2 = rand(0, 9);
-			$generate_no = $prefix[0] . $str . $rnd1 . $rnd2;
-		}
-
-		return $generate_no;
 	}
 
 	

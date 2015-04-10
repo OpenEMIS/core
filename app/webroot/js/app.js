@@ -211,7 +211,31 @@ var jsForm = {
 	goto: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url');
 	},
-	
+
+	autocomplete: function(obj) {
+		if (!jQuery.ui) {
+			$.getScript( getRootURL()+"js/jquery-ui.min.js", function( data, textStatus, jqxhr ) {
+			  $('head').append( $('<link rel="stylesheet" type="text/css" />').attr('href', 'your stylesheet url') );
+				console.log( "jquery-ui.min was loaded." );
+				var href = getRootURL()+"css/jquery-ui.min.css";
+				var cssLink = $("<link rel='stylesheet' type='text/css' href='"+href+"'>");
+				$("head").append(cssLink); 
+				
+				jsForm.attachAutocomplete(obj);
+			});
+		} else {
+			jsForm.attachAutocomplete(obj);
+		}
+	},
+
+	attachAutocomplete: function(obj) { 
+		var url = getRootURL()+$(obj).attr('autocompleteURL');
+		$(obj).autocomplete({
+			source: url,
+			minLength: 2,
+		});
+	},
+
 	change: function(obj, trailingSlash) {
 		var url = getRootURL() + $(obj).attr('url');
 		if(trailingSlash!=undefined && trailingSlash == false) {
@@ -635,6 +659,19 @@ var jsForm = {
 				}
 			});
 		});
+	},
+
+	doCopy: function(src, target){
+		src.find(':input[type=hidden][data-field]').each(function(){
+			var srcName = $(this).attr('data-field');
+			var srcValue = $(this).val();
+			target.find(':input[data-field]').each(function(){
+				var targetName = $(this).attr('data-field');
+				if(srcName == targetName) {
+					$(this).val(srcValue);
+				}
+			});
+		});
 	}
 };
 
@@ -761,5 +798,3 @@ var utils = {
 		w.print();
 	}
 }
-
-

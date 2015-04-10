@@ -61,7 +61,7 @@ class SecurityGroupUser extends AppModel {
 	public function getUsers($groupId) {
 		$roles = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),		
+			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),		
 			'joins' => array(
 				array(
 					'table' => 'security_roles',
@@ -213,4 +213,31 @@ class SecurityGroupUser extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function getUserInstitutionSites($userId){
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'InstitutionSite.id'
+			),
+			'joins' => array(
+				array(
+					'table' => 'security_group_institution_sites',
+					'alias' => 'SecurityGroupInstitutionSite',
+					'conditions' => array('SecurityGroupInstitutionSite.security_group_id = SecurityGroupUser.security_group_id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = SecurityGroupInstitutionSite.institution_site_id')
+				)
+			),
+			'conditions' => array(
+				'SecurityGroupUser.security_user_id' => $userId
+			)
+		));
+		
+		return $list;
+	}
+	
 }

@@ -135,7 +135,7 @@ class InstitutionSiteStaffAttendance extends AppModel {
 			//$staffName = sprintf('%s %s %s', $staffObj['first_name'], $staffObj['middle_name'], $staffObj['last_name']);
 
 			$row = array();
-			$row[] = $staffObj['identification_no'];
+			$row[] = $staffObj['openemis_no'];
 			$row[] = $staffObj['first_name'];
 			$row[] = $staffObj['last_name'];
 

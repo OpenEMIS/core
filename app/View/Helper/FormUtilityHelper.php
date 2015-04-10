@@ -131,7 +131,7 @@ class FormUtilityHelper extends AppHelper {
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
-			'value' => isset($_options['data-date'])?$_options['data-date']:date('d-m-Y')
+			'value' => (isset($_options['data-date']) && $_options['data-date']!='')?$_options['data-date']:date('d-m-Y')
 		);
 		$inputOptions = array_merge($_options, $inputOptions);
 
@@ -141,8 +141,9 @@ class FormUtilityHelper extends AppHelper {
 		if($disabled !== false) {
 			$inputOptions['disabled'] = $disabled;
 		}
+
 		$html = $this->Form->input($field, $inputOptions);
-	
+		
 		$_datepickerOptions = array();
 		$_datepickerOptions['id'] = $_options['id'];
 		if(!empty($_options['startDate'])){

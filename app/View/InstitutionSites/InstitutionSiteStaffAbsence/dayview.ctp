@@ -4,7 +4,9 @@ $this->assign('contentHeader', __('Attendance') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
 echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $academicPeriodId, $weekId), array('class' => 'divider'));
-echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $academicPeriodId, $weekId, $dayId), array('class' => 'divider'));
+if ($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $academicPeriodId, $weekId, $dayId), array('class' => 'divider'));
+}
 $this->end();
 
 $this->start('contentBody');
@@ -30,10 +32,10 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($staffList as $staff):
 				$staffObj = $staff['Staff'];
 				$staffId = $staffObj['id'];
-				$staffName = $this->Model->getName($staffObj);
+				$staffName = $this->Model->getName($staff['SecurityUser']);
 				?>
 				<tr>
-					<td><?php echo $staffObj['identification_no']; ?></td>
+					<td><?php echo $staff['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $staffName; ?></td>
 					<?php
 					if (isset($absenceCheckList[$staffId][$selectedDateDigit])) {

@@ -14,7 +14,7 @@
 			<tbody>
 				<?php foreach ($current as $i => $obj) : ?>
 				<tr>
-					<td><?php echo $obj['Staff']['identification_no'] ?></td>
+					<td><?php echo $obj['SecurityUser']['openemis_no'] ?></td>
 					<td>
 						<?php 
 						$name = $this->Model->getName($obj['Staff']);

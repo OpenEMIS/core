@@ -160,7 +160,7 @@ class InstitutionSitePosition extends AppModel {
 		if ($this->action == 'view') {
 			$id = $this->controller->viewVars['data'][$this->alias]['id'];
 			$fields = array(
-				'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name',
+				'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name',
 				'InstitutionSiteStaff.id', 'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date',
 				'InstitutionSiteStaff.FTE', 'StaffStatus.name'
 			);

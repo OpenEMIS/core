@@ -18,7 +18,7 @@
 class RubricsTemplateHeader extends QualityAppModel {
 
     //public $useTable = 'rubrics';
-    public $actsAs = array('ControllerAction', 'Reorder');
+    public $actsAs = array('ControllerAction', 'Reorder' => array('parentKey' => 'rubric_template_id'));
     public $belongsTo = array(
         //'Student',
         'RubricsTemplate' => array(

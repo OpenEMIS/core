@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationLevel extends AppModel {
-	public $actsAs = array('ControllerAction2', 'Reorder');
+	public $actsAs = array('ControllerAction2', 'Reorder' => array('parentKey' => 'education_system_id'));
 	public $belongsTo = array(
 		'EducationSystem',
 		'EducationLevelIsced',
@@ -219,15 +219,50 @@ class EducationLevel extends AppModel {
 	}
 
 	public function getOptions() {
-		$this->contain('EducationSystem');
 		$list = $this->find('list', array(
+			'contain' => 'EducationSystem',
 			'fields' => array(
 				'EducationLevel.id', 'EducationLevel.system_level_name'
 			),
 			'order' => array(
 				'EducationSystem.order', 'EducationLevel.order'
+			),
+			'conditions' => array(
+				'EducationLevel.visible' => 1,
+				'EducationSystem.visible' => 1
 			)
 		));
+		if (empty($list)) {
+   			$list = array('0' => __('-- No Data --'));
+   		}
+
+		$hidden = array();
+		$buffer = $this->find('list', array(
+			'contain' => 'EducationSystem',
+			'fields' => array(
+				'EducationLevel.id', 'EducationLevel.system_level_name'
+			),
+			'order' => array(
+				'EducationSystem.order', 'EducationLevel.order'
+			),
+			'conditions' => array(
+				'OR' => array(
+					'EducationSystem.visible' => 0,
+					'EducationLevel.visible' => 0
+				)
+			)
+		));
+		foreach ($buffer as $k => $v) {
+			$hidden[$k] = array(
+				'name'=>$v,
+				'value'=>$k,
+				'disabled' => '1'
+			);
+		}
+		if (count($hidden) > 0) {
+			$key = __('Disabled Education Level');
+			$list[$key] = $hidden;
+		}
 		
 		return $list;
 	}

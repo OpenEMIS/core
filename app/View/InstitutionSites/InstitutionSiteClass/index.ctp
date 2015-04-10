@@ -36,7 +36,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteClass/controls', array()
 					if (!empty($obj[$model]['InstitutionSiteClassStaff'])) {
 						foreach ($obj[$model]['InstitutionSiteClassStaff'] as $staff) {
 							if($staff['status'] == 1) {
-								array_push($staffNames, ModelHelper::getName($staff['Staff']));
+								array_push($staffNames, ModelHelper::getName($staff['Staff']['SecurityUser']));
 							}
 						}
 					}

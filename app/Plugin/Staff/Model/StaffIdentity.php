@@ -15,14 +15,15 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffIdentity extends StaffAppModel {
+	public $useTable = 'user_identities';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction', 
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
+		'ControllerAction2', 
 		'DatePicker' => array('issue_date', 'expiry_date')
 	);
 
 	public $belongsTo = array(
-		'Staff.Staff',
+		'SecurityUser',
 		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -78,98 +79,34 @@ class StaffIdentity extends StaffAppModel {
 		return true;
 	}
 
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'IdentityType', 'labelKey' => 'general.type'),
-				array('field' => 'number'),
-				array('field' => 'issue_date'),
-				array('field' => 'expiry_date'),
-				array('field' => 'issue_location', 'labelKey' =>'Identities.issue_location'),
-				array('field' => 'comments'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-
-	public function identities($controller, $params) {
-		$controller->Navigation->addCrumb(__('Identities'));
-		$header = __('Identities');
-		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser','CreatedUser')));
-		$staffId = $controller->Session->read('Staff.id');
-		$data = $this->findAllByStaffId($staffId);
-		$controller->set(compact('header', 'data'));
-	}
-
-	public function identitiesAdd($controller, $params) {
-		$controller->Navigation->addCrumb(__('Add Identity'));
-		$header = __('Add Identity');
-		if ($controller->request->is(array('post', 'put'))) {
-			$data = $controller->request->data[$this->alias];
-
-			$this->create();
-			$data['staff_id'] = $controller->Session->read('Staff.id');
-
-			if ($this->save($data)) {
-				$id = $this->getLastInsertId();
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'identities'));
-			}
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Staff.security_user_id')) {
+			$id = CakeSession::read('Staff.security_user_id');
+			$conditions = array($this->alias.'.security_user_id' => $id);
 		}
-		$identityTypeOptions = $this->IdentityType->getList(array('value' => 0));
-		$controller->set('identityTypeOptions', $identityTypeOptions);
-
-		$controller->set(compact('header', 'identityTypeOptions'));
+		return $conditions;
 	}
+	/* Excel Behaviour */
 
-	public function identitiesView($controller, $params) {
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0; //Identity Id
-		
-		$controller->Navigation->addCrumb(__('Identity Details'));
-		$header = __('Identity Details');
-		$data = $this->findById($id);
-
-		if (empty($data)) {
-			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action' => 'identities'));
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Staff.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
 		}
+		$this->Navigation->addCrumb(__('Identities'));
 
-		$controller->Session->write('StaffIdentity.id', $id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('data', 'header', 'fields', 'id'));
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Staff.security_user_id');
+		$this->fields['identity_type_id']['type'] = 'select';
+		$this->fields['identity_type_id']['options'] = $this->IdentityType->getList();
 	}
 
-	public function identitiesEdit($controller, $params) {
-		$controller->Navigation->addCrumb(__('Edit Identity'));
-		$header = 'Edit Identity';
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0; // <<--- Identity Id
-		$data = $this->findById($id);
-
-		if ($controller->request->is(array('post', 'put'))) {
-			$identityData = $controller->request->data[$this->alias];
-			$identityData['staff_id'] = $controller->Session->read('Staff.id');
-
-			if ($this->save($identityData)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'identitiesView', $id));
-			}
-		} else {
-			if (empty($data)) {
-				return $controller->redirect(array('action' => 'identities'));
-			}
-			$controller->request->data = $data;
-		}
-		$identityTypeOptions = $this->IdentityType->getList(array('value' => $data['StaffIdentity']['identity_type_id']));
-		$controller->set(compact('id', 'header', 'identityTypeOptions'));
-	}
-
-	public function identitiesDelete($controller, $params) {
-		return $this->remove($controller, 'identities');
+	public function index() {
+		$userId = $this->Session->read('Staff.security_user_id');
+		$this->contain(array('IdentityType' => array('id', 'name')));
+		$data = $this->findAllBySecurityUserId($userId);
+		$this->setVar(compact('data'));
 	}
 }

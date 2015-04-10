@@ -15,14 +15,15 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentIdentity extends StudentsAppModel {
+	public $useTable = 'user_identities';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction',
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
+		'ControllerAction2',
 		'DatePicker' => array('issue_date', 'expiry_date')
 	);
 
 	public $belongsTo = array(
-		'Students.Student',
+		'SecurityUser',
 		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -33,6 +34,8 @@ class StudentIdentity extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
+
+	// please note that this is being used in student and staff add; validator()->remove('issue_location') for partial validation insertion
 	public $validate = array(
 		'identity_type_id' => array(
 			'ruleRequired' => array(
@@ -78,98 +81,34 @@ class StudentIdentity extends StudentsAppModel {
 		return true;
 	}
 
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'IdentityType', 'labelKey' => 'general.type'),
-				array('field' => 'number'),
-				array('field' => 'issue_date'),
-				array('field' => 'expiry_date'),
-				array('field' => 'issue_location', 'labelKey' =>'Identities.issue_location'),
-				array('field' => 'comments'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-
-	public function identities($controller, $params) {
-		$controller->Navigation->addCrumb(__('Identities'));
-		$header = __('Identities');
-		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
-		$studentId = $controller->Session->read('Student.id');
-		$data = $this->find('all', array('conditions' => array('StudentIdentity.student_id' => $studentId)));
-		$controller->set(compact('header', 'data'));
-	}
-
-	public function identitiesAdd($controller, $params) {
-		$controller->Navigation->addCrumb(__('Add Identity'));
-		$header = __('Add Identity');
-		if ($controller->request->is(array('post', 'put'))) {
-			$data = $controller->request->data[$this->alias];
-
-			$this->create();
-			$data['student_id'] = $controller->Session->read('Student.id');
-
-			if ($this->save($data)) {
-				$id = $this->getLastInsertId();
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'identities'));
-			}
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Student.security_user_id')) {
+			$id = CakeSession::read('Student.security_user_id');
+			$conditions = array($this->alias.'.security_user_id' => $id);
 		}
-		$identityTypeOptions = $this->IdentityType->getList(array('value' => 0));
-		$controller->set('identityTypeOptions', $identityTypeOptions);
-
-		$controller->set(compact('header', 'identityTypeOptions'));
+		return $conditions;
 	}
+	/* End Excel Behaviour */
 
-	public function identitiesView($controller, $params) {
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0; //Identity Id
-		
-		$controller->Navigation->addCrumb(__('Identity Details'));
-		$header = __('Identity Details');
-		$data = $this->findById($id);
-
-		if (empty($data)) {
-			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action' => 'identities'));
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Student.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
 		}
+		$this->Navigation->addCrumb(__('Identities'));
 
-		$controller->Session->write('StudentIdentity.id', $id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('data', 'header', 'fields', 'id'));
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Student.security_user_id');
+		$this->fields['identity_type_id']['type'] = 'select';
+		$this->fields['identity_type_id']['options'] = $this->IdentityType->getList();
 	}
 
-	public function identitiesEdit($controller, $params) {
-		$controller->Navigation->addCrumb(__('Edit Identity'));
-		$header = 'Edit Identity';
-		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0; // <<--- Identity Id
-		$data = $this->findById($id);
-
-		if ($controller->request->is(array('post', 'put'))) {
-			$identityData = $controller->request->data[$this->alias];
-			$identityData['student_id'] = $controller->Session->read('Student.id');
-
-			if ($this->save($identityData)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'identitiesView', $id));
-			}
-		} else {
-			if (empty($data)) {
-				return $controller->redirect(array('action' => 'identities'));
-			}
-			$controller->request->data = $data;
-		}
-		$identityTypeOptions = $this->IdentityType->getList(array('value' => $data['StudentIdentity']['identity_type_id']));
-		$controller->set(compact('id', 'header', 'identityTypeOptions'));
-	}
-
-	public function identitiesDelete($controller, $params) {
-		return $this->remove($controller, 'identities');
+	public function index() {
+		$userId = $this->Session->read('Student.security_user_id');
+		$this->contain(array('IdentityType' => array('id', 'name')));
+		$data = $this->findAllBySecurityUserId($userId);
+		$this->setVar(compact('data'));
 	}
 }

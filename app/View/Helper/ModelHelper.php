@@ -73,7 +73,7 @@ class ModelHelper extends AppHelper {
 				}
 			}
 		}
-		return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['identification_no'], $name)) : trim(sprintf('%s', $name));
+		return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['openemis_no'], $name)) : trim(sprintf('%s', $name));
 	}
 
 	public static function getNameWithHistory($obj, $options=array()){
@@ -93,7 +93,7 @@ class ModelHelper extends AppHelper {
 				}
 			}
 		}
-		return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['identification_no'], $name)) : trim(sprintf('%s', $name));
+		return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['openemis_no'], $name)) : trim(sprintf('%s', $name));
 	}
 
 	public function getGender($gender) {

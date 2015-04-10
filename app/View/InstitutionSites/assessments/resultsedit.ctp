@@ -60,8 +60,8 @@ echo $this->Form->create($model, $formOptions);
 				echo $this->Form->hidden($i . '.student_id', array('value' => $obj['Student']['id']));
 				echo $this->Form->hidden($i . '.academic_period_id', array('value' => $obj['InstitutionSiteClass']['academic_period_id']));
 				?>
-				<td class="middle"><?php echo $obj['Student']['identification_no']; ?></td>
-				<td class="middle"><?php echo $this->Model->getName($obj['Student']); ?></td>
+				<td class="middle"><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
+				<td class="middle"><?php echo $this->Model->getName($obj['SecurityUser']); ?></td>
 				<td class="input">
 					<?php
 					echo $this->Form->input($i . '.marks', array(
