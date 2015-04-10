@@ -45,7 +45,11 @@ $this->start('contentBody');
 	echo $this->Form->create($model, $formOptions);
 	echo $this->element('edit');
 	echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => $actionParams));
+	if (isset($WizardMode) && $WizardMode) {
+		echo $this->FormUtility->getWizardButtons($WizardButtons);
+	} else {
+		echo $this->FormUtility->getFormButtons(array('cancelURL' => $actionParams));
+	}
 	echo $this->Form->end();
 $this->end();
 ?>

@@ -15,19 +15,19 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 		<tr>
         <th class="cell_code">
                 <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
-                <span class="icon_sort_<?php echo ($sortedcol =='Staff.identification_no')?$sorteddir:'up'; ?>"  order="Staff.identification_no"></span>
+                <span class="icon_sort_<?php echo ($sortedcol =='SecurityUser.openemis_no')?$sorteddir:'up'; ?>"  order="SecurityUser.openemis_no"></span>
         </th>
         <th class="cell_code">
             <span class="left"><?php echo __('Name'); ?></span>
-            <span class="icon_sort_<?php echo ($sortedcol =='Staff.first_name')?$sorteddir:'up'; ?>" order="Staff.first_name"></span>
+            <span class="icon_sort_<?php echo ($sortedcol =='SecurityUser.first_name')?$sorteddir:'up'; ?>" order="SecurityUser.first_name"></span>
         </th>
         <th class="cell_code">
             <span class="left"><?php echo __('Gender'); ?></span>
-            <span class="icon_sort_<?php echo ($sortedcol =='Staff.gender')?$sorteddir:'up'; ?>" order="Staff.gender"></span>
+            <span class="icon_sort_<?php echo ($sortedcol =='SecurityUser.gender')?$sorteddir:'up'; ?>" order="SecurityUser.gender"></span>
         </th>
         <th class="cell_code">
             <span class="left"><?php echo __('Date of Birth'); ?></span>
-            <span class="icon_sort_<?php echo ($sortedcol =='Staff.date_of_birth')?$sorteddir:'up'; ?>" order="Staff.date_of_birth"></span>
+            <span class="icon_sort_<?php echo ($sortedcol =='SecurityUser.date_of_birth')?$sorteddir:'up'; ?>" order="SecurityUser.date_of_birth"></span>
         </th>
 </tr> 
     </thead>
@@ -38,7 +38,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
         $ctr = 1;
         foreach ($staff as $arrItems):
             $id = $arrItems['Staff']['id'];
-            $identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
+            $identificationNo = $this->Utility->highlight($searchField, $arrItems['SecurityUser']['openemis_no']);
             $name = $this->Utility->highlight($search, $this->Model->getNameWithHistory($arrItems['Staff']));
             $name = $this->Html->link($name, array('action' => 'view', $id), array('escape' => false));
             $gender = $arrItems['Staff']['gender'];

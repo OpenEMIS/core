@@ -29,7 +29,7 @@ class CensusStaff extends AppModel {
 	public $belongsTo = array(
 		'AcademicPeriod',
 		'Gender' => array(
-			'className' => 'FieldOptionValue',
+			'className' => 'Gender',
 			'foreignKey' => 'gender_id'
 		),
 		'InstitutionSite',

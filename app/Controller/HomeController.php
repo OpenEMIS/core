@@ -27,9 +27,6 @@ class HomeController extends AppController {
 			'Staff' => 'staff'
 		),
 		'Edited' => array(
-			'InstitutionSiteHistory' => 'institution_site_history',
-			'StudentHistory' => 'student_history',
-			'StaffHistory' => 'staff_history'
 		)
 	);
 	public $uses = array(
@@ -38,9 +35,6 @@ class HomeController extends AppController {
 		'InstitutionSite',
 		'Students.Student',
 		'Staff.Staff',
-		'InstitutionSiteHistory',
-		'Students.StudentHistory',
-		'Staff.StaffHistory',
 		'InstitutionSiteStudent',
 		'InstitutionSiteStaff',
 		'AcademicPeriod',
@@ -213,7 +207,7 @@ class HomeController extends AppController {
 				$tableName = str_ireplace('history','', $tableName);
 				$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
 				$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
-				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['su']['first_name'].' '.$vrec['su']['last_name'];
 				$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
 			}
 		}

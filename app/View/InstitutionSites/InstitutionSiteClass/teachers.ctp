@@ -26,11 +26,23 @@
 					echo $this->Form->hidden("InstitutionSiteClassStaff.$i.status", array('value' => 1));
 
 					foreach ($obj['Staff'] as $field => $value) {
-						echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.$field", array('value' => $value));
+						if (!is_array($value)) {
+							echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.$field", array('value' => $value));
+						}	
+					}
+					foreach ($obj['Staff']['SecurityUser'] as $field => $value) {
+						if (!is_array($value)) {
+							echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.SecurityUser.$field", array('value' => $value));
+						}	
+					}
+					foreach ($obj['Staff']['SecurityUser']['Gender'] as $field => $value) {
+						if (!is_array($value)) {
+							echo $this->Form->hidden("InstitutionSiteClassStaff.$i.Staff.SecurityUser.Gender.$field", array('value' => $value));
+						}	
 					}
 					?>
-					<td><?php echo $obj['Staff']['identification_no']; ?></td>
-					<td><?php echo ModelHelper::getName($obj['Staff']) ?></td>
+					<td><?php echo $obj['Staff']['SecurityUser']['openemis_no']; ?></td>
+					<td><?php echo ModelHelper::getName($obj['Staff']['SecurityUser']) ?></td>
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>
 				</tr>
 			<?php 

@@ -28,7 +28,7 @@ echo $this->element('../InstitutionSites/InstitutionSiteSection/controls_index',
 			<?php foreach ($data as $i => $obj) : ?>
 				<tr>
 					<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'InstitutionSiteSection', 'view', $obj[$model]['id']), array('escape' => false)); ?></td>
-					<td><?php echo ModelHelper::getName($obj['Staff']); ?></td>
+					<td><?php echo ModelHelper::getName($obj['Staff']['SecurityUser']); ?></td>
 					<td class="cell-number"><?php echo !empty($obj[$model]['gender']['M']) ? $obj[$model]['gender']['M'] : 0; ?></td>
 					<td class="cell-number"><?php echo !empty($obj[$model]['gender']['F']) ? $obj[$model]['gender']['F'] : 0; ?></td>
 					<td class="cell-number">
