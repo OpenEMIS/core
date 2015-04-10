@@ -20,11 +20,13 @@ class StudentsController extends StudentsAppController {
 	public $name = 'Students';
 	public $studentId;
 	public $uses = array(
+		'SecurityUser',
 		'AreaAdministrative',
 		'InstitutionSite',
 		'InstitutionSiteClass',
 		'InstitutionSiteType',
 		'InstitutionSiteStudentAbsence',
+		'InstitutionSiteSectionStudent',
 		'InstitutionSiteClassStudent',
 		'Students.Student',
 		'Students.StudentActivity',
@@ -33,12 +35,14 @@ class StudentsController extends StudentsAppController {
 		'Students.StudentCustomValue',
 		'Students.StudentAssessment',
 		'Students.StudentAttendanceType',
+		'Students.Programme',
 		'AcademicPeriod',
 		'ConfigItem'
 	);
 	
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
+		'ControllerAction',
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'Students.StudentAttachment',
@@ -60,21 +64,20 @@ class StudentsController extends StudentsAppController {
 		'healthTest' => 'Students.StudentHealthTest',
 		'healthConsultation' => 'Students.StudentHealthConsultation',
 		'health' => 'Students.StudentHealth',
-		'specialNeed' => 'Students.StudentSpecialNeed',
-		'award' => 'Students.StudentAward',
+		'StudentSpecialNeed' => array('plugin' => 'Students'),
+		'StudentAward' => array('plugin' => 'Students'),
 		'bankAccounts' => 'Students.StudentBankAccount',
-		'comments' => 'Students.StudentComment',
-		'contacts' => 'Students.StudentContact',
+		'StudentComment' => array('plugin' => 'Students'),
+		'StudentContact' => array('plugin' => 'Students'),
 		'extracurricular' => 'Students.StudentExtracurricular',
-		'identities' => 'Students.StudentIdentity',
-		'languages' => 'Students.StudentLanguage',
-		'nationalities' => 'Students.StudentNationality',
+		'StudentIdentity' => array('plugin' => 'Students'),
+		'StudentLanguage' => array('plugin' => 'Students'),
+		'StudentNationality' => array('plugin' => 'Students'),
 		'attachments' =>'Students.StudentAttachment',
 		'guardians' => 'Students.StudentGuardian',
 		'additional' => 'Students.StudentCustomField',
 		// new ControllerAction
 		'InstitutionSiteStudent',
-		'Programme' => array('plugin' => 'Students'),
 		'StudentFee' => array('plugin' => 'Students'),
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'Absence' => array('plugin' => 'Students'),
@@ -89,7 +92,6 @@ class StudentsController extends StudentsAppController {
 		$actions = array('index', 'advanced');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Students');
-			//$this->Session->delete('Student');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
 			$studentId = $this->Session->read('Student.id');
@@ -139,7 +141,7 @@ class StudentsController extends StudentsAppController {
 			'defaultIdentity' => $defaultIdentity['IdentityType']['id']
 		);
 
-		$order = empty($this->params->named['sort']) ? array('Student.first_name' => 'asc') : array();
+		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
 		$data = $this->Search->search($this->Student, $conditions, $order);
 		$data = $this->Student->attachLatestInstitutionInfo($data);
 		
@@ -240,17 +242,21 @@ class StudentsController extends StudentsAppController {
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
+		$this->Student->contain(array('SecurityUser' => array('Gender')));
 		$data = $this->Student->findById($id);
+		
 		$obj = $data['Student'];
-		$name = ModelHelper::getName($obj);
+		$name = ModelHelper::getName($data['SecurityUser']);
 		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Student.data', $obj);
+		$this->Session->write('Student.user.data', $data['SecurityUser']);
+		$this->Session->write('Student.security_user_id', $obj['security_user_id']);
 		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
 		$this->set('data', $data);
 	}
-	
+
 	public function add() {
 		$wizardOptions = array(
 			'exclude' => array(
@@ -261,75 +267,97 @@ class StudentsController extends StudentsAppController {
 		$this->Wizard->start($wizardOptions);
 		return $this->redirect(array('action' => 'edit'));
 	}
-	
+
 	public function edit() {
-		$model = 'Student';
+		$model = 'SecurityUser';
 		$id = null;
-		$addressAreaId = false;
-		$birthplaceAreaId = false;
-		$studentIdSession = $this->Session->read('Student.id');
+
+		$studentIdSession = $this->Session->read('Student.id');	
+
 		if (!empty($studentIdSession)) {
-			$id = $this->Session->read($model . '.id');
-			$this->Student->id = $id;
 			$this->Navigation->addCrumb('Edit');
 		} else {
 			$this->Navigation->addCrumb('Add');
 			$this->bodyTitle = __('New Student');
 		}
+		
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
-			$addressAreaId = $this->request->data[$model]['address_area_id'];
-			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
+			if (array_key_exists('Student', $data)) {
+				if (array_key_exists('birthplace_area_id', $data['Student'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
+					}
+					$data[$model]['birthplace_area_id'] = $data['Student']['birthplace_area_id'];
+					unset($data['Student']['birthplace_area_id']);
+				}
+				if (array_key_exists('address_area_id', $data['Student'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
+					}
+					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
+					unset($data['Student']['birthplace_area_id']);
+				}
+			}
 
 			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
 				unset($this->request->data['StudentIdentity']);
-				$data = $this->request->data;
 			} else {
-				if ($this->Student->saveAll($data)) {
+				if ($this->SecurityUser->saveAll($data)) {
 					$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
 					$InstitutionSiteStudentModel->validator()->remove('search');
 					$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
-					
+
 					if ($this->Wizard->isActive()) {
+						$securityUserId = $this->SecurityUser->getLastInsertId();
+						$this->Student->create();
+						$this->Student->save(array('security_user_id' => $securityUserId));
 						if (is_null($id)) {
-							$this->Message->alert($model . '.add.success');
+							$this->Message->alert('Student.add.success');
 							$id = $this->Student->getLastInsertId();
-							$this->Session->write($model . '.id', $id);
+							$this->Session->write('Student.id', $id);
 						}
 						$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
 						$dataToSite['student_status_id'] = $studentStatusId;
 						$dataToSite['student_id'] = $id;
+
 						if (empty($studentIdSession)) {
+							$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
 							$InstitutionSiteStudentModel->save($dataToSite);
 						}
 
-						$this->Session->write($model . '.data', $this->Student->findById($id));
+						$this->Session->write('Student.data', $this->Student->findById($id));
+						$this->Session->write('Student.security_user_id', $securityUserId);
 						// unset wizard so it will not auto redirect from WizardComponent
 						unset($this->request->data['wizard']['next']);
 						$this->Wizard->next();
 					} else {
-						$dataToSite['student_id'] = $id;
-						if (empty($studentIdSession)) {
-							$InstitutionSiteStudentModel->save($dataToSite);
-						}
-						
 						$this->Message->alert('general.edit.success');
 						return $this->redirect(array('action' => 'view'));
 					}
 					
 					$this->Session->delete('InstitutionSiteStudent.addNew');
-				} 
+	
+				}
 			}
 		} else {
-			if (!empty($id)) {
-				$data = $this->Student->findById($id);
+			if (!empty($studentIdSession)) {
+				$data = $this->Student->findById($studentIdSession);
 				$this->request->data = $data;
-				$addressAreaId = $this->request->data[$model]['address_area_id'];
-				$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			}
 		}
-		$genderOptions = $this->Option->get('gender');
+
+		if (array_key_exists($model, $data)) {
+			if (array_key_exists('address_area_id', $data[$model])) {
+				$addressAreaId = $data[$model]['address_area_id'];
+			}
+			if (array_key_exists('birthplace_area_id', $data[$model])) {
+				$birthplaceAreaId = $data[$model]['birthplace_area_id'];	
+			}	
+		}
+
+		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('student_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 
@@ -350,13 +378,13 @@ class StudentsController extends StudentsAppController {
 			$this->set('identityTypeOptions', $identityTypeOptions);
 		}
 		
-		$this->set('autoid', $this->getUniqueID());
+		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model' => 'Student')));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', $model);
-		$this->set('addressAreaId', $addressAreaId);
-		$this->set('birthplaceAreaId', $birthplaceAreaId);
+		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
 
 	public function classes() {

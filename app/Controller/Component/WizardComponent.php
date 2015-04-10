@@ -177,16 +177,18 @@ class WizardComponent extends Component {
 	
 	public function getAllActions($module=null){
 		$data = $this->getLinks($module);
-		
 		$actions = array();
 		foreach($data AS $arr){
-			if($arr['Navigation']['action'] != 'additional'){
-				$actions[] = $arr['Navigation']['action'] . 'Add';
+			if (!in_array($arr['Navigation']['action'], array('additional', 'attachments'))) {
+				$actions[] = $arr['Navigation']['action'] . '/add';
 			}else{
-				$actions[] = $arr['Navigation']['action'] . 'Edit';
+				if ($arr['Navigation']['action'] == 'additional')  {
+					$actions[] = $arr['Navigation']['action'] . 'Edit';
+				} else {
+					$actions[] = $arr['Navigation']['action'] . 'Add';
+				}
 			}
 		}
-		
 		return $actions;
 	}
 	
@@ -342,11 +344,15 @@ class WizardComponent extends Component {
 		} else if ($index == -1) {
 			$url['action'] = $navigation['action'];
 		} else {
-			if($navigation['action'] != 'additional'){
-				$url['action'] = $navigation['action'] . ucfirst($action);
+			if (!in_array($navigation['action'], array('additional', 'attachments'))) {
+				$url['action'] = $navigation['action'] . '/' . $action;
 			}else{
-				$url['action'] = $navigation['action'] . 'Edit';
-			}	
+				if ($navigation['action'] == 'additional')  {
+					$url['action'] = $navigation['action'] . 'Edit';
+				} else {
+					$url['action'] = $navigation['action'] . 'Add';
+				}
+			}
 		}
 		return $url;
 	}

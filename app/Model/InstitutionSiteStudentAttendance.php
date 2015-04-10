@@ -143,7 +143,7 @@ class InstitutionSiteStudentAttendance extends AppModel {
 				
 				$row = array();
 				$row[] = $sectionName;
-				$row[] = $studentObj['identification_no'];
+				$row[] = $studentObj['openemis_no'];
 				$row[] = $studentObj['first_name'];
 				$row[] = $studentObj['last_name'];
 				

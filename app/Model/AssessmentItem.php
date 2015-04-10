@@ -79,12 +79,18 @@ class AssessmentItem extends AppModel {
 				array(
 					'table' => 'education_grades_subjects',
 					'alias' => 'EducationGradeSubject',
-					'conditions' => array('EducationGradeSubject.id = AssessmentItem.education_grade_subject_id')
+					'conditions' => array(
+						'EducationGradeSubject.id = AssessmentItem.education_grade_subject_id',
+						'EducationGradeSubject.visible' => 1
+					)
 				),
 				array(
 					'table' => 'education_subjects',
 					'alias' => 'EducationSubject',
-					'conditions' => array('EducationSubject.id = EducationGradeSubject.education_subject_id')
+					'conditions' => array(
+						'EducationSubject.id = EducationGradeSubject.education_subject_id',
+						'EducationSubject.visible' => 1
+					)
 				),
 				array(
 					'table' => 'institution_site_classes',
@@ -95,7 +101,10 @@ class AssessmentItem extends AppModel {
 					)
 				),
 			),
-			'conditions' => array('assessment_item_type_id' => $assessmentId),
+			'conditions' => array(
+				'AssessmentItem.assessment_item_type_id' => $assessmentId,
+				'AssessmentItem.visible' => 1
+			),
 			'order' => array('EducationSubject.order')
 		));
 		return $data;

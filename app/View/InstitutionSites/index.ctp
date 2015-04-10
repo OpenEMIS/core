@@ -30,11 +30,11 @@ $model = 'InstitutionSite';
 			foreach ($data as $obj):
 				$id = $obj['InstitutionSite']['id'];
 				$code = $this->Utility->highlight($search, $obj[$model]['code']);
-				$name = $this->Utility->highlight($search, $obj[$model]['name'].((isset($obj['InstitutionSiteHistory']['name']))?'<br>'.$obj['InstitutionSiteHistory']['name']:''));
+				$name = $this->Utility->highlight($search, $obj[$model]['name']);
 		?>
 			<tr>
 				<td><?php echo $code; ?></td>
-				<td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
+				<td><?php echo $this->Html->link($name, array('action' => 'dashboard', $id), array('escape' => false)); ?></td>
                 <td><?php echo $obj['Area']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSiteType']['name']; ?></td>
 			</tr>

@@ -274,7 +274,7 @@ class UtilityComponent extends Component {
 	}
 	
 	public function formatGender($value) {
-		return ($value == 'F') ? __('Female') : __('Male');
+		return (array_key_exists('Gender', $value) && array_key_exists('name', $value['Gender']))? __($value['Gender']['name']): '';
 	}
 	
 	public function unshiftArray(&$origArray, $newArray) {
@@ -314,5 +314,26 @@ class UtilityComponent extends Component {
 			array_push($permutations, $pick);
 		}
 		return $permutations;
+	}
+
+	public function getUniqueOpenemisId($options=array()) {
+		$prefix = '';
+		if (array_key_exists('model', $options)) {
+			switch ($options['model']) {
+				case 'Student': case 'Staff':
+					$prefix = ClassRegistry::init('ConfigItem')->find('first', array('limit' => 1,
+						'fields' => 'ConfigItem.value',
+						'conditions' => array(
+							'ConfigItem.name' => strtolower($options['model']).'_prefix'
+						)
+					));
+					$prefix = explode(",", $prefix['ConfigItem']['value']);
+					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
+
+					break;
+			}
+		}
+
+		return $prefix.time();
 	}
 }

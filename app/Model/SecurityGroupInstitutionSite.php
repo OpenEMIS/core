@@ -23,6 +23,22 @@ class SecurityGroupInstitutionSite extends AppModel {
 	);
 	
 	public function autocomplete($search, $exclude=array(), $conditions=array()) {
+		$isSuperUser = CakeSession::read('Auth.User.super_admin') == 1;
+		if(!$isSuperUser){
+			$userId = CakeSession::read('Auth.User.id');
+			$userInstitutionSites = ClassRegistry::init('SecurityGroupUser')->getUserInstitutionSites($userId);
+			
+			foreach($userInstitutionSites as $row){
+				$siteId = $row['InstitutionSite']['id'];
+				$institutionSiteIds[$siteId] = $siteId;
+			}
+			
+			if(isset($conditions['AND']['OR'])){
+				$conditions['AND']['OR'][] = array('InstitutionSite.id' => $institutionSiteIds);
+			}
+		}
+		//pr($conditions);
+		
 		$conditions = array_merge(array(
 			'OR' => array(
 				'InstitutionSite.code LIKE' => $search,
@@ -30,7 +46,7 @@ class SecurityGroupInstitutionSite extends AppModel {
 			),
 			'InstitutionSite.id NOT' => $exclude
 		), $conditions);
-
+		
 		$this->InstitutionSite->contain('Area');
 		$list = $this->InstitutionSite->find('all', array(
 			'fields' => array('InstitutionSite.id', 'InstitutionSite.code', 'InstitutionSite.name'),

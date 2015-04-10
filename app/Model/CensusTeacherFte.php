@@ -24,7 +24,7 @@ class CensusTeacherFte extends AppModel {
 		'InstitutionSite',
 		'AcademicPeriod',
 		'Gender' => array(
-			'className' => 'FieldOptionValue',
+			'className' => 'Gender',
 			'foreignKey' => 'gender_id'
 		)
 	);

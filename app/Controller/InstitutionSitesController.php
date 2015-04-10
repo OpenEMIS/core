@@ -20,6 +20,7 @@ App::uses('Sanitize', 'Utility');
 class InstitutionSitesController extends AppController {
 	public $institutionSiteId;
 	public $institutionSiteObj;
+	private $indexPage;
 	public $uses = array(
 		'Area',
 		'AreaLevel',
@@ -31,13 +32,11 @@ class InstitutionSitesController extends AppController {
 		'EducationProgramme',
 		'InstitutionSite',
 		'InstitutionSiteActivity',
-		'InstitutionSiteClass',
 		'InstitutionSiteClassSubject',
 		'InstitutionSiteClassStudent',
 		'InstitutionSiteCustomField',
 		'InstitutionSiteCustomFieldOption',
 		'InstitutionSiteCustomValue',
-		'InstitutionSiteHistory',
 		'InstitutionSiteOwnership',
 		'InstitutionSiteLocality',
 		'InstitutionSiteSector',
@@ -55,11 +54,12 @@ class InstitutionSitesController extends AppController {
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
-		'InstitutionSiteStudentAbsence'
+		'InstitutionSiteSectionStudent'
 	);
 	
 	public $helpers = array('Paginator', 'Model');
 	public $components = array(
+		'ControllerAction',
 		'Mpdf',
 		'Paginator',
 		'FileAttachment' => array(
@@ -69,15 +69,12 @@ class InstitutionSitesController extends AppController {
 		'FileUploader',
 		'AreaHandler',
 		'Alert',
-		'Activity' => array('model' => 'InstitutionSiteActivity')
+		'Activity' => array('model' => 'InstitutionSiteActivity'),
+		'HighCharts.HighCharts'
 	);
 	
 	public $modules = array(
 		'bankAccounts' => 'InstitutionSiteBankAccount',
-		'classesSubject' => 'InstitutionSiteClassSubject',
-		'classesStudent' => 'InstitutionSiteClassStudent',
-		'classesStaff' => 'InstitutionSiteClassStaff',
-		'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
@@ -85,13 +82,13 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteStudentFee',
 		'InstitutionSiteFee',
 		'InstitutionSitePosition',
-		'InstitutionSiteProgramme',
 		'InstitutionSiteStudentAttendance',
 		'InstitutionSiteStudentAbsence',
 		'StudentBehaviour' => array('plugin' => 'Students'),
 		'StaffBehaviour' => array('plugin' => 'Staff'),
 		'InstitutionSiteStaffAttendance',
 		'InstitutionSiteStaffAbsence',
+		'InstitutionSiteClass',
 		'InstitutionSiteSection',
 		'InstitutionSiteSectionStudent',
 		'InstitutionSiteSectionStaff',
@@ -105,13 +102,12 @@ class InstitutionSitesController extends AppController {
 		parent::beforeFilter();
 
 		$this->Auth->allow('viewMap', 'siteProfile');
-
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-
+		$this->indexPage = 'dashboard';
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
-		} else if ($this->action === 'view'){
-			
+		} else if ($this->action === 'view' || $this->action === 'dashboard') {
+
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
 				$this->layout = 'profile';
@@ -124,7 +120,7 @@ class InstitutionSitesController extends AppController {
 				
 				if($this->action !== 'advanced'){
 					$this->bodyTitle = $institutionSiteName;
-					$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+					$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 				}
 				
 			} else {
@@ -164,7 +160,7 @@ class InstitutionSitesController extends AppController {
 
 		// for resetting institution site id
 		if (!$this->AccessControl->check($this->params['controller'], 'add') && count($data) == 1 && !$this->Session->check('InstitutionSite.search')) {
-			return $this->redirect(array('action' => 'view', $data[0]['InstitutionSite']['id']));
+			return $this->redirect(array('action' => $this->indexPage, $data[0]['InstitutionSite']['id']));
 		} else {
 			$this->Session->delete('InstitutionSite.id');
 		}
@@ -256,9 +252,66 @@ class InstitutionSitesController extends AppController {
 		$this->render('/Elements/customfields/search');
 	}
 
+	public function dashboard($id = 0) {
+		$data = array();
+		if ($id != 0) {
+			$data = $this->InstitutionSite->findById($id);
+			if ($data) {
+				$this->Session->write('InstitutionSiteId', $id); // deprecated
+				$this->Session->write('InstitutionSite.id', $id); // writing to session using array dot notation
+				$this->Session->write('InstitutionSite.data', $data);
+				$this->Session->write('InstitutionSiteObj', $data); // deprecated
+			} else {
+				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			}
+		} else if ($this->Session->check('InstitutionSite.id')) {
+			$id = $this->Session->read('InstitutionSite.id');
+			$data = $this->InstitutionSite->findById($id);
+			$this->Session->write('InstitutionSite.data', $data);
+			$this->Session->write('InstitutionSiteObj', $data);
+		} else {
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
+
+		if($this->checkUserAccess($id, 'dashboard')) {
+			$this->institutionSiteId = $id;
+			$this->institutionSiteObj = $data;
+			
+			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
+			$this->bodyTitle = $name;
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
+			$this->Navigation->addCrumb('Dashboard');
+			$contentHeader = __('Dashboard');
+
+			$highChartDatas = array();
+			//Students By Year
+			$params = array(
+				'conditions' => array('institution_site_id' => $id)
+			);
+			$highChartDatas[] = $this->InstitutionSiteStudent->getHighChart('number_of_students_by_year', $params);
+			
+			//Students By Grade for current year
+			$params = array(
+				'conditions' => array('institution_site_id' => $id)
+			);
+			$highChartDatas[] = $this->InstitutionSiteSectionStudent->getHighChart('number_of_students_by_grade', $params);
+
+			//Staffs By Position for current year
+			$params = array(
+				'conditions' => array('institution_site_id' => $id)
+			);
+			$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff', $params);
+
+			$this->set('highChartDatas', $highChartDatas);
+			$this->set('contentHeader', $contentHeader);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SITE_NO_VIEW_ACCESS'), array('type' => 'warn'));
+			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
+	}
+
 	public function view($id = 0) {
 		$data = array();
-
 		if ($id != 0) {
 			$data = $this->InstitutionSite->findById($id);
 			if ($data) {
@@ -283,7 +336,7 @@ class InstitutionSitesController extends AppController {
 			
 			$name = $this->Session->read('InstitutionSite.data.InstitutionSite.name');
 			$this->bodyTitle = $name;
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'view'));
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 			$this->Navigation->addCrumb('Overview');
 			
 			$this->set('data', $data);
@@ -330,7 +383,7 @@ class InstitutionSitesController extends AppController {
 				if ($this->InstitutionSite->validates()) {
 					$result = $this->InstitutionSite->save($this->request->data);
 					$this->Message->alert('general.edit.success');
-					$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view'));	
+					$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 				}
 				$data = $this->request->data;
 			} else {
@@ -377,7 +430,7 @@ class InstitutionSitesController extends AppController {
 				
 				$institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
-				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view', $institutionSiteId));
+				$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage, $institutionSiteId));
 			}
 			$areaId = $this->request->data['InstitutionSite']['area_id'];
 			$areaAdministrativeId = $this->request->data['InstitutionSite']['area_administrative_id'];
@@ -418,6 +471,7 @@ class InstitutionSitesController extends AppController {
 			if($this->InstitutionSite->delete($id)){
 				$this->Utility->alert($name . ' have been deleted successfully.');
 			}else{
+				$this->log($this->InstitutionSite->validationErrors, 'debug');
 				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
 			}
 			

@@ -62,7 +62,7 @@ class InfrastructureLevelsController extends InfrastructureAppController {
 			
 			$this->set(compact('data', 'parentLevel'));
 		} else {
-			$this->Message->alert('general.view.notExists');
+			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index'));
 		}
 	}
