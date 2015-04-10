@@ -4,7 +4,9 @@ $this->assign('contentHeader', __('Attendance') . ' - ' . __('Students'));
 
 $this->start('contentActions');
 echo $this->Html->link(__('Absence'), array('action' => $model, 'absence', $academicPeriodId, $sectionId, $weekId), array('class' => 'divider'));
-echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $academicPeriodId, $sectionId, $weekId, $dayId), array('class' => 'divider'));
+if ($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => $model, 'dayedit', $academicPeriodId, $sectionId, $weekId, $dayId), array('class' => 'divider'));
+}
 $this->end();
 
 $this->start('contentBody');
@@ -28,12 +30,13 @@ echo $this->element("../InstitutionSites/$model/controls");
 			<?php
 			$todayIndex = date('Ymd');
 			foreach ($studentList as $student):
+
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = $this->Model->getName($studentObj);
+				$studentName = $this->Model->getName($student['SecurityUser']);
 				?>
 				<tr>
-					<td><?php echo $studentObj['identification_no']; ?></td>
+					<td><?php echo $student['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $studentName; ?></td>
 					<?php
 					if (isset($absenceCheckList[$studentId][$selectedDateDigit])) {

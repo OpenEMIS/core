@@ -26,6 +26,28 @@ class SecurityRoleFunction extends AppModel {
 		$controller->set('header', __('Permissions'));
     }
 	
+	public function getOperationsLookup(){
+		$lookup = array(
+			'_execute' => array(
+				'level' => 5
+			),
+			'_delete' => array(
+				'level' => 4
+			),
+			'_add' => array(
+				'level' => 3
+			),
+			'_edit' => array(
+				'level' => 2
+			),
+			'_view' => array(
+				'level' => 1
+			)
+		);
+		
+		return $lookup;
+	}
+	
 	public function permissions($controller, $params) {
 		if(isset($params->pass[0])) {
 			$selectedRole = $params->pass[0];
@@ -130,7 +152,25 @@ class SecurityRoleFunction extends AppModel {
 					$allowEdit = true;
 					$isSuperUser = $controller->Auth->user('super_admin')==1;
 					$userId = $isSuperUser ? false : $controller->Auth->user('id');
+					
+					$operationsLookup = $this->getOperationsLookup();
+					$permissionLookup = array();
 					if(!$isSuperUser) {
+						$userPermissions = $this->SecurityFunction->getUserPermissions($userId);
+						foreach($userPermissions as $row){
+							$securityFunctionId = $row['SecurityFunction']['id'];
+							$securityRoleFunction = $row['SecurityRoleFunction'];
+
+							foreach($operationsLookup as $operation => $operationObj){
+								if($securityRoleFunction[$operation] == 1){
+									if(!isset($permissionLookup[$securityFunctionId]) || $permissionLookup[$securityFunctionId]['highest'] < $operationObj['level']){
+										$permissionLookup[$securityFunctionId] = $operationObj['level'];
+									}
+									break;
+								}
+							}
+						}
+						
 						$userRoles = ClassRegistry::init('SecurityGroupUser')->getRolesByUserId($userId);
 						foreach($userRoles as $obj) {
 							if($obj['SecurityRole']['id'] === $selectedRole) {
@@ -150,7 +190,7 @@ class SecurityRoleFunction extends AppModel {
 					}
 					
 					$controller->set('_operations', $controller->AccessControl->operations);
-					$controller->set(compact('roleOptions', 'selectedRole', 'moduleOptions', 'selectedModule', 'permissions'));
+					$controller->set(compact('roleOptions', 'selectedRole', 'moduleOptions', 'selectedModule', 'permissions', 'permissionLookup', 'operationsLookup', 'isSuperUser'));
 				} else {
 					$data = $controller->request->data['SecurityRoleFunction'];
 					$this->saveAll($data);

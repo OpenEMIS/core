@@ -53,8 +53,18 @@ class ContactType extends AppModel {
 		return 'contact_option_id';
 	}
 
-	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('ContactType.order')));
+	public function getOptions($options = array()){
+		$conditions = array();
+		$conditions['visible'] = 1;
+		if (array_key_exists('contact_option_id', $options)) {
+			$conditions['contact_option_id'] = $options['contact_option_id'];
+		}
+		$data = $this->find('all', array(
+			'recursive' => -1, 
+			'conditions'=> $conditions,
+			'order' => array('ContactType.order')
+			)
+		);
 		$list = array();
 		foreach($data as $obj){
 			$list[$obj['ContactType']['id']] = $obj['ContactType']['name'];

@@ -39,6 +39,15 @@ class ExcelBehavior extends ModelBehavior {
 	public function setModel(Model $model, $newModel) {
 		$this->Model = $newModel;
 	}
+	
+	public function setHeader(Model $model, $newHeader) {
+		$header = array();
+		foreach($newHeader as $field) {
+			$header[$field] = $this->getLabel($field);
+		}
+		$this->header = $header;
+		return $this->header;
+	}
 
 	public function excel(Model $model, $format='xlsx', $settings=array()) {
 		$this->Model = $model;
@@ -129,9 +138,11 @@ class ExcelBehavior extends ModelBehavior {
 			$sheetName = array_key_exists('name', $sheet) ? __($sheet['name']) : $sheetModel->alias;
 			$include = array_key_exists('include', $sheet) ? $sheet['include'] : array();
 			$this->include = $include;
-			
+
 			if ($model->alias == $sheetModel->alias) {
 				$this->conditions = $model->excelGetConditions();
+			} else if (method_exists($sheetModel, 'excelGetConditions')) {
+				$this->conditions = $sheetModel->excelGetConditions();
 			}
 
 			// options set by external source
@@ -167,7 +178,6 @@ class ExcelBehavior extends ModelBehavior {
 
 			for ($pageNo=0; $pageNo<$pages; $pageNo++) {
 				$data = $sheetModel->excelGetData($pageNo);
-//pr($data);die;
 				foreach ($data as $row) {
 					$sheetRow = array();
 					foreach ($header as $key => $label) {
@@ -218,17 +228,19 @@ class ExcelBehavior extends ModelBehavior {
 
 		$header = array();
 		$exclude = array('id', 'photo_name', 'file_name', 'modified_user_id', 'modified', 'created_user_id', 'created');
-
+		if (isset($this->settings[$alias]['exclude'])) {
+			$exclude = array_merge($exclude, $this->settings[$alias]['exclude']);
+		}
+		
 		if (array_key_exists('header', $this->settings[$alias])) {
 			$appendedHeader = $this->settings[$alias]['header'];
 			foreach ($appendedHeader as $module => $fields) {
 				foreach ($fields as $f) {
 					$key = $module.'.'.$f;
-					$label = $this->LabelHelper->get($key);
-					if ($label === false) {
-						$label = $key;
-					}
-					$header[$key] = __($label);
+					// handle deep associations
+					$split = explode('.', $key);
+					$labelKey = $split[count($split)-2].'.'.$split[count($split)-1];
+					$header[$key] = $this->getLabel($labelKey);
 				}
 			}
 		}
@@ -251,13 +263,10 @@ class ExcelBehavior extends ModelBehavior {
 				} else {
 					$key = $alias.'.'.$field;
 				}
-				$label = $this->LabelHelper->get($key);
-				if ($label === false) {
-					$label = $key;
-				}
-				$header[$key] = __($label);
+				$header[$key] = $this->getLabel($key);
 			}
 		}
+		//pr($header);die;
 		
 		// Custom Field Logic starts here
 		if(!empty($include)){
@@ -271,13 +280,37 @@ class ExcelBehavior extends ModelBehavior {
 
 	public function excelGetData(Model $model, $page=false) {
 		$options = $this->Model->excelGetFindOptions();
+		//pr($options);
 
 		if ($page !== false) {
 			$options['offset'] = $page * $this->limit;
 			$options['limit'] = $this->limit;
 		}
+
+		// removing fields and handling it later because fields and contain will not be able to generate exactly the data required
+		$fields = $options['fields'];
+		
+		if (array_key_exists('contain', $options)) {
+			unset($options['fields']);
+		}
 		
 		$data = $this->Model->find('all', $options);
+		
+		// remove fields from main model that are not required
+		$fieldNames = array();
+		foreach ($fields as $key => $value) {
+			$split = explode('.', $value);
+			if (count($split) == 2 && $split[0] == $model->alias) {
+				$fieldNames[] = $split[1];
+			}	
+		}
+		foreach ($data as $key => $value) {
+			foreach ($value[$model->alias] as $mkey => $mvalue) {
+				if (!in_array($mkey, $fieldNames)) {
+					unset($data[$key][$model->alias][$mkey]);
+				}
+			}
+		}
 		return $data;
 	}
 
@@ -290,10 +323,12 @@ class ExcelBehavior extends ModelBehavior {
 
 	public function excelGetFindOptions(Model $model) {
 		$fields = array_keys($this->header);
+
 		$conditions = $this->Model->excelGetConditions();
 		$contain = $this->getContain($fields);
 		$order = $this->Model->excelGetOrder();
 		
+		// unset all custom fields
 		foreach ($fields as $key => $field) {
 			$split = explode('.', $field);
 			if (is_numeric($split[1])) {
@@ -303,6 +338,7 @@ class ExcelBehavior extends ModelBehavior {
 		
 		$options = array();
 		//$options['recursive'] = 0;
+		// already handled in contain... no longer needs 'fields'
 		$options['fields'] = $fields;
 		$options['contain'] = $contain;
 		$options['conditions'] = $conditions;
@@ -410,27 +446,38 @@ class ExcelBehavior extends ModelBehavior {
 		foreach ($fields as $field) {
 			$split = explode('.', $field);
 			if ($split[0] !== $this->Model->alias) {
-				if (!array_key_exists($split[0], $contain)) {
-					if (count($split) > 1) {
-						if (!is_numeric($split[1])) {
-							$contain[$split[0]] = array('fields' => $field);
-						} else {
-							$contain[$split[0]] = array();/*
-							if (!empty($this->include)) {
-								if (isset($this->include['header']) && isset($this->include['dataOptions'])) {
-									$contain[$split[0]][$this->include['header']] = array(
-										$this->include['dataOptions']
-									);
-								}
-							}*/
-						}
+				if (count($split) > 1) {
+					if (!is_numeric($split[count($split)-1])) { // if it's not a custom field
+						$contain = $this->buildContainItem($contain, $split);
 					} else {
 						$contain[$split[0]] = array();
 					}
+				} else {
+					$contain[$split[0]] = array();
 				}
 			}
-		}//pr($contain);die;
+		} 
 		return $contain;
+	}
+
+	private function buildContainItem($data, $split) {
+		if (!array_key_exists($split[0], $data)) {
+			$data[$split[0]] = array();
+			if (!array_key_exists('fields', $data[$split[0]])) {
+				$data[$split[0]]['fields'] = array();
+			}
+		}
+
+		if (count($split) == 2) {
+			$data[$split[0]]['fields'][] = $split[1];
+		} else {
+			// more than 2 then recurse
+			$currentKey = $split[0];
+			array_shift($split);
+			$data[$currentKey] = $this->buildContainItem($data[$currentKey], $split);
+		}
+
+		return $data;
 	}
 	
 	public function excelCustomFieldHeader(Model $model, $include, $header) {
@@ -462,6 +509,14 @@ class ExcelBehavior extends ModelBehavior {
 	
 	public function excelCustomFieldFindOptions(Model $model, $options) {
 		return $options;
+	}
+	
+	public function getLabel($key) {
+		$label = $this->LabelHelper->get($key);
+		if ($label === false) {
+			$label = $key;
+		}
+		return __($label);
 	}
 
 	private function download($path) {

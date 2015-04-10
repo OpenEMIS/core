@@ -27,9 +27,6 @@ class HomeController extends AppController {
 			'Staff' => 'staff'
 		),
 		'Edited' => array(
-			'InstitutionSiteHistory' => 'institution_site_history',
-			'StudentHistory' => 'student_history',
-			'StaffHistory' => 'staff_history'
 		)
 	);
 	public $uses = array(
@@ -38,9 +35,10 @@ class HomeController extends AppController {
 		'InstitutionSite',
 		'Students.Student',
 		'Staff.Staff',
-		'InstitutionSiteHistory',
-		'Students.StudentHistory',
-		'Staff.StaffHistory'
+		'InstitutionSiteStudent',
+		'InstitutionSiteStaff',
+		'AcademicPeriod',
+		'InstitutionSiteSectionStudent'
 	);
 	
 	private function logtimer($str=''){
@@ -49,6 +47,7 @@ class HomeController extends AppController {
 	}
 	
 	public function index() {
+		$this->redirect(array('action' => 'dashboard'));
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
@@ -69,11 +68,38 @@ class HomeController extends AppController {
 		}
 		$this->logtimer('End Attachment');
 		$this->logtimer('Start Notice');
-		$this->set('message', $this->ConfigItem->getNotice());
 		$this->logtimer('End Notice');
 		$this->logtimer('Start Adaptation');
 		$this->set('adaptation', $this->ConfigItem->getAdaptation());
 		$this->logtimer('End Adaptation');
+	}
+
+	public function dashboard() {
+		foreach($this->tableCounts['Added'] as $key => $val){
+			$rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
+			$total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
+		}
+		$this->set('tableCounts', $total);
+		$this->set('SeparateThousandsFormat', array(
+			'before' => '',
+			'places' => 0,
+			'thousands' => ',',
+		));
+
+		$highChartDatas = array();
+		$highChartDatas[] = $this->InstitutionSiteStudent->getHighChart('number_of_students_by_year');
+		$highChartDatas[] = $this->InstitutionSiteSectionStudent->getHighChart('number_of_students_by_grade');
+		$highChartDatas[] = $this->InstitutionSiteStaff->getHighChart('number_of_staff');
+
+		$noticeData = ClassRegistry::init('Notice')->find(
+			'all',
+			array(
+				'order' => array('Notice.created desc')
+			)
+		);
+
+		$this->set('noticeData', $noticeData);
+		$this->set('highChartDatas', $highChartDatas);
 	}
 	
 	public function support() {
@@ -181,7 +207,7 @@ class HomeController extends AppController {
 				$tableName = str_ireplace('history','', $tableName);
 				$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
 				$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
-				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+				$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['su']['first_name'].' '.$vrec['su']['last_name'];
 				$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
 			}
 		}
