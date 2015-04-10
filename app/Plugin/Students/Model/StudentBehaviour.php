@@ -18,7 +18,7 @@ class StudentBehaviour extends StudentsAppModel {
 	public $useTable = 'student_behaviours';
 	
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction2',
 		'DatePicker' => array('date_of_behaviour'),
 		'TimePicker' => array('time_of_behaviour' => array('format' => 'h:i a'))
@@ -86,12 +86,12 @@ class StudentBehaviour extends StudentsAppModel {
 			if ($this->Session->check($this->alias.'.studentId')) {
 				$studentId = $this->Session->read($this->alias.'.studentId');
 				
-				$this->Student->contain();
+				$this->Student->contain('SecurityUser');
 				$obj = $this->Student->findById($studentId);
 				
 				$this->fields['student_name']['visible'] = true;
 				$this->fields['student_name']['type'] = 'disabled';
-				$this->fields['student_name']['value'] = ModelHelper::getName($obj['Student']);
+				$this->fields['student_name']['value'] = ModelHelper::getName($obj['SecurityUser']);
 				$this->fields['student_name']['order'] = 0;
 				$this->setFieldOrder('student_name', 0);
 				
@@ -162,6 +162,7 @@ class StudentBehaviour extends StudentsAppModel {
 		}
 		$this->Session->write($this->alias.'.selectedAcademicPeriod', $selectedAcademicPeriod);
 		$this->Session->write($this->alias.'.selectedSection', $selectedSection);
+		
 		$this->setVar(compact('data', 'academicPeriodOptions', 'sectionOptions', 'selectedAcademicPeriod', 'selectedSection'));
 	}
 	
@@ -182,7 +183,7 @@ class StudentBehaviour extends StudentsAppModel {
 				$this->contain(array(
 					'StudentBehaviourCategory' => array('fields' => array('StudentBehaviourCategory.name'))
 				));
-				$this->Student->contain();
+				$this->Student->contain('SecurityUser');
 				$student = $this->Student->findById($studentId);
 				$data = $this->findAllByStudentIdAndInstitutionSiteId($studentId, $institutionSiteId, array(), array('StudentBehaviour.date_of_behaviour'));
 				

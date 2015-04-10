@@ -32,10 +32,10 @@ echo $this->element("../InstitutionSites/$model/controls");
 			foreach ($staffList as $staff):
 				$staffObj = $staff['Staff'];
 				$staffId = $staffObj['id'];
-				$staffName = $this->Model->getName($staffObj);
+				$staffName = $this->Model->getName($staff['SecurityUser']);
 				?>
 				<tr>
-					<td><?php echo $staffObj['identification_no']; ?></td>
+					<td><?php echo $staff['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $staffName; ?></td>
 					<?php
 					if (isset($absenceCheckList[$staffId][$selectedDateDigit])) {
