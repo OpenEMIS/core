@@ -34,24 +34,23 @@ echo $this->Form->create($model, $formOptions);
 	<?php 
 		$openEmisIdLabel = $labelOptions;
 		$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
-		
-		if ($autoid=='') {
-			$arrIdNo = array_merge(array('label' => $openEmisIdLabel),$arrIdNo);
-			echo $this->Form->input('identification_no', $arrIdNo);
-		} else {
-			if ($this->Session->check('Staff.id')) { 
-				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
-			} else {
-				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel, 'value' => $autoid));
-			}
+
+		if (isset($this->data[$model]['id'])) {
+			echo $this->Form->hidden('id', array('value' => $this->data[$model]['id']));
 		}
 		
-		echo $this->Form->input('first_name');
-		echo $this->Form->input('middle_name');
-		echo $this->Form->input('third_name');
-		echo $this->Form->input('last_name');
-		echo $this->Form->input('preferred_name');
-		echo $this->Form->input('gender', array('options' => $genderOptions));
+		if ($this->Session->check('Staff.id')) {
+			echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'readOnly' => true));
+		} else {
+			echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
+		}
+		
+		echo $this->Form->input('SecurityUser.first_name');
+		echo $this->Form->input('SecurityUser.middle_name');
+		echo $this->Form->input('SecurityUser.third_name');
+		echo $this->Form->input('SecurityUser.last_name');
+		echo $this->Form->input('SecurityUser.preferred_name');
+		echo $this->Form->input('SecurityUser.gender_id', array('options' => $genderOptions));
 		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
 		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
 		
@@ -60,8 +59,8 @@ echo $this->Form->create($model, $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if (isset($this->data[$model]['photo_name']) && isset($this->data[$model]['photo_content'])) {
-			$imgOptions['src'] = $this->Image->getBase64($this->data[$model]['photo_name'], $this->data[$model]['photo_content']);
+		if (isset($this->data['security_user']['photo_name']) && isset($this->data['security_user']['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data['security_user']['photo_name'], $this->data['security_user']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
@@ -76,8 +75,8 @@ echo $this->Form->create($model, $formOptions);
 <fieldset class="section_break">
 	<legend><?php echo __('Address'); ?></legend>
 	<?php 
-		echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)'));
-		echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');"));
+		echo $this->Form->input('SecurityUser.address', array('onkeyup' => 'utility.charLimit(this)'));
+		echo $this->Form->input('SecurityUser.postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');"));
 		$tempPostCode = isset($this->data[$model]['postal_code'])?$this->data[$model]['postal_code'] : '';
 		echo $this->Form->hidden(null, array('id'=>'validate_staff_postal_code', 'name' => 'validate_staff_postal_code', 'value' => $tempPostCode));
 	?>

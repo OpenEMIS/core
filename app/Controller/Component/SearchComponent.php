@@ -20,6 +20,7 @@ class SearchComponent extends Component {
 
 	public function search($model, $conditions = array(), $order = array()) {
 		$alias = $model->alias;
+		
 		$request = $this->controller->request;
 		$limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
 		$search = $this->Session->check($alias.'.search.key') ? $this->Session->read($alias.'.search.key') : '';

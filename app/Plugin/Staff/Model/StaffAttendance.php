@@ -30,7 +30,7 @@ class StaffAttendance extends StaffAppModel {
                     'name' => 'Institution'
                 ),
                 'Staff' => array(
-                    'identification_no' => 'OpenEMIS ID',
+                    'openemis_no' => 'OpenEMIS ID',
                     'first_name' => 'First Name',
                     'middle_name' => 'Middle Name',
                     'third_name' => 'Third Name',
@@ -88,7 +88,7 @@ class StaffAttendance extends StaffAppModel {
 			$options = array();
 			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('Staff.identification_no', 'AcademicPeriod.name');
+			$options['order'] = array('SecurityUser.openemis_no', 'AcademicPeriod.name');
 			$options['conditions'] = array('StaffAttendance.institution_site_id' => $institutionSiteId);
 
 			$options['joins'] = array(

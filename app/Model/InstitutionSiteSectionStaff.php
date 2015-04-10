@@ -47,9 +47,9 @@ class InstitutionSiteSectionStaff extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'DISTINCT Staff.identification_no',
-				'Staff.first_name', 'Staff.last_name',
-				'Staff.middle_name', 'Staff.third_name'
+				'DISTINCT SecurityUser.openemis_no',
+				'SecurityUser.first_name', 'SecurityUser.last_name',
+				'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
 			'joins' => array(
 				array(
@@ -62,7 +62,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 				'InstitutionSiteSectionStaff.institution_site_section_id' => $id,
 				'InstitutionSiteSectionStaff.status' => 1
 			),
-			'order' => array('Staff.first_name ASC')
+			'order' => array('SecurityUser.first_name ASC')
 		));
 		if(empty($data)) {
 			$this->Message->alert('general.noData');
@@ -76,7 +76,7 @@ class InstitutionSiteSectionStaff extends AppModel {
 			$data = $this->Staff->find('all', array(
 				'recursive' => 0,
 				'fields' => array(
-					'Staff.id', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.third_name', 'Staff.identification_no',
+					'Staff.id', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.last_name', 'SecurityUser.third_name', 'SecurityUser.openemis_no',
 					'InstitutionSiteSectionStaff.id', 'InstitutionSiteSectionStaff.status', 'InstitutionSiteSection.id'
 				),
 				'joins' => array(
@@ -144,19 +144,36 @@ class InstitutionSiteSectionStaff extends AppModel {
 	// used by InstitutionSite.classesEdit/classesView
 	public function getStaffs($sectionId, $mode = 'all') {
 		$data = $this->find('all', array(
-			'recursive' => 0,
+			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = InstitutionSiteSectionStaff.staff_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Staff.security_user_id')
+				),
+				array(
+					'table' => 'institution_site_sections',
+					'alias' => 'InstitutionSiteSection',
+					'conditions' => array('InstitutionSiteSection.id = InstitutionSiteSectionStaff.institution_site_section_id')
+				)
 			),
 			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 
 		if ($mode == 'list') {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = ModelHelper::getName($obj['Staff']);
+				$list[$id] = ModelHelper::getName($obj['SecurityUser']);
 			}
 			return $list;
 		} else {
@@ -164,45 +181,13 @@ class InstitutionSiteSectionStaff extends AppModel {
 		}
 	}
 
-	public function getStaffsByInstitutionSiteId($institutionSiteId) {
+	public function getStaffsInSectionAcademicPeriod($sectionId, $academicPeriodId, $mode = 'all') {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
+				'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
 			),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
-					'conditions' => array(
-						'InstitutionSiteSection.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteSection.id = InstitutionSiteSectionStaff.institution_site_section_id'
-					)
-				),
-				array(
-					'table' => 'staff',
-					'alias' => 'Staff',
-					'conditions' => array('Staff.id = InstitutionSiteSectionStaff.staff_id')
-				),
-			),
-			'order' => array('Staff.first_name')
-		));
-		$list = array();
-		foreach ($data as $obj) {
-			$id = $obj['Staff']['id'];
-			$teacherName = $obj['Staff']['first_name'] . ' ' . $obj['Staff']['middle_name'] . ' ' . $obj['Staff']['third_name'] . ' ' . $obj['Staff']['last_name'];
-			$list[$id] = ModelHelper::getName($obj['Staff']);
-		}
-		return $list;
-	}
-
-	public function getStaffsInClassAcademicPeriod($classId, $academicPeriodId, $mode = 'all') {
-		$this->unbindModel(array('belongsTo' => array('InstitutionSiteSection')));
-		$data = $this->find('all', array(
-			'fields' => array(
-				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
-			),
-			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $classId, 'AcademicPeriod.id' => $academicPeriodId),
+			'conditions' => array('InstitutionSiteSectionStaff.institution_site_section_id' => $sectionId, 'AcademicPeriod.id' => $academicPeriodId),
 			'joins' => array(
 				array(
 					'table' => 'institution_site_sections',
@@ -224,16 +209,26 @@ class InstitutionSiteSectionStaff extends AppModel {
 							'InstitutionSiteStaff.end_year >= AcademicPeriod.end_year', 'InstitutionSiteStaff.end_year is null'
 						)
 					)
+				),
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('Staff.security_user_id = SecurityUser.id')
 				)
 			),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		$this->bindModel(array('belongsTo' => array('InstitutionSiteSection')));
 		if ($mode == 'list') {
 			$list = array();
 			foreach ($data as $obj) {
 				$id = $obj['Staff']['id'];
-				$list[$id] = ModelHelper::getName($obj['Staff']);
+				$list[$id] = ModelHelper::getName($obj['SecurityUser']);
 			}
 			return $list;
 		} else {
