@@ -254,7 +254,7 @@ class InstitutionSiteFee extends AppModel {
 			$this->fields['education_grade_id']['type'] = 'disabled';
 			$this->fields['education_grade_id']['value'] = $data['EducationGrade']['name'];
 		} else {
-			$this->Message->alert('general.view.notExists');
+			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => get_class($this)));
 		}	
 	}

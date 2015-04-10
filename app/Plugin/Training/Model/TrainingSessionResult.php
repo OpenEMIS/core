@@ -327,11 +327,11 @@ class TrainingSessionResult extends TrainingAppModel {
 	 	if(!empty($trainingSessionTrainees)){
 	        $i = 0;
 	        foreach($trainingSessionTrainees as $obj){
-	        	$result[$i]['Staff.identification_no'] = $obj['Staff']['identification_no'];
-	        	$result[$i]['Staff.first_name'] = $obj['Staff']['first_name'];
-	        	$result[$i]['Staff.middle_name'] = $obj['Staff']['middle_name'];
-	        	$result[$i]['Staff.third_name'] = $obj['Staff']['third_name'];
-	        	$result[$i]['Staff.last_name'] = $obj['Staff']['last_name'];
+	        	$result[$i]['SecurityUser.openemis_no'] = $obj['SecurityUser']['openemis_no'];
+	        	$result[$i]['SecurityUser.first_name'] = $obj['SecurityUser']['first_name'];
+	        	$result[$i]['SecurityUser.middle_name'] = $obj['SecurityUser']['middle_name'];
+	        	$result[$i]['SecurityUser.third_name'] = $obj['SecurityUser']['third_name'];
+	        	$result[$i]['SecurityUser.last_name'] = $obj['SecurityUser']['last_name'];
 	        	foreach($obj['TrainingSessionTraineeResult'] as $val){
 	        		$pass = $val['pass'];
 	        		if($pass=='-1'){
@@ -570,10 +570,10 @@ class TrainingSessionResult extends TrainingAppModel {
 				$trainingSessionTraineeResultsVal = null;
 				if(!empty($trainingSessionTrainees)){
 					foreach($trainingSessionTrainees as $val){
-						$val['TrainingSessionTrainee']['first_name'] = $val['Staff']['first_name'];
-						$val['TrainingSessionTrainee']['middle_name'] = $val['Staff']['middle_name'];
-						$val['TrainingSessionTrainee']['third_name'] = $val['Staff']['third_name'];
-						$val['TrainingSessionTrainee']['last_name'] = $val['Staff']['last_name'];
+						$val['TrainingSessionTrainee']['first_name'] = $val['SecurityUser']['first_name'];
+						$val['TrainingSessionTrainee']['middle_name'] = $val['SecurityUser']['middle_name'];
+						$val['TrainingSessionTrainee']['third_name'] = $val['SecurityUser']['third_name'];
+						$val['TrainingSessionTrainee']['last_name'] = $val['SecurityUser']['last_name'];
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 						foreach($val['TrainingSessionTraineeResult'] as $val2){
 							$trainingSessionTraineeResultsVal[] = $val2;

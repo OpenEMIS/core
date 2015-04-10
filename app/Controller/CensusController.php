@@ -44,7 +44,6 @@ class CensusController extends AppController {
 		'CensusTeacher',
 		'CensusTeacherFte',
 		'CensusTeacherTraining',
-		'CensusBuildings',
 		'CensusFinance',
 		'CensusBuilding',
 		'CensusResource',

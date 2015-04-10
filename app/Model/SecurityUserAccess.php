@@ -52,13 +52,13 @@ class SecurityUserAccess extends AppModel {
 			$table = $obj['table_name'];
 			$id = $obj['table_id'];
 			$user = $modules[$table]->find('first', array(
-				'fields' => array('first_name', 'middle_name', 'third_name', 'last_name', 'identification_no'),
+				'fields' => array('first_name', 'middle_name', 'third_name', 'last_name', 'openemis_no'),
 				'recursive' => -1,
 				'conditions' => array($table . '.id' => $id)
 			));
 			if($user) {
 				$obj['name'] = ModelHelper::getName($user[$table]);
-				$obj['identification_no'] = $user[$table]['identification_no'];
+				$obj['openemis_no'] = $user[$table]['openemis_no'];
 			}
 		}
 		return $data;
@@ -68,11 +68,21 @@ class SecurityUserAccess extends AppModel {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		if($this->Session->check('SecurityUserId')) {
 			$userId = $this->Session->read('SecurityUserId');
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['access'] = $this->getAccess($userId);
+
+			$data = $this->SecurityUser->find(
+				'first',
+				array(
+					'recursive' => -1,
+					'contain' => array(
+						'SecurityUserAccess' => array('SecurityUser')
+					),
+					'conditions' => array('SecurityUser.id' => $userId)
+				)
+			);
+
 			$name = ModelHelper::getName($data);
 			$moduleOptions = array('Student' => __('Student'), /*'Teacher' => __('Teacher'), */'Staff' => __('Staff'));
+
 			$this->setVar('data', $data);
 			$this->setVar('moduleOptions', $moduleOptions);
 			$this->Navigation->addCrumb($name);
@@ -127,11 +137,7 @@ class SecurityUserAccess extends AppModel {
 		if ($this->request->is('ajax')) {
 			$this->render = false;
 			
-			$defaultModel = 'Student';
-			$model = $this->controller->params->query['model'];
-			if(empty($model)){
-				$model = $defaultModel;
-			}
+			$model = 'SecurityUser';
 			$search = $this->controller->params->query['term'];
 			
 			$data = array();

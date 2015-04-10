@@ -41,7 +41,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						$id = $arrItems['InstitutionSiteStaffAbsence']['id'];
 						$staff = $arrItems['Staff'];
 
-						$staffName = $this->Model->getName($staff);
+						$staffName = $this->Model->getName($staff['SecurityUser']);
 
 						$firstDateAbsentOriginal = $arrItems['InstitutionSiteStaffAbsence']['first_date_absent'];
 						$lastDateAbsentOriginal = $arrItems['InstitutionSiteStaffAbsence']['last_date_absent'];
@@ -63,7 +63,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 						?>
 						<tr>
 							<td><?php echo $dateStr; ?></td>
-							<td><?php echo $this->Html->link($arrItems['Staff']['identification_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
+							<td><?php echo $this->Html->link($arrItems['Staff']['SecurityUser']['openemis_no'], array('action' => $model, 'view', $id), array('escape' => false)); ?></td>
 
 							<td><?php echo $staffName; ?></td>
 							<td><?php echo $arrItems['InstitutionSiteStaffAbsence']['absence_type']; ?></td>

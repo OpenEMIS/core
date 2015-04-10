@@ -18,7 +18,7 @@ App::uses('FieldOptionValue', 'Model');
 
 class InstitutionSiteType extends FieldOptionValue {
 	public $useTable = 'field_option_values';
-	public $hasMany = array('InstitutionSite','InstitutionSiteCustomField','InstitutionSiteHistory','CensusGrid','CensusCustomField');
+	public $hasMany = array('InstitutionSite','InstitutionSiteCustomField','CensusGrid','CensusCustomField');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
