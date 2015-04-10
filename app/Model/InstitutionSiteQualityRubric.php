@@ -379,10 +379,10 @@ class InstitutionSiteQualityRubric extends AppModel {
 				),
 				'conditions' => array('Staff.id' => $selectedStaff)
 			));
-			$data['SecurityUser'] = $securityUser['SecurityUser'];
+			$data['Staff']['SecurityUser'] = $securityUser['SecurityUser'];
 		} else {
 			$data = $this->find('first', array(
-				'contain' => array('RubricTemplate', 'AcademicPeriod', 'EducationGrade' => array('EducationProgramme'), 'InstitutionSiteSection', 'InstitutionSiteClass', 'Staff'),
+				'contain' => array('RubricTemplate', 'AcademicPeriod', 'EducationGrade' => array('EducationProgramme'), 'InstitutionSiteSection', 'InstitutionSiteClass', 'Staff' => array('SecurityUser')),
 				'conditions' => array(
 					'InstitutionSiteQualityRubric.id' => $id
 				)
