@@ -98,7 +98,7 @@ endif;
 		echo $this->Form->submit($this->Label->get('general.import'), array('name' => 'submit', 'class' => 'btn_save btn_right', 'div' => false));
 		echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left'));
 	}else{
-		echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'import'), array('class' => 'btn_cancel btn_left'));
+		//echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'import'), array('class' => 'btn_cancel btn_left'));
 	}
 	?>
 	</div>

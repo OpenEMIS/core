@@ -603,6 +603,10 @@ class LabelHelper extends AppHelper {
 		'Notice' => array(
 			'title' => 'Notices',	
 			'created' => 'Date'
+		),
+		'Import' => array(
+			'saving_failed' => 'Saving Failed',
+			'code_unfound' => 'Code Not Found'
 		)
 	);
 	

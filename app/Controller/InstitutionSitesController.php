@@ -110,7 +110,7 @@ class InstitutionSitesController extends AppController {
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 			
-		} else if ($this->action === 'import' || $this->action === 'downloadImportTemplate'){
+		} else if ($this->action === 'import' || $this->action === 'importTemplate'){
 			
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
@@ -857,77 +857,142 @@ class InstitutionSitesController extends AppController {
 		}
 	}
 	
-	public function import(){
+	public function import() {
 		$this->Navigation->addCrumb('Import');
-		$header = $this->InstitutionSite->getHeader();
-		$columns = $this->InstitutionSite->getColumns();
-		$totalColumns = count($columns);
 
 		if ($this->request->is(array('post', 'put'))) {
-			if(!empty($this->request->data['InstitutionSite']['excel'])){
+			if (!empty($this->request->data['InstitutionSite']['excel'])) {
 				$fielObj = $this->request->data['InstitutionSite']['excel'];
 				$uploadedName = $fielObj['name'];
-				if($fielObj['error'] == 0){
+				if ($fielObj['error'] == 0) {
+					$header = $this->InstitutionSite->getHeader();
+					$columns = $this->InstitutionSite->getColumns();
+					$mapping = $this->InstitutionSite->getMapping();
+					$totalColumns = count($columns);
+
+					$lookup = array();
+					//pr($mapping);
+					foreach ($mapping as $key => $obj) {
+						$mappingRow = $obj['ImportMapping'];
+						if ($mappingRow['foreigh_key'] == 1) {
+							$lookupModel = $mappingRow['lookup_model'];
+							$lookupColumn = $mappingRow['lookup_column'];
+							$lookupModelObj = ClassRegistry::init($lookupModel);
+							$lookupValues = $lookupModelObj->getList();
+							//pr($lookupValues);
+							$lookup[$key] = array();
+							foreach ($lookupValues as $valId => $valObj) {
+								$lookupColumnValue = $valObj[$lookupColumn];
+								if(!empty($lookupColumnValue)){
+									$lookup[$key][$lookupColumnValue] = $valObj['id'];
+								}
+							}
+						}
+					}
+					//pr($lookup); die;
+
 					$uploaded = $fielObj['tmp_name'];
-					
+
 					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
 					$worksheets = $objPHPExcel->getWorksheetIterator();
 					$firstSheetOnly = false;
-					
-					$totalFailed = 0;
+
 					$totalSuccess = 0;
 					$dataFailed = array();
-					foreach($worksheets as $sheet){
-						if($firstSheetOnly){
-							break;
-						}
-						
+					foreach ($worksheets as $sheet) {
+						if ($firstSheetOnly) {break;}
+
 						$highestRow = $sheet->getHighestRow();
 						$totalRows = $highestRow - 1;
 						//$highestColumn = $sheet->getHighestColumn();
 						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
-						
-						for ($row = 1; $row <= $highestRow; ++ $row) {
+
+						for ($row = 1; $row <= $highestRow; ++$row) {
 							$tempRow = array();
-							 for ($col = 0; $col < $totalColumns; ++ $col) {
-								 $cell = $sheet->getCellByColumnAndRow($col, $row);
-								 $val = $cell->getValue();
-								 $columnName = $columns[$col];
-								 $tempRow[$columnName] = $val;
-							 }
-							 
-							 if($row == 1){
-								 $header = $tempRow;
-								 continue;
-							 }
-							 
-							 $this->InstitutionSite->set($tempRow);
-							 $this->InstitutionSite->validator()->remove('area_id_select');
-							 if ($this->InstitutionSite->validates()) {
-								 pr($tempRow);
-								 
-								 $this->InstitutionSite->create();
-								 if($this->InstitutionSite->save($tempRow)){
-									 echo 'A';
-								 	 $totalSuccess++;
-								 }else{
-									 echo 'B';
-									 $totalFailed ++;
-								 }
-							 }else{
-								 $dataFailed[] = array(
-									 'row_number' => $row,
-									 'error' => $this->InstitutionSite->validationErrors, 
-									 'data' => $tempRow
-								);
-								 $totalFailed ++;
-								 $this->log($this->InstitutionSite->validationErrors, 'debug');
-							 }
+							
+							for ($col = 0; $col < $totalColumns; ++$col) {
+								$cell = $sheet->getCellByColumnAndRow($col, $row);
+								$cellValue = $cell->getValue();
+								$excelMappingObj = $mapping[$col]['ImportMapping'];
+								$foreignKey = $excelMappingObj['foreigh_key'];
+								if ($foreignKey == 1) {
+									if (array_key_exists($cellValue, $lookup[$col])) {
+										$val = $lookup[$col][$cellValue];
+									} else {
+										$dataFailed[] = array(
+											'row_number' => $row,
+											'error' => $this->InstitutionSite->getExcelLabel('Import.code_unfound'),
+											'data' => $tempRow
+										);
+										continue 2;
+									}
+								} else if ($foreignKey == 2) {
+									$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
+									$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
+									if(!empty($recordId)){
+										$val = $recordId;
+									}else{
+										$dataFailed[] = array(
+											'row_number' => $row,
+											'error' => $this->InstitutionSite->getExcelLabel('Import.code_unfound'),
+											'data' => $tempRow
+										);
+										continue 2;
+									}
+								} else {
+									$val = $cellValue;
+								}
+								$columnName = $columns[$col];
+								$tempRow[$columnName] = $val;
+							}
+							
+							if ($row == 1) {
+								$header = $tempRow;
+								continue;
+							}
+
+							$this->InstitutionSite->set($tempRow);
+							$this->InstitutionSite->validator()->remove('area_id_select');
+							if ($this->InstitutionSite->validates()) {
+								$this->InstitutionSite->create();
+								if ($this->InstitutionSite->save($tempRow)) {
+									$totalSuccess++;
+								} else {
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => array($this->InstitutionSite->getExcelLabel('Import.saving_failed')),
+										'data' => $tempRow
+									);
+								}
+							} else {
+								$validationErrors = $this->InstitutionSite->validationErrors;
+								if(array_key_exists('code', $validationErrors) && count($validationErrors) == 1){
+									$idExisting = $this->InstitutionSite->field('id', array('code' => $tempRow['code']));
+									$updateRow = $tempRow;
+									$updateRow['id'] = $idExisting;
+									if ($this->InstitutionSite->save($updateRow)) {
+										$totalSuccess++;
+									}else{
+										$dataFailed[] = array(
+											'row_number' => $row,
+											'error' => array($this->InstitutionSite->getExcelLabel('Import.saving_failed')),
+											'data' => $tempRow
+										);
+									}
+								}else{
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $this->InstitutionSite->validationErrors,
+										'data' => $tempRow
+									);
+									$this->log($this->InstitutionSite->validationErrors, 'debug');
+								}
+							}
 						}
-						
+
 						$firstSheetOnly = true;
 					}
-					
+
 					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalSuccess', 'header'));
 				}
 			}
@@ -936,7 +1001,7 @@ class InstitutionSitesController extends AppController {
 		$model = 'InstitutionSite';
 		$this->set(compact('model'));
 	}
-	
+
 	public function importTemplate(){
 		$this->InstitutionSite->downloadTemplate();
 	}
