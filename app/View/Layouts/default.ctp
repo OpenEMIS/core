@@ -39,12 +39,14 @@ $description = __d('open_emis', 'OpenEMIS Core');
 		echo $this->Html->css('table'); // for tables
 		echo $this->Html->css('mask'); // for masking
 		echo $this->Html->css('dialog'); // for dialogs
+		// echo $this->Html->css('jquery-ui.min');
 		echo $this->fetch('css');
 		if($lang_dir=='rtl') {
 			echo $this->Html->css('rtl');
 		}
 		
 		echo $this->Html->script('default/jquery-1.9.1.min');
+		// echo $this->Html->script('jquery-ui.min');
 		echo $this->Html->script('default/bootstrap.min');
 		echo $this->Html->script('css_browser_selector');
 		echo $this->Html->script('jquery.plugins');

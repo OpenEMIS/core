@@ -16,7 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Student extends StudentsAppModel {
 	public $actsAs = array(
-		'Excel',
+		'Excel' => array('header' => array(
+			'SecurityUser' => array('username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'status')
+			)
+		),
+		// 'openemis_no', 'first_name', 'last_name'
 		'Search',
 		'TrackActivity' => array('target' => 'Students.StudentActivity', 'key' => 'student_id', 'session' => 'Student.id'),
 		'CascadeDelete' => array(
@@ -27,37 +31,12 @@ class Student extends StudentsAppModel {
 		),
 		'CustomReport' => array(
 			'_default' => array('photo_name', 'photo_content')
-		),
-		'DatePicker' => array('date_of_birth'),
-		'FileUpload' => array(
-			array(
-				'name' => 'photo_name',
-				'content' => 'photo_content',
-				'size' => '1MB',
-				'allowEmpty' => true
-			)
 		)
 	);
 
-	public $belongsTo = array(
-		'AddressArea' => array(
-			'className' => 'Area',
-			'foreignKey' => 'address_area_id'
-		),
-		'BirthplaceArea' => array(
-			'className' => 'Area',
-			'foreignKey' => 'birthplace_area_id'
-		)
-	);
+	public $belongsTo = array('SecurityUser');
 	
 	public $hasMany = array(
-		'Students.StudentContact',
-		'Students.StudentIdentity',
-		'Students.StudentNationality',
-		'Students.StudentLanguage',
-		'Students.StudentComment',
-		'Students.StudentSpecialNeed',
-		'Students.StudentAward',
 		'Students.StudentGuardian',
 		'Students.Programme',
 		'Students.Absence',
@@ -83,95 +62,6 @@ class Student extends StudentsAppModel {
 	);
 	
 	public $validate = array(
-		'first_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid First Name'
-			),
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid First Name'
-			)
-		),
-		'middle_name' => array(
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Middle Name'
-			)
-		),
-		'third_name' => array(
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Third Name'
-			)
-		),
-		'last_name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Last Name'
-			),
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Last Name'
-			)
-		),
-		'preferred_name' => array(
-			'ruleCheckIfStringGotNoNumber' => array(
-				'rule' => 'checkIfStringGotNoNumber',
-				'message' => 'Please enter a valid Preferred Name'
-			)
-		),
-		'identification_no' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid OpenEMIS ID'
-			),
-			'ruleUnique' => array(
-        		'rule' => 'isUnique',
-        		'required' => true,
-        		'message' => 'Please enter a unique OpenEMIS ID'
-		    )
-		),
-		'gender' => array(
-			'ruleRequired' => array(
-				'rule' => array('comparison', 'not equal', '0'),
-				'required' => true,
-				'message' => 'Please select a Gender'
-			)
-		),
-		'address' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Address'
-			)
-		),
-		'date_of_birth' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a Date of Birth'
-			),
-			'ruleCompare' => array(
-				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-				'required' => true,
-				'message' => 'Please select a Date of Birth'
-			),
-			'ruleCompare' => array(
-				'rule' => 'compareBirthDate',
-				'message' => 'Date of Birth cannot be future date'
-			)
-		),
-		'email' => array(
-			'ruleRequired' => array(
-				'rule' => 'email',
-				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
-			)
-		)
 	);
 
 	/* Excel Behaviour */
@@ -184,6 +74,19 @@ class Student extends StudentsAppModel {
 		}
 		return $conditions;
 	}
+
+	public function excelGetFieldLookup() {
+		$alias = $this->alias;
+		$areaList = ClassRegistry::init('Area')->find('list',array('fields' => array('id', 'name')));
+		$lookup = array(
+			'SecurityUser.status' => $this->SecurityUser->getStatus(),
+			'SecurityUser.gender_id' => $this->SecurityUser->Gender->getList(),
+			'SecurityUser.address_area_id' => $areaList,
+			'SecurityUser.birthplace_area_id' => $areaList,
+		);
+		return $lookup;
+	}
+	
 	public function excelGetModels() {
 		$models = parent::excelGetModels();
 		if (CakeSession::check('Student.id')) {
@@ -196,14 +99,14 @@ class Student extends StudentsAppModel {
 						'plugin' => 'Students'
 					)
 				),
-				array('model' => $this->StudentContact, 'name' => 'Contacts'),
-				array('model' => $this->StudentIdentity, 'name' => 'Identities'),
-				array('model' => $this->StudentNationality, 'name' => 'Nationalities'),
-				array('model' => $this->StudentGuardian, 'name' => 'Guardians'),
-				array('model' => $this->StudentLanguage, 'name' => 'Languages'),
-				array('model' => $this->StudentComment, 'name' => 'Comments'),
-				array('model' => $this->StudentSpecialNeed, 'name' => 'Special Needs'),
-				array('model' => $this->StudentAward, 'name' => 'Awards'),
+				array('model' => ClassRegistry::init('Students.StudentContact'), 'name' => 'Contacts'),
+				array('model' => ClassRegistry::init('Students.StudentIdentity'), 'name' => 'Identities'),
+				array('model' => ClassRegistry::init('Students.StudentNationality'), 'name' => 'Nationalities'),
+				array('model' => ClassRegistry::init('Students.StudentLanguage'), 'name' => 'Languages'),
+				array('model' => ClassRegistry::init('Students.StudentComment'), 'name' => 'Comments'),
+				array('model' => ClassRegistry::init('Students.StudentSpecialNeed'), 'name' => 'Special Needs'),
+				array('model' => ClassRegistry::init('Students.StudentAward'), 'name' => 'Awards'),
+				array('model' => ClassRegistry::init('Students.StudentGuardian'), 'name' => 'Guardians'),
 				array('model' => $this->Programme, 'name' => 'Programmes'),
 				array('model' => $this->Absence, 'name' => 'Absences'),
 				array('model' => $this->StudentBehaviour, 'name' => 'Behaviour'),
@@ -224,24 +127,6 @@ class Student extends StudentsAppModel {
 		return $models;
 	}
 	/* End Excel Behaviour */
-
-	public function checkIfStringGotNoNumber($check) {
-		$check = array_values($check);
-		$check = $check[0];
-		return !preg_match('#[0-9]#',$check);
-	}
-
-	public function compareBirthDate() {
-		if(!empty($this->data[$this->alias]['date_of_birth'])) {
-			$birthDate = $this->data[$this->alias]['date_of_birth'];
-			$birthTimestamp = strtotime($birthDate);
-			$todayDate=date("Y-m-d");
-			$todayTimestamp = strtotime($todayDate);
-
-			return $todayTimestamp >= $birthTimestamp;
-		}
-		return true;
-	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		return $this->getPaginate($conditions, $fields, $order, $limit, $page, $recursive, $extra);
@@ -257,20 +142,27 @@ class Student extends StudentsAppModel {
 		
 		$conditions = array(
 			'OR' => array(
-				$this->alias . '.identification_no LIKE' => $search,
-				$this->alias . '.first_name LIKE' => $search,
-				$this->alias . '.middle_name LIKE' => $search,
-				$this->alias . '.third_name LIKE' => $search,
-				$this->alias . '.last_name LIKE' => $search
+				'SecurityUser.openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search
 			)
 		);
 		$options = array(
 			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = Student.security_user_id')
+				)
+			),
 			'conditions' => $conditions,
-			'order' => array($this->alias . '.first_name')
+			'order' => array('SecurityUser.first_name')
 		);
 		
-		$options['fields'] = array('id', 'first_name', 'last_name', 'middle_name', 'third_name', 'gender', 'identification_no', 'date_of_birth');
+		$options['fields'] = array('id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.openemis_no', 'SecurityUser.date_of_birth');
 		$data = $this->find('all', $options);
 		
 		return $data;

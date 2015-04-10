@@ -22,8 +22,7 @@ class InstitutionSiteLocality extends FieldOptionValue {
 		'InstitutionSite' => array(
 			// foreignKey value can be set at runtime. Done at TrackActivityBehaviour.
 			//'foreignKey' => 'institution_site_locality_id',
-		),
-		'InstitutionSiteHistory'
+		)
 	);
 	public $belongsTo = array(
 		'ModifiedUser' => array(

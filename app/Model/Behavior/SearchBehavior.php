@@ -23,18 +23,18 @@ class SearchBehavior extends ModelBehavior {
 		
 		$conditions = array(
 			'OR' => array(
-				$class . '.identification_no LIKE' => $search,
-				$class . '.first_name LIKE' => $search,
-				$class . '.middle_name LIKE' => $search,
-				$class . '.third_name LIKE' => $search,
-				$class . '.last_name LIKE' => $search,
-				$class . '.preferred_name LIKE' => $search
+				'SecurityUser.openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
+				'SecurityUser.preferred_name LIKE' => $search
 			)
 		);
 		$options = array(
 			'recursive' => -1,
 			'conditions' => $conditions,
-			'order' => array($class . '.first_name')
+			'order' => array('SecurityUser.first_name')
 		);
 		$count = $model->find('count', $options);
 		$data = false;
@@ -49,7 +49,6 @@ class SearchBehavior extends ModelBehavior {
 		$class = $model->alias;
 		$dbo = $model->getDataSource();
 		$query = $dbo->buildStatement(array(
-			//'fields' => array('NULL', $class.'.id', $class.'.first_name', $class.'.last_name', $class.'.gender', $class.'.date_of_birth', $class.'.address_area_id'),
 			'fields' => array($class.'.id'),
 			'table' => $dbo->fullTableName($model),
 			'alias' => $class,
@@ -200,18 +199,6 @@ class SearchBehavior extends ModelBehavior {
 	
 	public function paginateJoins(Model $model, $joins, $params) {
 		$class = $model->alias;
-		$obj = Inflector::singularize(Inflector::tableize($class));
-		$table = $obj . '_history';
-		$alias = $class . 'History';
-		$id = $obj . '_id';
-		if(strlen($params['SearchKey']) != 0) {	
-			$joins[] = array(
-				'table' => $table,
-				'alias' => $alias,
-				'type' => 'LEFT',
-				'conditions' => array(sprintf('%s.%s = %s.id', $alias, $id, $class))
-			);
-		}
 
 		if(!is_null($params['AdvancedSearch'])) {
 			$advanced = $params['AdvancedSearch'];
@@ -229,26 +216,38 @@ class SearchBehavior extends ModelBehavior {
 			}
 			if($advanced['Search']['identity'] > 0 || $advanced['Search']['identity_type_id'] > 0) { // search by area and all its children
 
-				$joinConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
+				$joinConditions[] = $class.'Identity.security_user_id = SecurityUser.id';
 				$joinConditions[$class.'Identity.number'] = $advanced['Search']['identity'];
 				
 				if($advanced['Search']['identity_type_id'] > 0) { 
 					$joinConditions[$class.'Identity.identity_type_id'] = $advanced['Search']['identity_type_id'];
 				}
 				$joins[] = array(
-					'table' => strtolower($class).'_identities',
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array($class.'.security_user_id = SecurityUser.id')
+				);
+				$joins[] = array(
+					'table' => 'user_identities',
 					'alias' => $class.'Identity',
 					'conditions' => $joinConditions
 				);
 			}
 		}else{
 			if($class==='Student'||$class==='Staff'){
-				$identityConditions[] = $class.'Identity.'.strtolower($class).'_id = '.$class.'.id';
+				$identityConditions[] = $class.'Identity.security_user_id = SecurityUser.id';
 				if(isset($params['defaultIdentity'])&&strlen($params['defaultIdentity']>0)) {
 					$identityConditions[] = $class.'Identity.identity_type_id = '.$params['defaultIdentity'];
 				}
+
 				$joins[] = array(
-					'table' => strtolower($class).'_identities',
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array($class.'.security_user_id = SecurityUser.id')
+				);
+
+				$joins[] = array(
+					'table' => 'user_identities',
 					'alias' => $class.'Identity',
 					'type' => 'LEFT',
 					'conditions' => $identityConditions,
@@ -264,17 +263,12 @@ class SearchBehavior extends ModelBehavior {
 		if(strlen($params['SearchKey']) != 0) {
 			$search = "%".$params['SearchKey']."%";
 			$conditions['OR'] = array(
-				$class . '.first_name LIKE' => $search,
-				$class . '.middle_name LIKE' => $search,
-				$class . '.third_name LIKE' => $search,
-				$class . '.last_name LIKE' => $search,
-				$class . '.preferred_name LIKE' => $search,
-				$class . '.identification_no LIKE' => $search,
-				$class . 'History.first_name LIKE' => $search,
-				$class . 'History.middle_name LIKE' => $search,
-				$class . 'History.third_name LIKE' => $search,
-				$class . 'History.last_name LIKE' => $search,
-				$class . 'History.identification_no LIKE' => $search
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
+				'SecurityUser.preferred_name LIKE' => $search,
+				'SecurityUser.openemis_no LIKE' => $search
 			);
 		}
 
@@ -368,26 +362,20 @@ class SearchBehavior extends ModelBehavior {
 		$isSuperAdmin = $conditions['isSuperAdmin'];
 		$class = $model->alias;
 		$fields = array(
-			$class.'.id', $class.'.identification_no',
-			$class.'.first_name', $class.'.middle_name', $class.'.third_name', $class.'.last_name', $class.'.preferred_name',
+			$class.'.id', 'SecurityUser.openemis_no',
+			'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name',
 			$class.'Identity.number'
 		);
-		
-		if(strlen($conditions['SearchKey']) != 0) {
-			$fields[] = $class.'History.identification_no AS history_identification_no';
-			$fields[] = $class.'History.first_name AS history_first_name';
-			$fields[] = $class.'History.middle_name AS history_middle_name';
-			$fields[] = $class.'History.third_name AS history_third_name';
-			$fields[] = $class.'History.last_name AS history_last_name';
-		}
 
 		$joins = array();
 		$data = array();
+		$contain = (array_key_exists('contain', $extra))? $extra['contain']:array();
 		// if super admin
 		if($isSuperAdmin) {
 			$data = $model->find('all', array(
 				'recursive' => -1,
 				'fields' => $fields,
+				'contain' => $contain,
 				'joins' => $this->paginateJoins($model, $joins, $conditions),
 				'conditions' => $this->paginateConditions($model, $conditions),
 				'limit' => $limit,
@@ -469,14 +457,19 @@ class SearchBehavior extends ModelBehavior {
 				$mainTable = $mainClass;
 				$field = $mainTable . '.id';
 
-				$joinConditions[] = $mainClass.'Identity.'.strtolower($mainClass).'_id = '.$mainClass.'.id';
+				$joinConditions[] = $mainClass.'Identity.security_user_id = SecurityUser.id';
 				$joinConditions[$mainClass.'Identity.number'] = $arrAdvanced['Search']['identity'];
 				
 				if($params['Search']['identity_type_id'] > 0) { 
 					$joinConditions[$mainClass.'Identity.identity_type_id'] = $arrAdvanced['Search']['identity_type_id'];
 				}
 				$joins[] = array(
-					'table' => strtolower($mainClass).'_identities',
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array($class.'.security_user_id = SecurityUser.id')
+				);
+				$joins[] = array(
+					'table' => 'user_identities',
 					'alias' => $mainClass.'Identity',
 					'conditions' => $joinConditions
 				);

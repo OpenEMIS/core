@@ -1,0 +1,1 @@
+UPDATE security_functions SET `_delete` = '_view:remove' WHERE security_functions.name = 'Notices';

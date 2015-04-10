@@ -17,7 +17,7 @@
 
 class StaffHealthImmunization extends StaffAppModel {
 	public $actsAs = array(
-		'Excel' => array('header' => array('Staff' => array('identification_no', 'first_name', 'last_name'))),
+		'Excel' => array('header' => array('Staff' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'))),
 		'ControllerAction', 
 		'DatePicker' => 'date'
 	);

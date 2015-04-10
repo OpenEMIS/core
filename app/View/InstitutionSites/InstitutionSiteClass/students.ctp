@@ -28,16 +28,27 @@
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.student_id");
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.institution_site_section_id", array('value' => $selectedSectionId));
 					echo $this->Form->hidden("InstitutionSiteClassStudent.$i.status", array('value' => 1));
-					//echo $this->Form->hidden("InstitutionSiteClassStudent.$i.education_grade_id", array('value' => !empty($this->data[$model]['education_grade_id']) ? $this->data[$model]['education_grade_id'] : 0));
 
 					foreach ($obj['Student'] as $field => $value) {
-						echo $this->Form->hidden("InstitutionSiteClassStudent.$i.Student.$field", array('value' => $value));
+						if (!is_array($value)) {
+							echo $this->Form->hidden("InstitutionSiteClassStudent.$i.Student.$field", array('value' => $value));
+						}	
+					}
+					foreach ($obj['Student']['SecurityUser'] as $field => $value) {
+						if (!is_array($value)) {
+							echo $this->Form->hidden("InstitutionSiteClassStudent.$i.Student.SecurityUser.$field", array('value' => $value));
+						}	
+					}
+					foreach ($obj['Student']['SecurityUser']['Gender'] as $field => $value) {
+						if (!is_array($value)) {
+							echo $this->Form->hidden("InstitutionSiteClassStudent.$i.Student.SecurityUser.Gender.$field", array('value' => $value));
+						}	
 					}
 					?>
-					<td><?php echo $obj['Student']['identification_no']; ?></td>
-					<td><?php echo ModelHelper::getName($obj['Student']) ?></td>
-					<td><?php echo $this->Model->getGender($obj['Student']['gender']) ?></td>
-					<td><?php echo $this->Utility->formatDate($obj['Student']['date_of_birth']); ?></td>
+					<td><?php echo $obj['Student']['SecurityUser']['openemis_no']; ?></td>
+					<td><?php echo ModelHelper::getName($obj['Student']['SecurityUser']) ?></td>
+					<td><?php echo $this->Model->getGender($obj['Student']['SecurityUser']['Gender']['name']) ?></td>
+					<td><?php echo $this->Utility->formatDate($obj['Student']['SecurityUser']['date_of_birth']); ?></td>
 					<!--td>
 						<?php
 						echo $this->Form->input("InstitutionSiteClassStudent.$i.student_category_id", array(
