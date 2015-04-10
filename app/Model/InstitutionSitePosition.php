@@ -165,7 +165,27 @@ class InstitutionSitePosition extends AppModel {
 				'InstitutionSiteStaff.FTE', 'StaffStatus.name'
 			);
 			$this->InstitutionSiteStaff->recursive = 0;
-			$current = $this->InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndEndDate($id, null, $fields, array('InstitutionSiteStaff.start_date'));
+
+			// $current = $this->InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndEndDate($id, null, $fields, array('InstitutionSiteStaff.start_date'));
+
+			$current = $this->InstitutionSiteStaff->find(
+				'all',
+				array(
+					'contain' => array(
+						'Staff' => array(
+							'SecurityUser' => array('openemis_no','first_name','middle_name','third_name','last_name')
+						),
+						'StaffStatus'
+					),
+					// 'fields' => $fields,
+					'conditions' => array(
+						'InstitutionSiteStaff.institution_site_position_id' => $id,
+						'InstitutionSiteStaff.end_date' => null
+					),
+					'order' => array('InstitutionSiteStaff.start_date')
+				)
+			);
+
 			$totalCurrentFTE = '0.00';
 			if (count($current)>0) {
 				foreach ($current as $c) {
@@ -173,7 +193,13 @@ class InstitutionSitePosition extends AppModel {
 				}
 			}
 			$past = $this->InstitutionSiteStaff->find('all', array(
-				'fields' => $fields,
+				// 'fields' => $fields,
+				'contain' => array(
+						'Staff' => array(
+							'SecurityUser' => array('openemis_no','first_name','middle_name','third_name','last_name')
+						),
+						'StaffStatus'
+					),
 				'conditions' => array(
 					'InstitutionSiteStaff.institution_site_position_id' => $id,
 					'InstitutionSiteStaff.end_date IS NOT NULL'
@@ -191,6 +217,25 @@ class InstitutionSitePosition extends AppModel {
 		$this->recursive = 0;
 		$data = $this->findAllByInstitutionSiteId($institutionSiteId);
 		$this->setVar(compact('data'));
+	}
+
+	public function view($id=0) {
+		$this->render = 'auto';
+		if ($this->exists($id)) {
+			$data = $this->find(
+				'first',
+				array(
+					'conditions' => array(
+						'InstitutionSitePosition.id' => $id
+					)
+				)
+			);
+			$this->Session->write($this->alias.'.id', $id);
+			$this->setVar(compact('data'));
+		} else {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => get_class($model)));
+		}
 	}
 	
 	public function staffEdit($staffId=0) {
