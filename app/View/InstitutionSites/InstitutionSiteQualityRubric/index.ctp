@@ -73,7 +73,7 @@ echo $this->element($tabsElement, array(), array());
 							<span class="middot">&middot;</span>
 							<span><?php echo $class['InstitutionSiteClass']['name']; ?></span>
 						</td>
-						<td><?php echo $class['Staff']['first_name'] . " ". $class['Staff']['last_name']; ?></td>
+						<td><?php echo $class['SecurityUser']['first_name'] . " ". $class['SecurityUser']['last_name']; ?></td>
 						<?php if ($selectedAction == 0) : ?>
 							<td><?php echo $class['QualityStatus']['date_disabled']; ?></td>
 						<?php elseif ($selectedAction == 1) : ?>

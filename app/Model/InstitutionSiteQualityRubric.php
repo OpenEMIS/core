@@ -193,7 +193,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 						$fields = array(
 							'InstitutionSiteSection.id', 'InstitutionSiteSection.name', 'InstitutionSiteClass.id', 'InstitutionSiteClass.name',
 							'EducationGrade.id', 'EducationGrade.name', 'EducationProgramme.id', 'EducationProgramme.name',
-							'Staff.id', 'Staff.first_name', 'Staff.last_name'
+							'Staff.id', 'SecurityUser.first_name', 'SecurityUser.last_name'
 						);
 						$joins = array(
 							array(
@@ -236,6 +236,13 @@ class InstitutionSiteQualityRubric extends AppModel {
 								'alias' => 'Staff',
 								'conditions' => array(
 									'Staff.id = InstitutionSiteClassStaff.staff_id'
+								)
+							),
+							array(
+								'table' => 'security_users',
+								'alias' => 'SecurityUser',
+								'conditions' => array(
+									'SecurityUser.id = Staff.security_user_id'
 								)
 							)
 						);
@@ -365,7 +372,14 @@ class InstitutionSiteQualityRubric extends AppModel {
 			$data['EducationGrade']['EducationProgramme'] = $educationGrade['EducationProgramme'];
 			$data['InstitutionSiteSection']['name'] = $this->InstitutionSiteSection->field('name', array('InstitutionSiteSection.id' => $selectedSiteSection));
 			$data['InstitutionSiteClass']['name'] = $this->InstitutionSiteClass->field('name', array('InstitutionSiteClass.id' => $selectedSiteClass));
-			$data['Staff']['name'] = $this->Staff->field('name', array('Staff.id' => $selectedStaff));
+			$securityUser = $this->Staff->find('first', array(
+				'contain' => array('SecurityUser'),
+				'fields' => array(
+					'Staff.id', 'SecurityUser.first_name', 'SecurityUser.last_name'
+				),
+				'conditions' => array('Staff.id' => $selectedStaff)
+			));
+			$data['SecurityUser'] = $securityUser['SecurityUser'];
 		} else {
 			$data = $this->find('first', array(
 				'contain' => array('RubricTemplate', 'AcademicPeriod', 'EducationGrade' => array('EducationProgramme'), 'InstitutionSiteSection', 'InstitutionSiteClass', 'Staff'),
