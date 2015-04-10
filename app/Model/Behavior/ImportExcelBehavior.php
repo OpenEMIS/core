@@ -31,9 +31,9 @@ class ImportExcelBehavior extends ModelBehavior {
 		$this->LabelHelper = new LabelHelper(new View());
 	}
 	
-	public function getMapping($model){
+	public function getMapping(Model $model){
 		$mapping = $this->MappingModel->find('all', array(
-			'conditions' => array($this->MappingModel->alias.'.model' => $model),
+			'conditions' => array($this->MappingModel->alias.'.model' => $model->alias),
 			'order' => array($this->MappingModel->alias.'.order')
 		));
 		
@@ -42,11 +42,11 @@ class ImportExcelBehavior extends ModelBehavior {
 	
 	public function getHeader(Model $model){
 		$header = array();
-		$mapping = $this->getMapping($model->alias);
+		$mapping = $this->getMapping($model);
 		
 		foreach($mapping as $key => $value){
 			$column = $value[$this->MappingModel->alias]['column_name'];
-			$label = $this->getLabel(sprintf('%s.%s', $model->alias, $column));
+			$label = $this->getExcelLabel($model, sprintf('%s.%s', $model->alias, $column));
 			if(!empty($label)){
 				$headerCol = $label;
 			}else{
@@ -60,7 +60,7 @@ class ImportExcelBehavior extends ModelBehavior {
 	
 	public function getColumns(Model $model){
 		$columns = array();
-		$mapping = $this->getMapping($model->alias);
+		$mapping = $this->getMapping($model);
 		
 		foreach($mapping as $key => $value){
 			$column = $value[$this->MappingModel->alias]['column_name'];
@@ -70,7 +70,7 @@ class ImportExcelBehavior extends ModelBehavior {
 		return $columns;
 	}
 	
-	public function getLabel($key) {
+	public function getExcelLabel(Model $model, $key) {
 		$label = $this->LabelHelper->get($key);
 		return $label;
 	}
@@ -100,7 +100,7 @@ class ImportExcelBehavior extends ModelBehavior {
 			}
 		}
 		
-		$excelFile = sprintf('%s_%s_%s.xlsx', $this->getLabel('general.import'), $this->getLabel('general.'.$model->alias), $this->getLabel('general.template'));
+		$excelFile = sprintf('%s_%s_%s.xlsx', $this->getExcelLabel($model, 'general.import'), $this->getExcelLabel($model, 'general.'.$model->alias), $this->getExcelLabel($model, 'general.template'));
 		$excelPath = $folder . DS . $excelFile;
 
 		$writer = new XLSXWriter();
