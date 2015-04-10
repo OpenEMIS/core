@@ -27,7 +27,7 @@ echo $this->Form->create('SecurityUser', $formOptions);
 
 <fieldset class="section_break">
 	<legend><?php echo __('Information'); ?></legend>
-	<?php echo $this->Form->input('identification_no'); ?>
+	<?php echo $this->Form->input('openemis_no'); ?>
 	<?php echo $this->Form->input('first_name'); ?>
 	<?php echo $this->Form->input('last_name'); ?>
 </fieldset>
