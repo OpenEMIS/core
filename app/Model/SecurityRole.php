@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityRole extends AppModel {
-	public $actsAs = array('ControllerAction', 'Reorder');
+	public $actsAs = array('ControllerAction', 'Reorder' => array('parentKey' => 'security_group_id'));
 	public $belongsTo = array('SecurityGroup');
 	public $hasMany = array('SecurityRoleFunction', 'SecurityGroupUser');
 	
@@ -203,10 +203,10 @@ class SecurityRole extends AppModel {
 			}
 			
 			$data[$this->alias]['order'] = $newOrder;
-			$result = $this->save($data);
-			if ($result) {
+			$this->create();
+			if ($this->save($data)) {
 				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'rolesView', $result[$this->alias]['id']));
+				return $controller->redirect(array('action' => 'rolesView', $this->id));
 			}
 		}
 		$controller->set(compact('roleType', 'selectedGroup'));
