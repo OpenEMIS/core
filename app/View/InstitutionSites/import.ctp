@@ -6,7 +6,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Import Institutions'));
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.download_template'), array('action' => 'importTemplate'), array('class' => 'divider'));
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index'), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'import'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -46,7 +46,7 @@ if(empty($uploadedName)):
 <div class="form-group">
 	<div class="col-md-3"></div>
 	<div class="col-md-6">
-			<?php echo __("Format Supported:") . " .xls"; ?>
+			<?php echo __("Format Supported:") . " .xlsx"; ?>
 	</div>
 </div>
 <?php 
