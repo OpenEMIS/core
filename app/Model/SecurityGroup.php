@@ -217,7 +217,7 @@ class SecurityGroup extends AppModel {
 				}
 				$roleOptions = $this->SecurityRole->find('list', array(
 					'conditions' => array('SecurityRole.security_group_id' => $groupIds, 'SecurityRole.visible' => 1),
-					'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
+					'order' => array('SecurityRole.order')
 				));
 			}
 			
