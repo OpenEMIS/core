@@ -212,13 +212,22 @@ class SecurityGroup extends AppModel {
 				}
 			}else{
 				$groupIds = array(-1, 0);
-				if ($id != 0) {
-					$groupIds[] = $id;
-				}
 				$roleOptions = $this->SecurityRole->find('list', array(
 					'conditions' => array('SecurityRole.security_group_id' => $groupIds, 'SecurityRole.visible' => 1),
-					'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
+					'order' => array('SecurityRole.order')
 				));
+				
+				if ($id != 0) {
+					$additionalRoleOptions = $this->SecurityRole->find('list', array(
+						'conditions' => array('SecurityRole.security_group_id' => $id, 'SecurityRole.visible' => 1),
+						'order' => array('SecurityRole.order')
+					));
+					if(!empty($additionalRoleOptions)){
+						foreach($additionalRoleOptions as $id => $name){
+							$roleOptions[$id] = $name;
+						}
+					}
+				}
 			}
 			
 			if(empty($roleOptions)){
