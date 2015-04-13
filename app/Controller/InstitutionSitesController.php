@@ -906,25 +906,26 @@ class InstitutionSitesController extends AppController {
 						$totalRows = $highestRow - 1;
 						//$highestColumn = $sheet->getHighestColumn();
 						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
-
 						for ($row = 1; $row <= $highestRow; ++$row) {
 							$tempRow = array();
-							
+							$originalRow = array();
+							$rowPass = true;
 							for ($col = 0; $col < $totalColumns; ++$col) {
 								$cell = $sheet->getCellByColumnAndRow($col, $row);
 								$cellValue = $cell->getValue();
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
 								$foreignKey = $excelMappingObj['foreigh_key'];
+								$originalRow[] = $cellValue;
 								if ($foreignKey == 1) {
 									if (array_key_exists($cellValue, $lookup[$col])) {
 										$val = $lookup[$col][$cellValue];
 									} else {
-										$dataFailed[] = array(
-											'row_number' => $row,
-											'error' => $this->InstitutionSite->getExcelLabel('Import.code_unfound'),
-											'data' => $tempRow
-										);
-										continue 2;
+										if($row !== 1){
+											$rowPass = false;
+										}else{
+											$val = $cellValue;
+										}
+										
 									}
 								} else if ($foreignKey == 2) {
 									$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
@@ -932,22 +933,31 @@ class InstitutionSitesController extends AppController {
 									if(!empty($recordId)){
 										$val = $recordId;
 									}else{
-										$dataFailed[] = array(
-											'row_number' => $row,
-											'error' => $this->InstitutionSite->getExcelLabel('Import.code_unfound'),
-											'data' => $tempRow
-										);
-										continue 2;
+										if($row !== 1){
+											$rowPass = false;
+										}else{
+											$val = $cellValue;
+										}
 									}
 								} else {
 									$val = $cellValue;
 								}
+								
 								$columnName = $columns[$col];
 								$tempRow[$columnName] = $val;
+								
+								if(!$rowPass){
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $this->InstitutionSite->getExcelLabel('Import.code_unfound'),
+										'data' => $tempRow
+									);
+								}
 							}
 							
-							if ($row == 1) {
+							if ($row === 1) {
 								$header = $tempRow;
+								$dataFailed = array();
 								continue;
 							}
 
@@ -961,7 +971,7 @@ class InstitutionSitesController extends AppController {
 									$dataFailed[] = array(
 										'row_number' => $row,
 										'error' => array($this->InstitutionSite->getExcelLabel('Import.saving_failed')),
-										'data' => $tempRow
+										'data' => $originalRow
 									);
 								}
 							} else {
@@ -976,14 +986,14 @@ class InstitutionSitesController extends AppController {
 										$dataFailed[] = array(
 											'row_number' => $row,
 											'error' => array($this->InstitutionSite->getExcelLabel('Import.saving_failed')),
-											'data' => $tempRow
+											'data' => $originalRow
 										);
 									}
 								}else{
 									$dataFailed[] = array(
 										'row_number' => $row,
 										'error' => $this->InstitutionSite->validationErrors,
-										'data' => $tempRow
+										'data' => $originalRow
 									);
 									$this->log($this->InstitutionSite->validationErrors, 'debug');
 								}
