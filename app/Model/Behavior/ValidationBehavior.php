@@ -38,7 +38,7 @@ class ValidationBehavior extends ModelBehavior {
 				return 'Please input a proper date on '.(ucwords(str_replace('_', ' ', $compareField)));
 				exit(1);
 			}
-			if($equals){
+			if($equals) {
 				return $endDate >= $startDate;
 			} else {
 				return $endDate > $startDate;
@@ -62,4 +62,15 @@ class ValidationBehavior extends ModelBehavior {
 		$count = $model->find('count', array('recursive' => -1, 'conditions' => array('username' => $username, 'password' => $password)));
 		return $count==1;
 	}	
+
+	public function checkDateInput($value) {
+		try {
+		    $date = new DateTime($value);
+		} catch (Exception $e) {
+		    return 'Please input a proper date';
+		    exit(1);
+		}
+		return true;		
+	}
+
 }
