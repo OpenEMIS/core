@@ -22,6 +22,7 @@ class LabelHelper extends AppHelper {
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
+			'reject' => 'Reject',
 			'export' => 'Export',
 			'order' => 'Order',
 			'visible' => 'Visible',
@@ -108,6 +109,8 @@ class LabelHelper extends AppHelper {
 			'levels' => 'Levels',
 			'types' => 'Types',
 			'custom_fields' => 'Custom Fields',
+			'no_records' => 'There are no records.',
+			'editable' => 'Editable'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -712,6 +715,57 @@ class LabelHelper extends AppHelper {
 		'Notice' => array(
 			'title' => 'Notices',	
 			'created' => 'Date'
+		),
+		'RubricTemplate' => array(
+			'name' => 'Rubric Template',
+			'weighting_type' => 'Weighting Type',
+			'pass_mark' => 'Pass Mark',
+			'options' => 'Options'
+		),
+		'RubricTemplateGrade' => array(
+			'select_grade' => 'Select Grade'
+		),
+		'RubricTemplateOption' => array(
+			'rubric_template_id' => 'Rubric Template',
+			'weighting' => 'Weighting',
+			'color' => 'Color'
+		),
+		'RubricSection' => array(
+			'name' => 'Rubric Section',
+			'rubric_template_id' => 'Rubric Template',
+			'no_of_criterias' => 'No of Criterias'
+		),
+		'RubricCriteria' => array(
+			'rubric_section_id' => 'Section',
+			'type' => 'Type',
+			'criterias' => 'Options'
+		),
+		'QualityStatus' => array(
+			'rubric_template_id' => 'Rubric Template',
+			'academic_period_level_id' => 'Academic Period Level',
+			'security_roles' => 'Security Roles',
+			'education_programmes' => 'Education Programmes',
+			'date_enabled' => 'Date Enabled',
+			'date_disabled' => 'Date Disabled'
+		),
+		'InstitutionSiteQualityVisit' => array(
+			'academic_period_id' => 'Academic Period',
+			'education_grade_id' => 'Grade',
+			'institution_site_section_id' => 'Section',
+			'institution_site_class_id' => 'Class',
+			'staff_id' => 'Staff',
+			'quality_visit_type_id' => 'Visit Type'
+		),
+		'InstitutionSiteQualityRubric' => array(
+			'status' => 'Status',
+			'rubric_template_id' => 'Rubric Template',
+			'academic_period_id' => 'Academic Period',
+			'education_programme_id' => 'Programme',
+			'education_grade_id' => 'Grade',
+			'institution_site_section_id' => 'Section',
+			'institution_site_class_id' => 'Class',
+			'staff_id' => 'Staff',
+			'rubric_sections' => 'Rubric Sections'
 		)
 	);
 	

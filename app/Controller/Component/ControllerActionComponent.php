@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.6
+ControllerActionComponent - Version 1.0.9
 */
 
 class ControllerActionComponent extends Component {
@@ -24,7 +24,7 @@ class ControllerActionComponent extends Component {
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
-	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove');
+	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove', 'reorder', 'moveOrder');
 	public $autoRender = true;
 	public $autoProcess = true;
 
@@ -307,6 +307,102 @@ class ControllerActionComponent extends Component {
 			
 			$action = array_merge($action, $named, $pass);
 			return $this->controller->redirect($action);
+		}
+	}
+
+	public function reorder() {
+		$model = $this->model;
+		$named = $this->controller->params['named'];
+		$pass = $this->controller->params['pass'];
+		$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
+
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
+		$model->contain();
+		$data = $model->find('all', array(
+			'conditions' => $conditions,
+			'order' => array(
+				$model->alias.'.order', 
+				$model->alias.'.id'
+			)
+		));
+
+		$actionUrl = array('action' => isset($params['move']) ? $params['move'] : 'moveOrder');
+		if ($this->triggerFrom == 'Model') {
+			unset($pass[0]);
+			$actionUrl = array('action' => get_class($model));
+			$actionUrl[] = isset($params['move']) ? $params['move'] : 'moveOrder';
+		}
+
+		$actionUrl = array_merge($actionUrl, $named, $pass);
+		$this->controller->set(compact('data', 'actionUrl'));
+	}
+
+	public function moveOrder() {
+		$model = $this->model;
+
+		$named = $this->controller->params['named'];
+		$pass = $this->controller->params['pass'];
+		$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
+
+		$actionUrl = array('action' => isset($params['order']) ? $params['order'] : 'reorder');
+		if ($this->triggerFrom == 'Model') {
+			unset($pass[0]);
+			$actionUrl = array('action' => get_class($model));
+			$actionUrl[] = isset($params['order']) ? $params['order'] : 'reorder';
+		}
+
+		$actionUrl = array_merge($actionUrl, $named, $pass);
+
+		$data = $this->controller->request->data;
+		$conditions = isset($params['conditions']) ? $params['conditions'] : array();
+		$this->fixOrder($conditions);
+
+		$id = $data[$model->alias]['id'];
+		$idField = $model->alias.'.id';
+		$orderField = $model->alias.'.order';
+		$move = $data[$model->alias]['move'];
+		$order = $model->field('order', array('id' => $id));
+		$idConditions = array_merge(array($idField => $id), $conditions);
+		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
+
+		if($move === 'up') {
+			$model->updateAll(array($orderField => $order-1), $idConditions);
+			$updateConditions[$orderField] = $order-1;
+			$model->updateAll(array($orderField => $order), $updateConditions);
+		} else if($move === 'down') {
+			$model->updateAll(array($orderField => $order+1), $idConditions);
+			$updateConditions[$orderField] = $order+1;
+			$model->updateAll(array($orderField => $order), $updateConditions);
+		} else if($move === 'first') {
+			$model->updateAll(array($orderField => 1), $idConditions);
+			$updateConditions[$orderField . ' <'] = $order;
+			$model->updateAll(array($orderField => $orderField . ' + 1'), $updateConditions);
+		} else if($move === 'last') {
+			$count = $model->find('count', array('conditions' => $conditions));
+			$model->updateAll(array($orderField => $count), $idConditions);
+			$updateConditions[$orderField . ' >'] = $order;
+			$model->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
+		}
+
+		return $this->controller->redirect($actionUrl);
+    }
+
+    public function fixOrder($conditions) {
+    	$model = $this->model;
+		$count = $model->find('count', array('conditions' => $conditions));
+		if($count > 0) {
+			$list = $model->find('list', array(
+				'conditions' => $conditions,
+				'order' => array(
+					$model->alias.'.order',
+					$model->alias.'.id'
+				)
+			));
+			$order = 1;
+			foreach($list as $id => $name) {
+				$model->id = $id;
+				$model->saveField('order', $order++);
+			}
 		}
 	}
 
