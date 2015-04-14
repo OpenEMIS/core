@@ -189,6 +189,23 @@ class MessageComponent extends Component {
 		),
 		'WorkflowStep' => array(
 			'noWorkflow' => array('type' => 'warn', 'msg' => 'There are no workflows')
+		),
+		'RubricTemplate' => array(
+			'noTemplate' => array('type' => 'warn', 'msg' => 'There are no templates.')
+		),
+		'RubricSection' => array(
+			'noSection' => array('type' => 'warn', 'msg' => 'There are no sections.')
+		),
+		'InstitutionSiteQualityRubric' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Quality rubric record has been saved to draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Quality rubric record has been submitted successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'This quality rubric is not submitted due to incomplete records.')
+			),
+			'reject' => array(
+				'success' => array('type' => 'ok', 'msg' => 'Quality rubric record has been rejected successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'Quality rubric record is not rejected due to errors encountered.')
+			)
 		)
 	);
 	
