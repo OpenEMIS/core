@@ -42,19 +42,22 @@ class RestController extends RestfulAppController {
     );
 
 	public function beforeFilter() {
-        $this->autoRender = false;
-		parent::beforeFilter();
-
-        $this->Auth->allow('auth', 'token');
-
+        
+        $this->Auth->allow('auth', 'token', 'survey');
+//		parent::beforeFilter();
+        
         if ($this->action == 'survey') {
+        $this->autoRender = false;
+        
             $pass = $this->params->pass;
             $action = null;
 
             if (!empty($pass)) {
+        
                 $action = array_shift($pass);
             }
             if (!is_null($action) && !in_array($action, $this->RestSurvey->allowedActions)) {
+        
                 // actions require authentication
                 // if authentication is required:
                 // 1. check if token exists
@@ -62,6 +65,7 @@ class RestController extends RestfulAppController {
                 
                 $accessToken    = '';
                 if($this->request->is('post')) {
+        
                     $accessToken    = $this->data['SecurityRestSession']['access_token'];
                     $confirm = $this->SecurityRestSession->find('first', array(
                         'conditions' => array(
@@ -73,17 +77,25 @@ class RestController extends RestfulAppController {
                     $expiry     = strtotime($confirm['SecurityRestSession']['expiry_date']);
                     
                     if (empty($confirm) || $current > $expiry) {
-                        $json = array('message' => 'Missing Token');          
+        
+                        throw new BadRequestException('Custom error message', 408);
+                        $json = array('message' => 'invalid');          
+                        $jdata  = json_encode($json);
+                        echo $jdata;
                     } else {
-                        $json = array('message' => 'Valid Token');
+        
+                        $json = array('message' => 'valid');
+                        $jdata  = json_encode($json);
+                        echo $jdata;
                     }
-                    echo json_encode($json);
                 }
             }
         }
     }
 
 	public function survey() {
+		$this->layout = 'auth';
+
         $this->autoRender = false;
         $pass = $this->params->pass;
         $action = 'index';
@@ -97,8 +109,10 @@ class RestController extends RestfulAppController {
             return false;
         }
     }
-        
+    
     public function auth() {
+		$this->layout = 'auth';
+
         // We check if request came from a post form
         if($this->request->is('post')) {
             // do the login..
@@ -123,22 +137,25 @@ class RestController extends RestfulAppController {
             
             $this->SecurityRestSession->save($saveData);
             
-            // return the json data
-            echo json_encode($json);
+            $data  = json_encode($json);
+            $this->set(compact('data'));
         } else {
             
             // if the login is wrong, show the error message.
             $json = array('message' => 'failure');          
-            echo json_encode($json);
+            $data  = json_encode($json);
+            $this->set(compact('data'));
         }
     }
+
     
     public function token() {
+		$this->layout = 'auth';
         $accessToken    = '';
         $refreshToken   = '';
-    
+
         if($this->request->is('post')) {
-            
+        
             $accessToken    = $this->data['SecurityRestSession']['access_token'];
             $refreshToken   = $this->data['SecurityRestSession']['refresh_token'];
             
@@ -152,10 +169,12 @@ class RestController extends RestfulAppController {
             // check if the record actually exists. if it does, do the update, else just return fail.
             // we check if the expiry time has already passed. if it has passed, return error.
             if (!empty($search)) {
+                
                 $current    = time();
                 $expiry     = strtotime($search['SecurityRestSession']['expiry_date']);
 
                 if ($current < $expiry) {
+                    
                     $userID     = $search['SecurityRestSession']['created_user_id'];
                     $accessToken = sha1(time() . $userID);
                     $startDate = time() + 3600; // current time + one hour
@@ -166,18 +185,26 @@ class RestController extends RestfulAppController {
                         'expiry_date' => $expiryTime
                     );
 
-                    $message = array('message' => 'success', 'access_token' => $accessToken);         
+                    $json = array('message' => 'success', 'access_token' => $accessToken);         
 
                     $this->SecurityRestSession->id = $search['SecurityRestSession']['id'];
                     $this->SecurityRestSession->save($saveData);
 
                 } else {
+        
+                    $json = array('message' => 'line 193');
+                    $data  = json_encode($json);
+                    $this->set(compact('data'));
                     throw new BadRequestException('Custom error message', 408);
                 }
             } else {
-                $message = array('message' => 'failure');         
+        
+                $json = array('message' => 'failure');
+                $data  = json_encode($json);
+                $this->set(compact('data'));
             }
-            echo json_encode($message);
-        }        
+            $data  = json_encode($json);
+            $this->set(compact('data'));
+        }
     }
 }
