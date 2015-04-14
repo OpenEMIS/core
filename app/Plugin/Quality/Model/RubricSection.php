@@ -134,6 +134,10 @@ class RubricSection extends QualityAppModel {
 			}
 			$data = $result;
 
+			if (empty($data)) {
+				$this->controller->Message->alert('general.noData');
+			}
+
 			$this->controller->set(compact('data', 'templateOptions', 'selectedTemplate'));
 		}
 	}
