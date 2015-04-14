@@ -46,7 +46,7 @@ class Student extends StudentsAppModel {
 		'Students.StudentFee',
 		'InstitutionSiteStudent',
 		'InstitutionSiteClassStudent',
-		'InstitutionSiteSectionStudent',
+		'InstitutionSiteSectionStudent' => array('dependent' => true),
 		'InstitutionSiteStudentFee',
 		'Students.StudentHealth',
 		'Students.StudentHealthHistory',
