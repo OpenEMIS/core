@@ -20,6 +20,25 @@ class DatePickerBehavior extends ModelBehavior {
 			$this->settings[$Model->alias] = array();
 		}
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
+		
+		$validate = array();
+		if (count($settings)) {
+			foreach ($settings as $field) {
+				$validate[$field] = array(
+					'ruleDateInput' => array(
+						'rule' => 'checkDateInput',
+					)
+				);
+			}
+		}
+		$schema = $Model->schema();
+		foreach($validate as $name => $rule) {
+			if(!array_key_exists($name, $Model->validate) && array_key_exists($name, $schema)) {
+				$Model->validate[$name] = $rule;
+			} elseif (array_key_exists($name, $Model->validate) && array_key_exists($name, $schema)) {
+				$Model->validate[$name] = array_merge($Model->validate[$name], $rule);
+			}
+		}
 	}
 	
 	public function beforeSave(Model $model, $options = array()) {
@@ -34,8 +53,8 @@ class DatePickerBehavior extends ModelBehavior {
 				$model->data[$modelName][$field] = date($format, strtotime($value));
 			}
 		}
-		return parent::beforeSave($model, $options);
-	}
+        return parent::beforeSave($model, $options);
+    }
 	
 	public function afterFind(Model $model, $results, $primary = false) {
 		$format = 'd-m-Y';
