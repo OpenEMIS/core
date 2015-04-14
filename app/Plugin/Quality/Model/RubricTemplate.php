@@ -137,6 +137,10 @@ class RubricTemplate extends QualityAppModel {
 		$this->contain();
 		$data = $this->find('all');
 		$this->controller->set('data', $data);
+
+		if (empty($data)) {
+			$this->controller->Message->alert('general.noData');
+		}
 	}
 
 	public function getTemplateOptions() {

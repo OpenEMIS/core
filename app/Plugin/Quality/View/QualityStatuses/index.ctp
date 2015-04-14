@@ -2,9 +2,11 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $contentHeader);
 $this->start('contentActions');
+if (!empty($selectedTemplate)) {
 	if ($_add) {
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => 'add', 'template' => $selectedTemplate), array('class' => 'divider'));
 	}
+}
 $this->end();
 
 $this->start('contentBody');
