@@ -383,7 +383,9 @@ class LabelHelper extends AppHelper {
 			'institution_site_section_id' => 'Section',
 			'student_category_id' => 'Category',
 			'select_grade' => 'Select Grade',
-			'select_section' => 'Select Section'
+			'select_section' => 'Select Section',
+			'fte' => 'FTE',
+			'total_fte' => 'Total FTE',
 		),
 		'InstitutionSiteStaff' => array(
 			'staff_status_id' => 'Status',
