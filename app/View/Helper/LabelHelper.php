@@ -605,7 +605,7 @@ class LabelHelper extends AppHelper {
 			'created' => 'Date'
 		),
 		'Import' => array(
-			'saving_failed' => 'Saving Failed',
+			'saving_failed' => 'Failed to save to database',
 			'code_unfound' => 'Code Not Found'
 		)
 	);

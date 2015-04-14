@@ -22,6 +22,7 @@ var jsTable = {
 		//this.fixTable();
 		this.initICheck();
 		this.initTableCheckable();
+		//this.enableTooltip();
 	},
 	
 	initICheck: function() {
@@ -234,5 +235,15 @@ var jsTable = {
 		}else{
 			c.iCheck('uncheck');
 		}
-	}
+	},
+	
+//	enableTooltip: function(){
+//		$( document ).tooltip({
+//			items: ".tooltipTrigger",
+//			content: function() {
+//				var element = $(this);
+//				return 'abc';
+//			}
+//		});
+//	}
 };
