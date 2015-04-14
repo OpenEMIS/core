@@ -903,7 +903,7 @@ class InstitutionSitesController extends AppController {
 						if ($firstSheetOnly) {break;}
 
 						$highestRow = $sheet->getHighestRow();
-						$totalRows = $highestRow - 1;
+						$totalRows = $highestRow;
 						//$highestColumn = $sheet->getHighestColumn();
 						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
 						for ($row = 1; $row <= $highestRow; ++$row) {
@@ -916,16 +916,17 @@ class InstitutionSitesController extends AppController {
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
 								$foreignKey = $excelMappingObj['foreigh_key'];
 								$originalRow[] = $cellValue;
+								$val = $cellValue;
 								if ($foreignKey == 1) {
-									if (array_key_exists($cellValue, $lookup[$col])) {
-										$val = $lookup[$col][$cellValue];
-									} else {
-										if($row !== 1){
-											$rowPass = false;
-										}else{
-											$val = $cellValue;
+									if(!empty($cellValue)){
+										if (array_key_exists($cellValue, $lookup[$col])) {
+											$val = $lookup[$col][$cellValue];
+										} else {
+											if($row !== 1){
+												$rowPass = false;
+												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.code_unfound'), $cellValue);
+											}
 										}
-										
 									}
 								} else if ($foreignKey == 2) {
 									$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
@@ -935,12 +936,9 @@ class InstitutionSitesController extends AppController {
 									}else{
 										if($row !== 1){
 											$rowPass = false;
-										}else{
-											$val = $cellValue;
+											$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.code_unfound'), $cellValue);
 										}
 									}
-								} else {
-									$val = $cellValue;
 								}
 								
 								$columnName = $columns[$col];
@@ -949,7 +947,7 @@ class InstitutionSitesController extends AppController {
 								if(!$rowPass){
 									$dataFailed[] = array(
 										'row_number' => $row,
-										'error' => $this->InstitutionSite->getExcelLabel('Import.code_unfound'),
+										'error' => array($codeError),
 										'data' => $tempRow
 									);
 								}
