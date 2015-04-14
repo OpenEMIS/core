@@ -1,7 +1,6 @@
 <?php
-
-echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-
+//echo $this->Html->css('jui/jquery-ui.min', 'stylesheet', array('inline' => false));
+//echo $this->Html->script('jui/jquery-ui.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Import Institutions'));
 $this->start('contentActions');
@@ -74,7 +73,19 @@ else:
 			foreach($dataFailed as $row):
 			?>
 			<tr>
-				<td><?php echo $row['row_number']; ?></td>
+				<td class="tooltipTrigger" data-toggle="tooltip" title="show tooltip">
+					<?php echo $row['row_number']; ?>
+					<div style="display:none; visibility: hidden;">
+						<?php 
+						pr($row['error']);
+						//foreach($row['error'] as $msg){
+						?>
+							<?php //echo $msg; ?><br>
+						<?php 
+						//}
+						?>
+					</div>
+				</td>
 				<?php 
 				foreach($row['data'] as $col):
 					echo sprintf('<td>%s</td>', $col);
@@ -107,3 +118,5 @@ endif;
 echo $this->Form->end();
 $this->end(); 
 ?>
+
+
