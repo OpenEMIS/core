@@ -29,7 +29,7 @@ $this->start('contentBody');
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => $model, 'index', 'staffId' => $obj['Staff']['id'])) ?></td>
-					<td><?php echo $this->Model->getname($obj['Staff']) ?></td>
+					<td><?php echo $this->Model->getname($obj['Staff']['SecurityUser']) ?></td>
 					<td><?php echo $obj['StaffType']['name'] ?></td>
 					<td><?php echo $obj['StaffStatus']['name'] ?></td>
 				</tr>
