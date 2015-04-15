@@ -922,7 +922,7 @@ class InstitutionSitesController extends AppController {
 										if (array_key_exists($cellValue, $lookup[$col])) {
 											$val = $lookup[$col][$cellValue];
 										} else {
-											if($row !== 1){
+											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
 												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.code_unfound'), $cellValue);
 											}
@@ -934,7 +934,7 @@ class InstitutionSitesController extends AppController {
 									if(!empty($recordId)){
 										$val = $recordId;
 									}else{
-										if($row !== 1){
+										if($row !== 1 && $cellValue != ''){
 											$rowPass = false;
 											$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.code_unfound'), $cellValue);
 										}
@@ -944,14 +944,17 @@ class InstitutionSitesController extends AppController {
 								$columnName = $columns[$col];
 								$tempRow[$columnName] = $val;
 								
-								if(!$rowPass){
-									$dataFailed[] = array(
-										'row_number' => $row,
-										'error' => array($codeError),
-										'data' => $tempRow
-									);
-								}
 							}
+							
+							if(!$rowPass){
+								$dataFailed[] = array(
+									'row_number' => $row,
+									'error' => $codeError,
+									'data' => $originalRow
+								);
+								continue;
+							}
+							// delete from institution_sites where name like 'Test School';
 							
 							if ($row === 1) {
 								$header = $tempRow;
@@ -988,9 +991,27 @@ class InstitutionSitesController extends AppController {
 										);
 									}
 								}else{
+									$errorStr = $this->InstitutionSite->getExcelLabel('Import.validation_failed');
+									$count = 1;
+									foreach($validationErrors as $field => $arr){
+										if($field != 'code'){
+											$fieldName = $this->InstitutionSite->getExcelLabel('InstitutionSite.'.$field);
+											if(empty($fieldName)){
+												$fieldName = __($field);
+											}
+											
+											if($count === 1){
+												$errorStr .= ' ' . $fieldName;
+											}else{
+												$errorStr .= ', ' . $fieldName;
+											}
+											$count ++;
+										}
+									}
+									
 									$dataFailed[] = array(
 										'row_number' => $row,
-										'error' => $this->InstitutionSite->validationErrors,
+										'error' => $errorStr,
 										'data' => $originalRow
 									);
 									$this->log($this->InstitutionSite->validationErrors, 'debug');
