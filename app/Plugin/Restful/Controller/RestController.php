@@ -127,7 +127,7 @@ class RestController extends RestfulAppController {
             $json = array('message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken);         
             
             // set the values, and save the data
-            $startDate = time() + 20; // current time + one hour
+            $startDate = time()+ 3600; // current time + one hour
             $expiryTime = date('Y-m-d H:i:s', $startDate);
             $saveData = array(
                 'access_token' => $accessToken,
@@ -170,7 +170,7 @@ class RestController extends RestfulAppController {
             
             if (!empty($search)) {
                 $refreshToken= sha1(time());
-                $startDate   = time() + 20; // current time + one hour
+                $startDate   = time()+ 3600; // current time + one hour
                 $expiryTime  = date('Y-m-d H:i:s', $startDate);
                 $saveData = array(
                     'refresh_token' => $refreshToken,
@@ -216,7 +216,7 @@ class RestController extends RestfulAppController {
                 if ($current < $expiry) {
                     
                     $refreshToken= sha1(time());
-                    $startDate   = time() + 20; // current time + one hour
+                    $startDate   = time()+ 3600; // current time + one hour
                     $expiryTime  = date('Y-m-d H:i:s', $startDate);
 
                     $saveData = array(
