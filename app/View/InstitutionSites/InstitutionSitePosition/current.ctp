@@ -14,10 +14,10 @@
 			<tbody>
 				<?php foreach ($current as $i => $obj) : ?>
 				<tr>
-					<td><?php echo $obj['SecurityUser']['openemis_no'] ?></td>
+					<td><?php echo (array_key_exists('SecurityUser', $obj['Staff']))? $obj['Staff']['SecurityUser']['openemis_no']:""; ?></td>
 					<td>
 						<?php 
-						$name = $this->Model->getName($obj['Staff']);
+						$name = (array_key_exists('SecurityUser', $obj['Staff']))? $this->Model->getName($obj['Staff']['SecurityUser']): "";
 						if ($_edit) {
 							echo $this->Html->link($name, array('action' => $model, 'staffEdit', $obj['InstitutionSiteStaff']['id']));
 						} else {
