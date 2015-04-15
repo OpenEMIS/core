@@ -43,7 +43,7 @@ class RestController extends RestfulAppController {
 
 	public function beforeFilter() {
         
-        $this->Auth->allow('auth', 'token', 'survey');
+        $this->Auth->allow('auth', 'token', 'survey', 'refreshToken');
 //		parent::beforeFilter();
         
         if ($this->action == 'survey') {
@@ -127,7 +127,7 @@ class RestController extends RestfulAppController {
             $json = array('message' => 'success', 'access_token' => $accessToken, 'refresh_token' => $refreshToken);         
             
             // set the values, and save the data
-            $startDate = time() + 3600; // current time + one hour
+            $startDate = time() + 20; // current time + one hour
             $expiryTime = date('Y-m-d H:i:s', $startDate);
             $saveData = array(
                 'access_token' => $accessToken,
@@ -148,6 +148,46 @@ class RestController extends RestfulAppController {
         }
     }
 
+    public function refreshToken() {
+        
+        // This function checks for the existence of both the access and refresh tokens
+        // If found, updates the refresh token, and the expiry time accordingly.
+		$this->layout = 'auth';
+        $accessToken    = '';
+        $refreshToken   = '';
+
+        if($this->request->is('post')) {
+        
+            $accessToken    = $this->data['SecurityRestSession']['access_token'];
+            $refreshToken   = $this->data['SecurityRestSession']['refresh_token'];
+            
+            $search = $this->SecurityRestSession->find('first', array(
+                'conditions' => array(
+                    'SecurityRestSession.access_token' => $accessToken,
+                    'SecurityRestSession.refresh_token' => $refreshToken
+                )
+            ));
+            
+            if (!empty($search)) {
+                $refreshToken= sha1(time());
+                $startDate   = time() + 20; // current time + one hour
+                $expiryTime  = date('Y-m-d H:i:s', $startDate);
+                $saveData = array(
+                    'refresh_token' => $refreshToken,
+                    'expiry_date' => $expiryTime
+                );
+                $this->SecurityRestSession->id = $search['SecurityRestSession']['id'];
+                $this->SecurityRestSession->save($saveData);
+                $json = array('message' => 'updated', 'refresh_token' => $refreshToken);          
+                $data  = json_encode($json);
+                $this->set(compact('data'));
+            } else {
+                throw new BadRequestException('Custom error message', 302);
+            }
+        } else {
+            throw new BadRequestException('Custom error message', 400);
+        }
+    }
     
     public function token() {
 		$this->layout = 'auth';
@@ -175,33 +215,28 @@ class RestController extends RestfulAppController {
 
                 if ($current < $expiry) {
                     
-                    $userID     = $search['SecurityRestSession']['created_user_id'];
-                    $accessToken = sha1(time() . $userID);
-                    $startDate = time() + 3600; // current time + one hour
-                    $expiryTime = date('Y-m-d H:i:s', $startDate);
+                    $refreshToken= sha1(time());
+                    $startDate   = time() + 20; // current time + one hour
+                    $expiryTime  = date('Y-m-d H:i:s', $startDate);
 
                     $saveData = array(
-                        'access_token' => $accessToken,
+                        'refresh_token' => $refreshToken,
                         'expiry_date' => $expiryTime
                     );
 
-                    $json = array('message' => 'success', 'access_token' => $accessToken);         
+                    $json = array('message' => 'success', 'refresh_token' => $refreshToken);         
 
                     $this->SecurityRestSession->id = $search['SecurityRestSession']['id'];
                     $this->SecurityRestSession->save($saveData);
 
+                    $json = array('message' => 'token updated');
                 } else {
-        
-                    $json = array('message' => 'line 193');
-                    $data  = json_encode($json);
-                    $this->set(compact('data'));
-                    throw new BadRequestException('Custom error message', 408);
+                    $json = array('message' => 'token not updated');
                 }
             } else {
         
-                $json = array('message' => 'failure');
-                $data  = json_encode($json);
-                $this->set(compact('data'));
+                $json = array('message' => 'token not found');
+
             }
             $data  = json_encode($json);
             $this->set(compact('data'));
