@@ -500,4 +500,44 @@ select.topSelectControl{
 .stackElements input{
 	margin-bottom: 8px;
 }
-
+.red-tooltip + .tooltip > .tooltip-inner {
+	background-color: #D7676B;
+}
+.red-tooltip + .tooltip > .tooltip-arrow { 
+	border-top-color:#D7676B; 
+}
+i.red-tooltip{
+	color: #D7676B;
+}
+.overallInfo{
+	padding-top: 10px;
+	padding-bottom: 10px;
+	clear: both;
+}
+.overallInfo div{
+	display: inline-block;
+}
+.overallInfo div.totalRows{
+	margin-right: 30px;
+}
+.failedInfo{
+	color: #D7676B;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	padding-left: 15px;
+	border-top: 1px solid #ddd;
+}
+.importInfo{
+	font-size: 12px;
+	font-weight: bold;
+}
+.importInfo .content{
+	font-size: 13px;
+	font-weight: normal;
+}
+.importedFile{
+	border: 1px solid #CCC;
+	padding: 6px;
+	border-radius: 4px;
+	float: left;
+}

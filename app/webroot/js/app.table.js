@@ -237,13 +237,4 @@ var jsTable = {
 		}
 	},
 	
-//	enableTooltip: function(){
-//		$( document ).tooltip({
-//			items: ".tooltipTrigger",
-//			content: function() {
-//				var element = $(this);
-//				return 'abc';
-//			}
-//		});
-//	}
 };
