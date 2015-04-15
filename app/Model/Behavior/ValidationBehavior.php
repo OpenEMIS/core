@@ -28,7 +28,7 @@ class ValidationBehavior extends ModelBehavior {
 		try {
 			$startDate = new DateTime(current($field));
 		} catch (Exception $e) {
-			return 'Please input a proper date.';
+		    return 'Please input a proper date';
 			exit(1);
 		}
 		if($compareField) {
@@ -56,16 +56,15 @@ class ValidationBehavior extends ModelBehavior {
 			if (AuthComponent::user('id') != $model->data[$model->alias]['id']) {
 				die('illegal cp');
 			}
-		} 
-
+		}
 		$password = AuthComponent::password($password);
 		$count = $model->find('count', array('recursive' => -1, 'conditions' => array('username' => $username, 'password' => $password)));
 		return $count==1;
 	}	
 
-	public function checkDateInput($value) {
+	public function checkDateInput(Model $model, $field = array()) {
 		try {
-		    $date = new DateTime($value);
+		    $date = new DateTime(current($field));
 		} catch (Exception $e) {
 		    return 'Please input a proper date';
 		    exit(1);
