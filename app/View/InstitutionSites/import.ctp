@@ -1,15 +1,17 @@
 <?php
-//echo $this->Html->css('jui/jquery-ui.min', 'stylesheet', array('inline' => false));
-//echo $this->Html->script('jui/jquery-ui.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Import Institutions'));
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.download_template'), array('action' => 'importTemplate'), array('class' => 'divider'));
-	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'import'), array('class' => 'divider'));
+	if(empty($uploadedName)){
+		echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index'), array('class' => 'divider'));
+	}else{
+		echo $this->Html->link($this->Label->get('general.back'), array('action' => 'import'), array('class' => 'divider'));
+	}
+	
 $this->end();
 
 $this->start('contentBody');
-
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'import'));
 $labelOptions = $formOptions['inputDefaults']['label'];
@@ -51,14 +53,20 @@ if(empty($uploadedName)):
 <?php 
 else:
 ?>
-<p><?php echo $uploadedName; ?></p>
-<p>Total Rows: <?php echo $totalRows; ?></p>
-<p>Total Rows Imported: <?php echo $totalSuccess; ?></p>
-<p>Total Validation Failed: <?php echo count($dataFailed); ?></p>
+<div class="importedFile"><?php echo $uploadedName; ?></div>
+<div class="overallInfo importInfo">
+	<div class="totalRows">Total Rows: <span class="content"><?php echo $totalRows; ?></span></div> 
+	<div class="imported">Total Rows Imported: <span class="content"><?php echo $totalSuccess; ?></span></div>
+</div>
+<div class="failedInfo importInfo">
+	<i class="fa fa-exclamation-circle red-tooltip"></i> Total Validation Failed:
+	<span class="content"><?php echo count($dataFailed); ?></span>
+</div>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered table-sortable">
 		<thead>
 			<tr>
+				<th></th>
 				<th><?php echo __('Row Number'); ?></th>
 				<?php 
 				foreach($header as $col):
@@ -73,18 +81,9 @@ else:
 			foreach($dataFailed as $row):
 			?>
 			<tr>
-				<td class="tooltipTrigger" data-toggle="tooltip" title="show tooltip">
+				<td><i class="fa fa-exclamation-circle red-tooltip" data-toggle="tooltip" title="<?php echo $row['error']; ?>"></i></td>
+				<td>
 					<?php echo $row['row_number']; ?>
-					<div style="display:none; visibility: hidden;">
-						<?php 
-						pr($row['error']);
-						//foreach($row['error'] as $msg){
-						?>
-							<?php //echo $msg; ?><br>
-						<?php 
-						//}
-						?>
-					</div>
 				</td>
 				<?php 
 				foreach($row['data'] as $col):
