@@ -57,7 +57,7 @@ if(empty($uploadedName)):
 	<div class="col-md-3"></div>
 	<div class="col-md-6">
 			<?php echo $this->Label->get('general.format_supported') . ": .xls/.xlsx"; ?><br>
-			<?php echo $this->Label->get('Import.recommended_max_rows') . ": 3000"; ?>
+			<?php echo $this->Label->get('Import.recommended_max_records') . ": 3000"; ?>
 	</div>
 </div>
 <?php 
