@@ -30,12 +30,13 @@ echo $this->element("../InstitutionSites/$model/controls");
 			<?php
 			$todayIndex = date('Ymd');
 			foreach ($studentList as $student):
+
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = $this->Model->getName($studentObj);
+				$studentName = $this->Model->getName($student['SecurityUser']);
 				?>
 				<tr>
-					<td><?php echo $studentObj['identification_no']; ?></td>
+					<td><?php echo $student['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $studentName; ?></td>
 					<?php
 					if (isset($absenceCheckList[$studentId][$selectedDateDigit])) {

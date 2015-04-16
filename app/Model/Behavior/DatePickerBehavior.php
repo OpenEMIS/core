@@ -26,9 +26,12 @@ class DatePickerBehavior extends ModelBehavior {
 		$format = 'Y-m-d';
 		$fields = $this->settings[$model->alias];
 		foreach($fields as $field) {
-			if(isset($model->data[$model->alias][$field]) && !empty($model->data[$model->alias][$field])) {
-				$value = $model->data[$model->alias][$field];
-				$model->data[$model->alias][$field] = date($format, strtotime($value));
+			$field_array = explode('.', $field);
+			$modelName = (sizeof($field_array)>1)? $field_array[sizeof($field_array)-2]: $model->alias;	
+			$field = $field_array[sizeof($field_array)-1];
+			if(isset($model->data[$modelName][$field]) && !empty($model->data[$modelName][$field])) {
+				$value = $model->data[$modelName][$field];
+				$model->data[$modelName][$field] = date($format, strtotime($value));
 			}
 		}
 		return parent::beforeSave($model, $options);
@@ -39,11 +42,14 @@ class DatePickerBehavior extends ModelBehavior {
 		$fields = $this->settings[$model->alias];
 		foreach($results as $i => $result) {
 			foreach($fields as $field) {
-				if(isset($result[$model->alias][$field]) && !empty($result[$model->alias][$field]) && ($result[$model->alias][$field] !== '0000-00-00')) {
-					$value = $result[$model->alias][$field];
-					$results[$i][$model->alias][$field] = date($format, strtotime($value));
+				$field_array = explode('.', $field);
+				$modelName = (sizeof($field_array)>1)? $field_array[sizeof($field_array)-2]: $model->alias;
+				$field = $field_array[sizeof($field_array)-1];
+				if(isset($result[$modelName][$field]) && !empty($result[$modelName][$field]) && ($result[$modelName][$field] !== '0000-00-00')) {
+					$value = $result[$modelName][$field];
+					$results[$i][$modelName][$field] = date($format, strtotime($value));
 				}else{
-					$results[$i][$model->alias][$field] = '';
+					$results[$i][$modelName][$field] = '';
 				}
 			}
 		}

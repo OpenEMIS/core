@@ -43,7 +43,7 @@ foreach($data as $key => $classes){
 				<td><?php echo $obj['InstitutionSiteClass']['InstitutionSite']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSiteSection']['name']; ?></td>
 				<td><?php echo $obj['InstitutionSiteClass']['name']; ?></td>
-				<td><?php echo $obj['InstitutionSiteClass']['EducationSubject']['name']; ?></td>
+				<td><?php echo (array_key_exists('name', $obj['InstitutionSiteClass']['EducationSubject']))? $obj['InstitutionSiteClass']['EducationSubject']['name']: ''; ?></td>
 				<td><?php 
 				foreach($obj['InstitutionSiteClass']['teachers'] as $teacher){
 					echo $teacher . '<br>';

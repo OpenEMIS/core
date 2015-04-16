@@ -102,6 +102,44 @@ class CensusStudent extends AppModel {
 				'Gender.id AS genderId',
 				'Gender.name AS genderName'
 			),
+			// 'joins' => array(
+			// 	array(
+			// 		'table' => 'genders',
+			// 		'alias' => 'Gender',
+			// 		'conditions' => array(
+			// 			'CensusStudent.gender_id = Gender.id'
+			// 		)
+			// 	),
+			// 	array(
+			// 		'table' => 'education_grades',
+			// 		'alias' => 'EducationGrade',
+			// 		'conditions' => array(
+			// 			'EducationGrade.id = CensusStudent.education_grade_id'
+			// 		)
+			// 	),
+			// 	array(
+			// 		'table' => 'education_programmes',
+			// 		'alias' => 'EducationProgramme',
+			// 		'conditions' => array(
+			// 			'EducationProgramme.id = EducationGrade.education_programme_id',
+			// 									'EducationProgramme.id = ' . $programmeId
+			// 		)
+			// 	),
+			// 	array(
+			// 		'table' => 'education_cycles',
+			// 		'alias' => 'EducationCycle',
+			// 		'conditions' => array(
+			// 			'EducationCycle.id = EducationProgramme.education_cycle_id'
+			// 		)
+			// 	),
+			// 	array(
+			// 		'table' => 'education_levels',
+			// 		'alias' => 'EducationLevel',
+			// 		'conditions' => array(
+			// 			'EducationLevel.id = EducationCycle.education_level_id'
+			// 		)
+			// 	)
+			// ),
 			'conditions' => array(
 				'CensusStudent.academic_period_id' => $academicPeriodId,
 				'CensusStudent.student_category_id' => $categoryId,
@@ -170,9 +208,9 @@ class CensusStudent extends AppModel {
 	public function getCountByCycleId($academicPeriodId, $cycleId, $extras=array()) {
 		$this->formatResult = true;
 		
-		$genders = $this->Gender->getList();
-		$maleGenderId = $genders[0]['value'];
-		$femaleGenderId = $genders[1]['value'];
+		// $genders = $this->Gender->getList();
+		$maleGenderId = 1;
+		$femaleGenderId = 2;
 		
 		$optionsMale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS M'));
 		$optionsFemale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS F'));
@@ -248,9 +286,9 @@ class CensusStudent extends AppModel {
 	public function getCountByAreaId($academicPeriodId, $areaId) {
 		$this->formatResult = true;
 
-		$genders = $this->Gender->getList();
-		$maleGenderId = $genders[0]['value'];
-		$femaleGenderId = $genders[1]['value'];
+		// $genders = $this->Gender->getList();
+		$maleGenderId = 1;
+		$femaleGenderId = 2;
 		
 		$optionsMale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS M'));
 		$optionsFemale = array('recursive' => -1, 'fields' => array('SUM(CensusStudent.value) AS F'));
@@ -469,9 +507,9 @@ class CensusStudent extends AppModel {
 		$censusDataOrderByAge = $this->getCensusDataOrderByAge($institutionSiteId, $academicPeriodId, $educationProgrammeId, $studentCategoryId);
 		//pr($censusDataOrderByAge);
 		
-		$genders = $this->Gender->getList();
-		$maleGenderId = $genders[0]['value'];
-		$femaleGenderId = $genders[1]['value'];
+		// $genders = $this->Gender->getList();
+		$maleGenderId = 1;
+		$femaleGenderId = 2;
 		
 		$enrolmentArr = array();
 		foreach ($censusDataOrderByAge AS $row) {
@@ -736,9 +774,9 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $academicPeriodId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$genders = $this->Gender->getList();
-		$maleGenderId = $genders[0]['value'];
-		$femaleGenderId = $genders[1]['value'];
+		// $genders = $this->Gender->getList();
+		$maleGenderId = 1;
+		$femaleGenderId = 2;
 
 		$admission_age = $age;
 		$agePlus = $ConfigItem->getValue('admission_age_plus');
@@ -1040,9 +1078,9 @@ class CensusStudent extends AppModel {
 		$conditions = array('EducationGrade.education_programme_id' => $programmeId);
 		$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 		
-		$genders = $this->Gender->getList();
-		$maleGenderId = $genders[0]['value'];
-		$femaleGenderId = $genders[1]['value'];
+		// $genders = $this->Gender->getList();
+		$maleGenderId = 1;
+		$femaleGenderId = 2;
 		
 		$controller->set(compact('age', 'gradeList', 'maleGenderId', 'femaleGenderId'));	 
 	}
@@ -1064,9 +1102,9 @@ class CensusStudent extends AppModel {
 
 			$baseData = $this->groupByAcademicPeriodGradeCategory($institutionSiteId);
 			
-			$genders = $this->Gender->getList();
-			$maleGenderId = $genders[0]['value'];
-			$femaleGenderId = $genders[1]['value'];
+			// $genders = $this->Gender->getList();
+			$maleGenderId = 1;
+			$femaleGenderId = 2;
 
 			foreach ($baseData AS $row) {
 				$academicPeriod = $row['AcademicPeriod']['name'];

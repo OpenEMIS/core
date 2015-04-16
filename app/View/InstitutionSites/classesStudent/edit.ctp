@@ -41,7 +41,7 @@ echo $this->Form->create($model, $formOptions);
 					echo $this->Form->checkbox($i . '.status', array('class' => 'icheck-input', 'checked' => $checked));
 					?>
 				</td>
-				<td><?php echo $obj['Student']['identification_no']; ?></td>
+				<td><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
 				<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 			</tr>
 			<?php endforeach; ?>

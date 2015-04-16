@@ -17,7 +17,139 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityUser extends AppModel {
+	public $actsAs = array(
+		'DatePicker' => array('date_of_birth'),
+		'FileUpload' => array(
+			array(
+				'name' => 'photo_name',
+				'content' => 'photo_content',
+				'size' => '1MB',
+				'allowEmpty' => true
+			)
+		),
+		'ControllerAction2'
+	);
+	public $belongsTo = array(
+		'Gender',
+		'AddressArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'address_area_id'
+		),
+		'BirthplaceArea' => array(
+			'className' => 'Area',
+			'foreignKey' => 'birthplace_area_id'
+		),
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	public $hasMany = array(
+		'Students.Student',
+		'Staff.Staff',
+		'UserIdentity',
+		'UserNationality',
+		'UserLanguage',
+		'UserComment',
+		'UserSpecialNeed',
+		'UserAward',
+		'UserContact',
+		'Students.StudentIdentity',
+		'Students.StudentNationality',
+		'Students.StudentLanguage',
+		'Students.StudentComment',
+		'Students.StudentSpecialNeed',
+		'Students.StudentAward',
+		'Students.StudentContact',
+		'Staff.StaffIdentity',
+		'Staff.StaffNationality',
+		'Staff.StaffLanguage',
+		'Staff.StaffComment',
+		'Staff.StaffSpecialNeed',
+		'Staff.StaffAward',
+		'Staff.StaffContact',
+		'SecurityGroupUser',
+		'SecurityUserAccess'
+	);
 	public $validate = array(
+		'first_name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please enter a valid First Name'
+			),
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid First Name'
+			)
+		),
+		'middle_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Middle Name'
+			)
+		),
+		'third_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Third Name'
+			)
+		),
+		'last_name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please enter a valid Last Name'
+			),
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Last Name'
+			)
+		),
+		'preferred_name' => array(
+			'ruleCheckIfStringGotNoNumber' => array(
+				'rule' => 'checkIfStringGotNoNumber',
+				'message' => 'Please enter a valid Preferred Name'
+			)
+		),
+		'openemis_no' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please enter a valid OpenEMIS ID'
+			),
+			'ruleUnique' => array(
+        		'rule' => 'isUniqueOpenemisNo',
+        		'message' => 'Please enter a unique OpenEMIS ID'
+		    )
+		),
+		'gender_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please select a Gender'
+			)
+		),
+		'address' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please enter a valid Address'
+			)
+		),
+		'date_of_birth' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please select a Date of Birth'
+			),
+			'ruleCompare' => array(
+				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+				'message' => 'Please select a Date of Birth'
+			),
+			'ruleCompare' => array(
+				'rule' => 'compareBirthDate',
+				'message' => 'Date of Birth cannot be future date'
+			)
+		),
 		'username' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -29,37 +161,94 @@ class SecurityUser extends AppModel {
 			)
 		),
 		'password' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'message' => 'Please enter a valid password'
+			'ruleChangePassword' => array(
+				'rule' => array('changePassword',false),
+				 // authenticate changePassword ('new password', retyped password) // validate behaviour
+				'on' => 'update',
+				'message' => 'Incorrect password.'
 			),
 			'ruleMinLength' => array(
 				'rule' => array('minLength', 6),
+				'on' => 'create',
+				'allowEmpty' => true,
 				'message' => 'Password must be at least 6 characters'
 			)
 		),
-		'first_name' => array(
-			'ruleRequired' => array(
+		'newPassword' => array(
+			'ruleChangePassword' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid First Name'
+				'on' => 'update',
+				'message' => 'Please enter your new password'
+			),
+			'ruleMinLength' => array(
+				'rule' => array('minLength', 6),
+				'on' => 'update',
+				'message' => 'Password must be at least 6 characters'
 			)
 		),
-		'last_name' => array(
-			'ruleRequired' => array(
+		'retypeNewPassword' => array(
+			'ruleChangePassword' => array(
 				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Last Name'
-			)
-		),
-		'email' => array(
-			'ruleRequired' => array(
-				'rule' => 'email',
-				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
+				'on' => 'update',
+				'message' => 'Please confirm your new password'
+			),
+			'ruleCompare' => array(
+				'rule' => 'comparePasswords',
+				'on' => 'update',
+				'message' => 'Both passwords do not match'
 			)
 		)
 	);
+
+	public function comparePasswords() {
+		if(strcmp($this->data[$this->alias]['newPassword'], $this->data[$this->alias]['retypeNewPassword']) == 0 ) {
+			$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['newPassword']);
+			return true;
+		}
+		return false;
+	}
+
+	public function isUniqueOpenemisNo($check) {
+		$currentUserId = null;
+		if (array_key_exists('SecurityUser', $this->data)) {
+			if (array_key_exists('id', $this->data['SecurityUser'])) {
+				$currentUserId = $this->data['SecurityUser']['id'];
+			}
+		}
+		$conditions = array('SecurityUser.openemis_no' => $check['openemis_no']);
+
+		if (!empty($currentUserId)) {
+			$conditions['NOT'] = array('SecurityUser.id' => $currentUserId);
+		}
+
+		$isUnique = $this->find(
+			'count',
+			array(	
+				'conditions' => $conditions
+			)
+		);
+		$isUnique = ($isUnique==0)? true: false;
+
+		return $isUnique;
+	}
+
+	public function checkIfStringGotNoNumber($check) {
+		$check = array_values($check);
+		$check = $check[0];
+		return !preg_match('#[0-9]#',$check);
+	}
+
+	public function compareBirthDate() {
+		if(!empty($this->data[$this->alias]['date_of_birth'])) {
+			$birthDate = $this->data[$this->alias]['date_of_birth'];
+			$birthTimestamp = strtotime($birthDate);
+			$todayDate=date("Y-m-d");
+			$todayTimestamp = strtotime($todayDate);
+
+			return $todayTimestamp >= $birthTimestamp;
+		}
+		return true;
+	}
 	
 	public function getStatus() {
 		return array(0 => __('Inactive', true), 1 => __('Active', true));
@@ -96,11 +285,164 @@ class SecurityUser extends AppModel {
 	}
 	
 	public function beforeSave($options = array()) {
-		if (isset($this->data[$this->alias]['password'])) {
-			$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
-		}
 		parent::beforeSave();
+		if (!$this->id && !isset($this->data[$this->alias][$this->primaryKey])) {
+			// insert
+			if (array_key_exists('password', $this->data[$this->alias])) {
+				$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
+			}
+		} else {
+			// edit - already handled in authenticate no action required
+		}
 		return true;
+	}
+
+	public function beforeAction() {
+		parent::beforeAction();
+
+		if (in_array($this->action,array('view', 'edit'))) {
+			$this->fields['nav_tabs'] = array(
+				'type' => 'element',
+				'element' => '../Security/SecurityUser/nav_tabs',
+				'override' => true,
+				'visible' => true
+			);
+		}
+
+		if (in_array($this->action,array('add'))) {
+			$this->fields['openemis_no'] = array(
+				'type' => 'element',
+				'element' => 'form/text_multiple',
+				'override' => true,
+				'visible' => true,
+				'data' => array(
+					'fieldName' => 'openemis_no',
+					'prefixAttr' => array('maxlength' => 5),
+					'suffixAttr' => array('value' => $this->controller->Utility->getUniqueOpenemisId(), 'readonly' => 'readonly'),
+				)
+			);
+		} else {
+			$this->fields['openemis_no']['attr']['readonly'] = true;
+		}
+
+		$this->fields['id']['type'] = 'hidden';
+		$this->fields['username']['visible'] = false;
+		$this->fields['password']['visible'] = false;
+		$this->fields['address_area_id']['type'] = 'hidden';
+		$this->fields['birthplace_area_id']['type'] = 'hidden';
+		$this->fields['date_of_death']['type'] = 'hidden';
+		$this->fields['super_admin']['visible'] = false;
+		$this->fields['photo_name']['type'] = 'hidden';
+		$this->fields['photo_content']['type'] = 'hidden';
+		$this->fields['gender_id']['type'] = 'select';
+		$this->fields['gender_id']['options'] = $this->Gender->getList();
+		$this->fields['status']['type'] = 'select';
+		$this->fields['status']['options'] = $this->getStatus();
+		$this->fields['last_login']['type'] = 'hidden';		
+
+		$this->fields['UserContact'] = array(
+			'type' => 'element',
+			'element' => '../UserContact/viewContact',
+			'class' => 'col-md-8',
+			'visible' => true
+		);
+		$this->fields['SecurityGroupUser'] = array(
+			'type' => 'element',
+			'element' => '../Security/SecurityGroup/security_user',
+			'class' => 'col-md-8',
+			'visible' => true,
+		);
+
+		$order = 0;
+		$this->setFieldOrder('nav_tabs', $order++);
+		$this->setFieldOrder('openemis_no', $order++);
+		$this->setFieldOrder('first_name', $order++);
+		$this->setFieldOrder('middle_name', $order++);
+		$this->setFieldOrder('third_name', $order++);
+		$this->setFieldOrder('last_name', $order++);
+		$this->setFieldOrder('preferred_name', $order++);
+		$this->setFieldOrder('address', $order++);
+		$this->setFieldOrder('postal_code', $order++);
+		$this->setFieldOrder('gender_id', $order++);
+		$this->setFieldOrder('date_of_birth', $order++);
+		$this->setFieldOrder('status', $order++);
+		$this->setFieldOrder('UserContact', $order++);
+		$this->setFieldOrder('SecurityGroupUser', $order++);
+		$this->setFieldOrder('modified_user_id', $order++);
+		$this->setFieldOrder('modified', $order++);
+		$this->setFieldOrder('created_user_id', $order++);
+		$this->setFieldOrder('created', $order++);
+	}
+
+	public function index() {
+		$this->Navigation->addCrumb('Users');
+
+		$conditions = array('SecurityUser.super_admin' => 0);
+
+		$order = empty($this->params->named['sort']) ? array('SecurityUser.first_name' => 'asc') : array();
+		$data = $this->controller->Search->search($this, $conditions, $order);
+		
+		if (empty($data)) {
+			$this->Message->alert('general.noData');
+		}
+		$this->setVar('data', $data);
+	}
+
+	public function view($id) {
+		if ($this->exists($id)) {
+			$data = $this->find(
+				'first',
+				array(
+
+					'contain' => array(
+						'UserContact' => array(
+							'fields'=> array('id', 'value', 'preferred'),
+							'ContactType' => array(
+								'fields'=> array('id', 'name'),	
+								'ContactOption' => array('fields'=> array('id', 'name'))
+							)
+						),
+						'SecurityGroupUser' => array(
+							'SecurityUser',
+							'SecurityGroup' => array('fields'=> array('id', 'name')),
+							'SecurityRole' => array('fields'=> array('id', 'name'))
+						)
+					),
+					'conditions' => array('SecurityUser.id' => $id)
+				)
+			);
+
+			$this->fields['UserContact']['data'] = array('data' => $data['UserContact']);
+			$elementData = array(
+				'data' => array(
+					'SecurityUser' => array(
+						'SecurityGroupUser' => $data['SecurityGroupUser']
+					)
+				)
+			);
+			$this->fields['SecurityGroupUser']['data'] = $elementData;
+
+			$this->Session->write('User.id', $id);
+		}
+		parent::view($id);
+	}
+
+	public function edit($id) {
+		unset($this->fields['UserContact']);
+		unset($this->fields['SecurityGroupUser']);
+		parent::edit($id);
+	}
+
+	public function add() {
+		unset($this->fields['UserContact']);
+		unset($this->fields['SecurityGroupUser']);
+
+		if ($this->request->is(array('post', 'put'))) {
+			if (array_key_exists('openemis_no_suffix', $this->request->data['SecurityUser'])) {
+				$this->request->data['SecurityUser']['openemis_no'] = $this->request->data['SecurityUser']['openemis_no_prefix'].$this->request->data['SecurityUser']['openemis_no_suffix'];
+			}
+		}
+		parent::add();
 	}
 
 	public function createToken() {
@@ -139,7 +481,7 @@ class SecurityUser extends AppModel {
 			$data = $this->find('first', array(
 				'recursive' => -1,
 				'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
-				'conditions' => array('SecurityUser.identification_no' => $search, 'SecurityUser.super_admin <>' => 1),
+				'conditions' => array('SecurityUser.openemis_no' => $search, 'SecurityUser.super_admin <>' => 1),
 				'order' => array('SecurityUser.first_name')
 			));
 		} else {
@@ -149,7 +491,7 @@ class SecurityUser extends AppModel {
 			$conditions = array(
 				'SecurityUser.super_admin <>' => 1,
 				'OR' => array(
-					'SecurityUser.identification_no LIKE' => $search,
+					'openemis_no LIKE' => $search,
 					'SecurityUser.first_name LIKE' => $search,
 					'SecurityUser.last_name LIKE' => $search
 				)
@@ -191,6 +533,30 @@ class SecurityUser extends AppModel {
 				'SecurityUser.created_user_id' => $currentLoggedUser
 			)
 		));
+		return $data;
+	}
+
+	public function autocomplete($search) {
+		$search = '%' . $search . '%';
+		
+		$conditions = array(
+			'OR' => array(
+				'SecurityUser.openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search
+			)
+		);
+		$options = array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array('SecurityUser.first_name')
+		);
+		
+		$options['fields'] = array('id', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.openemis_no', 'SecurityUser.date_of_birth');
+		$data = $this->find('all', $options);
+		
 		return $data;
 	}
 }

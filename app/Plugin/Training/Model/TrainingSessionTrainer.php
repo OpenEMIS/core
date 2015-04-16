@@ -29,22 +29,22 @@ class TrainingSessionTrainer extends TrainingAppModel {
 		
 		$list = $this->Staff->find('all', array(
 			'recursive' => -1,
-			'fields' => array('DISTINCT Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name'),
+			'fields' => array('DISTINCT Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'),
 			'conditions' => array(
 				'OR' => array(
-					'Staff.identification_no LIKE' => $search,
-					'Staff.first_name LIKE' => $search,
-					'Staff.middle_name LIKE' => $search,
-					'Staff.third_name LIKE' => $search,
-					'Staff.last_name LIKE' => $search
+					'SecurityUser.openemis_no LIKE' => $search,
+					'SecurityUser.first_name LIKE' => $search,
+					'SecurityUser.middle_name LIKE' => $search,
+					'SecurityUser.third_name LIKE' => $search,
+					'SecurityUser.last_name LIKE' => $search
 				)
 			),
-			'order' => array('Staff.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		
 		foreach($list as $obj) {
 			$id = $obj['Staff']['id'];
-			$identificationNo = $obj['Staff']['identification_no'];
+			$identificationNo = $obj['SecurityUser']['openemis_no'];
 			
 			$data[] = array(
 				'label' => ModelHelper::getName($obj['Staff']),
