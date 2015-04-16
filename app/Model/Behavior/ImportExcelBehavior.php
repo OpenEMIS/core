@@ -122,4 +122,36 @@ class ImportExcelBehavior extends ModelBehavior {
 		header("Content-Length: ".filesize($excelPath));
 		echo file_get_contents($excelPath);
 	}
+	
+	public function getSupportedFormats(Model $model) {
+		$formats = array(
+			'application/vnd.ms-excel',
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		);
+		return $formats;
+	}
+	
+	public function getCodesByMapping(Model $model, $mapping) {
+		$lookup = array();
+		//pr($mapping);
+		foreach ($mapping as $key => $obj) {
+			$mappingRow = $obj['ImportMapping'];
+			if ($mappingRow['foreigh_key'] == 1) {
+				$lookupModel = $mappingRow['lookup_model'];
+				$lookupColumn = $mappingRow['lookup_column'];
+				$lookupModelObj = ClassRegistry::init($lookupModel);
+				$lookupValues = $lookupModelObj->getList();
+				//pr($lookupValues);
+				$lookup[$key] = array();
+				foreach ($lookupValues as $valId => $valObj) {
+					$lookupColumnValue = $valObj[$lookupColumn];
+					if(!empty($lookupColumnValue)){
+						$lookup[$key][$lookupColumnValue] = $valObj['id'];
+					}
+				}
+			}
+		}
+		
+		return $lookup;
+	}
 }

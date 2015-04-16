@@ -112,7 +112,8 @@ class LabelHelper extends AppHelper {
 			'proceed' => 'Proceed',
 			'template' => 'Template',
 			'InstitutionSite' => 'Institution',
-			'download_template' => 'Download Template'
+			'download_template' => 'Download Template',
+			'format_supported' => 'Format Supported'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -615,8 +616,13 @@ class LabelHelper extends AppHelper {
 		),
 		'Import' => array(
 			'saving_failed' => 'Failed to save to database',
-			'code_unfound' => 'Code Not Found',
-			'validation_failed' => 'Validation Failed.'
+			'invalid_code' => 'Invalid Code',
+			'validation_failed' => 'Validation Failed.',
+			'total_rows' => 'Total Rows',
+			'rows_imported' => 'Rows Imported',
+			'rows_updated' => 'Rows Updated',
+			'rows_failed' => 'Rows Failed',
+			'recommended_max_rows' => 'Recommended Maximum Rows'
 		)
 	);
 	
