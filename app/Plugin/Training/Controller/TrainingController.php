@@ -276,18 +276,18 @@ class TrainingController extends TrainingAppController {
                         try{
                             $openEmisID = $rowData[0];
 
-                            $staff = $this->Staff->find('first', array('recursive'=>-1, 'conditions'=>array('Staff.identification_no'=>$openEmisID)));
+                            $staff = $this->Staff->find('first', array('recursive'=>-1, 'conditions'=>array('SecurityUser.openemis_no'=>$openEmisID)));
 
                             if(empty($staff)){
                                $errorMessage .= '<br />' . sprintf($errorFormat, ($i+1), sprintf(__('Staff with OpenEmis ID %s does not exist.'), $openEmisID));
                             }else{
-                                $conditions[] = "Staff.identification_no IN ('" . $openEmisID . "')";
+                                $conditions[] = "SecurityUser.openemis_no IN ('" . $openEmisID . "')";
                                 $list = $this->TrainingSessionTrainee->searchCriteria($conditions, $trainingCourseID);
                                 if(!empty($list)){
                                     $val = array();
                                     foreach($list as $obj){
-                                        $firstName = $obj['Staff']['first_name'];
-                                        $lastName = $obj['Staff']['last_name'];
+                                        $firstName = $obj['SecurityUser']['first_name'];
+                                        $lastName = $obj['SecurityUser']['last_name'];
                                         $id = $obj['Staff']['id'];
                                         $val['staff_id'] = $id;
                                         $val['first_name'] = $firstName;

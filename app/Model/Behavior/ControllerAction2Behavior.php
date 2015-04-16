@@ -78,7 +78,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 			$model->Session->write($model->alias.'.id', $id);
 			$model->setVar(compact('data'));
 		} else {
-			$model->Message->alert('general.view.notExists');
+			$model->Message->alert('general.notExists');
 			return $model->redirect(array('action' => get_class($model)));
 		}
 	}
@@ -126,7 +126,7 @@ class ControllerAction2Behavior extends ModelBehavior {
 				$model->request->data = $data;
 			}
 		} else {
-			$model->Message->alert('general.view.notExists');
+			$model->Message->alert('general.notExists');
 			return $model->redirect(array('action' => get_class($model)));
 		}
 	}

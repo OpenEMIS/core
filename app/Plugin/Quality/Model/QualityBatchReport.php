@@ -189,7 +189,7 @@ class QualityBatchReport extends QualityAppModel {
 			'InstitutionSiteClass.name AS Class',
 			'InstitutionSiteClass.id AS ClassId',
 			'FieldOptionValues.name AS StaffType',
-			'CONCAT(Staff.first_name," ",Staff.middle_name," ",Staff.third_name," ",Staff.last_name) AS full_name',
+			'CONCAT(SecurityUser.first_name," ",SecurityUser.middle_name," ",SecurityUser.third_name," ",SecurityUser.last_name) AS full_name',
 			'RubricTemplate.name AS RubricName',
 			'RubricTemplate.id AS RubricId',
 			'RubricTemplateHeader.title AS RubricHeader',
@@ -597,7 +597,7 @@ class QualityBatchReport extends QualityAppModel {
 				'RubricTemplateSubheader.id as subId',
 				'RubricTemplateItem.id AS ques',
 				'QualityInstitutionRubricAnswer.id AS selected',
-				'CONCAT(Staff.first_name," ",Staff.middle_name," ",Staff.third_name," ",Staff.last_name) AS StaffName',
+				'CONCAT(SecurityUser.first_name," ",SecurityUser.middle_name," ",SecurityUser.third_name," ",SecurityUser.last_name) AS StaffName',
 			);
 		} else {
 			$fields = array(

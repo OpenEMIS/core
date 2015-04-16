@@ -1,5 +1,5 @@
 #header {
-	background-color: #5B8BAF;
+	background-color: #6699CC;
 	color: #fff;
 	height: 84px;
 	width: 100%;
@@ -47,6 +47,14 @@
 	width: 100%;
 	background-color: #FFFFFF;
 	z-index: 9999;
+}
+
+.pagination > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
+    background-color: #6699cc;
+    border-color: #6699cc;
+    color: #fff;
+    cursor: default;
+    z-index: 2;
 }
 
 .rtl #header .logo { margin-right: 5px; float: right !important; }

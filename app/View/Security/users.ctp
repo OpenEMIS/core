@@ -41,8 +41,8 @@ echo $this->element('layout/search', array(
 				$lastName = $this->Utility->highlight($search, $obj[$model]['last_name']);
 		?>
 			<tr>
-				<td><?php echo $this->Html->link($username, array('action' => 'usersView', $obj[$model]['id']), array('escape' => false)); ?></td>
-				<td><?php echo $firstName; ?></td>
+				<td><?php echo $username; ?></td>
+				<td><?php echo $this->Html->link($firstName, array('action' => 'usersView', $obj[$model]['id']), array('escape' => false)); ?></td>
 				<td><?php echo $lastName; ?></td>
 				<td><?php echo $this->Utility->getStatus($obj[$model]['status']); ?></td>
 			</tr>
