@@ -25,7 +25,7 @@ echo $this->element($tabsElement, array(), array('plugin' => $this->params['plug
 			<?php foreach ($data as $obj) : ?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['RubricTemplate']['name'], array('action' => $model, 'view', $obj['RubricTemplate']['id'])); ?></td>
-					<td><?php echo $obj['RubricTemplate']['description']; ?></td>
+					<td><?php echo nl2br($obj['RubricTemplate']['description']); ?></td>
 					<td><?php echo $weightingTypeOptions[$obj['RubricTemplate']['weighting_type']]; ?></td>
 					<td><?php echo $obj['RubricTemplate']['pass_mark']; ?></td>
 				</tr>
