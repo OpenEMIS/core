@@ -1,3 +1,5 @@
+UPDATE `navigations` SET `pattern` = 'index$|advanced|import' WHERE `module` LIKE 'Institution' AND `title` LIKE 'List of Institutions';
+
 --
 -- Table structure for table `import_mapping`
 --

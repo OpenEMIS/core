@@ -111,7 +111,7 @@ class InstitutionSitesController extends AppController {
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 			
 		} else if ($this->action === 'import' || $this->action === 'importTemplate'){
-			
+			$this->bodyTitle = 'Institutions';
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
 				$this->layout = 'profile';
