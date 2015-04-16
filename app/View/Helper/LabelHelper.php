@@ -622,7 +622,7 @@ class LabelHelper extends AppHelper {
 			'rows_imported' => 'Rows Imported',
 			'rows_updated' => 'Rows Updated',
 			'rows_failed' => 'Rows Failed',
-			'recommended_max_rows' => 'Recommended Maximum Rows'
+			'recommended_max_records' => 'Recommended Maximum Records'
 		)
 	);
 	
