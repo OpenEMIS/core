@@ -184,6 +184,9 @@ class MessageComponent extends Component {
 		),
 		'WorkflowStep' => array(
 			'noWorkflow' => array('type' => 'warn', 'msg' => 'There are no workflows')
+		),
+		'Import' => array(
+			'formatNotSupported' => array('type' => 'error', 'msg' => 'The uploaded file format is not supported.')
 		)
 	);
 	
