@@ -863,32 +863,22 @@ class InstitutionSitesController extends AppController {
 		if ($this->request->is(array('post', 'put'))) {
 			if (!empty($this->request->data['InstitutionSite']['excel'])) {
 				$fielObj = $this->request->data['InstitutionSite']['excel'];
-				$uploadedName = $fielObj['name'];
 				if ($fielObj['error'] == 0) {
+					$supportedFormats = $this->InstitutionSite->getSupportedFormats();
+					$uploadedName = $fielObj['name'];
+					$finfo = finfo_open(FILEINFO_MIME_TYPE);
+					$fileFormat = finfo_file($finfo, $fielObj['tmp_name']);
+					finfo_close($finfo);
+					if(!in_array($fileFormat, $supportedFormats)){
+						$this->Message->alert('Import.formatNotSupported');
+						return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'import'));
+					}
 					$header = $this->InstitutionSite->getHeader();
 					$columns = $this->InstitutionSite->getColumns();
 					$mapping = $this->InstitutionSite->getMapping();
 					$totalColumns = count($columns);
 
-					$lookup = array();
-					//pr($mapping);
-					foreach ($mapping as $key => $obj) {
-						$mappingRow = $obj['ImportMapping'];
-						if ($mappingRow['foreigh_key'] == 1) {
-							$lookupModel = $mappingRow['lookup_model'];
-							$lookupColumn = $mappingRow['lookup_column'];
-							$lookupModelObj = ClassRegistry::init($lookupModel);
-							$lookupValues = $lookupModelObj->getList();
-							//pr($lookupValues);
-							$lookup[$key] = array();
-							foreach ($lookupValues as $valId => $valObj) {
-								$lookupColumnValue = $valObj[$lookupColumn];
-								if(!empty($lookupColumnValue)){
-									$lookup[$key][$lookupColumnValue] = $valObj['id'];
-								}
-							}
-						}
-					}
+					$lookup = $this->InstitutionSite->getCodesByMapping($mapping);
 					//pr($lookup); die;
 
 					$uploaded = $fielObj['tmp_name'];
@@ -897,7 +887,8 @@ class InstitutionSitesController extends AppController {
 					$worksheets = $objPHPExcel->getWorksheetIterator();
 					$firstSheetOnly = false;
 
-					$totalSuccess = 0;
+					$totalImported = 0;
+					$totalUpdated = 0;
 					$dataFailed = array();
 					foreach ($worksheets as $sheet) {
 						if ($firstSheetOnly) {break;}
@@ -924,7 +915,7 @@ class InstitutionSitesController extends AppController {
 										} else {
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
-												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.code_unfound'), $cellValue);
+												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
 											}
 										}
 									}
@@ -936,7 +927,7 @@ class InstitutionSitesController extends AppController {
 									}else{
 										if($row !== 1 && $cellValue != ''){
 											$rowPass = false;
-											$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.code_unfound'), $cellValue);
+											$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
 										}
 									}
 								}
@@ -954,7 +945,6 @@ class InstitutionSitesController extends AppController {
 								);
 								continue;
 							}
-							// delete from institution_sites where name like 'Test School';
 							
 							if ($row === 1) {
 								$header = $tempRow;
@@ -967,11 +957,11 @@ class InstitutionSitesController extends AppController {
 							if ($this->InstitutionSite->validates()) {
 								$this->InstitutionSite->create();
 								if ($this->InstitutionSite->save($tempRow)) {
-									$totalSuccess++;
+									$totalImported++;
 								} else {
 									$dataFailed[] = array(
 										'row_number' => $row,
-										'error' => array($this->InstitutionSite->getExcelLabel('Import.saving_failed')),
+										'error' => $this->InstitutionSite->getExcelLabel('Import.saving_failed'),
 										'data' => $originalRow
 									);
 								}
@@ -982,11 +972,11 @@ class InstitutionSitesController extends AppController {
 									$updateRow = $tempRow;
 									$updateRow['id'] = $idExisting;
 									if ($this->InstitutionSite->save($updateRow)) {
-										$totalSuccess++;
+										$totalUpdated++;
 									}else{
 										$dataFailed[] = array(
 											'row_number' => $row,
-											'error' => array($this->InstitutionSite->getExcelLabel('Import.saving_failed')),
+											'error' => $this->InstitutionSite->getExcelLabel('Import.saving_failed'),
 											'data' => $originalRow
 										);
 									}
@@ -994,19 +984,17 @@ class InstitutionSitesController extends AppController {
 									$errorStr = $this->InstitutionSite->getExcelLabel('Import.validation_failed');
 									$count = 1;
 									foreach($validationErrors as $field => $arr){
-										if($field != 'code'){
-											$fieldName = $this->InstitutionSite->getExcelLabel('InstitutionSite.'.$field);
-											if(empty($fieldName)){
-												$fieldName = __($field);
-											}
-											
-											if($count === 1){
-												$errorStr .= ' ' . $fieldName;
-											}else{
-												$errorStr .= ', ' . $fieldName;
-											}
-											$count ++;
+										$fieldName = $this->InstitutionSite->getExcelLabel('InstitutionSite.'.$field);
+										if(empty($fieldName)){
+											$fieldName = __($field);
 										}
+
+										if($count === 1){
+											$errorStr .= ' ' . $fieldName;
+										}else{
+											$errorStr .= ', ' . $fieldName;
+										}
+										$count ++;
 									}
 									
 									$dataFailed[] = array(
@@ -1022,7 +1010,7 @@ class InstitutionSitesController extends AppController {
 						$firstSheetOnly = true;
 					}
 
-					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalSuccess', 'header'));
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header'));
 				}
 			}
 		}
