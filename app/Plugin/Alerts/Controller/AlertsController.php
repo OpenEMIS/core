@@ -48,7 +48,7 @@ class AlertsController extends AlertsAppController {
 			$this->Session->write($this->Alert->alias.'.id', $id);
 			$this->set(compact('data'));
 		} else {
-			$this->Message->alert('general.view.notExists');
+			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index'));
 		}
 	}

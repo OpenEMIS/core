@@ -13,7 +13,7 @@ $this->start('contentBody');
 ?>
 
 <fieldset class="section_group">
-	<legend><?php echo $this->Model->getName($staff['Staff']) ?></legend>
+	<legend><?php echo $this->Model->getName($staff['SecurityUser']) ?></legend>
 	
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">

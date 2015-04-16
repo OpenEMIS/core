@@ -50,7 +50,7 @@
 	width: 220px;
 }
 
-.login-box .btn-login { background-color: #5B8BAF; }
+.login-box .btn-login { background-color: #6699CC; }
 
 .rtl .login-box .alert { float: none; }
 .rtl .login-box .btn-login { float: right; margin-bottom: 15px; }

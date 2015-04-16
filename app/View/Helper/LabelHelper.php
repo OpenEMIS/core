@@ -343,7 +343,7 @@ class LabelHelper extends AppHelper {
 		),
 		'Student' => array(
 			'module' => 'Student',
-			'identification_no' => 'OpenEMIS ID',
+			'openemis_no' => 'OpenEMIS ID',
 			'first_name' => 'First Name',
 			'last_name' => 'Last Name',
 			'add_existing' => 'Add existing Student',
@@ -463,7 +463,25 @@ class LabelHelper extends AppHelper {
 			'security_group_id' => 'Group'
 		),
 		'SecurityUser' => array(
-			'name' => 'User'
+			'title' => 'User',
+			'name' => 'User',
+			'SecurityGroupUser' => 'Groups',
+			'UserContact' => 'Contacts',
+			'username' => 'User Name', 
+			'openemis_no' => 'Openemis ID', 
+			'first_name' => 'First Name', 
+			'middle_name' => 'Middle Name', 
+			'third_name' => 'Third Name', 
+			'last_name' => 'Last Name', 
+			'preferred_name' => 'Preferred Name', 
+			'address' => 'Address', 
+			'postal_code' => 'Postal Code', 
+			'address_area_id' => 'Address Area', 
+			'birthplace_area_id' => 'Birthplace Area', 
+			'gender_id' => 'Gender', 
+			'date_of_birth' => 'Date Of Birth', 
+			'date_of_death' => 'Date Of Death', 
+			'status' => 'Status'
 		),
 		
 		'InstitutionSiteFee' => array(
@@ -578,6 +596,96 @@ class LabelHelper extends AppHelper {
 		'ReportProgress' => array(
 			'error' => 'Please contact the administrator for assistance.'
 		),
+		'StudentContact' => array(
+			'title' => 'Contacts',
+			'contact_type_id' => 'Description',
+			'contact_option_id' => 'Type'
+		),
+		'StaffContact' => array(
+			'title' => 'Contacts',
+			'contact_type_id' => 'Description',
+			'contact_option_id' => 'Type'
+		),
+		'StudentIdentity' => array(
+			'title' => 'Identities',
+			'number' => 'Number',
+			'issue_date' => 'Issue Date',
+			'expiry_date' => 'Expiry Date',
+			'issue_location' => 'Issuer',
+			'identity_type_id' => 'Identity Type'
+		),
+		'StaffIdentity' => array(
+			'title' => 'Identities',
+			'number' => 'Number',
+			'issue_date' => 'Issue Date',
+			'expiry_date' => 'Expiry Date',
+			'issue_location' => 'Issuer',
+			'identity_type_id' => 'Identity Type'
+		),
+		'StudentNationality' => array(
+			'title' => 'Nationalities',
+			'comments' => 'Comments',
+			'country_id' => 'Country'
+		),
+		'StaffNationality' => array(
+			'title' => 'Nationalities',
+			'comments' => 'Comments',
+			'country_id' => 'Country'
+		),
+		'StudentLanguage' => array(
+			'title' => 'Languages',
+			'evaluation_date' => 'Evaluation Date',
+			'language_id' => 'Language',
+			'listening' => 'Listening',
+			'speaking' => 'Speaking',
+			'reading' => 'Reading',
+			'writing' => 'Writing'
+		),
+		'StaffLanguage' => array(
+			'title' => 'Languages',
+			'evaluation_date' => 'Evaluation Date',
+			'language_id' => 'Language',
+			'listening' => 'Listening',
+			'speaking' => 'Speaking',
+			'reading' => 'Reading',
+			'writing' => 'Writing'
+		),
+		'StudentComment' => array(
+			'title' => 'Title',
+			'comment_date' => 'Date',
+			'comment' => 'Comment'
+		),
+		'StaffComment' => array(
+			'title' => 'Title',
+			'comment_date' => 'Date',
+			'comment' => 'Comment'
+		),
+		'StudentSpecialNeed' => array(
+			'title' => 'Special Needs',
+			'special_need_type_id' => 'Type',
+			'special_need_date' => 'Date',
+			'comment' => 'Comment',
+		),
+		'StaffSpecialNeed' => array(
+			'title' => 'Special Needs',
+			'special_need_type_id' => 'Type',
+			'special_need_date' => 'Date',
+			'comment' => 'Comment',
+		),
+		'StudentAward' => array(
+			'title' => 'Awards',
+			'issue_date' => 'Issue Date',
+			'award' => 'Name',
+			'issuer' => 'Issuer',
+			'comment' => 'Comment',
+		),
+		'StaffAward' => array(
+			'title' => 'Awards',
+			'issue_date' => 'Issue Date',
+			'award' => 'Name',
+			'issuer' => 'Issuer',
+			'comment' => 'Comment',
+		),
 		'StaffSalary' => array(
 			'title' => 'Salary',
 			'additions' => 'Additions',
@@ -585,6 +693,12 @@ class LabelHelper extends AppHelper {
 			'gross' => 'Gross',
 			'net' => 'Net',
 			'salary_date' => 'Date'
+		),
+		'SecurityUserLogin' => array(
+			'title' => 'User',
+			'password' => 'Current Password',
+			'newPassword' => 'New Password',
+			'retypeNewPassword' => 'Retype New Password'
 		),
 		'FieldOption' => array(
 			'module' => 'Module',

@@ -33,14 +33,14 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			foreach ($studentList as $student):
 				$studentObj = $student['Student'];
 				$studentId = $studentObj['id'];
-				$studentName = $this->Model->getName($studentObj);
+				$studentName = $this->Model->getName($student['SecurityUser']);
 				$additionalReasonOptionFieldData = array();
 
 				echo $this->Form->hidden($model . '.' . $count . '.student_id', array('value' => $studentId));
 				echo $this->Form->hidden($model . '.' . $count . '.section_id', array('value' => $sectionId));
 				?>
 				<tr>
-					<td><?php echo $studentObj['identification_no']; ?></td>
+					<td><?php echo $student['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo $studentName; ?></td>
 					<?php
 					$absenceType = 0;

@@ -29,7 +29,7 @@ class StaffDetailsCustomValue extends StaffAppModel {
                     'name' => 'Institution'
                 ),
                 'Student' => array(
-                    'identification_no' => 'Student OpenEMIS ID',
+                    'openemis_no' => 'Student OpenEMIS ID',
                     'first_name' => '',
                     'middle_name' => '',
                     'third_name' => '',
@@ -114,11 +114,11 @@ class StaffDetailsCustomValue extends StaffAppModel {
                 'recursive' => -1,
                 'fields' => array(
                     'StaffDetailsCustomValue.staff_id',
-                    'Staff.identification_no',
-                    'Staff.first_name',
-                    'Staff.middle_name',
-                    'Staff.third_name',
-                    'Staff.last_name',
+                    'SecurityUser.openemis_no',
+                    'SecurityUser.first_name',
+                    'SecurityUser.middle_name',
+                    'SecurityUser.third_name',
+                    'SecurityUser.last_name',
                     'Staff.preferred_name',
                     'StaffDetailsCustomValue.academic_period_id',
                     'AcademicPeriod.name'
@@ -181,11 +181,11 @@ class StaffDetailsCustomValue extends StaffAppModel {
 
                 $row = $rowTpl;
                 $row['institution_site'] = $institutionSiteObj['InstitutionSite']['name'];
-                $row['openemis_id'] = $rowValue['Staff']['identification_no'];
-                $row['first_name'] = $rowValue['Staff']['first_name'];
-                $row['middle_name'] = $rowValue['Staff']['middle_name'];
-                $row['third_name'] = $rowValue['Staff']['third_name'];
-                $row['last_name'] = $rowValue['Staff']['last_name'];
+                $row['openemis_id'] = $rowValue['SecurityUser']['openemis_no'];
+                $row['first_name'] = $rowValue['SecurityUser']['first_name'];
+                $row['middle_name'] = $rowValue['SecurityUser']['middle_name'];
+                $row['third_name'] = $rowValue['SecurityUser']['third_name'];
+                $row['last_name'] = $rowValue['SecurityUser']['last_name'];
                 $row['preferred_name'] = $rowValue['Staff']['preferred_name'];
                 $row['academic_period'] = $rowValue['AcademicPeriod']['name'];
 

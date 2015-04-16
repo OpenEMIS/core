@@ -18,7 +18,7 @@ class StudentGuardian extends StudentsAppModel {
 	public $actsAs = array(
 		'Excel' => array(
 			'header' => array(
-				'Student' => array('identification_no', 'first_name', 'last_name'),
+				'Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),
 				'Guardian' => array('first_name', 'middle_name', 'last_name', 'email', 'home_phone', 'mobile_phone')
 			)
 		),
@@ -49,6 +49,16 @@ class StudentGuardian extends StudentsAppModel {
 		)
 	);
 
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Student.id')) {
+			$id = CakeSession::read('Student.id');
+			$conditions = array($this->alias.'.student_id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
 	
 	public function getGuardian($guardianId, $studentId) {
 		$this->unbindModel(array('belongsTo' => array('Guardian')));
@@ -196,8 +206,13 @@ class StudentGuardian extends StudentsAppModel {
 	}
 	
 	public function guardiansView($controller, $params) {
+		$genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+
 		$guardianId = $controller->params['pass'][0];
 		$guardianObj = $this->getGuardian($guardianId, $controller->Session->read('Student.id'));
+		if (array_key_exists('gender', $guardianObj['Guardian'])) {
+			$guardianObj['Guardian']['gender_name'] = (array_key_exists($guardianObj['Guardian']['gender'], $genderOptions))? $genderOptions[$guardianObj['Guardian']['gender']]:'';
+		}
 
 		if (!empty($guardianObj)) {
 			$controller->Navigation->addCrumb('Guardian Details');

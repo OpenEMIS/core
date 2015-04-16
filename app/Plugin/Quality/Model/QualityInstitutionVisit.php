@@ -21,7 +21,7 @@ class QualityInstitutionVisit extends QualityAppModel {
     public $actsAs = array(
         'Excel' => array(
             'header' => array(
-                'Staff' => array('identification_no', 'first_name', 'last_name'),
+                'SecurityUser' => array('openemis_no', 'first_name', 'last_name'),
                 'Evaluator' => array('first_name', 'last_name'),
             )
         ),
@@ -137,16 +137,18 @@ class QualityInstitutionVisit extends QualityAppModel {
         $controller->set('subheader', 'Visit');
       //  $controller->set('modelName', $this->name);
 
-		$this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser', 'AcademicPeriod', 'QualityVisitType')));
-		$options['fields'] = array(
-			'QualityInstitutionVisit.id',
-			'QualityInstitutionVisit.date',
-			'Staff.first_name',
-            'Staff.middle_name',
-			'Staff.third_name',
-			'Staff.last_name',
-			'EducationGrade.name',
-			'InstitutionSiteSection.name',
+		// $this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser', 'AcademicPeriod', 'QualityVisitType')));
+		$options['contain'] = array(
+			'Staff' => array(
+				'SecurityUser' => array(
+					'first_name',
+					'middle_name',
+					'third_name',
+					'last_name'
+				)
+			),
+			'EducationGrade' => array('name'),
+			'InstitutionSiteSection' => array('name')
 			
 		);
 		$options['conditions'] = array('InstitutionSiteSection.institution_site_id' => $institutionSiteId);
@@ -162,10 +164,45 @@ class QualityInstitutionVisit extends QualityAppModel {
       //  $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        $data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
+        $data = $this->find(
+        	'first', 
+        	array(
+        		'contain' => array(
+        			'Staff' => array(
+        				'SecurityUser' => array(
+        					'first_name',
+							'middle_name',
+							'third_name',
+							'last_name'
+        				)
+        			),
+					'AcademicPeriod',
+					'EducationGrade',
+					'InstitutionSite',
+					'InstitutionSiteSection',
+					'QualityVisitType',
+					'ModifiedUser',
+					'Evaluator'
+        		),
+        		'conditions' => array($this->name . '.id' => $id)
+        	)
+       	);
 
         if (empty($data)) {
             $controller->redirect(array('action' => 'qualityVisit'));
+        }
+
+        if (array_key_exists('Staff', $data)) {
+        	$data['Staff']['first_name'] = '';
+			$data['Staff']['middle_name'] = '';
+			$data['Staff']['third_name'] = '';
+			$data['Staff']['last_name'] = '';
+        	if (array_key_exists('SecurityUser', $data['Staff'])) {
+	        	$data['Staff']['first_name'] = (array_key_exists('first_name', $data['Staff']['SecurityUser']))? $data['Staff']['SecurityUser']['first_name']: '';
+	        	$data['Staff']['middle_name'] = (array_key_exists('middle_name', $data['Staff']['SecurityUser']))? $data['Staff']['SecurityUser']['middle_name']: '';
+	        	$data['Staff']['third_name'] = (array_key_exists('third_name', $data['Staff']['SecurityUser']))? $data['Staff']['SecurityUser']['third_name']: '';
+	        	$data['Staff']['last_name'] = (array_key_exists('last_name', $data['Staff']['SecurityUser']))? $data['Staff']['SecurityUser']['last_name']: '';
+        	}
         }
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('QualityInstitutionVisitAttachment.quality_institution_visit_id'=>$id)));
 		
@@ -313,19 +350,34 @@ class QualityInstitutionVisit extends QualityAppModel {
 
         $staffOptions = array();
         if (!empty($sectionOptions)) {
-            $this->InstitutionSiteSection->contain('Staff');
-            $staffs = $this->InstitutionSiteSection->find('all', array(
-                'fields' => array(
-                    'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.middle_name', 'Staff.third_name'
-                ),
-                'conditions' => array('InstitutionSiteSection.id' => $selectedSectionId, 'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriodId),
-                'order' => array('Staff.first_name')
-            ));
-            $staffOptions = array();
-            foreach ($staffs as $obj) {
-                $id = $obj['Staff']['id'];
-                $staffOptions[$id] = ModelHelper::getName($obj['Staff']);
-            }
+            //Process staff
+			$staffs = $this->InstitutionSiteSection->find('all', array(
+				'recursive' => -1,
+				'fields' => array(
+					'Staff.id', 'SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.middle_name', 'SecurityUser.third_name'
+				),
+				'joins' => array(
+					array(
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('Staff.id = InstitutionSiteSection.staff_id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array('SecurityUser.id = Staff.security_user_id')
+					),
+				),
+				'conditions' => array('InstitutionSiteSection.id' => $selectedSectionId, 'InstitutionSiteSection.academic_period_id' => $selectedAcademicPeriodId),
+				'order' => array('SecurityUser.first_name')
+			));
+
+			$staffOptions = array();
+			foreach ($staffs as $obj) {
+				$id = $obj['Staff']['id'];
+				$staffOptions[$id] = ModelHelper::getName($obj['SecurityUser']);
+			}
+
             $selectedstaffId = !empty($selectedstaffId) ? $selectedstaffId : key($staffOptions);
             $selectedstaffId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedstaffId;
         }

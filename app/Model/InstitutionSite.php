@@ -499,15 +499,6 @@ class InstitutionSite extends AppModel {
 	
 	public function paginateJoins($joins, $params) {
                 
-		if(strlen($params['SearchKey']) != 0) {
-			$joins[] = array(
-				'table' => 'institution_site_history',
-				'alias' => 'InstitutionSiteHistory',
-				'type' => 'LEFT',
-				'conditions' => array('InstitutionSiteHistory.institution_site_id = InstitutionSite.id')
-			);
-		}
-                
 		$joins[] = array(
 			'table' => 'field_option_values',
 			'alias' => 'InstitutionSiteType',
@@ -549,9 +540,7 @@ class InstitutionSite extends AppModel {
 			$search = "%".$params['SearchKey']."%";
 			$conditions['OR'] = array(
 				'InstitutionSite.name LIKE' => $search,
-				'InstitutionSite.code LIKE' => $search,
-				'InstitutionSiteHistory.name LIKE' => $search,
-				'InstitutionSiteHistory.code LIKE' => $search
+				'InstitutionSite.code LIKE' => $search
 			);
 		}
 		
@@ -661,10 +650,6 @@ class InstitutionSite extends AppModel {
 			'Area.name',
 			'Area.id'
 		);
-		if(strlen($conditions['SearchKey']) != 0) {
-			$fields[] = 'InstitutionSiteHistory.code';
-			$fields[] = 'InstitutionSiteHistory.name';
-		}
 		
 		$joins = array();
 		$data = array();
