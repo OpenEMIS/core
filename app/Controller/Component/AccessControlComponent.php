@@ -301,14 +301,14 @@ class AccessControlComponent extends Component {
 						}
 						
 					}else{
-						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add' || $action == 'advanced')){
+						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add' || $action == 'advanced' || $action == 'import' || $action == 'importTemplate')){
 							$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
 						}else{
 							if($this->Session->check('InstitutionSiteId')){
 								$institutionSiteId = $this->Session->read('InstitutionSiteId');
 								$userId = $this->Auth->user('id');
 								$arrayRoleIds = $this->GroupUser->getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId);
-
+								
 								$checkAllRoleIds = false;
 								foreach($arrayRoleIds AS $roleId){
 									if(isset($check[$controller][$action]['role_id'])){
