@@ -79,6 +79,9 @@ class InfrastructureLevelsController extends InfrastructureAppController {
 		if ($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
 			$this->InfrastructureLevel->create();
+			if(!isset($postData['InfrastructureLevel']['parent_id'])){
+				$postData['InfrastructureLevel']['parent_id'] = 0;
+			}
 			
 			if ($this->InfrastructureLevel->save($postData)) {
 				$this->Message->alert('general.add.success');
@@ -106,6 +109,9 @@ class InfrastructureLevelsController extends InfrastructureAppController {
 
 		if ($this->request->is(array('post', 'put'))) {
 			$postData = $this->request->data;
+			if(!isset($postData['InfrastructureLevel']['parent_id'])){
+				$postData['InfrastructureLevel']['parent_id'] = 0;
+			}
 
 			if ($this->InfrastructureLevel->save($postData)) {
 				$this->Message->alert('general.edit.success');
