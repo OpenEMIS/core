@@ -1,3 +1,6 @@
+UPDATE `navigations` SET `pattern` = 'index$|advanced|import' WHERE `module` LIKE 'Institution' AND `title` LIKE 'List of Institutions';
+UPDATE `security_functions` SET `_add` = '_view:import|importTemplate|add' WHERE `module` LIKE 'Institutions' AND `category` LIKE 'General' AND `name` LIKE 'Institution';
+
 --
 -- Table structure for table `import_mapping`
 --
