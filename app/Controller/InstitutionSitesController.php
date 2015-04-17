@@ -55,7 +55,9 @@ class InstitutionSitesController extends AppController {
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
-		'InstitutionSiteSectionStudent'
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteQualityRubric',
+		'InstitutionSiteQualityVisit'
 	);
 	
 	public $helpers = array('Paginator', 'Model');
@@ -108,10 +110,30 @@ class InstitutionSitesController extends AppController {
 		$this->indexPage = 'dashboard';
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
-		} else if ($this->action === 'view' || $this->action === 'dashboard') {
-			
 		} else if ($this->action === 'import' || $this->action === 'importTemplate'){
 			$this->bodyTitle = 'Institutions';
+		} else if ($this->action === 'view' || $this->action === 'dashboard') {
+			$pass = $this->request->params['pass'];
+			$siteId = isset($pass[0]) ? $pass[0] : 0;
+
+			if ($siteId != 0) {
+				$data = $this->InstitutionSite->findById($siteId);
+				if ($data) {
+					$this->Session->write('InstitutionSiteId', $siteId); // deprecated
+					$this->Session->write('InstitutionSite.id', $siteId); // writing to session using array dot notation
+					$this->Session->write('InstitutionSite.data', $data);
+					$this->Session->write('InstitutionSiteObj', $data); // deprecated
+				} else {
+					return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+				}
+			} else if ($this->Session->check('InstitutionSite.id')) {
+				$siteId = $this->Session->read('InstitutionSite.id');
+				$data = $this->InstitutionSite->findById($siteId);
+				$this->Session->write('InstitutionSite.data', $data);
+				$this->Session->write('InstitutionSiteObj', $data);
+			} else {
+				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			}
 		} else {
 			if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
 				$this->layout = 'profile';
@@ -256,25 +278,12 @@ class InstitutionSitesController extends AppController {
 		$this->render('/Elements/customfields/search');
 	}
 
-	public function dashboard($id = 0) {
-		$data = array();
+	public function dashboard($id=0) {
 		if ($id != 0) {
-			$data = $this->InstitutionSite->findById($id);
-			if ($data) {
-				$this->Session->write('InstitutionSiteId', $id); // deprecated
-				$this->Session->write('InstitutionSite.id', $id); // writing to session using array dot notation
-				$this->Session->write('InstitutionSite.data', $data);
-				$this->Session->write('InstitutionSiteObj', $data); // deprecated
-			} else {
-				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-			}
+			$data = $this->Session->read('InstitutionSite.data');
 		} else if ($this->Session->check('InstitutionSite.id')) {
 			$id = $this->Session->read('InstitutionSite.id');
-			$data = $this->InstitutionSite->findById($id);
-			$this->Session->write('InstitutionSite.data', $data);
-			$this->Session->write('InstitutionSiteObj', $data);
-		} else {
-			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			$data = $this->Session->read('InstitutionSite.data');
 		}
 
 		if($this->checkUserAccess($id, 'dashboard')) {
@@ -315,25 +324,13 @@ class InstitutionSitesController extends AppController {
 	}
 
 	public function view($id = 0) {
-		$data = array();
 		if ($id != 0) {
-			$data = $this->InstitutionSite->findById($id);
-			if ($data) {
-				$this->Session->write('InstitutionSiteId', $id); // deprecated
-				$this->Session->write('InstitutionSite.id', $id); // writing to session using array dot notation
-				$this->Session->write('InstitutionSite.data', $data);
-				$this->Session->write('InstitutionSiteObj', $data); // deprecated
-			} else {
-				return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-			}
+			$data = $this->Session->read('InstitutionSite.data');
 		} else if ($this->Session->check('InstitutionSite.id')) {
 			$id = $this->Session->read('InstitutionSite.id');
-			$data = $this->InstitutionSite->findById($id);
-			$this->Session->write('InstitutionSite.data', $data);
-			$this->Session->write('InstitutionSiteObj', $data);
-		} else {
-			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+			$data = $this->Session->read('InstitutionSite.data');
 		}
+
 		if($this->checkUserAccess($id, 'view')) {
 			$this->institutionSiteId = $id;
 			$this->institutionSiteObj = $data;
@@ -477,6 +474,7 @@ class InstitutionSitesController extends AppController {
 			}else{
 				$this->log($this->InstitutionSite->validationErrors, 'debug');
 				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
+				$this->Message->alert('general.delete.failed');
 			}
 			
 			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
@@ -906,37 +904,47 @@ class InstitutionSitesController extends AppController {
 								$cellValue = $cell->getValue();
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
 								$foreignKey = $excelMappingObj['foreigh_key'];
-								$originalRow[] = $cellValue;
+								$columnName = $columns[$col];
+								$originalRow[$col] = $cellValue;
 								$val = $cellValue;
-								if ($foreignKey == 1) {
-									if(!empty($cellValue)){
-										if (array_key_exists($cellValue, $lookup[$col])) {
-											$val = $lookup[$col][$cellValue];
-										} else {
+								
+								if($row > 1){
+									if(!empty($val)){
+										if($columnName == 'date_opened' || $columnName == 'date_closed'){
+											$val = date('Y-m-d', PHPExcel_Shared_Date::ExcelToPHP($val));
+											$originalRow[$col] = $val;
+										}
+									}
+
+									if ($foreignKey == 1) {
+										if(!empty($cellValue)){
+											if (array_key_exists($cellValue, $lookup[$col])) {
+												$val = $lookup[$col][$cellValue];
+											} else {
+												if($row !== 1 && $cellValue != ''){
+													$rowPass = false;
+													$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
+												}
+											}
+										}
+									} else if ($foreignKey == 2) {
+										$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
+										$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
+										if(!empty($recordId)){
+											$val = $recordId;
+										}else{
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
 												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
 											}
 										}
 									}
-								} else if ($foreignKey == 2) {
-									$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
-									$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
-									if(!empty($recordId)){
-										$val = $recordId;
-									}else{
-										if($row !== 1 && $cellValue != ''){
-											$rowPass = false;
-											$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
-										}
-									}
 								}
 								
-								$columnName = $columns[$col];
 								$tempRow[$columnName] = $val;
 								
 							}
-							
+
 							if(!$rowPass){
 								$dataFailed[] = array(
 									'row_number' => $row,

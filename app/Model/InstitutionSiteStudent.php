@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
 	public $actsAs = array(
-		'Excel',
+		'Excel' => array('header' => array('Student' => array('SecurityUser.openemis_no', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name'))),
 		'Search',
 		'ControllerAction2',
 		'DatePicker' => array('start_date', 'end_date'),
@@ -88,12 +88,12 @@ class InstitutionSiteStudent extends AppModel {
 	
 	public function excelGetHeader($include){
 		$fields = array(
-			'Student.identification_no',
-			'Student.first_name',
-			'Student.middle_name',
-			'Student.third_name',
-			'Student.last_name',
-			'Student.date_of_birth',
+			'SecurityUser.openemis_no',
+			'SecurityUser.first_name',
+			'SecurityUser.middle_name',
+			'SecurityUser.third_name',
+			'SecurityUser.last_name',
+			'SecurityUser.date_of_birth',
 			'StudentStatus.name',
 			'InstitutionSite.name',
 			'EducationProgramme.name',
@@ -116,6 +116,13 @@ class InstitutionSiteStudent extends AppModel {
 				'alias' => 'Student',
 				'conditions' => array(
 					'Student.id = InstitutionSiteStudent.student_id'
+				)
+			),
+			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'conditions' => array(
+					'SecurityUser.id = Student.security_user_id'
 				)
 			),
 			array(
@@ -184,7 +191,7 @@ class InstitutionSiteStudent extends AppModel {
 			),
 		);
 		unset($options['contain']);
-		$options['order'] = array('Student.identification_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
+		$options['order'] = array('SecurityUser.openemis_no', 'AcademicPeriod.order', 'InstitutionSiteSection.name');
 		
 		return $options;
 	}
@@ -313,12 +320,12 @@ class InstitutionSiteStudent extends AppModel {
 		if (!empty($searchField)) {
 			$search = '%' . $searchField . '%';
 			$conditions['OR'] = array(
-				'Student.identification_no LIKE' => $search,
-				'Student.first_name LIKE' => $search,
-				'Student.middle_name LIKE' => $search,
-				'Student.third_name LIKE' => $search,
-				'Student.last_name LIKE' => $search,
-				'Student.preferred_name LIKE' => $search
+				'SecurityUser.openemis_no LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.middle_name LIKE' => $search,
+				'SecurityUser.third_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search,
+				'SecurityUser.preferred_name LIKE' => $search
 			);
 		} else {
 			unset($conditions['OR']);
@@ -328,7 +335,6 @@ class InstitutionSiteStudent extends AppModel {
 			$params = $this->Session->read('Student.AdvancedSearch');
 			$conditions = $this->getAdvancedSearchConditionsWithSite($institutionSiteId, $params);
 		}
-
 		$this->Session->write($prefix . 'conditions', $conditions);
 		$data = $this->controller->Search->search($this, $conditions);
 
@@ -464,41 +470,58 @@ class InstitutionSiteStudent extends AppModel {
 		$this->fields['institution_site_section_id']['options'] = $sectionOptions;
 	}
 	
+	// I do not think this is being used.... search uses student->paginate
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$identityConditions[] = 'StudentIdentity.student_id = InstitutionSiteStudent.student_id';
+		$identityConditions[] = 'StudentIdentity.security_user_id = SecurityUser.id';
 		if(isset($conditions['defaultIdentity'])&&strlen($conditions['defaultIdentity']>0)) {
 			$identityConditions[] = 'StudentIdentity.identity_type_id = '.$conditions['defaultIdentity'];
 		}
-		$joins[] = array(
-			'table' => 'student_identities',
-			'alias' => 'StudentIdentity',
-			'type' => 'LEFT',
-			'conditions' => $identityConditions,
-		);
 
-		/*
-		*	Default identity is a required condition for extracting row on StudentIdentity only.
-		*	Must be unset to avoid mysql unknown column error when querying InstitutionSiteStudent table.
-		*	
-		*	Any other parameter that can be used other than $conditions?
-		*/
 		unset($conditions['defaultIdentity']);
 				
-		/*
-		*	Sorting would not work on National ID column.
-		*	The script below is to enforce sorting on that column.
-		*/
 		if (isset($extra['sort']) && isset($extra['direction'])) {
 			$order = array($extra['sort'] => $extra['direction']);
 		}
-		/**/
+		
+		// change to manual joins because apparently paginate cannot handle deep association sorting
+		$joins = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'type' => 'inner',
+				'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
+			),
+			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'type' => 'inner',
+				'conditions' => array('SecurityUser.id = Student.security_user_id')
+			),
+			array(
+				'table' => 'user_identities',
+				'alias' => 'StudentIdentity',
+				'type' => 'LEFT',
+				'conditions' => $identityConditions,
+			), 
+			array(
+				'table' => 'field_option_values',
+				'alias' => 'StudentStatus',
+				'type' => 'LEFT',
+				'conditions' => array('StudentStatus.id = InstitutionSiteStudent.student_status_id')
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'type' => 'LEFT',
+				'conditions' => array('EducationProgramme.id = InstitutionSiteStudent.education_programme_id')
+			)
+
+		);
+
 
 		$data = $this->find('all', array(
-			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-				'Student.third_name', 'Student.last_name', 'EducationProgramme.name', 'StudentStatus.name',
-				'StudentIdentity.number'
-			),
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteStudent.*, Student.*', 'SecurityUser.*', 'StudentIdentity.number', 'StudentStatus.name', 'EducationProgramme.name'),
 			'joins' => $joins,
 			'conditions' => $conditions,
 			'limit' => $limit,
@@ -507,7 +530,7 @@ class InstitutionSiteStudent extends AppModel {
 			'order' => $order
 		));
 		$data = $this->attachSectionInfo($data);
-		
+
 		return $data;
 	}
 	 
@@ -517,7 +540,30 @@ class InstitutionSiteStudent extends AppModel {
 		*	Must be unset to avoid mysql unknown column error when querying InstitutionSiteStudent table.
 		*/
 		unset($conditions['defaultIdentity']);
-		$count = $this->find('count', array('conditions' => $conditions, 'group' => array('Student.id'),));
+
+		$count = $this->find(
+			'count',
+			array(
+				'recursive' => -1,
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'type' => 'inner',
+						'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'type' => 'inner',
+						'conditions' => array('SecurityUser.id = Student.security_user_id')
+					),
+				),
+				'conditions' => $conditions, 
+				'group' => array('Student.id')
+			)
+		);
+
 		return $count;
 	}
 	
@@ -530,10 +576,9 @@ class InstitutionSiteStudent extends AppModel {
 			
 			$data = array();
 			foreach ($list as $obj) {
-				$info = $obj['Student'];
 				$data[] = array(
-					'label' => ModelHelper::getName($info, array('openEmisId'=>true)),
-					'value' => array('student_id' => $info['id']) 
+					'label' => ModelHelper::getName($obj['SecurityUser'], array('openEmisId'=>true)),
+					'value' => array('student_id' => $obj['Student']['id']) 
 				);
 			}
 			return json_encode($data);
@@ -560,63 +605,6 @@ class InstitutionSiteStudent extends AppModel {
 		));
 		return $data;
 	}
-	
-	// used by InstitutionSiteStudentAbsence
-	public function getAutoCompleteList($search,  $institutionSiteId = NULL, $limit = NULL) {
-		$search = sprintf('%%%s%%', $search);
-		
-		$options['recursive'] = -1;
-		$options['fields'] = array('DISTINCT Student.id', 'Student.*');
-		$options['joins'] = array(array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id',
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id'
-					)
-				));
-		if(!empty($institutionSiteId)){
-			$options['joins'][] = array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id',
-						'InstitutionSite.id' => $institutionSiteId
-					)
-				);
-		}
-		$options['conditions'] = array(
-				'OR' => array(
-					'Student.first_name LIKE' => $search,
-					'Student.middle_name LIKE' => $search,
-					'Student.third_name LIKE' => $search,
-					'Student.last_name LIKE' => $search,
-					'Student.preferred_name LIKE' => $search,
-					'Student.identification_no LIKE' => $search
-				)
-			);
-		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name', 'Student.preferred_name');
-		if(!empty($limit)){
-			$options['limit'] = $limit;
-		}
-		
-		$list = $this->find('all', $options);
-	
-		$data = array();
-		foreach ($list as $obj) {
-			$student = $obj['Student'];
-			$data[] = array(
-				'label' => ModelHelper::getName($student, array('openEmisId'=>true, 'preferred'=>true)),
-				'value' => $student['id']
-			);
-		}
-		return $data;
-	}
 
 	// used by InstitutionSiteSection.edit
 	public function getStudentOptions($institutionSiteId, $periodId) {
@@ -628,7 +616,7 @@ class InstitutionSiteStudent extends AppModel {
 
 		$alias = $this->alias;
 		$options = array(
-			'contain' => array('Student'),
+			'contain' => array('Student' => array('SecurityUser')),
 			'conditions' => array(
 				$alias.'.institution_site_id = ' . $institutionSiteId,
 				'OR' => array(
@@ -661,7 +649,9 @@ class InstitutionSiteStudent extends AppModel {
 		$data = array();
 		foreach ($list as $obj) {
 			$studentObj = $obj['Student'];
-			$data[$studentObj['id']] = ModelHelper::getName($studentObj, array('openEmisId' => true));
+			if (array_key_exists('SecurityUser', $studentObj)) {
+				$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
+			}
 		}
 		return $data;
 	}
@@ -685,12 +675,14 @@ class InstitutionSiteStudent extends AppModel {
 		$maxYear = $periodResult['max_year'];
 
 		$years = array();
-		$dataSet = array(
-			'M' => array('name' => __('Male'), 'data' => array()),
-			'F' => array('name' => __('Female'), 'data' => array())
-		);
 
-		$studentsByYearConditions = array('Student.gender IS NOT NULL');
+		$genderOptions = ClassRegistry::init('Gender')->getList();
+		$dataSet = array();
+		foreach ($genderOptions as $key => $value) {
+			$dataSet[$value] = array('name' => __($value), 'data' => array());
+		}
+
+		$studentsByYearConditions = array('Gender.name IS NOT NULL');
 		$studentsByYearConditions = array_merge($studentsByYearConditions, $_conditions);
 
 		for ($currentYear = $minYear; $currentYear <= $maxYear; $currentYear++) {
@@ -703,33 +695,56 @@ class InstitutionSiteStudent extends AppModel {
 				)
 			);
 
-			$this->contain('Student');
+			
 			$studentsByYear = $this->find('all', array(
+				'contain' => array(),
 				'fields' => array(
-					'Student.gender', 'COUNT(InstitutionSiteStudent.id) AS total'
+					'SecurityUser.first_name', 'Gender.name', 'COUNT(InstitutionSiteStudent.id) AS total'
+				),
+				'joins' => array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array(
+							'InstitutionSiteStudent.student_id = Student.id'
+						)
+					),
+					array(
+						'table' => 'security_users',
+						'alias' => 'SecurityUser',
+						'conditions' => array(
+							'Student.security_user_id = SecurityUser.id'
+						)
+					),
+					array(
+						'table' => 'genders',
+						'alias' => 'Gender',
+						'conditions' => array(
+							'SecurityUser.gender_id = Gender.id'
+						)
+					)
 				),
 				'conditions' => $studentsByYearConditions,
 				'group' => array(
-					'Student.gender'
+					'Gender.name'
 				)
 			));
 
-			if (!array_key_exists($currentYear, $dataSet['M']['data'])) {
-				$dataSet['M']['data'][$currentYear] = 0;
+ 			foreach ($dataSet as $key => $value) {
+ 				if (!array_key_exists($currentYear, $dataSet[$key]['data'])) {
+ 					$dataSet[$key]['data'][$currentYear] = 0;
+ 				}				
 			}
-			if (!array_key_exists($currentYear, $dataSet['F']['data'])) {
-				$dataSet['F']['data'][$currentYear] = 0;
-			}
-			foreach ($studentsByYear as $key => $studentByYear) {
-				$studentGender = isset($studentByYear['Student']['gender']) ? $studentByYear['Student']['gender'] : null;
-				$studentTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
 
+			foreach ($studentsByYear as $key => $studentByYear) {
+				$studentGender = isset($studentByYear['Gender']['name']) ? $studentByYear['Gender']['name'] : null;
+				$studentTotal = isset($studentByYear[0]['total']) ? $studentByYear[0]['total'] : 0;
 				$dataSet[$studentGender]['data'][$currentYear] = $studentTotal;
 			}
 		}
 
 		$params['dataSet'] = $dataSet;
-
+		
 		return $params;
 	}
 }

@@ -56,7 +56,7 @@ class StaffReport extends StaffAppModel {
             'FileName' => 'Report_Staff_Quality_Assurance'
         ),
         'Visit Report' => array(
-            'Model' => 'QualityInstitutionVisit',
+            'Model' => 'InstitutionSiteQualityVisit',
             'fields' => array(
                 'AcademicPeriod' => array(
                     'name' => 'Academic Period'
@@ -74,7 +74,7 @@ class StaffReport extends StaffAppModel {
                 'QualityVisitTypes' => array(
                     'name' => 'Quality Type'
                 ),
-                'QualityInstitutionVisit' => array(
+                'InstitutionSiteQualityVisit' => array(
                     'date' => 'Visit Date',
                     'comment' => 'Comment',
 					'staff_full_name' => 'Staff Name',
@@ -187,7 +187,7 @@ class StaffReport extends StaffAppModel {
                     )
                 );
 				
-				$modal->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.middle_name,' ',Staff.third_name,' ',Staff.last_name)";
+				$modal->virtualFields['staff_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.middle_name,' ',SecurityUser.third_name,' ',SecurityUser.last_name)";
 				$modal->virtualFields['evaluator_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.last_name)";
             } else if ($this->reportMapping[$name]['Model'] == 'InstitutionSite') {
 

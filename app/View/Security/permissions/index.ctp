@@ -4,7 +4,12 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'roles', $selectedGroup), array('class' => 'divider'));
+$params = array('action' => 'roles');
+if (!empty($selectedGroup) && $selectedGroup != -1) {
+	$params[] = $selectedGroup;
+	$params['action'] = 'rolesUserDefined';
+}
+echo $this->Html->link(__('Back'), $params, array('class' => 'divider'));
 if($_edit && $allowEdit) {
 	echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit', $selectedRole, $selectedModule), array('class' => 'divider'));
 }

@@ -25,11 +25,11 @@ echo $this->element('../InstitutionSites/StudentBehaviour/controls');
 		<tbody>
 			<?php 
 			foreach ($data as $obj) : 
-				$idNo = $obj['Student']['identification_no'];
+				$idNo = $obj['Student']['SecurityUser']['openemis_no'];
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => $model, 'index', $obj['Student']['id'])) ?></td>
-					<td><?php echo $this->Model->getName($obj['Student']) ?></td>
+					<td><?php echo $this->Model->getName($obj['Student']['SecurityUser']) ?></td>
 					<td><?php echo $obj['EducationGrade']['name'] ?></td>
 				</tr>
 			<?php endforeach ?>

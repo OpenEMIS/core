@@ -29,7 +29,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                     'name' => 'Institution'
                 ),
                 'Student' => array(
-                    'identification_no' => 'Student OpenEMIS ID',
+                    'openemis_no' => 'Student OpenEMIS ID',
                     'first_name' => '',
                     'middle_name' => '',
                     'third_name' => '',
@@ -114,10 +114,10 @@ class StudentDetailsCustomValue extends StudentsAppModel {
                 'recursive' => -1,
                 'fields' => array(
                     'StudentDetailsCustomValue.student_id',
-                    'Student.identification_no',
-                    'Student.first_name',
-                    'Student.middle_name',
-                    'Student.last_name',
+                    'SecurityUser.openemis_no',
+                    'SecurityUser.first_name',
+                    'SecurityUser.middle_name',
+                    'SecurityUser.last_name',
                     'Student.preferred_name',
                     'StudentDetailsCustomValue.academic_period_id',
                     'AcademicPeriod.name'
@@ -180,10 +180,10 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 
                 $row = $rowTpl;
                 $row['institution_site'] = $institutionSiteObj['InstitutionSite']['name'];
-                $row['openemis_id'] = $rowValue['Student']['identification_no'];
-                $row['first_name'] = $rowValue['Student']['first_name'];
-                $row['middle_name'] = $rowValue['Student']['middle_name'];
-                $row['last_name'] = $rowValue['Student']['last_name'];
+                $row['openemis_id'] = $rowValue['SecurityUser']['openemis_no'];
+                $row['first_name'] = $rowValue['SecurityUser']['first_name'];
+                $row['middle_name'] = $rowValue['SecurityUser']['middle_name'];
+                $row['last_name'] = $rowValue['SecurityUser']['last_name'];
                 $row['preferred_name'] = $rowValue['Student']['preferred_name'];
                 $row['academic_period'] = $rowValue['AcademicPeriod']['name'];
 

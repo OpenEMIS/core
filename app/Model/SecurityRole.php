@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityRole extends AppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Reorder' => array('parentKey' => 'security_group_id'));
 	public $belongsTo = array('SecurityGroup');
 	public $hasMany = array('SecurityRoleFunction', 'SecurityGroupUser');
 	
@@ -75,13 +75,26 @@ class SecurityRole extends AppModel {
 	
 	public function beforeAction($controller, $action) {
         parent::beforeAction($controller, $action);
-		$controller->Navigation->addCrumb('Roles');
 		$controller->set('header', __('Roles'));
 		$controller->set('fields', $this->getDisplayFields($controller));
     }
 	
 	public function roles($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$systemRoles = $this->getRoles(array(0, -1));
+		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		if(!$isSuperUser){
+			return $controller->redirect(array('action' => 'rolesUserDefined'));
+		}
+		
+		$currentTab = 'System Defined Roles';
+		$controller->set(compact('isSuperUser', 'systemRoles', 'currentTab'));
+	}
+	
+	public function rolesUserDefined($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$isSuperUser = $controller->Auth->user('super_admin')==1;
 		$userId = $controller->Auth->user('id');
 		$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
@@ -89,7 +102,7 @@ class SecurityRole extends AppModel {
 		$selectedGroup = 0;
 		
 		if(!empty($groupOptions)) {
-			if(isset($params['pass'][0])) {
+			if(!empty($params['pass'][0])) {
 				$groupId = $params['pass'][0];
 				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
 			} else {
@@ -98,14 +111,13 @@ class SecurityRole extends AppModel {
 			$userRoles = $this->getRoles($selectedGroup);
 		}
 		
-		$controller->set('isSuperUser', $isSuperUser);
-		$controller->set('systemRoles', $systemRoles);
-		$controller->set('userRoles', $userRoles);
-		$controller->set('groupOptions', $groupOptions);
-		$controller->set('selectedGroup', $selectedGroup);
+		$currentTab = 'User Defined Roles';
+		$controller->set(compact('isSuperUser', 'userRoles', 'groupOptions', 'selectedGroup', 'currentTab'));
 	}
 	
 	public function rolesView($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
 		if ($this->exists($id)) {
 			$data = $this->findById($id);
@@ -123,6 +135,8 @@ class SecurityRole extends AppModel {
 	}
 	
 	public function rolesEdit($controller, $params) {
+		$controller->Navigation->addCrumb('Roles');
+		
 		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
 		if ($this->exists($id)) {
 			$data = $this->findById($id);
@@ -150,15 +164,52 @@ class SecurityRole extends AppModel {
 	}
 	
 	public function rolesAdd($controller, $params) {
-		if ($controller->request->is(array('post', 'put'))) {
-			$data = $controller->request->data;
-			$data[$this->alias]['order'] = $this->find('count');
-			$result = $this->save($data);
-			if ($result) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'rolesView', $result[$this->alias]['id']));
+		$controller->Navigation->addCrumb('Roles');
+		
+		$roleType = 'system_defined';
+		$selectedGroup = 0;
+		
+		if(isset($params['pass'][0])) {
+			$type = $params['pass'][0];
+			if($type == 'user_defined'){
+				$roleType = $type;
+			}
+			
+			if(isset($params['pass'][1])) {
+				$selectedGroup = $params['pass'][1];
 			}
 		}
+		
+		if ($controller->request->is(array('post', 'put'))) {
+			$data = $controller->request->data;
+			$dataGroupId = $data['SecurityRole']['security_group_id'];
+			
+			if($dataGroupId == 0){
+				$maxOrderArr = $this->find('first', array(
+					'fields' => array('MAX(SecurityRole.order) AS max_order'), 
+					'conditions' => array('SecurityRole.security_group_id' => array(-1, 0)),
+					'order' => array('SecurityRole.order DESC')
+				));
+				$newOrder = (empty($maxOrderArr[0]['max_order']) ? 0 : $maxOrderArr[0]['max_order']) + 1;
+			}else if($dataGroupId > 0){
+				$maxOrderArr = $this->find('first', array(
+					'fields' => array('MAX(SecurityRole.order) AS max_order'), 
+					'conditions' => array('SecurityRole.security_group_id' => $dataGroupId),
+					'order' => array('SecurityRole.order DESC')
+				));
+				$newOrder = (empty($maxOrderArr[0]['max_order']) ? 0 : $maxOrderArr[0]['max_order']) + 1;
+			}else{
+				$newOrder = $this->find('count');
+			}
+			
+			$data[$this->alias]['order'] = $newOrder;
+			$this->create();
+			if ($this->save($data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'rolesView', $this->id));
+			}
+		}
+		$controller->set(compact('roleType', 'selectedGroup'));
 	}
 	
 	public function getGroupAdministratorRole() {
@@ -320,5 +371,67 @@ class SecurityRole extends AppModel {
 		));
 		
 		return $data;
+	}
+	
+	public function rolesReorder($controller, $params) {
+		$type = $params['pass'][0];
+		$isSuperUser = $controller->Auth->user('super_admin')==1;
+		$userId = $controller->Auth->user('id');
+		$roles = array();
+		$groupOptions = array();
+		$selectedGroup = 0;
+		
+		if($type == 'user_defined'){
+			$groupOptions = ClassRegistry::init('SecurityGroup')->getGroupOptions($isSuperUser ? false : $userId);
+
+			if(!empty($groupOptions)) {
+				if(!empty($params['pass'][1])) {
+					$groupId = $params['pass'][1];
+					$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
+				} else {
+					$selectedGroup = key($groupOptions);
+				}
+				$roles = $this->getRoles($selectedGroup);
+			}
+			
+			$controller->Navigation->addCrumb('User Defined Roles', array('action' => 'rolesUserDefined', $selectedGroup));
+			
+			$contentHeader = 'User Defined Roles';
+			$currentTab = 'User Defined Roles';
+		}else{
+			if(!$isSuperUser){
+				return $controller->redirect(array('action' => 'rolesReorder', 'user_defined', $selectedGroup));
+			}
+			
+			$controller->Navigation->addCrumb('User Defined Roles', array('action' => 'roles'));
+			
+			$contentHeader = 'System Defined Roles';
+			$roles = $this->getRoles(array(0, -1));
+			$currentTab = 'System Defined Roles';
+		}
+		
+		$controller->Navigation->addCrumb('Reorder');
+		
+		$page = 'reorder';
+
+		$controller->set(compact('isSuperUser', 'roles', 'groupOptions', 'selectedGroup', 'contentHeader', 'page', 'currentTab'));
+	}
+	
+	public function rolesMove($controller, $params) {
+		$controller->autoRender = false;
+		if ($controller->request->is(array('post', 'put'))) {
+			$data = $controller->request->data;
+			if(!empty($controller->params->named['security_group_id'])){
+				$conditions = array('SecurityRole.security_group_id' => $controller->params->named['security_group_id']);
+				$redirect = array('action' => 'rolesReorder', 'user_defined', $controller->params->named['security_group_id']);
+			}else{
+				$conditions = array('SecurityRole.security_group_id' => array(-1, 0));
+				$redirect = array('action' => 'rolesReorder', 'system_defined');
+			}
+			
+			$this->moveOrder($data, $conditions);
+			
+			return $controller->redirect($redirect);
+		}
 	}
 }

@@ -117,6 +117,11 @@ class MessageComponent extends Component {
 				'success' => array('type' => 'ok', 'msg' => 'New student has been created.')
 			)
 		),
+		'Staff' => array(
+			'add' => array(
+				'success' => array('type' => 'ok', 'msg' => 'New staff has been created.')
+			)
+		),
 		'Census' => array(
 			'noSubjects' => array('type' => 'warn', 'msg' => 'There are no subjects configured in the system.')
 		),
@@ -187,6 +192,23 @@ class MessageComponent extends Component {
 		),
 		'Import' => array(
 			'formatNotSupported' => array('type' => 'error', 'msg' => 'The uploaded file format is not supported.')
+		),
+		'RubricTemplate' => array(
+			'noTemplate' => array('type' => 'warn', 'msg' => 'There are no templates.')
+		),
+		'RubricSection' => array(
+			'noSection' => array('type' => 'warn', 'msg' => 'There are no sections.')
+		),
+		'InstitutionSiteQualityRubric' => array(
+			'save' => array(
+				'draft' => array('type' => 'ok', 'msg' => 'Quality rubric record has been saved to draft successfully.'),
+				'final' => array('type' => 'ok', 'msg' => 'Quality rubric record has been submitted successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'This quality rubric is not submitted due to incomplete records.')
+			),
+			'reject' => array(
+				'success' => array('type' => 'ok', 'msg' => 'Quality rubric record has been rejected successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'Quality rubric record is not rejected due to errors encountered.')
+			)
 		)
 	);
 	

@@ -28,7 +28,7 @@ if(!empty($data)) :
 		<tbody>
 			<?php foreach($data as $obj) : ?>
 			<tr>
-				<td><?php echo $obj['Student']['identification_no']; ?></td>
+				<td><?php echo $obj['SecurityUser']['openemis_no']; ?></td>
 				<td><?php echo $this->Model->getName($obj['Student']); ?></td>
 			</tr>
 			<?php endforeach ?>

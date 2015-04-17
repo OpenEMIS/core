@@ -113,9 +113,12 @@ class InstitutionSiteSectionClass extends AppModel {
 					'EducationSubject',
 					'InstitutionSiteClassStaff' => array(
 						'Staff' => array(
-							'fields' => array(
-								'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
-								'Staff.third_name', 'Staff.last_name'
+							'SecurityUser' => array(
+								'fields' => array(
+									'openemis_no', 'first_name', 'middle_name', 
+									'third_name', 'last_name'
+								),
+								'Gender' => array('name')
 							)
 						)
 					)
@@ -128,6 +131,25 @@ class InstitutionSiteSectionClass extends AppModel {
 		));
 		return $data;
 
+	}
+
+	public function getClassOptions($sectionId) {
+		$result = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSiteClass.id', 'InstitutionSiteClass.name'
+			),
+			'conditions' => array(
+				'InstitutionSiteSectionClass.institution_site_section_id' => $sectionId,
+				'InstitutionSiteSectionClass.status' => 1
+			)
+		));
+
+		$list = array();
+		foreach ($result as $key => $obj) {
+			$list[$obj['InstitutionSiteClass']['id']] = $obj['InstitutionSiteClass']['name'];
+		}
+
+		return $list;
 	}
 	
 	public function getSectionOptions($classId=null, $status=null) {

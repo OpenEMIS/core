@@ -8,7 +8,7 @@ $this->end();
 
 $this->start('contentBody');
 	$formAction = $_buttons['add']['url'];
-	if ($this->action == 'edit') {
+	if ($action == 'edit') {
 		$formAction = $_buttons['edit']['url'];
 	}
 	$formOptions = $this->FormUtility->getFormOptions($formAction);

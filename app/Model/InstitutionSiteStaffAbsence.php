@@ -174,7 +174,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		
 		if ($this->action == 'view') {
 			$data = $this->controller->viewVars['data'];
-			$data[$this->alias]['staff_id'] = ModelHelper::getName($data['Staff']);
+			$data[$this->alias]['staff_id'] = ModelHelper::getName($data['Staff']['SecurityUser']);
 			$this->controller->viewVars['data'] = $data;
 			$this->setFieldOrder('staff_id', 0);
 			$this->setVar('params', array('back' => $this->Session->read('InstitutionSiteStaffAbsence.backLink')));
@@ -185,7 +185,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$data = $this->request->data;
 			$this->fields['staff_id']['type'] = 'hidden';
 			$this->fields['staff']['type'] = 'disabled';
-			$this->fields['staff']['value'] = ModelHelper::getName($data['Staff']);
+			$this->fields['staff']['value'] = ModelHelper::getName($data['Staff']['SecurityUser']);
 			$this->fields['staff']['order'] = 0;
 			$this->fields['staff']['visible'] = true;
 			$this->request->data = $data;
@@ -200,6 +200,16 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 		
 		parent::afterAction();
+	}
+
+	public function view($id) {
+		$this->contain(array('Staff'=>array('SecurityUser'=>array('fields'=>array('first_name','middle_name','third_name','last_name','preferred_name')))));
+		parent::view($id);
+	}
+
+	public function edit($id) {
+		$this->contain(array('Staff'=>array('SecurityUser'=>array('fields'=>array('first_name','middle_name','third_name','last_name','preferred_name')))));
+		parent::edit($id);
 	}
 	
 	public function index($academicPeriodId=0, $weekId=null, $dayId=null){
@@ -374,7 +384,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$staffOptions = array();
 		foreach ($list as $obj) {
 			$staff = $obj['Staff'];
-			$staffOptions[$staff['id']] = ModelHelper::getName($staff, array('openEmisId'=>true));
+			$staffOptions[$staff['id']] = ModelHelper::getName($obj['SecurityUser'], array('openEmisId'=>true));
 		}
 		$this->fields['staff_id']['type'] = 'select';
 		$this->fields['staff_id']['options'] = $staffOptions;
@@ -614,23 +624,11 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		//$conditions[] = 'YEAR(InstitutionSiteStaffAbsence.first_date_absent) >= "' . $academicPeriod['start_date'] . '"';
 
 		$data = $this->find('all', array(
-			'fields' => array(
-				'DISTINCT InstitutionSiteStaffAbsence.id', 
-				'InstitutionSiteStaffAbsence.absence_type', 
-				'InstitutionSiteStaffAbsence.first_date_absent', 
-				'InstitutionSiteStaffAbsence.last_date_absent', 
-				'InstitutionSiteStaffAbsence.full_day_absent', 
-				'InstitutionSiteStaffAbsence.start_time_absent', 
-				'InstitutionSiteStaffAbsence.end_time_absent', 
-				'Staff.id',
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
-				'Staff.preferred_name',
-				'StaffAbsenceReason.id',
-				'StaffAbsenceReason.name'
+			'contain' => array(
+				'Staff' => array(
+					'fields' => array('id'),
+					'SecurityUser' => array('openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name')),
+				'StaffAbsenceReason'
 			),
 			'conditions' => $conditions,
 			'order' => array('InstitutionSiteStaffAbsence.first_date_absent', 'InstitutionSiteStaffAbsence.last_date_absent')
@@ -760,11 +758,11 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'InstitutionSiteStaffAbsence.staff_id',
 				'InstitutionSiteStaffAbsence.staff_absence_reason_id', 
 				'Staff.id',
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Staff.preferred_name',
 				'StaffAbsenceReason.name',
 				'CreatedUser.*', 
@@ -850,18 +848,18 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'InstitutionSiteStaffAbsence.start_time_absent', 
 				'InstitutionSiteStaffAbsence.end_time_absent', 
 				
-				'Staff.identification_no',
-				'Staff.first_name',
-				'Staff.middle_name',
-				'Staff.third_name',
-				'Staff.last_name',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name',
 				'Staff.preferred_name',
 				
 				'InstitutionSiteStaffAbsence.absence_type', 
 				'StaffAbsenceReason.name',
 				'InstitutionSiteStaffAbsence.comment'
 			);
-			$options['order'] = array('InstitutionSiteStaffAbsence.first_date_absent', 'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name');
+			$options['order'] = array('InstitutionSiteStaffAbsence.first_date_absent', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name');
 			$options['conditions'] = array('InstitutionSiteStaffAbsence.institution_site_id' => $institutionSiteId);
 			
 			$this->unbindModel(array('belongsTo' => array('InstitutionSite', 'ModifiedUser', 'CreatedUser')));
@@ -882,7 +880,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				$tempRow[] = $absence['start_time_absent'];
 				$tempRow[] = $absence['end_time_absent'];
 				
-				$tempRow[] = $staff['identification_no'];
+				$tempRow[] = $staff['openemis_no'];
 				$tempRow[] = $staff['first_name'];
 				$tempRow[] = $staff['middle_name'];
 				$tempRow[] = $staff['third_name'];
