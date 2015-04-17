@@ -15,13 +15,14 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentNationality extends StudentsAppModel {
+	public $useTable = 'user_nationalities';
 	public $actsAs = array(
-		'Excel' => array('header' => array('Student' => array('identification_no', 'first_name', 'last_name'))),
-		'ControllerAction'
+		'Excel' => array('header' => array('SecurityUser' => array('openemis_no', 'first_name', 'last_name'))),
+		'ControllerAction2'
 	);
 	
 	public $belongsTo = array(
-		'Students.Student',
+		'SecurityUser',
 		'Country',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -42,98 +43,34 @@ class StudentNationality extends StudentsAppModel {
 		)
 	);
 
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'name', 'model' => 'Country'),
-				array('field' => 'comments'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$conditions = array();
+		if (CakeSession::check('Student.security_user_id')) {
+			$id = CakeSession::read('Student.security_user_id');
+			$conditions = array($this->alias.'.security_user_id' => $id);
+		}
+		return $conditions;
+	}
+	/* End Excel Behaviour */
+
+	public function beforeAction() {
+		parent::beforeAction();
+		if (!$this->Session->check('Student.id')) {
+			return $this->redirect(array('controller' => $this->controller->name, 'action' => 'index'));
+		}
+		$this->Navigation->addCrumb(__('Nationalities'));
+
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = $this->Session->read('Student.security_user_id');
+		$this->fields['country_id']['type'] = 'select';
+		$this->fields['country_id']['options'] = $this->Country->getOptions();
 	}
 	
-	public function nationalities($controller, $params) {
-		$controller->Navigation->addCrumb('Nationalities');
-		$header = __('Nationalities');
-		$this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
-		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
-		$controller->set(compact('header', 'data'));
+	public function index() {
+		$userId = $this->Session->read('Student.security_user_id');
+		$this->contain(array('Country' => array('id', 'name')));
+		$data = $this->findAllBySecurityUserId($userId);
+		$this->setVar(compact('data'));
 	}
-	
-	public function nationalitiesAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add Nationalities');
-		$header = __('Add Nationalities');
-		
-		if ($controller->request->is('post')) {
-			$data = $controller->request->data[$this->alias];
-
-			$this->create();
-			$data['student_id'] = $controller->Session->read('Student.id');
-
-			if ($this->save($data)) {
-				$id = $this->getLastInsertId();
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'nationalities'));
-			}
-		}
-		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$defaultCountryId = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
-		
-		$countryOptions = $this->Country->getOptions();
-		$controller->set(compact('header', 'countryOptions','defaultCountryId'));
-	}
-
-	public function nationalitiesView($controller, $params) {
-		$id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
-		$controller->Navigation->addCrumb('Nationality Details');
-		$header = __('Nationality Details');
-		$data = $this->findById($id);
-
-		if (empty($data)) {
-			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action' => 'nationalities'));
-		}
-		$controller->Session->write('StudentNationality.id', $id);
-		$fields = $this->getDisplayFields($controller);
-		$controller->set(compact('header', 'data', 'fields', 'id'));
-	}
-
-	public function nationalitiesEdit($controller, $params)  {
-		$id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
-		$controller->Navigation->addCrumb('Edit Nationality');
-		$header = __('Edit Nationality');
-		
-		if ($controller->request->is('post') || $controller->request->is('put')) {
-			$nationalityData = $controller->request->data[$this->alias];
-			$nationalityData['student_id'] = $controller->Session->read('Student.id');
-
-			if ($this->save($nationalityData)) {
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'nationalitiesView', $id));
-			}
-		}
-		else{
-			$this->recursive = -1;
-			$data = $this->findById($id);
-
-			if (empty($data)) {
-				return $controller->redirect(array('action' => 'nationalities'));
-			}
-			$controller->request->data = $data;
-		}
-		$countryOptions = $this->Country->getOptions();
-		
-		$controller->set(compact('id', 'header', 'countryOptions'));
-	}
-
-	public function nationalitiesDelete($controller, $params) {
-		return $this->remove($controller, 'nationalities');
-	}
-
 }

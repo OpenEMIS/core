@@ -151,7 +151,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .left_nav .panel-title .accordion-toggle {
 	display: block;
 	padding: 6px 15px 8px 15px;
-	color: #007CBE;
+	color: #6699CC;
 	background-color:rgba(91,139,175,0.2);
 	border-bottom: 1px solid #ffffff;
 	background-image: url(../img/sub_nav_title_icon.png);
@@ -159,7 +159,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	background-repeat: no-repeat;
 }
 .left_nav .panel-title .accordion-toggle:hover{
-	background-color:#5B8BAF;
+	background-color:#6699CC;
 	color:#ffffff;
 	background-position: right -76px;
 }

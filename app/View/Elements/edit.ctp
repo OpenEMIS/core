@@ -23,6 +23,15 @@ foreach($fields as $key => $field) {
 				}
 				//echo $this->Form->hidden($fieldName);
 				break;
+
+			case 'readonly':
+				$options['readonly'] = 'readonly';
+				if (isset($field['options'])) {
+					$options['options'] = $field['options'];
+					$options['disabled'] = 'disabled';
+					echo $this->Form->hidden($fieldName);
+				}
+				break;
 				
 			case 'select':
 				if (isset($field['options'])) {
