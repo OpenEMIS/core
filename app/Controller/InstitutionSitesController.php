@@ -55,7 +55,9 @@ class InstitutionSitesController extends AppController {
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
-		'InstitutionSiteSectionStudent'
+		'InstitutionSiteSectionStudent',
+		'InstitutionSiteQualityRubric',
+		'InstitutionSiteQualityVisit'
 	);
 	
 	public $helpers = array('Paginator', 'Model');
@@ -902,37 +904,47 @@ class InstitutionSitesController extends AppController {
 								$cellValue = $cell->getValue();
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
 								$foreignKey = $excelMappingObj['foreigh_key'];
-								$originalRow[] = $cellValue;
+								$columnName = $columns[$col];
+								$originalRow[$col] = $cellValue;
 								$val = $cellValue;
-								if ($foreignKey == 1) {
-									if(!empty($cellValue)){
-										if (array_key_exists($cellValue, $lookup[$col])) {
-											$val = $lookup[$col][$cellValue];
-										} else {
+								
+								if($row > 1){
+									if(!empty($val)){
+										if($columnName == 'date_opened' || $columnName == 'date_closed'){
+											$val = date('Y-m-d', PHPExcel_Shared_Date::ExcelToPHP($val));
+											$originalRow[$col] = $val;
+										}
+									}
+
+									if ($foreignKey == 1) {
+										if(!empty($cellValue)){
+											if (array_key_exists($cellValue, $lookup[$col])) {
+												$val = $lookup[$col][$cellValue];
+											} else {
+												if($row !== 1 && $cellValue != ''){
+													$rowPass = false;
+													$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
+												}
+											}
+										}
+									} else if ($foreignKey == 2) {
+										$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
+										$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
+										if(!empty($recordId)){
+											$val = $recordId;
+										}else{
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
 												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
 											}
 										}
 									}
-								} else if ($foreignKey == 2) {
-									$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
-									$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
-									if(!empty($recordId)){
-										$val = $recordId;
-									}else{
-										if($row !== 1 && $cellValue != ''){
-											$rowPass = false;
-											$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
-										}
-									}
 								}
 								
-								$columnName = $columns[$col];
 								$tempRow[$columnName] = $val;
 								
 							}
-							
+
 							if(!$rowPass){
 								$dataFailed[] = array(
 									'row_number' => $row,
