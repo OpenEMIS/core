@@ -182,7 +182,8 @@ class InstitutionSiteClass extends AppModel {
 				'fields' => array('EducationSubject.id', 'EducationSubject.name'),
 				'contain' => array('EducationSubject'),
 				'conditions' => array(
-					'EducationGradeSubject.education_grade_id' => array_keys($gradeData)
+					'EducationGradeSubject.education_grade_id' => array_keys($gradeData),
+					'EducationGradeSubject.visible' => 1
 				),
 				'order' => array('EducationSubject.order')
 			));
@@ -237,17 +238,23 @@ class InstitutionSiteClass extends AppModel {
 				),
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
-						'fields' => array(
-							'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
-							'Staff.third_name', 'Staff.last_name', 'Staff.gender', 'Staff.date_of_birth'
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'date_of_birth'
+							),
+							'Gender' => array('name')
 						)
 					)
 				),
 				'InstitutionSiteClassStudent' => array(
 					'Student' => array(
-						'fields' => array(
-							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'date_of_birth'
+							),
+							'Gender' => array('name')
 						)
 					)
 				)
@@ -274,17 +281,23 @@ class InstitutionSiteClass extends AppModel {
 				'InstitutionSiteSectionClass',
 				'InstitutionSiteClassStaff' => array(
 					'Staff' => array(
-						'fields' => array(
-							'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
-							'Staff.third_name', 'Staff.last_name', 'Staff.gender', 'Staff.date_of_birth'
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'date_of_birth'
+							),
+							'Gender' => array('name')
 						)
 					)
 				),
 				'InstitutionSiteClassStudent' => array(
 					'Student' => array(
-						'fields' => array(
-							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'date_of_birth'
+							),
+							'Gender' => array('name')
 						)
 					)
 				)
@@ -325,6 +338,7 @@ class InstitutionSiteClass extends AppModel {
 			$staffOptions = $InstitutionSiteStaff->getStaffOptions($institutionSiteId, $periodId);
 			$staffOptions = $this->controller->Option->prependLabel($staffOptions, $this->alias . '.add_staff');
 
+
 			// get all the section ids that are linked to this class
 			$sectionIds = $this->InstitutionSiteSectionClass->find('list', array(
 				'fields' => array('id', 'InstitutionSiteSectionClass.institution_site_section_id'), 
@@ -334,7 +348,8 @@ class InstitutionSiteClass extends AppModel {
 			
 			// retrieve all the students linked to the sections
 			$InstitutionSiteSectionStudent = ClassRegistry::init('InstitutionSiteSectionStudent');
-			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions($selectedSectionId);
+
+			$studentOptions = $InstitutionSiteSectionStudent->getStudentOptions(array_values($sectionIds));
 
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
@@ -349,9 +364,24 @@ class InstitutionSiteClass extends AppModel {
 						
 						foreach ($newStudentList as $studentId) {
 							if ($studentId == 0 || $studentId == -1) continue;
-
-							$studentObj = $InstitutionSiteSectionStudent->Student->findById($studentId, $contain['InstitutionSiteClassStudent']['Student']['fields']);
-							
+							$InstitutionSiteStudent = ClassRegistry::init('InstitutionSiteStudent');							
+							$InstitutionSiteStudent->Student->recursive = -1;
+							$studentObj = $InstitutionSiteStudent->find(
+								'first', 
+								array(
+									'contain' => array(
+										'Student' => array(
+											'SecurityUser' => array(
+												'fields' => $contain['InstitutionSiteClassStudent']['Student']['SecurityUser']['fields'],
+												'Gender' => array('name')
+											)
+										)
+									),
+									'conditions' => array(
+										'Student.id' => $studentId
+									)
+								)
+							);
 							$newRow = array(
 								'student_id' => $studentId,
 								'institution_site_section_id' => $selectedSectionId,
@@ -376,7 +406,22 @@ class InstitutionSiteClass extends AppModel {
 						$staffId = $postData[$this->alias]['staff_id'];
 
 						$InstitutionSiteStaff->Staff->recursive = -1;
-						$staffObj = $InstitutionSiteStaff->Staff->findById($staffId, $contain['InstitutionSiteClassStaff']['Staff']['fields']);
+						$staffObj = $InstitutionSiteStaff->find(
+							'first', 
+							array(
+								'contain' => array(
+									'Staff' => array(
+										'SecurityUser' => array(
+											'fields' => $contain['InstitutionSiteClassStaff']['Staff']['SecurityUser']['fields'],
+											'Gender' => array('name')
+										)
+									)
+								),
+								'conditions' => array(
+									'Staff.id' => $staffId
+								)
+							)
+						);
 						
 						$newRow = array(
 							'staff_id' => $staffId,
@@ -464,41 +509,6 @@ class InstitutionSiteClass extends AppModel {
 		
 		$obj = $this->find('first', array('conditions' => $conditions));
 		return $obj;
-	}
-	
-	public function getListOfClasses($academicPeriodId, $institutionSiteId, $institutionSiteSectionId) {
-		$classes = $this->find('all', array(
-			'recursive' => -1,
-			'contain' => array(
-				'InstitutionSiteClassStaff' => array('id','status','staff_id'),
-				'EducationSubject' => array('name')
-			),
-			'conditions' => array(
-				'InstitutionSiteClass.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
-		));
-		
-		$data = array();
-		foreach ($classes as $key => $value) {
-			$currId = $value['InstitutionSiteClass']['id'];
-			$data[$currId] = array(
-				'name' => $value['InstitutionSiteClass']['name'],
-				'sections' => $this->InstitutionSiteSectionClass->getSectionsByClass($currId),
-				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($currId)
-			);
-			
-			foreach ($value['InstitutionSiteClassStaff'] as $key2 => $value2) {
-				$this->InstitutionSiteClassStaff->Staff->recursive = -1;
-				$currStaffData = $this->InstitutionSiteClassStaff->Staff->findById($classes[$key]['InstitutionSiteClassStaff'][$key2]['staff_id']);
-				$currStaffData = $currStaffData['Staff'];
-				$classes[$key]['InstitutionSiteClassStaff'][$key2] = ModelHelper::getName($currStaffData);
-			}
-			$data[$currId]['staffName'] = $classes[$key]['InstitutionSiteClassStaff'];
-			$data[$currId]['educationSubjectName'] = (array_key_exists('name', $value['EducationSubject']))? $value['EducationSubject']['name']: '';
-		}
-		return $data;
 	}
 	
 	public function getClassOptions($academicPeriodId, $institutionSiteId, $gradeId=false) {

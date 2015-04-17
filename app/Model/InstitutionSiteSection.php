@@ -256,12 +256,24 @@ class InstitutionSiteSection extends AppModel {
 		if ($this->exists($id)) {
 			$this->contain(array(
 					'ModifiedUser', 'CreatedUser', 'AcademicPeriod', 
-					'InstitutionSiteShift', 'EducationGrade', 'Staff', 
+					'InstitutionSiteShift', 'EducationGrade', 
+					'Staff' => array(
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'gender_id', 'date_of_birth'
+							),
+							'Gender' => array('name')
+						)
+					), 
 					'InstitutionSiteSectionStudent' => array(
 						'Student' => array(
-							'fields' => array(
-								'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-								'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+							'SecurityUser' => array(
+								'fields' => array(
+									'openemis_no', 'first_name', 'middle_name', 
+									'third_name', 'last_name', 'gender_id', 'date_of_birth'
+								),
+								'Gender' => array('name')
 							)
 						)
 					)
@@ -269,12 +281,10 @@ class InstitutionSiteSection extends AppModel {
 			);
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
-
 			$sectionName = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
 			$categoryOptions = $this->InstitutionSiteSectionStudent->StudentCategory->getList(array('listOnly' => true));
-			
 			$this->setVar(compact('data', 'grades', 'categoryOptions'));
 		} else {
 			$this->Message->alert('general.notExists');
@@ -291,15 +301,20 @@ class InstitutionSiteSection extends AppModel {
 				'Staff', 
 				'InstitutionSiteSectionStudent' => array(
 					'Student' => array(
-						'fields' => array(
-							'Student.identification_no', 'Student.first_name', 'Student.middle_name', 
-							'Student.third_name', 'Student.last_name', 'Student.gender', 'Student.date_of_birth'
+						'SecurityUser' => array(
+							'fields' => array(
+								'openemis_no', 'first_name', 'middle_name', 
+								'third_name', 'last_name', 'gender_id', 'date_of_birth'
+							),
+							'Gender' => array('name')
 						)
 					)
 				)
 			);
 			$this->contain($contain);
+
 			$data = $this->findById($id);
+
 			$contentHeader = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($contentHeader);
 
@@ -342,13 +357,27 @@ class InstitutionSiteSection extends AppModel {
 			
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->request->data;
-
 				if ($postData['submit'] == 'add') {
 					if (isset($postData[$this->alias]['student_id']) && !empty($postData[$this->alias]['student_id'])) {
 						$studentId = $postData[$this->alias]['student_id'];
 
 						$InstitutionSiteStudent->Student->recursive = -1;
-						$studentObj = $InstitutionSiteStudent->Student->findById($studentId, $contain['InstitutionSiteSectionStudent']['Student']['fields']);
+						$studentObj = $InstitutionSiteStudent->find(
+							'first', 
+							array(
+								'contain' => array(
+									'Student' => array(
+										'SecurityUser' => array(
+											'fields' => $contain['InstitutionSiteSectionStudent']['Student']['SecurityUser']['fields'],
+											'Gender' => array('name')
+										)
+									)
+								),
+								'conditions' => array(
+									'Student.id' => $studentId
+								)
+							)
+						);
 						
 						$newRow = array(
 							'student_id' => $studentId,
@@ -356,14 +385,12 @@ class InstitutionSiteSection extends AppModel {
 							'status' => 1,
 							'Student' => $studentObj['Student']
 						);
-
 						// search if the new student was previously added before
 						foreach ($data['InstitutionSiteSectionStudent'] as $row) {
 							if ($row['student_id'] == $studentId) {
 								$newRow['id'] = $row['id'];
 							}
 						}
-
 						$this->request->data['InstitutionSiteSectionStudent'][] = $newRow;
 
 						unset($this->request->data[$this->alias]['student_id']);
@@ -494,21 +521,32 @@ class InstitutionSiteSection extends AppModel {
 			$multiGradeOptions['group'] = array('InstitutionSiteSection.id');
 		}
 
-		$singleGradeData = $this->find('list', $singleGradeOptions);
-		$multiGradeData = $this->find('list', $multiGradeOptions);
-		$data = array_replace($singleGradeData, $multiGradeData);
+		if($gradeId!==false && is_null($gradeId)) {
+			$singleGradeData = array();
+			$multiGradeData = array();
+		} else {
+			$singleGradeData = $this->find('list', $singleGradeOptions);
+			$multiGradeData = $this->find('list', $multiGradeOptions);
+		}
 
+		$data = array_replace($singleGradeData, $multiGradeData);
 		return $data;
 	}
 	
 	public function getListOfSections($periodId, $institutionSiteId, $gradeId=0) {
 		$options = array(
-			'fields' => array(
-				'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
-				'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name',
-				'EducationGrade.name'
+			'contain' => array(
+				'Staff' => array(
+					'fields'=> array('id'),
+					'SecurityUser' => array(
+						'fields'=> array('id', 'first_name', 'middle_name', 'third_name', 'last_name'),
+						'Gender' => array(
+							'fields' => array('name')
+						)
+					)
+				), 
+				'EducationGrade' => array('name')
 			),
-			'contain' => array('Staff', 'EducationGrade'),
 			'conditions' => array(
 				'InstitutionSiteSection.academic_period_id' => $periodId,
 				'InstitutionSiteSection.institution_site_id' => $institutionSiteId
@@ -521,8 +559,8 @@ class InstitutionSiteSection extends AppModel {
 
 			// need to include multi grade search
 		}
-
-		$data = $this->find('all', $options);
+		$data = $this->find('all', 
+			$options);
 		
 		foreach($data as $i => $obj) {
 			$id = $obj[$this->alias]['id'];
@@ -532,7 +570,7 @@ class InstitutionSiteSection extends AppModel {
 		return $data;
 	}
 	
-	public function getSectionListByInstitution($institutionSiteId, $academicPeriodId=0) {
+	public function getSectionListByInstitution($institutionSiteId, $academicPeriodId=0, $gradeId=0) {
 		$options = array();
 		$options['fields'] = array('InstitutionSiteSection.id', 'InstitutionSiteSection.name');
 		$options['order'] = array('InstitutionSiteSection.name');
@@ -540,6 +578,10 @@ class InstitutionSiteSection extends AppModel {
 		
 		if (!empty($academicPeriodId)) {
 			$options['conditions']['InstitutionSiteSection.academic_period_id'] = $academicPeriodId;
+		}
+
+		if (!empty($gradeId)) {			
+			$options['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
 		}
 		
 		$data = $this->find('list', $options);

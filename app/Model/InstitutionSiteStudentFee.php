@@ -115,11 +115,17 @@ class InstitutionSiteStudentFee extends AppModel {
 			'fields' => array(
 				'InstitutionSiteFee.id',
 				'InstitutionSiteFee.total',
-				'SUM(StudentFee.amount) AS paid'
+				'SUM(StudentFee.amount) AS paid',
+				'Student.id',
+				'SecurityUser.id',
+				'SecurityUser.openemis_no',
+				'SecurityUser.first_name',
+				'SecurityUser.middle_name',
+				'SecurityUser.third_name',
+				'SecurityUser.last_name'
 			),
 			'contain' => array(
-				'InstitutionSiteSection',
-				'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
+				'InstitutionSiteSection'
 			),
 			'joins' => array(
 				array(
@@ -137,6 +143,16 @@ class InstitutionSiteStudentFee extends AppModel {
 						'StudentFee.institution_site_fee_id = InstitutionSiteFee.id',
 						'StudentFee.student_id = InstitutionSiteSectionStudent.student_id'
 					)
+				),
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteSectionStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('Student.security_user_id = SecurityUser.id')
 				)
 			),
 			'conditions' => array(
@@ -145,7 +161,7 @@ class InstitutionSiteStudentFee extends AppModel {
 				'InstitutionSiteSectionStudent.education_grade_id' => $selectedGrade
 			),
 			'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
-			'order' => array('Student.first_name')
+			'order' => array('SecurityUser.first_name')
 		));
 		
 		if (empty($data)) {
@@ -158,7 +174,7 @@ class InstitutionSiteStudentFee extends AppModel {
 	// Also used by Students.StudentFee.view
 	public function viewPayments($studentId, $institutionSiteFeeId) {
 		$alias = $this->alias;
-		$this->Student->contain();
+		$this->Student->contain('SecurityUser');
 		$student = $this->Student->findById($studentId);
 		$this->InstitutionSiteFee->contain(array(
 			'AcademicPeriod' => array('fields' => array('name')),
@@ -213,8 +229,8 @@ class InstitutionSiteStudentFee extends AppModel {
 		$data[$alias]['programme'] = $fees['EducationGrade']['EducationProgramme']['name'];
 		$data[$alias]['grade'] = $fees['EducationGrade']['name'];
 		$data[$alias]['student_id'] = $student['Student']['id'];
-		$data[$alias]['openemisId'] = $student['Student']['identification_no'];
-		$data[$alias]['name'] = ModelHelper::getName($student['Student']);
+		$data[$alias]['openemisId'] = $student['SecurityUser']['openemis_no'];
+		$data[$alias]['name'] = ModelHelper::getName($student['SecurityUser']);
 		$data[$alias]['institution_site_fee_id'] = $fees['InstitutionSiteFee']['id'];
 		$data[$alias]['total_fee'] = $fees['InstitutionSiteFee']['total'];
 		$data[$alias]['outstanding'] = number_format($outstanding, 2);
@@ -265,7 +281,7 @@ class InstitutionSiteStudentFee extends AppModel {
 						'fields' => array('EducationGrade.name'),
 						'EducationProgramme' => array('fields' => array('EducationProgramme.name'))
 					),
-					'Student' => array('fields' => array('id', 'identification_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
+					'Student' => array('fields' => array('id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name'))
 				),
 				'joins' => array(
 					array(
@@ -297,7 +313,7 @@ class InstitutionSiteStudentFee extends AppModel {
 					)
 				),
 				'group' => array('InstitutionSiteSectionStudent.student_id', 'InstitutionSiteSectionStudent.education_grade_id'),
-				'order' => array('AcademicPeriod.name', 'EducationGrade.order', 'Student.first_name', 'Student.middle_name', 'Student.third_name', 'Student.last_name')
+				'order' => array('AcademicPeriod.name', 'EducationGrade.order', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name')
 			));
 			
 			$csvData = array();
@@ -307,11 +323,11 @@ class InstitutionSiteStudentFee extends AppModel {
 				$row[] = $obj['AcademicPeriod']['name'];
 				$row[] = $obj['EducationGrade']['EducationProgramme']['name'];
 				$row[] = $obj['EducationGrade']['name'];
-				$row[] = $obj['Student']['identification_no'];
-				$row[] = $obj['Student']['first_name'];
-				$row[] = $obj['Student']['middle_name'];
-				$row[] = $obj['Student']['third_name'];
-				$row[] = $obj['Student']['last_name'];
+				$row[] = $obj['SecurityUser']['openemis_no'];
+				$row[] = $obj['SecurityUser']['first_name'];
+				$row[] = $obj['SecurityUser']['middle_name'];
+				$row[] = $obj['SecurityUser']['third_name'];
+				$row[] = $obj['SecurityUser']['last_name'];
 				$row[] = number_format($obj['InstitutionSiteFee']['total'], 2);
 				$row[] = number_format($obj[0]['paid'], 2);
 				$row[] = number_format($obj['InstitutionSiteFee']['total'] - $obj[0]['paid'], 2);
