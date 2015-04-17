@@ -109,7 +109,7 @@ class InstitutionSitesController extends AppController {
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'import' || $this->action === 'importTemplate'){
-			
+			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 			$pass = $this->request->params['pass'];
 			$siteId = isset($pass[0]) ? $pass[0] : 0;
