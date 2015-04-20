@@ -11,9 +11,9 @@
 			<tbody>
 				<?php foreach ($criteriaOptions as $obj) : ?>
 				<tr>
-					<td><?php echo ($obj['RubricTemplateOption']['name']); ?></td>
-					<td><?php echo ($obj['RubricCriteriaOption']['name']); ?></td>
-					<td><?php echo ($obj['RubricTemplateOption']['weighting']); ?></td>
+					<td><?php echo $obj['RubricTemplateOption']['name']; ?></td>
+					<td><?php echo nl2br($obj['RubricCriteriaOption']['name']); ?></td>
+					<td><?php echo $obj['RubricTemplateOption']['weighting']; ?></td>
 				</tr>
 				<?php endforeach ?>
 			</tbody>

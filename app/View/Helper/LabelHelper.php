@@ -109,6 +109,12 @@ class LabelHelper extends AppHelper {
 			'levels' => 'Levels',
 			'types' => 'Types',
 			'custom_fields' => 'Custom Fields',
+			'import' => 'Import',
+			'proceed' => 'Proceed',
+			'template' => 'Template',
+			'InstitutionSite' => 'Institution',
+			'download_template' => 'Download Template',
+			'format_supported' => 'Format Supported',
 			'no_records' => 'There are no records.',
 			'editable' => 'Editable'
 		),
@@ -220,7 +226,16 @@ class LabelHelper extends AppHelper {
 			'name' => 'Institution',
 			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
-			'id_name' => 'ID / Name'
+			'id_name' => 'ID / Name',
+			'alternative_name' => 'Alternative Name',
+			'postal_code' => 'Postal Code',
+			'contact_person' => 'Contact Person',
+			'date_opened' => 'Date Opened',
+			'year_opened' => 'Year Opened',
+			'date_closed' => 'Date Closed',
+			'year_closed' => 'Year Closed',
+			'area_id' => 'Area',
+			'area_administrative_id' => 'Area Administrative'
 		),
 		'InstitutionSiteProgramme' => array(
 			'title' => 'Programmes',
@@ -717,6 +732,16 @@ class LabelHelper extends AppHelper {
 		'Notice' => array(
 			'title' => 'Notices',	
 			'created' => 'Date'
+		),
+		'Import' => array(
+			'saving_failed' => 'Failed to save to database',
+			'invalid_code' => 'Invalid Code',
+			'validation_failed' => 'Validation Failed.',
+			'total_rows' => 'Total Rows',
+			'rows_imported' => 'Rows Imported',
+			'rows_updated' => 'Rows Updated',
+			'rows_failed' => 'Rows Failed',
+			'recommended_max_records' => 'Recommended Maximum Records'
 		),
 		'RubricTemplate' => array(
 			'name' => 'Rubric Template',

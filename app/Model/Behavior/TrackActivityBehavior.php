@@ -40,7 +40,7 @@ class TrackActivityBehavior extends ModelBehavior {
 		    $obj = array(
 		    	'model' => $model->alias,
 		    	'model_reference' => $model->id,
-		    	$this->settings[$model->alias]['key'] => CakeSession::read($this->settings[$model->alias]['session'])
+		    	$this->settings[$model->alias]['key'] => !empty(CakeSession::read($this->settings[$model->alias]['session'])) ? CakeSession::read($this->settings[$model->alias]['session']) : $model->id
 		    );
 
 			if ($oldData) {

@@ -259,6 +259,10 @@ class RubricCriteria extends QualityAppModel {
 					)
 				));
 
+				if (empty($data)) {
+					$this->controller->Message->alert('general.noData');
+				}
+
 				$this->controller->set(compact('data', 'sectionOptions', 'selectedSection'));
 			}
 
