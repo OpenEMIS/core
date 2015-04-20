@@ -5,10 +5,15 @@
 .table.full_width { width: 99%; margin-left: 3px; }
 
 /* <table> styles starts here */
-.table thead tr { background-color: #EFEFEF; }
+.table thead tr, .table tfoot tr { background-color: #EFEFEF; }
+.table tfoot { border-top: 2px solid #DDD; font-weight: bold;}
 .table thead th { font-size: 11px; }
 .table td { font-size: 11px; }
-.table a { color: #6699CC; }
+
+/*.table a { color: #6699CC; }*/
+.table a { color: #007CBE; }
+.table tfoot td.side-label { text-align: right; }
+
 .action { margin-left: 5px; }
 .cell-number { text-align: right; }
 .cell-visible { width: 70px; text-align: center; }
