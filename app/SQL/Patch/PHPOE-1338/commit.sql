@@ -9,7 +9,7 @@ CREATE TABLE `import_mapping` (
 `id` int(11) NOT NULL,
   `model` varchar(50) NOT NULL,
   `column_name` varchar(30) NOT NULL,
-  `is_code` int(11) NOT NULL,
+  `is_code` int(11) NOT NULL DEFAULT '0',
   `order` int(11) DEFAULT '0',
   `foreigh_key` int(11) DEFAULT '0' COMMENT '0: not foreign key, 1: normal foreign key, 2: heavy load foreign key',
   `lookup_model` varchar(50) DEFAULT NULL,
