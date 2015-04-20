@@ -26,7 +26,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 	public function getGradesBySection($sectionId) {
 		$this->unbindModel(array('belongsTo' => array('EducationGrade')));
 		$data = $this->find('all', array(
-			'fields' => array('InstitutionSiteSectionGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name'),
+			'fields' => array('InstitutionSiteSectionGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'EducationGrade.id'),
 			'joins' => array(
 				array(
 					'table' => 'education_grades',
@@ -54,7 +54,7 @@ class InstitutionSiteSectionGrade extends AppModel {
 
 		$list = array();
 		foreach($data as $obj) {
-			$id = $obj['InstitutionSiteSectionGrade']['id'];
+			$id = $obj['EducationGrade']['id'];
 			$cycleName = $obj['EducationCycle']['name'];
 			$programmeName = $obj['EducationProgramme']['name'];
 			$gradeName = $obj['EducationGrade']['name'];
