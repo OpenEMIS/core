@@ -52,6 +52,11 @@ class ImportExcelBehavior extends ModelBehavior {
 			}else{
 				$headerCol = __(Inflector::humanize($column));
 			}
+			
+			if($value[$this->MappingModel->alias]['is_code'] == 1){
+				$headerCol .= ' ' . $this->LabelHelper->get('general.code');
+			}
+			
 			$header[] = $headerCol;
 		}
 

@@ -71,9 +71,10 @@ else:
 </div>
 <div class="failedInfo importInfo">
 	<i class="fa fa-exclamation-circle red-exclamation"></i> <?php echo $this->Label->get('Import.rows_failed'); ?>:
-	<span class="content"><?php echo count($dataFailed); ?></span>
+	<span class="content"><?php echo count($dataFailed); ?></span> 
+	<span class="reminder">(Hover on the icon(s) to view errors.)</span>
 </div>
-<div class="table-responsive">
+<div class="table-responsive import">
 	<table class="table table-striped table-hover table-bordered table-sortable">
 		<thead>
 			<tr>
