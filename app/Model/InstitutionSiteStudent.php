@@ -671,8 +671,10 @@ class InstitutionSiteStudent extends AppModel {
 			),
 			'conditions' => $periodConditions
 		));
-		$minYear = $periodResult['min_year'];
-		$maxYear = $periodResult['max_year'];
+		$thisYear = date("Y");
+		$minYear = $thisYear - 2;
+		$minYear = $minYear > $periodResult['min_year'] ? $minYear : $periodResult['min_year'];
+		$maxYear = $thisYear;
 
 		$years = array();
 
