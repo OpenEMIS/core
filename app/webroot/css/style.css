@@ -539,6 +539,10 @@ i.blue-check{
 	font-size: 12px;
 	font-weight: bold;
 }
+.importInfo .reminder{
+	font-weight: normal;
+	font-size: 11px;
+}
 .importInfo .content{
 	font-size: 13px;
 	font-weight: normal;
@@ -562,4 +566,8 @@ i.blue-check{
 .input-size-half.space {
 	width:29%;
 	margin-right: 7px;
+}
+.import .table > thead > tr > th{
+	text-align: center;
+	vertical-align: middle;
 }
