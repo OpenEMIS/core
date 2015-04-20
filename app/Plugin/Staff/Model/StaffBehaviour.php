@@ -108,6 +108,10 @@ class StaffBehaviour extends StaffAppModel {
 				$this->Message->alert('general.notExists');
 				return $this->controller->redirect(array('action' => get_class($this), 'show'));
 			}
+		} else if ($this->action == 'excel') {
+			$this->ControllerAction->autoProcess = false;
+			$this->ControllerAction->autoRender = false;
+			$this->excel();
 		}
 		
 		$categoryOptions = array();
@@ -149,10 +153,17 @@ class StaffBehaviour extends StaffAppModel {
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 		}
-		$this->setVar(compact('data'));
+		$this->controller->set(compact('data'));
+
+		$this->ControllerAction->autoRender = false;
+		$this->controller->render('../InstitutionSites/StaffBehaviour/show');
 	}
 	
-	public function index($staffId = 0) {
+	public function index() {
+		$named = $this->controller->params['named'];
+		$pass = $this->controller->params['pass'];
+		$staffId = isset($named['staffId']) ? $named['staffId'] : 0;
+
 		if ($this->controller->name == 'InstitutionSites') {
 			$institutionSiteId = $this->Session->read('InstitutionSite.id');
 			
@@ -160,7 +171,9 @@ class StaffBehaviour extends StaffAppModel {
 				if ($this->Session->check($this->alias.'.staffId')) {
 					$staffId = $this->Session->read($this->alias.'.staffId');
 				} else {
-					return $this->controller->redirect(array('action' => get_class($this), 'show'));
+					$action = array('action' => get_class($this), 'show');
+					$action = array_merge($action, $named, $pass);
+					return $this->controller->redirect($action);
 				}
 			}
 			
@@ -176,7 +189,9 @@ class StaffBehaviour extends StaffAppModel {
 				$this->controller->set(compact('data', 'staff'));
 			} else {
 				$this->Message->alert('general.notExists');
-				return $this->controller->redirect(array('action' => get_class($this), 'show'));
+				$action = array('action' => get_class($this), 'show');
+				$action = array_merge($action, $named, $pass);
+				return $this->controller->redirect($action);
 			}
 		} else {
 			$staffId = $this->Session->read('Staff.id');
