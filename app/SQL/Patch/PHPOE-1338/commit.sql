@@ -7,8 +7,8 @@ UPDATE `security_functions` SET `_add` = '_view:import|importTemplate|add' WHERE
 
 CREATE TABLE `import_mapping` (
 `id` int(11) NOT NULL,
-  `model` varchar(50) NOT NULL,
   `module` varchar(50) NOT NULL,
+  `model` varchar(50) NOT NULL,
   `column_name` varchar(30) NOT NULL,
   `is_code` int(11) NOT NULL DEFAULT '0',
   `order` int(11) DEFAULT '0',
@@ -21,7 +21,7 @@ CREATE TABLE `import_mapping` (
 -- Dumping data for table `import_mapping`
 --
 
-INSERT INTO `import_mapping` (`id`, `model`, `module`, `column_name`, `is_code`, `order`, `foreigh_key`, `lookup_model`, `lookup_column`) VALUES
+INSERT INTO `import_mapping` (`id`, `module`, `model`, `column_name`, `is_code`, `order`, `foreigh_key`, `lookup_model`, `lookup_column`) VALUES
 (1, 'InstitutionSite', 'InstitutionSite', 'name', 0, 1, 0, NULL, NULL),
 (2, 'InstitutionSite', 'InstitutionSite', 'alternative_name', 0, 2, 0, NULL, NULL),
 (3, 'InstitutionSite', 'InstitutionSite', 'code', 0, 3, 0, NULL, NULL),
