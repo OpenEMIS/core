@@ -1,0 +1,23 @@
+v2.4.1
+- Merged Students and Staff information into Users. Those information are now in a single database.
+
+v2.4.2
+- Updated OpenEMIS Core color to use web-safe color code
+- Institutions -> Positions detail page for Staff shows the Staff Name and FTE value now
+- Fixed a bug that caused Institution side bar to appear empty upon login
+- Fixed a bug that caused subject list to be empty when adding classes to section
+- Fixed a bug that prevent Institution records to be deleted when clicking the delete link
+
+v2.4.3
+- Implemented Reorder feature on Security Roles to allow users to set the rank of the roles. This rank will be used for displaying the correct roles when the user adds another user into the same group
+- Fixed a bug that prevent Notices to be deleted even when permission is granted
+- Fixed a bug that caused a blank page when saving Education Subjects
+- Revamped the entire Rubrics module. Rubrics setup UI has been improved greatly.
+
+v2.4.4
+- Fixed a bug on year validation when using datepicker
+- Fixed a bug that caused an error in Section when a Student record is deleted from the system
+- The FTE field on Add Staff screen shows "No available FTE" instead of "No data" now
+- On the Positions module, it shows the total FTE value now
+- Fixed a bug that caused a blank page when user clicked on Staff Behaviour
+- Changed the SMS message length to a configurable value in the System Configurations
