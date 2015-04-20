@@ -70,6 +70,12 @@ class InstitutionSiteQualityRubric extends AppModel {
 		foreach ($securityRoles as $key => $securityRole) {
 			$userRoles[$securityRole['SecurityRole']['id']] = $securityRole['SecurityRole']['id'];
 		}
+		$statusRoleConditions = array(
+			'QualityStatusRole.quality_status_id = QualityStatus.id'
+		);
+		if ($this->controller->Auth->user('super_admin') != 1) {
+			$statusRoleConditions['QualityStatusRole.security_role_id'] = $userRoles;
+		}
 
 		// Find all templates
 		$this->RubricTemplate->contain();
@@ -94,10 +100,7 @@ class InstitutionSiteQualityRubric extends AppModel {
 					array(
 						'table' => 'quality_status_roles',
 						'alias' => 'QualityStatusRole',
-						'conditions' => array(
-							'QualityStatusRole.quality_status_id = QualityStatus.id',
-							'QualityStatusRole.security_role_id' => $userRoles
-						)
+						'conditions' => $statusRoleConditions
 					)
 				),
 				'conditions' => array(

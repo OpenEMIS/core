@@ -43,7 +43,7 @@ class PhpExcelComponent extends Component {
      */
     public function createWorksheet() {
         // load vendor classes
-        App::import('Vendor', 'PhpExcel.PHPExcel');
+        App::import('Vendor', 'PhpExcel');
 
         $this->_xls = new PHPExcel();
         $this->_row = 1;
@@ -59,7 +59,7 @@ class PhpExcelComponent extends Component {
      */
     public function loadWorksheet($file) {
         // load vendor classes
-        App::import('Vendor', 'PhpExcel.PHPExcel');
+        App::import('Vendor', 'PhpExcel');
 
         $this->_xls = PHPExcel_IOFactory::load($file);
         $this->setActiveSheet(0);

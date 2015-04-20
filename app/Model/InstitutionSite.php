@@ -71,7 +71,8 @@ class InstitutionSite extends AppModel {
 				'Area' => array('lft', 'rght')
 			)
 		),
-		'DatePicker' => array('date_opened', 'date_closed')
+		'DatePicker' => array('date_opened', 'date_closed'),
+		'ImportExcel'
 	);
 	
 	public $validate = array(
