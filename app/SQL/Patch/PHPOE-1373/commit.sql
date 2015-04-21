@@ -1,0 +1,2 @@
+UPDATE `navigations` SET `pattern` = 'index$|advanced|InstitutionSiteStudent.index|import' WHERE `module` LIKE 'Student' AND `title` LIKE 'List of Students';
+UPDATE `security_functions` SET `_add` = '_view:add|import|importTemplate' WHERE `module` LIKE 'Students' AND `category` LIKE 'General' AND `name` LIKE 'Student';
