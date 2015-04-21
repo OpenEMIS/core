@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class Country extends AppModel {
 	public $actsAs = array('FieldOption');
-	public $hasMany = array('StaffNationality', 'StudentNationality', 'TeacherNationality');
+	public $hasMany = array('StaffNationality', 'StudentNationality');
 	public $belongsTo = array(
 		'IdentityType',
 		'ModifiedUser' => array(
