@@ -4,10 +4,10 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('List of Institutions'));
 $this->start('contentActions');
-	echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'divider'));
 	if ($_add) {
 		echo $this->Html->link($this->Label->get('general.import'), array('action' => 'import'), array('class' => 'divider'));
 	}
+	echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
