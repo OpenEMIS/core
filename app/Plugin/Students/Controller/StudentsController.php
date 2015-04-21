@@ -258,13 +258,7 @@ class StudentsController extends StudentsAppController {
 	}
 
 	public function add() {
-		$wizardOptions = array(
-			'exclude' => array(
-				array('module' => 'Student', 'title' => 'Identities'),
-				array('module' => 'Student', 'title' => 'Nationalities'),
-			)
-		);
-		$this->Wizard->start($wizardOptions);
+		$this->Wizard->start();
 		return $this->redirect(array('action' => 'edit'));
 	}
 
