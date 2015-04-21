@@ -529,5 +529,182 @@ class StudentsController extends StudentsAppController {
 		
 		return $weekdays;
 	}
+	
+	public function import() {
+		$this->Navigation->addCrumb('Import');
+		$model = 'Student';
+
+		if ($this->request->is(array('post', 'put'))) {
+			if (!empty($this->request->data[$model]['excel'])) {
+				$fielObj = $this->request->data[$model]['excel'];
+				if ($fielObj['error'] == 0) {
+					$supportedFormats = $this->{$model}->getSupportedFormats();
+					$uploadedName = $fielObj['name'];
+					$finfo = finfo_open(FILEINFO_MIME_TYPE);
+					$fileFormat = finfo_file($finfo, $fielObj['tmp_name']);
+					finfo_close($finfo);
+					if(!in_array($fileFormat, $supportedFormats)){
+						$this->Message->alert('Import.formatNotSupported');
+						return $this->redirect(array('controller' => 'Students', 'action' => 'import'));
+					}
+					$header = $this->{$model}->getHeader();
+					$columns = $this->{$model}->getColumns();
+					$mapping = $this->{$model}->getMapping();
+					$totalColumns = count($columns);
+
+					$lookup = $this->{$model}->getCodesByMapping($mapping);
+					//pr($lookup); die;
+
+					$uploaded = $fielObj['tmp_name'];
+
+					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
+					$worksheets = $objPHPExcel->getWorksheetIterator();
+					$firstSheetOnly = false;
+
+					$totalImported = 0;
+					$totalUpdated = 0;
+					$dataFailed = array();
+					foreach ($worksheets as $sheet) {
+						if ($firstSheetOnly) {break;}
+
+						$highestRow = $sheet->getHighestRow();
+						$totalRows = $highestRow;
+						//$highestColumn = $sheet->getHighestColumn();
+						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
+						for ($row = 1; $row <= $highestRow; ++$row) {
+							$tempRow = array();
+							$originalRow = array();
+							$rowPass = true;
+							for ($col = 0; $col < $totalColumns; ++$col) {
+								$cell = $sheet->getCellByColumnAndRow($col, $row);
+								$cellValue = $cell->getValue();
+								$excelMappingObj = $mapping[$col]['ImportMapping'];
+								$foreignKey = $excelMappingObj['foreigh_key'];
+								$columnName = $columns[$col];
+								$originalRow[$col] = $cellValue;
+								$val = $cellValue;
+								
+								if($row > 1){
+									if(!empty($val)){
+										if($columnName == 'date_opened' || $columnName == 'date_closed'){
+											$val = date('Y-m-d', PHPExcel_Shared_Date::ExcelToPHP($val));
+											$originalRow[$col] = $val;
+										}
+									}
+
+									if ($foreignKey == 1) {
+										if(!empty($cellValue)){
+											if (array_key_exists($cellValue, $lookup[$col])) {
+												$val = $lookup[$col][$cellValue];
+											} else {
+												if($row !== 1 && $cellValue != ''){
+													$rowPass = false;
+													$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $cellValue);
+												}
+											}
+										}
+									} else if ($foreignKey == 2) {
+										$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
+										$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
+										if(!empty($recordId)){
+											$val = $recordId;
+										}else{
+											if($row !== 1 && $cellValue != ''){
+												$rowPass = false;
+												$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $cellValue);
+											}
+										}
+									}
+								}
+								
+								$tempRow[$columnName] = $val;
+								
+							}
+
+							if(!$rowPass){
+								$dataFailed[] = array(
+									'row_number' => $row,
+									'error' => $codeError,
+									'data' => $originalRow
+								);
+								continue;
+							}
+							
+							if ($row === 1) {
+								$header = $tempRow;
+								$dataFailed = array();
+								continue;
+							}
+
+							$this->{$model}->set($tempRow);
+							$this->{$model}->validator()->remove('area_id_select');
+							if ($this->{$model}->validates()) {
+								$this->{$model}->create();
+								if ($this->{$model}->save($tempRow)) {
+									$totalImported++;
+								} else {
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+										'data' => $originalRow
+									);
+								}
+							} else {
+								$validationErrors = $this->{$model}->validationErrors;
+								if(array_key_exists('code', $validationErrors) && count($validationErrors) == 1){
+									$idExisting = $this->{$model}->field('id', array('code' => $tempRow['code']));
+									$updateRow = $tempRow;
+									$updateRow['id'] = $idExisting;
+									if ($this->{$model}->save($updateRow)) {
+										$totalUpdated++;
+									}else{
+										$dataFailed[] = array(
+											'row_number' => $row,
+											'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+											'data' => $originalRow
+										);
+									}
+								}else{
+									$errorStr = $this->{$model}->getExcelLabel('Import.validation_failed');
+									$count = 1;
+									foreach($validationErrors as $field => $arr){
+										$fieldName = $this->{$model}->getExcelLabel($model.'.'.$field);
+										if(empty($fieldName)){
+											$fieldName = __($field);
+										}
+
+										if($count === 1){
+											$errorStr .= ' ' . $fieldName;
+										}else{
+											$errorStr .= ', ' . $fieldName;
+										}
+										$count ++;
+									}
+									
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $errorStr,
+										'data' => $originalRow
+									);
+									$this->log($this->{$model}->validationErrors, 'debug');
+								}
+							}
+						}
+
+						$firstSheetOnly = true;
+					}
+
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header'));
+				}
+			}
+		}
+		//pr($data);die;
+		
+		$this->set(compact('model'));
+	}
+
+	public function importTemplate(){
+		$this->Student->downloadTemplate();
+	}
 
 }
