@@ -195,63 +195,110 @@ class RestSurveyComponent extends Component {
 				3 => 'int_value',
 				4 => 'int_value',
 				5 => 'textarea_value',
-				6 => 'int_value'
+				6 => 'int_value',
+				7 => 'value'
 			);
     		$SurveyQuestion = ClassRegistry::init('SurveyQuestion');
 
     		foreach ($questions as $question) {
     			$questionId = $question->attributes()->id->__toString();
-    			$answerValue = $question->__toString();
+				$fieldType = $SurveyQuestion->field('type', array('SurveyQuestion.id' => $questionId));
+				$fieldName = $arrFieldName[$fieldType];
 
-    			if (!empty($answerValue)) {
-	    			$fieldType = $SurveyQuestion->field('type', array('SurveyQuestion.id' => $questionId));
-	    			$fieldName = $arrFieldName[$fieldType];
-
-	    			if ($fieldType == 2 || $fieldType == 3 || $fieldType == 5 || $fieldType == 6) {
-	    				$answer = array(
-		    				'institution_site_id' => $institutionSiteId,
-		    				'survey_status' => $surveyStatus,
-		    				'survey_question_id' => $questionId,
-		    				'type' => $fieldType,
-		    				$fieldName => $answerValue,
-		    				'created_user_id' => 1
-		    			);
-		    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
-	    			} else if ($fieldType == 4) {
-	    				$checkboxValues = explode(" ", $answerValue);
-						foreach ($checkboxValues as $key => $checkboxValue) {
-							$answer = array(
-			    				'institution_site_id' => $institutionSiteId,
-			    				'survey_status' => $surveyStatus,
-			    				'survey_question_id' => $questionId,
-			    				'answer_number' => ++$key,
-			    				'type' => $fieldType,
-			    				$fieldName => $checkboxValue,
-			    				'created_user_id' => 1
-			    			);
-			    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
-						}
-	    			}
-	    		}
+				$fieldTypeArr = array(2, 3, 4, 5, 6, 7); //Only support 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number, 7 -> Table
+				if(in_array($fieldType, $fieldTypeArr)) {
+					switch($fieldType) {
+						case 2:	//Text
+						case 3:	//Dropdown
+						case 5:	//Textarea
+						case 6:	//Number
+							$answerValue = $question->__toString();
+							if (!empty($answerValue)) {
+								$answer = array(
+				    				'institution_site_id' => $institutionSiteId,
+				    				'survey_status' => $surveyStatus,
+				    				'survey_question_id' => $questionId,
+				    				'type' => $fieldType,
+				    				$fieldName => $answerValue,
+				    				'created_user_id' => 1
+				    			);
+				    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
+				    		}
+							break;
+						case 4:	//Checkbox
+							$answerValue = $question->__toString();
+							if (!empty($answerValue)) {
+								$checkboxValues = explode(" ", $answerValue);
+								foreach ($checkboxValues as $key => $checkboxValue) {
+									$answer = array(
+					    				'institution_site_id' => $institutionSiteId,
+					    				'survey_status' => $surveyStatus,
+					    				'survey_question_id' => $questionId,
+					    				'answer_number' => ++$key,
+					    				'type' => $fieldType,
+					    				$fieldName => $checkboxValue,
+					    				'created_user_id' => 1
+					    			);
+					    			$surveyData['InstitutionSiteSurveyAnswer'][] = $answer;
+								}
+							}
+							break;
+						case 7:	//Table
+							foreach ($question->children() as $row => $rowObj) {
+								$rowId = $rowObj->attributes()->id->__toString();
+								foreach ($rowObj->children() as $col => $colObj) {
+									$colId = $colObj->attributes()->id->__toString();
+									if ($colId != 0) {
+										$cellValue = $colObj->__toString();
+										if (!empty($cellValue)) {
+											$cell = array(
+							    				'institution_site_id' => $institutionSiteId,
+							    				'survey_status' => $surveyStatus,
+							    				'survey_question_id' => $questionId,
+							    				'survey_table_column_id' => $colId,
+							    				'survey_table_row_id' => $rowId,
+							    				'type' => $fieldType,
+							    				$fieldName => $cellValue,
+							    				'created_user_id' => 1
+							    			);
+											$surveyData['InstitutionSiteSurveyTableCell'][] = $cell;
+										}
+									}
+								}
+							}
+							break;
+					}
+				}
     		}
 
-			$InstitutionSiteSurveyNew = ClassRegistry::init('InstitutionSiteSurveyNew');
+			$InstitutionSiteSurvey = ClassRegistry::init('InstitutionSiteSurveyNew');
 			$InstitutionSiteSurveyAnswer = ClassRegistry::init('InstitutionSiteSurveyAnswer');
-			$surveyId = $InstitutionSiteSurveyNew->field('id', array(
+			$InstitutionSiteSurveyTableCell = ClassRegistry::init('InstitutionSiteSurveyTableCell');
+			$surveyId = $InstitutionSiteSurvey->field('id', array(
 				'InstitutionSiteSurveyNew.survey_template_id' => $surveyTemplateId,
     			'InstitutionSiteSurveyNew.institution_site_id' => $institutionSiteId,
     			'InstitutionSiteSurveyNew.academic_period_id' => $academicPeriodId
 			));
 			if ($surveyId) {
-				$InstitutionSiteSurveyNew->deleteAll(array('InstitutionSiteSurveyNew.id' => $surveyId));
+				$InstitutionSiteSurvey->deleteAll(array('InstitutionSiteSurveyNew.id' => $surveyId));
 				$InstitutionSiteSurveyAnswer->deleteAll(array(
 					'InstitutionSiteSurveyAnswer.institution_site_survey_id' => $surveyId
 				), false);
+				$InstitutionSiteSurveyTableCell->deleteAll(array(
+					'InstitutionSiteSurveyTableCell.institution_site_survey_id' => $surveyId
+				), false);
 			}
 
-			if ($InstitutionSiteSurveyNew->saveAll($surveyData)) {
+			if ($InstitutionSiteSurvey->saveAll($surveyData)) {
+				if($surveyStatus == 2) {
+					$message = 'Survey record has been submitted successfully.';
+				} else {
+					$message = 'Survey record has been saved to draft successfully.';
+				}
+				$this->log('Message:', 'debug');
+    			$this->log($message, 'debug');
 			} else {
-				$this->log($InstitutionSiteSurveyNew->validationErrors, 'debug');
+				$this->log($InstitutionSiteSurvey->validationErrors, 'debug');
 			}
     	}
     }
