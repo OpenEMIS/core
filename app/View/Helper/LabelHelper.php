@@ -352,10 +352,16 @@ class LabelHelper extends AppHelper {
 			'add_existing' => 'Add existing Student',
 			'third_name' => 'Third Name',
 			'date_of_birth' => 'Birth Date',
-			'middle_name' => 'Middle Name'
+			'middle_name' => 'Middle Name',
+			'gender_id' => 'Gender',
+			'address_area_id' => 'Address Area',
+			'birthplace_area_id' => 'Birth Place Area'
 		),
 		'Staff' => array(
 			'module' => 'Staff',
+			'gender_id' => 'Gender',
+			'address_area_id' => 'Address Area',
+			'birthplace_area_id' => 'Birth Place Area'
 		),
 		'StaffLeave' => array(
 			'title' => 'Leave',
