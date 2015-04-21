@@ -780,7 +780,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function getDayViewAttendanceOptions() {
-		return array(__('Present'), __('Absent').' - '.__('Excused'), __('Absent').' - '.__('Unexcused'));
+		return array(__('Present'), __('Absent - Excused'), __('Absent - Unexcused'));
 	}
 	
 	public function generateMonthsByDates($startDate, $endDate) {
