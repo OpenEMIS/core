@@ -46,7 +46,7 @@ class RestController extends RestfulAppController {
 
 	public function beforeFilter() {
 
-		$this->Auth->allow('auth', 'token', 'survey', 'refreshToken');
+		$this->Auth->allow();
 
 		if ($this->action == 'survey') {
 		$this->autoRender = false;
@@ -111,14 +111,33 @@ class RestController extends RestfulAppController {
 		}
 	}
 
+	public function login() {
+		$username	= $this->data['username'];
+		$password	= $this->data['password'];
+		
+		$password	= AuthComponent::password($password);
+		
+		$check		= $this->SecurityUser->find('first', array(
+			'conditions' => array(
+				'SecurityUser.username' => $username,
+				'SecurityUser.password' => $password
+			)
+		));
+		if (!empty($check['SecurityUser'])) {
+			$data = true;
+		} else {
+			$data = false;
+		}
+		return $data;
+	}
+	
 	public function auth() {
 		$this->layout = 'auth';
 
 		// We check if request came from a post form
 		if($this->request->is('post')) {
-			// $this->Auth->logout();
 			// do the login..
-			$result = $this->Auth->login();
+			$result = $this->login();
 		}
 		if (isset($result) && $result == true) {
 
@@ -160,8 +179,8 @@ class RestController extends RestfulAppController {
 
 		if($this->request->is('post')) {
 
-			$accessToken    = $this->data['SecurityRestSession']['access_token'];
-			$refreshToken   = $this->data['SecurityRestSession']['refresh_token'];
+			$accessToken    = $this->data['access_token'];
+			$refreshToken   = $this->data['refresh_token'];
 
 			$search = $this->SecurityRestSession->find('first', array(
 				'conditions' => array(
@@ -180,7 +199,7 @@ class RestController extends RestfulAppController {
 				);
 				$this->SecurityRestSession->id = $search['SecurityRestSession']['id'];
 				$this->SecurityRestSession->save($saveData);
-				$json = array('message' => 'updated', 'refresh_token' => $refreshToken);          
+				$json = array('message' => 'updated', 'refresh_token' => $refreshToken);
 				$data  = json_encode($json);
 				$this->set(compact('data'));
 			} else {
@@ -198,8 +217,8 @@ class RestController extends RestfulAppController {
 
 		if($this->request->is('post')) {
 
-			$accessToken    = $this->data['SecurityRestSession']['access_token'];
-			$refreshToken   = $this->data['SecurityRestSession']['refresh_token'];
+			$accessToken    = $this->data['access_token'];
+			$refreshToken   = $this->data['refresh_token'];
 
 			$search = $this->SecurityRestSession->find('first', array(
 				'conditions' => array(
@@ -226,7 +245,7 @@ class RestController extends RestfulAppController {
 						'expiry_date' => $expiryTime
 					);
 
-					$json = array('message' => 'success', 'refresh_token' => $refreshToken);         
+					$json = array('message' => 'success', 'refresh_token' => $refreshToken);
 
 					$this->SecurityRestSession->id = $search['SecurityRestSession']['id'];
 					$this->SecurityRestSession->save($saveData);
