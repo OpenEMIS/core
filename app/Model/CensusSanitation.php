@@ -22,7 +22,7 @@ class CensusSanitation extends AppModel {
 		'InfrastructureMaterial',
 		'SanitationGender' => array(
 			'className' => 'SanitationGender',
-			'foreignKey' => 'gender_id'
+			'foreignKey' => 'sanitation_gender_id'
 		)
 	);
 }

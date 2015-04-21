@@ -4,8 +4,9 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
 $params = array('action' => 'roles');
-if (isset($selectedGroup)) {
+if (!empty($selectedGroup) && $selectedGroup != -1) {
 	$params[] = $selectedGroup;
+	$params['action'] = 'rolesUserDefined';
 }
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 if($_edit) {
