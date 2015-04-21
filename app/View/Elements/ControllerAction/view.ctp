@@ -1,5 +1,5 @@
 <?php
-//ControllerActionComponent - Version 1.0.3
+//ControllerActionComponent - Version 1.0.4
 // Requires FormUtilityHelper and LabelHelper
 
 $formDefaults = $this->FormUtility->getFormDefaults();
@@ -119,6 +119,7 @@ foreach ($displayFields as $_field => $attr) {
 				case 'chosen_select':
 					$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
 					$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
+					$_fieldAttr['dataSeparator'] = isset($_fieldAttr['dataSeparator']) ? $_fieldAttr['dataSeparator'] : ', ';
 					$value = $this->element('ControllerAction/chosen_select', $_fieldAttr);
 					break;
 				
