@@ -33,7 +33,7 @@ class ImportExcelBehavior extends ModelBehavior {
 	
 	public function getMapping(Model $model){
 		$mapping = $this->MappingModel->find('all', array(
-			'conditions' => array($this->MappingModel->alias.'.module' => $model->alias),
+			'conditions' => array($this->MappingModel->alias.'.model' => $model->alias),
 			'order' => array($this->MappingModel->alias.'.order')
 		));
 		
