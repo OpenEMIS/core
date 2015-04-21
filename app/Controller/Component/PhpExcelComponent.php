@@ -60,7 +60,7 @@ class PhpExcelComponent extends Component {
     public function loadWorksheet($file) {
         // load vendor classes
         App::import('Vendor', 'PhpExcel');
-		App::import('Vendor', 'PhpExcel/IOFactory.php');
+		App::import('Vendor', 'IOFactory', array('file' => 'PhpExcel' . DS . 'IOFactory.php'));
 
         $this->_xls = PHPExcel_IOFactory::load($file);
         $this->setActiveSheet(0);
