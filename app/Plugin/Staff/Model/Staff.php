@@ -78,6 +78,10 @@ class Staff extends StaffAppModel {
 	public $validate = array(
 	);
 
+	public $virtualFields = array(
+		'name' => "SELECT CONCAT(`SecurityUser`.`first_name`, ' - ', `SecurityUser`.`last_name`) from `security_users` AS `SecurityUser` WHERE `SecurityUser`.`id` = `Staff.security_user_id`"
+	);
+
 	/* Excel Behaviour */
 	public function excelGetConditions() {
 		$conditions = array();

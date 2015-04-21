@@ -8,5 +8,5 @@
 			}
 		}
 	}
-	echo implode(', ', $chosenSelectList);
+	echo implode($dataSeparator, $chosenSelectList);
 ?>	

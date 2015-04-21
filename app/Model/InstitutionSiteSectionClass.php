@@ -132,6 +132,25 @@ class InstitutionSiteSectionClass extends AppModel {
 		return $data;
 
 	}
+
+	public function getClassOptions($sectionId) {
+		$result = $this->find('all', array(
+			'fields' => array(
+				'InstitutionSiteClass.id', 'InstitutionSiteClass.name'
+			),
+			'conditions' => array(
+				'InstitutionSiteSectionClass.institution_site_section_id' => $sectionId,
+				'InstitutionSiteSectionClass.status' => 1
+			)
+		));
+
+		$list = array();
+		foreach ($result as $key => $obj) {
+			$list[$obj['InstitutionSiteClass']['id']] = $obj['InstitutionSiteClass']['name'];
+		}
+
+		return $list;
+	}
 	
 	public function getSectionOptions($classId=null, $status=null) {
 		$conditions = array();

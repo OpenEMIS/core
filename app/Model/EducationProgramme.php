@@ -70,7 +70,8 @@ class EducationProgramme extends AppModel {
 	);
 
 	public $virtualFields = array(
-		'cycle_programme_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
+		'cycle_programme_name' => "SELECT CONCAT(`EducationCycle`.`name`, ' - ', `EducationProgramme`.`name`) from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`",
+		'cycle_order' => "SELECT `EducationCycle`.`order` from `education_cycles` AS `EducationCycle` WHERE `EducationCycle`.`id` = `EducationProgramme.education_cycle_id`"
 	);
 	
 	public $_condition = 'education_cycle_id';
@@ -81,39 +82,39 @@ class EducationProgramme extends AppModel {
 		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
 		$this->setVar('conditionId', $conditionId);
 		
-		$this->fields['order']['visible'] = false;
-		$this->fields['education_cycle_id']['type'] = 'disabled';
+		$this->fields['order']['type'] = 'hidden';
+		$this->fields['visible']['type'] = 'select';
+		$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
+		$this->fields['education_cycle_id']['type'] = 'readonly';
+		$this->fields['education_cycle_id']['options'] = $this->EducationCycle->getCycles(array('listOnly' => true));
 		$this->fields['education_field_of_study_id']['type'] = 'select';
 		$this->fields['education_field_of_study_id']['options'] = $this->EducationFieldOfStudy->getList();
 		$this->fields['education_certification_id']['type'] = 'select';
 		$this->fields['education_certification_id']['options'] = $this->EducationCertification->find('list', array('conditions' => array('visible' => 1), 'order' => 'order'));
 		
-		if ($this->action == 'add') {
-			$this->fields['order']['type'] = 'hidden';
-			$this->fields['order']['visible'] = true;
+		$this->setFieldOrder('education_cycle_id', 0);
+
+		if ($this->action == 'view') {
+			$this->fields['education_cycle_id']['type'] = 'select';
+		} else if ($this->action == 'add') {
 			$this->fields['order']['value'] = 0;
 			$this->fields['visible']['type'] = 'hidden';
 			$this->fields['visible']['value'] = 1;
-			$this->fields['education_cycle_id']['type'] = 'hidden';
-			$this->fields['education_cycle_id']['value'] = $conditionId;
-			$this->fields['education_cycle'] = array(
-				'visible' => true,
-				'type' => 'disabled',
-				'value' => $this->EducationCycle->field('name', array('EducationCycle.id' => $conditionId))
-			);
-			$this->setFieldOrder('education_cycle', 0);
-		} else {
-			$this->fields['visible']['type'] = 'select';
-			$this->fields['visible']['options'] = $this->controller->Option->get('yesno');
-			$this->fields['education_cycle_id']['dataModel'] = 'EducationCycle';
-			$this->fields['education_cycle_id']['dataField'] = 'name';
 		}
-		$this->setFieldOrder('education_cycle_id', 1);
 		
 		$this->Navigation->addCrumb('Education Programmes');
 		
 		$this->setVar('selectedAction', 'EducationSystem');
 		$this->setVar('_condition', $this->_condition);
+	}
+
+	public function afterAction() {
+		if ($this->action == 'add') {
+			$params = $this->controller->params;
+			$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+			$this->request->data[$this->alias]['education_cycle_id'] = $conditionId;
+		}
+		parent::afterAction();
 	}
 	
 	public function index() {
@@ -189,9 +190,9 @@ class EducationProgramme extends AppModel {
 						$this->Message->alert('general.edit.success');
 						return $this->redirect(array('action' => get_class($this), 'view', $this->_condition => $conditionId, $id));
 					}
-				} else {
-					$this->request->data = $data;
+					$data[$this->alias] = array_merge($data[$this->alias], $this->request->data[$this->alias]);
 				}
+				$this->request->data = $data;
 				$this->render = '../template/edit';
 			} else {
 				$this->Message->alert('general.notExists');
