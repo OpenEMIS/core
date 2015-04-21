@@ -260,13 +260,7 @@ class StaffController extends StaffAppController {
 	}
 
 	public function add() {
-		$wizardOptions = array(
-			'exclude' => array(
-				array('module' => 'Staff', 'title' => 'Identities'),
-				array('module' => 'Staff', 'title' => 'Nationalities'),
-			)
-		);
-		$this->Wizard->start($wizardOptions);
+		$this->Wizard->start();
 		return $this->redirect(array('action' => 'edit'));
 	}
 
