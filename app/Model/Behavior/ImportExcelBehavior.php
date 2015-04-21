@@ -55,6 +55,9 @@ class ImportExcelBehavior extends ModelBehavior {
 			
 			if($value[$this->MappingModel->alias]['is_code'] == 1){
 				$headerCol .= ' ' . $this->LabelHelper->get('general.code');
+				if($column == 'gender_id' && ($model->alias == 'Student' || $model->alias == 'Staff')){
+					$headerCol .= ' (M/F)';
+				}
 			}
 			
 			$header[] = $headerCol;
@@ -105,7 +108,7 @@ class ImportExcelBehavior extends ModelBehavior {
 			}
 		}
 		
-		$excelFile = sprintf('%s_%s_%s.xlsx', $this->getExcelLabel($model, 'general.import'), $this->getExcelLabel($model, 'general.'.$model->alias), $this->getExcelLabel($model, 'general.template'));
+		$excelFile = sprintf('%s_%s_%s.xlsx', $this->getExcelLabel($model, 'general.import'), $this->getExcelLabel($model, 'general.'.  strtolower($model->alias)), $this->getExcelLabel($model, 'general.template'));
 		$excelPath = $folder . DS . $excelFile;
 
 		$writer = new XLSXWriter();
