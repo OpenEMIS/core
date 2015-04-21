@@ -78,11 +78,8 @@ class InstitutionSiteProgramme extends AppModel {
 		)
 	);
 
-	public function compareDate($field = array(), $compareField = null) {
-		$startDate = new DateTime($this->data[$this->name][$compareField]);
-		$endDate = new DateTime(current($field));
-		return $endDate >= $startDate;
-	}
+	// Do not include compareDate function here
+	// It was moved to ValidationBehaviour.php
 	
 	public $virtualFields = array(
 		'name' => "SELECT `education_programmes`.`name` from `education_programmes` WHERE `education_programmes`.`id` = InstitutionSiteProgramme.education_programme_id"
