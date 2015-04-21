@@ -49,7 +49,8 @@ class StaffController extends StaffAppController {
 		'FileUploader',
 		'Wizard',
 		'Activity' => array('model' => 'StaffActivity'),
-		'Workflow2'
+		'Workflow2',
+		'PhpExcel'
 	);
 	public $modules = array(
 		'healthHistory' => 'Staff.StaffHealthHistory',

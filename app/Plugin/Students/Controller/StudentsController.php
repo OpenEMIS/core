@@ -51,7 +51,8 @@ class StudentsController extends StudentsAppController {
 		'FileUploader',
 		'AccessControl',
 		'Wizard',
-		'Activity' => array('model' => 'StudentActivity')
+		'Activity' => array('model' => 'StudentActivity'),
+		'PhpExcel'
 	);
 	
 	public $modules = array(
@@ -96,7 +97,7 @@ class StudentsController extends StudentsAppController {
 			$this->bodyTitle = __('New Student');
 			$studentId = $this->Session->read('Student.id');
 			if (empty($studentId)) {
-				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add');
+				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add', 'import', 'importTemplate');
 				$wizardActions = $this->Wizard->getAllActions('Student');
 				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
 					return $this->redirect(array('action' => 'edit'));
@@ -586,7 +587,7 @@ class StudentsController extends StudentsAppController {
 								
 								if($row > 1){
 									if(!empty($val)){
-										if($columnName == 'date_opened' || $columnName == 'date_closed'){
+										if($columnName == 'date_of_birth'){
 											$val = date('Y-m-d', PHPExcel_Shared_Date::ExcelToPHP($val));
 											$originalRow[$col] = $val;
 										}
@@ -635,13 +636,16 @@ class StudentsController extends StudentsAppController {
 								$dataFailed = array();
 								continue;
 							}
-
-							$this->{$model}->set($tempRow);
-							$this->{$model}->validator()->remove('area_id_select');
-							if ($this->{$model}->validates()) {
-								$this->{$model}->create();
-								if ($this->{$model}->save($tempRow)) {
+							
+							$this->SecurityUser->set($tempRow);
+							if ($this->SecurityUser->validates()) {
+								$this->SecurityUser->create();
+								if ($this->SecurityUser->save($tempRow)) {
 									$totalImported++;
+									
+									$securityUserId = $this->SecurityUser->getLastInsertId();
+									$this->Student->create();
+									$this->Student->save(array('security_user_id' => $securityUserId));
 								} else {
 									$dataFailed[] = array(
 										'row_number' => $row,
@@ -650,12 +654,12 @@ class StudentsController extends StudentsAppController {
 									);
 								}
 							} else {
-								$validationErrors = $this->{$model}->validationErrors;
-								if(array_key_exists('code', $validationErrors) && count($validationErrors) == 1){
-									$idExisting = $this->{$model}->field('id', array('code' => $tempRow['code']));
+								$validationErrors = $this->SecurityUser->validationErrors;
+								if(array_key_exists('openemis_no', $validationErrors) && count($validationErrors) == 1){
+									$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $tempRow['openemis_no']));
 									$updateRow = $tempRow;
 									$updateRow['id'] = $idExisting;
-									if ($this->{$model}->save($updateRow)) {
+									if ($this->SecurityUser->save($updateRow)) {
 										$totalUpdated++;
 									}else{
 										$dataFailed[] = array(
