@@ -506,12 +506,12 @@ select.topSelectControl{
     color: #6699cc;
 }
 .input-size-half {
-	float:left !important;
-	width:69%;	
-	display:inline-block;
-	clear:none!important
+	float: left !important;
+	width: 69%;
+	display: inline-block;
+	clear: none!important
 }
 .input-size-half.space {
-	width:29%;
+	width: 29%;
 	margin-right: 2%;
 }
