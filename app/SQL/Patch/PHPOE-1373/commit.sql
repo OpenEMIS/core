@@ -35,3 +35,5 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `is_code`, `order`, 
 (NULL, 'Staff', 'postal_code', 0, 10, 0, NULL, NULL),
 (NULL, 'Staff', 'address_area_id', 1, 11, 2, 'Area', 'code'),
 (NULL, 'Staff', 'birthplace_area_id', 1, 12, 2, 'Area', 'code');
+
+ALTER TABLE `import_mapping` CHANGE `foreigh_key` `foreign_key` INT(11) NULL DEFAULT '0' COMMENT '0: not foreign key, 1: normal foreign key, 2: heavy load foreign key';

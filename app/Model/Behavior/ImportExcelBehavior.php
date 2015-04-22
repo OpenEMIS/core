@@ -145,7 +145,7 @@ class ImportExcelBehavior extends ModelBehavior {
 		//pr($mapping);
 		foreach ($mapping as $key => $obj) {
 			$mappingRow = $obj['ImportMapping'];
-			if ($mappingRow['foreigh_key'] == 1) {
+			if ($mappingRow['foreign_key'] == 1) {
 				$lookupModel = $mappingRow['lookup_model'];
 				$lookupColumn = $mappingRow['lookup_column'];
 				$lookupModelObj = ClassRegistry::init($lookupModel);
