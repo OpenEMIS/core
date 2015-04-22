@@ -2,7 +2,7 @@
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
 echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Import Students'));
+$this->assign('contentHeader', __('Import Staff'));
 $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.download_template'), array('action' => 'importTemplate'), array('class' => 'divider'));
 	if(empty($uploadedName)){
