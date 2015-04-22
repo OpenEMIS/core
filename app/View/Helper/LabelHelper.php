@@ -116,7 +116,8 @@ class LabelHelper extends AppHelper {
 			'download_template' => 'Download Template',
 			'format_supported' => 'Format Supported',
 			'no_records' => 'There are no records.',
-			'editable' => 'Editable'
+			'editable' => 'Editable',
+			'staff' => 'Staff'
 		),
 		'date' => array(
 			'start' => 'Start Date',

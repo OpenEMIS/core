@@ -90,14 +90,14 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb('Students', array('controller' => $this->name, 'action' => 'index'));
 		$this->Wizard->setModule('Student');
 		
-		$actions = array('index', 'advanced');
+		$actions = array('index', 'advanced', 'import');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Students');
 		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
 			$studentId = $this->Session->read('Student.id');
 			if (empty($studentId)) {
-				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add', 'import', 'importTemplate');
+				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add');
 				$wizardActions = $this->Wizard->getAllActions('Student');
 				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
 					return $this->redirect(array('action' => 'edit'));
@@ -554,7 +554,6 @@ class StudentsController extends StudentsAppController {
 					$totalColumns = count($columns);
 
 					$lookup = $this->{$model}->getCodesByMapping($mapping);
-					//pr($lookup); die;
 
 					$uploaded = $fielObj['tmp_name'];
 
@@ -592,6 +591,11 @@ class StudentsController extends StudentsAppController {
 											$originalRow[$col] = $val;
 										}
 									}
+									
+									$translatedCol = $this->{$model}->getExcelLabel($model.'.'.$columnName);
+									if(empty($translatedCol)){
+										$translatedCol = __($columnName);
+									}
 
 									if ($foreignKey == 1) {
 										if(!empty($cellValue)){
@@ -600,7 +604,7 @@ class StudentsController extends StudentsAppController {
 											} else {
 												if($row !== 1 && $cellValue != ''){
 													$rowPass = false;
-													$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $cellValue);
+													$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
 												}
 											}
 										}
@@ -612,14 +616,13 @@ class StudentsController extends StudentsAppController {
 										}else{
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
-												$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $cellValue);
+												$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
 											}
 										}
 									}
 								}
 								
 								$tempRow[$columnName] = $val;
-								
 							}
 
 							if(!$rowPass){
@@ -644,8 +647,8 @@ class StudentsController extends StudentsAppController {
 									$totalImported++;
 									
 									$securityUserId = $this->SecurityUser->getLastInsertId();
-									$this->Student->create();
-									$this->Student->save(array('security_user_id' => $securityUserId));
+									$this->{$model}->create();
+									$this->{$model}->save(array('security_user_id' => $securityUserId));
 								} else {
 									$dataFailed[] = array(
 										'row_number' => $row,
@@ -702,7 +705,6 @@ class StudentsController extends StudentsAppController {
 				}
 			}
 		}
-		//pr($data);die;
 		
 		$this->set(compact('model'));
 	}
