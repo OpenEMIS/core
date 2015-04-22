@@ -614,7 +614,7 @@ class StaffController extends StaffAppController {
 								$cell = $sheet->getCellByColumnAndRow($col, $row);
 								$cellValue = $cell->getValue();
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
-								$foreignKey = $excelMappingObj['foreigh_key'];
+								$foreignKey = $excelMappingObj['foreign_key'];
 								$columnName = $columns[$col];
 								$originalRow[$col] = $cellValue;
 								$val = $cellValue;

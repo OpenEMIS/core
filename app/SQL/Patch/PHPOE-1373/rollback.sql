@@ -8,4 +8,6 @@ WHERE `module` LIKE 'Staff' AND `category` LIKE 'General' AND `name` LIKE 'Staff
 
 ALTER TABLE `genders` DROP `code`;
 
+ALTER TABLE `import_mapping` CHANGE `foreign_key` `foreigh_key` INT(11) NULL DEFAULT '0' COMMENT '0: not foreign key, 1: normal foreign key, 2: heavy load foreign key';
+
 DELETE FROM `import_mapping` WHERE `model` LIKE 'Student' OR `model` LIKE 'Staff';
