@@ -485,3 +485,19 @@ div#accordion div.panel-heading:after{ content: ''; }
 }
 .fuelux .wizard > .actions .glyphicon-arrow-left:before { content:"\e092"; }
 .fuelux .wizard > .actions .glyphicon-arrow-right:before { content:"\e091"; }
+.red-tooltip + .tooltip > .tooltip-inner {
+	text-align: right;
+}
+.failedInfo{
+	padding-left: 0;
+	padding-right: 15px;
+}
+.overallInfo div{
+	margin-right: 0;
+	margin-left:30px;
+}
+.importedFile{
+	float: right;
+	padding-right: 6px;
+	padding-left: 12px;
+}

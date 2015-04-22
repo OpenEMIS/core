@@ -19,7 +19,7 @@ a {
 
 .table-checkable .checkbox-column { width: 36px; }
 .input-group-addon { font-size: 12px; padding: 5px 8px; }
-.fileupload .btn { font-size: 12px; padding: 4px 12px; }
+.fileupload .btn { font-size: 12px; padding: 3px 12px; }
 .form-buttons { margin-top: 15px; }
 .form-buttons input:first-child { margin-left: 15px; }
 /* end bootstrap */
@@ -502,6 +502,58 @@ select.topSelectControl{
 .stackElements input{
 	margin-bottom: 8px;
 }
+.red-tooltip + .tooltip > .tooltip-inner {
+	background-color: #D7676B;
+	text-align: left;
+	font-size: 12px;
+}
+.red-tooltip + .tooltip > .tooltip-arrow { 
+	border-top-color:#D7676B; 
+}
+i.red-exclamation{
+	color: #D7676B;
+}
+i.blue-check{
+	color: #6699CC;
+}
+.overallInfo{
+	padding-top: 10px;
+	padding-bottom: 10px;
+	clear: both;
+}
+.overallInfo div{
+	display: inline-block;
+	margin-right: 30px;
+}
+.overallInfo div.totalRows{
+	
+}
+.failedInfo{
+	color: #D7676B;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	padding-left: 10px;
+	border-top: 1px solid #ddd;
+}
+.importInfo{
+	font-size: 12px;
+	font-weight: bold;
+}
+.importInfo .reminder{
+	font-weight: normal;
+	font-size: 11px;
+}
+.importInfo .content{
+	font-size: 13px;
+	font-weight: normal;
+}
+.importedFile{
+	border: 1px solid #CCC;
+	padding: 6px;
+	padding-right: 12px;
+	border-radius: 4px;
+	float: left;
+}
 .alert-info {
     color: #6699cc;
 }
@@ -514,4 +566,8 @@ select.topSelectControl{
 .input-size-half.space {
 	width:29%;
 	margin-right: 2%;
+}
+.import .table > thead > tr > th{
+	text-align: center;
+	vertical-align: middle;
 }
