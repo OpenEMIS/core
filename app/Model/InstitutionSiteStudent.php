@@ -607,16 +607,28 @@ class InstitutionSiteStudent extends AppModel {
 	}
 
 	// used by InstitutionSiteSection.edit
-	public function getStudentOptions($institutionSiteId, $periodId) {
+	public function getStudentOptions($institutionSiteId, $periodId, $sectionId = null) {
 		$periodModel = ClassRegistry::init('AcademicPeriod');
 
 		$periodObj = $periodModel->findById($periodId);
 		$periodStartDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'start_date');
 		$periodEndDate = $periodModel->getDate($periodObj['AcademicPeriod'], 'end_date');
 
+		$sectionGrades = array();
+		if (!is_null($sectionId)) {
+			$sectionGrades = ClassRegistry::init('InstitutionSiteSection')->getGradesBySection($sectionId);
+			$sectionGrades = array_keys($sectionGrades);
+		}
+
 		$alias = $this->alias;
 		$options = array(
-			'contain' => array('Student' => array('SecurityUser')),
+			'contain' => array(
+				'Student' => array('SecurityUser'),
+				'EducationProgramme' => array(
+					'fields' => array('id','name'),
+					'EducationGrade' => array('id','name')
+				)
+			),
 			'conditions' => array(
 				$alias.'.institution_site_id = ' . $institutionSiteId,
 				'OR' => array(
@@ -647,10 +659,27 @@ class InstitutionSiteStudent extends AppModel {
 
 		$list = $this->find('all', $options);
 		$data = array();
-		foreach ($list as $obj) {
-			$studentObj = $obj['Student'];
-			if (array_key_exists('SecurityUser', $studentObj)) {
-				$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
+		foreach ($list as $okey => $obj) {
+			$studentGradeEligible = $obj['EducationProgramme']['EducationGrade'];
+			$studentGradeKeys = array();
+			foreach ($studentGradeEligible as $key => $value) {
+				$studentGradeKeys[] = $value['id'];
+			}
+
+			$studentProgramEligible = false;
+
+			foreach ($studentGradeKeys as $key => $value) {
+				if (in_array($value, $sectionGrades)) {
+					$studentProgramEligible = true;
+				}
+			}
+			if ($studentProgramEligible) {
+				$studentObj = $obj['Student'];
+				if (array_key_exists('SecurityUser', $studentObj)) {
+					$data[$studentObj['id']] = ModelHelper::getName($studentObj['SecurityUser'], array('openEmisId' => true));
+				} else {
+					$this->log('Data corrupted with no security user for student id: '. $studentObj['id'], 'debug');
+				}
 			}
 		}
 		return $data;
