@@ -274,7 +274,8 @@ class LabelHelper extends AppHelper {
 			'name' => 'School Year'
 		),
 		'Country' => array(
-			'name' => 'Country'
+			'name' => 'Country',
+			'identity_type_id' => 'Default Identity Type'
 		),
 		'HealthRelationship' => array(
 			'name' => 'Relationship'
