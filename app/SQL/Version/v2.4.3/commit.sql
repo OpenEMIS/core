@@ -1,3 +1,5 @@
+-- PHPOE-1285
+
 --
 -- 1. Navigations
 --
@@ -340,3 +342,14 @@ ALTER TABLE `institution_site_quality_visit_attachments`
 
 ALTER TABLE `institution_site_quality_visit_attachments`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- PHPOE-1317
+
+UPDATE `security_functions` SET `_view` = 'roles|rolesUserDefined|permissions|rolesView', 
+`_edit` = '_view:rolesEdit|permissionsEdit|rolesReorder|rolesMove' 
+WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Security' AND `name` LIKE 'Roles';
+
+-- PHPOE-1348
+
+UPDATE security_functions SET `_delete` = '_view:remove' WHERE security_functions.name = 'Notices';
+
