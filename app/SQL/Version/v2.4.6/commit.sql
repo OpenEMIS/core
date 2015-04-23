@@ -14,6 +14,6 @@ UPDATE navigations SET is_wizard = 0 WHERE action = 'StaffIdentity';
 
 -- PHPOE-1378
 
-UPDATE `security_functions` SET
-`_add` = '_view:finances'
+UPDATE `security_functions` SET 
+`_add` = '_view:financesAdd' 
 WHERE `controller` = 'Census' AND `module` = 'Institutions' AND `category` = 'Totals' AND `_view` = 'finances' LIMIT 1;
