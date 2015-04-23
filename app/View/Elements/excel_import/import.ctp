@@ -54,6 +54,7 @@ else:
 	if(!empty($dataFailed)):
 	?>
 	<span class="reminder">(Hover on the icon(s) to view errors.)</span>
+	<span class="download"><?php echo $this->Html->link($this->Label->get('Import.download_failed_records'), array('action' => 'downloadFailed', $excelFile)); ?></span>
 	<?php
 	endif;
 	?>
