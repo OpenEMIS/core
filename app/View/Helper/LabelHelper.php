@@ -117,7 +117,8 @@ class LabelHelper extends AppHelper {
 			'format_supported' => 'Format Supported',
 			'no_records' => 'There are no records.',
 			'editable' => 'Editable',
-			'staff' => 'Staff'
+			'staff' => 'Staff',
+			'failed' => 'Failed'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -746,7 +747,9 @@ class LabelHelper extends AppHelper {
 			'rows_imported' => 'Rows Imported',
 			'rows_updated' => 'Rows Updated',
 			'rows_failed' => 'Rows Failed',
-			'recommended_max_records' => 'Recommended Maximum Records'
+			'recommended_max_records' => 'Recommended Maximum Records',
+			'openemis_no' => 'OpenEMIS Number',
+			'download_failed_records' => 'Download failed records'
 		),
 		'RubricTemplate' => array(
 			'name' => 'Rubric Template',

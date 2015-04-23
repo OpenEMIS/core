@@ -6,8 +6,8 @@ UPDATE `navigations` SET `pattern` = 'index$|advanced|InstitutionSiteStaff.index
 UPDATE `security_functions` SET `_add` = '_view:add', `_view` = 'view|InstitutionSiteStaff|InstitutionSiteStaff.index' 
 WHERE `module` LIKE 'Staff' AND `category` LIKE 'General' AND `name` LIKE 'Staff';
 
-ALTER TABLE `genders` DROP `code`;
+UPDATE `security_functions` SET `_add` = '_view:import|importTemplate|add' WHERE `module` LIKE 'Institutions' AND `category` LIKE 'General' AND `name` LIKE 'Institution';
 
-ALTER TABLE `import_mapping` CHANGE `foreign_key` `foreigh_key` INT(11) NULL DEFAULT '0' COMMENT '0: not foreign key, 1: normal foreign key, 2: heavy load foreign key';
+ALTER TABLE `genders` DROP `code`;
 
 DELETE FROM `import_mapping` WHERE `model` LIKE 'Student' OR `model` LIKE 'Staff';

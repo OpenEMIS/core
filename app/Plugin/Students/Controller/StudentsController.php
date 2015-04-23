@@ -90,7 +90,7 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb('Students', array('controller' => $this->name, 'action' => 'index'));
 		$this->Wizard->setModule('Student');
 		
-		$actions = array('index', 'advanced', 'import');
+		$actions = array('index', 'advanced', 'import', 'importTemplate', 'downloadFailed');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Students');
 		} else if ($this->Wizard->isActive()) {
@@ -640,6 +640,10 @@ class StudentsController extends StudentsAppController {
 								continue;
 							}
 							
+							if(empty($tempRow['openemis_no'])){
+								$tempRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'));
+							}
+							
 							$this->SecurityUser->set($tempRow);
 							if ($this->SecurityUser->validates()) {
 								$this->SecurityUser->create();
@@ -700,8 +704,28 @@ class StudentsController extends StudentsAppController {
 
 						$firstSheetOnly = true;
 					}
+					
+					if(!empty($dataFailed)){
+						$downloadFolder = $this->{$model}->prepareDownload();
+						$excelFile = sprintf('%s_%s_%s_%s.xlsx', 
+								$this->{$model}->getExcelLabel('general.import'), 
+								$this->{$model}->getExcelLabel('general.'.  strtolower($this->{$model}->alias)), 
+								$this->{$model}->getExcelLabel('general.failed'),
+								time()
+						);
+						$excelPath = $downloadFolder . DS . $excelFile;
 
-					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header'));
+						$writer = new XLSXWriter();
+						$writer->writeSheetRow('sheet1', array_values($header));
+						foreach($dataFailed as $record){
+							$writer->writeSheetRow('sheet1', array_values($record['data']));
+						}
+						$writer->writeToFile($excelPath);
+					}else{
+						$excelPath = null;
+					}
+
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelFile'));
 				}
 			}
 		}
@@ -711,6 +735,10 @@ class StudentsController extends StudentsAppController {
 
 	public function importTemplate(){
 		$this->Student->downloadTemplate();
+	}
+	
+	public function downloadFailed($excelFile){
+		$this->Student->performDownload($excelFile);
 	}
 
 }

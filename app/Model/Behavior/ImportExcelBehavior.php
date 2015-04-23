@@ -47,17 +47,16 @@ class ImportExcelBehavior extends ModelBehavior {
 		foreach($mapping as $key => $value){
 			$column = $value[$this->MappingModel->alias]['column_name'];
 			$label = $this->getExcelLabel($model, sprintf('%s.%s', $model->alias, $column));
-			if(!empty($label)){
+			if($column == 'openemis_no'){
+				$headerCol = $this->getExcelLabel($model, sprintf('%s.%s', 'Import', $column));
+			}else if(!empty($label)){
 				$headerCol = $label;
 			}else{
 				$headerCol = __(Inflector::humanize($column));
 			}
 			
-			if($value[$this->MappingModel->alias]['is_code'] == 1){
-				$headerCol .= ' ' . $this->LabelHelper->get('general.code');
-				if($column == 'gender_id' && ($model->alias == 'Student' || $model->alias == 'Staff')){
-					$headerCol .= ' (M/F)';
-				}
+			if(!empty($value[$this->MappingModel->alias]['description'])){
+				$headerCol .= ' ' . $value[$this->MappingModel->alias]['description'];
 			}
 			
 			$header[] = $headerCol;
@@ -82,8 +81,8 @@ class ImportExcelBehavior extends ModelBehavior {
 		$label = $this->LabelHelper->get($key);
 		return $label;
 	}
-
-	public function downloadTemplate(Model $model) {
+	
+	public function prepareDownload(Model $model){
 		$folder = WWW_ROOT . $this->rootFolder;
 		if (!file_exists($folder)) {
 			umask(0);
@@ -108,15 +107,12 @@ class ImportExcelBehavior extends ModelBehavior {
 			}
 		}
 		
-		$excelFile = sprintf('%s_%s_%s.xlsx', $this->getExcelLabel($model, 'general.import'), $this->getExcelLabel($model, 'general.'.  strtolower($model->alias)), $this->getExcelLabel($model, 'general.template'));
+		return $folder;
+	}
+	
+	public function performDownload(Model $model, $excelFile){
+		$folder = WWW_ROOT . $this->rootFolder;
 		$excelPath = $folder . DS . $excelFile;
-
-		$writer = new XLSXWriter();
-		
-		$header = $model->getHeader($model);
-		$writer->writeSheetRow('sheet1', array_values($header));
-		$writer->writeToFile($excelPath);
-		
 		$filename = basename($excelPath);
 		
 		header("Pragma: public", true);
@@ -129,6 +125,19 @@ class ImportExcelBehavior extends ModelBehavior {
 		header("Content-Transfer-Encoding: binary");
 		header("Content-Length: ".filesize($excelPath));
 		echo file_get_contents($excelPath);
+	}
+
+	public function downloadTemplate(Model $model) {
+		$folder = $this->prepareDownload($model);
+		$excelFile = sprintf('%s_%s_%s.xlsx', $this->getExcelLabel($model, 'general.import'), $this->getExcelLabel($model, 'general.'.  strtolower($model->alias)), $this->getExcelLabel($model, 'general.template'));
+		$excelPath = $folder . DS . $excelFile;
+
+		$writer = new XLSXWriter();
+		
+		$header = $model->getHeader($model);
+		$writer->writeSheetRow('sheet1', array_values($header));
+		$writer->writeToFile($excelPath);
+		$this->performDownload($model, $excelFile);
 	}
 	
 	public function getSupportedFormats(Model $model) {
