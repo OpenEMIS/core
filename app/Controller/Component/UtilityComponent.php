@@ -316,7 +316,7 @@ class UtilityComponent extends Component {
 		return $permutations;
 	}
 
-	public function getUniqueOpenemisId($options=array(), &$prefix='') {
+	public function getUniqueOpenemisId($options=array()) {
 		$prefix = '';
 		if (array_key_exists('model', $options)) {
 			switch ($options['model']) {
@@ -334,7 +334,7 @@ class UtilityComponent extends Component {
 			}
 		}
 		
-		$latest = ClassRegistry::init('SecurityUser')->find('first', array('order' => 'id DESC'));
+		$latest = ClassRegistry::init('SecurityUser')->find('first', array('order' => 'SecurityUser.id DESC'));
 		$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
 		if(empty($prefix)){
 			$latestDbStamp = $latestOpenemisNo;
