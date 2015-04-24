@@ -148,7 +148,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 					)
 				),
 				'conditions' => array(
-					'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId,
+					'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
 				),
 				'group' => array('SecurityUser.gender_id')
 			)
