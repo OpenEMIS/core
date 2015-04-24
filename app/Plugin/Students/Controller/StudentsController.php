@@ -560,6 +560,8 @@ class StudentsController extends StudentsAppController {
 					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
 					$worksheets = $objPHPExcel->getWorksheetIterator();
 					$firstSheetOnly = false;
+					$baseOpenemisId = '';
+					$prefixOpenemisId = '';
 
 					$totalImported = 0;
 					$totalUpdated = 0;
@@ -641,7 +643,17 @@ class StudentsController extends StudentsAppController {
 							}
 							
 							if(empty($tempRow['openemis_no'])){
-								$tempRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'));
+								if(empty($baseOpenemisId)){
+									$baseOpenemisId = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'), $prefixOpenemisId);
+									$tempRow['openemis_no'] = $baseOpenemisId;
+								}else{
+									if(!empty($prefixOpenemisId)){
+										$tempRow['openemis_no'] = $prefixOpenemisId . (substr($baseOpenemisId, strlen($prefixOpenemisId)) + $row);
+									}else{
+										$tempRow['openemis_no'] = $baseOpenemisId + $row;
+									}
+								}
+								$tempRow['openemis_no_type'] = 'given';
 							}
 							
 							$this->SecurityUser->set($tempRow);
@@ -663,11 +675,20 @@ class StudentsController extends StudentsAppController {
 							} else {
 								$validationErrors = $this->SecurityUser->validationErrors;
 								if(array_key_exists('openemis_no', $validationErrors) && count($validationErrors) == 1){
-									$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $tempRow['openemis_no']));
 									$updateRow = $tempRow;
-									$updateRow['id'] = $idExisting;
-									if ($this->SecurityUser->save($updateRow)) {
-										$totalUpdated++;
+									if($updateRow['openemis_no_type'] !== 'given'){
+										$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $tempRow['openemis_no']));
+										$updateRow['id'] = $idExisting;
+										
+										if($this->SecurityUser->save($updateRow)) {
+											$totalUpdated++;
+										}else{
+											$dataFailed[] = array(
+												'row_number' => $row,
+												'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+												'data' => $originalRow
+											);
+										}
 									}else{
 										$dataFailed[] = array(
 											'row_number' => $row,
