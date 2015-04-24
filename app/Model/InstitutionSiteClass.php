@@ -451,10 +451,6 @@ class InstitutionSiteClass extends AppModel {
 		}
 	}
 
-	public function excel($controller, $params) {
-		$this->excel();
-	}
-	
 	public function getClass($classId, $institutionSiteId=0) {
 		$conditions = array('InstitutionSiteClass.id' => $classId);
 		

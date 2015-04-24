@@ -106,23 +106,30 @@ class ReportComponent extends Component {
 		$request = $this->controller->request;
 		
 		if ($request->is('post')) {
-			$name = $features[$selectedFeature]['name'];
-			$format = $request->data['Report']['format'];
-			$period = null;
-			$params = array('model' => $features[$selectedFeature]['model'], 'format' => $format, 'options' => array());
+			$name		= $features[$selectedFeature]['name'];
+			$format		= $request->data['Report']['format'];
+			$feature	= $request->data['Report']['feature'];
+			$period		= null;
+			$params		= array('model' => $features[$selectedFeature]['model'], 'format' => $format, 'options' => array());
 			if (array_key_exists('period', $request->data['Report'])) {
-				$periodId = $request->data['Report']['period'];
+				$periodId	= $request->data['Report']['period'];
+				$periodModel = ClassRegistry::init('AcademicPeriod');
+				$periodObj	= $periodModel->findById($periodId);
+				if ($feature == 5) {
+					$params['options']['conditions'] = array('academic_period_id' => $periodId);
+				} else {
+					$startDate	= $periodModel->getDate($periodObj['AcademicPeriod'], 'start_date');
+					$endDate	= $periodModel->getDate($periodObj['AcademicPeriod'], 'end_date');
+					$params['options']['conditions'] = array('start_date' => $startDate, 'end_date' => $endDate);
+				}
 				$period = $this->Period->field('name', array('id' => $periodId));
 				$name .= ' (' . $period . ')';
-				$params['options']['conditions'] = array('AcademicPeriod.id' => $periodId);
 			}
 			$obj = array(
 				'name' => $name,
 				'module' => $this->settings['module'],
 				'params' => $params
 			);
-			//pr($request->data);die;
-			//pr($obj);die;
 			$id = $this->ReportProgress->addReport($obj);
 			if ($id !== false) {
 				$this->ReportProgress->generate($id);
@@ -134,7 +141,6 @@ class ReportComponent extends Component {
 		$this->controller->set('selectedFeature', $selectedFeature);
 		$this->controller->render('/Elements/reports/generate');
 	}
-
 	public function download($id) {
 		$this->controller->autoRender = false;
 		$this->ReportProgress->id = $id;
