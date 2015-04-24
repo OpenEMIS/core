@@ -606,6 +606,8 @@ class StaffController extends StaffAppController {
 						$totalRows = $highestRow;
 						//$highestColumn = $sheet->getHighestColumn();
 						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
+						
+						$openemisNo = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'));
 						for ($row = 1; $row <= $highestRow; ++$row) {
 							$tempRow = array();
 							$originalRow = array();
@@ -676,8 +678,8 @@ class StaffController extends StaffAppController {
 							}
 							
 							if(empty($tempRow['openemis_no'])){
-								$tempRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model' => 'Staff'));
-								$tempRow['openemis_no_type'] = 'given';
+								$tempRow['openemis_no'] = ++$openemisNo;
+								$tempRow['openemis_no_generated'] = true;
 							}
 							
 							$this->SecurityUser->set($tempRow);
@@ -714,7 +716,7 @@ class StaffController extends StaffAppController {
 											);
 										}
 									}else{
-										$updateRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model' => 'Staff'));
+										$updateRow['openemis_no'] = ++$openemisNo;
 										$this->SecurityUser->create();
 										if ($this->SecurityUser->save($updateRow)) {
 											$totalImported++;
@@ -771,8 +773,11 @@ class StaffController extends StaffAppController {
 						$excelPath = $downloadFolder . DS . $excelFile;
 
 						$writer = new XLSXWriter();
-						$writer->writeSheetRow('sheet1', array_values($header));
+						$newHeader = $header;
+						$newHeader[] = $this->{$model}->getExcelLabel('general.errors');
+						$writer->writeSheetRow('sheet1', array_values($newHeader));
 						foreach($dataFailed as $record){
+							$record['data'][] = $record['error'];
 							$writer->writeSheetRow('sheet1', array_values($record['data']));
 						}
 						$writer->writeToFile($excelPath);
