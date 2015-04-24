@@ -118,7 +118,8 @@ class LabelHelper extends AppHelper {
 			'no_records' => 'There are no records.',
 			'editable' => 'Editable',
 			'staff' => 'Staff',
-			'failed' => 'Failed'
+			'failed' => 'Failed',
+			'errors' => 'Errors'
 		),
 		'date' => array(
 			'start' => 'Start Date',

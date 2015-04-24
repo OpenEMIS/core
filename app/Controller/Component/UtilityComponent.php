@@ -346,7 +346,7 @@ class UtilityComponent extends Component {
 		if($latestDbStamp >= $currentStamp){
 			$newStamp = $latestDbStamp + 1;
 		}else{
-			$newStamp = $currentStamp + 1;
+			$newStamp = $currentStamp;
 		}
 
 		return $prefix.$newStamp;
