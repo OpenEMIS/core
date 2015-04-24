@@ -17,7 +17,7 @@ ALTER TABLE `import_mapping` CHANGE `is_code` `description` VARCHAR(50) NULL DEF
 ALTER TABLE `import_mapping` CHANGE `foreigh_key` `foreign_key` INT(11) NULL DEFAULT '0' COMMENT '0: not foreign key, 1: normal foreign key, 2: heavy load foreign key';
 
 INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_model`, `lookup_column`) VALUES
-(NULL, 'Student', 'openemis_no', '(Leave as null for new entries)', 1, 0, NULL, NULL),
+(NULL, 'Student', 'openemis_no', '(Leave as blank for new entries)', 1, 0, NULL, NULL),
 (NULL, 'Student', 'first_name', NULL, 2, 0, NULL, NULL),
 (NULL, 'Student', 'middle_name', NULL, 3, 0, NULL, NULL),
 (NULL, 'Student', 'third_name', NULL, 4, 0, NULL, NULL),
@@ -29,7 +29,7 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `orde
 (NULL, 'Student', 'postal_code', NULL, 10, 0, NULL, NULL),
 (NULL, 'Student', 'address_area_id', 'Code', 11, 2, 'Area', 'code'),
 (NULL, 'Student', 'birthplace_area_id', 'Code', 12, 2, 'Area', 'code'),
-(NULL, 'Staff', 'openemis_no', '(Leave as null for new entries)', 1, 0, NULL, NULL),
+(NULL, 'Staff', 'openemis_no', '(Leave as blank for new entries)', 1, 0, NULL, NULL),
 (NULL, 'Staff', 'first_name', NULL, 2, 0, NULL, NULL),
 (NULL, 'Staff', 'middle_name', NULL, 3, 0, NULL, NULL),
 (NULL, 'Staff', 'third_name', NULL, 4, 0, NULL, NULL),
