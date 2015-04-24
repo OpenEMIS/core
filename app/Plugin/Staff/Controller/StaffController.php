@@ -595,6 +595,8 @@ class StaffController extends StaffAppController {
 					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
 					$worksheets = $objPHPExcel->getWorksheetIterator();
 					$firstSheetOnly = false;
+					$baseOpenemisId = '';
+					$prefixOpenemisId = '';
 
 					$totalImported = 0;
 					$totalUpdated = 0;
@@ -676,7 +678,17 @@ class StaffController extends StaffAppController {
 							}
 							
 							if(empty($tempRow['openemis_no'])){
-								$tempRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model'=>'Staff'));
+								if(empty($baseOpenemisId)){
+									$baseOpenemisId = $this->Utility->getUniqueOpenemisId(array('model' => 'Staff'), $prefixOpenemisId);
+									$tempRow['openemis_no'] = $baseOpenemisId;
+								}else{
+									if(!empty($prefixOpenemisId)){
+										$tempRow['openemis_no'] = $prefixOpenemisId . (substr($baseOpenemisId, strlen($prefixOpenemisId)) + $row);
+									}else{
+										$tempRow['openemis_no'] = $baseOpenemisId + $row;
+									}
+								}
+								$tempRow['openemis_no_type'] = 'given';
 							}
 							
 							$this->SecurityUser->set($tempRow);
@@ -698,11 +710,20 @@ class StaffController extends StaffAppController {
 							} else {
 								$validationErrors = $this->SecurityUser->validationErrors;
 								if(array_key_exists('openemis_no', $validationErrors) && count($validationErrors) == 1){
-									$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $tempRow['openemis_no']));
 									$updateRow = $tempRow;
-									$updateRow['id'] = $idExisting;
-									if ($this->SecurityUser->save($updateRow)) {
-										$totalUpdated++;
+									if($updateRow['openemis_no_type'] !== 'given'){
+										$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $tempRow['openemis_no']));
+										$updateRow['id'] = $idExisting;
+										
+										if($this->SecurityUser->save($updateRow)) {
+											$totalUpdated++;
+										}else{
+											$dataFailed[] = array(
+												'row_number' => $row,
+												'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+												'data' => $originalRow
+											);
+										}
 									}else{
 										$dataFailed[] = array(
 											'row_number' => $row,
@@ -760,7 +781,7 @@ class StaffController extends StaffAppController {
 						$excelPath = null;
 					}
 
-					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelPath'));
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelPath', 'excelFile'));
 				}
 			}
 		}
@@ -773,7 +794,7 @@ class StaffController extends StaffAppController {
 	}
 	
 	public function downloadFailed($excelFile){
-		$this->Student->performDownload($excelFile);
+		$this->Staff->performDownload($excelFile);
 	}
 
 }
