@@ -560,8 +560,6 @@ class StudentsController extends StudentsAppController {
 					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
 					$worksheets = $objPHPExcel->getWorksheetIterator();
 					$firstSheetOnly = false;
-					$baseOpenemisId = '';
-					$prefixOpenemisId = '';
 
 					$totalImported = 0;
 					$totalUpdated = 0;
@@ -643,16 +641,7 @@ class StudentsController extends StudentsAppController {
 							}
 							
 							if(empty($tempRow['openemis_no'])){
-								if(empty($baseOpenemisId)){
-									$baseOpenemisId = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'), $prefixOpenemisId);
-									$tempRow['openemis_no'] = $baseOpenemisId;
-								}else{
-									if(!empty($prefixOpenemisId)){
-										$tempRow['openemis_no'] = $prefixOpenemisId . (substr($baseOpenemisId, strlen($prefixOpenemisId)) + $row);
-									}else{
-										$tempRow['openemis_no'] = $baseOpenemisId + $row;
-									}
-								}
+								$tempRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'));
 								$tempRow['openemis_no_type'] = 'given';
 							}
 							
@@ -676,10 +665,10 @@ class StudentsController extends StudentsAppController {
 								$validationErrors = $this->SecurityUser->validationErrors;
 								if(array_key_exists('openemis_no', $validationErrors) && count($validationErrors) == 1){
 									$updateRow = $tempRow;
-									if($updateRow['openemis_no_type'] !== 'given'){
-										$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $tempRow['openemis_no']));
+									if(empty($updateRow['openemis_no_type'])){
+										$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $updateRow['openemis_no']));
 										$updateRow['id'] = $idExisting;
-										
+
 										if($this->SecurityUser->save($updateRow)) {
 											$totalUpdated++;
 										}else{
@@ -690,11 +679,21 @@ class StudentsController extends StudentsAppController {
 											);
 										}
 									}else{
-										$dataFailed[] = array(
-											'row_number' => $row,
-											'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
-											'data' => $originalRow
-										);
+										$updateRow['openemis_no'] = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'));
+										$this->SecurityUser->create();
+										if ($this->SecurityUser->save($updateRow)) {
+											$totalImported++;
+
+											$securityUserId = $this->SecurityUser->getLastInsertId();
+											$this->{$model}->create();
+											$this->{$model}->save(array('security_user_id' => $securityUserId));
+										} else {
+											$dataFailed[] = array(
+												'row_number' => $row,
+												'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+												'data' => $originalRow
+											);
+										}
 									}
 								}else{
 									$errorStr = $this->{$model}->getExcelLabel('Import.validation_failed');
