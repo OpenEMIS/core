@@ -1,3 +1,5 @@
+-- PHPOE-1285
+
 --
 -- 1. Navigations
 --
@@ -56,8 +58,13 @@ RENAME TABLE z_1285_quality_institution_visits TO quality_institution_visits;
 RENAME TABLE z_1285_quality_institution_visit_attachments TO quality_institution_visit_attachments;
 
 
+-- PHPOE-1317
+
 UPDATE `security_functions` SET `_view` = 'roles|permissions|rolesView' 
 `_edit` = '_view:rolesEdit|permissionsEdit' 
 WHERE `module` LIKE 'Administration' AND `controller` LIKE 'Security' AND `name` LIKE 'Roles';
+
+
+-- PHPOE-1348
 
 UPDATE security_functions SET `_delete` = '_view:delete' WHERE security_functions.name = 'Notices';

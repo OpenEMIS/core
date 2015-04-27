@@ -330,6 +330,7 @@ fieldset.section_break > .profile-image {
 }
 
 .table th { text-align: right; }
+.table tfoot td.side-label { text-align: left; }
 
 /* set spacing between options as some words' 1st character are not viewable especially in firefox browser */
 select > optgroup {margin: 10px 10px 0 0;}
