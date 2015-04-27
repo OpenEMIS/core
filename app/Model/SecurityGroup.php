@@ -51,22 +51,43 @@ class SecurityGroup extends AppModel {
 	
 	public function beforeAction() {
 		parent::beforeAction();
+
+		if (array_key_exists('group_type', $this->request->named)) {
+			$groupType = $this->request->named['group_type'];
+		} elseif ($this->Session->check('SecurityGroup.groupType')) {
+			$groupType = $this->Session->read('SecurityGroup.groupType');
+		}
+
+		if (empty($groupType) && $this->action=='index') {
+			$this->redirect(array('controller' => 'Security', 'action' => 'SecurityGroup', 'group_type'=>'user'));
+		} elseif ($groupType && $this->action=='index') {
+			$this->Session->write('SecurityGroup.groupType', $groupType);
+		} else {
+			$groupType = $this->Session->read('SecurityGroup.groupType');
+		}
+
 		$this->Navigation->addCrumb('Groups');
 		
-		$this->fields['SecurityGroupArea'] = array(
-			'type' => 'element',
-			'element' => '../Security/SecurityGroup/area',
-			'class' => 'col-md-8',
-			'order' => 1,
-			'visible' => true
-		);
-		$this->fields['SecurityGroupInstitutionSite'] = array(
-			'type' => 'element',
-			'element' => '../Security/SecurityGroup/institution_site',
-			'class' => 'col-md-8',
-			'order' => 2,
-			'visible' => true
-		);
+		if ($groupType=='user') {
+			$this->fields['SecurityGroupArea'] = array(
+				'type' => 'element',
+				'element' => '../Security/SecurityGroup/area',
+				'class' => 'col-md-8',
+				'order' => 1,
+				'visible' => true
+			);
+			$this->fields['SecurityGroupInstitutionSite'] = array(
+				'type' => 'element',
+				'element' => '../Security/SecurityGroup/institution_site',
+				'class' => 'col-md-8',
+				'order' => 2,
+				'visible' => true
+			);
+		} else {
+			$this->fields['name']['type'] = 'readonly';
+			$this->fields['SecurityGroupArea'] = array('type' => 'hidden');
+			$this->fields['SecurityGroupInstitutionSite'] = array('type' => 'hidden');
+		}
 		$this->fields['SecurityGroupUser'] = array(
 			'type' => 'element',
 			'element' => '../Security/SecurityGroup/security_user',
@@ -77,6 +98,8 @@ class SecurityGroup extends AppModel {
 		$this->setFieldOrder('SecurityGroupArea', 2);
 		$this->setFieldOrder('SecurityGroupInstitutionSite', 3);
 		$this->setFieldOrder('SecurityGroupUser', 4);
+
+		$this->setVar('currentTab',$groupType);
 	}
 	
 	public function ajaxGetAccessOptionsRow($type, $id=0) {
@@ -321,11 +344,65 @@ class SecurityGroup extends AppModel {
 
 			//must set validate to true in order for checkUnique to work
 			if ($this->saveAll($data, array('validate' => true))) {
-				$this->Message->alert('general.add.success');
-				return $this->redirect(array('action' => get_class($this), 'view', $this->getLastInsertID()));
+				if (!isset($this->request->data['InstitutionSite'])) {
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action' => get_class($this), 'view', $this->getLastInsertID()));
+				} else {
+					return $this->getLastInsertID();
+				}
 			} else {
 				$this->Message->alert('general.add.failed');
+				if (!isset($this->request->data['InstitutionSite'])) {
+					return false;
+				}
 			}
+		}
+	}
+	
+	// PHPOE-1387
+	// Only institution_site_id and security_user_id will be allowed to be added from InstitutionSiteController
+	// Currently, this function is called once during adding of InstitutionSite and no other places are using this except for InstitutionSite edit() to edit the name
+	public function updateFromInstitutionSite() {
+		if($this->request->is(array('post', 'put'))) {
+			$id = $this->request->data[$this->alias]['id'];
+			if ($this->exists($id)) {
+				$models = array(
+					'SecurityGroupInstitutionSite' => 'institution_site_id',
+					'SecurityGroupUser' => 'security_user_id'
+				);
+
+				foreach ($models as $model => $attr) {
+					if (isset($this->request->data[$model])) {
+						$data = $this->request->data[$model];
+						foreach ($data as $i => $obj) {
+							if (empty($obj[$attr])) {
+								unset($this->request->data[$model][$i]);
+							}
+						}
+					}
+				}
+
+				$data = array();
+				$models[$this->alias] = $this->request->data[$this->alias];
+				foreach ($models as $model => $attr) {
+					if (!empty($this->request->data[$model])) {
+						$data[$model] = $this->request->data[$model];
+					}
+				}
+
+				$dataSource = $this->getDataSource();
+				$dataSource->begin();
+
+				//must set validate to true in order for checkUnique to work
+				if ($this->saveAll($data, array('validate' => true))) {
+					$dataSource->commit();
+					return true;
+				} else {
+					$dataSource->rollback();
+					$this->log($this->validationErrors, 'debug');
+				}
+			}
+			return false;
 		}
 	}
 	
@@ -339,49 +416,71 @@ class SecurityGroup extends AppModel {
 			$existingData = $data;
 			
 			if ($this->request->is(array('post', 'put'))) {
-				$models = array(
-					'SecurityGroupArea' => 'area_id',
-					'SecurityGroupInstitutionSite' => 'institution_site_id',
-					'SecurityGroupUser' => 'security_user_id'
-				);
-				
-				foreach ($models as $model => $attr) {
-					if (isset($this->request->data[$model])) {
-						$data = $this->request->data[$model];
-						foreach ($data as $i => $obj) {
-							if (empty($obj[$attr])) {
-								unset($this->request->data[$model][$i]);
+				$institutionSiteExists = $this->checkInstitutionSites($id);
+
+				//	If institution site exists in original data, this record is a dedicated group for an institution
+				if ($institutionSiteExists) {
+
+					//	If the group name on original data and edit form is the same,
+					//	allow edit to go through by setting $institutionSiteExists to false.
+					//	Additional InstitutionSite and Area will not be asigned to this group either
+					if ($data[$this->alias]['name'] == $this->request->data[$this->alias]['name']) {
+						unset($this->request->data['SecurityGroupArea']);
+						unset($this->request->data['SecurityGroupInstitutionSite']);
+						$institutionSiteExists = false;
+					} else {
+						$this->Message->alert('SecurityGroup.edit.name_different');
+					}
+				}
+
+				//	proceed to edit when all conditions above are met
+				if (!$institutionSiteExists) {
+					$models = array(
+						'SecurityGroupArea' => 'area_id',
+						'SecurityGroupInstitutionSite' => 'institution_site_id',
+						'SecurityGroupUser' => 'security_user_id'
+					);
+					
+					foreach ($models as $model => $attr) {
+						if (isset($this->request->data[$model])) {
+							$data = $this->request->data[$model];
+							foreach ($data as $i => $obj) {
+								if (empty($obj[$attr])) {
+									unset($this->request->data[$model][$i]);
+								}
 							}
 						}
 					}
-				}
 
-				$data = array();
-				$models[$this->alias] = 'id';
-				foreach ($models as $model => $attr) {
-					if (!empty($this->request->data[$model])) {
-						$data[$model] = $this->request->data[$model];
+					$data = array();
+					$models[$this->alias] = 'id';
+					foreach ($models as $model => $attr) {
+						if (!empty($this->request->data[$model])) {
+							$data[$model] = $this->request->data[$model];
+						}
 					}
-				}
 
-				$dataSource = $this->getDataSource();
-				$dataSource->begin();
+					$dataSource = $this->getDataSource();
+					$dataSource->begin();
 
-				// remove all related records from groups and re-insert
-				foreach ($models as $model => $attr) {
-					if ($this->alias == $model) continue;
-					$this->{$model}->recursive = -1;
-					$this->{$model}->deleteAll(array("$model.security_group_id" => $id), false);
-				}
-				//must set validate to true in order for checkUnique to work
-				if ($this->saveAll($data, array('validate' => true))) {
-					$dataSource->commit();
-					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => get_class($this), 'view', $id));
+					// remove all related records from groups and re-insert
+					foreach ($models as $model => $attr) {
+						if ($this->alias == $model) continue;
+						$this->{$model}->recursive = -1;
+						$this->{$model}->deleteAll(array("$model.security_group_id" => $id), false);
+					}
+					//must set validate to true in order for checkUnique to work
+					if ($this->saveAll($data, array('validate' => true))) {
+						$dataSource->commit();
+						$this->Message->alert('general.edit.success');
+						return $this->redirect(array('action' => get_class($this), 'view', $id));
+					} else {
+						$dataSource->rollback();
+						$this->log($this->validationErrors, 'debug');
+						$this->Message->alert('general.edit.failed');
+						$this->request->data = $existingData;
+					}
 				} else {
-					$dataSource->rollback();
-					$this->log($this->validationErrors, 'debug');
-					$this->Message->alert('general.edit.failed');
 					$this->request->data = $existingData;
 				}
 			} else {
@@ -396,21 +495,53 @@ class SecurityGroup extends AppModel {
 	public function remove() {
 		if ($this->Session->check($this->alias . '.id')) {
 			$id = $this->Session->read($this->alias . '.id');
-			if($this->delete($id)) {
-				$hasMany = $this->hasMany;
-				foreach ($hasMany as $model => $attr) {
-					$this->{$model}->recursive = -1;
-					$this->{$model}->deleteAll(array("$model.security_group_id" => $id), false);
+			$institutionSiteExists = $this->checkInstitutionSites($id);
+			if (!$institutionSiteExists) {
+				if ($this->delete($id)) {
+					$hasMany = $this->hasMany;
+					foreach ($hasMany as $model => $attr) {
+						$this->{$model}->recursive = -1;
+						$this->{$model}->deleteAll(array("$model.security_group_id" => $id), false);
+					}
+					$this->Message->alert('general.delete.success');
+				} else {
+					$this->Message->alert('general.delete.failed');
 				}
-				$this->Message->alert('general.delete.success');
+				$this->Session->delete($this->alias . '.id');
+				return $this->redirect(array('action' => get_class($this)));
 			} else {
-				$this->Message->alert('general.delete.failed');
+				$this->Message->alert('SecurityGroup.delete.failed');
+				return $this->redirect(array('action' => get_class($this), 'view', $id));
 			}
-			$this->Session->delete($this->alias . '.id');
-			return $this->redirect(array('action' => get_class($this)));
 		}
 	}
 	
+	protected function checkInstitutionSites($id) {
+		$institutionSiteExists = false;
+		if ($this->exists($id)) {
+			$this->recursive = 2;
+			$securityGroup = $this->findById($id);
+			if (array_key_exists('SecurityGroup', $securityGroup)) {
+				foreach ($securityGroup['SecurityGroupInstitutionSite'] as $key=>$value) {
+					$now = new DateTime('now');
+
+					// mark $institutionSiteExists = true only if the group name and institution name is the same
+					// this is to avoid not deleting a group which is not dedicated for an institution
+					$sameName = ($securityGroup['SecurityGroup']['name'] == $value['InstitutionSite']['name']);
+					
+					if (empty($value['InstitutionSite']['year_closed']) && empty($value['InstitutionSite']['date_closed']) && $sameName) {
+						$institutionSiteExists = $value['InstitutionSite']['id'];
+					} else if (!empty($value['InstitutionSite']['year_closed']) && $value['InstitutionSite']['year_closed'] < date('Y') && $sameName) {
+						$institutionSiteExists = $value['InstitutionSite']['id'];
+					} else if (!empty($value['InstitutionSite']['date_closed']) && $value['InstitutionSite']['date_closed'] < $now && $sameName) {
+						$institutionSiteExists = $value['InstitutionSite']['id'];
+					}
+				}
+			}
+		}
+		return $institutionSiteExists;
+	}
+
 	public function getGroupOptions($userId=false) {
 		$options = array(
 			'recursive' => -1,
@@ -454,6 +585,18 @@ class SecurityGroup extends AppModel {
 	}
 
 	public function paginateJoins() {
+		$this->unBindModel(array('hasOne' => array('InstitutionSite')));
+		if ($this->controller->viewVars['currentTab'] == 'user') {
+			$joinType = 'LEFT';
+		} else {
+			$joinType = 'INNER';
+		}
+		$joins[] = array(
+			'table' => 'institution_sites',
+			'alias' => 'InstitutionSite',
+			'type' => $joinType,
+			'conditions' => array('InstitutionSite.security_group_id = SecurityGroup.id')
+		);
 		$joins[] = array(
 			'table' => 'security_group_users',
 			'alias' => 'SecurityGroupUser',
@@ -464,6 +607,9 @@ class SecurityGroup extends AppModel {
 	}
 
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		if ($this->controller->viewVars['currentTab'] == 'user') {
+			$conditions = array_merge($conditions, array('InstitutionSite.security_group_id IS NULL'));
+		}
 		$data = $this->find('all', array(
 			'fields' => array('SecurityGroup.id', 'SecurityGroup.name', 'COUNT(SecurityGroupUser.created) AS no_of_users'),
 			'joins' => $this->paginateJoins(),

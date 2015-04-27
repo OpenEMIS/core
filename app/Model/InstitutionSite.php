@@ -27,7 +27,8 @@ class InstitutionSite extends AppModel {
 		'AreaAdministrative',
 		'InstitutionSiteProvider',
 		'InstitutionSiteSector',
-		'InstitutionSiteGender'
+		'InstitutionSiteGender',
+		'SecurityGroup'
 	);
 
 	public $hasMany = array(
@@ -39,7 +40,8 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteClass',
 		'InstitutionSiteFee',
 		'InstitutionSiteCustomValue',
-		'InstitutionSiteActivity' => array('dependent' => true)
+		'InstitutionSiteActivity' => array('dependent' => true),
+		'SecurityGroupInstitutionSite'
 	);
 	
 	public $actsAs = array(
