@@ -747,7 +747,7 @@ class StudentsController extends StudentsAppController {
 						}
 						$writer->writeToFile($excelPath);
 					}else{
-						$excelPath = null;
+						$excelFile = null;
 					}
 
 					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelFile'));
