@@ -114,3 +114,6 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `orde
 (NULL, 'Staff', 'postal_code', NULL, 10, 0, NULL, NULL),
 (NULL, 'Staff', 'address_area_id', 'Code', 11, 2, 'Area', 'code'),
 (NULL, 'Staff', 'birthplace_area_id', 'Code', 12, 2, 'Area', 'code');
+
+UPDATE `import_mapping` SET `description` = NULL WHERE `model` LIKE 'InstitutionSite';
+UPDATE `import_mapping` SET `description` = 'Code' WHERE `model` LIKE 'InstitutionSite' AND (`foreign_key` = 1 OR `foreign_key` = 2);
