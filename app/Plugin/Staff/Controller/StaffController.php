@@ -810,7 +810,7 @@ class StaffController extends StaffAppController {
 						}
 						$writer->writeToFile($excelPath);
 					}else{
-						$excelPath = null;
+						$excelFile = null;
 					}
 
 					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelPath', 'excelFile'));
