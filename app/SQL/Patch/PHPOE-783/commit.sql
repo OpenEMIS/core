@@ -43,3 +43,4 @@ SELECT
 	NOW()
 FROM `contact_options`
 WHERE `contact_options`.`name` = 'Emergency';
+
