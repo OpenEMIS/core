@@ -1022,8 +1022,31 @@ class InstitutionSitesController extends AppController {
 
 						$firstSheetOnly = true;
 					}
+					
+					if(!empty($dataFailed)){
+						$downloadFolder = $this->{$model}->prepareDownload();
+						$excelFile = sprintf('%s_%s_%s_%s.xlsx', 
+								$this->{$model}->getExcelLabel('general.import'), 
+								$this->{$model}->getExcelLabel('general.'.  $this->{$model}->alias), 
+								$this->{$model}->getExcelLabel('general.failed'),
+								time()
+						);
+						$excelPath = $downloadFolder . DS . $excelFile;
 
-					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header'));
+						$writer = new XLSXWriter();
+						$newHeader = $header;
+						$newHeader[] = $this->{$model}->getExcelLabel('general.errors');
+						$writer->writeSheetRow('sheet1', array_values($newHeader));
+						foreach($dataFailed as $record){
+							$record['data'][] = $record['error'];
+							$writer->writeSheetRow('sheet1', array_values($record['data']));
+						}
+						$writer->writeToFile($excelPath);
+					}else{
+						$excelFile = null;
+					}
+
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelFile'));
 				}
 			}
 		}
@@ -1033,6 +1056,10 @@ class InstitutionSitesController extends AppController {
 
 	public function importTemplate(){
 		$this->InstitutionSite->downloadTemplate();
+	}
+	
+	public function downloadFailed($excelFile){
+		$this->InstitutionSite->performDownload($excelFile);
 	}
 
 }
