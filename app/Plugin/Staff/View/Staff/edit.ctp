@@ -14,10 +14,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'staff');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if (!$WizardMode) {
-	echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
-}
+
+echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
+echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
+
 $this->end();
 
 $this->start('contentBody');
@@ -107,11 +107,7 @@ echo $this->Form->create($model, $formOptions);
 </fieldset>
 
 <?php 
-if (!$WizardMode) {
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
-} else {
-	echo $this->FormUtility->getWizardButtons($WizardButtons);
-}
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
 echo $this->Form->end();
 $this->end();
 ?>
