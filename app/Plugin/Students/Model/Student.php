@@ -31,7 +31,8 @@ class Student extends StudentsAppModel {
 		),
 		'CustomReport' => array(
 			'_default' => array('photo_name', 'photo_content')
-		)
+		),
+		'ImportExcel'
 	);
 
 	public $belongsTo = array('SecurityUser');

@@ -4,6 +4,9 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('List of Staff'));
 $this->start('contentActions');
+	if ($_add) {
+		echo $this->Html->link($this->Label->get('general.import'), array('action' => 'import'), array('class' => 'divider'));
+	}
 	if ($_execute) {
 		echo $this->Html->link($this->Label->get('general.export'), array('action' => $model, 'excel'), array('class' => 'divider'));
 	}

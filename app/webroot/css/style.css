@@ -547,6 +547,9 @@ i.blue-check{
 	font-size: 13px;
 	font-weight: normal;
 }
+.importInfo .download{
+	font-weight: normal;
+}
 .importedFile{
 	border: 1px solid #CCC;
 	padding: 6px;
