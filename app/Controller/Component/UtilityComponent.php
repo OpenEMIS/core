@@ -333,7 +333,22 @@ class UtilityComponent extends Component {
 					break;
 			}
 		}
+		
+		$latest = ClassRegistry::init('SecurityUser')->find('first', array('order' => 'SecurityUser.id DESC'));
+		$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+		if(empty($prefix)){
+			$latestDbStamp = $latestOpenemisNo;
+		}else{
+			$latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+		}
+		
+		$currentStamp = time();
+		if($latestDbStamp >= $currentStamp){
+			$newStamp = $latestDbStamp + 1;
+		}else{
+			$newStamp = $currentStamp;
+		}
 
-		return $prefix.time();
+		return $prefix.$newStamp;
 	}
 }

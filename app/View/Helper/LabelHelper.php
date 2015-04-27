@@ -116,7 +116,10 @@ class LabelHelper extends AppHelper {
 			'download_template' => 'Download Template',
 			'format_supported' => 'Format Supported',
 			'no_records' => 'There are no records.',
-			'editable' => 'Editable'
+			'editable' => 'Editable',
+			'staff' => 'Staff',
+			'failed' => 'Failed',
+			'errors' => 'Errors'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -352,10 +355,16 @@ class LabelHelper extends AppHelper {
 			'add_existing' => 'Add existing Student',
 			'third_name' => 'Third Name',
 			'date_of_birth' => 'Birth Date',
-			'middle_name' => 'Middle Name'
+			'middle_name' => 'Middle Name',
+			'gender_id' => 'Gender',
+			'address_area_id' => 'Address Area',
+			'birthplace_area_id' => 'Birth Place Area'
 		),
 		'Staff' => array(
 			'module' => 'Staff',
+			'gender_id' => 'Gender',
+			'address_area_id' => 'Address Area',
+			'birthplace_area_id' => 'Birth Place Area'
 		),
 		'StaffLeave' => array(
 			'title' => 'Leave',
@@ -741,7 +750,9 @@ class LabelHelper extends AppHelper {
 			'rows_imported' => 'Rows Imported',
 			'rows_updated' => 'Rows Updated',
 			'rows_failed' => 'Rows Failed',
-			'recommended_max_records' => 'Recommended Maximum Records'
+			'recommended_max_records' => 'Recommended Maximum Records',
+			'openemis_no' => 'OpenEMIS Number',
+			'download_failed_records' => 'Download failed records'
 		),
 		'RubricTemplate' => array(
 			'name' => 'Rubric Template',
