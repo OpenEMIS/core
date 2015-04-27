@@ -857,12 +857,13 @@ class InstitutionSitesController extends AppController {
 	
 	public function import() {
 		$this->Navigation->addCrumb('Import');
+		$model = 'InstitutionSite';
 
 		if ($this->request->is(array('post', 'put'))) {
-			if (!empty($this->request->data['InstitutionSite']['excel'])) {
-				$fielObj = $this->request->data['InstitutionSite']['excel'];
+			if (!empty($this->request->data[$model]['excel'])) {
+				$fielObj = $this->request->data[$model]['excel'];
 				if ($fielObj['error'] == 0) {
-					$supportedFormats = $this->InstitutionSite->getSupportedFormats();
+					$supportedFormats = $this->{$model}->getSupportedFormats();
 					$uploadedName = $fielObj['name'];
 					$finfo = finfo_open(FILEINFO_MIME_TYPE);
 					$fileFormat = finfo_file($finfo, $fielObj['tmp_name']);
@@ -871,13 +872,12 @@ class InstitutionSitesController extends AppController {
 						$this->Message->alert('Import.formatNotSupported');
 						return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'import'));
 					}
-					$header = $this->InstitutionSite->getHeader();
-					$columns = $this->InstitutionSite->getColumns();
-					$mapping = $this->InstitutionSite->getMapping();
+					$header = $this->{$model}->getHeader();
+					$columns = $this->{$model}->getColumns();
+					$mapping = $this->{$model}->getMapping();
 					$totalColumns = count($columns);
 
-					$lookup = $this->InstitutionSite->getCodesByMapping($mapping);
-					//pr($lookup); die;
+					$lookup = $this->{$model}->getCodesByMapping($mapping);
 
 					$uploaded = $fielObj['tmp_name'];
 
@@ -903,7 +903,7 @@ class InstitutionSitesController extends AppController {
 								$cell = $sheet->getCellByColumnAndRow($col, $row);
 								$cellValue = $cell->getValue();
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
-								$foreignKey = $excelMappingObj['foreigh_key'];
+								$foreignKey = $excelMappingObj['foreign_key'];
 								$columnName = $columns[$col];
 								$originalRow[$col] = $cellValue;
 								$val = $cellValue;
@@ -915,6 +915,11 @@ class InstitutionSitesController extends AppController {
 											$originalRow[$col] = $val;
 										}
 									}
+									
+									$translatedCol = $this->{$model}->getExcelLabel($model.'.'.$columnName);
+									if(empty($translatedCol)){
+										$translatedCol = __($columnName);
+									}
 
 									if ($foreignKey == 1) {
 										if(!empty($cellValue)){
@@ -923,7 +928,7 @@ class InstitutionSitesController extends AppController {
 											} else {
 												if($row !== 1 && $cellValue != ''){
 													$rowPass = false;
-													$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
+													$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
 												}
 											}
 										}
@@ -935,7 +940,7 @@ class InstitutionSitesController extends AppController {
 										}else{
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
-												$codeError = sprintf('%s - %s', $this->InstitutionSite->getExcelLabel('Import.invalid_code'), $cellValue);
+												$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
 											}
 										}
 									}
@@ -960,39 +965,39 @@ class InstitutionSitesController extends AppController {
 								continue;
 							}
 
-							$this->InstitutionSite->set($tempRow);
-							$this->InstitutionSite->validator()->remove('area_id_select');
-							if ($this->InstitutionSite->validates()) {
-								$this->InstitutionSite->create();
-								if ($this->InstitutionSite->save($tempRow)) {
+							$this->{$model}->set($tempRow);
+							$this->{$model}->validator()->remove('area_id_select');
+							if ($this->{$model}->validates()) {
+								$this->{$model}->create();
+								if ($this->{$model}->save($tempRow)) {
 									$totalImported++;
 								} else {
 									$dataFailed[] = array(
 										'row_number' => $row,
-										'error' => $this->InstitutionSite->getExcelLabel('Import.saving_failed'),
+										'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
 										'data' => $originalRow
 									);
 								}
 							} else {
-								$validationErrors = $this->InstitutionSite->validationErrors;
+								$validationErrors = $this->{$model}->validationErrors;
 								if(array_key_exists('code', $validationErrors) && count($validationErrors) == 1){
-									$idExisting = $this->InstitutionSite->field('id', array('code' => $tempRow['code']));
+									$idExisting = $this->{$model}->field('id', array('code' => $tempRow['code']));
 									$updateRow = $tempRow;
 									$updateRow['id'] = $idExisting;
-									if ($this->InstitutionSite->save($updateRow)) {
+									if ($this->{$model}->save($updateRow)) {
 										$totalUpdated++;
 									}else{
 										$dataFailed[] = array(
 											'row_number' => $row,
-											'error' => $this->InstitutionSite->getExcelLabel('Import.saving_failed'),
+											'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
 											'data' => $originalRow
 										);
 									}
 								}else{
-									$errorStr = $this->InstitutionSite->getExcelLabel('Import.validation_failed');
+									$errorStr = $this->{$model}->getExcelLabel('Import.validation_failed');
 									$count = 1;
 									foreach($validationErrors as $field => $arr){
-										$fieldName = $this->InstitutionSite->getExcelLabel('InstitutionSite.'.$field);
+										$fieldName = $this->{$model}->getExcelLabel($model.'.'.$field);
 										if(empty($fieldName)){
 											$fieldName = __($field);
 										}
@@ -1010,7 +1015,7 @@ class InstitutionSitesController extends AppController {
 										'error' => $errorStr,
 										'data' => $originalRow
 									);
-									$this->log($this->InstitutionSite->validationErrors, 'debug');
+									$this->log($this->{$model}->validationErrors, 'debug');
 								}
 							}
 						}
@@ -1022,8 +1027,7 @@ class InstitutionSitesController extends AppController {
 				}
 			}
 		}
-		//pr($data);die;
-		$model = 'InstitutionSite';
+
 		$this->set(compact('model'));
 	}
 
