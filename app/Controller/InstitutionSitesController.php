@@ -110,7 +110,7 @@ class InstitutionSitesController extends AppController {
 		$this->indexPage = 'dashboard';
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
-		} else if ($this->action === 'import' || $this->action === 'importTemplate'){
+		} else if ($this->action === 'import' || $this->action === 'importTemplate' || $this->action === 'downloadFailed'){
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 			$pass = $this->request->params['pass'];
