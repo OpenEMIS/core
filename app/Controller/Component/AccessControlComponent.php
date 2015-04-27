@@ -272,6 +272,7 @@ class AccessControlComponent extends Component {
 		$currentController = $this->controller->params['controller'];
 		$currentAction = $this->getAction();
 		$controllersToCheck = array('INSTITUTIONSITES','CENSUS','QUALITY','DASHBOARDS','INSTITUTIONREPORTS');
+		$institutionActionsWoId = array('index', 'add', 'advanced', 'import', 'importTemplate', 'downloadFailed');
 
 		if($this->Session->check('permissions')) {
 			$permissions = $this->Session->read('permissions');
@@ -301,7 +302,7 @@ class AccessControlComponent extends Component {
 						}
 						
 					}else{
-						if($controller == "INSTITUTIONSITES" && ($action == 'index' || $action == 'add' || $action == 'advanced' || $action == 'import' || $action == 'importTemplate')){
+						if($controller == "INSTITUTIONSITES" && in_array($action, $institutionActionsWoId)){
 							$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
 						}else{
 							if($this->Session->check('InstitutionSiteId')){

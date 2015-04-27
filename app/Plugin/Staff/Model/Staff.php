@@ -28,7 +28,8 @@ class Staff extends StaffAppModel {
 				'Staff.StaffCustomValue'
 			)
 		),
-		'CustomReport'
+		'CustomReport',
+		'ImportExcel'
 	);
 
 	public $belongsTo = array('SecurityUser');
