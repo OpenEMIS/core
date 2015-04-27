@@ -52,6 +52,7 @@ class InstitutionSitesController extends AppController {
 		'Staff.StaffStatus',
 		'Staff.StaffCategory',
 		'Staff.StaffBehaviour',
+		'SecurityGroup',
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
@@ -379,6 +380,33 @@ class InstitutionSitesController extends AppController {
 				
 				if ($this->InstitutionSite->validates()) {
 					$result = $this->InstitutionSite->save($this->request->data);
+
+					$securityGroupExists = false;
+					if (array_key_exists('SecurityGroup', $data) ) {
+						foreach ($data['SecurityGroup'] as $key=>$value) {
+							if ($value['name'] == $data['InstitutionSite']['name']) {
+								$securityGroupExists = $value['id'];
+							}
+						}
+					}
+					if ($securityGroupExists) {
+						$addSecurityGroupParams = array(
+							'InstitutionSite' => $result['InstitutionSite'],
+							'SecurityGroup' => array(
+								'id' => $securityGroupExists,
+								'name' => $result['InstitutionSite']['name']
+							)
+						);
+						$this->request->data = $addSecurityGroupParams;
+						//	"initialise SecurityGroup model from InstitutionSitesController"
+						$this->SecurityGroup->request = $this->request;
+						$this->SecurityGroup->Message = $this->Message;
+
+						if (!$this->SecurityGroup->updateFromInstitutionSite()) {
+							$this->Message->alert('InstitutionSite.edit_security_group.failed');
+						}
+					}
+
 					$this->Message->alert('general.edit.success');
 					$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage));
 				}
@@ -423,11 +451,50 @@ class InstitutionSitesController extends AppController {
 			$this->InstitutionSite->set($this->request->data);
 			
 			if ($this->InstitutionSite->validates()) {
-				$newInstitutionSiteRec = $this->InstitutionSite->save($this->request->data);
-				
-				$institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
-				$this->Session->write('InstitutionSiteId', $institutionSiteId);
-				$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage, $institutionSiteId));
+
+				//	Includes InstitutionSite data in the request so that SecurityGroup model will distinguish that the request is from add institution form rather than add group form.
+				//	SecurityGroup model will react accordingly after saving new group data.
+				$addSecurityGroupParams = array(
+					'InstitutionSite' => $this->request->data['InstitutionSite'],
+					'SecurityGroup' => array(
+						'name' => $this->request->data['InstitutionSite']['name']
+					)
+				);
+				$this->request->data = $addSecurityGroupParams;
+
+				//	"initialise SecurityGroup model from InstitutionSitesController"
+				$this->SecurityGroup->request = $this->request;
+				$this->SecurityGroup->Message = $this->Message;
+
+				$securityGroupId = $this->SecurityGroup->add();
+				if ($securityGroupId) {
+					$this->request->data['InstitutionSite']['security_group_id'] =  $securityGroupId;
+					$result = $this->InstitutionSite->save($this->request->data);
+
+					$institutionSiteId = $result['InstitutionSite']['id'];
+
+					$addSecurityGroupParams['SecurityGroup']['id'] = $securityGroupId;
+					$addSecurityGroupParams['SecurityGroupInstitutionSite'] = array(
+						'0' => array(
+							'security_group_id' => $securityGroupId,
+							'institution_site_id' => $institutionSiteId
+						)
+					);
+					unset($addSecurityGroupParams['InstitutionSite']);
+
+					//	"Update SecurityGroup model request data from InstitutionSitesController"
+					$this->SecurityGroup->request->data = $addSecurityGroupParams;
+
+					if (!$this->SecurityGroup->updateFromInstitutionSite()) {
+						$this->Message->alert('InstitutionSite.edit_security_group.failed');
+					} else {
+						$this->Session->write('InstitutionSiteId', $institutionSiteId);
+						$this->Message->alert('InstitutionSite.add_security_group.success');
+						$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage, $institutionSiteId));
+					}
+				} else {
+					$this->Message->alert('InstitutionSite.add_security_group.failed');
+				}
 			}
 			$areaId = $this->request->data['InstitutionSite']['area_id'];
 			$areaAdministrativeId = $this->request->data['InstitutionSite']['area_administrative_id'];
@@ -464,10 +531,16 @@ class InstitutionSitesController extends AppController {
 		
 		if($this->checkUserAccess($id, 'delete')) {
 			$name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
-			//$this->InstitutionSite->delete($id);
-			if($this->InstitutionSite->delete($id)){
+			$securityGroupId = $this->InstitutionSite->field('security_group_id', array('InstitutionSite.id' => $id));
+			if($this->InstitutionSite->delete($id)) {
+				$this->InstitutionSite->SecurityGroup->delete($securityGroupId);
+				$hasMany = $this->InstitutionSite->hasMany;
+				foreach ($hasMany as $model => $attr) {
+					$this->InstitutionSite->{$model}->recursive = -1;
+					$this->InstitutionSite->{$model}->deleteAll(array("$model.institution_site_id" => $id), false);
+				}
 				$this->Utility->alert($name . ' have been deleted successfully.');
-			}else{
+			} else {
 				$this->log($this->InstitutionSite->validationErrors, 'debug');
 				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
 				$this->Message->alert('general.delete.failed');
@@ -479,7 +552,7 @@ class InstitutionSitesController extends AppController {
 			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 		}
 	}
-
+	
 	public function excel() {
 		$this->InstitutionSite->excel();
 	}

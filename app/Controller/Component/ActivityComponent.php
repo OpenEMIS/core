@@ -44,6 +44,12 @@ class ActivityComponent extends Component {
 			$this->Message->alert('general.noData');
 		}
 		$this->controller->set(compact('data', 'model'));
+
+		// Added on PHPOE-1387 as the activity.ctp could not be rendered
+		$this->controller->ControllerAction->autoRender = false;
+		$this->controller->ControllerAction->render();
+		//
+
 		$this->controller->render('/Elements/templates/activity');
 	}
 }
