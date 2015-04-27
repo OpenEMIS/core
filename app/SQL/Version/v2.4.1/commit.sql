@@ -1,3 +1,5 @@
+-- PHPOE-985
+
 -- Move the Memberships and Licenses menu items in the Staff module from General
 SELECT MIN(navigations.order) into @prevMembershipOrder FROM navigations WHERE title = 'Memberships' OR title = 'Licenses';
 UPDATE navigations SET navigations.order = navigations.order - 2 WHERE navigations.order >= @prevMembershipOrder;

@@ -1,3 +1,5 @@
+-- PHPOE-985
+
 -- reversing: need to make menu appear for student/add 
 UPDATE navigations set pattern = replace(pattern,'^edit$|^add$|' , '^edit$|') WHERE module = 'Student' AND plugin = 'Students' AND controller = 'Students' AND header = 'General' AND title = 'Overview';
 UPDATE navigations set pattern = replace(pattern,'^edit$|^add$|' , '^edit$|') WHERE module = 'Staff' AND plugin = 'Staff' AND controller = 'Staff' AND header = 'General' AND title = 'Overview';
