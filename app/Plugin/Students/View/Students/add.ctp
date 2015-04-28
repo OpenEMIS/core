@@ -36,26 +36,6 @@ echo $this->Form->create($model, $formOptions);
 		}
 		
 		echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
-
-		if ($configStudentNationality != 'Excluded') {
-			if (isset($nationalityOptions)) {
-				echo $this->Form->input('StudentNationality.0.country_id', array(
-					'label' => array('class' => 'col-md-3 control-label', 'text' => __('Nationality')),
-					'options' => $nationalityOptions, 'onchange' => "$('#reload').val('changeNationality').click()"));
-			}
-		}
-		if ($configStudentIdentity != 'Excluded') {
-			if (isset($identityTypeOptions)) {
-				$selectAndTxtOptions = array(
-					'label' => __('Identity'),
-					'selectOptions' => $identityTypeOptions,
-					'selectId' => 'StudentIdentity.0.identity_type_id',
-					'txtId' => 'StudentIdentity.0.number',
-					'txtPlaceHolder' => __('Identity Number')
-				);
-				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
-			}
-		}
 		
 		echo $this->Form->input('SecurityUser.first_name');
 		echo $this->Form->input('SecurityUser.middle_name');
@@ -79,6 +59,25 @@ echo $this->Form->create($model, $formOptions);
 			}
 			echo $this->Form->hidden('StudentContact.0.preferred', array('value' => true));
 		}
+		if ($configStudentNationality != 'Excluded') {
+			if (isset($nationalityOptions)) {
+				echo $this->Form->input('StudentNationality.0.country_id', array(
+					'label' => array('class' => 'col-md-3 control-label', 'text' => __('Nationality')),
+					'options' => $nationalityOptions, 'onchange' => "$('#reload').val('changeNationality').click()"));
+			}
+		}
+		if ($configStudentIdentity != 'Excluded') {
+			if (isset($identityTypeOptions)) {
+				$selectAndTxtOptions = array(
+					'label' => __('Identity'),
+					'selectOptions' => $identityTypeOptions,
+					'selectId' => 'StudentIdentity.0.identity_type_id',
+					'txtId' => 'StudentIdentity.0.number',
+					'txtPlaceHolder' => __('Identity Number')
+				);
+				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+			}
+		}
 		if ($configStudentSpecialNeed != 'Excluded') {
 			if (isset($specialNeedOptions)) {
 				$selectAndTxtOptions = array(
@@ -98,8 +97,8 @@ echo $this->Form->create($model, $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if (isset($this->data['security_user']['photo_name']) && isset($this->data['security_user']['photo_content'])) {
-			$imgOptions['src'] = $this->Image->getBase64($this->data['security_user']['photo_name'], $this->data['security_user']['photo_content']);
+		if (isset($this->data['SecurityUser']['photo_name']) && isset($this->data['SecurityUser']['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data['SecurityUser']['photo_name'], $this->data['SecurityUser']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
