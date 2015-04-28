@@ -959,7 +959,7 @@ class InstitutionSitesController extends AppController {
 								$colCount = 1;
 								foreach($rowInvalidCodeCols as $codeCol){
 									if($colCount == 1){
-										$rowCodeError .= ' ' . $codeCol;
+										$rowCodeError .= ': ' . $codeCol;
 									}else{
 										$rowCodeError .= ', ' . $codeCol;
 									}
@@ -1018,7 +1018,7 @@ class InstitutionSitesController extends AppController {
 										}
 
 										if($count === 1){
-											$errorStr .= ' ' . $fieldName;
+											$errorStr .= ': ' . $fieldName;
 										}else{
 											$errorStr .= ', ' . $fieldName;
 										}

@@ -119,7 +119,8 @@ class LabelHelper extends AppHelper {
 			'editable' => 'Editable',
 			'staff' => 'Staff',
 			'failed' => 'Failed',
-			'errors' => 'Errors'
+			'errors' => 'Errors',
+			'institutionsite' => 'Institution'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -745,7 +746,7 @@ class LabelHelper extends AppHelper {
 		'Import' => array(
 			'saving_failed' => 'Failed to save to database',
 			'invalid_code' => 'Invalid Code',
-			'validation_failed' => 'Validation Failed.',
+			'validation_failed' => 'Validation Failed',
 			'total_rows' => 'Total Rows',
 			'rows_imported' => 'Rows Imported',
 			'rows_updated' => 'Rows Updated',
