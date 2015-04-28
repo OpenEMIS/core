@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class MandatoryBehavior extends ModelBehavior {
 	public $currentModel;
-	public $validationModels;
+	public $validationModels = array();
 
 	public function setMandatoryModel(Model $model, $modelName) {
 		// needed for student and staff
