@@ -612,13 +612,18 @@ class StaffController extends StaffAppController {
 							$tempRow = array();
 							$originalRow = array();
 							$rowPass = true;
+							$rowInvalidCodeCols = array();
 							for ($col = 0; $col < $totalColumns; ++$col) {
 								$cell = $sheet->getCellByColumnAndRow($col, $row);
-								$cellValue = $cell->getValue();
+								$originalValue = $cell->getValue();
+								$cellValue = $originalValue;
+								if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean'){
+									$cellValue = (string) $cellValue;
+								}
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
 								$foreignKey = $excelMappingObj['foreign_key'];
 								$columnName = $columns[$col];
-								$originalRow[$col] = $cellValue;
+								$originalRow[$col] = $originalValue;
 								$val = $cellValue;
 								
 								if($row > 1){
@@ -641,7 +646,7 @@ class StaffController extends StaffAppController {
 											} else {
 												if($row !== 1 && $cellValue != ''){
 													$rowPass = false;
-													$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
+													$rowInvalidCodeCols[] = $translatedCol;
 												}
 											}
 										}
@@ -653,7 +658,7 @@ class StaffController extends StaffAppController {
 										}else{
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
-												$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
+												$rowInvalidCodeCols[] = $translatedCol;
 											}
 										}
 									}
@@ -663,9 +668,20 @@ class StaffController extends StaffAppController {
 							}
 
 							if(!$rowPass){
+								$rowCodeError = $this->{$model}->getExcelLabel('Import.invalid_code');
+								$colCount = 1;
+								foreach($rowInvalidCodeCols as $codeCol){
+									if($colCount == 1){
+										$rowCodeError .= ' ' . $codeCol;
+									}else{
+										$rowCodeError .= ', ' . $codeCol;
+									}
+									$colCount ++;
+								}
+								
 								$dataFailed[] = array(
 									'row_number' => $row,
-									'error' => $codeError,
+									'error' => $rowCodeError,
 									'data' => $originalRow
 								);
 								continue;
