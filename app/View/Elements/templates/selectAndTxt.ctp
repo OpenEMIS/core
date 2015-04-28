@@ -1,14 +1,15 @@
-<?php 
+<?php
+$labelOptions = $this->FormUtility->getLabelOptions();
 	echo $this->Form->input($selectId, 
 			array(
-				'label' => array('class' => 'col-md-3 control-label', 'text' => $label),
+				'label' => array('class' => $labelOptions['class'], 'text' => $label),
 				'options' => $selectOptions
 				)
 			);
 	echo $this->Form->input($txtId,
 		array(
 			'placeholder' => $txtPlaceHolder,
-			'label' => array('class' => 'col-md-3 control-label', 'text' => '')
+			'label' => array('class' => $labelOptions['class'], 'text' => '')
 		)
 	);  
 ?>

@@ -102,7 +102,6 @@ class StaffContact extends StaffAppModel {
 
 	public function beforeValidate($options = array()) {
 		if (isset($this->data[$this->alias]['contact_option_id'])) {
-			pr($this->data[$this->alias]);
 			$removeValidation = (array_key_exists('removeValidation', $this->data[$this->alias]))? $this->data[$this->alias]['removeValidation']: false;
 
 			if (!$removeValidation) {
