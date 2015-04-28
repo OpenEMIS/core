@@ -110,6 +110,13 @@ class ReportComponent extends Component {
 			$format = $request->data['Report']['format'];
 			$period = null;
 			$params = array('model' => $features[$selectedFeature]['model'], 'format' => $format, 'options' => array());
+			if (array_key_exists('template', $request->data['Report'])) {
+				$SurveyTemplate = ClassRegistry::init('Surveys.SurveyTemplate');
+				$templateId = $request->data['Report']['template'];
+				$template = $SurveyTemplate->field('name', array('id' => $templateId));
+				$name .= ' (' . $template . ')';
+				$params['options']['conditions'] = array('SurveyTemplate.id' => $templateId);
+			}
 			if (array_key_exists('period', $request->data['Report'])) {
 				$periodId = $request->data['Report']['period'];
 				$period = $this->Period->field('name', array('id' => $periodId));

@@ -55,6 +55,23 @@ $this->start('contentBody');
 					
 				</div>
 
+				<?php if (isset($feature['template'])) : ?>
+					<?php if (!array_key_exists('template', $feature) || (array_key_exists('template', $feature) && $feature['template'] !== false)) : ?>
+
+					<div class="step-pane alert" data-step="<?php echo $i++ ?>">
+						<div class="row">
+							<div class="col-md-1"><label class="control-label">Templates</label></div>
+							<div class="col-md-5">
+							<?php
+							echo $this->Form->input('template', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $templateOptions));
+							?>
+							</div>
+						</div>
+					</div>
+
+					<?php endif ?>
+				<?php endif ?>
+
 				<?php if (!array_key_exists('period', $feature) || (array_key_exists('period', $feature) && $feature['period'] !== false)) : ?>
 
 				<div class="step-pane alert" data-step="<?php echo $i++ ?>">

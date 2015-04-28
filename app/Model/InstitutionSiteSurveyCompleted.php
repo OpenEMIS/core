@@ -20,6 +20,7 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 	public $useTable = 'institution_site_surveys';
 
 	public $actsAs = array(
+		'Excel',
 		'ControllerAction2',
 		'Surveys.Survey' => array(
 			'module' => 'Institution',
@@ -36,6 +37,10 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
+		'InstitutionSite' => array(
+			'className' => 'InstitutionSite',
+			'fields' => array('InstitutionSite.id', 'InstitutionSite.code', 'InstitutionSite.name')
+		),
 		'AcademicPeriod' => array(
 			'className' => 'AcademicPeriod',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
@@ -56,6 +61,35 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		'InstitutionSiteSurveyAnswer',
 		'InstitutionSiteSurveyTableCell'
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$_conditions = parent::excelGetConditions();
+		$conditions = array('InstitutionSiteSurveyCompleted.status' => 2);
+		$conditions = array_merge($_conditions, $conditions);
+		return $conditions;
+	}
+
+	public function excelGetModels() {
+		$models = parent::excelGetModels();
+		$models = array(
+			array(
+				'model' => $this,
+				'include' => array(
+					'header' => 'Surveys.SurveyQuestion',
+					'data' => 'InstitutionSiteSurveyAnswer',
+					'dataOptions' => 'Surveys.SurveyQuestionChoice'
+				)
+			)
+		);
+		return $models;
+	}
+
+	public function excelCustomFieldFindOptions() {
+		pr(222);
+		return $options;
+	}
+	/* End Excel Behaviour */
 
 	public function beforeAction() {
 		parent::beforeAction();
