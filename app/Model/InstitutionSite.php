@@ -81,19 +81,19 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Name'
+				'messageCode' => 'general'
 			)
 		),
 		'code' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Code'
+				'messageCode' => 'general'
 			),
 			'ruleUnique' => array(
         		'rule' => 'isUnique',
         		'required' => true,
-        		'message' => 'Please enter a unique Code'
+        		'messageCode' => 'general'
 		    )
 		),
 		'address' => array(
@@ -105,7 +105,7 @@ class InstitutionSite extends AppModel {
 			'ruleMaximum' => array(
 				'rule' => array('maxLength', 255),
 				'required' => true,
-				'message' => 'Please eneter an address within 255 characters'
+				'message' => 'Please enter an address within 255 characters'
 			)
 		),
 		'postal_code' => array(
