@@ -176,14 +176,18 @@ class InstitutionSite extends AppModel {
 			)
 		),
 		'longitude' => array(
+			'ruleLongitude' => array(
 				'rule' => array('checkLongitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Longitude'
+			)
 		),
 		'latitude' => array(
+			'ruleLatitude' => array(
 				'rule' => array('checkLatitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Latitude'
+			)
 		),
 		'institution_site_provider_id' => array(
 			'ruleRequired' => array(

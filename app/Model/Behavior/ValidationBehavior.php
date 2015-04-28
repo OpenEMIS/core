@@ -22,26 +22,43 @@ class ValidationBehavior extends ModelBehavior {
 		}
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
 
-		//$this->loadValidationMessages($Model);
+		$this->loadValidationMessages($Model);
 	}
 
 	public function loadValidationMessages($model) {
 		$alias = $model->alias;
+		//pr($model->name);
+		//pr($model->validate);
 
-		if (!empty($model->validate)) {pr($model->validate);
-			foreach ($model->validate as $field => $rules) {pr($field);
+		if (!empty($model->validate)) {
+			foreach ($model->validate as $field => $rules) {
 				foreach ($rules as $rule => $attr) {
-					$code = $model->alias . '.' . $field . '.' . $rule;
-					if (isset($attr['messageCode'])) {
-						$code = $attr['messageCode'] . '.' . $field . '.' . $rule;
-					}
-					$message = $this->get($code);
 					if (!isset($attr['message'])) {
+						$code = $model->alias . '.' . $field . '.' . $rule;
+						if (isset($attr['messageCode'])) {
+							$code = $attr['messageCode'] . '.' . $field . '.' . $rule;
+						}
+						$message = $this->get($code);
 						$model->validate[$field][$rule]['message'] = $message;
 					}
 				}
 			}
 		}
+	}
+
+	public function get($code) {
+		$index = explode('.', $code);
+		$message = $this->validationMessages;
+		
+		foreach ($index as $i) {
+			if (isset($message[$i])) {
+				$message = $message[$i];
+			} else {
+				$message = '[Message Not Found]';
+				break;
+			}
+		}
+		return !is_array($message) ? __($message) : $message;
 	}
 
 	public function compareDate(Model $model, $field = array(), $compareField = null, $equals = false) {
