@@ -25,7 +25,7 @@ class SecurityGroupUser extends AppModel {
 
 	public $validate = array(
 	    'security_role_id' => array(
-	        'unique' => array(
+	        'ruleUnique' => array(
 	            'rule' => array('checkUnique', array('security_group_id', 'security_user_id', 'security_role_id'), false),
 	            'message' => 'Duplicate User and Role.'
 	        )
