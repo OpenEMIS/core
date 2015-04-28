@@ -637,7 +637,7 @@ class StudentsController extends StudentsAppController {
 								$colCount = 1;
 								foreach($rowInvalidCodeCols as $codeCol){
 									if($colCount == 1){
-										$rowCodeError .= ' ' . $codeCol;
+										$rowCodeError .= ': ' . $codeCol;
 									}else{
 										$rowCodeError .= ', ' . $codeCol;
 									}
@@ -723,7 +723,7 @@ class StudentsController extends StudentsAppController {
 										}
 
 										if($count === 1){
-											$errorStr .= ' ' . $fieldName;
+											$errorStr .= ': ' . $fieldName;
 										}else{
 											$errorStr .= ', ' . $fieldName;
 										}

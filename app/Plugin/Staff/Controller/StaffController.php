@@ -672,7 +672,7 @@ class StaffController extends StaffAppController {
 								$colCount = 1;
 								foreach($rowInvalidCodeCols as $codeCol){
 									if($colCount == 1){
-										$rowCodeError .= ' ' . $codeCol;
+										$rowCodeError .= ': ' . $codeCol;
 									}else{
 										$rowCodeError .= ', ' . $codeCol;
 									}
@@ -758,7 +758,7 @@ class StaffController extends StaffAppController {
 										}
 
 										if($count === 1){
-											$errorStr .= ' ' . $fieldName;
+											$errorStr .= ': ' . $fieldName;
 										}else{
 											$errorStr .= ', ' . $fieldName;
 										}
