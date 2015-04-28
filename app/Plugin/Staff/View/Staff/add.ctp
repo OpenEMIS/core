@@ -98,8 +98,8 @@ echo $this->Form->create($model, $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if (isset($this->data['security_user']['photo_name']) && isset($this->data['security_user']['photo_content'])) {
-			$imgOptions['src'] = $this->Image->getBase64($this->data['security_user']['photo_name'], $this->data['security_user']['photo_content']);
+		if (isset($this->data['SecurityUser']['photo_name']) && isset($this->data['SecurityUser']['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data['SecurityUser']['photo_name'], $this->data['SecurityUser']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
