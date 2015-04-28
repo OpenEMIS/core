@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class ConfigItem extends AppModel {
 	public $validate = array(
-		'image', array(
+		'image' => array(
 			'ruleImage' => array(
 				'rule'	=> array('extension', array('gif', 'jpeg', 'png', 'jpg')),
 				'message' => 'Please supply a valid image.'
