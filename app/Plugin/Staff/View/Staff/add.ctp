@@ -36,26 +36,6 @@ echo $this->Form->create($model, $formOptions);
 		}
 		
 		echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
-
-		if ($configStaffNationality != 'Excluded') {
-			if (isset($nationalityOptions)) {
-				echo $this->Form->input('StaffNationality.0.country_id', array(
-					'label' => array('class' => 'col-md-3 control-label', 'text' => __('Nationality')),
-					'options' => $nationalityOptions, 'onchange' => "$('#reload').val('changeNationality').click()"));
-			}
-		}
-		if ($configStaffIdentity != 'Excluded') {
-			if (isset($identityTypeOptions)) {
-				$selectAndTxtOptions = array(
-					'label' => __('Identity'),
-					'selectOptions' => $identityTypeOptions,
-					'selectId' => 'StaffIdentity.0.identity_type_id',
-					'txtId' => 'StaffIdentity.0.number',
-					'txtPlaceHolder' => __('Identity Number')
-				);
-				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
-			}
-		}
 		
 		echo $this->Form->input('SecurityUser.first_name');
 		echo $this->Form->input('SecurityUser.middle_name');
@@ -78,6 +58,25 @@ echo $this->Form->create($model, $formOptions);
 				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
 			}
 			echo $this->Form->hidden('StaffContact.0.preferred', array('value' => true));
+		}
+		if ($configStaffNationality != 'Excluded') {
+			if (isset($nationalityOptions)) {
+				echo $this->Form->input('StaffNationality.0.country_id', array(
+					'label' => array('class' => 'col-md-3 control-label', 'text' => __('Nationality')),
+					'options' => $nationalityOptions, 'onchange' => "$('#reload').val('changeNationality').click()"));
+			}
+		}
+		if ($configStaffIdentity != 'Excluded') {
+			if (isset($identityTypeOptions)) {
+				$selectAndTxtOptions = array(
+					'label' => __('Identity'),
+					'selectOptions' => $identityTypeOptions,
+					'selectId' => 'StaffIdentity.0.identity_type_id',
+					'txtId' => 'StaffIdentity.0.number',
+					'txtPlaceHolder' => __('Identity Number')
+				);
+				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+			}
 		}
 		if ($configStaffSpecialNeed != 'Excluded') {
 			if (isset($specialNeedOptions)) {
