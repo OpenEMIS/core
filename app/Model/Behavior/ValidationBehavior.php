@@ -21,6 +21,27 @@ class ValidationBehavior extends ModelBehavior {
 			$this->settings[$Model->alias] = array();
 		}
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
+
+		//$this->loadValidationMessages($Model);
+	}
+
+	public function loadValidationMessages($model) {
+		$alias = $model->alias;
+
+		if (!empty($model->validate)) {pr($model->validate);
+			foreach ($model->validate as $field => $rules) {pr($field);
+				foreach ($rules as $rule => $attr) {
+					$code = $model->alias . '.' . $field . '.' . $rule;
+					if (isset($attr['messageCode'])) {
+						$code = $attr['messageCode'] . '.' . $field . '.' . $rule;
+					}
+					$message = $this->get($code);
+					if (!isset($attr['message'])) {
+						$model->validate[$field][$rule]['message'] = $message;
+					}
+				}
+			}
+		}
 	}
 
 	public function compareDate(Model $model, $field = array(), $compareField = null, $equals = false) {
@@ -72,4 +93,18 @@ class ValidationBehavior extends ModelBehavior {
 		return true;		
 	}
 
+	public $validationMessages = array(
+		'general' => array(
+			'name' => array('ruleRequired' => 'Please enter a name'),
+			'code' => array(
+				'ruleRequired' => 'Please enter a code',
+				'ruleUnique' => 'Please enter a unique code'
+			),
+			'title' => array('ruleRequired' => 'Please enter a title')
+		),
+
+		'InstitutionSite' => array(
+			
+		)
+	);
 }

@@ -35,16 +35,29 @@ class SecurityGroup extends AppModel {
 	public $hasMany = array(
 		'SecurityGroupUser',
 		'SecurityGroupArea',
-		'SecurityGroupInstitutionSite',
+		//'SecurityGroupInstitutionSite',
 		'SecurityRole'
+	);
+
+	public $hasOne = array(
+		'InstitutionSite'
+	);
+
+	public $hasAndBelongsToMany = array(
+		'GroupInstitutionSite' => array(
+			'className' => 'InstitutionSite',
+			'joinTable' => 'security_group_institution_sites',
+			'order' => array('GroupInstitutionSite.name')
+		)
 	);
 	
 	public $validate = array(
 		'name' => array(
-			'notEmpty' => array(
+			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a name'
+				'messageCode' => 'general'
+				//'message' => 'Please enter a name'
 			)
 		)
 	);
@@ -300,8 +313,9 @@ class SecurityGroup extends AppModel {
 	
 	public function view($id) {
 		if ($this->exists($id)) {
-			$this->recursive = 0;
+			//$this->recursive = 0;
 			$data = $this->findById($id);
+			pr($data);
 			$data[$this->alias]['SecurityGroupArea'] = $this->SecurityGroupArea->findAllBySecurityGroupId($id, null, array('Area.order'));
 			$data[$this->alias]['SecurityGroupInstitutionSite'] = $this->SecurityGroupInstitutionSite->findAllBySecurityGroupId($id, null, array('InstitutionSite.name'));
 			$data[$this->alias]['SecurityGroupUser'] = $this->SecurityGroupUser->findAllBySecurityGroupId($id, null, array('SecurityUser.first_name'));
