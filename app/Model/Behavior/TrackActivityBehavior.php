@@ -27,10 +27,11 @@ class TrackActivityBehavior extends ModelBehavior {
 			);
 		}
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
+		$Model->trackActivity = true;
 	}
 	
 	public function beforeSave(Model $model, $options = array()) {
-		if (!empty($model->id)) { // edit operation
+		if (!empty($model->id) && $model->trackActivity) { // edit operation
 			$model->recursive = -1;
 		    $oldData = $model->findById($model->id);
 		    $data = $model->data;
