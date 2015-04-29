@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class ContactType extends AppModel {
 	public $actsAs = array('FieldOption');
-	public $hasMany = array('StudentContact', 'StaffContact', 'TeacherContact');
+	public $hasMany = array('StudentContact', 'StaffContact');
 	public $belongsTo = array(
 		'ContactOption',
 		'ModifiedUser' => array(

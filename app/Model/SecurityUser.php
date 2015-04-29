@@ -27,7 +27,8 @@ class SecurityUser extends AppModel {
 				'allowEmpty' => true
 			)
 		),
-		'ControllerAction2'
+		'ControllerAction2',
+		'Mandatory'
 	);
 	public $belongsTo = array(
 		'Gender',
@@ -171,6 +172,10 @@ class SecurityUser extends AppModel {
 				'on' => 'update',
 				'message' => 'Incorrect password.'
 			),
+			'ruleCheckUsernameExists' => array(
+				'rule' => array('checkUsernameExists'),
+				'message' => 'Please enter a valid password'
+			),
 			'ruleMinLength' => array(
 				'rule' => array('minLength', 6),
 				'on' => 'create',
@@ -203,6 +208,20 @@ class SecurityUser extends AppModel {
 			)
 		)
 	);
+
+	public function checkUsernameExists($check) {
+		$check = reset($check);
+		if (array_key_exists('username', $this->data[$this->alias])) {
+			if (!empty($this->data[$this->alias]['username'])) {
+				if (!empty($check)) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	public function comparePasswords() {
 		if(strcmp($this->data[$this->alias]['newPassword'], $this->data[$this->alias]['retypeNewPassword']) == 0 ) {
@@ -287,13 +306,32 @@ class SecurityUser extends AppModel {
 		}
 		return $validate;
 	}
+
+	public function beforeValidate($options=array()) {
+		if (!$this->id && !isset($this->data[$this->alias][$this->primaryKey])) {
+			if (array_key_exists('username', $this->data[$this->alias])) {
+				if (empty($this->data[$this->alias]['username'])) {
+					$this->data[$this->alias]['username'] = null;
+					$this->validator()->remove('username', 'ruleUnique');
+				}
+			}
+
+			if (array_key_exists('password', $this->data[$this->alias])) {
+				if (empty($this->data[$this->alias]['password'])) {
+					$this->data[$this->alias]['password'] = null;
+				}
+			}
+		}
+	}
 	
 	public function beforeSave($options = array()) {
 		parent::beforeSave();
 		if (!$this->id && !isset($this->data[$this->alias][$this->primaryKey])) {
 			// insert
 			if (array_key_exists('password', $this->data[$this->alias])) {
-				$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
+				if (!is_null($this->data[$this->alias]['password'])) {
+					$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
+				}
 			}
 		} else {
 			// edit - already handled in authenticate no action required
