@@ -25,6 +25,22 @@ class MandatoryBehavior extends ModelBehavior {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 		$this->validationModels = array();
 		switch ($this->currentModel) {
+			case 'Student':
+				$this->validationModels = array(
+					'StudentIdentity' => array(
+						'fieldName' => array('number')
+					), 
+					'StudentNationality' => array(
+						'fieldName' => array(),
+					), 
+					'StudentContact' => array(
+						'fieldName' => array('value')
+					), 
+					'StudentSpecialNeed' => array(
+						'fieldName' => array('comment')
+					)
+				);
+				break;
 			case 'Staff':
 				$this->validationModels = array(
 					'StaffIdentity' => array(
