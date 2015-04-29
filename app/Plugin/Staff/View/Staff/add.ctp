@@ -18,7 +18,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'add'));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'add'));
 $labelOptions = $formOptions['inputDefaults']['label'];
 $formOptions['id'] = $model;
 $formOptions['type'] = 'file';
