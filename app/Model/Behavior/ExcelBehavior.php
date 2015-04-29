@@ -413,26 +413,57 @@ class ExcelBehavior extends ModelBehavior {
 				$headerModelObj->contain($this->include['dataOptions']);
 				$fieldData = $headerModelObj->findById($id);
 				//pr($fieldData);
-				if($fieldData[$headerModel]['type'] == 3 || $fieldData[$headerModel]['type'] == 4){
-					if($fieldData[$headerModel]['type'] == 3){
-						foreach($fieldData[$this->include['dataOptions']] as $option){
-							if($option['id'] == $row['value']){
-								$values[] = $option['value'];
-								break 2;
-							}
-						}
-					}else{
-						foreach($fieldData[$this->include['dataOptions']] as $option){
-							if($option['id'] == $row['value']){
-								if(!empty($option['value'])){
+				if (array_key_exists('value', $row)) {	//old custom field structure
+					if($fieldData[$headerModel]['type'] == 3 || $fieldData[$headerModel]['type'] == 4){
+						if($fieldData[$headerModel]['type'] == 3){
+							foreach($fieldData[$this->include['dataOptions']] as $option){
+								if($option['id'] == $row['value']){
 									$values[] = $option['value'];
+									break 2;
+								}
+							}
+						}else{
+							foreach($fieldData[$this->include['dataOptions']] as $option){
+								if($option['id'] == $row['value']){
+									if(!empty($option['value'])){
+										$values[] = $option['value'];
+									}
 								}
 							}
 						}
+					}else{
+						$values[] = $row['value'];
+						break;
 					}
-				}else{
-					$values[] = $row['value'];
-					break;
+				} else {	//new custom field structure
+					switch($fieldData[$headerModel]['type']) {
+						case 2:
+							$values[] = $row['text_value'];
+							break;
+						case 3:
+							foreach($fieldData[$this->include['dataOptions']] as $option){
+								if($option['id'] == $row['int_value']){
+									$values[] = $option['value'];
+									break;
+								}
+							}
+							break;
+						case 4:
+							foreach($fieldData[$this->include['dataOptions']] as $option){
+								if($option['id'] == $row['int_value']){
+									if(!empty($option['value'])){
+										$values[] = $option['value'];
+									}
+								}
+							}
+							break;
+						case 5:
+							$values[] = $row['textarea_value'];
+							break;
+						case 6:
+							$values[] = $row['int_value'];
+							break;
+					}
 				}
 			}
 		}
@@ -495,7 +526,7 @@ class ExcelBehavior extends ModelBehavior {
 			),
 			'order' => $headerModel->alias . '.order'
 		);
-		
+
 		$options = $headerModel->excelCustomFieldFindOptions($options);
 		$customField = $headerModel->find('all', $options);
 		

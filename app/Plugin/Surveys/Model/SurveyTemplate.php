@@ -15,10 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class SurveyTemplate extends SurveysAppModel {
-	public $actsAs = array(
-		'Excel'
-	);
-
 	public $belongsTo = array(
 		'Surveys.SurveyModule',
 		'ModifiedUser' => array(
