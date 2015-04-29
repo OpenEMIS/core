@@ -987,11 +987,7 @@ class InstitutionSitesController extends AppController {
 								if ($this->{$model}->save($tempRow)) {
 									$totalImported++;
 								} else {
-									$dataFailed[] = array(
-										'row_number' => $row,
-										'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
-										'data' => $originalRow
-									);
+									$totalUpdated++;
 								}
 							} else {
 								$validationErrors = $this->{$model}->validationErrors;

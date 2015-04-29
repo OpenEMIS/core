@@ -32,11 +32,11 @@ class SecurityUser extends AppModel {
 	public $belongsTo = array(
 		'Gender',
 		'AddressArea' => array(
-			'className' => 'Area',
+			'className' => 'AreaAdministrative',
 			'foreignKey' => 'address_area_id'
 		),
 		'BirthplaceArea' => array(
-			'className' => 'Area',
+			'className' => 'AreaAdministrative',
 			'foreignKey' => 'birthplace_area_id'
 		),
 		'ModifiedUser' => array(
