@@ -1,4 +1,4 @@
-<!-- 	<?php
+<?php
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
@@ -14,10 +14,6 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'staff');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if (!$WizardMode) {
-	echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
-}
 $this->end();
 
 $this->start('contentBody');
@@ -39,25 +35,62 @@ echo $this->Form->create($model, $formOptions);
 			echo $this->Form->hidden('id', array('value' => $this->data[$model]['id']));
 		}
 		
-		if ($autoid=='') {
-			$arrIdNo = array_merge(array('label' => $openEmisIdLabel),$arrIdNo);
-			echo $this->Form->input('openemis_no', $arrIdNo);
-		} else {
-			if ($this->Session->check('Staff.id')) { 
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel));
-			} else {
-				echo $this->Form->input('openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
+		echo $this->Form->input('SecurityUser.openemis_no', array('label' => $openEmisIdLabel, 'value' => $autoid, 'readOnly' => true));
+		
+		echo $this->Form->input('SecurityUser.first_name');
+		echo $this->Form->input('SecurityUser.middle_name');
+		echo $this->Form->input('SecurityUser.third_name');
+		echo $this->Form->input('SecurityUser.last_name');
+		echo $this->Form->input('SecurityUser.preferred_name');
+		echo $this->Form->input('SecurityUser.gender_id', array('options' => $genderOptions));
+		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
+		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
+
+		if ($configStaffContact != 'Excluded') {
+			if (isset($contactOptions)) {
+				$selectAndTxtOptions = array(
+					'label' => __('Contact'),
+					'selectOptions' => $contactOptions,
+					'selectId' => 'StaffContact.0.contact_type_id',
+					'txtId' => 'StaffContact.0.value',
+					'txtPlaceHolder' => __('Value')
+				);
+				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+			}
+			echo $this->Form->hidden('StaffContact.0.preferred', array('value' => true));
+		}
+		if ($configStaffNationality != 'Excluded') {
+			if (isset($nationalityOptions)) {
+				echo $this->Form->input('StaffNationality.0.country_id', array(
+					'label' => array('class' => 'col-md-3 control-label', 'text' => __('Nationality')),
+					'options' => $nationalityOptions, 'onchange' => "$('#reload').val('changeNationality').click()"));
 			}
 		}
-		
-		echo $this->Form->input('first_name');
-		echo $this->Form->input('middle_name');
-		echo $this->Form->input('third_name');
-		echo $this->Form->input('last_name');
-		echo $this->Form->input('preferred_name');
-		echo $this->Form->input('gender_id', array('options' => $genderOptions));
-		$tempDob = isset($this->data['SecurityUser']['date_of_birth']) ? array('data-date' => $this->data['SecurityUser']['date_of_birth']) : array();
-		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
+		if ($configStaffIdentity != 'Excluded') {
+			if (isset($identityTypeOptions)) {
+				$selectAndTxtOptions = array(
+					'label' => __('Identity'),
+					'selectOptions' => $identityTypeOptions,
+					'selectId' => 'StaffIdentity.0.identity_type_id',
+					'txtId' => 'StaffIdentity.0.number',
+					'txtPlaceHolder' => __('Identity Number')
+				);
+				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+			}
+		}
+		if ($configStaffSpecialNeed != 'Excluded') {
+			if (isset($specialNeedOptions)) {
+				$selectAndTxtOptions = array(
+					'label' => __('Special Need'),
+					'selectOptions' => $specialNeedOptions,
+					'selectId' => 'StaffSpecialNeed.0.special_need_type_id',
+					'txtId' => 'StaffSpecialNeed.0.comment',
+					'txtPlaceHolder' => __('Comment')
+				);
+				echo $this->element('templates/selectAndTxt', $selectAndTxtOptions);
+				echo $this->Form->hidden('StaffSpecialNeed.0.special_need_date', array('value' => date("Y-m-d")));
+			}
+		}
 		
 		$imgOptions = array();
 		$imgOptions['field'] = 'photo_content';
@@ -80,9 +113,9 @@ echo $this->Form->create($model, $formOptions);
 <fieldset class="section_break">
 	<legend><?php echo __('Address'); ?></legend>
 	<?php 
-		echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)'));
-		echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');"));
-		$tempPostCode = isset($this->data['SecurityUser']['postal_code'])?$this->data['SecurityUser']['postal_code'] : '';
+		echo $this->Form->input('SecurityUser.address', array('onkeyup' => 'utility.charLimit(this)'));
+		echo $this->Form->input('SecurityUser.postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');"));
+		$tempPostCode = isset($this->data[$model]['postal_code'])?$this->data[$model]['postal_code'] : '';
 		echo $this->Form->hidden(null, array('id'=>'validate_staff_postal_code', 'name' => 'validate_staff_postal_code', 'value' => $tempPostCode));
 	?>
 </fieldset>
@@ -97,13 +130,17 @@ echo $this->Form->create($model, $formOptions);
 	<?php echo $this->FormUtility->areapicker('birthplace_area_id', array('id' => 'area_birthplace_picker', 'model' => 'AreaAdministrative', 'value' => $birthplaceAreaId)); ?>
 </fieldset>
 
+<fieldset class="section_break">
+	<legend><?php echo __('Login'); ?></legend>
+	<?php 
+		echo $this->Form->input('SecurityUser.username');
+		echo $this->Form->input('SecurityUser.password');
+	 ?>
+</fieldset>
+
 <?php 
-if (isset($WizardMode) && $WizardMode) {
-	echo $this->FormUtility->getWizardButtons($WizardButtons);
-} else {
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
-}
+echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'index')));
 echo $this->Form->end();
 $this->end();
 ?>
- -->
