@@ -99,3 +99,9 @@ INSERT INTO `security_functions` (
 VALUES (
 NULL , 'Generate', 'SurveyReports', 'Reports', 'Surveys', '-1', 'generate', @orderOfYearBookSecurity, '1', '1', '0000-00-00 00:00:00'
 );
+
+--
+-- 3. security_functions
+--
+
+UPDATE `security_functions` SET `_execute` = '_view:InstitutionSiteSurveyCompleted.excel' WHERE `controller` LIKE 'InstitutionSites' AND `module` LIKE 'Institutions' AND `category` LIKE 'Surveys' AND `name` LIKE 'Completed';

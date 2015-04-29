@@ -46,10 +46,7 @@ class SurveyReportsController extends SurveysAppController {
 	public function generate($selectedFeature=0) {
 		$i=0;
 		$features = array(
-			array('name' => __('Templates'), 'model' => 'Surveys.SurveyTemplate', 'period' => false),
-			array('name' => __('Questions'), 'model' => 'Surveys.SurveyQuestion', 'template' => true, 'period' => false),
-			array('name' => __('Answers'), 'model' => 'InstitutionSiteSurveyCompleted', 'template' => true, 'period' => false)
-			//array('name' => __('Answers'), 'model' => 'InstitutionSiteSurveyAnswer', 'template' => true, 'period' => false)
+			array('name' => __('Institution'), 'model' => 'InstitutionSiteSurveyCompleted', 'survey_template' => true, 'period' => false)
 		);
 
 		foreach ($features as $i => $feature) {
@@ -57,15 +54,13 @@ class SurveyReportsController extends SurveysAppController {
 			$features[$i]['selected'] = ($selectedFeature == $i);
 		}
 
-		if ($selectedFeature == 1 || $selectedFeature == 2) {
-			$steps = array(
-				'feature' => __('Feature'),
-				'template' => __('Templates'),
-				'period' => __('Period'),
-				'format' => __('Format')
-			);
-			$this->set('steps', $steps);
-		}
+		$steps = array(
+			'feature' => __('Feature'),
+			'survey_template' => __('Templates'),
+			'period' => __('Period'),
+			'format' => __('Format')
+		);
+		$this->set('steps', $steps);
 
 		$this->Report->generate($features, $selectedFeature);
 	}

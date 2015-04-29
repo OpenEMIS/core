@@ -21,3 +21,9 @@ SET @orderOfYearBookSecurity := 0;
 SELECT `order` INTO @orderOfYearBookSecurity FROM `security_functions` WHERE `controller` LIKE 'Reports' AND `module` LIKE 'Reports' AND `category` LIKE 'Yearbook' AND `name` LIKE 'General';
 
 UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` >= @orderOfYearBookSecurity;
+
+--
+-- 3. security_functions
+--
+
+UPDATE `security_functions` SET `_execute` = NULL WHERE `controller` LIKE 'InstitutionSites' AND `module` LIKE 'Institutions' AND `category` LIKE 'Surveys' AND `name` LIKE 'Completed';

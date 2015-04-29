@@ -38,7 +38,7 @@ $this->start('contentBody');
 				
 				<div class="step-pane active alert" data-step="<?php echo $i++ ?>">
 					<div class="row">
-						<div class="col-md-1"><label class="control-label">Feature</label></div>
+						<div class="col-md-1"><label class="control-label"><?php echo __('Feature'); ?></label></div>
 						<div class="col-md-5">
 						<?php
 						echo $this->Form->input('feature', array(
@@ -55,15 +55,15 @@ $this->start('contentBody');
 					
 				</div>
 
-				<?php if (isset($feature['template'])) : ?>
-					<?php if (!array_key_exists('template', $feature) || (array_key_exists('template', $feature) && $feature['template'] !== false)) : ?>
+				<?php if (isset($feature['survey_template'])) : ?>
+					<?php if (!array_key_exists('survey_template', $feature) || (array_key_exists('survey_template', $feature) && $feature['survey_template'] !== false)) : ?>
 
 					<div class="step-pane alert" data-step="<?php echo $i++ ?>">
 						<div class="row">
-							<div class="col-md-1"><label class="control-label">Templates</label></div>
+							<div class="col-md-1"><label class="control-label"><?php echo __('Templates'); ?></label></div>
 							<div class="col-md-5">
 							<?php
-							echo $this->Form->input('template', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $templateOptions));
+							echo $this->Form->input('survey_template', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $templateOptions));
 							?>
 							</div>
 						</div>
@@ -76,7 +76,7 @@ $this->start('contentBody');
 
 				<div class="step-pane alert" data-step="<?php echo $i++ ?>">
 					<div class="row">
-						<div class="col-md-1"><label class="control-label">Period</label></div>
+						<div class="col-md-1"><label class="control-label"><?php echo __('Period'); ?></label></div>
 						<div class="col-md-5">
 						<?php
 						echo $this->Form->input('period', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $periodOptions));
@@ -89,7 +89,7 @@ $this->start('contentBody');
 
 				<div class="step-pane alert" data-step="<?php echo $i++ ?>">
 					<div class="row">
-						<div class="col-md-1"><label class="control-label">Format</label></div>
+						<div class="col-md-1"><label class="control-label"><?php echo __('Format'); ?></label></div>
 						<div class="col-md-5">
 						<?php
 						echo $this->Form->input('format', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $formatOptions));
