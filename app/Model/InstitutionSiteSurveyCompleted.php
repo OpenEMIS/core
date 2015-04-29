@@ -67,11 +67,12 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		$_conditions = parent::excelGetConditions();
 
 		$conditions = array();
-		if ($this->Session->check($this->alias.'.id')) {
-			$id = $this->Session->read($this->alias.'.id');
-			$surveyTemplateId = $this->field('survey_template_id', array('id' => $id));
+		if (CakeSession::check('InstitutionSiteSurveyCompleted.id')) {
+			$id = CakeSession::read('InstitutionSiteSurveyCompleted.id');
+			$InstitutionSiteSurveyCompleted = ClassRegistry::init('InstitutionSiteSurveyCompleted');
+			$surveyTemplateId = $InstitutionSiteSurveyCompleted->field('survey_template_id', array('id' => $id));
 			$conditions = array(
-				$this->alias.'.id' => $id,
+				'InstitutionSiteSurveyCompleted.id' => $id,
 				'SurveyTemplate.id' => $surveyTemplateId
 			);
 		}

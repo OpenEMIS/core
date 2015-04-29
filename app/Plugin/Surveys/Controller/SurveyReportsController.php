@@ -46,7 +46,7 @@ class SurveyReportsController extends SurveysAppController {
 	public function generate($selectedFeature=0) {
 		$i=0;
 		$features = array(
-			array('name' => __('Institution'), 'model' => 'InstitutionSiteSurveyCompleted', 'survey_template' => true, 'period' => false)
+			array('name' => __('Institution'), 'model' => 'InstitutionSiteSurveyCompleted', 'survey_template' => true, 'period' => true)
 		);
 
 		foreach ($features as $i => $feature) {
