@@ -9,3 +9,5 @@ UPDATE config_items SET type = "Wizard - Add New Student" WHERE type = "Add New 
 
 -- making sure left nav is correct
 UPDATE navigations SET visible = '0' WHERE navigations.controller = 'Students' AND navigations.title = 'Add new Student';
+
+UPDATE navigations SET title = 'Add Student' WHERE navigations.controller = 'Students' AND navigations.title = 'Add Existing Student';
