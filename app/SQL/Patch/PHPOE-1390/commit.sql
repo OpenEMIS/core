@@ -14,3 +14,6 @@ DELETE FROM config_items WHERE name = 'student_attachments';
 -- renaming
 UPDATE config_items SET type = "Add New Staff" WHERE type = "Wizard - Add New Staff";
 UPDATE config_items SET type = "Add New Student" WHERE type = "Wizard - Add New Student";
+
+-- making sure left nav is correct
+UPDATE navigations SET visible = '1' WHERE navigations.controller = 'Students' AND navigations.title = 'Add new Student';
