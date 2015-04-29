@@ -313,6 +313,7 @@ class SecurityUser extends AppModel {
 				if (empty($this->data[$this->alias]['username'])) {
 					$this->data[$this->alias]['username'] = null;
 					$this->validator()->remove('username', 'ruleUnique');
+					$this->validator()->remove('username', 'ruleNoSpaces');
 				}
 			}
 
