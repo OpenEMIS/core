@@ -75,6 +75,9 @@ class FormUtilityHelper extends AppHelper {
 		}
 		$html .= '</div>';
 		$html .= '</div>';
+
+		$html .= $this->Form->button('reload', array('id' => 'reload', 'name' => 'submit', 'class' => 'none'));
+
 		return $html;
 	}
 	
