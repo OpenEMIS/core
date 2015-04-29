@@ -295,54 +295,84 @@ class StudentsController extends StudentsAppController {
 					unset($data['Student']['birthplace_area_id']);
 				}
 			}
-			
-			if ($this->SecurityUser->save($data)) {
-				$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
-				$InstitutionSiteStudentModel->validator()->remove('search');
-				$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
 
-				if ($this->Wizard->isActive()) {
-					$securityUserId = $this->SecurityUser->getLastInsertId();
-					$this->Student->create();
-					$this->Student->save(array('security_user_id' => $securityUserId));
-					if (is_null($id)) {
-						$this->Message->alert('Student.add.success');
-						$id = $this->Student->getLastInsertId();
-						$this->Session->write('Student.id', $id);
+			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
+				unset($this->request->data['StudentIdentity']);
+			} else {
+				if ($this->SecurityUser->saveAll($data)) {
+					$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
+					$InstitutionSiteStudentModel->validator()->remove('search');
+					$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
+
+					if ($this->Wizard->isActive()) {
+						$securityUserId = $this->SecurityUser->getLastInsertId();
+						$this->Student->create();
+						$this->Student->save(array('security_user_id' => $securityUserId));
+						if (is_null($id)) {
+							$this->Message->alert('Student.add.success');
+							$id = $this->Student->getLastInsertId();
+							$this->Session->write('Student.id', $id);
+						}
+						$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
+						$dataToSite['student_status_id'] = $studentStatusId;
+						$dataToSite['student_id'] = $id;
+
+						if (empty($studentIdSession)) {
+							$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
+							$InstitutionSiteStudentModel->save($dataToSite);
+						}
+
+						$this->Session->write('Student.data', $this->Student->findById($id));
+						$this->Session->write('Student.security_user_id', $securityUserId);
+						// unset wizard so it will not auto redirect from WizardComponent
+						unset($this->request->data['wizard']['next']);
+						$this->Wizard->next();
+					} else {
+						$this->Message->alert('general.edit.success');
+						return $this->redirect(array('action' => 'view'));
 					}
-					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
-					$dataToSite['student_status_id'] = $studentStatusId;
-					$dataToSite['student_id'] = $id;
-
-					if (empty($studentIdSession)) {
-						$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
-						$InstitutionSiteStudentModel->save($dataToSite);
-					}
-
-					$this->Session->write('Student.data', $this->Student->findById($id));
-					$this->Session->write('Student.security_user_id', $securityUserId);
-					// unset wizard so it will not auto redirect from WizardComponent
-					unset($this->request->data['wizard']['next']);
-					$this->Wizard->next();
-				} else {
-					$this->Message->alert('general.edit.success');
-					return $this->redirect(array('action' => 'view'));
+					
+					$this->Session->delete('InstitutionSiteStudent.addNew');
+	
 				}
-				
-				$this->Session->delete('InstitutionSiteStudent.addNew');
 			}
 		} else {
 			if (!empty($studentIdSession)) {
 				$data = $this->Student->findById($studentIdSession);
 				$this->request->data = $data;
-				$addressAreaId = $this->request->data[$model]['address_area_id'];
-				$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			}
 		}
+
+		if (array_key_exists($model, $data)) {
+			if (array_key_exists('address_area_id', $data[$model])) {
+				$addressAreaId = $data[$model]['address_area_id'];
+			}
+			if (array_key_exists('birthplace_area_id', $data[$model])) {
+				$birthplaceAreaId = $data[$model]['birthplace_area_id'];	
+			}	
+		}
+
 		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('student_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
 
+		if ($this->Wizard->isActive()) {
+			$Country = ClassRegistry::init('Country');
+			$nationalityOptions = $Country->getOptions();
+
+			$identityTypeOption = array();
+			if (array_key_exists('StudentNationality', $this->request->data)) {
+				$identityTypeOption = $this->request->data['StudentNationality'][0];
+			} else {
+				$first_key = key($nationalityOptions);
+				$identityTypeOption = array('country_id' => $first_key);
+				
+			}
+			$identityTypeOptions = ClassRegistry::init('IdentityType')->getList($identityTypeOption);
+			$this->set('nationalityOptions', $nationalityOptions);
+			$this->set('identityTypeOptions', $identityTypeOptions);
+		}
+		
 		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model' => 'Student')));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
