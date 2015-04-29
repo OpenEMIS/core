@@ -110,12 +110,13 @@ class ReportComponent extends Component {
 			$format = $request->data['Report']['format'];
 			$period = null;
 			$params = array('model' => $features[$selectedFeature]['model'], 'format' => $format, 'options' => array());
-			if (array_key_exists('template', $request->data['Report'])) {
+			if (array_key_exists('survey_template', $request->data['Report'])) {
 				$SurveyTemplate = ClassRegistry::init('Surveys.SurveyTemplate');
-				$templateId = $request->data['Report']['template'];
-				$template = $SurveyTemplate->field('name', array('id' => $templateId));
+				$surveyTemplateId = $request->data['Report']['survey_template'];
+				$template = $SurveyTemplate->field('name', array('id' => $surveyTemplateId));
 				$name .= ' (' . $template . ')';
-				$params['options']['conditions'] = array('SurveyTemplate.id' => $templateId);
+				// Used by SurveyQuestion::excelCustomFieldFindOptions
+				$params['options']['conditions'] = array('SurveyTemplate.id' => $surveyTemplateId);
 			}
 			if (array_key_exists('period', $request->data['Report'])) {
 				$periodId = $request->data['Report']['period'];

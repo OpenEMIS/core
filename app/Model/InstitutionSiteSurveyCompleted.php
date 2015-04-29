@@ -65,7 +65,18 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 	/* Excel Behaviour */
 	public function excelGetConditions() {
 		$_conditions = parent::excelGetConditions();
-		$conditions = array('InstitutionSiteSurveyCompleted.status' => 2);
+
+		$conditions = array();
+		if ($this->Session->check($this->alias.'.id')) {
+			$id = $this->Session->read($this->alias.'.id');
+			$surveyTemplateId = $this->field('survey_template_id', array('id' => $id));
+			$conditions = array(
+				$this->alias.'.id' => $id,
+				'SurveyTemplate.id' => $surveyTemplateId
+			);
+		}
+		$conditions[] = 'InstitutionSiteSurveyCompleted.survey_template_id = SurveyTemplate.id';
+		$conditions['InstitutionSiteSurveyCompleted.status'] = 2;
 		$conditions = array_merge($_conditions, $conditions);
 		return $conditions;
 	}
@@ -76,20 +87,15 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 			array(
 				'model' => $this,
 				'include' => array(
-					'header' => 'Surveys.SurveyQuestion',
+					'plugin' => 'Surveys',
+					'header' => 'SurveyQuestion',
 					'data' => 'InstitutionSiteSurveyAnswer',
-					'dataOptions' => 'Surveys.SurveyQuestionChoice'
+					'dataOptions' => 'SurveyQuestionChoice'
 				)
 			)
 		);
 		return $models;
 	}
-
-	public function excelCustomFieldFindOptions() {
-		pr(222);
-		return $options;
-	}
-	/* End Excel Behaviour */
 
 	public function beforeAction() {
 		parent::beforeAction();
