@@ -130,6 +130,7 @@ class RestController extends RestfulAppController {
 	}
 	
 	public function auth() {
+		$this->autoRender = false;
 		// We check if request came from a post form
 		if($this->request->is('post')) {
 			// do the login..
@@ -164,7 +165,7 @@ class RestController extends RestfulAppController {
 	}
 
 	public function refreshToken() {
-
+		$this->autoRender = false;
 		// This function checks for the existence of both the access and refresh tokens
 		// If found, updates the refresh token, and the expiry time accordingly.
 		$accessToken    = '';
@@ -204,6 +205,7 @@ class RestController extends RestfulAppController {
 	}
 
 	public function token() {
+		$this->autoRender = false;
 		$accessToken    = '';
 		$refreshToken   = '';
 		$json = array();
