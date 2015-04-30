@@ -381,29 +381,20 @@ class InstitutionSitesController extends AppController {
 				if ($this->InstitutionSite->validates()) {
 					$result = $this->InstitutionSite->save($this->request->data);
 
-					$securityGroupExists = false;
 					if (array_key_exists('SecurityGroup', $data) ) {
-						foreach ($data['SecurityGroup'] as $key=>$value) {
-							if ($value['name'] == $data['InstitutionSite']['name']) {
-								$securityGroupExists = $value['id'];
+						if ($data['SecurityGroup']['id'] == $data['InstitutionSite']['security_group_id']) {
+							$this->SecurityGroup->read(null, $data['SecurityGroup']['id']);
+							if (is_object($this->SecurityGroup)) {
+								$editSecurityGroupParams = array(
+									'SecurityGroup' => array(
+										'id' => $data['SecurityGroup']['id'],
+										'name' => $result['InstitutionSite']['name']
+									)
+								);
+								if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
+									$this->Message->alert('InstitutionSite.edit_security_group.failed');
+								}
 							}
-						}
-					}
-					if ($securityGroupExists) {
-						$addSecurityGroupParams = array(
-							'InstitutionSite' => $result['InstitutionSite'],
-							'SecurityGroup' => array(
-								'id' => $securityGroupExists,
-								'name' => $result['InstitutionSite']['name']
-							)
-						);
-						$this->request->data = $addSecurityGroupParams;
-						//	"initialise SecurityGroup model from InstitutionSitesController"
-						$this->SecurityGroup->request = $this->request;
-						$this->SecurityGroup->Message = $this->Message;
-
-						if (!$this->SecurityGroup->updateFromInstitutionSite()) {
-							$this->Message->alert('InstitutionSite.edit_security_group.failed');
 						}
 					}
 
@@ -451,13 +442,20 @@ class InstitutionSitesController extends AppController {
 			$this->InstitutionSite->set($this->request->data);
 			
 			if ($this->InstitutionSite->validates()) {
-
+				$result = $this->InstitutionSite->save($this->request->data);
+				$institutionSiteId = $result['InstitutionSite']['id'];
+				
 				//	Includes InstitutionSite data in the request so that SecurityGroup model will distinguish that the request is from add institution form rather than add group form.
 				//	SecurityGroup model will react accordingly after saving new group data.
 				$addSecurityGroupParams = array(
 					'InstitutionSite' => $this->request->data['InstitutionSite'],
 					'SecurityGroup' => array(
 						'name' => $this->request->data['InstitutionSite']['name']
+					),
+					'GroupInstitutionSite' => array(
+						'0' => array(
+							'institution_site_id' => $institutionSiteId
+						)
 					)
 				);
 				$this->request->data = $addSecurityGroupParams;
@@ -468,25 +466,11 @@ class InstitutionSitesController extends AppController {
 
 				$securityGroupId = $this->SecurityGroup->add();
 				if ($securityGroupId) {
-					$this->request->data['InstitutionSite']['security_group_id'] =  $securityGroupId;
-					$result = $this->InstitutionSite->save($this->request->data);
-
-					$institutionSiteId = $result['InstitutionSite']['id'];
-
-					$addSecurityGroupParams['SecurityGroup']['id'] = $securityGroupId;
-					$addSecurityGroupParams['SecurityGroupInstitutionSite'] = array(
-						'0' => array(
-							'security_group_id' => $securityGroupId,
-							'institution_site_id' => $institutionSiteId
-						)
-					);
-					unset($addSecurityGroupParams['InstitutionSite']);
-
-					//	"Update SecurityGroup model request data from InstitutionSitesController"
-					$this->SecurityGroup->request->data = $addSecurityGroupParams;
-
-					if (!$this->SecurityGroup->updateFromInstitutionSite()) {
-						$this->Message->alert('InstitutionSite.edit_security_group.failed');
+					$this->InstitutionSite->clear();
+					$this->InstitutionSite->trackActivity = false;
+					$result['InstitutionSite']['security_group_id'] = $securityGroupId;
+					if (!$this->InstitutionSite->save($result)) {
+						$this->Message->alert('general.edit.failed');
 					} else {
 						$this->Session->write('InstitutionSiteId', $institutionSiteId);
 						$this->Message->alert('InstitutionSite.add_security_group.success');
@@ -533,7 +517,13 @@ class InstitutionSitesController extends AppController {
 			$name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
 			$securityGroupId = $this->InstitutionSite->field('security_group_id', array('InstitutionSite.id' => $id));
 			if($this->InstitutionSite->delete($id)) {
-				$this->InstitutionSite->SecurityGroup->delete($securityGroupId);
+				if ($securityGroupId) {
+					$this->InstitutionSite->SecurityGroup->read(null, $securityGroupId);
+					if (is_object($this->InstitutionSite->SecurityGroup)) {
+						// $this->InstitutionSite->SecurityGroup->unbindModel('GroupInstitutionSite');
+						$this->InstitutionSite->SecurityGroup->delete($securityGroupId);
+					}
+				}
 				$hasMany = $this->InstitutionSite->hasMany;
 				foreach ($hasMany as $model => $attr) {
 					$this->InstitutionSite->{$model}->recursive = -1;
