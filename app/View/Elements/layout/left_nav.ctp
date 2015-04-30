@@ -52,7 +52,8 @@
 				
 				
 				// hide the add new staff if institution site id is set
-				if ($link['controller'] == 'Staff' && $link['action'] == 'add') {
+				if (($link['controller'] == 'Staff' && $link['action'] == 'add')
+				|| ($link['controller'] == 'Students' && $link['action'] == 'add')) {
 					if ($this->Session->check('InstitutionSite.id')) {
 						continue;
 					}

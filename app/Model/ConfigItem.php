@@ -232,6 +232,32 @@ class ConfigItem extends AppModel {
 		return (empty($value))? $this->getDefaultValue($name):$value;
 	}
 
+	public function getOptionValue($name) {
+
+		$data = $this->find(
+			'first',
+			array(
+				'recursive' => -1,
+				'conditions' => array(
+					'name' => $name
+				)
+			)
+		);
+
+		$optionType = $data['ConfigItem']['option_type'];
+		$value = $this->getValue($name);
+
+		$ConfigItemOption = ClassRegistry::init('ConfigItemOption');
+		$result = $ConfigItemOption->field('option',
+			array(
+				'option_type' => $optionType,
+				'value' => $value
+			)
+		);
+
+		return $result;
+	}
+
 	public function getDefaultValue($name) {
 		return $this->field('default_value', array('name' => $name));
 	}
