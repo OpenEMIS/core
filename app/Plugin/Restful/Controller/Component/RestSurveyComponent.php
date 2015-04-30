@@ -424,6 +424,11 @@ class RestSurveyComponent extends Component {
 								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
 								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
 								$sectionBreakNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
+							} else if ($field[$this->Field->alias]['type'] == 7) {
+								$sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+								$sectionBreakNode->addAttribute("ref", $field[$this->Field->alias]['id']);
+								$sectionBreakNode->addAttribute("oe-type", "table");
+								$sectionBreakNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
 							}
 
 							$fieldTypeArr = array(2, 3, 4, 5, 6, 7); //Only support 2 -> Text, 3 -> Dropdown, 4 -> Checkbox, 5 -> Textarea, 6 -> Number, 7 -> Table
@@ -475,12 +480,7 @@ class RestSurveyComponent extends Component {
 									case 7:	//Table
 										$fieldType = false;
 
-										$tableGroupNode = $sectionBreakNode->addChild("group", null, NS_XF);
-										$tableGroupNode->addAttribute("ref", $field[$this->Field->alias]['id']);
-										$tableGroupNode->addAttribute("oe-type", "table");
-										$tableGroupNode->addChild("label", htmlspecialchars($field[$this->Field->alias]['name'], ENT_QUOTES), NS_XF);
-
-										$tableNode = $tableGroupNode->addChild("table", null, NS_XHTML);
+										$tableNode = $sectionBreakNode->addChild("table", null, NS_XHTML);
 										$tableNode->addAttribute("ref", "instance('" . $instanceId . "')/".$this->Group->alias."/".$this->Field->alias."[".$index."]");
 											$tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
 											$tableHeader->addChild("th", null, NS_XHTML);
