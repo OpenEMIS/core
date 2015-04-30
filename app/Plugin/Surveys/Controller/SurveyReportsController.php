@@ -25,14 +25,6 @@ class SurveyReportsController extends SurveysAppController {
 		$this->Navigation->addCrumb('Reports', array('plugin' => 'Surveys', 'controller' => 'SurveyReports', 'action' => 'index'));
 		$this->Navigation->addCrumb('Surveys', array('plugin' => 'Surveys', 'controller' => 'SurveyReports', 'action' => 'index'));
 		$this->Navigation->addCrumb('List of Reports');
-
-		$SurveyModule = ClassRegistry::init('Surveys.SurveyModule');
-		$modules = $SurveyModule->getModuleList();
-		$selectedModule = !empty($modules) ? key($modules) : 0;
-
-		$SurveyTemplate = ClassRegistry::init('Surveys.SurveyTemplate');
-		$templateOptions = $SurveyTemplate->getTemplateListByModule($selectedModule);
-		$this->set('templateOptions', $templateOptions);
     }
 
     public function ajaxGetReportProgress() {
@@ -44,6 +36,40 @@ class SurveyReportsController extends SurveysAppController {
 	}
 
 	public function generate($selectedFeature=0) {
+		$named = $this->request->params['named'];
+
+		$SurveyModule = ClassRegistry::init('Surveys.SurveyModule');
+		$modules = $SurveyModule->getModuleList();
+		$selectedModule = !empty($modules) ? key($modules) : 0;
+
+		$SurveyTemplate = ClassRegistry::init('Surveys.SurveyTemplate');
+		$templates = $SurveyTemplate->getTemplateListByModule($selectedModule);
+		$selectedSurveyTemplate = isset($named['surveyTemplate']) ? $named['surveyTemplate'] : key($templates);
+
+		$templateOptions = array();
+		foreach ($templates as $key => $template) {
+			$templateOptions['surveyTemplate:' . $key] = $template;
+		}
+
+		$InstitutionSiteSurveyCompleted = ClassRegistry::init('InstitutionSiteSurveyCompleted');
+		$periodOptions = $InstitutionSiteSurveyCompleted->find('list', array(
+			'contain' => array('AcademicPeriod'),
+			'fields' => array(
+				'AcademicPeriod.id', 'AcademicPeriod.name'
+			),
+			'conditions' => array(
+				'InstitutionSiteSurveyCompleted.survey_template_id' => $selectedSurveyTemplate
+			),
+			'group' => array(
+				'AcademicPeriod.id'
+			),
+			'order' => array(
+				'AcademicPeriod.order'
+			)
+		));
+
+		$this->set('templateOptions', $templateOptions);
+
 		$i=0;
 		$features = array(
 			array('name' => __('Institution'), 'model' => 'InstitutionSiteSurveyCompleted', 'survey_template' => true, 'period' => true)
@@ -61,7 +87,9 @@ class SurveyReportsController extends SurveysAppController {
 			'format' => __('Format')
 		);
 		$this->set('steps', $steps);
-
+		$this->set('templateOptions', $templateOptions);
+		$this->set('selectedSurveyTemplate', $selectedSurveyTemplate);
+		$this->set('periodOptions', $periodOptions);
 		$this->Report->generate($features, $selectedFeature);
 	}
 

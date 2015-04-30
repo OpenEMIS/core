@@ -15,10 +15,12 @@ $this->start('contentBody');
 			$li = '<li data-step="%d" %s><span class="badge">%d</span>%s<span class="chevron"></span></li>';
 			$i=0;
 			$feature = $features[$selectedFeature];
+			$named = $this->params->named;
+			$currentStep = isset($named['step']) ? $named['step'] : 0;
 
 			foreach ($steps as $key => $step) {
 				if (!array_key_exists($key, $feature) || (array_key_exists($key, $feature) && $feature[$key] !== false)) {
-					$class = $i++==0 ? 'class="active"' : '';
+					$class = $i++==$currentStep ? 'class="active"' : '';
 					echo sprintf($li, $i, $class, $i, $step);
 				}
 			}
@@ -33,6 +35,7 @@ $this->start('contentBody');
 
 		<?php
 		echo $this->Form->create('Report', array('class' => 'form-horizontal'));
+		$baseUrl = $this->params['controller'] . '/' . $this->action;
 		?>
 			<div class="step-content">
 				
@@ -41,14 +44,16 @@ $this->start('contentBody');
 						<div class="col-md-1"><label class="control-label"><?php echo __('Feature'); ?></label></div>
 						<div class="col-md-5">
 						<?php
-						echo $this->Form->input('feature', array(
-							'div' => false, 
-							'label' => false, 
-							'class' => 'form-control', 
-							'options' => $features,
-							'onchange' => 'jsForm.change(this)',
-							'url' => $this->params['controller'] . '/' . $this->action
-						));
+							echo $this->Form->input('feature', array(
+								'div' => false, 
+								'label' => false, 
+								'class' => 'form-control', 
+								'options' => $features,
+								'default' => $selectedFeature,
+								'onchange' => 'jsForm.change(this)',
+								'url' => $baseUrl
+							));
+							$baseUrl = $baseUrl . '/' . $selectedFeature;
 						?>
 						</div>
 					</div>
@@ -63,7 +68,16 @@ $this->start('contentBody');
 							<div class="col-md-1"><label class="control-label"><?php echo __('Templates'); ?></label></div>
 							<div class="col-md-5">
 							<?php
-							echo $this->Form->input('survey_template', array('div' => false, 'label' => false, 'class' => 'form-control', 'options' => $templateOptions));
+								echo $this->Form->input('survey_template', array(
+									'div' => false,
+									'label' => false,
+									'class' => 'form-control',
+									'options' => $templateOptions,
+									'default' => 'surveyTemplate:' . $selectedSurveyTemplate,
+									'onchange' => 'jsForm.change(this)',
+									'url' => $baseUrl . '/step:1'
+								));
+								$baseUrl = $baseUrl . '/surveyTemplate:' . $selectedSurveyTemplate;
 							?>
 							</div>
 						</div>
