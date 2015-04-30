@@ -300,14 +300,14 @@ class StudentsController extends StudentsAppController {
 					$id = $this->Student->getLastInsertId();
 					$this->Session->write('Student.id', $id);
 
-					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
-					$dataToSite['student_status_id'] = $studentStatusId;
-					$dataToSite['student_id'] = $id;
-
-					if (empty($studentIdSession)) {
+					if (!empty($dataToSite)) {
+						$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
+						$dataToSite['student_status_id'] = $studentStatusId;
+						$dataToSite['student_id'] = $id;
+					
 						$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
 						$InstitutionSiteStudentModel->save($dataToSite);
-					}
+					} 
 
 					$this->Session->write('Student.data', $this->Student->findById($id));
 					$this->Session->write('Student.security_user_id', $securityUserId);
@@ -414,10 +414,6 @@ class StudentsController extends StudentsAppController {
 				unset($this->request->data['StudentIdentity']);
 			} else {
 				if ($this->SecurityUser->saveAll($data)) {
-					$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
-					$InstitutionSiteStudentModel->validator()->remove('search');
-					$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
-
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}

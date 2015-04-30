@@ -156,6 +156,8 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function index() {
+		$this->Session->delete('InstitutionSiteStudent.addNew');
+		$this->Session->delete('InstitutionSiteStaff.addNew');
 		$this->AccessControl->init($this->Auth->user('id'));
 		$this->Navigation->addCrumb('List of Institutions');
 
