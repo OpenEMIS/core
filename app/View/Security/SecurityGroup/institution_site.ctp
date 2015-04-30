@@ -10,10 +10,10 @@ if ($action == 'view') : ?>
 		</tr>
 	</thead>
 	<tbody>
-			<?php foreach ($data[$model]['SecurityGroupInstitutionSite'] as $obj) : ?>
+			<?php foreach ($data['GroupInstitutionSite'] as $key=>$obj) : ?>
 		<tr>
-			<td><?php echo $obj['InstitutionSite']['code'] ?></td>
-			<td><?php echo $obj['InstitutionSite']['name'] ?></td>
+			<td><?php echo $obj['code'] ?></td>
+			<td><?php echo $obj['name'] ?></td>
 		</tr>
 			<?php endforeach ?>
 	</tbody>
@@ -22,7 +22,7 @@ if ($action == 'view') : ?>
 <?php else : ?>
 
 <div class="form-group">
-	<label class="col-md-3 control-label"><?php echo $this->Label->get("$model.SecurityGroupInstitutionSite") ?></label>
+	<label class="col-md-3 control-label"><?php echo $this->Label->get("$model.GroupInstitutionSite") ?></label>
 	<div class="col-md-6">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
@@ -34,14 +34,14 @@ if ($action == 'view') : ?>
 			<tbody>
 				<?php 
 				if ($action == 'edit') :
-					foreach ($this->data[$model]['SecurityGroupInstitutionSite'] as $i => $obj) :
+					foreach ($this->data['GroupInstitutionSite'] as $i => $obj) :
 				?>
 				<tr>
 					<td>
 							<?php
-							echo $this->Form->hidden("SecurityGroupInstitutionSite.$i.institution_site_id", array('class' => 'value-id', 'value' => $obj['SecurityGroupInstitutionSite']['institution_site_id']));
+							echo $this->Form->hidden("GroupInstitutionSite.$i.institution_site_id", array('class' => 'value-id', 'value' => $obj['id']));
 							echo $this->Form->hidden('index', array('name' => 'index', 'class' => 'index', 'value' => $i));
-							echo $obj['InstitutionSite']['name'];
+							echo $obj['code'].' - '.$obj['name'];
 							?>
 					</td>
 					<td><span class="icon_delete" title="<?php echo $this->Label->get('general.delete') ?>" onclick="jsTable.doRemove(this)"></span></td>

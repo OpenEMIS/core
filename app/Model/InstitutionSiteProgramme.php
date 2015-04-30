@@ -71,7 +71,7 @@ class InstitutionSiteProgramme extends AppModel {
 		),
 		'end_date' => array(
 			'ruleCompare' => array(
-				'rule' => array('compareDate', 'start_date'),
+				'rule' => array('compareDateReverse', 'start_date'),
 				'allowEmpty' => true,
 				'message' => 'End Date cannot be earlier than Start Date'
 			)
