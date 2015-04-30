@@ -15,7 +15,8 @@ DELETE FROM config_items WHERE name = 'student_attachments';
 UPDATE config_items SET type = "Add New Staff" WHERE type = "Wizard - Add New Staff";
 UPDATE config_items SET type = "Add New Student" WHERE type = "Wizard - Add New Student";
 
--- making sure left nav is correct
-UPDATE navigations SET visible = '1' WHERE navigations.controller = 'Students' AND navigations.title = 'Add new Student';
+UPDATE navigations SET title = 'Add Student' WHERE navigations.controller = 'Students' AND navigations.title = 'Add new Student';
+UPDATE navigations SET title = 'Add Student' WHERE navigations.controller = 'Students' AND navigations.title = 'Add existing Student';
 
-UPDATE navigations SET title = 'Add existing Student' WHERE navigations.controller = 'Students' AND navigations.title = 'Add Student';
+-- making sure left nav is correct
+UPDATE navigations SET visible = '1' WHERE navigations.controller = 'Students' AND navigations.title = 'Add Student';
