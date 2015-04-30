@@ -100,8 +100,8 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `orde
 (NULL, 'Student', 'date_of_birth', NULL, 8, 0, NULL, NULL),
 (NULL, 'Student', 'address', NULL, 9, 0, NULL, NULL),
 (NULL, 'Student', 'postal_code', NULL, 10, 0, NULL, NULL),
-(NULL, 'Student', 'address_area_id', 'Code', 11, 2, 'Area', 'code'),
-(NULL, 'Student', 'birthplace_area_id', 'Code', 12, 2, 'Area', 'code'),
+(NULL, 'Student', 'address_area_id', 'Code', 11, 2, 'AreaAdministrative', 'code'),
+(NULL, 'Student', 'birthplace_area_id', 'Code', 12, 2, 'AreaAdministrative', 'code'),
 (NULL, 'Staff', 'openemis_no', '(Leave as blank for new entries)', 1, 0, NULL, NULL),
 (NULL, 'Staff', 'first_name', NULL, 2, 0, NULL, NULL),
 (NULL, 'Staff', 'middle_name', NULL, 3, 0, NULL, NULL),
@@ -112,9 +112,63 @@ INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `orde
 (NULL, 'Staff', 'date_of_birth', NULL, 8, 0, NULL, NULL),
 (NULL, 'Staff', 'address', NULL, 9, 0, NULL, NULL),
 (NULL, 'Staff', 'postal_code', NULL, 10, 0, NULL, NULL),
-(NULL, 'Staff', 'address_area_id', 'Code', 11, 2, 'Area', 'code'),
-(NULL, 'Staff', 'birthplace_area_id', 'Code', 12, 2, 'Area', 'code');
+(NULL, 'Staff', 'address_area_id', 'Code', 11, 2, 'AreaAdministrative', 'code'),
+(NULL, 'Staff', 'birthplace_area_id', 'Code', 12, 2, 'AreaAdministrative', 'code');
 
 UPDATE `import_mapping` SET `description` = NULL WHERE `model` LIKE 'InstitutionSite';
 UPDATE `import_mapping` SET `description` = 'Code' WHERE `model` LIKE 'InstitutionSite' AND (`foreign_key` = 1 OR `foreign_key` = 2);
+
+-- PHPOE-1272
+
+ALTER TABLE `countries` ADD `identity_type_id` INT NULL AFTER `name`;
+
+ALTER TABLE `user_identities` CHANGE `issue_date` `issue_date` DATE NULL;
+ALTER TABLE `user_identities` CHANGE `expiry_date` `expiry_date` DATE NULL;
+ALTER TABLE `user_identities` CHANGE `issue_location` `issue_location` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+
+-- Removing is_wizard
+UPDATE navigations SET is_wizard = 0 WHERE action = 'StudentNationality';
+UPDATE navigations SET is_wizard = 0 WHERE action = 'StudentIdentity';
+UPDATE navigations SET is_wizard = 0 WHERE action = 'StaffNationality';
+UPDATE navigations SET is_wizard = 0 WHERE action = 'StaffIdentity';
+
+-- PHPOE-1386
+
+UPDATE config_items SET name = "StaffIdentity" WHERE name = "staff_identities";
+UPDATE config_items SET name = "StaffNationality" WHERE name = "staff_nationalities";
+UPDATE config_items SET name = "StaffContact" WHERE name = "staff_contacts";
+UPDATE config_items SET name = "StaffSpecialNeed" WHERE name = "staff_specialNeed";
+
+-- removing 
+DELETE FROM config_items WHERE name = 'staff_membership';
+DELETE FROM config_items WHERE name = 'staff_license';
+DELETE FROM config_items WHERE name = 'staff_languages';
+DELETE FROM config_items WHERE name = 'staff_comments';
+DELETE FROM config_items WHERE name = 'staff_bankAccounts';
+DELETE FROM config_items WHERE name = 'staff_award';
+DELETE FROM config_items WHERE name = 'staff_attachments';
+
+-- PHPOE-1390
+UPDATE config_items SET name = "StudentIdentity" WHERE name = "student_identities";
+UPDATE config_items SET name = "StudentNationality" WHERE name = "student_nationalities";
+UPDATE config_items SET name = "StudentContact" WHERE name = "student_contacts";
+UPDATE config_items SET name = "StudentSpecialNeed" WHERE name = "student_specialNeed";
+
+
+-- removing 
+DELETE FROM config_items WHERE name = 'student_languages';
+DELETE FROM config_items WHERE name = 'student_comments';
+DELETE FROM config_items WHERE name = 'student_bankAccounts';
+DELETE FROM config_items WHERE name = 'student_award';
+DELETE FROM config_items WHERE name = 'student_attachments';
+
+-- renaming
+UPDATE config_items SET type = "Add New Staff" WHERE type = "Wizard - Add New Staff";
+UPDATE config_items SET type = "Add New Student" WHERE type = "Wizard - Add New Student";
+
+UPDATE navigations SET title = 'Add Student' WHERE navigations.controller = 'Students' AND navigations.title = 'Add new Student';
+UPDATE navigations SET title = 'Add Student' WHERE navigations.controller = 'Students' AND navigations.title = 'Add existing Student';
+
+-- making sure left nav is correct
+UPDATE navigations SET visible = '1' WHERE navigations.controller = 'Students' AND navigations.title = 'Add Student';
 

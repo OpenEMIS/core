@@ -119,7 +119,8 @@ class LabelHelper extends AppHelper {
 			'editable' => 'Editable',
 			'staff' => 'Staff',
 			'failed' => 'Failed',
-			'errors' => 'Errors'
+			'errors' => 'Errors',
+			'institutionsite' => 'Institution'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -238,7 +239,15 @@ class LabelHelper extends AppHelper {
 			'date_closed' => 'Date Closed',
 			'year_closed' => 'Year Closed',
 			'area_id' => 'Area',
-			'area_administrative_id' => 'Area Administrative'
+			'area_administrative_id' => 'Area Administrative',
+			'code' => 'Code',
+			'address' => 'Address',
+			'telephone' => 'Telephone',
+			'fax' => 'Fax',
+			'email' => 'Email',
+			'longitude' => 'Longitude',
+			'website' => 'Website',
+			'latitude' => 'Latitude'
 		),
 		'InstitutionSiteProgramme' => array(
 			'title' => 'Programmes',
@@ -359,13 +368,25 @@ class LabelHelper extends AppHelper {
 			'middle_name' => 'Middle Name',
 			'gender_id' => 'Gender',
 			'address_area_id' => 'Address Area',
-			'birthplace_area_id' => 'Birth Place Area'
+			'birthplace_area_id' => 'Birth Place Area',
+			'preferred_name' => 'Preferred Name',
+			'address' => 'Address',
+			'postal_code' => 'Postal Code'
 		),
 		'Staff' => array(
 			'module' => 'Staff',
+			'openemis_no' => 'OpenEMIS ID',
+			'first_name' => 'First Name',
+			'last_name' => 'Last Name',
 			'gender_id' => 'Gender',
+			'third_name' => 'Third Name',
+			'date_of_birth' => 'Birth Date',
+			'middle_name' => 'Middle Name',
 			'address_area_id' => 'Address Area',
-			'birthplace_area_id' => 'Birth Place Area'
+			'birthplace_area_id' => 'Birth Place Area',
+			'preferred_name' => 'Preferred Name',
+			'address' => 'Address',
+			'postal_code' => 'Postal Code'
 		),
 		'StaffLeave' => array(
 			'title' => 'Leave',
@@ -497,6 +518,7 @@ class LabelHelper extends AppHelper {
 			'date_of_birth' => 'Date Of Birth', 
 			'date_of_death' => 'Date Of Death', 
 			'status' => 'Status'
+			
 		),
 		
 		'InstitutionSiteFee' => array(
@@ -746,7 +768,7 @@ class LabelHelper extends AppHelper {
 		'Import' => array(
 			'saving_failed' => 'Failed to save to database',
 			'invalid_code' => 'Invalid Code',
-			'validation_failed' => 'Validation Failed.',
+			'validation_failed' => 'Validation Failed',
 			'total_rows' => 'Total Rows',
 			'rows_imported' => 'Rows Imported',
 			'rows_updated' => 'Rows Updated',

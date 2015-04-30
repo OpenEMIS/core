@@ -14,10 +14,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'staff');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if (!$WizardMode) {
-	echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
-}
+
+echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
+echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
+
 $this->end();
 
 $this->start('contentBody');
@@ -73,8 +73,8 @@ echo $this->Form->create($model, $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if (isset($this->data['security_user']['photo_name']) && isset($this->data['security_user']['photo_content'])) {
-			$imgOptions['src'] = $this->Image->getBase64($this->data['security_user']['photo_name'], $this->data['security_user']['photo_content']);
+		if (isset($this->data['SecurityUser']['photo_name']) && isset($this->data['SecurityUser']['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data['SecurityUser']['photo_name'], $this->data['SecurityUser']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
@@ -107,11 +107,7 @@ echo $this->Form->create($model, $formOptions);
 </fieldset>
 
 <?php 
-if (!$WizardMode) {
-	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
-} else {
-	echo $this->FormUtility->getWizardButtons($WizardButtons);
-}
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
 echo $this->Form->end();
 $this->end();
 ?>
