@@ -122,10 +122,10 @@ class MessageComponent extends Component {
 		),
 		'SecurityGroup' => array(
 			'delete' => array(
-				'failed' => array('type' => 'error', 'msg' => 'There is an active Institution under this group')
+				'failed' => array('type' => 'error', 'msg' => 'This group belongs to an active Institution')
 			),
 			'edit' => array(
-				'name_different' => array('type' => 'error', 'msg' => 'Group name cannot be change since there is an active Institution under this group')
+				'name_different' => array('type' => 'error', 'msg' => 'This group name cannot be changed since it belongs to an active Institution')
 			)
 		),
 		'Student' => array(
