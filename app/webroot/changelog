@@ -28,6 +28,8 @@ v2.4.5
 - Fixed a bug that allows users to add space to username during user creation
 - Fixed a bug that redirects to the wrong page when user clicked on General tab in User Details
 - Implemented a new feature to allow user to import Institution/Student/Staff data from an excel spreadsheet
+- Added Identities, Nationalities, Contact and Special Needs in Student/Staff add form
+- User can now select a default identity for each nationality
 
 v2.4.6
 - Fixed a bug that restrict user to adding data to Total -> Finance even though permission is granted

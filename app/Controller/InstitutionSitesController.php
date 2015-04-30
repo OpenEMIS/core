@@ -110,7 +110,7 @@ class InstitutionSitesController extends AppController {
 		$this->indexPage = 'dashboard';
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
 			$this->bodyTitle = 'Institutions';
-		} else if ($this->action === 'import' || $this->action === 'importTemplate'){
+		} else if ($this->action === 'import' || $this->action === 'importTemplate' || $this->action === 'downloadFailed'){
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 			$pass = $this->request->params['pass'];
@@ -156,6 +156,8 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function index() {
+		$this->Session->delete('InstitutionSiteStudent.addNew');
+		$this->Session->delete('InstitutionSiteStaff.addNew');
 		$this->AccessControl->init($this->Auth->user('id'));
 		$this->Navigation->addCrumb('List of Institutions');
 
@@ -899,13 +901,18 @@ class InstitutionSitesController extends AppController {
 							$tempRow = array();
 							$originalRow = array();
 							$rowPass = true;
+							$rowInvalidCodeCols = array();
 							for ($col = 0; $col < $totalColumns; ++$col) {
 								$cell = $sheet->getCellByColumnAndRow($col, $row);
-								$cellValue = $cell->getValue();
+								$originalValue = $cell->getValue();
+								$cellValue = $originalValue;
+								if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean'){
+									$cellValue = (string) $cellValue;
+								}
 								$excelMappingObj = $mapping[$col]['ImportMapping'];
 								$foreignKey = $excelMappingObj['foreign_key'];
 								$columnName = $columns[$col];
-								$originalRow[$col] = $cellValue;
+								$originalRow[$col] = $originalValue;
 								$val = $cellValue;
 								
 								if($row > 1){
@@ -928,7 +935,7 @@ class InstitutionSitesController extends AppController {
 											} else {
 												if($row !== 1 && $cellValue != ''){
 													$rowPass = false;
-													$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
+													$rowInvalidCodeCols[] = $translatedCol;
 												}
 											}
 										}
@@ -940,20 +947,30 @@ class InstitutionSitesController extends AppController {
 										}else{
 											if($row !== 1 && $cellValue != ''){
 												$rowPass = false;
-												$codeError = sprintf('%s - %s', $this->{$model}->getExcelLabel('Import.invalid_code'), $translatedCol);
+												$rowInvalidCodeCols[] = $translatedCol;
 											}
 										}
 									}
 								}
 								
 								$tempRow[$columnName] = $val;
-								
 							}
 
 							if(!$rowPass){
+								$rowCodeError = $this->{$model}->getExcelLabel('Import.invalid_code');
+								$colCount = 1;
+								foreach($rowInvalidCodeCols as $codeCol){
+									if($colCount == 1){
+										$rowCodeError .= ': ' . $codeCol;
+									}else{
+										$rowCodeError .= ', ' . $codeCol;
+									}
+									$colCount ++;
+								}
+								
 								$dataFailed[] = array(
 									'row_number' => $row,
-									'error' => $codeError,
+									'error' => $rowCodeError,
 									'data' => $originalRow
 								);
 								continue;
@@ -972,11 +989,7 @@ class InstitutionSitesController extends AppController {
 								if ($this->{$model}->save($tempRow)) {
 									$totalImported++;
 								} else {
-									$dataFailed[] = array(
-										'row_number' => $row,
-										'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
-										'data' => $originalRow
-									);
+									$totalUpdated++;
 								}
 							} else {
 								$validationErrors = $this->{$model}->validationErrors;
@@ -1003,7 +1016,7 @@ class InstitutionSitesController extends AppController {
 										}
 
 										if($count === 1){
-											$errorStr .= ' ' . $fieldName;
+											$errorStr .= ': ' . $fieldName;
 										}else{
 											$errorStr .= ', ' . $fieldName;
 										}
