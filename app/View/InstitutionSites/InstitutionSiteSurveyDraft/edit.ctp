@@ -1,4 +1,5 @@
 <?php
+echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $template['name']);
 $this->start('contentActions');
