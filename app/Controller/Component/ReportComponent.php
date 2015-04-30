@@ -113,7 +113,8 @@ class ReportComponent extends Component {
 			$params['options']['conditions'] = array();
 			if (array_key_exists('survey_template', $request->data['Report'])) {
 				$SurveyTemplate = ClassRegistry::init('Surveys.SurveyTemplate');
-				$surveyTemplateId = $request->data['Report']['survey_template'];
+				$surveyTemplateData = explode(':', $request->data['Report']['survey_template']);
+				$surveyTemplateId = $surveyTemplateData[1];
 				$template = $SurveyTemplate->field('name', array('id' => $surveyTemplateId));
 				$name .= ' (' . $template . ')';
 				// Used by SurveyQuestion::excelCustomFieldFindOptions
