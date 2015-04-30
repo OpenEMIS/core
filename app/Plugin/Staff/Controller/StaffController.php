@@ -306,11 +306,11 @@ class StaffController extends StaffAppController {
 					$id = $this->Staff->getLastInsertId();
 					$this->Session->write('Staff.id', $id);
 
-					$staffStatusId = $InstitutionSiteStaffModel->StaffStatus->getDefaultValue();
-					$dataToSite['staff_status_id'] = $staffStatusId;
-					$dataToSite['staff_id'] = $id;
+					if (!empty($dataToSite)) {
+						$staffStatusId = $InstitutionSiteStaffModel->StaffStatus->getDefaultValue();
+						$dataToSite['staff_status_id'] = $staffStatusId;
+						$dataToSite['staff_id'] = $id;
 
-					if (empty($staffIdSession)) {
 						$InstitutionSiteStaffModel->save($dataToSite);
 					}
 
