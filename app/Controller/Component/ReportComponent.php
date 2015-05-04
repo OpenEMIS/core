@@ -101,10 +101,9 @@ class ReportComponent extends Component {
 		$this->controller->set(compact('data', 'model'));
 		$this->controller->render('/Elements/reports/index');
 	}
-
+	
 	public function generate($features, $selectedFeature) {
 		$request = $this->controller->request;
-		
 		if ($request->is('post')) {
 			$name = $features[$selectedFeature]['name'];
 			$format = $request->data['Report']['format'];
@@ -129,12 +128,12 @@ class ReportComponent extends Component {
 			}
 			return $this->controller->redirect(array('action' => 'index'));
 		}
-
+		
 		$this->controller->set('features', $features);
 		$this->controller->set('selectedFeature', $selectedFeature);
 		$this->controller->render('/Elements/reports/generate');
 	}
-
+	
 	public function download($id) {
 		$this->controller->autoRender = false;
 		$this->ReportProgress->id = $id;
