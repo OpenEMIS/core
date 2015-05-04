@@ -22,12 +22,6 @@ class Staff extends StaffAppModel {
 		'Search',
 		'UserAccess',
 		'TrackActivity' => array('target' => 'Staff.StaffActivity', 'key' => 'staff_id', 'session' => 'Staff.id'),
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'Staff.StaffAttachment',
-				'Staff.StaffCustomValue'
-			)
-		),
 		'CustomReport',
 		'ImportExcel'
 	);
@@ -35,22 +29,114 @@ class Staff extends StaffAppModel {
 	public $belongsTo = array('SecurityUser');
 
 	public $hasMany = array(
-		'Staff.StaffMembership',
-		'Staff.StaffLicense',
-		'Staff.StaffQualification',
-		'Staff.StaffBehaviour',
-		'Staff.StaffExtracurricular',
-		'Staff.StaffBankAccount',
-		'Staff.StaffHealth',
-		'Staff.StaffHealthHistory',
-		'Staff.StaffHealthFamily',
-		'Staff.StaffHealthImmunization',
-		'Staff.StaffHealthMedication',
-		'Staff.StaffHealthAllergy',
-		'Staff.StaffHealthTest',
-		'Staff.StaffHealthConsultation',
-		//'Staff.StaffActivity' => array('dependent' => true),
-		'StaffActivity' => array('dependent' => true),
+		'StaffMembership' => array(
+			'className' => 'Staff.StaffMembership',
+			'dependent' => true
+		),
+		'StaffLicense' => array(
+			'className' => 'Staff.StaffLicense',
+			'dependent' => true
+		),
+		'StaffQualification' => array(
+			'className' => 'Staff.StaffQualification',
+			'dependent' => true
+		),
+		'StaffBehaviour' => array(
+			'className' => 'Staff.StaffBehaviour',
+			'dependent' => true
+		),
+		'StaffExtracurricular' => array(
+			'className' => 'Staff.StaffExtracurricular',
+			'dependent' => true
+		),
+		'StaffBankAccount' => array(
+			'className' => 'Staff.StaffBankAccount',
+			'dependent' => true
+		),
+		'StaffHealth' => array(
+			'className' => 'Staff.StaffHealth',
+			'dependent' => true
+		),
+		'StaffHealthHistory' => array(
+			'className' => 'Staff.StaffHealthHistory',
+			'dependent' => true
+		),
+		'StaffHealthFamily' => array(
+			'className' => 'Staff.StaffHealthFamily',
+			'dependent' => true
+		),
+		'StaffHealthImmunization' => array(
+			'className' => 'Staff.StaffHealthImmunization',
+			'dependent' => true
+		),
+		'StaffHealthMedication' => array(
+			'className' => 'Staff.StaffHealthMedication',
+			'dependent' => true
+		),
+		'StaffHealthAllergy' => array(
+			'className' => 'Staff.StaffHealthAllergy',
+			'dependent' => true
+		),
+		'StaffHealthTest' => array(
+			'className' => 'Staff.StaffHealthTest',
+			'dependent' => true
+		),
+		'StaffHealthConsultation' => array(
+			'className' => 'Staff.StaffHealthConsultation',
+			'dependent' => true
+		),
+		'StaffActivity' => array(
+			'className' => 'Staff.StaffActivity',
+			'dependent' => true
+		),
+		'StaffCustomValue' => array(
+			'className' => 'Staff.StaffCustomValue',
+			'dependent' => true
+		),
+		'StaffAttachment' => array(
+			'className' => 'Staff.StaffAttachment',
+			'dependent' => true
+		),
+		// Additions by Sani
+		'StaffTraining' => array(
+			'className' => 'Staff.StaffTraining',
+			'dependent' => true
+		),
+		'StaffLeave' => array(
+			'className' => 'Staff.StaffLeave',
+			'dependent' => true
+		),
+		'StaffExtracurricular' => array(
+			'className' => 'Staff.StaffExtracurricular',
+			'dependent' => true
+		),
+		'StaffEmployment' => array(
+			'className' => 'Staff.StaffEmployment',
+			'dependent' => true
+		),
+		'StaffEmployment' => array(
+			'className' => 'Staff.StaffEmployment',
+			'dependent' => true
+		),
+		'StaffSalary' => array(
+			'className' => 'Staff.StaffSalary',
+			'dependent' => true
+		),
+		'StaffMembership' => array(
+			'className' => 'Staff.StaffMembership',
+			'dependent' => true
+		),
+		'StaffLicense' => array(
+			'className' => 'Staff.StaffLicense',
+			'dependent' => true
+		),
+		'StaffBankAccount' => array(
+			'className' => 'Staff.StaffBankAccount',
+			'dependent' => true
+		),
+		'InstitutionSiteStaff' => array('dependent' => true),
+		
+		// Training
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
 			'foreignKey' => 'staff_id',
@@ -71,9 +157,7 @@ class Staff extends StaffAppModel {
 			'className' => 'StaffTrainingSelfStudy',
 			'foreignKey' => 'staff_id',
 			'dependent' => true
-		),
-		'InstitutionSiteStaff',
-		'Staff.StaffCustomValue'
+		)
 	);
 
 	public $validate = array(
