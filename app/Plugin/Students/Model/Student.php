@@ -23,12 +23,6 @@ class Student extends StudentsAppModel {
 		// 'openemis_no', 'first_name', 'last_name'
 		'Search',
 		'TrackActivity' => array('target' => 'Students.StudentActivity', 'key' => 'student_id', 'session' => 'Student.id'),
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'Students.StudentAttachment',
-				'Students.StudentCustomValue'
-			)
-		),
 		'CustomReport' => array(
 			'_default' => array('photo_name', 'photo_content')
 		),
@@ -38,28 +32,78 @@ class Student extends StudentsAppModel {
 	public $belongsTo = array('SecurityUser');
 	
 	public $hasMany = array(
-		'Students.StudentGuardian',
-		'Students.Programme',
-		'Students.Absence',
-		'Students.StudentBehaviour',
-		'Students.StudentExtracurricular',
-		'Students.StudentBankAccount',
-		'Students.StudentFee',
+		'StudentGuardian' => array(
+			'className' => 'Students.StudentGuardian',
+			'dependent' => true
+		),
+		'Programme' => array(
+			'className' => 'Students.Programme',
+			'dependent' => true
+		),
+		'Absence' => array(
+			'className' => 'Students.Absence',
+			'dependent' => true
+		),
+		'StudentBehaviour' => array(
+			'className' => 'Students.StudentBehaviour',
+			'dependent' => true
+		),
+		'StudentExtracurricular' => array(
+			'className' => 'Students.StudentExtracurricular',
+			'dependent' => true
+		),
+		'StudentBankAccount' => array(
+			'className' => 'Students.StudentBankAccount',
+			'dependent' => true
+		),
+		'StudentFee' => array(
+			'className' => 'Students.StudentFee',
+			'dependent' => true
+		),
+		'StudentHealth' => array(
+			'className' => 'Students.StudentHealth',
+			'dependent' => true
+		),
+		'StudentHealthHistory' => array(
+			'className' => 'Students.StudentHealthHistory',
+			'dependent' => true
+		),
+		'StudentHealthFamily' => array(
+			'className' => 'Students.StudentHealthFamily',
+			'dependent' => true
+		),
+		'StudentHealthImmunization' => array(
+			'className' => 'Students.StudentHealthImmunization',
+			'dependent' => true
+		),
+		'StudentHealthMedication' => array(
+			'className' => 'Students.StudentHealthMedication',
+			'dependent' => true
+		),
+		'StudentHealthAllergy' => array(
+			'className' => 'Students.StudentHealthAllergy',
+			'dependent' => true
+		),
+		'StudentHealthTest' => array(
+			'className' => 'Students.StudentHealthTest',
+			'dependent' => true
+		),
+		'StudentHealthConsultation' => array(
+			'className' => 'Students.StudentHealthConsultation',
+			'dependent' => true
+		),
+		'StudentCustomValue' => array(
+			'className' => 'Students.StudentCustomValue',
+			'dependent' => true
+		),
+		'StudentActivity' => array(
+			'className' => 'Students.StudentActivity',
+			'dependent' => true
+		),
 		'InstitutionSiteStudent',
 		'InstitutionSiteClassStudent',
 		'InstitutionSiteSectionStudent' => array('dependent' => true),
-		'InstitutionSiteStudentFee',
-		'Students.StudentHealth',
-		'Students.StudentHealthHistory',
-		'Students.StudentHealthFamily',
-		'Students.StudentHealthImmunization',
-		'Students.StudentHealthMedication',
-		'Students.StudentHealthAllergy',
-		'Students.StudentHealthTest',
-		'Students.StudentHealthConsultation',
-		'Students.StudentCustomValue',
-		//'Students.StudentActivity' => array('dependent' => true)
-		'StudentActivity' => array('dependent' => true)
+		'InstitutionSiteStudentFee'
 	);
 	
 	public $validate = array(
