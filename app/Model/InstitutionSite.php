@@ -245,6 +245,48 @@ class InstitutionSite extends AppModel {
         return $isValid;
     }
 
+	public function afterSave($created, $options = Array()) {
+        if ($created) {
+			$addSecurityGroupParams = array(
+				'SecurityGroup' => array(
+					'name' => $this->data['InstitutionSite']['name']
+				),
+				'GroupInstitutionSite' => array(
+					'0' => array(
+						'institution_site_id' => $this->data['InstitutionSite']['id']
+					)
+				)
+			);
+			$securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
+			if ($securityGroup) {
+				$this->trackActivity = false;
+				$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
+				if (!$this->save()) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+        } else {
+			$securityGroupId = $this->field('security_group_id');
+			if (!empty($securityGroupId)) {
+				$this->SecurityGroup->read(null, $securityGroupId);
+				if (is_object($this->SecurityGroup)) {
+					$editSecurityGroupParams = array(
+						'SecurityGroup' => array(
+							'id' => $securityGroupId,
+							'name' => $this->data['InstitutionSite']['name']
+						)
+					);
+					if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
+						return false;
+					}
+				}
+			}
+        }
+        return true;
+    }
+	
     /* Excel Behaviour */
 	public function excelGetConditions() {
 		$conditions = array();
