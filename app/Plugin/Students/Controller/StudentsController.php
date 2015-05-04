@@ -51,7 +51,8 @@ class StudentsController extends StudentsAppController {
 		'FileUploader',
 		'AccessControl',
 		'Wizard',
-		'Activity' => array('model' => 'StudentActivity')
+		'Activity' => array('model' => 'StudentActivity'),
+		'PhpExcel'
 	);
 	
 	public $modules = array(
@@ -89,19 +90,9 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb('Students', array('controller' => $this->name, 'action' => 'index'));
 		$this->Wizard->setModule('Student');
 		
-		$actions = array('index', 'advanced');
+		$actions = array('index', 'advanced', 'import', 'importTemplate', 'downloadFailed');
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = __('Students');
-		} else if ($this->Wizard->isActive()) {
-			$this->bodyTitle = __('New Student');
-			$studentId = $this->Session->read('Student.id');
-			if (empty($studentId)) {
-				$skipActions = array('InstitutionSiteStudent', 'edit', 'view', 'add');
-				$wizardActions = $this->Wizard->getAllActions('Student');
-				if(!in_array($this->action, $skipActions) && !in_array($this->action, $wizardActions)){
-					return $this->redirect(array('action' => 'edit'));
-				}
-			}
 		} else if ($this->Session->check('Student.data.name')) {
 			$name = $this->Session->read('Student.data.name');
 			$this->studentId = $this->Session->read('Student.id'); // for backward compatibility
@@ -180,7 +171,6 @@ class StudentsController extends StudentsAppController {
 					}
 				}
 
-				$this->Session->delete('Student.wizard');
 			}
 		} else {
 			$search = $this->request->data;
@@ -229,7 +219,6 @@ class StudentsController extends StudentsAppController {
 			if ($this->Student->exists($id)) {
 				$this->DateTime->getConfigDateFormat();
 				$this->Session->write('Student.id', $id);
-				$this->Session->delete('Student.wizard');
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
@@ -258,8 +247,134 @@ class StudentsController extends StudentsAppController {
 	}
 
 	public function add() {
-		$this->Wizard->start();
-		return $this->redirect(array('action' => 'edit'));
+		$this->SecurityUser->controller = $this;
+		$this->SecurityUser->setMandatoryModel('Student');
+
+		$this->SecurityUser->StudentContact->validator()->remove('preferred');
+		$this->SecurityUser->validator()->remove('username', 'ruleRequired');
+
+		$ConfigItem = ClassRegistry::init('ConfigItem');
+
+		$configContacts = $ConfigItem->getOptionValue('StudentContact');
+
+		$model = 'SecurityUser';
+		$id = null;
+
+		$this->Navigation->addCrumb('Add');
+		$this->bodyTitle = __('New Student');
+
+		$data = array();
+		if ($this->request->is(array('post', 'put'))) {
+			$data = $this->request->data;
+			if (array_key_exists('Student', $data)) {
+				if (array_key_exists('birthplace_area_id', $data['Student'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
+					}
+					$data[$model]['birthplace_area_id'] = $data['Student']['birthplace_area_id'];
+					unset($data['Student']['birthplace_area_id']);
+				}
+				if (array_key_exists('address_area_id', $data['Student'])) {
+					if (!array_key_exists($model, $data)) {
+						$data[$model] = array();
+					}
+					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
+					unset($data['Student']['birthplace_area_id']);
+				}
+			}
+
+			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
+				unset($this->request->data['StudentIdentity']);
+				$data = $this->request->data;
+			} else {
+				if ($this->SecurityUser->saveAll($data)) {
+					$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
+					$InstitutionSiteStudentModel->validator()->remove('search');
+					$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
+
+					$securityUserId = $this->SecurityUser->getLastInsertId();
+					$this->Student->create();
+					$this->Student->save(array('security_user_id' => $securityUserId));
+					
+					$this->Message->alert('Student.add.success');
+					$id = $this->Student->getLastInsertId();
+					$this->Session->write('Student.id', $id);
+
+					if (!empty($dataToSite)) {
+						$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
+						$dataToSite['student_status_id'] = $studentStatusId;
+						$dataToSite['student_id'] = $id;
+					
+						$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
+						$InstitutionSiteStudentModel->save($dataToSite);
+					} 
+
+					$this->Session->write('Student.data', $this->Student->findById($id));
+					$this->Session->write('Student.security_user_id', $securityUserId);
+
+					return $this->redirect(array('action' => 'view'));
+
+				} else {
+				}
+			}
+		}
+
+		if (array_key_exists($model, $data)) {
+			if (array_key_exists('address_area_id', $data[$model])) {
+				$addressAreaId = $data[$model]['address_area_id'];
+			}
+			if (array_key_exists('birthplace_area_id', $data[$model])) {
+				$birthplaceAreaId = $data[$model]['birthplace_area_id'];	
+			}	
+		}
+
+		$genderOptions = $this->SecurityUser->Gender->getList();
+		$dataMask = $this->ConfigItem->getValue('student_identification');
+		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
+
+		$Country = ClassRegistry::init('Country');
+		$nationalityOptions = $Country->getOptions();
+
+		$identityTypeOption = array();
+		if (array_key_exists('StudentNationality', $this->request->data)) {
+			$identityTypeOption = $this->request->data['StudentNationality'][0];
+		} else {
+			$first_key = key($nationalityOptions);
+			$identityTypeOption = array('country_id' => $first_key);
+			
+		}
+
+		$IdentityType = ClassRegistry::init('IdentityType');
+		$identityTypeOptions = $IdentityType->getList($identityTypeOption);
+
+		$SpecialNeedType = ClassRegistry::init('SpecialNeedType');
+		$specialNeedOptions = $SpecialNeedType->getList($identityTypeOption);
+
+		$ContactType = ClassRegistry::init('ContactType');
+		$contactOptionData = $ContactType->find(
+			'all',
+			array(
+				'contain' => array(
+					'ContactOption' => array(
+						'name'
+					)
+				)
+			)
+		);
+		$contactOptions = array();
+		foreach ($contactOptionData as $key => $value) {
+			$contactOptions[$value['ContactType']['id']] = $value['ContactType']['name'].' - '.$value['ContactOption']['name'];
+		}
+
+		$this->set(compact('nationalityOptions', 'identityTypeOptions', 'contactOptions', 'specialNeedOptions'));
+
+		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model'=>'Student')));
+		$this->set('arrIdNo', $arrIdNo);
+		$this->set('genderOptions', $genderOptions);
+		$this->set('data', $data);
+		$this->set('model', $model);
+		$this->set('addressAreaId', (isset($addressAreaId))? $addressAreaId: null);
+		$this->set('birthplaceAreaId', (isset($birthplaceAreaId))? $birthplaceAreaId: null);
 	}
 
 	public function edit() {
@@ -294,54 +409,35 @@ class StudentsController extends StudentsAppController {
 					unset($data['Student']['birthplace_area_id']);
 				}
 			}
-			
-			if ($this->SecurityUser->save($data)) {
-				$InstitutionSiteStudentModel = ClassRegistry::init('InstitutionSiteStudent');
-				$InstitutionSiteStudentModel->validator()->remove('search');
-				$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
 
-				if ($this->Wizard->isActive()) {
-					$securityUserId = $this->SecurityUser->getLastInsertId();
-					$this->Student->create();
-					$this->Student->save(array('security_user_id' => $securityUserId));
-					if (is_null($id)) {
-						$this->Message->alert('Student.add.success');
-						$id = $this->Student->getLastInsertId();
-						$this->Session->write('Student.id', $id);
-					}
-					$studentStatusId = $InstitutionSiteStudentModel->StudentStatus->getDefaultValue();
-					$dataToSite['student_status_id'] = $studentStatusId;
-					$dataToSite['student_id'] = $id;
-
-					if (empty($studentIdSession)) {
-						$this->InstitutionSiteSectionStudent->autoInsertSectionStudent($dataToSite);
-						$InstitutionSiteStudentModel->save($dataToSite);
-					}
-
-					$this->Session->write('Student.data', $this->Student->findById($id));
-					$this->Session->write('Student.security_user_id', $securityUserId);
-					// unset wizard so it will not auto redirect from WizardComponent
-					unset($this->request->data['wizard']['next']);
-					$this->Wizard->next();
-				} else {
+			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
+				unset($this->request->data['StudentIdentity']);
+			} else {
+				if ($this->SecurityUser->saveAll($data)) {
 					$this->Message->alert('general.edit.success');
 					return $this->redirect(array('action' => 'view'));
 				}
-				
-				$this->Session->delete('InstitutionSiteStudent.addNew');
 			}
 		} else {
 			if (!empty($studentIdSession)) {
 				$data = $this->Student->findById($studentIdSession);
 				$this->request->data = $data;
-				$addressAreaId = $this->request->data[$model]['address_area_id'];
-				$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			}
 		}
+
+		if (array_key_exists($model, $data)) {
+			if (array_key_exists('address_area_id', $data[$model])) {
+				$addressAreaId = $data[$model]['address_area_id'];
+			}
+			if (array_key_exists('birthplace_area_id', $data[$model])) {
+				$birthplaceAreaId = $data[$model]['birthplace_area_id'];	
+			}	
+		}
+
 		$genderOptions = $this->SecurityUser->Gender->getList();
 		$dataMask = $this->ConfigItem->getValue('student_identification');
 		$arrIdNo = !empty($dataMask) ? array('data-mask' => $dataMask) : array();
-
+		
 		$this->set('autoid', $this->Utility->getUniqueOpenemisId(array('model' => 'Student')));
 		$this->set('arrIdNo', $arrIdNo);
 		$this->set('genderOptions', $genderOptions);
@@ -528,6 +624,257 @@ class StudentsController extends StudentsAppController {
 		}
 		
 		return $weekdays;
+	}
+	
+	public function import() {
+		$this->Navigation->addCrumb('Import');
+		$model = 'Student';
+
+		if ($this->request->is(array('post', 'put'))) {
+			if (!empty($this->request->data[$model]['excel'])) {
+				$fielObj = $this->request->data[$model]['excel'];
+				if ($fielObj['error'] == 0) {
+					$supportedFormats = $this->{$model}->getSupportedFormats();
+					$uploadedName = $fielObj['name'];
+					$finfo = finfo_open(FILEINFO_MIME_TYPE);
+					$fileFormat = finfo_file($finfo, $fielObj['tmp_name']);
+					finfo_close($finfo);
+					if(!in_array($fileFormat, $supportedFormats)){
+						$this->Message->alert('Import.formatNotSupported');
+						return $this->redirect(array('controller' => 'Students', 'action' => 'import'));
+					}
+					$header = $this->{$model}->getHeader();
+					$columns = $this->{$model}->getColumns();
+					$mapping = $this->{$model}->getMapping();
+					$totalColumns = count($columns);
+
+					$lookup = $this->{$model}->getCodesByMapping($mapping);
+
+					$uploaded = $fielObj['tmp_name'];
+
+					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
+					$worksheets = $objPHPExcel->getWorksheetIterator();
+					$firstSheetOnly = false;
+
+					$totalImported = 0;
+					$totalUpdated = 0;
+					$dataFailed = array();
+					foreach ($worksheets as $sheet) {
+						if ($firstSheetOnly) {break;}
+
+						$highestRow = $sheet->getHighestRow();
+						$totalRows = $highestRow;
+						//$highestColumn = $sheet->getHighestColumn();
+						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
+						
+						$openemisNo = $this->Utility->getUniqueOpenemisId(array('model' => 'Student'));
+						for ($row = 1; $row <= $highestRow; ++$row) {
+							$tempRow = array();
+							$originalRow = array();
+							$rowPass = true;
+							$rowInvalidCodeCols = array();
+							for ($col = 0; $col < $totalColumns; ++$col) {
+								$cell = $sheet->getCellByColumnAndRow($col, $row);
+								$originalValue = $cell->getValue();
+								$cellValue = $originalValue;
+								if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean'){
+									$cellValue = (string) $cellValue;
+								}
+								$excelMappingObj = $mapping[$col]['ImportMapping'];
+								$foreignKey = $excelMappingObj['foreign_key'];
+								$columnName = $columns[$col];
+								$originalRow[$col] = $originalValue;
+								$val = $cellValue;
+								
+								if($row > 1){
+									if(!empty($val)){
+										if($columnName == 'date_of_birth'){
+											$val = date('Y-m-d', PHPExcel_Shared_Date::ExcelToPHP($val));
+											$originalRow[$col] = $val;
+										}
+									}
+									
+									$translatedCol = $this->{$model}->getExcelLabel($model.'.'.$columnName);
+									if(empty($translatedCol)){
+										$translatedCol = __($columnName);
+									}
+
+									if ($foreignKey == 1) {
+										if(!empty($cellValue)){
+											if (array_key_exists($cellValue, $lookup[$col])) {
+												$val = $lookup[$col][$cellValue];
+											} else {
+												if($row !== 1 && $cellValue != ''){
+													$rowPass = false;
+													$rowInvalidCodeCols[] = $translatedCol;
+												}
+											}
+										}
+									} else if ($foreignKey == 2) {
+										$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
+										$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
+										if(!empty($recordId)){
+											$val = $recordId;
+										}else{
+											if($row !== 1 && $cellValue != ''){
+												$rowPass = false;
+												$rowInvalidCodeCols[] = $translatedCol;
+											}
+										}
+									}
+								}
+								
+								$tempRow[$columnName] = $val;
+							}
+
+							if(!$rowPass){
+								$rowCodeError = $this->{$model}->getExcelLabel('Import.invalid_code');
+								$colCount = 1;
+								foreach($rowInvalidCodeCols as $codeCol){
+									if($colCount == 1){
+										$rowCodeError .= ': ' . $codeCol;
+									}else{
+										$rowCodeError .= ', ' . $codeCol;
+									}
+									$colCount ++;
+								}
+								
+								$dataFailed[] = array(
+									'row_number' => $row,
+									'error' => $rowCodeError,
+									'data' => $originalRow
+								);
+								continue;
+							}
+							
+							if ($row === 1) {
+								$header = $tempRow;
+								$dataFailed = array();
+								continue;
+							}
+							
+							if(empty($tempRow['openemis_no'])){
+								$tempRow['openemis_no'] = ++$openemisNo;
+								$tempRow['openemis_no_generated'] = true;
+							}
+							
+							$this->SecurityUser->set($tempRow);
+							if ($this->SecurityUser->validates()) {
+								$this->SecurityUser->create();
+								if ($this->SecurityUser->save($tempRow)) {
+									$totalImported++;
+									
+									$securityUserId = $this->SecurityUser->getLastInsertId();
+									$this->{$model}->create();
+									$this->{$model}->save(array('security_user_id' => $securityUserId));
+								} else {
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+										'data' => $originalRow
+									);
+								}
+							} else {
+								$validationErrors = $this->SecurityUser->validationErrors;
+								if(array_key_exists('openemis_no', $validationErrors) && count($validationErrors) == 1){
+									$updateRow = $tempRow;
+									if(empty($updateRow['openemis_no_type'])){
+										$idExisting = $this->SecurityUser->field('id', array('openemis_no' => $updateRow['openemis_no']));
+										$updateRow['id'] = $idExisting;
+
+										if($this->SecurityUser->save($updateRow)) {
+											$totalUpdated++;
+										}else{
+											$dataFailed[] = array(
+												'row_number' => $row,
+												'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+												'data' => $originalRow
+											);
+										}
+									}else{
+										$updateRow['openemis_no'] = ++$openemisNo;
+										$this->SecurityUser->create();
+										if ($this->SecurityUser->save($updateRow)) {
+											$totalImported++;
+
+											$securityUserId = $this->SecurityUser->getLastInsertId();
+											$this->{$model}->create();
+											$this->{$model}->save(array('security_user_id' => $securityUserId));
+										} else {
+											$dataFailed[] = array(
+												'row_number' => $row,
+												'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+												'data' => $originalRow
+											);
+										}
+									}
+								}else{
+									$errorStr = $this->{$model}->getExcelLabel('Import.validation_failed');
+									$count = 1;
+									foreach($validationErrors as $field => $arr){
+										$fieldName = $this->{$model}->getExcelLabel($model.'.'.$field);
+										if(empty($fieldName)){
+											$fieldName = __($field);
+										}
+
+										if($count === 1){
+											$errorStr .= ': ' . $fieldName;
+										}else{
+											$errorStr .= ', ' . $fieldName;
+										}
+										$count ++;
+									}
+									
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $errorStr,
+										'data' => $originalRow
+									);
+									$this->log($this->{$model}->validationErrors, 'debug');
+								}
+							}
+						}
+
+						$firstSheetOnly = true;
+					}
+					
+					if(!empty($dataFailed)){
+						$downloadFolder = $this->{$model}->prepareDownload();
+						$excelFile = sprintf('%s_%s_%s_%s.xlsx', 
+								$this->{$model}->getExcelLabel('general.import'), 
+								$this->{$model}->getExcelLabel('general.'.  strtolower($this->{$model}->alias)), 
+								$this->{$model}->getExcelLabel('general.failed'),
+								time()
+						);
+						$excelPath = $downloadFolder . DS . $excelFile;
+
+						$writer = new XLSXWriter();
+						$newHeader = $header;
+						$newHeader[] = $this->{$model}->getExcelLabel('general.errors');
+						$writer->writeSheetRow('sheet1', array_values($newHeader));
+						foreach($dataFailed as $record){
+							$record['data'][] = $record['error'];
+							$writer->writeSheetRow('sheet1', array_values($record['data']));
+						}
+						$writer->writeToFile($excelPath);
+					}else{
+						$excelFile = null;
+					}
+
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelFile'));
+				}
+			}
+		}
+		
+		$this->set(compact('model'));
+	}
+
+	public function importTemplate(){
+		$this->Student->downloadTemplate();
+	}
+	
+	public function downloadFailed($excelFile){
+		$this->Student->performDownload($excelFile);
 	}
 
 }

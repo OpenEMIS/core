@@ -109,8 +109,18 @@ class LabelHelper extends AppHelper {
 			'levels' => 'Levels',
 			'types' => 'Types',
 			'custom_fields' => 'Custom Fields',
+			'import' => 'Import',
+			'proceed' => 'Proceed',
+			'template' => 'Template',
+			'InstitutionSite' => 'Institution',
+			'download_template' => 'Download Template',
+			'format_supported' => 'Format Supported',
 			'no_records' => 'There are no records.',
-			'editable' => 'Editable'
+			'editable' => 'Editable',
+			'staff' => 'Staff',
+			'failed' => 'Failed',
+			'errors' => 'Errors',
+			'institutionsite' => 'Institution'
 		),
 		'date' => array(
 			'start' => 'Start Date',
@@ -220,7 +230,24 @@ class LabelHelper extends AppHelper {
 			'name' => 'Institution',
 			'institution_site_id' => 'Institution',
 			'programme' => 'Programme',
-			'id_name' => 'ID / Name'
+			'id_name' => 'ID / Name',
+			'alternative_name' => 'Alternative Name',
+			'postal_code' => 'Postal Code',
+			'contact_person' => 'Contact Person',
+			'date_opened' => 'Date Opened',
+			'year_opened' => 'Year Opened',
+			'date_closed' => 'Date Closed',
+			'year_closed' => 'Year Closed',
+			'area_id' => 'Area',
+			'area_administrative_id' => 'Area Administrative',
+			'code' => 'Code',
+			'address' => 'Address',
+			'telephone' => 'Telephone',
+			'fax' => 'Fax',
+			'email' => 'Email',
+			'longitude' => 'Longitude',
+			'website' => 'Website',
+			'latitude' => 'Latitude'
 		),
 		'InstitutionSiteProgramme' => array(
 			'title' => 'Programmes',
@@ -274,7 +301,8 @@ class LabelHelper extends AppHelper {
 			'name' => 'School Year'
 		),
 		'Country' => array(
-			'name' => 'Country'
+			'name' => 'Country',
+			'identity_type_id' => 'Default Identity Type'
 		),
 		'HealthRelationship' => array(
 			'name' => 'Relationship'
@@ -337,10 +365,28 @@ class LabelHelper extends AppHelper {
 			'add_existing' => 'Add existing Student',
 			'third_name' => 'Third Name',
 			'date_of_birth' => 'Birth Date',
-			'middle_name' => 'Middle Name'
+			'middle_name' => 'Middle Name',
+			'gender_id' => 'Gender',
+			'address_area_id' => 'Address Area',
+			'birthplace_area_id' => 'Birth Place Area',
+			'preferred_name' => 'Preferred Name',
+			'address' => 'Address',
+			'postal_code' => 'Postal Code'
 		),
 		'Staff' => array(
 			'module' => 'Staff',
+			'openemis_no' => 'OpenEMIS ID',
+			'first_name' => 'First Name',
+			'last_name' => 'Last Name',
+			'gender_id' => 'Gender',
+			'third_name' => 'Third Name',
+			'date_of_birth' => 'Birth Date',
+			'middle_name' => 'Middle Name',
+			'address_area_id' => 'Address Area',
+			'birthplace_area_id' => 'Birth Place Area',
+			'preferred_name' => 'Preferred Name',
+			'address' => 'Address',
+			'postal_code' => 'Postal Code'
 		),
 		'StaffLeave' => array(
 			'title' => 'Leave',
@@ -472,6 +518,7 @@ class LabelHelper extends AppHelper {
 			'date_of_birth' => 'Date Of Birth', 
 			'date_of_death' => 'Date Of Death', 
 			'status' => 'Status'
+			
 		),
 		
 		'InstitutionSiteFee' => array(
@@ -717,6 +764,18 @@ class LabelHelper extends AppHelper {
 		'Notice' => array(
 			'title' => 'Notices',	
 			'created' => 'Date'
+		),
+		'Import' => array(
+			'saving_failed' => 'Failed to save to database',
+			'invalid_code' => 'Invalid Code',
+			'validation_failed' => 'Validation Failed',
+			'total_rows' => 'Total Rows',
+			'rows_imported' => 'Rows Imported',
+			'rows_updated' => 'Rows Updated',
+			'rows_failed' => 'Rows Failed',
+			'recommended_max_records' => 'Recommended Maximum Records',
+			'openemis_no' => 'OpenEMIS Number',
+			'download_failed_records' => 'Download failed records'
 		),
 		'RubricTemplate' => array(
 			'name' => 'Rubric Template',

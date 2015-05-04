@@ -227,8 +227,9 @@ class WizardComponent extends Component {
 		return count($links);
 	}
 	
-	public function start() {
+	public function start($options = array()) {
 		$links = $this->getLinks($this->module);
+		
 		$personnelId = $this->Session->read($this->module.'.id');
 		$this->Session->delete($this->module);
 		$this->Session->write($this->module . '.wizard.links', $links);
