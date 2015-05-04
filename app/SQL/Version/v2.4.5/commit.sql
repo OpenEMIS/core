@@ -186,4 +186,13 @@ CREATE TABLE `security_rest_sessions` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- update config_items
+update `config_items` set `label` = 'Number of Shifts' where `name` = 'no_of_shifts';
+update `config_items` set `name` = 'ldap_version' where `type` = 'LDAP Configuration' and `name` = 'version';
+update `config_items` set `name` = 'db_version', `label` = 'Database Version', `visible` = 0, `default_value` = '1.0', `value` = '2.4.5' where `name` = 'version';
+ALTER TABLE `config_items` ADD UNIQUE (`name`);
+-- select name, count(name) from www_openemis_blz.config_items group by name having count(name) > 1;
+
+
+
 
