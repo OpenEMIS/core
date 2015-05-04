@@ -37,7 +37,7 @@ echo $this->element('../Security/roles/nav_tabs');
 					if ($obj['security_group_id'] == 0) {
 						echo $this->Html->link($obj['name'], array('action' => 'rolesView', $obj['id']));
 					} else {
-						echo $obj['name'];
+						echo __($obj['name']);
 					}
 					?>
 		</td>
