@@ -541,24 +541,35 @@ class InstitutionSiteStudent extends AppModel {
 		*/
 		unset($conditions['defaultIdentity']);
 
+		$joins = array(
+			array(
+				'table' => 'students',
+				'alias' => 'Student',
+				'type' => 'inner',
+				'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
+			),
+			array(
+				'table' => 'security_users',
+				'alias' => 'SecurityUser',
+				'type' => 'inner',
+				'conditions' => array('SecurityUser.id = Student.security_user_id')
+			),
+		);
+		
+		if(array_key_exists('EducationProgramme.id', $conditions)){
+			$joins[] = array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'type' => 'inner',
+				'conditions' => array('EducationProgramme.id = InstitutionSiteStudent.education_programme_id')
+			);
+		}
+
 		$count = $this->find(
 			'count',
 			array(
 				'recursive' => -1,
-				'joins' => array(
-					array(
-						'table' => 'students',
-						'alias' => 'Student',
-						'type' => 'inner',
-						'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
-					),
-					array(
-						'table' => 'security_users',
-						'alias' => 'SecurityUser',
-						'type' => 'inner',
-						'conditions' => array('SecurityUser.id = Student.security_user_id')
-					),
-				),
+				'joins' => $joins,
 				'conditions' => $conditions, 
 				'group' => array('Student.id')
 			)
