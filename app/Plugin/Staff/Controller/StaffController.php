@@ -354,19 +354,14 @@ class StaffController extends StaffAppController {
 
 	public function delete() {
 		$id = $this->Session->read('Staff.id');
-		
-//		Check if the row exists.
 		$secId = $this->Staff->field('security_user_id', array('Staff.id' => $id));
 		
-//		Check if the security_user id exists, and delete both the staff and security_user row.
-		if ($secId !== false) {
-			$this->Staff->delete($id);
+		if ($this->Staff->delete($id)) {
 			$this->SecurityUser->delete($secId);
-			$this->Message->alert('general.delete.success');
-		} else {
-			$this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
 		}
-		$this->redirect(array('action' => 'index'));
+		
+		$this->Message->alert('general.delete.success');
+		return $this->redirect(array('action' => 'index'));
 	}
 	
 	public function excel() {
