@@ -22,14 +22,6 @@ class Staff extends StaffAppModel {
 		'Search',
 		'UserAccess',
 		'TrackActivity' => array('target' => 'Staff.StaffActivity', 'key' => 'staff_id', 'session' => 'Staff.id'),
-		/*
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'Staff.StaffAttachment',
-				'Staff.StaffCustomValue'
-			)
-		),
-		*/
 		'CustomReport'
 	);
 
