@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppController', 'Controller');
 App::uses('Sanitize', 'Utility');
+App::import('Vendor', 'php-excel-reader/excel_reader2');
 
 class InstitutionSitesController extends AppController {
 	public $institutionSiteId;
@@ -73,7 +74,8 @@ class InstitutionSitesController extends AppController {
 		'AreaHandler',
 		'Alert',
 		'Activity' => array('model' => 'InstitutionSiteActivity'),
-		'HighCharts.HighCharts'
+		'HighCharts.HighCharts',
+		'PhpExcel'
 	);
 	
 	public $modules = array(
@@ -107,6 +109,8 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 		$this->indexPage = 'dashboard';
 		if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
+			$this->bodyTitle = 'Institutions';
+		} else if ($this->action === 'import' || $this->action === 'importTemplate' || $this->action === 'downloadFailed'){
 			$this->bodyTitle = 'Institutions';
 		} else if ($this->action === 'view' || $this->action === 'dashboard') {
 			$pass = $this->request->params['pass'];
@@ -152,6 +156,8 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function index() {
+		$this->Session->delete('InstitutionSiteStudent.addNew');
+		$this->Session->delete('InstitutionSiteStaff.addNew');
 		$this->AccessControl->init($this->Auth->user('id'));
 		$this->Navigation->addCrumb('List of Institutions');
 
@@ -849,6 +855,224 @@ class InstitutionSitesController extends AppController {
 		} else {
 			return false;
 		}
+	}
+	
+	public function import() {
+		$this->Navigation->addCrumb('Import');
+		$model = 'InstitutionSite';
+
+		if ($this->request->is(array('post', 'put'))) {
+			if (!empty($this->request->data[$model]['excel'])) {
+				$fielObj = $this->request->data[$model]['excel'];
+				if ($fielObj['error'] == 0) {
+					$supportedFormats = $this->{$model}->getSupportedFormats();
+					$uploadedName = $fielObj['name'];
+					$finfo = finfo_open(FILEINFO_MIME_TYPE);
+					$fileFormat = finfo_file($finfo, $fielObj['tmp_name']);
+					finfo_close($finfo);
+					if(!in_array($fileFormat, $supportedFormats)){
+						$this->Message->alert('Import.formatNotSupported');
+						return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'import'));
+					}
+					$header = $this->{$model}->getHeader();
+					$columns = $this->{$model}->getColumns();
+					$mapping = $this->{$model}->getMapping();
+					$totalColumns = count($columns);
+
+					$lookup = $this->{$model}->getCodesByMapping($mapping);
+
+					$uploaded = $fielObj['tmp_name'];
+
+					$objPHPExcel = $this->PhpExcel->loadWorksheet($uploaded);
+					$worksheets = $objPHPExcel->getWorksheetIterator();
+					$firstSheetOnly = false;
+
+					$totalImported = 0;
+					$totalUpdated = 0;
+					$dataFailed = array();
+					foreach ($worksheets as $sheet) {
+						if ($firstSheetOnly) {break;}
+
+						$highestRow = $sheet->getHighestRow();
+						$totalRows = $highestRow;
+						//$highestColumn = $sheet->getHighestColumn();
+						//$highestColumnIndex = PHPExcel_Cell::columnIndexFromString($highestColumn);
+						for ($row = 1; $row <= $highestRow; ++$row) {
+							$tempRow = array();
+							$originalRow = array();
+							$rowPass = true;
+							$rowInvalidCodeCols = array();
+							for ($col = 0; $col < $totalColumns; ++$col) {
+								$cell = $sheet->getCellByColumnAndRow($col, $row);
+								$originalValue = $cell->getValue();
+								$cellValue = $originalValue;
+								if(gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean'){
+									$cellValue = (string) $cellValue;
+								}
+								$excelMappingObj = $mapping[$col]['ImportMapping'];
+								$foreignKey = $excelMappingObj['foreign_key'];
+								$columnName = $columns[$col];
+								$originalRow[$col] = $originalValue;
+								$val = $cellValue;
+								
+								if($row > 1){
+									if(!empty($val)){
+										if($columnName == 'date_opened' || $columnName == 'date_closed'){
+											$val = date('Y-m-d', PHPExcel_Shared_Date::ExcelToPHP($val));
+											$originalRow[$col] = $val;
+										}
+									}
+									
+									$translatedCol = $this->{$model}->getExcelLabel($model.'.'.$columnName);
+									if(empty($translatedCol)){
+										$translatedCol = __($columnName);
+									}
+
+									if ($foreignKey == 1) {
+										if(!empty($cellValue)){
+											if (array_key_exists($cellValue, $lookup[$col])) {
+												$val = $lookup[$col][$cellValue];
+											} else {
+												if($row !== 1 && $cellValue != ''){
+													$rowPass = false;
+													$rowInvalidCodeCols[] = $translatedCol;
+												}
+											}
+										}
+									} else if ($foreignKey == 2) {
+										$excelLookupModel = ClassRegistry::init($excelMappingObj['lookup_model']);
+										$recordId = $excelLookupModel->field('id', array($excelMappingObj['lookup_column'] => $cellValue));
+										if(!empty($recordId)){
+											$val = $recordId;
+										}else{
+											if($row !== 1 && $cellValue != ''){
+												$rowPass = false;
+												$rowInvalidCodeCols[] = $translatedCol;
+											}
+										}
+									}
+								}
+								
+								$tempRow[$columnName] = $val;
+							}
+
+							if(!$rowPass){
+								$rowCodeError = $this->{$model}->getExcelLabel('Import.invalid_code');
+								$colCount = 1;
+								foreach($rowInvalidCodeCols as $codeCol){
+									if($colCount == 1){
+										$rowCodeError .= ': ' . $codeCol;
+									}else{
+										$rowCodeError .= ', ' . $codeCol;
+									}
+									$colCount ++;
+								}
+								
+								$dataFailed[] = array(
+									'row_number' => $row,
+									'error' => $rowCodeError,
+									'data' => $originalRow
+								);
+								continue;
+							}
+							
+							if ($row === 1) {
+								$header = $tempRow;
+								$dataFailed = array();
+								continue;
+							}
+
+							$this->{$model}->set($tempRow);
+							$this->{$model}->validator()->remove('area_id_select');
+							if ($this->{$model}->validates()) {
+								$this->{$model}->create();
+								if ($this->{$model}->save($tempRow)) {
+									$totalImported++;
+								} else {
+									$totalUpdated++;
+								}
+							} else {
+								$validationErrors = $this->{$model}->validationErrors;
+								if(array_key_exists('code', $validationErrors) && count($validationErrors) == 1){
+									$idExisting = $this->{$model}->field('id', array('code' => $tempRow['code']));
+									$updateRow = $tempRow;
+									$updateRow['id'] = $idExisting;
+									if ($this->{$model}->save($updateRow)) {
+										$totalUpdated++;
+									}else{
+										$dataFailed[] = array(
+											'row_number' => $row,
+											'error' => $this->{$model}->getExcelLabel('Import.saving_failed'),
+											'data' => $originalRow
+										);
+									}
+								}else{
+									$errorStr = $this->{$model}->getExcelLabel('Import.validation_failed');
+									$count = 1;
+									foreach($validationErrors as $field => $arr){
+										$fieldName = $this->{$model}->getExcelLabel($model.'.'.$field);
+										if(empty($fieldName)){
+											$fieldName = __($field);
+										}
+
+										if($count === 1){
+											$errorStr .= ': ' . $fieldName;
+										}else{
+											$errorStr .= ', ' . $fieldName;
+										}
+										$count ++;
+									}
+									
+									$dataFailed[] = array(
+										'row_number' => $row,
+										'error' => $errorStr,
+										'data' => $originalRow
+									);
+									$this->log($this->{$model}->validationErrors, 'debug');
+								}
+							}
+						}
+
+						$firstSheetOnly = true;
+					}
+					
+					if(!empty($dataFailed)){
+						$downloadFolder = $this->{$model}->prepareDownload();
+						$excelFile = sprintf('%s_%s_%s_%s.xlsx', 
+								$this->{$model}->getExcelLabel('general.import'), 
+								$this->{$model}->getExcelLabel('general.'.  $this->{$model}->alias), 
+								$this->{$model}->getExcelLabel('general.failed'),
+								time()
+						);
+						$excelPath = $downloadFolder . DS . $excelFile;
+
+						$writer = new XLSXWriter();
+						$newHeader = $header;
+						$newHeader[] = $this->{$model}->getExcelLabel('general.errors');
+						$writer->writeSheetRow('sheet1', array_values($newHeader));
+						foreach($dataFailed as $record){
+							$record['data'][] = $record['error'];
+							$writer->writeSheetRow('sheet1', array_values($record['data']));
+						}
+						$writer->writeToFile($excelPath);
+					}else{
+						$excelFile = null;
+					}
+
+					$this->set(compact('uploadedName', 'totalRows', 'dataFailed', 'totalImported', 'totalUpdated', 'header', 'excelFile'));
+				}
+			}
+		}
+
+		$this->set(compact('model'));
+	}
+
+	public function importTemplate(){
+		$this->InstitutionSite->downloadTemplate();
+	}
+	
+	public function downloadFailed($excelFile){
+		$this->InstitutionSite->performDownload($excelFile);
 	}
 
 }

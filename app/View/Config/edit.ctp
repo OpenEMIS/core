@@ -24,7 +24,7 @@ echo $this->Form->input('name', array('type' => 'hidden'));
 echo $this->Form->input('field_type', array('type' => 'hidden'));
 echo $this->Form->input('option_type', array('type' => 'hidden'));
 echo $this->Form->input('type', array('readonly' => 'readonly'));
-echo $this->Form->input('label', array('readonly' => 'readonly', 'disabled'));
+echo $this->Form->input('label', array('readonly' => 'readonly'));
 
 if($fieldType=='Dropdown'){
 	echo $this->Form->input('value', array('options'=>$options));
