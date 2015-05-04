@@ -468,9 +468,14 @@ class StudentsController extends StudentsAppController {
 
 	public function delete() {
 		$id = $this->Session->read('Student.id');
-		$this->Student->delete($id);
+		$secId = $this->Student->field('security_user_id', array('Student.id' => $id));
+		
+		if ($this->Student->delete($id)) {
+			$this->SecurityUser->delete($secId);
+		}
+		
 		$this->Message->alert('general.delete.success');
-		$this->redirect(array('action' => 'index'));
+		return $this->redirect(array('action' => 'index'));
 	}
 
 	public function excel() {
