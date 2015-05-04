@@ -41,7 +41,7 @@ class InstitutionReportsController extends AppController {
 		$i=0;
 		$features = array(
 			array('name' => __('Overview'), 'model' => 'InstitutionSite', 'period' => false),
-			array('name' => __('Programmes'), 'model' => 'InstitutionSiteProgramme', 'period' => true),
+			array('name' => __('Programmes'), 'model' => 'InstitutionSiteProgramme', 'period' => false),
 			array('name' => __('Positions'), 'model' => 'InstitutionSitePosition', 'period' => false),
 			array('name' => __('Shifts'), 'model' => 'InstitutionSiteShift', 'period' => true),
 			array('name' => __('Sections'), 'model' => 'InstitutionSiteSection', 'period' => true),
