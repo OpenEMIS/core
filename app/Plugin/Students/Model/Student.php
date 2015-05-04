@@ -23,12 +23,6 @@ class Student extends StudentsAppModel {
 		// 'openemis_no', 'first_name', 'last_name'
 		'Search',
 		'TrackActivity' => array('target' => 'Students.StudentActivity', 'key' => 'student_id', 'session' => 'Student.id'),
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'Students.StudentAttachment',
-				'Students.StudentCustomValue'
-			)
-		),
 		'CustomReport' => array(
 			'_default' => array('photo_name', 'photo_content')
 		)
