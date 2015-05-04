@@ -194,7 +194,9 @@ class FieldOptionValue extends AppModel {
 				$name = __($value[$alias]['name']);
 				array_push($result, 
 					array(
+						'id' => $value[$alias]['id'],
 						'name' => $name, 
+						'national_code' => $value[$alias]['national_code'], 
 						'value' => $value[$alias]['id'],
 						'obsolete' => ($value[$alias]['visible']!='0') ? false : true,
 						'selected' => ($selected && $selected==$value[$alias]['id']) ? true : ((!$selected && $value[$alias]['default']!='0') ? true : false)

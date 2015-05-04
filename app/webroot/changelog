@@ -21,3 +21,12 @@ v2.4.4
 - On the Positions module, it shows the total FTE value now
 - Fixed a bug that caused a blank page when user clicked on Staff Behaviour
 - Changed the SMS message length to a configurable value in the System Configurations
+
+v2.4.5
+- Fixed a bug that caused students from different programmes to be added to another programme
+- Fixed a bug that caused the label field to become empty when user submits an invalid value in System Configurations
+- Fixed a bug that allows users to add space to username during user creation
+- Fixed a bug that redirects to the wrong page when user clicked on General tab in User Details
+- Implemented a new feature to allow user to import Institution/Student/Staff data from an excel spreadsheet
+- Added Identities, Nationalities, Contact and Special Needs in Student/Staff add form
+- User can now select a default identity for each nationality
