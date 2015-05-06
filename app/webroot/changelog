@@ -35,3 +35,4 @@ v2.4.6
 - Fixed a bug that restrict user to adding data to Total -> Finance even though permission is granted
 - Fixed a bug that caused the user able to save multiple Academic Period with current set to true
 - Fixed a bug that shows in incorrect gender for students in sections
+- Sections and Classes now shows the correct total number of students
