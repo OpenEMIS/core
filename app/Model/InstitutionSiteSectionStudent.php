@@ -117,7 +117,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 	public function getGenderTotalBySection($sectionId) {
 		$joins = array(
 			array(
-				'table' => 'students', 
+				'table' => 'students',
 				'alias' => 'Student'
 			)
 		);
@@ -129,7 +129,7 @@ class InstitutionSiteSectionStudent extends AppModel {
 			'all',
 			array(
 				'recursive' => -1,
-				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(DISTINCT SecurityUser.gender_id) as counter'),
+				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(SecurityUser.gender_id) as counter'),
 				'joins' => array(
 					array(
 						'table' => 'students',
@@ -150,14 +150,17 @@ class InstitutionSiteSectionStudent extends AppModel {
 				'conditions' => array(
 					'InstitutionSiteSectionStudent.institution_site_section_id' => $sectionId
 				),
+				'group' => array('SecurityUser.gender_id')
 			)
 		);
 
 		foreach ($data as $key => $value) {
-			if ($value['Gender']['name'] == 'Male') $gender['M'] = $value[0]['counter'];
-			if ($value['Gender']['name'] == 'Female') $gender['F'] = $value[0]['counter'];
+			if ($value['Gender']['name'] == 'Female') {
+				$gender['F'] = $value[0]['counter'];
+			} else {
+				$gender['M'] = $value[0]['counter'];
+			}
 		}
-
 		return $gender;
 	}
 
