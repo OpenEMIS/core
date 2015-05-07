@@ -279,7 +279,7 @@ class StudentsController extends StudentsAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
-					unset($data['Student']['birthplace_area_id']);
+					unset($data['Student']['address_area_id']);
 				}
 			}
 
@@ -406,7 +406,7 @@ class StudentsController extends StudentsAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
-					unset($data['Student']['birthplace_area_id']);
+					unset($data['Student']['address_area_id']);
 				}
 			}
 
