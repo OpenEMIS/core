@@ -39,7 +39,7 @@
 					?>
 					<td><?php echo $obj['Student']['SecurityUser']['openemis_no']; ?></td>
 					<td><?php echo ModelHelper::getName($obj['Student']['SecurityUser']) ?></td>
-					<td><?php echo $this->Model->getGender($obj['Student']['SecurityUser']['Gender']['name']) ?></td>
+					<td><?php echo __($obj['Student']['SecurityUser']['Gender']['name']) ?></td>
 					<td><?php echo $this->Utility->formatDate($obj['Student']['SecurityUser']['date_of_birth']); ?></td>
 					<td>
 						<?php

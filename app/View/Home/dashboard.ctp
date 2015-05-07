@@ -2,7 +2,7 @@
 echo $this->Html->css('highchart-override', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/HighCharts/js/highcharts', false);
 echo $this->Html->script('/HighCharts/js/modules/exporting', false);
-echo $this->Html->script('institution_site_dashboards', false);
+echo $this->Html->script('dashboards', false);
 echo $this->element('alert');
 ?>
 
