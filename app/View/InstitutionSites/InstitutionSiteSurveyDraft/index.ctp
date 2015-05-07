@@ -13,7 +13,8 @@ if (!empty($data)) : ?>
 			<tr>
 				<th><?php echo __('Name') ?></th>
 				<th><?php echo __('Academic Period') ?></th>
-				<th><?php echo __('Complete By') ?></th>
+				<th><?php echo __('Last Modified') ?></th>
+				<th><?php echo __('To be completed by') ?></th>
 				<th><?php echo __('Description') ?></th>
 			</tr>
 		</thead>
@@ -24,12 +25,14 @@ if (!empty($data)) : ?>
 				foreach ($obj['AcademicPeriod'] as $key => $period) :
 				$name = $this->Html->link($obj['SurveyTemplate']['name'], array('action' => $model, 'view', $period[$model]['id']));
 				$academicPeriod = $period['AcademicPeriod']['name'];
+				$lastModified = (!empty($period[$model]['modified']) ? $period[$model]['modified'] : $period[$model]['created']);
 				$completeBy = $period['SurveyStatus']['date_disabled'];
 				$description = $obj['SurveyTemplate']['description'];
 		?>
 			<tr>
 				<td><?php echo $name; ?></td>
 				<td><?php echo $academicPeriod; ?></td>
+				<td><?php echo $lastModified; ?></td>
 				<td><?php echo $completeBy; ?></td>
 				<td><?php echo $description; ?></td>
 			</tr>
