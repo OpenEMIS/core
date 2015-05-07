@@ -285,7 +285,7 @@ class StaffController extends StaffAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-					unset($data['Staff']['birthplace_area_id']);
+					unset($data['Staff']['address_area_id']);
 				}
 			}
 
@@ -411,7 +411,7 @@ class StaffController extends StaffAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-					unset($data['Staff']['birthplace_area_id']);
+					unset($data['Staff']['address_area_id']);
 				}
 			}
 
