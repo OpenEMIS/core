@@ -20,6 +20,7 @@ echo $this->element('../AcademicPeriods/breadcrumbs');
 		<thead>
 			<tr>
 				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
+				<th class="cell-visible"><?php echo $this->Label->get('general.current'); ?></th>
 				<th><?php echo $this->Label->get('general.name'); ?></th>
 				<th><?php echo $this->Label->get('general.code'); ?></th>
 				<th><?php echo $this->Label->get('date.start'); ?></th>
@@ -32,6 +33,7 @@ echo $this->element('../AcademicPeriods/breadcrumbs');
 			<?php foreach($data as $obj) { ?>
 			<tr>
 				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['current']==1); ?></td>
 				<td>
 					<?php
 					if($obj['AcademicPeriodLevel']['level'] == $maxLevel) {

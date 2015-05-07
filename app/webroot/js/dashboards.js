@@ -14,17 +14,19 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	institution_site_dashboards.init();
+	dashboards.init();
 });
 
-var institution_site_dashboards = {
+var dashboards = {
 	init: function() {
-		groups = $('.highchart');
-
 		$.each($('.highchart'), function(key, group) {
 			json = $(group).html();
 			obj = JSON.parse(json);
 			$(group).highcharts(obj);
+		});
+
+		$.each($('text:contains("Highcharts.com")'), function(key, text) {
+			$(text).html('');
 		});
 	}
 }

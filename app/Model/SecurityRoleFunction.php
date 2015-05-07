@@ -87,6 +87,13 @@ class SecurityRoleFunction extends AppModel {
 					$header = $groupObj['SecurityGroup']['name'];// . ' - ' . __('Permissions');
 					$controller->set('header', $header);
 				}
+				// Apply the translation function to all values in the array for both $roleOptions and $moduleOptions
+				array_walk($roleOptions, function(&$roleArg){
+					$roleArg = __($roleArg);
+				});
+				array_walk($moduleOptions, function(&$modArg){
+					$modArg = __($modArg);
+				});
 				
 				$controller->set('_operations', $controller->AccessControl->operations);
 				$controller->set(compact('allowEdit', 'roleOptions', 'selectedRole', 'moduleOptions', 'selectedModule', 'permissions', 'selectedGroup'));
