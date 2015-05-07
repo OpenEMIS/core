@@ -13,7 +13,7 @@ if (!empty($data)) : ?>
 			<tr>
 				<th><?php echo __('Name') ?></th>
 				<th><?php echo __('Academic Period') ?></th>
-				<th><?php echo __('Complete By') ?></th>
+				<th><?php echo __('To be completed by') ?></th>
 				<th><?php echo __('Description') ?></th>
 			</tr>
 		</thead>
