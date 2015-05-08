@@ -110,7 +110,23 @@ class MessageComponent extends Component {
 				'student_already_exists_in_other_site' => array('type' => 'info', 'msg' => 'This student is already exists in other institution site.'),
 				'notExist' => array('type' => 'error', 'msg' => 'The Student Record does not exist.')
 			),
+			'add_security_group' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The record has been added successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'Error adding new group')
+			),
+			'edit_security_group' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The record has been edited successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'Error updating group')
+			),
 			'noProgramme' => array('type' => 'warn', 'msg' => 'There are no programmes associated with this institution site')
+		),
+		'SecurityGroup' => array(
+			'delete' => array(
+				'failed' => array('type' => 'error', 'msg' => 'This group belongs to an active Institution')
+			),
+			'edit' => array(
+				'name_different' => array('type' => 'error', 'msg' => 'This group name cannot be changed since it belongs to an active Institution')
+			)
 		),
 		'Student' => array(
 			'add' => array(

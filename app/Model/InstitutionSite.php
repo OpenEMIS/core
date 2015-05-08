@@ -27,7 +27,8 @@ class InstitutionSite extends AppModel {
 		'AreaAdministrative',
 		'InstitutionSiteProvider',
 		'InstitutionSiteSector',
-		'InstitutionSiteGender'
+		'InstitutionSiteGender',
+		'SecurityGroup'
 	);
 
 	public $hasMany = array(
@@ -39,12 +40,12 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteClass',
 		'InstitutionSiteFee',
 		'InstitutionSiteCustomValue',
-		'InstitutionSiteActivity' => array('dependent' => true)
+		'InstitutionSiteActivity' => array('dependent' => true),
+		'SecurityGroupInstitutionSite'
 	);
 	
 	public $actsAs = array(
 		'Excel',
-		//'TrackHistory',
 		'TrackActivity' => array('target' => 'InstitutionSiteActivity', 'key' => 'institution_site_id', 'session' => 'InstitutionSite.id'),
 		'CascadeDelete' => array(
 			'cascade' => array(
@@ -80,144 +81,137 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Name'
+				'messageCode' => 'general'
 			)
 		),
 		'code' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Code'
+				'messageCode' => 'general'
 			),
 			'ruleUnique' => array(
         		'rule' => 'isUnique',
         		'required' => true,
-        		'message' => 'Please enter a unique Code'
+        		'messageCode' => 'general'
 		    )
 		),
 		'address' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Address'
+        		'messageCode' => 'general'
 			),
-			'ruleMaximum' => array(
+			'ruleMaximum255' => array(
 				'rule' => array('maxLength', 255),
 				'required' => true,
-				'message' => 'Please eneter an address within 255 characters'
+        		'messageCode' => 'general'
 			)
 		),
 		'postal_code' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Postal Code'
+        		'messageCode' => 'general'
 			)
 		),
 		'institution_site_locality_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
-				'required' => true,
-				'message' => 'Please select a Locality'
+				'required' => true
 			)
 		),
 		'institution_site_status_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
-				'required' => true,
-				'message' => 'Please select a Status'
+				'required' => true
 			)
 		),
 		'institution_site_type_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Type'
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
 		'institution_site_ownership_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select an Ownership'
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
+
 		'area_id_select' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a valid Area'
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
 				'allowEmpty' => true,
-				'message' => 'Please enter a valid Email'
+        		'messageCode' => 'general'
 			)
 		),
 		'date_opened' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select the Date Opened'
+        		'messageCode' => 'InstitutionSite'
 			),
 			'ruleCompare' => array(
 				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
 				'required' => true,
-				'message' => 'Please select the Date Opened'
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
 		'date_closed' => array(
 			'ruleCompare' => array(
-				'rule' => 'compareDates',
-				'message' => 'Date Closed cannot be earlier than Date Opened'
+				'rule' => array('compareDateReverse', 'date_opened'),
+				'allowEmpty' => true,
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
 		'longitude' => array(
+			'ruleLongitude' => array(
 				'rule' => array('checkLongitude'),
 				'allowEmpty' => true,
-				'message' => 'Please enter a valid Longitude'
+        		'messageCode' => 'InstitutionSite'
+			)
 		),
 		'latitude' => array(
+			'ruleLatitude' => array(
 				'rule' => array('checkLatitude'),
 				'allowEmpty' => true,
-				'message' => 'Please enter a valid Latitude'
+        		'messageCode' => 'InstitutionSite'
+			)
 		),
 		'institution_site_provider_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Provider'
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
 		'institution_site_sector_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Sector'
+        		'messageCode' => 'InstitutionSite'
 			)
 		),
 		'institution_site_gender_id' => array(
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Gender'
+        		'messageCode' => 'InstitutionSite'
 			)
 		)
 	);
 	
-	public function compareDates() {
-		if(!empty($this->data[$this->alias]['date_closed'])) {
-			$startDate = $this->data[$this->alias]['date_opened'];
-			$startTimestamp = strtotime($startDate);
-			$endDate = $this->data[$this->alias]['date_closed'];
-			$endTimestamp = strtotime($endDate);
-			return $endTimestamp > $startTimestamp;
-		}
-		return true;
-	}
-    
 	public function checkNumeric($arrVal){
 		$o = array_values($arrVal);
 		
@@ -252,6 +246,48 @@ class InstitutionSite extends AppModel {
         return $isValid;
     }
 
+	public function afterSave($created, $options = Array()) {
+        if ($created) {
+			$addSecurityGroupParams = array(
+				'SecurityGroup' => array(
+					'name' => $this->data['InstitutionSite']['name']
+				),
+				'GroupInstitutionSite' => array(
+					'0' => array(
+						'institution_site_id' => $this->data['InstitutionSite']['id']
+					)
+				)
+			);
+			$securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
+			if ($securityGroup) {
+				$this->trackActivity = false;
+				$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
+				if (!$this->save()) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+        } else {
+			$securityGroupId = $this->field('security_group_id');
+			if (!empty($securityGroupId)) {
+				$this->SecurityGroup->read(null, $securityGroupId);
+				if (is_object($this->SecurityGroup)) {
+					$editSecurityGroupParams = array(
+						'SecurityGroup' => array(
+							'id' => $securityGroupId,
+							'name' => $this->data['InstitutionSite']['name']
+						)
+					);
+					if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
+						return false;
+					}
+				}
+			}
+        }
+        return true;
+    }
+	
     /* Excel Behaviour */
 	public function excelGetConditions() {
 		$conditions = array();
@@ -710,6 +746,56 @@ class InstitutionSite extends AppModel {
 			$data[] = array(
 				'label' => $site['name'],
 				'value' => $site['id'],
+			);
+		}
+		return $data;
+	}
+	
+	// This is strictly for SecurityGroup autocomplete()
+	// This function has to be here due to " $hasAndBelongsToMany = array(
+	// 	'GroupInstitutionSite' => array(
+	// 		'className' => 'InstitutionSite',
+	// 		'joinTable' => 'security_group_institution_sites',
+	// 		'order' => array('GroupInstitutionSite.name')
+	// 	)
+	// ); " defined in SecurityGroup.php
+	// 
+	public function autocomplete($search, $exclude=array(), $conditions=array()) {
+		$isSuperUser = CakeSession::read('Auth.User.super_admin') == 1;
+		if(!$isSuperUser){
+			$userId = CakeSession::read('Auth.User.id');
+			$userInstitutionSites = ClassRegistry::init('SecurityGroupUser')->getUserInstitutionSites($userId);
+			
+			foreach($userInstitutionSites as $row){
+				$siteId = $row['InstitutionSite']['id'];
+				$institutionSiteIds[$siteId] = $siteId;
+			}
+			
+			if(isset($conditions['AND']['OR'])){
+				$conditions['AND']['OR'][] = array('GroupInstitutionSite.id' => $institutionSiteIds);
+			}
+		}
+		
+		$conditions = array_merge(array(
+			'OR' => array(
+				'GroupInstitutionSite.code LIKE' => $search,
+				'GroupInstitutionSite.name LIKE' => $search
+			),
+			'GroupInstitutionSite.id NOT' => $exclude
+		), $conditions);
+		
+		$list = $this->find('all', array(
+			'fields' => array('GroupInstitutionSite.id', 'GroupInstitutionSite.code', 'GroupInstitutionSite.name'),
+			'conditions' => $conditions,
+			'order' => array('GroupInstitutionSite.name')
+		));
+		
+		$data = array();
+		foreach($list as $obj) {
+			$site = $obj['GroupInstitutionSite'];
+			$data[] = array(
+				'label' => sprintf('%s - %s', $site['code'], $site['name']),
+				'value' => array('value-id' => $site['id'], 'site-name' => $site['name'], 'site-code' => $site['code'])
 			);
 		}
 		return $data;
