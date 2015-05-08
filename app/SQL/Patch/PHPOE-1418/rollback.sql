@@ -2,8 +2,7 @@
 -- PHPOE-1418 rollback.sql
 -- 
 
-DROP TABLE `staff_attachments`;
-ALTER TABLE `z_1418_staff_attachments` RENAME `staff_attachments`;
+ALTER TABLE `staff_attachments` DROP `date_on_file`;
 
 UPDATE `navigations` 
 SET `action` = 'attachments', `pattern` = 'attachments' 
