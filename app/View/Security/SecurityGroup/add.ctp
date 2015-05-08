@@ -12,6 +12,8 @@ $this->end();
 
 $this->start('contentBody');
 
+echo $this->element('../Security/SecurityGroup/nav_tabs');
+
 $formOptions = $this->FormUtility->getFormOptions(array('action' => $model, 'add'));
 echo $this->Form->create($model, $formOptions);
 echo $this->element('edit');
