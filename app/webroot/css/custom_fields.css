@@ -121,3 +121,7 @@
 .table_view .cell_name { margin-left: -1px; width: 410px; line-height: 25px; }
 .table_view .cell_site_type { margin-left: -1px; line-height: 25px; }
 .table_view .cell_desc { margin-left: -1px; width: 213px; }
+
+/* styles for custom field table */
+.custom-field-table .section_group { display:table-cell; width: 100%; }
+.custom-field-table .table th > div { min-width: 100px; }
