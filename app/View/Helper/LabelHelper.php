@@ -343,6 +343,7 @@ class LabelHelper extends AppHelper {
 		),
 		'StaffAttachment' => array(
 			'file_name' => 'File',
+			'created' => 'Uploaded On'
 		),
 		'StaffQualification' => array(
 			'qualification_institution_country' => 'Institution Country',
