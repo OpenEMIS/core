@@ -44,6 +44,8 @@ class ActivityComponent extends Component {
 			$this->Message->alert('general.noData');
 		}
 		$this->controller->set(compact('data', 'model'));
+		$this->controller->ControllerAction->autoRender = false;
+		$this->controller->ControllerAction->render();
 		$this->controller->render('/Elements/templates/activity');
 	}
 }
