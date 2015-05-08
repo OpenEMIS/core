@@ -11,7 +11,7 @@ $this->start('contentBody');
 	if ($action == 'edit') {
 		$formAction = $_buttons['edit']['url'];
 	}
-	$formOptions = $this->FormUtility->getFormOptions($formAction);
+	$formOptions = $this->FormUtility->getFormOptions($formAction, $_formType);
 	echo $this->Form->create($model, $formOptions);
 	echo $this->element('ControllerAction/edit');
 	echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));

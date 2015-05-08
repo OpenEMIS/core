@@ -53,7 +53,10 @@ class Workflow2Component extends Component {
 		$this->model = !empty($this->controller->viewVars['model'])? $this->controller->viewVars['model'] : null;
 		$this->currentAction = !empty($this->controller->viewVars['action'])? $this->controller->viewVars['action'] : null;
 
-		if ($this->currentAction == 'view') {
+		// If model is StaffAttachment, do not continue this script!!!
+		// Previously, StaffAttachment model was access through attachments as the currentAction using the ControllerActionBehaviour, therefore; this script does not continue.
+		// Modified for PHPOE-1418
+		if ($this->currentAction == 'view' && $this->model!='StaffAttachment') {
 			$this->WfWorkflow->contain('WorkflowModel');
 			$workflows = $this->WfWorkflow->find('first', array(
 				'conditions' => array(
