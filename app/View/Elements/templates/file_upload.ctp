@@ -1,4 +1,7 @@
 <?php
+echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
+echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
+
 if(!isset($label)) {
 	$label = __('File');
 }

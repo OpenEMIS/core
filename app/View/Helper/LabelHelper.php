@@ -341,6 +341,9 @@ class LabelHelper extends AppHelper {
 		'QualificationSpecialisation' => array(
 			'name' => 'Major/Specialisation'
 		),
+		'StaffAttachment' => array(
+			'file_name' => 'File',
+		),
 		'StaffQualification' => array(
 			'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
