@@ -195,17 +195,20 @@ class InstitutionSiteClassStudent extends AppModel {
 	// used by InstitutionSiteClass.classes
 	public function getGenderTotalByClass($classId) {
 		$joins = array(
-			array('table' => 'students', 'alias' => 'Student')
+			array(
+				'table' => 'students',
+				'alias' => 'Student'
+			)
 		);
 
 		$gender = array('M' => 0, 'F' => 0);
-		$studentConditions = array('Student.id = InstitutionSiteClassStudent.student_id');
+		$studentConditions = array('Student.id = InstitutionSiteSectionStudent.student_id');
 
 		$data = $this->find(
 			'all',
 			array(
 				'recursive' => -1,
-				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(DISTINCT SecurityUser.gender_id) as counter'),
+				'fields' => array('SecurityUser.gender_id', 'Gender.name', 'COUNT(SecurityUser.gender_id) as counter'),
 				'joins' => array(
 					array(
 						'table' => 'students',
@@ -224,16 +227,21 @@ class InstitutionSiteClassStudent extends AppModel {
 					)
 				),
 				'conditions' => array(
-					'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+					'InstitutionSiteClassStudent.institution_site_class_id' => $classId,
+					'InstitutionSiteClassStudent.status' => 1
 				),
+				'group' => array('SecurityUser.gender_id')
 			)
 		);
 
 		foreach ($data as $key => $value) {
-			if ($value['Gender']['name'] == 'Male') $gender['M'] = $value[0]['counter'];
-			if ($value['Gender']['name'] == 'Female') $gender['F'] = $value[0]['counter'];
+			if ($value['Gender']['name'] == 'Female') {
+				$gender['F'] = $value[0]['counter'];
+			} else {
+				$gender['M'] = $value[0]['counter'];
+			}
 		}
-
+		
 		return $gender;
 	}
 	
