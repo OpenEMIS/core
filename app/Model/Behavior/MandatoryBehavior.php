@@ -79,8 +79,12 @@ class MandatoryBehavior extends ModelBehavior {
 					}
 					switch ($mandatoryField) {
 						case 'Non-Mandatory':
-							if (empty($model->data[$key][$fieldName])) {
-								unset($model->data[$key]);
+							if (array_key_exists($key, $model->data)) {
+								foreach ($model->data[$key] as $dkey => $dvalue) {
+									if (empty($model->data[$key][$dkey][$fieldName])) {
+										unset($model->data[$key][$dkey]);
+									}
+								}
 							}
 							if ($model->{$key}->validator()->offsetExists($fieldName)) {
 								$model->{$key}->validator()->remove($fieldName);	
