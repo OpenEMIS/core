@@ -15,6 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class SurveyQuestion extends SurveysAppModel {
+	public $actsAs = array(
+		'Excel'
+	);
+
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
 		'ModifiedUser' => array(
@@ -53,4 +57,19 @@ class SurveyQuestion extends SurveysAppModel {
 			)
 		)
 	);
+
+	/* Excel Behaviour */
+	public function excelCustomFieldFindOptions($options) {
+		$parentConditions = parent::excelGetConditions();
+		$options = array(
+			'conditions' => array(
+				$this->alias . '.survey_template_id' => $parentConditions['SurveyTemplate.id'],
+				$this->alias . '.type <> ' => 7,
+				$this->alias . '.visible' => 1
+			),
+			'order' => $this->alias . '.order'
+		);
+		return $options;
+	}
+	/* End Excel Behaviour */
 }
