@@ -37,7 +37,6 @@ class StaffAttachment extends StaffAppModel {
 	);
 
 	public function beforeAction() {
-		$this->controller->set('model', $this->alias);
 		$this->controller->FileUploader->fileModel = 'StaffAttachment';
 		$this->controller->FileUploader->additionalFileType();
 
@@ -46,7 +45,7 @@ class StaffAttachment extends StaffAppModel {
 		if ($this->action == 'view') {
 
 			if (isset($this->request->params['pass'][1])) {
-				$this->controller->Navigation->addCrumb('Attachment Details');
+				$this->Navigation->addCrumb('Attachment Details');
 		
 				$this->fields['file_name']['type'] = 'download';
 				$this->fields['file_name']['attr']['url'] = array('action' => 'StaffAttachment', 'download', $this->request->params['pass'][1]);
@@ -60,7 +59,7 @@ class StaffAttachment extends StaffAppModel {
 			}
 		} elseif ($this->action == 'edit') {
 
-			$this->controller->Navigation->addCrumb('Edit Attachments');
+			$this->Navigation->addCrumb('Edit Attachments');
 
 			$this->fields['id']['type'] = 'hidden';
 			$this->fields['file_name']['visible'] = false;
@@ -94,9 +93,10 @@ class StaffAttachment extends StaffAppModel {
 	}
 
 	public function index() {
-		$this->controller->Navigation->addCrumb('Attachments');
+		$this->Navigation->addCrumb('Attachments');
 		$header = __('Attachments');
-		$data = $this->findAllByStaffIdAndVisible($this->controller->Session->read('Staff.id'), 1, array('id', 'name', 'description', 'file_name', 'file_content', 'date_on_file', 'created'), array(), null, null, -1);
+		$fields = array('id', 'name', 'description', 'file_name', 'file_content', 'date_on_file', 'created');
+		$data = $this->findAllByStaffIdAndVisible($this->Session->read('Staff.id'), 1, $fields, array(), null, null, -1);
 
 		$this->fields['name']['hyperlink'] = true;
 		$this->fields['file_content']['visible'] = false;
@@ -104,20 +104,20 @@ class StaffAttachment extends StaffAppModel {
 		$this->fields['staff_id']['visible'] = false;
 		$this->fields['file_content']['visible'] = false;
 		$this->fields['created']['visible'] = true;
-		$this->fields['created']['label'] = 'Uploaded On';
+		$this->fields['created']['labelKey'] = $this->alias;
 		
 		$this->controller->set(compact('data', 'header'));
 	}
 
 	public function add() {
 		$this->render = false;
-		$this->controller->Navigation->addCrumb('Add Attachment');
+		$this->Navigation->addCrumb('Add Attachment');
 		
-		if ($this->controller->request->is(array('post', 'put'))) {
-			$this->set($this->controller->request->data);
+		if ($this->request->is(array('post', 'put'))) {
+			$this->set($this->request->data);
 			if ($this->validates()) {
-				$postData = $this->controller->request->data[$this->alias];
-				$this->controller->FileUploader->additionData = array('staff_id' => $this->controller->Session->read('Staff.id'), 'name' => $postData['name'], 'description' => $postData['description'], 'date_on_file' => $postData['date_on_file']);
+				$postData = $this->request->data[$this->alias];
+				$this->controller->FileUploader->additionData = array('staff_id' => $this->Session->read('Staff.id'), 'name' => $postData['name'], 'description' => $postData['description'], 'date_on_file' => $postData['date_on_file']);
 				$this->controller->FileUploader->uploadFile();
 				if ($this->controller->FileUploader->success) {
 					return $this->controller->redirect(array('action' => 'StaffAttachment'));
