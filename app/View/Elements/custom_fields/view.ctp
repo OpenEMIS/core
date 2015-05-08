@@ -53,53 +53,57 @@
 <?php endif ?>
 <?php if ($data[$Custom_Field]['type'] == 7) : ?>
 	<?php if (sizeof($data[$Custom_TableColumn]) > 0 || sizeof($data[$Custom_TableRow]) > 0) : ?>
-		<div class="row">
+		<div class="row custom-field-table">
 			<fieldset class="section_group">
 				<legend><?php echo $data[$Custom_Field]['name']; ?></legend>
-				<table class="table table-striped table-hover table-bordered">
-					<thead>
-						<tr>
-							<th></th>
+				<div class="table-responsive">
+					<table class="table table-striped table-hover table-bordered">
+						<thead>
+							<tr>
+								<th><div></div></th>
+								<?php
+								if(isset($data[$Custom_TableColumn])) :
+									foreach ($data[$Custom_TableColumn] as $i => $obj) {
+										if($obj['visible'] == 1) :
+								?>
+										<th>
+											<div><?php echo $obj['name']; ?></div>
+										</th>
+								<?php
+										endif;
+									}
+								endif;
+								?>
+							</tr>
+						</thead>
+						<tbody>
 							<?php
-							if(isset($data[$Custom_TableColumn])) :
-								foreach ($data[$Custom_TableColumn] as $i => $obj) {
+							if(isset($data[$Custom_TableRow])) :
+								foreach ($data[$Custom_TableRow] as $i => $obj) {
 									if($obj['visible'] == 1) :
 							?>
-									<th><?php echo $obj['name']; ?></th>
+									<tr>
+										<td><?php echo $obj['name']; ?></td>
+										<?php
+										if(isset($data[$Custom_TableColumn])) :
+											foreach ($data[$Custom_TableColumn] as $j => $obj) {
+												if($obj['visible'] == 1) :
+										?>
+												<td></td>
+										<?php
+												endif;
+											}
+										endif;
+										?>
+									</tr>
 							<?php
 									endif;
 								}
 							endif;
 							?>
-						</tr>
-					</thead>
-					<tbody>
-						<?php
-						if(isset($data[$Custom_TableRow])) :
-							foreach ($data[$Custom_TableRow] as $i => $obj) {
-								if($obj['visible'] == 1) :
-						?>
-								<tr>
-									<td><?php echo $obj['name']; ?></td>
-									<?php
-									if(isset($data[$Custom_TableColumn])) :
-										foreach ($data[$Custom_TableColumn] as $j => $obj) {
-											if($obj['visible'] == 1) :
-									?>
-											<td></td>
-									<?php
-											endif;
-										}
-									endif;
-									?>
-								</tr>
-						<?php
-								endif;
-							}
-						endif;
-						?>
-					</tbody>
-				</table>
+						</tbody>
+					</table>
+				</div>
 			</fieldset>
 		</div>
 	<?php endif ?>

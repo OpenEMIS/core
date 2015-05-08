@@ -278,6 +278,7 @@ class StaffController extends StaffAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['birthplace_area_id'] = $data['Staff']['birthplace_area_id'];
+					$birthplace_area_id = $data['Staff']['birthplace_area_id'];
 					unset($data['Staff']['birthplace_area_id']);
 				}
 				if (array_key_exists('address_area_id', $data['Staff'])) {
@@ -285,8 +286,20 @@ class StaffController extends StaffAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-					unset($data['Staff']['birthplace_area_id']);
+					$address_area_id = $data['Staff']['address_area_id'];
+					unset($data['Staff']['address_area_id']);
 				}
+				$data['Staff'][0] = array();
+				if (isset($birthplace_area_id)) {
+					$data['Staff'][0]['birthplace_area_id'] = $birthplace_area_id;
+				}
+				if (isset($address_area_id)) {
+					$data['Staff'][0]['address_area_id'] = $address_area_id;
+				}
+			} else {
+				$data['Staff'][0] = array();
+				// so there is something in the array for staff to be saved too. overriden later by app model
+				$data['Staff'][0]['created_user_id'] = 0;
 			}
 
 			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
@@ -299,8 +312,6 @@ class StaffController extends StaffAppController {
 					$dataToSite = $this->Session->read('InstitutionSiteStaff.addNew');
 
 					$securityUserId = $this->SecurityUser->getLastInsertId();
-					$this->Staff->create();
-					$this->Staff->save(array('security_user_id' => $securityUserId));
 					
 					$this->Message->alert('Staff.add.success');
 					$id = $this->Staff->getLastInsertId();
@@ -411,7 +422,7 @@ class StaffController extends StaffAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Staff']['address_area_id'];
-					unset($data['Staff']['birthplace_area_id']);
+					unset($data['Staff']['address_area_id']);
 				}
 			}
 

@@ -55,3 +55,7 @@ UPDATE config_items SET type = "Wizard - Add New Student" WHERE type = "Add New 
 
 -- making sure left nav is correct
 UPDATE navigations SET visible = '0' WHERE navigations.controller = 'Students' AND navigations.title = 'Add Student' AND action = 'add';
+
+-- PHPOE-1354
+
+DROP TABLE IF EXISTS `security_rest_sessions`;
