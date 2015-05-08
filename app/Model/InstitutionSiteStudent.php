@@ -700,8 +700,13 @@ class InstitutionSiteStudent extends AppModel {
 			),
 			'conditions' => $periodConditions
 		));
-		$minYear = $periodResult['min_year'];
-		$maxYear = $periodResult['max_year'];
+		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+		$currentPeriodId = $AcademicPeriod->getCurrent();
+		$currentPeriodObj = $AcademicPeriod->getAcademicPeriodObjectById($currentPeriodId);		
+		$thisYear = $currentPeriodObj['end_year'];
+		$minYear = $thisYear - 2;
+		$minYear = $minYear > $periodResult['min_year'] ? $minYear : $periodResult['min_year'];
+		$maxYear = $thisYear;
 
 		$years = array();
 
