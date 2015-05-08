@@ -14,7 +14,7 @@ if($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('File'), __('Description'), __('File Type'), __('Date On File'), __('Uploaded On'));
+$tableHeaders = array(__('File'), __('Description'), __('File Type'), __('Uploaded On'));
 $tableData = array();
 foreach($data as $value) {
 	$obj = $value[$model];
@@ -25,7 +25,6 @@ foreach($data as $value) {
 	$row[] = $link;
 	$row[] = $obj['description'];
 	$row[] = __($ext);
-	$row[] = $obj['date_on_file'];
 	$row[] = $obj['created'];
 	$tableData[] = $row;
 }
