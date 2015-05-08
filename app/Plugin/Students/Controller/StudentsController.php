@@ -266,12 +266,14 @@ class StudentsController extends StudentsAppController {
 		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
+			
 			if (array_key_exists('Student', $data)) {
 				if (array_key_exists('birthplace_area_id', $data['Student'])) {
 					if (!array_key_exists($model, $data)) {
 						$data[$model] = array();
 					}
 					$data[$model]['birthplace_area_id'] = $data['Student']['birthplace_area_id'];
+					$birthplace_area_id = $data['Student']['birthplace_area_id'];
 					unset($data['Student']['birthplace_area_id']);
 				}
 				if (array_key_exists('address_area_id', $data['Student'])) {
@@ -279,8 +281,20 @@ class StudentsController extends StudentsAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
-					unset($data['Student']['birthplace_area_id']);
+					$address_area_id = $data['Student']['address_area_id'];
+					unset($data['Student']['address_area_id']);
 				}
+				$data['Student'][0] = array();
+				if (isset($birthplace_area_id)) {
+					$data['Student'][0]['birthplace_area_id'] = $birthplace_area_id;
+				}
+				if (isset($address_area_id)) {
+					$data['Student'][0]['address_area_id'] = $address_area_id;
+				}
+			} else {
+				$data['Student'][0] = array();
+				// so there is something in the array for student to be saved too. overriden later by app model
+				$data['Student'][0]['created_user_id'] = 0;
 			}
 
 			if (array_key_exists('submit', $data) && $data['submit'] == 'changeNationality') {
@@ -293,9 +307,7 @@ class StudentsController extends StudentsAppController {
 					$dataToSite = $this->Session->read('InstitutionSiteStudent.addNew');
 
 					$securityUserId = $this->SecurityUser->getLastInsertId();
-					$this->Student->create();
-					$this->Student->save(array('security_user_id' => $securityUserId));
-					
+						
 					$this->Message->alert('Student.add.success');
 					$id = $this->Student->getLastInsertId();
 					$this->Session->write('Student.id', $id);
@@ -406,7 +418,7 @@ class StudentsController extends StudentsAppController {
 						$data[$model] = array();
 					}
 					$data[$model]['address_area_id'] = $data['Student']['address_area_id'];
-					unset($data['Student']['birthplace_area_id']);
+					unset($data['Student']['address_area_id']);
 				}
 			}
 
