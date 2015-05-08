@@ -20,6 +20,7 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 	public $useTable = 'institution_site_surveys';
 
 	public $actsAs = array(
+		'Excel',
 		'ControllerAction2',
 		'Surveys.Survey' => array(
 			'module' => 'Institution',
@@ -36,6 +37,10 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 
 	public $belongsTo = array(
 		'Surveys.SurveyTemplate',
+		'InstitutionSite' => array(
+			'className' => 'InstitutionSite',
+			'fields' => array('InstitutionSite.id', 'InstitutionSite.code', 'InstitutionSite.name')
+		),
 		'AcademicPeriod' => array(
 			'className' => 'AcademicPeriod',
 			'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name', 'AcademicPeriod.order')
@@ -56,6 +61,42 @@ class InstitutionSiteSurveyCompleted extends AppModel {
 		'InstitutionSiteSurveyAnswer',
 		'InstitutionSiteSurveyTableCell'
 	);
+
+	/* Excel Behaviour */
+	public function excelGetConditions() {
+		$_conditions = parent::excelGetConditions();
+
+		$conditions = array();
+		if (CakeSession::check('InstitutionSiteSurveyCompleted.id')) {
+			$id = CakeSession::read('InstitutionSiteSurveyCompleted.id');
+			$InstitutionSiteSurveyCompleted = ClassRegistry::init('InstitutionSiteSurveyCompleted');
+			$surveyTemplateId = $InstitutionSiteSurveyCompleted->field('survey_template_id', array('id' => $id));
+			$conditions = array(
+				'InstitutionSiteSurveyCompleted.id' => $id,
+				'SurveyTemplate.id' => $surveyTemplateId
+			);
+		}
+		$conditions[] = 'InstitutionSiteSurveyCompleted.survey_template_id = SurveyTemplate.id';
+		$conditions['InstitutionSiteSurveyCompleted.status'] = 2;
+		$conditions = array_merge($_conditions, $conditions);
+		return $conditions;
+	}
+
+	public function excelGetModels() {
+		$models = parent::excelGetModels();
+		$models = array(
+			array(
+				'model' => $this,
+				'include' => array(
+					'plugin' => 'Surveys',
+					'header' => 'SurveyQuestion',
+					'data' => 'InstitutionSiteSurveyAnswer',
+					'dataOptions' => 'SurveyQuestionChoice'
+				)
+			)
+		);
+		return $models;
+	}
 
 	public function beforeAction() {
 		parent::beforeAction();
