@@ -97,7 +97,6 @@ class Staff extends StaffAppModel {
 			'className' => 'Staff.StaffAttachment',
 			'dependent' => true
 		),
-		// Additions by Sani
 		'StaffTraining' => array(
 			'className' => 'Staff.StaffTraining',
 			'dependent' => true
@@ -135,7 +134,8 @@ class Staff extends StaffAppModel {
 			'dependent' => true
 		),
 		'InstitutionSiteStaff' => array('dependent' => true),
-		
+		'InstitutionSiteSectionStaff' => array('dependent' => true),
+		'InstitutionSiteClassStaff' => array('dependent' => true)
 		// Training
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
