@@ -15,7 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffAttachment extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'ControllerAction', 
+		'DatePicker' => array('date_on_file')
+	);
 	public $belongsTo = array(
 		'Staff.Staff',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
@@ -47,6 +50,7 @@ class StaffAttachment extends StaffAppModel {
 				array('field' => 'name'),
 				array('field' => 'description'),
 				array('field' => 'file_name', 'type' => 'file', 'url' => array('action' => 'attachmentsDownload')),
+				array('field' => 'date_on_file'),
 				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
 				array('field' => 'modified', 'edit' => false),
 				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
@@ -60,7 +64,7 @@ class StaffAttachment extends StaffAppModel {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Attachments');
 		$header = __('Attachments');
-		$data = $this->findAllByStaffIdAndVisible($controller->Session->read('Staff.id'), 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
+		$data = $this->findAllByStaffIdAndVisible($controller->Session->read('Staff.id'), 1, array('id', 'name', 'description', 'file_name', 'file_content', 'date_on_file', 'created'), array(), null, null, -1);
 		$arrFileExtensions = $controller->Utility->getFileExtensionList();
 
 		$controller->set(compact('data', 'arrFileExtensions', 'header'));
@@ -95,7 +99,7 @@ class StaffAttachment extends StaffAppModel {
 			$this->set($controller->request->data);
 			if ($this->validates()) {
 				$postData = $controller->request->data[$this->alias];
-				$controller->FileUploader->additionData = array('staff_id' => $controller->Session->read('Staff.id'), 'name' => $postData['name'], 'description' => $postData['description']);
+				$controller->FileUploader->additionData = array('staff_id' => $controller->Session->read('Staff.id'), 'name' => $postData['name'], 'description' => $postData['description'], 'date_on_file' => $postData['date_on_file']);
 				$controller->FileUploader->uploadFile();
 				if ($controller->FileUploader->success) {
 					return $controller->redirect(array('action' => 'attachments'));
