@@ -25,6 +25,7 @@ class ControllerActionComponent extends Component {
 	private $ctpFolder;
 	private $paramsPass;
 	private $defaultActions = array('index', 'add', 'view', 'edit', 'remove', 'reorder', 'moveOrder');
+	public $formType = '';
 	public $autoRender = true;
 	public $autoProcess = true;
 
@@ -67,6 +68,7 @@ class ControllerActionComponent extends Component {
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias;
 						$controller->request->params['action'] = 'ComponentAction';
+						
 						$this->initComponentsForModel();
 						if (method_exists($this->model, 'beforeAction')) {
 							$this->model->beforeAction();
@@ -100,6 +102,7 @@ class ControllerActionComponent extends Component {
 			$controller->set('action', $this->currentAction);
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
+			$controller->set('_formType', $this->formType);
 
 			$this->initButtons();
 		}
