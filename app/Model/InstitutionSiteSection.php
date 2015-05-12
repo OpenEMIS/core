@@ -535,10 +535,17 @@ class InstitutionSiteSection extends AppModel {
 	
 	public function getListOfSections($periodId, $institutionSiteId, $gradeId=0) {
 		$singleGradeOptions = array(
-			'fields' => array(
-				'InstitutionSiteSection.id', 'InstitutionSiteSection.name',
-				'Staff.first_name', 'Staff.middle_name', 'Staff.third_name', 'Staff.last_name',
-				'EducationGrade.name'
+			'contain' => array(
+				'Staff' => array(
+					'fields'=> array('id'),
+					'SecurityUser' => array(
+						'fields'=> array('id', 'first_name', 'middle_name', 'third_name', 'last_name'),
+						'Gender' => array(
+							'fields' => array('name')
+						)
+					)
+				),
+				'EducationGrade' => array('name')
 			),
 			'conditions' => array(
 				'InstitutionSiteSection.academic_period_id' => $periodId,
