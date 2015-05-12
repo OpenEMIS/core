@@ -19,7 +19,7 @@ echo $this->element('../Security/SecurityGroup/nav_tabs');
 echo $this->element('layout/search', array(
 	'model' => $model, 
 	'placeholder' => 'Group Name', 
-	'formOptions' => array('url' => array('controller' => 'Security', 'action' => 'SecurityGroup'))
+	'formOptions' => array('url' => array('controller' => 'Security', 'action' => 'SecurityGroup', 'group_type'=>$currentTab))
 ))
 ?>
 <?php if (!empty($data)) : ?>
