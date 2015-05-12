@@ -37,3 +37,10 @@ v2.4.6
 - Fixed a bug that shows in incorrect gender for students in sections
 - Sections and Classes now shows the correct total number of students
 - Added "Date On File" in Staff Attachment module
+
+v2.4.7
+- System defined Roles are now translated
+- Added new Contact Type - Emergency
+- Implemented reports for Survey module
+- Fixed a bug that caused Sections not filtered correctly by grades
+- A security group will be created when user add a new Institution
