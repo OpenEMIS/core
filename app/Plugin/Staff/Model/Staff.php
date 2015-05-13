@@ -136,6 +136,7 @@ class Staff extends StaffAppModel {
 		'InstitutionSiteStaff' => array('dependent' => true),
 		'InstitutionSiteSectionStaff' => array('dependent' => true),
 		'InstitutionSiteClassStaff' => array('dependent' => true),
+		'InstitutionSiteSection' => array('dependent' => true),
 		// Training
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
