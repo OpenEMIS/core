@@ -281,6 +281,9 @@ class InstitutionSiteSection extends AppModel {
 			);
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
+			if (!array_key_exists('SecurityUser', $data)) {
+				$data['Staff']['SecurityUser'] = '';
+			}
 			$sectionName = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
@@ -580,6 +583,9 @@ class InstitutionSiteSection extends AppModel {
 		$data = array_replace($singleData, $multiData);
 
 		foreach($data as $i => $obj) {
+			if (!array_key_exists('SecurityUser', $data[$i]['Staff'])) {
+				$data[$i]['Staff']['SecurityUser'] = '';
+			}
 			$id = $obj[$this->alias]['id'];
 			$data[$i][$this->alias]['classes'] = $this->InstitutionSiteSectionClass->getClassCount($id);
 			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id);
