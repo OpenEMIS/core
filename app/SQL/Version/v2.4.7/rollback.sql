@@ -52,6 +52,14 @@ WHERE `id` IN (SELECT `security_group_id` FROM `institution_sites`);
 
 ALTER TABLE `institution_sites` DROP `security_group_id`;
 
+-- PHPOE-1383
+UPDATE `navigations` SET `visible` = 1 WHERE `module` = 'Administration' AND `plugin` = 'Datawarehouse' AND `controller` = 'Datawarehouse' AND `header` = 'Data Processing';
+UPDATE `navigations` SET `visible` = 1 WHERE `module` = 'Administration' AND `plugin` = 'DataProcessing' AND `controller` = 'DataProcessing' AND `header` = 'Data Processing';
+
+UPDATE `security_functions` SET `visible` = 1 WHERE `name` = 'Build' AND `controller` = 'DataProcessing' AND `module` = 'Administration' AND `category` = 'Data Processing';
+UPDATE `security_functions` SET `visible` = 1 WHERE `name` = 'Generate' AND `controller` = 'DataProcessing' AND `module` = 'Administration' AND `category` = 'Data Processing';
+UPDATE `security_functions` SET `visible` = 1 WHERE `name` = 'Export' AND `controller` = 'DataProcessing' AND `module` = 'Administration' AND `category` = 'Data Processing';
+UPDATE `security_functions` SET `visible` = 1 WHERE `name` = 'Processes' AND `controller` = 'DataProcessing' AND `module` = 'Administration' AND `category` = 'Data Processing';
 
 -- Update version number
 UPDATE `config_items` SET `value` = '2.4.6' WHERE `name` = 'db_version';
