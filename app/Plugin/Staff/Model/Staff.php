@@ -134,9 +134,8 @@ class Staff extends StaffAppModel {
 			'dependent' => true
 		),
 		'InstitutionSiteStaff' => array('dependent' => true),
-		'InstitutionSiteSectionStaff' => array('dependent' => true),
+		'InstitutionSiteSection',
 		'InstitutionSiteClassStaff' => array('dependent' => true),
-		'InstitutionSiteSection' => array('dependent' => true),
 		// Training
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
@@ -167,6 +166,13 @@ class Staff extends StaffAppModel {
 	public $virtualFields = array(
 		'name' => "SELECT CONCAT(`SecurityUser`.`first_name`, ' - ', `SecurityUser`.`last_name`) from `security_users` AS `SecurityUser` WHERE `SecurityUser`.`id` = `Staff.security_user_id`"
 	);
+
+	public function afterDelete() {
+		$this->InstitutionSiteSection->updateAll(
+			array('InstitutionSiteSection.staff_id' => NULL),
+			array('InstitutionSiteSection.staff_id' => $this->id)
+		);
+	}
 
 	/* Excel Behaviour */
 	public function excelGetConditions() {
