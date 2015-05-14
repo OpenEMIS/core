@@ -281,7 +281,7 @@ class InstitutionSiteSection extends AppModel {
 			);
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
-			if (!array_key_exists('SecurityUser', $data)) {
+			if (!array_key_exists('SecurityUser', $data['Staff'])) {
 				$data['Staff']['SecurityUser'] = '';
 			}
 			$sectionName = $data[$this->alias]['name'];
