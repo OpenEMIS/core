@@ -491,6 +491,7 @@ class LabelHelper extends AppHelper {
 		),
 		'SecurityGroup' => array(
 			'SecurityGroupArea' => 'Areas (Education)',
+			'GroupInstitutionSite' => 'Institutions',
 			'SecurityGroupInstitutionSite' => 'Institutions',
 			'SecurityGroupUser' => 'Users'
 		),

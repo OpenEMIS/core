@@ -37,7 +37,6 @@ class SecurityGroupInstitutionSite extends AppModel {
 				$conditions['AND']['OR'][] = array('InstitutionSite.id' => $institutionSiteIds);
 			}
 		}
-		//pr($conditions);
 		
 		$conditions = array_merge(array(
 			'OR' => array(
