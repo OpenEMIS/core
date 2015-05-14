@@ -86,13 +86,31 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 							<?php 
 							echo ($absenceType==0)? '<div class="reasonVisible" style="display:none">':'<div class="reasonVisible">';
 							 ?>
-								<?php 
+								<?php
+								// PHPOE-1303
+								// update absence reason list to select record value instead of showing the system default
+								$updatedAbsenceReasonList = $absenceReasonList;
+								if (isset($additionalReasonOptionFieldData['value']) && $additionalReasonOptionFieldData['value']!='') {
+									$recordExists = false;
+									foreach ($updatedAbsenceReasonList as $listKey=>$reason) {
+										if ($reason['value']==$additionalReasonOptionFieldData['value']) {
+											$updatedAbsenceReasonList[$listKey]['selected'] = 1;
+											$recordExists = true;
+										} else {
+											$updatedAbsenceReasonList[$listKey]['selected'] = '';
+										}
+									}
+									// reset absence reason list to default if record does not exist anymore
+									$updatedAbsenceReasonList = ($recordExists) ? $updatedAbsenceReasonList : $absenceReasonList;
+								}
+								//
+								
 								echo $this->Form->input($model.'.'.$count.'.'.'student_absence_reason_id', 
 									array_merge(
 										array(
 										'label' => false,
 										'div' => false,
-										'options' => $absenceReasonList, 
+										'options' => $updatedAbsenceReasonList, 
 										'class' => 'form-control',
 										'before' => false,
 										'between' => false

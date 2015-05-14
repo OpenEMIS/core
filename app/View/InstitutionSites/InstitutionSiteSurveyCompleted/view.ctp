@@ -17,6 +17,9 @@ $this->start('contentActions');
 			)
 		);
 	}
+	if ($_execute) {
+		echo $this->Html->link($this->Label->get('general.export'), array('action' => 'InstitutionSiteSurveyCompleted', 'excel'), array('class' => 'divider'));
+	}
 $this->end();
 
 $this->start('contentBody');

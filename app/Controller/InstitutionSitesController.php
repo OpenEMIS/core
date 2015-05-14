@@ -53,6 +53,7 @@ class InstitutionSitesController extends AppController {
 		'Staff.StaffStatus',
 		'Staff.StaffCategory',
 		'Staff.StaffBehaviour',
+		'SecurityGroup',
 		'SecurityGroupUser',
 		'SecurityGroupArea',
 		'InstitutionSiteShift',
@@ -429,10 +430,10 @@ class InstitutionSitesController extends AppController {
 			$this->InstitutionSite->set($this->request->data);
 			
 			if ($this->InstitutionSite->validates()) {
-				$newInstitutionSiteRec = $this->InstitutionSite->save($this->request->data);
-				
-				$institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
+				$result = $this->InstitutionSite->save($this->request->data);
+				$institutionSiteId = $result['InstitutionSite']['id'];
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
+				$this->Message->alert('general.add.success');
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => $this->indexPage, $institutionSiteId));
 			}
 			$areaId = $this->request->data['InstitutionSite']['area_id'];
@@ -470,10 +471,22 @@ class InstitutionSitesController extends AppController {
 		
 		if($this->checkUserAccess($id, 'delete')) {
 			$name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
-			//$this->InstitutionSite->delete($id);
-			if($this->InstitutionSite->delete($id)){
+			$securityGroupId = $this->InstitutionSite->field('security_group_id', array('InstitutionSite.id' => $id));
+			if($this->InstitutionSite->delete($id)) {
+				if ($securityGroupId) {
+					$this->InstitutionSite->SecurityGroup->read(null, $securityGroupId);
+					if (is_object($this->InstitutionSite->SecurityGroup)) {
+						// $this->InstitutionSite->SecurityGroup->unbindModel('GroupInstitutionSite');
+						$this->InstitutionSite->SecurityGroup->delete($securityGroupId);
+					}
+				}
+				$hasMany = $this->InstitutionSite->hasMany;
+				foreach ($hasMany as $model => $attr) {
+					$this->InstitutionSite->{$model}->recursive = -1;
+					$this->InstitutionSite->{$model}->deleteAll(array("$model.institution_site_id" => $id), false);
+				}
 				$this->Utility->alert($name . ' have been deleted successfully.');
-			}else{
+			} else {
 				$this->log($this->InstitutionSite->validationErrors, 'debug');
 				//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
 				$this->Message->alert('general.delete.failed');
@@ -485,7 +498,7 @@ class InstitutionSitesController extends AppController {
 			return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 		}
 	}
-
+	
 	public function excel() {
 		$this->InstitutionSite->excel();
 	}

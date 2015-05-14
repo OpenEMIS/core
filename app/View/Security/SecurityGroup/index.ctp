@@ -4,19 +4,22 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Groups'));
 $this->start('contentActions');
-	if($_add) {
+	if($_add && $currentTab=='user') {
 		echo $this->Html->link($this->Label->get('general.add'), array('action' => $model, 'add'), array('class' => 'divider'));
 	}
 $this->end();
 
 $this->start('contentBody');
+
+echo $this->element('../Security/SecurityGroup/nav_tabs');
+
 ?>
 
 <?php
 echo $this->element('layout/search', array(
 	'model' => $model, 
 	'placeholder' => 'Group Name', 
-	'formOptions' => array('url' => array('controller' => 'Security', 'action' => 'SecurityGroup'))
+	'formOptions' => array('url' => array('controller' => 'Security', 'action' => 'SecurityGroup', 'group_type'=>$currentTab))
 ))
 ?>
 <?php if (!empty($data)) : ?>
