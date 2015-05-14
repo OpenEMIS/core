@@ -44,3 +44,4 @@ v2.4.7
 - Implemented reports for Survey module
 - Fixed a bug that caused Sections not filtered correctly by grades
 - A security group will be created when user add a new Institution
+- Fixed a bug that caused certain fields not updated when creating a new Student/Staff
