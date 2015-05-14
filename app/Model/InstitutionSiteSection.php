@@ -281,6 +281,9 @@ class InstitutionSiteSection extends AppModel {
 			);
 			$data = $this->findById($id);
 			$this->Session->write($this->alias.'.id', $id);
+			if (!array_key_exists('SecurityUser', $data)) {
+				$data['Staff']['SecurityUser'] = '';
+			}
 			$sectionName = $data[$this->alias]['name'];
 			$this->Navigation->addCrumb($sectionName);
 			$grades = $this->InstitutionSiteSectionGrade->getGradesBySection($id);
@@ -447,12 +450,12 @@ class InstitutionSiteSection extends AppModel {
 				}
 			}
 		}
-		return $studentOptions;		
+		return $studentOptions;
 	}
 
 	public function getGradeOptions($sectionId) {
 		$this->contain(array(
-			'EducationGrade', 
+			'EducationGrade',
 			'InstitutionSiteSectionGrade' => array(
 				'EducationGrade' => array('fields' => array('EducationGrade.id', 'EducationGrade.name'))
 			)
@@ -534,7 +537,7 @@ class InstitutionSiteSection extends AppModel {
 	}
 	
 	public function getListOfSections($periodId, $institutionSiteId, $gradeId=0) {
-		$options = array(
+		$singleGradeOptions = array(
 			'contain' => array(
 				'Staff' => array(
 					'fields'=> array('id'),
@@ -544,7 +547,7 @@ class InstitutionSiteSection extends AppModel {
 							'fields' => array('name')
 						)
 					)
-				), 
+				),
 				'EducationGrade' => array('name')
 			),
 			'conditions' => array(
@@ -554,15 +557,35 @@ class InstitutionSiteSection extends AppModel {
 			'order' => array('InstitutionSiteSection.name')
 		);
 
-		if (!empty($gradeId)) {
-			$options['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
+		// This is because $multiGradeOptions has the same SQL options as $singleGradeOptions
+		$multiGradeOptions = $singleGradeOptions;
 
-			// need to include multi grade search
+		if (!empty($gradeId)) {
+			$singleGradeOptions['conditions']['InstitutionSiteSection.education_grade_id'] = $gradeId;
+
+			$multiGradeOptions['joins'] = array(
+				array(
+					'table' => 'institution_site_section_grades',
+					'alias' => 'InstitutionSiteSectionGrade',
+					'conditions' => array(
+						'InstitutionSiteSectionGrade.institution_site_section_id = InstitutionSiteSection.id',
+						'InstitutionSiteSectionGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteSectionGrade.status = 1'
+					)
+				)
+			);
+			$multiGradeOptions['group'] = array('InstitutionSiteSection.id');
 		}
-		$data = $this->find('all', 
-			$options);
+
+		$singleData = $this->find('all', $singleGradeOptions);
+		$multiData = $this->find('all', $multiGradeOptions);
 		
+		$data = array_replace($singleData, $multiData);
+
 		foreach($data as $i => $obj) {
+			if (!array_key_exists('SecurityUser', $data[$i]['Staff'])) {
+				$data[$i]['Staff']['SecurityUser'] = '';
+			}
 			$id = $obj[$this->alias]['id'];
 			$data[$i][$this->alias]['classes'] = $this->InstitutionSiteSectionClass->getClassCount($id);
 			$data[$i][$this->alias]['gender'] = $this->InstitutionSiteSectionStudent->getGenderTotalBySection($id);

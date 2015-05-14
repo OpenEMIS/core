@@ -100,10 +100,11 @@ class Student extends StudentsAppModel {
 			'className' => 'Students.StudentActivity',
 			'dependent' => true
 		),
-		'InstitutionSiteStudent',
-		'InstitutionSiteClassStudent',
+		'StudentAttachment' => array('dependent' => true),
+		'InstitutionSiteStudent' => array('dependent' => true),
+		'InstitutionSiteClassStudent' => array('dependent' => true),
 		'InstitutionSiteSectionStudent' => array('dependent' => true),
-		'InstitutionSiteStudentFee'
+		'AssessmentItemResult' => array('dependent' => true)
 	);
 	
 	public $validate = array(
