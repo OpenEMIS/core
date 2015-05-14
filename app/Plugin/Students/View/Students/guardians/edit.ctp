@@ -11,7 +11,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'guardiansEdit'));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'guardiansEdit', $guardianId));
 echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->input('Guardian.id', array('type' => 'hidden'));
