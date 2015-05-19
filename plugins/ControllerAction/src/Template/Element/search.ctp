@@ -4,7 +4,7 @@
 			<?= 
 			$this->Form->input('Search.searchField', [
 				'label' => false, 
-				'class' => 'form-control search-input', 
+				'class' => 'form-control search-input focus', 
 				'placeholder' => __('Search')
 			]);
 			?>
