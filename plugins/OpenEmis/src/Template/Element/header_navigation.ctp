@@ -27,7 +27,7 @@ $home = ['plugin' => false, 'controller' => 'Users', 'action' => 'index'];
 <div class="header-navigation">
 	<div class="username">
 		<span><?php echo sprintf('%s %s', $firstName, $lastName) ?>System Administrator</span>
-		<a class="tooltip-bottom" data-tooltip="User Role: Principal"><i class="kd-role"></i></a>
+		<a class="btn" data-toggle="tooltip" data-placement="bottom" title="User Role: Principal"><i class="kd-role"></i></a>
 	</div>
 
 	<div class="btn-group">

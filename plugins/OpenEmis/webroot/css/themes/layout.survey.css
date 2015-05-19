@@ -3,7 +3,7 @@
  
 
  /* PRODUCT COLOR */
-.panel-button .btn,
+.btn-default,
 .login-box .btn-login,
 .navbar {
 	background-color: #FFCC00;
@@ -43,18 +43,17 @@
 	background-color: #FFF !important;
 }
 
-.panel-button .btn,
+.btn-default,
 .pagination > .active > a,
 .pagination > .active > a:hover,
 .pagination > li > a:hover,
 .login-box .btn-login,
 .outline-btn {
-	border: 1px solid #B28F00;
+	border: 1px solid #B28F00 !important;
 }
 
 .header-navigation .btn-group .btn:hover,
-.header-navigation .kd-role:hover,
-.panel-button .btn:hover {
+.btn-default:hover {
 	background-color: #B28F00;
 }
 
@@ -63,7 +62,7 @@
 .horizontal-tabs span a:hover,
 .nav > li > a:hover,
 .outline-btn:hover,
-.panel-button .btn:active,
+.btn-default:active,
 .btn-active,
 .action-dropdown > li > a:hover,
 .login-box .btn-login:hover,
