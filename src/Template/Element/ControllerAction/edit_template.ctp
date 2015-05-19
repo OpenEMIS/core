@@ -2,9 +2,9 @@
 $this->extend('OpenEmis./Layout/Panel');
 
 $this->start('toolbar');
-	echo $this->Html->link('<i class="fa fa-chevron-left"></i>', $_buttons['back']['url'], ['class' => 'btn btn-xs btn-default', 'data-tooltip' => 'Back', 'escape' => false]);
+	echo $this->Html->link('<i class="fa fa-chevron-left"></i>', $_buttons['back']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Back' ,'escape' => false]);
 	if ($action == 'edit') {
-		echo $this->Html->link('<i class="fa fa-list"></i>', $_buttons['index']['url'], ['class' => 'btn btn-xs btn-default', 'data-tooltip' => 'Lists', 'escape' => false]);
+		echo $this->Html->link('<i class="fa fa-list"></i>', $_buttons['index']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Lists' ,'escape' => false]);
 	}
 $this->end();
 
