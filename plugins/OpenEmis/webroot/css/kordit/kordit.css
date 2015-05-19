@@ -1,0 +1,65 @@
+@import "style.css";
+
+.kd-classroom {
+	background-color: #99CC00;
+}
+
+.kd-core {
+	background-color: #6699CC;
+}
+
+.kd-dashboard {
+	background-color: #990000;
+}
+
+.kd-insight {
+	background-color: #66CCCC;
+}
+
+.kd-integrator {
+	background-color: #999999;
+}
+
+.kd-logistics {
+	background-color: #330099;
+}
+
+.kd-monitoring {
+	background-color: #663399;
+}
+
+.kd-school {
+	background-color: #336600;
+}
+
+.kd-survey {
+	background-color: #FFCC00;
+}
+
+.kd-visualizer {
+	background-color: #CC9933;
+}
+
+.kd-purple {
+	background-color: #993366;
+}
+
+.kd-classroom, 
+.kd-core, 
+.kd-dashboard,
+.kd-insight,
+.kd-integrator,
+.kd-logistics,
+.kd-monitoring,
+.kd-school, 
+.kd-survey,
+.kd-visualizer,
+.kd-purple {
+	color: #FFF;
+	-webkit-border-radius: 8px;
+	        border-radius: 8px;
+}
+
+.kd-staff {
+	font-size: 26px;
+}
