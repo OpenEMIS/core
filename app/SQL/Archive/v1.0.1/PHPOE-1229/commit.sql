@@ -1,1 +1,0 @@
-UPDATE `security_functions` SET `_add` = '_view:InstitutionSiteSection.singleGradeAdd|InstitutionSiteSection.multiGradesAdd' WHERE `module` LIKE 'Institutions' AND `category` LIKE 'Details' AND `name` LIKE 'Sections';

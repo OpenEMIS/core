@@ -1,1 +1,0 @@
-ALTER TABLE `datawarehouse_indicators` DROP `classification` ;

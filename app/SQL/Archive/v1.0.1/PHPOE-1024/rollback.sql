@@ -1,1 +1,0 @@
-UPDATE `navigations` SET `action` = 'genReports' WHERE `module` LIKE 'Administration' AND `header` LIKE 'Data Processing' AND `title` LIKE 'Generate';

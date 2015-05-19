@@ -1,33 +1,22 @@
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+# User specific & automatically generated files #
+#################################################
+tmp/cache/*
+tmp/sessions/*
+tmp/tests/*
+logs/*
+/build
+/dist
+/tags
+*.mo
 
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# Logs and databases #
-######################
-*.log
-*.sqlite
+# IDE and editor specific files #
+#################################
+/nbproject
+.idea
 
 # OS generated files #
 ######################
-*.DS_Store
+.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
@@ -36,26 +25,3 @@ Icon?
 ehthumbs.db
 Thumbs.db
 
-# Folders
-######################
-app/Config/database.php
-app/Backups/*
-app/webroot/reports/logs/*
-app/webroot/custom_indicators/*
-app/webroot/export/*
-app/tmp/logs/*
-app/tmp/cache/*
-app/tmp/sessions/*
-app/Lib/Olap/datasources.xml
-lib/Cake/Console/Templates/skel/tmp/*
-app/webroot/img/.DS_Store
-app/webroot/logs/*
-# *.mo
-.DS_Store
-.idea/*
-*.csv
-*.vcf
-*.pdf
-*.kml
-# *.xls*
-/nbproject/private/

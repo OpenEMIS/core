@@ -1,0 +1,75 @@
+
+/* CUSTOMIZED THEME */
+.body-wrapper {
+ 	background-image: url('../../img/core-login-bg.jpg') !important;
+}
+
+ /* PRODUCT COLOR */
+.panel-button .btn,
+.login-box .btn-login,
+.navbar {
+	background-color: #6699CC;
+}
+
+.panel-breadcrumb .active,
+.panel-breadcrumb a:hover,
+.panel-breadcrumb i:hover {
+	color: #6699CC;
+}
+
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.toggle-btn i {
+	background-color: #6699CC;
+	color: #FFF;
+	border: 1px solid #6699CC;
+}
+
+.pagination > .active > a:focus,
+.pagination > li > a:hover {
+	background-color: #6699CC !important;
+	color: #FFF !important;
+	border: 1px solid #6699CC;
+}
+
+/* DARK SHADES */
+
+.pagination > li > a,
+.panel-breadcrumb li a,
+.panel-breadcrumb i {
+	color: #476B8F;
+}
+
+.outline-btn {
+	color: #476B8F !important;
+	background-color: #FFF !important;
+}
+
+.panel-button .btn,
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination > li > a:hover,
+.login-box .btn-login,
+.outline-btn {
+	border: 1px solid #476B8F;
+}
+
+.header-navigation .btn-group .btn:hover,
+.header-navigation .kd-role:hover,
+.panel-button .btn:hover {
+	background-color: #476B8F;
+}
+
+.more-menu-item a:hover, 
+#action-menu:hover,
+.horizontal-tabs span a:hover,
+.nav > li > a:hover,
+.outline-btn:hover,
+.panel-button .btn:active,
+.btn-active,
+.action-dropdown > li > a:hover,
+.login-box .btn-login:hover,
+#menu-toggle .fa:hover {
+	background-color: #476B8F !important;
+	color: #FFF !important;
+}

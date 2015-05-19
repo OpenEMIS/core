@@ -1,0 +1,268 @@
+/* Right to Left Styles */
+html {
+    overflow-x: hidden;
+}
+/* HEADER */
+.rtl #menu-toggle {
+    position: absolute;
+    right: 0;
+    float: right;
+    width: 40px;
+    position: relative;
+    right: 0;
+    margin: 0;
+}
+
+.rtl #menu-toggle .fa {
+    border-right: 0;
+    border-left: 1px solid rgba(225, 225 , 225, 0.3);
+    padding: 18px 14px 17px;
+}
+
+.rtl .navbar-left {
+    float: right !important;
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+.rtl .navbar-right {
+    float: left !important;
+}
+
+.rtl .navbar-right .username {
+    float: right;
+    border-right: 0;
+    border-left: 1px solid rgba(225, 225 , 225, 0.3);
+    padding: 14px 0 9px;
+}
+
+.rtl .header-navigation .kd-role {
+    float: left;
+    margin-right: 2px;
+}
+
+.rtl .tooltip:before,
+.rtl [data-tooltip]:before {
+    left: -16px;
+}
+
+.rtl .header-navigation .toolbar-btn {
+    left: 0px !important;
+}
+
+.rtl .header-navigation .btn-group .btn {
+    padding: 7px;
+}
+
+.rtl .header-navigation .dropdown-menu {
+    right: -130px;
+}
+
+.rtl .more-menu .dropdown-arrow {
+    left: 5px;
+}
+
+.rtl .more-menu i {
+    width: 25px;
+    padding: 0 2px;
+}
+
+.rtl .more-menu-item {
+    text-align: right;    
+}
+
+.rtl .product-lists {
+    right: -246px !important;
+}
+
+.rtl .product-lists .dropdown-arrow {
+    left: 22px;
+}
+
+.rtl .navbar-right .username {
+    margin-left: 10px;
+    margin-right: 0;
+    padding: 12px 0;
+}
+
+.rtl .pagination {
+    margin: 0 0 0 10px;
+    padding: 0;
+}
+
+.rtl .page-header,
+.rtl .toolbar {
+    text-align: right;
+}
+
+.rtl .page-header h2 {
+    padding: 9px 0 7px !important;
+}
+
+.rtl .breadcrumb > li + li::before {
+    display: none;
+}
+
+.rtl .breadcrumb > li + li::after {
+    font-family: 'FontAwesome';
+    content: "\f054";
+    font-size: 0.6em;
+    margin: 0 2px;
+    padding-left: 5px;
+}
+
+/* MENU */
+.rtl #sidebar-wrapper {
+    border-right: 0;
+    border-left: 1px solid #DDD;
+}
+
+/* CONTENT */
+.rtl .content-wrapper {
+    padding: 30px 0 0;
+}
+
+.rtl .search {
+    float: right;
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+.rtl #SearchSearch {
+    -webkit-border-radius: 3px;
+            border-radius: 3px;
+}
+
+.rtl .toolbar .search .btn {
+    -webkit-border-bottom-left-radius: 3px;
+            border-bottom-left-radius: 3px; 
+    -webkit-border-top-left-radius: 3px;
+            border-top-left-radius: 3px;
+    -webkit-border-bottom-right-radius: 0;
+            border-bottom-right-radius: 0;                      
+    -webkit-border-top-right-radius: 0;
+            border-top-right-radius: 0; 
+}
+
+.rtl #tabs {
+    text-align: right;
+}
+
+.rtl #action-menu {
+    padding: 4px 10px 4px 22px;
+}
+
+.rtl .action-dropdown {
+    left: 310px;
+}
+
+.rtl .action-dropdown .dropdown-arrow {
+    left: 7px;
+}
+
+.rtl .action-dropdown i {
+    margin: 0 0 5px 5px;
+}
+
+.rtl .action-dropdown {
+    right: -84px;
+}
+
+.rtl table th {
+    text-align: right;
+}
+
+/* GENERAL ELEMENTS FLOAT RIGHT AND LEFT */
+
+.rtl .navbar-right .username,
+.rtl .error-message,
+.rtl .counter, 
+.rtl .navbar-left,
+.rtl .horizontal-tabs li,
+.rtl .search .col-md-4,
+.rtl .pagination,
+.rtl .menu-toggle-bg{
+    float: right;
+}
+
+.rtl .display-limit,
+.rtl .navbar-left h1 {
+    float: left;
+}
+
+.rtl .navbar-left h1 {
+    margin-right: 10px;
+    padding: 7px 0;
+}
+
+/* NAVIGATION */
+/* Toggle Styles */
+
+.rtl #wrapper {
+    padding-right: 0;
+}
+
+.rtl #wrapper.toggled {
+    padding-right: 180px;
+}
+
+.rtl #sidebar-wrapper {
+    right: 180px;
+    margin-right: -180px;
+    left: auto;
+}
+
+.rtl #wrapper.toggled #sidebar-wrapper {
+    width: 180px;
+}
+
+/* Sidebar Styles */
+
+.rtl .sidebar-nav {
+    width: 180px;
+}
+
+/* FOOTER */
+
+.rtl footer {
+    text-align: left;
+}
+
+/* MEDIA QUERIES */
+
+@media(max-width: 770px;) {
+    .rtl .navbar-right {
+        float: none;
+        clear: both;
+        width: 100%;
+    }
+}
+
+@media(min-width:768px) {
+    .rtl #wrapper {
+        padding-right: 180px;
+        padding-left: 0;
+    }
+
+    .rtl #wrapper.toggled {
+        padding-right: 0;
+    }
+
+    .rtl #sidebar-wrapper {
+        width: 180px;
+    }
+
+    .rtl #wrapper.toggled #sidebar-wrapper {
+        width: 0;
+    }
+
+    .rtl #page-content-wrapper {
+        padding: 20px;
+        position: relative;
+    }
+
+    .rtl #wrapper.toggled #page-content-wrapper {
+        position: relative;
+        margin-left: 0;
+    }
+}

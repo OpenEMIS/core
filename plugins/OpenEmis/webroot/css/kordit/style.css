@@ -1,0 +1,121 @@
+@font-face {
+	font-family: 'kordit-fonts';
+	src:url('fonts/kordit-fonts.eot?azpdbn');
+	src:url('fonts/kordit-fonts.eot?#iefixazpdbn') format('embedded-opentype'),
+		url('fonts/kordit-fonts.woff?azpdbn') format('woff'),
+		url('fonts/kordit-fonts.ttf?azpdbn') format('truetype'),
+		url('fonts/kordit-fonts.svg?azpdbn#kordit-fonts') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="kd-"], [class*=" kd-"] {
+	font-family: 'kordit-fonts';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.kd-grid:before {
+	content: "\e613";
+}
+
+.kd-data-collection:before {
+	content: "\e600";
+}
+
+.kd-openemis:before {
+	content: "\e601";
+}
+
+.kd-administration:before {
+	content: "\e602";
+}
+
+.kd-web:before {
+	content: "\e603";
+}
+
+.kd-user-role:before {
+	content: "\e604";
+}
+
+.kd-students2:before {
+	content: "\e605";
+}
+
+.kd-students:before {
+	content: "\e606";
+}
+
+.kd-staff2:before {
+	content: "\e607";
+}
+
+.kd-staff:before {
+	content: "\e608";
+}
+
+.kd-role:before {
+	content: "\e609";
+}
+
+.kd-results:before {
+	content: "\e60a";
+}
+
+.kd-reports:before {
+	content: "\e60b";
+}
+
+.kd-play:before {
+	content: "\e60c";
+}
+
+.kd-packages:before {
+	content: "\e60d";
+}
+
+.kd-mobile:before {
+	content: "\e60e";
+}
+
+.kd-items:before {
+	content: "\e60f";
+}
+
+.kd-institutions:before {
+	content: "\e610";
+}
+
+.kd-data-management:before {
+	content: "\e611";
+}
+
+.kd-ellipsis:before {
+	content: "\e612";
+}
+
+.kd-arrow-down:before {
+	content: "\e614";
+}
+
+.kd-arrow-up:before {
+	content: "\e615";
+}
+
+.kd-arrow-last:before {
+	content: "\e616";
+}
+
+.kd-arrow-first:before {
+	content: "\e617";
+}
+

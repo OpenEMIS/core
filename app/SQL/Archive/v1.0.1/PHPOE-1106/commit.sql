@@ -1,1 +1,0 @@
-ALTER TABLE `datawarehouse_indicators` ADD `classification` VARCHAR( 100 ) NULL ;
