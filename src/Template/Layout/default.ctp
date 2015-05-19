@@ -44,16 +44,10 @@
 		if (isset($modal)) {
 			echo $this->element('ControllerAction.modal');
 		}
-		echo $this->fetch('scriptBottom');
 		?>
-
 	</div>
 	<?= $this->element('OpenEmis.footer') ?>
+	<?= $this->fetch('scriptBottom') ?>
+	<?= $this->element('OpenEmis.scriptBottom') ?>
 </body>
-
-<script type="text/javascript">
-$(function () {
-	$('[data-toggle="tooltip"]').tooltip();
-})
-</script>
 </html>
