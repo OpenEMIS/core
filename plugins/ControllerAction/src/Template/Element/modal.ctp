@@ -24,7 +24,7 @@
 					}
 				}
 				?>
-				<button type="button" class="btn outline-btn" data-dismiss="modal"><?= __('Cancel') ?></button>
+				<button type="button" class="btn btn-outline" data-dismiss="modal"><?= __('Cancel') ?></button>
 			</div>
 			<?= $this->Form->end() ?>
 		</div>
