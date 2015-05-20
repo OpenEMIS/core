@@ -183,7 +183,7 @@ Request::addDetector('tablet', function ($request) {
 Plugin::load('Migrations');
 
 // Custom Plugins
-Plugin::load('OpenEmis');
+Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('Localization', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
 
