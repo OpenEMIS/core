@@ -1,5 +1,5 @@
 <?php
-namespace App\View\Helper;
+namespace OpenEmis\View\Helper;
 
 use Cake\View\Helper;
 
