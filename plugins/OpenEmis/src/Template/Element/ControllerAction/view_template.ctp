@@ -20,5 +20,5 @@ $this->start('toolbar');
 $this->end();
 
 $this->start('panelBody');
-	echo $this->ControllerAction->getViewElements();
+	echo $this->ControllerAction->getViewElements($data);
 $this->end();
