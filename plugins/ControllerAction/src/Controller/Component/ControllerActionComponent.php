@@ -673,6 +673,8 @@ class ControllerActionComponent extends Component {
 		foreach($fields as $key => $obj) {
 			$fields[$key]['order'] = $i++;
 			$fields[$key]['visible'] = true;
+			$fields[$key]['field'] = $key;
+			$fields[$key]['model'] = $model->alias();
 			if ($obj['type'] == 'string') { // make field sortable by default if it is a string data-type
 				$fields[$key]['sort'] = true;
 			}
