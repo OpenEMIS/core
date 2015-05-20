@@ -1,6 +1,4 @@
 <?php
-$this->extend('OpenEmis./Layout/Panel');
-
 $this->start('toolbar');
 	echo $this->Html->link('<i class="fa fa-chevron-left"></i>', $_buttons['back']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Back' ,'escape' => false]);
 	if ($action == 'edit') {

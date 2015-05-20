@@ -13,7 +13,7 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 
-ControllerActionComponent - Version 1.0.7
+ControllerActionComponent - Version 2.0.1
 */
 
 namespace ControllerAction\Controller\Component;
@@ -36,6 +36,7 @@ class ControllerActionComponent extends Component {
 	public $autoRender = true;
 	public $autoProcess = true;
 	public $removeStraightAway = true;
+	public $templatePath = '/ControllerAction/';
 	public $indexActions = [
 		'view' => array('class' => 'fa fa-eye'),
 		'edit' => array('class' => 'fa fa-pencil'),
@@ -48,7 +49,10 @@ class ControllerActionComponent extends Component {
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
-		$controller = $this->_registry->getController();//pr($this->request);
+		if (array_key_exists('templates', $config)) {
+			$this->templatePath = $config['templates'];
+		}
+		$controller = $this->_registry->getController();
 		$this->paramsPass = $this->request->params['pass'];
 		$this->currentAction = $this->request->params['action'];
 		$this->ctpFolder = $controller->name;
@@ -241,7 +245,7 @@ class ControllerActionComponent extends Component {
 
 		if ($this->autoRender) {
 			$view = $this->currentAction == 'add' ? 'edit' : $this->currentAction;
-			$this->controller->render('/Element/ControllerAction/' . $view . '_template');
+			$this->controller->render($this->templatePath . $view);
 		}
 	}
 
@@ -316,7 +320,7 @@ class ControllerActionComponent extends Component {
 				'id' => array('type' => 'hidden', 'id' => 'recordId')
 			);
 			$modal['buttons'] = array(
-				'<button type="submit" class="btn">' . __('Delete') . '</button>'
+				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
 			);
 		}
 		return $modal;
@@ -361,7 +365,7 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists($id)) {
-			$data = $model->get($id, ['contain' => $contain]);//pr($data);
+			$data = $model->get($id, ['contain' => $contain]);
 
 			$this->Session->write($model->alias().'.'.$model->primaryKey(), $id);
 			$modal = $this->getModalOptions('delete');
