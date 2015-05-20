@@ -21,8 +21,8 @@ $description = __d('open_emis', $_productName);
 			echo $this->Html->css($theme);
 		}
 		
-		echo $this->Html->script('jquery.min');
-		echo $this->Html->script('css_browser_selector');
+		echo $this->Html->script('OpenEmis.css_browser_selector');
+		echo $this->Html->script('OpenEmis.jquery.min');
 	?>
 </head>
 
