@@ -382,8 +382,8 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
-	public function getEditElements($fields = array(), $exclude = array()) {
-		$formDefaults = $this->getFormDefaults();
+	public function getEditElements($data, $fields = array(), $exclude = array()) {
+		//$formDefaults = $this->getFormDefaults();
 		$_fields = $this->_View->get('_fields');
 		$model = $this->_View->get('model');
 		$displayFields = $_fields;
@@ -404,38 +404,36 @@ class ControllerActionHelper extends Helper {
 			}
 		}
 
-		$_attrDefaults = array(
+		$_attrDefaults = [
 			'type' => 'string',
 			'model' => $model,
 			'label' => true
-		);
+		];
 
-		$includes = array(
-			'datepicker' => array(
+		$includes = [
+			'datepicker' => [
 				'include' => false,
 				'css' => 'ControllerAction.../plugins/datepicker/css/datepicker',
 				'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker',
 				'element' => 'ControllerAction.datepicker'
-			),
-			'timepicker' => array(
+			],
+			'timepicker' => [
 				'include' => false,
 				'css' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
 				'js' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
 				'element' => 'ControllerAction.timepicker'
-			),
-			'chosen' => array(
+			],
+			'chosen' => [
 				'include' => false,
 				'css' => 'ControllerAction.../plugins/chosen/chosen.min',
 				'js' => 'ControllerAction.../plugins/chosen/chosen.query.min'
-			)
-		);
+			]
+		];
 
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$_type = $_fieldAttr['type'];
 			$visible = $this->isFieldVisible($_fieldAttr, 'edit');
-			//$template = $this->getFormTemplate();
-			//$this->Form->templates($template);
 
 			if ($visible) {
 				$_fieldModel = array_key_exists('model', $_fieldAttr) ? $_fieldAttr['model'] : $model;
@@ -518,7 +516,6 @@ class ControllerActionHelper extends Helper {
 							if (array_key_exists('class', $_fieldAttr)) {
 								$class = $_fieldAttr['class'];
 							};
-							// pr($element);
 							// $value = $this->element($element, $elementData);
 							$value = $this->_View->element($element, $elementData);
 							break;
@@ -535,14 +532,14 @@ class ControllerActionHelper extends Helper {
 						
 					case 'date':
 						$attr = array('id' => $_fieldModel . '_' . $_field);
-						$attr['data-date'] = $this->request->data->$_field;
+						$attr['data-date'] = $data->$_field;
 						if (array_key_exists('attr', $_fieldAttr)) {
 							$attr = array_merge($attr, $_fieldAttr['attr']);
 						}
 
 						$attr['label'] = $label;
 						$includes['datepicker']['include'] = true;
-						echo $this->datepicker($fieldName, $attr);
+						//echo $this->datepicker($fieldName, $attr);
 						break;
 						
 					case 'time':
@@ -597,10 +594,10 @@ class ControllerActionHelper extends Helper {
 		foreach ($includes as $include) {
 			if ($include['include']) {
 				if (array_key_exists('css', $include)) {
-					echo $this->Html->css($include['css'], 'stylesheet', array('inline' => false));
+					echo $this->Html->css($include['css'], ['block' => true]);
 				}
 				if (array_key_exists('js', $include)) {
-					echo $this->Html->script($include['js'], array('inline' => false));
+					echo $this->Html->script($include['js'], ['block' => true]);
 				}
 				if (array_key_exists('element', $include)) {
 					echo $this->_View->element($include['element']);
@@ -613,7 +610,6 @@ class ControllerActionHelper extends Helper {
 		//  1. implemented override param for nav_tabs to omit label
 		//  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
 
-		$formDefaults = $this->getFormDefaults();
 		$_fields = $this->_View->get('_fields');
 		$model = $this->_View->get('model');
 		$data = $this->_View->get('data');
@@ -677,10 +673,6 @@ class ControllerActionHelper extends Helper {
 				}
 				
 				switch ($_type) {
-					case 'disabled':
-						$value = $_fieldAttr['value'];
-						break;
-						
 					case 'select':
 						if (!empty($_fieldAttr['options'])) {
 							reset($_fieldAttr['options']);
@@ -783,5 +775,28 @@ class ControllerActionHelper extends Helper {
 			}
 		}
 		echo $html;
+	}
+
+	public function getTextElement($view='view') {
+		if ($view == 'view') {
+			
+		} else if ($view == 'edit') {
+			
+		}
+	}
+
+	public function getDisabledElement($view = 'view', $attr, &$options=array()) {
+		$value = '';
+		if ($view == 'view') {
+			$value = $attr['value'];
+		} else if ($view == 'edit') {
+			$options['type'] = 'text';
+			$options['disabled'] = 'disabled';
+			if (isset($_fieldAttr['options'])) {
+				//$options['value'] = $_fieldAttr['options'][$this->request->data->$_field];
+			}
+			//echo $this->Form->hidden($fieldName);
+		}
+		return $value;
 	}
 }
