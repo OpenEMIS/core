@@ -3,7 +3,7 @@
 tmp/cache/*
 tmp/sessions/*
 tmp/tests/*
-logs/*
+logs/*.log
 /build
 /dist
 /tags
