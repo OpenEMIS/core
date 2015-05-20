@@ -28,7 +28,7 @@ use Cake\Event\Event;
 class AppController extends Controller {
 	public $_productName = 'OpenEMIS';
 
-    public $helpers = ['ControllerAction.ControllerAction'];
+    public $helpers = ['ControllerAction.ControllerAction', 'OpenEmis.Navigation'];
 
     /**
      * Initialization hook method.
