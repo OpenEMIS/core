@@ -2,6 +2,8 @@
 namespace ControllerAction\View\Helper;
 
 use Cake\View\Helper;
+use Cake\ORM\Entity;
+use Cake\Utility\Inflector;
 
 class ControllerActionHelper extends Helper {
 	public $helpers = ['Html', 'Form', 'Paginator', 'Label'];
@@ -382,8 +384,7 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
-	public function getEditElements($data, $fields = array(), $exclude = array()) {
-		//$formDefaults = $this->getFormDefaults();
+	public function getEditElements(Entity $data, $fields = [], $exclude = []) {
 		$_fields = $this->_View->get('_fields');
 		$model = $this->_View->get('model');
 		$displayFields = $_fields;
@@ -432,11 +433,10 @@ class ControllerActionHelper extends Helper {
 
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
-			$_type = $_fieldAttr['type'];
 			$visible = $this->isFieldVisible($_fieldAttr, 'edit');
 
 			if ($visible) {
-				$_fieldModel = array_key_exists('model', $_fieldAttr) ? $_fieldAttr['model'] : $model;
+				$_type = $_fieldAttr['type'];
 				$_fieldModel = $_fieldAttr['model'];
 				$fieldName = $_fieldModel . '.' . $_field;
 				$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
@@ -445,101 +445,15 @@ class ControllerActionHelper extends Helper {
 				if (!empty($label)) {
 					$options['label'] = $label;
 				}
+
+				$function = 'get' . Inflector::camelize($_type) . 'Element';
+				if (method_exists($this, $function)) {
+					$this->$function('edit', $data, $_fieldAttr);
+				}
 				
 				switch ($_type) {
-					case 'disabled': 
-						$options['type'] = 'text';
-						$options['disabled'] = 'disabled';
-						if (isset($_fieldAttr['options'])) {
-							$options['value'] = $_fieldAttr['options'][$this->request->data->$_field];
-						}
-						//echo $this->Form->hidden($fieldName);
-						break;
-						
-					case 'select':
-						if (isset($_fieldAttr['options'])) {
-							if (empty($_fieldAttr['options'])) {
-								$options['empty'] = isset($_fieldAttr['empty']) ? $_fieldAttr['empty'] : $this->Label->get('general.noData');
-							} else {
-								if (isset($_fieldAttr['default'])) {
-									$options['default'] = $_fieldAttr['default'];
-								} else {
-									if (!empty($this->request->data)) {
-										if(!empty($this->request->data->$_field)) {
-											$options['default'] = $this->request->data->$_field;
-										}
-									}
-								}
-							}
-							$options['options'] = $_fieldAttr['options'];
-						}
-
-						// get rid of options that obsolete and not the default
-						if (!empty($_fieldAttr['options'])) {
-							reset($_fieldAttr['options']);
-							$first_key = key($_fieldAttr['options']);
-							if (is_array($_fieldAttr['options'][$first_key])) {
-								foreach ($options['options'] as $okey => $ovalue) {
-									if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
-										if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
-											unset($options['options'][$okey]);
-										}
-									}
-								}
-							}
-						}
-						break;
-
-					case 'string':
-						$options['type'] = 'string';
-						if (array_key_exists('length', $_fieldAttr)) {
-							$options['maxlength'] = $_fieldAttr['length'];
-						}
-						break;
-						
-					case 'text':
-						$options['type'] = 'textarea';
-						break;
-					
-					case 'hidden':
-						//$template = $this->getFormTemplate();
-						//unset($template['input']);
-						//$this->Form->resetTemplates();
-						//$this->Form->templates($template);
-						$options['type'] = 'hidden';
-						$options['label'] = false;
-						break;
-						
-					case 'element':
-							$element = $_fieldAttr['element'];
-							$elementData = (array_key_exists('data', $_fieldAttr))? $_fieldAttr['data']: array();
-							if (array_key_exists('class', $_fieldAttr)) {
-								$class = $_fieldAttr['class'];
-							};
-							// $value = $this->element($element, $elementData);
-							$value = $this->_View->element($element, $elementData);
-							break;
-						
-					case 'image':
-						$attr = $_fieldAttr['attr'];
-						$attr['field'] = $_field;
-						$attr['label'] = $label;
-						if (isset($this->data->{$_field . '_name'}) && isset($this->data->$_field)) {
-							$attr['src'] = $this->Image->getBase64($this->data->{$_field . '_name'}, $this->data->$_field);
-						}
-						echo $this->_View->element('layout/file_upload_preview', $attr);
-						break;
-						
 					case 'date':
-						$attr = array('id' => $_fieldModel . '_' . $_field);
-						$attr['data-date'] = $data->$_field;
-						if (array_key_exists('attr', $_fieldAttr)) {
-							$attr = array_merge($attr, $_fieldAttr['attr']);
-						}
-
-						$attr['label'] = $label;
-						$includes['datepicker']['include'] = true;
-						//echo $this->datepicker($fieldName, $attr);
+						
 						break;
 						
 					case 'time':
@@ -606,22 +520,15 @@ class ControllerActionHelper extends Helper {
 		}
 	}
 
-	public function getViewElements() {
+	public function getViewElements(Entity $data, $fields = [], $exclude = []) {
 		//  1. implemented override param for nav_tabs to omit label
 		//  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
-
 		$_fields = $this->_View->get('_fields');
-		$model = $this->_View->get('model');
-		$data = $this->_View->get('data');
 
 		$html = '';
-		$row = '<div class="%s">%s</div>';
+		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
 		$_rowClass = array('row');
-
-		$_labelCol = '<div class="%s">%s</div>';
 		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-
-		$_valueCol = '<div class="%s">%s</div>';
 		$_valueClass = array('col-xs-6 col-md-6'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosen_select');
@@ -646,7 +553,6 @@ class ControllerActionHelper extends Helper {
 
 		$_attrDefaults = array(
 			'type' => 'string',
-			'model' => $model,
 			'label' => true,
 			'rowClass' => '',
 			'labelClass' => '',
@@ -671,77 +577,11 @@ class ControllerActionHelper extends Helper {
 					}
 					$label = $this->getLabel($_fieldModel, $associatedObject, $_fieldAttr);
 				}
-				
-				switch ($_type) {
-					case 'select':
-						if (!empty($_fieldAttr['options'])) {
-							reset($_fieldAttr['options']);
-							$firstKey = key($_fieldAttr['options']);
-							if (is_array($_fieldAttr['options'][$firstKey])) {
-								foreach ($_fieldAttr['options'] as $fkey => $fvalue) {
-									if ($fvalue['value'] == $value) {
-										$value = $fvalue['name'];
-									}
-								}
-							} else {
-								if (array_key_exists($value, $_fieldAttr['options'])) {
-									$value = $_fieldAttr['options'][$value];
-								}
-							}
-						}
-						break;
 
-					case 'text':
-						$value = nl2br($value);
-						break;
-
-					case 'image':
-						//$value = $this->Image->getBase64Image($data[$model][$_field . '_name'], $data[$model][$_field], $_fieldAttr['attr']);
-						break;
-						
-					case 'download':
-						$value = $this->Html->link($value, $_fieldAttr['attr']['url']);
-						break;
-						
-					case 'element':
-						$element = $_fieldAttr['element'];
-						$elementData = (array_key_exists('data', $_fieldAttr))? $_fieldAttr['data']: array();
-						if (array_key_exists('class', $_fieldAttr)) {
-							$class = $_fieldAttr['class'];
-						};
-						$value = $this->_View->element($element, $elementData);
-						break;
-						
-					case 'date':
-						//$value = $this->Utility->formatDate($value, null, false);
-						break;
-
-					case 'chosen_select':
-						$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
-						$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
-						//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
-						$chosenSelectList = array();
-						if (isset($data[$dataModel])) {
-							foreach ($data[$dataModel] as $obj) {
-								$chosenSelectData = isset($obj[$dataField]) ? $obj[$dataField] : '';
-								if (!empty($chosenSelectData)) {
-									$chosenSelectList[] = $chosenSelectData;
-								}
-							}
-						}
-						echo implode(', ', $chosenSelectList);
-						break;
-					
-					case 'modified_user_id':
-					case 'created_user_id':
-						$dataModel = $_fieldAttr['dataModel'];
-						//if (isset($data[$dataModel]['first_name']) && isset($data[$dataModel]['last_name'])) {
-							//$value = $data[$dataModel]['first_name'] . ' ' . $data[$dataModel]['last_name'];
-						//}
-						break;
-						
-					default:
-						break;
+				// mapped to a current function in this class
+				$function = 'get' . Inflector::camelize($_type) . 'Element';
+				if (method_exists($this, $function)) {
+					$value = $this->$function('view', $data, $_fieldAttr);
 				}
 
 				if (is_string($value) && strlen(trim($value)) == 0) {
@@ -774,22 +614,104 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
-		echo $html;
+		return $html;
 	}
 
-	public function getTextElement($view='view') {
-		if ($view == 'view') {
-			
-		} else if ($view == 'edit') {
-			
-		}
-	}
+	// Elements definition starts here
 
-	public function getDisabledElement($view = 'view', $attr, &$options=array()) {
+	public function getStringElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($view == 'view') {
+		if ($action == 'view') {
+			
+		} else if ($action == 'edit') {
+			$options['type'] = 'string';
+			if (array_key_exists('length', $attr)) {
+				$options['maxlength'] = $attr['length'];
+			}
+		}
+		return $value;
+	}
+
+	public function getSelectElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			if (!empty($attr['options'])) {
+				reset($attr['options']);
+				$firstKey = key($attr['options']);
+				if (is_array($attr['options'][$firstKey])) {
+					foreach ($attr['options'] as $fkey => $fvalue) {
+						if ($fvalue['value'] == $value) {
+							$value = $fvalue['name'];
+						}
+					}
+				} else {
+					if (array_key_exists($value, $attr['options'])) {
+						$value = $attr['options'][$value];
+					}
+				}
+			}
+		} else if ($action == 'edit') {
+			if (isset($attr['options'])) {
+				if (empty($attr['options'])) {
+					$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
+				} else {
+					if (isset($attr['default'])) {
+						$options['default'] = $attr['default'];
+					} else {
+						if (!empty($this->request->data)) {
+							if(!empty($this->request->data->$_field)) {
+								$options['default'] = $this->request->data->$_field;
+							}
+						}
+					}
+				}
+				$options['options'] = $attr['options'];
+			}
+
+			// get rid of options that obsolete and not the default
+			if (!empty($attr['options'])) {
+				reset($attr['options']);
+				$first_key = key($attr['options']);
+				if (is_array($attr['options'][$first_key])) {
+					foreach ($options['options'] as $okey => $ovalue) {
+						if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
+							if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
+								unset($options['options'][$okey]);
+							}
+						}
+					}
+				}
+			}
+		}
+		return $value;
+	}
+
+	public function getTextElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$value = nl2br($data->$attr['field']);
+		} else if ($action == 'edit') {
+			$options['type'] = 'textarea';
+		}
+		return $value;
+	}
+
+	public function getHiddenElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			// no logic required
+		} else if ($action == 'edit') {
+			$options['type'] = 'hidden';
+			$options['label'] = false;
+		}
+		return $value;
+	}
+
+	public function getDisabledElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
 			$value = $attr['value'];
-		} else if ($view == 'edit') {
+		} else if ($action == 'edit') {
 			$options['type'] = 'text';
 			$options['disabled'] = 'disabled';
 			if (isset($_fieldAttr['options'])) {
@@ -799,4 +721,125 @@ class ControllerActionHelper extends Helper {
 		}
 		return $value;
 	}
+
+	public function getImageElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$value = $this->Image->getBase64Image($data->{$_field . '_name'}, $data->$_field, $attr['attr']);
+		} else if ($action == 'edit') {
+			$imageAttr = $attr['attr'];
+			$imageAttr['field'] = $_field;
+			$imageAttr['label'] = $label;
+			if (isset($data->{$_field . '_name'}) && isset($data->$_field)) {
+				$imageAttr['src'] = $this->Image->getBase64($data->{$_field . '_name'}, $data->$_field);
+			}
+			echo $this->_View->element('layout/file_upload_preview', $imageAttr);
+		}
+		return $value;
+	}
+
+	public function getDownloadElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$value = $this->Html->link($value, $attr['attr']['url']);
+		} else if ($action == 'edit') {
+			
+		}
+		return $value;
+	}
+
+	public function getElementElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+
+		// seems like view and edit actions have the same logic?
+		if ($action == 'view') {
+			$element = $attr['element'];
+			$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
+			if (array_key_exists('class', $attr)) {
+				$class = $attr['class'];
+			};
+			$value = $this->_View->element($element, $elementData);
+		} else if ($action == 'edit') {
+			$element = $attr['element'];
+			$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
+			if (array_key_exists('class', $attr)) {
+				$class = $attr['class'];
+			};
+			$value = $this->_View->element($element, $elementData);
+		}
+		return $value;
+	}
+
+	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			//$value = $this->Utility->formatDate($value, null, false);
+		} else if ($action == 'edit') {
+			$field = $attr['field'];
+			$attr = array('id' => $attr['model'] . '_' . $field);
+			$attr['data-date'] = $data->$field;
+			if (array_key_exists('attr', $attr)) {
+				$dateOptions = array_merge($attr, $attr['attr']);
+			}
+
+			$dateOptions['label'] = $label;
+			//$includes['datepicker']['include'] = true;
+			//echo $this->datepicker($fieldName, $dateOptions);
+		}
+		return $value;
+	}
+
+	public function getTimeElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			
+		} else if ($action == 'edit') {
+			$attr = array('id' => $_fieldModel . '_' . $_field);
+			
+			if (array_key_exists('attr', $_fieldAttr)) {
+				$attr = array_merge($attr, $_fieldAttr['attr']);
+			}
+
+			$attr['value'] = $this->request->data->$_field;
+			$attr['label'] = $label;
+			$includes['timepicker']['include'] = true;
+			echo $this->timepicker($fieldName, $attr);
+		}
+		return $value;
+	}
+
+	public function getChosenSelectElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$attr['dataModel'] = isset($attr['dataModel']) ? $attr['dataModel'] : Inflector::classify($_field);
+			$attr['dataField'] = isset($attr['dataField']) ? $attr['dataField'] : 'id';
+			//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
+			$chosenSelectList = array();
+			if (isset($data[$dataModel])) {
+				foreach ($data[$dataModel] as $obj) {
+					$chosenSelectData = isset($obj[$dataField]) ? $obj[$dataField] : '';
+					if (!empty($chosenSelectData)) {
+						$chosenSelectList[] = $chosenSelectData;
+					}
+				}
+			}
+			echo implode(', ', $chosenSelectList);
+		} else if ($action == 'edit') {
+			
+		}
+		return $value;
+	}
+
+	// a template function for creating new elements
+	public function getTestElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			
+		} else if ($action == 'edit') {
+			
+		}
+		return $value;
+	}
+
+	// Elements definition ends here
 }
