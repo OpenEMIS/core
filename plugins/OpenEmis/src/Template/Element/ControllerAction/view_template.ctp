@@ -1,8 +1,8 @@
 <?php
 $this->start('toolbar');
-	echo $this->Html->link('<i class="fa fa-chevron-left"></i>', $_buttons['back']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Back', 'escape' => false]);
+	echo $this->Html->link('<i class="fa kd-back"></i>', $_buttons['back']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Back', 'escape' => false]);
 	if (array_key_exists('edit', $_buttons)) {
-		echo $this->Html->link('<i class="fa fa-pencil"></i>', $_buttons['edit']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Edit', 'escape' => false]);
+		echo $this->Html->link('<i class="fa kd-edit"></i>', $_buttons['edit']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Edit', 'escape' => false]);
 	}
 	if (array_key_exists('remove', $_buttons)) {
 		$primaryKey = $modelObj->primaryKey();
@@ -14,7 +14,7 @@ $this->start('toolbar');
 			$buttonOptions['field-target'] = '#recordId';
 			$buttonOptions['field-value'] = $data->$primaryKey;
 		}
-		echo $this->Html->link('<i class="fa fa-trash"></i>', '#', $buttonOptions);
+		echo $this->Html->link('<i class="fa kd-trash"></i>', '#', $buttonOptions);
 		echo '</div>';
 	}
 $this->end();
