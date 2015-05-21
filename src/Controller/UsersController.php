@@ -14,9 +14,9 @@ class UsersController extends AppController {
 		//pr($this->Users->fields);die;
 		$this->Users->fields['password']['visible'] = false;
 		$this->Users->fields['status']['type'] = 'select';
-		$this->Users->fields['status']['options'] = array('Inactive', 'Active');
+		$this->Users->fields['status']['options'] = ['Inactive', 'Active'];
 		$this->Users->fields['privileges']['type'] = 'select';
-		$this->Users->fields['privileges']['options'] = array('User', 'Super User');
+		$this->Users->fields['privileges']['options'] = ['User', 'Super User'];
 		$this->set('contentHeader', 'Users');
 		$this->Message->alert('general.add.success');
 	}
@@ -25,9 +25,9 @@ class UsersController extends AppController {
 		$this->layout = false;
 		$username = '';
 		$password = '';
-		
+
 		if ($this->request->is('post') && $this->request->data['submit'] == 'login') {
-			return $this->redirect(array('controller' => 'Users', 'action'=> 'index'));
+			return $this->redirect(['controller' => 'Institutions', 'action'=> 'index']);
 			/*
 			$username = $this->data['User']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
@@ -62,7 +62,7 @@ class UsersController extends AppController {
     public function logout() {
 		//$this->Auth->logout();
 		//$this->Session->destroy();
-		$action = array('plugin' => false, 'controller' => 'Users', 'action' => 'login');
+		$action = ['plugin' => false, 'controller' => 'Users', 'action' => 'login'];
         return $this->redirect($action);
     }
 }
