@@ -41,7 +41,7 @@ $description = __d('open_emis', $_productName);
 				'label' => ''
 			]);
 			echo $this->Form->create('Users', [
-				'url' => ['plugin' => false, 'controller' => 'Users', 'action' => 'index']
+				'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index']
 			]);
 			echo $this->Form->input('username', ['placeholder' => __('Username')]);
 			echo $this->Form->input('password', ['placeholder' => __('Password')]);
