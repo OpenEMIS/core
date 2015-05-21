@@ -448,29 +448,17 @@ class ControllerActionHelper extends Helper {
 
 				$function = 'get' . Inflector::camelize($_type) . 'Element';
 				if (method_exists($this, $function)) {
-					$this->$function('edit', $data, $_fieldAttr);
+					$this->$function('edit', $data, $_fieldAttr, $options);
 				}
 				
 				switch ($_type) {
-					case 'date':
-						
-						break;
 						
 					case 'time':
-						$attr = array('id' => $_fieldModel . '_' . $_field);
-
-						if (array_key_exists('attr', $_fieldAttr)) {
-							$attr = array_merge($attr, $_fieldAttr['attr']);
-						}
-
-						$attr['value'] = $this->request->data->$_field;
-						$attr['label'] = $label;
-						$includes['timepicker']['include'] = true;
-						echo $this->timepicker($fieldName, $attr);
+						
 						break;
 
 					case 'file':
-						echo $this->_View->element('layout/attachment');
+						
 						break;
 
 					case 'file_upload';
@@ -535,7 +523,7 @@ class ControllerActionHelper extends Helper {
 
 		$displayFields = $_fields;
 
-		if (isset($fields)) { // if we only want specific fields to be displayed
+		if (!empty($fields)) { // if we only want specific fields to be displayed
 			foreach ($displayFields as $_field => $attr) {
 				if (!in_array($displayFields, $fields)) {
 					unset($displayFields[$_field]);
@@ -543,7 +531,7 @@ class ControllerActionHelper extends Helper {
 			}
 		}
 
-		if (isset($exclude)) {
+		if (!($exclude)) {
 			foreach ($exclude as $f) {
 				if (array_key_exists($f, $displayFields)) {
 					unset($displayFields[$f]);
@@ -622,7 +610,7 @@ class ControllerActionHelper extends Helper {
 	public function getStringElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
-			
+			$value = $data->$attr['field'];
 		} else if ($action == 'edit') {
 			$options['type'] = 'string';
 			if (array_key_exists('length', $attr)) {
@@ -779,12 +767,10 @@ class ControllerActionHelper extends Helper {
 			$attr = array('id' => $attr['model'] . '_' . $field);
 			$attr['data-date'] = $data->$field;
 			if (array_key_exists('attr', $attr)) {
-				$dateOptions = array_merge($attr, $attr['attr']);
+				$options = array_merge($attr, $attr['attr']);
 			}
-
-			$dateOptions['label'] = $label;
 			//$includes['datepicker']['include'] = true;
-			//echo $this->datepicker($fieldName, $dateOptions);
+			//echo $this->datepicker($fieldName, $options);
 		}
 		return $value;
 	}
@@ -826,6 +812,16 @@ class ControllerActionHelper extends Helper {
 			echo implode(', ', $chosenSelectList);
 		} else if ($action == 'edit') {
 			
+		}
+		return $value;
+	}
+
+	public function getFileElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			
+		} else if ($action == 'edit') {
+			echo $this->_View->element('layout/attachment');
 		}
 		return $value;
 	}
