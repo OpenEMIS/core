@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'kordit-fonts';
-	src:url('fonts/kordit-fonts.eot?azpdbn');
-	src:url('fonts/kordit-fonts.eot?#iefixazpdbn') format('embedded-opentype'),
-		url('fonts/kordit-fonts.woff?azpdbn') format('woff'),
-		url('fonts/kordit-fonts.ttf?azpdbn') format('truetype'),
-		url('fonts/kordit-fonts.svg?azpdbn#kordit-fonts') format('svg');
+	src:url('fonts/kordit-fonts.eot?ewy3xy');
+	src:url('fonts/kordit-fonts.eot?#iefixewy3xy') format('embedded-opentype'),
+		url('fonts/kordit-fonts.woff?ewy3xy') format('woff'),
+		url('fonts/kordit-fonts.ttf?ewy3xy') format('truetype'),
+		url('fonts/kordit-fonts.svg?ewy3xy#kordit-fonts') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,99 +23,96 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.kd-grid:before {
-	content: "\e613";
-}
-
-.kd-data-collection:before {
-	content: "\e600";
-}
-
-.kd-openemis:before {
-	content: "\e601";
-}
-
-.kd-administration:before {
-	content: "\e602";
-}
-
-.kd-web:before {
+.kd-back:before {
 	content: "\e603";
 }
-
-.kd-user-role:before {
+.kd-lists:before {
+	content: "\e61e";
+}
+.kd-download:before {
+	content: "\e600";
+}
+.kd-edit:before {
+	content: "\e601";
+}
+.kd-trash:before {
+	content: "\e602";
+}
+.kd-upload:before {
 	content: "\e604";
 }
-
-.kd-students2:before {
+.kd-add:before {
 	content: "\e605";
 }
-
-.kd-students:before {
+.kd-data_collection_icon:before {
 	content: "\e606";
 }
-
-.kd-staff2:before {
+.kd-openemis:before {
 	content: "\e607";
 }
-
-.kd-staff:before {
+.kd-administration:before {
 	content: "\e608";
 }
-
-.kd-role:before {
+.kd-web_icon:before {
 	content: "\e609";
 }
-
-.kd-results:before {
+.kd-user-role:before {
 	content: "\e60a";
 }
-
-.kd-reports:before {
+.kd-students:before {
 	content: "\e60b";
 }
-
-.kd-play:before {
+.kd-students-old:before {
 	content: "\e60c";
 }
-
-.kd-packages:before {
+.kd-staff:before {
 	content: "\e60d";
 }
-
-.kd-mobile:before {
+.kd-staff-old:before {
 	content: "\e60e";
 }
-
-.kd-items:before {
+.kd-role:before {
 	content: "\e60f";
 }
-
-.kd-institutions:before {
+.kd-results:before {
 	content: "\e610";
 }
-
-.kd-data-management:before {
+.kd-reports:before {
 	content: "\e611";
 }
-
-.kd-ellipsis:before {
+.kd-play:before {
 	content: "\e612";
 }
-
-.kd-arrow-down:before {
+.kd-packages:before {
+	content: "\e613";
+}
+.kd-mobile_icon:before {
 	content: "\e614";
 }
-
-.kd-arrow-up:before {
+.kd-items:before {
 	content: "\e615";
 }
-
-.kd-arrow-last:before {
+.kd-institutions:before {
 	content: "\e616";
 }
-
-.kd-arrow-first:before {
+.kd-data_management_icon:before {
 	content: "\e617";
 }
-
+.kd-ellipsis:before {
+	content: "\e618";
+}
+.kd-grid:before {
+	content: "\e619";
+}
+.kd-arrow-down:before {
+	content: "\e61a";
+}
+.kd-arrow-up:before {
+	content: "\e61b";
+}
+.kd-arrow-last:before {
+	content: "\e61c";
+}
+.kd-arrow-first:before {
+	content: "\e61d";
+}

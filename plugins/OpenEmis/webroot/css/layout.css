@@ -1,6 +1,6 @@
 /* GENERAL STYLE */
 body {
-	font-family: 'Helvetica', Arial, sans-serif;
+	font-family: 'Helvetica Neue', Arial, sans-serif;
 	background-color: #FFF;
 	font-size: 13px;
 }
@@ -50,7 +50,7 @@ a:hover {
 /* HEADINGS */
 
 h1, h2, h3, h4, h5, h6 {
-	font-family: 'Helvetica', Arial, sans-serif;
+	font-family: 'Helvetica Neue', Arial, sans-serif;
 	color: #333;
 	margin-top: 10px;
 }
@@ -104,8 +104,8 @@ p.error { margin-top: 50px; }
 }
 
 .navbar-left h1 {
-	font-family: 'Helvetica', Arial, sans-serif;
-	font-weight: 500;
+	font-family: 'Helvetica Neue', Arial, sans-serif;
+	font-weight: 400;
 	line-height: 1.1;
 	display: inline-block;
 	vertical-align: middle;
@@ -125,7 +125,6 @@ p.error { margin-top: 50px; }
 	background: 0;
 	color: #FFF;
 	padding: 14px 10px;
-	height: 50px;
 	-webkit-border-radius: 0;
 	        border-radius: 0;
 }
@@ -134,19 +133,14 @@ p.error { margin-top: 50px; }
 	background-color: #6B6B6B;
 }
 
-.header-navigation .fa-home {
-	font-size: 18px;
-}
-
 .header-navigation .dropdown-menu {
 	top: 45px;
 	right: -6px;
 	padding: 20px;
 }
 
-.header-navigation .kd-grid,
-.header-navigation .kd-ellipsis {
-	padding: 2px 0 !important;
+.header-navigation .fa-home {
+	font-size: 18px;
 }
 
 .header-navigation .fa-caret-up,
@@ -180,7 +174,6 @@ p.error { margin-top: 50px; }
 
 .username span {
 	display: inline-block;
-	padding: 19px 0 14px;
 }
 
 .dropdown-menu .dropdown-arrow {
@@ -264,7 +257,7 @@ p.error { margin-top: 50px; }
 }
 
 .more-menu-item span {
-	font-family: 'Helvetica';
+	font-family: 'Helvetica Neue';
 }
 
 .more-menu-item a:hover {
@@ -560,14 +553,15 @@ body .large {
 }
 
 .toolbar .btn i {
-	padding: 5px 8px;
+	display: table-cell;
+	font-size: 11px;
+	padding: 6px 9px 7px;
 	vertical-align: middle;
 }
 
 .toolbar .search .btn {
 	margin-right: -1px;
 	margin-top: 0;
-	height: 26px;
 }
 
 .btn-default {
@@ -907,6 +901,7 @@ body .large {
 
 .table tr:hover {
     background-color: #F9F9F9 !important;
+    cursor: pointer;
 }
 
 th > a,
@@ -940,7 +935,7 @@ th > a:active { color: #444; }
 }
 
 .view-image:hover:before {
-    font-family: 'Helvetica';
+    font-family: 'Helvetica Neue';
     color: #999;
     content: "View";
     font-size: 12px;
@@ -999,9 +994,9 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .search input {
 	width: 220px !important;
-	height: 26px;	
+	height: 27px;	
 	font-size: 12px;
-	padding: 2px 5px 0;
+	padding: 2px 8px 0;
 	z-index: 0;
 	margin-right: -2px;
 	-webkit-border-radius: 3px !important;
@@ -1017,6 +1012,10 @@ table tr.sorting-row td {background-color: #8b8;}
 .search form {
 	padding-bottom: 0;
 	display: inline-block;
+}
+
+.search i {
+	font-size: 12px !important;
 }
 
 .search .form-control {
