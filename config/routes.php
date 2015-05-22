@@ -49,6 +49,11 @@ Router::scope('/', function ($routes) {
      */
     $routes->connect('/', ['controller' => 'Users', 'action' => 'login']);
 
+    $routes->connect('/institutions', ['plugin' => 'Institution', 'controller' => 'Institutions']);
+    $routes->connect('/institutions/:action', ['plugin' => 'Institution', 'controller' => 'Institutions']);
+    $routes->connect('/institutions/:action/:id', ['plugin' => 'Institution', 'controller' => 'Institutions'], ['id' => '\d+', 'pass' => ['id']]);
+
+
     /**
      * ...and connect the rest of 'Pages' controller's URLs.
      */

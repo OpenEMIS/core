@@ -17,6 +17,7 @@ class NavigationComponent extends Component {
 	public function beforeRender(Event $event) {
 		$controller = $this->controller;
 		$action = $this->action;
+		$id = $this->request->param('id');
 
 		$navigations = [];
 
@@ -42,7 +43,8 @@ class NavigationComponent extends Component {
 						'collapse' => true,
 						'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index'],
 						'items' => [
-							'Overview' => ['url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'view']]
+							'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
+							'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']]
 						]
 					]
 				]
