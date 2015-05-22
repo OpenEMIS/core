@@ -35,19 +35,20 @@ $description = __d('open_emis', $_productName);
 			<?php 
 			//echo $this->element('OpenEmis.alert');
 
-			$this->Form->templates([
-			    'inputContainer' => '<div class="form-group">{{content}}</div>',
-				'input' => '<input type="{{type}}" name="{{name}}" {{attrs}} class="form-control" />',
-				'label' => ''
-			]);
 			echo $this->Form->create('Users', [
-				'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index']
+				'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index'],
+				'class' => 'form-horizontal'
 			]);
-			echo $this->Form->input('username', ['placeholder' => __('Username')]);
-			echo $this->Form->input('password', ['placeholder' => __('Password')]);
+			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false]);
+			echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false]);
 
 			if (isset($showLanguage) && $showLanguage) {
-				echo $this->Form->input('System.language', ['options' => $languageOptions, 'value' => $lang, 'onchange' => "$('#reload').click()"]);
+				echo $this->Form->input('System.language', [
+					'label' => false,
+					'options' => $languageOptions, 
+					'value' => $htmlLang, 
+					'onchange' => "$('#reload').click()"
+				]);
 			}
 			?>
 
