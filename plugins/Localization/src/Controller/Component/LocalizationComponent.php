@@ -19,31 +19,33 @@ namespace Localization\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\I18n\I18n;
-//App::uses('L10n', 'I18n');
 
 class LocalizationComponent extends Component {
 	private $controller;
 
 	public $Session;
 	public $showLanguage = true;
-	public $language = 'eng';
-	public $languageOptions = [
-
+	public $language = 'en';
+	public $languages = [
+		'ar' => ['name' => 'العربية', 'direction' => 'rtl'],
+		'zh' => ['name' => '中文', 'direction' => 'ltr'],
+		'en' => ['name' => 'English', 'direction' => 'ltr'],
+		'fr' => ['name' => 'Français', 'direction' => 'ltr'],
+		'ru' => ['name' => 'русский', 'direction' => 'ltr'],
+		'es' => ['name' => 'español', 'direction' => 'ltr']
 	];
 	public $components = ['Cookie'];
 
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
-		$Session = $this->request->session();
+		$session = $this->request->session();
 		$this->controller = $this->_registry->getController();
-		/*
+		
 		$this->Cookie->name = str_replace(' ', '_', $this->controller->_productName) . '_COOKIE';
 		$this->Cookie->time = 3600 * 24 * 30; // expires after one month
-		$lang = 'eng';
+		$lang = $this->language;
 		$params = $this->controller->params;
-
-		$session = $this->request->session();
 
 		if (!empty($params->query['lang'])) {
 			$lang = $params->query['lang'];
@@ -56,51 +58,37 @@ class LocalizationComponent extends Component {
 
 		}
 		$this->language = $lang;
-		*/
+		$this->Session = $session;
 	}
 
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Event $event) {
-		/*
-		$lang = $this->language;
-		$languageOptions = array(
-			'ara' => 'العربية',
-			'chi' => '中文',
-			'eng' => 'English',
-			'fre' => 'Français',
-			'rus' => 'русский',
-			'spa' => 'español'
-		);
-
-		$l10n = new L10n();
-
-		$controller->set('showLanguage', $this->showLanguage);
-
-		if ($controller->request->is('post') && array_key_exists('System', $controller->request->data)) {
-			if (isset($controller->request->data['System']['language'])) {
-				$lang = $controller->request->data['System']['language'];
-				$this->Cookie->write('System.language', $lang);
+		$controller = $this->controller;
+		$htmlLang = $this->language;
+		$languages = $this->languages;
+		
+		if ($this->request->is('post') && array_key_exists('System', $this->request->data)) {
+			if (isset($this->request->data['System']['language'])) {
+				$htmlLang = $this->request->data['System']['language'];
+				$this->Cookie->write('System.language', $htmlLang);
 			}
 		}
-		
-		$locale = $l10n->map($lang);
-		if ($locale == false) {
-			$lang = 'eng';
-			$locale = $l10n->map($lang);
+
+		$this->Session->write('System.language', $htmlLang);
+
+		$htmlLangDir = $languages[$htmlLang]['direction'];
+		$controller->set('showLanguage', $this->showLanguage);
+		$controller->set('languageOptions', $this->getOptions());
+		$controller->set(compact('htmlLang', 'htmlLangDir'));
+	}
+
+	public function getOptions() {
+		$languages = $this->languages;
+		$options = [];
+
+		foreach ($languages as $key => $lang) {
+			$options[$key] = $lang['name'];
 		}
-
-		$catalog = $l10n->catalog($locale);
-		$controller->set('lang_locale', $locale);
-		$controller->set('lang_dir', $catalog['direction']);
-		$controller->set('lang', $lang);
-		$controller->set('languageOptions', $languageOptions);
-
-		$this->Session->write('System.language', $lang);
-		Configure::write('Config.language', $lang);
-		*/
-
-		$htmlLang = 'en';
-		$htmlLangDir = 'ltr';
-		$this->controller->set(compact('htmlLang', 'htmlLangDir'));
+		return $options;
 	}
 }
