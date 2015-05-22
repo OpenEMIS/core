@@ -43,6 +43,7 @@ class AppController extends Controller {
 
         // Custom Components
         $this->loadComponent('Message');
+        $this->loadComponent('Navigation');
         $this->loadComponent('Localization.Localization');
         $this->loadComponent('ControllerAction.ControllerAction');
     }

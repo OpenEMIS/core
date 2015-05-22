@@ -283,7 +283,9 @@ class ControllerActionComponent extends Component {
 				$OR["$alias.$name LIKE"] = '%' . $search . '%';
 			}
 		}
-		$conditions['OR'] = $OR;
+		if (!empty($OR)) {
+			$conditions['OR'] = $OR;
+		}
 
 		$paginateOptions = ['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions];
 		if (!empty($contain)) {
