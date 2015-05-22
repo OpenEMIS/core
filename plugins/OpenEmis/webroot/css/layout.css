@@ -828,6 +828,11 @@ body .large {
     margin: 20% auto;
 }
 
+.modal-body img {
+	width: 100% !important;
+	height: 100% !important;
+}
+
 /* TABLE */
 .table {
     border: 0;
@@ -1123,7 +1128,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal select {
-	padding: 6px 10px;
+	padding: 5px 10px;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
 	border: 1px solid #CCC;
@@ -1424,21 +1429,38 @@ footer {
 	margin-bottom: 15px;
 }
 
-.login-box form {
+.login-box .form-horizontal {
 	text-align: left;
-	display: inline-block;
-    margin: 0 auto;
+	width: 50%;
+	margin: 0 auto;
 }
 
-.login-box form label {
-	font-size: 14px;
+.login-box .form-group {
+	margin-left: 0;
+	margin-right: 0;
 }
 
-.login-box form .form-control {
-	font-size: 14px;
-	padding: 6px 12px;
-	height: 34px;
-	width: 220px;
+.login-box input,
+.login-box select {
+	color: #333;
+	font-weight: 500;
+	width: 100%;
+}
+
+.login-box select {
+	color: #555;
+}
+
+.login-box .select {
+	height: 30px;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+	margin-bottom: 15px;
+	background-color: #FFF;
+}
+
+.login-box .select:after {
+	color: #333;
 }
 
 .login-box .btn-login { 
