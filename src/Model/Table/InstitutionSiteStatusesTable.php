@@ -8,6 +8,6 @@ class InstitutionSiteStatusesTable extends Table {
 	public function initialize(array $config) {
 		$this->table('field_option_values');
 		
-		$this->hasMany('Institutions');
+		$this->hasMany('InstitutionSites');
 	}
 }
