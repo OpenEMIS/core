@@ -186,7 +186,7 @@ class ControllerActionHelper extends Helper {
 			$pageOptions = $this->_View->get('pageOptions');
 			
 			if (!empty($pageOptions)) {
-				$html = __('Display');
+				$html = __('<span>Display</span>');
 				$html .= $this->Form->create(NULL, ['type' => 'post', 'style' => 'display: inline-block']);
 				$html .= $this->Form->input('Search.limit', [
 					'label' => false,
