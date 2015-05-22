@@ -4,9 +4,9 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
-class InstitutionsTable extends Table {
+class InstitutionSitesTable extends Table {
 	public function initialize(array $config) {
-		$this->table('institution_sites');
+		//$this->table('institution_sites');
 
 		$this->belongsTo('InstitutionSiteLocalities');
 		$this->belongsTo('InstitutionSiteProviders');
@@ -15,6 +15,8 @@ class InstitutionsTable extends Table {
 		$this->belongsTo('InstitutionSiteSectors');
 		$this->belongsTo('InstitutionSiteGenders');
 		$this->belongsTo('InstitutionSiteStatuses');
+
+		$this->hasMany('InstitutionSiteStudents');
 	}
 
 	public function validationDefault(Validator $validator) {
