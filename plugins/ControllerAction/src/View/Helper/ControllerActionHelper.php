@@ -8,6 +8,31 @@ use Cake\Utility\Inflector;
 class ControllerActionHelper extends Helper {
 	public $helpers = ['Html', 'Form', 'Paginator', 'Label'];
 
+	public $includes = [
+		'datepicker' => [
+			'include' => false,
+			'css' => 'ControllerAction.../plugins/datepicker/css/datepicker',
+			'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker',
+			'element' => 'ControllerAction.datepicker'
+		],
+		'timepicker' => [
+			'include' => false,
+			'css' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
+			'js' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
+			'element' => 'ControllerAction.timepicker'
+		],
+		'chosen' => [
+			'include' => false,
+			'css' => 'ControllerAction.../plugins/chosen/chosen.min',
+			'js' => 'ControllerAction.../plugins/chosen/chosen.query.min'
+		],
+		'jasny' => [
+			'include' => false,
+			'css' => 'ControllerAction.../plugins/jasny/css/jasny-bootstrap.min',
+			'js' => 'ControllerAction.../plugins/jasny/js/jasny-bootstrap.min'
+		]
+	];
+
 	public function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
@@ -34,10 +59,22 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getFormOptions() {
-		$options = array(
+		$options = [
 			'class' => 'form-horizontal',
 			'novalidate' => true
-		);
+		];
+
+		$fields = $this->_View->get('_fields');
+		if (!empty($fields)) {
+			$types = ['binary'];
+			foreach ($fields as $key => $attr) {
+				if (in_array($attr['type'], $types)) {
+					$options['type'] = 'file';
+					break;
+				}
+			}
+		}
+		
 		return $options;
 	}
 
@@ -411,26 +448,6 @@ class ControllerActionHelper extends Helper {
 			'label' => true
 		];
 
-		$includes = [
-			'datepicker' => [
-				'include' => false,
-				'css' => 'ControllerAction.../plugins/datepicker/css/datepicker',
-				'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker',
-				'element' => 'ControllerAction.datepicker'
-			],
-			'timepicker' => [
-				'include' => false,
-				'css' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
-				'js' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
-				'element' => 'ControllerAction.timepicker'
-			],
-			'chosen' => [
-				'include' => false,
-				'css' => 'ControllerAction.../plugins/chosen/chosen.min',
-				'js' => 'ControllerAction.../plugins/chosen/chosen.query.min'
-			]
-		];
-
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$visible = $this->isFieldVisible($_fieldAttr, 'edit');
@@ -452,15 +469,6 @@ class ControllerActionHelper extends Helper {
 				}
 				
 				switch ($_type) {
-						
-					case 'time':
-						
-						break;
-
-					case 'file':
-						
-						break;
-
 					case 'file_upload';
 						$attr = array('field' => $_field);
 						echo $this->_View->element('layout/attachment_upload', $attr);
@@ -472,7 +480,7 @@ class ControllerActionHelper extends Helper {
 						$options['multiple'] = true;
 						$options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
 						$fieldName = $attr['id'];
-						$includes['chosen']['include'] = true;
+						$this->includes['chosen']['include'] = true;
 						break;
 
 					default:
@@ -488,12 +496,12 @@ class ControllerActionHelper extends Helper {
 				}
 				if (array_key_exists('override', $_fieldAttr)) { 
 					echo '<div class="row">' . $value . '</div>';
-				} else if (!in_array($_type, array('image', 'date', 'time', 'file', 'file_upload', 'element'))) {
+				} else if (!in_array($_type, array('image', 'date', 'time', 'binary', 'file_upload', 'element'))) {
 					echo $this->Form->input($fieldName, $options);
 				}
 			}
 		}
-		foreach ($includes as $include) {
+		foreach ($this->includes as $include) {
 			if ($include['include']) {
 				if (array_key_exists('css', $include)) {
 					echo $this->Html->css($include['css'], ['block' => true]);
@@ -690,7 +698,9 @@ class ControllerActionHelper extends Helper {
 			// no logic required
 		} else if ($action == 'edit') {
 			$options['type'] = 'hidden';
-			$options['label'] = false;
+			if (array_key_exists('value', $attr)) {
+				$options['value'] = $attr['value'];
+			}
 		}
 		return $value;
 	}
@@ -816,12 +826,13 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
-	public function getFileElement($action, Entity $data, $attr, &$options=[]) {
+	public function getBinaryElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
 			
 		} else if ($action == 'edit') {
-			echo $this->_View->element('layout/attachment');
+			$this->includes['jasny']['include'] = true;
+			echo $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
 		}
 		return $value;
 	}
