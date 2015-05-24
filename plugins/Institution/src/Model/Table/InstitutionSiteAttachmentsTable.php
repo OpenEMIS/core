@@ -1,5 +1,5 @@
 <?php
-namespace App\Model\Table;
+namespace Institution\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -7,7 +7,7 @@ use Cake\Validation\Validator;
 class InstitutionSiteAttachmentsTable extends Table {
 	public function initialize(array $config) {
 
-		$this->belongsTo('InstitutionSites');
+		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
 		// public $belongsTo = array(
 		// 	'InstitutionSite',
 		// 	'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
@@ -21,17 +21,14 @@ class InstitutionSiteAttachmentsTable extends Table {
 		return $validator;
 	}
 
-
-	// public function beforeAction($controller, $action) {
 	public function beforeAction() {
-
 		$visibility = ['view' => true, 'edit' => true];
 		
-		$this->fields['contact_person']['visible'] = $visibility;
+		//$this->fields['contact_person']['visible'] = $visibility;
 
-		$this->fields['id']['type'] = 'hidden';
+		//$this->fields['id']['type'] = 'hidden';
 		// array('field' => 'name', 'type' => 'file', 'url' => array('action' => 'attachmentsDownload')),
-		$this->fields['description']['type'] = 'textarea';
+		//$this->fields['description']['type'] = 'textarea';
 		// $this->fields['id']['type'] = 'hidden';
 
 				// array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
@@ -44,19 +41,8 @@ class InstitutionSiteAttachmentsTable extends Table {
 		// $this->controller->FileUploader->additionalFileType();
 	}
 
-	// public function attachments($controller, $params) {
 	public function attachments() {
-		pr('model attachments');
-		pr('===============================================');
-		pr($this);die;
-		$this->controller->ControllerAction->index();
-		// $this->render = false;
-		// $controller->Navigation->addCrumb('Attachments');
-		// $header = __('Attachments');
-		// $data = $this->findAllByInstitutionSiteIdAndVisible($controller->institutionSiteId, 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
-		// $arrFileExtensions = $controller->Utility->getFileExtensionList();
-		// $controller->set(compact('data', 'arrFileExtensions', 'header'));
-		// $controller->render('/Elements/attachment/index');
+		
 	}
 
 	public function attachmentsAdd($controller, $params) {

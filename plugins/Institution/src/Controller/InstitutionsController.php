@@ -1,8 +1,8 @@
 <?php
 namespace Institution\Controller;
 
-// use Institution\Controller\AppController;
-use App\Controller\AppController;// as BaseController;
+use Institution\Controller\AppController;
+use Cake\Event\Event;
 
 class InstitutionsController extends AppController
 {
@@ -10,27 +10,41 @@ class InstitutionsController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		// $this->ControllerAction->model('Institution.InstitutionSites');
-		$this->ControllerAction->model('InstitutionSites');
-		// $this->ControllerAction->models = ['InstitutionSites'];
-		if ($this->request->param('action') == 'attachments') {
-			$this->request->params['action'] = 'InstitutionSiteAttachments';
-			$this->loadModel('InstitutionSiteAttachments');
-			$this->ControllerAction->model('InstitutionSiteAttachments');
-			$this->ControllerAction->models[] = 'InstitutionSiteAttachments';
-			// die('yeah');
-		// } elseif ($this->request->params['action'] == 'InstitutionSiteAttachments') {
-		// 	$this->loadModel('InstitutionSiteAttachments');
-		// 	$this->ControllerAction->model('InstitutionSiteAttachments');
-		// 	$this->ControllerAction->models[] = 'InstitutionSiteAttachments';
-		// 	// die('yeah');
-		// }else{
-		}
+		$this->ControllerAction->model('Institution.InstitutionSites');
+		$this->ControllerAction->models = [
+			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments']
+		];
 		$this->loadComponent('Paginator');
-
-		// $this->modules( ['attachments' => 'InstitutionSiteAttachment'] );
-		$this->set('contentHeader', 'Institutions');
-
+		
     }
 
+    public function beforeFilter(Event $event) {
+    	parent::beforeFilter($event);
+
+    	$header = __('Institution');
+    	$controller = $this;
+    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
+			$header .= ' - ' . $model->alias;
+			$controller->set('contentHeader', $header);
+		};
+		$this->set('contentHeader', $header);
+
+    	$visibility = ['view' => true, 'edit' => true];
+
+    	$this->InstitutionSites->fields['alternative_name']['visible'] = $visibility;
+		$this->InstitutionSites->fields['address']['visible'] = $visibility;
+		$this->InstitutionSites->fields['postal_code']['visible'] = $visibility;
+		$this->InstitutionSites->fields['telephone']['visible'] = $visibility;
+		$this->InstitutionSites->fields['fax']['visible'] = $visibility;
+		$this->InstitutionSites->fields['email']['visible'] = $visibility;
+		$this->InstitutionSites->fields['website']['visible'] = $visibility;
+		$this->InstitutionSites->fields['date_opened']['visible'] = $visibility;
+		$this->InstitutionSites->fields['year_opened']['visible'] = $visibility;
+		$this->InstitutionSites->fields['date_closed']['visible'] = $visibility;
+		$this->InstitutionSites->fields['year_closed']['visible'] = $visibility;
+		$this->InstitutionSites->fields['longitude']['visible'] = $visibility;
+		$this->InstitutionSites->fields['latitude']['visible'] = $visibility;
+		$this->InstitutionSites->fields['security_group_id']['visible'] = $visibility;
+		$this->InstitutionSites->fields['contact_person']['visible'] = $visibility;
+    }
 }
