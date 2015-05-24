@@ -36,7 +36,7 @@ $description = __d('open_emis', $_productName);
 			//echo $this->element('OpenEmis.alert');
 
 			echo $this->Form->create('Users', [
-				'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index'],
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index'],
 				'class' => 'form-horizontal'
 			]);
 			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false]);

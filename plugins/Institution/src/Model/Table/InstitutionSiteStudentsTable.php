@@ -1,5 +1,5 @@
 <?php
-namespace App\Model\Table;
+namespace Institution\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
