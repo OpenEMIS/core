@@ -1,5 +1,5 @@
 <?php
-$primaryKey = $modelObj->primaryKey();
+$primaryKey = $table->primaryKey();
 $id = $obj->$primaryKey;
 ?>
 

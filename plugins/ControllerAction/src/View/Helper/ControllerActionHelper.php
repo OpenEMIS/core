@@ -3,6 +3,7 @@ namespace ControllerAction\View\Helper;
 
 use Cake\View\Helper;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 
 class ControllerActionHelper extends Helper {
@@ -829,7 +830,20 @@ class ControllerActionHelper extends Helper {
 	public function getBinaryElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
-			
+			$table = TableRegistry::get($attr['className']);
+			$fileUpload = $table->behaviors()->get('FileUpload');
+			$name = '';
+			if (!empty($fileUpload)) {
+				$name = $fileUpload->config('name');
+			}
+			$primaryKey = $table->primaryKey();
+			$action = ['action' => 'download'];
+			if ($this->_View->get('_triggerFrom') == 'Model') {
+				$action['action'] = $this->_View->get('_alias');
+				$action[] = 'download';
+			}
+			$action[] = $data->$primaryKey;
+			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
 			echo $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
