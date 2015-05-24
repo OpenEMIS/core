@@ -29,7 +29,7 @@ class ControllerActionComponent extends Component {
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
-	private $defaultActions = ['index', 'add', 'view', 'edit', 'remove', 'reorder'];
+	private $defaultActions = ['index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
 	public $models = [];
 	public $buttons = [];
 	public $params = [];
@@ -121,10 +121,13 @@ class ControllerActionComponent extends Component {
 
 			uasort($this->model->fields, [$this, 'sortFields']);
 			$controller->set('model', $this->model->alias());
-			$controller->set('modelObj', $this->model);
+			$controller->set('table', $this->model);
 			$controller->set('action', $this->currentAction);
 			$controller->set('_fields', $this->model->fields);
 			$controller->set('_triggerFrom', $this->triggerFrom);
+			if ($this->triggerFrom == 'Model') {
+				$controller->set('_alias', $this->model->alias);
+			}
 		}
 	}
 
@@ -491,6 +494,32 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
+	public function download($id) {
+		$fileUpload = $this->model->behaviors()->get('FileUpload');
+		$name = '';
+		if (!empty($fileUpload)) {
+			$name = $fileUpload->config('name');
+			$content = $fileUpload->config('content');
+		}
+
+		$data = $this->model->get($id);
+		$fileName = $data->$name;
+		$pathInfo = pathinfo($fileName);
+
+		header("Pragma: public", true);
+		header("Expires: 0"); // set expiration time
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Content-Type: application/force-download");
+		header("Content-Type: application/octet-stream");
+		header("Content-Type: application/download");
+		header('Content-Type: ' . $pathInfo['extension']);
+		header("Content-Disposition: attachment; filename=" . $fileName);
+		header("Content-Transfer-Encoding: binary");
+		//header("Content-Length: ".filesize($path));
+		echo $data->$content;
+		exit();
+	}
+
 	/*
 	private function removeAndTransfer($options = array()) {
 
@@ -686,7 +715,10 @@ class ControllerActionComponent extends Component {
 	
 	public function getFields($model) {
 		$defaultFields = array('modified_user_id', 'modified', 'created_user_id', 'created', 'order');
-
+		$className = $model->alias();
+		if (!empty($this->plugin)) {
+			$className = $this->plugin . '.' . $className;
+		}
 		$fields = $this->getSchema($model);
 		$visibility = ['view' => true, 'edit' => true, 'index' => true];
 
@@ -696,6 +728,7 @@ class ControllerActionComponent extends Component {
 			$fields[$key]['visible'] = $visibility;
 			$fields[$key]['field'] = $key;
 			$fields[$key]['model'] = $model->alias();
+			$fields[$key]['className'] = $className;
 			if ($obj['type'] == 'string') { // make field sortable by default if it is a string data-type
 				$fields[$key]['sort'] = true;
 			}

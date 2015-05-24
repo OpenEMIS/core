@@ -21,7 +21,6 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 
 class FileUploadBehavior extends Behavior {
-
 	protected $_defaultConfig = [
 		'name' => 'file_name',
 		'content' => 'file_content',
@@ -31,8 +30,8 @@ class FileUploadBehavior extends Behavior {
 	];
 
 	public function initialize(array $config) {
-		$this->_defaultConfig = array_merge($this->_defaultConfig, $config);
-		//pr($this->_defaultConfig);
+		$this->config($config);
+		
 		/*
 		$validate = array(
 			'ruleExtension' => array(
@@ -88,15 +87,13 @@ class FileUploadBehavior extends Behavior {
 	*/
 	
 	public function beforeSave(Event $event, Entity $entity) {
-		$config = $this->_defaultConfig;
-
-		$fileNameField = $config['name'];
-		$fileContentField = $config['content'];
+		$fileNameField = $this->config('name');
+		$fileContentField = $this->config('content');
 
 		$file = $entity->$fileContentField;
 		$entity->$fileContentField =  null;
 		if ($file['error'] == 0) { // success
-			if ($config['useDefaultName']) {
+			if ($this->config('useDefaultName')) {
 				$entity->$fileNameField = $file['name'];
 			} else {
 				$pathInfo = pathinfo($file['name']);
