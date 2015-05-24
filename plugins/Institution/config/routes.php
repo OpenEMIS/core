@@ -1,7 +1,8 @@
 <?php
-use Cake\Core\Plugin;
 use Cake\Routing\Router;
 
-Router::plugin('Institution', function ($routes) {
-    $routes->fallbacks('InflectedRoute');
+Router::scope('/institutions', ['plugin' => 'Institution'], function ($routes) {
+	Router::connect('/institutions', ['plugin' => 'Institution', 'controller' => 'Institutions']);
+	Router::connect('/institutions/:action/*', ['plugin' => 'Institution', 'controller' => 'Institutions']);
+	$routes->fallbacks('InflectedRoute');
 });

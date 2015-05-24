@@ -30,7 +30,7 @@ class NavigationHelper extends Helper {
 						unset($path[$level]);
 						--$level;
 					} else {
-						if ($attr['url']['controller'] == $controller && $attr['url']['action'] == $action) {
+						if ($attr['url']['controller'] == $controller && strtolower($attr['url']['action']) == strtolower($action)) {
 							$level = -1;
 						}
 					}
@@ -76,7 +76,7 @@ class NavigationHelper extends Helper {
 					--$level;
 				} else {
 					$aOptions = array();
-					if ($attr['url']['controller'] == $controller && $attr['url']['action'] == $action) {
+					if ($attr['url']['controller'] == $controller && strtolower($attr['url']['action']) == strtolower($action)) {
 						$aOptions['class'] = 'nav-active';
 					}
 					$html .= $this->Html->link($name, $attr['url'], $aOptions);

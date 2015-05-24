@@ -32,6 +32,7 @@ class ControllerActionComponent extends Component {
 	private $defaultActions = ['index', 'add', 'view', 'edit', 'remove', 'reorder'];
 	public $models = [];
 	public $buttons = [];
+	public $params = [];
 	public $orderField = 'order';
 	public $autoRender = true;
 	public $autoProcess = true;
@@ -44,6 +45,7 @@ class ControllerActionComponent extends Component {
 	];
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
+	public $onInitialize = null;
 
 	public $components = ['Message', 'Paginator'];
 
@@ -70,22 +72,24 @@ class ControllerActionComponent extends Component {
 			if (in_array($action, $this->defaultActions)) { // default actions
 				$this->request->params['action'] = 'ComponentAction';
 			} else { // check if it's a model action
-				foreach ($this->models as $modelName) {
-					$model = $this->getModel($modelName);
-					$modelClass = $model['model'];
-
-					if ($action === $modelClass) { // model class found
+				foreach ($this->models as $name => $attr) {
+					if (strtolower($action) === strtolower($name)) { // model class found
 						$currentAction = 'index';
 						if (!empty($this->paramsPass)) {
 							$currentAction = array_shift($this->paramsPass);
 						}
-						$this->plugin = $model['plugin'];
-						$this->model = $controller->{$modelClass};
-						$this->getFields($this->model);
+
+						$this->model($attr['className']);
+						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias();
 						$this->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
+
+						if (is_callable($this->onInitialize)) {
+							$initialize = $this->onInitialize;
+							$initialize($this->model);
+						}
 						if (method_exists($this->model, 'beforeAction')) {
 							$this->model->beforeAction();
 						}
@@ -108,7 +112,7 @@ class ControllerActionComponent extends Component {
 				
 				
 			} else if ($this->triggerFrom == 'Model') {
-				$action = $this->model->alias();
+				$action = $this->model->alias;
 				if (method_exists($this->model, 'afterAction')) {
 					$this->model->afterAction();
 				}
@@ -132,6 +136,18 @@ class ControllerActionComponent extends Component {
 			$this->model = $this->controller->loadModel($model);
 			$this->getFields($this->model);
 		}
+	}
+
+	public function vars() {
+		return $this->controller->viewVars;
+	}
+
+	public function getVar($key) {
+		$value = null;
+		if (isset($this->controller->viewVars[$key])) {
+			$value = $this->controller->viewVars[$key];
+		}
+		return $value;
 	}
 
 	private function initButtons() {
@@ -199,12 +215,14 @@ class ControllerActionComponent extends Component {
 	private function initComponentsForModel() {
 		$this->model->controller = $this->controller;
 		$this->model->request = $this->request;
-		$this->model->Navigation = $this->controller->Navigation;
 		$this->model->Session = $this->request->session();
-		$this->model->Message = $this->Message;
-		$this->model->ControllerAction = $this;
 		$this->model->action = $this->currentAction;
-		$this->model->setVar = null;
+
+		// Copy all component objects from Controller to Model
+		$components = $this->controller->components()->loaded();
+		foreach ($components as $component) {
+			$this->model->$component = $this->controller->$component;
+		}
 	}
 
 	public function processAction() {
