@@ -5,7 +5,7 @@ $this->start('toolbar');
 		echo $this->Html->link('<i class="fa kd-edit"></i>', $_buttons['edit']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Edit', 'escape' => false]);
 	}
 	if (array_key_exists('remove', $_buttons)) {
-		$primaryKey = $modelObj->primaryKey();
+		$primaryKey = $table->primaryKey();
 		echo '<div class="delete-wrapper" data-toggle="tooltip" data-placement="bottom" title="Delete">';
 		$buttonOptions = ['class' => 'btn btn-xs btn-default', 'escape' => false];
 		if (array_key_exists('removeStraightAway', $_buttons['remove']) && $_buttons['remove']['removeStraightAway']) {
