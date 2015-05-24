@@ -25,6 +25,10 @@ class InstitutionsController extends AppController
     	$controller = $this;
     	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
 			$header .= ' - ' . $model->alias;
+			$session = $this->request->session();
+
+			$model->fields['institution_site_id']['type'] = 'hidden';
+			$model->fields['institution_site_id']['value'] = 1;//$session->read('InstitutionSite.id');
 			$controller->set('contentHeader', $header);
 		};
 		$this->set('contentHeader', $header);

@@ -168,7 +168,7 @@ class ControllerActionComponent extends Component {
 			$actionUrl['action'] = $action;
 
 			if ($this->triggerFrom == 'Model') {
-				$actionUrl['action'] = $this->model->alias();
+				$actionUrl['action'] = $this->model->alias;
 				$actionUrl[] = $action;
 			}
 
@@ -187,7 +187,7 @@ class ControllerActionComponent extends Component {
 		$backUrl = $defaultUrl;
 		$backUrl['action'] = $backAction;
 		if ($this->triggerFrom == 'Model') {
-			$backUrl['action'] = $this->model->alias();
+			$backUrl['action'] = $this->model->alias;
 			$backUrl[] = $backAction;
 		}
 		if ($backAction != 'index') {
@@ -404,14 +404,13 @@ class ControllerActionComponent extends Component {
 	public function add() {
 		$model = $this->model;
 		$data = $model->newEntity();
-		if ($this->request->is(array('post', 'put'))) {
+		$primaryKey = $model->primaryKey();
+		if ($this->request->is(array('post', 'put'))) {//pr($this->request->data);die;
 			$data = $model->patchEntity($data, $this->request->data);
-			//$model->create();
+			
 			if ($model->save($data)) {
 				$this->Message->alert('general.add.success');
-				//$named = $this->controller->params['named'];
 				$pass = $this->controller->params['pass'];
-				//$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 				$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
 				if ($this->triggerFrom == 'Model') {
@@ -419,11 +418,12 @@ class ControllerActionComponent extends Component {
 					$action = ['action' => get_class($model)];
 					$action[] = isset($params['back']) ? $params['back'] : 'view';
 				}
-				$action[] = $model->getLastInsertID();
-				$action = array_merge($action, $named, $pass);
+
+				$action[] = $data->$primaryKey;
+				$action = array_merge($action, $pass);
 				return $this->controller->redirect($action);
 			} else {
-				//$this->log($model->errors(), 'debug');
+				$this->log($data->errors(), 'debug');
 				$this->Message->alert('general.add.failed');
 			}
 		}
@@ -688,16 +688,22 @@ class ControllerActionComponent extends Component {
 		$defaultFields = array('modified_user_id', 'modified', 'created_user_id', 'created', 'order');
 
 		$fields = $this->getSchema($model);
-		
+		$visibility = ['view' => true, 'edit' => true, 'index' => true];
+
 		$i = 0;
 		foreach($fields as $key => $obj) {
 			$fields[$key]['order'] = $i++;
-			$fields[$key]['visible'] = true;
+			$fields[$key]['visible'] = $visibility;
 			$fields[$key]['field'] = $key;
 			$fields[$key]['model'] = $model->alias();
 			if ($obj['type'] == 'string') { // make field sortable by default if it is a string data-type
 				$fields[$key]['sort'] = true;
 			}
+			/*
+			if ($obj['type'] == 'binary') {
+				$fields[$key]['visible']['index'] = false;
+			}
+			*/
 		}
 		
 		$fields[$model->primaryKey()]['type'] = 'hidden';
