@@ -27,28 +27,37 @@ class InstitutionsController extends AppController
 			$header .= ' - ' . $model->alias;
 			$session = $this->request->session();
 
-			$model->fields['institution_site_id']['type'] = 'hidden';
-			$model->fields['institution_site_id']['value'] = 1;//$session->read('InstitutionSite.id');
+			if (array_key_exists('institution_site_id', $model->fields)) {
+				$model->fields['institution_site_id']['type'] = 'hidden';
+				$model->fields['institution_site_id']['value'] = 1;//$session->read('InstitutionSite.id');
+			}
+			
 			$controller->set('contentHeader', $header);
 		};
+
+		$this->ControllerAction->beforePaginate = function($model, $options) {
+			// logic here
+			return $options;
+		};
+
 		$this->set('contentHeader', $header);
 
-    	$visibility = ['view' => true, 'edit' => true];
-
-    	$this->InstitutionSites->fields['alternative_name']['visible'] = $visibility;
-		$this->InstitutionSites->fields['address']['visible'] = $visibility;
-		$this->InstitutionSites->fields['postal_code']['visible'] = $visibility;
-		$this->InstitutionSites->fields['telephone']['visible'] = $visibility;
-		$this->InstitutionSites->fields['fax']['visible'] = $visibility;
-		$this->InstitutionSites->fields['email']['visible'] = $visibility;
-		$this->InstitutionSites->fields['website']['visible'] = $visibility;
-		$this->InstitutionSites->fields['date_opened']['visible'] = $visibility;
-		$this->InstitutionSites->fields['year_opened']['visible'] = $visibility;
-		$this->InstitutionSites->fields['date_closed']['visible'] = $visibility;
-		$this->InstitutionSites->fields['year_closed']['visible'] = $visibility;
-		$this->InstitutionSites->fields['longitude']['visible'] = $visibility;
-		$this->InstitutionSites->fields['latitude']['visible'] = $visibility;
-		$this->InstitutionSites->fields['security_group_id']['visible'] = $visibility;
-		$this->InstitutionSites->fields['contact_person']['visible'] = $visibility;
+		if ($this->request->action = 'index') {
+			$this->InstitutionSites->fields['alternative_name']['visible']['index'] = false;
+			$this->InstitutionSites->fields['address']['visible']['index'] = false;
+			$this->InstitutionSites->fields['postal_code']['visible']['index'] = false;
+			$this->InstitutionSites->fields['telephone']['visible']['index'] = false;
+			$this->InstitutionSites->fields['fax']['visible']['index'] = false;
+			$this->InstitutionSites->fields['email']['visible']['index'] = false;
+			$this->InstitutionSites->fields['website']['visible']['index'] = false;
+			$this->InstitutionSites->fields['date_opened']['visible']['index'] = false;
+			$this->InstitutionSites->fields['year_opened']['visible']['index'] = false;
+			$this->InstitutionSites->fields['date_closed']['visible']['index'] = false;
+			$this->InstitutionSites->fields['year_closed']['visible']['index'] = false;
+			$this->InstitutionSites->fields['longitude']['visible']['index'] = false;
+			$this->InstitutionSites->fields['latitude']['visible']['index'] = false;
+			$this->InstitutionSites->fields['security_group_id']['visible']['index'] = false;
+			$this->InstitutionSites->fields['contact_person']['visible']['index'] = false;
+		}
     }
 }
