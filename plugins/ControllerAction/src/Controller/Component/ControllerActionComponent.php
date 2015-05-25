@@ -428,17 +428,19 @@ class ControllerActionComponent extends Component {
 			
 			if ($model->save($data)) {
 				$this->Message->alert('general.add.success');
-				$pass = $this->controller->params['pass'];
+				$named = ['?' => $this->request->query];
+				$pass = $this->request->params['pass'];
+				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
-				$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
+				$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
 				if ($this->triggerFrom == 'Model') {
 					unset($pass[0]);
 					$action = ['action' => get_class($model)];
-					$action[] = isset($params['back']) ? $params['back'] : 'view';
+					$action[] = isset($params['back']) ? $params['back'] : 'index';
 				}
 
 				$action[] = $data->$primaryKey;
-				$action = array_merge($action, $pass);
+				$action = array_merge($action, $named, $pass);
 				return $this->controller->redirect($action);
 			} else {
 				$this->log($data->errors(), 'debug');
@@ -450,16 +452,18 @@ class ControllerActionComponent extends Component {
 
 	public function edit($id=0) {
 		$model = $this->model;
+		$primaryKey = $model->primaryKey();
 
 		if ($model->exists($id)) {
 			$data = $model->get($id);
 			
 			if ($this->request->is(array('post', 'put'))) {
+				$data = $model->patchEntity($data, $this->request->data);
 
-				if ($model->save($this->request->data)) {
+				if ($model->save($data)) {
 					$this->Message->alert('general.edit.success');
-					$named = $this->controller->params['named'];
-					$pass = $this->controller->params['pass'];
+					$named = ['?' => $this->controller->request->query];
+					$pass = $this->controller->request->params['pass'];
 					$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
 					$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
@@ -490,13 +494,16 @@ class ControllerActionComponent extends Component {
 	}
 
 	public function remove() {
+		$this->autoRender = false;
 		$request = $this->request;
 		$model = $this->model;
+		$primaryKey = $model->primaryKey();
 		
-		if ($request->is('delete') && isset($request->data[$model->alias()]['id'])) {
-			$id = $request->data[$model->alias()][$model->primaryKey()];
+		if ($request->is('delete') && isset($request->data[$primaryKey])) {
+			$id = $request->data[$primaryKey];
+			$data = $model->get($id);
 			if ($this->removeStraightAway) {
-				if ($model->delete($id)) {
+				if ($model->delete($data)) {
 					$this->Message->alert('general.delete.success');
 				} else {
 					$this->Message->alert('general.delete.failed');
