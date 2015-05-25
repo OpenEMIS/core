@@ -46,6 +46,7 @@ class ControllerActionComponent extends Component {
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
 	public $onInitialize = null;
+	public $beforePaginate = null;
 
 	public $components = ['Message', 'Paginator'];
 
@@ -320,6 +321,11 @@ class ControllerActionComponent extends Component {
 		$controller->set('pageOptions', $this->pageOptions);
 
 		try {
+			if (is_callable($this->beforePaginate)) {
+				$beforePaginate = $this->beforePaginate;
+				$paginateOptions = $beforePaginate($model, $paginateOptions);
+			}
+
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 		} catch (NotFoundException $e) {
 			$this->log($e->getMessage(), 'debug');
@@ -379,6 +385,7 @@ class ControllerActionComponent extends Component {
 
 	public function view($id=0) {
 		$model = $this->model;
+		$primaryKey = $model->primaryKey();
 
 		$contain = [];
 		foreach ($model->associations() as $assoc) {
@@ -386,11 +393,19 @@ class ControllerActionComponent extends Component {
 				$contain[] = $assoc->name();
 			}
 		}
+
+		$idKey = $model->alias().'.'.$primaryKey;
+
+		if ($id == 0) {
+			if ($this->Session->check($idKey)) {
+				$id = $this->Session->read($idKey);
+			}
+		}
 		
 		if ($model->exists($id)) {
 			$data = $model->get($id, ['contain' => $contain]);
 
-			$this->Session->write($model->alias().'.'.$model->primaryKey(), $id);
+			$this->Session->write($idKey, $id);
 			$modal = $this->getModalOptions('delete');
 			$this->controller->set('modal', $modal);
 			$this->controller->set(compact('data'));
@@ -750,7 +765,8 @@ class ControllerActionComponent extends Component {
 					$fields[$field]['type'] = $field;
 					$fields[$field]['dataModel'] = 'CreatedUser';
 				}
-				$fields[$field]['visible'] = array('view' => true, 'edit' => false);
+				$fields[$field]['visible']['view'] = true;
+				$fields[$field]['visible']['edit'] = false;
 				$fields[$field]['labelKey'] = 'general';
 			}
 		}
