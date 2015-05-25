@@ -396,7 +396,7 @@ class ControllerActionComponent extends Component {
 
 		$idKey = $model->alias().'.'.$primaryKey;
 
-		if ($id == 0) {
+		if (empty($id)) {
 			if ($this->Session->check($idKey)) {
 				$id = $this->Session->read($idKey);
 			}
