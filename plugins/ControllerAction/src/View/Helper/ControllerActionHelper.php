@@ -642,6 +642,7 @@ class ControllerActionHelper extends Helper {
 						}
 					}
 				} else {
+					$value = $data->$attr['field'];
 					if (array_key_exists($value, $attr['options'])) {
 						$value = $attr['options'][$value];
 					}
@@ -656,8 +657,8 @@ class ControllerActionHelper extends Helper {
 						$options['default'] = $attr['default'];
 					} else {
 						if (!empty($this->request->data)) {
-							if(!empty($this->request->data->$_field)) {
-								$options['default'] = $this->request->data->$_field;
+							if(!empty($this->request->data->$attr['field'])) {
+								$options['default'] = $this->request->data->$attr['field'];
 							}
 						}
 					}
