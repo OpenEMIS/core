@@ -27,11 +27,15 @@ class NavigationComponent extends Component {
 				'items' => [
 					'Institutions' => [
 						'collapse' => true,
-						'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index']
+						'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
 					],
 					'Students' => [
 						'collapse' => true,
 						'url' => ['plugin' => false, 'controller' => 'Students', 'action' => 'index']
+					],
+					'Areas' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index']
 					]
 				]
 			];
