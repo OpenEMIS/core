@@ -46,6 +46,20 @@ class NavigationComponent extends Component {
 							'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
 							'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']]
 						]
+					],
+					'Students' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index'],
+						'items' => [
+							'Overview' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'view']],
+							'Contacts' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Contacts']],
+							'Identities' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentIdentities']],
+							'Languages' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentLanguages']],
+							'Comments' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentComments']],
+							'Special Needs' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentSpecialNeeds']],
+							'Awards' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentAwards']],
+							'Attachments' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentAttachments']]
+						]
 					]
 				]
 			];
