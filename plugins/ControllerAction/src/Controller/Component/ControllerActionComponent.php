@@ -24,7 +24,7 @@ use Cake\Event\Event;
 class ControllerActionComponent extends Component {
 	private $plugin;
 	private $controller;
-	private $model = null;
+	public $model = null;
 	private $triggerFrom = 'Controller';
 	private $currentAction;
 	private $ctpFolder;
@@ -138,6 +138,7 @@ class ControllerActionComponent extends Component {
 		} else {
 			$this->plugin = $this->getPlugin($model);
 			$this->model = $this->controller->loadModel($model);
+			$this->model->alias = $this->model->alias();
 			$this->getFields($this->model);
 		}
 	}

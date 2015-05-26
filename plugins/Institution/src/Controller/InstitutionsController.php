@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Institution\Controller\AppController;
+use App\Controller\AppController;
 use Cake\Event\Event;
 
 class InstitutionsController extends AppController
@@ -28,8 +28,11 @@ class InstitutionsController extends AppController
 			$session = $this->request->session();
 
 			if (array_key_exists('institution_site_id', $model->fields)) {
+				if (!$session->check('InstitutionSites.id')) {
+					$this->Message->alert('general.notExists');
+				}
 				$model->fields['institution_site_id']['type'] = 'hidden';
-				$model->fields['institution_site_id']['value'] = 1;//$session->read('InstitutionSite.id');
+				$model->fields['institution_site_id']['value'] = $session->read('InstitutionSites.id');
 			}
 			
 			$controller->set('contentHeader', $header);
@@ -43,6 +46,13 @@ class InstitutionsController extends AppController
 		$this->set('contentHeader', $header);
 
 		if ($this->request->action = 'index') {
+
+			$this->InstitutionSites->fields['modified_user_id']['visible'] = false;
+			$this->InstitutionSites->fields['created_user_id']['visible'] = false;
+			$this->InstitutionSites->fields['modified']['visible'] = false;
+			$this->InstitutionSites->fields['created']['visible'] = false;
+
+
 			$this->InstitutionSites->fields['alternative_name']['visible']['index'] = false;
 			$this->InstitutionSites->fields['address']['visible']['index'] = false;
 			$this->InstitutionSites->fields['postal_code']['visible']['index'] = false;
@@ -58,6 +68,14 @@ class InstitutionsController extends AppController
 			$this->InstitutionSites->fields['latitude']['visible']['index'] = false;
 			$this->InstitutionSites->fields['security_group_id']['visible']['index'] = false;
 			$this->InstitutionSites->fields['contact_person']['visible']['index'] = false;
+
+		} else if ($this->request->action = 'view') {
+			
+			$this->InstitutionSites->fields['modified_user_id']['visible'] = false;
+			$this->InstitutionSites->fields['created_user_id']['visible'] = false;
+			$this->InstitutionSites->fields['modified']['visible'] = false;
+			$this->InstitutionSites->fields['created']['visible'] = false;
+
 		}
     }
 }
