@@ -741,7 +741,7 @@ class ControllerActionHelper extends Helper {
 	public function getDownloadElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
-			$value = $this->Html->link($value, $attr['attr']['url']);
+			$value = $this->Html->link($data->{$attr['field']}, $attr['attr']['url']);
 		} else if ($action == 'edit') {
 			
 		}
