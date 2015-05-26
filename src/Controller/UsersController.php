@@ -5,18 +5,18 @@ use Cake\Event\Event;
 class UsersController extends AppController {
 	public function initialize() {
 		parent::initialize();
-		$this->ControllerAction->model('Users');
+		$this->ControllerAction->model('SecurityUsers');
 		$this->loadComponent('Paginator');
     }
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		//pr($this->Users->fields);die;
-		$this->Users->fields['password']['visible'] = false;
-		$this->Users->fields['status']['type'] = 'select';
-		$this->Users->fields['status']['options'] = ['Inactive', 'Active'];
-		$this->Users->fields['privileges']['type'] = 'select';
-		$this->Users->fields['privileges']['options'] = ['User', 'Super User'];
+		$this->SecurityUsers->fields['password']['visible'] = false;
+		$this->SecurityUsers->fields['status']['type'] = 'select';
+		$this->SecurityUsers->fields['status']['options'] = ['Inactive', 'Active'];
+		$this->SecurityUsers->fields['privileges']['type'] = 'select';
+		$this->SecurityUsers->fields['privileges']['options'] = ['User', 'Super User'];
 		$this->set('contentHeader', 'Users');
 		$this->Message->alert('general.add.success');
 	}
