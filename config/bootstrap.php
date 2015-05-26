@@ -187,6 +187,8 @@ Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('Localization', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
 Plugin::load('Institution', ['routes' => true, 'autoload' => true]);
+Plugin::load('Student', ['routes' => true, 'autoload' => true]);
+Plugin::load('Area', ['routes' => true, 'autoload' => true]);
 Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
