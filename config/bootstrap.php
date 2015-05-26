@@ -187,6 +187,7 @@ Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('Localization', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
 Plugin::load('Institution', ['routes' => true, 'autoload' => true]);
+Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
