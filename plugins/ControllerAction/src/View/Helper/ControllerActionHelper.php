@@ -745,13 +745,14 @@ class ControllerActionHelper extends Helper {
 				$value = $this->Html->image('Student.default_student_profile.jpg');
 			}
 		} else if ($action == 'edit') {
-			$imageAttr = $attr['attr'];
-			$imageAttr['field'] = $_field;
-			$imageAttr['label'] = $label;
-			if (isset($data->{$_field . '_name'}) && isset($data->$_field)) {
-				$imageAttr['src'] = $this->Image->getBase64($data->{$_field . '_name'}, $data->$_field);
-			}
-			echo $this->_View->element('layout/file_upload_preview', $imageAttr);
+			// $imageAttr = $attr['attr'];
+			// $imageAttr['field'] = $_field;
+			// $imageAttr['label'] = $label;
+			// if (isset($data->{$_field . '_name'}) && isset($data->$_field)) {
+			// 	$imageAttr['src'] = $this->Image->getBase64($data->{$_field . '_name'}, $data->$_field);
+			// }
+			// echo $this->_View->element('layout/file_upload_preview', $imageAttr);
+			echo 'WIP';
 		}
 		return $value;
 	}
