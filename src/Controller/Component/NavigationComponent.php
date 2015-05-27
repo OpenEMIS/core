@@ -19,31 +19,88 @@ class NavigationComponent extends Component {
 		$action = $this->action;
 		$id = $this->request->param('id');
 
-		$navigations = [];
-
-		if ($controller->name == 'Institutions' && $action == 'index') {
-			$navigations = [
-				'collapse' => false,
-				'items' => [
-					'Institutions' => [
-						'collapse' => true,
-						'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
-					],
-					'Students' => [
-						'collapse' => true,
-						'url' => ['plugin' => false, 'controller' => 'Students', 'action' => 'index']
-					],
-					'Areas' => [
-						'collapse' => true,
-						'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index']
-					],
-					'Infrastructures' => [
-						'collapse' => true,
-						'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+		$navigations = [
+			'collapse' => false,
+			'items' => [
+				'Institutions' => [
+					'collapse' => true,
+					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
+				],
+				'Students' => [
+					'collapse' => true,
+					'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']
+				],
+				'Staff' => [
+					'collapse' => true,
+					'url' => ['plugin' => 'Staff', 'controller' => 'Areas', 'action' => 'index']
+				],
+				'Reports' => [
+					'collapse' => true,
+					'url' => ['plugin' => false, 'controller' => 'Reports', 'action' => 'index']
+				],
+				'Administration' => [
+					'collapse' => true,
+					'items' => [
+						'System Setup' => [
+							'collapse' => true,
+							'items' => [
+								'Administrative Boundaries' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index']
+								],
+								'Academic Periods' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'AcademicPeriods', 'action' => 'index']
+								],
+								'Education Structure' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'Education', 'action' => 'index']
+								],
+								'Infrastructure' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+								],
+								'Assessments' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'Assessments', 'action' => 'levels']
+								],
+								'Field Options' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+								],
+								'Translations' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+								],
+								'System Configurations' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+								],
+								'Notices' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']
+								]
+							]
+						]
 					]
 				]
+			]
+		];
+
+		if ($controller->name == 'Institutions' && $action != 'index') {
+			$navigations['items']['Institutions']['items'] = [
+				'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
+				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
+				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
+				'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'positions']],
+				'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'programmes']],
+				'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'shifts']],
+				'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'sections']],
+				'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'classes']],
+				'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'infrastructures']]
 			];
 		} else {
+			/*
 			$navigations = [
 				'collapse' => false,
 				'items' => [
@@ -188,8 +245,8 @@ class NavigationComponent extends Component {
 					]
 				]
 			];
+		*/
 		}
-
 		$controller->set('_navigations', $navigations);
 	}
 }
