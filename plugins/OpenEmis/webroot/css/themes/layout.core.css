@@ -50,7 +50,10 @@
 .pagination > .active > a:hover,
 .pagination > li > a:hover,
 .login-box .btn-login,
-.outline-btn {
+.outline-btn,
+.btn-outline:hover, 
+.btn-outline:active, 
+.btn-outline:focus {
 	border: 1px solid #476B8F !important;
 }
 
@@ -59,6 +62,9 @@
 	background-color: #476B8F;
 }
 
+.btn-outline:hover, 
+.btn-outline:active, 
+.btn-outline:focus,
 .more-menu-item a:hover, 
 #action-menu:hover,
 .horizontal-tabs span a:hover,
