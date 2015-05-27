@@ -1,8 +1,8 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/students', ['plugin' => 'Student'], function ($routes) {
-	Router::connect('/students', ['plugin' => 'Student', 'controller' => 'students']);
-	Router::connect('/students/:action/*', ['plugin' => 'Student', 'controller' => 'students']);
+Router::scope('/Students', ['plugin' => 'Student'], function ($routes) {
+	Router::connect('/Students', ['plugin' => 'Student', 'controller' => 'Students']);
+	Router::connect('/Students/:action/*', ['plugin' => 'Student', 'controller' => 'Students']);
 	$routes->fallbacks('InflectedRoute');
 });
