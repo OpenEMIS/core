@@ -42,6 +42,11 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 					'download',
 					$id
 				);
+
+				$this->fields['file_name']['visible'] = false;
+				$this->fields['file_content']['visible'] = true;
+				// $this->fields['file_content']['type']
+
 			} else {
 				$this->controller->redirect(array(
 					'plugin' => 'Institution',
@@ -49,11 +54,11 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 					'action' => 'Attachments'
 				));
 			}
+		} else if ($this->action == 'edit') {
+			$this->fields['file_content']['visible'] = false;
+			// $this->fields['file']['visible'] = ['index' => false, 'add' => true, 'edit' => false];
 		}
 
-		// $this->fields['file_name']['visible'] = ['index' => false, 'add' => true, 'edit' => false];
-		// $this->fields['file_content']['visible'] = ['index' => false, 'add' => true, 'edit' => false];
-		// $this->fields['file']['visible'] = ['index' => false, 'add' => true, 'edit' => false];
 
 		$this->fields['modified_user_id']['visible'] = ['index' => false, 'view' => true];
 		$this->fields['modified']['visible'] = ['index' => false, 'view' => true];

@@ -1,6 +1,6 @@
 <div id="advanced-search" class="search-wrapper alert search-box hidden">
 
-	<button id="search-toggle" class="btn btn-default btn-xs close" type="button" alt="Collapse">×</button>
+	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
 	<h4>Advanced Search</h4>
 
 	<form role="form">
@@ -79,9 +79,7 @@
 	</div>  
 	</form>
 
-	<div class="panel-button">
-		<a class="btn btn-xs" href="">Search</a>		
-	</div>
+	<a class="btn btn-xs btn-default" href="">Search</a>
 
 </div>
 
