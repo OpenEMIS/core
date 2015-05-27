@@ -110,6 +110,12 @@ class LabelHelper extends Helper {
 		),
 		'SurveyTemplates' => array(
 			'survey_module_id' => 'Module'
+		),
+		'SurveyQuestions' => array(
+			'survey_template_id' => 'Template'
+		),
+		'SurveyStatuses' => array(
+			'survey_template_id' => 'Template'
 		)
 	);
 	
