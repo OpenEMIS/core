@@ -86,6 +86,23 @@ class FileUploadBehavior extends Behavior {
 	}
 	*/
 	
+	public $imageTypesMap = array(
+		'jpeg'=>'image/jpeg',
+		'jpg'=>'image/jpeg',
+		'gif'=>'image/gif',
+		'png'=>'image/png',
+		// 'jpeg'=>'image/pjpeg',
+		// 'jpeg'=>'image/x-png'
+	);
+
+	public function getImageType($ext) {
+		if (array_key_exists($ext, $this->imageTypesMap)) {
+			return $this->imageTypesMap[$ext];
+		} else {
+			return false;
+		}
+	}
+
 	public function beforeSave(Event $event, Entity $entity) {
 		$fileNameField = $this->config('name');
 		$fileContentField = $this->config('content');

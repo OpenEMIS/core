@@ -164,7 +164,7 @@ class ControllerActionComponent extends Component {
 			unset($pass[0]);
 		}
 
-		$defaultUrl = ['plugin' => $this->controller->params['plugin'], 'controller' => $controller->name];
+		$defaultUrl = ['plugin' => $this->plugin, 'controller' => $controller->name];
 
 		$buttons = [];
 
@@ -429,19 +429,20 @@ class ControllerActionComponent extends Component {
 			
 			if ($model->save($data)) {
 				$this->Message->alert('general.add.success');
-				$named = ['?' => $this->request->query];
-				$pass = $this->request->params['pass'];
+				// $named = ['?' => $this->request->query];
+				// $pass = $this->request->params['pass'];
 				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
-				$action = array('action' => isset($params['back']) ? $params['back'] : 'index');
-				if ($this->triggerFrom == 'Model') {
-					unset($pass[0]);
-					$action = ['action' => get_class($model)];
-					$action[] = isset($params['back']) ? $params['back'] : 'index';
-				}
+				// $action = array('action' => isset($params['back']) ? $params['back'] : 'index');
+				// if ($this->triggerFrom == 'Model') {
+				// 	unset($pass[0]);
+				// 	$action = ['action' => get_class($model)];
+				// 	$action[] = isset($params['back']) ? $params['back'] : 'index';
+				// }
 
-				$action[] = $data->$primaryKey;
-				$action = array_merge($action, $named, $pass);
+				// $action[] = $data->$primaryKey;
+				// $action = array_merge($action, $named, $pass);
+				$action = isset($params['back']) ? $this->buttons['back']['url'] : $this->buttons['index']['url'];
 				return $this->controller->redirect($action);
 			} else {
 				$this->log($data->errors(), 'debug');
@@ -463,18 +464,19 @@ class ControllerActionComponent extends Component {
 
 				if ($model->save($data)) {
 					$this->Message->alert('general.edit.success');
-					$named = ['?' => $this->controller->request->query];
-					$pass = $this->controller->request->params['pass'];
+					// $named = ['?' => $this->controller->request->query];
+					// $pass = $this->controller->request->params['pass'];
 					$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
 
-					$action = array('action' => isset($params['back']) ? $params['back'] : 'view');
-					if ($this->triggerFrom == 'Model') {
-						unset($pass[0]);
-						$action = array('action' => get_class($model));
-						$action[] = isset($params['back']) ? $params['back'] : 'view';
-					}
+					// $action = array('action' => isset($params['back']) ? $params['back'] : 'view');
+					// if ($this->triggerFrom == 'Model') {
+					// 	unset($pass[0]);
+					// 	$action = array('action' => get_class($model));
+					// 	$action[] = isset($params['back']) ? $params['back'] : 'view';
+					// }
 					
-					$action = array_merge($action, $named, $pass);
+					// $action = array_merge($action, $named, $pass);
+					$action = isset($params['back']) ? $this->buttons['back']['url'] : $this->buttons['view']['url'];
 					return $this->controller->redirect($action);
 				} else {
 					$this->request->data = array_merge($data, $this->request->data);
@@ -529,17 +531,26 @@ class ControllerActionComponent extends Component {
 		$fileName = $data->$name;
 		$pathInfo = pathinfo($fileName);
 
+		/**
+		 * Cake V3 returns binary column type data as php resource id instead of the whole file for better performance.
+		 * The current work-around is to use native php normal stream functions to read the contents incrementally or all at once.
+		 * @link https://groups.google.com/forum/#!topic/cake-php/rgaHYh2iWwU
+		 */
+		$file = ''; 
+		while (!feof($data->$content)) {
+			$file .= fread($data->$content, 8192); 
+		} 
+		fclose($data->$content); 
+
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header("Content-Type: application/force-download");
 		header("Content-Type: application/octet-stream");
-		header("Content-Type: application/download");
-		header('Content-Type: ' . $pathInfo['extension']);
-		header("Content-Disposition: attachment; filename=" . $fileName);
-		header("Content-Transfer-Encoding: binary");
-		//header("Content-Length: ".filesize($path));
-		echo $data->$content;
+		header("Content-Type: " . $fileUpload->getImageType($pathInfo['extension']));
+		header('Content-Disposition: attachment; filename="' . $fileName . '"');
+
+		echo $file;
 		exit();
 	}
 
