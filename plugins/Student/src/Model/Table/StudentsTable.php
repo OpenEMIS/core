@@ -23,6 +23,10 @@ class StudentsTable extends AppTable {
 		// $this->hasMany('InstitutionSiteAttachments', ['className' => 'Institution.InstitutionSiteAttachments']);
 	}
 
+	public function beforeAction() {
+		
+	}
+
 	public function test() {
 		pr('normal test');
 	}
