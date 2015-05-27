@@ -531,23 +531,19 @@ class ControllerActionComponent extends Component {
 		$fileName = $data->$name;
 		$pathInfo = pathinfo($fileName);
 
-		/**
-		 * Cake V3 returns binary column type data as php resource id instead of the whole file for better performance.
-		 * The current work-around is to use native php normal stream functions to read the contents incrementally or all at once.
-		 * @link https://groups.google.com/forum/#!topic/cake-php/rgaHYh2iWwU
-		 */
-		$file = ''; 
-		while (!feof($data->$content)) {
-			$file .= fread($data->$content, 8192); 
-		} 
-		fclose($data->$content); 
+		$file = $fileUpload->getActualFile($data->$content);
+		$fileType = $fileUpload->getFileType($pathInfo['extension']);
+		if (!$fileType) {
+			$fileType = 'image/jpg';
+		}
+		// echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
 
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header("Content-Type: application/force-download");
 		header("Content-Type: application/octet-stream");
-		header("Content-Type: " . $fileUpload->getImageType($pathInfo['extension']));
+		header("Content-Type: " . $fileType);
 		header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
 		echo $file;
