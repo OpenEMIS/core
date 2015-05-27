@@ -1,20 +1,18 @@
 <?php
-namespace Area\Controller;
+namespace Security\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
 
-class AreasController extends AppController
+class SecuritiesController extends AppController
 {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Area.Areas');
 		$this->ControllerAction->models = [
-			'Areas' => ['className' => 'Area.Areas'],
-			'AreaLevels' => ['className' => 'Area.AreaLevels'],
-			'AreaAdministratives' => ['className' => 'Area.AreaAdministratives'],
-			'AreaAdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels']
+			'Users' => ['className' => 'Security.SecurityUsers'],
+			'Groups' => ['className' => 'Security.SecurityGroups'],
+			'Roles' => ['className' => 'Security.SecurityRoles']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -22,7 +20,7 @@ class AreasController extends AppController
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 
-    	$header = __('Area');
+    	$header = __('Security');
     	$controller = $this;
     	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
 			$header .= ' - ' . $model->alias;

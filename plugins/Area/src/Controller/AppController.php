@@ -1,0 +1,9 @@
+<?php
+
+namespace Area\Controller;
+
+use App\Controller\AppController as BaseController;
+
+class AppController extends BaseController {
+
+}

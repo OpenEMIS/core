@@ -17,7 +17,7 @@ class SurveyTemplatesTable extends AppTable {
 			'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
 			'foreignKey' => 'created_user_id'
 		]);
-		//$this->hasMany('SurveyQuestions', ['className' => 'Survey.SurveyQuestions']);
+		$this->hasMany('SurveyQuestions', ['className' => 'Survey.SurveyQuestions']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -37,15 +37,13 @@ class SurveyTemplatesTable extends AppTable {
 		return $validator;
 	}
 
-	public function getList() {
-		$result = $this->find('list', [
-			'conditions' => [
-				$this->alias().'.visible' => 1
-			],
-			'order' => [
-				$this->alias().'.order'
-			]
-		]);
+	public function getList($options=[]) {
+		$_options = [
+			'order' => [$this->alias().'.name']
+		];
+		$options = array_merge($options, $_options);
+
+		$result = $this->find('list', $options);
 		$list = $result->toArray();
 
 		return $list;
