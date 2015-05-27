@@ -39,13 +39,25 @@ class InstitutionsController extends AppController
 		};
 
 		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
+			$session = $this->request->session();
+			if (array_key_exists('institution_site_id', $model->fields)) {
+				if (!$session->check('InstitutionSites.id')) {
+					$this->Message->alert('general.notExists');
+				}
+				$options['conditions'][] = ['InstitutionSites.id' => $session->read('InstitutionSites.id')];
+			}
 			return $options;
 		};
 
 		$this->set('contentHeader', $header);
 
 		if ($this->request->action = 'index') {
+
+			// pr($this->InstitutionSites->InstitutionSiteAttachments->fields());
+			// $this->InstitutionSiteAttachments->fields['modified_user_id']['visible'] = false;
+			// // $this->InstitutionSites->InstitutionSiteAttachments->fields['created_user_id']['visible'] = false;
+			// $this->InstitutionSites->InstitutionSiteAttachments->fields['modified']['visible'] = false;
+			// $this->InstitutionSites->InstitutionSiteAttachments->fields['created']['visible'] = false;
 
 			$this->InstitutionSites->fields['modified_user_id']['visible'] = false;
 			$this->InstitutionSites->fields['created_user_id']['visible'] = false;

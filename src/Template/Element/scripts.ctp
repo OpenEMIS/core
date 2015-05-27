@@ -12,3 +12,5 @@ echo $this->Html->script('OpenEmis.../plugins/scrolltabs/js/jquery.scrolltabs');
 
 echo $this->Html->script('doughnutchart/Chart.min');
 echo $this->Html->script('doughnutchart/Chart.Doughnut');
+
+echo $this->Html->script('app');
