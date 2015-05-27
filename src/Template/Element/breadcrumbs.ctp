@@ -1,5 +1,7 @@
 <ul class="breadcrumb panel-breadcrumb">
+	<li class="active">name</li>
 	<?php
+	$paths = [];
 	foreach($paths as $i => $item) {
 		$nameKey = (isset($nameKey))? $nameKey: 'name';
 		$idKey = (isset($idKey))? $idKey: 'id';

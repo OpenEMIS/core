@@ -36,6 +36,10 @@ class NavigationComponent extends Component {
 					'Areas' => [
 						'collapse' => true,
 						'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index']
+					],
+					'Infrastructures' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
 					]
 				]
 			];
@@ -48,7 +52,14 @@ class NavigationComponent extends Component {
 						'url' => ['plugin' => false, 'controller' => 'Institutions', 'action' => 'index'],
 						'items' => [
 							'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
-							'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']]
+							'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
+							'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
+							'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'positions']],
+							'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'programmes']],
+							'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'shifts']],
+							'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'sections']],
+							'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'classes']],
+							'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'infrastructures']]
 						]
 					],
 					'Students' => [
@@ -100,8 +111,32 @@ class NavigationComponent extends Component {
 							]
 						]
 					],
-
-
+					'Surveys' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index'],
+						'items' => [
+							'Survey Templates' => ['url' => ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index']],
+							'Survey Modules' => ['url' => ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'surveyModules']],
+						]
+					],
+					'Areas' => [
+						'collapse' => true,
+						'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index'],
+						'items' => [
+							'Area' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index']],
+							'Area Level' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'levels']],
+							'Area Administrative' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'administratives']],
+							'Area Administrative Level' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'administrativeLevels']]
+						]
+					],
+					'Infrastructures' => [
+						'collapse' => true,
+						'items' => [
+							'Levels' => ['url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']],
+							'Types' => ['url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'types']],
+							'Custom Fields' => ['url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'customFields']]
+						]
+					]
 				]
 			];
 		}
