@@ -404,7 +404,7 @@ class ControllerActionComponent extends Component {
 			}
 		}
 		
-		if ($model->exists($id)) {
+		if ($model->exists([$model->primaryKey() => $id])) {
 			$data = $model->get($id, ['contain' => $contain]);
 
 			$this->Session->write($idKey, $id);
@@ -440,7 +440,7 @@ class ControllerActionComponent extends Component {
 	public function edit($id=0) {
 		$model = $this->model;
 
-		if ($model->exists($id)) {
+		if ($model->exists([$model->primaryKey() => $id])) {
 			$data = $model->get($id);
 			
 			if ($this->request->is(array('post', 'put'))) {
