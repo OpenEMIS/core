@@ -5,13 +5,17 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class UserLanguagesTable extends AppTable {
-	public $validator;
-
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->belongsTo('SecurityUsers', ['className' => 'SecurityUsers']);
+		$this->belongsTo('Languages', ['className' => 'Languages']);
+		$this->belongsTo('ModifiedUser', ['className' => 'SecurityUsers', 'foreignKey' => 'modified_user_id']);
+		$this->belongsTo('CreatedUser', ['className' => 'SecurityUsers', 'foreignKey' => 'created_user_id']);
 	}
 
 	public function beforeAction() {
+		$this->fields['language_id']['type'] = 'select';
+		$this->fields['language_id']['options'] = $this->Languages->getList();
 		$gradeOptions = $this->getGradeOptions();
 		$this->fields['listening']['type'] = 'select';
 		$this->fields['listening']['options'] = $gradeOptions;
@@ -32,7 +36,6 @@ class UserLanguagesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		
 		return $validator;
 	}
 
