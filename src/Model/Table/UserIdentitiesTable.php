@@ -10,12 +10,12 @@ class UserIdentitiesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('IdentityType', ['className' => 'IdentityTypes']);
+		$this->belongsTo('IdentityTypes', ['className' => 'IdentityTypes']);
 	}
 
 	public function beforeAction() {
 		$this->fields['identity_type_id']['type'] = 'select';
-		$this->fields['identity_type_id']['options'] = $this->IdentityType->getList();
+		$this->fields['identity_type_id']['options'] = $this->IdentityTypes->getList();
 	}
 
 	public function validationDefault(Validator $validator)
