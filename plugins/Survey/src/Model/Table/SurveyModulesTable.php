@@ -14,7 +14,8 @@ class SurveyModulesTable extends AppTable {
 				$this->alias().'.visible' => 1
 			],
 			'order' => [
-				$this->alias().'.order'
+				$this->alias().'.order',
+				$this->alias().'.name'
 			]
 		]);
 		$list = $result->toArray();
