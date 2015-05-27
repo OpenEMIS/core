@@ -4,7 +4,7 @@ namespace OpenEmis\View\Helper;
 use Cake\View\Helper;
 
 class NavigationHelper extends Helper {
-	public $helpers = ['Html'];
+	public $helpers = ['Html', 'Url'];
 
 	public function render($navigations) {
 		$html = '';
@@ -44,7 +44,7 @@ class NavigationHelper extends Helper {
 		$controller = $this->request->params['controller'];
 		$action = $this->request->params['action'];
 		
-		$a = '<a class="accordion-toggle %s" href="#nav-menu-%s" data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
+		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
 		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
 		++$level;
 
@@ -66,13 +66,23 @@ class NavigationHelper extends Helper {
 				}
 				$html .= '<li>';
 				$aClass = 'panel-heading';
+				
 				if (array_key_exists('items', $attr)) {
 					if (!$collapsed) {
 						$aClass .= ' collapsed';
 					}
 
 					++$index;
-	                $html .= sprintf($a, $aClass, $index, $index, $name);
+					$toggle = 'collapse';
+					if (array_key_exists('url', $attr)) {
+						$href = $this->Url->build($attr['url']);
+						$toggle = '';
+					} else {
+						$href = '#nav-menu-' . $index;
+					}
+					
+					$html .= sprintf($a, $aClass, $href, $toggle, $index, $name);
+	                
 					$this->getMenu($attr, $html, $level, $index, $path);
 					--$level;
 				} else {
