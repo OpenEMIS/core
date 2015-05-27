@@ -9,16 +9,16 @@ class StudentsController extends AppController {
 		parent::initialize();
 
 		$this->ControllerAction->model('SecurityUsers');
-		// $this->ControllerAction->model()->addBehavior('Student.Student');
+		$this->ControllerAction->model()->addBehavior('Student.Student');
 
 		$this->ControllerAction->models = [
 			'Contacts' => ['className' => 'UserContacts'],
-			'StudentIdentities' => ['className' => 'Student.StudentIdentities'],
-			'StudentLanguages' => ['className' => 'Student.StudentLanguages'],
-			'StudentComments' => ['className' => 'Student.StudentComments'],
-			'StudentSpecialNeeds' => ['className' => 'Student.StudentSpecialNeeds'],
-			'StudentAwards' => ['className' => 'Student.StudentAwards'],
-			'StudentAttachments' => ['className' => 'Student.StudentAttachments']
+			'Identities' => ['className' => 'UserIdentities'],
+			'Languages' => ['className' => 'UserLanguages'],
+			'Comments' => ['className' => 'UserComments'],
+			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
+			'Awards' => ['className' => 'UserAwards'],
+			// 'Attachments' => ['className' => 'UserAttachments']
 		];
 
 		$this->set('contentHeader', 'Students');
@@ -29,8 +29,8 @@ class StudentsController extends AppController {
 
 		$this->ControllerAction->beforePaginate = function($model, $options) {
 			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('SecurityUsers.id')) {
-					$securityUserId = $this->ControllerAction->Session->read('SecurityUsers.id');
+				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
+					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
 						$options['conditions'] = [];
 					}
@@ -52,12 +52,15 @@ class StudentsController extends AppController {
 			$header .= ' - ' . $model->alias;
 			$session = $this->request->session();
 
-			$model->fields['student_id']['type'] = 'hidden';
-			$model->fields['student_id']['value'] = 1;//$session->read('InstitutionSite.id');
+			$model->fields['security_user_id']['type'] = 'hidden';
+			$model->fields['security_user_id']['value'] = $this->ControllerAction->Session->read('Student.security_user_id');
+
 			$controller->set('contentHeader', $header);
 		};
 
-		unset($this->SecurityUsers->fields['photo_content']);
+		$this->SecurityUsers->fields['photo_content']['type'] = 'image';
+
+		// unset($this->SecurityUsers->fields['photo_content']);
 
 		
 		// pr($this->ControllerAction->models);
@@ -85,15 +88,22 @@ class StudentsController extends AppController {
 
 	public function view($id = null) {
 		if (is_null($id)) {
-			$id = $this->ControllerAction->Session->read('SecurityUsers.id');
+			$id = $this->ControllerAction->Session->read('Student.security_user_id');
+		} else {
+			$this->ControllerAction->Session->write('Student.security_user_id', $id);
 		}
-		// if ($this->InstitutionSiteStudents->Students->exists($id)) {
-		// 	$this->ControllerAction->Session->write('InstitutionSiteStudents.id',$id);
-		// 	// wrong because db will be changed but currently now lets just try to get the security user id
-		// 	$query = $this->InstitutionSiteStudents->get($id, ['contain' => ['Students']]);
-		// 	$this->ControllerAction->Session->write('Student.security_user_id',$query->student->security_user_id);
-		// }
 		$this->ControllerAction->view($id);
 		$this->ControllerAction->render();
 	}
+
+	public function edit($id = null) {
+		if (is_null($id)) {
+			$id = $this->ControllerAction->Session->read('Student.security_user_id');
+		}
+		$this->ControllerAction->edit($id);
+		$this->ControllerAction->render();
+	}
+
+
+
 }

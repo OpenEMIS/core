@@ -724,7 +724,25 @@ class ControllerActionHelper extends Helper {
 	public function getImageElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
-			$value = $this->Image->getBase64Image($data->{$_field . '_name'}, $data->$_field, $attr['attr']);
+			if (!is_null($data->photo_content)) {
+				$file = ''; 
+				while (!feof($data->photo_content)) {
+					$file .= fread($data->photo_content, 8192); 
+				} 
+				fclose($data->photo_content); 	
+			}
+			$src = null;
+			if(!empty($data->photo_name) && !empty($file)) {
+				$temp = explode('.', $data->photo_name);
+				$ext = strtolower(array_pop($temp));
+				if($ext === 'jpg') {
+					$ext = 'jpeg';
+				}
+				$src = sprintf('data: image/%s; base64,%s', $ext, base64_encode($file));
+				$value = '<img src="'.$src.'" class="profile-image" alt="90x115" />';
+			} else {
+				$value = $this->Html->image('Student.default_student_profile.jpg');
+			}
 		} else if ($action == 'edit') {
 			$imageAttr = $attr['attr'];
 			$imageAttr['field'] = $_field;
@@ -832,17 +850,12 @@ class ControllerActionHelper extends Helper {
 		if ($action == 'view') {
 			$table = TableRegistry::get($attr['className']);
 			$fileUpload = $table->behaviors()->get('FileUpload');
-			$name = '';
+			$name = '&nbsp;';
 			if (!empty($fileUpload)) {
 				$name = $fileUpload->config('name');
 			}
-			$primaryKey = $table->primaryKey();
-			$action = ['action' => 'download'];
-			if ($this->_View->get('_triggerFrom') == 'Model') {
-				$action['action'] = $this->_View->get('_alias');
-				$action[] = 'download';
-			}
-			$action[] = $data->$primaryKey;
+			$buttons = $this->_View->get('_buttons');
+			$action = $buttons['download']['url'];
 			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
