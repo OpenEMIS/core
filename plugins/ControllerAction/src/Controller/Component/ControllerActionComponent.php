@@ -330,7 +330,8 @@ class ControllerActionComponent extends Component {
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 		} catch (NotFoundException $e) {
 			$this->log($e->getMessage(), 'debug');
-			return $controller->redirect(['action' => 'index']);
+			$action = $this->buttons['index']['url'];
+			return $controller->redirect($action);
 		}
 		return $data;
 	}
@@ -412,37 +413,21 @@ class ControllerActionComponent extends Component {
 			$this->controller->set(compact('data'));
 		} else {
 			$this->Message->alert('general.notExists');
-			$action = 'index';
-			if ($this->triggerFrom == 'Model') {
-				$action = get_class($model);
-			}
-			return $this->controller->redirect(array('action' => $action));
+			$action = $this->buttons['index']['url'];
+			return $this->controller->redirect($action);
 		}
 	}
 
 	public function add() {
 		$model = $this->model;
 		$data = $model->newEntity();
-		$primaryKey = $model->primaryKey();
+
 		if ($this->request->is(array('post', 'put'))) {//pr($this->request->data);die;
 			$data = $model->patchEntity($data, $this->request->data);
 			
 			if ($model->save($data)) {
 				$this->Message->alert('general.add.success');
-				// $named = ['?' => $this->request->query];
-				// $pass = $this->request->params['pass'];
-				$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
-
-				// $action = array('action' => isset($params['back']) ? $params['back'] : 'index');
-				// if ($this->triggerFrom == 'Model') {
-				// 	unset($pass[0]);
-				// 	$action = ['action' => get_class($model)];
-				// 	$action[] = isset($params['back']) ? $params['back'] : 'index';
-				// }
-
-				// $action[] = $data->$primaryKey;
-				// $action = array_merge($action, $named, $pass);
-				$action = isset($params['back']) ? $this->buttons['back']['url'] : $this->buttons['index']['url'];
+				$action = $this->buttons['index']['url'];
 				return $this->controller->redirect($action);
 			} else {
 				$this->log($data->errors(), 'debug');
@@ -454,7 +439,6 @@ class ControllerActionComponent extends Component {
 
 	public function edit($id=0) {
 		$model = $this->model;
-		$primaryKey = $model->primaryKey();
 
 		if ($model->exists($id)) {
 			$data = $model->get($id);
@@ -464,19 +448,7 @@ class ControllerActionComponent extends Component {
 
 				if ($model->save($data)) {
 					$this->Message->alert('general.edit.success');
-					// $named = ['?' => $this->controller->request->query];
-					// $pass = $this->controller->request->params['pass'];
-					$params = isset($this->controller->viewVars['params']) ? $this->controller->viewVars['params'] : array();
-
-					// $action = array('action' => isset($params['back']) ? $params['back'] : 'view');
-					// if ($this->triggerFrom == 'Model') {
-					// 	unset($pass[0]);
-					// 	$action = array('action' => get_class($model));
-					// 	$action[] = isset($params['back']) ? $params['back'] : 'view';
-					// }
-					
-					// $action = array_merge($action, $named, $pass);
-					$action = isset($params['back']) ? $this->buttons['back']['url'] : $this->buttons['view']['url'];
+					$action = $this->buttons['view']['url'];
 					return $this->controller->redirect($action);
 				} else {
 					$this->request->data = array_merge($data, $this->request->data);
@@ -488,11 +460,8 @@ class ControllerActionComponent extends Component {
 			}
 		} else {
 			$this->Message->alert('general.notExists');
-			$action = 'index';
-			if ($this->triggerFrom == 'Model') {
-				$action = get_class($model);
-			}
-			return $this->controller->redirect(array('action' => $action));
+			$action = $this->buttons['index']['url'];
+			return $this->controller->redirect($action);
 		}
 	}
 
@@ -531,23 +500,19 @@ class ControllerActionComponent extends Component {
 		$fileName = $data->$name;
 		$pathInfo = pathinfo($fileName);
 
-		/**
-		 * Cake V3 returns binary column type data as php resource id instead of the whole file for better performance.
-		 * The current work-around is to use native php normal stream functions to read the contents incrementally or all at once.
-		 * @link https://groups.google.com/forum/#!topic/cake-php/rgaHYh2iWwU
-		 */
-		$file = ''; 
-		while (!feof($data->$content)) {
-			$file .= fread($data->$content, 8192); 
-		} 
-		fclose($data->$content); 
+		$file = $fileUpload->getActualFile($data->$content);
+		$fileType = $fileUpload->getFileType($pathInfo['extension']);
+		if (!$fileType) {
+			$fileType = 'image/jpg';
+		}
+		// echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
 
 		header("Pragma: public", true);
 		header("Expires: 0"); // set expiration time
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header("Content-Type: application/force-download");
 		header("Content-Type: application/octet-stream");
-		header("Content-Type: " . $fileUpload->getImageType($pathInfo['extension']));
+		header("Content-Type: " . $fileType);
 		header('Content-Disposition: attachment; filename="' . $fileName . '"');
 
 		echo $file;
@@ -784,6 +749,7 @@ class ControllerActionComponent extends Component {
 					$fields[$field]['type'] = $field;
 					$fields[$field]['dataModel'] = 'CreatedUser';
 				}
+				$fields[$field]['visible']['index'] = false;
 				$fields[$field]['visible']['view'] = true;
 				$fields[$field]['visible']['edit'] = false;
 				$fields[$field]['labelKey'] = 'general';

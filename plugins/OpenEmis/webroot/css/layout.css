@@ -1066,7 +1066,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .form-control {
 	height: 28px;
-	padding: 5px 6px 3px;
+	padding: 5px 6px 3px !important;
 	font-size: 13px;
 }
 
@@ -1118,13 +1118,49 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 25.3%;
 }
 
-.form-horizontal input {
+.form-horizontal input,
+.form-horizontal textarea {
 	border: 1px solid #CCC;
 	padding: 5px 10px;
 	margin-bottom: 15px;
 	width: 30%;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
+}
+
+.form-horizontal .textarea label,
+.form-horizontal .file label {
+	vertical-align: top;
+}
+
+.form-horizontal textarea {
+	resize: none;
+}
+
+.form-horizontal .file {
+	width: 100%;
+}
+
+.form-horizontal .file label {
+	float: left;
+	margin-top: 5px;
+}
+
+.form-horizontal .fileinput {
+	width: 30%;
+}
+
+.fileinput.input-group > .btn-file {
+	border-right: 0 !important;
+}
+
+.form-horizontal .file .form-control {
+	height: auto;
+}
+
+.form-horizontal .datetime select {
+	width: 60px;
+	margin-right: 10px;
 }
 
 .form-horizontal select {
@@ -1154,7 +1190,7 @@ select:-moz-focusring {
 .select:after {
 	font-family: 'FontAwesome';
 	content: "\f0dc";
-	font-size: 13px;
+	font-size: 11px;
 	margin-left: -20px;	
 }
 
@@ -1623,6 +1659,18 @@ footer {
 		width: 100%;
 	}
 
+	.form-horizontal textarea {
+		width: 100%;
+	}
+
+	.form-horizontal .file label {
+		float: none;
+	}
+
+	.form-horizontal .fileinput {
+		width: 100%;
+	}
+
 	.error-message {
 		margin: 10px 15px 0;
 	}
@@ -1899,6 +1947,14 @@ footer {
 
 	.form-buttons {
 		margin: 10px 0 !important;
+		width: 100%;
+	}
+
+	.form-horizontal .file label {
+		float: none;
+	}
+
+	.form-horizontal .fileinput {
 		width: 100%;
 	}
 

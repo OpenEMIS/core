@@ -107,6 +107,9 @@ class LabelHelper extends Helper {
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
+		),
+		'SurveyTemplates' => array(
+			'survey_module_id' => 'Module'
 		)
 	);
 	

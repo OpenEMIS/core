@@ -19,6 +19,7 @@ namespace ControllerAction\Model\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 
 class FileUploadBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -28,9 +29,33 @@ class FileUploadBehavior extends Behavior {
 		'allowEmpty' => false,
 		'useDefaultName' => true
 	];
+	private $_validator;
 
 	public function initialize(array $config) {
-		$this->config($config);
+		$this->_defaultConfig = array_merge($this->_defaultConfig, $config);
+		$this->config($this->_defaultConfig);
+
+		// pr($this->_defaultConfig);die;
+		// $this->_validator = new Validator();
+
+		// $this->_validator
+		//     ->requirePresence($this->_defaultConfig['name'])
+		//     ->notEmpty($this->_defaultConfig['name'], 'Please upload a file');
+		    // ->add('title', [
+		    //     'length' => [
+		    //         'rule' => ['minLength', 10],
+		    //         'message' => 'Titles need to be at least 10 characters long',
+		    //     ]
+		    // ])
+		    // ->allowEmpty('published')
+		    // ->add('published', 'boolean', [
+		    //     'rule' => 'boolean'
+		    // ])
+		    // ->requirePresence('body')
+		    // ->add('body', 'length', [
+		    //     'rule' => ['minLength', 50],
+		    //     'message' => 'Articles must have a substantial body.'
+		    // ]);
 		
 		/*
 		$validate = array(
@@ -60,6 +85,7 @@ class FileUploadBehavior extends Behavior {
 			}
 		}
 		*/
+	
 	}
 	
 	/*
@@ -86,21 +112,69 @@ class FileUploadBehavior extends Behavior {
 	}
 	*/
 	
-	public $imageTypesMap = array(
-		'jpeg'=>'image/jpeg',
-		'jpg'=>'image/jpeg',
-		'gif'=>'image/gif',
-		'png'=>'image/png',
+	// public function validationDefault(Validator $validator) {
+	// 	$validator
+	// 	->requirePresence('name')
+	// 	->notEmpty('name', 'Please enter a name.')
+ //    	->add('name', [
+ //    		'unique' => [
+	// 	        'rule' => ['validateUnique', ['scope' => 'survey_module_id']],
+	// 	        'provider' => 'table',
+	// 	        'message' => 'This name is already exists in the system'
+	// 	    ]
+	//     ])
+	//     ->requirePresence('survey_module_id')
+	// 	->notEmpty('survey_module_id', 'Please select a module.')
+	//     ;
+
+	// 	return $validator;
+	// }
+
+	public $fileTypesMap = array(
+		'jpeg'	=> 'image/jpeg',
+		'jpg'	=> 'image/jpeg',
+		'gif'	=> 'image/gif',
+		'png'	=> 'image/png',
 		// 'jpeg'=>'image/pjpeg',
 		// 'jpeg'=>'image/x-png'
+
+		'rtf' 	=> 'text/rtf',
+		'txt' 	=> 'text/plain',
+		'csv' 	=> 'text/csv',
+		'pdf' 	=> 'application/pdf',
+		'ppt' 	=> 'application/vnd.ms-powerpoint',
+		'pptx' 	=> 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+		'doc' 	=> 'application/msword',
+		'docx' 	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'xls' 	=> 'application/vnd.ms-excel',
+		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		'zip' 	=> 'application/zip'
 	);
 
-	public function getImageType($ext) {
-		if (array_key_exists($ext, $this->imageTypesMap)) {
-			return $this->imageTypesMap[$ext];
+	public function getFileType($ext) {
+		if (array_key_exists($ext, $this->fileTypesMap)) {
+			return $this->fileTypesMap[$ext];
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Cake V3 returns binary column type data as php resource id instead of the whole file for better performance.
+	 * The current work-around is to use native php normal stream functions to read the contents incrementally or all at once.
+	 * @link https://groups.google.com/forum/#!topic/cake-php/rgaHYh2iWwU
+	 * 
+	 * @param  php_resource_file_handler $phpResourceFile acquired from table entity
+	 * @return binary/boolean          	 				  returns the binary file if resource exists and returns boolean false if not exists
+	 */
+	public function getActualFile($phpResourceFile) {
+		$file = ''; 
+		while (!feof($phpResourceFile)) {
+			$file .= fread($phpResourceFile, 8192); 
+		} 
+		fclose($phpResourceFile);
+
+		return $file;
 	}
 
 	public function beforeSave(Event $event, Entity $entity) {
@@ -109,6 +183,11 @@ class FileUploadBehavior extends Behavior {
 
 		$file = $entity->$fileContentField;
 		$entity->$fileContentField =  null;
+		// $errors = $validator->errors($entity);
+		// if (!empty($errors)) {
+		//     pr($errors);
+		// }
+
 		if ($file['error'] == 0) { // success
 			if ($this->config('useDefaultName')) {
 				$entity->$fileNameField = $file['name'];
@@ -118,5 +197,9 @@ class FileUploadBehavior extends Behavior {
 			}
 			$entity->$fileContentField = file_get_contents($file['tmp_name']);
 		}
+
+		// if (empty($entity->$fileNameField)) {
+		// 	return false;
+		// }
 	}
 }

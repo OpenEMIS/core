@@ -12,7 +12,8 @@ class InstitutionsController extends AppController
 
 		$this->ControllerAction->model('Institution.InstitutionSites');
 		$this->ControllerAction->models = [
-			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments']
+			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments'],
+			'Sections' => ['className' => 'Institution.InstitutionSiteSections'],
 		];
 		$this->loadComponent('Paginator');
 		
