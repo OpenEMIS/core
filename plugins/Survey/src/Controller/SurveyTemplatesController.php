@@ -40,6 +40,9 @@ class SurveyTemplatesController extends AppController {
                     $options['conditions'][] = [
                         $model->alias().'.survey_module_id' => $this->selectedModule
                     ];
+                    $options['order'] = [
+                        $model->alias().'.name'
+                    ];
                 }
 
                 return $options;
