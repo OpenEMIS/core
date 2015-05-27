@@ -82,7 +82,7 @@ class NavigationComponent extends Component {
 							'Details' => [
 								'collapse' => true,
 								'items' => [
-									'Guardians' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Guardians']],
+									'Guardians' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'Guardians']],
 									'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Programmes']],
 									'Sections' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Sections']],
 									'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Classes']],
@@ -109,6 +109,55 @@ class NavigationComponent extends Component {
 // <a href="/core/Students/StudentFee" >Fees
 								]
 							]
+						]
+					],
+					'Staff' => [
+						'collapse' => true,
+						'items' => [
+							'General' => [
+								'collapse' => true,
+								'items' => [
+									'Overview' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'view']],
+									'Contacts' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'Contacts']],
+									'Identities' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'Identities']],
+									'Languages' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'Languages']],
+									'Comments' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'Comments']],
+									'Special Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'SpecialNeeds']],
+									'Awards' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'Awards']],
+									'Attachments' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'Attachments']],
+									'More' => ['url' => ['plugin' => 'Staff', 'controller' => 'staff', 'action' => 'additional']]
+								]
+							],
+// 							'Details' => [
+// 								'collapse' => true,
+// 								// 'items' => [
+// 								// 	'Guardians' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Guardians']],
+// 								// 	'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Programmes']],
+// 								// 	'Sections' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Sections']],
+// 								// 	'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Classes']],
+// 								// 	'Absence' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Absence']],
+// 								// 	'Behaviour' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Behaviour']],
+// 								// 	'Results' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Results']],
+// 								// 	'Extracurricular' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'Extracurricular']]
+// // <a href="/core/Students/guardians" >Guardians
+// // <a href="/core/Students/Programme" >Programmes
+// // <a href="/core/Students/StudentSection" >Sections
+// // <a href="/core/Students/classes" >Classes
+// // <a href="/core/Students/Absence" >Absence
+// // <a href="/core/Students/StudentBehaviour" >Behaviour
+// // <a href="/core/Students/assessments" >Results
+// // <a href="/core/Students/extracurricular" >Extracurricular
+// 								// ]
+// 							],
+// 							'Finance' => [
+// 								'collapse' => true,
+// 								// 'items' => [
+// 								// 	'Bank Accounts' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'BankAccounts']],
+// 								// 	'Fees' => ['url' => ['plugin' => 'Student', 'controller' => 'students', 'action' => 'StudentFee']],
+// // <a href="/core/Students/bankAccounts" >Bank Accounts
+// // <a href="/core/Students/StudentFee" >Fees
+// 								// ]
+// 							]
 						]
 					],
 					'Surveys' => [

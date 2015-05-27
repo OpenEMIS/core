@@ -1,27 +1,27 @@
 <?php
-namespace Student\Controller;
+namespace Guardian\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
 
-class StudentsController extends AppController {
+class GuardiansController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
 		$this->ControllerAction->model('SecurityUsers');
-		$this->ControllerAction->model()->addBehavior('Student.Student');
+		$this->ControllerAction->model()->addBehavior('Guardian.Guardian');
 
 		$this->ControllerAction->models = [
 			'Contacts' => ['className' => 'UserContacts'],
-			'Identities' => ['className' => 'UserIdentities'],
-			'Languages' => ['className' => 'UserLanguages'],
-			'Comments' => ['className' => 'UserComments'],
-			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
-			'Awards' => ['className' => 'UserAwards'],
-			'Attachments' => ['className' => 'StudentAttachments']
+			// 'Identities' => ['className' => 'UserIdentities'],
+			// 'Languages' => ['className' => 'UserLanguages'],
+			// 'Comments' => ['className' => 'UserComments'],
+			// 'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
+			// 'Awards' => ['className' => 'UserAwards'],
+			// 'Attachments' => ['className' => 'GuardianAttachments']
 		];
 
-		$this->set('contentHeader', 'Students');
+		$this->set('contentHeader', 'Guardians');
     }
 
 	public function beforeFilter(Event $event) {
@@ -29,8 +29,8 @@ class StudentsController extends AppController {
 
 		$this->ControllerAction->beforePaginate = function($model, $options) {
 			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
-					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
+				if ($this->ControllerAction->Session->check('Guardian.security_user_id')) {
+					$securityUserId = $this->ControllerAction->Session->read('Guardian.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
 						$options['conditions'] = [];
 					}
@@ -45,7 +45,7 @@ class StudentsController extends AppController {
 
 		$visibility = ['view' => true, 'edit' => true];
 
-		$header = __('Student');
+		$header = __('Guardian');
 		$controller = $this;
 
 		$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
@@ -53,7 +53,7 @@ class StudentsController extends AppController {
 			$session = $this->request->session();
 
 			$model->fields['security_user_id']['type'] = 'hidden';
-			$model->fields['security_user_id']['value'] = $this->ControllerAction->Session->read('Student.security_user_id');
+			$model->fields['security_user_id']['value'] = $this->ControllerAction->Session->read('Guardian.security_user_id');
 
 			$controller->set('contentHeader', $header);
 		};
@@ -88,9 +88,9 @@ class StudentsController extends AppController {
 
 	public function view($id = null) {
 		if (is_null($id)) {
-			$id = $this->ControllerAction->Session->read('Student.security_user_id');
+			$id = $this->ControllerAction->Session->read('Guardian.security_user_id');
 		} else {
-			$this->ControllerAction->Session->write('Student.security_user_id', $id);
+			$this->ControllerAction->Session->write('Guardian.security_user_id', $id);
 		}
 		$this->ControllerAction->view($id);
 		$this->ControllerAction->render();
@@ -98,7 +98,7 @@ class StudentsController extends AppController {
 
 	public function edit($id = null) {
 		if (is_null($id)) {
-			$id = $this->ControllerAction->Session->read('Student.security_user_id');
+			$id = $this->ControllerAction->Session->read('Guardian.security_user_id');
 		}
 		$this->ControllerAction->edit($id);
 		$this->ControllerAction->render();
