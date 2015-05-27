@@ -1,20 +1,17 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/survey_templates', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/survey_templates', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates']);
-	Router::connect('/survey_templates/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates']);
-	$routes->fallbacks('InflectedRoute');
+Router::scope('/SurveyTemplates', ['plugin' => 'Survey'], function ($routes) {
+	Router::connect('/SurveyTemplates', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates']);
+	Router::connect('/SurveyTemplates/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates']);
 });
 
-Router::scope('/survey_questions', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/survey_questions', ['plugin' => 'Survey', 'controller' => 'SurveyQuestions']);
-	Router::connect('/survey_questions/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyQuestions']);
-	$routes->fallbacks('InflectedRoute');
+Router::scope('/SurveyQuestions', ['plugin' => 'Survey'], function ($routes) {
+	Router::connect('/SurveyQuestions', ['plugin' => 'Survey', 'controller' => 'SurveyQuestions']);
+	Router::connect('/SurveyQuestions/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyQuestions']);
 });
 
-Router::scope('/survey_statuses', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/survey_statuses', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
-	Router::connect('/survey_statuses/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
-	$routes->fallbacks('InflectedRoute');
+Router::scope('/SurveyStatuses', ['plugin' => 'Survey'], function ($routes) {
+	Router::connect('/SurveyStatuses', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
+	Router::connect('/SurveyStatuses/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
 });

@@ -1,0 +1,38 @@
+<?php
+namespace Security\Controller;
+
+use App\Controller\AppController;
+use Cake\Event\Event;
+
+class SecuritiesController extends AppController
+{
+	public function initialize() {
+		parent::initialize();
+
+		$this->ControllerAction->models = [
+			'Users' => ['className' => 'Security.SecurityUsers'],
+			'Groups' => ['className' => 'Security.SecurityGroups'],
+			'Roles' => ['className' => 'Security.SecurityRoles']
+		];
+		$this->loadComponent('Paginator');
+    }
+
+    public function beforeFilter(Event $event) {
+    	parent::beforeFilter($event);
+
+    	$header = __('Security');
+    	$controller = $this;
+    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
+			$header .= ' - ' . $model->alias;
+
+			$controller->set('contentHeader', $header);
+		};
+
+		$this->ControllerAction->beforePaginate = function($model, $options) {
+			// logic here
+			return $options;
+		};
+
+		$this->set('contentHeader', $header);
+	}
+}
