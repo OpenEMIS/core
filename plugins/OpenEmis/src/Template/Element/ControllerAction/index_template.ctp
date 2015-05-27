@@ -7,6 +7,12 @@ $this->start('toolbar');
 $this->end();
 
 $this->start('panelBody');
+	if (isset($toolbarElements)) {
+		foreach ($toolbarElements as $element) {
+			echo $this->element($element['name'], $element['data'], $element['options']);
+		}
+	}
+
 	foreach ($indexElements as $element) {
 		echo $this->element($element['name'], $element['data'], $element['options']);
 	}
