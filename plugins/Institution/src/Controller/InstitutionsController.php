@@ -54,52 +54,12 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+    	$session = $this->request->session();
+    	$action = $this->request->params['action'];
 
-    	$header = __('Institution');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->getHeader($model->alias);
-			$session = $this->request->session();
-
-			if (array_key_exists('institution_site_id', $model->fields)) {
-				if (!$session->check('InstitutionSites.id')) {
-					$this->Message->alert('general.notExists');
-				}
-				$model->fields['institution_site_id']['type'] = 'hidden';
-				$model->fields['institution_site_id']['value'] = $session->read('InstitutionSites.id');
-			}
-			
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			$session = $this->request->session();
-			if (array_key_exists('institution_site_id', $model->fields)) {
-				if (!$session->check('InstitutionSites.id')) {
-					$this->Message->alert('general.notExists');
-				}
-				$options['conditions'][] = ['InstitutionSites.id' => $session->read('InstitutionSites.id')];
-			}
-			// pr($options);die;
-			return $options;
-		};
-
-		$this->set('contentHeader', $header);
-
-		if ($this->request->action = 'index') {
-
-			// pr($this->InstitutionSites->InstitutionSiteAttachments->fields());
-			// $this->InstitutionSiteAttachments->fields['modified_user_id']['visible'] = false;
-			// // $this->InstitutionSites->InstitutionSiteAttachments->fields['created_user_id']['visible'] = false;
-			// $this->InstitutionSites->InstitutionSiteAttachments->fields['modified']['visible'] = false;
-			// $this->InstitutionSites->InstitutionSiteAttachments->fields['created']['visible'] = false;
-
-			$this->InstitutionSites->fields['modified_user_id']['visible'] = false;
-			$this->InstitutionSites->fields['created_user_id']['visible'] = false;
-			$this->InstitutionSites->fields['modified']['visible'] = false;
-			$this->InstitutionSites->fields['created']['visible'] = false;
-
-
+    	if ($action == 'index') {
+			$session->delete('InstitutionSites.id');
 			$this->InstitutionSites->fields['alternative_name']['visible']['index'] = false;
 			$this->InstitutionSites->fields['address']['visible']['index'] = false;
 			$this->InstitutionSites->fields['postal_code']['visible']['index'] = false;
@@ -115,14 +75,52 @@ class InstitutionsController extends AppController
 			$this->InstitutionSites->fields['latitude']['visible']['index'] = false;
 			$this->InstitutionSites->fields['security_group_id']['visible']['index'] = false;
 			$this->InstitutionSites->fields['contact_person']['visible']['index'] = false;
-
-		} else if ($this->request->action = 'view') {
-			
-			$this->InstitutionSites->fields['modified_user_id']['visible'] = false;
-			$this->InstitutionSites->fields['created_user_id']['visible'] = false;
-			$this->InstitutionSites->fields['modified']['visible'] = false;
-			$this->InstitutionSites->fields['created']['visible'] = false;
-
 		}
+
+		if ($session->check('InstitutionSites.id') || $action == 'view') {
+    		$id = 0;
+    		if ($session->check('InstitutionSites.id')) {
+    			$id = $session->read('InstitutionSites.id');
+    		} else if (isset($this->request->pass[0])) {
+    			$id = $this->request->pass[0];
+    		}
+    		if (!empty($id)) {
+    			$obj = $this->InstitutionSites->get($id);
+	    		$name = $obj->name;
+	    		$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
+    		} else {
+    			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+    		}
+    	}
+
+    	$header = __('Institution');
+    	$controller = $this;
+    	$this->ControllerAction->onInitialize = function($model) use ($session, $controller, $header) {
+			$header .= ' - ' . $model->getHeader($model->alias);
+			$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+
+			if (array_key_exists('institution_site_id', $model->fields)) {
+				if (!$session->check('InstitutionSites.id')) {
+					$this->Message->alert('general.notExists');
+				}
+				$model->fields['institution_site_id']['type'] = 'hidden';
+				$model->fields['institution_site_id']['value'] = $session->read('InstitutionSites.id');
+			}
+			
+			$controller->set('contentHeader', $header);
+		};
+
+		$this->ControllerAction->beforePaginate = function($model, $options) use ($session) {
+			if (array_key_exists('institution_site_id', $model->fields)) {
+				if (!$session->check('InstitutionSites.id')) {
+					$this->Message->alert('general.notExists');
+				}
+				$options['conditions'][] = ['InstitutionSites.id' => $session->read('InstitutionSites.id')];
+			}
+			
+			return $options;
+		};
+
+		$this->set('contentHeader', $header);
     }
 }

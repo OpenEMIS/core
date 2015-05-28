@@ -194,8 +194,11 @@ Plugin::load('Area', ['routes' => true, 'autoload' => true]);
 Plugin::load('AcademicPeriod', ['routes' => true, 'autoload' => true]);
 Plugin::load('Education', ['routes' => true, 'autoload' => true]);
 Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
+Plugin::load('Assessment', ['routes' => true, 'autoload' => true]);
 Plugin::load('Security', ['routes' => true, 'autoload' => true]);
 Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
+Plugin::load('Rubric', ['routes' => true, 'autoload' => true]);
+Plugin::load('Workflow', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomField', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode

@@ -9,6 +9,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('InstitutionSiteShifts', ['className' => 'Institution.InstitutionSiteShifts']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 	}
 
 	public function validationDefault(Validator $validator) {
