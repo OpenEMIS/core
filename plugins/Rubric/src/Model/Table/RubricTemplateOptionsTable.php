@@ -34,7 +34,7 @@ class RubricTemplateOptionsTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		//$this->ControllerAction->setFieldOrder('created', $order++);
+		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 
 		if($this->action == 'index') {
 			$query = $this->request->query;
