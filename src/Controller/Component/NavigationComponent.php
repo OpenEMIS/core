@@ -29,7 +29,6 @@ class NavigationComponent extends Component {
 
 		$controller = $this->controller;
 		$action = $this->action;
-		$id = $this->request->param('id');
 
 		$navigations = [
 			'collapse' => false,
@@ -165,7 +164,7 @@ class NavigationComponent extends Component {
 				'General' => [
 					'collapse' => true,
 					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
+						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view'], 'selected' => ['edit']],
 						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
 						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']]
 					]

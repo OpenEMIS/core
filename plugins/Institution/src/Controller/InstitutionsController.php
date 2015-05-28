@@ -78,10 +78,19 @@ class InstitutionsController extends AppController
 		}
 
 		if ($session->check('InstitutionSites.id') || $action == 'view') {
-    		$id = $session->check('InstitutionSites.id') ? $session->read('InstitutionSites.id') : $this->request->pass[0];
-    		$obj = $this->InstitutionSites->get($id);
-    		$name = $obj->name;
-    		$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
+    		$id = 0;
+    		if ($session->check('InstitutionSites.id')) {
+    			$id = $session->read('InstitutionSites.id');
+    		} else if (isset($this->request->pass[0])) {
+    			$id = $this->request->pass[0];
+    		}
+    		if (!empty($id)) {
+    			$obj = $this->InstitutionSites->get($id);
+	    		$name = $obj->name;
+	    		$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
+    		} else {
+    			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+    		}
     	}
 
     	$header = __('Institution');
