@@ -8,16 +8,27 @@ class NavigationComponent extends Component {
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public $controller;
 	public $action;
+	public $breadcrumbs = [];
 
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
 		$this->action = $this->request->params['action'];
 	}
 
+	public function addCrumb($title, $options=array()) {
+		$item = array(
+			'title' => __($title),
+			'link' => ['url' => $options],
+			'selected' => sizeof($options)==0
+		);
+		$this->breadcrumbs[] = $item;
+	}
+
 	public function beforeRender(Event $event) {
+		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
+
 		$controller = $this->controller;
 		$action = $this->action;
-		$id = $this->request->param('id');
 
 		$navigations = [
 			'collapse' => false,
@@ -61,10 +72,9 @@ class NavigationComponent extends Component {
 									'collapse' => true,
 									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels']
 								],
-								/*
 								'Assessments' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Assessments', 'action' => 'index']
+									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Items']
 								],
 								'Field Options' => [
 									'collapse' => true,
@@ -78,7 +88,6 @@ class NavigationComponent extends Component {
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
 								],
-								*/
 								'Notices' => [
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']
@@ -124,11 +133,11 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Rubrics' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Rubrics', 'action' => 'Templates']
+									'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates']
 								],
 								'Status' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'RubricStatuses', 'action' => 'index']
+									'url' => ['plugin' => 'Rubric', 'controller' => 'RubricStatuses', 'action' => 'index']
 								]
 							]
 						],
@@ -137,11 +146,11 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Workflows' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Workflows', 'action' => 'index']
+									'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'index']
 								],
 								'Steps' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'WorkflowSteps', 'action' => 'index']
+									'url' => ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps', 'action' => 'index']
 								]
 							]
 						]
@@ -155,7 +164,7 @@ class NavigationComponent extends Component {
 				'General' => [
 					'collapse' => true,
 					'items' => [
-						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
+						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view'], 'selected' => ['edit']],
 						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
 						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']]
 					]

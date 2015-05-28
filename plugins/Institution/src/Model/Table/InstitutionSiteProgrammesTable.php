@@ -9,6 +9,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -19,6 +20,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
 	}
 }
