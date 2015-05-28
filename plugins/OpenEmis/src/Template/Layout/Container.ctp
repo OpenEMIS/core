@@ -5,7 +5,7 @@
 
 	<div class="content-wrapper">
 
-		<?= $this->element('ControllerAction.breadcrumbs') ?>
+		<?= $this->element('OpenEmis.breadcrumbs') ?>
 
 		<div class="page-header">
 			<h2><?= $this->fetch('contentHeader') ?></h2>
