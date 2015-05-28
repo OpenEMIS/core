@@ -191,6 +191,7 @@ Plugin::load('Student', ['routes' => true, 'autoload' => true]);
 Plugin::load('Staff', ['routes' => true, 'autoload' => true]);
 Plugin::load('Guardian', ['routes' => true, 'autoload' => true]);
 Plugin::load('Area', ['routes' => true, 'autoload' => true]);
+Plugin::load('AcademicPeriod', ['routes' => true, 'autoload' => true]);
 Plugin::load('Education', ['routes' => true, 'autoload' => true]);
 Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
 Plugin::load('Security', ['routes' => true, 'autoload' => true]);
