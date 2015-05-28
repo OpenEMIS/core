@@ -18,7 +18,8 @@ class StudentsController extends AppController {
 			'Comments' => ['className' => 'UserComments'],
 			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
 			'Awards' => ['className' => 'UserAwards'],
-			'Attachments' => ['className' => 'StudentAttachments']
+			'Attachments' => ['className' => 'Student.StudentAttachments'],
+			'Programmes' => ['className' => 'Student.Programmes']
 		];
 
 		$this->set('contentHeader', 'Students');
