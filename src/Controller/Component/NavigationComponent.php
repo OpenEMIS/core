@@ -51,7 +51,7 @@ class NavigationComponent extends Component {
 								],
 								'Academic Periods' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'AcademicPeriods', 'action' => 'index']
+									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods']
 								],
 								'Education Structure' => [
 									'collapse' => true,
