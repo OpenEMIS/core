@@ -8,5 +8,6 @@ class EducationProgrammesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
 		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->hasMany('InstitutionSiteProgrammes', ['className' => 'Institution.InstitutionSiteProgrammes']);
 	}
 }
