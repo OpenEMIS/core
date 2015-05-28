@@ -1,16 +1,16 @@
 <?php
-namespace Institution\Model\Table;
+namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class StudentAttachmentsTable extends AppTable {
+class StaffAttachmentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
 		$this->addBehavior('ControllerAction.FileUpload');
 
-		$this->belongsTo('Students', ['className' => 'Student.Students']);
+		$this->belongsTo('Staff', ['className' => 'Staff.Staff']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -32,7 +32,7 @@ class StudentAttachmentsTable extends AppTable {
 		
 		if ($this->action == 'view') {
 			$session = $this->request->session();
-			$id = $session->check('StudentAttachments.id') ? $session->read('StudentAttachments.id') : false ;
+			$id = $session->check('StaffAttachments.id') ? $session->read('StaffAttachments.id') : false ;
 			if ($id) {
 				$this->fields['name']['type'] = 'download';
 				$this->fields['name']['attr']['url'] = array(

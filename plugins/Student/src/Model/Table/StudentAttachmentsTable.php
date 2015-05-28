@@ -1,5 +1,5 @@
 <?php
-namespace Institution\Model\Table;
+namespace Student\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -25,6 +25,8 @@ class StudentAttachmentsTable extends AppTable {
 		
 		// $this->fields['file_type']['visible'] = ['add' => false, 'edit' => false];
 		// pr($this->action);
+
+
 		$this->fields['file_name']['visible'] = ['index' => true, 'view' => true];
 		if ($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['file_name']['type'] = 'hidden';

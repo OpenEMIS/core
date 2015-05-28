@@ -18,17 +18,27 @@ class StaffController extends AppController {
 			'Comments' => ['className' => 'UserComments'],
 			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
 			'Awards' => ['className' => 'UserAwards'],
-			'Attachments' => ['className' => 'StaffAttachments']
+			'Attachments' => ['className' => 'Staff.StaffAttachments']
 		];
 
 		$this->set('contentHeader', 'Staff');
     }
 
+    // temp method until institution site role is using security user id
+    public $modelsThatUseSecurityUserId = [
+			'Contacts',
+			'Identities',
+			'Languages',
+			'Comments',
+			'SpecialNeeds',
+			'Awards'
+		];
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 
 		$this->ControllerAction->beforePaginate = function($model, $options) {
-			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
+			// if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
+			if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
 				if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
 					$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
 					if (!array_key_exists('conditions', $options)) {

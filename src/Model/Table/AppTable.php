@@ -60,4 +60,9 @@ class AppTable extends Table {
 	        return Inflector::humanize(Inflector::underscore($this->alias()));
 		}
 	}
+
+	public function getList() {
+		// need to fix
+		return ['a'];
+	}
 }
