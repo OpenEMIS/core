@@ -19,17 +19,32 @@ class StudentsController extends AppController {
 			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
 			'Awards' => ['className' => 'UserAwards'],
 			'Attachments' => ['className' => 'Student.StudentAttachments'],
-			'Programmes' => ['className' => 'Student.Programmes']
+			'Programmes' => ['className' => 'Student.Programmes'],
+			'Sections' => ['className' => 'Student.StudentSections'],
+			'Absences' => ['className' => 'Student.Absences'],
+			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
+			'Extracurriculars' => ['className' => 'Student.StudentExtracurriculars'],
+			'BankAccounts' => ['className' => 'Student.StudentBankAccounts'],
+			'StudentFees' => ['className' => 'Student.StudentFees'],
 		];
 
 		$this->set('contentHeader', 'Students');
     }
 
+    // temp method until institution site role is using security user id
+    public $modelsThatUseSecurityUserId = [
+			'Contacts',
+			'Identities',
+			'Languages',
+			'Comments',
+			'SpecialNeeds',
+			'Awards'
+		];
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-
 		$this->ControllerAction->beforePaginate = function($model, $options) {
-			if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
+			// if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
+			if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
 				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
 					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
