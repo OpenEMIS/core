@@ -90,14 +90,34 @@ class NavigationComponent extends Component {
 		if ($controller->name == 'Institutions' && $action != 'index') {
 			$navigations['items']['Institutions']['items'] = [
 				'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
-				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
-				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
-				'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'positions']],
-				'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'programmes']],
-				'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'shifts']],
-				'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'sections']],
-				'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'classes']],
-				'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'infrastructures']]
+				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
+				'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']],
+
+				'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions']],
+				'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Programmes']],
+				'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Shifts']],
+				'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
+				'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
+				'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Infrastructures']],
+
+				'Student Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']],
+				'Staff Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAbsences']],
+
+				'Assessment Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentResults']],
+
+				'Student Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
+				'Staff Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
+
+				'Bank Accounts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'BankAccounts']],
+				'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'fees']],
+				'Student Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']],
+
+				'New Surveys' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+				'Drafted Surveys' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+				'Completed Surveys' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+			
+				'Quality Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+				'Quality Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
 			];
 		} else if ($controller->name == 'Students' && $action != 'index') {
 			$navigations['items']['Students']['items'] = [
