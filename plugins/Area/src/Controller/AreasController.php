@@ -3,6 +3,7 @@ namespace Area\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class AreasController extends AppController
 {
@@ -20,11 +21,13 @@ class AreasController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Administrative Boundaries', ['plugin' => 'Area', 'controller' => 'Areas', 'action' => $this->request->action]);
+		$this->Navigation->addCrumb(Inflector::humanize(Inflector::underscore($this->request->action)));
 
     	$header = __('Area');
     	$controller = $this;
     	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
+			$header .= ' - ' . Inflector::humanize(Inflector::underscore($model->alias));
 
 			$controller->set('contentHeader', $header);
 		};

@@ -20,6 +20,8 @@ class SurveyStatusesController extends AppController {
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+        $this->Navigation->addCrumb('Survey', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses', 'action' => 'index']);
+        $this->Navigation->addCrumb('Statuses');
 
     	$header = __('Statuses');
     	$this->set('contentHeader', $header);
