@@ -8,13 +8,25 @@ class NavigationComponent extends Component {
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public $controller;
 	public $action;
+	public $breadcrumbs = [];
 
 	public function initialize(array $config) {
 		$this->controller = $this->_registry->getController();
 		$this->action = $this->request->params['action'];
 	}
 
+	public function addCrumb($title, $options=array()) {
+		$item = array(
+			'title' => __($title),
+			'link' => ['url' => $options],
+			'selected' => sizeof($options)==0
+		);
+		$this->breadcrumbs[] = $item;
+	}
+
 	public function beforeRender(Event $event) {
+		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
+
 		$controller = $this->controller;
 		$action = $this->action;
 		$id = $this->request->param('id');
