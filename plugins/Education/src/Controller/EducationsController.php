@@ -22,6 +22,8 @@ class EducationsController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Education', ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $this->request->action]);
+		$this->Navigation->addCrumb($this->request->action);
 
     	$header = __('Education');
     	$controller = $this;
