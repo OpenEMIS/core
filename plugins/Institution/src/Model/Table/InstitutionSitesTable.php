@@ -21,6 +21,7 @@ class InstitutionSitesTable extends AppTable {
 		// $this->hasMany('InstitutionSiteStudents');
 		
 		$this->hasMany('InstitutionSiteAttachments', ['className' => 'Institution.InstitutionSiteAttachments']);
+		$this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
 	}
 

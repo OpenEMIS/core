@@ -9,7 +9,6 @@ class AreasController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Area.Areas');
 		$this->ControllerAction->models = [
 			'AreaLevels' => ['className' => 'Area.AreaLevels'],
 			'Areas' => ['className' => 'Area.Areas'],
