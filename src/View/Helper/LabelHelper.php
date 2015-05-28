@@ -112,10 +112,19 @@ class LabelHelper extends Helper {
 			'survey_module_id' => 'Module'
 		),
 		'SurveyQuestions' => array(
-			'survey_template_id' => 'Template'
+			'survey_template_id' => 'Survey Template'
 		),
 		'SurveyStatuses' => array(
-			'survey_template_id' => 'Template'
+			'survey_template_id' => 'Survey Template'
+		),
+		'RubricSections' => array(
+			'rubric_template_id' => 'Rubric Template'
+		),
+		'RubricCriterias' => array(
+			'rubric_section_id' => 'Rubric Section'
+		),
+		'RubricTemplateOptions' => array(
+			'rubric_template_id' => 'Rubric Template'
 		)
 	);
 	
