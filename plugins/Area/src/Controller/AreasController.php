@@ -12,9 +12,9 @@ class AreasController extends AppController
 		$this->ControllerAction->model('Area.Areas');
 		$this->ControllerAction->models = [
 			'Areas' => ['className' => 'Area.Areas'],
-			'AreaLevels' => ['className' => 'Area.AreaLevels'],
-			'AreaAdministratives' => ['className' => 'Area.AreaAdministratives'],
-			'AreaAdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels']
+			'Levels' => ['className' => 'Area.AreaLevels'],
+			'Administratives' => ['className' => 'Area.AreaAdministratives'],
+			'AdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels']
 		];
 		$this->loadComponent('Paginator');
     }

@@ -5,6 +5,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 
 class AppTable extends Table {
 	public function initialize(array $config) {
@@ -39,6 +40,24 @@ class AppTable extends Table {
 		}
 		if (in_array('created_user_id', $columns)) {
 			$entity->created_user_id = 1;
+		}
+	}
+
+	/**
+	 * Converts the class alias to a label.
+	 * 
+	 * Usefull for class names or aliases that are more than a word.
+	 * Converts the camelized word to a sentence.
+	 * If null, this function will used the default alias of the current model.
+	 * 
+	 * @param  string $camelizedString the camelized string [optional]
+	 * @return string                  the converted string
+	 */
+	public function getHeader($camelizedString = null) {
+		if ($camelizedString) {
+		    return Inflector::humanize(Inflector::underscore($camelizedString));
+		} else {
+	        return Inflector::humanize(Inflector::underscore($this->alias()));
 		}
 	}
 }

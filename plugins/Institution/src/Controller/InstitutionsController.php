@@ -13,7 +13,40 @@ class InstitutionsController extends AppController
 		$this->ControllerAction->model('Institution.InstitutionSites');
 		$this->ControllerAction->models = [
 			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments'],
+			'Additional' => ['className' => 'Institution.InstitutionSiteAdditionals'],
+
+			// 'InstitutionSiteCustomField',
+			// 'InstitutionSiteCustomFieldOption',
+
+
+			'Positions' => ['className' => 'Institution.InstitutionSitePositions'],
+			'Programmes' => ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Shifts' => ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' => ['className' => 'Institution.InstitutionSiteSections'],
+			'Classes' => ['className' => 'Institution.InstitutionSiteClasses'],
+			'Infrastructures' => ['className' => 'Institution.InstitutionSiteInfrastructures'],
+
+			'StudentAbsences' => ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'StaffAbsences' => ['className' => 'Institution.InstitutionSiteStaffAbsences'],
+
+			'AssessmentResults' => ['className' => 'Institution.InstitutionSiteAssessmentResults'],
+
+			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
+			'StaffBehaviours' => ['className' => 'Institution.StaffBehaviours'],
+
+			'BankAccounts' => ['className' => 'Institution.InstitutionSiteBankAccounts'],
+			'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
+			'StudentFees' => ['className' => 'Institution.StudentFees'],
+
+			// Surveys
+			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
+			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
+			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
+
+			// Quality
+			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
+			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
+
 		];
 		$this->loadComponent('Paginator');
 		
@@ -25,7 +58,7 @@ class InstitutionsController extends AppController
     	$header = __('Institution');
     	$controller = $this;
     	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
+			$header .= ' - ' . $model->getHeader($model->alias);
 			$session = $this->request->session();
 
 			if (array_key_exists('institution_site_id', $model->fields)) {
@@ -47,6 +80,7 @@ class InstitutionsController extends AppController
 				}
 				$options['conditions'][] = ['InstitutionSites.id' => $session->read('InstitutionSites.id')];
 			}
+			// pr($options);die;
 			return $options;
 		};
 
