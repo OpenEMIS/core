@@ -11,7 +11,7 @@ $panelHeader = $this->fetch('panelHeader');
 		<?= $this->element('advanced_search') ?>
 		<?= $this->element('OpenEmis.alert') ?>
 		<!--?= $this->element('data_overview') ?-->
-		<!--?= $this->element('nav_tabs') ?-->
+		<?= $this->element('nav_tabs') ?>
 		<?= $this->fetch('panelBody') ?>
 	</div>
 </div>
