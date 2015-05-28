@@ -203,12 +203,16 @@ class ControllerActionComponent extends Component {
 		$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
 
 		// logic for Reorder buttons
-		if (!is_null($this->model) && array_key_exists($this->orderField, $this->model->schema())) {
+		$schema = $this->getSchema($this->model);
+		if (!is_null($this->model) && array_key_exists($this->orderField, $schema)) {
 			$reorderUrl = $defaultUrl;
 			$reorderUrl['action'] = 'reorder';
 			$reorderUrl = array_merge($reorderUrl, $named, $pass);
 			$buttons['reorder'] = array('url' => $reorderUrl);
+		} else {
+			unset($buttons['reorder']);
 		}
+		
 		$this->buttons = $buttons;
 		$controller->set('_buttons', $buttons);
 		foreach ($this->indexActions as $action => $attr) {
@@ -730,6 +734,9 @@ class ControllerActionComponent extends Component {
 			$fields[$key]['className'] = $className;
 			if ($obj['type'] == 'string') { // make field sortable by default if it is a string data-type
 				$fields[$key]['sort'] = true;
+			}
+			if ($key == 'password') {
+				$fields[$key]['visible']['index'] = false;
 			}
 			/*
 			if ($obj['type'] == 'binary') {

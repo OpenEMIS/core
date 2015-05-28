@@ -23,6 +23,7 @@ class NavigationComponent extends Component {
 			'collapse' => false,
 			'items' => [
 				'Institutions' => [
+				
 					'collapse' => true,
 					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']
 				],
@@ -46,39 +47,101 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Administrative Boundaries' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'index']
+									'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas']
 								],
 								'Academic Periods' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'AcademicPeriods', 'action' => 'index']
+									'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods']
 								],
 								'Education Structure' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Education', 'action' => 'index']
+									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems']
 								],
 								'Infrastructure' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels']
 								],
+								/*
 								'Assessments' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Assessments', 'action' => 'levels']
+									'url' => ['plugin' => false, 'controller' => 'Assessments', 'action' => 'index']
 								],
 								'Field Options' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+									'url' => ['plugin' => false, 'controller' => 'FieldOptions', 'action' => 'index']
 								],
 								'Translations' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+									'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
 								],
 								'System Configurations' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'levels']
+									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
 								],
+								*/
 								'Notices' => [
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']
+								]
+							]
+						],
+						'Security' => [
+							'collapse' => true,
+							'items' => [
+								'Users' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Users']
+								],
+								'Groups' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Groups']
+								],
+								'Roles' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']
+								]
+							]
+						],
+						'Survey' => [
+							'collapse' => true,
+							'items' => [
+								'Templates' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index']
+								],
+								'Questions' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Survey', 'controller' => 'SurveyQuestions', 'action' => 'index']
+								],
+								'Status' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'Survey', 'controller' => 'SurveyStatuses', 'action' => 'index']
+								]
+							]
+						],
+						'Rubric' => [
+							'collapse' => true,
+							'items' => [
+								'Rubrics' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'Rubrics', 'action' => 'Templates']
+								],
+								'Status' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'RubricStatuses', 'action' => 'index']
+								]
+							]
+						],
+						'Workflow' => [
+							'collapse' => true,
+							'items' => [
+								'Workflows' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'Workflows', 'action' => 'index']
+								],
+								'Steps' => [
+									'collapse' => true,
+									'url' => ['plugin' => false, 'controller' => 'WorkflowSteps', 'action' => 'index']
 								]
 							]
 						]
@@ -89,15 +152,65 @@ class NavigationComponent extends Component {
 
 		if ($controller->name == 'Institutions' && $action != 'index') {
 			$navigations['items']['Institutions']['items'] = [
-				'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
-				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
-				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'attachments']],
-				'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'positions']],
-				'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'programmes']],
-				'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'shifts']],
-				'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'sections']],
-				'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'classes']],
-				'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'infrastructures']]
+				'General' => [
+					'collapse' => true,
+					'items' => [
+						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
+						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
+						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']]
+					]
+				],
+				'Details' => [
+					'collapse' => true,
+					'items' => [
+						'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions']],
+						'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Programmes']],
+						'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Shifts']],
+						'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
+						'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
+						'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Infrastructures']]
+					]
+				],
+
+				'Behaviour' => [
+					'collapse' => true,
+					'items' => [
+						'Student' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
+						'Staff' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']]
+					]
+				],
+
+				'Finance' => [
+					'collapse' => true,
+					'items' => [
+						'Bank Accounts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'BankAccounts']],
+						'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'fees']],
+						'Student Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
+					]
+				],
+
+				'Survey' => [
+					'collapse' => true,
+					'items' => [
+						'New' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+						'Draft' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+						'Completed' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+					]
+				],
+
+				'Quality' => [
+					'collapse' => true,
+					'items' => [
+						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+					]
+				],
+				
+				'Student Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']],
+				'Staff Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAbsences']],
+
+				'Assessment Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentResults']],
+				
 			];
 		} else if ($controller->name == 'Students' && $action != 'index') {
 			$navigations['items']['Students']['items'] = [
@@ -320,74 +433,6 @@ class NavigationComponent extends Component {
 // // <a href="/core/Students/StudentFee" >Fees
 // 								// ]
 // 							]
-						]
-					],
-					'Administration' => [
-						'collapse' => true,
-						'items' => [
-							'System Setup' => [
-								'collapse' => true,
-								'items' => [
-									'Administrative Boundaries' => [
-										'collapse' => true,
-										'items' => [
-											'Area Levels (Education)' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas']],
-											'Areas (Education)' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaLevels']],
-											'Area Levels (Administrative)' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministratives']],
-											'Areas (Administrative)' => ['url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministrativeLevels']]
-										]
-									],
-									'Education Structure' => [
-										'collapse' => true,
-										'items' => [
-											'Systems' => ['url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems']],
-											'Levels' => ['url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Levels']],
-											'Cycles' => ['url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Cycles']],
-											'Programmes' => ['url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Programmes']],
-											'Grades' => ['url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades']],
-											'Subjects' => ['url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Subjects']]
-										]
-									],
-									'Infrastructures' => [
-										'collapse' => true,
-										'items' => [
-											'Levels' => ['url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels']],
-											'Types' => ['url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Types']]
-										]
-									],
-									'Notices' => ['url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']]
-								]
-							],
-							'Security' => [
-								'collapse' => true,
-								'items' => [
-									'Users' => ['url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Users']],
-									'Groups' => ['url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Groups']],
-									'Roles' => ['url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']]
-								]
-							],
-							'Survey' => [
-								'collapse' => true,
-								'items' => [
-									'Templates' => ['url' => ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index']],
-									'Questions' => ['url' => ['plugin' => 'Survey', 'controller' => 'SurveyQuestions', 'action' => 'index']],
-									'Status' => ['url' => ['plugin' => 'Survey', 'controller' => 'SurveyStatuses', 'action' => 'index']]
-								]
-							],
-							'Rubric' => [
-								'collapse' => true,
-								'items' => [
-									'Rubrics' => ['url' => ['plugin' => false, 'controller' => 'Rubrics', 'action' => 'Templates']],
-									'Status' => ['url' => ['plugin' => false, 'controller' => 'RubricStatuses', 'action' => 'index']]
-								]
-							],
-							'Workflow' => [
-								'collapse' => true,
-								'items' => [
-									'Workflows' => ['url' => ['plugin' => false, 'controller' => 'Workflows', 'action' => 'index']],
-									'Steps' => ['url' => ['plugin' => false, 'controller' => 'WorkflowSteps', 'action' => 'index']]
-								]
-							],
 						]
 					]
 				]

@@ -1,17 +1,17 @@
 <?php
-namespace Infrastructure\Controller;
+namespace AcademicPeriod\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
 
-class InfrastructuresController extends AppController
+class AcademicPeriodsController extends AppController
 {
 	public function initialize() {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Levels' => ['className' => 'Infrastructure.InfrastructureLevels'],
-			'Types' => ['className' => 'Infrastructure.InfrastructureTypes']
+			'Levels' => ['className' => 'AcademicPeriod.AcademicPeriodLevels'],
+			'Periods' => ['className' => 'AcademicPeriod.AcademicPeriods']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -19,7 +19,7 @@ class InfrastructuresController extends AppController
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 
-    	$header = __('Infrastructure');
+    	$header = __('AcademicPeriod');
     	$controller = $this;
     	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
 			$header .= ' - ' . $model->alias;
@@ -36,12 +36,12 @@ class InfrastructuresController extends AppController
 
 		$tabElements = [
 			'Levels' => [
-				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
+				'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Levels'],
 				'text' => __('Levels')
 			],
-			'Types' => [
-				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Types'],
-				'text' => __('Types')
+			'Periods' => [
+				'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Periods'],
+				'text' => __('Periods')
 			]
 		];
 

@@ -1,4 +1,6 @@
 <?php
+echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
+
 //ControllerActionComponent - Version 1.0.4
 $dataKeys = array();
 $tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
@@ -7,10 +9,10 @@ $displayAction = array_key_exists('view', $_buttons) || array_key_exists('edit',
 $displayReorder = array_key_exists('reorder', $_buttons) && count($data) > 1;
 
 if ($displayAction) {
-	$tableHeaders[] = array(__('Actions') => array('class' => 'cell-action'));
+	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
 }
 if ($displayReorder) {
-	$tableHeaders[] = array(__('Reorder') => array('class' => 'cell-reorder'));
+	$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 }
 if(isset($moreRows) && $moreRows) {
 	$tableHeaders[] = array(__($moreRows['tableHeader']) => array('class' => 'cell-reorder'));
@@ -22,10 +24,10 @@ foreach ($data as $obj) {
 	$row = $this->ControllerAction->getTableRow($obj, $dataKeys, $data);
 
 	if ($displayAction) {
-		$row[] = $this->element('ControllerAction.actions', array('obj' => $obj));
+		$row[] = [$this->element('ControllerAction.actions', ['obj' => $obj]), ['class' => 'rowlink-skip']];
 	}
 	if ($displayReorder) {
-		$row[] = array($this->element('ControllerAction.reorder', array('obj' => $obj)), array('class' => 'sorter'));
+		$row[] = [$this->element('ControllerAction.reorder', ['obj' => $obj]), ['class' => 'sorter']];
 	}
 	if(isset($moreRows) && $moreRows) {
 		$options = $moreRows;
@@ -50,11 +52,11 @@ if(isset($moreRows) && $moreRows) {
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered table-sortable <?php echo $tableClass ?>">
 		<thead><?php echo $this->Html->tableHeaders($tableHeaders) ?></thead>
-		<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
+		<tbody data-link="row"><?php echo $this->Html->tableCells($tableData) ?></tbody>
 	</table>
 </div>
 <?php 
 if(isset($moreRows) && $moreRows) {
 	echo $this->Form->end();
 }
- ?>
+?>
