@@ -56,3 +56,18 @@ if (isset($_navigations)) {
 		<?php echo $this->Navigation->render($navigations) ?>
 	</div>
 </div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#accordion').on('show.bs.collapse', function (e) {
+		var target = e.target;
+		var level = $(target).attr('data-level');
+		var id = $(target).attr('id');
+		$('[data-level=' + level + ']').each(function() {
+			if ($(this).attr('id') != id && $(this).hasClass('in') == true) {
+				$(this).collapse('hide');
+			}
+		});
+	})
+});
+</script>
