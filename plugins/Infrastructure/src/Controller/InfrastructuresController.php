@@ -9,7 +9,6 @@ class InfrastructuresController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		//$this->ControllerAction->model('Infrastructure.InfrastructureLevels');
 		$this->ControllerAction->models = [
 			'Levels' => ['className' => 'Infrastructure.InfrastructureLevels'],
 			'Types' => ['className' => 'Infrastructure.InfrastructureTypes']
