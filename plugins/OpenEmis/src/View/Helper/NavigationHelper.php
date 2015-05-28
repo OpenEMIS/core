@@ -19,7 +19,7 @@ class NavigationHelper extends Helper {
 
 	public function select($navigations, &$path, &$level) {
 		$controller = $this->request->params['controller'];
-		$action = $this->request->params['action'];
+		$action = strtolower($this->request->params['action']);
 		if ($level != -1) {
 			$level++;
 			if (array_key_exists('items', $navigations)) {
@@ -30,8 +30,9 @@ class NavigationHelper extends Helper {
 						unset($path[$level]);
 						--$level;
 					} else {
+						$selected = isset($attr['selected']) ? $attr['selected'] : [];
 						if (strtolower($attr['url']['controller']) == strtolower($controller) 
-						&&  strtolower($attr['url']['action']) == strtolower($action)) {
+						&&  (strtolower($attr['url']['action']) == $action || in_array($action, $selected))) {
 							$level = -1;
 						}
 					}
@@ -42,7 +43,7 @@ class NavigationHelper extends Helper {
 
 	public function getMenu($navigations, &$html, &$level, &$index, $path) {
 		$controller = $this->request->params['controller'];
-		$action = $this->request->params['action'];
+		$action = strtolower($this->request->params['action']);
 		
 		$a = '<a class="accordion-toggle %s" href="%s" data-toggle="%s" data-parent="#accordion" aria-expanded="true" aria-controls="nav-menu-%s"><span>%s</span></a>';
 		$ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
@@ -87,8 +88,9 @@ class NavigationHelper extends Helper {
 					--$level;
 				} else {
 					$aOptions = array();
+					$selected = isset($attr['selected']) ? $attr['selected'] : [];
 					if (strtolower($attr['url']['controller']) == strtolower($controller) 
-					&&  strtolower($attr['url']['action']) == strtolower($action)) {
+					&&  (strtolower($attr['url']['action']) == $action || in_array($action, $selected))) {
 						$aOptions['class'] = 'nav-active';
 					}
 					$html .= $this->Html->link($name, $attr['url'], $aOptions);
