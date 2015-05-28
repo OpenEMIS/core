@@ -37,5 +37,35 @@ class EducationsController extends AppController
 		};
 
 		$this->set('contentHeader', $header);
+
+		$tabElements = [
+			'Systems' => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems'],
+				'text' => __('Systems')
+			],
+			'Levels' => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Levels'],
+				'text' => __('Levels')
+			],
+			'Cycles' => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Cycles'],
+				'text' => __('Cycles')
+			],
+			'Programmes' => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Programmes'],
+				'text' => __('Programmes')
+			],
+			'Grades' => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades'],
+				'text' => __('Grades')
+			],
+			'Subjects' => [
+				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Subjects'],
+				'text' => __('Subjects')
+			]
+		];
+
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', $this->request->action);
 	}
 }

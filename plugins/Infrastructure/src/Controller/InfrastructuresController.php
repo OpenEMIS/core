@@ -34,5 +34,19 @@ class InfrastructuresController extends AppController
 		};
 
 		$this->set('contentHeader', $header);
+
+		$tabElements = [
+			'Levels' => [
+				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
+				'text' => __('Levels')
+			],
+			'Types' => [
+				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Types'],
+				'text' => __('Types')
+			]
+		];
+
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', $this->request->action);
 	}
 }
