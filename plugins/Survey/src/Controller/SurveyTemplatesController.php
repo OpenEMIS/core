@@ -16,6 +16,8 @@ class SurveyTemplatesController extends AppController {
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+        $this->Navigation->addCrumb('Survey', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index']);
+        $this->Navigation->addCrumb('Templates');
 
     	$header = __('Templates');
     	$this->set('contentHeader', $header);
