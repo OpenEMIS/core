@@ -136,11 +136,11 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Rubrics' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Rubrics', 'action' => 'Templates']
+									'url' => ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => 'Templates']
 								],
 								'Status' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'RubricStatuses', 'action' => 'index']
+									'url' => ['plugin' => 'Rubric', 'controller' => 'RubricStatuses', 'action' => 'index']
 								]
 							]
 						],
@@ -149,11 +149,11 @@ class NavigationComponent extends Component {
 							'items' => [
 								'Workflows' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Workflows', 'action' => 'index']
+									'url' => ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'index']
 								],
 								'Steps' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'WorkflowSteps', 'action' => 'index']
+									'url' => ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps', 'action' => 'index']
 								]
 							]
 						]
