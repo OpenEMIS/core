@@ -152,35 +152,65 @@ class NavigationComponent extends Component {
 
 		if ($controller->name == 'Institutions' && $action != 'index') {
 			$navigations['items']['Institutions']['items'] = [
-				'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
-				'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
-				'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']],
+				'General' => [
+					'collapse' => true,
+					'items' => [
+						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
+						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
+						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']]
+					]
+				],
+				'Details' => [
+					'collapse' => true,
+					'items' => [
+						'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions']],
+						'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Programmes']],
+						'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Shifts']],
+						'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
+						'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
+						'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Infrastructures']]
+					]
+				],
 
-				'Positions' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Positions']],
-				'Programmes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Programmes']],
-				'Shifts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Shifts']],
-				'Sections' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Sections']],
-				'Classes' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Classes']],
-				'Infrastructures' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Infrastructures']],
+				'Behaviour' => [
+					'collapse' => true,
+					'items' => [
+						'Student' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
+						'Staff' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']]
+					]
+				],
 
+				'Finance' => [
+					'collapse' => true,
+					'items' => [
+						'Bank Accounts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'BankAccounts']],
+						'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'fees']],
+						'Student Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
+					]
+				],
+
+				'Survey' => [
+					'collapse' => true,
+					'items' => [
+						'New' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+						'Draft' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+						'Completed' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+					]
+				],
+
+				'Quality' => [
+					'collapse' => true,
+					'items' => [
+						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+					]
+				],
+				
 				'Student Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']],
 				'Staff Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAbsences']],
 
 				'Assessment Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentResults']],
-
-				'Student Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
-				'Staff Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
-
-				'Bank Accounts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'BankAccounts']],
-				'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'fees']],
-				'Student Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']],
-
-				'New Surveys' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-				'Drafted Surveys' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-				'Completed Surveys' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-			
-				'Quality Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-				'Quality Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
+				
 			];
 		} else if ($controller->name == 'Students' && $action != 'index') {
 			$navigations['items']['Students']['items'] = [
