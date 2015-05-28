@@ -1,4 +1,6 @@
 <?php
+echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
+
 //ControllerActionComponent - Version 1.0.4
 $dataKeys = array();
 $tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
@@ -50,11 +52,11 @@ if(isset($moreRows) && $moreRows) {
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered table-sortable <?php echo $tableClass ?>">
 		<thead><?php echo $this->Html->tableHeaders($tableHeaders) ?></thead>
-		<tbody><?php echo $this->Html->tableCells($tableData) ?></tbody>
+		<tbody data-link="row"><?php echo $this->Html->tableCells($tableData) ?></tbody>
 	</table>
 </div>
 <?php 
 if(isset($moreRows) && $moreRows) {
 	echo $this->Form->end();
 }
- ?>
+?>
