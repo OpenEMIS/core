@@ -235,10 +235,10 @@ class NavigationComponent extends Component {
 						'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes']],
 						'Sections' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
 						'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],
-						'Absence' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Absence']],
-						'Behaviour' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Behaviour']],
+						'Absences' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Absences']],
+						'Behaviours' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Behaviours']],
 						'Results' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Results']],
-						'Extracurricular' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Extracurricular']]
+						'Extracurriculars' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Extracurriculars']]
 // <a href="/core/Students/guardians" >Guardians
 // <a href="/core/Students/Programme" >Programmes
 // <a href="/core/Students/StudentSection" >Sections
@@ -253,7 +253,7 @@ class NavigationComponent extends Component {
 					'collapse' => true,
 					'items' => [
 						'Bank Accounts' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts']],
-						'Fees' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentFee']],
+						'Fees' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentFees']],
 // <a href="/core/Students/bankAccounts" >Bank Accounts
 // <a href="/core/Students/StudentFee" >Fees
 					]
@@ -286,6 +286,26 @@ class NavigationComponent extends Component {
 									'More' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'additional']]
 								]
 							],
+			'Details' => [
+					'collapse' => true,
+					'items' => [
+						'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'qualifications']],
+						// 'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'training']],
+						// 'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Position']],
+						// 'Sections' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSection']],
+						// 'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffClass']],
+						// 'Absence' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'absence']],
+						// 'Leave' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'leaves']],
+						// 'Behaviour' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffBehaviour']],
+						// 'Extracurricular' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'extracurricular']],
+						// 'Employment' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'employments']],
+						// 'Salary' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSalary']],
+						// 'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'membership']],
+						// 'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'license']],
+					]
+				],
+
+
 // 							'Details' => [
 // 								'collapse' => true,
 // 								// 'items' => [
