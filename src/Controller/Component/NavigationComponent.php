@@ -73,10 +73,9 @@ class NavigationComponent extends Component {
 									'collapse' => true,
 									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels']
 								],
-								/*
 								'Assessments' => [
 									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Assessments', 'action' => 'index']
+									'url' => ['plugin' => 'Assessment', 'controller' => 'Assessments', 'action' => 'Items']
 								],
 								'Field Options' => [
 									'collapse' => true,
@@ -90,7 +89,6 @@ class NavigationComponent extends Component {
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
 								],
-								*/
 								'Notices' => [
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']
