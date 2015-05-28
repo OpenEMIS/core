@@ -9,10 +9,10 @@ $displayAction = array_key_exists('view', $_buttons) || array_key_exists('edit',
 $displayReorder = array_key_exists('reorder', $_buttons) && count($data) > 1;
 
 if ($displayAction) {
-	$tableHeaders[] = array(__('Actions') => array('class' => 'cell-action'));
+	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
 }
 if ($displayReorder) {
-	$tableHeaders[] = array(__('Reorder') => array('class' => 'cell-reorder'));
+	$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 }
 if(isset($moreRows) && $moreRows) {
 	$tableHeaders[] = array(__($moreRows['tableHeader']) => array('class' => 'cell-reorder'));
@@ -24,10 +24,10 @@ foreach ($data as $obj) {
 	$row = $this->ControllerAction->getTableRow($obj, $dataKeys, $data);
 
 	if ($displayAction) {
-		$row[] = $this->element('ControllerAction.actions', array('obj' => $obj));
+		$row[] = [$this->element('ControllerAction.actions', ['obj' => $obj]), ['class' => 'rowlink-skip']];
 	}
 	if ($displayReorder) {
-		$row[] = array($this->element('ControllerAction.reorder', array('obj' => $obj)), array('class' => 'sorter'));
+		$row[] = [$this->element('ControllerAction.reorder', ['obj' => $obj]), ['class' => 'sorter']];
 	}
 	if(isset($moreRows) && $moreRows) {
 		$options = $moreRows;

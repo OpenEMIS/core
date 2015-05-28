@@ -735,6 +735,9 @@ class ControllerActionComponent extends Component {
 			if ($obj['type'] == 'string') { // make field sortable by default if it is a string data-type
 				$fields[$key]['sort'] = true;
 			}
+			if ($key == 'password') {
+				$fields[$key]['visible']['index'] = false;
+			}
 			/*
 			if ($obj['type'] == 'binary') {
 				$fields[$key]['visible']['index'] = false;
