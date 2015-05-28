@@ -1,17 +1,11 @@
-<div id="tabs" class="nav nav-tabs horizontal-tabs">
-	<span role="presentation" class="tab-active"><a href="">Tab 1</a></span>
-	<span role="presentation" class=""><a href="">Tab 2</a></span>
-	<span role="presentation" class=""><a href="">Tab 3</a></span>
-	<span role="presentation" class=""><a href="">Tab 3</a></span>
-	<span role="presentation" class=""><a href="">Tab 4</a></span>
-	<span role="presentation" class=""><a href="">Tab 5</a></span>
-	<span role="presentation" class=""><a href="">Tab 6</a></span>
-	<span role="presentation" class=""><a href="">Tab 7</a></span>
-	<span role="presentation" class=""><a href="">Tab 8</a></span>
-	<span role="presentation" class=""><a href="">Tab 9</a></span>
-	<span role="presentation" class=""><a href="">Tab 10</a></span>
-	<span role="presentation" class=""><a href="">Tab 11</a></span>
-</div>
+<?php if (isset($tabElements)) : ?>
+	<?php $selectedAction = isset($selectedAction) ? $selectedAction : null; ?>
+	<div id="tabs" class="nav nav-tabs horizontal-tabs">
+		<?php foreach($tabElements as $element => $attr): ?>
+			<span role="presentation" class="<?php echo ($element == $selectedAction) ? 'tab-active' : ''; ?>"><?php echo $this->Html->link($attr['text'], $attr['url']); ?></span>
+		<?php endforeach; ?>
+	</div>
+<?php endif ?>
 
 <script type="text/javascript">
 	$(document).ready(function(){
