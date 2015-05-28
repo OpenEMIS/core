@@ -9,12 +9,11 @@ class AreasController extends AppController
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Area.Areas');
 		$this->ControllerAction->models = [
-			'Areas' => ['className' => 'Area.Areas'],
 			'AreaLevels' => ['className' => 'Area.AreaLevels'],
-			'AreaAdministratives' => ['className' => 'Area.AreaAdministratives'],
-			'AreaAdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels']
+			'Areas' => ['className' => 'Area.Areas'],
+			'AreaAdministrativeLevels' => ['className' => 'Area.AreaAdministrativeLevels'],
+			'AreaAdministratives' => ['className' => 'Area.AreaAdministratives']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -36,5 +35,27 @@ class AreasController extends AppController
 		};
 
 		$this->set('contentHeader', $header);
+
+		$tabElements = [
+			'AreaLevels' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaLevels'],
+				'text' => __('Area Levels (Education)')
+			],
+			'Areas' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas'],
+				'text' => __('Areas (Education)')
+			],
+			'AreaAdministrativeLevels' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministrativeLevels'],
+				'text' => __('Area Levels (Administrative)')
+			],
+			'AreaAdministratives' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AreaAdministratives'],
+				'text' => __('Area Levels (Administrative)')
+			]
+		];
+
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', $this->request->action);
 	}
 }
