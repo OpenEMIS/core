@@ -18,9 +18,9 @@ class StudentBehavior extends Behavior {
 				'table' => 'institution_site_students',
 				'alias' => 'InstitionSiteStudents',
 				'type' => 'INNER',
-				'conditions' => 'SecurityUsers.id = InstitionSiteStudents.student_id',
+				'conditions' => 'Users.id = InstitionSiteStudents.security_user_id',
 			])
-			->group('SecurityUsers.id');
+			->group('Users.id');
 	}
 
 }

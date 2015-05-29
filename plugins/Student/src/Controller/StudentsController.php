@@ -8,16 +8,16 @@ class StudentsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('SecurityUsers');
+		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Student.Student');
 
 		$this->ControllerAction->models = [
-			'Contacts' => ['className' => 'UserContacts'],
-			'Identities' => ['className' => 'UserIdentities'],
-			'Languages' => ['className' => 'UserLanguages'],
-			'Comments' => ['className' => 'UserComments'],
-			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
-			'Awards' => ['className' => 'UserAwards'],
+			'Contacts' => ['className' => 'User.UserContacts'],
+			'Identities' => ['className' => 'User.UserIdentities'],
+			'Languages' => ['className' => 'User.UserLanguages'],
+			'Comments' => ['className' => 'User.UserComments'],
+			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
+			'Awards' => ['className' => 'User.UserAwards'],
 			'Attachments' => ['className' => 'Student.StudentAttachments'],
 			'Programmes' => ['className' => 'Student.Programmes'],
 			'Sections' => ['className' => 'Student.StudentSections'],
@@ -74,7 +74,7 @@ class StudentsController extends AppController {
 			$controller->set('contentHeader', $header);
 		};
 
-		$this->SecurityUsers->fields['photo_content']['type'] = 'image';
+		$this->Users->fields['photo_content']['type'] = 'image';
 
 		// unset($this->SecurityUsers->fields['photo_content']);
 
@@ -115,6 +115,8 @@ class StudentsController extends AppController {
 	public function edit($id = null) {
 		if (is_null($id)) {
 			$id = $this->ControllerAction->Session->read('Student.security_user_id');
+		} else {
+			$this->ControllerAction->Session->write('Student.security_user_id', $id);
 		}
 		$this->ControllerAction->edit($id);
 		$this->ControllerAction->render();

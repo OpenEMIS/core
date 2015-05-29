@@ -4,7 +4,7 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
-class SpecialNeedTypesTable extends Table {
+class SpecialNeedTypesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('field_option_values');
 		$this->addBehavior('FieldOptionValues');
