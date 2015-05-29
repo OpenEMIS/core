@@ -4,9 +4,8 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class AttachmentsTable extends AppTable {
+class InstitutionSiteAttachmentsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_attachments');
 		parent::initialize($config);
 		
 		$this->addBehavior('ControllerAction.FileUpload');

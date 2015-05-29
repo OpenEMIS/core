@@ -6,10 +6,9 @@ use Cake\Validation\Validator;
 
 class AssessmentResultTypesTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('field_option_values');
+        $this->addBehavior('ControllerAction.FieldOption');
         parent::initialize($config);
-        $this->addBehavior('FieldOptionValues');
-		
+				
 		// $this->hasMany('AssessmentItemResults', ['className' => 'Institution.AssessmentItemResults']);
 	}
 }
