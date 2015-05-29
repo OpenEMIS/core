@@ -9,10 +9,12 @@ use Cake\Utility\Inflector;
 
 class AppTable extends Table {
 	public function initialize(array $config) {
-		$this->addBehavior('Timestamp');
-
 		$schema = $this->schema();
 		$columns = $schema->columns();
+
+		if (in_array('modified', $columns) || in_array('created', $columns)) {
+			$this->addBehavior('Timestamp');
+		}
 
 		if (in_array('modified_user_id', $columns)) {
 			$this->belongsTo('ModifiedUser', [
@@ -29,6 +31,8 @@ class AppTable extends Table {
 				'foreignKey' => 'created_user_id'
 			]);
 		}
+
+		$this->addBehavior('ControllerAction.ControllerAction');
 	}
 	
 	public function beforeSave(Event $event, Entity $entity) {
@@ -59,10 +63,5 @@ class AppTable extends Table {
 		} else {
 	        return Inflector::humanize(Inflector::underscore($this->alias()));
 		}
-	}
-
-	public function getList() {
-		// need to fix
-		return ['a'];
 	}
 }

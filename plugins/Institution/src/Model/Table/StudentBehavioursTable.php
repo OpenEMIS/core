@@ -8,7 +8,7 @@ class StudentBehavioursTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		// $this->belongsTo('SecurityUsers', ['className' => 'SecurityUsers', 'foreignKey' => 'student_id']);
 	}
 
