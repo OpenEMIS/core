@@ -7,5 +7,7 @@ class EducationGradesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+
+		// $this->hasMany('Sections', ['className' => 'Institution.Sections']);
 	}
 }
