@@ -18,8 +18,10 @@ class AcademicPeriodsController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+		$this->Navigation->addCrumb('Academic Period', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => $this->request->action]);
+		$this->Navigation->addCrumb($this->request->action);
 
-    	$header = __('AcademicPeriod');
+    	$header = __('Academic Period');
     	$controller = $this;
     	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
 			$header .= ' - ' . $model->alias;

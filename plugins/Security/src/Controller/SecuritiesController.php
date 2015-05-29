@@ -19,6 +19,8 @@ class SecuritiesController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Security', ['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->request->action]);
+		$this->Navigation->addCrumb($this->request->action);
 
     	$header = __('Security');
     	$controller = $this;

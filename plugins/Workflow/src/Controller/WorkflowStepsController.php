@@ -15,6 +15,7 @@ class WorkflowStepsController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Workflow Steps', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps', 'action' => 'index']);
 
     	$header = __('Workflow Steps');
     	$controller = $this;
