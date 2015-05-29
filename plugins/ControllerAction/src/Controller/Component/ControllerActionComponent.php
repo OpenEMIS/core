@@ -20,6 +20,7 @@ namespace ControllerAction\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -72,6 +73,7 @@ class ControllerActionComponent extends Component {
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
 				$this->request->params['action'] = 'ComponentAction';
+				$this->initComponentsForModel();
 			} else { // check if it's a model action
 				foreach ($this->models as $name => $attr) {
 					if (strtolower($action) === strtolower($name)) { // model class found
@@ -91,13 +93,14 @@ class ControllerActionComponent extends Component {
 							$initialize = $this->onInitialize;
 							$initialize($this->model);
 						}
-						if (method_exists($this->model, 'beforeAction')) {
-							$this->model->beforeAction();
-						}
+						
 						$this->triggerFrom = 'Model';
 						break;
 					}
 				}
+			}
+			if (method_exists($this->model, 'beforeAction')) {
+				$this->model->beforeAction();
 			}
 		}
 		$this->initButtons();
@@ -107,16 +110,23 @@ class ControllerActionComponent extends Component {
 	public function beforeRender(Event $event) {
 		$controller = $this->controller;
 		if (!is_null($this->model) && !empty($this->model->fields)) {
-			$action = $this->currentAction;
+			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
-			if ($this->triggerFrom == 'Controller') {
-				
-				
-			} else if ($this->triggerFrom == 'Model') {
-				$action = $this->model->alias;
-				if (method_exists($this->model, 'afterAction')) {
-					$this->model->afterAction();
+			foreach ($this->model->fields as $key => $attr) {
+				if ($attr['type'] == 'select' && !isset($attr['options'])) {
+					$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
+					$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
+
+					if ($associatedObject->hasBehavior('FieldOption')) {
+						$this->model->fields[$key]['options'] = $associatedObject->getOptions();
+					} else if ($associatedObject->hasBehavior('ControllerAction')) {
+						$this->model->fields[$key]['options'] = $associatedObject->getList();
+					}
 				}
+			}
+
+			if (method_exists($this->model, 'afterAction')) {
+				$this->model->afterAction();
 			}
 			$this->request->params['action'] = $action;
 
