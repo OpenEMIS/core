@@ -22,6 +22,10 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
+	public function initialize(array $config) {
+		$this->_table->table('field_option_values');
+	}
+
 	public function getOptions($options=[]) { // need to cater for visible flag
 		$alias = $this->_table->alias();
 		$schema = $this->_table->schema();
