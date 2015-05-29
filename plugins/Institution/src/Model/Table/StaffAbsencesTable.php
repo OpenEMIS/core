@@ -4,17 +4,18 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSiteClassesTable extends AppTable {
+class StaffAbsencesTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('institution_site_staff_absences');
 		parent::initialize($config);
 		
-		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator->add('name', 'notBlank', [
-			'rule' => 'notBlank'
-		]);
+		// $validator->add('name', 'notBlank', [
+		// 	'rule' => 'notBlank'
+		// ]);
 		return $validator;
 	}
 
