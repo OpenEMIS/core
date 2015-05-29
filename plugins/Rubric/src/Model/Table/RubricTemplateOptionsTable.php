@@ -34,6 +34,9 @@ class RubricTemplateOptionsTable extends AppTable {
 	}
 
 	public function beforeAction() {
+		$this->fields['rubric_template_id']['type'] = 'select';
+		$this->fields['color']['type'] = 'color';
+
 		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 
 		if($this->action == 'index') {
@@ -70,7 +73,20 @@ class RubricTemplateOptionsTable extends AppTable {
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$templateOptions = $this->RubricTemplates->getList();
 
-			$this->fields['rubric_template_id']['type'] = 'select';
+			if ($this->request->is(array('post', 'put'))) {
+			} else {
+				if ($this->action == 'add') {
+					$query = $this->request->query;
+					$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
+					
+					$data = $this->newEntity();
+					$this->request->data[$this->alias()]['rubric_template_id']['value'] = $selectedTemplate;
+					$this->request->data[$this->alias()]['color']['value'] = '#ff00ff';
+					$data = $this->patchEntity($data, $this->request->data);
+					$this->controller->set('data', $data);
+				}
+			}
+
 			$this->fields['rubric_template_id']['options'] = $templateOptions;
 		}
 	}
