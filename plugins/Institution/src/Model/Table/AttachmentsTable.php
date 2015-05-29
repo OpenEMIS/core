@@ -4,13 +4,14 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionSiteAttachmentsTable extends AppTable {
+class AttachmentsTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('institution_site_attachments');
 		parent::initialize($config);
 		
 		$this->addBehavior('ControllerAction.FileUpload');
 
-		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -32,7 +33,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 		
 		if ($this->action == 'view') {
 			$session = $this->request->session();
-			$id = $session->check('InstitutionSiteAttachments.id') ? $session->read('InstitutionSiteAttachments.id') : false ;
+			$id = $session->check('Attachments.id') ? $session->read('Attachments.id') : false ;
 			if ($id) {
 				$this->fields['name']['type'] = 'download';
 				$this->fields['name']['attr']['url'] = array(
