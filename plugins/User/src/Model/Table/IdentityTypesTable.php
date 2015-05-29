@@ -1,7 +1,7 @@
 <?php
-namespace App\Model\Table;
+namespace User\Model\Table;
 
-use Cake\ORM\Table;
+use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class IdentityTypesTable extends AppTable {

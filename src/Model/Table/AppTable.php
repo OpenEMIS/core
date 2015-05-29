@@ -18,7 +18,7 @@ class AppTable extends Table {
 
 		if (in_array('modified_user_id', $columns)) {
 			$this->belongsTo('ModifiedUser', [
-				'className' => 'Security.SecurityUsers',
+				'className' => 'User.Users',
 				'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
 				'foreignKey' => 'modified_user_id'
 			]);
@@ -26,7 +26,7 @@ class AppTable extends Table {
 
 		if (in_array('created_user_id', $columns)) {
 			$this->belongsTo('CreatedUser', [
-				'className' => 'Security.SecurityUsers',
+				'className' => 'User.Users',
 				'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
 				'foreignKey' => 'created_user_id'
 			]);
