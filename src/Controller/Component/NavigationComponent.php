@@ -201,9 +201,9 @@ class NavigationComponent extends Component {
 				'Survey' => [
 					'collapse' => true,
 					'items' => [
-						'New' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-						'Draft' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
-						'Completed' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
+						'New' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'NewSurveys']],
+						'Draft' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'DraftedSurveys']],
+						'Completed' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'CompletedSurveys']]
 					]
 				],
 
