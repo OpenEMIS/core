@@ -163,8 +163,7 @@ class ControllerActionComponent extends Component {
 		if ($this->triggerFrom == 'Model') {
 			unset($pass[0]);
 		}
-
-		$defaultUrl = ['plugin' => $this->plugin, 'controller' => $controller->name];
+		$defaultUrl = ['plugin' => $this->request->params['plugin'], 'controller' => $controller->name];
 
 		$buttons = [];
 

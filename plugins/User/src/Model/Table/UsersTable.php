@@ -1,11 +1,13 @@
 <?php
-namespace App\Model\Table;
+namespace User\Model\Table;
 
-use Cake\ORM\Table;
+use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class SecurityUsersTable extends Table {
+class UsersTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('security_users');
+		parent::initialize($config);
 		$this->addBehavior('ControllerAction.FileUpload');
 
 		$this->belongsTo('ModifiedUser', ['className' => 'SecurityUsers', 'foreignKey' => 'modified_user_id']);
@@ -23,5 +25,4 @@ class SecurityUsersTable extends Table {
 
 		return $validator;
 	}
-
 }
