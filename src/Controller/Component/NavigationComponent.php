@@ -193,7 +193,7 @@ class NavigationComponent extends Component {
 					'collapse' => true,
 					'items' => [
 						'Bank Accounts' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'BankAccounts']],
-						'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'fees']],
+						'Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Fees']],
 						'Student Fees' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentFees']]
 					]
 				],

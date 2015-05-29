@@ -4,11 +4,12 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class BankAccountsTable extends AppTable {
+class InstitutionSitePositionsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('institution_site_bank_accounts');
 		parent::initialize($config);
 		
+		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
+		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 

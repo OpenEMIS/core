@@ -12,30 +12,30 @@ class InstitutionsController extends AppController
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
-			'Attachments' => ['className' => 'Institution.Attachments'],
+			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments'],
 			'Additional' => ['className' => 'Institution.Additional'],
 
 			// 'InstitutionSiteCustomField',
 			// 'InstitutionSiteCustomFieldOption',
 
 
-			'Positions' => ['className' => 'Institution.Positions'],
-			'Programmes' => ['className' => 'Institution.Programmes'],
-			'Shifts' => ['className' => 'Institution.Shifts'],
-			'Sections' => ['className' => 'Institution.Sections'],
-			'Classes' => ['className' => 'Institution.Classes'],
-			'Infrastructures' => ['className' => 'Institution.Infrastructures'],
+			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
+			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
+			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
+			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
 
-			'StudentAbsences' => ['className' => 'Institution.StudentAbsences'],
-			'StaffAbsences' => ['className' => 'Institution.StaffAbsences'],
+			'StudentAbsences' => ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'StaffAbsences' => ['className' => 'Institution.InstitutionSiteStaffAbsences'],
 
 			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
 
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'StaffBehaviours' => ['className' => 'Institution.StaffBehaviours'],
 
-			'BankAccounts' => ['className' => 'Institution.BankAccounts'],
-			'Fees' => ['className' => 'Institution.Fees'],
+			'BankAccounts' => ['className' => 'Institution.InstitutionSiteBankAccounts'],
+			'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
 			'StudentFees' => ['className' => 'Institution.StudentFees'],
 
 			// // Surveys
