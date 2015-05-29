@@ -14,6 +14,7 @@ class NoticesController extends AppController {
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Notices', ['plugin' => false, 'controller' => 'Notices', 'action' => 'index']);
 
     	$header = __('Notices');
 		$this->set('contentHeader', $header);

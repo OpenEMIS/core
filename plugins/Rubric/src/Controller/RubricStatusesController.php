@@ -15,6 +15,8 @@ class RubricStatusesController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Rubric', ['plugin' => 'Rubric', 'controller' => 'RubricStatuses', 'action' => 'index']);
+        $this->Navigation->addCrumb('Statuses');
 
     	$header = __('Rubric');
     	$controller = $this;

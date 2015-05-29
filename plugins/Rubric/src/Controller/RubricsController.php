@@ -3,6 +3,7 @@ namespace Rubric\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class RubricsController extends AppController
 {
@@ -20,6 +21,8 @@ class RubricsController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Rubric', ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => $this->request->action]);
+		$this->Navigation->addCrumb(Inflector::humanize(Inflector::underscore($this->request->action)));
 
     	$header = __('Rubric');
     	$controller = $this;
