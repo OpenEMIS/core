@@ -1,21 +1,20 @@
 <?php
-namespace App\Model\Table;
+namespace User\Model\Table;
 
-use Cake\ORM\Table;
-use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class UserIdentitiesTable extends AppTable {
 	public function initialize(array $config) {
+
 		parent::initialize($config);
 
-		$this->belongsTo('IdentityTypes', ['className' => 'IdentityTypes']);
+		$this->belongsTo('IdentityTypes', ['className' => 'User.IdentityTypes']);
+
 	}
 
 	public function beforeAction() {
 		$this->fields['identity_type_id']['type'] = 'select';
-		$this->fields['identity_type_id']['options'] = $this->IdentityTypes->getList();
 	}
 
 	public function validationDefault(Validator $validator)
