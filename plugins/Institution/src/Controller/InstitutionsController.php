@@ -60,21 +60,6 @@ class InstitutionsController extends AppController
 
     	if ($action == 'index') {
 			$session->delete('InstitutionSites.id');
-			$this->InstitutionSites->fields['alternative_name']['visible']['index'] = false;
-			$this->InstitutionSites->fields['address']['visible']['index'] = false;
-			$this->InstitutionSites->fields['postal_code']['visible']['index'] = false;
-			$this->InstitutionSites->fields['telephone']['visible']['index'] = false;
-			$this->InstitutionSites->fields['fax']['visible']['index'] = false;
-			$this->InstitutionSites->fields['email']['visible']['index'] = false;
-			$this->InstitutionSites->fields['website']['visible']['index'] = false;
-			$this->InstitutionSites->fields['date_opened']['visible']['index'] = false;
-			$this->InstitutionSites->fields['year_opened']['visible']['index'] = false;
-			$this->InstitutionSites->fields['date_closed']['visible']['index'] = false;
-			$this->InstitutionSites->fields['year_closed']['visible']['index'] = false;
-			$this->InstitutionSites->fields['longitude']['visible']['index'] = false;
-			$this->InstitutionSites->fields['latitude']['visible']['index'] = false;
-			$this->InstitutionSites->fields['security_group_id']['visible']['index'] = false;
-			$this->InstitutionSites->fields['contact_person']['visible']['index'] = false;
 		}
 
 		if ($session->check('InstitutionSites.id') || $action == 'view') {
