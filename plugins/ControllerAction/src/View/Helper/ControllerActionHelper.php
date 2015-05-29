@@ -407,6 +407,10 @@ class ControllerActionHelper extends Helper {
 			case 'bool':
 				$value = $value==1 ? '<span class="green">&#10003;</span>' : '<span class="red">&#10008;</span>';
 				break;
+
+			case 'color':
+				$value = '<div style="background-color:'.$value.'">&nbsp;</div>';
+				break;
 			
 			case 'modified_user_id':
 			case 'created_user_id':
@@ -862,6 +866,17 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
 			echo $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+		}
+		return $value;
+	}
+
+	public function getColorElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$value = '<div style="background-color:'.$data->$attr['field'].'">&nbsp;</div>';
+		} else if ($action == 'edit') {
+			$options['type'] = 'color';
+			$options['onchange'] = 'clickColor(0, -1, -1, 5);';
 		}
 		return $value;
 	}
