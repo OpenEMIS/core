@@ -658,7 +658,7 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {
 				if (empty($attr['options'])) {
-					$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
+					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
 				} else {
 					if (isset($attr['default'])) {
 						$options['default'] = $attr['default'];
