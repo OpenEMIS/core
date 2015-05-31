@@ -30,12 +30,11 @@ class SurveyTemplatesTable extends AppTable {
 
 	public function getList($options=[]) {
 		$_options = [
-			'order' => [$this->alias().'.name']
+			'order' => [$this->alias().'.id']
 		];
 		$options = array_merge($options, $_options);
 
-		$result = $this->find('list', $options);
-		$list = $result->toArray();
+		$list = $this->find('list', $options)->toArray();
 
 		return $list;
 	}
