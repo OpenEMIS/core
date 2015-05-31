@@ -59,7 +59,7 @@ class InstitutionsController extends AppController
     	$action = $this->request->params['action'];
 
     	if ($action == 'index') {
-			$session->delete('InstitutionSites.id');
+			$session->delete('Institutions.id');
 		}
 
 		if ($session->check('Institutions.id') || $action == 'view') {

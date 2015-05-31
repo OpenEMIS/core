@@ -65,7 +65,7 @@ class InstitutionsTable extends AppTable {
 
 	public function beforeAction() {
 		if ($this->action == 'index') {
-			$this->Session->delete('InstitutionSites.id');
+			$this->Session->delete('Institutions.id');
 			$this->fields['alternative_name']['visible']['index'] = false;
 			$this->fields['address']['visible']['index'] = false;
 			$this->fields['postal_code']['visible']['index'] = false;

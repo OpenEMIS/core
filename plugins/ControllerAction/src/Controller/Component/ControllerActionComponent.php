@@ -435,16 +435,20 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$data = $model->newEntity();
 
-		if ($this->request->is(array('post', 'put'))) {//pr($this->request->data);die;
-			$data = $model->patchEntity($data, $this->request->data);
-			
-			if ($model->save($data)) {
-				$this->Message->alert('general.add.success');
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
-			} else {
-				$this->log($data->errors(), 'debug');
-				$this->Message->alert('general.add.failed');
+		if ($this->request->is(array('post', 'put'))) {
+			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+
+			if ($submit == 'save') {
+				$data = $model->patchEntity($data, $this->request->data);
+				
+				if ($model->save($data)) {
+					$this->Message->alert('general.add.success');
+					$action = $this->buttons['index']['url'];
+					return $this->controller->redirect($action);
+				} else {
+					$this->log($data->errors(), 'debug');
+					$this->Message->alert('general.add.failed');
+				}
 			}
 		}
 		$this->controller->set('data', $data);
