@@ -476,6 +476,7 @@ class ControllerActionHelper extends Helper {
 					$this->$function('edit', $data, $_fieldAttr, $options);
 				}
 				
+				/*
 				switch ($_type) {
 					case 'file_upload';
 						$attr = array('field' => $_field);
@@ -495,6 +496,8 @@ class ControllerActionHelper extends Helper {
 						break;
 					
 				}
+				*/
+				/* confirm to be removed
 				if (array_key_exists('dataModel', $_fieldAttr) && array_key_exists('dataField', $_fieldAttr)) {
 					$dataModel = $_fieldAttr['dataModel'];
 					$dataField = $_fieldAttr['dataField'];
@@ -502,9 +505,9 @@ class ControllerActionHelper extends Helper {
 				} else if (isset($_fieldAttr['value'])) {
 					$options['value'] = $_fieldAttr['value'];
 				}
-				if (array_key_exists('override', $_fieldAttr)) { 
-					echo '<div class="row">' . $value . '</div>';
-				} else if (!in_array($_type, array('image', 'date', 'time', 'binary', 'file_upload', 'element'))) {
+				*/
+				
+				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
 					echo $this->Form->input($fieldName, $options);
 				}
 			}
@@ -787,11 +790,13 @@ class ControllerActionHelper extends Helper {
 			$value = $this->_View->element($element, $elementData);
 		} else if ($action == 'edit') {
 			$element = $attr['element'];
-			$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
-			if (array_key_exists('class', $attr)) {
-				$class = $attr['class'];
-			};
-			$value = $this->_View->element($element, $elementData);
+			$attr['id'] = $attr['model'] . '_' . $attr['field'];
+			//$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
+			// if (array_key_exists('class', $attr)) {
+			// 	$class = $attr['class'];
+			// }
+			//pr($attr);
+			echo $this->_View->element($element, ['attr' => $attr]);
 		}
 		return $value;
 	}
