@@ -14,9 +14,11 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		/*
 		$validator->add('name', 'notBlank', [
 			'rule' => 'notBlank'
 		]);
+		*/
 		return $validator;
 	}
 
@@ -51,8 +53,24 @@ class InstitutionSiteProgrammesTable extends AppTable {
 			
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
 
-			//$this->ControllerAction->addField('education_grade', ['type' => 'element', 'order' => 5]);
-			//$this->fields['education_grade']['options'] = [];
-		}		
+			// start Education Grade field
+			$this->ControllerAction->addField('education_grade', ['type' => 'element', 'order' => 5]);
+			$this->fields['education_grade']['element'] = 'Institution.Programmes/grades';
+
+			$programmeId = key($programmeOptions);
+			if (isset($this->request->data[$this->alias()])) {
+				$programmeId = $this->request->data[$this->alias()]['education_programme_id'];
+			}
+			// TODO: need to check if programme id is empty
+			$EducationGrades = $this->EducationProgrammes->EducationGrades;
+			$gradeData = $EducationGrades->find()
+				->find('order')
+				->find('visible')
+				->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
+				->all();
+
+			$this->fields['education_grade']['data'] = $gradeData;
+			// end Education Grade field
+		}
 	}
 }
