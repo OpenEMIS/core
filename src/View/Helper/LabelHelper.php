@@ -127,6 +127,10 @@ class LabelHelper extends Helper {
 			'rubric_template_id' => 'Rubric Template'
 		)
 	);
+
+	public function endsWith($haystack, $needle) {
+		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	}
 	
 	public function get($code) {
 		$index = explode('.', $code);
@@ -152,6 +156,10 @@ class LabelHelper extends Helper {
 		
 		if($label === false) {
 			$label = __(Inflector::humanize($key));
+
+			if ($this->endsWith($label, ' Id')) {
+				$label = str_replace(' Id', '', $label);
+			}
 		}
 		return $label;
 	}
