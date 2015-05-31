@@ -8,19 +8,4 @@ class SurveyModulesTable extends AppTable {
 		parent::initialize($config);
 		$this->hasMany('SurveyTemplates', ['className' => 'Survey.SurveyTemplates']);
 	}
-
-	public function getList() {
-		$result = $this->find('list', [
-			'conditions' => [
-				$this->alias().'.visible' => 1
-			],
-			'order' => [
-				$this->alias().'.order',
-				$this->alias().'.name'
-			]
-		]);
-		$list = $result->toArray();
-
-		return $list;
-	}
 }
