@@ -728,6 +728,30 @@ class ControllerActionComponent extends Component {
 		}
 		return $fields;
 	}
+
+	public function addField($field, $attr) {
+		$model = $this->model;
+		$className = $model->alias();
+		if (!empty($this->plugin)) {
+			$className = $this->plugin . '.' . $className;
+		}
+
+		$_attr = [
+			'type' => 'string',
+			'order' => 0,
+			'visible' => true,
+			'field' => $field,
+			'model' => $model->alias(),
+			'className' => $className
+		];
+
+		$attr = array_merge($_attr, $attr);
+		
+		if ($attr['type'] == 'string') { // make field sortable by default if it is a string data-type
+			$attr['sort'] = true;
+		}
+		$this->model->fields[$field] = $attr;
+	}
 	
 	public function getFields($model) {
 		$defaultFields = array('modified_user_id', 'modified', 'created_user_id', 'created', 'order');
