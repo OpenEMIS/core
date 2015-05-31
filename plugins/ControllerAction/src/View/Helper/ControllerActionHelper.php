@@ -12,9 +12,9 @@ class ControllerActionHelper extends Helper {
 	public $includes = [
 		'datepicker' => [
 			'include' => false,
-			'css' => 'ControllerAction.../plugins/datepicker/css/datepicker',
-			'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker',
-			'element' => 'ControllerAction.datepicker'
+			'css' => 'ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min',
+			'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min',
+			'element' => 'ControllerAction.bootstrap-datepicker/datepicker'
 		],
 		'timepicker' => [
 			'include' => false,
@@ -243,7 +243,9 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function datepicker($field, $options=array()) {
+		/*
 		$dateFormat = 'dd-mm-yyyy';
+
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
 		$_options = array(
 			'id' => 'date',
@@ -260,7 +262,7 @@ class ControllerActionHelper extends Helper {
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
-		$defaults = $this->Form->inputDefaults();
+		
 		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
@@ -299,6 +301,7 @@ class ControllerActionHelper extends Helper {
 		} else {
 			$this->_View->set('datepicker', array($_datepickerOptions));
 		}
+		*/
 		return $html;
 	}
 	
@@ -795,17 +798,31 @@ class ControllerActionHelper extends Helper {
 
 	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+		$_options = [
+			'format' => 'dd-M-yyyy',
+			'todayBtn' => 'linked',
+			'orientation' => 'top auto'
+		];
+
+		if (!isset($attr['date_options'])) {
+			$attr['date_options'] = [];
+		}
+
 		if ($action == 'view') {
 			//$value = $this->Utility->formatDate($value, null, false);
 		} else if ($action == 'edit') {
 			$field = $attr['field'];
-			$attr = array('id' => $attr['model'] . '_' . $field);
-			$attr['data-date'] = $data->$field;
-			if (array_key_exists('attr', $attr)) {
-				$options = array_merge($attr, $attr['attr']);
+			$attr['id'] = $attr['model'] . '_' . $field;
+			$attr['date_options'] = array_merge($_options, $attr['date_options']);
+			if (!is_null($this->_View->get('datepicker'))) {
+				$datepickers = $this->_View->get('datepicker');
+				$datepickers[] = $attr;
+				$this->_View->set('datepicker', $datepickers);
+			} else {
+				$this->_View->set('datepicker', [$attr]);
 			}
-			//$includes['datepicker']['include'] = true;
-			//echo $this->datepicker($fieldName, $options);
+			echo $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+			$this->includes['datepicker']['include'] = true;
 		}
 		return $value;
 	}

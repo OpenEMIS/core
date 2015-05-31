@@ -1,8 +1,15 @@
 <?php
-$this->Html->scriptStart(array('inline' => false, 'block' => 'scriptBottom'));
+$this->Html->scriptStart(['block' => 'scriptBottom']);
 ?>
 $(function () {
 <?php
+$datepickerScript = "$('#%s').datepicker(%s);\n";
+if (isset($datepicker)) {
+	foreach ($datepicker as $key => $obj) {
+		echo sprintf($datepickerScript, $obj['id'], json_encode($obj['date_options']));
+	}
+}
+/*
 foreach ($datepicker as $key => $obj) {
 	$_setting = array();
 	$eventKeys = array('changeDate', 'show', 'hide', 'onRender');
@@ -39,7 +46,7 @@ foreach ($datepicker as $key => $obj) {
 		}
 		echo ";\n";
 	}
-}
+}*/
 ?>
 });
 <?php
