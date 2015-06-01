@@ -780,22 +780,11 @@ class ControllerActionHelper extends Helper {
 	public function getElementElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 
-		// seems like view and edit actions have the same logic?
+		$element = $attr['element'];
+		$attr['id'] = $attr['model'] . '_' . $attr['field'];
 		if ($action == 'view') {
-			$element = $attr['element'];
-			$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
-			if (array_key_exists('class', $attr)) {
-				$class = $attr['class'];
-			};
-			$value = $this->_View->element($element, $elementData);
+			$value = $this->_View->element($element, ['attr' => $attr]);
 		} else if ($action == 'edit') {
-			$element = $attr['element'];
-			$attr['id'] = $attr['model'] . '_' . $attr['field'];
-			//$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
-			// if (array_key_exists('class', $attr)) {
-			// 	$class = $attr['class'];
-			// }
-			//pr($attr);
 			echo $this->_View->element($element, ['attr' => $attr]);
 		}
 		return $value;

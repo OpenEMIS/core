@@ -14,11 +14,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		/*
-		$validator->add('name', 'notBlank', [
-			'rule' => 'notBlank'
-		]);
-		*/
 		return $validator;
 	}
 
@@ -42,8 +37,8 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		if ($this->action == 'add') {
 			// TODO: write validation logic to check for loaded $levelOptions
 			$levelId = key($levelOptions);
-			if (isset($this->request->data[$this->alias()])) {
-				$levelId = $this->request->data[$this->alias()]['education_level'];
+			if ($this->request->data($this->aliasField('education_level'))) {
+				$levelId = $this->request->data($this->aliasField('education_level'));
 			}
 			$programmeOptions = $this->EducationProgrammes
 				->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -52,14 +47,15 @@ class InstitutionSiteProgrammesTable extends AppTable {
 				->toArray();
 			
 			$this->fields['education_programme_id']['options'] = $programmeOptions;
+			$this->fields['education_programme_id']['attr'] = ['onchange' => "$('#reload').click()"];
 
 			// start Education Grade field
 			$this->ControllerAction->addField('education_grade', ['type' => 'element', 'order' => 5]);
 			$this->fields['education_grade']['element'] = 'Institution.Programmes/grades';
 
 			$programmeId = key($programmeOptions);
-			if (isset($this->request->data[$this->alias()])) {
-				$programmeId = $this->request->data[$this->alias()]['education_programme_id'];
+			if ($this->request->data($this->aliasField('education_programme_id'))) {
+				$programmeId = $this->request->data($this->aliasField('education_programme_id'));
 			}
 			// TODO: need to check if programme id is empty
 			$EducationGrades = $this->EducationProgrammes->EducationGrades;
