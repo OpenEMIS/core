@@ -5,32 +5,45 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class RubricSectionsTable extends AppTable {
+	private $selectedTemplate = null;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
-		$this->hasMany('RubricCriterias', ['className' => 'Rubric.RubricCriterias']);
+		$this->hasMany('RubricCriterias', ['className' => 'Rubric.RubricCriterias', 'dependent' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator
-		->requirePresence('name')
-		->notEmpty('name', 'Please enter a name.')
-    	->add('name', [
-    		'unique' => [
-		        'rule' => ['validateUnique', ['scope' => 'rubric_template_id']],
-		        'provider' => 'table',
-		        'message' => 'This name is already exists in the system'
-		    ]
-	    ])
-	    ->requirePresence('rubric_template_id')
-		->notEmpty('rubric_template_id', 'Please select a template.');
+			->requirePresence('name')
+			->notEmpty('name', 'Please enter a name.')
+	    	->add('name', [
+	    		'unique' => [
+			        'rule' => ['validateUnique', ['scope' => 'rubric_template_id']],
+			        'provider' => 'table',
+			        'message' => 'This name is already exists in the system'
+			    ]
+		    ])
+		    ->requirePresence('rubric_template_id')
+			->notEmpty('rubric_template_id', 'Please select a template.');
 
 		return $validator;
 	}
 
-	public function beforeAction() {
-		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
+	public function getList($options=[]) {
+		$_options = [
+			'order' => [
+				$this->aliasField('order'),
+				$this->aliasField('id')
+			]
+		];
+		$options = array_merge($options, $_options);
 
+		$list = $this->find('list', $options)->toArray();
+		return $list;
+	}
+
+	public function beforeAction() {
 		if($this->action == 'index') {
 			$query = $this->request->query;
 
@@ -49,10 +62,11 @@ class RubricSectionsTable extends AppTable {
             $this->ControllerAction->beforePaginate = function($model, $options) {
                 if (!is_null($this->selectedTemplate)) {
                     $options['conditions'][] = [
-                        $model->alias().'.rubric_template_id' => $this->selectedTemplate
+                    	$model->aliasField('rubric_template_id') => $this->selectedTemplate
                     ];
                     $options['order'] = [
-                        $model->alias().'.name'
+                    	$model->aliasField('order'),
+                    	$model->aliasField('id')
                     ];
                 }
 
@@ -65,8 +79,22 @@ class RubricSectionsTable extends AppTable {
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$templateOptions = $this->RubricTemplates->getList();
 
+			if ($this->request->is(array('post', 'put'))) {
+			} else {
+				if ($this->action == 'add') {
+					$query = $this->request->query;
+					$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
+					
+					$this->request->data[$this->alias()]['rubric_template_id'] = $selectedTemplate;
+					$data = $this->newEntity($this->request->data, ['validate' => false]);
+					$this->controller->set('data', $data);
+				}
+			}
+
 			$this->fields['rubric_template_id']['type'] = 'select';
 			$this->fields['rubric_template_id']['options'] = $templateOptions;
+
+			$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 		}
 	}
 }
