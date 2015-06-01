@@ -21,6 +21,7 @@ namespace ControllerAction\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -38,6 +39,7 @@ class ControllerActionComponent extends Component {
 	public $autoRender = true;
 	public $autoProcess = true;
 	public $removeStraightAway = true;
+	public $ignoreFields = ['modified', 'created'];
 	public $templatePath = '/ControllerAction/';
 	public $indexActions = [
 		'view' => array('class' => 'fa fa-eye'),
@@ -55,6 +57,9 @@ class ControllerActionComponent extends Component {
 	public function initialize(array $config) {
 		if (array_key_exists('templates', $config)) {
 			$this->templatePath = $config['templates'];
+		}
+		if (array_key_exists('ignoreFields', $config)) {
+			$this->ignoreFields = array_merge($this->ignoreFields, $config['ignoreFields']);
 		}
 		$controller = $this->_registry->getController();
 		$this->paramsPass = $this->request->params['pass'];
@@ -102,6 +107,7 @@ class ControllerActionComponent extends Component {
 			if (method_exists($this->model, 'beforeAction')) {
 				$this->model->beforeAction();
 			}
+			$this->buildDefaultValidation();
 		}
 		$this->initButtons();
 	}
@@ -163,6 +169,46 @@ class ControllerActionComponent extends Component {
 			$value = $this->controller->viewVars[$key];
 		}
 		return $value;
+	}
+
+	public function buildDefaultValidation() {
+		$action = $this->currentAction;
+		if ($action != 'index' && $action != 'view') {
+			$validator = $this->model->validator();
+			foreach ($this->model->fields as $key => $attr) {
+				if ($validator->hasField($key)) {
+					$set = $validator->field($key);
+
+					if ($set->isEmptyAllowed()) {
+						$set->add('notEmpty', ['rule' => 'notEmpty']);
+					}
+					if (!$set->isPresenceRequired()) {
+						if ($this->isForeignKey($key)) {
+							$validator->requirePresence($key);
+						}
+					}
+				} else { // field not presence in validator
+					if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
+						$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
+						if ($this->isForeignKey($key)) {
+							$validator->requirePresence($key);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public function isForeignKey($field) {
+		$model = $this->model;
+		foreach ($model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private function initButtons() {
@@ -401,6 +447,7 @@ class ControllerActionComponent extends Component {
 	public function view($id=0) {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
 
 		$contain = [];
 		foreach ($model->associations() as $assoc) {
@@ -409,15 +456,13 @@ class ControllerActionComponent extends Component {
 			}
 		}
 
-		$idKey = $model->alias().'.'.$primaryKey;
-
 		if (empty($id)) {
 			if ($this->Session->check($idKey)) {
 				$id = $this->Session->read($idKey);
 			}
 		}
 		
-		if ($model->exists([$model->alias().'.'.$model->primaryKey() => $id])) {
+		if ($model->exists([$idKey => $id])) {
 			$data = $model->get($id, ['contain' => $contain]);
 
 			$this->Session->write($idKey, $id);
@@ -456,8 +501,10 @@ class ControllerActionComponent extends Component {
 
 	public function edit($id=0) {
 		$model = $this->model;
+		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
 
-		if ($model->exists([$model->alias().'.'.$model->primaryKey() => $id])) {
+		if ($model->exists([$idKey => $id])) {
 			$data = $model->get($id);
 			
 			if ($this->request->is(array('post', 'put'))) {
@@ -469,7 +516,7 @@ class ControllerActionComponent extends Component {
 					return $this->controller->redirect($action);
 				} else {
 					$this->request->data = array_merge($data, $this->request->data);
-					$this->log($model->errors(), 'debug');
+					$this->log($data->errors(), 'debug');
 					$this->Message->alert('general.edit.failed');
 				}
 			} else {
@@ -738,6 +785,8 @@ class ControllerActionComponent extends Component {
 
 		$_attr = [
 			'type' => 'string',
+			'null' => true,
+			'autoIncrement' => false,
 			'order' => 0,
 			'visible' => true,
 			'field' => $field,
@@ -754,7 +803,7 @@ class ControllerActionComponent extends Component {
 	}
 	
 	public function getFields($model) {
-		$defaultFields = array('modified_user_id', 'modified', 'created_user_id', 'created', 'order');
+		$ignoreFields = $this->ignoreFields;
 		$className = $model->alias();
 		if (!empty($this->plugin)) {
 			$className = $this->plugin . '.' . $className;
@@ -783,16 +832,8 @@ class ControllerActionComponent extends Component {
 		}
 		
 		$fields[$model->primaryKey()]['type'] = 'hidden';
-		foreach ($defaultFields as $field) {
+		foreach ($ignoreFields as $field) {
 			if (array_key_exists($field, $fields)) {
-				if ($field == 'modified_user_id') {
-					$fields[$field]['type'] = $field;
-					$fields[$field]['dataModel'] = 'ModifiedUser';
-				}
-				if ($field == 'created_user_id') {
-					$fields[$field]['type'] = $field;
-					$fields[$field]['dataModel'] = 'CreatedUser';
-				}
 				$fields[$field]['visible']['index'] = false;
 				$fields[$field]['visible']['view'] = true;
 				$fields[$field]['visible']['edit'] = false;

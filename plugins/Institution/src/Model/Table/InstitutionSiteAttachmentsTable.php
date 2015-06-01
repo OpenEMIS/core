@@ -14,9 +14,6 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator->add('name', 'notBlank', [
-			'rule' => 'notBlank'
-		]);
 		return $validator;
 	}
 

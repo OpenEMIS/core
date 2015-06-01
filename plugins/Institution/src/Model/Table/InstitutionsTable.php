@@ -54,10 +54,6 @@ class InstitutionsTable extends AppTable {
 
 	}
 
-    public function test() {
-    	die('chak '.$this->alias());
-    }
-
 	public function validationDefault(Validator $validator) {
 		
 		return $validator;
