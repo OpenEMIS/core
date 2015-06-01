@@ -121,10 +121,12 @@ class LabelHelper extends Helper {
 			'rubric_template_id' => 'Rubric Template'
 		),
 		'RubricCriterias' => array(
-			'rubric_section_id' => 'Rubric Section'
+			'rubric_section_id' => 'Rubric Section',
+			'criterias' => 'Criterias'
 		),
 		'RubricTemplateOptions' => array(
-			'rubric_template_id' => 'Rubric Template'
+			'rubric_template_id' => 'Rubric Template',
+			'weighting' => 'Weighting'
 		)
 	);
 
