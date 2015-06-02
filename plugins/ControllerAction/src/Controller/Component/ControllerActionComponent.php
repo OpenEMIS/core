@@ -116,11 +116,15 @@ class ControllerActionComponent extends Component {
 					$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 					$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
 
-					if ($associatedObject->hasBehavior('FieldOption')) {
-						$this->model->fields[$key]['options'] = $associatedObject->getOptions();
-					} else if ($associatedObject->hasBehavior('ControllerAction')) {
-						$this->model->fields[$key]['options'] = $associatedObject->getList();
+					$query = $associatedObject->find('list');
+
+					$event = new Event('ControllerAction.onPopulateSelectOptions', $this, compact('query'));
+					$event = $associatedObject->eventManager()->dispatch($event);
+					if (!empty($event->result)) {
+						$query = $event->result;
 					}
+
+					$this->model->fields[$key]['options'] = $query->toArray();
 				}
 			}
 
