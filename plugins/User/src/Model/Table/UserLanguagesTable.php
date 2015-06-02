@@ -12,9 +12,8 @@ class UserLanguagesTable extends AppTable {
 		$this->belongsTo('Languages', ['className' => 'Languages']);
 	}
 
-	public function beforeAction() {
+	public function beforeAction($event) {
 		$this->fields['language_id']['type'] = 'select';
-		$this->fields['language_id']['options'] = $this->Languages->getList();
 		$gradeOptions = $this->getGradeOptions();
 		$this->fields['listening']['type'] = 'select';
 		$this->fields['listening']['options'] = $gradeOptions;
@@ -24,6 +23,16 @@ class UserLanguagesTable extends AppTable {
 		$this->fields['reading']['options'] = $gradeOptions;
 		$this->fields['writing']['type'] = 'select';
 		$this->fields['writing']['options'] = $gradeOptions;
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		// $events['ControllerAction.afterAction'] = 'afterAction';
+		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
+		// $events['ControllerAction.beforeView'] = 'beforeView';
+		return $events;
 	}
 
 	public function getGradeOptions() {

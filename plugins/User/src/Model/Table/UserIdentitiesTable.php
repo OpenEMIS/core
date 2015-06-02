@@ -6,15 +6,24 @@ use Cake\Validation\Validator;
 
 class UserIdentitiesTable extends AppTable {
 	public function initialize(array $config) {
-
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'User.IdentityTypes']);
 	}
 
-	public function beforeAction() {
+	public function beforeAction($event) {
 		$this->fields['identity_type_id']['type'] = 'select';
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		// $events['ControllerAction.afterAction'] = 'afterAction';
+		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
+		// $events['ControllerAction.beforeView'] = 'beforeView';
+		return $events;
 	}
 
 	public function validationDefault(Validator $validator)

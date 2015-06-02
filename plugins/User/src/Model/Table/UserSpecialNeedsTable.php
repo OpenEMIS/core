@@ -12,9 +12,18 @@ class UserSpecialNeedsTable extends AppTable {
 		$this->belongsTo('SpecialNeedTypes', ['className' => 'User.SpecialNeedTypes']);
 	}
 
-	public function beforeAction() {
+	public function beforeAction($event) {
 		$this->fields['special_need_type_id']['type'] = 'select';
-		$this->fields['special_need_type_id']['options'] = $this->SpecialNeedTypes->getList();
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		// $events['ControllerAction.afterAction'] = 'afterAction';
+		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
+		// $events['ControllerAction.beforeView'] = 'beforeView';
+		return $events;
 	}
 
 	public function validationDefault(Validator $validator) {
