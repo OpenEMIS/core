@@ -35,7 +35,6 @@ class RubricCriteriasTable extends AppTable {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.beforeAction'] = 'beforeAction';
 		$events['ControllerAction.afterAction'] = 'afterAction';
-		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
 		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
 		$events['ControllerAction.beforeView'] = 'beforeView';
 		return $events;
@@ -130,45 +129,7 @@ class RubricCriteriasTable extends AppTable {
 		*/
 	}
 
-	public function beforePaginate($event) {
-		$query = $this->request->query;
-
-		$templates = $this->RubricSections->RubricTemplates->getList();
-        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templates);
-
-        $templateOptions = [];
-        foreach ($templates as $key => $template) {
-            $templateOptions['template=' . $key] = $template;
-        }
-
-        $sections = $this->RubricSections->find('list')
-        	->find('order')
-        	->where([$this->RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
-        	->toArray();
-        
-        $selectedSection = isset($query['section']) ? $query['section'] : key($sections);
-
-        $sectionOptions = [];
-        foreach ($sections as $key => $section) {
-            $sectionOptions['section=' . $key] = $section;
-        }
-
-        $options['conditions'][] = [
-        	$this->aliasField('rubric_section_id') => $selectedSection
-        ];
-        $options['order'] = [
-        	$this->aliasField('order')
-        ];
-
-        $this->controller->set('selectedTemplate', $selectedTemplate);
-        $this->controller->set('templateOptions', $templateOptions);
-        $this->controller->set('selectedSection', $selectedSection);
-        $this->controller->set('sectionOptions', $sectionOptions);
-	    return $options;
-	}
-
-	public function beforeAdd($event) {
-		$entity = $event->data['entity'];
+	public function beforeAdd($event, $entity) {
 		$query = $this->request->query;
 
 		$templateOptions = $this->RubricSections->RubricTemplates->getList();
@@ -194,11 +155,9 @@ class RubricCriteriasTable extends AppTable {
     	return $entity;
 	}
 
-	public function beforeView($event) {
-		$query = $event->data['query'];
-		$contain = $event->data['contain'];
+	public function beforeView($event, $query, $contain) {
 		//$contain[] = 'RubricCriteriaOptions';
-		//pr($contain);
+
 		return compact('query', 'contain');
 	}
 }
