@@ -31,94 +31,41 @@ class RubricCriteriasTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction() {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.afterAction'] = 'afterAction';
+		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
+		$events['ControllerAction.beforeView'] = 'beforeView';
+		return $events;
+	}
+
+	public function beforeAction($event) {
 		$criteriaTypeOptions = [];
 		foreach ($this->criteriaType as $key => $criteriaType) {
 			$criteriaTypeOptions[$criteriaType['id']] = __($criteriaType['name']);
 		}
 		$selectedCriteriaType = key($criteriaTypeOptions);
 
-		if($this->action == 'index') {
-			$query = $this->request->query;
-
+		if ($this->action == 'index') {
 			$toolbarElements = [
                 ['name' => 'Rubric.controls', 'data' => [], 'options' => []]
             ];
 
-			$templates = $this->RubricSections->RubricTemplates->getList();
-            $this->selectedTemplate = isset($query['template']) ? $query['template'] : key($templates);
-
-            $templateOptions = [];
-            foreach ($templates as $key => $template) {
-                $templateOptions['template=' . $key] = $template;
-            }
-
- 			$sectionListOptions = [
-                'conditions' => [
-                	$this->RubricSections->aliasField('rubric_template_id') => $this->selectedTemplate
-                ]
-            ];
-            $sections = $this->RubricSections->getList($sectionListOptions);
-            $this->selectedSection = isset($query['section']) ? $query['section'] : key($sections);
-
-            $sectionOptions = [];
-            foreach ($sections as $key => $section) {
-                $sectionOptions['section=' . $key] = $section;
-            }
-
-			$this->ControllerAction->beforePaginate = function($model, $options) {
-                if (!is_null($this->selectedSection)) {
-                    $options['conditions'][] = [
-                    	$model->aliasField('rubric_section_id') => $this->selectedSection
-                    ];
-                    $options['order'] = [
-                    	$model->aliasField('order'),
-                    	$model->aliasField('id')
-                    ];
-                }
-
-                return $options;
-            };
-
-            $this->controller->set('toolbarElements', $toolbarElements);
-            $this->controller->set('selectedTemplate', $this->selectedTemplate);
-            $this->controller->set('templateOptions', $templateOptions);
-            $this->controller->set('selectedSection', $this->selectedSection);
-            $this->controller->set('sectionOptions', $sectionOptions);
+			$this->controller->set('toolbarElements', $toolbarElements);
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$query = $this->request->query;
 
 			$templateOptions = $this->RubricSections->RubricTemplates->getList();
 			$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
 
- 			$sectionListOptions = [
-                'conditions' => [
-                	$this->RubricSections->aliasField('rubric_template_id') => $selectedTemplate
-                ]
-            ];
-            $sectionOptions = $this->RubricSections->getList($sectionListOptions);
-
-			if ($this->request->is(array('post', 'put'))) {
-				$data = $this->request->data;
-
-				if (isset($data['submit']) && $data['submit'] == 'reload') {
-					$this->ControllerAction->autoProcess = false;
-					$data = $this->newEntity($this->request->data, ['validate' => false]);
-					$this->controller->set('data', $data);
-				} else {
-					$this->ControllerAction->autoProcess = true;
-				}
-			} else {
-				if ($this->action == 'add') {
-					$query = $this->request->query;
-					$selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
-
-					$this->request->data[$this->alias()]['rubric_section_id'] = $selectedSection;
-					$this->request->data[$this->alias()]['type'] = $selectedCriteriaType;
-					$data = $this->newEntity($this->request->data, ['validate' => false]);
-					$this->controller->set('data', $data);
-				}
-			}
+            $sectionOptions = $this->RubricSections->find('list')
+	        	->find('order')
+	        	->where([$this->RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
+	        	->toArray();
+        
+        	$selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
 
 			$this->fields['rubric_section_id']['type'] = 'select';
 			$this->fields['rubric_section_id']['options'] = $sectionOptions;
@@ -140,6 +87,7 @@ class RubricCriteriasTable extends AppTable {
 	}
 
 	public function afterAction() {
+		/*
 		if ($this->action == 'view') {
 		} else if ($this->action == 'add' || $this->action == 'edit') {
 			$data = $this->request->data;
@@ -179,5 +127,78 @@ class RubricCriteriasTable extends AppTable {
 				}
 			}
 		}
+		*/
+	}
+
+	public function beforePaginate($event) {
+		$query = $this->request->query;
+
+		$templates = $this->RubricSections->RubricTemplates->getList();
+        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templates);
+
+        $templateOptions = [];
+        foreach ($templates as $key => $template) {
+            $templateOptions['template=' . $key] = $template;
+        }
+
+        $sections = $this->RubricSections->find('list')
+        	->find('order')
+        	->where([$this->RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
+        	->toArray();
+        
+        $selectedSection = isset($query['section']) ? $query['section'] : key($sections);
+
+        $sectionOptions = [];
+        foreach ($sections as $key => $section) {
+            $sectionOptions['section=' . $key] = $section;
+        }
+
+        $options['conditions'][] = [
+        	$this->aliasField('rubric_section_id') => $selectedSection
+        ];
+        $options['order'] = [
+        	$this->aliasField('order')
+        ];
+
+        $this->controller->set('selectedTemplate', $selectedTemplate);
+        $this->controller->set('templateOptions', $templateOptions);
+        $this->controller->set('selectedSection', $selectedSection);
+        $this->controller->set('sectionOptions', $sectionOptions);
+	    return $options;
+	}
+
+	public function beforeAdd($event) {
+		$entity = $event->data['entity'];
+		$query = $this->request->query;
+
+		$templateOptions = $this->RubricSections->RubricTemplates->getList();
+		$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
+
+        $sectionOptions = $this->RubricSections->find('list')
+        	->find('order')
+        	->where([$this->RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
+        	->toArray();
+    
+    	$selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
+
+    	// type
+    	$criteriaTypeOptions = [];
+		foreach ($this->criteriaType as $key => $criteriaType) {
+			$criteriaTypeOptions[$criteriaType['id']] = __($criteriaType['name']);
+		}
+		$selectedCriteriaType = key($criteriaTypeOptions);
+
+		$entity->rubric_section_id = $selectedSection;
+		$entity->type = $selectedCriteriaType;
+
+    	return $entity;
+	}
+
+	public function beforeView($event) {
+		$query = $event->data['query'];
+		$contain = $event->data['contain'];
+		//$contain[] = 'RubricCriteriaOptions';
+		//pr($contain);
+		return compact('query', 'contain');
 	}
 }
