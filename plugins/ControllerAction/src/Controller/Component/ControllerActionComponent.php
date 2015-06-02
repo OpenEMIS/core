@@ -465,7 +465,7 @@ class ControllerActionComponent extends Component {
 			$query = $model->findById($id);
 
 			$event = new Event('ControllerAction.beforeView', $this, ['query' => $query, 'contain' => $contain]);
-			$event = $this->controller->eventManager()->dispatch($event);
+			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$query = $event->result['query'];
 				$contain = $event->result['contain'];
@@ -474,7 +474,7 @@ class ControllerActionComponent extends Component {
 			$data = $query->contain($contain)->first();
 
 			$event = new Event('ControllerAction.afterView', $this, ['entity' => $data]);
-			$event = $this->controller->eventManager()->dispatch($event);
+			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$data = $event->result;
 			}
@@ -509,7 +509,7 @@ class ControllerActionComponent extends Component {
 				}
 			} else if ($submit == 'reload') {
 				$event = new Event('ControllerAction.addReload', $this, ['entity' => $data]);
-				$event = $this->controller->eventManager()->dispatch($event);
+				$event = $this->model->eventManager()->dispatch($event);
 			}
 		}
 		$this->controller->set('data', $data);
@@ -544,7 +544,7 @@ class ControllerActionComponent extends Component {
 					}
 				} else if ($submit == 'reload') {
 					$event = new Event('ControllerAction.editReload', $this, ['entity' => $data]);
-					$event = $this->controller->eventManager()->dispatch($event);
+					$event = $this->model->eventManager()->dispatch($event);
 				}
 			}
 			$this->controller->set('data', $data);
