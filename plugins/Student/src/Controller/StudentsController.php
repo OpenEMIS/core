@@ -18,7 +18,7 @@ class StudentsController extends AppController {
 			'Comments' => ['className' => 'User.UserComments'],
 			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
 			'Awards' => ['className' => 'User.UserAwards'],
-			'Attachments' => ['className' => 'Student.StudentAttachments'],
+			'Attachments' => ['className' => 'User.UserAttachments'],
 			'Programmes' => ['className' => 'Student.Programmes'],
 			'Sections' => ['className' => 'Student.StudentSections'],
 			'Absences' => ['className' => 'Student.Absences'],
@@ -38,7 +38,8 @@ class StudentsController extends AppController {
 			'Languages',
 			'Comments',
 			'SpecialNeeds',
-			'Awards'
+			'Awards',
+			'Attachments'
 		];
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);

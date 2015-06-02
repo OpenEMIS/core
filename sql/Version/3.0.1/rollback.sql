@@ -201,3 +201,5 @@ DROP TABLE staff_training_self_studies;
 RENAME TABLE z1407_staff_training_self_studies TO staff_training_self_studies;
 DROP TABLE training_session_trainees;
 RENAME TABLE z1407_training_session_trainees TO training_session_trainees;
+
+DROP TABLE user_attachments;
