@@ -48,51 +48,50 @@ class InstitutionsController extends AppController  {
 		];
 		$this->loadComponent('Paginator');
 		
-    }
+	}
 
-    public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['ControllerAction.onInitialize'] = 'onInitialize';
-    	$events['ControllerAction.beforePaginate'] = 'beforePaginate';
-    	return $events;
-    }
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.onInitialize'] = 'onInitialize';
+		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		return $events;
+	}
 
-    public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-    	$session = $this->request->session();
-    	$action = $this->request->params['action'];
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+		$session = $this->request->session();
+		$action = $this->request->params['action'];
 
-    	if ($action == 'index') {
+		if ($action == 'index') {
 			$session->delete('Institutions.id');
 		}
 
 		if ($session->check('Institutions.id') || $action == 'view') {
-    		$id = 0;
-    		if ($session->check('Institutions.id')) {
-    			$id = $session->read('Institutions.id');
-    		} else if (isset($this->request->pass[0])) {
-    			$id = $this->request->pass[0];
-    		}
-    		if (!empty($id)) {
-    			$obj = $this->Institutions->get($id);
-	    		$name = $obj->name;
-	    		$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
-    		} else {
-    			return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-    		}
-    	}
+			$id = 0;
+			if ($session->check('Institutions.id')) {
+				$id = $session->read('Institutions.id');
+			} else if (isset($this->request->pass[0])) {
+				$id = $this->request->pass[0];
+			}
+			if (!empty($id)) {
+				$obj = $this->Institutions->get($id);
+				$name = $obj->name;
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]);
+			} else {
+				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+			}
+		}
 
-    	$header = __('Institution');
+		$header = __('Institution');
 		$this->set('contentHeader', $header);
-    }
+	}
 
-    public function onInitialize($event) {
-    	$session = $this->request->session();
-    	$header = __('Institution');
-    	$model = $event->data['model'];
+	public function onInitialize($event, $model) {
+		$session = $this->request->session();
+		$header = __('Institution');
 
-    	$header .= ' - ' . $model->getHeader($model->alias);
+		$header .= ' - ' . $model->getHeader($model->alias);
 		$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
 
 		if (array_key_exists('institution_site_id', $model->fields)) {
@@ -104,14 +103,12 @@ class InstitutionsController extends AppController  {
 		}
 		
 		$this->set('contentHeader', $header);
-    }
+	}
 
-    public function beforePaginate($event) {
-    	$model = $event->data['model'];
-    	$options = $event->data['options'];
-    	$session = $this->request->session();
+	public function beforePaginate($event, $model, $options) {
+		$session = $this->request->session();
 
-    	if (array_key_exists('institution_site_id', $model->fields)) {
+		if (array_key_exists('institution_site_id', $model->fields)) {
 			if (!$session->check('Institutions.id')) {
 				$this->Message->alert('general.notExists');
 			}
@@ -119,5 +116,5 @@ class InstitutionsController extends AppController  {
 		}
 		
 		return $options;
-    }
+	}
 }
