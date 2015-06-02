@@ -21,6 +21,7 @@ namespace ControllerAction\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -38,6 +39,7 @@ class ControllerActionComponent extends Component {
 	public $autoRender = true;
 	public $autoProcess = true;
 	public $removeStraightAway = true;
+	public $ignoreFields = ['modified', 'created'];
 	public $templatePath = '/ControllerAction/';
 	public $indexActions = [
 		'view' => array('class' => 'fa fa-eye'),
@@ -46,8 +48,6 @@ class ControllerActionComponent extends Component {
 	];
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
-	public $onInitialize = null;
-	public $beforePaginate = null;
 
 	public $components = ['Message', 'Paginator'];
 
@@ -55,6 +55,9 @@ class ControllerActionComponent extends Component {
 	public function initialize(array $config) {
 		if (array_key_exists('templates', $config)) {
 			$this->templatePath = $config['templates'];
+		}
+		if (array_key_exists('ignoreFields', $config)) {
+			$this->ignoreFields = array_merge($this->ignoreFields, $config['ignoreFields']);
 		}
 		$controller = $this->_registry->getController();
 		$this->paramsPass = $this->request->params['pass'];
@@ -89,19 +92,17 @@ class ControllerActionComponent extends Component {
 						$this->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
 
-						if (is_callable($this->onInitialize)) {
-							$initialize = $this->onInitialize;
-							$initialize($this->model);
-						}
+						$event = new Event('ControllerAction.onInitialize', $this, ['model' => $this->model]);
+						$this->controller->eventManager()->dispatch($event);
 						
 						$this->triggerFrom = 'Model';
 						break;
 					}
 				}
 			}
-			if (method_exists($this->model, 'beforeAction')) {
-				$this->model->beforeAction();
-			}
+			$event = new Event('ControllerAction.beforeAction', $this);
+			$this->model->eventManager()->dispatch($event);
+			$this->buildDefaultValidation();
 		}
 		$this->initButtons();
 	}
@@ -125,9 +126,8 @@ class ControllerActionComponent extends Component {
 				}
 			}
 
-			if (method_exists($this->model, 'afterAction')) {
-				$this->model->afterAction();
-			}
+			$event = new Event('ControllerAction.afterAction', $this);
+			$this->model->eventManager()->dispatch($event);
 			$this->request->params['action'] = $action;
 
 			uasort($this->model->fields, [$this, 'sortFields']);
@@ -163,6 +163,46 @@ class ControllerActionComponent extends Component {
 			$value = $this->controller->viewVars[$key];
 		}
 		return $value;
+	}
+
+	public function buildDefaultValidation() {
+		$action = $this->currentAction;
+		if ($action != 'index' && $action != 'view') {
+			$validator = $this->model->validator();
+			foreach ($this->model->fields as $key => $attr) {
+				if ($validator->hasField($key)) {
+					$set = $validator->field($key);
+
+					if ($set->isEmptyAllowed()) {
+						$set->add('notEmpty', ['rule' => 'notEmpty']);
+					}
+					if (!$set->isPresenceRequired()) {
+						if ($this->isForeignKey($key)) {
+							$validator->requirePresence($key);
+						}
+					}
+				} else { // field not presence in validator
+					if ($attr['null'] === false && $key !== 'id' && !in_array($key, $this->ignoreFields)) {
+						$validator->add($key, 'notBlank', ['rule' => 'notBlank']);
+						if ($this->isForeignKey($key)) {
+							$validator->requirePresence($key);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public function isForeignKey($field) {
+		$model = $this->model;
+		foreach ($model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private function initButtons() {
@@ -335,10 +375,9 @@ class ControllerActionComponent extends Component {
 		$controller->set('pageOptions', $this->pageOptions);
 
 		try {
-			if (is_callable($this->beforePaginate)) {
-				$beforePaginate = $this->beforePaginate;
-				$paginateOptions = $beforePaginate($model, $paginateOptions);
-			}
+			$event = new Event('ControllerAction.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+			$event = $this->controller->eventManager()->dispatch($event);
+			$paginateOptions = $event->result;
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 		} catch (NotFoundException $e) {
@@ -401,6 +440,7 @@ class ControllerActionComponent extends Component {
 	public function view($id=0) {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
 
 		$contain = [];
 		foreach ($model->associations() as $assoc) {
@@ -409,15 +449,13 @@ class ControllerActionComponent extends Component {
 			}
 		}
 
-		$idKey = $model->alias().'.'.$primaryKey;
-
 		if (empty($id)) {
 			if ($this->Session->check($idKey)) {
 				$id = $this->Session->read($idKey);
 			}
 		}
 		
-		if ($model->exists([$model->alias().'.'.$model->primaryKey() => $id])) {
+		if ($model->exists([$idKey => $id])) {
 			$data = $model->get($id, ['contain' => $contain]);
 
 			$this->Session->write($idKey, $id);
@@ -435,16 +473,19 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$data = $model->newEntity();
 
-		if ($this->request->is(array('post', 'put'))) {//pr($this->request->data);die;
+		if ($this->request->is(['post', 'put'])) {
+			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
 			$data = $model->patchEntity($data, $this->request->data);
-			
-			if ($model->save($data)) {
-				$this->Message->alert('general.add.success');
-				$action = $this->buttons['index']['url'];
-				return $this->controller->redirect($action);
-			} else {
-				$this->log($data->errors(), 'debug');
-				$this->Message->alert('general.add.failed');
+
+			if ($submit == 'save') {
+				if ($model->save($data)) {
+					$this->Message->alert('general.add.success');
+					$action = $this->buttons['index']['url'];
+					return $this->controller->redirect($action);
+				} else {
+					$this->log($data->errors(), 'debug');
+					$this->Message->alert('general.add.failed');
+				}
 			}
 		}
 		$this->controller->set('data', $data);
@@ -452,25 +493,30 @@ class ControllerActionComponent extends Component {
 
 	public function edit($id=0) {
 		$model = $this->model;
+		$primaryKey = $model->primaryKey();
+		$idKey = $model->aliasField($primaryKey);
+		$options = [];
 
-		if ($model->exists([$model->alias().'.'.$model->primaryKey() => $id])) {
-			$data = $model->get($id);
+		if ($model->exists([$idKey => $id])) {
+
+			$data = $model->get($id, $options);
 			
-			if ($this->request->is(array('post', 'put'))) {
+			if ($this->request->is(['post', 'put'])) {
+				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
 				$data = $model->patchEntity($data, $this->request->data);
 
-				if ($model->save($data)) {
-					$this->Message->alert('general.edit.success');
-					$action = $this->buttons['view']['url'];
-					return $this->controller->redirect($action);
-				} else {
-					$this->request->data = array_merge($data, $this->request->data);
-					$this->log($model->errors(), 'debug');
-					$this->Message->alert('general.edit.failed');
+				if ($submit == 'save') {
+					if ($model->save($data)) {
+						$this->Message->alert('general.edit.success');
+						$action = $this->buttons['view']['url'];
+						return $this->controller->redirect($action);
+					} else {
+						$this->log($data->errors(), 'debug');
+						$this->Message->alert('general.edit.failed');
+					}
 				}
-			} else {
-				$this->controller->set('data', $data);
 			}
+			$this->controller->set('data', $data);
 		} else {
 			$this->Message->alert('general.notExists');
 			$action = $this->buttons['index']['url'];
@@ -724,9 +770,35 @@ class ControllerActionComponent extends Component {
 		}
 		return $fields;
 	}
+
+	public function addField($field, $attr) {
+		$model = $this->model;
+		$className = $model->alias();
+		if (!empty($this->plugin)) {
+			$className = $this->plugin . '.' . $className;
+		}
+
+		$_attr = [
+			'type' => 'string',
+			'null' => true,
+			'autoIncrement' => false,
+			'order' => 0,
+			'visible' => true,
+			'field' => $field,
+			'model' => $model->alias(),
+			'className' => $className
+		];
+
+		$attr = array_merge($_attr, $attr);
+		
+		if ($attr['type'] == 'string') { // make field sortable by default if it is a string data-type
+			$attr['sort'] = true;
+		}
+		$this->model->fields[$field] = $attr;
+	}
 	
 	public function getFields($model) {
-		$defaultFields = array('modified_user_id', 'modified', 'created_user_id', 'created', 'order');
+		$ignoreFields = $this->ignoreFields;
 		$className = $model->alias();
 		if (!empty($this->plugin)) {
 			$className = $this->plugin . '.' . $className;
@@ -755,16 +827,8 @@ class ControllerActionComponent extends Component {
 		}
 		
 		$fields[$model->primaryKey()]['type'] = 'hidden';
-		foreach ($defaultFields as $field) {
+		foreach ($ignoreFields as $field) {
 			if (array_key_exists($field, $fields)) {
-				if ($field == 'modified_user_id') {
-					$fields[$field]['type'] = $field;
-					$fields[$field]['dataModel'] = 'ModifiedUser';
-				}
-				if ($field == 'created_user_id') {
-					$fields[$field]['type'] = $field;
-					$fields[$field]['dataModel'] = 'CreatedUser';
-				}
 				$fields[$field]['visible']['index'] = false;
 				$fields[$field]['visible']['view'] = true;
 				$fields[$field]['visible']['edit'] = false;

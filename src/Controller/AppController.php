@@ -51,7 +51,9 @@ class AppController extends Controller {
         $this->loadComponent('Message');
         $this->loadComponent('Navigation');
         $this->loadComponent('Localization.Localization');
-        $this->loadComponent('ControllerAction.ControllerAction');
+        $this->loadComponent('ControllerAction.ControllerAction', [
+            'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
+        ]);
     }
 
     public function ComponentAction() { // Redirect logic to functions in Component or Model

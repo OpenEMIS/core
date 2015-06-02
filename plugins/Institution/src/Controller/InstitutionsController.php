@@ -4,38 +4,36 @@ namespace Institution\Controller;
 use App\Controller\AppController;
 use Cake\Event\Event;
 
-class InstitutionsController extends AppController
-{
-
+class InstitutionsController extends AppController  {
 	public function initialize() {
 		parent::initialize();
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
-			'Attachments' => ['className' => 'Institution.Attachments'],
+			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments'],
 			'Additional' => ['className' => 'Institution.Additional'],
 
 			// 'InstitutionSiteCustomField',
 			// 'InstitutionSiteCustomFieldOption',
 
 
-			'Positions' => ['className' => 'Institution.Positions'],
-			'Programmes' => ['className' => 'Institution.Programmes'],
-			'Shifts' => ['className' => 'Institution.Shifts'],
-			'Sections' => ['className' => 'Institution.Sections'],
-			'Classes' => ['className' => 'Institution.Classes'],
-			'Infrastructures' => ['className' => 'Institution.Infrastructures'],
+			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
+			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
+			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
+			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
+			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
+			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
 
-			'StudentAbsences' => ['className' => 'Institution.StudentAbsences'],
-			'StaffAbsences' => ['className' => 'Institution.StaffAbsences'],
+			'StudentAbsences' => ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'StaffAbsences' => ['className' => 'Institution.InstitutionSiteStaffAbsences'],
 
 			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
 
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 			'StaffBehaviours' => ['className' => 'Institution.StaffBehaviours'],
 
-			'BankAccounts' => ['className' => 'Institution.BankAccounts'],
-			'Fees' => ['className' => 'Institution.Fees'],
+			'BankAccounts' => ['className' => 'Institution.InstitutionSiteBankAccounts'],
+			'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
 			'StudentFees' => ['className' => 'Institution.StudentFees'],
 
 			// // Surveys
@@ -52,6 +50,13 @@ class InstitutionsController extends AppController
 		
     }
 
+    public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['ControllerAction.onInitialize'] = 'onInitialize';
+    	$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+    	return $events;
+    }
+
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
     	$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
@@ -59,7 +64,7 @@ class InstitutionsController extends AppController
     	$action = $this->request->params['action'];
 
     	if ($action == 'index') {
-			$session->delete('InstitutionSites.id');
+			$session->delete('Institutions.id');
 		}
 
 		if ($session->check('Institutions.id') || $action == 'view') {
@@ -79,33 +84,40 @@ class InstitutionsController extends AppController
     	}
 
     	$header = __('Institution');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($session, $controller, $header) {
-			$header .= ' - ' . $model->getHeader($model->alias);
-			$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
-
-			if (array_key_exists('institution_site_id', $model->fields)) {
-				if (!$session->check('Institutions.id')) {
-					$this->Message->alert('general.notExists');
-				}
-				$model->fields['institution_site_id']['type'] = 'hidden';
-				$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
-			}
-			
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) use ($session) {
-			if (array_key_exists('institution_site_id', $model->fields)) {
-				if (!$session->check('Institutions.id')) {
-					$this->Message->alert('general.notExists');
-				}
-				$options['conditions'][] = ['Institutions.id' => $session->read('Institutions.id')];
-			}
-			
-			return $options;
-		};
-
 		$this->set('contentHeader', $header);
+    }
+
+    public function onInitialize($event) {
+    	$session = $this->request->session();
+    	$header = __('Institution');
+    	$model = $event->data['model'];
+
+    	$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
+
+		if (array_key_exists('institution_site_id', $model->fields)) {
+			if (!$session->check('Institutions.id')) {
+				$this->Message->alert('general.notExists');
+			}
+			$model->fields['institution_site_id']['type'] = 'hidden';
+			$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
+		}
+		
+		$this->set('contentHeader', $header);
+    }
+
+    public function beforePaginate($event) {
+    	$model = $event->data['model'];
+    	$options = $event->data['options'];
+    	$session = $this->request->session();
+
+    	if (array_key_exists('institution_site_id', $model->fields)) {
+			if (!$session->check('Institutions.id')) {
+				$this->Message->alert('general.notExists');
+			}
+			$options['conditions'][] = ['Institutions.id' => $session->read('Institutions.id')];
+		}
+		
+		return $options;
     }
 }

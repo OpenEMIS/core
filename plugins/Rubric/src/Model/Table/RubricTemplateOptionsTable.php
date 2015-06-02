@@ -14,30 +14,19 @@ class RubricTemplateOptionsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator
-		->requirePresence('name')
-		->notEmpty('name', 'Please enter a name.')
-    	->add('name', [
-    		'unique' => [
-		        'rule' => ['validateUnique', ['scope' => 'rubric_template_id']],
-		        'provider' => 'table',
-		        'message' => 'This name is already exists in the system'
-		    ]
-	    ])
-	    ->requirePresence('rubric_template_id')
-		->notEmpty('rubric_template_id', 'Please select a template.')
-		->requirePresence('weighting')
-		->notEmpty('weighting', 'Please enter a weighting.')
-		->requirePresence('color')
-		->notEmpty('color', 'Please enter a color.');
+	    	->add('name', [
+	    		'unique' => [
+			        'rule' => ['validateUnique', ['scope' => 'rubric_template_id']],
+			        'provider' => 'table',
+			        'message' => 'This name is already exists in the system'
+			    ]
+		    ]);
 
 		return $validator;
 	}
 
 	public function beforeAction() {
-		$this->fields['rubric_template_id']['type'] = 'select';
 		$this->fields['color']['type'] = 'color';
-
-		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 
 		if($this->action == 'index') {
 			$query = $this->request->query;
@@ -57,10 +46,11 @@ class RubricTemplateOptionsTable extends AppTable {
             $this->ControllerAction->beforePaginate = function($model, $options) {
                 if (!is_null($this->selectedTemplate)) {
                     $options['conditions'][] = [
-                        $model->alias().'.rubric_template_id' => $this->selectedTemplate
+                    	$model->aliasField('rubric_template_id') => $this->selectedTemplate
                     ];
                     $options['order'] = [
-                        $model->alias().'.name'
+                    	$model->aliasField('order'),
+                    	$model->aliasField('id')
                     ];
                 }
 
@@ -78,16 +68,18 @@ class RubricTemplateOptionsTable extends AppTable {
 				if ($this->action == 'add') {
 					$query = $this->request->query;
 					$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
-					
-					$data = $this->newEntity();
-					$this->request->data[$this->alias()]['rubric_template_id']['value'] = $selectedTemplate;
-					$this->request->data[$this->alias()]['color']['value'] = '#ff00ff';
-					$data = $this->patchEntity($data, $this->request->data);
+
+					$this->request->data[$this->alias()]['rubric_template_id'] = $selectedTemplate;
+					$this->request->data[$this->alias()]['color'] = '#ff00ff';
+					$data = $this->newEntity($this->request->data, ['validate' => false]);
 					$this->controller->set('data', $data);
 				}
 			}
 
+			$this->fields['rubric_template_id']['type'] = 'select';
 			$this->fields['rubric_template_id']['options'] = $templateOptions;
+
+			$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 		}
 	}
 }
