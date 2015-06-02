@@ -34,12 +34,36 @@ class StaffController extends AppController {
 			'Awards',
 			'Attachments'
 		];
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
 
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-			if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.onInitialize'] = 'onInitialize';
+		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		return $events;
+	}
+
+	public function onInitialize($event, $model) {
+		$session = $this->request->session();
+		$header = __('Staff');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => $model->alias]);
+
+		if (array_key_exists('security_user_id', $model->fields)) {
+			if (!$session->check('Staff.security_user_id')) {
+				$this->Message->alert('general.notExists');
+			}
+			$model->fields['security_user_id']['type'] = 'hidden';
+			$model->fields['security_user_id']['value'] = $session->read('Staff.security_user_id');
+		}
+		
+		$this->set('contentHeader', $header);
+	}
+
+	public function beforePaginate($event, $model, $options) {
+		$session = $this->request->session();
+
+		if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
 				if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
 					$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
@@ -52,22 +76,12 @@ class StaffController extends AppController {
 				}
 			}
 			return $options;
-		};
+	}
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
 
 		$visibility = ['view' => true, 'edit' => true];
-
-		$header = __('Staff');
-		$controller = $this;
-
-		$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
-			$session = $this->request->session();
-
-			$model->fields['security_user_id']['type'] = 'hidden';
-			$model->fields['security_user_id']['value'] = $this->ControllerAction->Session->read('Staff.security_user_id');
-
-			$controller->set('contentHeader', $header);
-		};
 
 		$this->Users->fields['photo_content']['type'] = 'image';
 

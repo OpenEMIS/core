@@ -1,10 +1,10 @@
 <?php
-namespace Student\Model\Table;
+namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class StudentAttachmentsTable extends AppTable {
+class UserAttachmentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		

@@ -21,6 +21,7 @@ class StudentsController extends AppController {
 			'Attachments' => ['className' => 'User.UserAttachments'],
 			'Programmes' => ['className' => 'Student.Programmes'],
 			'Sections' => ['className' => 'Student.StudentSections'],
+			'Classes' => ['className' => 'Student.StudentClasses'],
 			'Absences' => ['className' => 'Student.Absences'],
 			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
 			'Extracurriculars' => ['className' => 'Student.StudentExtracurriculars'],
@@ -39,13 +40,40 @@ class StudentsController extends AppController {
 			'Comments',
 			'SpecialNeeds',
 			'Awards',
-			'Attachments'
+			'Attachments',
+			'Absences',
+			'Behaviours'
 		];
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-			if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.onInitialize'] = 'onInitialize';
+		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		return $events;
+	}
+
+	public function onInitialize($event, $model) {
+		$session = $this->request->session();
+		$header = __('Student');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb($model->getHeader($model->alias), ['plugin' => 'Student', 'controller' => 'Students', 'action' => $model->alias]);
+
+		if (array_key_exists('security_user_id', $model->fields)) {
+			if (!$session->check('Student.security_user_id')) {
+				$this->Message->alert('general.notExists');
+			}
+			$model->fields['security_user_id']['type'] = 'hidden';
+			$model->fields['security_user_id']['value'] = $session->read('Student.security_user_id');
+		}
+		
+		$this->set('contentHeader', $header);
+	}
+
+	public function beforePaginate($event, $model, $options) {
+		$session = $this->request->session();
+
+		if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
 				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
 					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
@@ -58,22 +86,12 @@ class StudentsController extends AppController {
 				}
 			}
 			return $options;
-		};
+	}
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
 
 		$visibility = ['view' => true, 'edit' => true];
-
-		$header = __('Student');
-		$controller = $this;
-
-		$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
-			$session = $this->request->session();
-
-			$model->fields['security_user_id']['type'] = 'hidden';
-			$model->fields['security_user_id']['value'] = $this->ControllerAction->Session->read('Student.security_user_id');
-
-			$controller->set('contentHeader', $header);
-		};
 
 		$this->Users->fields['photo_content']['type'] = 'image';
 
