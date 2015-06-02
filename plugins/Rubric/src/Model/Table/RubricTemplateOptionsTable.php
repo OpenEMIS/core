@@ -25,61 +25,37 @@ class RubricTemplateOptionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction() {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
+		return $events;
+	}
+
+	public function beforeAction($event) {
 		$this->fields['color']['type'] = 'color';
 
 		if($this->action == 'index') {
-			$query = $this->request->query;
-
             $toolbarElements = [
                 ['name' => 'Rubric.controls', 'data' => [], 'options' => []]
             ];
 
-            $templates = $this->RubricTemplates->getList();
-            $this->selectedTemplate = isset($query['template']) ? $query['template'] : key($templates);
-
-            $templateOptions = array();
-            foreach ($templates as $key => $template) {
-                $templateOptions['template=' . $key] = $template;
-            }
-
-            $this->ControllerAction->beforePaginate = function($model, $options) {
-                if (!is_null($this->selectedTemplate)) {
-                    $options['conditions'][] = [
-                    	$model->aliasField('rubric_template_id') => $this->selectedTemplate
-                    ];
-                    $options['order'] = [
-                    	$model->aliasField('order'),
-                    	$model->aliasField('id')
-                    ];
-                }
-
-                return $options;
-            };
-
             $this->controller->set('toolbarElements', $toolbarElements);
-            $this->controller->set('selectedTemplate', $this->selectedTemplate);
-            $this->controller->set('templateOptions', $templateOptions);
 		} else if($this->action == 'add' || $this->action == 'edit') {
-			$templateOptions = $this->RubricTemplates->getList();
-
-			if ($this->request->is(array('post', 'put'))) {
-			} else {
-				if ($this->action == 'add') {
-					$query = $this->request->query;
-					$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
-
-					$this->request->data[$this->alias()]['rubric_template_id'] = $selectedTemplate;
-					$this->request->data[$this->alias()]['color'] = '#ff00ff';
-					$data = $this->newEntity($this->request->data, ['validate' => false]);
-					$this->controller->set('data', $data);
-				}
-			}
-
 			$this->fields['rubric_template_id']['type'] = 'select';
-			$this->fields['rubric_template_id']['options'] = $templateOptions;
-
 			$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 		}
+	}
+
+	public function beforeAdd($event, $entity) {
+		$query = $this->request->query;
+
+		$templateOptions = $this->RubricTemplates->getList();
+		$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
+
+		$entity->rubric_template_id = $selectedTemplate;
+		$entity->color = '#ff00ff';
+
+		return $entity;
 	}
 }

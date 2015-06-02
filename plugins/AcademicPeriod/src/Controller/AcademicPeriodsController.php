@@ -16,25 +16,15 @@ class AcademicPeriodsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
+    public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['ControllerAction.onInitialize'] = 'onInitialize';
+    	$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+    	return $events;
+    }
+
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-		$this->Navigation->addCrumb('Academic Period', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => $this->request->action]);
-		$this->Navigation->addCrumb($this->request->action);
-
-    	$header = __('Academic Period');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
-
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
-
-		$this->set('contentHeader', $header);
 
 		$tabElements = [
 			'Levels' => [
@@ -50,4 +40,18 @@ class AcademicPeriodsController extends AppController
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
+
+    public function onInitialize($event, $model) {
+		$header = __('Academic Period');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb('Academic Period', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => $model->alias]);
+		$this->Navigation->addCrumb($model->getHeader($model->alias));
+
+		$this->set('contentHeader', $header);
+    }
+
+    public function beforePaginate($event, $model, $options) {
+    	return $options;
+    }
 }
