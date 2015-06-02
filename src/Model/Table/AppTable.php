@@ -32,8 +32,36 @@ class AppTable extends Table {
 				'foreignKey' => 'created_user_id'
 			]);
 		}
+	}
 
-		$this->addBehavior('ControllerAction.ControllerAction');
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.onPopulateSelectOptions'] = 'buildSelectOptions';
+		return $events;
+	}
+
+	public function buildSelectOptions($event, $query) {
+		$schema = $this->schema();
+		$columns = $schema->columns();
+		
+		if ($this->hasBehavior('FieldOption')) {
+			$query->innerJoin(
+				['FieldOption' => 'field_options'],
+				[
+					'FieldOption.id = ' . $this->aliasField('field_option_id'),
+					'FieldOption.code' => $this->alias()
+				]
+			)->find('order')->find('visible');
+		} else {
+			if (in_array('order', $columns)) {
+				$query->find('order');
+			}
+
+			if (in_array('visible', $columns)) {
+				$query->find('visible');
+			}
+		}
+		return $query;
 	}
 
 	public function findVisible(Query $query, array $options) {
