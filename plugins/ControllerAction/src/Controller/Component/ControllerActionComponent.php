@@ -377,7 +377,9 @@ class ControllerActionComponent extends Component {
 		try {
 			$event = new Event('ControllerAction.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
 			$event = $this->controller->eventManager()->dispatch($event);
-			$paginateOptions = $event->result;
+			if (!empty($event->result)) {
+				$paginateOptions = $event->result;
+			}
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 		} catch (NotFoundException $e) {
@@ -442,12 +444,16 @@ class ControllerActionComponent extends Component {
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
 
+		$options = [];
 		$contain = [];
+
 		foreach ($model->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
 				$contain[] = $assoc->name();
 			}
 		}
+
+		$options['contain'] = $contain;
 
 		if (empty($id)) {
 			if ($this->Session->check($idKey)) {
@@ -456,7 +462,22 @@ class ControllerActionComponent extends Component {
 		}
 		
 		if ($model->exists([$idKey => $id])) {
-			$data = $model->get($id, ['contain' => $contain]);
+			$query = $model->findById($id);
+
+			$event = new Event('ControllerAction.beforeView', $this, ['query' => $query, 'contain' => $contain]);
+			$event = $this->controller->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$query = $event->result['query'];
+				$contain = $event->result['contain'];
+			}
+
+			$data = $query->contain($contain)->first();
+
+			$event = new Event('ControllerAction.afterView', $this, ['entity' => $data]);
+			$event = $this->controller->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$data = $event->result;
+			}
 
 			$this->Session->write($idKey, $id);
 			$modal = $this->getModalOptions('delete');
@@ -486,6 +507,9 @@ class ControllerActionComponent extends Component {
 					$this->log($data->errors(), 'debug');
 					$this->Message->alert('general.add.failed');
 				}
+			} else if ($submit == 'reload') {
+				$event = new Event('ControllerAction.addReload', $this, ['entity' => $data]);
+				$event = $this->controller->eventManager()->dispatch($event);
 			}
 		}
 		$this->controller->set('data', $data);
@@ -498,7 +522,11 @@ class ControllerActionComponent extends Component {
 		$options = [];
 
 		if ($model->exists([$idKey => $id])) {
-
+			$event = new Event('ControllerAction.beforeEdit', $this, ['options' => $options]);
+			$event = $this->controller->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$options = $event->result;
+			}
 			$data = $model->get($id, $options);
 			
 			if ($this->request->is(['post', 'put'])) {
@@ -514,6 +542,9 @@ class ControllerActionComponent extends Component {
 						$this->log($data->errors(), 'debug');
 						$this->Message->alert('general.edit.failed');
 					}
+				} else if ($submit == 'reload') {
+					$event = new Event('ControllerAction.editReload', $this, ['entity' => $data]);
+					$event = $this->controller->eventManager()->dispatch($event);
 				}
 			}
 			$this->controller->set('data', $data);
