@@ -96,10 +96,11 @@ class InstitutionsController extends AppController  {
 
 		if (array_key_exists('institution_site_id', $model->fields)) {
 			if (!$session->check('Institutions.id')) {
-				$this->Message->alert('general.notExists');
+				$this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+			} else {
+				$model->fields['institution_site_id']['type'] = 'hidden';
+				$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
 			}
-			$model->fields['institution_site_id']['type'] = 'hidden';
-			$model->fields['institution_site_id']['value'] = $session->read('Institutions.id');
 		}
 		
 		$this->set('contentHeader', $header);
