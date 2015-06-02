@@ -35,7 +35,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->fields['education_programme_id']['type'] = 'select';
 
 		if ($this->action == 'add') {
-			// TODO: write validation logic to check for loaded $levelOptions
+			// TODO-jeff: write validation logic to check for loaded $levelOptions
 			$levelId = key($levelOptions);
 			if ($this->request->data($this->aliasField('education_level'))) {
 				$levelId = $this->request->data($this->aliasField('education_level'));
@@ -50,18 +50,20 @@ class InstitutionSiteProgrammesTable extends AppTable {
 			$this->fields['education_programme_id']['attr'] = ['onchange' => "$('#reload').click()"];
 
 			// start Education Grade field
-			$this->ControllerAction->addField('education_grade', ['type' => 'element', 'order' => 5]);
-			$this->fields['education_grade']['element'] = 'Institution.Programmes/grades';
+			$this->ControllerAction->addField('education_grade', [
+				'type' => 'element', 
+				'order' => 5,
+				'element' => 'Institution.Programmes/grades'
+			]);
 
 			$programmeId = key($programmeOptions);
 			if ($this->request->data($this->aliasField('education_programme_id'))) {
 				$programmeId = $this->request->data($this->aliasField('education_programme_id'));
 			}
-			// TODO: need to check if programme id is empty
+			// TODO-jeff: need to check if programme id is empty
 			$EducationGrades = $this->EducationProgrammes->EducationGrades;
 			$gradeData = $EducationGrades->find()
-				->find('order')
-				->find('visible')
+				->find('visible')->find('order')
 				->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
 				->all();
 
