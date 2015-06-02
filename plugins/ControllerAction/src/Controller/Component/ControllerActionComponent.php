@@ -48,8 +48,6 @@ class ControllerActionComponent extends Component {
 	];
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
-	public $onInitialize = null;
-	public $beforePaginate = null;
 
 	public $components = ['Message', 'Paginator'];
 
@@ -94,19 +92,16 @@ class ControllerActionComponent extends Component {
 						$this->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
 
-						if (is_callable($this->onInitialize)) {
-							$initialize = $this->onInitialize;
-							$initialize($this->model);
-						}
+						$event = new Event('ControllerAction.onInitialize', $this, ['model' => $this->model]);
+						$this->controller->eventManager()->dispatch($event);
 						
 						$this->triggerFrom = 'Model';
 						break;
 					}
 				}
 			}
-			if (method_exists($this->model, 'beforeAction')) {
-				$this->model->beforeAction();
-			}
+			$event = new Event('ControllerAction.beforeAction', $this);
+			$this->model->eventManager()->dispatch($event);
 			$this->buildDefaultValidation();
 		}
 		$this->initButtons();
@@ -131,9 +126,8 @@ class ControllerActionComponent extends Component {
 				}
 			}
 
-			if (method_exists($this->model, 'afterAction')) {
-				$this->model->afterAction();
-			}
+			$event = new Event('ControllerAction.afterAction', $this);
+			$this->model->eventManager()->dispatch($event);
 			$this->request->params['action'] = $action;
 
 			uasort($this->model->fields, [$this, 'sortFields']);
@@ -381,10 +375,9 @@ class ControllerActionComponent extends Component {
 		$controller->set('pageOptions', $this->pageOptions);
 
 		try {
-			if (is_callable($this->beforePaginate)) {
-				$beforePaginate = $this->beforePaginate;
-				$paginateOptions = $beforePaginate($model, $paginateOptions);
-			}
+			$event = new Event('ControllerAction.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+			$event = $this->controller->eventManager()->dispatch($event);
+			$paginateOptions = $event->result;
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 		} catch (NotFoundException $e) {
@@ -480,12 +473,11 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$data = $model->newEntity();
 
-		if ($this->request->is(array('post', 'put'))) {
+		if ($this->request->is(['post', 'put'])) {
 			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+			$data = $model->patchEntity($data, $this->request->data);
 
 			if ($submit == 'save') {
-				$data = $model->patchEntity($data, $this->request->data);
-				
 				if ($model->save($data)) {
 					$this->Message->alert('general.add.success');
 					$action = $this->buttons['index']['url'];
@@ -503,29 +495,28 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
+		$options = [];
 
 		if ($model->exists([$idKey => $id])) {
-			$data = $model->get($id);
+
+			$data = $model->get($id, $options);
 			
-			if ($this->request->is(array('post', 'put'))) {
+			if ($this->request->is(['post', 'put'])) {
 				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+				$data = $model->patchEntity($data, $this->request->data);
 
 				if ($submit == 'save') {
-					$data = $model->patchEntity($data, $this->request->data);
-
 					if ($model->save($data)) {
 						$this->Message->alert('general.edit.success');
 						$action = $this->buttons['view']['url'];
 						return $this->controller->redirect($action);
 					} else {
-						$this->request->data = array_merge($data, $this->request->data);
 						$this->log($data->errors(), 'debug');
 						$this->Message->alert('general.edit.failed');
 					}
 				}
-			} else {
-				$this->controller->set('data', $data);
 			}
+			$this->controller->set('data', $data);
 		} else {
 			$this->Message->alert('general.notExists');
 			$action = $this->buttons['index']['url'];

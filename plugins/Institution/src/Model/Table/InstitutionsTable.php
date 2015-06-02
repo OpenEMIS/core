@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionsTable extends AppTable {
+class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
         parent::initialize($config);
@@ -59,7 +59,13 @@ class InstitutionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction() {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		return $events;
+	}
+
+	public function beforeAction($event) {
 		if ($this->action == 'index') {
 			$this->Session->delete('Institutions.id');
 			$this->fields['alternative_name']['visible']['index'] = false;
