@@ -456,4 +456,38 @@ ALTER TABLE `staff_training_needs` DROP `staff_id`;
 ALTER TABLE `staff_training_self_studies` DROP `staff_id`;
 ALTER TABLE `training_session_trainees` DROP `staff_id`;
 
+-- June 2nd 1320hrs
+-- Workflow - Backup tables
+RENAME TABLE workflows TO z_1407_workflows;
+RENAME TABLE workflow_logs TO z_1407_workflow_logs;
+RENAME TABLE workflow_steps TO z_1407_workflow_steps;
 
+RENAME TABLE wf_workflows TO z_1407_wf_workflows;
+RENAME TABLE wf_workflow_actions TO z_1407_wf_workflow_actions;
+RENAME TABLE wf_workflow_comments TO z_1407_wf_workflow_comments;
+RENAME TABLE wf_workflow_models TO z_1407_wf_workflow_models;
+RENAME TABLE wf_workflow_records TO z_1407_wf_workflow_records;
+RENAME TABLE wf_workflow_steps TO z_1407_wf_workflow_steps;
+RENAME TABLE wf_workflow_step_roles TO z_1407_wf_workflow_step_roles;
+RENAME TABLE wf_workflow_submodels TO z_1407_wf_workflow_submodels;
+RENAME TABLE wf_workflow_transitions TO z_1407_wf_workflow_transitions;
+
+CREATE TABLE IF NOT EXISTS workflows LIKE z_1407_wf_workflows;
+CREATE TABLE IF NOT EXISTS workflow_actions LIKE z_1407_wf_workflow_actions;
+CREATE TABLE IF NOT EXISTS workflow_comments LIKE z_1407_wf_workflow_comments;
+CREATE TABLE IF NOT EXISTS workflow_models LIKE z_1407_wf_workflow_models;
+CREATE TABLE IF NOT EXISTS workflow_records LIKE z_1407_wf_workflow_records;
+CREATE TABLE IF NOT EXISTS workflow_steps LIKE z_1407_wf_workflow_steps;
+CREATE TABLE IF NOT EXISTS workflow_step_roles LIKE z_1407_wf_workflow_step_roles;
+CREATE TABLE IF NOT EXISTS workflow_submodels LIKE z_1407_wf_workflow_submodels;
+CREATE TABLE IF NOT EXISTS workflow_transitions LIKE z_1407_wf_workflow_transitions;
+
+INSERT workflows SELECT * FROM z_1407_wf_workflows;
+INSERT workflow_actions SELECT * FROM z_1407_wf_workflow_actions;
+INSERT workflow_comments SELECT * FROM z_1407_wf_workflow_comments;
+INSERT workflow_models SELECT * FROM z_1407_wf_workflow_models;
+INSERT workflow_records SELECT * FROM z_1407_wf_workflow_records;
+INSERT workflow_steps SELECT * FROM z_1407_wf_workflow_steps;
+INSERT workflow_step_roles SELECT * FROM z_1407_wf_workflow_step_roles;
+INSERT workflow_submodels SELECT * FROM z_1407_wf_workflow_submodels;
+INSERT workflow_transitions SELECT * FROM z_1407_wf_workflow_transitions;
