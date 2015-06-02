@@ -14,21 +14,13 @@ class RubricTemplateOptionsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator
-			->requirePresence('name')
-			->notEmpty('name', 'Please enter a name.')
 	    	->add('name', [
 	    		'unique' => [
 			        'rule' => ['validateUnique', ['scope' => 'rubric_template_id']],
 			        'provider' => 'table',
 			        'message' => 'This name is already exists in the system'
 			    ]
-		    ])
-		    ->requirePresence('rubric_template_id')
-			->notEmpty('rubric_template_id', 'Please select a template.')
-			->requirePresence('weighting')
-			->notEmpty('weighting', 'Please enter a weighting.')
-			->requirePresence('color')
-			->notEmpty('color', 'Please enter a color.');
+		    ]);
 
 		return $validator;
 	}

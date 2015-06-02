@@ -19,12 +19,6 @@ class RubricTemplatesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-			->requirePresence('name')
-			->notEmpty('name', 'Please enter a name.')
-			->requirePresence('pass_mark')
-			->notEmpty('pass_mark', 'Please enter a pass mark.');
-
 		return $validator;
 	}
 
