@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class InstitutionsTable extends AppTable {
+class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
         parent::initialize($config);
@@ -22,23 +22,25 @@ class InstitutionsTable extends AppTable {
 
 		// $this->hasMany('InstitutionSiteStudents');
 		
-		$this->hasMany('Attachments', ['className' => 'Institution.Attachments']);
+		$this->hasMany('Attachments', ['className' => 'Institution.InstitutionSiteAttachments']);
 		$this->hasMany('Additional', ['className' => 'Institution.Additional']);
 
-		$this->hasMany('Programmes', ['className' => 'Institution.Programmes']);
-		$this->hasMany('Shifts', ['className' => 'Institution.Shifts']);
-		$this->hasMany('Sections', ['className' => 'Institution.Sections']);
-		$this->hasMany('Classes', ['className' => 'Institution.Classes']);
-		$this->hasMany('Infrastructures', ['className' => 'Institution.Infrastructures']);
+		$this->hasMany('Positions', ['className' => 'Institution.InstitutionSitePositions']);
+		$this->hasMany('Programmes', ['className' => 'Institution.InstitutionSiteProgrammes']);
+		$this->hasMany('Shifts', ['className' => 'Institution.InstitutionSiteShifts']);
+		$this->hasMany('Sections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->hasMany('Classes', ['className' => 'Institution.InstitutionSiteClasses']);
+		$this->hasMany('Infrastructures', ['className' => 'Institution.InstitutionSiteInfrastructures']);
 
-		$this->hasMany('StaffAbsences', ['className' => 'Institution.StaffAbsences']);
-		$this->hasMany('StudentAbsences', ['className' => 'Institution.StudentAbsences']);
+		$this->hasMany('StaffAbsences', ['className' => 'Institution.InstitutionSiteStaffAbsences']);
+		$this->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
 		$this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours']);
 		$this->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours']);
 
-		$this->hasMany('BankAccounts', ['className' => 'Institution.BankAccounts']);
-		$this->hasMany('Fees', ['className' => 'Institution.BankAccounts']);
+		$this->hasMany('BankAccounts', ['className' => 'Institution.InstitutionSiteBankAccounts']);
+		$this->hasMany('Fees', ['className' => 'Institution.InstitutionSiteFees']);
+		$this->hasMany('StudentFees', ['className' => 'Institution.StudentFees']);
 
 		$this->hasMany('NewSurveys', ['className' => 'Institution.SurveyNew']);
 		$this->hasMany('InstitutionSiteSurveyDrafts', ['className' => 'Institution.InstitutionSiteSurveyDrafts']);
@@ -52,18 +54,20 @@ class InstitutionsTable extends AppTable {
 
 	}
 
-    public function test() {
-    	die('chak '.$this->alias());
-    }
-
 	public function validationDefault(Validator $validator) {
 		
 		return $validator;
 	}
 
-	public function beforeAction() {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		return $events;
+	}
+
+	public function beforeAction($event) {
 		if ($this->action == 'index') {
-			$this->Session->delete('InstitutionSites.id');
+			$this->Session->delete('Institutions.id');
 			$this->fields['alternative_name']['visible']['index'] = false;
 			$this->fields['address']['visible']['index'] = false;
 			$this->fields['postal_code']['visible']['index'] = false;

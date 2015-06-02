@@ -202,4 +202,32 @@ RENAME TABLE z1407_staff_training_self_studies TO staff_training_self_studies;
 DROP TABLE training_session_trainees;
 RENAME TABLE z1407_training_session_trainees TO training_session_trainees;
 
+-- June 2 1323hrs
+-- changing student and staff id to security user id (part 2)
 DROP TABLE user_attachments;
+
+-- June 2nd 1320hrs
+-- Workflow - Restore tables
+DROP TABLE IF EXISTS `workflows`;
+DROP TABLE IF EXISTS `workflow_actions`;
+DROP TABLE IF EXISTS `workflow_comments`;
+DROP TABLE IF EXISTS `workflow_models`;
+DROP TABLE IF EXISTS `workflow_records`;
+DROP TABLE IF EXISTS `workflow_steps`;
+DROP TABLE IF EXISTS `workflow_step_roles`;
+DROP TABLE IF EXISTS `workflow_submodels`;
+DROP TABLE IF EXISTS `workflow_transitions`;
+
+RENAME TABLE z_1407_workflows TO workflows;
+RENAME TABLE z_1407_workflow_logs TO workflow_logs;
+RENAME TABLE z_1407_workflow_steps TO workflow_steps;
+
+RENAME TABLE z_1407_wf_workflows TO wf_workflows;
+RENAME TABLE z_1407_wf_workflow_actions TO wf_workflow_actions;
+RENAME TABLE z_1407_wf_workflow_comments TO wf_workflow_comments;
+RENAME TABLE z_1407_wf_workflow_models TO wf_workflow_models;
+RENAME TABLE z_1407_wf_workflow_records TO wf_workflow_records;
+RENAME TABLE z_1407_wf_workflow_steps TO wf_workflow_steps;
+RENAME TABLE z_1407_wf_workflow_step_roles TO wf_workflow_step_roles;
+RENAME TABLE z_1407_wf_workflow_submodels TO wf_workflow_submodels;
+RENAME TABLE z_1407_wf_workflow_transitions TO wf_workflow_transitions;

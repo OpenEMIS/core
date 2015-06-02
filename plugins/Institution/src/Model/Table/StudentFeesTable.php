@@ -8,13 +8,10 @@ class StudentFeesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->belongsTo('InstitutionSiteFees', ['className' => 'Institution.Fees']);
+		$this->belongsTo('InstitutionSiteFees', ['className' => 'Institution.InstitutionSiteFees']);
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator->add('name', 'notBlank', [
-			'rule' => 'notBlank'
-		]);
 		return $validator;
 	}
 

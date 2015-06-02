@@ -20,8 +20,8 @@ use Cake\View\Helper;
 use Cake\Utility\Inflector;
 
 class LabelHelper extends Helper {
-	public $messages = array(
-		'general' => array(
+	public $messages = [
+		'general' => [
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
@@ -89,44 +89,53 @@ class LabelHelper extends Helper {
 			'total' => 'Total',
 			'fee' => 'Fee',
 			'model' => 'Model'
-		),
-		'date' => array(
+		],
+		'date' => [
 			'start' => 'Start Date',
 			'end' => 'End Date',
 			'from' => 'From',
 			'to' => 'To'
-		),
-		'gender' => array(
+		],
+		'gender' => [
 			'm' => 'Male',
 			'f' => 'Female'
-		),
-		'password'=> array(
+		],
+		'password'=> [
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
-		),
-		'fileUpload' => array(
+		],
+		'fileUpload' => [
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
-		),
-		'SurveyTemplates' => array(
+		],
+		'InstitutionSiteShifts' => [
+			'location_institution_site_id' => 'Location'
+		],
+		'SurveyTemplates' => [
 			'survey_module_id' => 'Module'
-		),
-		'SurveyQuestions' => array(
+		],
+		'SurveyQuestions' => [
 			'survey_template_id' => 'Survey Template'
-		),
-		'SurveyStatuses' => array(
+		],
+		'SurveyStatuses' => [
 			'survey_template_id' => 'Survey Template'
-		),
-		'RubricSections' => array(
+		],
+		'RubricSections' => [
 			'rubric_template_id' => 'Rubric Template'
-		),
-		'RubricCriterias' => array(
-			'rubric_section_id' => 'Rubric Section'
-		),
-		'RubricTemplateOptions' => array(
-			'rubric_template_id' => 'Rubric Template'
-		)
-	);
+		],
+		'RubricCriterias' => [
+			'rubric_section_id' => 'Rubric Section',
+			'criterias' => 'Criterias'
+		],
+		'RubricTemplateOptions' => [
+			'rubric_template_id' => 'Rubric Template',
+			'weighting' => 'Weighting'
+		]
+	];
+
+	public function endsWith($haystack, $needle) {
+		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	}
 	
 	public function get($code) {
 		$index = explode('.', $code);
@@ -152,6 +161,10 @@ class LabelHelper extends Helper {
 		
 		if($label === false) {
 			$label = __(Inflector::humanize($key));
+
+			if ($this->endsWith($label, ' Id')) {
+				$label = str_replace(' Id', '', $label);
+			}
 		}
 		return $label;
 	}

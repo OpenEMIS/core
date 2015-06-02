@@ -11,4 +11,28 @@ class AcademicPeriodsTable extends AppTable {
 		// $this->hasMany('Shifts', ['className' => 'Institution.Shifts']);
 		// $this->hasMany('Sections', ['className' => 'Institution.Sections']);
 	}
+
+	public function getList() {
+		$where = [
+			$this->aliasField('current') => 1,
+			$this->aliasField('parent_id') . ' <> ' => 0
+		];
+
+		// get the current period
+		$data = $this->find('list')
+			->find('visible')
+			->find('order')
+			->where($where)
+			->toArray();
+		
+		// get all other periods
+		$where[$this->aliasField('current')] = 0;
+		$data += $this->find('list')
+			->find('visible')
+			->find('order')
+			->where($where)
+			->toArray();
+		
+		return $data;
+	}
 }

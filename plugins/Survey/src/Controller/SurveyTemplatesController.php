@@ -32,7 +32,7 @@ class SurveyTemplatesController extends AppController {
             $modules = $this->SurveyTemplates->SurveyModules->getList();
             $this->selectedModule = isset($query['module']) ? $query['module'] : key($modules);
 
-            $moduleOptions = array();
+            $moduleOptions = [];
             foreach ($modules as $key => $module) {
                 $moduleOptions['module=' . $key] = $module;
             }
@@ -40,10 +40,7 @@ class SurveyTemplatesController extends AppController {
             $this->ControllerAction->beforePaginate = function($model, $options) {
                 if (!is_null($this->selectedModule)) {
                     $options['conditions'][] = [
-                        $model->alias().'.survey_module_id' => $this->selectedModule
-                    ];
-                    $options['order'] = [
-                        $model->alias().'.name'
+                        $model->aliasField('survey_module_id') => $this->selectedModule
                     ];
                 }
 
