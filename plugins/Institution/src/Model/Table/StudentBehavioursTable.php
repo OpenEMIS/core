@@ -9,7 +9,7 @@ class StudentBehavioursTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
-		// $this->belongsTo('SecurityUsers', ['className' => 'SecurityUsers', 'foreignKey' => 'student_id']);
+		// $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 	}
 
 	public function validationDefault(Validator $validator) {

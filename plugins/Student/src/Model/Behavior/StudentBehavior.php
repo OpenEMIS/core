@@ -12,7 +12,6 @@ class StudentBehavior extends Behavior {
 
 
 	public function beforeFind(Event $event, Query $query, $options) {
-		// todo:mlee wrong SQL - needs to be InstitionSiteStudents.security_user_id
 		$query
 			->join([
 				'table' => 'institution_site_students',
