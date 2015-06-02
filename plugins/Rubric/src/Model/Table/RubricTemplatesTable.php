@@ -22,7 +22,13 @@ class RubricTemplatesTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction() {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		return $events;
+	}
+
+	public function beforeAction($event) {
 		$weightingTypeOptions = [];
 		foreach ($this->weightingType as $key => $weightingType) {
 			$weightingTypeOptions[$weightingType['id']] = __($weightingType['name']);
@@ -35,6 +41,7 @@ class RubricTemplatesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity) {
+		parent::beforeSave($event, $entity);
 		if ($entity->isNew()) {
 			$data = [
 				'rubric_template_options' => [

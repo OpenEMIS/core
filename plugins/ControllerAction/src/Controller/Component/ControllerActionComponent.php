@@ -380,6 +380,10 @@ class ControllerActionComponent extends Component {
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
 			}
+			$event = $this->model->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$paginateOptions = $event->result;
+			}
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 		} catch (NotFoundException $e) {
@@ -472,7 +476,7 @@ class ControllerActionComponent extends Component {
 			}
 
 			$data = $query->contain($contain)->first();
-
+			
 			$event = new Event('ControllerAction.afterView', $this, ['entity' => $data]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
@@ -494,11 +498,17 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$data = $model->newEntity();
 
+		$event = new Event('ControllerAction.beforeAdd', $this, ['entity' => $data]);
+		$event = $this->model->eventManager()->dispatch($event);
+		if (!empty($event->result)) {
+			$data = $event->result;
+		}
+
 		if ($this->request->is(['post', 'put'])) {
 			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
-			$data = $model->patchEntity($data, $this->request->data);
 
 			if ($submit == 'save') {
+				$data = $model->patchEntity($data, $this->request->data);
 				if ($model->save($data)) {
 					$this->Message->alert('general.add.success');
 					$action = $this->buttons['index']['url'];
@@ -508,6 +518,7 @@ class ControllerActionComponent extends Component {
 					$this->Message->alert('general.add.failed');
 				}
 			} else if ($submit == 'reload') {
+				$data = $model->patchEntity($data, $this->request->data, ['validate' => false]);
 				$event = new Event('ControllerAction.addReload', $this, ['entity' => $data]);
 				$event = $this->model->eventManager()->dispatch($event);
 			}
