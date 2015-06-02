@@ -1,6 +1,7 @@
 <script type="text/javascript">
 $(document).ready(function() {
 	Chosen.init();
+	Checkable.init();
 	$('[data-toggle="tooltip"]').tooltip();
 	$('.focus').focus();
 });
@@ -20,6 +21,38 @@ var Chosen = {
 				 $this.next().css({'width': $this.parent().width()});
 			})
 		}).trigger('resize.chosen');
+	}
+};
+
+var Checkable = {
+	init: function() {
+		this.initICheck();
+		this.initTableCheckable();
+	},
+
+	initICheck: function() {
+		if ($.fn.iCheck) {
+			$('.icheck-input').iCheck({
+				checkboxClass: 'icheckbox_minimal-blue',
+				radioClass: 'iradio_minimal-blue',
+				inheritClass: true
+			}).on ('ifChanged', function (e) {
+				$(e.currentTarget).trigger ('change');
+			});
+		}
+	},
+	
+	initTableCheckable: function() {
+		if ($.fn.tableCheckable) {
+			$('.table-checkable')
+		        .tableCheckable ()
+			        .on ('masterChecked', function (event, master, slaves) { 
+			            if ($.fn.iCheck) { $(slaves).iCheck ('update'); }
+			        })
+			        .on ('slaveChecked', function (event, master, slave) {
+			            if ($.fn.iCheck) { $(master).iCheck ('update'); }
+			        });
+		}
 	}
 };
 </script>
