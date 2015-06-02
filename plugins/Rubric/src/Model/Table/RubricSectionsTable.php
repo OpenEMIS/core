@@ -26,21 +26,16 @@ class RubricSectionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function getList($options=[]) {
-		$_options = [
-			'order' => [
-				$this->aliasField('order'),
-				$this->aliasField('id')
-			]
-		];
-		$options = array_merge($options, $_options);
-
-		$list = $this->find('list', $options)->toArray();
-		return $list;
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		return $events;
 	}
 
-	public function beforeAction() {
-		if($this->action == 'index') {
+	
+
+	public function beforeAction($event) {
+		if ($this->action == 'index') {
 			$query = $this->request->query;
 
             $toolbarElements = [

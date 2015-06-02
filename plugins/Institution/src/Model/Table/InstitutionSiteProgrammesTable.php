@@ -17,7 +17,13 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction() {
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		return $events;
+	}
+
+	public function beforeAction($event) {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 
