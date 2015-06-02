@@ -8,17 +8,17 @@ class StaffController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('SecurityUsers');
+		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Staff.Staff');
 
 		$this->ControllerAction->models = [
-			'Contacts' => ['className' => 'UserContacts'],
-			'Identities' => ['className' => 'UserIdentities'],
-			'Languages' => ['className' => 'UserLanguages'],
-			'Comments' => ['className' => 'UserComments'],
-			'SpecialNeeds' => ['className' => 'UserSpecialNeeds'],
-			'Awards' => ['className' => 'UserAwards'],
-			'Attachments' => ['className' => 'Staff.StaffAttachments']
+			'Contacts' => ['className' => 'User.UserContacts'],
+			'Identities' => ['className' => 'User.UserIdentities'],
+			'Languages' => ['className' => 'User.UserLanguages'],
+			'Comments' => ['className' => 'User.UserComments'],
+			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
+			'Awards' => ['className' => 'User.UserAwards'],
+			'Attachments' => ['className' => 'User.UserAttachments']
 		];
 
 		$this->set('contentHeader', 'Staff');
@@ -31,7 +31,8 @@ class StaffController extends AppController {
 			'Languages',
 			'Comments',
 			'SpecialNeeds',
-			'Awards'
+			'Awards',
+			'Attachments'
 		];
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -68,7 +69,7 @@ class StaffController extends AppController {
 			$controller->set('contentHeader', $header);
 		};
 
-		$this->SecurityUsers->fields['photo_content']['type'] = 'image';
+		$this->Users->fields['photo_content']['type'] = 'image';
 
 		// unset($this->SecurityUsers->fields['photo_content']);
 

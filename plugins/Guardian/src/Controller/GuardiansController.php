@@ -8,11 +8,11 @@ class GuardiansController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('SecurityUsers');
+		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Guardian.Guardian');
 
 		$this->ControllerAction->models = [
-			'Contacts' => ['className' => 'UserContacts'],
+			// 'Contacts' => ['className' => 'UserContacts'],
 			// 'Identities' => ['className' => 'UserIdentities'],
 			// 'Languages' => ['className' => 'UserLanguages'],
 			// 'Comments' => ['className' => 'UserComments'],
@@ -58,7 +58,7 @@ class GuardiansController extends AppController {
 			$controller->set('contentHeader', $header);
 		};
 
-		$this->SecurityUsers->fields['photo_content']['type'] = 'image';
+		$this->Users->fields['photo_content']['type'] = 'image';
 
 		// unset($this->SecurityUsers->fields['photo_content']);
 

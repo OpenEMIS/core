@@ -6,8 +6,13 @@ use Cake\Validation\Validator;
 
 class ProgrammesTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('students');
+		$this->table('institution_site_students');
 		parent::initialize($config);
+
+		$this->belongsTo('User', ['className' => 'User.Users']);
+		$this->belongsTo('StudentStatus', ['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('EducationProgramme', ['className' => 'Education.EducationProgrammes']);
+		$this->belongsTo('InstitutionSite', ['className' => 'Institution.InstitutionSites']);
 	}
 
 	public function index() {
@@ -22,10 +27,10 @@ class ProgrammesTable extends AppTable {
 		}
 
 		// $query = $this->find()->hydrate(false)
-		// 			->joins()
+		// 			// ->joins()
 		// 			->limit(1)
 		// 			->toArray()
-					// ;
+		// 			;
 
 
 		// pr($conditions);

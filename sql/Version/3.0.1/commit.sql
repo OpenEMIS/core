@@ -456,4 +456,11 @@ ALTER TABLE `staff_training_needs` DROP `staff_id`;
 ALTER TABLE `staff_training_self_studies` DROP `staff_id`;
 ALTER TABLE `training_session_trainees` DROP `staff_id`;
 
+ALTER TABLE `student_attachments` ADD `date_on_file` DATE NOT NULL AFTER `file_content`;
+CREATE TABLE user_attachments LIKE student_attachments;
+
+INSERT INTO user_attachments (name, description, file_name, file_content, date_on_file, visible, security_user_id, modified_user_id, modified, created_user_id, created) SELECT name, description, file_name, file_content, date_on_file, visible, security_user_id, modified_user_id, modified, created_user_id, created FROM student_attachments;
+INSERT INTO user_attachments (name, description, file_name, file_content, date_on_file, visible, security_user_id, modified_user_id, modified, created_user_id, created) SELECT name, description, file_name, file_content, date_on_file, visible, security_user_id, modified_user_id, modified, created_user_id, created FROM staff_attachments;
+DROP TABLE student_attachments;
+DROP TABLE staff_attachments;
 
