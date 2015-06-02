@@ -3,6 +3,7 @@ namespace App\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -33,6 +34,14 @@ class AppTable extends Table {
 		}
 
 		$this->addBehavior('ControllerAction.ControllerAction');
+	}
+
+	public function findVisible(Query $query, array $options) {
+		return $query->where([$this->aliasField('visible') => 1]);
+	}
+
+	public function findOrder(Query $query, array $options) {
+		return $query->order([$this->aliasField('order') => 'ASC']);
 	}
 	
 	public function beforeSave(Event $event, Entity $entity) {

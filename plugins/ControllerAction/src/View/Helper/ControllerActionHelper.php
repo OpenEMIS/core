@@ -12,9 +12,9 @@ class ControllerActionHelper extends Helper {
 	public $includes = [
 		'datepicker' => [
 			'include' => false,
-			'css' => 'ControllerAction.../plugins/datepicker/css/datepicker',
-			'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker',
-			'element' => 'ControllerAction.datepicker'
+			'css' => 'ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min',
+			'js' => 'ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min',
+			'element' => 'ControllerAction.bootstrap-datepicker/datepicker'
 		],
 		'timepicker' => [
 			'include' => false,
@@ -243,7 +243,9 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function datepicker($field, $options=array()) {
+		/*
 		$dateFormat = 'dd-mm-yyyy';
+
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
 		$_options = array(
 			'id' => 'date',
@@ -260,7 +262,7 @@ class ControllerActionHelper extends Helper {
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
-		$defaults = $this->Form->inputDefaults();
+		
 		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
@@ -299,6 +301,7 @@ class ControllerActionHelper extends Helper {
 		} else {
 			$this->_View->set('datepicker', array($_datepickerOptions));
 		}
+		*/
 		return $html;
 	}
 	
@@ -473,6 +476,7 @@ class ControllerActionHelper extends Helper {
 					$this->$function('edit', $data, $_fieldAttr, $options);
 				}
 				
+				/*
 				switch ($_type) {
 					case 'file_upload';
 						$attr = array('field' => $_field);
@@ -492,6 +496,8 @@ class ControllerActionHelper extends Helper {
 						break;
 					
 				}
+				*/
+				/* confirm to be removed
 				if (array_key_exists('dataModel', $_fieldAttr) && array_key_exists('dataField', $_fieldAttr)) {
 					$dataModel = $_fieldAttr['dataModel'];
 					$dataField = $_fieldAttr['dataField'];
@@ -499,9 +505,9 @@ class ControllerActionHelper extends Helper {
 				} else if (isset($_fieldAttr['value'])) {
 					$options['value'] = $_fieldAttr['value'];
 				}
-				if (array_key_exists('override', $_fieldAttr)) { 
-					echo '<div class="row">' . $value . '</div>';
-				} else if (!in_array($_type, array('image', 'date', 'time', 'binary', 'file_upload', 'element'))) {
+				*/
+				
+				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
 					echo $this->Form->input($fieldName, $options);
 				}
 			}
@@ -655,7 +661,7 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {
 				if (empty($attr['options'])) {
-					$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
+					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
 				} else {
 					if (isset($attr['default'])) {
 						$options['default'] = $attr['default'];
@@ -774,38 +780,43 @@ class ControllerActionHelper extends Helper {
 	public function getElementElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 
-		// seems like view and edit actions have the same logic?
+		$element = $attr['element'];
+		$attr['id'] = $attr['model'] . '_' . $attr['field'];
 		if ($action == 'view') {
-			$element = $attr['element'];
-			$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
-			if (array_key_exists('class', $attr)) {
-				$class = $attr['class'];
-			};
-			$value = $this->_View->element($element, $elementData);
+			$value = $this->_View->element($element, ['attr' => $attr]);
 		} else if ($action == 'edit') {
-			$element = $attr['element'];
-			$elementData = (array_key_exists('data', $attr)) ? $attr['data']: array();
-			if (array_key_exists('class', $attr)) {
-				$class = $attr['class'];
-			};
-			$value = $this->_View->element($element, $elementData);
+			echo $this->_View->element($element, ['attr' => $attr]);
 		}
 		return $value;
 	}
 
 	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+		$_options = [
+			'format' => 'dd-M-yyyy',
+			'todayBtn' => 'linked',
+			'orientation' => 'top auto'
+		];
+
+		if (!isset($attr['date_options'])) {
+			$attr['date_options'] = [];
+		}
+
 		if ($action == 'view') {
 			//$value = $this->Utility->formatDate($value, null, false);
 		} else if ($action == 'edit') {
 			$field = $attr['field'];
-			$attr = array('id' => $attr['model'] . '_' . $field);
-			$attr['data-date'] = $data->$field;
-			if (array_key_exists('attr', $attr)) {
-				$options = array_merge($attr, $attr['attr']);
+			$attr['id'] = $attr['model'] . '_' . $field;
+			$attr['date_options'] = array_merge($_options, $attr['date_options']);
+			if (!is_null($this->_View->get('datepicker'))) {
+				$datepickers = $this->_View->get('datepicker');
+				$datepickers[] = $attr;
+				$this->_View->set('datepicker', $datepickers);
+			} else {
+				$this->_View->set('datepicker', [$attr]);
 			}
-			//$includes['datepicker']['include'] = true;
-			//echo $this->datepicker($fieldName, $options);
+			echo $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+			$this->includes['datepicker']['include'] = true;
 		}
 		return $value;
 	}

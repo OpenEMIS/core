@@ -2,6 +2,8 @@
 namespace Rubric\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class RubricTemplatesTable extends AppTable {
@@ -12,29 +14,12 @@ class RubricTemplatesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->hasMany('RubricSections', ['className' => 'Rubric.RubricSections']);
-		$this->hasMany('RubricTemplateOptions', ['className' => 'Rubric.RubricTemplateOptions']);
+		$this->hasMany('RubricSections', ['className' => 'Rubric.RubricSections', 'dependent' => true]);
+		$this->hasMany('RubricTemplateOptions', ['className' => 'Rubric.RubricTemplateOptions', 'dependent' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator
-		->requirePresence('name')
-		->notEmpty('name', 'Please enter a name.')
-		->requirePresence('pass_mark')
-		->notEmpty('pass_mark', 'Please enter a pass mark.');
-
 		return $validator;
-	}
-
-	public function getList() {
-		$result = $this->find('list', [
-			'order' => [
-				$this->alias().'.name'
-			]
-		]);
-		$list = $result->toArray();
-
-		return $list;
 	}
 
 	public function beforeAction() {
@@ -46,6 +31,20 @@ class RubricTemplatesTable extends AppTable {
 		if($this->action == 'add' || $this->action == 'edit') {
 			$this->fields['weighting_type']['type'] = 'select';
 			$this->fields['weighting_type']['options'] = $weightingTypeOptions;
+		}
+	}
+
+	public function beforeSave(Event $event, Entity $entity) {
+		if ($entity->isNew()) {
+			$data = [
+				'rubric_template_options' => [
+					['name' => 'Good', 'weighting' => 3, 'color' => '#00ff00', 'order' => 1],
+					['name' => 'Normal', 'weighting' => 2, 'color' => '#000ff0', 'order' => 2],
+					['name' => 'Bad', 'weighting' => 1, 'color' => '#ff0000', 'order' => 3],
+				]
+			];
+
+			$entity = $this->patchEntity($entity, $data);
 		}
 	}
 }
