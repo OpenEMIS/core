@@ -18,7 +18,8 @@ class StaffController extends AppController {
 			'Comments' => ['className' => 'User.UserComments'],
 			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
 			'Awards' => ['className' => 'User.UserAwards'],
-			'Attachments' => ['className' => 'User.UserAttachments']
+			'Attachments' => ['className' => 'User.UserAttachments'],
+			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
 		];
 
 		$this->set('contentHeader', 'Staff');
@@ -32,7 +33,8 @@ class StaffController extends AppController {
 			'Comments',
 			'SpecialNeeds',
 			'Awards',
-			'Attachments'
+			'Attachments',
+			'Behaviours'
 		];
 
 	public function implementedEvents() {
