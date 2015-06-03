@@ -14,6 +14,12 @@ class SurveyTemplatesController extends AppController {
 		$this->loadComponent('Paginator');
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.beforePaginate'] = 'beforePaginate';
+        return $events;
+    }
+
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
         $this->Navigation->addCrumb('Survey', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index']);
@@ -29,7 +35,7 @@ class SurveyTemplatesController extends AppController {
                 ['name' => 'Survey.controls', 'data' => [], 'options' => []]
             ];
 
-            $modules = $this->SurveyTemplates->SurveyModules->getList();
+            $modules = $this->SurveyTemplates->SurveyModules->find('list')->toArray();
             $this->selectedModule = isset($query['module']) ? $query['module'] : key($modules);
 
             $moduleOptions = [];
@@ -37,24 +43,23 @@ class SurveyTemplatesController extends AppController {
                 $moduleOptions['module=' . $key] = $module;
             }
 
-            $this->ControllerAction->beforePaginate = function($model, $options) {
-                if (!is_null($this->selectedModule)) {
-                    $options['conditions'][] = [
-                        $model->aliasField('survey_module_id') => $this->selectedModule
-                    ];
-                }
-
-                return $options;
-            };
-
             $this->set('toolbarElements', $toolbarElements);
             $this->set('selectedModule', $this->selectedModule);
             $this->set('moduleOptions', $moduleOptions);
         } else if ($this->request->action == 'add' || $this->request->action == 'edit') {
-            $moduleOptions = $this->SurveyTemplates->SurveyModules->getList();
-
             $this->SurveyTemplates->fields['survey_module_id']['type'] = 'select';
-            $this->SurveyTemplates->fields['survey_module_id']['options'] = $moduleOptions;
+
+            $this->ControllerAction->setFieldOrder('survey_module_id', 1);
         }
+    }
+
+    public function beforePaginate($event, $model, $options) {
+        if (!is_null($this->selectedModule)) {
+            $options['conditions'][] = [
+                $model->aliasField('survey_module_id') => $this->selectedModule
+            ];
+        }
+
+        return $options;
     }
 }

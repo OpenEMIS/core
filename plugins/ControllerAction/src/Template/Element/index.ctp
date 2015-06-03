@@ -5,7 +5,7 @@ echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.m
 $dataKeys = array();
 $tableHeaders = $this->ControllerAction->getTableHeaders($_fields, $model, $dataKeys);
 
-$displayAction = array_key_exists('view', $_buttons) || array_key_exists('edit', $_buttons) || array_key_exists('remove', $_buttons);
+$displayAction = !empty($_indexActions);
 $displayReorder = array_key_exists('reorder', $_buttons) && count($data) > 1;
 
 if ($displayAction) {
@@ -14,9 +14,9 @@ if ($displayAction) {
 if ($displayReorder) {
 	$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 }
-if(isset($moreRows) && $moreRows) {
-	$tableHeaders[] = array(__($moreRows['tableHeader']) => array('class' => 'cell-reorder'));
-}
+// if(isset($moreRows) && $moreRows) {
+// 	$tableHeaders[] = array(__($moreRows['tableHeader']) => array('class' => 'cell-reorder'));
+// }
 
 $tableData = array();
 
@@ -27,14 +27,14 @@ foreach ($data as $obj) {
 		$row[] = [$this->element('ControllerAction.actions', ['obj' => $obj]), ['class' => 'rowlink-skip']];
 	}
 	if ($displayReorder) {
-		$row[] = [$this->element('ControllerAction.reorder', ['obj' => $obj]), ['class' => 'sorter']];
+		$row[] = [$this->element('ControllerAction.reorder', ['obj' => $obj]), ['class' => 'sorter rowlink-skip']];
 	}
-	if(isset($moreRows) && $moreRows) {
-		$options = $moreRows;
-		$options['model'] = $model;
-		$options['param'] = $obj->{$modelObj->primaryKey()};
-		$row[] = $this->ControllerAction->getExecuteButton($options);
-	}
+	// if(isset($moreRows) && $moreRows) {
+	// 	$options = $moreRows;
+	// 	$options['model'] = $model;
+	// 	$options['param'] = $obj->{$modelObj->primaryKey()};
+	// 	$row[] = $this->ControllerAction->getExecuteButton($options);
+	// }
 	// example of thumbnails
 	//array_unshift($row, $this->element('thumbnail'));
 	$tableData[] = $row;
