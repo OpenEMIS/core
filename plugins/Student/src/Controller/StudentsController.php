@@ -24,6 +24,7 @@ class StudentsController extends AppController {
 			'Classes' => ['className' => 'Student.StudentClasses'],
 			'Absences' => ['className' => 'Student.Absences'],
 			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
+			'Results' => ['className' => 'Student.StudentAssessments'],
 			'Extracurriculars' => ['className' => 'Student.StudentExtracurriculars'],
 			'BankAccounts' => ['className' => 'Student.StudentBankAccounts'],
 			'StudentFees' => ['className' => 'Student.StudentFees'],
