@@ -49,7 +49,7 @@ class RubricSectionsTable extends AppTable {
 	public function beforeAdd($event, $entity) {
 		$query = $this->request->query;
 
-		$templateOptions = $this->RubricTemplates->getList();
+		$templateOptions = $this->RubricTemplates->find('list')->toArray();
 		$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
 
 		$entity->rubric_template_id = $selectedTemplate;

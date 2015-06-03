@@ -20,6 +20,14 @@ class InstitutionSiteShiftsTable extends AppTable {
 	}
 
 	public function beforeAction() {
+		if ($this->action == 'index') {
+			// $this->fields['start_year']['visible'] = false;
+			// $this->fields['end_year']['visible'] = false;
+		}
+
+		// pr($this->fields);die;
+		$this->fields['academic_period_id']['type'] = 'select';
+		$this->fields['location_institution_site_id']['type'] = 'select';
 		
 	}
 }

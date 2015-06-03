@@ -13,21 +13,26 @@ class WorkflowsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
+    public function implementedEvents() {
+    	$events = parent::implementedEvents();
+    	$events['ControllerAction.onInitialize'] = 'onInitialize';
+    	$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+    	return $events;
+    }
+
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Workflow', ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'index']);
+	}
 
-    	$header = __('Workflow');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			// logic here
-		};
+    public function onInitialize($event, $model) {
+		$header = __('Workflow');
 
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
+		$this->Navigation->addCrumb('Workflow', ['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'index']);
 
 		$this->set('contentHeader', $header);
-	}
+    }
+
+    public function beforePaginate($event, $model, $options) {
+		return $options;
+    }
 }

@@ -27,15 +27,4 @@ class SurveyTemplatesTable extends AppTable {
 
 		return $validator;
 	}
-
-	public function getList($options=[]) {
-		$_options = [
-			'order' => [$this->alias().'.id']
-		];
-		$options = array_merge($options, $_options);
-
-		$list = $this->find('list', $options)->toArray();
-
-		return $list;
-	}
 }
