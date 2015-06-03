@@ -23,7 +23,7 @@ class InstitutionSiteActivitiesTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		$events['ControllerAction.IndexButtons.beforeRender'] = 'beforeRenderActions';
+		$events['ControllerAction.Model.index.onInitializeButtons'] = 'beforeRenderActions';
 		// $events['Model.beforeFind'] = 'beforeFind';
 		return $events;
 	}
