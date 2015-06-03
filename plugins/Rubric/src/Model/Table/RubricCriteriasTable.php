@@ -35,8 +35,12 @@ class RubricCriteriasTable extends AppTable {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.beforeAction'] = 'beforeAction';
 		$events['ControllerAction.afterAction'] = 'afterAction';
-		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
 		$events['ControllerAction.beforeView'] = 'beforeView';
+		$events['ControllerAction.afterView'] = 'afterView';
+		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
+		$events['ControllerAction.addReload'] = 'addReload';
+		$events['ControllerAction.beforeEdit'] = 'beforeEdit';
+		$events['ControllerAction.editReload'] = 'editReload';
 		return $events;
 	}
 
@@ -45,7 +49,6 @@ class RubricCriteriasTable extends AppTable {
 		foreach ($this->criteriaType as $key => $criteriaType) {
 			$criteriaTypeOptions[$criteriaType['id']] = __($criteriaType['name']);
 		}
-		$selectedCriteriaType = key($criteriaTypeOptions);
 
 		if ($this->action == 'index') {
 			$toolbarElements = [
@@ -56,7 +59,7 @@ class RubricCriteriasTable extends AppTable {
 		} else if($this->action == 'add' || $this->action == 'edit') {
 			$query = $this->request->query;
 
-			$templateOptions = $this->RubricSections->RubricTemplates->getList();
+			$templateOptions = $this->RubricSections->RubricTemplates->find('list')->toArray();
 			$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
 
             $sectionOptions = $this->RubricSections->find('list')
@@ -73,9 +76,12 @@ class RubricCriteriasTable extends AppTable {
 			$this->fields['type']['options'] = $criteriaTypeOptions;
 			$this->fields['type']['attr'] = ['onchange' => "$('#reload').click()"];
 
-			$this->ControllerAction->addField('criterias', ['type' => 'element', 'order' => 4]);
-			$this->fields['criterias']['element'] = 'Rubric.criterias';
-			$this->fields['criterias']['visible'] = false;
+			$this->ControllerAction->addField('criterias', [
+				'type' => 'element',
+				'order' => 4,
+				'element' => 'Rubric.criterias',
+				'visible' => false
+			]);
 
 			$order = 1;
 			$this->ControllerAction->setFieldOrder('rubric_section_id', $order++);
@@ -85,7 +91,7 @@ class RubricCriteriasTable extends AppTable {
 		}
 	}
 
-	public function afterAction() {
+	public function afterAction($event) {
 		/*
 		if ($this->action == 'view') {
 		} else if ($this->action == 'add' || $this->action == 'edit') {
@@ -129,10 +135,19 @@ class RubricCriteriasTable extends AppTable {
 		*/
 	}
 
+	public function beforeView($event, $query, $contain) {
+		//$contain[] = 'RubricCriteriaOptions';
+		return compact('query', 'contain');
+	}
+
+	public function afterView($event, $entity) {
+		return $entity;
+	}
+
 	public function beforeAdd($event, $entity) {
 		$query = $this->request->query;
 
-		$templateOptions = $this->RubricSections->RubricTemplates->getList();
+		$templateOptions = $this->RubricSections->RubricTemplates->find('list')->toArray();
 		$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
 
         $sectionOptions = $this->RubricSections->find('list')
@@ -155,9 +170,19 @@ class RubricCriteriasTable extends AppTable {
     	return $entity;
 	}
 
-	public function beforeView($event, $query, $contain) {
-		//$contain[] = 'RubricCriteriaOptions';
+	public function addReload($event, $entity) {
+		return $entity;
+	}
 
+	public function beforeEdit($event, $query, $contain) {
 		return compact('query', 'contain');
+	}
+
+	public function editReload($event, $entity) {
+		return $entity;
+	}
+
+	public function	setCriteriaElement($entity) {
+		pr($entity);
 	}
 }
