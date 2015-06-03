@@ -1,25 +1,13 @@
 <?php
-namespace Staff\Model\Table;
+namespace FieldOption\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class QualificationsTable extends AppTable {
+class QualificationLevelsTable extends AppTable {
 	public function initialize(array $config) {
-		$this->table('staff_qualifications');
-		parent::initialize($config);
-
-		// public $belongsTo = array(
-		// 'Staff.Staff',
-		// 'Staff.QualificationLevel',
-		// 'QualificationInstitution',
-		// 'Training.QualificationSpecialisation',
-		
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
-		// $this->belongsTo('QualificationLevels', ['className' => 'Staff.QualificationLevels']);
-		// todo-mlee
-		// 'Training.QualificationSpecialisation',
+		$this->addBehavior('ControllerAction.FieldOption');
+		$this->belongsTo('Qualifications', ['className' => 'Staff.Qualifications']);
 	}
 
 	public function beforeAction($event) {
