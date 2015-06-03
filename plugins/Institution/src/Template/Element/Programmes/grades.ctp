@@ -20,7 +20,12 @@
 			<tbody>
 				<?php foreach ($attr['data'] as $obj) : ?>
 				<tr>
-					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+					<td class="checkbox-column">
+						<input type="checkbox" class="icheck-input" />
+						<?php
+						// TODO-jeff: populate hidden fields for education grades
+						?>
+					</td>
 					<td><?= $obj->code ?></td>
 					<td><?= $obj->name ?></td>
 				</tr>
