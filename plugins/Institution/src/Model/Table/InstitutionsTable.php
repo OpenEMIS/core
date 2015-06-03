@@ -35,8 +35,8 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StaffAbsences', ['className' => 'Institution.InstitutionSiteStaffAbsences']);
 		$this->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
-		$this->hasMany('StaffBehaviours', ['className' => 'Staff.StaffBehaviours']);
-		$this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours']);
+		$this->hasMany('StaffBehaviours', ['Institution' => 'Staff.StaffBehaviours']);
+		$this->hasMany('StudentBehaviours', ['Institution' => 'Student.StudentBehaviours']);
 
 		$this->hasMany('BankAccounts', ['className' => 'Institution.InstitutionSiteBankAccounts']);
 		$this->hasMany('Fees', ['className' => 'Institution.InstitutionSiteFees']);
