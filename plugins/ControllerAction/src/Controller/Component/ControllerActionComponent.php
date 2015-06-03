@@ -20,16 +20,20 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use ControllerAction\Model\Traits\ControllerActionTrait;
 
 class ControllerActionComponent extends Component {
+	use ControllerActionTrait;
+
 	private $plugin;
 	private $controller;
-	public $model = null;
 	private $triggerFrom = 'Controller';
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
 	private $defaultActions = ['index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
+
+	public $model = null;
 	public $models = [];
 	public $buttons = [];
 	public $params = [];
@@ -398,7 +402,7 @@ class ControllerActionComponent extends Component {
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
 			}
-			$event = new Event('ControllerAction.Model.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+			$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
@@ -406,7 +410,7 @@ class ControllerActionComponent extends Component {
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 
-			$event = new Event('ControllerAction.Model.afterPaginate', $this, ['data' => $data]);
+			$event = new Event('ControllerAction.Model.index.afterPaginate', $this, ['data' => $data]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$data = $event->result;
