@@ -19,7 +19,42 @@ class StaffController extends AppController {
 			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
 			'Awards' => ['className' => 'User.UserAwards'],
 			'Attachments' => ['className' => 'User.UserAttachments'],
-			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
+
+			'Qualifications' => ['className' => 'Staff.Qualifications'],
+			'Positions' => ['className' => 'Staff.Positions'],
+			'Sections' => ['className' => 'Staff.Sections'],
+			'Classes' => ['className' => 'Staff.Classes'],
+			'Absences' => ['className' => 'Staff.Absences'],
+			'Leaves' => ['className' => 'Staff.Leaves'],
+			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
+			'Employments' => ['className' => 'Staff.Employments'],
+			'Salaries' => ['className' => 'Staff.Salaries'],
+			'Memberships' => ['className' => 'Staff.Memberships'],
+			'Licenses' => ['className' => 'Staff.Licenses'],
+
+
+			// 'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'qualifications']],
+			// 'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'training']],
+			// 'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Position']],
+			// 'Sections' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSection']],
+			// 'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffClass']],
+			// 'Absence' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'absence']],
+			// 'Leave' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'leaves']],
+			// 'Behaviour' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffBehaviour']],
+			// 'Extracurricular' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'extracurricular']],
+			// 'Employment' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'employments']],
+			// 'Salary' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSalary']],
+			// 'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'membership']],
+			// 'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'license']],
+
+
+
+
+
+
+
+
+			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
 		];
 
 		$this->set('contentHeader', 'Staff');

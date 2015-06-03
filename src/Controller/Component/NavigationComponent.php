@@ -266,6 +266,12 @@ class NavigationComponent extends Component {
 // <a href="/core/Students/bankAccounts" >Bank Accounts
 // <a href="/core/Students/StudentFee" >Fees
 					]
+				],
+				'Health' => [
+					'collapse' => true,
+					'items' => [
+						'<placeholder>' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts']]
+					]
 				]
 			];
 			// $navigations['items']['Institutions']['items'] = [
@@ -298,21 +304,39 @@ class NavigationComponent extends Component {
 			'Details' => [
 					'collapse' => true,
 					'items' => [
-						'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'qualifications']],
-						// 'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'training']],
-						// 'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Position']],
-						// 'Sections' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSection']],
-						// 'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffClass']],
-						// 'Absence' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'absence']],
-						// 'Leave' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'leaves']],
-						// 'Behaviour' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffBehaviour']],
-						// 'Extracurricular' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'extracurricular']],
-						// 'Employment' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'employments']],
-						// 'Salary' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSalary']],
-						// 'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'membership']],
-						// 'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'license']],
+						'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications']],
+						'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Training']],
+						'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Positions']],
+						'Sections' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Sections']],
+						'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Classes']],
+						'Absences' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Absences']],
+						'Leave' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Leaves']],
+						'Behaviours' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffBehaviours']],
+						'Extracurricular' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'extracurricular']],
+						'Employments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Employments']],
+						'Salaries' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Salaries']],
+						'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Memberships']],
+						'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Licenses']],
 					]
 				],
+				'Finance' => [
+					'collapse' => true,
+					'items' => [
+						'Bank Accounts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']],
+					]
+				],
+				'Health' => [
+					'collapse' => true,
+					'items' => [
+						'<placeholder>' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']]
+					]
+				],
+				'Training' => [
+					'collapse' => true,
+					'items' => [
+						'<placeholder>' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']]
+					]
+				]
 
 
 // 							'Details' => [
