@@ -19,6 +19,11 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		
+		if ($this->action == 'index') {
+
+		}
+
+		$this->fields['staff_position_title_id']['type'] = 'select';
+		$this->fields['staff_position_grade_id']['type'] = 'select';
 	}
 }
