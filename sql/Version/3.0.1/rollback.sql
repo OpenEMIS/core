@@ -231,3 +231,7 @@ RENAME TABLE z_1407_wf_workflow_steps TO wf_workflow_steps;
 RENAME TABLE z_1407_wf_workflow_step_roles TO wf_workflow_step_roles;
 RENAME TABLE z_1407_wf_workflow_submodels TO wf_workflow_submodels;
 RENAME TABLE z_1407_wf_workflow_transitions TO wf_workflow_transitions;
+
+-- June 3 1605hrs
+-- changing student and staff id to security user id (part 3) - rollback
+DROP TABLE user_bank_accounts;

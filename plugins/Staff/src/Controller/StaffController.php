@@ -31,46 +31,11 @@ class StaffController extends AppController {
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
 			'Licenses' => ['className' => 'Staff.Licenses'],
-
-
-			// 'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'qualifications']],
-			// 'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'training']],
-			// 'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Position']],
-			// 'Sections' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSection']],
-			// 'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffClass']],
-			// 'Absence' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'absence']],
-			// 'Leave' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'leaves']],
-			// 'Behaviour' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffBehaviour']],
-			// 'Extracurricular' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'extracurricular']],
-			// 'Employment' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'employments']],
-			// 'Salary' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'StaffSalary']],
-			// 'Memberships' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'membership']],
-			// 'Licenses' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'license']],
-
-
-
-
-
-
-
-
-			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
+			'BankAccounts' => ['className' => 'User.UserBankAccounts'],
 		];
 
 		$this->set('contentHeader', 'Staff');
     }
-
-    // temp method until institution site role is using security user id
-    public $modelsThatUseSecurityUserId = [
-			'Contacts',
-			'Identities',
-			'Languages',
-			'Comments',
-			'SpecialNeeds',
-			'Awards',
-			'Attachments',
-			'Behaviours'
-		];
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -100,7 +65,7 @@ class StaffController extends AppController {
 	public function beforePaginate($event, $model, $options) {
 		$session = $this->request->session();
 
-		if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
+		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
 				if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
 					$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
 					if (!array_key_exists('conditions', $options)) {
