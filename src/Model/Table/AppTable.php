@@ -7,8 +7,11 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use ControllerAction\Model\Traits\ControllerActionTrait;
 
 class AppTable extends Table {
+	use ControllerActionTrait;
+
 	public function initialize(array $config) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
@@ -34,13 +37,7 @@ class AppTable extends Table {
 		}
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.onPopulateSelectOptions'] = 'buildSelectOptions';
-		return $events;
-	}
-
-	public function buildSelectOptions($event, $query) {
+	public function onPopulateSelectOptions($event, $query) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 		
