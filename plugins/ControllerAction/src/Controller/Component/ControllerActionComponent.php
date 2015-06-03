@@ -90,7 +90,7 @@ class ControllerActionComponent extends Component {
 						$this->request->params['action'] = 'ComponentAction';
 						$this->initComponentsForModel();
 
-						$event = new Event('ControllerAction.onInitialize', $this, ['model' => $this->model]);
+						$event = new Event('ControllerAction.Controller.onInitialize', $this, ['model' => $this->model]);
 						$this->controller->eventManager()->dispatch($event);
 						
 						$this->triggerFrom = 'Model';
@@ -98,7 +98,7 @@ class ControllerActionComponent extends Component {
 					}
 				}
 			}
-			$event = new Event('ControllerAction.beforeAction', $this);
+			$event = new Event('ControllerAction.Model.beforeAction', $this);
 			$this->model->eventManager()->dispatch($event);
 			$this->buildDefaultValidation();
 		}
@@ -118,7 +118,7 @@ class ControllerActionComponent extends Component {
 
 					$query = $associatedObject->find('list');
 
-					$event = new Event('ControllerAction.onPopulateSelectOptions', $this, compact('query'));
+					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
 					$event = $associatedObject->eventManager()->dispatch($event);
 					if (!empty($event->result)) {
 						$query = $event->result;
@@ -128,7 +128,7 @@ class ControllerActionComponent extends Component {
 				}
 			}
 
-			$event = new Event('ControllerAction.afterAction', $this);
+			$event = new Event('ControllerAction.Model.afterAction', $this);
 			$this->model->eventManager()->dispatch($event);
 			$this->request->params['action'] = $action;
 
@@ -273,7 +273,7 @@ class ControllerActionComponent extends Component {
 		foreach ($this->indexActions as $action => $attr) {
 			$this->indexActions[$action] = array_merge($this->indexActions[$action], $buttons[$action]);
 		}
-		$event = new Event('ControllerAction.IndexButtons.beforeRender', $this, ['actions' => $this->indexActions]);
+		$event = new Event('ControllerAction.Model.index.onInitializeButtons', $this, ['actions' => $this->indexActions]);
 		$event = $this->model->eventManager()->dispatch($event);
 		if (!is_null($event->result)) {
 			$this->indexActions = $event->result;
@@ -336,7 +336,7 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
-	public function search($model, $options = array(), $order = array()) {
+	public function search($model, $order = array()) {
 		$alias = $model->alias();
 		$controller = $this->controller;
 		$request = $this->request;
@@ -362,7 +362,14 @@ class ControllerActionComponent extends Component {
 			}
 		}
 		$conditions = isset($options['conditions']) ? $options['conditions'] : [];
-		$contain = isset($options['contain']) ? $options['contain'] : [];
+
+		$contain = [];
+		foreach ($model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+				$contain[] = $assoc->name();
+			}
+		}
+
 		// all string fields are searchable by default
 		$OR = isset($conditions['OR']) ? $conditions['OR'] : [];
 		foreach($schema as $name => $obj) {
@@ -386,17 +393,24 @@ class ControllerActionComponent extends Component {
 		$controller->set('pageOptions', $this->pageOptions);
 
 		try {
-			$event = new Event('ControllerAction.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+			$event = new Event('ControllerAction.Controller.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
 			$event = $this->controller->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
 			}
+			$event = new Event('ControllerAction.Model.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
 			}
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
+
+			$event = new Event('ControllerAction.Model.afterPaginate', $this, ['data' => $data]);
+			$event = $this->model->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$data = $event->result;
+			}
 		} catch (NotFoundException $e) {
 			$this->log($e->getMessage(), 'debug');
 			$action = $this->buttons['index']['url'];
@@ -429,14 +443,10 @@ class ControllerActionComponent extends Component {
 	public function index() {
 		$model = $this->model;
 
-		$contain = [];
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
-			}
-		}
+		$event = new Event('ControllerAction.Model.index.beforeAction', $this);
+		$event = $model->eventManager()->dispatch($event);
 
-		$data = $this->search($model, ['contain' => $contain]);
+		$data = $this->search($model);
 		$modal = $this->getModalOptions('delete');
 
 		$indexElements = array(
@@ -449,6 +459,12 @@ class ControllerActionComponent extends Component {
 			$indexElements[] = array('name' => 'ControllerAction.pagination', 'data' => array(), 'options' => array());
 		}
 
+		$event = new Event('ControllerAction.Model.index.afterAction', $this, ['data' => $data]);
+		$event = $model->eventManager()->dispatch($event);
+		if (!is_null($event->result)) {
+			$data = $event->result;
+		}
+
 		$this->controller->set('data', $data);
 		$this->controller->set('modal', $modal);
 		$this->controller->set('indexElements', $indexElements);
@@ -458,6 +474,9 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
+
+		$event = new Event('ControllerAction.Model.view.beforeAction', $this);
+		$event = $model->eventManager()->dispatch($event);
 
 		$contain = [];
 		foreach ($model->associations() as $assoc) {
@@ -475,17 +494,16 @@ class ControllerActionComponent extends Component {
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->findById($id);
 
-			$event = new Event('ControllerAction.beforeView', $this, compact('query', 'contain'));
+			$event = new Event('ControllerAction.Model.view.beforeQuery', $this, compact('query', 'contain'));
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
-				$query = $event->result['query'];
-				$contain = $event->result['contain'];
+				list($query, $contain) = $event->result;
 			}
 
 			$data = $query->contain($contain)->first();
 
-			$event = new Event('ControllerAction.afterView', $this, ['entity' => $data]);
-			$event = $this->model->eventManager()->dispatch($event);
+			$event = new Event('ControllerAction.Model.view.afterAction', $this, ['entity' => $data]);
+			$event = $model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$data = $event->result;
 			}
@@ -505,17 +523,30 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$data = $model->newEntity();
 
-		$event = new Event('ControllerAction.beforeAdd', $this, ['entity' => $data]);
-		$event = $this->model->eventManager()->dispatch($event);
+		$event = new Event('ControllerAction.Model.add.beforeAction', $this, ['entity' => $data]);
+		$event = $model->eventManager()->dispatch($event);
 		if (!empty($event->result)) {
 			$data = $event->result;
 		}
 
-		if ($this->request->is(['post', 'put'])) {
+		if ($this->request->is(['get'])) {
+			$event = new Event('ControllerAction.Model.add.onInitialize', $this, ['entity' => $data]);
+			$event = $model->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$data = $event->result;
+			}
+		} else if ($this->request->is(['post', 'put'])) {
 			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+			$patchOptions = [];
 
 			if ($submit == 'save') {
-				$data = $model->patchEntity($data, $this->request->data);
+				$event = new Event('ControllerAction.Model.add.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+				$event = $model->eventManager()->dispatch($event);
+				if (!empty($event->result)) {
+					list($data, $this->request->data, $patchOptions) = $event->result;
+				}
+				
+				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 				if ($model->save($data)) {
 					$this->Message->alert('general.add.success');
 					$action = $this->buttons['index']['url'];
@@ -524,14 +555,20 @@ class ControllerActionComponent extends Component {
 					$this->log($data->errors(), 'debug');
 					$this->Message->alert('general.add.failed');
 				}
-			} else if ($submit == 'reload') {
-				$data = $model->patchEntity($data, $this->request->data, ['validate' => false]);
-				$event = new Event('ControllerAction.addReload', $this, ['entity' => $data]);
-				$event = $this->model->eventManager()->dispatch($event);
+			} else {
+				$patchOptions['validate'] = false;
+				$event = new Event('ControllerAction.Model.add.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+				$event = $model->eventManager()->dispatch($event);
 				if (!empty($event->result)) {
-					$data = $event->result;
+					list($data, $this->request->data, $patchOptions) = $event->result;
 				}
+				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 			}
+		}
+		$event = new Event('ControllerAction.Model.add.afterAction', $this, ['entity' => $data]);
+		$event = $model->eventManager()->dispatch($event);
+		if (!empty($event->result)) {
+			$data = $event->result;
 		}
 		$this->controller->set('data', $data);
 	}
@@ -542,37 +579,53 @@ class ControllerActionComponent extends Component {
 		$idKey = $model->aliasField($primaryKey);
 		$contain = [];
 
+		$event = new Event('ControllerAction.Model.edit.beforeAction', $this);
+		$event = $model->eventManager()->dispatch($event);
+
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->findById($id);
-			$event = new Event('ControllerAction.beforeEdit', $this, compact('query', 'contain'));
-			$event = $this->model->eventManager()->dispatch($event);
+			$event = new Event('ControllerAction.Model.edit.beforeQuery', $this, compact('query', 'contain'));
+			$event = $model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
-				$query = $event->result['query'];
-				$contain = $event->result['contain'];
+				list($query, $contain) = $event->result;
 			}
 			$data = $query->contain($contain)->first();
 			
 			if ($this->request->is(['post', 'put'])) {
 				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+				$patchOptions = [];
 
 				if ($submit == 'save') {
-					$data = $model->patchEntity($data, $this->request->data);
+					$event = new Event('ControllerAction.Model.edit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					$event = $model->eventManager()->dispatch($event);
+					if (!empty($event->result)) {
+						list($data, $this->request->data, $patchOptions) = $event->result;
+					}
+					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 					if ($model->save($data)) {
+						// event: onSaveSuccess
 						$this->Message->alert('general.edit.success');
 						$action = $this->buttons['view']['url'];
 						return $this->controller->redirect($action);
 					} else {
+						// event: onSaveFailed
 						$this->log($data->errors(), 'debug');
 						$this->Message->alert('general.edit.failed');
 					}
-				} else if ($submit == 'reload') {
-					$data = $model->patchEntity($data, $this->request->data, ['validate' => false]);
-					$event = new Event('ControllerAction.editReload', $this, ['entity' => $data]);
-					$event = $this->model->eventManager()->dispatch($event);
+				} else {
+					$patchOptions['validate'] = false;
+					$event = new Event('ControllerAction.Model.edit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					$event = $model->eventManager()->dispatch($event);
 					if (!empty($event->result)) {
-						$data = $event->result;
+						list($data, $this->request->data, $patchOptions) = $event->result;
 					}
+					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 				}
+			}
+			$event = new Event('ControllerAction.Model.edit.afterAction', $this, ['entity' => $data]);
+			$event = $model->eventManager()->dispatch($event);
+			if (!empty($event->result)) {
+				$data = $event->result;
 			}
 			$this->controller->set('data', $data);
 		} else {
