@@ -26,25 +26,12 @@ class StudentsController extends AppController {
 			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
 			'Results' => ['className' => 'Student.StudentAssessments'],
 			'Extracurriculars' => ['className' => 'Student.StudentExtracurriculars'],
-			'BankAccounts' => ['className' => 'Student.StudentBankAccounts'],
+			'BankAccounts' => ['className' => 'User.UserBankAccounts'],
 			'StudentFees' => ['className' => 'Student.StudentFees'],
 		];
 
 		$this->set('contentHeader', 'Students');
     }
-
-    // temp method until institution site role is using security user id
-    public $modelsThatUseSecurityUserId = [
-			'Contacts',
-			'Identities',
-			'Languages',
-			'Comments',
-			'SpecialNeeds',
-			'Awards',
-			'Attachments',
-			'Absences',
-			'Behaviours'
-		];
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -74,7 +61,7 @@ class StudentsController extends AppController {
 	public function beforePaginate($event, $model, $options) {
 		$session = $this->request->session();
 
-		if (in_array($model->alias, $this->modelsThatUseSecurityUserId)) {
+		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
 				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
 					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
 					if (!array_key_exists('conditions', $options)) {

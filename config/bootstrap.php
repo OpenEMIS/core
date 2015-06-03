@@ -186,6 +186,7 @@ Plugin::load('Migrations');
 Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('Localization', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
+Plugin::load('FieldOption', ['routes' => true, 'autoload' => true]);
 Plugin::load('Institution', ['routes' => true, 'autoload' => true]);
 Plugin::load('User', ['routes' => true, 'autoload' => true]);
 Plugin::load('Student', ['routes' => true, 'autoload' => true]);
