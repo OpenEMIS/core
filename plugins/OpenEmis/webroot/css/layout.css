@@ -1307,6 +1307,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal select {
+	float: left;
 	padding: 5px 10px;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
