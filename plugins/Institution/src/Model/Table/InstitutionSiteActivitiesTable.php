@@ -23,6 +23,7 @@ class InstitutionSiteActivitiesTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.beforeAction'] = 'beforeAction';
+		$events['ControllerAction.IndexButtons.beforeRender'] = 'beforeRenderActions';
 		// $events['Model.beforeFind'] = 'beforeFind';
 		return $events;
 	}
@@ -47,4 +48,7 @@ class InstitutionSiteActivitiesTable extends AppTable {
 		$this->fields['created']['visible'] = true; 
 	}
 
+	public function beforeRenderActions($event, $buttons) {
+		return [];
+	}
 }

@@ -42,7 +42,7 @@ class ControllerActionComponent extends Component {
 	public $indexActions = [
 		'view' => array('class' => 'fa fa-eye'),
 		'edit' => array('class' => 'fa fa-pencil'),
-		'remove' => array('class' => 'fa fa-trash')
+		'delete' => array('class' => 'fa fa-trash')
 	];
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
@@ -232,7 +232,11 @@ class ControllerActionComponent extends Component {
 				$actionUrl = array_merge($actionUrl, $pass);
 			}
 			$actionUrl = array_merge($actionUrl, $named);
-			$buttons[$action] = array('url' => $actionUrl);
+			if ($action != 'remove') {
+				$buttons[$action] = array('url' => $actionUrl);
+			} else {
+				$buttons['delete'] = array('url' => $actionUrl);
+			}
 		}
 
 		$backAction = 'index';
@@ -251,7 +255,7 @@ class ControllerActionComponent extends Component {
 		}
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
-		$buttons['remove']['removeStraightAway'] = $this->removeStraightAway;
+		$buttons['delete']['removeStraightAway'] = $this->removeStraightAway;
 
 		// logic for Reorder buttons
 		$schema = $this->getSchema($this->model);
@@ -268,6 +272,11 @@ class ControllerActionComponent extends Component {
 		$controller->set('_buttons', $buttons);
 		foreach ($this->indexActions as $action => $attr) {
 			$this->indexActions[$action] = array_merge($this->indexActions[$action], $buttons[$action]);
+		}
+		$event = new Event('ControllerAction.IndexButtons.beforeRender', $this, ['actions' => $this->indexActions]);
+		$event = $this->model->eventManager()->dispatch($event);
+		if (!is_null($event->result)) {
+			$this->indexActions = $event->result;
 		}
 		$controller->set('_indexActions', $this->indexActions);
 	}
@@ -405,7 +414,7 @@ class ControllerActionComponent extends Component {
 			$modal['content'] = __('Are you sure you want to delete this record.');
 			$modal['formOptions'] = array(
 				'type' => 'delete',
-				'action' => $this->buttons['remove']['url']['action']
+				'action' => $this->buttons['delete']['url']['action']
 			);
 			$modal['fields'] = array(
 				'id' => array('type' => 'hidden', 'id' => 'recordId')
