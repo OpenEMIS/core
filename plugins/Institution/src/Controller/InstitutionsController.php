@@ -29,8 +29,8 @@ class InstitutionsController extends AppController  {
 
 			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
 
-			'StudentBehaviours' => ['className' => 'Student.StudentBehaviours'],
-			'StaffBehaviours' => ['className' => 'Staff.StaffBehaviours'],
+			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
+			'StaffBehaviours' => ['className' => 'Institution.StaffBehaviours'],
 
 			'BankAccounts' => ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
