@@ -19,7 +19,8 @@
 
 .pagination > .active > a,
 .pagination > .active > a:hover,
-.toggle-btn i {
+.toggle-btn i,
+.input-group-addon {
 	background-color: #6699CC;
 	color: #FFF;
 	border: 1px solid #6699CC;
@@ -53,7 +54,8 @@
 .outline-btn,
 .btn-outline:hover, 
 .btn-outline:active, 
-.btn-outline:focus {
+.btn-outline:focus,
+.input-group-addon {
 	border: 1px solid #476B8F !important;
 }
 
@@ -74,7 +76,13 @@
 .btn-active,
 .action-dropdown > li > a:hover,
 .login-box .btn-login:hover,
-#menu-toggle .fa:hover {
+#menu-toggle .fa:hover,
+.input-group-addon:hover,
+.datepicker table tr td.active, 
+.datepicker table tr td.active:hover, 
+.datepicker table tr td.active.disabled, 
+.datepicker table tr td.active.disabled:hover {
 	background-color: #476B8F !important;
 	color: #FFF !important;
+	background-image: none !important;	
 }
