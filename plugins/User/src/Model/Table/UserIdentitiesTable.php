@@ -9,7 +9,7 @@ class UserIdentitiesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('IdentityTypes', ['className' => 'User.IdentityTypes']);
+		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
 	}
 
 	public function beforeAction($event) {

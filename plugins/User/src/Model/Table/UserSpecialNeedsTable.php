@@ -9,7 +9,7 @@ class UserSpecialNeedsTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('SpecialNeedTypes', ['className' => 'User.SpecialNeedTypes']);
+		$this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
 	}
 
 	public function beforeAction($event) {
