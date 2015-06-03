@@ -67,7 +67,7 @@ class RubricsController extends AppController
     	if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
 			$query = $this->request->query;
 
-			$templates = TableRegistry::get('Rubric.RubricTemplates')->getList();
+			$templates = TableRegistry::get('Rubric.RubricTemplates')->find('list')->toArray();
 	        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templates);
 
 	        $templateOptions = [];
