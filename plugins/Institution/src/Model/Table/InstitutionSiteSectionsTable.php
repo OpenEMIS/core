@@ -20,6 +20,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function beforeAction() {
+
 		if ($this->action == 'add') {
 			$tabElements = [
 				'single_grade' => [
@@ -51,5 +52,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 		if ($this->action == 'add') {
 			
 		}
+		if ($this->action == 'index') {
+			// $this->fields['start_year']['visible'] = false;
+			// $this->fields['end_year']['visible'] = false;
+		}
+
+		// pr($this->fields);die;
+		// $this->fields['education_grade_id']['type'] = 'select';
+		// $this->fields['academic_period_id']['type'] = 'select';
+		// $this->fields['institution_site_shift_id']['type'] = 'select';
 	}
 }

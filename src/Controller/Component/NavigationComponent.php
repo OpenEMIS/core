@@ -166,7 +166,8 @@ class NavigationComponent extends Component {
 					'items' => [
 						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view'], 'selected' => ['edit']],
 						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
-						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']]
+						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']],
+						'History' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'History']]
 					]
 				],
 				'Details' => [

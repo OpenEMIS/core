@@ -10,12 +10,12 @@ class InstitutionsController extends AppController  {
 
 		$this->ControllerAction->model('Institution.Institutions');
 		$this->ControllerAction->models = [
-			'Attachments' => ['className' => 'Institution.InstitutionSiteAttachments'],
-			'Additional' => ['className' => 'Institution.Additional'],
+			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
+			'Additional' 		=> ['className' => 'Institution.Additional'],
+			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities'],
 
 			// 'InstitutionSiteCustomField',
 			// 'InstitutionSiteCustomFieldOption',
-
 
 			'Positions' 		=> ['className' => 'Institution.InstitutionSitePositions'],
 			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
@@ -24,22 +24,22 @@ class InstitutionsController extends AppController  {
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
 
-			'StudentAbsences' => ['className' => 'Institution.InstitutionSiteStudentAbsences'],
-			'StaffAbsences' => ['className' => 'Institution.InstitutionSiteStaffAbsences'],
+			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'StaffAbsences' 	=> ['className' => 'Institution.InstitutionSiteStaffAbsences'],
 
 			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
 
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'StaffBehaviours' => ['className' => 'Institution.StaffBehaviours'],
+			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
-			'BankAccounts' => ['className' => 'Institution.InstitutionSiteBankAccounts'],
-			'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
-			'StudentFees' => ['className' => 'Institution.StudentFees'],
+			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
+			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
+			'StudentFees' 		=> ['className' => 'Institution.StudentFees'],
 
 			// // Surveys
-			'NewSurveys' => ['className' => 'Institution.SurveyNew'],
-			'DraftedSurveys' => ['className' => 'Institution.SurveyDrafts'],
-			'CompletedSurveys' => ['className' => 'Institution.SurveyCompleted'],
+			'NewSurveys' 		=> ['className' => 'Institution.SurveyNew'],
+			'DraftedSurveys' 	=> ['className' => 'Institution.SurveyDrafts'],
+			'CompletedSurveys' 	=> ['className' => 'Institution.SurveyCompleted'],
 
 			// Quality
 			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
@@ -47,6 +47,7 @@ class InstitutionsController extends AppController  {
 
 		];
 		$this->loadComponent('Paginator');
+		// $this->loadComponent('Activity', ['model'=>'InstitutionSiteActivities']);
 		
 	}
 
@@ -54,6 +55,7 @@ class InstitutionsController extends AppController  {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.onInitialize'] = 'onInitialize';
 		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		// pr($events);
 		return $events;
 	}
 
