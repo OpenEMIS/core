@@ -172,7 +172,6 @@ p.error { margin-top: 50px; }
 }
 
 .username .kd-role {
-	padding: 10px 0;
 	vertical-align: top;
 }
 
@@ -1244,19 +1243,27 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal label {
-	margin: 10px;
+	margin: 5px 10px;
 	text-align: right;
 	width: 25.3%;
+	float: left;
 }
 
 .form-horizontal input,
 .form-horizontal textarea {
+	float: left;
 	border: 1px solid #CCC;
 	padding: 5px 10px;
 	margin-bottom: 15px;
 	width: 30%;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
+}
+
+.form-horizontal .input-group {
+	width: 30%;	
+	margin: 0 0 15px;
+	float: left;
 }
 
 .form-horizontal .textarea label,
@@ -1309,6 +1316,11 @@ table tr.sorting-row td {background-color: #8b8;}
 	height: 30px;
 }
 
+.form-horizontal .input-group-addon {
+	line-height: 0;
+	cursor: pointer;
+}
+
 select {
     background-color: transparent;	
     position: relative;
@@ -1318,18 +1330,6 @@ select {
 select:-moz-focusring {
     color: transparent;
     text-shadow: 0 0 0 #000;
-}
-
-.select:after {
-	border-left: 5px solid transparent;
-	border-right: 5px solid transparent;
-	border-top: 5px solid #4a4a4a;
-	content: "";
-	margin-top: -2.5px;
-	pointer-events: none;
-	position: absolute;
-	right: 10px;
-	top: 50%;
 }
 
 .form-horizontal option {
@@ -1369,7 +1369,7 @@ select:-moz-focusring {
 	content: "*";
 	font-size: 14px;
 	color: #CC5C5C;
-	margin: 5px;
+	margin: 3px;
 }
 
 /* TABLE DROPDOWN; ACTION & REORDER */
@@ -1795,7 +1795,7 @@ footer {
 	
 	.form-horizontal label {
 		width: 100%;
-		text-align: left;
+		text-align: left !important;
 		margin: 10px 0;
 	}
 
@@ -1810,12 +1810,13 @@ footer {
 		float: none;
 	}
 
-	.form-horizontal .fileinput {
-		width: 100%;
+	.form-horizontal .fileinput,
+	.form-horizontal .input-group {
+		width: 100% !important;
 	}
 
 	.form-buttons {
-		margin: 20px 0;
+		margin: 30px 0;
 		width: 100%;
 	}
 
@@ -2010,7 +2011,7 @@ footer {
 	}
 
 	.username a {
-		padding: 4px 0;
+		padding: 6px 0;
 		vertical-align: middle;
 	}
 
@@ -2087,33 +2088,25 @@ footer {
 	}
 
 	.form-horizontal label {
-		width: 100%;
-		text-align: left;
-		margin: 10px 0;
+		text-align: right;
+		margin: 0 10px 10px 0;
 	}
 
 	.form-horizontal input,
 	.form-horizontal select,
 	.form-horizontal textarea,
-	.form-horizontal .file {
+	.form-horizontal .fileinput,
+	.form-horizontal .input-group {
 		width: 60%;
 	}
 
 	.form-buttons {
-		margin: 30px 0 !important;
 		width: 100%;
+		clear: both;
 	}
 
 	.error-message {
-		margin: 0 10px 10px;
-	}
-
-	.form-horizontal .file label {
-		float: none;
-	}
-
-	.form-horizontal .fileinput {
-		width: 100%;
+		margin: 0 28% 10px;
 	}
 
 	/* PAGINATION */
@@ -2222,11 +2215,6 @@ footer {
 		padding: 4px 0 0;
 	}
 
-	/* FORM */
-
-	.form-buttons {
-		margin-left: 28%;
-	}
 }
 
 @media only screen and (min-width: 30em) { 
@@ -2250,4 +2238,11 @@ footer {
     	top: 42px; 
     	left: 0;  
     }
+}
+
+
+@media (min-width: 486px) and (max-width: 762px){
+	.error-message {
+		margin-left: 27%;
+	}
 }
