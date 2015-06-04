@@ -61,34 +61,23 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['Model.afterSave'] = 'afterSave';
-		return $events;
-	}
-
-	public function afterSave($event) {
-		// ss
+	public function indexBeforeAction($event) {
+		$this->Session->delete('Institutions.id');
+		$this->fields['alternative_name']['visible']['index'] = false;
+		$this->fields['address']['visible']['index'] = false;
+		$this->fields['postal_code']['visible']['index'] = false;
+		$this->fields['telephone']['visible']['index'] = false;
+		$this->fields['fax']['visible']['index'] = false;
+		$this->fields['email']['visible']['index'] = false;
+		$this->fields['website']['visible']['index'] = false;
+		$this->fields['date_opened']['visible']['index'] = false;
+		$this->fields['date_closed']['visible']['index'] = false;
+		$this->fields['longitude']['visible']['index'] = false;
+		$this->fields['latitude']['visible']['index'] = false;
+		$this->fields['contact_person']['visible']['index'] = false;
 	}
 
 	public function beforeAction($event) {
-		if ($this->action == 'index') {
-			$this->Session->delete('Institutions.id');
-			$this->fields['alternative_name']['visible']['index'] = false;
-			$this->fields['address']['visible']['index'] = false;
-			$this->fields['postal_code']['visible']['index'] = false;
-			$this->fields['telephone']['visible']['index'] = false;
-			$this->fields['fax']['visible']['index'] = false;
-			$this->fields['email']['visible']['index'] = false;
-			$this->fields['website']['visible']['index'] = false;
-			$this->fields['date_opened']['visible']['index'] = false;
-			$this->fields['date_closed']['visible']['index'] = false;
-			$this->fields['longitude']['visible']['index'] = false;
-			$this->fields['latitude']['visible']['index'] = false;
-			$this->fields['contact_person']['visible']['index'] = false;
-		}
-
 		/**
 		 * 
 		 */
