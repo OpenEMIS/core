@@ -501,7 +501,7 @@ class ControllerActionComponent extends Component {
 			$event = new Event('ControllerAction.Model.view.beforeQuery', $this, compact('query', 'contain'));
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
-				list($query, $contain) = $event->result;
+				list($query, $contain) = array_values($event->result);
 			}
 
 			$data = $query->contain($contain)->first();
@@ -525,8 +525,11 @@ class ControllerActionComponent extends Component {
 
 	public function add() {
 		$model = $this->model;
+		$event = new Event('ControllerAction.Model.addEdit.beforeAction', $this);
+		$model->eventManager()->dispatch($event);
 		$event = new Event('ControllerAction.Model.add.beforeAction', $this);
-		$event = $model->eventManager()->dispatch($event);
+		$model->eventManager()->dispatch($event);
+		
 		$data = $model->newEntity();
 
 		if ($this->request->is(['get'])) {
@@ -543,7 +546,7 @@ class ControllerActionComponent extends Component {
 				$event = new Event('ControllerAction.Model.add.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 				$event = $model->eventManager()->dispatch($event);
 				if (!empty($event->result)) {
-					list($data, $this->request->data, $patchOptions) = $event->result;
+					list($data, $this->request->data, $patchOptions) = array_values($event->result);
 				}
 				
 				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
@@ -560,14 +563,19 @@ class ControllerActionComponent extends Component {
 				$event = new Event('ControllerAction.Model.add.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 				$event = $model->eventManager()->dispatch($event);
 				if (!empty($event->result)) {
-					list($data, $this->request->data, $patchOptions) = $event->result;
+					list($data, $this->request->data, $patchOptions) = array_values($event->result);
 				}
 				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 			}
 		}
+		$event = new Event('ControllerAction.Model.addEdit.afterAction', $this, ['entity' => $data]);
+		$event = $model->eventManager()->dispatch($event);
+		if (is_object($event->result)) {
+			$data = $event->result;
+		}
 		$event = new Event('ControllerAction.Model.add.afterAction', $this, ['entity' => $data]);
 		$event = $model->eventManager()->dispatch($event);
-		if (!empty($event->result)) {
+		if (is_object($event->result)) {
 			$data = $event->result;
 		}
 		$this->controller->set('data', $data);
@@ -579,15 +587,17 @@ class ControllerActionComponent extends Component {
 		$idKey = $model->aliasField($primaryKey);
 		$contain = [];
 
+		$event = new Event('ControllerAction.Model.addEdit.beforeAction', $this);
+		$model->eventManager()->dispatch($event);
 		$event = new Event('ControllerAction.Model.edit.beforeAction', $this);
-		$event = $model->eventManager()->dispatch($event);
+		$model->eventManager()->dispatch($event);
 
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->findById($id);
 			$event = new Event('ControllerAction.Model.edit.beforeQuery', $this, compact('query', 'contain'));
 			$event = $model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
-				list($query, $contain) = $event->result;
+				list($query, $contain) = array_values($event->result);
 			}
 			$data = $query->contain($contain)->first();
 			
@@ -605,7 +615,7 @@ class ControllerActionComponent extends Component {
 					$event = new Event('ControllerAction.Model.edit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 					$event = $model->eventManager()->dispatch($event);
 					if (!empty($event->result)) {
-						list($data, $this->request->data, $patchOptions) = $event->result;
+						list($data, $this->request->data, $patchOptions) = array_values($event->result);
 					}
 					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 					if ($model->save($data)) {
@@ -623,14 +633,19 @@ class ControllerActionComponent extends Component {
 					$event = new Event('ControllerAction.Model.edit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 					$event = $model->eventManager()->dispatch($event);
 					if (!empty($event->result)) {
-						list($data, $this->request->data, $patchOptions) = $event->result;
+						list($data, $this->request->data, $patchOptions) = array_values($event->result);
 					}
 					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 				}
 			}
+			$event = new Event('ControllerAction.Model.addEdit.afterAction', $this, ['entity' => $data]);
+			$event = $model->eventManager()->dispatch($event);
+			if (is_object($event->result)) {
+				$data = $event->result;
+			}
 			$event = new Event('ControllerAction.Model.edit.afterAction', $this, ['entity' => $data]);
 			$event = $model->eventManager()->dispatch($event);
-			if (!empty($event->result)) {
+			if (is_object($event->result)) {
 				$data = $event->result;
 			}
 			$this->controller->set('data', $data);
