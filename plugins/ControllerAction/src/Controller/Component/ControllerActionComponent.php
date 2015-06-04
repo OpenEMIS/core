@@ -20,16 +20,18 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use ControllerAction\Model\Traits\ControllerActionTrait;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
 	private $controller;
-	public $model = null;
 	private $triggerFrom = 'Controller';
 	private $currentAction;
 	private $ctpFolder;
 	private $paramsPass;
 	private $defaultActions = ['index', 'add', 'view', 'edit', 'remove', 'download', 'reorder'];
+
+	public $model = null;
 	public $models = [];
 	public $buttons = [];
 	public $params = [];
@@ -398,7 +400,7 @@ class ControllerActionComponent extends Component {
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
 			}
-			$event = new Event('ControllerAction.Model.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+			$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
@@ -406,7 +408,7 @@ class ControllerActionComponent extends Component {
 
 			$data = $this->Paginator->paginate($model, $paginateOptions);
 
-			$event = new Event('ControllerAction.Model.afterPaginate', $this, ['data' => $data]);
+			$event = new Event('ControllerAction.Model.index.afterPaginate', $this, ['data' => $data]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if (!empty($event->result)) {
 				$data = $event->result;
@@ -591,7 +593,13 @@ class ControllerActionComponent extends Component {
 			}
 			$data = $query->contain($contain)->first();
 			
-			if ($this->request->is(['post', 'put'])) {
+			if ($this->request->is(['get'])) {
+				$event = new Event('ControllerAction.Model.edit.onInitialize', $this, ['entity' => $data]);
+				$event = $model->eventManager()->dispatch($event);
+				if (!empty($event->result)) {
+					$data = $event->result;
+				}
+			} else if ($this->request->is(['post', 'put'])) {
 				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
 				$patchOptions = [];
 
