@@ -35,8 +35,8 @@ class StudentsController extends AppController {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.onInitialize'] = 'onInitialize';
-		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		$events['ControllerAction.Controller.onInitialize'] = 'onInitialize';
+		$events['ControllerAction.Controller.beforePaginate'] = 'beforePaginate';
 		return $events;
 	}
 
