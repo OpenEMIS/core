@@ -593,7 +593,13 @@ class ControllerActionComponent extends Component {
 			}
 			$data = $query->contain($contain)->first();
 			
-			if ($this->request->is(['post', 'put'])) {
+			if ($this->request->is(['get'])) {
+				$event = new Event('ControllerAction.Model.edit.onInitialize', $this, ['entity' => $data]);
+				$event = $model->eventManager()->dispatch($event);
+				if (!empty($event->result)) {
+					$data = $event->result;
+				}
+			} else if ($this->request->is(['post', 'put'])) {
 				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
 				$patchOptions = [];
 
