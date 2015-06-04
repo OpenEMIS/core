@@ -25,13 +25,6 @@ class RubricTemplateOptionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		return $events;
-	}
-
 	public function beforeAction($event) {
 		$this->fields['color']['type'] = 'color';
 

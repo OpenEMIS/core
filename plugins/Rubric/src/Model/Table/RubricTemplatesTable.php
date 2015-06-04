@@ -22,12 +22,6 @@ class RubricTemplatesTable extends AppTable {
 		return $validator;
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		return $events;
-	}
-
 	public function beforeAction($event) {
 		$weightingTypeOptions = [];
 		foreach ($this->weightingType as $key => $weightingType) {
