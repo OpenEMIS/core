@@ -22,7 +22,7 @@ class AppValidator extends Validator {
 
     public function checkLongitude($check, array $globalData){
 
-        $isValid = 'Wrong Longitude value';
+        $isValid = false;
         $longitude = trim($check);
 
         if(is_numeric($longitude) && floatval($longitude) >= -180.00 && floatval($longitude <= 180.00)){
@@ -60,7 +60,6 @@ class AppValidator extends Validator {
 			$startDate = new DateTime($field);
 		} catch (Exception $e) {
 		    return 'Please input a proper date';
-			exit(1);
 		}
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => false];
@@ -93,7 +92,6 @@ class AppValidator extends Validator {
 			$endDate = new DateTime($field);
 		} catch (Exception $e) {
 		    return 'Please input a proper date';
-			exit(1);
 		}
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => true];
@@ -142,6 +140,27 @@ class AppValidator extends Validator {
 			}
 		}
 	}
+
+	/**
+	 * created this function to overwrite Validator.php notEmpty.
+	 * seems like that file has a bug?
+	 * @param  [type]  $field   [description]
+	 * @param  [type]  $message [description]
+	 * @param  boolean $when    [description]
+	 * @return [type]           [description]
+	 */
+    public function notEmpty($field, $message = null, $when = false)
+    {
+    	if ($this->hasField($field)) {
+	    	$this->field($field)->isEmptyAllowed($when);
+	        if ($message) {
+	            $this->_allowEmptyMessages[$field] = $message;
+	        }
+	        return $this;
+	    } else {
+	    	return $this->notBlank($field);
+	    }
+    }
 
 	// private function setEssentials() {
 	// 	$table = $this->_providers['table'];

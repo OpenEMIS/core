@@ -62,29 +62,45 @@ class InstitutionsTable extends AppTable  {
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
+	        // pr($validator);
+
 		$validator
-	        // ->requirePresence('date_closed', false)
 	        ->allowEmpty('date_closed')
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-	            'rule' => ['compareDateReverse', 'date_opened', false],
-	            'message' => 'Closing date should be later than opening date'
-	        ])
+		            'rule' => ['compareDateReverse', 'date_opened', false],
+		            'message' => 'Closing date should be later than opening date'
+	    	    ])
 
-	        ->requirePresence('longitude', false)
-			->add('longitude', 'ruleLongitude', [ 
-					'rule' => 'checkLongitude'
-			])
 	        ->allowEmpty('longitude')
+			->add('longitude', 'ruleLongitude', [
+					'rule' => 'checkLongitude'
+				])
 		
-		// 'latitude' => array(
-		// 	'ruleLatitude' => array(
-		// 		'rule' => array('checkLatitude'),
-		// 		'allowEmpty' => true,
-  //       		'messageCode' => 'InstitutionSite'
-		// 	)
-		// ),
+	        ->allowEmpty('latitude')
+			->add('latitude', 'ruleLatitude', [
+					'rule' => 'checkLatitude'
+				])
+		
+			->add('address', 'ruleMaximum255', [
+					'rule' => ['maxLength', 255],
+					'message' => 'asd',
+					'last' => true
+				])
+
+			// ->add('body', [
+		 //        'minLength' => [
+		 //            'rule' => ['minLength', 10],
+		 //            'last' => true,
+		 //            'message' => 'Comments must have a substantial body.'
+		 //        ],
+		 //        'maxLength' => [
+		 //            'rule' => ['maxLength', 250],
+		 //            'message' => 'Comments cannot be too long.'
+		 //        ]
+		 //    ]);
 	        ;
 
+	        // pr($validator);
 		// 'code' => array(
 		// 	'ruleUnique' => array(
   //       		'rule' => 'isUnique',
@@ -92,13 +108,6 @@ class InstitutionsTable extends AppTable  {
   //       		'messageCode' => 'general'
 		//     )
 		// ),
-
-		// 'address' => array(
-		// 	'ruleMaximum255' => array(
-		// 		'rule' => array('maxLength', 255),
-		// 		'required' => true,
-  //       		'messageCode' => 'general'
-		// 	)
 
 		// 'email' => array(
 		// 	'ruleRequired' => array(

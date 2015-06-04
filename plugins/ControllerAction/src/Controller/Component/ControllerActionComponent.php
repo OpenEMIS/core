@@ -177,7 +177,7 @@ class ControllerActionComponent extends Component {
 				if ($validator->hasField($key)) {
 					$set = $validator->field($key);
 
-					if ($set->isEmptyAllowed()) {
+					if (!$set->isEmptyAllowed()) {
 						$set->add('notEmpty', ['rule' => 'notEmpty']);
 					}
 					if (!$set->isPresenceRequired()) {
@@ -194,6 +194,8 @@ class ControllerActionComponent extends Component {
 					}
 				}
 			}
+			// pr('buildDefaultValidation');
+			// pr($validator);
 		}
 	}
 
