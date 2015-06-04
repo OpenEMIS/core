@@ -23,8 +23,6 @@ use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 
 class ControllerActionComponent extends Component {
-	use ControllerActionTrait;
-
 	private $plugin;
 	private $controller;
 	private $triggerFrom = 'Controller';
