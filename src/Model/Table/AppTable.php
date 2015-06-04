@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use App\Model\Validation\AppValidator;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 
@@ -59,6 +60,12 @@ class AppTable extends Table {
 			}
 		}
 		return $query;
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = new AppValidator();
+		$validator->provider('default', $validator);
+		return $validator;
 	}
 
 	public function getAssociatedBelongsToModel($field) {
