@@ -9,6 +9,8 @@ class StaffBehavioursTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 	}
 
 	public function validationDefault(Validator $validator) {

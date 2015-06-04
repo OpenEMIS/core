@@ -8,23 +8,16 @@ class SectionsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_sections');
 		parent::initialize($config);
-		
-		// $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		// $this->belongsTo('SpecialNeedTypes', ['className' => 'User.SpecialNeedTypes']);
-	}
 
-	public function beforeAction($event) {
-		// $this->fields['special_need_type_id']['type'] = 'select';
-	}
+		// 'Staff.Staff',
+		// 'InstitutionSite',
+		// 'AcademicPeriod',
+		// 'EducationGrade'
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['ControllerAction.afterAction'] = 'afterAction';
-		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		// $events['ControllerAction.beforeView'] = 'beforeView';
-		return $events;
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 	}
 
 	public function validationDefault(Validator $validator) {
