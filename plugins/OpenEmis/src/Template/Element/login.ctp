@@ -31,7 +31,7 @@ $description = __d('open_emis', $_productName);
 		<?= $this->element('OpenEmis.header', ['headerSideNav' => false, 'menuToggle' => false]) ?>
 
 		<div class="login-box">
-			<div class="title">Login to Your Account</div>
+			<!-- <div class="title">Login to Your Account</div> -->
 			<?php 
 			//echo $this->element('OpenEmis.alert');
 

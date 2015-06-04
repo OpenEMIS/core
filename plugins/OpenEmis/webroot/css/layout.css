@@ -1626,7 +1626,7 @@ footer {
 .login-box select {
 	color: #333;
 	font-weight: 500;
-	width: 100%;
+	width: 100% !important;
 }
 
 .login-box select {
