@@ -114,7 +114,7 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if ($attr['type'] == 'select' && !isset($attr['options'])) {
+				if ($attr['type'] == 'select' && !isset($attr['options']) && $this->endsWith($key, '_id')) {
 					$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 					$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
 
@@ -523,13 +523,9 @@ class ControllerActionComponent extends Component {
 
 	public function add() {
 		$model = $this->model;
-		$data = $model->newEntity();
-
-		$event = new Event('ControllerAction.Model.add.beforeAction', $this, ['entity' => $data]);
+		$event = new Event('ControllerAction.Model.add.beforeAction', $this);
 		$event = $model->eventManager()->dispatch($event);
-		if (!empty($event->result)) {
-			$data = $event->result;
-		}
+		$data = $model->newEntity();
 
 		if ($this->request->is(['get'])) {
 			$event = new Event('ControllerAction.Model.add.onInitialize', $this, ['entity' => $data]);
@@ -991,5 +987,9 @@ class ControllerActionComponent extends Component {
 		} else {
 			return true;
 		}
+	}
+
+	public function endsWith($haystack, $needle) {
+		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
 }
