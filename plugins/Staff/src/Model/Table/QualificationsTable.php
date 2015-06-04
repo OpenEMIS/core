@@ -8,18 +8,11 @@ class QualificationsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
-
-		// public $belongsTo = array(
-		// 'Staff.Staff',
-		// 'Staff.QualificationLevel',
-		// 'QualificationInstitution',
-		// 'Training.QualificationSpecialisation',
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
-		// $this->belongsTo('QualificationLevels', ['className' => 'Staff.QualificationLevels']);
-		// todo-mlee
-		// 'Training.QualificationSpecialisation',
+		$this->belongsTo('QualificationInstitutions', ['className' => 'FieldOption.QualificationInstitutions']);
+		$this->belongsTo('QualificationSpecialisation', ['className' => 'FieldOption.QualificationSpecialisation']);
 	}
 
 	public function beforeAction($event) {

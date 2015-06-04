@@ -19,7 +19,6 @@ class StaffController extends AppController {
 			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
 			'Awards' => ['className' => 'User.UserAwards'],
 			'Attachments' => ['className' => 'User.UserAttachments'],
-
 			'Qualifications' => ['className' => 'Staff.Qualifications'],
 			'Positions' => ['className' => 'Staff.Positions'],
 			'Sections' => ['className' => 'Staff.Sections'],
@@ -27,6 +26,7 @@ class StaffController extends AppController {
 			'Absences' => ['className' => 'Staff.Absences'],
 			'Leaves' => ['className' => 'Staff.Leaves'],
 			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
+			'Extracurriculars' => ['className' => 'Staff.StaffExtracurriculars'],
 			'Employments' => ['className' => 'Staff.Employments'],
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
@@ -39,8 +39,8 @@ class StaffController extends AppController {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.onInitialize'] = 'onInitialize';
-		$events['ControllerAction.beforePaginate'] = 'beforePaginate';
+		$events['ControllerAction.Controller.onInitialize'] = 'onInitialize';
+		$events['ControllerAction.Controller.beforePaginate'] = 'beforePaginate';
 		return $events;
 	}
 
