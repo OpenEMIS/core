@@ -23,6 +23,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.add.afterAction'			=> 'addAfterAction', // called after adding entity
 		'ControllerAction.Model.edit.beforeAction'			=> 'editBeforeAction',
 		'ControllerAction.Model.edit.beforeQuery'			=> 'editBeforeQuery',
+		'ControllerAction.Model.edit.onInitialize'			=> 'editOnInitialize',
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		'ControllerAction.Model.edit.onReload'				=> 'editOnReload',
 		'ControllerAction.Model.edit.afterAction'			=> 'editAfterAction'
