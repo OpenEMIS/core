@@ -4,13 +4,13 @@ namespace Staff\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class StaffBehavioursTable extends AppTable {
+class ExtracurricularsTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('staff_extracurriculars');
 		parent::initialize($config);
-
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 	}
 
 	public function validationDefault(Validator $validator) {
