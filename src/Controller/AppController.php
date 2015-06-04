@@ -16,6 +16,7 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
+use ControllerAction\Model\Traits\ControllerActionTrait;
 
 /**
  * Application Controller
@@ -26,6 +27,8 @@ use Cake\Event\Event;
  * @link http://book.cakephp.org/3.0/en/controllers.html#the-app-controller
  */
 class AppController extends Controller {
+    use ControllerActionTrait;
+
 	public $_productName = 'OpenEMIS';
 
     public $helpers = [
@@ -54,10 +57,6 @@ class AppController extends Controller {
         $this->loadComponent('ControllerAction.ControllerAction', [
             'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
         ]);
-    }
-
-    public function ComponentAction() { // Redirect logic to functions in Component or Model
-        return $this->ControllerAction->processAction();
     }
 
     public function beforeFilter(Event $event) {

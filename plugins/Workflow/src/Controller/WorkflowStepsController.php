@@ -15,22 +15,16 @@ class WorkflowStepsController extends AppController
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
-    	$events['ControllerAction.onInitialize'] = 'onInitialize';
     	$events['ControllerAction.beforePaginate'] = 'beforePaginate';
     	return $events;
     }
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
+        $header = __('Workflow Steps');
+        $this->Navigation->addCrumb('Workflow Steps', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps', 'action' => 'index']);
+        $this->set('contentHeader', $header);
 	}
-
-    public function onInitialize($event, $model) {
-		$header = __('Workflow Steps');
-
-		$this->Navigation->addCrumb('Workflow Steps', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps', 'action' => 'index']);
-
-		$this->set('contentHeader', $header);
-    }
 
     public function beforePaginate($event, $model, $options) {
 		return $options;

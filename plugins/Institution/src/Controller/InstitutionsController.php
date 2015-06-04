@@ -51,14 +51,6 @@ class InstitutionsController extends AppController  {
 		
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Controller.onInitialize'] = 'onInitialize';
-		$events['ControllerAction.Controller.beforePaginate'] = 'beforePaginate';
-		// pr($events);
-		return $events;
-	}
-
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
