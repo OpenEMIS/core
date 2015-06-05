@@ -545,6 +545,11 @@ class ControllerActionComponent extends Component {
 			$patchOptions = [];
 
 			if ($submit == 'save') {
+				$event = new Event('ControllerAction.Model.addEdit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+				$event = $model->eventManager()->dispatch($event);
+				if (!empty($event->result)) {
+					list($data, $this->request->data, $patchOptions) = array_values($event->result);
+				}
 				$event = new Event('ControllerAction.Model.add.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 				$event = $model->eventManager()->dispatch($event);
 				if (!empty($event->result)) {
@@ -614,6 +619,11 @@ class ControllerActionComponent extends Component {
 				$patchOptions = [];
 
 				if ($submit == 'save') {
+					$event = new Event('ControllerAction.Model.addEdit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					$event = $model->eventManager()->dispatch($event);
+					if (!empty($event->result)) {
+						list($data, $this->request->data, $patchOptions) = array_values($event->result);
+					}
 					$event = new Event('ControllerAction.Model.edit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 					$event = $model->eventManager()->dispatch($event);
 					if (!empty($event->result)) {
