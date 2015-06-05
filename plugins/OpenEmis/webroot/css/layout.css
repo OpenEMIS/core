@@ -1372,6 +1372,11 @@ select:-moz-focusring {
 	margin: 3px;
 }
 
+input[readonly] {
+	color: #999;
+	cursor: not-allowed;
+}
+
 /* TABLE DROPDOWN; ACTION & REORDER */
 .btn-dropdown {
 	position: relative;
