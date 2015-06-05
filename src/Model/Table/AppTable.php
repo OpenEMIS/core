@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -14,6 +15,7 @@ class AppTable extends Table {
 	use ControllerActionTrait;
 
 	public function initialize(array $config) {
+		parent::initialize($config);
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
@@ -89,7 +91,7 @@ class AppTable extends Table {
 		return $query->order([$this->aliasField('order') => 'ASC']);
 	}
 	
-	public function beforeSave(Event $event, Entity $entity) {
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
