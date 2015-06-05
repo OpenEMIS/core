@@ -82,6 +82,30 @@ class StudentsController extends AppController {
 		$visibility = ['view' => true, 'edit' => true];
 
 		$this->Users->fields['photo_content']['type'] = 'image';
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('openemis_no', $order++);
+		$this->ControllerAction->setFieldOrder('first_name', $order++);
+		$this->ControllerAction->setFieldOrder('middle_name', $order++);
+		$this->ControllerAction->setFieldOrder('third_name', $order++);
+		$this->ControllerAction->setFieldOrder('last_name', $order++);
+		$this->ControllerAction->setFieldOrder('preferred_name', $order++);
+		$this->ControllerAction->setFieldOrder('address', $order++);
+		$this->ControllerAction->setFieldOrder('postal_code', $order++);
+		$this->ControllerAction->setFieldOrder('gender_id', $order++);
+		$this->ControllerAction->setFieldOrder('date_of_birth', $order++);
+		$this->ControllerAction->setFieldOrder('status', $order++);
+
+		// $this->ControllerAction->setFieldOrder('UserContact', $order++);
+		// $this->ControllerAction->setFieldOrder('SecurityGroupUser', $order++);
+		$this->ControllerAction->setFieldOrder('modified_user_id', $order++);
+		$this->ControllerAction->setFieldOrder('modified', $order++);
+		$this->ControllerAction->setFieldOrder('created_user_id', $order++);
+		$this->ControllerAction->setFieldOrder('created', $order++);
+
+		$this->Users->fields['status']['type'] = 'select';
+		$this->Users->fields['status']['options'] = $this->Users->getStatus();
+
+		
 
 		// unset($this->SecurityUsers->fields['photo_content']);
 
@@ -116,6 +140,13 @@ class StudentsController extends AppController {
 			$this->ControllerAction->Session->write('Student.security_user_id', $id);
 		}
 		$this->ControllerAction->view($id);
+		$this->ControllerAction->render();
+	}
+
+	public function add($id = null) {
+		$this->Users->fields['openemis_no']['attr']['readonly'] = true;
+		$this->Users->fields['openemis_no']['attr']['value'] = $this->Users->getUniqueOpenemisId(['model'=>'Student']);
+		$this->ControllerAction->add($id);
 		$this->ControllerAction->render();
 	}
 
