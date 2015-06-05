@@ -641,15 +641,6 @@ textarea {
 	resize: none;
 }
 
-/*.format-item .select-field:after {
-	font-family: 'FontAwesome';
-	content: "\f0dc";
-	font-size: 11px;
-	margin-left: -20px;	
-	color: #333;
-	display: block;
-}*/
-
 .dropdown-menu .checkbox input[type="checkbox"], 
 .dropdown-menu .checkbox-inline input[type="checkbox"], 
 .dropdown-menu .radio input[type="radio"], 
