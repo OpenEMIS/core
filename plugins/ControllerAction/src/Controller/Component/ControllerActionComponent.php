@@ -114,19 +114,21 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if ($attr['type'] == 'select' && !isset($attr['options']) && $this->endsWith($key, '_id')) {
-					$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
-					$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
+				if ($attr['type'] == 'select' && !isset($attr['options'])) {
+					if ($this->isForeignKey($key)) {
+						$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
+						$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
 
-					$query = $associatedObject->find('list');
+						$query = $associatedObject->find('list');
 
-					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
-					$event = $associatedObject->eventManager()->dispatch($event);
-					if (!empty($event->result)) {
-						$query = $event->result;
+						$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
+						$event = $associatedObject->eventManager()->dispatch($event);
+						if (!empty($event->result)) {
+							$query = $event->result;
+						}
+
+						$this->model->fields[$key]['options'] = $query->toArray();
 					}
-
-					$this->model->fields[$key]['options'] = $query->toArray();
 				}
 			}
 
