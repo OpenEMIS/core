@@ -3,6 +3,8 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
@@ -54,10 +56,79 @@ class InstitutionsTable extends AppTable  {
 
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
+		// pr($this->validator());
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+	        // pr($validator);
+
+		$validator
+	        ->allowEmpty('date_closed')
+ 	        ->add('date_closed', 'ruleCompareDateReverse', [
+		            'rule' => ['compareDateReverse', 'date_opened', false],
+		            'message' => 'Closing date should be later than opening date'
+	    	    ])
+
+	        ->allowEmpty('longitude')
+			->add('longitude', 'ruleLongitude', [
+					'rule' => 'checkLongitude'
+				])
 		
+	        ->allowEmpty('latitude')
+			->add('latitude', 'ruleLatitude', [
+					'rule' => 'checkLatitude'
+				])
+		
+			->add('address', 'ruleMaximum255', [
+					'rule' => ['maxLength', 255],
+					'message' => 'asd',
+					'last' => true
+				])
+
+			// ->add('body', [
+		 //        'minLength' => [
+		 //            'rule' => ['minLength', 10],
+		 //            'last' => true,
+		 //            'message' => 'Comments must have a substantial body.'
+		 //        ],
+		 //        'maxLength' => [
+		 //            'rule' => ['maxLength', 250],
+		 //            'message' => 'Comments cannot be too long.'
+		 //        ]
+		 //    ]);
+	        ;
+
+	        // pr($validator);
+		// 'code' => array(
+		// 	'ruleUnique' => array(
+  //       		'rule' => 'isUnique',
+  //       		'required' => true,
+  //       		'messageCode' => 'general'
+		//     )
+		// ),
+
+		// 'email' => array(
+		// 	'ruleRequired' => array(
+		// 		'rule' => 'email',
+		// 		'allowEmpty' => true,
+  //       		'messageCode' => 'general'
+		// 	)
+		// ),
+		// 'date_opened' => array(
+		// 	'ruleRequired' => array(
+		// 		'rule' => 'notEmpty',
+		// 		'required' => true,
+  //       		'messageCode' => 'InstitutionSite'
+		// 	),
+		// 	'ruleCompare' => array(
+		// 		'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+		// 		'required' => true,
+  //       		'messageCode' => 'InstitutionSite'
+		// 	)
+		// ),
+
 		return $validator;
 	}
 
@@ -75,6 +146,67 @@ class InstitutionsTable extends AppTable  {
 		$this->fields['longitude']['visible']['index'] = false;
 		$this->fields['latitude']['visible']['index'] = false;
 		$this->fields['contact_person']['visible']['index'] = false;
+	}
+
+	// public function implementedEvents() {
+	// 	$events = parent::implementedEvents();
+	// 	$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
+		// $events['Model.beforeRules'] = 'beforeRules';
+	// 	// $events['Model.afterSave'] = 'afterSave';
+		// return $events;
+	// }
+
+	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
+		echo 'Entity<br/>';pr($entity);pr('<hr/>');
+		// echo 'Options<br/>';pr($options);pr('<hr/>');
+		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
+		return true;
+	}
+
+	public function afterSave(Event $event, Entity $entity, $options) {
+		echo 'Entity<br/>';pr($entity);pr('<hr/>');
+		echo 'Options<br/>';pr($options);pr('<hr/>');
+		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
+		die('afterSave');
+        if ($created) {
+			$addSecurityGroupParams = array(
+				'SecurityGroup' => array(
+					'name' => $this->data['InstitutionSite']['name']
+				),
+				'GroupInstitutionSite' => array(
+					'0' => array(
+						'institution_site_id' => $this->data['InstitutionSite']['id']
+					)
+				)
+			);
+			$securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
+			if ($securityGroup) {
+				$this->trackActivity = false;
+				$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
+				if (!$this->save()) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+        } else {
+			$securityGroupId = $this->field('security_group_id');
+			if (!empty($securityGroupId)) {
+				$this->SecurityGroup->read(null, $securityGroupId);
+				if (is_object($this->SecurityGroup)) {
+					$editSecurityGroupParams = array(
+						'SecurityGroup' => array(
+							'id' => $securityGroupId,
+							'name' => $this->data['InstitutionSite']['name']
+						)
+					);
+					if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
+						return false;
+					}
+				}
+			}
+        }
+        return true;
 	}
 
 	public function beforeAction($event) {

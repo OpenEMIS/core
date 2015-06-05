@@ -3,6 +3,8 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Exception;
+use DateTime;
 
 class UserIdentitiesTable extends AppTable {
 	public function initialize(array $config) {
@@ -67,35 +69,24 @@ class UserIdentitiesTable extends AppTable {
 		//     'message' => 'asd'
 		// ]);
 
+		$validator = parent::validationDefault($validator);
+
 		return $validator
 			->requirePresence('identity_type_id')
 			->notEmpty('identity_type_id', 'Please select a Type')
 			->requirePresence('number')
 			->notEmpty('number', 'Please enter a valid Number')
-			->allowEmpty('issue_location')
-			// ->add('issue_location', 'custom', [
-			// 	'rule' => [$this, 'customFunction'],
-			// 	'message' => 'assd'
-			// ])
+			->requirePresence('issue_location')
+			->notEmpty('issue_location', 'Please enter a valid Issue Location')
+
+			->add('issue_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'expiry_date', false]
+			])
+			
+			->requirePresence('expiry_date')
 			->notEmpty('expiry_date', 'Expiry Date Is Required')
 		;
 	}
-
-	// To check start date is earlier than end date from start date field
-	// public function compareDate(Model $model, $field = array(), $compareField = null, $equals = false) {
-	// 	try {
-	// 		$startDate = new DateTime(current($field));
-	// 	} catch (Exception $e) {
-	// 	    return 'Please input a proper date';
-	// 		exit(1);
-	// 	}
-	// 	if($compareField) {
-	// 		$options = array('equals' => $equals, 'reverse' => false);
-	// 		return $this->doCompareDates($model, $startDate, $compareField, $options);
-	// 	} else {
-	// 		return true;
-	// 	}
-	// }
 
 	public function customFunction($value,$context){
         //some logic here
