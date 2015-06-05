@@ -2,6 +2,9 @@
 namespace Rubric\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class RubricCriteriasTable extends AppTable {
@@ -15,7 +18,7 @@ class RubricCriteriasTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('RubricSections', ['className' => 'Rubric.RubricSections']);
-		$this->hasMany('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions', 'dependent' => true]);
+		$this->hasMany('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -31,14 +34,18 @@ class RubricCriteriasTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
+		//Add new fields
+		$this->ControllerAction->addField('criterias', [
+			'type' => 'element',
+			'order' => 5,
+			'element' => 'Rubric.criterias',
+			'visible' => true
+		]);
 	}
 
-	public function afterAction($event) {
-	}
-
-	public function indexBeforeAction($event) {
-		//Only index page has controls dropdown
+	public function indexBeforeAction(Event $event) {
+		//Add controls filter to index page
 		$toolbarElements = [
             ['name' => 'Rubric.controls', 'data' => [], 'options' => []]
         ];
@@ -46,50 +53,107 @@ class RubricCriteriasTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function addBeforeAction($event) {
-		$this->setFields();
+	public function viewBeforeAction(Event $event) {
+		$this->setFieldOrder();
 	}
 
-	public function addOnInitialize($event, $entity) {
-		$entity = $this->setFieldValues($entity);
-		return $entity;
-	}
-
-	public function addBeforePatch($event, $entity, $data, $options) {
-		$options['associated'] = ['RubricCriteriaOptions.RubricTemplateOptions'];
-		return compact('entity', 'data', 'options');
-	}
-
-	public function addOnReload($event, $entity, $data, $options) {
-		list($entity, $data, $options) = array_values($this->setCriteriaElement($entity, $data, $options));
-		return compact('entity', 'data', 'options');
-	}
-
-	public function addAfterAction($event, $entity) {
-		$this->setCriteriaVisible($entity);
-		return $entity;
-	}
-
-	public function editBeforeAction($event) {
-		$this->setFields();
-	}
-
-	public function editBeforeQuery($event, $query, $contain) {
+	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
 		$contain = ['RubricCriteriaOptions.RubricTemplateOptions'];
 		return compact('query', 'contain');
 	}
 
-	public function editBeforePatch($event, $entity, $data, $options) {
+	public function addEditBeforeAction(Event $event) {
+		//Setup fields
+		list($sectionOptions, , $criteriaTypeOptions, ) = array_values($this->getSelectOptions());
+
+		$this->fields['rubric_section_id']['type'] = 'select';
+		$this->fields['rubric_section_id']['options'] = $sectionOptions;
+
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $criteriaTypeOptions;
+		$this->fields['type']['attr'] = ['onchange' => "$('#reload').click()"];
+
+
+		$this->fields['criterias']['visible'] = false;
+		$this->setFieldOrder();
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+		//Required by patchEntity for associated data
 		$options['associated'] = ['RubricCriteriaOptions.RubricTemplateOptions'];
 		return compact('entity', 'data', 'options');
 	}
 
-	public function editAfterAction($event, $entity) {
-		$this->setCriteriaVisible($entity);
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$selectedCriteriaType = $entity->type;
+
+		if ($selectedCriteriaType == 1) {	//1-> Section Break, 2 -> Dropdown
+			$this->fields['criterias']['visible'] = false;
+		} else if ($selectedCriteriaType == 2) {
+			$this->fields['criterias']['visible'] = true;
+		}
+
 		return $entity;
 	}
 
-	public function getOptions() {
+	public function addOnInitialize(Event $event, Entity $entity) {
+		//Initialize field values
+		list(, $selectedSection, , $selectedCriteriaType) = array_values($this->getSelectOptions());
+
+		$entity->rubric_section_id = $selectedSection;
+		$entity->type = $selectedCriteriaType;
+
+		return $entity;
+	}
+
+	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
+		$selectedSection = $data[$this->alias()]['rubric_section_id'];
+		$selectedCriteriaType = $data[$this->alias()]['type'];
+		$selectedTemplate = $this->RubricSections->find('all')->where([$this->RubricSections->aliasField('id') => $selectedSection])->first()->rubric_template_id;
+
+		if ($selectedCriteriaType == 1) {	//1-> Section Break, 2 -> Dropdown
+			//do nothing
+		} else if ($selectedCriteriaType == 2) {
+			if (count($entity->rubric_criteria_options) == 0) {
+				$RubricTemplateOptions = $this->RubricCriteriaOptions->RubricTemplateOptions;
+				$templateOptions = $RubricTemplateOptions->find('all')
+		        	->find('order')
+		        	->where([$RubricTemplateOptions->aliasField('rubric_template_id') => $selectedTemplate])
+		        	->toArray();
+
+		        $criteriaOptions = [];
+				foreach ($templateOptions as $key => $obj) {
+				    $criteriaOptions[$key] = [
+				    	'name' => '',
+				    	'rubric_template_option_id' => $obj->id,
+				    	'rubric_template_option' => [
+				    		'name' => $obj->name,
+				    		'weighting' => $obj->weighting
+				    	]
+				    ];
+				}
+
+				$data[$this->alias()]['rubric_criteria_options'] = $criteriaOptions;
+				//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+				//$options['associated'] = ['RubricCriteriaOptions.RubricTemplateOptions'];
+				$options['associated'] = [
+					'RubricCriteriaOptions' => ['validate' => false, 'associated' => 'RubricTemplateOptions']
+				];
+			}
+		}
+
+		return compact('entity', 'data', 'options');
+	}
+
+	public function editBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = ['RubricCriteriaOptions.RubricTemplateOptions'];
+		return compact('query', 'contain');
+	}
+
+	public function getSelectOptions() {
+		//Return all required options and their key
 		$query = $this->request->query;
 
 		$templateOptions = $this->RubricSections->RubricTemplates->find('list')->toArray();
@@ -110,80 +174,11 @@ class RubricCriteriasTable extends AppTable {
 		return compact('sectionOptions', 'selectedSection', 'criteriaTypeOptions', 'selectedCriteriaType');
 	}
 
-	public function setFields() {
-		list($sectionOptions, , $criteriaTypeOptions, ) = array_values($this->getOptions());
-
-		$this->fields['rubric_section_id']['type'] = 'select';
-		$this->fields['rubric_section_id']['options'] = $sectionOptions;
-
-		$this->fields['type']['type'] = 'select';
-		$this->fields['type']['options'] = $criteriaTypeOptions;
-		$this->fields['type']['attr'] = ['onchange' => "$('#reload').click()"];
-
-		$this->ControllerAction->addField('criterias', [
-			'type' => 'element',
-			'order' => 5,
-			'element' => 'Rubric.criterias',
-			'visible' => false
-		]);
-
+	public function setFieldOrder() {
 		$order = 1;
 		$this->ControllerAction->setFieldOrder('rubric_section_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
 		$this->ControllerAction->setFieldOrder('type', $order++);
 		$this->ControllerAction->setFieldOrder('criterias', $order++);
-	}
-
-	public function setFieldValues($entity) {
-		list(, $selectedSection, , $selectedCriteriaType) = array_values($this->getOptions());
-
-		$entity->rubric_section_id = $selectedSection;
-		$entity->type = $selectedCriteriaType;
-
-		return $entity;
-	}
-
-	public function	setCriteriaVisible($entity) {
-		$selectedCriteriaType = $entity->type;
-
-		if ($selectedCriteriaType == 1) {	//1-> Section Break, 2 -> Dropdown
-			$this->fields['criterias']['visible'] = false;
-		} else if ($selectedCriteriaType == 2) {
-			$this->fields['criterias']['visible'] = true;
-		}
-	}
-
-	public function	setCriteriaElement($entity, $data, $options) {
-		$selectedSection = $data[$this->alias()]['rubric_section_id'];
-		$selectedCriteriaType = $data[$this->alias()]['type'];
-		$selectedTemplate = $this->RubricSections->find('all')->where([$this->RubricSections->aliasField('id') => $selectedSection])->first()->rubric_template_id;
-
-		if ($selectedCriteriaType == 1) {	//1-> Section Break, 2 -> Dropdown
-		} else if ($selectedCriteriaType == 2) {
-			$RubricTemplateOptions = $this->RubricCriteriaOptions->RubricTemplateOptions;
-			$templateOptions = $RubricTemplateOptions->find('all')
-	        	->find('order')
-	        	->where([$RubricTemplateOptions->aliasField('rubric_template_id') => $selectedTemplate])
-	        	->toArray();
-
-	        $criteriaOptions = [];
-			foreach ($templateOptions as $key => $obj) {
-			    $criteriaOptions[$key] = [
-			    	'name' => '',
-			    	'rubric_template_option_id' => $obj->id,
-			    	'rubric_template_option' => [
-			    		'name' => $obj->name,
-			    		'weighting' => $obj->weighting
-			    	]
-			    ];
-			}
-
-			$data[$this->alias()]['rubric_criteria_options'] = $criteriaOptions;
-			//$options['associated'] = ['RubricCriteriaOptions.RubricTemplateOptions'];
-			$options['associated'] = [
-				'RubricCriteriaOptions' => ['validate' => false, 'associated' => 'RubricTemplateOptions']
-			];
-		}
-		return compact('entity', 'data', 'options');
 	}
 }
