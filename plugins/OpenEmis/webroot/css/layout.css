@@ -783,10 +783,6 @@ textarea {
 	border-top: 1px solid #FFF;
 }
 
-.panel-body .row:hover {
-	background-color: #F9F9F9;
-}
-
 /* TABS */
 .scroll_tabs_container {
     height: 30px;
@@ -1193,7 +1189,6 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-control {
-	height: 28px;
 	padding: 5px 6px 3px;
 	font-size: 13px;
 	background: #FFF;
@@ -1292,12 +1287,20 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 30%;
 }
 
-.fileinput.input-group > .btn-file {
-	border-right: 0 !important;
+.fileinput-filename {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: middle;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    padding-left: 25px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.form-horizontal .file .form-control {
-	height: auto;
+.fileinput.input-group > .btn-file {
+	border-right: 0 !important;
 }
 
 .form-horizontal .datetime select {
