@@ -34,6 +34,17 @@ class InstitutionSiteProgrammesTable extends AppTable {
 			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
 			->find('withSystem')
 			->toArray();
+
+		// $this->virtualProperties(['system_level_name']);
+		pr($this->EducationLevels
+			->find()->first()->system_level_name);
+		pr($this->EducationLevels
+			->find()->first()->toArray());
+
+		// foreach ($this->EducationLevels->find() as $key => $value) {
+		// 	// pr($value->toArray());
+		// 	// pr($value);
+		// }
 			
 		$this->fields['education_level']['options'] = $levelOptions;
 
