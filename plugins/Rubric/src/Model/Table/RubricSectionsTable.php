@@ -2,6 +2,8 @@
 namespace Rubric\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class RubricSectionsTable extends AppTable {
@@ -10,7 +12,7 @@ class RubricSectionsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
-		$this->hasMany('RubricCriterias', ['className' => 'Rubric.RubricCriterias', 'dependent' => true]);
+		$this->hasMany('RubricCriterias', ['className' => 'Rubric.RubricCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -26,34 +28,41 @@ class RubricSectionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		$events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		return $events;
+	public function indexBeforeAction(Event $event) {
+		//Add controls filter to index page
+		$toolbarElements = [
+            ['name' => 'Rubric.controls', 'data' => [], 'options' => []]
+        ];
+
+        $this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function beforeAction($event) {
-		if ($this->action == 'index') {
-            $toolbarElements = [
-                ['name' => 'Rubric.controls', 'data' => [], 'options' => []]
-            ];
+	public function addEditBeforeAction(Event $event) {
+		//Setup fields
+		list($templateOptions) = array_values($this->getSelectOptions());
 
-            $this->controller->set('toolbarElements', $toolbarElements);
-		} else if($this->action == 'add' || $this->action == 'edit') {
-			$this->fields['rubric_template_id']['type'] = 'select';
-			$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
-		}
+		$this->fields['rubric_template_id']['type'] = 'select';
+		$this->fields['rubric_template_id']['options'] = $templateOptions;
+
+		$this->ControllerAction->setFieldOrder('rubric_template_id', 1);
 	}
 
-	public function beforeAdd($event, $entity) {
+	public function addOnInitialize(Event $event, Entity $entity) {
+		//Initialize field values
+		list(, $selectedTemplate) = array_values($this->getSelectOptions());
+
+		$entity->rubric_template_id = $selectedTemplate;
+
+		return $entity;
+	}	
+
+	public function getSelectOptions() {
+		//Return all required options and their key
 		$query = $this->request->query;
 
 		$templateOptions = $this->RubricTemplates->find('list')->toArray();
 		$selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
 
-		$entity->rubric_template_id = $selectedTemplate;
-
-		return $entity;
+		return compact('templateOptions', 'selectedTemplate');
 	}
 }
