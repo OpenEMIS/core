@@ -555,7 +555,7 @@ body .large {
 }
 
 .panel-toolbar a {
-	padding: 5px;
+	padding: 8px;
 	margin: 0 2px 0 5px;
 	-webkit-border-radius: 3px !important;
 	        border-radius: 3px !important;	
@@ -574,8 +574,12 @@ body .large {
 	vertical-align: middle;
 }
 
+.panel-toolbar .dropdown-toggle i {
+	padding: 0 0 0 3px;
+}
+
 .panel-toolbar .dropdown-menu {
-	top: 35px;
+	top: 40px;
 	left: -5px;
 }
 
