@@ -1323,11 +1323,29 @@ select {
     background-color: transparent;	
     position: relative;
     cursor: pointer;
+	-webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
 }
 
 select:-moz-focusring {
     color: transparent;
     text-shadow: 0 0 0 #000;
+}	
+
+.select {
+	position: relative;
+}
+
+.select:after {
+	position: absolute;	
+	font-family: 'FontAwesome';
+	content: "\f0d7";
+	font-size: 12px;
+	color: #555;
+	cursor: pointer;
+	margin-left: -18px;
+	margin-top: 6px;
 }
 
 .form-horizontal option {
@@ -1516,21 +1534,30 @@ a.thumbnail:hover {
 
 .display-limit select {
 	float: left;
-	margin: -4px 0 0 5px;
+	margin: -2px 0 0 5px;
+	padding: 0 15px 0 0;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
 	border: 1px solid #CCC;
+}
+
+.chrome .display-limit select {
+	padding: 0 15px 0 4px;
 }
 
 .display-limit .select:after {
 	position: absolute;
 	font-size: 10px;
 	margin-left: -58px;
-	margin-top: 2px;
+	margin-top: 1px;
 }
 
 .chrome .display-limit .select:after {
-	margin-left: -60px;
+	margin-left: -55px;
+}
+
+.chrome .display-limit .select:after {
+	margin-left: -57px;
 	margin-top: 0;
 }
 
@@ -1598,7 +1625,6 @@ footer {
 	color: #FFFFFF;
 	left: 50%;
 	margin: 0 0 0 -245px;
-	padding: 10px;
 	position: absolute;
 	text-align: center;
 	top: 20%;
@@ -1607,22 +1633,76 @@ footer {
 }
 
 .login-box .title {
-	border-bottom: 1px solid rgba(225,225,225,0.2);
-	font-size: 30px;
-	padding: 10px 0 14px;
+	font-size: 22px;
+	padding: 14px 0 14px;
+	background-color: #999999;
+	-webkit-border-top-right-radius: 5px;
+	        border-top-right-radius: 5px;
+	-webkit-border-top-left-radius: 5px;
+	        border-top-left-radius: 5px;	
 }
 
 .login-box i {
-	font-size: 55px;
-	padding: 0 8px 8px 0;
+	font-size: 40px;
+	padding: 1px 0 8px;
 	vertical-align: middle;
-	display: block;
 }
 
 .login-box .form-horizontal {
 	text-align: left;
 	width: 50%;
 	margin: 0 auto;
+}
+
+.login .text,
+.login .password,
+.login .select {
+	position: relative;
+}
+
+.login .text:after {
+	font-family: 'FontAwesome';
+	content: "\f007";
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	color: #888;
+	font-size: 14px;
+	margin: 1px;
+	padding: 10px;
+	border-right: 1px solid #DDD;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+.login .password:after {
+	font-family: 'FontAwesome';
+	content: "\f084";
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	color: #888;
+	font-size: 14px;
+	margin: 1px;
+	padding: 10px 9px;
+	border-right: 1px solid #DDD;	
+
+}
+
+.login .select:before {
+	font-family: 'FontAwesome';
+	content: "\f0ac";
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	color: #888;
+	font-size: 14px;
+	margin: 1px;
+	padding: 9px 9px;
+	border-right: 1px solid #DDD;	
 }
 
 .login-box .form-group {
@@ -1636,7 +1716,7 @@ footer {
 	font-weight: 400;
 	width: 100% !important;
 	border: 1px solid #000;
-	padding: 10px;
+	padding: 10px 0 10px 40px;
 	font-size: 14px;
 }
 
@@ -1655,6 +1735,7 @@ footer {
 
 .login-box .select:after {
 	color: #333;
+	margin-top: 12px;
 }
 
 .login-box .btn-login { 
@@ -1705,7 +1786,11 @@ footer {
 	}
 
 	.login-box .title {
-		font-size: 25px;
+		font-size: 20px;
+	}
+
+	.login-box i {
+		font-size: 32px;
 	}
 
 	.login .brand-logo {
@@ -1874,7 +1959,7 @@ footer {
 	}
 
 	.login-box {
-		padding: 30px 0;	
+		padding: 0;	
 	}
 
 	.brand-logo i {

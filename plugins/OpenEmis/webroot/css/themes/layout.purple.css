@@ -5,7 +5,8 @@
  /* PRODUCT COLOR */
 .btn-default,
 .login-box .btn-login,
-.navbar {
+.navbar,
+.login-box .title {
 	background-color: #993366;
 }
 
@@ -48,7 +49,10 @@
 .pagination > .active > a:hover,
 .pagination > li > a:hover,
 .login-box .btn-login,
-.outline-btn {
+.outline-btn,
+.btn-outline:hover, 
+.btn-outline:active, 
+.btn-outline:focus {
 	border: 1px solid #6B2447 !important;
 }
 
@@ -57,6 +61,9 @@
 	background-color: #6B2447;
 }
 
+.btn-outline:hover, 
+.btn-outline:active, 
+.btn-outline:focus,
 .more-menu-item a:hover, 
 #action-menu:hover,
 .horizontal-tabs span a:hover,
