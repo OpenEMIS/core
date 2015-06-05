@@ -2,9 +2,12 @@
 namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 
 class InstitutionSitePositionsTable extends AppTable {
+	use OptionsTrait;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
@@ -19,11 +22,12 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function beforeAction() {
-		if ($this->action == 'index') {
-
-		}
-
 		$this->fields['staff_position_title_id']['type'] = 'select';
 		$this->fields['staff_position_grade_id']['type'] = 'select';
+
+		$this->fields['status']['type'] = 'select';
+		$this->fields['status']['options'] = $this->getSelectOptions('general.active');
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $this->getSelectOptions('Staff.position_types');
 	}
 }
