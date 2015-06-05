@@ -1579,13 +1579,12 @@ footer {
 	overflow-y: auto;
 }
 
-.login .form-group {
-	margin: 0;
+.login header {
+	display: none;
 }
 
-.login .title {
-	border: 0;
-	margin-bottom: 10px;
+.login .form-group {
+	margin: 0;
 }
 
 .login .navbar-left {
@@ -1609,9 +1608,15 @@ footer {
 
 .login-box .title {
 	border-bottom: 1px solid rgba(225,225,225,0.2);
-	font-size: 25px;
-	padding: 10px 0 8px;
-	margin-bottom: 15px;
+	font-size: 30px;
+	padding: 10px 0 14px;
+}
+
+.login-box i {
+	font-size: 55px;
+	padding: 0 8px 8px 0;
+	vertical-align: middle;
+	display: block;
 }
 
 .login-box .form-horizontal {
@@ -1627,17 +1632,21 @@ footer {
 
 .login-box input,
 .login-box select {
-	color: #333;
-	font-weight: 500;
+	color: #555;
+	font-weight: 400;
 	width: 100% !important;
+	border: 1px solid #000;
+	padding: 10px;
+	font-size: 14px;
 }
 
 .login-box select {
 	color: #555;
+	height: 40px;
 }
 
 .login-box .select {
-	height: 30px;
+	height: 40px;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
 	margin-bottom: 15px;
@@ -1653,6 +1662,7 @@ footer {
 	border-color: #999;
 	width: 100%;
 	font-size: 16px;
+	padding: 10px;
 }
 
 .login-box .btn-login:hover {
@@ -1688,17 +1698,14 @@ footer {
 
 	.login-box {
 		left: 5%;
+		top: 2%;
 		width: 90%;
 		margin: 0 auto 30px;
 		padding-bottom: 60px;	
 	}
 
 	.login-box .title {
-		font-size: 18px;
-	}
-
-	.login-box .title::before {
-		font-size: 24px;
+		font-size: 25px;
 	}
 
 	.login .brand-logo {
