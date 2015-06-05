@@ -109,8 +109,8 @@
 }
 
 .chart-wrapper .dropdown-arrow {
-	top: -22px;
-	left: 17px;
+	top: -24px;
+	left: 20px;
 }
 
 .format-wrapper .dropdown-arrow {
@@ -151,8 +151,8 @@
 	content: "\f0d7";
 	font-size: 10px;
 	position: absolute;
-	bottom: -5px;
-	left: 15px;
+	bottom: -7px;
+	left: 18px;
 }
 
 .format-item {
