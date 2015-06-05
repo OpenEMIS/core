@@ -28,6 +28,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.onReload'				=> 'editOnReload',
 		'ControllerAction.Model.edit.afterAction'			=> 'editAfterAction',
 		'ControllerAction.Model.addEdit.beforeAction'		=> 'addEditBeforeAction',
+		'ControllerAction.Model.addEdit.beforePatch'		=> 'addEditBeforePatch',
 		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction'
 	];
 
