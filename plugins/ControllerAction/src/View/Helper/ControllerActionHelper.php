@@ -180,18 +180,23 @@ class ControllerActionHelper extends Helper {
 				$value = $this->getIndexElement($value, $attr);
 			}
 
+			// attach event for index columns
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
 			}
-			$functionName = Inflector::camelize($field);
-			$eventName = 'ControllerAction.Model.index.onGet' . $functionName;
+			$eventKey = 'ControllerAction.Model.index.onGet' . Inflector::camelize($field);
+			$method = 'indexOnGet' . Inflector::camelize($field);
 
-			$event = new Event($eventName, $this, ['entity' => $obj]);
+			$event = new Event($eventKey, $this, ['entity' => $obj]);
+			if (method_exists($table, $method)) {
+                $table->eventManager()->on($eventKey, [], [$table, $method]);
+            }
 			$event = $table->eventManager()->dispatch($event);
 
 			if ($event->result) {
 				$value = $event->result;
 			}
+			// end attach event
 
 			if (!empty($search)) {
 				$value = $this->highlight($search, $value);
