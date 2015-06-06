@@ -118,7 +118,7 @@ class ControllerActionComponent extends Component {
 					if ($this->isForeignKey($key)) {
 						$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 						$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
-
+						
 						$query = $associatedObject->find('list');
 
 						$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
@@ -129,6 +129,12 @@ class ControllerActionComponent extends Component {
 
 						$this->model->fields[$key]['options'] = $query->toArray();
 					}
+				}
+				if (array_key_exists('reload', $attr) && $attr['reload']) {
+					if (!array_key_exists('attr', $attr)) {
+						$this->model->fields[$key]['attr'] = [];
+					}
+					$this->model->fields[$key]['attr']['onchange'] = "$('#reload').click()";
 				}
 			}
 

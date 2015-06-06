@@ -365,6 +365,12 @@ class ControllerActionHelper extends Helper {
 
 	public function getIndexElement($value, $_fieldAttr) {
 		$_type = $_fieldAttr['type'];
+
+		// $function = 'get' . Inflector::camelize($_type) . 'Element';
+		// if (method_exists($this, $function)) {
+		// 	$value = $this->$function('view', $data, $_fieldAttr);
+		// }
+
 		switch ($_type) {
 			case 'select':
 				if (!empty($_fieldAttr['options'])) {
@@ -659,6 +665,8 @@ class ControllerActionHelper extends Helper {
 						$value = $attr['options'][$value];
 					}
 				}
+			} else {
+				$value = $data->$attr['field'];
 			}
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {
@@ -795,7 +803,7 @@ class ControllerActionHelper extends Helper {
 	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		$_options = [
-			'format' => 'dd-M-yyyy',
+			'format' => 'dd-mm-yyyy',
 			'todayBtn' => 'linked',
 			'orientation' => 'top auto'
 		];
@@ -804,12 +812,24 @@ class ControllerActionHelper extends Helper {
 			$attr['date_options'] = [];
 		}
 
-		if ($action == 'view') {
-			//$value = $this->Utility->formatDate($value, null, false);
+		$field = $attr['field'];
+		$value = $data->$field;
+
+		if ($action == 'view' || $action == 'index') {
+			if (!is_null($value)) {
+				$table = TableRegistry::get($attr['className']);
+				$event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
+				$event = $table->eventManager()->dispatch($event);
+				if (strlen($event->result) > 0) {
+					$value = $event->result;
+				}
+			}
 		} else if ($action == 'edit') {
-			$field = $attr['field'];
 			$attr['id'] = $attr['model'] . '_' . $field;
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
+			if (!is_null($value)) {
+				$attr['value'] = date('d-m-Y', strtotime($value));
+			}
 			if (!is_null($this->_View->get('datepicker'))) {
 				$datepickers = $this->_View->get('datepicker');
 				$datepickers[] = $attr;
