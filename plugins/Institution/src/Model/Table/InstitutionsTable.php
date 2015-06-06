@@ -148,14 +148,6 @@ class InstitutionsTable extends AppTable  {
 		$this->fields['contact_person']['visible']['index'] = false;
 	}
 
-	// public function implementedEvents() {
-	// 	$events = parent::implementedEvents();
-	// 	$events['ControllerAction.Model.beforeAction'] = 'beforeAction';
-		// $events['Model.beforeRules'] = 'beforeRules';
-	// 	// $events['Model.afterSave'] = 'afterSave';
-		// return $events;
-	// }
-
 	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
 		echo 'Entity<br/>';pr($entity);pr('<hr/>');
 		// echo 'Options<br/>';pr($options);pr('<hr/>');
