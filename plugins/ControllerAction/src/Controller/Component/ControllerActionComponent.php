@@ -114,7 +114,7 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if ($attr['type'] == 'select' && !isset($attr['options'])) {
+				if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 					if ($this->isForeignKey($key)) {
 						$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 						$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};

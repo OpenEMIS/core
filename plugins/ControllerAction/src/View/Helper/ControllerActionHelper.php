@@ -176,7 +176,7 @@ class ControllerActionHelper extends Helper {
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
-			} else {
+			} else if (strlen($value) == 0) {
 				$value = $this->getIndexElement($value, $attr);
 			}
 
