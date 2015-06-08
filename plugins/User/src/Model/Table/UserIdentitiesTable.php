@@ -76,15 +76,15 @@ class UserIdentitiesTable extends AppTable {
 			->notEmpty('identity_type_id', 'Please select a Type')
 			->requirePresence('number')
 			->notEmpty('number', 'Please enter a valid Number')
-			->requirePresence('issue_location')
-			->notEmpty('issue_location', 'Please enter a valid Issue Location')
+			// ->requirePresence('issue_location')
+			// ->notEmpty('issue_location', 'Please enter a valid Issue Location')
 
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
 			])
 			
-			->requirePresence('expiry_date')
-			->notEmpty('expiry_date', 'Expiry Date Is Required')
+			// ->requirePresence('expiry_date')
+			// ->notEmpty('expiry_date', 'Expiry Date Is Required')
 		;
 	}
 
