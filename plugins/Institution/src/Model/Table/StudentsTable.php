@@ -1,4 +1,4 @@
-]<?php
+<?php
 namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
@@ -8,7 +8,7 @@ class StudentsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 		// $this->belongsTo('InstitutionSiteProgramme', ['className' => 'Institution.InstitutionSiteProgrammes', 'foreignKey' => false, 'conditions' => [
 		// 			'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id',
