@@ -4,6 +4,9 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\Event\Event;
 
 class UsersTable extends AppTable {
 	public function initialize(array $config) {
@@ -11,7 +14,7 @@ class UsersTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('ControllerAction.FileUpload');
 
-		// 'Gender',
+		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		// 'AddressArea' => array(
 		// 	'className' => 'AreaAdministrative',
 		// 	'foreignKey' => 'address_area_id'
@@ -20,6 +23,18 @@ class UsersTable extends AppTable {
 		// 	'className' => 'AreaAdministrative',
 		// 	'foreignKey' => 'birthplace_area_id'
 		// ),
+
+		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents']);
+		$this->hasMany('UserIdentities', ['className' => 'User.UserIdentities']);
+		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities']);
+		$this->hasMany('UserSpecialNeeds', ['className' => 'User.UserSpecialNeeds']);
+		$this->hasMany('UserContacts', ['className' => 'User.UserContacts']);
+	}
+
+	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+		//Required by patchEntity for associated data
+		$options['associated'] = ['Institution.InstitutionSiteStudents', 'User.UserIdentities', 'User.UserNationality', 'User.UserSpecialNeed', 'User.UserContact'];
+		return compact('entity', 'data', 'options');
 	}
 
 	public function getUniqueOpenemisId($options = []) {
