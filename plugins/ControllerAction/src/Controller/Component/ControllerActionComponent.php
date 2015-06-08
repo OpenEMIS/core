@@ -118,7 +118,7 @@ class ControllerActionComponent extends Component {
 					if ($this->isForeignKey($key)) {
 						$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 						$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
-
+						
 						$query = $associatedObject->find('list');
 
 						$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
@@ -129,6 +129,12 @@ class ControllerActionComponent extends Component {
 
 						$this->model->fields[$key]['options'] = $query->toArray();
 					}
+				}
+				if (array_key_exists('reload', $attr) && $attr['reload']) {
+					if (!array_key_exists('attr', $attr)) {
+						$this->model->fields[$key]['attr'] = [];
+					}
+					$this->model->fields[$key]['attr']['onchange'] = "$('#reload').click()";
 				}
 			}
 
@@ -180,7 +186,7 @@ class ControllerActionComponent extends Component {
 					$set = $validator->field($key);
 
 					if (!$set->isEmptyAllowed()) {
-						$set->add('notEmpty', ['rule' => 'notEmpty']);
+						$set->add('notBlank', ['rule' => 'notBlank']);
 					}
 					if (!$set->isPresenceRequired()) {
 						if ($this->isForeignKey($key)) {
@@ -567,6 +573,11 @@ class ControllerActionComponent extends Component {
 				}
 			} else {
 				$patchOptions['validate'] = false;
+				$event = new Event('ControllerAction.Model.addEdit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+				$event = $model->eventManager()->dispatch($event);
+				if (!empty($event->result)) {
+					list($data, $this->request->data, $patchOptions) = array_values($event->result);
+				}
 				$event = new Event('ControllerAction.Model.add.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 				$event = $model->eventManager()->dispatch($event);
 				if (!empty($event->result)) {
@@ -642,6 +653,11 @@ class ControllerActionComponent extends Component {
 					}
 				} else {
 					$patchOptions['validate'] = false;
+					$event = new Event('ControllerAction.Model.addEdit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					$event = $model->eventManager()->dispatch($event);
+					if (!empty($event->result)) {
+						list($data, $this->request->data, $patchOptions) = array_values($event->result);
+					}
 					$event = new Event('ControllerAction.Model.edit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 					$event = $model->eventManager()->dispatch($event);
 					if (!empty($event->result)) {
