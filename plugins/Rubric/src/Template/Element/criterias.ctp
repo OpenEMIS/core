@@ -8,15 +8,17 @@
 					<th><?= $this->Label->get('RubricTemplateOption.weighting'); ?></th>
 				</tr>
 			</thead>
-			<tbody>
-				<?php foreach ($criteriaOptions as $obj) : ?>
-				<tr>
-					<td><?= $obj['RubricTemplateOption']['name']; ?></td>
-					<td><?= nl2br($obj['RubricCriteriaOption']['name']); ?></td>
-					<td><?= $obj['RubricTemplateOption']['weighting']; ?></td>
-				</tr>
-				<?php endforeach ?>
-			</tbody>
+			<?php if (!empty($data->rubric_criteria_options)) : ?>
+				<tbody>
+					<?php foreach ($data->rubric_criteria_options as $key => $obj) : ?>
+					<tr>
+						<td><?= $obj->rubric_template_option->name; ?></td>
+						<td><?= $obj->name; ?></td>
+						<td><?= $obj->rubric_template_option->weighting; ?></td>
+					</tr>
+					<?php endforeach ?>
+				</tbody>
+			<?php endif ?>
 		</table>
 	</div>
 <?php else : ?>

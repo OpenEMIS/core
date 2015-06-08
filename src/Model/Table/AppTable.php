@@ -1,19 +1,23 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Validation\AppValidator;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\ControllerActionTrait;
+use Cake\I18n\Time;
 
 class AppTable extends Table {
 	use ControllerActionTrait;
 
 	public function initialize(array $config) {
+		parent::initialize($config);
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
@@ -36,9 +40,20 @@ class AppTable extends Table {
 				'foreignKey' => 'created_user_id'
 			]);
 		}
+
+		$dateFields = [];
+		foreach ($columns as $column) {
+			if ($schema->columnType($column) == 'date') {
+				$dateFields[] = $column;
+			}
+		}
+		if (!empty($dateFields)) {
+			$this->addBehavior('ControllerAction.DatePicker', $dateFields);
+		}
 	}
 
-	public function onPopulateSelectOptions($event, $query) {
+	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
+	public function onPopulateSelectOptions(Event $event, $query) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 		
@@ -60,6 +75,13 @@ class AppTable extends Table {
 			}
 		}
 		return $query;
+	}
+
+	// Event: 'ControllerAction.Model.onFormatDate'
+	public function onFormatDate(Event $event, Time $dateObject) {
+		$ConfigItem = TableRegistry::get('ConfigItems');
+		$format = $ConfigItem->value('date_format');
+		return $dateObject->format($format);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -89,7 +111,7 @@ class AppTable extends Table {
 		return $query->order([$this->aliasField('order') => 'ASC']);
 	}
 	
-	public function beforeSave(Event $event, Entity $entity) {
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 

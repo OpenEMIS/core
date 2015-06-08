@@ -1,6 +1,7 @@
 <?php
 namespace ControllerAction\View\Helper;
 
+use Cake\Event\Event;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -164,18 +165,39 @@ class ControllerActionHelper extends Helper {
 			$search = $this->request->data['Search']['searchField'];
 		}
 
+		$table = null;
+
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
 			$value = $obj->$field;
 
 			if ($this->endsWith($field, '_id')) {
 				$associatedObject = str_replace('_id', '', $field);
-				if (is_object($obj->$associatedObject)) {
+				if (is_object($obj->$associatedObject) && $obj->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
+			} else {
+				$value = $this->getIndexElement($value, $attr);
 			}
-			
-			$value = $this->getIndexElement($value, $attr);
+
+			// attach event for index columns
+			if (is_null($table)) {
+				$table = TableRegistry::get($attr['className']);
+			}
+			$eventKey = 'ControllerAction.Model.index.onGet' . Inflector::camelize($field);
+			$method = 'indexOnGet' . Inflector::camelize($field);
+
+			$event = new Event($eventKey, $this, ['entity' => $obj]);
+			if (method_exists($table, $method)) {
+                $table->eventManager()->on($eventKey, [], [$table, $method]);
+            }
+			$event = $table->eventManager()->dispatch($event);
+
+			if ($event->result) {
+				$value = $event->result;
+			}
+			// end attach event
+
 			if (!empty($search)) {
 				$value = $this->highlight($search, $value);
 			}
@@ -343,11 +365,13 @@ class ControllerActionHelper extends Helper {
 
 	public function getIndexElement($value, $_fieldAttr) {
 		$_type = $_fieldAttr['type'];
+
+		// $function = 'get' . Inflector::camelize($_type) . 'Element';
+		// if (method_exists($this, $function)) {
+		// 	$value = $this->$function('view', $data, $_fieldAttr);
+		// }
+
 		switch ($_type) {
-			case 'disabled':
-				$value = $_fieldAttr['value'];
-				break;
-				
 			case 'select':
 				if (!empty($_fieldAttr['options'])) {
 					reset($_fieldAttr['options']);
@@ -378,14 +402,6 @@ class ControllerActionHelper extends Helper {
 				$value = $this->Html->link($value, $_fieldAttr['attr']['url']);
 				break;
 				
-			case 'element':
-				$element = $_fieldAttr['element'];
-				if (array_key_exists('class', $_fieldAttr)) {
-					$class = $_fieldAttr['class'];
-				}
-				$value = $this->_View->element($element);
-				break;
-				
 			case 'date':
 				//$value = $this->Utility->formatDate($value, null, false);
 				break;
@@ -413,14 +429,6 @@ class ControllerActionHelper extends Helper {
 
 			case 'color':
 				$value = '<div style="background-color:'.$value.'">&nbsp;</div>';
-				break;
-			
-			case 'modified_user_id':
-			case 'created_user_id':
-				$dataModel = $_fieldAttr['dataModel'];
-				if (isset($data[$dataModel]['first_name']) && isset($data[$dataModel]['last_name'])) {
-					$value = $data[$dataModel]['first_name'] . ' ' . $data[$dataModel]['last_name'];
-				}
 				break;
 				
 			default:
@@ -657,6 +665,8 @@ class ControllerActionHelper extends Helper {
 						$value = $attr['options'][$value];
 					}
 				}
+			} else {
+				$value = $data->$attr['field'];
 			}
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {
@@ -793,7 +803,7 @@ class ControllerActionHelper extends Helper {
 	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		$_options = [
-			'format' => 'dd-M-yyyy',
+			'format' => 'dd-mm-yyyy',
 			'todayBtn' => 'linked',
 			'orientation' => 'top auto'
 		];
@@ -802,12 +812,24 @@ class ControllerActionHelper extends Helper {
 			$attr['date_options'] = [];
 		}
 
-		if ($action == 'view') {
-			//$value = $this->Utility->formatDate($value, null, false);
+		$field = $attr['field'];
+		$value = $data->$field;
+
+		if ($action == 'view' || $action == 'index') {
+			if (!is_null($value)) {
+				$table = TableRegistry::get($attr['className']);
+				$event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
+				$event = $table->eventManager()->dispatch($event);
+				if (strlen($event->result) > 0) {
+					$value = $event->result;
+				}
+			}
 		} else if ($action == 'edit') {
-			$field = $attr['field'];
 			$attr['id'] = $attr['model'] . '_' . $field;
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
+			if (!is_null($value)) {
+				$attr['value'] = date('d-m-Y', strtotime($value));
+			}
 			if (!is_null($this->_View->get('datepicker'))) {
 				$datepickers = $this->_View->get('datepicker');
 				$datepickers[] = $attr;

@@ -7,7 +7,8 @@
  /* PRODUCT COLOR */
 .btn-default,
 .login-box .btn-login,
-.navbar {
+.navbar,
+.login-box .title {
 	background-color: #6699CC;
 }
 
@@ -20,7 +21,8 @@
 .pagination > .active > a,
 .pagination > .active > a:hover,
 .toggle-btn i,
-.input-group-addon {
+.input-group-addon,
+.selected {
 	background-color: #6699CC;
 	color: #FFF;
 	border: 1px solid #6699CC;
@@ -55,7 +57,8 @@
 .btn-outline:hover, 
 .btn-outline:active, 
 .btn-outline:focus,
-.input-group-addon {
+.input-group-addon,
+.selected {
 	border: 1px solid #476B8F !important;
 }
 

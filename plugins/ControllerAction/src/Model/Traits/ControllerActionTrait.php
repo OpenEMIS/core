@@ -8,6 +8,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.onPopulateSelectOptions'	=> 'onPopulateSelectOptions', // called when select options auto populated
 		'ControllerAction.Model.beforeAction'				=> 'beforeAction', // called before start of any actions
 		'ControllerAction.Model.afterAction'				=> 'afterAction', // called after any actions
+		'ControllerAction.Model.onFormatDate'				=> 'onFormatDate', // called before displaying date fields
 		'ControllerAction.Model.index.onInitializeButtons' 	=> 'indexOnInitializeButtons',
 		'ControllerAction.Model.index.beforeAction'			=> 'indexBeforeAction',
 		'ControllerAction.Model.index.beforePaginate'		=> 'indexBeforePaginate',
@@ -29,6 +30,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.afterAction'			=> 'editAfterAction',
 		'ControllerAction.Model.addEdit.beforeAction'		=> 'addEditBeforeAction',
 		'ControllerAction.Model.addEdit.beforePatch'		=> 'addEditBeforePatch',
+		'ControllerAction.Model.addEdit.onReload'			=> 'addEditOnReload',
 		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction'
 	];
 
