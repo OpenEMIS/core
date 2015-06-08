@@ -173,7 +173,7 @@ class ControllerActionHelper extends Helper {
 
 			if ($this->endsWith($field, '_id')) {
 				$associatedObject = str_replace('_id', '', $field);
-				if (is_object($obj->$associatedObject) && $obj->has('name')) {
+				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
 			} else {
@@ -673,15 +673,15 @@ class ControllerActionHelper extends Helper {
 				if (empty($attr['options'])) {
 					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
 				} else {
-					if (isset($attr['default'])) {
-						$options['default'] = $attr['default'];
-					} else {
-						if (!empty($this->request->data)) {
-							if(!empty($this->request->data->$attr['field'])) {
-								$options['default'] = $this->request->data->$attr['field'];
-							}
-						}
-					}
+					// if (isset($attr['default'])) {
+					// 	$options['default'] = $attr['default'];
+					// } else {
+					// 	if (!empty($this->request->data)) {
+					// 		if(!empty($this->request->data->$attr['field'])) {
+					// 			$options['default'] = $this->request->data->$attr['field'];
+					// 		}
+					// 	}
+					// }
 				}
 				$options['options'] = $attr['options'];
 			}
@@ -734,8 +734,10 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'text';
 			$options['disabled'] = 'disabled';
-			if (isset($_fieldAttr['options'])) {
+			if (isset($attr['options'])) {
 				//$options['value'] = $_fieldAttr['options'][$this->request->data->$_field];
+			} else {
+				$options['value'] = $data->$attr['field'];
 			}
 			//echo $this->Form->hidden($fieldName);
 		}

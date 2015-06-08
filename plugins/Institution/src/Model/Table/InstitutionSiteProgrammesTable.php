@@ -1,7 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
@@ -19,10 +21,19 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['education_programme_id']['type'] = 'select';
-		$this->fields['education_programme_id']['reload'] = true;
+		$this->fields['education_programme_id']['onChangeReload'] = true;
 
-		$this->ControllerAction->addField('education_level', ['type' => 'select', 'reload' => true]);
+		$this->ControllerAction->addField('education_level', ['type' => 'select', 'onChangeReload' => true]);
 		$this->EducationLevels = TableRegistry::get('Education.EducationLevels');
+	}
+
+	public function editBeforeAction(Event $event) {
+		$this->fields['education_level']['type'] = 'disabled';
+	}
+
+	public function editBeforeQuery(Event $event, Query $query, $contain) {
+		$contain[] = 'EducationProgrammes';
+		return compact('query', 'contain');
 	}
 
 	public function addBeforeAction($event, $entity) {

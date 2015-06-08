@@ -16,8 +16,6 @@ class InstitutionSiteProgramme extends Entity {
                 ->contain(['EducationLevels' => ['EducationSystems']])
                 ->first();
             $name = $data->education_level->education_system->name . ' - ' . $data->education_level->name;
-    	} else {
-    		// TODO-jeff: link education programmes
     	}
 
     	return $name;

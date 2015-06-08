@@ -5,15 +5,29 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 class ConfigItemsTable extends AppTable {
-	public function value($name) {
-		$entity = $this->findByName($name)->first();
+	private $configurations = [];
 
-		return $entity->value;
+	public function value($name) {
+		$value = '';
+		if (array_key_exists($name, $this->configurations)) {
+			$value = $this->configurations[$name];
+		} else {
+			$entity = $this->findByName($name)->first();
+			$value = $entity->value;
+			$this->configurations[$name] = $value;
+		}
+		return $value;
 	}
 
 	public function defaultValue($name) {
-		$entity = $this->findByName($name)->first();
-
-		return $entity->default;
+		$value = '';
+		if (array_key_exists($name, $this->configurations)) {
+			$value = $this->configurations[$name];
+		} else {
+			$entity = $this->findByName($name)->first();
+			$value = $entity->default;
+			$this->configurations[$name] = $value;
+		}
+		return $value;
 	}
 }
