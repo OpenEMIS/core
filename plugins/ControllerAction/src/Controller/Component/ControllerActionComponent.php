@@ -114,7 +114,7 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if ($attr['type'] == 'select' && !isset($attr['options'])) {
+				if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 					if ($this->isForeignKey($key)) {
 						$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 						$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
@@ -130,7 +130,7 @@ class ControllerActionComponent extends Component {
 						$this->model->fields[$key]['options'] = $query->toArray();
 					}
 				}
-				if (array_key_exists('reload', $attr) && $attr['reload']) {
+				if (array_key_exists('onChangeReload', $attr) && $attr['onChangeReload']) {
 					if (!array_key_exists('attr', $attr)) {
 						$this->model->fields[$key]['attr'] = [];
 					}
