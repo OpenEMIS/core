@@ -111,7 +111,7 @@ class StudentsController extends AppController {
 			$this->ControllerAction->addField('user_nationalities.0.country_id', [
 				'type' => 'select', 
 				'options' => $nationalityOptions, 
-				'attr' => ['onchange' => "$('#reload').click()"]
+				'onChangeReload' => true
 			]);
 
 			// identity 'mandatory field'
@@ -135,7 +135,7 @@ class StudentsController extends AppController {
 				'selectOptions' => $specialNeedOptions,
 				'txtPlaceHolder' => __('Special Need'),
 				'selectId' => 'Users.user_special_needs.0.special_need_type_id',
-				'txtId' => 'Users.user_special_needs.0.number',
+				'txtId' => 'Users.user_special_needs.0.comment',
 			]);
 		}
 
@@ -222,8 +222,7 @@ class StudentsController extends AppController {
 		} else {
 			// todo-mlee need to put correct alert saying need to select institution first
 			$action = $this->ControllerAction->buttons['index']['url'];
-			// $this->Message->alert('general.notExists');
-			$this->redirect($action);
+			return $this->redirect($action);
 		}
 
 		$this->ControllerAction->addField('institution_site_students.0.institution_site_id', [

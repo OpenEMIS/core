@@ -24,37 +24,30 @@ class UsersTable extends AppTable {
 		// 	'foreignKey' => 'birthplace_area_id'
 		// ),
 
-		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents']);
-		$this->hasMany('UserIdentities', ['className' => 'User.UserIdentities']);
-		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities']);
-		$this->hasMany('UserSpecialNeeds', ['className' => 'User.UserSpecialNeeds']);
-		$this->hasMany('UserContacts', ['className' => 'User.UserContacts']);
+		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('UserIdentities', ['className' => 'User.UserIdentities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('UserSpecialNeeds', ['className' => 'User.UserSpecialNeeds', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('UserContacts', ['className' => 'User.UserContacts', 'foreignKey' => 'security_user_id']);
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		//Required by patchEntity for associated data
-		$options['associated'] = ['Institution.InstitutionSiteStudents', 'User.UserIdentities', 'User.UserNationality', 'User.UserSpecialNeed', 'User.UserContact'];
+		$options['associated'] = ['InstitutionSiteStudents', 'UserIdentities', 'UserNationalities', 'UserSpecialNeeds', 'UserContacts'];
 		return compact('entity', 'data', 'options');
 	}
 
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
-		// todo-mlee: implement with config item
-		// if (array_key_exists('model', $options)) {
-		// 	switch ($options['model']) {
-		// 		case 'Student': case 'Staff':
-		// 			$prefix = TableRegistry::get('ConfigItem')->find('first', array('limit' => 1,
-		// 				'fields' => 'ConfigItem.value',
-		// 				'conditions' => array(
-		// 					'ConfigItem.name' => strtolower($options['model']).'_prefix'
-		// 				)
-		// 			));
-		// 			$prefix = explode(",", $prefix['ConfigItem']['value']);
-		// 			$prefix = ($prefix[1] > 0)? $prefix[0]: '';
-
-		// 			break;
-		// 	}
-		// }
+		
+		if (array_key_exists('model', $options)) {
+			switch ($options['model']) {
+				case 'Student': case 'Staff':
+					$prefix = TableRegistry::get('ConfigItems')->value(strtolower($options['model']).'_prefix');
+					$prefix = explode(",", $prefix);
+					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
+					break;
+			}
+		}
 		
 		$latest = $this->find()
 			->order('Users.id DESC')
