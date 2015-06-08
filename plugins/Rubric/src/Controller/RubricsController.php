@@ -2,6 +2,7 @@
 namespace Rubric\Controller;
 
 use App\Controller\AppController;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
@@ -46,7 +47,7 @@ class RubricsController extends AppController
         $this->set('selectedAction', $this->request->action);
 	}
 
-    public function onInitialize($event, $model) {
+    public function onInitialize(Event $event, Table $model) {
 		$header = __('Rubric');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
@@ -56,7 +57,7 @@ class RubricsController extends AppController
 		$this->set('contentHeader', $header);
     }
 
-    public function beforePaginate($event, $model, $options) {
+    public function beforePaginate(Event $event, Table $model, array $options) {
     	if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
 			$query = $this->request->query;
 

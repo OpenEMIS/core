@@ -19,13 +19,9 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['education_programme_id']['type'] = 'select';
-		$this->fields['education_programme_id']['attr'] = ['onchange' => "$('#reload').click()"];
+		$this->fields['education_programme_id']['reload'] = true;
 
-		$this->ControllerAction->addField('education_level', [
-			'type' => 'select',
-			'attr' => ['onchange' => "$('#reload').click()"]
-		]);
-
+		$this->ControllerAction->addField('education_level', ['type' => 'select', 'reload' => true]);
 		$this->EducationLevels = TableRegistry::get('Education.EducationLevels');
 	}
 
