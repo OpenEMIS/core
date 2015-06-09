@@ -27,7 +27,7 @@ class StaffController extends AppController {
 			'Absences' => ['className' => 'Staff.Absences'],
 			'Leaves' => ['className' => 'Staff.Leaves'],
 			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
-			'Extracurriculars' => ['className' => 'User.Extracurriculars'],
+			'Extracurriculars' => ['className' => 'Staff.Extracurriculars'],
 			'Employments' => ['className' => 'Staff.Employments'],
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
