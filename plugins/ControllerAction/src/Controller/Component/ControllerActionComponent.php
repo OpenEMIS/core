@@ -130,11 +130,17 @@ class ControllerActionComponent extends Component {
 						$this->model->fields[$key]['options'] = $query->toArray();
 					}
 				}
-				if (array_key_exists('onChangeReload', $attr) && $attr['onChangeReload']) {
+				if (array_key_exists('onChangeReload', $attr)) {
 					if (!array_key_exists('attr', $attr)) {
 						$this->model->fields[$key]['attr'] = [];
 					}
-					$this->model->fields[$key]['attr']['onchange'] = "$('#reload').click()";
+					$onChange = '';
+					if (is_bool($attr['onChangeReload']) && $attr['onChangeReload'] == true) {
+						$onChange = "$('#reload').click()";
+					} else {
+						$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click()";
+					}
+					$this->model->fields[$key]['attr']['onchange'] = $onChange;
 				}
 			}
 
