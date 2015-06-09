@@ -116,15 +116,11 @@ class AppValidator extends Validator {
 	protected function doCompareDates($dateOne, $compareField, $options, $globalData) {
 		$equals = $options['equals'];
 		$reverse = $options['reverse'];
-		// foreach ($globalData['data'] as $key => $value) {
-		// 	pr($key .' => '. $value);
-		// }die;
 		$dateTwo = $globalData['data'][$compareField];
 		try {
 			$dateTwo = new DateTime($dateTwo);
 		} catch (Exception $e) {
 			return 'Please input a proper date for '.(ucwords(str_replace('_', ' ', $compareField)));
-			exit(1);
 		}
 		if($equals) {
 			if ($reverse) {
@@ -162,12 +158,6 @@ class AppValidator extends Validator {
 	    }
     }
 
-	// private function setEssentials() {
-	// 	$table = $this->_providers['table'];
-	// 	$this->_modelAlias = $table->alias();
-	// 	$this->_data = $table->request->data;
-	// }
-
 	public function changePassword($field, $allowChangeAll, array $array) {
 		$model = $array['providers']['table'];
 		$username = array_key_exists('username', $array['data']) ? $array['data']['username'] : null;
@@ -183,126 +173,125 @@ class AppValidator extends Validator {
 		return $count==1;
 	}	
 
-	public function checkDateInput($field, array $array) {
+	public function checkDateInput($field) {
 		try {
 		    $date = new DateTime($field);
 		} catch (Exception $e) {
 		    return 'Please input a proper date';
-		    exit(1);
 		}
 		return true;		
 	}
 
-	public function testerCheckWithParms($check, $second, $third, array $array) {
-		if ($check == $second) {
-			return true;
-		} else {
-            return $this->newGetMessage(
-            	[
-            		'model'=>$array['providers']['table']->alias(),
-            		'field'=>$array['field'],
-            		'rule'=>'testerCheckWithParms'
-            	]
-            );
-		}
-	}
+	// public function testerCheckWithParms($check, $second, $third, array $array) {
+	// 	if ($check == $second) {
+	// 		return true;
+	// 	} else {
+ //            return $this->newGetMessage(
+ //            	[
+ //            		'model'=>$array['providers']['table']->alias(),
+ //            		'field'=>$array['field'],
+ //            		'rule'=>'testerCheckWithParms'
+ //            	]
+ //            );
+	// 	}
+	// }
 
-	public function testerCheck($check, array $array) {
-		if ($check === 'sss') {
-			return true;
-		} else {
-            return $this->newGetMessage(
-            	[
-            		'model'=>$array['providers']['table']->alias(),
-            		'field'=>$array['field'],
-            		'rule'=>'testerCheck'
-            	]
-            );
-		}
-	}
+	// public function testerCheck($check, array $array) {
+	// 	if ($check === 'sss') {
+	// 		return true;
+	// 	} else {
+ //            return $this->newGetMessage(
+ //            	[
+ //            		'model'=>$array['providers']['table']->alias(),
+ //            		'field'=>$array['field'],
+ //            		'rule'=>'testerCheck'
+ //            	]
+ //            );
+	// 	}
+	// }
 
-	public function newGetMessage($params=[]) {
-		if ( array_key_exists('model', $params) && array_key_exists('field', $params) && array_key_exists('rule', $params) ) {
-			if ( $params['model']!='' && $params['field']!='' && $params['rule']!='' ) {
-				$message = $this->validationMessages;
-				if (isset($message[$params['model']][$params['field']][$params['rule']])) {
-					return $message[$params['model']][$params['field']][$params['rule']];
-				} else {
-					return '[Message Not Found]';
-				}
-			}
-			return 'Your validation function has empty parameter(s)';
-		}
-		return 'Your validation function has missing parameter(s)';
-	}
+	// public function newGetMessage($params=[]) {
+	// 	if ( array_key_exists('model', $params) && array_key_exists('field', $params) && array_key_exists('rule', $params) ) {
+	// 		if ( $params['model']!='' && $params['field']!='' && $params['rule']!='' ) {
+	// 			$message = $this->validationMessages;
+	// 			if (isset($message[$params['model']][$params['field']][$params['rule']])) {
+	// 				return $message[$params['model']][$params['field']][$params['rule']];
+	// 			} else {
+	// 				return '[Message Not Found]';
+	// 			}
+	// 		}
+	// 		return 'Your validation function has empty parameter(s)';
+	// 	}
+	// 	return 'Your validation function has missing parameter(s)';
+	// }
 
-	public $validationMessages = array(
-		'general' => array(
-			'name' => array('ruleRequired' => 'Please enter a name'),
-			'code' => array(
-				'ruleRequired' => 'Please enter a code',
-				'ruleUnique' => 'Please enter a unique code'
-			),
-			'title' => array('ruleRequired' => 'Please enter a title'),
-			'address' => array(
-				'ruleRequired' => 'Please enter a valid Address',
-				'ruleMaximum255' => 'Please enter an address within 255 characters'
-			),
-			'postal_code' => array('ruleRequired' => 'Please enter a Postal Code'),
-			'email' => array('ruleRequired' => 'Please enter a valid Email'),
-		),
+	// public $validationMessages = array(
+	// 	'general' => array(
+	// 		'name' => array('ruleRequired' => 'Please enter a name'),
+	// 		'code' => array(
+	// 			'ruleRequired' => 'Please enter a code',
+	// 			'ruleUnique' => 'Please enter a unique code'
+	// 		),
+	// 		'title' => array('ruleRequired' => 'Please enter a title'),
+	// 		'address' => array(
+	// 			'ruleRequired' => 'Please enter a valid Address',
+	// 			'ruleMaximum255' => 'Please enter an address within 255 characters'
+	// 		),
+	// 		'postal_code' => array('ruleRequired' => 'Please enter a Postal Code'),
+	// 		'email' => array('ruleRequired' => 'Please enter a valid Email'),
+	// 	),
 
-		'Institutions' => array(
+	// 	'Institutions' => array(
 
-			/* For testing */
-			'contact_person' => [
-				'testerCheck' => 'Value should be triple "s"'
-			],
-			'telephone' => [
-				'testerCheckWithParms' => 'Test with Parameters'
-			],
-			/* End For testing */
+	// 		/* For testing */
+	// 		'contact_person' => [
+	// 			'testerCheck' => 'Value should be triple "s"'
+	// 		],
+	// 		'telephone' => [
+	// 			'testerCheckWithParms' => 'Test with Parameters'
+	// 		],
+	// 		/* End For testing */
 
-			'institution_site_locality_id' => array(
-				'ruleRequired' => 'Please select a Locality'
-			),
-			'institution_site_status_id' => array(
-				'ruleRequired' => 'Please select a Status'
-			),
-			'institution_site_type_id' => array(
-				'ruleRequired' => 'Please select a Type'
-			),
-			'institution_site_ownership_id' => array(
-				'ruleRequired' => 'Please select an Ownership'
-			),
-			'area_id_select' => array(
-				'ruleRequired' => 'Please select a valid Area'
-			),
-			'date_opened' => array(
-				'ruleRequired' => 'Please select the Date Opened',
-				'ruleCompare' => 'Please select the Date Opened'
-			),
-			'date_closed' => array(
-				'ruleCompare' => 'Date Closed cannot be earlier than Date Opened'
-			),
-			'longitude' => array(
-				'ruleLongitude' => 'Please enter a valid Longitude'
-			),
-			'latitude' => array(
-				'ruleLatitude' => 'Please enter a valid Latitude'
-			),
-			'institution_site_provider_id' => array(
-				'ruleRequired' => 'Please select a Provider'
-			),
-			'institution_site_sector_id' => array(
-				'ruleRequired' => 'Please select a Sector'
-			),
-			'institution_site_gender_id' => array(
-				'ruleRequired' => 'Please select a Gender'
-			)
-		)
+	// 		'institution_site_locality_id' => array(
+	// 			'ruleRequired' => 'Please select a Locality'
+	// 		),
+	// 		'institution_site_status_id' => array(
+	// 			'ruleRequired' => 'Please select a Status'
+	// 		),
+	// 		'institution_site_type_id' => array(
+	// 			'ruleRequired' => 'Please select a Type'
+	// 		),
+	// 		'institution_site_ownership_id' => array(
+	// 			'ruleRequired' => 'Please select an Ownership'
+	// 		),
+	// 		'area_id_select' => array(
+	// 			'ruleRequired' => 'Please select a valid Area'
+	// 		),
+	// 		'date_opened' => array(
+	// 			'ruleRequired' => 'Please select the Date Opened',
+	// 			'ruleCompare' => 'Please select the Date Opened'
+	// 		),
+	// 		'date_closed' => array(
+	// 			'ruleCompare' => 'Date Closed cannot be earlier than Date Opened'
+	// 		),
+	// 		'longitude' => array(
+	// 			'ruleLongitude' => 'Please enter a valid Longitude'
+	// 		),
+	// 		'latitude' => array(
+	// 			'ruleLatitude' => 'Please enter a valid Latitude'
+	// 		),
+	// 		'institution_site_provider_id' => array(
+	// 			'ruleRequired' => 'Please select a Provider'
+	// 		),
+	// 		'institution_site_sector_id' => array(
+	// 			'ruleRequired' => 'Please select a Sector'
+	// 		),
+	// 		'institution_site_gender_id' => array(
+	// 			'ruleRequired' => 'Please select a Gender'
+	// 		)
+	// 	)
 
-	);
+	// );
 
 	// public function loadValidationMessages($model) {
 	// 	$alias = $model->alias;

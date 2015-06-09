@@ -24,6 +24,7 @@ class UsersTable extends AppTable {
 		// 	'foreignKey' => 'birthplace_area_id'
 		// ),
 
+		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('UserIdentities', ['className' => 'User.UserIdentities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id']);
