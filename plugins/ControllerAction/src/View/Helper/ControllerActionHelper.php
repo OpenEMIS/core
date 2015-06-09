@@ -517,6 +517,9 @@ class ControllerActionHelper extends Helper {
 				*/
 				
 				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
+					if (array_key_exists('fieldName', $_fieldAttr)) {
+						$fieldName = $_fieldAttr['fieldName'];
+					}
 					echo $this->Form->input($fieldName, $options);
 				}
 			}
