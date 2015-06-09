@@ -11,6 +11,4 @@ return array(
     $vendorDir . '/cakephp/cakephp/src/Collection/functions.php',
     $vendorDir . '/cakephp/cakephp/src/I18n/functions.php',
     $vendorDir . '/cakephp/cakephp/src/Utility/bootstrap.php',
-    $vendorDir . '/nikic/php-parser/lib/bootstrap.php',
-    $vendorDir . '/psy/psysh/src/Psy/functions.php',
 );

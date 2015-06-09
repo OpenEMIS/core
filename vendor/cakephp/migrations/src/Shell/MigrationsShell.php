@@ -13,6 +13,7 @@ namespace Migrations\Shell;
 
 use Cake\Console\Shell;
 use Migrations\MigrationsDispatcher;
+use Symfony\Component\Console\Input\ArgvInput;
 
 /**
  * A wrapper shell for phinx migrations, used to inject our own
@@ -23,8 +24,15 @@ class MigrationsShell extends Shell
 {
 
     /**
+     * Array of arguments to run the shell with.
+     *
+     * @var array
+     */
+    public $argv = [];
+
+    /**
      * Defines what options can be passed to the shell.
-     * This is required becuase CakePHP validates the passed options
+     * This is required because CakePHP validates the passed options
      * and would complain if something not configured here is present
      *
      * @return Cake\Console\ConsoleOptionParser
@@ -40,7 +48,8 @@ class MigrationsShell extends Shell
             ->addOption('no-ansi')
             ->addOption('version', ['short' => 'V'])
             ->addOption('no-interaction', ['short' => 'n'])
-            ->addOption('template', ['short' => 't']);
+            ->addOption('template', ['short' => 't'])
+            ->addOption('format', ['short' => 'f']);
     }
 
     /**
@@ -61,14 +70,29 @@ class MigrationsShell extends Shell
      * responsible for parsing the command line from phinx and gives full control of
      * the rest of the flow to it.
      *
+     * The input parameter of the ``MigrationDispatcher::run()`` method is manually built
+     * in case a MigrationsShell is dispatched using ``Shell::dispatch()``.
+     *
      * @return void
      */
     public function main()
     {
-        array_shift($_SERVER['argv']);
-        $_SERVER['argv']--;
         $app = new MigrationsDispatcher(PHINX_VERSION);
-        $app->run();
+        $input = new ArgvInput($this->argv);
+        $app->run($input);
+    }
+
+    /**
+     * Override the default behavior to save the command called
+     * in order to pass it to the command dispatcher
+     *
+     * {@inheritDoc}
+     */
+    public function runCommand($argv, $autoMethod = false)
+    {
+        array_unshift($argv, 'migrations');
+        $this->argv = $argv;
+        return parent::runCommand($argv, $autoMethod);
     }
 
     /**
