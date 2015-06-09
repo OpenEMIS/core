@@ -1,8 +1,15 @@
 <?php
-$this->Html->scriptStart(array('inline' => false, 'block' => 'scriptBottom'));
+$this->Html->scriptStart(['block' => 'scriptBottom']);
 ?>
 $(function () {
 <?php
+$timepickerScript = "$('#%s').timepicker(%s);\n";
+if (isset($timepicker)) {
+	foreach ($timepicker as $key => $obj) {
+		echo sprintf($timepickerScript, $obj['id'], json_encode($obj['time_options']));
+	}
+}
+/*
 foreach ($timepicker as $key => $obj) {
 	$_setting = array();
 	$eventKeys = array('show', 'hide', 'update');
@@ -31,6 +38,7 @@ foreach ($timepicker as $key => $obj) {
 		echo ";\n";
 	}
 }
+*/
 ?>
 });
 <?php
