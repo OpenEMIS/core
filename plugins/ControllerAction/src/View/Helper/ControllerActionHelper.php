@@ -19,9 +19,9 @@ class ControllerActionHelper extends Helper {
 		],
 		'timepicker' => [
 			'include' => false,
-			'css' => 'ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min',
-			'js' => 'ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min',
-			'element' => 'ControllerAction.bootstrap-timepicker/timepicker'
+			'css' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
+			'js' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
+			'element' => 'ControllerAction.timepicker'
 		],
 		'chosen' => [
 			'include' => false,
@@ -328,7 +328,6 @@ class ControllerActionHelper extends Helper {
 	}
 	
 	public function timepicker($field, $options=array()) {
-		/*
 		$id = isset($options['id']) ? $options['id'] : 'time';
 		$wrapper = '<div class="input-group bootstrap-timepicker">';
 		$icon = '<span class="input-group-addon"><i class="fa fa-clock-o"></i></span></div>';
@@ -361,7 +360,6 @@ class ControllerActionHelper extends Helper {
 		} else {
 			$this->_View->set('timepicker', array($_timepickerOptions));
 		}
-		*/
 		return $html;
 	}
 
@@ -518,7 +516,7 @@ class ControllerActionHelper extends Helper {
 				}
 				*/
 				
-				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
+				if (!in_array($_type, [ 'image', 'date', 'time', 'binary', 'element'])) {
 					if (array_key_exists('fieldName', $_fieldAttr)) {
 						$fieldName = $_fieldAttr['fieldName'];
 					}
@@ -736,6 +734,21 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
+	public function getReadonlyElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$value = $attr['value'];
+		} else if ($action == 'edit') {
+			$this->getDisabledElement($action, $data, $attr, $options);
+			echo $this->Form->input('disabled-'.$attr['field'], $options);
+
+			unset($options['disabled']);
+			unset($options['value']);
+			$value = $this->getHiddenElement($action, $data, $attr, $options);
+		}
+		return $value;
+	}
+
 	public function getDisabledElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
@@ -743,12 +756,13 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'text';
 			$options['disabled'] = 'disabled';
-			if (isset($attr['options'])) {
-				//$options['value'] = $_fieldAttr['options'][$this->request->data->$_field];
+			if (isset($attr['options']) && !isset($attr['attr']['value'])) {
+				$options['value'] = $attr['options'][$data->$attr['field']];
+			} elseif (isset($attr['attr']['value'])) {
+				$options['value'] = $attr['attr']['value'];
 			} else {
 				$options['value'] = $data->$attr['field'];
 			}
-			//echo $this->Form->hidden($fieldName);
 		}
 		return $value;
 	}
@@ -884,44 +898,20 @@ class ControllerActionHelper extends Helper {
 
 	public function getTimeElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		$_options = [
-			'defaultTime' => false
-		];
-
-		if (!isset($attr['time_options'])) {
-			$attr['time_options'] = [];
-		}
-
-		$field = $attr['field'];
-		$value = $data->$field;
-
-		if ($action == 'view' || $action == 'index') {
-			if (!is_null($value)) {
-				$table = TableRegistry::get($attr['className']);
-				$event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
-				$event = $table->eventManager()->dispatch($event);
-				if (strlen($event->result) > 0) {
-					$value = $event->result;
-				}
-			}
+		if ($action == 'view') {
+			
 		} else if ($action == 'edit') {
-			$attr['id'] = $attr['model'] . '_' . $field;
-			$attr['time_options'] = array_merge($_options, $attr['time_options']);
-			if (!is_null($value)) {
-				$attr['value'] = date('h:i A', strtotime($value));
-				$attr['time_options']['defaultTime'] = $attr['value'];
+			$attr = array('id' => $_fieldModel . '_' . $_field);
+			
+			if (array_key_exists('attr', $_fieldAttr)) {
+				$attr = array_merge($attr, $_fieldAttr['attr']);
 			}
-			if (!is_null($this->_View->get('timepicker'))) {
-				$timepickers = $this->_View->get('timepicker');
-				$timepickers[] = $attr;
-				$this->_View->set('timepicker', $timepickers);
-			} else {
-				$this->_View->set('timepicker', [$attr]);
-			}
-			echo $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
-			$this->includes['timepicker']['include'] = true;
-		}
 
+			$attr['value'] = $this->request->data->$_field;
+			$attr['label'] = $label;
+			$includes['timepicker']['include'] = true;
+			echo $this->timepicker($fieldName, $attr);
+		}
 		return $value;
 	}
 
