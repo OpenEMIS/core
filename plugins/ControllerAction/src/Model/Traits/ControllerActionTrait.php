@@ -9,6 +9,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.beforeAction'				=> 'beforeAction', // called before start of any actions
 		'ControllerAction.Model.afterAction'				=> 'afterAction', // called after any actions
 		'ControllerAction.Model.onFormatDate'				=> 'onFormatDate', // called before displaying date fields
+		'ControllerAction.Model.onFormatTime'				=> 'onFormatTime', // called before displaying time fields
 		'ControllerAction.Model.onFormatDateTime'			=> 'onFormatDateTime', // called before displaying datetime fields
 		'ControllerAction.Model.index.onInitializeButtons' 	=> 'indexOnInitializeButtons',
 		'ControllerAction.Model.index.beforeAction'			=> 'indexBeforeAction',
