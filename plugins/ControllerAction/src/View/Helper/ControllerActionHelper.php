@@ -809,6 +809,34 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
+	public function getDateTimeElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		$_options = [
+			'format' => 'dd-mm-yyyy H:i:s',
+			'todayBtn' => 'linked',
+			'orientation' => 'top auto'
+		];
+
+		if (!isset($attr['date_options'])) {
+			$attr['date_options'] = [];
+		}
+
+		$field = $attr['field'];
+		$value = $data->$field;
+
+		if ($action == 'view' || $action == 'index') {
+			if (!is_null($value)) {
+				$table = TableRegistry::get($attr['className']);
+				$event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
+				$event = $table->eventManager()->dispatch($event);
+				if (strlen($event->result) > 0) {
+					$value = $event->result;
+				}
+			}
+		}
+		return $value;
+	}
+
 	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		$_options = [
