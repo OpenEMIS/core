@@ -510,6 +510,9 @@ INSERT INTO user_bank_accounts (account_name, account_number, active, security_u
 DROP TABLE student_bank_accounts;
 DROP TABLE staff_bank_accounts;
 
+-- Shifted default country data from config items to country table
+ALTER TABLE `countries` ADD `default` INT(1) NOT NULL DEFAULT '0' AFTER `visible`;
+
 -- June 3 1605hrs
 -- changing student and staff id to security user id (part 3)
 -- CREATE TABLE user_bank_accounts LIKE student_bank_accounts;
@@ -518,5 +521,4 @@ DROP TABLE staff_bank_accounts;
 -- DROP TABLE student_bank_accounts;
 -- DROP TABLE staff_bank_accounts;
 
--- Shifted default country data from config items to country table
--- ALTER TABLE `countries` ADD `default` INT(1) NOT NULL DEFAULT '0' AFTER `visible`;
+
