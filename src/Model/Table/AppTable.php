@@ -162,8 +162,7 @@ class AppTable extends Table {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = new AppValidator();
-		$validator->provider('default', $validator);
+		$validator->provider('default', new AppValidator());
 		return $validator;
 	}
 

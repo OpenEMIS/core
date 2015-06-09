@@ -24,19 +24,21 @@ class InstitutionsController extends AppController  {
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
 
-			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'Staff' 			=> ['className' => 'Institution.InstitutionSiteStaff'],
 			'StaffAbsences' 	=> ['className' => 'Institution.InstitutionSiteStaffAbsences'],
+			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
 			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
 
+			'Students' 			=> ['className' => 'Institution.InstitutionSiteStudents'],
+			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-			'StaffBehaviours' 	=> ['className' => 'Institution.StaffBehaviours'],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
 			'Fees' 				=> ['className' => 'Institution.InstitutionSiteFees'],
 			'StudentFees' 		=> ['className' => 'Institution.StudentFees'],
 
-			// // Surveys
+			// Surveys
 			'NewSurveys' 		=> ['className' => 'Institution.SurveyNew'],
 			'DraftedSurveys' 	=> ['className' => 'Institution.SurveyDrafts'],
 			'CompletedSurveys' 	=> ['className' => 'Institution.SurveyCompleted'],
