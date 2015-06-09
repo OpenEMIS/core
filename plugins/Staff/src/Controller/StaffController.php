@@ -3,6 +3,7 @@ namespace Staff\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 
 class StaffController extends AppController {
 	public function initialize() {
@@ -26,7 +27,7 @@ class StaffController extends AppController {
 			'Absences' => ['className' => 'Staff.Absences'],
 			'Leaves' => ['className' => 'Staff.Leaves'],
 			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
-			'Extracurriculars' => ['className' => 'Staff.Extracurriculars'],
+			'Extracurriculars' => ['className' => 'User.Extracurriculars'],
 			'Employments' => ['className' => 'Staff.Employments'],
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
@@ -80,39 +81,6 @@ class StaffController extends AppController {
 			return $options;
 	}
 
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
-
-		$visibility = ['view' => true, 'edit' => true];
-
-		$this->Users->fields['photo_content']['type'] = 'image';
-
-		// unset($this->SecurityUsers->fields['photo_content']);
-
-		
-		// pr($this->ControllerAction->models);
-
-		
-		// $this->Institutions->fields['alternative_name']['visible'] = $visibility;
-		// $this->Institutions->fields['address']['visible'] = $visibility;
-		// $this->Institutions->fields['postal_code']['visible'] = $visibility;
-		// $this->Institutions->fields['telephone']['visible'] = $visibility;
-		// $this->Institutions->fields['fax']['visible'] = $visibility;
-		// $this->Institutions->fields['email']['visible'] = $visibility;
-		// $this->Institutions->fields['website']['visible'] = $visibility;
-		// $this->Institutions->fields['date_opened']['visible'] = $visibility;
-		// $this->Institutions->fields['year_opened']['visible'] = $visibility;
-		// $this->Institutions->fields['date_closed']['visible'] = $visibility;
-		// $this->Institutions->fields['year_closed']['visible'] = $visibility;
-		// $this->Institutions->fields['longitude']['visible'] = $visibility;
-		// $this->Institutions->fields['latitude']['visible'] = $visibility;
-		// $this->Institutions->fields['security_group_id']['visible'] = $visibility;
-		// $this->Institutions->fields['contact_person']['visible'] = $visibility;
-
-		// // columns to be removed, used by ECE QA Dashboard
-		// $this->Institutions->fields['institution_site_area_id']['visible'] = $visibility;
-	}
-
 	public function view($id = null) {
 		if (is_null($id)) {
 			$id = $this->ControllerAction->Session->read('Staff.security_user_id');
@@ -126,6 +94,8 @@ class StaffController extends AppController {
 	public function edit($id = null) {
 		if (is_null($id)) {
 			$id = $this->ControllerAction->Session->read('Staff.security_user_id');
+		} else {
+			$this->ControllerAction->Session->write('Staff.security_user_id', $id);
 		}
 		$this->ControllerAction->edit($id);
 		$this->ControllerAction->render();
