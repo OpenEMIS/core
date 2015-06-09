@@ -579,13 +579,14 @@ class ControllerActionComponent extends Component {
 				}
 			} else {
 				$patchOptions['validate'] = false;
-				$method = 'addOn' . ucfirst($submit);
-				$event = new Event('ControllerAction.Model.addEdit.' . $method, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+				$methodKey = 'on' . ucfirst($submit);
+				$event = new Event('ControllerAction.Model.addEdit.' . $methodKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 				$event = $model->eventManager()->dispatch($event);
 				if (!empty($event->result)) {
 					list($data, $this->request->data, $patchOptions) = array_values($event->result);
 				}
-				$eventKey = 'ControllerAction.Model.add.' . $method;
+				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
+				$method = 'add' . ucfirst($methodKey);
 				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 				if (method_exists($this->model, $method)) {
 	                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
