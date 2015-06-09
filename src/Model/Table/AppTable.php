@@ -109,8 +109,33 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onFormatDate'
 	public function onFormatDate(Event $event, Time $dateObject) {
+		return $this->formatDate($dateObject);
+	}
+
+	/**
+	 * For calling from view files
+	 * @param  Time   $dateObject [description]
+	 * @return [type]             [description]
+	 */
+	public function formatDate(Time $dateObject) {
 		$ConfigItem = TableRegistry::get('ConfigItems');
 		$format = $ConfigItem->value('date_format');
+		return $dateObject->format($format);
+	}
+
+	// Event: 'ControllerAction.Model.onFormatDateTime'
+	public function onFormatDateTime(Event $event, Time $dateObject) {
+		return $this->formatDateTime($dateObject);
+	}
+
+	/**
+	 * For calling from view files
+	 * @param  Time   $dateObject [description]
+	 * @return [type]             [description]
+	 */
+	public function formatDateTime(Time $dateObject) {
+		$ConfigItem = TableRegistry::get('ConfigItems');
+		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		return $dateObject->format($format);
 	}
 
@@ -135,6 +160,10 @@ class AppTable extends Table {
 
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
+	}
+
+	public function findActive(Query $query, array $options) {
+		return $query->where([$this->aliasField('active') => 1]);
 	}
 
 	public function findOrder(Query $query, array $options) {
