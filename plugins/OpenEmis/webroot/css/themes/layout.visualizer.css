@@ -124,6 +124,12 @@
 	left: 13px;
 }
 
+.format-wrapper .select:after,
+.chart-wrapper .select:after {
+	margin-top: 9px;
+	margin-left: -15px;
+}
+
 .dropdown-header {
 	border-bottom: 1px solid #DDD;
 	padding: 0;
@@ -182,6 +188,7 @@
 .selected:active,
 .selected:visited
 .selected[ng-click] {
+	color: #FFF;
 	outline: none;
 	-webkit-box-shadow: 0;
 	        box-shadow: 0;
@@ -200,12 +207,12 @@
 	font-size: 20px;
 	color: #990000;
 	position: absolute;
-	top: -1px !important;
-	left: 5px;
+	top: 5px !important;
+	left: 11px;
 }
 
 .chrome .x-axis:before {
-	top: -2px !important;
+	top: 3px !important;
 }
 
 .y-axis:before {
@@ -214,14 +221,10 @@
 	font-size: 20px;
 	color: #990000;
 	position: absolute;
-	top: -1px !important;
-	left: 5px;
-}
-
-.chrome .x-axis:before {
-	top: 1px;
+	top: 5px !important;
+	left: 12px;
 }
 
 .chrome .y-axis:before {
-	top: 2px;
+	left: 11px;
 }
