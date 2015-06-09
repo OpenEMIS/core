@@ -474,6 +474,7 @@ class ControllerActionHelper extends Helper {
 				$fieldName = $_fieldModel . '.' . $_field;
 				$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 				
+				// TODO-jeff: make label optional
 				$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
 				if (!empty($label)) {
 					$options['label'] = $label;
@@ -673,33 +674,36 @@ class ControllerActionHelper extends Helper {
 				if (empty($attr['options'])) {
 					//$options['empty'] = isset($attr['empty']) ? $attr['empty'] : $this->getLabel('general.noData');
 				} else {
-					// if (isset($attr['default'])) {
-					// 	$options['default'] = $attr['default'];
-					// } else {
-					// 	if (!empty($this->request->data)) {
-					// 		if(!empty($this->request->data->$attr['field'])) {
-					// 			$options['default'] = $this->request->data->$attr['field'];
-					// 		}
-					// 	}
-					// }
+					if (isset($attr['default'])) {
+						$options['default'] = $attr['default'];
+					} else {
+						// if (!empty($this->request->data)) {
+						// 	if(!empty($this->request->data->$attr['field'])) {
+						// 		$options['default'] = $this->request->data->$attr['field'];
+						// 	}
+						// }
+					}
 				}
 				$options['options'] = $attr['options'];
 			}
+			if (isset($attr['attr'])) {
+				$options = array_merge($options, $attr['attr']);
+			}
 
 			// get rid of options that obsolete and not the default
-			if (!empty($attr['options'])) {
-				reset($attr['options']);
-				$first_key = key($attr['options']);
-				if (is_array($attr['options'][$first_key])) {
-					foreach ($options['options'] as $okey => $ovalue) {
-						if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
-							if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
-								unset($options['options'][$okey]);
-							}
-						}
-					}
-				}
-			}
+			// if (!empty($attr['options'])) {
+			// 	reset($attr['options']);
+			// 	$first_key = key($attr['options']);
+			// 	if (is_array($attr['options'][$first_key])) {
+			// 		foreach ($options['options'] as $okey => $ovalue) {
+			// 			if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
+			// 				if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
+			// 					unset($options['options'][$okey]);
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}
 		return $value;
 	}
