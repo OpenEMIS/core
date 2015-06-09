@@ -9,7 +9,9 @@
         "cakephp/cakephp": "~3.0",
         "mobiledetect/mobiledetectlib": "2.*",
         "cakephp/migrations": "~1.0",
-        "cakephp/plugin-installer": "*"
+        "cakephp/plugin-installer": "*",
+	"phpunit/phpunit": "*",
+	"cakephp/debug_kit": "~3.0"
     },
     "require-dev": {
         "psy/psysh": "@stable",
