@@ -124,6 +124,17 @@
 	left: 13px;
 }
 
+.format-wrapper .select:after,
+.chart-wrapper .select:after {
+	margin-top: 9px;
+	margin-left: -15px;
+}
+
+.select-arrow .select:after {
+	top: 30px;
+	right: 10px;
+}
+
 .dropdown-header {
 	border-bottom: 1px solid #DDD;
 	padding: 0;
@@ -166,8 +177,10 @@
 	padding: 0;
 }
 
-.format-item input {
-	margin-bottom: 5px;
+.format-item input,
+.format-item textarea,
+.chart-lists textarea {
+	margin-bottom: 10px !important;
 }
 
 .format-item .checkbox input {
@@ -182,6 +195,7 @@
 .selected:active,
 .selected:visited
 .selected[ng-click] {
+	color: #FFF;
 	outline: none;
 	-webkit-box-shadow: 0;
 	        box-shadow: 0;
@@ -200,12 +214,12 @@
 	font-size: 20px;
 	color: #990000;
 	position: absolute;
-	top: -1px !important;
-	left: 5px;
+	top: 5px !important;
+	left: 11px;
 }
 
 .chrome .x-axis:before {
-	top: -2px !important;
+	top: 3px !important;
 }
 
 .y-axis:before {
@@ -214,16 +228,12 @@
 	font-size: 20px;
 	color: #990000;
 	position: absolute;
-	top: -1px !important;
-	left: 5px;
-}
-
-.chrome .x-axis:before {
-	top: 1px;
+	top: 5px !important;
+	left: 12px;
 }
 
 .chrome .y-axis:before {
-	top: 2px;
+	left: 11px;
 }
 
 /* DASHBOARD LAYOUT */
@@ -248,6 +258,7 @@
 .dragdrop-wrapper {
 	border: 1px #ccc solid; 
 	overflow: scroll;
+	background-color: #fff;
 }
 
 .dragdrop-wrapper i {
@@ -305,6 +316,11 @@
 .visualization-search {
 	display: inline;
 	position: relative;
+	vertical-align: middle;
+}
+
+.visualization-search .dropdown-menu {
+	display: block;
 }
 
 .visualization-search .btn-reset {
@@ -344,7 +360,7 @@
 .search-wrapper {
 	padding: 0;
 	left: 5px !important;
-	top: 21px !important;
+	top: 19px !important;
 	width: 300px;
 	-webkit-border-top-left-radius: 0;
 	        border-top-left-radius: 0;
@@ -357,4 +373,12 @@
 
 .search-lists p {
 	text-align: center;
+}
+
+/* ELEMENTS */
+
+.chart-lists i {
+	font-size: 12px !important;
+	vertical-align: initial;
+	padding-right: 3px;
 }
