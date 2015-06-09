@@ -12,7 +12,7 @@ class AcademicPeriodsTable extends AppTable {
 		// $this->hasMany('Sections', ['className' => 'Institution.Sections']);
 	}
 
-	public function getList() {
+	public function getList($query = NULL) {
 		$where = [
 			$this->aliasField('current') => 1,
 			$this->aliasField('parent_id') . ' <> ' => 0
