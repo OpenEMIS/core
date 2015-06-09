@@ -21,7 +21,11 @@
 					<td>
 						<?php 
 						if ($_edit) {
-							echo $this->Html->link($obj->user->name, array('action' => $model, 'staffEdit', $obj->id));
+							$url = $_buttons['index']['url'];
+							$url['action'] = 'Staff';
+							$url[0] = 'edit';
+							$url[1] = $obj->id;
+							echo $this->Html->link($obj->user->name, $url);
 						} else {
 							echo $obj->user->name;
 						}

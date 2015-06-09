@@ -1,4 +1,5 @@
 <?php $_edit = (array_key_exists('edit', $_buttons) ? true : false);?>
+<?php //pr($_buttons);?>
 
 	<div class="col-md-12">
 		<table class="table table-striped table-hover table-bordered">
@@ -24,7 +25,11 @@
 						<td>
 							<?php 
 							if ($_edit) {
-								echo $this->Html->link($obj->user->name, array('action' => $model, 'staffEdit', $obj->id));
+								$url = $_buttons['index']['url'];
+								$url['action'] = 'Staff';
+								$url[0] = 'edit';
+								$url[1] = $obj->id;
+								echo $this->Html->link($obj->user->name, $url);
 							} else {
 								echo $obj->user->name;
 							}
