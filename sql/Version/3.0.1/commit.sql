@@ -510,15 +510,8 @@ INSERT INTO user_bank_accounts (account_name, account_number, active, security_u
 DROP TABLE student_bank_accounts;
 DROP TABLE staff_bank_accounts;
 
+-- June 9 1505hrs
 -- Shifted default country data from config items to country table
 ALTER TABLE `countries` ADD `default` INT(1) NOT NULL DEFAULT '0' AFTER `visible`;
-
--- June 3 1605hrs
--- changing student and staff id to security user id (part 3)
--- CREATE TABLE user_bank_accounts LIKE student_bank_accounts;
--- INSERT INTO user_bank_accounts (account_name, account_number, active, security_user_id, bank_branch_id, remarks, modified_user_id, modified, created_user_id, created) SELECT account_name, account_number, active, security_user_id, bank_branch_id, remarks, modified_user_id, modified, created_user_id, created FROM student_bank_accounts;
--- INSERT INTO user_bank_accounts (account_name, account_number, active, security_user_id, bank_branch_id, remarks, modified_user_id, modified, created_user_id, created) SELECT account_name, account_number, active, security_user_id, bank_branch_id, remarks, modified_user_id, modified, created_user_id, created FROM staff_bank_accounts;
--- DROP TABLE student_bank_accounts;
--- DROP TABLE staff_bank_accounts;
 
 
