@@ -54,10 +54,40 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
 	public function onPopulateSelectOptions(Event $event, $query) {
+		// $schema = $this->schema();
+		// $columns = $schema->columns();
+		
+		// if ($this->hasBehavior('FieldOption')) {
+		// 	$query->innerJoin(
+		// 		['FieldOption' => 'field_options'],
+		// 		[
+		// 			'FieldOption.id = ' . $this->aliasField('field_option_id'),
+		// 			'FieldOption.code' => $this->alias()
+		// 		]
+		// 	)->find('order')->find('visible');
+		// } else {
+		// 	if (in_array('order', $columns)) {
+		// 		$query->find('order');
+		// 	}
+
+		// 	if (in_array('visible', $columns)) {
+		// 		$query->find('visible');
+		// 	}
+		// }
+		// return $query;
+
+		return $this->getList($query);
+	}
+
+	public function getList($query = null) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
-		
-		if ($this->hasBehavior('FieldOption')) {
+
+		if (is_null($query)) {
+			$query = $this->find('list');
+		}
+
+		if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
 			$query->innerJoin(
 				['FieldOption' => 'field_options'],
 				[
