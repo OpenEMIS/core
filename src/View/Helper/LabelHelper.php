@@ -145,6 +145,9 @@ class LabelHelper extends Helper {
 		'RubricTemplateOptions' => [
 			'rubric_template_id' => 'Rubric Template',
 			'weighting' => 'Weighting'
+		],
+		'Workflows' => [
+			'workflow_model_id' => 'Form'
 		]
 	];
 
