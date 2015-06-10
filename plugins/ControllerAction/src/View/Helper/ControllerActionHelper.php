@@ -410,6 +410,7 @@ class ControllerActionHelper extends Helper {
 				break;
 
 			case 'chosen_select':
+				/*
 				$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
 				$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
 				//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
@@ -424,6 +425,7 @@ class ControllerActionHelper extends Helper {
 					}
 				}
 				echo implode(', ', $chosenSelectList);
+				*/
 				break;
 
 			case 'bool':
