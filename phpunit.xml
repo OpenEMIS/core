@@ -17,6 +17,10 @@
 			<directory>./tests/TestCase</directory>
 		</testsuite>
 		<!-- Add plugin test suites here. -->
+		
+                <testsuite name="Area Test Suite">
+                        <directory>./plugins/Area/tests/TestCase</directory>
+                </testsuite>
 	</testsuites>
 
 	<!-- Setup a listener for fixtures -->
