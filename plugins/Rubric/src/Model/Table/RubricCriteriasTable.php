@@ -72,8 +72,7 @@ class RubricCriteriasTable extends AppTable {
 
 		$this->fields['type']['type'] = 'select';
 		$this->fields['type']['options'] = $criteriaTypeOptions;
-		$this->fields['type']['attr'] = ['onchange' => "$('#reload').click()"];
-
+		$this->fields['type']['onChangeReload'] = true;
 
 		$this->fields['criterias']['visible'] = false;
 		$this->setFieldOrder();

@@ -148,6 +148,10 @@ class LabelHelper extends Helper {
 		],
 		'Workflows' => [
 			'workflow_model_id' => 'Form'
+		],
+		'WorkflowActions' => [
+			'next_step' => 'Next Step',
+			'comment_required' => 'Comment Required'
 		]
 	];
 

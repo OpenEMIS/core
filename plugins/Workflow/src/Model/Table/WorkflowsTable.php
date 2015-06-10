@@ -1,6 +1,7 @@
 <?php
 namespace Workflow\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -26,6 +27,21 @@ class WorkflowsTable extends AppTable {
 		return $validator;
 	}
 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+		parent::beforeSave($event, $entity, $options);
+		//Auto insert default rubric_template_options when add
+		if ($entity->isNew()) {
+			$data = [
+				'workflow_steps' => [
+					['name' => __('Open'), 'stage' => 0],
+					['name' => __('Closed'), 'stage' => 1]
+				]
+			];
+
+			$entity = $this->patchEntity($entity, $data);
+		}
+	}
+
 	public function beforeAction(Event $event) {
 		//Add new fields
 		$this->ControllerAction->addField('apply_to_all', [
@@ -41,7 +57,7 @@ class WorkflowsTable extends AppTable {
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain = ['FieldOptionValues'];
+		$contain[] = 'FieldOptionValues';
 		return compact('query', 'contain');
 	}
 
@@ -153,7 +169,7 @@ class WorkflowsTable extends AppTable {
 
 	public function editBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain = ['FieldOptionValues'];
+		$contain[] = 'FieldOptionValues';
 		return compact('query', 'contain');
 	}
 
