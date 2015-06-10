@@ -76,6 +76,7 @@ class StaffController extends AppController {
 				} else {
 					$this->ControllerAction->Message->alert('general.noData');
 					$this->redirect(['action' => 'index']);
+					return false;
 				}
 			}
 			return $options;

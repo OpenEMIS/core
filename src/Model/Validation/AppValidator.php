@@ -8,6 +8,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Validation\ValidationSet;
 use App\Model\Traits\AppValidatorTrait;
+use Cake\Controller\Component\AuthComponent;
 
 class AppValidator extends Validator {
 	use AppValidatorTrait;
@@ -72,6 +73,10 @@ class AppValidator extends Validator {
 		} else {
 			return true;
 		}
+	}
+
+	function validatePreferred($check1, $field2) {
+		die('dead2');
 	}
 
 	/**
@@ -180,6 +185,15 @@ class AppValidator extends Validator {
 		    return 'Please input a proper date';
 		}
 		return true;		
+	}
+
+	/**
+	 * Checks that input has no number
+	 * @param  [type] $check [description]
+	 * @return [type]        [description]
+	 */
+	public function checkIfStringGotNoNumber($check, array $globalData) {
+		return !preg_match('#[0-9]#',$check);
 	}
 
 	// public function testerCheckWithParms($check, $second, $third, array $array) {

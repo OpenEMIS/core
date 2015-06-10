@@ -31,15 +31,9 @@ class StudentsController extends AppController {
 			'StudentFees' => ['className' => 'Student.StudentFees'],
 		];
 
+		$this->loadComponent('Paginator');
 		$this->set('contentHeader', 'Students');
     }
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Controller.onInitialize'] = 'onInitialize';
-		$events['ControllerAction.Controller.beforePaginate'] = 'beforePaginate';
-		return $events;
-	}
 
 	public function onInitialize($event, $model) {
 		$session = $this->request->session();
@@ -72,6 +66,7 @@ class StudentsController extends AppController {
 				} else {
 					$this->ControllerAction->Message->alert('general.noData');
 					$this->redirect(['action' => 'index']);
+					return false;
 				}
 			}
 			return $options;
