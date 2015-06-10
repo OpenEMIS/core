@@ -209,6 +209,8 @@ p.error { margin-top: 50px; }
 	margin: 0 auto;
 	padding: 2px 0;
 	width: 35px;
+	-webkit-border-radius: 5px;
+	        border-radius: 5px;
 }
 
 .product-lists span {
@@ -1637,6 +1639,13 @@ footer {
 }
 
 /* LOGIN */
+.ltl-view {
+	display: inline-block !important;
+}
+
+.rtl-view {
+	display: none !important;
+}
 
 .body-wrapper {
 	width: 100%;
