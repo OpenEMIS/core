@@ -44,8 +44,50 @@ class UserContactsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			->add('contact_type_id', [
+			])
+			->notEmpty('contact_type_id')
+			->add('value', [
+			])
+			->notEmpty('value')
+
+			// ->add('preferred', [
+			// 	'rule' => ['validatePreferred', 'preferred'],
+			// 	'provider' => 'table',
+			// ])
+			// ->notEmpty('preferred')
+				
+			;
 		return $validator;
+	}
+
+	function validatePreferred($check1, $field2) {
+		die('dead');
+		$flag = false;
+		foreach ($check1 as $key => $value1) {
+			$preferred = $this->data[$this->alias][$field2];
+			$contactOption = $this->data[$this->alias]['contact_option_id'];
+			if ($preferred == "0" && $contactOption != "5") {
+				if (isset($this->data[$this->alias]['id'])) {
+					$contactId = $this->data[$this->alias]['id'];
+					$count = $this->find('count', array('conditions' => array('ContactType.contact_option_id' => $contactOption, array('NOT' => array('StaffContact.id' => array($contactId))))));
+					if ($count != 0) {
+						$flag = true;
+					}
+				} else {
+					$count = $this->find('count', array('conditions' => array('ContactType.contact_option_id' => $contactOption)));
+					if ($count != 0) {
+						$flag = true;
+					}
+				}
+			} else {
+				$flag = true;
+			}
+		}
+		return $flag;
 	}
 
 }

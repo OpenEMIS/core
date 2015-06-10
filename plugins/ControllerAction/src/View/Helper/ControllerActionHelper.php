@@ -84,9 +84,9 @@ class ControllerActionHelper extends Helper {
 		$buttons = $this->_View->get('_buttons');
 	
 		echo '<div class="form-buttons">';
-		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false));
 		echo $this->Html->link(__('Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel'));
+		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo '</div>';
 	}
 
