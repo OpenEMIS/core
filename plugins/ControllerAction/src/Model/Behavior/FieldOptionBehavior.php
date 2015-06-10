@@ -39,6 +39,12 @@ class FieldOptionBehavior extends Behavior {
 			$entity = $query
 				->where([$this->_table->aliasField('default') => 1])
 				->first();
+
+			if (is_null($entity)) {
+				$query = $this->_table->find();
+				$entity = $query
+					->first();
+			}
 		} else {
 			$entity = $this->_table
 				->find()

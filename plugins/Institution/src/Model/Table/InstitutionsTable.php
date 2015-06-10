@@ -23,7 +23,6 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		// $this->hasMany('InstitutionSiteStudents');
 		$this->hasMany('Activities', 						['className' => 'Institution.InstitutionSiteActivities']);
 		
 		$this->hasMany('Attachments', 						['className' => 'Institution.InstitutionSiteAttachments']);
@@ -36,11 +35,13 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('Classes', 							['className' => 'Institution.InstitutionSiteClasses']);
 		$this->hasMany('Infrastructures', 					['className' => 'Institution.InstitutionSiteInfrastructures']);
 
-		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
-		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
-
+		$this->hasMany('Staff', 							['className' => 'Institution.InstitutionSiteStaff']);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours']);
+		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
+
+		$this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours']);
+		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
 		$this->hasMany('BankAccounts', 						['className' => 'Institution.InstitutionSiteBankAccounts']);
 		$this->hasMany('Fees', 								['className' => 'Institution.InstitutionSiteFees']);
@@ -51,9 +52,6 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteSurveyCompleted', 	['className' => 'Institution.InstitutionSiteSurveyCompleted']);
 
 		$this->hasMany('InstitutionSiteAssessmentResults', 	['className' => 'Institution.InstitutionSiteAssessmentResults']);
-
-
-		$this->hasMany('Staff', 							['className' => 'Institution.InstitutionSiteStaff', 'foreignKey'=>'institution_site_id']);
 
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 

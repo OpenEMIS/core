@@ -209,6 +209,8 @@ p.error { margin-top: 50px; }
 	margin: 0 auto;
 	padding: 2px 0;
 	width: 35px;
+	-webkit-border-radius: 5px;
+	        border-radius: 5px;
 }
 
 .product-lists span {
@@ -549,6 +551,26 @@ body .large {
 	margin-bottom: 20px;
 }
 
+.toolbar-wrapper .input{
+	width: 20%;
+	margin: 5px;
+	display: inline-block;
+}
+
+.toolbar-wrapper .form-control {
+	height: 25px;
+	padding: 2px;
+}
+
+.toolbar-wrapper .select {
+	position: relative;
+}
+
+.toolbar-wrapper .select:after {
+	top: -2px;
+	right: 8px;
+}
+
 .dropdown-arrow {
 	color: #FFF;
 	text-shadow: 0 -1px 0px rgba(0,0,0,0.2);	
@@ -781,9 +803,7 @@ textarea {
 
 /* TABS */
 .scroll_tabs_container {
-    height: 30px;
-    -webkit-box-shadow: 0 -15px 6px -2px rgba(0, 0, 0, 0.03) inset;
-             box-shadow: 0 -15px 6px -2px rgba(0, 0, 0, 0.03) inset;           
+    height: 30px;          
 }
 
 .scroll_tabs_container div.scroll_tab_inner {
@@ -1619,6 +1639,13 @@ footer {
 }
 
 /* LOGIN */
+.ltl-view {
+	display: inline-block !important;
+}
+
+.rtl-view {
+	display: none !important;
+}
 
 .body-wrapper {
 	width: 100%;
@@ -1786,7 +1813,6 @@ footer {
 }
 
 /* Small devices (tablets, 768px and up) */
-
 @media (min-width: 320px) and (max-width: 480px){
 	body .login {
 		overflow: auto;
@@ -1987,6 +2013,22 @@ footer {
 	}
 }
 
+@media (max-width: 480px) {
+	.toolbar-wrapper .input{
+		width: 95%;
+	}
+
+	.toolbar-wrapper .select::after {
+		top: -30px;
+	}
+}
+
+@media (min-width: 486px) and (max-width: 762px){
+	.error-message {
+		margin-left: 27%;
+	}
+}
+
 @media (max-width: 765px){
 
 	.login .brand-logo {
@@ -2035,7 +2077,6 @@ footer {
 		top: 17px;
 	}
 
-
 	.search input {
 		width: 100% !important;
 	}	
@@ -2053,6 +2094,10 @@ footer {
 	.header-navigation .btn:hover,
 	.header-navigation .kd-role:hover {
 		background-color: #F9F9F9 !important;
+	}
+
+	.scroll_tabs_container div.scroll_tab_inner span {
+		line-height: 34px;
 	}
 }
 
@@ -2207,6 +2252,10 @@ footer {
 
 	/* FORM */
 	
+	.toolbar-wrapper .input{
+		width: 45%;
+	}
+	
 	.form-horizontal {
 		margin: 0 auto;
 	}
@@ -2351,11 +2400,4 @@ footer {
     	top: 42px; 
     	left: 0;  
     }
-}
-
-
-@media (min-width: 486px) and (max-width: 762px){
-	.error-message {
-		margin-left: 27%;
-	}
 }

@@ -1,6 +1,8 @@
 <?php
 namespace Institution\Model\Table;
 
+use DateTime;
+use DateInterval;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -23,7 +25,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function viewBeforeQuery(Event $event) {
+	public function viewBeforeQuery($event) {
 		// pr('viewBeforeQuery');
 		// pr($this->id);
 		// pr($event->action);
@@ -31,12 +33,9 @@ class InstitutionSitePositionsTable extends AppTable {
 		// return true;
 	}
 
-	public function viewBeforeAction(Event $event) {
-		// pr($this->ControllerAction->vars());
-		// pr($this->id);
+	public function viewBeforeAction($event) {
 		$viewVars = $this->ControllerAction->vars();
 		$id = $viewVars['_buttons']['view']['url'][1];
-		// pr($id);
 
 		$session = $this->controller->request->session();
 
@@ -87,7 +86,7 @@ class InstitutionSitePositionsTable extends AppTable {
 		return true;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction($event) {
 
 		$this->fields['staff_position_title_id']['type'] = 'select';
 		$this->fields['staff_position_grade_id']['type'] = 'select';
@@ -103,59 +102,6 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function addBeforeAction($event) {
-
-		// $levelOptions = $this->EducationLevels
-		// 	->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
-		// 	->find('withSystem')
-		// 	->toArray();
-
-		// // $this->virtualProperties(['system_level_name']);
-		// // pr($this->EducationLevels
-		// // 	->find()->first()->system_level_name);
-		// // pr($this->EducationLevels
-		// // 	->find()->first()->toArray());
-
-		// // foreach ($this->EducationLevels->find() as $key => $value) {
-		// // 	// pr($value->toArray());
-		// // 	// pr($value);
-		// // }
-			
-		// $this->fields['education_level']['options'] = $levelOptions;
-
-		// // TODO-jeff: write validation logic to check for loaded $levelOptions
-		// $levelId = key($levelOptions);
-		// if ($this->request->data($this->aliasField('education_level'))) {
-		// 	$levelId = $this->request->data($this->aliasField('education_level'));
-		// }
-
-		// $programmeOptions = $this->EducationProgrammes
-		// 	->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-		// 	->find('withCycle')
-		// 	->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $levelId])
-		// 	->toArray();
-
-		// $this->fields['education_programme_id']['options'] = $programmeOptions;
-
-		// // start Education Grade field
-		// $this->ControllerAction->addField('education_grade', [
-		// 	'type' => 'element', 
-		// 	'order' => 5,
-		// 	'element' => 'Institution.Programmes/grades'
-		// ]);
-
-		// $programmeId = key($programmeOptions);
-		// if ($this->request->data($this->aliasField('education_programme_id'))) {
-		// 	$programmeId = $this->request->data($this->aliasField('education_programme_id'));
-		// }
-		// // TODO-jeff: need to check if programme id is empty
-
-		// $EducationGrades = $this->EducationProgrammes->EducationGrades;
-		// $gradeData = $EducationGrades->find()
-		// 	->find('visible')->find('order')
-		// 	->where([$EducationGrades->aliasField('education_programme_id') => $programmeId])
-		// 	->all();
-
-		// $this->fields['education_grade']['data'] = $gradeData;
-		// // end Education Grade field
 	}
+
 }
