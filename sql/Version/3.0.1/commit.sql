@@ -514,4 +514,3 @@ DROP TABLE staff_bank_accounts;
 -- Shifted default country data from config items to country table
 ALTER TABLE `countries` ADD `default` INT(1) NOT NULL DEFAULT '0' AFTER `visible`;
 
-

@@ -182,11 +182,21 @@ class NavigationComponent extends Component {
 					]
 				],
 
-				'Behaviour' => [
+				'Staff' => [
 					'collapse' => true,
 					'items' => [
-						'Student' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
-						'Staff' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']]
+						'Staff List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']],
+						'Staff Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviours']],
+						'Staff Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAbsences']]
+					]
+				],
+
+				'Students' => [
+					'collapse' => true,
+					'items' => [
+						'Students List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']],
+						'Students Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
+						'Students Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']]
 					]
 				],
 
@@ -216,9 +226,6 @@ class NavigationComponent extends Component {
 					]
 				],
 				
-				'Student Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']],
-				'Staff Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAbsences']],
-
 				'Assessment Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentResults']],
 				
 			];
