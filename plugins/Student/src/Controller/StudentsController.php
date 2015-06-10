@@ -71,27 +71,4 @@ class StudentsController extends AppController {
 			}
 			return $options;
 	}
-
-	public function view($id = null) {
-		if (is_null($id)) {
-			$id = $this->ControllerAction->Session->read('Student.security_user_id');
-		} else {
-			$this->ControllerAction->Session->write('Student.security_user_id', $id);
-		}
-		$this->ControllerAction->view($id);
-		$this->ControllerAction->render();
-	}
-
-	public function edit($id = null) {
-		if (is_null($id)) {
-			$id = $this->ControllerAction->Session->read('Student.security_user_id');
-		} else {
-			$this->ControllerAction->Session->write('Student.security_user_id', $id);
-		}
-		$this->ControllerAction->edit($id);
-		$this->ControllerAction->render();
-	}
-
-
-
 }
