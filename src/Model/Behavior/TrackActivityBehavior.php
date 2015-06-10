@@ -8,6 +8,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
 use Cake\Utility\Inflector;
 
+/**
+ * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
+ */
 class TrackActivityBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'target' => '',
@@ -47,7 +50,7 @@ class TrackActivityBehavior extends Behavior {
 		    			 */
 		    			if ($entity->getOriginal($field) != 'World' && $entity->$field != '') {
 
-							$relatedModel = $model->getAssociatedBelongsToModel($field);
+							$relatedModel = $model->ControllerAction->getAssociatedBelongsToModel($field);
 							
 							// check if related model's table is actually field_option_values by reading its useTable instance
 							if (is_object($relatedModel) && $relatedModel->hasBehavior('FieldOption')) {
