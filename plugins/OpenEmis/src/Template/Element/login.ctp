@@ -16,6 +16,7 @@ $description = __d('open_emis', $_productName);
 		echo $this->Html->css('OpenEmis.../plugins/font-awesome/css/font-awesome.min', ['media' => 'screen']);
 		echo $this->Html->css('OpenEmis.kordit/kordit', ['media' => 'screen']);
 		echo $this->Html->css('OpenEmis.layout', ['media' => 'screen']);
+		echo $this->Html->css('OpenEmis.layout.rtl', ['media' => 'screen']);
 
 		if (isset($theme)) {
 			echo $this->Html->css($theme);
@@ -31,7 +32,13 @@ $description = __d('open_emis', $_productName);
 		<?= $this->element('OpenEmis.header', ['headerSideNav' => false, 'menuToggle' => false]) ?>
 
 		<div class="login-box">
-			<div class="title"><i class="kd-openemis"></i>OpenEMIS Core</div>
+			<div class="title">
+				<span class="title-wrapper">
+					<i class="kd-openemis ltl-view"></i>
+					<h1>OpenEMIS Core</h1>
+					<i class="kd-openemis rtl-view"></i>
+				</span>
+			</div>
 			<?php 
 			//echo $this->element('OpenEmis.alert');
 
