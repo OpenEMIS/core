@@ -42,13 +42,19 @@ class AppTable extends Table {
 		}
 
 		$dateFields = [];
+		$timeFields = [];
 		foreach ($columns as $column) {
 			if ($schema->columnType($column) == 'date') {
 				$dateFields[] = $column;
+			} else if ($schema->columnType($column) == 'time') {
+				$timeFields[] = $column;
 			}
 		}
 		if (!empty($dateFields)) {
 			$this->addBehavior('ControllerAction.DatePicker', $dateFields);
+		}
+		if (!empty($timeFields)) {
+			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 	}
 
@@ -123,6 +129,22 @@ class AppTable extends Table {
 		return $dateObject->format($format);
 	}
 
+	// Event: 'ControllerAction.Model.onFormatTime'
+	public function onFormatTime(Event $event, Time $dateObject) {
+		return $this->formatTime($dateObject);
+	}
+
+	/**
+	 * For calling from view files
+	 * @param  Time   $dateObject [description]
+	 * @return [type]             [description]
+	 */
+	public function formatTime(Time $dateObject) {
+		$ConfigItem = TableRegistry::get('ConfigItems');
+		$format = $ConfigItem->value('time_format');
+		return $dateObject->format($format);
+	}
+
 	// Event: 'ControllerAction.Model.onFormatDateTime'
 	public function onFormatDateTime(Event $event, Time $dateObject) {
 		return $this->formatDateTime($dateObject);
@@ -140,22 +162,8 @@ class AppTable extends Table {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = new AppValidator();
-		$validator->provider('default', $validator);
+		$validator->provider('default', new AppValidator());
 		return $validator;
-	}
-
-	public function getAssociatedBelongsToModel($field) {
-		$relatedModel = null;
-		foreach ($this->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
-					$relatedModel = $assoc;
-					break;
-				}
-			}
-		}
-		return $relatedModel;
 	}
 
 	public function findVisible(Query $query, array $options) {
