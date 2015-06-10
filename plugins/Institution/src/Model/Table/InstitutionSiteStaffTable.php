@@ -12,14 +12,11 @@ class InstitutionSiteStaffTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		$this->belongsTo('Users', 		 ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
-		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions', 'foreignKey' => 'institution_site_position_id']);
-
-		// $this->belongsTo('Types', 		 ['className' => 'Institution.StaffTypes', 'foreignKey' => 'staff_type_id']);
-		// $this->belongsTo('Statuses', 	 ['className' => 'Institution.StaffStatuses', 'foreignKey' => 'staff_status_id']);
-		$this->belongsTo('StaffTypes', ['className' => 'Institution.StaffTypes', 'foreignKey' => 'staff_type_id']);
-		$this->belongsTo('StaffStatuses');
+		$this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
+		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions','foreignKey' => 'institution_site_position_id']);
+		$this->belongsTo('StaffTypes', 	 ['className' => 'Institution.StaffTypes', 				'foreignKey' => 'staff_type_id']);
+		$this->belongsTo('StaffStatuses',['className' => 'Institution.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 
 	}
 
@@ -50,31 +47,6 @@ class InstitutionSiteStaffTable extends AppTable {
 
 	public function beforeAction() {
 
-		// pr($this->fields);die;
-		// $this->fields['staff_position_title_id']['type'] = 'select';
-		// $this->fields['staff_position_grade_id']['type'] = 'select';
-
-		// $order = $this->fields['staff_position_grade_id']['order'] + 1;
-		// $this->fields['type']['order'] = $order;
-		// $this->fields['type']['type'] = 'select';
-		// $this->fields['type']['options'] = $this->getSelectOptions('Staff.position_types');
-		// $this->fields['status']['order'] = $order + 1;
-		// $this->fields['status']['type'] = 'select';
-		// $this->fields['status']['options'] = $this->getSelectOptions('general.active');
-		
-		$this->fields['start_year']['visible'] = false;
-		$this->fields['end_year']['visible'] = false;
-
-		$this->fields['institution_site_position_id']['type'] = 'select';
-		$rawData = $this->Positions->find('all')->select(['id', 'position_no']);
-		$options = [];
-		foreach ($rawData as $rd) {
-			$options[$rd['id']] = $rd['position_no'];
-		}
-		$this->fields['institution_site_position_id']['options'] = $options;		
-		$this->fields['staff_type_id']['type'] = 'select';
-		$this->fields['staff_status_id']['type'] = 'select';
-
 		$this->fields['security_user_id']['order'] = 0;
 		$this->fields['institution_site_position_id']['order'] = 1;		
 		$this->fields['FTE']['order'] = 2;
@@ -85,18 +57,49 @@ class InstitutionSiteStaffTable extends AppTable {
 
 	}
 
+	public function editBeforeAction($event) {
+
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
+
+		$this->fields['institution_site_position_id']['type'] = 'select';
+		$rawData = $this->Positions->find('all')->select(['id', 'position_no']);
+		$options = [];
+		foreach ($rawData as $rd) {
+			$options[$rd['id']] = $rd['position_no'];
+		}
+		$this->fields['institution_site_position_id']['options'] = $options;
+
+		$this->fields['staff_type_id']['type'] = 'select';
+		$this->fields['staff_status_id']['type'] = 'select';
+
+	}
+
+	public function addBeforeAction($event) {
+
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
+
+		$this->fields['institution_site_position_id']['type'] = 'select';
+		$rawData = $this->Positions->find('all')->select(['id', 'position_no']);
+		$options = [];
+		foreach ($rawData as $rd) {
+			$options[$rd['id']] = $rd['position_no'];
+		}
+		$this->fields['institution_site_position_id']['options'] = $options;
+
+		$this->fields['staff_type_id']['type'] = 'select';
+		$this->fields['staff_status_id']['type'] = 'select';
+
+	}
+
 	public function editBeforeQuery(Event $event, Query $query, $contain) {
 		$contain = ['Users', 'Positions', 'StaffTypes', 'StaffStatuses'];
 		return compact('query', 'contain');
 	}
 
 	public function editOnInitialize($event, $entity) {
-		// $viewVars = $this->ControllerAction->vars();
-		if ($this->action == 'edit') {
-			// $this->fields['institution_site_position_id']['type'] = 'disabled';
-			// $this->fields['FTE']['type'] = 'disabled';
-			// $this->fields['start_date']['type'] = 'disabled';
-			
+
 			$this->fields['security_user_id']['type'] = 'readonly';
 			$this->fields['security_user_id']['attr']['value'] = $entity->user->name;
 
@@ -106,13 +109,11 @@ class InstitutionSiteStaffTable extends AppTable {
 
 			$this->fields['start_date']['type'] = 'readonly';
 			$this->fields['start_date']['attr']['value'] = $this->formatDateTime($entity->start_date);
-		}
-		// return true;
+
 	}
 
 	// public function editAfterAction($event) {
-	// 	$viewVars = $this->ControllerAction->vars();
-	// 	pr($viewVars);
-	// 	pr($event);
+	// 	pr($this->fields['staff_type_id']);
+	// 	pr($this->fields['staff_status_id']);
 	// }
 }

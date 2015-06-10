@@ -166,19 +166,6 @@ class AppTable extends Table {
 		return $validator;
 	}
 
-	public function getAssociatedBelongsToModel($field) {
-		$relatedModel = null;
-		foreach ($this->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
-					$relatedModel = $assoc;
-					break;
-				}
-			}
-		}
-		return $relatedModel;
-	}
-
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
 	}

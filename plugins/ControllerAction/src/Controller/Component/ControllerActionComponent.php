@@ -116,11 +116,11 @@ class ControllerActionComponent extends Component {
 			foreach ($this->model->fields as $key => $attr) {
 				if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 					if ($this->isForeignKey($key)) {
-						$associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
-						$associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
+						// $associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
+						// $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
+						$associatedObject = $this->getAssociatedBelongsToModel($key);
 						
 						$query = $associatedObject->find('list');
-
 						$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
 						$event = $associatedObject->eventManager()->dispatch($event);
 						if (!empty($event->result)) {
@@ -223,6 +223,27 @@ class ControllerActionComponent extends Component {
 			}
 		}
 		return false;
+	}
+
+	public function getAssociatedBelongsToModel($field) {
+		$relatedModel = null;
+		foreach ($this->model->associations() as $assoc) {
+			if ($assoc->type() == 'manyToOne') { // belongsTo associations
+				if ($field === $assoc->foreignKey()) {
+					$relatedModel = $assoc;
+					break;
+				}
+			}
+		}
+		return $relatedModel;
+	}
+
+	public function getAssociatedEntityArrayKey($field) {
+		$associationKey = $this->getAssociatedBelongsToModel($field);
+		if (is_object($associationKey)) { 
+			$associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->alias()));
+		}
+		return $associatedEntityArrayKey;
 	}
 
 	private function initButtons() {

@@ -171,8 +171,13 @@ class ControllerActionHelper extends Helper {
 			$model = $attr['model'];
 			$value = $obj->$field;
 
+			// attach event for index columns
+			if (is_null($table)) {
+				$table = TableRegistry::get($attr['className']);
+			}
+
 			if ($this->endsWith($field, '_id')) {
-				$associatedObject = str_replace('_id', '', $field);
+				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
@@ -180,10 +185,6 @@ class ControllerActionHelper extends Helper {
 				$value = $this->getIndexElement($value, $attr);
 			}
 
-			// attach event for index columns
-			if (is_null($table)) {
-				$table = TableRegistry::get($attr['className']);
-			}
 			$eventKey = 'ControllerAction.Model.index.onGet' . Inflector::camelize($field);
 			$method = 'indexOnGet' . Inflector::camelize($field);
 
@@ -592,7 +593,9 @@ class ControllerActionHelper extends Helper {
 				
 				$value = $data->$_field;
 				if ($this->endsWith($_field, '_id')) {
-					$associatedObject = str_replace('_id', '', $_field);
+					$table = TableRegistry::get($attr['className']);
+					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
+					// $associatedObject = str_replace('_id', '', $_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
