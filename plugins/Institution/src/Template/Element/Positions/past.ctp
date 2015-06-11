@@ -33,7 +33,7 @@
 					</td>
 					<td><?php echo $table->formatDate($obj->start_date) ?></td>
 					<td><?php echo $table->formatDate($obj->end_date) ?></td>
-					<td><?php echo (is_object($obj->status) ? $obj->status->name : '') ?></td>
+					<td><?php echo (is_object($obj->staff_status) ? $obj->staff_status->name : '') ?></td>
 					<td><?php echo $obj->FTE ?></td>
 				</tr>
 				<?php endforeach ?>

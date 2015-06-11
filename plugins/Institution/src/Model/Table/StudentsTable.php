@@ -9,7 +9,7 @@ class StudentsTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
+		$this->belongsTo('StudentStatuses', ['className' => 'FieldOption.StudentStatuses']);
 		// $this->belongsTo('InstitutionSiteProgramme', ['className' => 'Institution.InstitutionSiteProgrammes', 'foreignKey' => false, 'conditions' => [
 		// 			'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id',
 		// 			'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id'
