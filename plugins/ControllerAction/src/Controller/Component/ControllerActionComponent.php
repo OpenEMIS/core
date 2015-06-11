@@ -20,7 +20,6 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-use ControllerAction\Model\Traits\ControllerActionTrait;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -49,7 +48,7 @@ class ControllerActionComponent extends Component {
 	public $pageOptions = [10, 20, 30, 40, 50];
 	public $Session;
 
-	public $components = ['Message', 'Paginator'];
+	public $components = ['ControllerAction.Alert', 'Paginator'];
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
@@ -235,6 +234,7 @@ class ControllerActionComponent extends Component {
 
 	public function getAssociatedBelongsToModel($field) {
 		$relatedModel = null;
+
 		foreach ($this->model->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // belongsTo associations
 				if ($field === $assoc->foreignKey()) {
@@ -248,8 +248,11 @@ class ControllerActionComponent extends Component {
 
 	public function getAssociatedEntityArrayKey($field) {
 		$associationKey = $this->getAssociatedBelongsToModel($field);
+		$associatedEntityArrayKey = null;
 		if (is_object($associationKey)) { 
 			$associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->alias()));
+		} else {
+			die($field . '\'s association not found in ' . $this->model->alias());
 		}
 		return $associatedEntityArrayKey;
 	}
@@ -506,7 +509,7 @@ class ControllerActionComponent extends Component {
 		);
 
 		if (empty($data)) {
-			$this->Message->alert('general.noData');
+			$this->Alert->info('general.noData');
 		} else {
 			$indexElements[] = array('name' => 'ControllerAction.pagination', 'data' => array(), 'options' => array());
 		}
@@ -569,7 +572,7 @@ class ControllerActionComponent extends Component {
 			$this->controller->set('modal', $modal);
 			$this->controller->set(compact('data'));
 		} else {
-			$this->Message->alert('general.notExists');
+			$this->Alert->warning('general.notExists');
 			$action = $this->buttons['index']['url'];
 			return $this->controller->redirect($action);
 		}
@@ -613,12 +616,12 @@ class ControllerActionComponent extends Component {
 				
 				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 				if ($model->save($data)) {
-					$this->Message->alert('general.add.success');
+					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
 					return $this->controller->redirect($action);
 				} else {
 					$this->log($data->errors(), 'debug');
-					$this->Message->alert('general.add.failed');
+					$this->Alert->error('general.add.failed');
 				}
 			} else {
 				$patchOptions['validate'] = false;
@@ -708,13 +711,13 @@ class ControllerActionComponent extends Component {
 					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 					if ($model->save($data)) {
 						// event: onSaveSuccess
-						$this->Message->alert('general.edit.success');
+						$this->Alert->success('general.edit.success');
 						$action = $this->buttons['view']['url'];
 						return $this->controller->redirect($action);
 					} else {
 						// event: onSaveFailed
 						$this->log($data->errors(), 'debug');
-						$this->Message->alert('general.edit.failed');
+						$this->Alert->error('general.edit.failed');
 					}
 				} else {
 					$patchOptions['validate'] = false;
@@ -747,7 +750,7 @@ class ControllerActionComponent extends Component {
 			}
 			$this->controller->set('data', $data);
 		} else {
-			$this->Message->alert('general.notExists');
+			$this->Alert->warning('general.notExists');
 			$action = $this->buttons['index']['url'];
 			return $this->controller->redirect($action);
 		}
@@ -764,9 +767,9 @@ class ControllerActionComponent extends Component {
 			$data = $model->get($id);
 			if ($this->removeStraightAway) {
 				if ($model->delete($data)) {
-					$this->Message->alert('general.delete.success');
+					$this->Alert->success('general.delete.success');
 				} else {
-					$this->Message->alert('general.delete.failed');
+					$this->Alert->error('general.delete.failed');
 				}
 				$action = $this->buttons['index']['url'];
 				return $this->controller->redirect($action);
@@ -818,14 +821,14 @@ class ControllerActionComponent extends Component {
 		$modelName = $model->alias();
 
 		if ($selectedValue == 0) {
-			$this->Message->alert('general.notExists');
+			$this->Alert->warning('general.notExists');
 			$action = $this->controller->viewVars['_buttons']['index']['url'];
 			return $this->controller->redirect($action);
 		}
 
 		$allowDelete = (isset($model->allowDelete))? $model->allowDelete: false;
 		if (!$allowDelete) {
-			$this->Message->alert('general.delete.failed');
+			$this->Alert->error('general.delete.failed');
 			$action = $this->controller->viewVars['_buttons']['view']['url'];
 			return $this->controller->redirect($action);
 		}
@@ -835,7 +838,7 @@ class ControllerActionComponent extends Component {
 			// unset only if field option exists in list
 			unset($allFieldOptionValues[$selectedValue]);
 		} else {
-			$this->Message->alert('general.notExists');
+			$this->Alert->warning('general.notExists');
 			$action = $this->controller->viewVars['_buttons']['index']['url'];
 			return $this->controller->redirect($action);
 		}
@@ -845,7 +848,7 @@ class ControllerActionComponent extends Component {
 
 		// if no legal records to migrate to ... they are not allowed to delete
 		if (empty($allFieldOptionValues)) {
-			$this->Message->alert('general.delete.cannotDeleteOnlyRecord');
+			$this->Alert->warning('general.delete.cannotDeleteOnlyRecord');
 			$action = $this->controller->viewVars['_buttons']['view']['url'];
 			return $this->controller->redirect($action);
 		}
@@ -893,7 +896,7 @@ class ControllerActionComponent extends Component {
 			}
 			$model->id = $selectedValue;
 			if ($model->delete()) {
-				$this->Message->alert('general.delete.successAfterTransfer');
+				$this->Alert->success('general.delete.successAfterTransfer');
 				$action = $this->controller->viewVars['_buttons']['index']['url'];
 				if (isset($action[1])) {
 					unset($action[1]);

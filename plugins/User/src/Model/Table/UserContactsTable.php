@@ -4,8 +4,11 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
+use App\Model\Traits\OptionsTrait;
 
 class UserContactsTable extends AppTable {
+	use OptionsTrait;
 	public function initialize(array $config) {
 		parent::initialize($config);
 
@@ -13,7 +16,7 @@ class UserContactsTable extends AppTable {
 		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
 	}
 
-	public function beforeAction() {
+	public function addEditBeforeAction(Event $event) {
 		$contactOptions = TableRegistry::get('User.ContactOptions')
 			->find('list')
 			->find('order')
@@ -35,59 +38,25 @@ class UserContactsTable extends AppTable {
 		
 		$this->ControllerAction->addField('contact_option_id',['type' => 'select','options'=>$contactOptions]);
 		$this->fields['contact_option_id']['attr'] = ['onchange' => "$('#reload').click()"];
+	}
 
+	public function beforeAction() {
+		$this->fields['preferred']['type'] = 'select';
+		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
 		if ($this->action == 'index') {
 			// todo-mlee: need to implement virtual fields using ContactType Entity _getFullContactTypeName 'full_contact_type_name'
-		}
-
-		
+		}		
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
 		$validator
-			->add('contact_type_id', [
+			->add('preferred', 'ruleValidatePreferred', [
+				'rule' => ['validatePreferred'],
 			])
-			->notEmpty('contact_type_id')
-			->add('value', [
-			])
-			->notEmpty('value')
-
-			// ->add('preferred', [
-			// 	'rule' => ['validatePreferred', 'preferred'],
-			// 	'provider' => 'table',
-			// ])
-			// ->notEmpty('preferred')
-				
 			;
 		return $validator;
-	}
-
-	function validatePreferred($check1, $field2) {
-		die('dead');
-		$flag = false;
-		foreach ($check1 as $key => $value1) {
-			$preferred = $this->data[$this->alias][$field2];
-			$contactOption = $this->data[$this->alias]['contact_option_id'];
-			if ($preferred == "0" && $contactOption != "5") {
-				if (isset($this->data[$this->alias]['id'])) {
-					$contactId = $this->data[$this->alias]['id'];
-					$count = $this->find('count', array('conditions' => array('ContactType.contact_option_id' => $contactOption, array('NOT' => array('StaffContact.id' => array($contactId))))));
-					if ($count != 0) {
-						$flag = true;
-					}
-				} else {
-					$count = $this->find('count', array('conditions' => array('ContactType.contact_option_id' => $contactOption)));
-					if ($count != 0) {
-						$flag = true;
-					}
-				}
-			} else {
-				$flag = true;
-			}
-		}
-		return $flag;
 	}
 
 }
