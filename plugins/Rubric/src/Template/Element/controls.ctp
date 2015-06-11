@@ -1,5 +1,4 @@
 <div class="toolbar-responsive panel-toolbar">
-
 	<div class="toolbar-wrapper">
 		<?php
 			if (!empty($templateOptions)) {
@@ -36,7 +35,6 @@
 					'onchange' => 'jsForm.change(this);'
 				));
 			}
-			
 		?>
 	</div>
 </div>
