@@ -1396,7 +1396,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 select {
-    background-color: transparent;	
+    background-color: #FFF;	
     position: relative;
     cursor: pointer;
 	-webkit-appearance: none;
@@ -1411,7 +1411,6 @@ select:-moz-focusring {
 
 .select {
 	position: relative;
-	background-color: #FFF;
 }
 
 .select:after {
@@ -1851,6 +1850,7 @@ footer {
 .login-box select {
 	color: #555;
 	height: 40px;
+	background: transparent;
 }
 
 .login-box .select {
