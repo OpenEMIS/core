@@ -32,14 +32,6 @@ class RubricTemplatesTable extends AppTable {
 		return $validator;
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		list($weightingTypeOptions) = array_values($this->getSelectOptions());
-
-		$this->fields['weighting_type']['type'] = 'select';
-		$this->fields['weighting_type']['options'] = $weightingTypeOptions;
-	}
-
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		parent::beforeSave($event, $entity, $options);
 		//Auto insert default rubric_template_options when add
@@ -54,6 +46,14 @@ class RubricTemplatesTable extends AppTable {
 
 			$entity = $this->patchEntity($entity, $data);
 		}
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		//Setup fields
+		list($weightingTypeOptions) = array_values($this->getSelectOptions());
+
+		$this->fields['weighting_type']['type'] = 'select';
+		$this->fields['weighting_type']['options'] = $weightingTypeOptions;
 	}
 
 	public function getSelectOptions() {
