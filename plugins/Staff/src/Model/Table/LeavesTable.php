@@ -8,23 +8,9 @@ class LeavesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_leaves');
 		parent::initialize($config);
-		
-		// $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		// $this->belongsTo('SpecialNeedTypes', ['className' => 'User.SpecialNeedTypes']);
-	}
 
-	public function beforeAction($event) {
-		// $this->fields['special_need_type_id']['type'] = 'select';
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['ControllerAction.afterAction'] = 'afterAction';
-		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		// $events['ControllerAction.beforeView'] = 'beforeView';
-		return $events;
+		$this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
+		$this->belongsTo('LeaveStatuses', ['className' => 'Staff.LeaveStatuses']);	
 	}
 
 	public function validationDefault(Validator $validator) {

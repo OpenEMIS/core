@@ -188,15 +188,19 @@ class FileUploadBehavior extends Behavior {
 		//     pr($errors);
 		// }
 
-		if ($file['error'] == 0) { // success
-			if ($this->config('useDefaultName')) {
-				$entity->$fileNameField = $file['name'];
-			} else {
-				$pathInfo = pathinfo($file['name']);
-				$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
+		if (!is_null($file)) {
+			if ($file['error'] == 0) { // success
+				if ($this->config('useDefaultName')) {
+					$entity->$fileNameField = $file['name'];
+				} else {
+					$pathInfo = pathinfo($file['name']);
+					$entity->$fileNameField = uniqid() . '.' . $pathInfo['extension'];
+				}
+				
+				$entity->$fileContentField = file_get_contents($file['tmp_name']);
 			}
-			$entity->$fileContentField = file_get_contents($file['tmp_name']);
 		}
+		
 
 		// if (empty($entity->$fileNameField)) {
 		// 	return false;

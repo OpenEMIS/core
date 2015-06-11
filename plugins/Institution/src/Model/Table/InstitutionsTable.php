@@ -3,6 +3,8 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
@@ -21,7 +23,6 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		// $this->hasMany('InstitutionSiteStudents');
 		$this->hasMany('Activities', 						['className' => 'Institution.InstitutionSiteActivities']);
 		
 		$this->hasMany('Attachments', 						['className' => 'Institution.InstitutionSiteAttachments']);
@@ -34,11 +35,13 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('Classes', 							['className' => 'Institution.InstitutionSiteClasses']);
 		$this->hasMany('Infrastructures', 					['className' => 'Institution.InstitutionSiteInfrastructures']);
 
-		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
-		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
-
+		$this->hasMany('Staff', 							['className' => 'Institution.InstitutionSiteStaff']);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours']);
+		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
+
+		$this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours']);
+		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
 		$this->hasMany('BankAccounts', 						['className' => 'Institution.InstitutionSiteBankAccounts']);
 		$this->hasMany('Fees', 								['className' => 'Institution.InstitutionSiteFees']);
@@ -50,45 +53,139 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteAssessmentResults', 	['className' => 'Institution.InstitutionSiteAssessmentResults']);
 
-		// $this->hasMany('InstitutionSitePositions', ['className' => 'Institution.InstitutionSitePositions']);
-
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
+		// pr($this->validator());
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+	        // pr($validator);
+
+		$validator
+			->add('date_opened', 'ruleCompare', [
+					'rule' => array('comparison', 'notequal', '0000-00-00'),
+				])
+
+	        ->allowEmpty('date_closed')
+ 	        ->add('date_closed', 'ruleCompareDateReverse', [
+		            'rule' => ['compareDateReverse', 'date_opened', false],
+		            'message' => 'Closing date should be later than opening date'
+	    	    ])
+
+	        ->allowEmpty('longitude')
+			->add('longitude', 'ruleLongitude', [
+					'rule' => 'checkLongitude'
+				])
 		
+	        ->allowEmpty('latitude')
+			->add('latitude', 'ruleLatitude', [
+					'rule' => 'checkLatitude'
+				])
+		
+			->add('address', 'ruleMaximum255', [
+					'rule' => ['maxLength', 255],
+					'message' => 'Maximum allowable character is 255',
+					'last' => true
+				])
+
+			->add('code', 'ruleUnique', [
+	        		'rule' => 'validateUnique',
+	        		'provider' => 'table',
+	        		'message' => 'Code has to be unique'
+			    ])
+
+	        ->allowEmpty('email')
+			->add('email', [
+					'ruleUnique' => [
+		        		'rule' => 'validateUnique',
+		        		'provider' => 'table',
+		        		'message' => 'Email has to be unique',
+		        		'last' => true
+				    ],
+					'ruleValidEmail' => [
+						'rule' => 'email',
+					]
+				])
+
+	        ;
+
+	        // pr($validator);
+
 		return $validator;
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['Model.afterSave'] = 'afterSave';
-		return $events;
+	public function indexBeforeAction($event) {
+		$this->Session->delete('Institutions.id');
+		$this->fields['alternative_name']['visible']['index'] = false;
+		$this->fields['address']['visible']['index'] = false;
+		$this->fields['postal_code']['visible']['index'] = false;
+		$this->fields['telephone']['visible']['index'] = false;
+		$this->fields['fax']['visible']['index'] = false;
+		$this->fields['email']['visible']['index'] = false;
+		$this->fields['website']['visible']['index'] = false;
+		$this->fields['date_opened']['visible']['index'] = false;
+		$this->fields['date_closed']['visible']['index'] = false;
+		$this->fields['longitude']['visible']['index'] = false;
+		$this->fields['latitude']['visible']['index'] = false;
+		$this->fields['contact_person']['visible']['index'] = false;
 	}
 
-	public function afterSave($event) {
-		// ss
+	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
+		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
+		// echo 'Options<br/>';pr($options);pr('<hr/>');
+		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
+		return true;
+	}
+
+	public function afterSave(Event $event, Entity $entity, $options) {
+		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
+		// echo 'Options<br/>';pr($options);pr('<hr/>');
+		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
+		// die('afterSave');
+        if ($entity->isNew()) {
+			// $addSecurityGroupParams = array(
+			// 	'SecurityGroup' => array(
+			// 		'name' => $this->data['InstitutionSite']['name']
+			// 	),
+			// 	'GroupInstitutionSite' => array(
+			// 		'0' => array(
+			// 			'institution_site_id' => $this->data['InstitutionSite']['id']
+			// 		)
+			// 	)
+			// );
+			// $securityGroup = $this->SecurityGroup->save($addSecurityGroupParams);
+			// if ($securityGroup) {
+			// 	$this->trackActivity = false;
+			// 	$this->data['InstitutionSite']['security_group_id'] = $securityGroup['SecurityGroup']['id'];
+			// 	if (!$this->save()) {
+			// 		return false;
+			// 	}
+			// } else {
+			// 	return false;
+			// }
+        } else {
+			// $securityGroupId = $this->field('security_group_id');
+			// if (!empty($securityGroupId)) {
+			// 	$this->SecurityGroup->read(null, $securityGroupId);
+			// 	if (is_object($this->SecurityGroup)) {
+			// 		$editSecurityGroupParams = array(
+			// 			'SecurityGroup' => array(
+			// 				'id' => $securityGroupId,
+			// 				'name' => $this->data['InstitutionSite']['name']
+			// 			)
+			// 		);
+			// 		if (!$this->SecurityGroup->save($editSecurityGroupParams)) {
+			// 			return false;
+			// 		}
+			// 	}
+			// }
+        }
+        return true;
 	}
 
 	public function beforeAction($event) {
-		if ($this->action == 'index') {
-			$this->Session->delete('Institutions.id');
-			$this->fields['alternative_name']['visible']['index'] = false;
-			$this->fields['address']['visible']['index'] = false;
-			$this->fields['postal_code']['visible']['index'] = false;
-			$this->fields['telephone']['visible']['index'] = false;
-			$this->fields['fax']['visible']['index'] = false;
-			$this->fields['email']['visible']['index'] = false;
-			$this->fields['website']['visible']['index'] = false;
-			$this->fields['date_opened']['visible']['index'] = false;
-			$this->fields['date_closed']['visible']['index'] = false;
-			$this->fields['longitude']['visible']['index'] = false;
-			$this->fields['latitude']['visible']['index'] = false;
-			$this->fields['contact_person']['visible']['index'] = false;
-		}
-
 		/**
 		 * 
 		 */

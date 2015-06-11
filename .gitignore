@@ -1,5 +1,6 @@
 # User specific & automatically generated files #
 #################################################
+datasource.php
 tmp/cache/*
 tmp/sessions/*
 tmp/tests/*

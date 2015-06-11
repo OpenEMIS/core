@@ -172,7 +172,6 @@ p.error { margin-top: 50px; }
 }
 
 .username .kd-role {
-	padding: 10px 0;
 	vertical-align: top;
 }
 
@@ -210,6 +209,8 @@ p.error { margin-top: 50px; }
 	margin: 0 auto;
 	padding: 2px 0;
 	width: 35px;
+	-webkit-border-radius: 5px;
+	        border-radius: 5px;
 }
 
 .product-lists span {
@@ -376,14 +377,14 @@ body .large {
 
 .panel-breadcrumb li a {
     color: #6B6B6B;
-    font-weight: bold;
+    font-weight: normal;
     font-size: 12px;
 }
 
 .breadcrumb-active,
 .panel-breadcrumb a:hover {
     color: #999;
-    font-weight: bold;
+    font-weight: normal;
 }
 
 /* CONTENT HEADER */
@@ -401,7 +402,7 @@ body .large {
 
 .page-header h2 {
 	float: left;
-	padding: 10px 12px 4px 0;
+	padding: 8px 12px 6px 0;
 	margin: 0;
 }
 
@@ -550,13 +551,33 @@ body .large {
 	margin-bottom: 20px;
 }
 
+.toolbar-wrapper .input{
+	width: 20%;
+	margin: 5px;
+	display: inline-block;
+}
+
+.toolbar-wrapper .form-control {
+	height: 25px;
+	padding: 2px;
+}
+
+.toolbar-wrapper .select {
+	position: relative;
+}
+
+.toolbar-wrapper .select:after {
+	top: -2px;
+	right: 8px;
+}
+
 .dropdown-arrow {
 	color: #FFF;
 	text-shadow: 0 -1px 0px rgba(0,0,0,0.2);	
 }
 
 .panel-toolbar a {
-	padding: 5px;
+	padding: 8px;
 	margin: 0 2px 0 5px;
 	-webkit-border-radius: 3px !important;
 	        border-radius: 3px !important;	
@@ -575,8 +596,12 @@ body .large {
 	vertical-align: middle;
 }
 
+.panel-toolbar .dropdown-toggle i {
+	padding: 0 0 0 3px;
+}
+
 .panel-toolbar .dropdown-menu {
-	top: 35px;
+	top: 40px;
 	left: -5px;
 }
 
@@ -642,15 +667,6 @@ textarea {
 	resize: none;
 }
 
-/*.format-item .select-field:after {
-	font-family: 'FontAwesome';
-	content: "\f0dc";
-	font-size: 11px;
-	margin-left: -20px;	
-	color: #333;
-	display: block;
-}*/
-
 .dropdown-menu .checkbox input[type="checkbox"], 
 .dropdown-menu .checkbox-inline input[type="checkbox"], 
 .dropdown-menu .radio input[type="radio"], 
@@ -669,9 +685,10 @@ textarea {
 }
 
 .toolbar .btn {
+	display: inline-block;
+	float: left;	
 	margin: 0 2px;
 	padding: 0;
-	float: left;
 }
 
 .toolbar .btn i {
@@ -780,20 +797,13 @@ textarea {
 
 .panel-body .row {
 	margin: 0 1px;
-	padding: 10px 0;
-	border-bottom: 1px solid #EEE;
+	padding: 5px 0;
 	border-top: 1px solid #FFF;
-}
-
-.panel-body .row:hover {
-	background-color: #F9F9F9;
 }
 
 /* TABS */
 .scroll_tabs_container {
-    height: 30px;
-    -webkit-box-shadow: 0 -15px 6px -2px rgba(0, 0, 0, 0.03) inset;
-             box-shadow: 0 -15px 6px -2px rgba(0, 0, 0, 0.03) inset;           
+    height: 30px;          
 }
 
 .scroll_tabs_container div.scroll_tab_inner {
@@ -893,7 +903,7 @@ textarea {
     font-weight: 500;
     background-color: #FFF;
     background: none;
-    padding-bottom: 10px;
+    padding-bottom: 6px !important;
 }
 
 .horizontal-tabs {
@@ -946,6 +956,11 @@ textarea {
 
 .modal-dialog {
     margin: 20% auto;
+}
+
+.modal-body img {
+	width: 100% !important;
+	height: auto !important;
 }
 
 /* TABLE */
@@ -1112,9 +1127,9 @@ table tr.sorting-row td {background-color: #8b8;}
 
 /* SEARCH */
 .search {
+	display: inline-block;
 	width: 250px;
 	margin-top: -1px;
-	float: left;
 }
 
 .search .btn {
@@ -1195,13 +1210,12 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-control {
-	height: 28px;
 	padding: 5px 6px 3px;
 	font-size: 13px;
 	background: #FFF;
 }
 
-.search-wrapper {
+.advanced-search-wrapper {
 	float: none;
 	clear: both;
 	min-height: 105px;
@@ -1209,6 +1223,47 @@ table tr.sorting-row td {background-color: #8b8;}
 	display: block;
 	background-color: #F9F9F9;
 	border: 1px solid #CCC;
+	width: 100%;
+}
+
+.advanced-search-wrapper form {
+	padding: 0;
+}
+
+.advanced-search-wrapper select, 
+.advanced-search-wrapper input {
+	width: 80% !important;
+}
+
+.advanced-search-wrapper .input {
+	width: 30%;
+	display: inline-block;
+}
+
+.advanced-search-wrapper .form-label {
+	margin: 0;
+	display: block;
+	float: none;
+	clear: both;
+	text-align: left;
+	width: 100%;
+}
+
+.advanced-search-wrapper .form-control {
+	height: 25px;
+	padding: 3px;
+	font-size: 12px;
+}
+
+.advanced-search-wrapper .form-group {
+	margin-bottom: 5px;
+	display: inline-block;
+	vertical-align: middle;
+	margin-right: 30px;	
+}
+
+.advanced-search-wrapper .btn-default {
+	margin: 8px 0 4px;
 }
 
 .search-box {
@@ -1217,46 +1272,33 @@ table tr.sorting-row td {background-color: #8b8;}
 	min-height: 105px;	
 }
 
-.search-wrapper .form-label {
-	margin-bottom: 0;
-}
-
-.search-wrapper .form-control {
-	height: 25px;
-	padding: 3px;
-	font-size: 12px;
-}
-
-.search-wrapper .form-group {
-	margin-bottom: 5px;
-	display: inline-block;
-	vertical-align: middle;
-	margin-right: 30px;	
-}
-
-.search-wrapper .btn-default {
-	margin: 8px 0 4px;
-}
-
 /* FORM */
 .form-horizontal {
-	padding: 20px 0;
+	padding: 45px 0;
 }
 
 .form-horizontal label {
-	margin: 10px;
+	margin: 5px 10px;
 	text-align: right;
 	width: 25.3%;
+	float: left;
 }
 
 .form-horizontal input,
 .form-horizontal textarea {
+	float: left;
 	border: 1px solid #CCC;
 	padding: 5px 10px;
 	margin-bottom: 15px;
 	width: 30%;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
+}
+
+.form-horizontal .input-group {
+	width: 30%;	
+	margin: 0 0 15px;
+	float: left;
 }
 
 .form-horizontal .textarea label,
@@ -1286,12 +1328,20 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 30%;
 }
 
-.fileinput.input-group > .btn-file {
-	border-right: 0 !important;
+.fileinput-filename {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: middle;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    padding-left: 25px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.form-horizontal .file .form-control {
-	height: auto;
+.fileinput.input-group > .btn-file {
+	border-right: 0 !important;
 }
 
 .form-horizontal .datetime select {
@@ -1300,7 +1350,8 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal select {
-	padding: 5px 10px;
+	float: left;
+	padding: 5px;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
 	border: 1px solid #CCC;
@@ -1309,27 +1360,38 @@ table tr.sorting-row td {background-color: #8b8;}
 	height: 30px;
 }
 
+.form-horizontal .input-group-addon {
+	line-height: 0;
+	cursor: pointer;
+}
+
 select {
     background-color: transparent;	
     position: relative;
     cursor: pointer;
+	-webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
 }
 
 select:-moz-focusring {
     color: transparent;
     text-shadow: 0 0 0 #000;
+}	
+
+.select {
+	position: relative;
 }
 
 .select:after {
-	border-left: 5px solid transparent;
-	border-right: 5px solid transparent;
-	border-top: 5px solid #4a4a4a;
-	content: "";
-	margin-top: -2.5px;
-	pointer-events: none;
-	position: absolute;
-	right: 10px;
-	top: 50%;
+	position: absolute;	
+	font-family: 'FontAwesome';
+	content: "\f0d7";
+	font-size: 12px;
+	color: #555;
+	cursor: pointer;
+	margin-left: -18px;
+	margin-top: 6px;
 }
 
 .form-horizontal option {
@@ -1369,7 +1431,12 @@ select:-moz-focusring {
 	content: "*";
 	font-size: 14px;
 	color: #CC5C5C;
-	margin: 5px;
+	margin: 3px;
+}
+
+input[readonly] {
+	color: #999;
+	cursor: not-allowed;
 }
 
 /* TABLE DROPDOWN; ACTION & REORDER */
@@ -1513,21 +1580,30 @@ a.thumbnail:hover {
 
 .display-limit select {
 	float: left;
-	margin: -4px 0 0 5px;
+	margin: -2px 0 0 5px;
+	padding: 0 15px 0 0;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
 	border: 1px solid #CCC;
+}
+
+.chrome .display-limit select {
+	padding: 0 15px 0 4px;
 }
 
 .display-limit .select:after {
 	position: absolute;
 	font-size: 10px;
 	margin-left: -58px;
-	margin-top: 2px;
+	margin-top: 1px;
 }
 
 .chrome .display-limit .select:after {
-	margin-left: -60px;
+	margin-left: -55px;
+}
+
+.chrome .display-limit .select:after {
+	margin-left: -57px;
 	margin-top: 0;
 }
 
@@ -1563,6 +1639,13 @@ footer {
 }
 
 /* LOGIN */
+.ltl-view {
+	display: inline-block !important;
+}
+
+.rtl-view {
+	display: none !important;
+}
 
 .body-wrapper {
 	width: 100%;
@@ -1576,13 +1659,12 @@ footer {
 	overflow-y: auto;
 }
 
-.login .form-group {
-	margin: 0;
+.login header {
+	display: none;
 }
 
-.login .title {
-	border: 0;
-	margin-bottom: 10px;
+.login .form-group {
+	margin: 0;
 }
 
 .login .navbar-left {
@@ -1595,26 +1677,93 @@ footer {
 	box-shadow: 0 0 8px rgba(0,0,0,0.3);
 	color: #FFFFFF;
 	left: 50%;
-	margin: 0 0 0 -245px;
-	padding: 10px;
+	margin: 0 0 0 -190px;
 	position: absolute;
 	text-align: center;
 	top: 20%;
-	width: 500px;
+	width: 400px;
 	z-index: 1000;
 }
 
 .login-box .title {
-	border-bottom: 1px solid rgba(225,225,225,0.2);
 	font-size: 25px;
-	padding: 10px 0 8px;
-	margin-bottom: 15px;
+	padding: 14px 0 14px;
+	background-color: #999999;
+	-webkit-border-top-right-radius: 5px;
+	        border-top-right-radius: 5px;
+	-webkit-border-top-left-radius: 5px;
+	        border-top-left-radius: 5px;	
+}
+
+.login .title i {
+	display: inline-block;
+}
+
+.login .title h1 {
+	display: inline-block;
+	color: #FFF;
+}
+
+.login-box i {
+	font-size: 45px;
+	vertical-align: top;
 }
 
 .login-box .form-horizontal {
 	text-align: left;
-	width: 50%;
+	width: 75%;
 	margin: 0 auto;
+}
+
+.login .text,
+.login .password,
+.login .select {
+	position: relative;
+}
+
+.login .text:after {
+	font-family: 'FontAwesome';
+	content: "\f007";
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	color: #888;
+	font-size: 14px;
+	margin: 1px;
+	padding: 10px;
+	border-right: 1px solid #DDD;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+.login .password:after {
+	font-family: 'FontAwesome';
+	content: "\f084";
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	color: #888;
+	font-size: 14px;
+	margin: 1px;
+	padding: 10px 9px;
+	border-right: 1px solid #DDD;	
+
+}
+
+.login .select:before {
+	font-family: 'FontAwesome';
+	content: "\f0ac";
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	color: #888;
+	font-size: 14px;
+	margin: 1px;
+	padding: 9px 10px;
+	border-right: 1px solid #DDD;	
 }
 
 .login-box .form-group {
@@ -1624,17 +1773,21 @@ footer {
 
 .login-box input,
 .login-box select {
-	color: #333;
-	font-weight: 500;
-	width: 100%;
+	color: #555;
+	font-weight: 400;
+	width: 100% !important;
+	border: 1px solid #000;
+	padding: 10px 0 10px 40px;
+	font-size: 14px;
 }
 
 .login-box select {
 	color: #555;
+	height: 40px;
 }
 
 .login-box .select {
-	height: 30px;
+	height: 40px;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
 	margin-bottom: 15px;
@@ -1643,23 +1796,23 @@ footer {
 
 .login-box .select:after {
 	color: #333;
+	margin-top: 12px;
 }
 
 .login-box .btn-login { 
-	background-color: #999; 
-	border-color: #999;
+	background-color: #999;
+	border: 0; 
 	width: 100%;
 	font-size: 16px;
+	padding: 10px;
 }
 
 .login-box .btn-login:hover {
 	background-color: #6B6B6B;
-	border: 1px solid #6B6B6B;
 	transition: all 1s ease;	
 }
 
 /* Small devices (tablets, 768px and up) */
-
 @media (min-width: 320px) and (max-width: 480px){
 	body .login {
 		overflow: auto;
@@ -1685,17 +1838,18 @@ footer {
 
 	.login-box {
 		left: 5%;
+		top: 10%;
 		width: 90%;
 		margin: 0 auto 30px;
 		padding-bottom: 60px;	
 	}
 
 	.login-box .title {
-		font-size: 18px;
+		font-size: 20px;
 	}
 
-	.login-box .title::before {
-		font-size: 24px;
+	.login-box i {
+		font-size: 32px;
 	}
 
 	.login .brand-logo {
@@ -1748,12 +1902,13 @@ footer {
 	}
 
 	.search {
-		margin: 10px 0 0 !important;
-		width: 100%;
+		clear: both;
+		display: block;
 	}
 
 	.search input {
 		width: 100% !important;
+		margin: 0;
 	}
 
 	.btn-default .btn {
@@ -1791,11 +1946,20 @@ footer {
 		height: auto;
 	}
 
+	.toolbar .btn {
+		margin-bottom: 10px;
+	}
+
 	/* FORM */
+	
+	.select:after {
+		margin-left: -30px;
+		margin-top: 35px;
+	}
 	
 	.form-horizontal label {
 		width: 100%;
-		text-align: left;
+		text-align: left !important;
 		margin: 10px 0;
 	}
 
@@ -1810,12 +1974,13 @@ footer {
 		float: none;
 	}
 
-	.form-horizontal .fileinput {
-		width: 100%;
+	.form-horizontal .fileinput,
+	.form-horizontal .input-group {
+		width: 100% !important;
 	}
 
 	.form-buttons {
-		margin: 20px 0;
+		margin: 30px 0;
 		width: 100%;
 	}
 
@@ -1848,6 +2013,22 @@ footer {
 	}
 }
 
+@media (max-width: 480px) {
+	.toolbar-wrapper .input{
+		width: 95%;
+	}
+
+	.toolbar-wrapper .select::after {
+		top: -30px;
+	}
+}
+
+@media (min-width: 486px) and (max-width: 762px){
+	.error-message {
+		margin-left: 27%;
+	}
+}
+
 @media (max-width: 765px){
 
 	.login .brand-logo {
@@ -1863,7 +2044,7 @@ footer {
 	}
 
 	.login-box {
-		padding: 30px 0;	
+		padding: 0;	
 	}
 
 	.brand-logo i {
@@ -1896,10 +2077,6 @@ footer {
 		top: 17px;
 	}
 
-	.search {
-		margin: 10px 0 0 !important;
-	}
-
 	.search input {
 		width: 100% !important;
 	}	
@@ -1917,6 +2094,10 @@ footer {
 	.header-navigation .btn:hover,
 	.header-navigation .kd-role:hover {
 		background-color: #F9F9F9 !important;
+	}
+
+	.scroll_tabs_container div.scroll_tab_inner span {
+		line-height: 34px;
 	}
 }
 
@@ -2010,7 +2191,7 @@ footer {
 	}
 
 	.username a {
-		padding: 4px 0;
+		padding: 6px 0;
 		vertical-align: middle;
 	}
 
@@ -2052,12 +2233,6 @@ footer {
 		color: #555;
 	}
 
-	.search {
-		margin: 10px 0 0 !important;
-		clear: both;
-		float: none;
-	}
-
 	.search input {
 		min-width: 248px;
 	}
@@ -2070,11 +2245,6 @@ footer {
 		height: auto;
 	}
 
-	.toolbar .btn-default {
-		float: none;
-		clear: both;
-	}
-
 	.toolbar .btn {
 		margin-left: 0;
 		margin-right: 5px;
@@ -2082,38 +2252,34 @@ footer {
 
 	/* FORM */
 	
+	.toolbar-wrapper .input{
+		width: 45%;
+	}
+	
 	.form-horizontal {
 		margin: 0 auto;
 	}
 
 	.form-horizontal label {
-		width: 100%;
-		text-align: left;
-		margin: 10px 0;
+		text-align: right;
+		margin: 0 10px 10px 0;
 	}
 
 	.form-horizontal input,
 	.form-horizontal select,
 	.form-horizontal textarea,
-	.form-horizontal .file {
+	.form-horizontal .fileinput,
+	.form-horizontal .input-group {
 		width: 60%;
 	}
 
 	.form-buttons {
-		margin: 30px 0 !important;
 		width: 100%;
+		clear: both;
 	}
 
 	.error-message {
-		margin: 0 10px 10px;
-	}
-
-	.form-horizontal .file label {
-		float: none;
-	}
-
-	.form-horizontal .fileinput {
-		width: 100%;
+		margin: 0 28% 10px;
 	}
 
 	/* PAGINATION */
@@ -2170,19 +2336,8 @@ footer {
 		width: 248px;
 	}
 
-	.search {
-		clear: both;
-		float: none;
-		margin: 10px 0 0 !important;
-	}
-
 	.toolbar {
 		float: none;
-	}
-
-	.toolbar .btn-default {
-		float: none;
-		clear: both;
 	}
 
 	.page-header,
@@ -2222,11 +2377,6 @@ footer {
 		padding: 4px 0 0;
 	}
 
-	/* FORM */
-
-	.form-buttons {
-		margin-left: 28%;
-	}
 }
 
 @media only screen and (min-width: 30em) { 
