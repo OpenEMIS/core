@@ -18,7 +18,6 @@ class UsersController extends AppController {
 		$this->SecurityUsers->fields['privileges']['type'] = 'select';
 		$this->SecurityUsers->fields['privileges']['options'] = ['User', 'Super User'];
 		$this->set('contentHeader', 'Users');
-		$this->Message->alert('general.add.success');
 	}
 
 	public function login() {

@@ -36,7 +36,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		return compact('query', 'contain');
 	}
 
-	public function addBeforeAction($event, $entity) {
+	public function addBeforeAction($event) {
 		$levelOptions = $this->EducationLevels
 			->find('list', ['keyField' => 'id', 'valueField' => 'system_level_name'])
 			->find('withSystem')
@@ -91,4 +91,31 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->fields['education_grade']['data'] = $gradeData;
 		// end Education Grade field
 	}
+
+	// public function getAcademicPeriodOptions($conditions=array()) {
+	// 	$startDate = $this->field('MIN(InstitutionSiteProgramme.start_date) AS min_date', $conditions);
+	// 	$endDate = $this->field('MAX(InstitutionSiteProgramme.end_date) AS max_date', $conditions);
+	// 	$conditions = array_merge(array('InstitutionSiteProgramme.end_date' => NULL), $conditions);
+	// 	$options['conditions'] = $conditions;
+	// 	$nullDate = $this->find('count', $options);
+
+	// 	$academicPeriodConditions = array();
+	// 	$academicPeriodConditions['AcademicPeriod.parent_id >'] = 0;
+	// 	$academicPeriodConditions['AcademicPeriod.end_date >='] = $startDate;
+	// 	if($nullDate == 0) {
+	// 		$academicPeriodConditions['AcademicPeriod.start_date <='] = $endDate;
+	// 	} else {
+	// 		$academicPeriodConditions['AcademicPeriod.end_date >='] = $startDate;
+	// 	}
+
+	// 	$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
+	// 	$list = $AcademicPeriod->find('list', array(
+	// 		'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
+	// 		'conditions' => $academicPeriodConditions,
+	// 		'order' => array('AcademicPeriod.order')
+	// 	));
+
+	// 	return $list;
+	// }
+
 }
