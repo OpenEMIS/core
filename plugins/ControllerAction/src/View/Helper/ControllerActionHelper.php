@@ -176,10 +176,6 @@ class ControllerActionHelper extends Helper {
 				$table = TableRegistry::get($attr['className']);
 			}
 
-			if (array_key_exists('options', $attr)) {
-				$value = $attr['options'][$value];
-			}
-
 			if ($this->endsWith($field, '_id')) {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
