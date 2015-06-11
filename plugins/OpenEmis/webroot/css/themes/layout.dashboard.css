@@ -211,7 +211,7 @@
 
 /* SERIES TAB */
 
-.x-axis:before {
+.y-axis:before {
 	font-family: "kordit-fonts";
 	content: "\e628";
 	font-size: 20px;
@@ -221,11 +221,11 @@
 	left: 11px;
 }
 
-.chrome .x-axis:before {
+.chrome .y-axis:before {
 	top: 3px !important;
 }
 
-.y-axis:before {
+.x-axis:before {
 	font-family: "kordit-fonts";
 	content: "\e629";
 	font-size: 20px;
@@ -235,7 +235,7 @@
 	left: 12px;
 }
 
-.chrome .y-axis:before {
+.chrome .x-axis:before {
 	left: 11px;
 }
 
@@ -264,7 +264,7 @@
 	background-color: #fff;
 }
 
-.dragdrop-wrapper i {
+.dragdrop-wrapper > i {
 	position: absolute; 
 	top : 5px; 
 	right: 5px; 
