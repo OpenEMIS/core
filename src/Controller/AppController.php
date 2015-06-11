@@ -52,10 +52,8 @@ class AppController extends Controller {
 		$this->loadComponent('Auth', [
 			'authenticate' => [
 				'Form' => [
-					'passwordHasher' => [
-	                    'className' => 'Fallback',
-	                    'hashers' => ['Default', 'Weak']
-	                ]
+					'userModel' => 'User.Users',
+					'passwordHasher' => ['className' => 'Default']
 				]
 			],
 			'loginRedirect' => [
