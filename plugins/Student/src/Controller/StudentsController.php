@@ -53,6 +53,15 @@ class StudentsController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 
+	
+
+		// if (is_null($id)) {
+		// 	$id = $this->ControllerAction->Session->read('Student.security_user_id');
+		// } else {
+		// 	$this->ControllerAction->Session->write('Student.security_user_id', $id);
+		// }
+
+
 	public function beforePaginate($event, $model, $options) {
 		$session = $this->request->session();
 
