@@ -1285,14 +1285,34 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal input,
-.form-horizontal textarea {
+.form-horizontal textarea,
+.form-horizontal .chosen-choices {
 	float: left;
-	border: 1px solid #CCC;
+	border: 1px solid #CCC !important;
 	padding: 5px 10px;
 	margin-bottom: 15px;
 	width: 30%;
 	-webkit-border-radius: 3px;
 	        border-radius: 3px;
+}
+
+.form-horizontal .chosen-container {
+	width: 30% !important;
+	margin-bottom: 15px;
+}
+
+.search-choice {
+	border: 1px solid #CCC !important;
+	background: #EEE !important;
+	padding: 5px 20px 5px 6px !important;
+}
+
+.chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+	padding: 4px 4px 0 !important;
+}
+
+.chosen-container-multi .chosen-choices li.search-choice .search-choice-close {
+	top: 6px !important;
 }
 
 .form-horizontal .input-group {
@@ -1324,8 +1344,22 @@ table tr.sorting-row td {background-color: #8b8;}
 	margin-top: 5px;
 }
 
-.form-horizontal .fileinput {
-	width: 30%;
+.fileinput {
+	position: relative;
+}
+
+.fileinput .btn-file {
+	position: absolute;
+	right: 0;
+}
+
+.fileinput .btn-file-cancel {
+	position: absolute;
+	padding: 9px 12px 10px 14px;
+	border-radius: 0;
+	border-right: 0 !important;
+	right: 0;
+	top: 0;
 }
 
 .fileinput-filename {
@@ -1335,14 +1369,10 @@ table tr.sorting-row td {background-color: #8b8;}
     width: 100%;
     position: absolute;
     left: 0;
-    padding-left: 25px;
+ 	padding: 0 0 0 25px;
     white-space: nowrap;
     text-overflow: ellipsis;
-}
-
-.fileinput.input-group > .btn-file {
-	border-right: 0 !important;
-}
+} 
 
 .form-horizontal .datetime select {
 	width: 60px;
@@ -1381,6 +1411,7 @@ select:-moz-focusring {
 
 .select {
 	position: relative;
+	background-color: #FFF;
 }
 
 .select:after {
