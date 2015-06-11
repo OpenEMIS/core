@@ -21,7 +21,7 @@ class UsersController extends AppController {
 		// $this->Message->alert('general.add.success');
 		//pr($this->request->params);die;
 
-		$this->Auth->allow(['add', 'logout', 'postLogin']);
+		$this->Auth->allow(['add', 'logout', 'postLogin', 'updatePassword']);
 		//$this->log($this->request->method(), 'debug');
 	}
 
@@ -68,23 +68,53 @@ class UsersController extends AppController {
 	public function postLogin() {
 		$this->autoRender = false;
 		
-		//$this->Alert->success('general.notExists');
 		if ($this->request->is('post')) {
+			if (!empty($this->request->data('username'))) {
+				$username = $this->request->data('username');
+				$user = $this->Users->findByUsername($username)->first();
+				if ($user) {
+					$session = $this->request->session();
+					$session->write('Users.updatePassword.username', $username);
+					return $this->redirect(['action' => 'updatePassword']);
+				}
+			}
 			$user = $this->Auth->identify();
-			if ($user) {
+			if ($user) {pr($user);
 	            $this->Auth->setUser($user);
 	            if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
+	            	pr('asd');die;
 	                $user = $this->Users->get($this->Auth->user('id'));
 	                $user->password = $this->request->data('password');
 	                $this->Users->save($user);
 	            }
 	            return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 	            //return $this->redirect($this->Auth->redirectUrl());
+	        } else {
+	        	$this->Alert->error('security.login.fail');
+	        	return $this->redirect(['action' => 'login']);
 	        }
-			//$this->Alert->error('security.login.fail');
-			//return $this->redirect(['action' => 'login']);
 			//return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		}
+	}
+
+	// this action is to allow users to migrate old password hash to use the new password hasher
+	// this function will be removed once all users have updated their old password
+	public function updatePassword() {
+		$this->layout = false;
+		$salt = 'thisismysalt';
+		$username = '';
+		if ($this->request->is('get')) {
+			$session = $this->request->session();
+			if ($session->check('Users.updatePassword.username')) {
+				$this->Alert->success('security.login.updatePassword', ['closeButton' => false]);
+				$username = $session->read('Users.updatePassword.username');
+			} else {
+				return $this->redirect(['action' => 'login']);
+			}
+		} else {
+			pr($this->request->data);
+		}
+		$this->set('username', $username);
 	}
 
     public function logout() {
