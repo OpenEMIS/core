@@ -28,6 +28,22 @@ class UsersTable extends AppTable {
 		$this->hasMany('UserContacts', ['className' => 'User.UserContacts', 'foreignKey' => 'security_user_id']);
 	}
 
+	public function viewBeforeAction(Event $event) {
+		if (array_key_exists('pass', $this->controller->request->params)) {
+			$id = reset($this->controller->request->params['pass']);
+		}
+
+		// would be 'Student' or 'Staff'
+		$roleName = Inflector::singularize($this->controller->request->params['controller']);
+		if (isset($id)) {
+			$this->ControllerAction->Session->write($roleName.'.security_user_id', $id);
+		} else {
+			$id = $this->ControllerAction->Session->read($roleName.'.security_user_id');
+		}
+	}
+
+
+
 	public function addBeforeAction(Event $event) {
 		if ($this->Session->check('Institutions.id')) {
 			$institutionId = $this->Session->read('Institutions.id');
@@ -233,14 +249,16 @@ class UsersTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-
+		
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [
 						'rule' => 'checkIfStringGotNoNumber',
+					],
+					'ruleNotBlank' => [
+						'rule' => 'notBlank',
 					]
 				])
-			->notEmpty('first_name')
 			->add('middle_name', [
 					'ruleCheckIfStringGotNoNumber' => [
 						'rule' => 'checkIfStringGotNoNumber',
@@ -256,7 +274,6 @@ class UsersTable extends AppTable {
 						'rule' => 'checkIfStringGotNoNumber',
 					]
 				])
-			->notEmpty('last_name')
 			->add('preferred_name', [
 					'ruleCheckIfStringGotNoNumber' => [
 						'rule' => 'checkIfStringGotNoNumber',
@@ -268,16 +285,6 @@ class UsersTable extends AppTable {
 						'provider' => 'table',
 					]
 				])
-			->notEmpty('openemis_no')
-			->add('gender_id', [
-			])
-			->notEmpty('gender_id')
-			->add('address', [
-			])
-			->notEmpty('address')
-			->add('date_of_birth', [
-			])
-			->notEmpty('date_of_birth')
 			->add('username', [
 				'ruleUnique' => [
 					'rule' => 'validateUnique',
@@ -287,8 +294,6 @@ class UsersTable extends AppTable {
 				    'rule' => 'alphanumeric',
 				]
 			])
-			->notEmpty('username')
-
 			->add('password', [
 				// 'ruleUnique' => [
 				// 	'rule' => 'validateUnique',
@@ -338,20 +343,5 @@ class UsersTable extends AppTable {
 
 		return $validator;
 	}
-
-	public function changePassword(Model $model, $field, $allowChangeAll) {
-		return false;
-		// $username = array_key_exists('username', $model->data[$model->alias])? $model->data[$model->alias]['username']: null;
-		// $password = array_key_exists('password', $model->data[$model->alias])? $model->data[$model->alias]['password']: null;
-
-		// if (!$allowChangeAll) {
-		// 	if (AuthComponent::user('id') != $model->data[$model->alias]['id']) {
-		// 		die('illegal cp');
-		// 	}
-		// }
-		// $password = AuthComponent::password($password);
-		// $count = $model->find('count', array('recursive' => -1, 'conditions' => array('username' => $username, 'password' => $password)));
-		// return $count==1;
-	}	
 
 }

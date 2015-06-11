@@ -231,6 +231,7 @@ class ControllerActionComponent extends Component {
 
 	public function getAssociatedBelongsToModel($field) {
 		$relatedModel = null;
+
 		foreach ($this->model->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // belongsTo associations
 				if ($field === $assoc->foreignKey()) {
@@ -244,8 +245,11 @@ class ControllerActionComponent extends Component {
 
 	public function getAssociatedEntityArrayKey($field) {
 		$associationKey = $this->getAssociatedBelongsToModel($field);
+		$associatedEntityArrayKey = null;
 		if (is_object($associationKey)) { 
 			$associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->alias()));
+		} else {
+			die($field . '\'s association not found in ' . $this->model->alias());
 		}
 		return $associatedEntityArrayKey;
 	}
