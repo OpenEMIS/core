@@ -1,6 +1,7 @@
 <?php
 namespace ControllerAction\View\Helper;
 
+use Cake\Event\Event;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -18,14 +19,14 @@ class ControllerActionHelper extends Helper {
 		],
 		'timepicker' => [
 			'include' => false,
-			'css' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
-			'js' => 'ControllerAction.../plugins/timepicker/bootstrap-timepicker',
-			'element' => 'ControllerAction.timepicker'
+			'css' => 'ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min',
+			'js' => 'ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min',
+			'element' => 'ControllerAction.bootstrap-timepicker/timepicker'
 		],
 		'chosen' => [
 			'include' => false,
-			'css' => 'ControllerAction.../plugins/chosen/chosen.min',
-			'js' => 'ControllerAction.../plugins/chosen/chosen.query.min'
+			'css' => 'ControllerAction.../plugins/chosen/css/chosen.min',
+			'js' => 'ControllerAction.../plugins/chosen/js/chosen.jquery.min'
 		],
 		'jasny' => [
 			'include' => false,
@@ -83,9 +84,9 @@ class ControllerActionHelper extends Helper {
 		$buttons = $this->_View->get('_buttons');
 	
 		echo '<div class="form-buttons">';
-		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false));
 		echo $this->Html->link(__('Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel'));
+		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo '</div>';
 	}
 
@@ -164,18 +165,44 @@ class ControllerActionHelper extends Helper {
 			$search = $this->request->data['Search']['searchField'];
 		}
 
+		$table = null;
+
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
 			$value = $obj->$field;
 
+			// attach event for index columns
+			if (is_null($table)) {
+				$table = TableRegistry::get($attr['className']);
+			}
+
+			if (array_key_exists('options', $attr)) {
+				$value = $attr['options'][$value];
+			}
+
 			if ($this->endsWith($field, '_id')) {
-				$associatedObject = str_replace('_id', '', $field);
-				if (is_object($obj->$associatedObject)) {
+				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
+				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
+			} else if (strlen($value) == 0) {
+				$value = $this->getIndexElement($value, $attr);
 			}
-			
-			$value = $this->getIndexElement($value, $attr);
+
+			$eventKey = 'ControllerAction.Model.index.onGet' . Inflector::camelize($field);
+			$method = 'indexOnGet' . Inflector::camelize($field);
+
+			$event = new Event($eventKey, $this, ['entity' => $obj]);
+			if (method_exists($table, $method)) {
+                $table->eventManager()->on($eventKey, [], [$table, $method]);
+            }
+			$event = $table->eventManager()->dispatch($event);
+
+			if ($event->result) {
+				$value = $event->result;
+			}
+			// end attach event
+
 			if (!empty($search)) {
 				$value = $this->highlight($search, $value);
 			}
@@ -306,6 +333,7 @@ class ControllerActionHelper extends Helper {
 	}
 	
 	public function timepicker($field, $options=array()) {
+		/*
 		$id = isset($options['id']) ? $options['id'] : 'time';
 		$wrapper = '<div class="input-group bootstrap-timepicker">';
 		$icon = '<span class="input-group-addon"><i class="fa fa-clock-o"></i></span></div>';
@@ -338,16 +366,19 @@ class ControllerActionHelper extends Helper {
 		} else {
 			$this->_View->set('timepicker', array($_timepickerOptions));
 		}
+		*/
 		return $html;
 	}
 
 	public function getIndexElement($value, $_fieldAttr) {
 		$_type = $_fieldAttr['type'];
+
+		// $function = 'get' . Inflector::camelize($_type) . 'Element';
+		// if (method_exists($this, $function)) {
+		// 	$value = $this->$function('view', $data, $_fieldAttr);
+		// }
+
 		switch ($_type) {
-			case 'disabled':
-				$value = $_fieldAttr['value'];
-				break;
-				
 			case 'select':
 				if (!empty($_fieldAttr['options'])) {
 					reset($_fieldAttr['options']);
@@ -378,19 +409,12 @@ class ControllerActionHelper extends Helper {
 				$value = $this->Html->link($value, $_fieldAttr['attr']['url']);
 				break;
 				
-			case 'element':
-				$element = $_fieldAttr['element'];
-				if (array_key_exists('class', $_fieldAttr)) {
-					$class = $_fieldAttr['class'];
-				}
-				$value = $this->_View->element($element);
-				break;
-				
 			case 'date':
 				//$value = $this->Utility->formatDate($value, null, false);
 				break;
 
 			case 'chosen_select':
+				/*
 				$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
 				$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
 				//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
@@ -405,6 +429,7 @@ class ControllerActionHelper extends Helper {
 					}
 				}
 				echo implode(', ', $chosenSelectList);
+				*/
 				break;
 
 			case 'bool':
@@ -413,14 +438,6 @@ class ControllerActionHelper extends Helper {
 
 			case 'color':
 				$value = '<div style="background-color:'.$value.'">&nbsp;</div>';
-				break;
-			
-			case 'modified_user_id':
-			case 'created_user_id':
-				$dataModel = $_fieldAttr['dataModel'];
-				if (isset($data[$dataModel]['first_name']) && isset($data[$dataModel]['last_name'])) {
-					$value = $data[$dataModel]['first_name'] . ' ' . $data[$dataModel]['last_name'];
-				}
 				break;
 				
 			default:
@@ -466,6 +483,7 @@ class ControllerActionHelper extends Helper {
 				$fieldName = $_fieldModel . '.' . $_field;
 				$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 				
+				// TODO-jeff: make label optional
 				$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
 				if (!empty($label)) {
 					$options['label'] = $label;
@@ -508,6 +526,9 @@ class ControllerActionHelper extends Helper {
 				*/
 				
 				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
+					if (array_key_exists('fieldName', $_fieldAttr)) {
+						$fieldName = $_fieldAttr['fieldName'];
+					}
 					echo $this->Form->input($fieldName, $options);
 				}
 			}
@@ -578,7 +599,9 @@ class ControllerActionHelper extends Helper {
 				
 				$value = $data->$_field;
 				if ($this->endsWith($_field, '_id')) {
-					$associatedObject = str_replace('_id', '', $_field);
+					$table = TableRegistry::get($attr['className']);
+					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
+					// $associatedObject = str_replace('_id', '', $_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
@@ -657,6 +680,8 @@ class ControllerActionHelper extends Helper {
 						$value = $attr['options'][$value];
 					}
 				}
+			} else {
+				$value = $data->$attr['field'];
 			}
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {
@@ -666,30 +691,33 @@ class ControllerActionHelper extends Helper {
 					if (isset($attr['default'])) {
 						$options['default'] = $attr['default'];
 					} else {
-						if (!empty($this->request->data)) {
-							if(!empty($this->request->data->$attr['field'])) {
-								$options['default'] = $this->request->data->$attr['field'];
-							}
-						}
+						// if (!empty($this->request->data)) {
+						// 	if(!empty($this->request->data->$attr['field'])) {
+						// 		$options['default'] = $this->request->data->$attr['field'];
+						// 	}
+						// }
 					}
 				}
 				$options['options'] = $attr['options'];
 			}
+			if (isset($attr['attr'])) {
+				$options = array_merge($options, $attr['attr']);
+			}
 
 			// get rid of options that obsolete and not the default
-			if (!empty($attr['options'])) {
-				reset($attr['options']);
-				$first_key = key($attr['options']);
-				if (is_array($attr['options'][$first_key])) {
-					foreach ($options['options'] as $okey => $ovalue) {
-						if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
-							if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
-								unset($options['options'][$okey]);
-							}
-						}
-					}
-				}
-			}
+			// if (!empty($attr['options'])) {
+			// 	reset($attr['options']);
+			// 	$first_key = key($attr['options']);
+			// 	if (is_array($attr['options'][$first_key])) {
+			// 		foreach ($options['options'] as $okey => $ovalue) {
+			// 			if (isset($ovalue['obsolete']) && $ovalue['obsolete'] == '1') {
+			// 				if (!array_key_exists('default', $options) || $ovalue['value']!=$options['default']) {
+			// 					unset($options['options'][$okey]);
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}
 		return $value;
 	}
@@ -717,6 +745,21 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
+	public function getReadonlyElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		if ($action == 'view') {
+			$value = $attr['value'];
+		} else if ($action == 'edit') {
+			$this->getDisabledElement($action, $data, $attr, $options);
+			echo $this->Form->input('disabled-'.$attr['field'], $options);
+
+			unset($options['disabled']);
+			unset($options['value']);
+			$value = $this->getHiddenElement($action, $data, $attr, $options);
+		}
+		return $value;
+	}
+
 	public function getDisabledElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'view') {
@@ -724,10 +767,13 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'text';
 			$options['disabled'] = 'disabled';
-			if (isset($_fieldAttr['options'])) {
-				//$options['value'] = $_fieldAttr['options'][$this->request->data->$_field];
+			if (isset($attr['options']) && !isset($attr['attr']['value'])) {
+				$options['value'] = $attr['options'][$data->$attr['field']];
+			} elseif (isset($attr['attr']['value'])) {
+				$options['value'] = $attr['attr']['value'];
+			} else {
+				$options['value'] = $data->$attr['field'];
 			}
-			//echo $this->Form->hidden($fieldName);
 		}
 		return $value;
 	}
@@ -790,10 +836,10 @@ class ControllerActionHelper extends Helper {
 		return $value;
 	}
 
-	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
+	public function getDateTimeElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		$_options = [
-			'format' => 'dd-M-yyyy',
+			'format' => 'dd-mm-yyyy H:i:s',
 			'todayBtn' => 'linked',
 			'orientation' => 'top auto'
 		];
@@ -802,12 +848,52 @@ class ControllerActionHelper extends Helper {
 			$attr['date_options'] = [];
 		}
 
-		if ($action == 'view') {
-			//$value = $this->Utility->formatDate($value, null, false);
+		$field = $attr['field'];
+		$value = $data->$field;
+
+		if ($action == 'view' || $action == 'index') {
+			if (!is_null($value)) {
+				$table = TableRegistry::get($attr['className']);
+				$event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
+				$event = $table->eventManager()->dispatch($event);
+				if (strlen($event->result) > 0) {
+					$value = $event->result;
+				}
+			}
+		}
+		return $value;
+	}
+
+	public function getDateElement($action, Entity $data, $attr, &$options=[]) {
+		$value = '';
+		$_options = [
+			'format' => 'dd-mm-yyyy',
+			'todayBtn' => 'linked',
+			'orientation' => 'top auto'
+		];
+
+		if (!isset($attr['date_options'])) {
+			$attr['date_options'] = [];
+		}
+
+		$field = $attr['field'];
+		$value = $data->$field;
+
+		if ($action == 'view' || $action == 'index') {
+			if (!is_null($value)) {
+				$table = TableRegistry::get($attr['className']);
+				$event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
+				$event = $table->eventManager()->dispatch($event);
+				if (strlen($event->result) > 0) {
+					$value = $event->result;
+				}
+			}
 		} else if ($action == 'edit') {
-			$field = $attr['field'];
 			$attr['id'] = $attr['model'] . '_' . $field;
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
+			if (!is_null($value)) {
+				$attr['value'] = date('d-m-Y', strtotime($value));
+			}
 			if (!is_null($this->_View->get('datepicker'))) {
 				$datepickers = $this->_View->get('datepicker');
 				$datepickers[] = $attr;
@@ -823,41 +909,69 @@ class ControllerActionHelper extends Helper {
 
 	public function getTimeElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
-			
-		} else if ($action == 'edit') {
-			$attr = array('id' => $_fieldModel . '_' . $_field);
-			
-			if (array_key_exists('attr', $_fieldAttr)) {
-				$attr = array_merge($attr, $_fieldAttr['attr']);
-			}
+		$_options = [
+			'defaultTime' => false
+		];
 
-			$attr['value'] = $this->request->data->$_field;
-			$attr['label'] = $label;
-			$includes['timepicker']['include'] = true;
-			echo $this->timepicker($fieldName, $attr);
+		if (!isset($attr['time_options'])) {
+			$attr['time_options'] = [];
 		}
+
+		$field = $attr['field'];
+		$value = $data->$field;
+
+		if ($action == 'view' || $action == 'index') {
+			if (!is_null($value)) {
+				$table = TableRegistry::get($attr['className']);
+				$event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
+				$event = $table->eventManager()->dispatch($event);
+				if (strlen($event->result) > 0) {
+					$value = $event->result;
+				}
+			}
+		} else if ($action == 'edit') {
+			$attr['id'] = $attr['model'] . '_' . $field;
+			$attr['time_options'] = array_merge($_options, $attr['time_options']);
+			if (!is_null($value)) {
+				$attr['value'] = date('h:i A', strtotime($value));
+				$attr['time_options']['defaultTime'] = $attr['value'];
+			}
+			if (!is_null($this->_View->get('timepicker'))) {
+				$timepickers = $this->_View->get('timepicker');
+				$timepickers[] = $attr;
+				$this->_View->set('timepicker', $timepickers);
+			} else {
+				$this->_View->set('timepicker', [$attr]);
+			}
+			echo $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
+			$this->includes['timepicker']['include'] = true;
+		}
+
 		return $value;
 	}
 
 	public function getChosenSelectElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+
+		$_options = [
+			'class' => 'chosen-select',
+			'multiple' => true
+		];
+
 		if ($action == 'view') {
-			$attr['dataModel'] = isset($attr['dataModel']) ? $attr['dataModel'] : Inflector::classify($_field);
-			$attr['dataField'] = isset($attr['dataField']) ? $attr['dataField'] : 'id';
-			//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
-			$chosenSelectList = array();
-			if (isset($data[$dataModel])) {
-				foreach ($data[$dataModel] as $obj) {
-					$chosenSelectData = isset($obj[$dataField]) ? $obj[$dataField] : '';
-					if (!empty($chosenSelectData)) {
-						$chosenSelectList[] = $chosenSelectData;
-					}
+			$chosenSelectList = [];
+			if (!empty($data->$attr['fieldNameKey'])) {
+				foreach ($data->$attr['fieldNameKey'] as $obj) {
+					$chosenSelectList[] = $obj->name;
 				}
 			}
-			echo implode(', ', $chosenSelectList);
+			$value = implode(', ', $chosenSelectList);
 		} else if ($action == 'edit') {
-			
+			$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
+			$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
+			$options = array_merge($_options, $options);
+
+			$this->includes['chosen']['include'] = true;
 		}
 		return $value;
 	}

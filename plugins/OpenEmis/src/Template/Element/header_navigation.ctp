@@ -51,7 +51,8 @@ $home = ['plugin' => false, 'controller' => 'Users', 'action' => 'index'];
 				foreach ($dropdown as $name => $attr) {
 					if ($name != '_divider') {
 						echo '<li>';
-						echo '<a class="fa ' . $attr['icon'] . '" href="' . $this->Url->build($attr['url']) . '">';
+						echo '<a href="' . $this->Url->build($attr['url']) . '">';
+						echo '<i class="fa ' . $attr['icon'] . '"></i>';
 						echo '<span> ' . __($name) . '</span>';
 						echo '</a>';
 						echo '</li>';

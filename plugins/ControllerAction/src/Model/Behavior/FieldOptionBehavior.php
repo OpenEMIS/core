@@ -26,24 +26,74 @@ class FieldOptionBehavior extends Behavior {
 		$this->_table->table('field_option_values');
 	}
 
-	public function getOptions($options=[]) { // need to cater for visible flag
-		$alias = $this->_table->alias();
-		$schema = $this->_table->schema();
-		$columns = $schema->columns();
-
-		if (!array_key_exists('order', $options) && in_array('order', $columns)) {
-			$options['order'] = [$this->_table->aliasField('order') => 'ASC'];
-		}
-
-		$query = $this->_table->find('list', $options);
-		$query->innerJoin(
-			['FieldOption' => 'field_options'],
-			[
-				'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
-				'FieldOption.code' => $alias
-			]
-		);
-		$data = $query->toArray();
-		return $data;
+	public function getDefaultValue() {
+		$value = '';
+		$primaryKey = $this->_table->primaryKey();
+		$entity = $this->getDefaultEntity();
+		return $entity->$primaryKey;
 	}
+
+	public function getDefaultEntity() {
+		if ($this->_table->table() != 'field_option_values') {
+			$query = $this->_table->find();
+			$entity = $query
+				->where([$this->_table->aliasField('default') => 1])
+				->first();
+
+			if (is_null($entity)) {
+				$query = $this->_table->find();
+				$entity = $query
+					->first();
+			}
+		} else {
+			$entity = $this->_table
+				->find()
+				->innerJoin(
+					['FieldOption' => 'field_options'],
+					[
+						'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+						'FieldOption.code' => $this->_table->alias()
+					]
+				)
+				->find('order')->find('visible')
+				->where([$this->_table->aliasField('default') => 1])
+				->first();
+				
+			if (is_null($entity)) {
+				$entity = $this->_table
+					->find()
+					->innerJoin(
+						['FieldOption' => 'field_options'],
+						[
+							'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+							'FieldOption.code' => $this->_table->alias()
+						]
+					)
+					->find('order')->find('visible')
+					->first();
+			}
+		}
+		return $entity;
+	}
+
+	// public function getOptions($options=[]) { // need to cater for visible flag
+	// 	$alias = $this->_table->alias();
+	// 	$schema = $this->_table->schema();
+	// 	$columns = $schema->columns();
+
+	// 	if (!array_key_exists('order', $options) && in_array('order', $columns)) {
+	// 		$options['order'] = [$this->_table->aliasField('order') => 'ASC'];
+	// 	}
+
+	// 	$query = $this->_table->find('list', $options);
+	// 	$query->innerJoin(
+	// 		['FieldOption' => 'field_options'],
+	// 		[
+	// 			'FieldOption.id = ' . $this->_table->aliasField('field_option_id'),
+	// 			'FieldOption.code' => $alias
+	// 		]
+	// 	);
+	// 	$data = $query->toArray();
+	// 	return $data;
+	// }
 }
