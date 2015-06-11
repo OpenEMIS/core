@@ -1470,6 +1470,42 @@ input[readonly] {
 	cursor: not-allowed;
 }
 
+/* TAGS */
+.tags {
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+tags-input .tags .input,
+tags-input .tags .tag-item {
+	font-size: 12px !important;
+}
+
+tags-input .tags .tag-item {
+	background: #EEE !important;
+	color: #333 !important;
+	border: 1px solid #CCC !important;
+}
+
+tags-input .tags .tag-item .remove-button {
+	font-size: 14px !important;
+	opacity: 0.6;
+}
+
+tags-input .tags .tag-item .remove-button:hover {
+	opacity: 1;
+}
+
+tags-input .tags.focused,
+tags-input.ng-invalid .tags {
+	-webkit-box-shadow: none !important;
+	        box-shadow: none !important;
+}
+
+tags-input .tags {
+	border: 1px solid #CCC !important;
+}
+
 /* TABLE DROPDOWN; ACTION & REORDER */
 .btn-dropdown {
 	position: relative;
