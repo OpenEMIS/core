@@ -15,8 +15,8 @@ class InstitutionSiteStaffTable extends AppTable {
 		$this->belongsTo('Users', 		 ['className' => 'User.Users', 							'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('Positions', 	 ['className' => 'Institution.InstitutionSitePositions','foreignKey' => 'institution_site_position_id']);
-		$this->belongsTo('StaffTypes', 	 ['className' => 'Institution.StaffTypes', 				'foreignKey' => 'staff_type_id']);
-		$this->belongsTo('StaffStatuses',['className' => 'Institution.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
+		$this->belongsTo('StaffTypes', 	 ['className' => 'FieldOption.StaffTypes', 				'foreignKey' => 'staff_type_id']);
+		$this->belongsTo('StaffStatuses',['className' => 'FieldOption.StaffStatuses', 			'foreignKey' => 'staff_status_id']);
 
 	}
 
@@ -57,25 +57,7 @@ class InstitutionSiteStaffTable extends AppTable {
 
 	}
 
-	public function editBeforeAction($event) {
-
-		$this->fields['start_year']['visible'] = false;
-		$this->fields['end_year']['visible'] = false;
-
-		$this->fields['institution_site_position_id']['type'] = 'select';
-		$rawData = $this->Positions->find('all')->select(['id', 'position_no']);
-		$options = [];
-		foreach ($rawData as $rd) {
-			$options[$rd['id']] = $rd['position_no'];
-		}
-		$this->fields['institution_site_position_id']['options'] = $options;
-
-		$this->fields['staff_type_id']['type'] = 'select';
-		$this->fields['staff_status_id']['type'] = 'select';
-
-	}
-
-	public function addBeforeAction($event) {
+	public function addEditBeforeAction($event) {
 
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
