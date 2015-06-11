@@ -25,8 +25,8 @@ class ControllerActionHelper extends Helper {
 		],
 		'chosen' => [
 			'include' => false,
-			'css' => 'ControllerAction.../plugins/chosen/chosen.min',
-			'js' => 'ControllerAction.../plugins/chosen/chosen.query.min'
+			'css' => 'ControllerAction.../plugins/chosen/css/chosen.min',
+			'js' => 'ControllerAction.../plugins/chosen/js/chosen.jquery.min'
 		],
 		'jasny' => [
 			'include' => false,
@@ -414,6 +414,7 @@ class ControllerActionHelper extends Helper {
 				break;
 
 			case 'chosen_select':
+				/*
 				$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
 				$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
 				//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
@@ -428,6 +429,7 @@ class ControllerActionHelper extends Helper {
 					}
 				}
 				echo implode(', ', $chosenSelectList);
+				*/
 				break;
 
 			case 'bool':
@@ -950,22 +952,26 @@ class ControllerActionHelper extends Helper {
 
 	public function getChosenSelectElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+
+		$_options = [
+			'class' => 'chosen-select',
+			'multiple' => true
+		];
+
 		if ($action == 'view') {
-			$attr['dataModel'] = isset($attr['dataModel']) ? $attr['dataModel'] : Inflector::classify($_field);
-			$attr['dataField'] = isset($attr['dataField']) ? $attr['dataField'] : 'id';
-			//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
-			$chosenSelectList = array();
-			if (isset($data[$dataModel])) {
-				foreach ($data[$dataModel] as $obj) {
-					$chosenSelectData = isset($obj[$dataField]) ? $obj[$dataField] : '';
-					if (!empty($chosenSelectData)) {
-						$chosenSelectList[] = $chosenSelectData;
-					}
+			$chosenSelectList = [];
+			if (!empty($data->$attr['fieldNameKey'])) {
+				foreach ($data->$attr['fieldNameKey'] as $obj) {
+					$chosenSelectList[] = $obj->name;
 				}
 			}
-			echo implode(', ', $chosenSelectList);
+			$value = implode(', ', $chosenSelectList);
 		} else if ($action == 'edit') {
-			
+			$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
+			$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
+			$options = array_merge($_options, $options);
+
+			$this->includes['chosen']['include'] = true;
 		}
 		return $value;
 	}
