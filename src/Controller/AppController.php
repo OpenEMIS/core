@@ -8,8 +8,8 @@
  * Redistributions of files must retain the above copyright notice.
  *
  * @copyright Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link      http://cakephp.org CakePHP(tm) Project
- * @since     0.2.9
+ * @link	  http://cakephp.org CakePHP(tm) Project
+ * @since	 0.2.9
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace App\Controller;
@@ -27,50 +27,62 @@ use ControllerAction\Model\Traits\ControllerActionTrait;
  * @link http://book.cakephp.org/3.0/en/controllers.html#the-app-controller
  */
 class AppController extends Controller {
-    use ControllerActionTrait;
+	use ControllerActionTrait;
 
-	public $_productName = 'OpenEMIS';
+	public $_productName = 'OpenEMIS Core';
 
-    public $helpers = [
-        'Text',
+	public $helpers = [
+		'Text',
 
-        // Custom Helper
-        'ControllerAction.ControllerAction',
-        'OpenEmis.Navigation'
-    ];
+		// Custom Helper
+		'ControllerAction.ControllerAction',
+		'OpenEmis.Navigation'
+	];
 
-    /**
-     * Initialization hook method.
-     *
-     * Use this method to add common initialization code like loading components.
-     *
-     * @return void
-     */
-    public function initialize() {
-        parent::initialize();
-        $this->loadComponent('Flash');
+	/**
+	 * Initialization hook method.
+	 *
+	 * Use this method to add common initialization code like loading components.
+	 *
+	 * @return void
+	 */
+	public function initialize() {
+		parent::initialize();
+		$this->loadComponent('Flash');
+		$this->loadComponent('Auth', [
+			'loginRedirect' => [
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
+				'action' => 'index'
+			],
+			'logoutRedirect' => [
+				'plugin' => 'User',
+				'controller' => 'Users',
+				'action' => 'login'
+			]
+		]);
 
-        // Custom Components
-        $this->loadComponent('Message');
-        $this->loadComponent('Navigation');
-        $this->loadComponent('Localization.Localization');
-        $this->loadComponent('ControllerAction.ControllerAction', [
-            'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
-        ]);
-    }
+		// Custom Components
+		$this->loadComponent('Navigation');
+		$this->loadComponent('Localization.Localization');
+		$this->loadComponent('ControllerAction.Alert');
+		$this->loadComponent('ControllerAction.ControllerAction', [
+			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
+		]);
+	}
 
-    public function beforeFilter(Event $event) {
+	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-        $session = $this->request->session();
-        
-        $theme = 'OpenEmis.themes/layout.core';
+		$session = $this->request->session();
+		
+		$theme = 'OpenEmis.themes/layout.core';
 
-        $this->set('theme', $theme);
+		$this->set('theme', $theme);
 		$this->set('SystemVersion', $this->getCodeVersion());
 		$this->set('_productName', $this->_productName);
-    }
+	}
 
-    public function getCodeVersion() {
+	public function getCodeVersion() {
 		$path = 'version';
 		$session = $this->request->session();
 		$version = '';
