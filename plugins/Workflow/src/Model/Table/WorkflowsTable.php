@@ -15,6 +15,7 @@ class WorkflowsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 		$this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowSubmodels', ['className' => 'Workflow.WorkflowSubmodels', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('FieldOptionValues', [
 			'className' => 'FieldOptionValues',
 			'joinTable' => 'workflow_submodels',
@@ -29,7 +30,7 @@ class WorkflowsTable extends AppTable {
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		parent::beforeSave($event, $entity, $options);
-		//Auto insert default rubric_template_options when add
+		//Auto insert default workflow_steps when add
 		if ($entity->isNew()) {
 			$data = [
 				'workflow_steps' => [
@@ -39,6 +40,30 @@ class WorkflowsTable extends AppTable {
 			];
 
 			$entity = $this->patchEntity($entity, $data);
+		}
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		if (isset($entity->apply_to_all) && $entity->apply_to_all == 1) {
+			$where = [
+				$this->aliasField('workflow_model_id') => $entity->workflow_model_id,
+				$this->aliasField('id') . ' <> ' => $entity->id
+			];
+
+			$workflowIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id'])->where($where)->toArray();
+			$this->WorkflowSubmodels->deleteAll([
+				$this->WorkflowSubmodels->aliasField('workflow_id IN') => $workflowIds,
+				$this->WorkflowSubmodels->aliasField('submodel_reference') => 0
+			]);
+
+			$WorkflowSubmodelTable = $this->WorkflowSubmodels;
+			$workflowSubmodel = $WorkflowSubmodelTable->newEntity();
+			$workflowSubmodel->workflow_id = $entity->id;
+			$workflowSubmodel->submodel_reference = 0;
+			if ($WorkflowSubmodelTable->save($workflowSubmodel)) {
+			} else {
+				$this->WorkflowSubmodels->log($workflowSubmodel->errors(), 'debug');
+			}
 		}
 	}
 
@@ -117,7 +142,6 @@ class WorkflowsTable extends AppTable {
 	}
 
 	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
-		$data[$this->alias()]['field_option_values'] = [];
 		$options['associated'] = ['FieldOptionValues'];
 		return compact('entity', 'data', 'options');
 	}
