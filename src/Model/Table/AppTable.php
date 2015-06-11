@@ -1,15 +1,23 @@
 <?php
 namespace App\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use App\Model\Validation\AppValidator;
 use Cake\Utility\Inflector;
+use ControllerAction\Model\Traits\ControllerActionTrait;
+use Cake\I18n\Time;
 
 class AppTable extends Table {
+	use ControllerActionTrait;
+
 	public function initialize(array $config) {
+		parent::initialize($config);
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
@@ -32,19 +40,60 @@ class AppTable extends Table {
 				'foreignKey' => 'created_user_id'
 			]);
 		}
+
+		$dateFields = [];
+		$timeFields = [];
+		foreach ($columns as $column) {
+			if ($schema->columnType($column) == 'date') {
+				$dateFields[] = $column;
+			} else if ($schema->columnType($column) == 'time') {
+				$timeFields[] = $column;
+			}
+		}
+		if (!empty($dateFields)) {
+			$this->addBehavior('ControllerAction.DatePicker', $dateFields);
+		}
+		if (!empty($timeFields)) {
+			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
+		}
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.onPopulateSelectOptions'] = 'buildSelectOptions';
-		return $events;
+	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
+	public function onPopulateSelectOptions(Event $event, $query) {
+		// $schema = $this->schema();
+		// $columns = $schema->columns();
+		
+		// if ($this->hasBehavior('FieldOption')) {
+		// 	$query->innerJoin(
+		// 		['FieldOption' => 'field_options'],
+		// 		[
+		// 			'FieldOption.id = ' . $this->aliasField('field_option_id'),
+		// 			'FieldOption.code' => $this->alias()
+		// 		]
+		// 	)->find('order')->find('visible');
+		// } else {
+		// 	if (in_array('order', $columns)) {
+		// 		$query->find('order');
+		// 	}
+
+		// 	if (in_array('visible', $columns)) {
+		// 		$query->find('visible');
+		// 	}
+		// }
+		// return $query;
+
+		return $this->getList($query);
 	}
 
-	public function buildSelectOptions($event, $query) {
+	public function getList($query = null) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
-		
-		if ($this->hasBehavior('FieldOption')) {
+
+		if (is_null($query)) {
+			$query = $this->find('list');
+		}
+
+		if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
 			$query->innerJoin(
 				['FieldOption' => 'field_options'],
 				[
@@ -64,28 +113,72 @@ class AppTable extends Table {
 		return $query;
 	}
 
-	public function getAssociatedBelongsToModel($field) {
-		$relatedModel = null;
-		foreach ($this->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
-					$relatedModel = $assoc;
-					break;
-				}
-			}
-		}
-		return $relatedModel;
+	// Event: 'ControllerAction.Model.onFormatDate'
+	public function onFormatDate(Event $event, Time $dateObject) {
+		return $this->formatDate($dateObject);
+	}
+
+	/**
+	 * For calling from view files
+	 * @param  Time   $dateObject [description]
+	 * @return [type]             [description]
+	 */
+	public function formatDate(Time $dateObject) {
+		$ConfigItem = TableRegistry::get('ConfigItems');
+		$format = $ConfigItem->value('date_format');
+		return $dateObject->format($format);
+	}
+
+	// Event: 'ControllerAction.Model.onFormatTime'
+	public function onFormatTime(Event $event, Time $dateObject) {
+		return $this->formatTime($dateObject);
+	}
+
+	/**
+	 * For calling from view files
+	 * @param  Time   $dateObject [description]
+	 * @return [type]             [description]
+	 */
+	public function formatTime(Time $dateObject) {
+		$ConfigItem = TableRegistry::get('ConfigItems');
+		$format = $ConfigItem->value('time_format');
+		return $dateObject->format($format);
+	}
+
+	// Event: 'ControllerAction.Model.onFormatDateTime'
+	public function onFormatDateTime(Event $event, Time $dateObject) {
+		return $this->formatDateTime($dateObject);
+	}
+
+	/**
+	 * For calling from view files
+	 * @param  Time   $dateObject [description]
+	 * @return [type]             [description]
+	 */
+	public function formatDateTime(Time $dateObject) {
+		$ConfigItem = TableRegistry::get('ConfigItems');
+		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
+		return $dateObject->format($format);
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator->provider('default', new AppValidator());
+		return $validator;
 	}
 
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
 	}
 
+	public function findActive(Query $query, array $options) {
+		return $query->where([$this->aliasField('active') => 1]);
+	}
+
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
 	}
 	
-	public function beforeSave(Event $event, Entity $entity) {
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
 

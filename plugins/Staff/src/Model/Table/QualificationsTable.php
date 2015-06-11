@@ -9,8 +9,10 @@ class QualificationsTable extends AppTable {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
 		
-		// $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		// $this->belongsTo('SpecialNeedTypes', ['className' => 'User.SpecialNeedTypes']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
+		$this->belongsTo('QualificationInstitutions', ['className' => 'FieldOption.QualificationInstitutions']);
+		$this->belongsTo('QualificationSpecialisation', ['className' => 'FieldOption.QualificationSpecialisation']);
 	}
 
 	public function beforeAction($event) {

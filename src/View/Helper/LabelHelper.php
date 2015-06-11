@@ -108,6 +108,21 @@ class LabelHelper extends Helper {
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		],
+		'InstitutionSiteStaff' => [
+			'staff_status_id' => 'Status',
+			'staff_type_id' => 'Type',
+			'institution_site_position_id' => 'Position',
+			'total_fte' => 'Total FTE',
+			'fte' => 'FTE'
+		],
+		'InstitutionSitePosition' => [
+			'title' => 'Positions',
+			'position_no' => 'Position No',
+			'status' => 'Status',
+			'type' => 'Type',
+			'staff_position_title_id' => 'Title',
+			'staff_position_grade_id' => 'Grade'
+		],
 		'InstitutionSiteShifts' => [
 			'location_institution_site_id' => 'Location'
 		],
@@ -130,6 +145,13 @@ class LabelHelper extends Helper {
 		'RubricTemplateOptions' => [
 			'rubric_template_id' => 'Rubric Template',
 			'weighting' => 'Weighting'
+		],
+		'Workflows' => [
+			'workflow_model_id' => 'Form'
+		],
+		'WorkflowActions' => [
+			'next_step' => 'Next Step',
+			'comment_required' => 'Comment Required'
 		]
 	];
 

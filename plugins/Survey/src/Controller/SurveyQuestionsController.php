@@ -2,6 +2,7 @@
 namespace Survey\Controller;
 
 use Survey\Controller\AppController;
+use Cake\ORM\Table;
 use Cake\Event\Event;
 
 class SurveyQuestionsController extends AppController {
@@ -14,12 +15,6 @@ class SurveyQuestionsController extends AppController {
 		$this->ControllerAction->model('Survey.SurveyQuestions');
 		$this->loadComponent('Paginator');
 		$this->loadComponent('CustomField.CustomField');
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-        return $events;
     }
 
     public function beforeFilter(Event $event) {
@@ -65,16 +60,15 @@ class SurveyQuestionsController extends AppController {
         }
     }
 
-    public function beforePaginate($event, $model, $options) {
-        if (!is_null($this->selectedTemplate)) {
-            $options['conditions'][] = [
-                $model->aliasField('survey_template_id') => $this->selectedTemplate
-            ];
-            $options['order'] = [
-                $model->aliasField('order'),
-                $model->aliasField('id')
-            ];
-        }
+    public function beforePaginate(Event $event, Table $model, array $options) {
+        $options['conditions'][] = [
+            $model->aliasField('survey_template_id') => $this->selectedTemplate
+        ];
+        $options['order'] = [
+            $model->aliasField('order'),
+            $model->aliasField('id')
+        ];
+
         return $options;
     }
 }

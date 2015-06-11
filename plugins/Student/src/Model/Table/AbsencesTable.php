@@ -8,6 +8,10 @@ class AbsencesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_student_absences');
 		parent::initialize($config);
+
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'security_user_id']);
+		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('StudentAbsenceReasons', ['className' => 'FieldOption.StudentAbsenceReasons']);
 	}
 }
 
