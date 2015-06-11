@@ -92,7 +92,21 @@ html {
 #canvas-holder,
 .rtl .required label, 
 .rtl .required input,
-.rtl .form-horizontal label {
+.rtl .form-horizontal label,
+.rtl .form-horizontal .input-group,
+.rtl .col-md-1, 
+.rtl .col-md-10, 
+.rtl .col-md-11, 
+.rtl .col-md-12, 
+.rtl .col-md-2, 
+.rtl .col-md-3, 
+.rtl .col-md-4, 
+.rtl .col-md-5, 
+.rtl .col-md-6, 
+.rtl .col-md-7, 
+.rtl .col-md-8, 
+.rtl .col-md-9,
+.rtl .form-label  {
     float: right;
 }
 
@@ -345,7 +359,7 @@ html {
 .rtl .btn-reset, 
 .rtl .btn-reset:hover {
     margin-left: 0 !important;
-    margin-right: -32px !important;
+    margin-right: -34px !important;
 }
 
 /* TABS */
@@ -419,6 +433,10 @@ html {
     margin-right: 10px;
 }
 
+.rtl .form-label {
+    text-align: left;
+}
+
 .rtl .form-buttons {
     margin-left: 0;
     margin-right: 26.5%;
@@ -428,6 +446,50 @@ html {
 .rtl .form-buttons button {
     margin-left: 10px;
 }
+
+.rtl .file .form-control {
+    -webkit-border-bottom-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+    -webkit-border-top-left-radius: 0 !important;
+            border-top-left-radius: 0 !important;
+    -webkit-border-top-right-radius: 3px !important;
+            border-top-right-radius: 3px !important;
+    -webkit-border-bottom-right-radius: 3px !important;
+            border-bottom-right-radius: 3px !important;
+}
+
+.rtl .input-group-addon {
+    -webkit-border-bottom-left-radius: 3px !important;
+            border-bottom-left-radius: 3px !important;
+    -webkit-border-top-left-radius: 3px !important;
+            border-top-left-radius: 3px !important;
+    -webkit-border-top-right-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+}
+
+.rtl .fileinput-filename {
+    padding: 0 25px 0 0;
+}
+
+.rtl .btn-file-cancel {
+    -webkit-border-radius: 0 !important;
+            border-radius: 0 !important;
+    border-left: 0 !important;
+}
+
+.rtl .input-group .form-control:not(:first-child):not(:last-child), 
+.rtl .input-group-addon:not(:first-child):not(:last-child), 
+.rtl .input-group-btn:not(:first-child):not(:last-child) {
+    -webkit-border-radius: 0;
+            border-radius: 0;
+}
+
+.rtl .toolbar-wrapper .select:after {
+    right: 0;
+    top: 0;
+}   
 
 /* FOOTER */
 

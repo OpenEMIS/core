@@ -129,7 +129,11 @@ class ControllerActionComponent extends Component {
 							$query = $event->result;
 						}
 
-						$this->model->fields[$key]['options'] = $query->toArray();
+						if (is_object($query)) {
+							$this->model->fields[$key]['options'] = $query->toArray();
+						} else {
+							$this->model->fields[$key]['options'] = $query;
+						}
 					}
 				}
 				if (array_key_exists('onChangeReload', $attr)) {

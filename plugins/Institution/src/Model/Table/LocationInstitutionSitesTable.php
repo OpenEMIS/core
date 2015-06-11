@@ -6,9 +6,10 @@ use Cake\Validation\Validator;
 
 class LocationInstitutionSitesTable extends AppTable {
 	public function initialize(array $config) {
-        $this->addBehavior('ControllerAction.FieldOption');
+        // $this->addBehavior('ControllerAction.FieldOption');
+		$this->table('institution_sites');
         parent::initialize($config);
 				
-		// $this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
+		$this->hasMany('InstitutionSiteShifts', ['className' => 'Institution.InstitutionSiteShifts']);
 	}
 }
