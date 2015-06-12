@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 class EducationLevelsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->belongsTo('EducationLevelIsced', ['className' => 'Education.EducationLevelIsced']);
 		$this->belongsTo('EducationSystems', ['className' => 'Education.EducationSystems']);
 		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles']);
 	}
