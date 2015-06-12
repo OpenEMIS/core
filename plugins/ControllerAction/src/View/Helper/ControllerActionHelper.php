@@ -177,7 +177,9 @@ class ControllerActionHelper extends Helper {
 			}
 
 			if (array_key_exists('options', $attr)) {
-				$value = $attr['options'][$value];
+				if (isset($attr['options'][$value])) {
+					$value = $attr['options'][$value];	
+				}
 			}
 
 			if ($this->endsWith($field, '_id')) {
