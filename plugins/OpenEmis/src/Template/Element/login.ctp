@@ -40,10 +40,10 @@ $description = __d('open_emis', $_productName);
 				</span>
 			</div>
 			<?php 
-			//echo $this->element('OpenEmis.alert');
+			echo $this->element('OpenEmis.alert');
 
 			echo $this->Form->create('Users', [
-				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index'],
+				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
 				'class' => 'form-horizontal'
 			]);
 			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false]);

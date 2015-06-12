@@ -35,6 +35,15 @@ class ControllerActionHelper extends Helper {
 		]
 	];
 
+	public function getColumnLetter($columnNumber) {
+        if ($columnNumber > 26) {
+            $columnLetter = Chr(intval(($columnNumber - 1) / 26) + 64) . Chr((($columnNumber - 1) % 26) + 65);
+        } else {
+            $columnLetter = Chr($columnNumber + 64);
+        }
+        return $columnLetter;
+    }
+
 	public function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
@@ -174,6 +183,12 @@ class ControllerActionHelper extends Helper {
 			// attach event for index columns
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
+			}
+
+			if (array_key_exists('options', $attr)) {
+				if (isset($attr['options'][$value])) {
+					$value = $attr['options'][$value];	
+				}
 			}
 
 			if ($this->endsWith($field, '_id')) {
