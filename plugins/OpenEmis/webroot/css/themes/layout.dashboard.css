@@ -5,7 +5,6 @@
 }
 
  /* PRODUCT COLOR */
-.btn-default,
 .login-box .btn-login,
 .navbar,
 .login-box .title {
@@ -28,6 +27,7 @@
 	border: 1px solid #990000;
 }
 
+.btn-default,
 .pagination > .active > a:focus,
 .pagination > li > a:hover {
 	background-color: #990000 !important;
@@ -61,11 +61,11 @@
 	border: 1px solid #6B0000 !important;
 }
 
-.header-navigation .btn-group .btn:hover,
-.btn-default:hover {
+.header-navigation .btn-group .btn:hover {
 	background-color: #6B0000;
 }
 
+.btn-default:hover,
 .btn-outline:hover, 
 .btn-outline:active, 
 .btn-outline:focus,
@@ -85,7 +85,10 @@
 .datepicker table tr td.active, 
 .datepicker table tr td.active:hover, 
 .datepicker table tr td.active.disabled, 
-.datepicker table tr td.active.disabled:hover {
+.datepicker table tr td.active.disabled:hover,
+.mce-menu-item:hover, 
+.mce-menu-item.mce-selected, 
+.mce-menu-item:focus {
 	background-color: #6B0000 !important;
 	color: #FFF !important;
 }
@@ -208,7 +211,7 @@
 
 /* SERIES TAB */
 
-.x-axis:before {
+.y-axis:before {
 	font-family: "kordit-fonts";
 	content: "\e628";
 	font-size: 20px;
@@ -218,11 +221,11 @@
 	left: 11px;
 }
 
-.chrome .x-axis:before {
+.chrome .y-axis:before {
 	top: 3px !important;
 }
 
-.y-axis:before {
+.x-axis:before {
 	font-family: "kordit-fonts";
 	content: "\e629";
 	font-size: 20px;
@@ -232,7 +235,7 @@
 	left: 12px;
 }
 
-.chrome .y-axis:before {
+.chrome .x-axis:before {
 	left: 11px;
 }
 
@@ -261,7 +264,7 @@
 	background-color: #fff;
 }
 
-.dragdrop-wrapper i {
+.dragdrop-wrapper > i {
 	position: absolute; 
 	top : 5px; 
 	right: 5px; 
@@ -380,5 +383,75 @@
 .chart-lists i {
 	font-size: 12px !important;
 	vertical-align: initial;
-	padding-right: 3px;
+	padding: 0px 5px 5px 0;
+}
+
+.text-editor {
+	width: 395px;
+}
+
+.text-editor .mce-tinymce i {
+	color: #333;
+	text-shadow: none;
+}
+
+.text-editor .mce-tinymce {
+	margin-bottom: 10px;
+	border: 1px solid #CCC;
+}
+
+.text-editor .mce-panel {
+	background-image: none;
+	border-color: #CCC;
+	-webkit-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+.text-editor .mce-panel button {
+	padding: 0 1px 0 6px;
+	border-left: 1px solid #CCC;
+}
+
+.text-editor .mce-panel button i {
+	padding: 0;
+}
+
+.text-editor .mce-btn-group {
+	border: 0;
+}
+
+.text-editor .mce-menubtn span {
+	font-size: 12px;
+}
+
+.text-editor .mce-btn .mce-caret {
+	margin-left: -4px;
+	margin-bottom: 2px;
+}
+
+.mce-btn-group .mce-first {
+	border-left: 0 !important;
+}
+
+.mce-widget,
+.mce-reset {
+	background-color: #EEE !important;	
+}
+
+.mce-menu-item:hover, 
+.mce-menu-item.mce-selected, 
+.mce-menu-item:focus {
+	background-image: none !important;
+}
+
+.mce-path-item {
+	font-size: 12px !important;
+}
+
+.mce-tooltip-ne {
+	background: #000 !important;
+}
+
+.mce-container-body span {
+	font-size: 12px;
 }
