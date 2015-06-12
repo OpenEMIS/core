@@ -43,24 +43,18 @@ $description = __d('open_emis', $_productName);
 			echo $this->element('OpenEmis.alert');
 
 			echo $this->Form->create('Users', [
-				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
+				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'updatePassword'],
 				'class' => 'form-horizontal'
 			]);
-			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false]);
-			echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false]);
-
-			if (isset($showLanguage) && $showLanguage) {
-				echo $this->Form->input('System.language', [
-					'label' => false,
-					'options' => $languageOptions, 
-					'value' => $htmlLang, 
-					'onchange' => "$('#reload').click()"
-				]);
-			}
+			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
+			echo $this->Form->input('password', ['placeholder' => __('Current Password'), 'label' => false]);
+			echo $this->Form->input('new_password', ['type' => 'password', 'placeholder' => __('New Password'), 'label' => false]);
+			echo $this->Form->input('retype_password', ['type' => 'password', 'placeholder' => __('Retype Password'), 'label' => false]);
 			?>
 
 			<div class="form-group">
-				<?= $this->Form->button(__('Login'), ['type' => 'submit', 'name' => 'submit', 'value' => 'login', 'class' => 'btn btn-primary btn-login']) ?>
+				<?= $this->Form->button(__('Update'), ['type' => 'submit', 'name' => 'submit', 'value' => 'update', 'class' => 'btn btn-primary btn-login']) ?>
+				<?= $this->Html->link(__('Cancel'), ['action' => 'login'], ['class' => 'btn btn-primary btn-cancel']) ?>
 				<button class="hidden" value="reload" name="submit" type="submit" id="reload">reload</button>
 			</div>
 			<?= $this->Form->end() ?>

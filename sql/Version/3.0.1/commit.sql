@@ -514,3 +514,6 @@ DROP TABLE staff_bank_accounts;
 -- Shifted default country data from config items to country table
 ALTER TABLE `countries` ADD `default` INT(1) NOT NULL DEFAULT '0' AFTER `visible`;
 
+-- June 12 0926hrs
+ALTER TABLE `security_users` CHANGE `password` `password` CHAR( 60 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+
