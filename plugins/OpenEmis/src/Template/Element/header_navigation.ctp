@@ -1,9 +1,9 @@
-<?php 
-// $firstName = AuthComponent::user('first_name');
-// $lastName = AuthComponent::user('last_name');
-$firstName = '';
-$lastName = '';
-$userId = 1;
+<?php
+$session = $this->request->session();
+$firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : '';
+$lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : '';
+$userId = $session->check('Auth.User.id') ? $session->read('Auth.User.id') : '';
+$homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
 
 $dropdown = [
 	'About' => [
@@ -16,22 +16,20 @@ $dropdown = [
 	],
 	'_divider',
 	'Logout' => [
-		'url' => ['plugin' => false, 'controller' => 'Users', 'action' => 'logout'],
+		'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
 		'icon' => 'fa-power-off'
 	]
 ];
-
-$home = ['plugin' => false, 'controller' => 'Users', 'action' => 'index'];
 ?>
 
 <div class="header-navigation">
 	<div class="username">
-		<span><?php echo sprintf('%s %s', $firstName, $lastName) ?>System Administrator</span>
+		<span><?php echo sprintf('%s %s', $firstName, $lastName) ?></span>
 		<a class="btn" data-toggle="tooltip" data-placement="bottom" title="User Role: Principal"><i class="kd-role"></i></a>
 	</div>
 
 	<div class="btn-group">
-        <a class="btn" href="<?php echo $this->Url->build($home) ?>">
+        <a class="btn" href="<?php echo $this->Url->build($homeUrl) ?>">
             <i class="fa fa-home"></i>
         </a>
     </div>
@@ -65,5 +63,3 @@ $home = ['plugin' => false, 'controller' => 'Users', 'action' => 'index'];
 		</ul>
 	</div>
 </div>
-
-
