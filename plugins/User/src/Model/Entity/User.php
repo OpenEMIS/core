@@ -2,10 +2,14 @@
 namespace User\Model\Entity;
 
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
+use Cake\Auth\DefaultPasswordHasher;
 
 class User extends Entity {
     protected $_virtual = ['name', 'name_with_id'];
+
+    protected function _setPassword($password) {
+        return (new DefaultPasswordHasher)->hash($password);
+    }
 
     protected function getNameDefaults() {
         /* To create option field for Administration to set these default values for system wide use */

@@ -50,6 +50,15 @@ class AppController extends Controller {
 		parent::initialize();
 		$this->loadComponent('Flash');
 		$this->loadComponent('Auth', [
+			'authenticate' => [
+				'Form' => [
+					'userModel' => 'User.Users',
+					'passwordHasher' => [
+						'className' => 'Fallback',
+						'hashers' => ['Default', 'Legacy']
+					]
+				]
+			],
 			'loginRedirect' => [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
