@@ -3,6 +3,7 @@ namespace Student\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class ExtracurricularsTable extends AppTable {
 	public function initialize(array $config) {
@@ -13,11 +14,21 @@ class ExtracurricularsTable extends AppTable {
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
+	public function indexBeforeAction(Event $event) {
+		$this->fields['end_date']['visible'] = false;
+		$this->fields['hours']['visible'] = false;
+		$this->fields['points']['visible'] = false;
+		$this->fields['location']['visible'] = false;
+		$this->fields['comment']['visible'] = false;
+
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
+		$this->ControllerAction->setFieldOrder('start_date', $order++);
+		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
+		$this->ControllerAction->setFieldOrder('name', $order++);
 	}
 
-	public function beforeAction() {
-		
+	public function validationDefault(Validator $validator) {
+		return $validator;
 	}
 }

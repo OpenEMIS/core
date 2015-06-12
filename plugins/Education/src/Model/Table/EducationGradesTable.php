@@ -8,6 +8,8 @@ class EducationGradesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 
-		// $this->hasMany('Sections', ['className' => 'Institution.Sections']);
+		// todo:mlee need to put in this association when it is created
+		// $this->hasMany('EducationGradeSubject', ['className' => 'Education.EducationGradeSubject']);
+
 	}
 }

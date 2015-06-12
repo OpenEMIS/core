@@ -7,6 +7,7 @@ class AcademicPeriodsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('AcademicPeriodLevels', ['className' => 'AcademicPeriod.AcademicPeriodLevels']);
+		$this->belongsTo('Parent', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'parent_id']);
 		
 		// $this->hasMany('Shifts', ['className' => 'Institution.Shifts']);
 		// $this->hasMany('Sections', ['className' => 'Institution.Sections']);

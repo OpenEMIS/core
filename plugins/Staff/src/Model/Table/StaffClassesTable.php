@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class ClassesTable extends AppTable {
+class StaffClassesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_class_staff');
 		parent::initialize($config);

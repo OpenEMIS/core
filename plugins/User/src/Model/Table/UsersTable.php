@@ -42,8 +42,6 @@ class UsersTable extends AppTable {
 		}
 	}
 
-
-
 	public function addBeforeAction(Event $event) {
 		if ($this->Session->check('Institutions.id')) {
 			$institutionId = $this->Session->read('Institutions.id');

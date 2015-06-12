@@ -3,6 +3,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class UserSpecialNeedsTable extends AppTable {
 	public function initialize(array $config) {
@@ -16,18 +17,19 @@ class UserSpecialNeedsTable extends AppTable {
 		$this->fields['special_need_type_id']['type'] = 'select';
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['ControllerAction.afterAction'] = 'afterAction';
-		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		// $events['ControllerAction.beforeView'] = 'beforeView';
-		return $events;
+	public function indexBeforeAction(Event $event) {
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('special_need_date', $order++);
+		$this->ControllerAction->setFieldOrder('special_need_type_id', $order++);
+		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->allowEmpty('special_need_date')
+		;
 	}
 
 }

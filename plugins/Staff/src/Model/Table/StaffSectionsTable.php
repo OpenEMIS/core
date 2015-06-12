@@ -3,8 +3,9 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
-class SectionsTable extends AppTable {
+class StaffSectionsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_sections');
 		parent::initialize($config);
