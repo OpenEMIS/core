@@ -84,6 +84,10 @@ class AppController extends Controller {
 		
 		$theme = 'OpenEmis.themes/layout.core';
 
+		$session = $this->request->session();
+		if (!$session->check('System.home')) {
+			$session->write('System.home', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+		}
 		$this->set('theme', $theme);
 		$this->set('SystemVersion', $this->getCodeVersion());
 		$this->set('_productName', $this->_productName);
