@@ -214,6 +214,9 @@ class Marshaller
      */
     protected function _marshalAssociation($assoc, $value, $options)
     {
+        if (!is_array($value)) {
+            return;
+        }
         $targetTable = $assoc->target();
         $marshaller = $targetTable->marshaller();
         $types = [Association::ONE_TO_ONE, Association::MANY_TO_ONE];
@@ -282,28 +285,54 @@ class Marshaller
 
         $primaryKey = array_flip($assoc->target()->schema()->primaryKey());
         $records = [];
+        $conditions = [];
+        $primaryCount = count($primaryKey);
 
-        foreach ($data as $row) {
+        foreach ($data as $i => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             if (array_intersect_key($primaryKey, $row) === $primaryKey) {
-                if (!isset($query)) {
-                    $primaryCount = count($primaryKey);
-                    $query = $assoc->find();
-                }
                 $keys = array_intersect_key($row, $primaryKey);
                 if (count($keys) === $primaryCount) {
-                    $query->orWhere($keys);
+                    $conditions[] = $keys;
                 }
             } else {
-                $records[] = $this->one($row, $options);
+                $records[$i] = $this->one($row, $options);
             }
         }
 
-        if (isset($query)) {
-            $records = array_merge($records, $query->toArray());
+        if (!empty($conditions)) {
+            $query = $assoc->target()->find();
+            $query->andWhere(function ($exp) use ($conditions) {
+                return $exp->or_($conditions);
+            });
         }
 
-        $joint = $assoc->junction();
-        $jointMarshaller = $joint->marshaller();
+        if (isset($query)) {
+            $keyFields = array_keys($primaryKey);
+
+            $existing = [];
+            foreach ($query as $row) {
+                $k = implode(';', $row->extract($keyFields));
+                $existing[$k] = $row;
+            }
+
+            foreach ($data as $i => $row) {
+                $key = [];
+                foreach ($keyFields as $k) {
+                    if (isset($row[$k])) {
+                        $key[] = $row[$k];
+                    }
+                }
+                $key = implode(';', $key);
+                if (isset($existing[$key])) {
+                    $records[$i] = $existing[$key];
+                }
+            }
+        }
+
+        $jointMarshaller = $assoc->junction()->marshaller();
 
         $nested = [];
         if (isset($associated['_joinData'])) {

@@ -703,6 +703,16 @@ textarea {
 	margin-top: 0;
 }
 
+.toolbar .search .btn:focus {
+	outline: 0;
+}
+
+/* OVERRIDE FROM BOOTSTRAP HOVER STATE */
+.input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle) {
+	-webkit-border-radius: 3px !important;
+	        border-radius: 3px !important;
+}
+
 .btn-default {
 	background-color: #999;
 	color: #FFF;
@@ -772,15 +782,12 @@ textarea {
 
 /* buttons, toolbar and page-header alignments in safari */
 .safari .page-header {
-	padding: 13px 15px 8px;
 	margin-left: -1px;
 }
 
 .safari .toolbar {
 	top: 48px;
-	height: 47px;
 	margin-left: -1px;
-	padding: 13px 15px;
 }
 
 /* PANEL BODY */
@@ -1139,6 +1146,7 @@ table tr.sorting-row td {background-color: #8b8;}
 .chrome .search {
 	width: 276px;
 	margin-top: 0;
+	display: -webkit-box;	
 }
 
 .search input {
@@ -1657,6 +1665,10 @@ a.thumbnail:hover {
 	padding: 0 15px 0 4px;
 }
 
+.safari .display-limit select {
+	padding: 1px 15px 0 5px;
+}
+
 .display-limit .select:after {
 	position: absolute;
 	font-size: 10px;
@@ -1665,12 +1677,12 @@ a.thumbnail:hover {
 }
 
 .chrome .display-limit .select:after {
-	margin-left: -55px;
-}
-
-.chrome .display-limit .select:after {
 	margin-left: -57px;
 	margin-top: 0;
+}
+
+.safari .display-limit .select:after {
+	margin-left: -60px;
 }
 
 .pagination li a:hover,
@@ -1768,6 +1780,12 @@ footer {
 .login .title h1 {
 	display: inline-block;
 	color: #FFF;
+}
+
+.login-box .alert {
+	padding: 12px 8px;
+	-webkit-border-radius: 0;
+	        border-radius: 0;
 }
 
 .login-box i {
@@ -2020,8 +2038,10 @@ footer {
 	/* FORM */
 	
 	.select:after {
-		margin-left: -30px;
-		margin-top: 35px;
+		margin-left: -20px;
+		margin-top: 1px;
+		background-color: #FFF;
+		padding: 5px;
 	}
 	
 	.form-horizontal label {
@@ -2069,6 +2089,11 @@ footer {
 		margin: 0;
 		padding: 0;
 		width: 138px;
+	}
+
+	.advanced-search-wrapper .input {
+		width: 40%;
+		margin-right: 20px;
 	}
 
 	.footer-buttons .btn {
