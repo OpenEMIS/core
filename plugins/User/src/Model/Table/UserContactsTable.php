@@ -16,6 +16,17 @@ class UserContactsTable extends AppTable {
 		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
 	}
 
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->addField('description', []);
+
+		$this->fields['contact_type_id']['visible'] = 'false';
+
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('description', $order++);
+		$this->ControllerAction->setFieldOrder('value', $order++);
+		$this->ControllerAction->setFieldOrder('preferred', $order++);
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		$contactOptions = TableRegistry::get('User.ContactOptions')
 			->find('list')

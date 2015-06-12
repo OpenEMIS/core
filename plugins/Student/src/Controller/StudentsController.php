@@ -44,7 +44,7 @@ class StudentsController extends AppController {
 
 		if (array_key_exists('security_user_id', $model->fields)) {
 			if (!$session->check('Student.security_user_id')) {
-				$this->Message->alert('general.notExists');
+				$this->Alert->warning('general.notExists');
 			}
 			$model->fields['security_user_id']['type'] = 'hidden';
 			$model->fields['security_user_id']['value'] = $session->read('Student.security_user_id');
@@ -52,14 +52,6 @@ class StudentsController extends AppController {
 		
 		$this->set('contentHeader', $header);
 	}
-
-	
-
-		// if (is_null($id)) {
-		// 	$id = $this->ControllerAction->Session->read('Student.security_user_id');
-		// } else {
-		// 	$this->ControllerAction->Session->write('Student.security_user_id', $id);
-		// }
 
 
 	public function beforePaginate($event, $model, $options) {
@@ -73,7 +65,7 @@ class StudentsController extends AppController {
 					}
 					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
 				} else {
-					$this->ControllerAction->Message->alert('general.noData');
+					$this->Alert->warning('general.noData');
 					$this->redirect(['action' => 'index']);
 					return false;
 				}

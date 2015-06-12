@@ -25,16 +25,6 @@ class UserLanguagesTable extends AppTable {
 		$this->fields['writing']['options'] = $gradeOptions;
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['ControllerAction.afterAction'] = 'afterAction';
-		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		// $events['ControllerAction.beforeView'] = 'beforeView';
-		return $events;
-	}
-
 	public function getGradeOptions() {
 		$gradeOptions = array();
 		for ($i = 0; $i < 6; $i++) {
@@ -44,7 +34,22 @@ class UserLanguagesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->add('listening', 'ruleRange', [
+				'rule' => ['range', -1, 6]
+			])
+			->add('speaking', 'ruleRange', [
+				'rule' => ['range', -1, 6]
+			])
+			->add('reading', 'ruleRange', [
+				'rule' => ['range', -1, 6]
+			])
+			->add('writing', 'ruleRange', [
+				'rule' => ['range', -1, 6]
+			])
+		;
 	}
 
 }

@@ -22,8 +22,8 @@ class StaffController extends AppController {
 			'Attachments' => ['className' => 'User.UserAttachments'],
 			'Qualifications' => ['className' => 'Staff.Qualifications'],
 			'Positions' => ['className' => 'Staff.Positions'],
-			'Sections' => ['className' => 'Staff.Sections'],
-			'Classes' => ['className' => 'Staff.Classes'],
+			'Sections' => ['className' => 'Staff.StaffSections'],
+			'Classes' => ['className' => 'Staff.StaffClasses'],
 			'Absences' => ['className' => 'Staff.Absences'],
 			'Leaves' => ['className' => 'Staff.Leaves'],
 			'Behaviours' => ['className' => 'Staff.StaffBehaviours'],
@@ -54,7 +54,8 @@ class StaffController extends AppController {
 
 		if (array_key_exists('security_user_id', $model->fields)) {
 			if (!$session->check('Staff.security_user_id')) {
-				$this->Message->alert('general.notExists');
+				$this->Alert->warning('general.notExists');
+				$this->redirect(['action' => 'index']);
 			}
 			$model->fields['security_user_id']['type'] = 'hidden';
 			$model->fields['security_user_id']['value'] = $session->read('Staff.security_user_id');
@@ -74,7 +75,7 @@ class StaffController extends AppController {
 					}
 					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
 				} else {
-					$this->ControllerAction->Message->alert('general.noData');
+					$this->Alert->warning('general.noData');
 					$this->redirect(['action' => 'index']);
 					return false;
 				}

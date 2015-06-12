@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class QualificationsTable extends AppTable {
 	public function initialize(array $config) {
@@ -12,25 +13,56 @@ class QualificationsTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
 		$this->belongsTo('QualificationInstitutions', ['className' => 'FieldOption.QualificationInstitutions']);
-		$this->belongsTo('QualificationSpecialisation', ['className' => 'FieldOption.QualificationSpecialisation']);
+		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);
 	}
 
-	public function beforeAction($event) {
-		// $this->fields['special_need_type_id']['type'] = 'select';
+	public function beforeAction() {
+		$this->fields['qualification_level_id']['type'] = 'select';
+		$this->fields['qualification_specialisation_id']['type'] = 'select';
+		$this->fields['qualification_institution_id']['type'] = 'select';
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['ControllerAction.afterAction'] = 'afterAction';
-		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		// $events['ControllerAction.beforeView'] = 'beforeView';
-		return $events;
+	public function indexBeforeAction(Event $event) {
+		$this->fields['qualification_specialisation_id']['visible'] = false;
+		$this->fields['qualification_institution_country']['visible'] = false;
+		$this->fields['file_name']['visible'] = false;
+		$this->fields['file_content']['visible'] = false;
+		$this->fields['gpa']['visible'] = false;
+
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('graduate_year', $order++);
+		$this->ControllerAction->setFieldOrder('qualification_level_id', $order++);
+		$this->ControllerAction->setFieldOrder('qualification_title', $order++);
+		$this->ControllerAction->setFieldOrder('document_no', $order++);
+		$this->ControllerAction->setFieldOrder('qualification_institution_id', $order++);
+	}
+
+	public function addEditBeforeAction(Event $event) {
+		$this->fields['file_name']['visible'] = false;
+		$this->fields['graduate_year']['type'] = 'string';
+
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('qualification_level_id', $order++);
+		// todo:mlee - need to handle auto complete
+		$this->ControllerAction->setFieldOrder('qualification_institution_id', $order++);
+		$this->ControllerAction->setFieldOrder('qualification_institution_country', $order++);
+		$this->ControllerAction->setFieldOrder('qualification_title', $order++);
+		$this->ControllerAction->setFieldOrder('qualification_specialisation_id', $order++);
+		$this->ControllerAction->setFieldOrder('graduate_year', $order++);
+		$this->ControllerAction->setFieldOrder('document_no', $order++);
+		$this->ControllerAction->setFieldOrder('gpa', $order++);
+		$this->ControllerAction->setFieldOrder('file_name', $order++);
+		$this->ControllerAction->setFieldOrder('file_content', $order++);
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->add('graduate_year', 'ruleNumeric', 
+				['rule' => 'numeric']
+			)
+		;
 	}
 
 }

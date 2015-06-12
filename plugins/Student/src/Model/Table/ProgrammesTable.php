@@ -3,6 +3,7 @@ namespace Student\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class ProgrammesTable extends AppTable {
 	public function initialize(array $config) {
@@ -15,33 +16,15 @@ class ProgrammesTable extends AppTable {
 		$this->belongsTo('InstitutionSite', ['className' => 'Institution.InstitutionSites']);
 	}
 
-	// public function index() {
-		// todo-mlee sort out dynamic fields
-		// $this->controller->set('indexElements', []);
-		// $this->controller->set('modal', []);
-		// $id = $this->ControllerAction->Session->read('Student.security_user_id');
-		// $institutionSiteId = $this->Session->read('InstitutionSite.id');
-		// $conditions = array($this->alias().".student_id" => $id);
+	public function indexBeforeAction(Event $event) {
+		$this->fields['start_year']['visible'] = 'false';
+		$this->fields['end_year']['visible'] = 'false';
 
-		// if (!is_null($institutionSiteId)) {
-		// 	$conditions[$this->alias().".institution_site_id"] = $institutionSiteId;
-		// }
-
-
-		// $conditions = [];
-		// $conditions[$this->aliasField('security_user_id')] = $id;
-		// $query = $this->find()->hydrate(false)
-		// 			->contain(['StudentStatus', 'InstitutionSite', 'EducationProgramme'])
-		// 			->where($conditions)
-		// 			->toArray();
-
-		// if(empty($query)){
-		// 	$this->Message->alert('general.noData');
-		// }
-
-		// $this->controller->set('data', $query);
-		// $this->ControllerAction->autoRender = false;
-		// $this->controller->render('Programmes/index');
-	// }
-
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('institution_site_id', $order++);
+		$this->ControllerAction->setFieldOrder('education_programme_id', $order++);
+		$this->ControllerAction->setFieldOrder('start_date', $order++);
+		$this->ControllerAction->setFieldOrder('end_date', $order++);
+		$this->ControllerAction->setFieldOrder('student_status_id', $order++);
+	}
 }
