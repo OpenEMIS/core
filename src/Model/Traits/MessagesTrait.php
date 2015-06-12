@@ -31,8 +31,7 @@ trait MessagesTrait {
 		],
 		'security' => [
 			'login' => [
-				'fail' => 'You have entered an invalid username or password.',
-				'updatePassword' => 'Please update your password.'
+				'fail' => 'You have entered an invalid username or password.'
 			]
 		]
 	];

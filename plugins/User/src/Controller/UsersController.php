@@ -1,6 +1,7 @@
 <?php
 namespace User\Controller;
 use Cake\Event\Event;
+use DateTime;
 
 class UsersController extends AppController {
 	public function initialize() {
@@ -18,43 +19,15 @@ class UsersController extends AppController {
 		// $this->SecurityUsers->fields['privileges']['type'] = 'select';
 		// $this->SecurityUsers->fields['privileges']['options'] = ['User', 'Super User'];
 		// $this->set('contentHeader', 'Users');
-		// $this->Message->alert('general.add.success');
 		//pr($this->request->params);die;
 
-		$this->Auth->allow(['add', 'logout', 'postLogin', 'updatePassword']);
-		//$this->log($this->request->method(), 'debug');
+		$this->Auth->allow(['add', 'logout', 'postLogin']);
 	}
 
 	public function login() {
-		//return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action'=> 'index']);
 		$this->layout = false;
 		$username = '';
-		$password = '';//pr($this->request->method());
-
-		if ($this->request->is('post') /*&& $this->request->data['submit'] == 'login'*/) {
-			pr($this->request->data);die;
-			return $this->redirect(['controller' => 'Institutions', 'action'=> 'index']);
-			/*
-			$username = $this->data['User']['username'];
-			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
-			if(!$this->RequestHandler->isAjax()) {
-				$result = $this->Auth->login();
-
-				if($result) {
-					$this->log('[' . $username . '] Login successfully.', 'security');
-					$userId = $this->Auth->user('id');
-					
-					//Redirect to the respective page
-					return $this->redirect(array('controller' => 'Users', 'action'=> 'index'));
-				} else {
-					$this->Message->alert('security.login.fail', array('type' => 'error'));
-				}
-			}
-			else {
-				// ajax login implement here, if necessary
-			}
-			*/
-		}
+		$password = '';
 		
 		if ($this->request->is('post') && $this->request->data['submit'] == 'reload') {
 			//$username = $this->request->data['User']['username'];
@@ -68,7 +41,9 @@ class UsersController extends AppController {
 	public function postLogin() {
 		$this->autoRender = false;
 		
-		if ($this->request->is('post')) {
+		if ($this->request->is('post') && $this->request->data['submit'] == 'login') {
+			$username = $this->request->data('username');
+			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
 			$user = $this->Auth->identify();
 			if ($user) {
 				$this->Auth->setUser($user);
@@ -78,18 +53,30 @@ class UsersController extends AppController {
 					$this->Users->save($user);
 				}
 				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-				//return $this->redirect($this->Auth->redirectUrl());
 			} else {
 				$this->Alert->error('security.login.fail');
 				return $this->redirect(['action' => 'login']);
 			}
+		} else {
+			return $this->redirect($this->Auth->logout());
 		}
 	}
 
 	public function logout() {
-		//$this->Auth->logout();
-		//$this->Session->destroy();
-		$action = ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'];
-		return $this->redirect($action);
+		$this->request->session()->destroy();
+		return $this->redirect($this->Auth->logout());
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Auth.afterIdentify'] = 'afterIdentify';
+		return $events;
+	}
+
+	public function afterIdentify(Event $event, $user) {
+		$user = $this->Users->get($user['id']);
+		$user->last_login = new DateTime();
+		$this->Users->save($user);
+		$this->log('[' . $user->username . '] Login successfully.', 'debug');
 	}
 }

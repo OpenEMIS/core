@@ -49,6 +49,12 @@ class AppController extends Controller {
 	public function initialize() {
 		parent::initialize();
 		$this->loadComponent('Flash');
+
+		// ControllerActionComponent must be loaded before AuthComponent for it to work
+		$this->loadComponent('ControllerAction.ControllerAction', [
+			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
+		]);
+		
 		$this->loadComponent('Auth', [
 			'authenticate' => [
 				'Form' => [
@@ -58,11 +64,6 @@ class AppController extends Controller {
 						'hashers' => ['Default', 'Legacy']
 					]
 				]
-			],
-			'loginRedirect' => [
-				'plugin' => 'Institution',
-				'controller' => 'Institutions',
-				'action' => 'index'
 			],
 			'logoutRedirect' => [
 				'plugin' => 'User',
@@ -75,9 +76,6 @@ class AppController extends Controller {
 		$this->loadComponent('Navigation');
 		$this->loadComponent('Localization.Localization');
 		$this->loadComponent('ControllerAction.Alert');
-		$this->loadComponent('ControllerAction.ControllerAction', [
-			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
-		]);
 	}
 
 	public function beforeFilter(Event $event) {
