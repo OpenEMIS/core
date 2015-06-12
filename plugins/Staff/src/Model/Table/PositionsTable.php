@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class PositionsTable extends AppTable {
 	public function initialize(array $config) {
@@ -14,5 +15,19 @@ class PositionsTable extends AppTable {
 		$this->belongsTo('StaffStatuses', ['className' => 'FieldOption.StaffStatuses']);
 		$this->belongsTo('InstitutionSitePositions', ['className' => 'Institution.InstitutionSitePositions']);
 		$this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$this->fields['start_year']['visible'] = false;
+		$this->fields['end_year']['visible'] = false;
+		$this->fields['FTE']['visible'] = false;
+		$this->fields['staff_type_id']['visible'] = false;
+
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('institution_site_id', $order++);
+		$this->ControllerAction->setFieldOrder('institution_site_position_id', $order++);
+		$this->ControllerAction->setFieldOrder('start_date', $order++);
+		$this->ControllerAction->setFieldOrder('end_date', $order++);
+		$this->ControllerAction->setFieldOrder('staff_status_id', $order++);
 	}
 }

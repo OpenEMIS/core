@@ -3,99 +3,36 @@ namespace Student\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class StudentSectionsTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_site_section_students');
 		parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
 
-		$this->hasMany('Institution.InstitutionSiteSectionGrade');
+		$this->hasMany('InstitutionSiteSectionGrade', ['className' => 'Institution.InstitutionSiteSectionGrade']);
 	}
 
-	public function index() {
-		$this->controller->set('indexElements', []);
-		$this->controller->set('modal', []);
+	public function indexBeforeAction(Event $event) {
+		$this->fields['education_grade_id']['visible'] = false;
+		$this->fields['student_category_id']['visible'] = false;
+		$this->fields['status']['visible'] = false;
 
-		$alias = $this->alias();
-		$securityUserID = $this->Session->read('Student.security_user_id');
+		$this->ControllerAction->addField('academic_period', []);
+		$this->ControllerAction->addField('institution', []);
+		$this->ControllerAction->addField('education_grade', []);
+		$this->ControllerAction->addField('homeroom_teacher_name', []);
 
-		$joins = [
-				[
-					'table' => 'institution_site_sections',
-					'alias' => 'InstitutionSiteSection',
-					'conditions' => [
-						"InstitutionSiteSection.id = ".$this->aliasField('institution_site_section_id')
-					]
-				],
-				[
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => [
-						"InstitutionSite.id = InstitutionSiteSection.institution_site_id"
-					]
-				],
-				[
-					'table' => 'academic_periods',
-					'alias' => 'AcademicPeriod',
-					'conditions' => [
-						"AcademicPeriod.id = InstitutionSiteSection.academic_period_id",
-						"AcademicPeriod.visible = 1"
-					]
-				],
-				[
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'type' => 'LEFT',
-					'conditions' => [
-						"EducationGrade.id = InstitutionSiteSection.education_grade_id"
-					]
-				],
-				[
-					'table' => 'security_users',
-					'alias' => 'SecurityUser',
-					'conditions' => [
-						"SecurityUser.id = InstitutionSiteSection.security_user_id"
-					]
-				]
-			];
-		// $fields = [
-			// 	"$this->alias.*", 'AcademicPeriod.name', 'InstitutionSite.name',
-			// 	'InstitutionSiteSection.name', 'EducationGrade.id', 'EducationGrade.name',
-			// 	'Staff.*', 'SecurityUser.first_name', 'SecurityUser.middle_name', 'SecurityUser.third_name', 'SecurityUser.last_name', 'SecurityUser.preferred_name'
-			// ];
-
-		$conditions = [
-				$this->aliasField('security_user_id') => $securityUserID,
-				$this->aliasField('status')." = 1"
-			];
-		$order = ["AcademicPeriod.order"];
-
-		$query = $this->find()->hydrate(false)
-					->join($joins)
-					// ->fields($fields)
-					->where($conditions)
-					->order($order)
-					->toArray();
-
-		if(empty($data)){
-			$this->Message->alert('general.noData');
-		}
-
-		// foreach($data as $i => $obj) {
-		// 	$sectionId = $obj[$this->alias]['institution_site_section_id'];
-		// 	if(empty($obj['EducationGrade']['id'])){
-		// 		$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSectionGrade->getGradesBySection($sectionId);
-		// 	}else{
-		// 		$data[$i]['EducationGrade']['grades'] = $this->InstitutionSiteSection->getSingleGradeBySection($sectionId);
-		// 	}	
-		// 	$data[$i]['Staff']['staff_name'] = ModelHelper::getName($obj['SecurityUser']);
-		// }
-
-		$this->controller->set('data', $query);
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('academic_period', $order++);
+		$this->ControllerAction->setFieldOrder('institution', $order++);
+		$this->ControllerAction->setFieldOrder('education_grade', $order++);
+		$this->ControllerAction->setFieldOrder('institution_site_section_id', $order++);
+		$this->ControllerAction->setFieldOrder('homeroom_teacher_name', $order++);
 	}
-
-
 }

@@ -9,7 +9,7 @@ class InstitutionSiteSectionGradesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
-		$this->belongsTo('EducationGrades', ['className' => 'Institution.EducationGrades']);
+		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 	}
 
 	public function validationDefault(Validator $validator) {
