@@ -35,6 +35,15 @@ class ControllerActionHelper extends Helper {
 		]
 	];
 
+	public function getColumnLetter($columnNumber) {
+        if ($columnNumber > 26) {
+            $columnLetter = Chr(intval(($columnNumber - 1) / 26) + 64) . Chr((($columnNumber - 1) % 26) + 65);
+        } else {
+            $columnLetter = Chr($columnNumber + 64);
+        }
+        return $columnLetter;
+    }
+
 	public function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
