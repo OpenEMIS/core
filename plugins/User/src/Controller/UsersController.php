@@ -7,7 +7,7 @@ class UsersController extends AppController {
 		parent::initialize();
 		$this->ControllerAction->model('User.Users');
 		$this->loadComponent('Paginator');
-    }
+	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
@@ -69,58 +69,27 @@ class UsersController extends AppController {
 		$this->autoRender = false;
 		
 		if ($this->request->is('post')) {
-			if (!empty($this->request->data('username'))) {
-				$username = $this->request->data('username');
-				$user = $this->Users->findByUsername($username)->first();
-				if ($user) {
-					$session = $this->request->session();
-					$session->write('Users.updatePassword.username', $username);
-					return $this->redirect(['action' => 'updatePassword']);
-				}
-			}
 			$user = $this->Auth->identify();
-			if ($user) {pr($user);
-	            $this->Auth->setUser($user);
-	            if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
-	            	pr('asd');die;
-	                $user = $this->Users->get($this->Auth->user('id'));
-	                $user->password = $this->request->data('password');
-	                $this->Users->save($user);
-	            }
-	            return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-	            //return $this->redirect($this->Auth->redirectUrl());
-	        } else {
-	        	$this->Alert->error('security.login.fail');
-	        	return $this->redirect(['action' => 'login']);
-	        }
-			//return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
-		}
-	}
-
-	// this action is to allow users to migrate old password hash to use the new password hasher
-	// this function will be removed once all users have updated their old password
-	public function updatePassword() {
-		$this->layout = false;
-		$salt = 'thisismysalt';
-		$username = '';
-		if ($this->request->is('get')) {
-			$session = $this->request->session();
-			if ($session->check('Users.updatePassword.username')) {
-				$this->Alert->success('security.login.updatePassword', ['closeButton' => false]);
-				$username = $session->read('Users.updatePassword.username');
+			if ($user) {
+				$this->Auth->setUser($user);
+				if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
+					$user = $this->Users->get($this->Auth->user('id'));
+					$user->password = $this->request->data('password');
+					$this->Users->save($user);
+				}
+				return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+				//return $this->redirect($this->Auth->redirectUrl());
 			} else {
+				$this->Alert->error('security.login.fail');
 				return $this->redirect(['action' => 'login']);
 			}
-		} else {
-			pr($this->request->data);
 		}
-		$this->set('username', $username);
 	}
 
-    public function logout() {
+	public function logout() {
 		//$this->Auth->logout();
 		//$this->Session->destroy();
 		$action = ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login'];
-        return $this->redirect($action);
-    }
+		return $this->redirect($action);
+	}
 }
