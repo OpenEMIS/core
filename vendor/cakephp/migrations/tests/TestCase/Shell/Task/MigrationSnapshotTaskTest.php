@@ -30,6 +30,8 @@ class MigrationSnapshotTaskTest extends TestCase
         'plugin.migrations.special_tags',
         'plugin.migrations.special_pk',
         'plugin.migrations.composite_pk',
+        'plugin.migrations.categories',
+        'plugin.migrations.products'
     ];
 
     /**
@@ -58,12 +60,19 @@ class MigrationSnapshotTaskTest extends TestCase
     public function testNotEmptySnapshot()
     {
         $this->Task->params['require-table'] = false;
+        $this->Task->params['connection'] = 'test';
+        $this->Task->params['plugin'] = 'BogusPlugin';
 
         $version = Util::getCurrentTimestamp();
 
         $this->Task->expects($this->once())
             ->method('dispatchShell')
-            ->with('migrations', 'mark_migrated', $version);
+            ->with(
+                $this->logicalAnd(
+                    $this->stringContains('migrations mark_migrated'),
+                    $this->stringContains('-c test -p BogusPlugin')
+                )
+            );
 
         $result = $this->Task->bake('NotEmptySnapshot');
         $this->assertSameAsFile(__FUNCTION__ . '.php', $result);

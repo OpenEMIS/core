@@ -11,5 +11,12 @@ class EducationGradesTable extends AppTable {
 		// todo:mlee need to put in this association when it is created
 		// $this->hasMany('EducationGradeSubject', ['className' => 'Education.EducationGradeSubject']);
 
+		$this->belongsToMany('EducationSubjects', [
+			'className' => 'Education.EducationSubjects',
+			'joinTable' => 'education_grade_subjects',
+			'foreignKey' => 'education_grade_id',
+			'targetForeignKey' => 'education_subject_id'
+		]);
+		// $this->hasMany('Sections', ['className' => 'Institution.Sections']);
 	}
 }

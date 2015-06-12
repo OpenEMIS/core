@@ -116,13 +116,6 @@ trait EntityTrait
     protected $_registryAlias;
 
     /**
-     * Holds a list of properties that were mutated using the get accessor
-     *
-     * @var array
-     */
-    protected $_mutated = [];
-
-    /**
      * Magic getter to access properties that have been set in this entity
      *
      * @param string $property Name of the property to access
@@ -242,11 +235,10 @@ trait EntityTrait
                 continue;
             }
 
-            unset($this->_mutated[$p]);
             $this->dirty($p, true);
 
-            if (!isset($this->_original[$p]) &&
-                isset($this->_properties[$p]) &&
+            if (!array_key_exists($p, $this->_original) &&
+                array_key_exists($p, $this->_properties) &&
                 $this->_properties[$p] !== $value
             ) {
                 $this->_original[$p] = $this->_properties[$p];
@@ -263,6 +255,7 @@ trait EntityTrait
             }
             $this->_properties[$p] = $value;
         }
+
         return $this;
     }
 
@@ -279,10 +272,6 @@ trait EntityTrait
             throw new InvalidArgumentException('Cannot get an empty property');
         }
 
-        if (array_key_exists($property, $this->_mutated)) {
-            return $this->_mutated[$property];
-        }
-
         $value = null;
         $method = '_get' . Inflector::camelize($property);
 
@@ -292,7 +281,6 @@ trait EntityTrait
 
         if ($this->_methodExists($method)) {
             $result = $this->{$method}($value);
-            $this->_mutated[$property] = $result;
             return $result;
         }
         return $value;
@@ -310,7 +298,7 @@ trait EntityTrait
         if (!strlen((string)$property)) {
             throw new InvalidArgumentException('Cannot get an empty property');
         }
-        if (isset($this->_original[$property])) {
+        if (array_key_exists($property, $this->_original)) {
             return $this->_original[$property];
         }
         return $this->get($property);
@@ -364,7 +352,6 @@ trait EntityTrait
         foreach ($property as $p) {
             unset($this->_properties[$p]);
             unset($this->_dirty[$p]);
-            unset($this->_mutated[$p]);
         }
 
         return $this;
@@ -552,10 +539,7 @@ trait EntityTrait
     {
         $result = [];
         foreach ($properties as $property) {
-            $original = $this->getOriginal($property);
-            if ($original !== null) {
-                $result[$property] = $original;
-            }
+            $result[$property] = $this->getOriginal($property);
         }
         return $result;
     }
@@ -884,15 +868,14 @@ trait EntityTrait
      */
     public function __debugInfo()
     {
-        return [
-            'new' => $this->isNew(),
-            'accessible' => array_filter($this->_accessible),
-            'properties' => $this->_properties,
-            'dirty' => $this->_dirty,
-            'original' => $this->_original,
-            'virtual' => $this->_virtual,
-            'errors' => $this->_errors,
-            'repository' => $this->_registryAlias
+        return $this->_properties + [
+            '[new]' => $this->isNew(),
+            '[accessible]' => array_filter($this->_accessible),
+            '[dirty]' => $this->_dirty,
+            '[original]' => $this->_original,
+            '[virtual]' => $this->_virtual,
+            '[errors]' => $this->_errors,
+            '[repository]' => $this->_registryAlias
         ];
     }
 }
