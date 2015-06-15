@@ -17,14 +17,11 @@ class StaffClassesTable extends AppTable {
 
 
 	public function indexBeforeAction(Event $event) {
-
-		// Status	Institution Site Class
-		// Academic Period	Institution	Section	Class	Subject	Male Students	Female Students	
-
 		$this->fields['status']['visible'] = false;
 
 		$this->ControllerAction->addField('academic_period', []);
 		$this->ControllerAction->addField('institution', []);
+		$this->ControllerAction->addField('institution_site_section', []);
 		$this->ControllerAction->addField('educationSubject', []);
 		$this->ControllerAction->addField('male_students', []);
 		$this->ControllerAction->addField('female_students', []);
@@ -32,7 +29,7 @@ class StaffClassesTable extends AppTable {
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('academic_period', $order++);
 		$this->ControllerAction->setFieldOrder('institution', $order++);
-		$this->ControllerAction->setFieldOrder('institution_site_section_id', $order++);
+		$this->ControllerAction->setFieldOrder('institution_site_section', $order++);
 		$this->ControllerAction->setFieldOrder('institution_site_class_id', $order++);
 		$this->ControllerAction->setFieldOrder('educationSubject', $order++);
 		$this->ControllerAction->setFieldOrder('male_students', $order++);
