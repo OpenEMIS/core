@@ -107,7 +107,7 @@ class InstitutionsController extends AppController  {
 
 		if (array_key_exists('institution_site_id', $model->fields)) {
 			if (!$session->check('Institutions.id')) {
-				$this->Message->alert('general.notExists');
+				$this->Alert->error('general.notExists');
 			}
 			$options['conditions'][] = ['Institutions.id' => $session->read('Institutions.id')];
 		}

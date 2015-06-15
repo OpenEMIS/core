@@ -53,6 +53,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteAssessmentResults', 	['className' => 'Institution.InstitutionSiteAssessmentResults']);
 
+		$this->hasMany('Grades', 							['className' => 'Institution.InstitutionSiteGrades']);
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
 		// pr($this->validator());

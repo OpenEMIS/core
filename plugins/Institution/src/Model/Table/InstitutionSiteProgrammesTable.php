@@ -15,6 +15,8 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
+
+		$this->hasMany('InstitutionSiteGrades',	['className' => 'Institution.InstitutionSiteGrades']);
 	}
 
 	public function beforeAction($event) {
@@ -92,30 +94,42 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		// end Education Grade field
 	}
 
-	// public function getAcademicPeriodOptions($conditions=array()) {
-	// 	$startDate = $this->field('MIN(InstitutionSiteProgramme.start_date) AS min_date', $conditions);
-	// 	$endDate = $this->field('MAX(InstitutionSiteProgramme.end_date) AS max_date', $conditions);
-	// 	$conditions = array_merge(array('InstitutionSiteProgramme.end_date' => NULL), $conditions);
-	// 	$options['conditions'] = $conditions;
-	// 	$nullDate = $this->find('count', $options);
+	public function getConditionsByAcademicPeriodId($academicPeriodId=0, $conditions=[]) {
+		$modelConditions = [];
+		if($academicPeriodId > 0) {
+			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodObj = $AcademicPeriod->get($academicPeriodId);
+			$startDate = $AcademicPeriod->getDate($academicPeriodObj->start_date);
+			$endDate = $AcademicPeriod->getDate($academicPeriodObj->end_date);
 
-	// 	$academicPeriodConditions = array();
-	// 	$academicPeriodConditions['AcademicPeriod.parent_id >'] = 0;
-	// 	$academicPeriodConditions['AcademicPeriod.end_date >='] = $startDate;
-	// 	if($nullDate == 0) {
-	// 		$academicPeriodConditions['AcademicPeriod.start_date <='] = $endDate;
-	// 	} else {
-	// 		$academicPeriodConditions['AcademicPeriod.end_date >='] = $startDate;
-	// 	}
+			$modelConditions['OR'] = array(
+				'OR' => array(
+					array(
+						'end_date IS NOT NULL',
+						'start_date <= "' . $startDate . '"',
+						'end_date >= "' . $startDate . '"'
+					),
+					array(
+						'end_date IS NOT NULL',
+						'start_date <= "' . $endDate . '"',
+						'end_date >= "' . $endDate . '"'
+					),
+					array(
+						'end_date IS NOT NULL',
+						'start_date >= "' . $startDate . '"',
+						'end_date <= "' . $endDate . '"'
+					)
+				),
+				array(
+					'end_date IS NULL',
+					'start_date <= "' . $endDate . '"'
+				)
+			);
+		}
 
-	// 	$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-	// 	$list = $AcademicPeriod->find('list', array(
-	// 		'fields' => array('AcademicPeriod.id', 'AcademicPeriod.name'),
-	// 		'conditions' => $academicPeriodConditions,
-	// 		'order' => array('AcademicPeriod.order')
-	// 	));
+		$conditions = array_merge($conditions, $modelConditions);
 
-	// 	return $list;
-	// }
-
+		return $conditions;
+	}
+	
 }

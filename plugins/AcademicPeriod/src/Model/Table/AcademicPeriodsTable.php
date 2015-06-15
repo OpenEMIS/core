@@ -36,4 +36,12 @@ class AcademicPeriodsTable extends AppTable {
 		
 		return $data;
 	}
+
+	public function getDate($dateObject) {
+		if (is_object($dateObject)) {
+			return $dateObject->toDateString();
+		}
+		return false;
+	}
+
 }
