@@ -19,12 +19,13 @@
 			<?php if (isset($attr['data'])) : ?>
 			<tbody>
 				<?php foreach ($attr['data'] as $i=>$obj) : ?>
+				<?php 	$selected = (isset($attr['selected']) && in_array($obj->id, $attr['selected'])) ? true : false; ?>
 				<tr>
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiGrades[%d][id]', $i) ?>" value="<?php echo $obj->id?>" />
+						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSiteSections[institution_site_section_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->id?>" <?php echo ($selected) ? 'checked' : '';?> />
 					</td>
-					<td><?= $obj->education_programme->name ?></td>
-					<td><?= $obj->name ?></td>
+					<td><?= $obj->education_grade->programme_name ?></td>
+					<td><?= $obj->education_grade->name ?></td>
 				</tr>
 				<?php endforeach ?>
 			</tbody>
@@ -35,6 +36,12 @@
 
 <?php else : ?>
 
-
+<?php 
+	foreach ($attr['data']['grades'] as $grade) {
+		// pr($grade);die;
+		echo $grade->name.'<br/>';
+	}
+	// pr($attr['data']['grades']);
+?>
 
 <?php endif ?>

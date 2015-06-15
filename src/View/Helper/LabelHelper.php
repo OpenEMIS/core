@@ -89,7 +89,9 @@ class LabelHelper extends Helper {
 			'total' => 'Total',
 			'fee' => 'Fee',
 			'model' => 'Model',
-			'section' => 'Section'
+			'section' => 'Section',
+			'gender' => 'Gender',
+			'date_of_birth' => 'Date Of Birth'
 		],
 		'date' => [
 			'start' => 'Start Date',

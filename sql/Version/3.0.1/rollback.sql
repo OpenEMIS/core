@@ -235,3 +235,8 @@ RENAME TABLE z_1407_wf_workflow_transitions TO wf_workflow_transitions;
 -- June 3 1605hrs
 -- changing student and staff id to security user id (part 3) - rollback
 DROP TABLE user_bank_accounts;
+
+-- June 15 1800hrs
+DROP TABLE IF EXISTS `institution_site_sections`;
+ALTER TABLE `z_1458_institution_site_sections` RENAME  `institution_site_sections`;
+ALTER TABLE `z_1458_institution_site_section_staff` RENAME  `institution_site_section_staff`;

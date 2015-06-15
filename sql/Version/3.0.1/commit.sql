@@ -517,3 +517,10 @@ ALTER TABLE `countries` ADD `default` INT(1) NOT NULL DEFAULT '0' AFTER `visible
 -- June 12 0926hrs
 ALTER TABLE `security_users` CHANGE `password` `password` CHAR( 60 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
 
+-- June 15 1800hrs
+-- remove education_grade_id from institution_site_sections as it will not be used
+CREATE TABLE `z_1458_institution_site_sections` LIKE  `institution_site_sections`;
+INSERT INTO `z_1458_institution_site_sections` SELECT * FROM `institution_site_sections` WHERE 1;
+ALTER TABLE `institution_site_sections` DROP `education_grade_id`;
+-- rename institution_site_section_staff as it will not be used
+ALTER TABLE `institution_site_section_staff` RENAME  `z_1458_institution_site_section_staff`;
