@@ -18,7 +18,6 @@ class UniqueBehavior extends Behavior {
 
 	public function getUniqueVisibility($selectedFieldType) {
         $isUnique = $this->CustomFieldTypes->find('all')->where([$this->CustomFieldTypes->aliasField('code') => $selectedFieldType])->first()->is_unique;
-        //$visible = $isUnique == 1 ? true : false;
         return ($isUnique == 1 ? true : false);
     }
 }
