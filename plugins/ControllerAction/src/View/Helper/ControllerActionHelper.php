@@ -604,7 +604,6 @@ class ControllerActionHelper extends Helper {
 				if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
-					// $associatedObject = str_replace('_id', '', $_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
@@ -638,7 +637,7 @@ class ControllerActionHelper extends Helper {
 					$labelClass = implode(' ', $_labelClass);
 					$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, $label, $valueClass, $value);
 				} else { // no label
-					$rowContent = sprintf($valueCol, $valueClass, $value);
+					$rowContent = sprintf($_valueCol, $valueClass, $value);
 				}
 				if (!array_key_exists('override', $_fieldAttr)) {
 					$html .= sprintf($row, $rowClass, $rowContent);
