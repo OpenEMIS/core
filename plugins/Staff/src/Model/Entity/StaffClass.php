@@ -1,11 +1,11 @@
 <?php
-namespace Student\Model\Entity;
+namespace Staff\Model\Entity;
 
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class StudentClass extends Entity
+class StaffClass extends Entity
 {
 	protected $_virtual = ['academic_period', 'institution', 'education_subject', 'homeroom_teacher_name'];
 
@@ -48,5 +48,4 @@ class StudentClass extends Entity
 		}
 		return $name;
 	}
-
 }
