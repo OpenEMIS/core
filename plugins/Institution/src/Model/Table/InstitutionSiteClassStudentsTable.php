@@ -13,11 +13,28 @@ class InstitutionSiteClassStudentsTable extends AppTable {
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
+	public function getMaleCountBySection($sectionId) {
+		$gender_id = 1; // male
+		$count = $this
+			->find()
+			->contain('Users')
+			->where([$this->Users->aliasField('gender_id') => $gender_id])
+			->where([$this->aliasField('institution_site_section_id') => $sectionId])
+			->count()
+		;
+		return $count;
 	}
 
-	public function beforeAction() {
-		
+	public function getFemaleCountBySection($sectionId) {
+		$gender_id = 2; // female
+		$count = $this
+			->find()
+			->contain('Users')
+			->where([$this->Users->aliasField('gender_id') => $gender_id])
+			->where([$this->aliasField('institution_site_section_id') => $sectionId])
+			->count()
+		;
+		return $count;
 	}
+
 }

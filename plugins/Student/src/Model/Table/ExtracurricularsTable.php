@@ -14,6 +14,11 @@ class ExtracurricularsTable extends AppTable {
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 	}
 
+	public function beforeAction() {
+		$this->fields['academic_period_id']['type'] = 'select';
+		$this->fields['extracurricular_type_id']['type'] = 'select';
+	}
+
 	public function indexBeforeAction(Event $event) {
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['hours']['visible'] = false;
@@ -28,7 +33,26 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('name', $order++);
 	}
 
+	public function addEditBeforeAction(Event $event) {
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
+		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
+		$this->ControllerAction->setFieldOrder('name', $order++);
+		$this->ControllerAction->setFieldOrder('start_date', $order++);
+		$this->ControllerAction->setFieldOrder('end_date', $order++);
+		$this->ControllerAction->setFieldOrder('hours', $order++);
+		$this->ControllerAction->setFieldOrder('points', $order++);
+		$this->ControllerAction->setFieldOrder('location', $order++);
+		$this->ControllerAction->setFieldOrder('comment', $order++);
+	}
+
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->add('start_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'end_date', false]
+			])
+		;
 	}
 }
