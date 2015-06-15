@@ -14,6 +14,10 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
 	}
 
+	public function beforeAction() {
+		$this->fields['student_behaviour_category_id']['type'] = 'select';
+	}	
+
 	public function indexBeforeAction(Event $event) {
 		$this->fields['description']['visible'] = false;
 		$this->fields['action']['visible'] = false;

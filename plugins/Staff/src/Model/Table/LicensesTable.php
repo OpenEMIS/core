@@ -9,15 +9,22 @@ class LicensesTable extends AppTable {
 		$this->table('staff_licenses');
 		parent::initialize($config);
 		
-		// $this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
-		// $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-	}
-
-	public function validationDefault(Validator $validator) {
-		return $validator;
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
 	}
 
 	public function beforeAction() {
+		$this->fields['license_type_id']['type'] = 'select';
+	}
+
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		
+		return $validator->add('issue_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'expiry_date', false]
+			])
+			->add('expiry_date', [
+			])
+		;
 	}
 }
