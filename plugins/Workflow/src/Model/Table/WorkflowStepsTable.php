@@ -2,6 +2,7 @@
 namespace Workflow\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -40,6 +41,11 @@ class WorkflowStepsTable extends AppTable {
         ];
 
         $this->controller->set(compact('toolbarElements'));
+	}
+
+	public function indexBeforePaginate(Event $event, Table $model, array $options) {
+		$options['contain'][] = 'SecurityRoles';
+		return $options;
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
