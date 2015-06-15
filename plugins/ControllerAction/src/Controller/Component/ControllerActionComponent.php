@@ -613,7 +613,7 @@ class ControllerActionComponent extends Component {
 				if (!empty($event->result)) {
 					list($data, $this->request->data, $patchOptions) = array_values($event->result);
 				}
-				
+				// die;
 				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
 				if ($model->save($data)) {
 					$this->Alert->success('general.add.success');
