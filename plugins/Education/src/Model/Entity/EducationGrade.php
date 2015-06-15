@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 
 class EducationGrade extends Entity
 {
-    protected $_virtual = ['programme_grade_name', 'programme_order'];
+    protected $_virtual = ['programme_name', 'programme_grade_name', 'programme_order'];
 
     protected function _getProgrammeGradeName() {
         $name = '';
@@ -17,6 +17,18 @@ class EducationGrade extends Entity
             $table = TableRegistry::get('Education.EducationProgrammes');
             $id = $this->education_programme_id;
             $name = $table->get($id)->name . ' - ' . $this->name;            
+        }
+        return $name;
+    }
+
+    protected function _getProgrammeName() {
+        $name = '';
+        if ($this->has('education_programme')) {
+            $name = $this->education_programme->name;
+        } else {
+            $table = TableRegistry::get('Education.EducationProgrammes');
+            $id = $this->education_programme_id;
+            $name = $table->get($id)->name;
         }
         return $name;
     }

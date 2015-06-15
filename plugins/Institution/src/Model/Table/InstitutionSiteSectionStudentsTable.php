@@ -13,7 +13,8 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('StudentCategories', ['className' => 'FieldOption.StudentCategories']);
-		$this->hasMany('InstitutionSiteSectionGrade', ['className' => 'Institution.InstitutionSiteSectionGrade']);
+
+		$this->hasMany('InstitutionSiteSectionGrades', ['className' => 'Institution.InstitutionSiteSectionGrade']);
 	}
 
 	public function getMaleCountBySection($sectionId) {
@@ -38,5 +39,10 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 			->count()
 		;
 		return $count;
+	}
+
+	public function getStudentCategoryList() {
+		$query = $this->StudentCategories->getList();
+		return $query->toArray();
 	}
 }
