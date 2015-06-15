@@ -88,7 +88,8 @@ class LabelHelper extends Helper {
 			'amount' => 'Amount',
 			'total' => 'Total',
 			'fee' => 'Fee',
-			'model' => 'Model'
+			'model' => 'Model',
+			'section' => 'Section'
 		],
 		'date' => [
 			'start' => 'Start Date',
@@ -115,13 +116,18 @@ class LabelHelper extends Helper {
 			'total_fte' => 'Total FTE',
 			'fte' => 'FTE'
 		],
-		'InstitutionSitePosition' => [
+		'InstitutionSitePositions' => [
 			'title' => 'Positions',
-			'position_no' => 'Position No',
+			'position_no' => 'Position Name',
 			'status' => 'Status',
 			'type' => 'Type',
 			'staff_position_title_id' => 'Title',
 			'staff_position_grade_id' => 'Grade'
+		],
+		'InstitutionSiteSections' => [
+			'security_user_id' => 'Home Room Teacher',
+			'single_grade_field' => 'Sections',
+			'multi_grade_field' => 'Education Grades',
 		],
 		'InstitutionSiteShifts' => [
 			'location_institution_site_id' => 'Location'
