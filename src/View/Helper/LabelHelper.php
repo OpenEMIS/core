@@ -132,6 +132,14 @@ class LabelHelper extends Helper {
 		'InstitutionSiteShifts' => [
 			'location_institution_site_id' => 'Location'
 		],
+		'CustomGroups' => [
+			'custom_modules' => 'Module'
+		],
+		'CustomFields' => [
+			'field_type' => 'Type',
+			'is_mandatory' => 'Mandatory',
+			'is_unique' => 'Unique'
+		],
 		'SurveyTemplates' => [
 			'survey_module_id' => 'Module'
 		],
