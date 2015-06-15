@@ -140,6 +140,9 @@ class LabelHelper extends Helper {
 			'is_mandatory' => 'Mandatory',
 			'is_unique' => 'Unique'
 		],
+		'CustomFieldOptions' => [
+			'is_default' => 'Default'
+		],
 		'SurveyTemplates' => [
 			'survey_module_id' => 'Module'
 		],

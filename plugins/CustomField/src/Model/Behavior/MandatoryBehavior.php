@@ -18,7 +18,6 @@ class MandatoryBehavior extends Behavior {
 
     public function getMandatoryVisibility($selectedFieldType) {
         $isMandatory = $this->CustomFieldTypes->find('all')->where([$this->CustomFieldTypes->aliasField('code') => $selectedFieldType])->first()->is_mandatory;
-        //$mandatoryVisible = $isMandatory == 1 ? true : false;
         return ($isMandatory == 1 ? true : false);
     }
 }
