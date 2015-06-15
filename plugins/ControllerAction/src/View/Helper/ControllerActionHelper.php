@@ -196,7 +196,7 @@ class ControllerActionHelper extends Helper {
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
-			} else if (strlen($value) == 0) {
+			} else if (is_array($value) || strlen($value) == 0) {
 				$value = $this->getIndexElement($value, $attr);
 			}
 
@@ -425,22 +425,14 @@ class ControllerActionHelper extends Helper {
 				break;
 
 			case 'chosen_select':
-				/*
-				$_fieldAttr['dataModel'] = isset($_fieldAttr['dataModel']) ? $_fieldAttr['dataModel'] : Inflector::classify($_field);
-				$_fieldAttr['dataField'] = isset($_fieldAttr['dataField']) ? $_fieldAttr['dataField'] : 'id';
-				//$value = $this->_View->element('ControllerAction/chosen_select', $_fieldAttr);
-
-				$chosenSelectList = array();
-				if (isset($data[$dataModel])) {
-					foreach ($data[$dataModel] as $obj) {
-						$chosenSelectData = isset($obj[$dataField]) ? $obj[$dataField] : '';
-						if (!empty($chosenSelectData)) {
-							$chosenSelectList[] = $chosenSelectData;
-						}
+				$chosenSelectList = [];
+				if (!empty($value)) {
+					foreach ($value as $obj) {
+						$chosenSelectList[] = $obj->name;
 					}
 				}
-				echo implode(', ', $chosenSelectList);
-				*/
+
+				$value = implode(', ', $chosenSelectList);
 				break;
 
 			case 'bool':
