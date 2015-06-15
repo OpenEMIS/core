@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Event\Event;
 
 class StaffClassesTable extends AppTable {
 	public function initialize(array $config) {
@@ -14,8 +15,30 @@ class StaffClassesTable extends AppTable {
 		$this->hasMany('InstitutionSiteClassStudents', ['className' => 'Institution.InstitutionSiteClassStudents']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
+
+	public function indexBeforeAction(Event $event) {
+
+		// Status	Institution Site Class
+		// Academic Period	Institution	Section	Class	Subject	Male Students	Female Students	
+
+		$this->fields['status']['visible'] = false;
+
+		$this->ControllerAction->addField('academic_period', []);
+		$this->ControllerAction->addField('institution', []);
+		$this->ControllerAction->addField('educationSubject', []);
+		$this->ControllerAction->addField('male_students', []);
+		$this->ControllerAction->addField('female_students', []);
+		
+		$order = 0;
+		$this->ControllerAction->setFieldOrder('academic_period', $order++);
+		$this->ControllerAction->setFieldOrder('institution', $order++);
+		$this->ControllerAction->setFieldOrder('institution_site_section_id', $order++);
+		$this->ControllerAction->setFieldOrder('institution_site_class_id', $order++);
+		$this->ControllerAction->setFieldOrder('educationSubject', $order++);
+		$this->ControllerAction->setFieldOrder('male_students', $order++);
+		$this->ControllerAction->setFieldOrder('female_students', $order++);
 	}
+
+
 
 }
