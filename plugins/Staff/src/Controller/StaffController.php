@@ -74,6 +74,7 @@ class StaffController extends AppController {
 						$options['conditions'] = [];
 					}
 					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
+					pr($options['conditions']);
 				} else {
 					$this->Alert->warning('general.noData');
 					$this->redirect(['action' => 'index']);
