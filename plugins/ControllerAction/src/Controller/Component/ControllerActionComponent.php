@@ -480,9 +480,10 @@ class ControllerActionComponent extends Component {
 			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
+			$action = $this->triggerFrom == 'Controller' ? $this->buttons['delete']['url']['action'] : $this->buttons['delete']['url']['action'].'/'.$this->buttons['delete']['url'][0];
 			$modal['formOptions'] = array(
 				'type' => 'delete',
-				'action' => $this->buttons['delete']['url']['action']
+				'action' => $action
 			);
 			$modal['fields'] = array(
 				'id' => array('type' => 'hidden', 'id' => 'recordId')
@@ -626,12 +627,19 @@ class ControllerActionComponent extends Component {
 			} else {
 				$patchOptions['validate'] = false;
 				$methodKey = 'on' . ucfirst($submit);
-				$event = new Event('ControllerAction.Model.addEdit.' . $methodKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				$event = $model->eventManager()->dispatch($event);
+				//addEditOnReload
+				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
+				$method = 'addEdit' . ucfirst($methodKey);
+				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+				if (method_exists($this->model, $method)) {
+	                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+	            }
+	            $event = $model->eventManager()->dispatch($event);
 				if ($event->isStopped()) { return $event->result; }
 				if (!empty($event->result)) {
 					list($data, $this->request->data, $patchOptions) = array_values($event->result);
 				}
+				//addOnReload
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
 				$method = 'add' . ucfirst($methodKey);
 				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
@@ -721,13 +729,26 @@ class ControllerActionComponent extends Component {
 					}
 				} else {
 					$patchOptions['validate'] = false;
-					$event = new Event('ControllerAction.Model.addEdit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-					$event = $model->eventManager()->dispatch($event);
+					$methodKey = 'on' . ucfirst($submit);
+					//addEditOnReload
+					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
+					$method = 'addEdit' . ucfirst($methodKey);
+					$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					if (method_exists($this->model, $method)) {
+		                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+		            }
+		            $event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
 					if (!empty($event->result)) {
 						list($data, $this->request->data, $patchOptions) = array_values($event->result);
 					}
-					$event = new Event('ControllerAction.Model.edit.on' . ucfirst($submit), $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					//editOnReload
+					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
+					$method = 'edit' . ucfirst($methodKey);
+					$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					if (method_exists($this->model, $method)) {
+		                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+		            }
 					$event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
 					if (!empty($event->result)) {
