@@ -3,10 +3,13 @@ namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class CustomFieldsTable extends AppTable {
+	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -28,6 +31,17 @@ class CustomFieldsTable extends AppTable {
 		$this->setFieldOrder();
 	}
 
+	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->loadBehavior($entity->field_type);
+		return $entity;
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
 		list($fieldTypeOptions, , $mandatoryOptions, , $uniqueOptions) = array_values($this->getSelectOptions());
@@ -45,9 +59,18 @@ class CustomFieldsTable extends AppTable {
 		$this->setFieldOrder();
 	}
 
+	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+		//Required by patchEntity for associated data
+		if (!empty($data[$this->alias()]['custom_field_options'])) {
+			$defaultKey = $data[$this->alias()]['is_default'];
+			$data[$this->alias()]['custom_field_options'][$defaultKey]['is_default'] = 1;
+		}
+		$options['associated'] = $this->_contain;
+		return compact('entity', 'data', 'options');
+	}
+
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->fields['is_mandatory']['visible'] = $this->getMandatoryVisibility($entity->field_type);
-		$this->fields['is_unique']['visible'] = $this->getUniqueVisibility($entity->field_type);
+		$this->loadBehavior($entity->field_type);
 
 		return $entity;
 	}
@@ -58,24 +81,35 @@ class CustomFieldsTable extends AppTable {
 		$entity->field_type = $selectedFieldType;
 		$entity->is_mandatory = $selectedMandatory;
 		$entity->is_unique = $selectedUnique;
-		$this->loadBehavior($selectedFieldType);
 
 		return $entity;
 	}
 
 	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
-		$selectedFieldType = $data[$this->alias()]['field_type'];
-		$this->loadBehavior($selectedFieldType);
-
 		return compact('entity', 'data', 'options');
 	}
 
-	/*
 	public function addEditOnAddOption(Event $event, Entity $entity, array $data, array $options) {
-		//pr('addEditOnAddOption');die;
+		//pr('CustomFieldsTable->addEditOnAddOption()');
+		$fieldOptions = [
+			'name' => '',
+			'visible' => 1
+		];
+		$data[$this->alias()]['custom_field_options'][] = $fieldOptions;
+
+		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+		$options['associated'] = [
+			'CustomFieldOptions' => ['validate' => false]
+		];
+
 		return compact('entity', 'data', 'options');
 	}
-	*/
+
+	public function editBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
+	}
 
 	public function getSelectOptions() {
 		//Return all required options and their key
@@ -100,10 +134,8 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function loadBehavior($selectedFieldType) {
-		$this->addBehavior('CustomField.'.Inflector::camelize(strtolower($selectedFieldType)), [
-			'events' => [
-				'ControllerAction.Model.addEdit.onReload' => 'addEditOnAddOption'
-			]
-		]);
+		$this->fields['is_mandatory']['visible'] = $this->getMandatoryVisibility($selectedFieldType);
+		$this->fields['is_unique']['visible'] = $this->getUniqueVisibility($selectedFieldType);
+		$this->addBehavior('CustomField.'.Inflector::camelize(strtolower($selectedFieldType)));
 	}
 }
