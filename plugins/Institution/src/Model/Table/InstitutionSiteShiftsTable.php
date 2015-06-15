@@ -44,12 +44,13 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	}
 
-	public function onPopulateSelectOptions(Event $event, $query) {
-		$query = parent::onPopulateSelectOptions($event, $query);
+	// public function onPopulateSelectOptions(Event $event, $query) {
+		// $query = parent::onPopulateSelectOptions($event, $query);
 		// $query->
-		// pr($result->toArray());
-		return $query;
-	}
+		// // pr($result->toArray());
+		// return $query;
+	// }
+
 
 	public function createInstitutionDefaultShift($institutionsId, $academicPeriodId){
 		$data = $this->getShifts($institutionsId, $academicPeriodId);
