@@ -10,7 +10,6 @@ class StudentBehavior extends Behavior {
 	public function initialize(array $config) {
 	}
 
-
 	public function beforeFind(Event $event, Query $query, $options) {
 		$query
 			->join([
@@ -22,6 +21,21 @@ class StudentBehavior extends Behavior {
 			->group('Users.id');
 	}
 
-}
+	public function implementedEvents() {
+		$events = [
+			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'
+		];
+		return $events;
+	}
 
-?>
+	public function indexBeforeAction(Event $event) {
+		$this->_table->fields['username']['visible']['index'] = false;
+		$this->_table->fields['birthplace_area_id']['visible']['index'] = false;
+		$this->_table->fields['date_of_death']['visible']['index'] = false;
+		$this->_table->fields['super_admin']['visible']['index'] = false;
+		$this->_table->fields['status']['visible']['index'] = false;
+		$this->_table->fields['last_login']['visible']['index'] = false;
+		$this->_table->fields['photo_name']['visible']['index'] = false;
+		$this->_table->fields['photo_content']['visible']['index'] = false;
+	}
+}
