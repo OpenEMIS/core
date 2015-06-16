@@ -501,7 +501,6 @@ INSERT workflow_step_roles SELECT * FROM z_1407_wf_workflow_step_roles;
 INSERT workflow_submodels SELECT * FROM z_1407_wf_workflow_submodels;
 INSERT workflow_transitions SELECT * FROM z_1407_wf_workflow_transitions;
 
-
 -- June 3 1605hrs
 -- changing student and staff id to security user id (part 3)
 CREATE TABLE user_bank_accounts LIKE student_bank_accounts;
@@ -524,3 +523,364 @@ INSERT INTO `z_1458_institution_site_sections` SELECT * FROM `institution_site_s
 ALTER TABLE `institution_site_sections` DROP `education_grade_id`;
 -- rename institution_site_section_staff as it will not be used
 ALTER TABLE `institution_site_section_staff` RENAME  `z_1458_institution_site_section_staff`;
+
+-- June 16 1020hrs
+ALTER TABLE `survey_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+ALTER TABLE `rubric_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+ALTER TABLE `rubric_template_options` CHANGE `color` `color` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '#ffffff';
+UPDATE `workflow_models` SET `submodel` = 'FieldOption.StaffLeaveTypes' WHERE `workflow_models`.`model` = 'StaffLeave';
+
+-- June 16 1100hrs
+-- New tables for Custom Field
+
+--
+-- New table - custom_groups
+--
+
+DROP TABLE IF EXISTS `custom_groups`;
+CREATE TABLE IF NOT EXISTS `custom_groups` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_groups`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_groups`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+TRUNCATE TABLE `custom_groups`;
+INSERT INTO `custom_groups` (`id`, `name`, `created_user_id`, `created`) VALUES
+(1, 'Survey', 1, '0000-00-00 00:00:00'),
+(2, 'Infrastructure', 1, '0000-00-00 00:00:00'),
+(3, 'Health', 1, '0000-00-00 00:00:00'),
+(4, 'Quiz', 1, '0000-00-00 00:00:00');
+
+--
+-- New table - custom_modules
+--
+
+DROP TABLE IF EXISTS `custom_modules`;
+CREATE TABLE IF NOT EXISTS `custom_modules` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_modules`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_modules`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+TRUNCATE TABLE `custom_modules`;
+INSERT INTO `custom_modules` (`id`, `name`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 1, '0000-00-00 00:00:00'),
+(2, 'Student', 1, '0000-00-00 00:00:00'),
+(3, 'Staff', 1, '0000-00-00 00:00:00');
+
+--
+-- New table - custom_group_modules
+--
+
+DROP TABLE IF EXISTS `custom_group_modules`;
+CREATE TABLE IF NOT EXISTS `custom_group_modules` (
+  `id` char(36) NOT NULL,
+  `custom_group_id` int(11) NOT NULL,
+  `custom_module_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_group_modules`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- New table - custom_field_types
+--
+
+DROP TABLE IF EXISTS `custom_field_types`;
+CREATE TABLE IF NOT EXISTS `custom_field_types` (
+  `id` int(11) NOT NULL,
+  `code` varchar(100) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `format` varchar(50) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_field_types`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_field_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+TRUNCATE TABLE `custom_field_types`;
+INSERT INTO `custom_field_types` (`id`, `code`, `name`, `description`, `format`, `is_mandatory`, `is_unique`) VALUES
+(1, 'TEXT', 'Text', '', 'OpenEMIS', 1, 1),
+(2, 'NUMBER', 'Number', '', 'OpenEMIS', 1, 1),
+(3, 'TEXTAREA', 'Textarea', '', 'OpenEMIS', 1, 0),
+(4, 'DROPDOWN', 'Dropdown', '', 'OpenEMIS', 0, 0),
+(5, 'CHECKBOX', 'Checkbox', '', 'OpenEMIS', 0, 0),
+(6, 'TABLE', 'Table', '', 'OpenEMIS', 0, 0),
+(7, 'DATE', 'Date', '', 'OpenEMIS', 1, 0),
+(8, 'TIME', 'Time', '', 'OpenEMIS', 1, 0),
+(9, 'MULTIPLE_CHOICE', 'Multiple Choice', 'A stimulus followed by a question prompt and a number of possible responses. The candidate chooses the correct response.', 'QTI', 1, 0);
+
+--
+-- New table - custom_fields
+--
+
+DROP TABLE IF EXISTS `custom_fields`;
+CREATE TABLE IF NOT EXISTS `custom_fields` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `field_type` varchar(100) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_fields`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_fields`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_field_options
+--
+
+DROP TABLE IF EXISTS `custom_field_options`;
+CREATE TABLE IF NOT EXISTS `custom_field_options` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_default` int(1) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_field_options`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_field_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_table_columns
+--
+
+DROP TABLE IF EXISTS `custom_table_columns`;
+CREATE TABLE IF NOT EXISTS `custom_table_columns` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_table_columns`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_table_columns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_table_rows
+--
+
+DROP TABLE IF EXISTS `custom_table_rows`;
+CREATE TABLE IF NOT EXISTS `custom_table_rows` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_table_rows`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_table_rows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_forms
+--
+
+DROP TABLE IF EXISTS `custom_forms`;
+CREATE TABLE IF NOT EXISTS `custom_forms` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_group_id` int(11) NOT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_forms`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_forms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_field_forms
+--
+
+DROP TABLE IF EXISTS `custom_form_fields`;
+CREATE TABLE IF NOT EXISTS `custom_form_fields` (
+  `id` char(36) NOT NULL,
+  `custom_form_id` int(11) NOT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_form_fields`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- New table - custom_field_records
+--
+
+DROP TABLE IF EXISTS `custom_field_records`;
+CREATE TABLE IF NOT EXISTS `custom_field_records` (
+  `id` int(11) NOT NULL,
+  `institution_id` int(11) NOT NULL,
+  `survey_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_field_records`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_field_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_field_values
+--
+
+DROP TABLE IF EXISTS `custom_field_values`;
+CREATE TABLE IF NOT EXISTS `custom_field_values` (
+  `id` int(11) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `custom_field_record_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_field_values`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - custom_table_cells
+--
+
+DROP TABLE IF EXISTS `custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `custom_table_cells` (
+  `id` int(11) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text DEFAULT NULL,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `custom_table_column_id` int(11) NOT NULL,
+  `custom_table_row_id` int(11) NOT NULL,
+  `custom_field_record_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `custom_table_cells`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- New table - surveys
+--
+
+DROP TABLE IF EXISTS `surveys`;
+CREATE TABLE IF NOT EXISTS `surveys` (
+  `id` int(11) NOT NULL,
+  `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Draft, 2 -> Completed',
+  `academic_period_id` int(11) NOT NULL,
+  `custom_form_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `surveys`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `surveys`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;

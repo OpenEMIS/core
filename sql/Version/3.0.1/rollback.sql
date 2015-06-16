@@ -240,3 +240,26 @@ DROP TABLE user_bank_accounts;
 DROP TABLE IF EXISTS `institution_site_sections`;
 ALTER TABLE `z_1458_institution_site_sections` RENAME  `institution_site_sections`;
 ALTER TABLE `z_1458_institution_site_section_staff` RENAME  `institution_site_section_staff`;
+
+-- June 16 1020hrs
+ALTER TABLE `survey_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+ALTER TABLE `rubric_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+ALTER TABLE `rubric_template_options` CHANGE `color` `color` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'ffffff';
+UPDATE `workflow_models` SET `submodel` = 'Staff.StaffLeaveType' WHERE `workflow_models`.`model` = 'StaffLeave';
+
+-- June 16 1100hrs
+-- Drop tables for Custom Field
+DROP TABLE IF EXISTS `custom_groups`;
+DROP TABLE IF EXISTS `custom_modules`;
+DROP TABLE IF EXISTS `custom_group_modules`;
+DROP TABLE IF EXISTS `custom_field_types`;
+DROP TABLE IF EXISTS `custom_fields`;
+DROP TABLE IF EXISTS `custom_field_options`;
+DROP TABLE IF EXISTS `custom_table_columns`;
+DROP TABLE IF EXISTS `custom_table_rows`;
+DROP TABLE IF EXISTS `custom_forms`;
+DROP TABLE IF EXISTS `custom_form_fields`;
+DROP TABLE IF EXISTS `custom_field_records`;
+DROP TABLE IF EXISTS `custom_field_values`;
+DROP TABLE IF EXISTS `custom_table_cells`;
+DROP TABLE IF EXISTS `surveys`;
