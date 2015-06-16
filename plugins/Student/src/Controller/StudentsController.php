@@ -35,6 +35,35 @@ class StudentsController extends AppController {
 		$this->set('contentHeader', 'Students');
     }
 
+    public function beforeFilter(Event $event) {
+    	parent::beforeFilter($event);
+    	$this->Navigation->addCrumb('Student', ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+    	$session = $this->request->session();
+		$action = $this->request->params['action'];
+
+		if ($action == 'index') {
+			$session->delete('Student.security_user_id');
+		}
+		if ($session->check('Student.security_user_id') || $action == 'view') {
+			$id = 0;
+			if ($session->check('Student.security_user_id')) {
+				$id = $session->read('Student.security_user_id');
+			} else if (isset($this->request->pass[0])) {
+				$id = $this->request->pass[0];
+			}
+			if (!empty($id)) {
+				$obj = $this->Users->get($id);
+				$name = $obj->name;
+				$this->Navigation->addCrumb($name, ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'view', $id]);
+			} else {
+				return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'index']);
+			}
+		}
+
+    	$header = __('Student');
+    	$this->set('contentHeader', $header);
+    }
+
 	public function onInitialize($event, $model) {
 		$session = $this->request->session();
 		$header = __('Student');
