@@ -2,6 +2,7 @@
 namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -17,7 +18,7 @@ class CustomFieldsTable extends AppTable {
 		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'CustomField.CustomForms',
-			'joinTable' => 'custom_field_forms',
+			'joinTable' => 'custom_form_fields',
 			'foreignKey' => 'custom_field_id',
 			'targetForeignKey' => 'custom_form_id'
 		]);
@@ -57,22 +58,20 @@ class CustomFieldsTable extends AppTable {
 		$this->fields['is_unique']['options'] = $uniqueOptions;
 
 		$this->setFieldOrder();
+
+		if ($this->request->is(['post', 'put'])) {
+			$selectedFieldType = $this->request->data($this->aliasField('field_type'));
+			$this->loadBehavior($selectedFieldType);
+		}
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		//Required by patchEntity for associated data
-		if (!empty($data[$this->alias()]['custom_field_options'])) {
-			$defaultKey = $data[$this->alias()]['is_default'];
-			$data[$this->alias()]['custom_field_options'][$defaultKey]['is_default'] = 1;
+		if ($this->behaviors()->hasMethod('addEditBeforePatch')) {
+			list($entity, $data, $options) = array_values($this->behaviors()->call('addEditBeforePatch', [$event, $entity, $data, $options]));
 		}
+		//Required by patchEntity for associated data
 		$options['associated'] = $this->_contain;
 		return compact('entity', 'data', 'options');
-	}
-
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->loadBehavior($entity->field_type);
-
-		return $entity;
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -81,34 +80,20 @@ class CustomFieldsTable extends AppTable {
 		$entity->field_type = $selectedFieldType;
 		$entity->is_mandatory = $selectedMandatory;
 		$entity->is_unique = $selectedUnique;
+		$this->loadBehavior($selectedFieldType);
 
 		return $entity;
-	}
-
-	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
-		return compact('entity', 'data', 'options');
-	}
-
-	public function addEditOnAddOption(Event $event, Entity $entity, array $data, array $options) {
-		//pr('CustomFieldsTable->addEditOnAddOption()');
-		$fieldOptions = [
-			'name' => '',
-			'visible' => 1
-		];
-		$data[$this->alias()]['custom_field_options'][] = $fieldOptions;
-
-		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
-		$options['associated'] = [
-			'CustomFieldOptions' => ['validate' => false]
-		];
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
 		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->loadBehavior($entity->field_type);
+		return $entity;
 	}
 
 	public function getSelectOptions() {
