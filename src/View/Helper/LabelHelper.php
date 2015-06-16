@@ -89,7 +89,9 @@ class LabelHelper extends Helper {
 			'total' => 'Total',
 			'fee' => 'Fee',
 			'model' => 'Model',
-			'section' => 'Section'
+			'section' => 'Section',
+			'gender' => 'Gender',
+			'date_of_birth' => 'Date Of Birth'
 		],
 		'date' => [
 			'start' => 'Start Date',
@@ -139,6 +141,9 @@ class LabelHelper extends Helper {
 			'field_type' => 'Type',
 			'is_mandatory' => 'Mandatory',
 			'is_unique' => 'Unique'
+		],
+		'CustomFieldOptions' => [
+			'is_default' => 'Default'
 		],
 		'SurveyTemplates' => [
 			'survey_module_id' => 'Module'

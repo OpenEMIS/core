@@ -14,7 +14,7 @@ class CustomFormsTable extends AppTable {
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->belongsToMany('CustomFields', [
 			'className' => 'CustomField.CustomFields',
-			'joinTable' => 'custom_field_forms',
+			'joinTable' => 'custom_form_fields',
 			'foreignKey' => 'custom_form_id',
 			'targetForeignKey' => 'custom_field_id'
 		]);
