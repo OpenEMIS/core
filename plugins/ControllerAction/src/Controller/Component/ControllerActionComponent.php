@@ -631,8 +631,8 @@ class ControllerActionComponent extends Component {
 				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 				$method = 'addEdit' . ucfirst($methodKey);
 				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				if (method_exists($this->model, $method)) {
-	                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+				if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
+	                $model->eventManager()->on($eventKey, [], [$model, $method]);
 	            }
 	            $event = $model->eventManager()->dispatch($event);
 				if ($event->isStopped()) { return $event->result; }
@@ -643,8 +643,8 @@ class ControllerActionComponent extends Component {
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
 				$method = 'add' . ucfirst($methodKey);
 				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				if (method_exists($this->model, $method)) {
-	                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+				if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
+	                $model->eventManager()->on($eventKey, [], [$model, $method]);
 	            }
 				$event = $model->eventManager()->dispatch($event);
 				if ($event->isStopped()) { return $event->result; }
@@ -734,8 +734,8 @@ class ControllerActionComponent extends Component {
 					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 					$method = 'addEdit' . ucfirst($methodKey);
 					$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-					if (method_exists($this->model, $method)) {
-		                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+					if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
+		                $model->eventManager()->on($eventKey, [], [$model, $method]);
 		            }
 		            $event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
@@ -746,8 +746,8 @@ class ControllerActionComponent extends Component {
 					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
 					$method = 'edit' . ucfirst($methodKey);
 					$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-					if (method_exists($this->model, $method)) {
-		                $this->model->eventManager()->on($eventKey, [], [$this->model, $method]);
+					if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
+		                $model->eventManager()->on($eventKey, [], [$model, $method]);
 		            }
 					$event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }

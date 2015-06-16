@@ -12,3 +12,4 @@ echo $this->Html->script('doughnutchart/Chart.min');
 echo $this->Html->script('doughnutchart/Chart.Doughnut');
 
 echo $this->Html->script('app');
+echo $this->Html->script('app.table');

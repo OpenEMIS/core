@@ -42,11 +42,6 @@ class InstitutionSiteGradesTable extends AppTable {
 
 	}
 
-	// public function onPopulateSelectOptions(Event $event, $query) {
-	// 	$query = parent::onPopulateSelectOptions($event, $query);
-	// 	return $query;
-	// }
-
 	public function getInstitutionSiteGradeOptions($institutionsId, $academicPeriodId, $listOnly=true) {
 		$conditions = array(
 			'InstitutionSiteProgrammes.institution_site_id = ' . $institutionsId
@@ -82,8 +77,7 @@ class InstitutionSiteGradesTable extends AppTable {
 
 	public function getGradeOptions($institutionsId, $academicPeriodId, $programmeId=0) {
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId,
-			'InstitutionSiteProgrammes.education_programme_id' => $programmeId
+			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
 		);
 		$conditions = $this->InstitutionSiteProgrammes->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 		$query = $this->InstitutionSiteProgrammes->find()->where($conditions)->select('id');
