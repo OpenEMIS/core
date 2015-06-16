@@ -32,17 +32,15 @@ class StaffController extends AppController {
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
 			'Licenses' => ['className' => 'Staff.Licenses'],
-			'BankAccounts' => ['className' => 'User.UserBankAccounts'],
+			'BankAccounts' => ['className' => 'User.UserBankAccounts']
 		];
 
 		$this->set('contentHeader', 'Staff');
-    }
+	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Controller.onInitialize'] = 'onInitialize';
-		$events['ControllerAction.Controller.beforePaginate'] = 'beforePaginate';
-		return $events;
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$this->Navigation->addCrumb('Staff', ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'index']);
 	}
 
 	public function onInitialize($event, $model) {
@@ -68,18 +66,18 @@ class StaffController extends AppController {
 		$session = $this->request->session();
 
 		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
-					$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
-					if (!array_key_exists('conditions', $options)) {
-						$options['conditions'] = [];
-					}
-					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
-				} else {
-					$this->Alert->warning('general.noData');
-					$this->redirect(['action' => 'index']);
-					return false;
+			if ($this->ControllerAction->Session->check('Staff.security_user_id')) {
+				$securityUserId = $this->ControllerAction->Session->read('Staff.security_user_id');
+				if (!array_key_exists('conditions', $options)) {
+					$options['conditions'] = [];
 				}
+				$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
+			} else {
+				$this->Alert->warning('general.noData');
+				$this->redirect(['action' => 'index']);
+				return false;
 			}
-			return $options;
+		}
+		return $options;
 	}
 }

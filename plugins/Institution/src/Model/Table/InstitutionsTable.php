@@ -118,7 +118,7 @@ class InstitutionsTable extends AppTable  {
 		return $validator;
 	}
 
-	public function indexBeforeAction($event) {
+	public function indexBeforeAction(Event $event) {
 		$this->Session->delete('Institutions.id');
 		$this->fields['alternative_name']['visible']['index'] = false;
 		$this->fields['address']['visible']['index'] = false;
