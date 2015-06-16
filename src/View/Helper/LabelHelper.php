@@ -127,6 +127,8 @@ class LabelHelper extends Helper {
 			'staff_position_grade_id' => 'Grade'
 		],
 		'InstitutionSiteSections' => [
+			'name' => 'Section Name',
+			'institution_site_shift_id' => 'Shift',
 			'security_user_id' => 'Home Room Teacher',
 			'single_grade_field' => 'Sections',
 			'multi_grade_field' => 'Education Grades',
