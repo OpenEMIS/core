@@ -2,11 +2,15 @@
 namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class CustomFieldsTable extends AppTable {
+	private $_contain = ['CustomFieldOptions', 'CustomTableColumns', 'CustomTableRows'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -14,7 +18,7 @@ class CustomFieldsTable extends AppTable {
 		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('CustomForms', [
 			'className' => 'CustomField.CustomForms',
-			'joinTable' => 'custom_field_forms',
+			'joinTable' => 'custom_form_fields',
 			'foreignKey' => 'custom_field_id',
 			'targetForeignKey' => 'custom_form_id'
 		]);
@@ -26,6 +30,17 @@ class CustomFieldsTable extends AppTable {
 
 	public function viewBeforeAction(Event $event) {
 		$this->setFieldOrder();
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->loadBehavior($entity->field_type);
+		return $entity;
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -43,13 +58,20 @@ class CustomFieldsTable extends AppTable {
 		$this->fields['is_unique']['options'] = $uniqueOptions;
 
 		$this->setFieldOrder();
+
+		if ($this->request->is(['post', 'put'])) {
+			$selectedFieldType = $this->request->data($this->aliasField('field_type'));
+			$this->loadBehavior($selectedFieldType);
+		}
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		$this->fields['is_mandatory']['visible'] = $this->getMandatoryVisibility($entity->field_type);
-		$this->fields['is_unique']['visible'] = $this->getUniqueVisibility($entity->field_type);
-
-		return $entity;
+	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+		if ($this->behaviors()->hasMethod('addEditBeforePatch')) {
+			list($entity, $data, $options) = array_values($this->behaviors()->call('addEditBeforePatch', [$event, $entity, $data, $options]));
+		}
+		//Required by patchEntity for associated data
+		$options['associated'] = $this->_contain;
+		return compact('entity', 'data', 'options');
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -63,19 +85,16 @@ class CustomFieldsTable extends AppTable {
 		return $entity;
 	}
 
-	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
-		$selectedFieldType = $data[$this->alias()]['field_type'];
-		$this->loadBehavior($selectedFieldType);
-
-		return compact('entity', 'data', 'options');
+	public function editBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
 	}
 
-	/*
-	public function addEditOnAddOption(Event $event, Entity $entity, array $data, array $options) {
-		//pr('addEditOnAddOption');die;
-		return compact('entity', 'data', 'options');
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->loadBehavior($entity->field_type);
+		return $entity;
 	}
-	*/
 
 	public function getSelectOptions() {
 		//Return all required options and their key
@@ -100,10 +119,8 @@ class CustomFieldsTable extends AppTable {
 	}
 
 	public function loadBehavior($selectedFieldType) {
-		$this->addBehavior('CustomField.'.Inflector::camelize(strtolower($selectedFieldType)), [
-			'events' => [
-				'ControllerAction.Model.addEdit.onReload' => 'addEditOnAddOption'
-			]
-		]);
+		$this->fields['is_mandatory']['visible'] = $this->getMandatoryVisibility($selectedFieldType);
+		$this->fields['is_unique']['visible'] = $this->getUniqueVisibility($selectedFieldType);
+		$this->addBehavior('CustomField.'.Inflector::camelize(strtolower($selectedFieldType)));
 	}
 }

@@ -200,11 +200,11 @@ class ControllerActionHelper extends Helper {
 				$value = $this->getIndexElement($value, $attr);
 			}
 
-			$eventKey = 'ControllerAction.Model.index.onGet' . Inflector::camelize($field);
-			$method = 'indexOnGet' . Inflector::camelize($field);
+			$method = 'onGet' . Inflector::camelize($field);
+			$eventKey = 'ControllerAction.Model.' . $method;
 
 			$event = new Event($eventKey, $this, ['entity' => $obj]);
-			if (method_exists($table, $method)) {
+			if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
                 $table->eventManager()->on($eventKey, [], [$table, $method]);
             }
 			$event = $table->eventManager()->dispatch($event);
@@ -604,7 +604,6 @@ class ControllerActionHelper extends Helper {
 				if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
-					// $associatedObject = str_replace('_id', '', $_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
@@ -638,7 +637,7 @@ class ControllerActionHelper extends Helper {
 					$labelClass = implode(' ', $_labelClass);
 					$rowContent = sprintf($_labelCol.$_valueCol, $labelClass, $label, $valueClass, $value);
 				} else { // no label
-					$rowContent = sprintf($valueCol, $valueClass, $value);
+					$rowContent = sprintf($_valueCol, $valueClass, $value);
 				}
 				if (!array_key_exists('override', $_fieldAttr)) {
 					$html .= sprintf($row, $rowClass, $rowContent);
