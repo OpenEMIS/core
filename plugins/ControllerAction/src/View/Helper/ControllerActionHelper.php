@@ -200,11 +200,11 @@ class ControllerActionHelper extends Helper {
 				$value = $this->getIndexElement($value, $attr);
 			}
 
-			$eventKey = 'ControllerAction.Model.index.onGet' . Inflector::camelize($field);
-			$method = 'indexOnGet' . Inflector::camelize($field);
+			$method = 'onGet' . Inflector::camelize($field);
+			$eventKey = 'ControllerAction.Model.' . $method;
 
 			$event = new Event($eventKey, $this, ['entity' => $obj]);
-			if (method_exists($table, $method)) {
+			if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
                 $table->eventManager()->on($eventKey, [], [$table, $method]);
             }
 			$event = $table->eventManager()->dispatch($event);

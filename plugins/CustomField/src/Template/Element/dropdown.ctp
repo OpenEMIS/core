@@ -45,9 +45,7 @@
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
 						<th><?= $this->Label->get('CustomFieldOptions.is_default'); ?></th>
-						<?php if ($action == 'add') : ?>
-							<th class="cell-delete"></th>
-						<?php endif ?>
+						<th class="cell-delete"></th>
 					</tr>
 				</thead>
 				<?php if (!empty($data->custom_field_options)) : ?>
@@ -78,11 +76,9 @@
 									?>
 									<?= $this->Form->radio("CustomFields.is_default", [$key => false], $attributes); ?>
 								</td>
-								<?php if ($action == 'add') : ?>
-									<td>
-										<span class="fa fa-minus-circle" style="cursor: pointer;" title="<?php echo $this->Label->get('general.delete'); ?>" onclick="jsTable.doRemove(this);"></span>
-									</td>
-								<?php endif ?>
+								<td>
+									<span class="fa fa-minus-circle" style="cursor: pointer;" title="<?php echo $this->Label->get('general.delete'); ?>" onclick="jsTable.doRemove(this);"></span>
+								</td>
 							</tr>
 						<?php endforeach ?>
 					</tbody>
