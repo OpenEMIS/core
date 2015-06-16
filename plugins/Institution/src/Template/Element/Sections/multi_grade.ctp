@@ -17,12 +17,13 @@
 			</thead>
 
 			<?php if (isset($attr['data'])) : ?>
+			<?php //pr($attr['data']);?>
 			<tbody>
 				<?php foreach ($attr['data'] as $i=>$obj) : ?>
-				<?php 	$selected = (isset($attr['selected']) && in_array($obj->id, $attr['selected'])) ? true : false; ?>
+				<?php 	$selected = (isset($attr['selected']) && in_array($obj->education_grade_id, $attr['selected'])) ? true : false; ?>
 				<tr>
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSiteSections[institution_site_section_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->id?>" <?php echo ($selected) ? 'checked' : '';?> />
+						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSiteSections[institution_site_section_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->education_grade_id?>" <?php echo ($selected) ? 'checked' : '';?> />
 					</td>
 					<td><?= $obj->education_grade->programme_name ?></td>
 					<td><?= $obj->education_grade->name ?></td>

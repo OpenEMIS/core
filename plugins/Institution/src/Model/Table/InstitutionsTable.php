@@ -39,7 +39,8 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours']);
 		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
 
-		$this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
+		$this->hasMany('InstitutionSiteStudents', 			['className' => 'Institution.InstitutionSiteStudents']);
+		// $this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours']);
 		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
@@ -53,7 +54,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteAssessmentResults', 	['className' => 'Institution.InstitutionSiteAssessmentResults']);
 
-		$this->hasMany('Grades', 							['className' => 'Institution.InstitutionSiteGrades']);
+		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades']);
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
 		// pr($this->validator());
