@@ -84,7 +84,7 @@
 					</tbody>
 				<?php endif ?>
 			</table>
-			<a class="void icon_plus" onclick="$('#reload').val('addOption').click()"><i class="fa fa-plus"></i></a>
+			<a onclick="$('#reload').val('addOption').click()"><i class="fa fa-plus"></i></a>
 		</div>
 	</div>
 <?php endif ?>
