@@ -43,14 +43,14 @@ class UsersTable extends AppTable {
 	}
 
 	public function addBeforeAction(Event $event) {
-		if ($this->Session->check('Institutions.id')) {
-			$institutionId = $this->Session->read('Institutions.id');
-		} else {
-			// todo-mlee need to put correct alert saying need to select institution first
-			$action = $this->ControllerAction->buttons['index']['url'];
-			$this->controller->redirect($action);
-			return false;
-		}
+		// if ($this->Session->check('Institutions.id')) {
+		// 	$institutionId = $this->Session->read('Institutions.id');
+		// } else {
+		// 	// todo-mlee need to put correct alert saying need to select institution first
+		// 	$action = $this->ControllerAction->buttons['index']['url'];
+		// 	$this->controller->redirect($action);
+		// 	return false;
+		// }
 
 		if (in_array($this->controller->name, ['Students','Staff'])) {
 			$this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
