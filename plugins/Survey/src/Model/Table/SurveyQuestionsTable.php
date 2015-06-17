@@ -1,15 +1,15 @@
 <?php
 namespace Survey\Model\Table;
 
-use App\Model\Table\AppTable;
+use CustomField\Model\Table\CustomFieldsTable;
+use Cake\Event\Event;
 use Cake\Validation\Validator;
 
-class SurveyQuestionsTable extends AppTable {
+class SurveyQuestionsTable extends CustomFieldsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('SurveyTemplates', ['className' => 'Survey.SurveyTemplates']);
-		$this->hasMany('SurveyQuestionChoices', ['className' => 'Survey.SurveyQuestionChoices']);
-		$this->hasMany('SurveyTableColumns', ['className' => 'Survey.SurveyTableColumns']);
-		$this->hasMany('SurveyTableRows', ['className' => 'Survey.SurveyTableRows']);
+		$this->hasMany('CustomFieldOptions', ['className' => 'Survey.SurveyQuestionChoices', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('CustomTableColumns', ['className' => 'Survey.SurveyTableColumns', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('CustomTableRows', ['className' => 'Survey.SurveyTableRows', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 }
