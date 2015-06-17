@@ -1,3 +1,4 @@
+<?php $CustomFields = $attr['model']; ?>
 <?php if ($action == 'view') : ?>
 	<?php if (!empty($data->custom_table_columns)) : ?>
 		<div class="table-responsive">
@@ -61,9 +62,9 @@
 						<tr>
 							<th>
 								<div>
-									<a onclick="$('#reload').val('addColumn').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Column'); ?></a>
+									<a style="cursor:pointer;" onclick="$('#reload').val('addColumn').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Column'); ?></a>
 									<br>
-									<a onclick="$('#reload').val('addRow').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Row'); ?></a>
+									<a style="cursor:pointer;" onclick="$('#reload').val('addRow').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Row'); ?></a>
 								</div>
 							</th>
 							<?php if (!empty($data->custom_table_columns)) : ?>
@@ -76,11 +77,11 @@
 										<div>
 											<?php
 												if(isset($obj->id)) {
-													echo $this->Form->hidden("CustomFields.custom_table_columns.$key.id");
+													echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.id");
 												}
-												echo $this->Form->input("CustomFields.custom_table_columns.$key.name", ['label' => false]);
-												echo $this->Form->hidden("CustomFields.custom_table_columns.$key.order", ['value' => $columnOrder]);
-												echo $this->Form->hidden("CustomFields.custom_table_columns.$key.visible");
+												echo $this->Form->input("$CustomFields.custom_table_columns.$key.name", ['label' => false]);
+												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.order", ['value' => $columnOrder]);
+												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.visible");
 											?>
 											<span style="cursor: pointer;"><a onclick="jsTable.doRemoveColumn(this)"><i class="fa fa-minus-circle"></i></a></span>
 										</div>
@@ -104,11 +105,11 @@
 										<td>
 											<?php
 												if(isset($obj->id)) {
-													echo $this->Form->hidden("CustomFields.custom_table_rows.$key.id");
+													echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.id");
 												}
-												echo $this->Form->input("CustomFields.custom_table_rows.$key.name", ['label' => false]);
-												echo $this->Form->hidden("CustomFields.custom_table_rows.$key.order", ['value' => $rowOrder]);
-												echo $this->Form->hidden("CustomFields.custom_table_rows.$key.visible");
+												echo $this->Form->input("$CustomFields.custom_table_rows.$key.name", ['label' => false]);
+												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.order", ['value' => $rowOrder]);
+												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.visible");
 											?>
 											<span style="cursor: pointer;"><a onclick="jsTable.doRemove(this)"><i class="fa fa-minus-circle"></i></a></span>
 										</td>

@@ -886,3 +886,100 @@ ALTER TABLE `surveys`
 
 ALTER TABLE `surveys`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- June 17 0911hrs
+-- Update for infrastructure
+
+-- Backup old tables
+RENAME TABLE infrastructure_custom_fields TO z_1461_infrastructure_custom_fields;
+RENAME TABLE infrastructure_custom_field_options TO z_1461_infrastructure_custom_field_options;
+
+-- New table - infrastructure_custom_fields
+DROP TABLE IF EXISTS `infrastructure_custom_fields`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_fields` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `field_type` varchar(100) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `infrastructure_level_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_fields`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_custom_fields`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - infrastructure_custom_field_options
+DROP TABLE IF EXISTS `infrastructure_custom_field_options`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_field_options` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_default` int(1) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_field_options`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_custom_field_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - infrastructure_custom_table_columns
+DROP TABLE IF EXISTS `infrastructure_custom_table_columns`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_table_columns` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_table_columns`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_custom_table_columns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - infrastructure_custom_table_rows
+DROP TABLE IF EXISTS `infrastructure_custom_table_rows`;
+CREATE TABLE IF NOT EXISTS `infrastructure_custom_table_rows` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `infrastructure_custom_field_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `infrastructure_custom_table_rows`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `infrastructure_custom_table_rows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
