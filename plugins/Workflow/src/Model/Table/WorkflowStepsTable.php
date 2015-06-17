@@ -9,6 +9,8 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 
 class WorkflowStepsTable extends AppTable {
+	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
@@ -32,6 +34,13 @@ class WorkflowStepsTable extends AppTable {
 			'order' => 3,
 			'visible' => true
 		]);
+
+		$this->ControllerAction->addField('actions', [
+			'type' => 'element',
+			'order' => 4,
+			'element' => 'Workflow.actions',
+			'visible' => true
+		]);
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -44,13 +53,13 @@ class WorkflowStepsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Table $model, array $options) {
-		$options['contain'][] = 'SecurityRoles';
+		$options['contain'] = array_merge($options['contain'], $this->_contain);
 		return $options;
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain[] = 'SecurityRoles';
+		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
 	}
 
@@ -68,8 +77,35 @@ class WorkflowStepsTable extends AppTable {
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
 		//Required by patchEntity for associated data
-		$options['associated'] = ['SecurityRoles'];
+		$options['associated'] = $this->_contain;
 		return compact('entity', 'data', 'options');
+	}
+
+	public function addEditOnAddAction(Event $event, Entity $entity, array $data, array $options) {
+		$actionOptions = [
+			'name' => '',
+			'visible' => 1,
+			'comment_required' => 0
+		];
+		$data[$this->alias()]['workflow_actions'][] = $actionOptions;
+
+		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+		$options['associated'] = [
+			'WorkflowActions' => ['validate' => false]
+		];
+
+		return compact('entity', 'data', 'options');
+	}
+
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$where = [
+			$this->aliasField('workflow_id') => $entity->workflow_id,
+			//$this->aliasField('id !=') => $entity->id
+		];
+		$nextStepOptions = $this->find('list')->where($where)->toArray();
+		$this->controller->set('nextStepOptions', $nextStepOptions);
+
+		return $entity;
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
