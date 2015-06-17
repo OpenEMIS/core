@@ -14,7 +14,6 @@ class CustomFieldsController extends AppController
 
 		$this->ControllerAction->models = [
 			'Modules' => ['className' => 'CustomField.CustomModules'],
-			'Groups' => ['className' => 'CustomField.CustomGroups'],
 			'Fields' => ['className' => 'CustomField.CustomFields'],
 			'Forms' => ['className' => 'CustomField.CustomForms']
 		];
@@ -28,10 +27,6 @@ class CustomFieldsController extends AppController
 			'Modules' => [
 				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Modules'],
 				'text' => __('Modules')
-			],
-			'Groups' => [
-				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Groups'],
-				'text' => __('Groups')
 			],
 			'Fields' => [
 				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
