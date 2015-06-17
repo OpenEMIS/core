@@ -132,6 +132,9 @@ class InstitutionsTable extends AppTable  {
 		$this->fields['longitude']['visible']['index'] = false;
 		$this->fields['latitude']['visible']['index'] = false;
 		$this->fields['contact_person']['visible']['index'] = false;
+
+		$indexDashboard = 'Institution.Institutions/dashboard';
+		$this->controller->set('indexDashboard', $indexDashboard);
 	}
 
 	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
