@@ -37,5 +37,8 @@ class StaffBehavior extends Behavior {
 		$this->_table->fields['last_login']['visible']['index'] = false;
 		$this->_table->fields['photo_name']['visible']['index'] = false;
 		$this->_table->fields['photo_content']['visible']['index'] = false;
+
+		$indexDashboard = 'Staff.Staff/dashboard';
+		$this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 }
