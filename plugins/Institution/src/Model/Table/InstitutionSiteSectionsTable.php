@@ -43,7 +43,6 @@ class InstitutionSiteSectionsTable extends AppTable {
     		unset($this->ControllerAction->buttons['index']['url']['grade_type']);
 			$action = $this->ControllerAction->buttons['index']['url'];
 			$this->controller->redirect($action);
-    		// $this->_selectedGradeType = $this->ControllerAction->buttons['index']['url']['grade_type'];
     	}
     }
 
@@ -223,27 +222,17 @@ class InstitutionSiteSectionsTable extends AppTable {
 				$action = $this->ControllerAction->buttons['index']['url'];
 				$this->controller->redirect($action);
 			} else {
-				pr($error);
-				// $this->log($error, 'debug');
+				// pr($error);
+				$this->log($error, 'debug');
 				$this->Alert->error('general.add.failed');
 			}
+			return false;
 		} else {
 			foreach($data['InstitutionSiteSections']['institution_site_section_grades'] as $key => $row) {
 				$data['InstitutionSiteSections']['institution_site_section_grades'][$key]['status'] = 1;
 			}
-			
-			$entity = $this->newEntity();
-			$data = $this->patchEntity($entity, $data);
-			if ($this->save($data)) {
-				$this->Alert->success('general.add.success');
-				$action = $this->ControllerAction->buttons['index']['url'];
-				$this->controller->redirect($action);
-			} else {
-				$this->log($this->errors(), 'debug');
-				$this->Alert->error('general.add.failed');
-			}
+			return compact('entity', 'data', 'options');
 		}
-		return false;
 	}
 
 	public function addAfterAction($event, $entity) {
@@ -306,7 +295,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'element' => 'Institution.Sections/students',
 			'data' => [	
 				'students'=>[],
-				'categoryOptions'=>$categoryOptions
+				'categoryOptions'=>$categoryOptions,
+				'gradeOptions'=>[]
 			]
 		]);
 
@@ -316,32 +306,44 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->fields['name']['order'] = 2;
 		$this->fields['institution_site_shift_id']['order'] = 3;
 		$this->fields['security_user_id']['order'] = 4;
-		$this->fields['students']['order'] = 6;
+		$this->fields['students']['order'] = 5;
 
 	}
 
 	public function editBeforeQuery($event, $query, $contain) {
-		$contain = ['Staff', 'InstitutionSiteSectionGrades', 'InstitutionSiteSectionStudents'];
+		$contain = ['Staff', 'InstitutionSiteSectionGrades', 'InstitutionSiteSectionStudents'=>['EducationGrades', 'Users'=>['Genders']]];
 		return [$query, $contain];
 	}
 
 	public function editBeforePatch($event, $entity, $data, $options) {
+		$this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
+		$data['InstitutionSiteSections']['institution_site_section_students'] = $data['InstitutionSiteSectionStudents'];
+		unset($data['InstitutionSiteSectionStudents']);
 		// pr($data);die;
-		$this->InstitutionSiteSectionStudents->deleteAll(['institution_site_section_id' => $entity->id]);
+	// 	$this->InstitutionSiteSectionStudents->deleteAll(['institution_site_section_id' => $entity->id]);
 		return compact('entity', 'data', 'options');
 	}
 
 	public function editAfterAction($event, $entity) {
-		
-		$this->fields['students']['data']['students'] = $entity->institution_site_section_students;
-
+		$students = $entity->institution_site_section_students;
 		$studentOptions = $this->getStudentsOptions($entity);
 		// removing existing students from StudentOptions
-		if (array_key_exists('InstitutionSiteSectionStudents', $this->request->data)) {
-			foreach ($this->request->data['InstitutionSiteSectionStudents'] as $row) {
-				if ($row['status'] == 1 && array_key_exists($row['security_user_id'], $studentOptions)) {
-					unset($studentOptions[$row['security_user_id']]);
+		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
+			// clear institution_site_section_students list grab from db
+			$students = [];
+			if (array_key_exists('InstitutionSiteSectionStudents', $this->request->data)) {
+				foreach ($this->request->data['InstitutionSiteSectionStudents'] as $row) {
+					if ($row['status'] == 1 && array_key_exists($row['security_user_id'], $studentOptions)) {
+						$id = $row['security_user_id'];
+						$students[] = $this->createVirtualStudentEntity($id, $entity);
+						unset($studentOptions[$id]);
+					}
 				}
+			}
+			if (array_key_exists('student_id', $this->request->data)) {
+				$id = $this->request->data['student_id'];
+				$students[] = $this->createVirtualStudentEntity($id, $entity);
+				unset($studentOptions[$id]);
 			}
 		} else {
 			foreach ($entity->institution_site_section_students as $row) {
@@ -350,7 +352,11 @@ class InstitutionSiteSectionsTable extends AppTable {
 				}
 			}
 		}
+		$this->fields['students']['data']['students'] = $students;
 		$this->fields['students']['data']['studentOptions'] = $studentOptions;
+
+		$gradeOptions = $this->getSectionGradeOptions($entity);
+		$this->fields['students']['data']['gradeOptions'] = $gradeOptions;
 
 	}
 
@@ -401,7 +407,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 	public function viewBeforeQuery($event, $query, $contain) {
-		$contain = ['Staff', 'InstitutionSiteSectionGrades', 'InstitutionSiteSectionStudents'];
+		$contain = ['Staff', 'InstitutionSiteSectionGrades', 'InstitutionSiteSectionStudents'=>['EducationGrades', 'Users'=>['Genders']]];
 		return [$query, $contain];
 	}
 
@@ -417,6 +423,22 @@ class InstitutionSiteSectionsTable extends AppTable {
 ** essential functions
 **
 ******************************************************************************************************************/
+
+	protected function getSectionGradeOptions($entity) {
+		$Grade = $this->InstitutionSiteSectionGrades;
+		$gradeOptions = $Grade->find()
+							->contain('EducationGrades')
+							->where([
+								$Grade->aliasField('institution_site_section_id') => $entity->id,
+								$Grade->aliasField('status') => 1
+							])
+							->toArray();
+		$options = [];
+		foreach ($gradeOptions as $key => $value) {
+			$options[$value->education_grade->id] = $value->education_grade->name;
+		}
+		return $options;
+	}
 
 	protected function getStudentsOptions($sectionEntity) {
 		$institutionsId = $this->Session->read('Institutions.id');
@@ -661,4 +683,20 @@ class InstitutionSiteSectionsTable extends AppTable {
 		return $number;
 	}
 	
+	protected function createVirtualStudentEntity($id, $entity) {
+		$userData = $this->Institutions->InstitutionSiteStudents->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+		$data = [
+			'security_user_id'=>$id,
+			'institution_site_section_id'=>$entity->id,
+			'education_grade_id'=>0,
+			'student_category_id'=>0,
+			'status'=>1,
+			'user'=>[]
+		];
+		$student = $this->InstitutionSiteSectionStudents->newEntity();
+		$student = $this->InstitutionSiteSectionStudents->patchEntity($student, $data);
+		$student->user = $userData->user;
+		return $student;
+	}
+
 }

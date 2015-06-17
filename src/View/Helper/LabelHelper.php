@@ -91,7 +91,8 @@ class LabelHelper extends Helper {
 			'model' => 'Model',
 			'section' => 'Section',
 			'gender' => 'Gender',
-			'date_of_birth' => 'Date Of Birth'
+			'date_of_birth' => 'Date Of Birth',
+			'education_grade' => 'Education Grade'
 		],
 		'date' => [
 			'start' => 'Start Date',

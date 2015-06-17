@@ -12,6 +12,9 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         parent::initialize($config);
 
+		/**
+		 * fieldOption tables
+		 */
 		$this->belongsTo('InstitutionSiteLocalities', 		['className' => 'Institution.Localities']);
 		$this->belongsTo('InstitutionSiteTypes', 			['className' => 'Institution.Types']);
 		$this->belongsTo('InstitutionSiteOwnerships', 		['className' => 'Institution.Ownerships']);
@@ -23,7 +26,10 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		$this->hasMany('Activities', 						['className' => 'Institution.InstitutionSiteActivities']);
+		/**
+		 * This model uses TrackActivityBehavior
+		 */
+		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities']);
 		
 		$this->hasMany('Attachments', 						['className' => 'Institution.InstitutionSiteAttachments']);
 		$this->hasMany('Additional', 						['className' => 'Institution.Additional']);
@@ -62,9 +68,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-
-	        // pr($validator);
-
 		$validator
 			->add('date_opened', 'ruleCompare', [
 					'rule' => array('comparison', 'notequal', '0000-00-00'),
@@ -112,9 +115,6 @@ class InstitutionsTable extends AppTable  {
 				])
 
 	        ;
-
-	        // pr($validator);
-
 		return $validator;
 	}
 
@@ -209,6 +209,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->fields['area_id']['type'] = 'select';
 		$this->fields['area_administrative_id']['type'] = 'select';
+		// pr($this->fields);die;
 		// $areaId = false;
 		// $areaAdministrativeId = false;
 		if ($this->action == 'add') {
