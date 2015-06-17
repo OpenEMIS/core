@@ -22,10 +22,12 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function implementedEvents() {
-		$events = [
+		$events = parent::implementedEvents();
+		$newEvent = [
 			'ControllerAction.Model.beforeAction' => 'beforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'
 		];
+		$events = array_merge($events,$newEvent);
 		return $events;
 	}
 
