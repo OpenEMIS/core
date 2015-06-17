@@ -2,6 +2,8 @@
 namespace Infrastructure\Controller;
 
 use App\Controller\AppController;
+use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class InfrastructuresController extends AppController
@@ -11,7 +13,8 @@ class InfrastructuresController extends AppController
 
 		$this->ControllerAction->models = [
 			'Levels' => ['className' => 'Infrastructure.InfrastructureLevels'],
-			'Types' => ['className' => 'Infrastructure.InfrastructureTypes']
+			'Types' => ['className' => 'Infrastructure.InfrastructureTypes'],
+			'CustomFields' => ['className' => 'Infrastructure.InfrastructureCustomFields']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -21,21 +24,6 @@ class InfrastructuresController extends AppController
     	$this->Navigation->addCrumb('Infrastructure', ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => $this->request->action]);
 		$this->Navigation->addCrumb($this->request->action);
 
-    	$header = __('Infrastructure');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
-
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
-
-		$this->set('contentHeader', $header);
-
 		$tabElements = [
 			'Levels' => [
 				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels'],
@@ -44,10 +32,46 @@ class InfrastructuresController extends AppController
 			'Types' => [
 				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Types'],
 				'text' => __('Types')
+			],
+			'CustomFields' => [
+				'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'CustomFields'],
+				'text' => __('Custom Fields')
 			]
 		];
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
+
+	public function onInitialize(Event $event, Table $model) {
+		$header = __('Infrastructure');
+
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb('Infrastructure', ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => $model->alias]);
+		$this->Navigation->addCrumb($model->getHeader($model->alias));
+
+		$this->set('contentHeader', $header);
+    }
+
+    public function beforePaginate(Event $event, Table $model, array $options) {
+    	if ($model->alias == 'Types' || $model->alias == 'CustomFields') {
+			$query = $this->request->query;
+
+			$levels = TableRegistry::get('Infrastructure.InfrastructureLevels')->find('list')->toArray();
+	        $selectedLevel = isset($query['level']) ? $query['level'] : key($levels);
+
+	        $levelOptions = [];
+	        foreach ($levels as $key => $level) {
+	            $levelOptions['level=' . $key] = $level;
+	        }
+
+	        $options['conditions'][] = [
+	        	$model->aliasField('infrastructure_level_id') => $selectedLevel
+	        ];
+
+			$this->set(compact('levelOptions', 'selectedLevel'));
+    	}
+
+    	return $options;
+    }
 }
