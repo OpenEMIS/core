@@ -49,7 +49,6 @@ class InstitutionsController extends AppController  {
 
 		];
 		$this->loadComponent('Paginator');
-		// $this->loadComponent('Activity', ['model'=>'InstitutionSiteActivities']);
 		
 	}
 
