@@ -1070,7 +1070,7 @@ class ControllerActionComponent extends Component {
 				$fields[$key]['sort'] = true;
 			}
 			if ($key == 'password') {
-				$fields[$key]['visible']['index'] = false;
+				$fields[$key]['visible'] = false;
 			}
 			/*
 			if ($obj['type'] == 'binary') {

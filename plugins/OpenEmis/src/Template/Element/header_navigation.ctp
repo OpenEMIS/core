@@ -1,7 +1,7 @@
 <?php
 $session = $this->request->session();
-$firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : '';
-$lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : '';
+$firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
+$lastName = $session->check('Auth.User.last_name') ? $session->read('Auth.User.last_name') : 'Administrator';
 $userId = $session->check('Auth.User.id') ? $session->read('Auth.User.id') : '';
 $homeUrl = $session->check('System.home') ? $session->read('System.home') : [];
 

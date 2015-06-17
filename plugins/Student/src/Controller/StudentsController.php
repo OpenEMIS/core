@@ -28,12 +28,12 @@ class StudentsController extends AppController {
 			'Results' => ['className' => 'Student.StudentAssessments'],
 			'Extracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' => ['className' => 'User.UserBankAccounts'],
-			'StudentFees' => ['className' => 'Student.StudentFees'],
+			'StudentFees' => ['className' => 'Student.StudentFees']
 		];
 
 		$this->loadComponent('Paginator');
 		$this->set('contentHeader', 'Students');
-    }
+	}
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
@@ -87,18 +87,18 @@ class StudentsController extends AppController {
 		$session = $this->request->session();
 
 		if (in_array($model->alias, array_keys($this->ControllerAction->models))) {
-				if ($this->ControllerAction->Session->check('Student.security_user_id')) {
-					$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
-					if (!array_key_exists('conditions', $options)) {
-						$options['conditions'] = [];
-					}
-					$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
-				} else {
-					$this->Alert->warning('general.noData');
-					$this->redirect(['action' => 'index']);
-					return false;
+			if ($this->ControllerAction->Session->check('Student.security_user_id')) {
+				$securityUserId = $this->ControllerAction->Session->read('Student.security_user_id');
+				if (!array_key_exists('conditions', $options)) {
+					$options['conditions'] = [];
 				}
+				$options['conditions'][] = [$model->alias().'.security_user_id = ' => $securityUserId];
+			} else {
+				$this->Alert->warning('general.noData');
+				$this->redirect(['action' => 'index']);
+				return false;
 			}
-			return $options;
+		}
+		return $options;
 	}
 }

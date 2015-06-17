@@ -12,6 +12,9 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
         parent::initialize($config);
 
+		/**
+		 * fieldOption tables
+		 */
 		$this->belongsTo('InstitutionSiteLocalities', 		['className' => 'Institution.Localities']);
 		$this->belongsTo('InstitutionSiteTypes', 			['className' => 'Institution.Types']);
 		$this->belongsTo('InstitutionSiteOwnerships', 		['className' => 'Institution.Ownerships']);
@@ -23,7 +26,10 @@ class InstitutionsTable extends AppTable  {
 		$this->belongsTo('Areas', 							['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', 			['className' => 'Area.AreaAdministratives']);
 
-		$this->hasMany('Activities', 						['className' => 'Institution.InstitutionSiteActivities']);
+		/**
+		 * This model uses TrackActivityBehavior
+		 */
+		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities']);
 		
 		$this->hasMany('Attachments', 						['className' => 'Institution.InstitutionSiteAttachments']);
 		$this->hasMany('Additional', 						['className' => 'Institution.Additional']);
@@ -39,7 +45,8 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours']);
 		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
 
-		$this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
+		$this->hasMany('InstitutionSiteStudents', 			['className' => 'Institution.InstitutionSiteStudents']);
+		// $this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours']);
 		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
@@ -53,7 +60,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteAssessmentResults', 	['className' => 'Institution.InstitutionSiteAssessmentResults']);
 
-		$this->hasMany('Grades', 							['className' => 'Institution.InstitutionSiteGrades']);
+		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades']);
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
 		// pr($this->validator());
@@ -61,9 +68,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-
-	        // pr($validator);
-
 		$validator
 			->add('date_opened', 'ruleCompare', [
 					'rule' => array('comparison', 'notequal', '0000-00-00'),
@@ -111,13 +115,10 @@ class InstitutionsTable extends AppTable  {
 				])
 
 	        ;
-
-	        // pr($validator);
-
 		return $validator;
 	}
 
-	public function indexBeforeAction($event) {
+	public function indexBeforeAction(Event $event) {
 		$this->Session->delete('Institutions.id');
 		$this->fields['alternative_name']['visible']['index'] = false;
 		$this->fields['address']['visible']['index'] = false;
@@ -131,6 +132,9 @@ class InstitutionsTable extends AppTable  {
 		$this->fields['longitude']['visible']['index'] = false;
 		$this->fields['latitude']['visible']['index'] = false;
 		$this->fields['contact_person']['visible']['index'] = false;
+
+		$indexDashboard = 'Institution.Institutions/dashboard';
+		$this->controller->set('indexDashboard', $indexDashboard);
 	}
 
 	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
@@ -205,6 +209,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->fields['area_id']['type'] = 'select';
 		$this->fields['area_administrative_id']['type'] = 'select';
+		// pr($this->fields);die;
 		// $areaId = false;
 		// $areaAdministrativeId = false;
 		if ($this->action == 'add') {
