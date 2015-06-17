@@ -2,8 +2,6 @@
 namespace Survey\Model\Table;
 
 use CustomField\Model\Table\CustomFieldsTable;
-use Cake\Event\Event;
-use Cake\Validation\Validator;
 
 class SurveyQuestionsTable extends CustomFieldsTable {
 	public function initialize(array $config) {

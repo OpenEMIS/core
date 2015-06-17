@@ -249,9 +249,7 @@ UPDATE `workflow_models` SET `submodel` = 'Staff.StaffLeaveType' WHERE `workflow
 
 -- June 16 1100hrs
 -- Drop tables for Custom Field
-DROP TABLE IF EXISTS `custom_groups`;
 DROP TABLE IF EXISTS `custom_modules`;
-DROP TABLE IF EXISTS `custom_group_modules`;
 DROP TABLE IF EXISTS `custom_field_types`;
 DROP TABLE IF EXISTS `custom_fields`;
 DROP TABLE IF EXISTS `custom_field_options`;
