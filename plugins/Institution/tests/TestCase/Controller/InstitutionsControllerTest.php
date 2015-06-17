@@ -6,75 +6,121 @@ use Cake\ORM\TableRegistry;
 use Cake\TestSuite\IntegrationTestCase;
 
 class InstitutionsControllerTest extends IntegrationTestCase {
-	public $fixtures = ['plugin.institution.institutions'];
+	public $fixtures = [
+		'plugin.institution.institutions',
+		// 'plugin.institution.institution_site_activities',
+		// 'plugin.institution.security_users',
+		// 'plugin.FieldOption.field_option_values',
+		// 'plugin.FieldOption.field_options',
+	];
 	private $prefix = '/Institutions';
 
 	public function setUp() {
 		parent::setUp();
 		$this->Institutions = TableRegistry::get('institution_sites');
+		$this->Institutions->InstitutionSiteActivities = TableRegistry::get('institution_site_activities');
+		// $this->SecurityUsers = TableRegistry::get('security_users');
+		// $this->Institutions = TableRegistry::get('Institutions');
 	}
 
-	public function testIndex() {
-        $this->get($this->prefix);
-        $this->assertResponseOk();
-        
-        // Example: Check if we have at least 10 records out from the pagination
-        $this->assertEquals(true, (count($this->viewVariable('data')) <= 10));
+	public function setAuthSession() {
+		$this->session([
+	        'Auth' => [
+	            'User' => [
+	                'id' => 1,
+	                'username' => 'admin',
+	                'password' => '$2y$10$2su1R6ZNGay4j9iBQ.lSbeV8A0j1PHcUPZR3gMgSR89WTeZlBTF4e'
+	                // other keys.
+	            ]
+	        ]
+	    ]);
 	}
 
-	public function testSearch() {
-		$this->post($this->prefix . '/index', ['Search' => ['searchField' => 'NUS']]);
-		$this->assertEquals(1, count($this->viewVariable('data')));
+	// public function testBeforePaginate() {
+	// 	$session = $this->request->session();
 
-		$data = $this->viewVariable('data');
+	// 	if (array_key_exists('institution_site_id', $model->fields)) {
+	// 		if (!$session->check('Institutions.id')) {
+	// 			$this->Alert->error('general.notExists');
+	// 		}
+	// 		$options['conditions'][] = ['Institutions.id' => $session->read('Institutions.id')];
+	// 	}
 		
-		foreach ($data as $obj) {
-			$recordData = $obj->code . '|' . $obj->name;
-			$this->assertTextNotContains('-1', strpos($recordData, 'NUS'));
-		}
-	}
+	// 	return $options;
+	// }
 
-	public function testAdd() {
-		$data = [
-			'name' => 'Singapore Management University',
-			'alternative_name' => 'SMU',
-			'code' => 'SMU',
-			'address' => 'test address 3',
-			'postal_code' => '1234560',
-			'contact_person' => 'Karl Turnbull',
-			'telephone' => '123456781',
-			'fax' => '187654321',
-			'email' => 'kturnbull@kordit.com',
-			'website' => 'http://www.smu.edu.sg',
-			'date_opened' => '01-01-1985',
-			'year_opened' => 1985,
-			'date_closed' => '01-01-1990',
-			'year_closed' => 1990,
-			'longitude' => '100',
-			'latitude' => '1.32',
-			'institution_site_area_id' => null,
-			'area_id' => 1,
-			'area_administrative_id' => 1,
-			'institution_site_locality_id' => 83,
-			'institution_site_type_id' => 65,
-			'institution_site_ownership_id' => 72,
-			'institution_site_status_id' => 89,
-			'institution_site_sector_id' => 2,
-			'institution_site_provider_id' => 1,
-			'institution_site_gender_id' => 6,
-			'security_group_id' => 0
-		];
+	// public function testIndex() {
+ //        $this->setAuthSession();
+ //        $this->get($this->prefix);
+ //        $this->assertResponseOk();
+        
+ //        // Example: Check if we have at least 10 records out from the pagination
+ //        $this->assertEquals(true, (count($this->viewVariable('data')) <= 10));
+	// }
 
-		$this->post($this->prefix . '/add', $data);
-		$this->assertResponseSuccess();
+	// public function testSearch() {
+ //        $this->setAuthSession();
+	// 	$this->post($this->prefix . '/index', ['Search' => ['searchField' => 'NUS']]);
+	// 	$this->assertEquals(1, count($this->viewVariable('data')));
 
-		$institutionsTable = TableRegistry::get('institution_sites');
+	// 	$data = $this->viewVariable('data');
+		
+	// 	foreach ($data as $obj) {
+	// 		$recordData = $obj->code . '|' . $obj->name;
+	// 		$this->assertTextNotContains('-1', strpos($recordData, 'National Univerysity of Singapore'));
+	// 	}
+	// }
 
-		$query = $institutionsTable->find()->where(['code' => 'SMU']);
-		$this->assertEquals(1, $query->count());
-	}
+	// public function testAdd() {
+ //        $this->setAuthSession();
+	// 	$data = [
+	// 		'name' => 'Singapore Management University',
+	// 		'alternative_name' => 'SMU',
+	// 		'code' => 'SMU',
+	// 		'address' => 'test address 3',
+	// 		'postal_code' => '1234560',
+	// 		'contact_person' => 'Karl Turnbull',
+	// 		'telephone' => '123456781',
+	// 		'fax' => '187654321',
+	// 		'email' => 'kturnbull@kordit.com',
+	// 		'website' => 'http://www.smu.edu.sg',
+	// 		'date_opened' => '01-01-1985',
+	// 		'year_opened' => 1985,
+	// 		'date_closed' => '01-01-1990',
+	// 		'year_closed' => 1990,
+	// 		'longitude' => '100',
+	// 		'latitude' => '1.32',
+	// 		'institution_site_area_id' => null,
+	// 		'area_id' => 1,
+	// 		'area_administrative_id' => 1,
+	// 		'institution_site_locality_id' => 83,
+	// 		'institution_site_type_id' => 65,
+	// 		'institution_site_ownership_id' => 72,
+	// 		'institution_site_status_id' => 89,
+	// 		'institution_site_sector_id' => 2,
+	// 		'institution_site_provider_id' => 1,
+	// 		'institution_site_gender_id' => 6,
+	// 		'security_group_id' => 0
+	// 	];
+
+	// 	$this->post($this->prefix . '/add', $data);
+	// 	$this->assertResponseSuccess();
+
+	// 	$query = $this->Institutions->find()->where(['code' => 'SMU']);
+	// 	$this->assertEquals(1, $query->count());
+	// }
+
+	public function testHistory() {
+        $this->setAuthSession();
+        $this->session(['Institutions'=>['id'=>1]]);
+		$this->get($this->prefix . '/History');
+        $this->assertResponseOk();
+	
+		$this->assertResponseContains('SMU');
+    }
 
 	public function testEdit() {
+        $this->setAuthSession();
 		// Test edit the first row of the Institutions fixture
 		$data = [
 			'id' => 1,
@@ -110,9 +156,7 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 		$this->post($this->prefix . '/edit/1', $data);
 		$this->assertResponseSuccess();
 
-		$institutionsTable = TableRegistry::get('institution_sites');
-
-        $fData = $institutionsTable->findById(1)->hydrate(false)->toArray();
+        $fData = $this->Institutions->findById(1)->hydrate(false)->toArray();
 
 		$this->assertEquals($data['name'], $fData[0]['name']);
 	}
@@ -128,6 +172,7 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 	}*/
 
 	public function testView() {
+        $this->setAuthSession();
 		// Test view the first row of the Institutions fixture
 		$this->get($this->prefix . '/view/1');
 		$this->assertResponseSuccess();
@@ -136,4 +181,5 @@ class InstitutionsControllerTest extends IntegrationTestCase {
 		$this->assertResponseContains('Nanyang Technological University');
 		$this->assertResponseContains('NTU');
 	}
+
 }
