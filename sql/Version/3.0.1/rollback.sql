@@ -263,3 +263,14 @@ DROP TABLE IF EXISTS `custom_field_records`;
 DROP TABLE IF EXISTS `custom_field_values`;
 DROP TABLE IF EXISTS `custom_table_cells`;
 DROP TABLE IF EXISTS `surveys`;
+
+-- June 17 0911hrs
+-- Revert for infrastructure
+
+DROP TABLE IF EXISTS `infrastructure_custom_fields`;
+DROP TABLE IF EXISTS `infrastructure_custom_field_options`;
+DROP TABLE IF EXISTS `infrastructure_custom_table_columns`;
+DROP TABLE IF EXISTS `infrastructure_custom_table_rows`;
+
+RENAME TABLE z_1461_infrastructure_custom_fields TO infrastructure_custom_fields;
+RENAME TABLE z_1461_infrastructure_custom_field_options TO infrastructure_custom_field_options;

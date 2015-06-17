@@ -1,3 +1,4 @@
+<?php $CustomFields = $attr['model']; ?>
 <?php if ($action == 'view') : ?>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
@@ -45,16 +46,16 @@
 							<tr>
 								<?php if ($action == 'edit') : ?>
 									<td class="checkbox-column">
-										<?= $this->Form->checkbox("CustomFields.custom_field_options.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
+										<?= $this->Form->checkbox("$CustomFields.custom_field_options.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
 									</td>
 								<?php endif ?>
 								<td>
 									<?php
 										if(isset($obj->id)) {
-											echo $this->Form->hidden("CustomFields.custom_field_options.$key.id");
+											echo $this->Form->hidden("$CustomFields.custom_field_options.$key.id");
 										}
-										echo $this->Form->input("CustomFields.custom_field_options.$key.name", ['label' => false]);
-										echo $this->Form->hidden("CustomFields.custom_field_options.$key.is_default", ['value' => 0]);
+										echo $this->Form->input("$CustomFields.custom_field_options.$key.name", ['label' => false]);
+										echo $this->Form->hidden("$CustomFields.custom_field_options.$key.is_default", ['value' => 0]);
 									?>
 								</td>
 								<td>
@@ -65,7 +66,7 @@
 					</tbody>
 				<?php endif ?>
 			</table>
-			<a onclick="$('#reload').val('addOption').click()"><i class="fa fa-plus"></i></a>
+			<span class="fa fa-plus" style="cursor: pointer;" onclick="$('#reload').val('addOption').click();"></span>
 		</div>
 	</div>
 <?php endif ?>
