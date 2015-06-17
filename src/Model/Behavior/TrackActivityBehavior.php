@@ -1,12 +1,13 @@
 <?php
 namespace App\Model\Behavior;
 
+use Cake\I18n\Time;
 use Cake\ORM\Entity;
-use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\ORM\TableRegistry;
+use Cake\ORM\Behavior;
 use Cake\Network\Session;
 use Cake\Utility\Inflector;
+use Cake\ORM\TableRegistry;
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
@@ -17,8 +18,9 @@ class TrackActivityBehavior extends Behavior {
 		'key' => '',
 		'session' => ''
 	];
-	private $_exclude = array('id', 'modified_user_id', 'modified', 'created_user_id', 'created');
-	private $_excludeType = array('binary');
+	private $_dateFields = [];
+	private $_exclude = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+	private $_excludeType = ['binary'];
 	private $_session;
 
 	public function initialize(array $config) {
@@ -32,8 +34,12 @@ class TrackActivityBehavior extends Behavior {
 
 		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity) { // edit operation
 			$model = $this->_table;
+			foreach ($model->fields as $key=>$field) {
+				if (substr_count($field['type'], 'date')>0) {
+					$this->_dateFields[] = $key;
+				}
+			}
 		    $schema = $model->schema();
-		    $ActivityModel = TableRegistry::get($this->config('target'));
 		    $session = $this->_session->read($this->config('session'));
 		    $obj = [
 		    	'model' => $model->alias(),
@@ -44,12 +50,25 @@ class TrackActivityBehavior extends Behavior {
 			foreach ($entity->extractOriginalChanged($entity->visibleProperties()) as $field=>$value) {
 		    	if (!in_array($field, $this->_exclude) && $entity->has($field)) {
 					if (!is_null($schema->column($field)) && !in_array($schema->columnType($field), $this->_excludeType)) {
-	
+
+		    			$oldValue = $entity->getOriginal($field);
+						
 		    			/**
 		    			 * Added extra conditions; if oldData is 'World' and newData is an empty string, skip it as location 'World' is the same as an empty string on user views.
 		    			 */
-		    			if ($entity->getOriginal($field) != 'World' && $entity->$field != '') {
+		    			if ($oldValue != 'World' && $entity->$field != '') {
 
+							/**
+			    			 * Added extra condition to convert old field data to db date format since the new data is in db date format else, 
+			    			 * there will always be a new history record for date fields even though the date is the same.
+			    			 */
+							// if (in_array($field, $this->_dateFields)) {
+							// 	$oldValue = date('Y-m-d', strtotime($oldValue));
+								// pr($oldValue);die;
+								// $oldValueTimeObj = new Time($oldValue);
+								// pr($oldValueTimeObj->nice());die;
+							// }
+		    			
 							$relatedModel = $model->ControllerAction->getAssociatedBelongsToModel($field);
 							
 							// check if related model's table is actually field_option_values by reading its useTable instance
@@ -64,7 +83,7 @@ class TrackActivityBehavior extends Behavior {
 							}
 							$obj['field'] = $field;
 								
-							$allData = ['old'=>$entity->getOriginal($field), 'new'=>$entity->$field];
+							$allData = ['old'=>$oldValue, 'new'=>$entity->$field];
 							foreach ($allData as $allDataKey=>$allDataValue) {
 
 								// if related model exists, get related data
@@ -88,6 +107,7 @@ class TrackActivityBehavior extends Behavior {
 							}
 
 							$obj['operation'] = 'edit';
+						    $ActivityModel = TableRegistry::get($this->config('target'));
 							$data = $ActivityModel->newEntity();
 							$data = $ActivityModel->patchEntity($data, $obj);
 							$ActivityModel->save($data);
