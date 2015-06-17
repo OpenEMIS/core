@@ -13,17 +13,16 @@ class SalaryAdditionsTable extends AppTable {
 		$this->belongsTo('Salaries', ['className' => 'Staff.Salaries']);
 	}
 
-	public function beforeAction() {
-	}
-
-	public function indexBeforeAction(Event $event) {
-	}
-
-	public function addEditBeforeAction(Event $event) {
-	}
-
 	public function validationDefault(Validator $validator) {
-		
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->add('salary_addition_type_id', [
+			])
+			->add('addition_amount', 'ruleMoney',  [
+				'rule' => ['money']
+			])
+		;
 	}
 
 }
