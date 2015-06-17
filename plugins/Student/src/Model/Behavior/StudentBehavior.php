@@ -38,6 +38,10 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
+		$this->_table->ControllerAction->addField('Picture', [
+			'type' => 'element',
+			'element' => 'Student.Students/picture'
+		]);
 		$this->_table->fields['username']['visible']['index'] = false;
 		$this->_table->fields['birthplace_area_id']['visible']['index'] = false;
 		$this->_table->fields['photo_content']['visible']['index'] = false;

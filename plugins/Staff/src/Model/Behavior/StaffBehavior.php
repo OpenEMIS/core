@@ -30,6 +30,10 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->_table->ControllerAction->addField('Picture', [
+			'type' => 'element',
+			'element' => 'Staff.Staff/picture'
+		]);
 		$this->_table->fields['super_admin']['visible'] = false;
 		$this->_table->fields['status']['visible'] = false;
 		$this->_table->fields['date_of_death']['visible'] = false;

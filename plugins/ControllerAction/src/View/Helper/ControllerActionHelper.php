@@ -128,7 +128,7 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getTableHeaders($fields, $model, &$dataKeys) {
-		$excludedTypes = array('hidden', 'image', 'file', 'file_upload', 'element');
+		$excludedTypes = array('hidden', 'image', 'file', 'file_upload');
 		$attrDefaults = array(
 			'type' => 'string',
 			'model' => $model,
@@ -390,6 +390,13 @@ class ControllerActionHelper extends Helper {
 		// }
 
 		switch ($_type) {
+			case 'element':
+				$element = $_fieldAttr['element'];
+				
+				$value = $this->_View->element($element, ['attr' => $_fieldAttr]);
+				
+				break;
+
 			case 'select':
 				if (!empty($_fieldAttr['options'])) {
 					reset($_fieldAttr['options']);
