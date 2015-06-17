@@ -8,10 +8,11 @@ use Cake\Validation\Validator;
 class SurveyTemplatesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('SurveyModules', ['className' => 'Survey.SurveyModules']);
-		$this->hasMany('SurveyQuestions', ['className' => 'Survey.SurveyQuestions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		//$this->belongsTo('SurveyModules', ['className' => 'Survey.SurveyModules']);
+		//$this->hasMany('SurveyQuestions', ['className' => 'Survey.SurveyQuestions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
+	/*
 	public function validationDefault(Validator $validator) {
 		$validator
 	    	->add('name', [
@@ -24,4 +25,5 @@ class SurveyTemplatesTable extends AppTable {
 
 		return $validator;
 	}
+	*/
 }

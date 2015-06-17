@@ -1,3 +1,7 @@
+<?= $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/blue', ['block' => true]) ?>
+<?= $this->Html->script('OpenEmis.../plugins/icheck/jquery.icheck.min', ['block' => true]) ?>
+<?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
+
 <?php $CustomFields = $attr['model']; ?>
 <?php if ($action == 'view') : ?>
 	<div class="table-responsive">
@@ -34,10 +38,10 @@
 				<thead>
 					<tr>
 						<?php if ($action == 'edit') : ?>
-							<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+							<th><?= $this->Label->get('general.visible'); ?></th>
 						<?php endif ?>
 						<th><?= $this->Label->get('general.name'); ?></th>
-						<th class="cell-delete"></th>
+						<th><?= $this->Label->get('general.delete'); ?></th>
 					</tr>
 				</thead>
 				<?php if (!empty($data->custom_field_options)) : ?>
