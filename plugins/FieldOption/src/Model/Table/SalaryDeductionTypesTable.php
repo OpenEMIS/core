@@ -11,4 +11,8 @@ class SalaryDeductionTypesTable extends AppTable {
 
 		$this->hasMany('StaffSalaryAdditions', ['className' => 'Staff.StaffSalaryAdditions']);
 	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator;
+	}
 }
