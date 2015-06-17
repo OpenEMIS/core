@@ -568,7 +568,8 @@ body .large {
 
 .toolbar-wrapper .select:after {
 	top: -2px;
-	right: 8px;
+	right: 1px;
+	padding: 0 8px;
 }
 
 .dropdown-arrow {
@@ -674,6 +675,117 @@ textarea {
 	position: relative;
 }
 
+/* PANEL TOOLBAR*/
+.chart-wrapper,
+.format-wrapper,
+.search-wrapper {
+	padding: 10px;
+	width: 250px;
+}
+
+.format-lists {
+	max-height: 300px;
+	overflow: auto;
+}
+
+.chart-wrapper i,
+.format-wrapper i {
+	color: #FFF;
+	font-size: 20px;
+}
+
+.chart-wrapper .dropdown-arrow {
+	top: -24px;
+	left: 20px;
+}
+
+.format-wrapper .dropdown-arrow {
+	top: -22px;
+	left: 13px;
+}
+
+.search-wrapper .dropdown-arrow {
+	top: -25px;
+	left: 13px;
+}
+
+.format-wrapper .select:after,
+.chart-wrapper .select:after {
+	margin-top: 9px;
+	margin-left: -15px;
+}
+
+.select-arrow .select:after {
+	top: 30px;
+	right: 10px;
+}
+
+.dropdown-header {
+	border-bottom: 1px solid #DDD;
+	padding: 0;
+	margin-bottom: 10px;
+}
+
+.format-item,
+.chart-item {
+	margin-bottom: 5px;
+}
+
+.format-item a,
+.chart-item a {
+	display: table-cell;
+	text-align: center;
+	padding: 10px 15px 0;
+}
+
+.format-item p,
+.chart-item p {
+	margin-top: 5px;
+}
+
+.dropdown-item:after {
+	font-family: "FontAwesome";
+	content: "\f0d7";
+	font-size: 10px;
+	position: absolute;
+	bottom: -7px;
+	left: 18px;
+}
+
+.format-item {
+	margin-bottom: 10px;
+}
+
+.format-item label {
+	font-size: 12px;
+	font-weight: 500;
+	padding: 0;
+}
+
+.format-item input,
+.format-item textarea,
+.chart-lists textarea {
+	margin-bottom: 10px !important;
+}
+
+.format-item .checkbox input {
+	margin: -2px 6px 0 6px !important;
+}
+
+.move-action i {
+	font-size: 14px !important;
+}
+
+.selected:focus,
+.selected:active,
+.selected:visited
+.selected[ng-click] {
+	color: #FFF;
+	outline: none;
+	-webkit-box-shadow: 0;
+	        box-shadow: 0;
+}
+
 /* BUTTONS */
 .toolbar {
 	background-color: #FFF;
@@ -713,7 +825,9 @@ textarea {
 	        border-radius: 3px !important;
 }
 
-.btn-default {
+.btn-default,
+.selected,
+.selected:active {
 	background-color: #999;
 	color: #FFF;
 	border: 1px solid #6B6B6B !important;
@@ -722,7 +836,8 @@ textarea {
 
 .btn-default:hover,
 .btn-default:active,
-.btn-active {
+.btn-active,
+.selected:hover {
 	background-color: #6B6B6B;
 	color: #FFF;
 	transition: all 0.8s ease;	
@@ -1095,6 +1210,26 @@ th > a:active { color: #444; }
     left: 16px; 
 }
 
+.profile-image {
+	display: table;
+	width: 60px;
+	height: 60px;
+	background-color: #EEEEEE;
+	-webkit-border-radius: 5px;
+	        border-radius: 5px;
+	opacity: 1;
+	cursor: default;
+}
+
+.profile-image i {
+	display: table-cell;
+	color: #BBB;
+	font-size: 35px;
+	padding: 5px;
+	vertical-align: middle;
+	text-align: center;
+}
+
 .table-icons i {
     font-size: 30px;
 }
@@ -1430,6 +1565,7 @@ select:-moz-focusring {
 	cursor: pointer;
 	margin-left: -18px;
 	margin-top: 6px;
+	background-color: #FFF;
 }
 
 .form-horizontal option {
@@ -1929,6 +2065,11 @@ footer {
 		padding-bottom: 60px;	
 	}
 
+	.login-box .select:after {
+		margin-top: 8px;
+		margin-left: -25px;
+	}
+
 	.login-box .title {
 		font-size: 20px;
 	}
@@ -2094,6 +2235,19 @@ footer {
 	.advanced-search-wrapper .input {
 		width: 40%;
 		margin-right: 20px;
+	}
+
+	.format-wrapper .select:after,
+	.chart-wrapper .select:after {
+		margin-top: 9px;
+		margin-left: -18px;
+		padding: 0 4px;
+	}
+
+	.toolbar-wrapper .select::after {
+		padding: 0 8px;
+		right: 1px !important;
+		top: 3px !important;
 	}
 
 	.footer-buttons .btn {
