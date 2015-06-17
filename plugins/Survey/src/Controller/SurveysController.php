@@ -3,7 +3,6 @@ namespace Survey\Controller;
 
 use App\Controller\AppController;
 use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class SurveysController extends AppController
