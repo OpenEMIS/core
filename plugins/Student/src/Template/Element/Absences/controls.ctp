@@ -6,12 +6,14 @@
 				    'controller' => $this->request->params['controller'],
 				    'action' => 'Absences',
 				]);
+
 			if (!empty($academicPeriodList)) {
 				echo $this->Form->input('academic_period_', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $academicPeriodList,
 					'url' => $baseUrl,
+					'default' => $selectedAcademicPeriod,
 					'data-named-key' => 'academic_period',
 				));
 			}
@@ -22,6 +24,7 @@
 					'label' => false,
 					'options' => $monthOptions,
 					'url' => $baseUrl,
+					'default' => $selectedMonth,
 					'data-named-key' => 'month',
 				));
 			}

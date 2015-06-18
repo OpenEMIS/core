@@ -17,43 +17,4 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}
-
-	public function getStudentAbsenceDataByMonth($studentId, $academicPeriodId, $monthId){
-		$AcademicPeriod = ClassRegistry::init('AcademicPeriod');
-		$academicPeriod = $AcademicPeriod->getAcademicPeriodById($academicPeriodId);
-		
-		$conditions = array(
-			'Student.id = ' . $studentId,
-		);
-		
-		$conditions['OR'] = array(
-			array(
-				'MONTH(InstitutionSiteStudentAbsence.first_date_absent) = "' . $monthId . '"',
-				'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $academicPeriod . '"'
-			),
-			array(
-				'MONTH(InstitutionSiteStudentAbsence.last_date_absent) = "' . $monthId . '"',
-				'YEAR(InstitutionSiteStudentAbsence.last_date_absent) = "' . $academicPeriod . '"'
-			)
-		);
-		
-		$data = $this->find('all', array(
-			'fields' => array(
-				'DISTINCT InstitutionSiteStudentAbsence.id', 
-				'InstitutionSiteStudentAbsence.absence_type', 
-				'InstitutionSiteStudentAbsence.first_date_absent', 
-				'InstitutionSiteStudentAbsence.last_date_absent', 
-				'InstitutionSiteStudentAbsence.full_day_absent', 
-				'InstitutionSiteStudentAbsence.start_time_absent', 
-				'InstitutionSiteStudentAbsence.end_time_absent',
-				'StudentAbsenceReason.name'
-			),
-			'conditions' => $conditions,
-			'order' => array('InstitutionSiteStudentAbsence.first_date_absent', 'InstitutionSiteStudentAbsence.last_date_absent')
-		));
-		
-		return $data;
-	}
-
-
 }
