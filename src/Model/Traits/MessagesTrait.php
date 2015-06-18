@@ -33,6 +33,13 @@ trait MessagesTrait {
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.'
 			]
+		],
+
+		// Validation Messages
+		'Institutions' => [
+			'date_closed' => [
+				'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+			]
 		]
 	];
 

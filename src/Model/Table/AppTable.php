@@ -56,6 +56,7 @@ class AppTable extends Table {
 		if (!empty($timeFields)) {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
+		$this->addBehavior('Validation');
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
@@ -175,10 +176,10 @@ class AppTable extends Table {
 		return $label;
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator->provider('default', new AppValidator());
-		return $validator;
-	}
+	// public function validationDefault(Validator $validator) {
+	// 	$validator->provider('default', new AppValidator());
+	// 	return $validator;
+	// }
 
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);

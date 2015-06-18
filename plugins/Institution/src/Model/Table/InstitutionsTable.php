@@ -62,12 +62,9 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades']);
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
-
-		// pr($this->validator());
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
 		$validator
 			->add('date_opened', 'ruleCompare', [
 					'rule' => array('comparison', 'notequal', '0000-00-00'),
@@ -75,8 +72,7 @@ class InstitutionsTable extends AppTable  {
 
 	        ->allowEmpty('date_closed')
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', false],
-		            'message' => 'Closing date should be later than opening date'
+		            'rule' => ['compareDateReverse', 'date_opened', false]
 	    	    ])
 
 	        ->allowEmpty('longitude')
@@ -89,16 +85,16 @@ class InstitutionsTable extends AppTable  {
 					'rule' => 'checkLatitude'
 				])
 		
-			->add('address', 'ruleMaximum255', [
-					'rule' => ['maxLength', 255],
-					'message' => 'Maximum allowable character is 255',
-					'last' => true
-				])
+			// ->add('address', 'ruleMaximum255', [
+			// 		'rule' => ['maxLength', 255],
+			// 		'message' => 'Maximum allowable character is 255',
+			// 		'last' => true
+			// 	])
 
 			->add('code', 'ruleUnique', [
 	        		'rule' => 'validateUnique',
 	        		'provider' => 'table',
-	        		'message' => 'Code has to be unique'
+	        		// 'message' => 'Code has to be unique'
 			    ])
 
 	        ->allowEmpty('email')
@@ -106,15 +102,15 @@ class InstitutionsTable extends AppTable  {
 					'ruleUnique' => [
 		        		'rule' => 'validateUnique',
 		        		'provider' => 'table',
-		        		'message' => 'Email has to be unique',
+		        		// 'message' => 'Email has to be unique',
 		        		'last' => true
 				    ],
 					'ruleValidEmail' => [
-						'rule' => 'email',
+						'rule' => 'email'
 					]
 				])
-
 	        ;
+
 		return $validator;
 	}
 
@@ -135,13 +131,6 @@ class InstitutionsTable extends AppTable  {
 
 		$indexDashboard = 'Institution.Institutions/dashboard';
 		$this->controller->set('indexDashboard', $indexDashboard);
-	}
-
-	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
-		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
-		// echo 'Options<br/>';pr($options);pr('<hr/>');
-		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
-		return true;
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
