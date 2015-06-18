@@ -33,6 +33,15 @@ trait MessagesTrait {
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.'
 			]
+		],
+		'Institutions' => [
+			'noProgrammes' => 'There is no available Programme set for this Institution.',
+			'noSections' => 'There is no available Section under the selected Academic Period.',
+		],
+		'InstitutionSiteProgrammes' => [
+			'noEducationLevels' => 'There are no available Education Level.',
+			'noEducationProgrammes' => 'There are no available Education Programme.',
+			'noEducationGrades' => 'There are no available Education Grade.',
 		]
 	];
 
