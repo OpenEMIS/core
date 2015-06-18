@@ -46,7 +46,7 @@ class InstitutionSitePositionsTable extends AppTable {
 			'element' => 'Institution.Positions/current'
 		]);
 
-		$Staff = $this->Institutions->Staff;
+		$Staff = $this->Institutions->InstitutionSiteStaff;
 		$currentStaff = $Staff ->find('all')
 							->where([$Staff->aliasField('end_date').' IS NULL'])
 							->order([$Staff->aliasField('start_date')])

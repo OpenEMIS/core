@@ -3,8 +3,8 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
-
-<div class="input">
+<?php //pr($data);?>
+<div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
 	<div class="col-md-5">
 		<table class="table table-striped table-hover table-bordered table-checkable">
@@ -17,21 +17,34 @@
 			</thead>
 
 			<?php if (isset($attr['data'])) : ?>
+
 			<tbody>
-				<?php foreach ($attr['data'] as $obj) : ?>
+				<?php foreach ($attr['data'] as $i=>$obj) : ?>
+				<?php 
+					$selected = false;
+					$institutionSiteGradeId = false;
+					if (isset($attr['selected']) && array_key_exists($obj->id, $attr['selected'])) {
+						$selected = true;
+					}
+					if (isset($attr['recorded']) && array_key_exists($obj->id, $attr['recorded'])) {
+						$institutionSiteGradeId = $attr['recorded'][$obj->id];
+					}
+				?>
 				<tr>
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" />
-						<?php
-						// TODO-jeff: populate hidden fields for education grades
-						?>
+						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('InstitutionSiteProgrammes[institution_site_grades][%d][education_grade_id]', $i) ?>" value="<?php echo $obj->id?>" <?php echo ($selected) ? 'checked' : '';?> />
+						<input type="hidden" name="<?php echo sprintf('InstitutionSiteProgrammes[institution_site_grades][%d][id]', $i) ?>" value="<?php echo $institutionSiteGradeId?>" />
 					</td>
 					<td><?= $obj->code ?></td>
 					<td><?= $obj->name ?></td>
 				</tr>
 				<?php endforeach ?>
 			</tbody>
-			<?php endif ?>
+			
+			<?php else : ?>
+				<tr>&nbsp;</tr>
+			<?php endif; ?>
+
 		</table>
 	</div>
 </div>
