@@ -1365,6 +1365,7 @@ table tr.sorting-row td {background-color: #8b8;}
 	text-align: left;
 	padding: 5px 8px 5px 0;
 	font-size: 13px !important;
+	min-height: 30px;
 }
 
 .form-input {
@@ -1374,12 +1375,12 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .row:nth-of-type(even) {
 	background-color: #F9F9F9;
-	-webkit-border-radius: 5px;
-	        border-radius: 5px;
+	border-left: 2px solid #F5F5F5;
 }
 
 .row:nth-of-type(odd) {
 	background-color: #FFF;	
+	border-top: 2px solid #F5F5F5;
 }
 
 .form-control {
