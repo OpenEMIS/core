@@ -11,6 +11,8 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
 class WorkflowsTable extends AppTable {
+	private $_contain = ['FieldOptionValues'];
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
@@ -82,7 +84,7 @@ class WorkflowsTable extends AppTable {
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain[] = 'FieldOptionValues';
+		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
 	}
 
@@ -137,12 +139,12 @@ class WorkflowsTable extends AppTable {
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
 		//Required by patchEntity for associated data
-		$options['associated'] = ['FieldOptionValues'];
+		$options['associated'] = $this->_contain;
 		return compact('entity', 'data', 'options');
 	}
 
 	public function addEditOnReload(Event $event, Entity $entity, array $data, array $options) {
-		$options['associated'] = ['FieldOptionValues'];
+		$options['associated'] = $this->_contain;
 		return compact('entity', 'data', 'options');
 	}
 
@@ -193,7 +195,7 @@ class WorkflowsTable extends AppTable {
 
 	public function editBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain[] = 'FieldOptionValues';
+		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
 	}
 
