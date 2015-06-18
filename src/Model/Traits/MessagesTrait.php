@@ -40,6 +40,63 @@ trait MessagesTrait {
 			'date_closed' => [
 				'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
 			]
+		],
+
+		'Users' => [
+			'first_name' => [
+				'ruleRequired' => 'Please enter a valid First Name',
+				'ruleCheckIfStringGotNoNumber' => 'Please enter a valid First Name'
+			],
+			'middle_name' => [
+				'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Middle Name'
+			],
+			'third_name' => [
+				'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Third Name'
+			],
+			'last_name' => [
+				'ruleRequired' => 'Please enter a valid Last Name',
+				'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Last Name'
+			],
+			'preferred_name' => [
+				'ruleCheckIfStringGotNoNumber' => 'Please enter a valid Preferred Name'
+			],
+			'openemis_no' => [
+				'ruleRequired' => 'Please enter a valid OpenEMIS ID',
+				'ruleUnique' => 'Please enter a unique OpenEMIS ID'
+			],
+			'gender_id' => [
+				'ruleRequired' => 'Please select a Gender'
+			],
+			'address' => [
+				'ruleRequired' => 'Please enter a valid Address'
+			],
+			'date_of_birth' => [
+				'ruleRequired' => 'Please select a Date of Birth',
+				'ruleCompare' => 'Please select a Date of Birth',
+				'ruleCompare' => 'Date of Birth cannot be future date'
+			],
+			'username' => [
+				'ruleRequired' => 'Please enter a valid username',
+				'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
+				'ruleUnique' => 'This username is already in use.'
+			],
+			'password' => [
+				'ruleChangePassword' => 'Incorrect password.',
+				'ruleCheckUsernameExists' => 'Please enter a valid password',
+				'ruleMinLength' => 'Password must be at least 6 characters'
+			],
+			'retype_password' => [
+				'ruleChangePassword' => 'Please confirm your new password',
+				'ruleCompare' => 'Both passwords do not match'
+			],
+			'newPassword' => [
+				'ruleChangePassword' => 'Please enter your new password',
+				'ruleMinLength' => 'Password must be at least 6 characters'
+			],
+			'retypeNewPassword' => [
+				'ruleChangePassword' => 'Please confirm your new password',
+				'ruleCompare' => 'Both passwords do not match'
+			]
 		]
 	];
 

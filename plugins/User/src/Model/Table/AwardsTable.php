@@ -4,8 +4,9 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class UserAwardsTable extends AppTable {
+class AwardsTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('user_awards');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 	}

@@ -9,6 +9,6 @@ class CountriesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		$this->table('countries');
 		parent::initialize($config);
-		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities']);
+		$this->hasMany('Nationalities', ['className' => 'User.Nationalities']);
 	}
 }

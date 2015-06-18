@@ -4,8 +4,9 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class UserAttachmentsTable extends AppTable {
+class AttachmentsTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('user_attachments');
 		parent::initialize($config);
 		
 		$this->addBehavior('ControllerAction.FileUpload');
