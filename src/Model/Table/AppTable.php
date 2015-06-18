@@ -209,6 +209,19 @@ class AppTable extends Table {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
 
+	public function checkIdInOptions($key, $options) {
+		if (!empty($options)) {
+			if ($key != 0) {
+				if (!array_key_exists($key, $options)) {
+					$key = key($options);
+				}
+			} else {
+				$key = key($options);
+			}
+		}
+		return $key;
+	}
+	
 	/**
 	 * Converts the class alias to a label.
 	 * 

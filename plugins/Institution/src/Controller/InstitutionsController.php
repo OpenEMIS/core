@@ -21,6 +21,7 @@ class InstitutionsController extends AppController  {
 			'Programmes' 		=> ['className' => 'Institution.InstitutionSiteProgrammes'],
 			'Shifts' 			=> ['className' => 'Institution.InstitutionSiteShifts'],
 			'Sections' 			=> ['className' => 'Institution.InstitutionSiteSections'],
+			// 'Classes' 			=> ['className' => 'Institution.InstitutionSiteSectionClasses'],
 			'Classes' 			=> ['className' => 'Institution.InstitutionSiteClasses'],
 			'Infrastructures' 	=> ['className' => 'Institution.InstitutionSiteInfrastructures'],
 
