@@ -2,57 +2,42 @@
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
-				if (!empty($statusOptions)) {
-					$baseUrl = $this->Url->build([
-						'plugin' => $this->request->params['plugin'],
-					    'controller' => $this->request->params['controller'],
-					    'action' => 'index'
-					]);
+				$baseUrl = $this->Url->build([
+					'plugin' => $this->request->params['plugin'],
+				    'controller' => $this->request->params['controller'],
+				    'action' => 'index'
+				]);
 
+				if (!empty($statusOptions)) {
 					echo $this->Form->input('survey_status', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $statusOptions,
-						'default' => 'status=' . $selectedStatus,
+						'default' => $selectedStatus,
 						'url' => $baseUrl,
-						'onchange' => 'jsForm.change(this);'
+						'data-named-key' => 'status'
 					));
 				}
 
 				if (!empty($moduleOptions)) {
-					$baseUrl = $this->Url->build([
-						'plugin' => $this->request->params['plugin'],
-					    'controller' => $this->request->params['controller'],
-					    'action' => 'index',
-					    'status' => $selectedStatus
-					]);
-
 					echo $this->Form->input('survey_module', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $moduleOptions,
-						'default' => 'module=' . $selectedModule,
+						'default' => $selectedModule,
 						'url' => $baseUrl,
-						'onchange' => 'jsForm.change(this);'
+						'data-named-key' => 'module'
 					));
 				}
 
 				if (!empty($templateOptions)) {
-					$baseUrl = $this->Url->build([
-						'plugin' => $this->request->params['plugin'],
-					    'controller' => $this->request->params['controller'],
-					    'action' => 'index',
-					    'status' => $selectedStatus,
-					    'module' => $selectedModule
-					]);
-
 					echo $this->Form->input('survey_template', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $templateOptions,
-						'default' => 'template=' . $selectedTemplate,
+						'default' => $selectedTemplate,
 						'url' => $baseUrl,
-						'onchange' => 'jsForm.change(this);'
+						'data-named-key' => 'template'
 					));
 				}
 			?>

@@ -2,20 +2,20 @@
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
-				if (!empty($levelOptions)) {
-					$baseUrl = $this->Url->build([
-						'plugin' => $this->request->params['plugin'],
-					    'controller' => $this->request->params['controller'],
-					    'action' => $this->request->params['action']
-					]);
+				$baseUrl = $this->Url->build([
+					'plugin' => $this->request->params['plugin'],
+				    'controller' => $this->request->params['controller'],
+				    'action' => $this->request->params['action']
+				]);
 
-					echo $this->Form->input('survey_module', array(
+				if (!empty($levelOptions)) {
+					echo $this->Form->input('infrastructure_level', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $levelOptions,
-						'default' => 'level=' . $selectedLevel,
+						'default' => $selectedLevel,
 						'url' => $baseUrl,
-						'onchange' => 'jsForm.change(this);'
+						'data-named-key' => 'level'
 					));
 				}
 			?>

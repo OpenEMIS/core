@@ -1016,3 +1016,23 @@ CREATE TABLE IF NOT EXISTS `survey_template_questions` (
 
 ALTER TABLE `survey_template_questions`
   ADD PRIMARY KEY (`id`);
+
+-- added Labels table
+DROP TABLE IF EXISTS `labels`;
+CREATE TABLE IF NOT EXISTS `labels` (
+  `module` varchar(100) NOT NULL,
+  `field` varchar(100) NOT NULL,
+  `code` varchar(50) UNIQUE,
+  `en` varchar(100) COMMENT 'English',
+  `ar` varchar(100) COMMENT 'Arabic',
+  `zh` varchar(100) COMMENT 'Chinese',
+  `es` varchar(100) COMMENT 'Spanish',
+  `fr` varchar(100) COMMENT 'French',
+  `ru` varchar(100) COMMENT 'Russian',
+  `modified_user_id` int(11),
+  `modified` datetime,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`module`, `field`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
