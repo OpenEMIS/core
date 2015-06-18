@@ -2,38 +2,31 @@
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
-				if (!empty($templateOptions)) {
-					$baseUrl = $this->Url->build([
-						'plugin' => $this->request->params['plugin'],
-					    'controller' => $this->request->params['controller'],
-					    'action' => $this->request->params['action']
-					]);
+				$baseUrl = $this->Url->build([
+					'plugin' => $this->request->params['plugin'],
+				    'controller' => $this->request->params['controller'],
+				    'action' => $this->request->params['action'],
+				]);
 
-					echo $this->Form->input('survey_module', array(
+				if (!empty($templateOptions)) {
+					echo $this->Form->input('rubric_template', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $templateOptions,
-						'default' => 'template=' . $selectedTemplate,
+						'default' => $selectedTemplate,
 						'url' => $baseUrl,
-						'onchange' => 'jsForm.change(this);'
+						'data-named-key' => 'template'
 					));
 				}
 
 				if (!empty($sectionOptions)) {
-					$baseUrl = $this->Url->build([
-						'plugin' => $this->request->params['plugin'],
-					    'controller' => $this->request->params['controller'],
-					    'action' => $this->request->params['action'],
-					    'template' => $selectedTemplate
-					]);
-
-					echo $this->Form->input('survey_module', array(
+					echo $this->Form->input('rubric_section', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $sectionOptions,
-						'default' => 'section=' . $selectedSection,
+						'default' => $selectedSection,
 						'url' => $baseUrl,
-						'onchange' => 'jsForm.change(this);'
+						'data-named-key' => 'section'
 					));
 				}
 			?>
