@@ -146,4 +146,14 @@ class ValidationBehavior extends Behavior {
 			}
 		}
 	}
+
+	/**
+	 * [checkIfStringGotNoNumber description]
+	 * @param  [type] $check      [description]
+	 * @param  array  $globalData [description]
+	 * @return [type]             [description]
+	 */
+	public static function checkIfStringGotNoNumber($check, array $globalData) {
+		return !preg_match('#[0-9]#',$check);
+	}
 }

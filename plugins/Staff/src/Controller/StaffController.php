@@ -13,13 +13,13 @@ class StaffController extends AppController {
 		$this->ControllerAction->model()->addBehavior('Staff.Staff');
 
 		$this->ControllerAction->models = [
-			'Contacts' => ['className' => 'User.UserContacts'],
-			'Identities' => ['className' => 'User.UserIdentities'],
+			'Contacts' => ['className' => 'User.Contacts'],
+			'Identities' => ['className' => 'User.Identities'],
 			'Languages' => ['className' => 'User.UserLanguages'],
-			'Comments' => ['className' => 'User.UserComments'],
-			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
-			'Awards' => ['className' => 'User.UserAwards'],
-			'Attachments' => ['className' => 'User.UserAttachments'],
+			'Comments' => ['className' => 'User.Comments'],
+			'SpecialNeeds' => ['className' => 'User.SpecialNeeds'],
+			'Awards' => ['className' => 'User.Awards'],
+			'Attachments' => ['className' => 'User.Attachments'],
 			'Qualifications' => ['className' => 'Staff.Qualifications'],
 			'Positions' => ['className' => 'Staff.Positions'],
 			'Sections' => ['className' => 'Staff.StaffSections'],
@@ -32,7 +32,7 @@ class StaffController extends AppController {
 			'Salaries' => ['className' => 'Staff.Salaries'],
 			'Memberships' => ['className' => 'Staff.Memberships'],
 			'Licenses' => ['className' => 'Staff.Licenses'],
-			'BankAccounts' => ['className' => 'User.UserBankAccounts']
+			'BankAccounts' => ['className' => 'User.BankAccounts']
 		];
 
 		$this->set('contentHeader', 'Staff');
