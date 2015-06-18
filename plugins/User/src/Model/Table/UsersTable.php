@@ -14,6 +14,7 @@ class UsersTable extends AppTable {
 		$this->table('security_users');
 		parent::initialize($config);
 		$this->addBehavior('ControllerAction.FileUpload');
+		$this->addBehavior('User.Mandatory',['userRole'=>'Student']);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -53,10 +54,10 @@ class UsersTable extends AppTable {
 		// }
 
 		if (in_array($this->controller->name, ['Students','Staff'])) {
-			$this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
-				'type' => 'hidden', 
-				'value' =>$institutionId
-			]);
+			// $this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
+			// 	'type' => 'hidden', 
+			// 	'value' =>$institutionId
+			// ]);
 			$this->fields['openemis_no']['attr']['readonly'] = true;
 			$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($this->controller->name)]);
 		}
