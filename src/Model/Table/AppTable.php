@@ -161,6 +161,20 @@ class AppTable extends Table {
 		return $dateObject->format($format);
 	}
 
+	// Event: 'ControllerAction.Model.onGetLabel'
+	public function onGetLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		$Labels = TableRegistry::get('Labels');
+		$label = $Labels->getLabel($module, $field, $language);
+
+		if ($label === false && $autoHumanize) {
+			$label = Inflector::humanize($field);
+			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
+				$label = str_replace(' Id', '', $label);
+			}
+		}
+		return $label;
+	}
+
 	public function validationDefault(Validator $validator) {
 		$validator->provider('default', new AppValidator());
 		return $validator;
@@ -188,6 +202,10 @@ class AppTable extends Table {
 		if (in_array('created_user_id', $columns)) {
 			$entity->created_user_id = 1;
 		}
+	}
+
+	public function endsWith($haystack, $needle) {
+		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
 
 	/**

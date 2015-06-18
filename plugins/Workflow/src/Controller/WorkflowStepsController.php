@@ -21,15 +21,9 @@ class WorkflowStepsController extends AppController
 	}
 
     public function beforePaginate($event, $model, $options) {
-        list($workflows, $selectedWorkflow) = array_values($this->WorkflowSteps->getSelectOptions());
-                
-        $workflowOptions = [];
-        foreach ($workflows as $key => $workflow) {
-            $workflowOptions['workflow=' . $key] = $workflow;
-        }
+        list($workflowOptions, $selectedWorkflow) = array_values($this->WorkflowSteps->getSelectOptions());
 
         $this->set(compact('workflowOptions', 'selectedWorkflow'));
-
         $options['conditions'][] = [
             $model->aliasField('workflow_id') => $selectedWorkflow
         ];

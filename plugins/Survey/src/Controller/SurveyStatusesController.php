@@ -24,23 +24,7 @@ class SurveyStatusesController extends AppController {
     }
 
     public function beforePaginate(Event $event, Table $model, array $options) {
-        list($statuses, $selectedStatus, $modules, $selectedModule, $templates, $selectedTemplate) = array_values($this->getSelectOptions());
-
-        $statusOptions = [];
-        foreach ($statuses as $key => $status) {
-            $statusOptions['status=' . $key] = $status;
-        }
-
-        $moduleOptions = [];
-        foreach ($modules as $key => $module) {
-            $moduleOptions['module=' . $key] = $module;
-        }
-
-        $templateOptions = [];
-        foreach ($templates as $key => $template) {
-            $templateOptions['template=' . $key] = $template;
-        }
-
+        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $templateOptions, $selectedTemplate) = array_values($this->getSelectOptions());
         $this->set(compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'templateOptions', 'selectedTemplate'));
 
         $todayDate = date('Y-m-d');
