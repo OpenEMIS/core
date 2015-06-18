@@ -61,7 +61,7 @@
 							<tr>
 								<?php if ($action == 'edit') : ?>
 									<td class="checkbox-column">
-										<?= $this->Form->checkbox("WorkflowAction.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
+										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.visible", ['class' => 'icheck-input', 'checked' => $obj->visible]); ?>
 									</td>
 								<?php endif ?>
 									<td>
