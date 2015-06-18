@@ -2,6 +2,7 @@
 namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 
 class CustomModulesTable extends AppTable {
@@ -14,6 +15,14 @@ class CustomModulesTable extends AppTable {
 		$this->setFieldOrder();
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		if ($entity->id) {
+			$this->fields['parent_id']['visible'] = $entity->parent_id == 0 ? false : true;
+		}
+
+		return $entity;
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
 		list($moduleOptions) = array_values($this->getSelectOptions());
@@ -22,6 +31,15 @@ class CustomModulesTable extends AppTable {
 		$this->fields['parent_id']['options'] = $moduleOptions;
 
 		$this->setFieldOrder();
+	}
+
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		//edit
+		if ($entity->id) {
+			$this->fields['parent_id']['visible'] = $entity->parent_id == 0 ? false : true;
+		}
+
+		return $entity;
 	}
 
 	public function getSelectOptions() {

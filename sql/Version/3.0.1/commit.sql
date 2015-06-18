@@ -538,7 +538,9 @@ DROP TABLE IF EXISTS `custom_modules`;
 CREATE TABLE IF NOT EXISTS `custom_modules` (
   `id` int(11) NOT NULL,
   `name` varchar(250) NOT NULL,
-  `parent_id` int(11) NOT NULL,
+  `model` varchar(200),
+  `field_option` varchar(200),
+  `parent_id` int(11) DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime NOT NULL,
   `created_user_id` int(11) DEFAULT NULL,
@@ -554,10 +556,10 @@ ALTER TABLE `custom_modules`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 TRUNCATE TABLE `custom_modules`;
-INSERT INTO `custom_modules` (`id`, `name`, `parent_id`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 0, 1, '0000-00-00 00:00:00'),
-(2, 'Student', 0, 1, '0000-00-00 00:00:00'),
-(3, 'Staff', 0, 1, '0000-00-00 00:00:00');
+INSERT INTO `custom_modules` (`id`, `name`, `model`, `field_option`, `parent_id`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 'Institution.Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
+(2, 'Student', '', NULL, 0, 1, '0000-00-00 00:00:00'),
+(3, 'Staff', '', NULL, 0, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
@@ -714,6 +716,18 @@ CREATE TABLE IF NOT EXISTS `custom_form_fields` (
 
 
 ALTER TABLE `custom_form_fields`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - custom_form_types
+DROP TABLE IF EXISTS `custom_form_types`;
+CREATE TABLE IF NOT EXISTS `custom_form_types` (
+  `id` char(36) NOT NULL,
+  `custom_form_id` int(11) NOT NULL,
+  `custom_type_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `custom_form_types`
   ADD PRIMARY KEY (`id`);
 
 -- New table - custom_field_records
