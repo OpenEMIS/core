@@ -21,8 +21,6 @@ class InfrastructuresController extends AppController
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Infrastructure', ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => $this->request->action]);
-		$this->Navigation->addCrumb($this->request->action);
 
 		$tabElements = [
 			'Levels' => [

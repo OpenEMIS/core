@@ -1,14 +1,9 @@
 <?php
 use Cake\Routing\Router;
 
-Router::scope('/SurveyTemplates', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/SurveyTemplates', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates']);
-	Router::connect('/SurveyTemplates/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyTemplates']);
-});
-
-Router::scope('/SurveyQuestions', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/SurveyQuestions', ['plugin' => 'Survey', 'controller' => 'SurveyQuestions']);
-	Router::connect('/SurveyQuestions/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyQuestions']);
+Router::scope('/Surveys', ['plugin' => 'Survey'], function ($routes) {
+	Router::connect('/Surveys', ['plugin' => 'Survey', 'controller' => 'Surveys']);
+	Router::connect('/Surveys/:action/*', ['plugin' => 'Survey', 'controller' => 'Surveys']);
 });
 
 Router::scope('/SurveyStatuses', ['plugin' => 'Survey'], function ($routes) {

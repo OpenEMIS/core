@@ -533,43 +533,12 @@ UPDATE `workflow_models` SET `submodel` = 'FieldOption.StaffLeaveTypes' WHERE `w
 -- June 16 1100hrs
 -- New tables for Custom Field
 
---
--- New table - custom_groups
---
-
-DROP TABLE IF EXISTS `custom_groups`;
-CREATE TABLE IF NOT EXISTS `custom_groups` (
-  `id` int(11) NOT NULL,
-  `name` varchar(250) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `custom_groups`
-  ADD PRIMARY KEY (`id`);
-
-
-ALTER TABLE `custom_groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
-TRUNCATE TABLE `custom_groups`;
-INSERT INTO `custom_groups` (`id`, `name`, `created_user_id`, `created`) VALUES
-(1, 'Survey', 1, '0000-00-00 00:00:00'),
-(2, 'Infrastructure', 1, '0000-00-00 00:00:00'),
-(3, 'Health', 1, '0000-00-00 00:00:00'),
-(4, 'Quiz', 1, '0000-00-00 00:00:00');
-
---
 -- New table - custom_modules
---
-
 DROP TABLE IF EXISTS `custom_modules`;
 CREATE TABLE IF NOT EXISTS `custom_modules` (
   `id` int(11) NOT NULL,
   `name` varchar(250) NOT NULL,
+  `parent_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime NOT NULL,
   `created_user_id` int(11) DEFAULT NULL,
@@ -585,30 +554,12 @@ ALTER TABLE `custom_modules`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 TRUNCATE TABLE `custom_modules`;
-INSERT INTO `custom_modules` (`id`, `name`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 1, '0000-00-00 00:00:00'),
-(2, 'Student', 1, '0000-00-00 00:00:00'),
-(3, 'Staff', 1, '0000-00-00 00:00:00');
+INSERT INTO `custom_modules` (`id`, `name`, `parent_id`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 0, 1, '0000-00-00 00:00:00'),
+(2, 'Student', 0, 1, '0000-00-00 00:00:00'),
+(3, 'Staff', 0, 1, '0000-00-00 00:00:00');
 
---
--- New table - custom_group_modules
---
-
-DROP TABLE IF EXISTS `custom_group_modules`;
-CREATE TABLE IF NOT EXISTS `custom_group_modules` (
-  `id` char(36) NOT NULL,
-  `custom_group_id` int(11) NOT NULL,
-  `custom_module_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `custom_group_modules`
-  ADD PRIMARY KEY (`id`);
-
---
 -- New table - custom_field_types
---
-
 DROP TABLE IF EXISTS `custom_field_types`;
 CREATE TABLE IF NOT EXISTS `custom_field_types` (
   `id` int(11) NOT NULL,
@@ -637,13 +588,9 @@ INSERT INTO `custom_field_types` (`id`, `code`, `name`, `description`, `format`,
 (5, 'CHECKBOX', 'Checkbox', '', 'OpenEMIS', 0, 0),
 (6, 'TABLE', 'Table', '', 'OpenEMIS', 0, 0),
 (7, 'DATE', 'Date', '', 'OpenEMIS', 1, 0),
-(8, 'TIME', 'Time', '', 'OpenEMIS', 1, 0),
-(9, 'MULTIPLE_CHOICE', 'Multiple Choice', 'A stimulus followed by a question prompt and a number of possible responses. The candidate chooses the correct response.', 'QTI', 1, 0);
+(8, 'TIME', 'Time', '', 'OpenEMIS', 1, 0);
 
---
 -- New table - custom_fields
---
-
 DROP TABLE IF EXISTS `custom_fields`;
 CREATE TABLE IF NOT EXISTS `custom_fields` (
   `id` int(11) NOT NULL,
@@ -665,10 +612,7 @@ ALTER TABLE `custom_fields`
 ALTER TABLE `custom_fields`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
 -- New table - custom_field_options
---
-
 DROP TABLE IF EXISTS `custom_field_options`;
 CREATE TABLE IF NOT EXISTS `custom_field_options` (
   `id` int(11) NOT NULL,
@@ -691,10 +635,7 @@ ALTER TABLE `custom_field_options`
 ALTER TABLE `custom_field_options`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
 -- New table - custom_table_columns
---
-
 DROP TABLE IF EXISTS `custom_table_columns`;
 CREATE TABLE IF NOT EXISTS `custom_table_columns` (
   `id` int(11) NOT NULL,
@@ -716,10 +657,7 @@ ALTER TABLE `custom_table_columns`
 ALTER TABLE `custom_table_columns`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
 -- New table - custom_table_rows
---
-
 DROP TABLE IF EXISTS `custom_table_rows`;
 CREATE TABLE IF NOT EXISTS `custom_table_rows` (
   `id` int(11) NOT NULL,
@@ -741,16 +679,12 @@ ALTER TABLE `custom_table_rows`
 ALTER TABLE `custom_table_rows`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
 -- New table - custom_forms
---
-
 DROP TABLE IF EXISTS `custom_forms`;
 CREATE TABLE IF NOT EXISTS `custom_forms` (
   `id` int(11) NOT NULL,
   `name` varchar(250) NOT NULL,
   `description` text DEFAULT NULL,
-  `custom_group_id` int(11) NOT NULL,
   `custom_module_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime NOT NULL,
@@ -766,15 +700,15 @@ ALTER TABLE `custom_forms`
 ALTER TABLE `custom_forms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- New table - custom_field_forms
---
-
+-- New table - custom_form_fields
 DROP TABLE IF EXISTS `custom_form_fields`;
 CREATE TABLE IF NOT EXISTS `custom_form_fields` (
   `id` char(36) NOT NULL,
   `custom_form_id` int(11) NOT NULL,
   `custom_field_id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
   `order` int(3) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -782,15 +716,11 @@ CREATE TABLE IF NOT EXISTS `custom_form_fields` (
 ALTER TABLE `custom_form_fields`
   ADD PRIMARY KEY (`id`);
 
---
 -- New table - custom_field_records
---
-
 DROP TABLE IF EXISTS `custom_field_records`;
 CREATE TABLE IF NOT EXISTS `custom_field_records` (
   `id` int(11) NOT NULL,
   `institution_id` int(11) NOT NULL,
-  `survey_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -805,10 +735,7 @@ ALTER TABLE `custom_field_records`
 ALTER TABLE `custom_field_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
 -- New table - custom_field_values
---
-
 DROP TABLE IF EXISTS `custom_field_values`;
 CREATE TABLE IF NOT EXISTS `custom_field_values` (
   `id` int(11) NOT NULL,
@@ -833,18 +760,11 @@ ALTER TABLE `custom_field_values`
 ALTER TABLE `custom_field_values`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
 -- New table - custom_table_cells
---
-
 DROP TABLE IF EXISTS `custom_table_cells`;
 CREATE TABLE IF NOT EXISTS `custom_table_cells` (
   `id` int(11) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
-  `number_value` int(11) DEFAULT NULL,
-  `textarea_value` text DEFAULT NULL,
-  `date_value` date DEFAULT NULL,
-  `time_value` time DEFAULT NULL,
   `custom_field_id` int(11) NOT NULL,
   `custom_table_column_id` int(11) NOT NULL,
   `custom_table_row_id` int(11) NOT NULL,
@@ -861,30 +781,6 @@ ALTER TABLE `custom_table_cells`
 
 
 ALTER TABLE `custom_table_cells`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- New table - surveys
---
-
-DROP TABLE IF EXISTS `surveys`;
-CREATE TABLE IF NOT EXISTS `surveys` (
-  `id` int(11) NOT NULL,
-  `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Draft, 2 -> Completed',
-  `academic_period_id` int(11) NOT NULL,
-  `custom_form_id` int(11) NOT NULL,
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-ALTER TABLE `surveys`
-  ADD PRIMARY KEY (`id`);
-
-
-ALTER TABLE `surveys`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 -- June 17 0911hrs
@@ -983,3 +879,140 @@ ALTER TABLE `infrastructure_custom_table_rows`
 
 ALTER TABLE `infrastructure_custom_table_rows`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- June 17 1118hrs
+-- Update for survey
+
+-- Backup old tables
+RENAME TABLE survey_modules TO z_1461_survey_modules;
+RENAME TABLE survey_questions TO z_1461_survey_questions;
+RENAME TABLE survey_question_choices TO z_1461_survey_question_choices;
+RENAME TABLE survey_table_columns TO z_1461_survey_table_columns;
+RENAME TABLE survey_table_rows TO z_1461_survey_table_rows;
+RENAME TABLE survey_templates TO z_1461_survey_templates;
+
+-- New table - survey_questions
+DROP TABLE IF EXISTS `survey_questions`;
+CREATE TABLE IF NOT EXISTS `survey_questions` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `field_type` varchar(100) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `survey_questions`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `survey_questions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - survey_question_choices
+DROP TABLE IF EXISTS `survey_question_choices`;
+CREATE TABLE IF NOT EXISTS `survey_question_choices` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_default` int(1) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `order` int(3) NOT NULL DEFAULT '0',
+  `survey_question_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `survey_question_choices`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `survey_question_choices`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - survey_table_columns
+DROP TABLE IF EXISTS `survey_table_columns`;
+CREATE TABLE IF NOT EXISTS `survey_table_columns` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `survey_question_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `survey_table_columns`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `survey_table_columns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - survey_table_rows
+DROP TABLE IF EXISTS `survey_table_rows`;
+CREATE TABLE IF NOT EXISTS `survey_table_rows` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `order` int(3) NOT NULL DEFAULT '0',
+  `visible` int(1) NOT NULL DEFAULT '1',
+  `survey_question_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `survey_table_rows`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `survey_table_rows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - survey_templates
+DROP TABLE IF EXISTS `survey_templates`;
+CREATE TABLE IF NOT EXISTS `survey_templates` (
+  `id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
+  `custom_module_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime NOT NULL,
+  `created_user_id` int(11) DEFAULT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `survey_templates`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `survey_templates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - survey_template_questions
+DROP TABLE IF EXISTS `survey_template_questions`;
+CREATE TABLE IF NOT EXISTS `survey_template_questions` (
+  `id` char(36) NOT NULL,
+  `survey_template_id` int(11) NOT NULL,
+  `survey_question_id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `is_mandatory` int(1) NOT NULL DEFAULT '0',
+  `is_unique` int(1) NOT NULL DEFAULT '0',
+  `order` int(3) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `survey_template_questions`
+  ADD PRIMARY KEY (`id`);
