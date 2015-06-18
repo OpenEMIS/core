@@ -40,7 +40,7 @@ class Absence extends Entity
     		if ($this->full_day_absent == 'Yes') {
 				$timeStr = __('full day');
     		} else {
-				$timeStr = sprintf('%s - %s', $absenceObj['start_time_absent'], $absenceObj['end_time_absent']);
+				$timeStr = sprintf('%s - %s', $this->start_time_absent, $this->end_time_absent);
     		}
     	}
     	return $timeStr;
