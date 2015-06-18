@@ -84,7 +84,12 @@ class ControllerActionComponent extends Component {
 							$currentAction = array_shift($this->paramsPass);
 						}
 
-						$this->model($attr['className']);
+						$actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
+
+						if (!in_array($currentAction, $actions)) {
+							return $this->controller->redirect(['action' => $action]);
+						}
+						$this->model($attr['className'], $actions);
 						$this->model->alias = $name;
 						$this->currentAction = $currentAction;
 						$this->ctpFolder = $this->model->alias();
@@ -167,10 +172,13 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
-	public function model($model = null) {
+	public function model($model=null, $actions=[]) {
 		if (is_null($model)) {
 			return $this->model;
 		} else {
+			if (!empty($actions)) {
+				$this->defaultActions = $actions;
+			}
 			$this->plugin = $this->getPlugin($model);
 			$this->model = $this->controller->loadModel($model);
 			$this->model->alias = $this->model->alias();
@@ -305,7 +313,9 @@ class ControllerActionComponent extends Component {
 		}
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
-		$buttons['delete']['removeStraightAway'] = $this->removeStraightAway;
+		if (array_key_exists('remove', $this->defaultActions)) {
+			$buttons['delete']['removeStraightAway'] = $this->removeStraightAway;
+		}
 
 		// logic for Reorder buttons
 		$schema = $this->getSchema($this->model);
@@ -321,7 +331,11 @@ class ControllerActionComponent extends Component {
 		$this->buttons = $buttons;
 		$controller->set('_buttons', $buttons);
 		foreach ($this->indexActions as $action => $attr) {
-			$this->indexActions[$action] = array_merge($this->indexActions[$action], $buttons[$action]);
+			if (array_key_exists($action, $buttons)) {
+				$this->indexActions[$action] = array_merge($this->indexActions[$action], $buttons[$action]);
+			} else {
+				unset($this->indexActions[$action]);
+			}
 		}
 		$event = new Event('ControllerAction.Model.index.onInitializeButtons', $this, ['actions' => $this->indexActions]);
 		$event = $this->model->eventManager()->dispatch($event);
@@ -476,7 +490,7 @@ class ControllerActionComponent extends Component {
 	public function getModalOptions($type) {
 		$modal = array();
 
-		if ($type == 'delete') {
+		if ($type == 'delete' && in_array($type, $this->defaultActions)) {
 			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');

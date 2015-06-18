@@ -12,7 +12,7 @@ class InstitutionsController extends AppController  {
 		$this->ControllerAction->models = [
 			'Attachments' 		=> ['className' => 'Institution.InstitutionSiteAttachments'],
 			'Additional' 		=> ['className' => 'Institution.Additional'],
-			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities'],
+			'History' 			=> ['className' => 'Institution.InstitutionSiteActivities', 'actions' => ['index']],
 
 			// 'InstitutionSiteCustomField',
 			// 'InstitutionSiteCustomFieldOption',
