@@ -99,9 +99,17 @@ class WorkflowStepsTable extends AppTable {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$where = [
-			$this->aliasField('workflow_id') => $entity->workflow_id,
-			//$this->aliasField('id !=') => $entity->id
+			$this->aliasField('workflow_id') => $entity->workflow_id
 		];
+
+		//edit
+		if (isset($entity->id)) {
+			//do not allow to edit name of Open and Closed
+			$this->fields['name']['attr']['disabled'] = !is_null($entity->stage) ? 'disabled' : '';
+			//exclude ownself in nextStepOptions
+			$where[$this->aliasField('id !=')] = $entity->id;
+		}
+
 		$nextStepOptions = $this->find('list')->where($where)->toArray();
 		$this->controller->set('nextStepOptions', $nextStepOptions);
 
