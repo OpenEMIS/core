@@ -5,7 +5,6 @@
 }
 
  /* PRODUCT COLOR */
-.btn-default,
 .login-box .btn-login,
 .navbar,
 .login-box .title {
@@ -28,6 +27,7 @@
 	border: 1px solid #6699CC;
 }
 
+.btn-default,
 .pagination > .active > a:focus,
 .pagination > li > a:hover {
 	background-color: #6699CC !important;
@@ -43,20 +43,13 @@
 	color: #476B8F;
 }
 
-.outline-btn {
-	color: #476B8F !important;
-	background-color: #FFF !important;
-}
-
 .btn-default,
 .pagination > .active > a,
 .pagination > .active > a:hover,
 .pagination > li > a:hover,
 .login-box .btn-login,
-.outline-btn,
-.btn-outline:hover, 
-.btn-outline:active, 
-.btn-outline:focus,
+.btn-bold:hover,
+.btn-italic:hover,
 .input-group-addon,
 .selected {
 	border: 1px solid #476B8F !important;
@@ -66,11 +59,11 @@
 	border-right: 1px solid #476B8F !important;
 }
 
-.header-navigation .btn-group .btn:hover,
-.btn-default:hover {
+.header-navigation .btn-group .btn:hover {
 	background-color: #476B8F;
 }
 
+.btn-default:hover,
 .btn-outline:hover, 
 .btn-outline:active, 
 .btn-outline:focus,
@@ -78,17 +71,22 @@
 #action-menu:hover,
 .horizontal-tabs span a:hover,
 .nav > li > a:hover,
-.outline-btn:hover,
 .btn-default:active,
 .btn-active,
 .action-dropdown > li > a:hover,
 .login-box .btn-login:hover,
 #menu-toggle .fa:hover,
+.btn-bold:hover,
+.btn-italic:hover,
 .input-group-addon:hover,
 .datepicker table tr td.active, 
 .datepicker table tr td.active:hover, 
 .datepicker table tr td.active.disabled, 
-.datepicker table tr td.active.disabled:hover {
+.datepicker table tr td.active.disabled:hover,
+.mce-menu-item:hover, 
+.mce-menu-item.mce-selected, 
+.mce-menu-item:focus,
+.selected-size {
 	background-color: #476B8F !important;
 	color: #FFF !important;
 	background-image: none !important;	
