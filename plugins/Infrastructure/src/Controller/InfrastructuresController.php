@@ -55,14 +55,8 @@ class InfrastructuresController extends AppController
     	if ($model->alias == 'Types' || $model->alias == 'CustomFields') {
 			$query = $this->request->query;
 
-			$levels = TableRegistry::get('Infrastructure.InfrastructureLevels')->find('list')->toArray();
-	        $selectedLevel = isset($query['level']) ? $query['level'] : key($levels);
-
-	        $levelOptions = [];
-	        foreach ($levels as $key => $level) {
-	            $levelOptions['level=' . $key] = $level;
-	        }
-
+			$levelOptions = TableRegistry::get('Infrastructure.InfrastructureLevels')->find('list')->toArray();
+	        $selectedLevel = isset($query['level']) ? $query['level'] : key($levelOptions);
 	        $options['conditions'][] = [
 	        	$model->aliasField('infrastructure_level_id') => $selectedLevel
 	        ];

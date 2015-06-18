@@ -40,14 +40,9 @@ class CustomFormsTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Table $model, array $options) {
-		list($modules, $selectedModule) = array_values($this->getSelectOptions());
+		list($moduleOptions, $selectedModule) = array_values($this->getSelectOptions());
 
-		$moduleOptions = [];
-        foreach ($modules as $key => $module) {
-            $moduleOptions['module=' . $key] = $module;
-        }
         $this->controller->set(compact('moduleOptions', 'selectedModule'));
-
 		$options['conditions'][] = [
         	$model->aliasField('custom_module_id') => $selectedModule
         ];
