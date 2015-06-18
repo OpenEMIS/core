@@ -257,7 +257,7 @@ DROP TABLE IF EXISTS `custom_table_columns`;
 DROP TABLE IF EXISTS `custom_table_rows`;
 DROP TABLE IF EXISTS `custom_forms`;
 DROP TABLE IF EXISTS `custom_form_fields`;
-DROP TABLE IF EXISTS `custom_field_records`;
+DROP TABLE IF EXISTS `custom_records`;
 DROP TABLE IF EXISTS `custom_field_values`;
 DROP TABLE IF EXISTS `custom_table_cells`;
 
@@ -287,3 +287,18 @@ RENAME TABLE z_1461_survey_question_choices TO survey_question_choices;
 RENAME TABLE z_1461_survey_table_columns TO survey_table_columns;
 RENAME TABLE z_1461_survey_table_rows TO survey_table_rows;
 RENAME TABLE z_1461_survey_templates TO survey_templates;
+
+-- June 18 1730hrs
+-- Revert Institution - Custom Fields
+DROP TABLE IF EXISTS `institution_custom_field_values`;
+DROP TABLE IF EXISTS `institution_custom_table_cells`;
+
+RENAME TABLE z_1461_institution_custom_fields TO institution_custom_fields;
+RENAME TABLE z_1461_institution_custom_field_options TO institution_custom_field_options;
+RENAME TABLE z_1461_institution_custom_values TO institution_custom_values;
+RENAME TABLE z_1461_institution_custom_value_history TO institution_custom_value_history;
+
+RENAME TABLE z_1461_institution_site_custom_fields TO institution_site_custom_fields;
+RENAME TABLE z_1461_institution_site_custom_field_options TO institution_site_custom_field_options;
+RENAME TABLE z_1461_institution_site_custom_values TO institution_site_custom_values;
+RENAME TABLE z_1461_institution_site_custom_value_history TO institution_site_custom_value_history;
