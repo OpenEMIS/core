@@ -50,12 +50,15 @@ class CustomFieldsTable extends AppTable {
 		$this->fields['field_type']['type'] = 'select';
 		$this->fields['field_type']['options'] = $fieldTypeOptions;
 		$this->fields['field_type']['onChangeReload'] = true;
+		$this->fields['field_type']['labelKey'] = 'general';
 
 		$this->fields['is_mandatory']['type'] = 'select';
 		$this->fields['is_mandatory']['options'] = $mandatoryOptions;
+		$this->fields['is_mandatory']['labelKey'] = 'general';
 
 		$this->fields['is_unique']['type'] = 'select';
 		$this->fields['is_unique']['options'] = $uniqueOptions;
+		$this->fields['is_unique']['labelKey'] = 'general';
 
 		$this->setFieldOrder();
 
