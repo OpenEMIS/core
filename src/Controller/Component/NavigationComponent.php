@@ -118,13 +118,9 @@ class NavigationComponent extends Component {
 						'Survey' => [
 							'collapse' => true,
 							'items' => [
-								'Templates' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'Survey', 'controller' => 'SurveyTemplates', 'action' => 'index']
-								],
 								'Questions' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Survey', 'controller' => 'SurveyQuestions', 'action' => 'index']
+									'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions']
 								],
 								'Status' => [
 									'collapse' => true,

@@ -249,9 +249,7 @@ UPDATE `workflow_models` SET `submodel` = 'Staff.StaffLeaveType' WHERE `workflow
 
 -- June 16 1100hrs
 -- Drop tables for Custom Field
-DROP TABLE IF EXISTS `custom_groups`;
 DROP TABLE IF EXISTS `custom_modules`;
-DROP TABLE IF EXISTS `custom_group_modules`;
 DROP TABLE IF EXISTS `custom_field_types`;
 DROP TABLE IF EXISTS `custom_fields`;
 DROP TABLE IF EXISTS `custom_field_options`;
@@ -262,7 +260,6 @@ DROP TABLE IF EXISTS `custom_form_fields`;
 DROP TABLE IF EXISTS `custom_field_records`;
 DROP TABLE IF EXISTS `custom_field_values`;
 DROP TABLE IF EXISTS `custom_table_cells`;
-DROP TABLE IF EXISTS `surveys`;
 
 -- June 17 0911hrs
 -- Revert for infrastructure
@@ -274,3 +271,19 @@ DROP TABLE IF EXISTS `infrastructure_custom_table_rows`;
 
 RENAME TABLE z_1461_infrastructure_custom_fields TO infrastructure_custom_fields;
 RENAME TABLE z_1461_infrastructure_custom_field_options TO infrastructure_custom_field_options;
+
+-- June 17 1118hrs
+-- Revert for survey
+DROP TABLE IF EXISTS `survey_questions`;
+DROP TABLE IF EXISTS `survey_question_choices`;
+DROP TABLE IF EXISTS `survey_table_columns`;
+DROP TABLE IF EXISTS `survey_table_rows`;
+DROP TABLE IF EXISTS `survey_templates`;
+DROP TABLE IF EXISTS `survey_template_questions`;
+
+RENAME TABLE z_1461_survey_modules TO survey_modules;
+RENAME TABLE z_1461_survey_questions TO survey_questions;
+RENAME TABLE z_1461_survey_question_choices TO survey_question_choices;
+RENAME TABLE z_1461_survey_table_columns TO survey_table_columns;
+RENAME TABLE z_1461_survey_table_rows TO survey_table_rows;
+RENAME TABLE z_1461_survey_templates TO survey_templates;

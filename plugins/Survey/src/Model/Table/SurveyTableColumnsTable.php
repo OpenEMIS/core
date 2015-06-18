@@ -1,12 +1,11 @@
 <?php
 namespace Survey\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
+use CustomField\Model\Table\CustomTableColumnsTable;
 
-class SurveyTableColumnsTable extends AppTable {
+class SurveyTableColumnsTable extends CustomTableColumnsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('SurveyQuestions', ['className' => 'Survey.SurveyQuestions']);
+		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 	}
 }

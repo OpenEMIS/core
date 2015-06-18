@@ -92,7 +92,10 @@ class LabelHelper extends Helper {
 			'section' => 'Section',
 			'gender' => 'Gender',
 			'date_of_birth' => 'Date Of Birth',
-			'education_grade' => 'Education Grade'
+			'education_grade' => 'Education Grade',
+			'field_type' => 'Type',
+			'is_mandatory' => 'Mandatory',
+			'is_unique' => 'Unique'
 		],
 		'date' => [
 			'start' => 'Start Date',
@@ -137,16 +140,14 @@ class LabelHelper extends Helper {
 		'InstitutionSiteShifts' => [
 			'location_institution_site_id' => 'Location'
 		],
+		'InfrastructureTypes' => [
+			'infrastructure_level_id' => 'Level Name'
+		],
+		'InfrastructureCustomFields' => [
+			'infrastructure_level_id' => 'Level Name'
+		],
 		'CustomGroups' => [
 			'custom_modules' => 'Module'
-		],
-		'CustomFields' => [
-			'field_type' => 'Type',
-			'is_mandatory' => 'Mandatory',
-			'is_unique' => 'Unique'
-		],
-		'CustomFieldOptions' => [
-			'is_default' => 'Default'
 		],
 		'SurveyTemplates' => [
 			'survey_module_id' => 'Module'
