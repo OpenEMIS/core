@@ -156,4 +156,41 @@ class ValidationBehavior extends Behavior {
 	public static function checkIfStringGotNoNumber($check, array $globalData) {
 		return !preg_match('#[0-9]#',$check);
 	}
+
+	/**
+	 * [validatePreferred description]
+	 * @param  [type] $field      [description]
+	 * @param  array  $globalData [description]
+	 * @return [type]             [description]
+	 */
+	public static function validatePreferred($field, array $globalData) {
+		$flag = false;
+		// foreach ($check1 as $key => $value1) {
+			$preferred = $field;
+			$contactOption = $globalData['data']['contact_option_id'];
+			if ($preferred == "0" && $contactOption != "5") {
+				if (!$globalData['newRecord']) {
+					// todo:mlee: not converted yet
+					$contactId = $globalData['data']['id'];
+					$count = $this->find('count', array('conditions' => array('ContactType.contact_option_id' => $contactOption, array('NOT' => array('StaffContact.id' => array($contactId))))));
+					if ($count != 0) {
+						$flag = true;
+					}
+				} else {
+					$query = $model->find();
+					$query->matching('ContactTypes', function ($q) {
+						return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+					});
+					$count = $query->count();
+
+					if ($count != 0) {
+						$flag = true;
+					}
+				}
+			} else {
+				$flag = true;
+			}
+		// }
+		return $flag;
+	}
 }
