@@ -31,27 +31,27 @@ class InstitutionsTable extends AppTable  {
 		 */
 		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities']);
 		
-		$this->hasMany('Attachments', 						['className' => 'Institution.InstitutionSiteAttachments']);
+		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments']);
 		$this->hasMany('Additional', 						['className' => 'Institution.Additional']);
 
-		$this->hasMany('Positions', 						['className' => 'Institution.InstitutionSitePositions']);
-		$this->hasMany('Programmes', 						['className' => 'Institution.InstitutionSiteProgrammes']);
-		$this->hasMany('Shifts', 							['className' => 'Institution.InstitutionSiteShifts']);
-		$this->hasMany('Sections', 							['className' => 'Institution.InstitutionSiteSections']);
-		$this->hasMany('Classes', 							['className' => 'Institution.InstitutionSiteClasses']);
-		$this->hasMany('Infrastructures', 					['className' => 'Institution.InstitutionSiteInfrastructures']);
+		$this->hasMany('InstitutionSitePositions', 			['className' => 'Institution.InstitutionSitePositions']);
+		$this->hasMany('InstitutionSiteProgrammes', 		['className' => 'Institution.InstitutionSiteProgrammes']);
+		$this->hasMany('InstitutionSiteShifts', 			['className' => 'Institution.InstitutionSiteShifts']);
+		$this->hasMany('InstitutionSiteSections', 			['className' => 'Institution.InstitutionSiteSections']);
+		$this->hasMany('InstitutionSiteClasses', 			['className' => 'Institution.InstitutionSiteClasses']);
+		$this->hasMany('InstitutionSiteInfrastructures', 	['className' => 'Institution.InstitutionSiteInfrastructures']);
 
-		$this->hasMany('Staff', 							['className' => 'Institution.InstitutionSiteStaff']);
+		$this->hasMany('InstitutionSiteStaff', 				['className' => 'Institution.InstitutionSiteStaff']);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours']);
-		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
+		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences']);
 
 		$this->hasMany('InstitutionSiteStudents', 			['className' => 'Institution.InstitutionSiteStudents']);
 		// $this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours']);
-		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
+		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
-		$this->hasMany('BankAccounts', 						['className' => 'Institution.InstitutionSiteBankAccounts']);
-		$this->hasMany('Fees', 								['className' => 'Institution.InstitutionSiteFees']);
+		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts']);
+		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees']);
 		$this->hasMany('StudentFees', 						['className' => 'Institution.StudentFees']);
 
 		$this->hasMany('NewSurveys', 						['className' => 'Institution.SurveyNew']);
@@ -62,6 +62,14 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades']);
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
+
+
+		$this->hasMany('InstitutionSiteClassStaff', 		['className' => 'Institution.InstitutionSiteClassStaff']);
+		$this->hasMany('InstitutionSiteClassStudents', 		['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteSectionClasses', 	['className' => 'Institution.InstitutionSiteSectionClasses']);
+
+		// pr($this->validator());
+
 	}
 
 	public function validationDefault(Validator $validator) {
