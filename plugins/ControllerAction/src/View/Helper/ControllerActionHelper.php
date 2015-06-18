@@ -136,15 +136,10 @@ class ControllerActionHelper extends Helper {
 		);
 
 		$tableHeaders = array();
-		$table = null;
-		$session = $this->request->session();
-		$language = $session->read('System.language');
-
 		foreach ($fields as $field => $attr) {
 			$attr = array_merge($attrDefaults, $attr);
 			$type = $attr['type'];
 			$visible = $this->isFieldVisible($attr, 'index');
-			$label = '';
 
 			if ($visible && $type != 'hidden') {
 				$fieldModel = $attr['model'];
@@ -153,17 +148,9 @@ class ControllerActionHelper extends Helper {
 					if ($attr['sort']) {
 						$label = $this->Paginator->sort($field);
 					} else {
-						if (is_null($table)) {
-							$table = TableRegistry::get($attr['className']);
-						}
-
-						// attach event to get labels for fields
-						$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
-						$event = $table->eventManager()->dispatch($event);
-						// end attach event
-
-						if ($event->result) {
-							$label = $event->result;
+						$label = $this->getLabel($fieldModel, $field, $attr);
+						if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
+							$label = str_replace(' Id', '', $label);
 						}
 					}
 
@@ -193,15 +180,26 @@ class ControllerActionHelper extends Helper {
 			$model = $attr['model'];
 			$value = $obj->$field;
 
-			if (!empty($search)) {
-				$value = $this->highlight($search, $value);
-			}
-
+			// attach event for index columns
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
 			}
 
-			// attach event for index columns
+			if (array_key_exists('options', $attr)) {
+				if (isset($attr['options'][$value])) {
+					$value = $attr['options'][$value];	
+				}
+			}
+
+			if ($this->endsWith($field, '_id')) {
+				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
+				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
+					$value = $obj->$associatedObject->name;
+				}
+			} else if (is_array($value) || strlen($value) == 0) {
+				$value = $this->getIndexElement($value, $attr);
+			}
+
 			$method = 'onGet' . Inflector::camelize($field);
 			$eventKey = 'ControllerAction.Model.' . $method;
 
@@ -210,21 +208,14 @@ class ControllerActionHelper extends Helper {
                 $table->eventManager()->on($eventKey, [], [$table, $method]);
             }
 			$event = $table->eventManager()->dispatch($event);
-			// end attach event
 
 			if ($event->result) {
 				$value = $event->result;
-			} else if ($this->endsWith($field, '_id')) {
-				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
-				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
-					$value = $obj->$associatedObject->name;
-				}
-			} else if (array_key_exists('options', $attr)) {
-				if (isset($attr['options'][$value])) {
-					$value = $attr['options'][$value];
-				} 
-			} else if (is_array($value) || strlen($value) == 0) {
-				$value = $this->getIndexElement($value, $attr);
+			}
+			// end attach event
+
+			if (!empty($search)) {
+				$value = $this->highlight($search, $value);
 			}
 
 			if (isset($attr['tableRowClass'])) {
@@ -492,14 +483,9 @@ class ControllerActionHelper extends Helper {
 			'label' => true
 		];
 
-		$table = null;
-		$session = $this->request->session();
-		$language = $session->read('System.language');
-
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$visible = $this->isFieldVisible($_fieldAttr, 'edit');
-			$label = false;
 
 			if ($visible) {
 				$_type = $_fieldAttr['type'];
@@ -507,19 +493,9 @@ class ControllerActionHelper extends Helper {
 				$fieldName = $_fieldModel . '.' . $_field;
 				$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 				
-				if (is_null($table)) {
-					$table = TableRegistry::get($attr['className']);
-				}
-
-				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
-				$event = $table->eventManager()->dispatch($event);
-				// end attach event
-
-				if ($event->result) {
-					$label = $event->result;
-				}
-				if ($label !== false) {
+				// TODO-jeff: make label optional
+				$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
+				if (!empty($label)) {
 					$options['label'] = $label;
 				}
 
@@ -527,6 +503,37 @@ class ControllerActionHelper extends Helper {
 				if (method_exists($this, $function)) {
 					$this->$function('edit', $data, $_fieldAttr, $options);
 				}
+				
+				/*
+				switch ($_type) {
+					case 'file_upload';
+						$attr = array('field' => $_field);
+						echo $this->_View->element('layout/attachment_upload', $attr);
+						break;
+
+					case 'chosen_select':
+						$options['options'] = isset($attr['options']) ? $attr['options'] : array();
+						$options['class'] = 'chosen-select';
+						$options['multiple'] = true;
+						$options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
+						$fieldName = $attr['id'];
+						$this->includes['chosen']['include'] = true;
+						break;
+
+					default:
+						break;
+					
+				}
+				*/
+				/* confirm to be removed
+				if (array_key_exists('dataModel', $_fieldAttr) && array_key_exists('dataField', $_fieldAttr)) {
+					$dataModel = $_fieldAttr['dataModel'];
+					$dataField = $_fieldAttr['dataField'];
+					$options['value'] = $this->request->data->$dataField;
+				} else if (isset($_fieldAttr['value'])) {
+					$options['value'] = $_fieldAttr['value'];
+				}
+				*/
 				
 				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
 					if (array_key_exists('fieldName', $_fieldAttr)) {
@@ -560,7 +567,7 @@ class ControllerActionHelper extends Helper {
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
 		$_rowClass = array('row');
 		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-		$_valueClass = array('col-xs-6 col-md-6'); // default bootstrap class for values
+		$_valueClass = array('col-xs-6 col-md-6 form-input'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosen_select');
 
@@ -590,32 +597,15 @@ class ControllerActionHelper extends Helper {
 			'valueClass' => ''
 		);
 
-		$table = null;
-		$session = $this->request->session();
-		$language = $session->read('System.language');
-
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$_type = $_fieldAttr['type'];
 			$visible = $this->isFieldVisible($_fieldAttr, 'view');
-			$label = '';
 
 			if ($visible && $_type != 'hidden') {
 				$_fieldModel = $_fieldAttr['model'];
 				
-				//$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
-				if (is_null($table)) {
-					$table = TableRegistry::get($attr['className']);
-				}
-
-				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
-				$event = $table->eventManager()->dispatch($event);
-				// end attach event
-
-				if ($event->result) {
-					$label = $event->result;
-				}
+				$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
 				
 				$value = $data->$_field;
 				if ($this->endsWith($_field, '_id')) {
@@ -624,6 +614,7 @@ class ControllerActionHelper extends Helper {
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
+					$label = $this->getLabel($_fieldModel, $associatedObject, $_fieldAttr);
 				}
 
 				// mapped to a current function in this class
