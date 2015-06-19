@@ -77,9 +77,9 @@ class ControllerActionHelper extends Helper {
 
 		$fields = $this->_View->get('_fields');
 		if (!empty($fields)) {
-			$types = ['binary'];
+			$types = ['binary','image'];
 			foreach ($fields as $key => $attr) {
-				if (in_array($attr['type'], $types)) {
+				if (in_array($attr['type'], $types )) {
 					$options['type'] = 'file';
 					break;
 				}
@@ -817,7 +817,8 @@ class ControllerActionHelper extends Helper {
 			// 	$imageAttr['src'] = $this->Image->getBase64($data->{$_field . '_name'}, $data->$_field);
 			// }
 			// echo $this->_View->element('layout/file_upload_preview', $imageAttr);
-			echo 'WIP';
+			$this->includes['jasny']['include'] = true;
+			echo $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr]);
 		}
 		return $value;
 	}

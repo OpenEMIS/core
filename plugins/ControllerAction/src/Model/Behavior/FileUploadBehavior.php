@@ -29,13 +29,40 @@ class FileUploadBehavior extends Behavior {
 		'allowEmpty' => false,
 		'useDefaultName' => true
 	];
+
+	public $fileImagesMap = array(
+		'jpeg'	=> 'image/jpeg',
+		'jpg'	=> 'image/jpeg',
+		'gif'	=> 'image/gif',
+		'png'	=> 'image/png'
+		// 'jpeg'=>'image/pjpeg',
+		// 'jpeg'=>'image/x-png'
+	);
+
+	public $fileDocumentsMap = array(
+		'rtf' 	=> 'text/rtf',
+		'txt' 	=> 'text/plain',
+		'csv' 	=> 'text/csv',
+		'pdf' 	=> 'application/pdf',
+		'ppt' 	=> 'application/vnd.ms-powerpoint',
+		'pptx' 	=> 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+		'doc' 	=> 'application/msword',
+		'docx' 	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'xls' 	=> 'application/vnd.ms-excel',
+		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		'zip' 	=> 'application/zip',
+	);
+
+	public $fileTypesMap = array();
+
 	private $_validator;
 
 	public function initialize(array $config) {
 		$this->_defaultConfig = array_merge($this->_defaultConfig, $config);
 		$this->config($this->_defaultConfig);
 
-		// pr($this->_defaultConfig);die;
+		$this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
+
 		// $this->_validator = new Validator();
 
 		// $this->_validator
@@ -130,26 +157,6 @@ class FileUploadBehavior extends Behavior {
 	// 	return $validator;
 	// }
 
-	public $fileTypesMap = array(
-		'jpeg'	=> 'image/jpeg',
-		'jpg'	=> 'image/jpeg',
-		'gif'	=> 'image/gif',
-		'png'	=> 'image/png',
-		// 'jpeg'=>'image/pjpeg',
-		// 'jpeg'=>'image/x-png'
-
-		'rtf' 	=> 'text/rtf',
-		'txt' 	=> 'text/plain',
-		'csv' 	=> 'text/csv',
-		'pdf' 	=> 'application/pdf',
-		'ppt' 	=> 'application/vnd.ms-powerpoint',
-		'pptx' 	=> 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-		'doc' 	=> 'application/msword',
-		'docx' 	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		'xls' 	=> 'application/vnd.ms-excel',
-		'xlsx' 	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		'zip' 	=> 'application/zip'
-	);
 
 	public function getFileType($ext) {
 		if (array_key_exists($ext, $this->fileTypesMap)) {
@@ -177,7 +184,10 @@ class FileUploadBehavior extends Behavior {
 		return $file;
 	}
 
+
+
 	public function beforeSave(Event $event, Entity $entity) {
+
 		$fileNameField = $this->config('name');
 		$fileContentField = $this->config('content');
 
@@ -200,8 +210,6 @@ class FileUploadBehavior extends Behavior {
 				$entity->$fileContentField = file_get_contents($file['tmp_name']);
 			}
 		}
-		
-
 		// if (empty($entity->$fileNameField)) {
 		// 	return false;
 		// }

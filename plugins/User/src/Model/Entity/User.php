@@ -5,7 +5,10 @@ use Cake\ORM\Entity;
 use Cake\Auth\DefaultPasswordHasher;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id'];
+    const picture_width = 90; //in pixels
+    const picture_height = 115; //in pixels
+
+    protected $_virtual = ['name', 'name_with_id', 'picture'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -18,6 +21,13 @@ class User extends Entity {
             'third'     => true,
             'preferred' => false
         );
+    }
+
+    protected function _getPicture(){
+        if(!empty($this->photo_content)){
+            $style = 'width: ' . self::picture_width . 'px; height: ' . self::picture_height . 'px';
+            return '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($this->photo_content) ).'" style="'.$style.'"/>';
+        }
     }
 
     protected function getNameKeys($otherNames=[]) {
