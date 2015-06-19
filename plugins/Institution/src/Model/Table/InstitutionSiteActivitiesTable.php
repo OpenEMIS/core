@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
@@ -10,7 +11,6 @@ class InstitutionSiteActivitiesTable extends AppTable {
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey'=>'institution_site_id']);
 		$this->belongsTo('CreatedUser',  ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
-
     }
 
     // Used in ActivityComponent
@@ -19,14 +19,6 @@ class InstitutionSiteActivitiesTable extends AppTable {
 	// 	$conditions = array($this->alias . '.institution_site_id' => $id);
 	// 	return $conditions;
 	// }
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		$events['ControllerAction.Model.index.onInitializeButtons'] = 'beforeRenderActions';
-		// $events['Model.beforeFind'] = 'beforeFind';
-		return $events;
-	}
 
 	/**
 	 * Redirect to index if navigating to other actions. Not working yet.
@@ -41,14 +33,10 @@ class InstitutionSiteActivitiesTable extends AppTable {
 	// 	}
 	// }
 
-	public function beforeAction($event) {
+	public function beforeAction(Event $event) {
 		$this->fields['operation']['visible'] = false;
 		$this->fields['model_reference']['visible'] = false;
 		$this->fields['created_user_id']['visible'] = true;
 		$this->fields['created']['visible'] = true; 
-	}
-
-	public function beforeRenderActions($event, $buttons) {
-		return [];
 	}
 }
