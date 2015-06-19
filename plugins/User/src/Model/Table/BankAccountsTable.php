@@ -7,9 +7,10 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Traits\OptionsTrait;
 
-class UserBankAccountsTable extends AppTable {
+class BankAccountsTable extends AppTable {
 	use OptionsTrait;
 	public function initialize(array $config) {
+		$this->table('user_bank_accounts');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);

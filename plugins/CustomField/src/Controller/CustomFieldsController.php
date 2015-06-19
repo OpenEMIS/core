@@ -15,7 +15,8 @@ class CustomFieldsController extends AppController
 		$this->ControllerAction->models = [
 			'Modules' => ['className' => 'CustomField.CustomModules'],
 			'Fields' => ['className' => 'CustomField.CustomFields'],
-			'Forms' => ['className' => 'CustomField.CustomForms']
+			'Forms' => ['className' => 'CustomField.CustomForms'],
+			'Records' => ['className' => 'CustomField.CustomRecords']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -35,6 +36,10 @@ class CustomFieldsController extends AppController
 			'Forms' => [
 				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Forms'],
 				'text' => __('Forms')
+			],
+			'Records' => [
+				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Records'],
+				'text' => __('Records')
 			]
 		];
 

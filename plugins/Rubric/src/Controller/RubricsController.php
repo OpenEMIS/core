@@ -61,28 +61,18 @@ class RubricsController extends AppController
     	if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
 			$query = $this->request->query;
 
-			$templates = TableRegistry::get('Rubric.RubricTemplates')->find('list')->toArray();
-	        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templates);
-
-	        $templateOptions = [];
-	        foreach ($templates as $key => $template) {
-	            $templateOptions['template=' . $key] = $template;
-	        }
+			$templateOptions = TableRegistry::get('Rubric.RubricTemplates')->find('list')->toArray();
+	        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
 
 			$columns = $model->schema()->columns();
 			if (in_array('rubric_section_id', $columns)) {
 				$RubricSections = TableRegistry::get('Rubric.RubricSections');
-				$sections = $RubricSections->find('list')
+				$sectionOptions = $RubricSections->find('list')
 		        	->find('order')
 		        	->where([$RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
 		        	->toArray();
 		        
-		        $selectedSection = isset($query['section']) ? $query['section'] : key($sections);
-
-		        $sectionOptions = [];
-		        foreach ($sections as $key => $section) {
-		            $sectionOptions['section=' . $key] = $section;
-		        }
+		        $selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
 
 		        $options['conditions'][] = [
 		        	$model->aliasField('rubric_section_id') => $selectedSection

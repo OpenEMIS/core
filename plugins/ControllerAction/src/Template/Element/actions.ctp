@@ -11,7 +11,7 @@ $id = $obj->$primaryKey;
 	<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
 		<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>
 
-		<?php 
+		<?php
 		foreach ($_indexActions as $action => $attr) : 
 			$icon = sprintf('<i class="%s"></i>%s', $attr['class'], $this->ControllerAction->getLabel('general', $action));
 			$options = array(

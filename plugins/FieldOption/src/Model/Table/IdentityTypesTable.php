@@ -9,6 +9,6 @@ class IdentityTypesTable extends AppTable {
 		$this->addBehavior('ControllerAction.FieldOption');
 		parent::initialize($config);
 		
-		$this->hasMany('UserIdentities', ['className' => 'User.UserIdentities']);
+		$this->hasMany('Identities', ['className' => 'User.Identities']);
 	}
 }

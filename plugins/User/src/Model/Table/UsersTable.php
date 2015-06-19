@@ -13,6 +13,7 @@ class UsersTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
+
 		$this->addBehavior('ControllerAction.FileUpload', [
 							'name' => 'photo_name',
 							'content' => 'photo_content',
@@ -20,6 +21,7 @@ class UsersTable extends AppTable {
 							'allowEmpty' => false,
 							'useDefaultName' => false
 						]);
+		// $this->addBehavior('User.Mandatory',['userRole'=>'Student']);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -28,10 +30,10 @@ class UsersTable extends AppTable {
 		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('UserIdentities', ['className' => 'User.UserIdentities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('UserSpecialNeeds', ['className' => 'User.UserSpecialNeeds', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('UserContacts', ['className' => 'User.UserContacts', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Identities', ['className' => 'User.UserIdentities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('SpecialNeeds', ['className' => 'User.UserSpecialNeeds', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Contacts', ['className' => 'User.UserContacts', 'foreignKey' => 'security_user_id']);
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -53,18 +55,6 @@ class UsersTable extends AppTable {
 		// 	$institutionId = $this->Session->read('Institutions.id');
 		// } else {
 		// 	// todo-mlee need to put correct alert saying need to select institution first
-// <<<<<<< Updated upstream
-		// 	$action = $this->ControllerAction->buttons['index']['url'];
-		// 	$this->controller->redirect($action);
-		// 	return false;
-		// }
-
-// =======
-		// 	/*$action = $this->ControllerAction->buttons['index']['url'];
-		// 	$this->controller->redirect($action);
-		// 	return false;*/
-		// }
-// >>>>>>> Stashed changes
 		if (in_array($this->controller->name, ['Students','Staff'])) {
 			// $this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
 			// 	'type' => 'hidden', 
@@ -217,7 +207,6 @@ class UsersTable extends AppTable {
 	}
 
 	public function addEditBeforeAction(){
-		//pr($this->fields['photo_content']);
 		$this->fields['photo_content']['type'] = 'image';
 	}
 
@@ -265,8 +254,6 @@ class UsersTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		
 		$validator
 			->add('first_name', [
 					'ruleCheckIfStringGotNoNumber' => [

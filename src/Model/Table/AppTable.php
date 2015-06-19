@@ -56,6 +56,7 @@ class AppTable extends Table {
 		if (!empty($timeFields)) {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
+		$this->addBehavior('Validation');
 	}
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
@@ -161,10 +162,24 @@ class AppTable extends Table {
 		return $dateObject->format($format);
 	}
 
-	public function validationDefault(Validator $validator) {
-		$validator->provider('default', new AppValidator());
-		return $validator;
+	// Event: 'ControllerAction.Model.onGetLabel'
+	public function onGetLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		$Labels = TableRegistry::get('Labels');
+		$label = $Labels->getLabel($module, $field, $language);
+
+		if ($label === false && $autoHumanize) {
+			$label = Inflector::humanize($field);
+			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
+				$label = str_replace(' Id', '', $label);
+			}
+		}
+		return $label;
 	}
+
+	// public function validationDefault(Validator $validator) {
+	// 	$validator->provider('default', new AppValidator());
+	// 	return $validator;
+	// }
 
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
@@ -190,6 +205,23 @@ class AppTable extends Table {
 		}
 	}
 
+	public function endsWith($haystack, $needle) {
+		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	}
+
+	public function checkIdInOptions($key, $options) {
+		if (!empty($options)) {
+			if ($key != 0) {
+				if (!array_key_exists($key, $options)) {
+					$key = key($options);
+				}
+			} else {
+				$key = key($options);
+			}
+		}
+		return $key;
+	}
+	
 	/**
 	 * Converts the class alias to a label.
 	 * 

@@ -14,7 +14,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 			'foreignKey' => 'institution_site_id']);
 		$this->belongsTo('LocationInstitutionSites',['className' => 'Institution.LocationInstitutionSites']);
 	
-		$this->hasMany('Sections', 					['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id']);
+		$this->hasMany('InstitutionSiteSections', 	['className' => 'Institution.InstitutionSiteSections', 	'foreignKey' => 'institution_site_shift_id']);
 	}
 
 	public function validationDefault(Validator $validator) {

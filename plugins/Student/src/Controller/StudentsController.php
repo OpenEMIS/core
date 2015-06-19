@@ -13,13 +13,13 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model()->addBehavior('Student.Student');
 
 		$this->ControllerAction->models = [
-			'Contacts' => ['className' => 'User.UserContacts'],
-			'Identities' => ['className' => 'User.UserIdentities'],
+			'Contacts' => ['className' => 'User.Contacts'],
+			'Identities' => ['className' => 'User.Identities'],
 			'Languages' => ['className' => 'User.UserLanguages'],
-			'Comments' => ['className' => 'User.UserComments'],
-			'SpecialNeeds' => ['className' => 'User.UserSpecialNeeds'],
-			'Awards' => ['className' => 'User.UserAwards'],
-			'Attachments' => ['className' => 'User.UserAttachments'],
+			'Comments' => ['className' => 'User.Comments'],
+			'SpecialNeeds' => ['className' => 'User.SpecialNeeds'],
+			'Awards' => ['className' => 'User.Awards'],
+			'Attachments' => ['className' => 'User.Attachments'],
 			'Programmes' => ['className' => 'Student.Programmes'],
 			'Sections' => ['className' => 'Student.StudentSections'],
 			'Classes' => ['className' => 'Student.StudentClasses'],
@@ -27,7 +27,7 @@ class StudentsController extends AppController {
 			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
 			'Results' => ['className' => 'Student.StudentAssessments'],
 			'Extracurriculars' => ['className' => 'Student.Extracurriculars'],
-			'BankAccounts' => ['className' => 'User.UserBankAccounts'],
+			'BankAccounts' => ['className' => 'User.BankAccounts'],
 			'StudentFees' => ['className' => 'Student.StudentFees']
 		];
 
