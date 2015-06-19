@@ -730,11 +730,12 @@ CREATE TABLE IF NOT EXISTS `custom_form_types` (
 ALTER TABLE `custom_form_types`
   ADD PRIMARY KEY (`id`);
 
--- New table - custom_field_records
-DROP TABLE IF EXISTS `custom_field_records`;
-CREATE TABLE IF NOT EXISTS `custom_field_records` (
+-- New table - custom_records
+DROP TABLE IF EXISTS `custom_records`;
+CREATE TABLE IF NOT EXISTS `custom_records` (
   `id` int(11) NOT NULL,
-  `institution_id` int(11) NOT NULL,
+  `name` varchar(250) NOT NULL,
+  `custom_form_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -742,11 +743,11 @@ CREATE TABLE IF NOT EXISTS `custom_field_records` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `custom_field_records`
+ALTER TABLE `custom_records`
   ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `custom_field_records`
+ALTER TABLE `custom_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 -- New table - custom_field_values
@@ -759,7 +760,7 @@ CREATE TABLE IF NOT EXISTS `custom_field_values` (
   `date_value` date DEFAULT NULL,
   `time_value` time DEFAULT NULL,
   `custom_field_id` int(11) NOT NULL,
-  `custom_field_record_id` int(11) NOT NULL,
+  `custom_record_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -782,7 +783,7 @@ CREATE TABLE IF NOT EXISTS `custom_table_cells` (
   `custom_field_id` int(11) NOT NULL,
   `custom_table_column_id` int(11) NOT NULL,
   `custom_table_row_id` int(11) NOT NULL,
-  `custom_field_record_id` int(11) NOT NULL,
+  `custom_record_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -1050,3 +1051,63 @@ CREATE TABLE IF NOT EXISTS `labels` (
   PRIMARY KEY (`module`, `field`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- June 18 1730hrs
+-- Update for Institution - Custom Fields
+
+RENAME TABLE institution_custom_fields TO z_1461_institution_custom_fields;
+RENAME TABLE institution_custom_field_options TO z_1461_institution_custom_field_options;
+RENAME TABLE institution_custom_values TO z_1461_institution_custom_values;
+RENAME TABLE institution_custom_value_history TO z_1461_institution_custom_value_history;
+
+RENAME TABLE institution_site_custom_fields TO z_1461_institution_site_custom_fields;
+RENAME TABLE institution_site_custom_field_options TO z_1461_institution_site_custom_field_options;
+RENAME TABLE institution_site_custom_values TO z_1461_institution_site_custom_values;
+RENAME TABLE institution_site_custom_value_history TO z_1461_institution_site_custom_value_history;
+
+-- New table - institution_custom_field_values
+DROP TABLE IF EXISTS `institution_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
+  `id` int(11) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `institution_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_field_values`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_field_values`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_custom_table_cells
+DROP TABLE IF EXISTS `institution_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `institution_custom_table_cells` (
+  `id` int(11) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `custom_field_id` int(11) NOT NULL,
+  `custom_table_column_id` int(11) NOT NULL,
+  `custom_table_row_id` int(11) NOT NULL,
+  `institution_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_custom_table_cells`
+  ADD PRIMARY KEY (`id`);
+
+
+ALTER TABLE `institution_custom_table_cells`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;

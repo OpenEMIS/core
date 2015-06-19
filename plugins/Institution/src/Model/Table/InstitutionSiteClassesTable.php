@@ -20,6 +20,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		
 		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses']);
 
+		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
+
 		/**
 		 * Short cuts to initialised models set in relations.
 		 * By using initialised models set in relations, the relation's className is set at a single place.
@@ -31,7 +33,6 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
@@ -67,22 +68,18 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->_selectedAcademicPeriod = $this->checkIdInOptions($this->_selectedAcademicPeriod, $academicPeriodOptions);
 
 		$sectionOptions = $this->InstitutionSiteSections
-					->find('list')
-					->where([
-						'academic_period_id'=>$this->_selectedAcademicPeriod, 
-						'institution_site_id'=>$institutionsId
-					])
-					->toArray();
+								->find('list')
+								->where([
+									'academic_period_id'=>$this->_selectedAcademicPeriod, 
+									'institution_site_id'=>$institutionsId
+								])
+								->toArray();
 		if (empty($sectionOptions)) {
 			$this->Alert->warning('Institutions.noSections');
 		}
 		$this->_selectedSection = isset($query['section']) ? $query['section'] : key($sectionOptions);
 		$this->_selectedSection = $this->checkIdInOptions($this->_selectedSection, $sectionOptions);
 
-		// if (empty($sectionOptions)) {
-		// 	$this->Message->alert('InstitutionSiteSection.noDataForSelectedPeriod');
-		// }
-		
 		$toolbarElements = [
             ['name' => 'Institution.Classes/controls', 
              'data' => [
@@ -98,65 +95,27 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
+    public function findBySections(Query $query, array $options) {
+    	return $query
+			->join([
+				[
+					'table' => 'institution_site_section_classes',
+					'alias' => 'InstitutionSiteSectionClass',
+					'conditions' => [
+						'InstitutionSiteSectionClass.institution_site_class_id = InstitutionSiteClasses.id',
+						'InstitutionSiteSectionClass.institution_site_section_id' => $this->_selectedSection
+					]
+				]
+			]);
+    }
+
 	public function indexBeforePaginate($event, $model, $paginateOptions) {
-		// $paginateOptions['contain']['InstitutionSiteSectionClasses'] = ['InstitutionSiteSections', 'InstitutionSiteClasses'];
+		$paginateOptions['finder'] = ['bySections' => []];
 		$paginateOptions['conditions'][]['academic_period_id'] = $this->_selectedAcademicPeriod;
-		
-		$model = $model	->find()
-						->contain(['InstitutionSiteSectionClasses'])
-						// ->where(['InstitutionSiteSectionClasses.institution_site_section_id'=>$this->_selectedSection])
-						;
-
-
-		// $paginateOptions['conditions'][] = ['InstitutionSiteSectionClasses.institution_site_section_id' => $this->_selectedSection];
-		// $paginateOptions['conditions'][0]['institution_site_section_id'] = $this->_selectedSection;
-		// pr($paginateOptions);//die;
-		// return $paginateOptions;
-		return [$model, $paginateOptions];
+		return $paginateOptions;
 	}
-
 
 	public function indexAfterAction(Event $event, $data) {
-		// $buffer = [];
-		// foreach ($data as $key=>$value) {
-		// 	foreach ($value->institution_site_section_classes as $ckey=>$cvalue) {
-		// 		if ($cvalue->institution_site_section_id == $this->_selectedSection) {
-		// 			$buffer[] = $cvalue;
-		// 		}
-		// 	}
-		// }
-		// pr($buffer);//die;
-		// $query = $query->where(['institution_site_section_id' => $this->_selectedSection]);
-		pr($data->toArray());die;
-		// $contain[] = 'EducationProgrammes';
-		// return $buffer;
-		return $data;
-	}
-
-
-	// public function index($selectedPeriod=0, $selectedSection=0) {
-	// 	$this->Navigation->addCrumb('List of Classes');
-	// 	$institutionSiteId = $this->Session->read('InstitutionSite.id');
-	// 	$conditions = array(
-	// 		'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId
-	// 	);
-	// 	$periodOptions = ClassRegistry::init('InstitutionSiteProgramme')->getAcademicPeriodOptions($conditions);
-	// 	$selectedPeriod = $this->checkIdInOptions($selectedPeriod, $periodOptions);
-
-	// 	if (empty($periodOptions)) {
-	// 		$this->Message->alert('InstitutionSite.noProgramme');
-	// 	}
-
-	// 	$InstitutionSiteSection = ClassRegistry::init('InstitutionSiteSection');
-	// 	$sectionOptions = $InstitutionSiteSection->getSectionOptions($selectedPeriod, $institutionSiteId);
-	// 	$selectedSection = $this->checkIdInOptions($selectedSection, $sectionOptions);
-
-	// 	if (empty($sectionOptions)) {
-	// 		$this->Message->alert('InstitutionSiteSection.noDataForSelectedPeriod');
-	// 	}
-
-	// 	$data = $this->InstitutionSiteSectionClass->getClassesBySection($selectedSection);
-
 	// 	foreach ($data as $key => $value) {
 	// 		if(!empty($value['InstitutionSiteClass']['id'])) {
 	// 			$data[$key]['InstitutionSiteClass']['gender'] = $this->InstitutionSiteClassStudent->getGenderTotalByClass($value['InstitutionSiteClass']['id']);
@@ -165,8 +124,9 @@ class InstitutionSiteClassesTable extends AppTable {
 	// 		}
 	// 	}
 
-	// 	$this->setVar(compact('data', 'periodOptions', 'selectedPeriod', 'sectionOptions', 'selectedSection'));
-	// }
+		return $data;
+	}
+
 
 
 

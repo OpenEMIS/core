@@ -51,8 +51,8 @@ if(isset($moreRows) && $moreRows) {
 ?>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered table-sortable <?php echo $tableClass ?>">
-		<thead><?php echo $this->Html->tableHeaders($tableHeaders) ?></thead>
-		<tbody data-link="row"><?php echo $this->Html->tableCells($tableData) ?></tbody>
+		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+		<tbody <?= $displayAction ? 'data-link="row"' : '' ?>><?php echo $this->Html->tableCells($tableData) ?></tbody>
 	</table>
 </div>
 <?php 
