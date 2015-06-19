@@ -196,7 +196,8 @@ class NavigationComponent extends Component {
 					'items' => [
 						'List' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']],
 						'Behaviour' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviours']],
-						'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']]
+						'Attendance' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences']],
+						'Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentResults']]
 					]
 				],
 
@@ -224,10 +225,7 @@ class NavigationComponent extends Component {
 						'Rubrics' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']],
 						'Visits' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => '#']]
 					]
-				],
-				
-				'Assessment Results' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentResults']],
-				
+				]
 			];
 		} else if ($controller->name == 'Students' && $action != 'index') {
 			$navigations['items']['Students']['items'] = [
