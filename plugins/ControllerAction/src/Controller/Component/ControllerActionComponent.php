@@ -110,7 +110,9 @@ class ControllerActionComponent extends Component {
 			if ($event->isStopped()) { return $event->result; }
 			$this->buildDefaultValidation();
 		}
-		$this->initButtons();
+		if (!is_null($this->model)) {
+			$this->initButtons();
+		}
 	}
 
 	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
@@ -522,6 +524,7 @@ class ControllerActionComponent extends Component {
 		$indexElements = array(
 			array('name' => 'ControllerAction.index', 'data' => array(), 'options' => array())
 		);
+
 		if (empty($data)) {
 			$this->Alert->info('general.noData');
 		} else {
@@ -1037,7 +1040,7 @@ class ControllerActionComponent extends Component {
 		return $fields;
 	}
 
-	public function addField($field, $attr) {
+	public function addField($field, $attr=[]) {
 		$model = $this->model;
 		$className = $model->alias();
 		if (!empty($this->plugin)) {
@@ -1057,10 +1060,37 @@ class ControllerActionComponent extends Component {
 
 		$attr = array_merge($_attr, $attr);
 		
-		if ($attr['type'] == 'string') { // make field sortable by default if it is a string data-type
-			$attr['sort'] = true;
-		}
 		$this->model->fields[$field] = $attr;
+
+		$method = 'onAddField' . Inflector::camelize($field);
+		$eventKey = 'ControllerAction.Model.' . $method;
+		$event = new Event($eventKey, $this);
+		if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
+            $model->eventManager()->on($eventKey, [], [$model, $method]);
+        }
+		$event = $model->eventManager()->dispatch($event);
+
+		if ($this->model->fields[$field]['type'] == 'string') { // make field sortable by default if it is a string data-type
+			$this->model->fields[$field]['sort'] = true;
+		}
+		if (array_key_exists('options', $attr)) {
+			$this->model->fields[$field]['type'] = 'select';
+		}
+	}
+
+	public function updateField($field, $attr=[]) {
+		$this->model->fields[$field] = array_merge($this->model->fields[$field], $attr);
+		if (array_key_exists('options', $attr)) {
+			$this->model->fields[$field]['type'] = 'select';
+		}
+		$model = $this->model;
+		$method = 'onUpdateField' . Inflector::camelize($field);
+		$eventKey = 'ControllerAction.Model.' . $method;
+		$event = new Event($eventKey, $this);
+		if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
+            $model->eventManager()->on($eventKey, [], [$model, $method]);
+        }
+		$event = $model->eventManager()->dispatch($event);
 	}
 	
 	public function getFields($model) {
@@ -1072,7 +1102,7 @@ class ControllerActionComponent extends Component {
 		$fields = $this->getSchema($model);
 		$visibility = ['view' => true, 'edit' => true, 'index' => true];
 
-		$i = 0;
+		$i = 50;
 		foreach($fields as $key => $obj) {
 			$fields[$key]['order'] = $i++;
 			$fields[$key]['visible'] = $visibility;
@@ -1105,29 +1135,36 @@ class ControllerActionComponent extends Component {
 		return $fields;
 	}
 	
-	public function setFieldOrder($field, $order) {
+	public function setFieldOrder($field, $order=0) {
 		$fields = $this->model->fields;
-		$found = false;
-		$count = 0;
-		foreach ($fields as $key => $obj) {
-			$count++;
-			if (!isset($fields[$key]['order'])) {
-				$fields[$key]['order'] = $count;
+
+		if (is_array($field)) {
+			foreach ($field as $key) {
+				$fields[$key]['order'] = $order++;
 			}
-			
-			if ($found && $key !== $field) {
-				$fields[$key]['order'] = $fields[$key]['order'] + 1;
-			} else {
-				if ($field === $key) {
-					$found = true;
-					$fields[$key]['order'] = $order;
-				} else if ($fields[$key]['order'] == $order) {
-					$found = true;
-					$fields[$key]['order'] = $order + 1;
+		} else {
+			$found = false;
+			$count = 0;
+			foreach ($fields as $key => $obj) {
+				$count++;
+				if (!isset($fields[$key]['order'])) {
+					$fields[$key]['order'] = $count;
+				}
+				
+				if ($found && $key !== $field) {
+					$fields[$key]['order'] = $fields[$key]['order'] + 1;
+				} else {
+					if ($field === $key) {
+						$found = true;
+						$fields[$key]['order'] = $order;
+					} else if ($fields[$key]['order'] == $order) {
+						$found = true;
+						$fields[$key]['order'] = $order + 1;
+					}
 				}
 			}
+			$fields[$field]['order'] = $order;
 		}
-		$fields[$field]['order'] = $order;
 		uasort($fields, array($this, 'sortFields'));
 		$this->model->fields = $fields;
 	}
