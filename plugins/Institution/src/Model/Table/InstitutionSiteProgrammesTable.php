@@ -39,13 +39,16 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	public function indexBeforeAction(Event $event) {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
-		$this->fields['education_programme_id']['type'] = 'select';
 
-		$this->ControllerAction->addField('education_level', ['type' => 'select']);
+		$this->ControllerAction->addField('education_level', ['type' => 'string']);
 
 		$this->fields['education_programme_id']['order'] = 1;
 		$this->fields['education_level']['order'] = 2;
+	}
 
+	public function indexAfterAction(Event $event, $data) {
+		// pr($data->toArray());
+		return $data;
 	}
 
 
@@ -57,6 +60,11 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	public function viewBeforeAction(Event $event) {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
+
+		$this->ControllerAction->addField('education_level', ['type' => 'string']);
+
+		$this->fields['education_programme_id']['order'] = 1;
+		$this->fields['education_level']['order'] = 2;
 	}
 
 
