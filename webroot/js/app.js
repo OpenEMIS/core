@@ -191,6 +191,13 @@ var jsForm = {
         //this.datepickerUpdateSelector();
 		
 		this.prentMultiSubmit();
+
+		// to handle select box to change url for filtering
+		$("select[data-named-key]").change(
+			function() {
+				jsForm.change($(this));
+			}
+		);
 	},
 
 	compute: function(obj) {
@@ -236,15 +243,15 @@ var jsForm = {
 		});
 	},
 
-	change: function(obj, trailingSlash) {
-		//var url = getRootURL() + $(obj).attr('url');
+	change: function(obj) {
+		var ret = [];
+		$("select[data-named-key]").each(
+			function() {
+				ret.push(encodeURIComponent($(this).attr('data-named-key')) + "=" + encodeURIComponent($(this).val()));
+			}
+		);
 		var url = window.location.origin + $(obj).attr('url');
-		if (url.indexOf('?') >= 0) {
-			url += '&' + $(obj).val();
-		} else {
-			url += '?' + $(obj).val();
-		}
-		window.location.href = url;
+		window.location.href = url+'?'+ret.join("&");
 	},
 	
 	initDatepicker: function(p) {

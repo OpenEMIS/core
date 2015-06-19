@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class UserBankAccount extends Entity
+class BankAccount extends Entity
 {
 	protected $_virtual = ['bank_name'];
 	

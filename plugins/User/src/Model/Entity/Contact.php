@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 
-class UserContact extends Entity
+class Contact extends Entity
 {
 	protected $_virtual = ['description'];
 	

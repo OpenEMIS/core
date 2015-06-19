@@ -14,6 +14,7 @@ class RubricCriteriasTable extends AppTable {
 		1 => array('id' => 1, 'name' => 'Section Break'),
 		2 => array('id' => 2, 'name' => 'Criteria')
 	);
+	private $_contain = ['RubricCriteriaOptions.RubricTemplateOptions'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -40,7 +41,7 @@ class RubricCriteriasTable extends AppTable {
 			'type' => 'element',
 			'order' => 5,
 			'element' => 'Rubric.criterias',
-			'visible' => true
+			'visible' => false
 		]);
 	}
 
@@ -59,8 +60,20 @@ class RubricCriteriasTable extends AppTable {
 
 	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain = ['RubricCriteriaOptions.RubricTemplateOptions'];
+		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$selectedCriteriaType = $entity->type;
+
+		if ($selectedCriteriaType == 1) {	//1-> Section Break, 2 -> Dropdown
+			$this->fields['criterias']['visible'] = false;
+		} else if ($selectedCriteriaType == 2) {
+			$this->fields['criterias']['visible'] = true;
+		}
+
+		return $entity;
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -74,13 +87,12 @@ class RubricCriteriasTable extends AppTable {
 		$this->fields['type']['options'] = $criteriaTypeOptions;
 		$this->fields['type']['onChangeReload'] = true;
 
-		$this->fields['criterias']['visible'] = false;
 		$this->setFieldOrder();
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
 		//Required by patchEntity for associated data
-		$options['associated'] = ['RubricCriteriaOptions.RubricTemplateOptions'];
+		$options['associated'] = $this->_contain;
 		return compact('entity', 'data', 'options');
 	}
 
@@ -147,7 +159,7 @@ class RubricCriteriasTable extends AppTable {
 
 	public function editBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain = ['RubricCriteriaOptions.RubricTemplateOptions'];
+		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
 	}
 

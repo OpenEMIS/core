@@ -127,7 +127,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function editBeforeQuery(Event $event, Query $query, array $contain) {
 		//Retrieve associated data
-		$contain[] = 'SecurityRoles';
+		$contain = array_merge($contain, $this->_contain);
 		return compact('query', 'contain');
 	}
 

@@ -26,10 +26,10 @@
 			<tr>
 				<?php
 
-				echo $this->Form->hidden("InstitutionSiteSectionStudents.$i.id", [ 'value'=> $obj->id ]);
-				echo $this->Form->hidden("InstitutionSiteSectionStudents.$i.security_user_id", [ 'value'=> $obj->security_user_id ]);
-				echo $this->Form->hidden("InstitutionSiteSectionStudents.$i.status", [ 'value' => $obj->status ]);
-				echo $this->Form->hidden("InstitutionSiteSectionStudents.$i.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
+				echo $this->Form->hidden("institution_site_section_students.$i.id", [ 'value'=> $obj->id ]);
+				echo $this->Form->hidden("institution_site_section_students.$i.security_user_id", [ 'value'=> $obj->security_user_id ]);
+				echo $this->Form->hidden("institution_site_section_students.$i.status", [ 'value' => $obj->status ]);
+				echo $this->Form->hidden("institution_site_section_students.$i.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
 
 				?>
 				<td><?php echo $obj->user->openemis_no ?></td>
@@ -38,7 +38,7 @@
 				<td><?php echo $obj->user->date_of_birth ?></td>
 				<td>
 					<?php
-					echo $this->Form->input("InstitutionSiteSectionStudents.$i.education_grade_id", array(
+					echo $this->Form->input("institution_site_section_students.$i.education_grade_id", array(
 						'label' => false,
 						'options' => $attr['data']['gradeOptions'],
 						'value' => $obj->education_grade_id
@@ -47,7 +47,7 @@
 				</td>
 				<td>
 					<?php
-					echo $this->Form->input("InstitutionSiteSectionStudents.$i.student_category_id", array(
+					echo $this->Form->input("institution_site_section_students.$i.student_category_id", array(
 						'label' => false,
 						'options' => $attr['data']['categoryOptions'],
 						'value' => $obj->student_category_id
@@ -68,7 +68,7 @@
 				<td><?php echo $obj->user->name ?></td>
 				<td><?php echo $obj->user->gender->name ?></td>
 				<td><?php echo $obj->user->date_of_birth ?></td>
-				<td><?php echo $obj->education_grade->name ?></td>
+				<td><?php echo (is_object($obj->education_grade) ? $obj->education_grade->name : ''); ?></td>
 				<td><?php echo $attr['data']['categoryOptions'][$obj->student_category_id] ?></td>
 			</tr>
 

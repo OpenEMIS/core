@@ -4,7 +4,7 @@ namespace User\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
-class UserNationalitiesTable extends AppTable {
+class NationalitiesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		

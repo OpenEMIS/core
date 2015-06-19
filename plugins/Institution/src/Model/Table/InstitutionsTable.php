@@ -31,27 +31,27 @@ class InstitutionsTable extends AppTable  {
 		 */
 		$this->hasMany('InstitutionSiteActivities', 		['className' => 'Institution.InstitutionSiteActivities']);
 		
-		$this->hasMany('Attachments', 						['className' => 'Institution.InstitutionSiteAttachments']);
+		$this->hasMany('InstitutionSiteAttachments', 		['className' => 'Institution.InstitutionSiteAttachments']);
 		$this->hasMany('Additional', 						['className' => 'Institution.Additional']);
 
-		$this->hasMany('Positions', 						['className' => 'Institution.InstitutionSitePositions']);
-		$this->hasMany('Programmes', 						['className' => 'Institution.InstitutionSiteProgrammes']);
-		$this->hasMany('Shifts', 							['className' => 'Institution.InstitutionSiteShifts']);
-		$this->hasMany('Sections', 							['className' => 'Institution.InstitutionSiteSections']);
-		$this->hasMany('Classes', 							['className' => 'Institution.InstitutionSiteClasses']);
-		$this->hasMany('Infrastructures', 					['className' => 'Institution.InstitutionSiteInfrastructures']);
+		$this->hasMany('InstitutionSitePositions', 			['className' => 'Institution.InstitutionSitePositions']);
+		$this->hasMany('InstitutionSiteProgrammes', 		['className' => 'Institution.InstitutionSiteProgrammes']);
+		$this->hasMany('InstitutionSiteShifts', 			['className' => 'Institution.InstitutionSiteShifts']);
+		$this->hasMany('InstitutionSiteSections', 			['className' => 'Institution.InstitutionSiteSections']);
+		$this->hasMany('InstitutionSiteClasses', 			['className' => 'Institution.InstitutionSiteClasses']);
+		$this->hasMany('InstitutionSiteInfrastructures', 	['className' => 'Institution.InstitutionSiteInfrastructures']);
 
-		$this->hasMany('Staff', 							['className' => 'Institution.InstitutionSiteStaff']);
+		$this->hasMany('InstitutionSiteStaff', 				['className' => 'Institution.InstitutionSiteStaff']);
 		$this->hasMany('StaffBehaviours', 					['className' => 'Institution.StaffBehaviours']);
-		$this->hasMany('StaffAbsences', 					['className' => 'Institution.InstitutionSiteStaffAbsences']);
+		$this->hasMany('InstitutionSiteStaffAbsences', 		['className' => 'Institution.InstitutionSiteStaffAbsences']);
 
 		$this->hasMany('InstitutionSiteStudents', 			['className' => 'Institution.InstitutionSiteStudents']);
 		// $this->hasMany('Students', 							['className' => 'Institution.InstitutionSiteStudents']);
 		$this->hasMany('StudentBehaviours', 				['className' => 'Institution.StudentBehaviours']);
-		$this->hasMany('StudentAbsences', 					['className' => 'Institution.InstitutionSiteStudentAbsences']);
+		$this->hasMany('InstitutionSiteStudentAbsences', 	['className' => 'Institution.InstitutionSiteStudentAbsences']);
 
-		$this->hasMany('BankAccounts', 						['className' => 'Institution.InstitutionSiteBankAccounts']);
-		$this->hasMany('Fees', 								['className' => 'Institution.InstitutionSiteFees']);
+		$this->hasMany('InstitutionSiteBankAccounts', 		['className' => 'Institution.InstitutionSiteBankAccounts']);
+		$this->hasMany('InstitutionSiteFees', 				['className' => 'Institution.InstitutionSiteFees']);
 		$this->hasMany('StudentFees', 						['className' => 'Institution.StudentFees']);
 
 		$this->hasMany('NewSurveys', 						['className' => 'Institution.SurveyNew']);
@@ -63,11 +63,16 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteGrades', 			['className' => 'Institution.InstitutionSiteGrades']);
 		// $this->hasMany('InstitutionSiteCustomFields', ['className' => 'Institution.InstitutionSiteCustomFields']);
 
+
+		$this->hasMany('InstitutionSiteClassStaff', 		['className' => 'Institution.InstitutionSiteClassStaff']);
+		$this->hasMany('InstitutionSiteClassStudents', 		['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteSectionClasses', 	['className' => 'Institution.InstitutionSiteSectionClasses']);
+
 		// pr($this->validator());
+
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
 		$validator
 			->add('date_opened', 'ruleCompare', [
 					'rule' => array('comparison', 'notequal', '0000-00-00'),
@@ -75,8 +80,7 @@ class InstitutionsTable extends AppTable  {
 
 	        ->allowEmpty('date_closed')
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', false],
-		            'message' => 'Closing date should be later than opening date'
+		            'rule' => ['compareDateReverse', 'date_opened', false]
 	    	    ])
 
 	        ->allowEmpty('longitude')
@@ -89,16 +93,16 @@ class InstitutionsTable extends AppTable  {
 					'rule' => 'checkLatitude'
 				])
 		
-			->add('address', 'ruleMaximum255', [
-					'rule' => ['maxLength', 255],
-					'message' => 'Maximum allowable character is 255',
-					'last' => true
-				])
+			// ->add('address', 'ruleMaximum255', [
+			// 		'rule' => ['maxLength', 255],
+			// 		'message' => 'Maximum allowable character is 255',
+			// 		'last' => true
+			// 	])
 
 			->add('code', 'ruleUnique', [
 	        		'rule' => 'validateUnique',
 	        		'provider' => 'table',
-	        		'message' => 'Code has to be unique'
+	        		// 'message' => 'Code has to be unique'
 			    ])
 
 	        ->allowEmpty('email')
@@ -106,15 +110,15 @@ class InstitutionsTable extends AppTable  {
 					'ruleUnique' => [
 		        		'rule' => 'validateUnique',
 		        		'provider' => 'table',
-		        		'message' => 'Email has to be unique',
+		        		// 'message' => 'Email has to be unique',
 		        		'last' => true
 				    ],
 					'ruleValidEmail' => [
-						'rule' => 'email',
+						'rule' => 'email'
 					]
 				])
-
 	        ;
+
 		return $validator;
 	}
 
@@ -135,13 +139,6 @@ class InstitutionsTable extends AppTable  {
 
 		$indexDashboard = 'Institution.Institutions/dashboard';
 		$this->controller->set('indexDashboard', $indexDashboard);
-	}
-
-	public function beforeRules(Event $event, Entity $entity, $options, $operation) {
-		// echo 'Entity<br/>';pr($entity);pr('<hr/>');
-		// echo 'Options<br/>';pr($options);pr('<hr/>');
-		// echo 'Operation<br/>';pr($operation);pr('<hr/>');
-		return true;
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
