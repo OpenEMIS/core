@@ -17,6 +17,7 @@ class InstitutionSiteSection extends Entity
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
                     ->where([$table->aliasField('institution_site_section_id') => $this->id])
+                    ->where([$table->aliasField('status') => 1])
                     ->count()
         ;
         return $count;
@@ -30,8 +31,8 @@ class InstitutionSiteSection extends Entity
                     ->contain('Users')
                     ->where(['Users.gender_id' => $gender_id])
                     ->where([$table->aliasField('institution_site_section_id') => $this->id])
-                    ->count()
-        ;
+                    ->where([$table->aliasField('status') => 1])
+                    ->count();
         return $count;
     }
 
