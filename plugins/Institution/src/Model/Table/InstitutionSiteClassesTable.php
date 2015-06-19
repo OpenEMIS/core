@@ -1,10 +1,11 @@
 <?php
 namespace Institution\Model\Table;
 
-use Cake\Event\Event;
-use App\Model\Table\AppTable;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class InstitutionSiteClassesTable extends AppTable {
@@ -19,6 +20,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		$this->belongsTo('EducationSubjects', 			['className' => 'Education.EducationSubjects']);
 		
 		$this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses']);
+		$this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
+		$this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
 
 		// $this->belongsToMany('InstitutionSiteSections', ['through' => 'InstitutionSiteSectionClasses']);
 
@@ -93,7 +96,26 @@ class InstitutionSiteClassesTable extends AppTable {
         ];
 
 		$this->controller->set('toolbarElements', $toolbarElements);
-    }
+
+		$this->fields['no_of_seats']['visible'] = false;
+    	$this->fields['academic_period_id']['visible'] = false;
+
+    	$this->fields['education_subject_id']['order'] = 3;
+		$this->ControllerAction->addField('teachers', [
+			'type' => 'string', 
+			'order' => 4,
+		]);
+		$this->ControllerAction->addField('male_students', [
+			'type' => 'integer', 
+			'order' => 5,
+		]);
+		$this->ControllerAction->addField('female_students', [
+			'type' => 'integer', 
+			'order' => 6,
+		]);
+
+
+	}
 
     public function findBySections(Query $query, array $options) {
     	return $query
@@ -152,6 +174,102 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function addBeforeAction($event) {
+	}
+
+
+/******************************************************************************************************************
+**
+** view action methods
+**
+******************************************************************************************************************/
+    public function viewBeforeAction($event) {
+		// $query = $this->request->query;
+ 		
+  //   	if (array_key_exists('academic_period', $query) || array_key_exists('grade', $query)) {
+  //   		if (array_key_exists('academic_period', $query)) {
+	 //    		unset($this->ControllerAction->buttons['view']['url']['academic_period']);
+  //   		}
+  //   		if (array_key_exists('grade', $query)) {
+	 //    		unset($this->ControllerAction->buttons['view']['url']['grade']);
+  //   		}
+  //   		$action = $this->ControllerAction->buttons['view']['url'];
+		// 	$this->controller->redirect($action);
+  //   	}
+
+		$this->fields['no_of_seats']['visible'] = false;
+		$this->fields['modified_user_id']['visible'] = false;
+		$this->fields['modified']['visible'] = false;
+		$this->fields['created_user_id']['visible'] = false;
+		$this->fields['created']['visible'] = false;
+
+		$this->fields['academic_period_id']['order'] = 1;
+
+		// $this->ControllerAction->addField('section_name', [
+		// 	'type' => 'element',
+		// 	'element' => 'Institution.Sections/multi_grade',
+		// 	'data' => [	
+		// 		'grades'=>[]
+		// 	]
+		// ]);
+		$this->ControllerAction->addField('section_name', ['type' => 'string', 'order' => 2]);
+
+		$this->fields['name']['order'] = 3;
+		$this->ControllerAction->addField('education_subject_code', ['type' => 'string', 'order' => 4]);
+		$this->fields['education_subject_id']['order'] = 5;
+
+		$this->ControllerAction->addField('teachers', [
+			'label' => '',
+			'type' => 'element',
+			'order' => 6,
+			'element' => 'Institution.Classes/teachers',
+			'data' => [	
+				'teachers'=>[],
+				'teacherOptions'=>[]
+			]
+		]);
+
+		$this->ControllerAction->addField('students', [
+			'label' => '',
+			'type' => 'element',
+			'order' => 7,
+			'element' => 'Institution.Classes/students',
+			'data' => [	
+				'students'=>[],
+				'studentOptions'=>[],
+				'categoryOptions'=>[]
+			]
+		]);
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query, $contain) {
+		$contain = array_merge([
+			'InstitutionSiteSectionClasses' => ['InstitutionSiteSections']
+		], $contain);
+		return compact('query', 'contain');
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$sections = [];
+		foreach ($entity->institution_site_section_classes as $key => $value) {
+			$sections[] = $value->institution_site_section->name;
+		}
+		$entity->section_name = implode(', ', $sections);
+		
+		$this->fields['teachers']['data']['teachers'] = $this
+			->InstitutionSiteClassStaff
+			->find()
+			->contain(['Users'])
+			->where(['InstitutionSiteClassStaff.institution_site_class_id'=>$entity->id])
+			->toArray();
+
+		$this->fields['students']['data']['students'] = $this
+			->InstitutionSiteClassStudents
+			->find()
+			->contain(['Users'=>['Genders']])
+			->where(['InstitutionSiteClassStudents.institution_site_class_id'=>$entity->id])
+			->toArray();
+
+		return $entity;
 	}
 
 }
