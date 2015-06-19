@@ -7,8 +7,9 @@ use Cake\Event\Event;
 use Exception;
 use DateTime;
 
-class UserIdentitiesTable extends AppTable {
+class IdentitiesTable extends AppTable {
 	public function initialize(array $config) {
+		$this->table('user_identities');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);

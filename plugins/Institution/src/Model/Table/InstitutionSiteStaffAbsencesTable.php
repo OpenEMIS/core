@@ -7,6 +7,7 @@ use Cake\Validation\Validator;
 class InstitutionSiteStaffAbsencesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->addBehavior('Institution.Absence');
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_site_id']);
