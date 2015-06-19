@@ -1070,19 +1070,17 @@ class ControllerActionComponent extends Component {
         }
 		$event = $model->eventManager()->dispatch($event);
 
-		if ($this->model->fields[$field]['type'] == 'string') { // make field sortable by default if it is a string data-type
-			$this->model->fields[$field]['sort'] = true;
-		}
 		if (array_key_exists('options', $attr)) {
 			$this->model->fields[$field]['type'] = 'select';
+		}
+		if ($this->model->fields[$field]['type'] == 'string') { // make field sortable by default if it is a string data-type
+			$this->model->fields[$field]['sort'] = true;
 		}
 	}
 
 	public function updateField($field, $attr=[]) {
 		$this->model->fields[$field] = array_merge($this->model->fields[$field], $attr);
-		if (array_key_exists('options', $attr)) {
-			$this->model->fields[$field]['type'] = 'select';
-		}
+		
 		$model = $this->model;
 		$method = 'onUpdateField' . Inflector::camelize($field);
 		$eventKey = 'ControllerAction.Model.' . $method;
@@ -1091,6 +1089,13 @@ class ControllerActionComponent extends Component {
             $model->eventManager()->on($eventKey, [], [$model, $method]);
         }
 		$event = $model->eventManager()->dispatch($event);
+
+		if (array_key_exists('options', $attr)) {
+			$this->model->fields[$field]['type'] = 'select';
+		}
+		if ($this->model->fields[$field]['type'] == 'string') { // make field sortable by default if it is a string data-type
+			$this->model->fields[$field]['sort'] = true;
+		}
 	}
 	
 	public function getFields($model) {
