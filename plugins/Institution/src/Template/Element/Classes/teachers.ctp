@@ -55,7 +55,7 @@
 	<div class="panel-footer">
 	<?php
 		echo $this->Form->input('staff_id', array(
-			'options' => $attr['data']['staffOptions'],
+			'options' => $attr['data']['teacherOptions'],
 			'label' => false,
 			'onchange' => "$('#reload').val('add').click();"
 		));
