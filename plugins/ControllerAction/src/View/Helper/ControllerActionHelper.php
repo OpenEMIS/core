@@ -79,7 +79,7 @@ class ControllerActionHelper extends Helper {
 		if (!empty($fields)) {
 			$types = ['binary','image'];
 			foreach ($fields as $key => $attr) {
-				if (in_array($attr['type'], $types )) {
+				if (in_array($attr['type'], $types)) {
 					$options['type'] = 'file';
 					break;
 				}
@@ -136,10 +136,15 @@ class ControllerActionHelper extends Helper {
 		);
 
 		$tableHeaders = array();
+		$table = null;
+		$session = $this->request->session();
+		$language = $session->read('System.language');
+
 		foreach ($fields as $field => $attr) {
 			$attr = array_merge($attrDefaults, $attr);
 			$type = $attr['type'];
 			$visible = $this->isFieldVisible($attr, 'index');
+			$label = '';
 
 			if ($visible && $type != 'hidden') {
 				$fieldModel = $attr['model'];
@@ -148,9 +153,17 @@ class ControllerActionHelper extends Helper {
 					if ($attr['sort']) {
 						$label = $this->Paginator->sort($field);
 					} else {
-						$label = $this->getLabel($fieldModel, $field, $attr);
-						if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
-							$label = str_replace(' Id', '', $label);
+						if (is_null($table)) {
+							$table = TableRegistry::get($attr['className']);
+						}
+
+						// attach event to get labels for fields
+						$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
+						$event = $table->eventManager()->dispatch($event);
+						// end attach event
+
+						if ($event->result) {
+							$label = $event->result;
 						}
 					}
 
@@ -179,27 +192,17 @@ class ControllerActionHelper extends Helper {
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
 			$value = $obj->$field;
+			$type = $attr['type'];
 
-			// attach event for index columns
+			if (!empty($search)) {
+				$value = $this->highlight($search, $value);
+			}
+
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
 			}
 
-			if (array_key_exists('options', $attr)) {
-				if (isset($attr['options'][$value])) {
-					$value = $attr['options'][$value];	
-				}
-			}
-
-			if ($this->endsWith($field, '_id')) {
-				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
-				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
-					$value = $obj->$associatedObject->name;
-				}
-			} else if (is_array($value) || strlen($value) == 0) {
-				$value = $this->getIndexElement($value, $attr);
-			}
-
+			// attach event for index columns
 			$method = 'onGet' . Inflector::camelize($field);
 			$eventKey = 'ControllerAction.Model.' . $method;
 
@@ -208,14 +211,24 @@ class ControllerActionHelper extends Helper {
                 $table->eventManager()->on($eventKey, [], [$table, $method]);
             }
 			$event = $table->eventManager()->dispatch($event);
+			// end attach event
 
 			if ($event->result) {
 				$value = $event->result;
-			}
-			// end attach event
-
-			if (!empty($search)) {
-				$value = $this->highlight($search, $value);
+			} else if ($this->endsWith($field, '_id')) {
+				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
+				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
+					$value = $obj->$associatedObject->name;
+				}
+			} else if (array_key_exists('options', $attr)) {
+				if (isset($attr['options'][$value])) {
+					$value = $attr['options'][$value];
+				}
+			} else {
+				$function = 'get' . Inflector::camelize($type) . 'Element';
+				if (method_exists($this, $function)) {
+					$value = $this->$function('index', $obj, $attr);
+				}
 			}
 
 			if (isset($attr['tableRowClass'])) {
@@ -226,10 +239,14 @@ class ControllerActionHelper extends Helper {
 		}
 		return $row;
 	}
-	
-	public function getExecuteButton($options) {
-		return $this->Html->link($options['buttonName'],array($options['actionURL'], $options['param']));
+
+	public function getLabel($model, $field, $attr=array()) {
+		return $this->Label->getLabel($model, $field, $attr);
 	}
+
+	// public function getExecuteButton($options) {
+	// 	return $this->Html->link($options['buttonName'],array($options['actionURL'], $options['param']));
+	// }
 
 	public function getPaginatorButtons($type='prev') {
 		$icon = array('prev' => '&laquo', 'next' => '&raquo');
@@ -276,185 +293,80 @@ class ControllerActionHelper extends Helper {
 		return $html;
 	}
 
-	public function getLabel($model, $field, $attr=array()) {
-		return $this->Label->getLabel($model, $field, $attr);
-	}
+	// public function getIndexElement($value, $_fieldAttr) {
+	// 	$_type = $_fieldAttr['type'];
 
-	public function datepicker($field, $options=array()) {
-		/*
-		$dateFormat = 'dd-mm-yyyy';
+	// 	// $function = 'get' . Inflector::camelize($_type) . 'Element';
+	// 	// if (method_exists($this, $function)) {
+	// 	// 	$value = $this->$function('view', $data, $_fieldAttr);
+	// 	// }
 
-		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
-		$_options = array(
-			'id' => 'date',
-			'data-date-format' => $dateFormat,
-			'data-date-autoclose' => 'true',
-			'label' => false,
-			'disabled' => false
-		);
-		$label = isset($options['label']) ? $options['label'] : $_options['label'];
-		unset($_options['label']);
-		$disabled = isset($options['disabled']) ? $options['disabled'] : $_options['disabled'];
-		unset($_options['disabled']);
-		$wrapper = $this->Html->div('input-group date', null, $_options);
-		if(!empty($options)) {
-			$_options = array_merge($_options, $options);
-		}
-		
-		$inputOptions = array(
-			'id' => $_options['id'],
-			'type' => 'text',
-			'between' => $defaults['between'] . $wrapper,
-			'after' => $icon . $defaults['after'],
-			'value' => isset($_options['data-date'])?$_options['data-date']:date('d-m-Y')
-		);
-		$inputOptions = array_merge($_options, $inputOptions);
-
-		if($label !== false) {
-			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
-		}
-		if($disabled !== false) {
-			$inputOptions['disabled'] = $disabled;
-		}
-		$html = $this->Form->input($field, $inputOptions);
-	
-		$_datepickerOptions = array();
-		$_datepickerOptions['id'] = $_options['id'];
-		if(!empty($_options['startDate'])){
-			$_datepickerOptions['startDate'] = $_options['startDate'];
-		}
-		if(!empty($_options['endDate'])){
-			$_datepickerOptions['endDate'] = $_options['endDate'];
-		}
-		if($disabled !== false) {
-			$_datepickerOptions['disabled'] = $disabled;
-		}
-		if (array_key_exists('dateOptions', $_options)) {
-			$_datepickerOptions = array_merge($_datepickerOptions, $options['dateOptions']);
-		}
-		if(!is_null($this->_View->get('datepicker'))) {
-			$datepickers = $this->_View->get('datepicker');
-			$datepickers[] = $_datepickerOptions;
-			$this->_View->set('datepicker', $datepickers);
-		} else {
-			$this->_View->set('datepicker', array($_datepickerOptions));
-		}
-		*/
-		return $html;
-	}
-	
-	public function timepicker($field, $options=array()) {
-		/*
-		$id = isset($options['id']) ? $options['id'] : 'time';
-		$wrapper = '<div class="input-group bootstrap-timepicker">';
-		$icon = '<span class="input-group-addon"><i class="fa fa-clock-o"></i></span></div>';
-		$defaults = $this->Form->inputDefaults();
-		if(!empty($options['label'])) {
-			$options['label'] = array('text' => $options['label'], 'class' => $defaults['label']['class']);
-		}
-		$inputOptions = array(
-			'id' => $id,
-			'type' => 'text',
-			'between' => $defaults['between'] . $wrapper,
-			'after' => $icon . $defaults['after']
-		);
-
-		$inputOptions = array_merge($inputOptions, $options);
-		$html = $this->Form->input($field, $inputOptions);
-		
-		$fields = array('id' => 'id', 'value' => 'defaultTime');
-		$_timepickerOptions = array();
-		foreach ($fields as $key => $field) {
-			if (isset($inputOptions[$key])) {
-				$_timepickerOptions[$field] = $inputOptions[$key];
-			}
-		}
-		
-		if(!is_null($this->_View->get('timepicker'))) {
-			$timepickers = $this->_View->get('timepicker');
-			$timepickers[] = $_timepickerOptions;
-			$this->_View->set('timepicker', $timepickers);
-		} else {
-			$this->_View->set('timepicker', array($_timepickerOptions));
-		}
-		*/
-		return $html;
-	}
-
-	public function getIndexElement($value, $_fieldAttr) {
-		$_type = $_fieldAttr['type'];
-
-		// $function = 'get' . Inflector::camelize($_type) . 'Element';
-		// if (method_exists($this, $function)) {
-		// 	$value = $this->$function('view', $data, $_fieldAttr);
-		// }
-
-		switch ($_type) {
-			case 'element':
-				$element = $_fieldAttr['element'];
+	// 	switch ($_type) {
+	// 		case 'element':
+	// 			$element = $_fieldAttr['element'];
 				
-				$value = $this->_View->element($element, ['attr' => $_fieldAttr]);
+	// 			$value = $this->_View->element($element, ['attr' => $_fieldAttr]);
 				
-				break;
+	// 			break;
 
-			case 'select':
-				if (!empty($_fieldAttr['options'])) {
-					reset($_fieldAttr['options']);
-					$firstKey = key($_fieldAttr['options']);
-					if (is_array($_fieldAttr['options'][$firstKey])) {
-						foreach ($_fieldAttr['options'] as $fkey => $fvalue) {
-							if ($fvalue['value'] == $value) {
-								$value = $fvalue['name'];
-							}
-						}
-					} else {
-						if (array_key_exists($value, $_fieldAttr['options'])) {
-							$value = $_fieldAttr['options'][$value];
-						}
-					}
-				}
-				break;
+	// 		case 'select':
+	// 			if (!empty($_fieldAttr['options'])) {
+	// 				reset($_fieldAttr['options']);
+	// 				$firstKey = key($_fieldAttr['options']);
+	// 				if (is_array($_fieldAttr['options'][$firstKey])) {
+	// 					foreach ($_fieldAttr['options'] as $fkey => $fvalue) {
+	// 						if ($fvalue['value'] == $value) {
+	// 							$value = $fvalue['name'];
+	// 						}
+	// 					}
+	// 				} else {
+	// 					if (array_key_exists($value, $_fieldAttr['options'])) {
+	// 						$value = $_fieldAttr['options'][$value];
+	// 					}
+	// 				}
+	// 			}
+	// 			break;
 
-			case 'text':
-				$value = nl2br($value);
-				break;
+	// 		case 'text':
+	// 			$value = nl2br($value);
+	// 			break;
 
-			case 'image':
-				//$value = $this->Image->getBase64Image($data[$model][$_field . '_name'], $data[$model][$_field], $_fieldAttr['attr']);
-				break;
+	// 		case 'image':
+	// 			//$value = $this->Image->getBase64Image($data[$model][$_field . '_name'], $data[$model][$_field], $_fieldAttr['attr']);
+	// 			break;
 				
-			case 'download':
-				$value = $this->Html->link($value, $_fieldAttr['attr']['url']);
-				break;
+	// 		case 'download':
+	// 			$value = $this->Html->link($value, $_fieldAttr['attr']['url']);
+	// 			break;
 				
-			case 'date':
-				//$value = $this->Utility->formatDate($value, null, false);
-				break;
+	// 		case 'date':
+	// 			//$value = $this->Utility->formatDate($value, null, false);
+	// 			break;
 
-			case 'chosen_select':
-				$chosenSelectList = [];
-				if (!empty($value)) {
-					foreach ($value as $obj) {
-						$chosenSelectList[] = $obj->name;
-					}
-				}
+	// 		case 'chosen_select':
+	// 			$chosenSelectList = [];
+	// 			if (!empty($value)) {
+	// 				foreach ($value as $obj) {
+	// 					$chosenSelectList[] = $obj->name;
+	// 				}
+	// 			}
 
-				$value = implode(', ', $chosenSelectList);
-				break;
+	// 			$value = implode(', ', $chosenSelectList);
+	// 			break;
 
-			case 'bool':
-				$value = $value==1 ? '<span class="green">&#10003;</span>' : '<span class="red">&#10008;</span>';
-				break;
+	// 		case 'bool':
+	// 			$value = $value==1 ? '<span class="green">&#10003;</span>' : '<span class="red">&#10008;</span>';
+	// 			break;
 
-			case 'color':
-				$value = '<div style="background-color:'.$value.'">&nbsp;</div>';
-				break;
+	// 		case 'color':
+	// 			$value = '<div style="background-color:'.$value.'">&nbsp;</div>';
+	// 			break;
 				
-			default:
-				break;
-		}
-		return $value;
-	}
+	// 		default:
+	// 			break;
+	// 	}
+	// 	return $value;
+	// }
 
 	public function getEditElements(Entity $data, $fields = [], $exclude = []) {
 		$_fields = $this->_View->get('_fields');
@@ -483,9 +395,15 @@ class ControllerActionHelper extends Helper {
 			'label' => true
 		];
 
+		$table = null;
+		$session = $this->request->session();
+		$language = $session->read('System.language');
+
+
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$visible = $this->isFieldVisible($_fieldAttr, 'edit');
+			$label = false;
 
 			if ($visible) {
 				$_type = $_fieldAttr['type'];
@@ -493,9 +411,19 @@ class ControllerActionHelper extends Helper {
 				$fieldName = $_fieldModel . '.' . $_field;
 				$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 				
-				// TODO-jeff: make label optional
-				$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
-				if (!empty($label)) {
+				if (is_null($table)) {
+					$table = TableRegistry::get($attr['className']);
+				}
+
+				// attach event to get labels for fields
+				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
+				$event = $table->eventManager()->dispatch($event);
+				// end attach event
+
+				if ($event->result) {
+					$label = $event->result;
+				}
+				if ($label !== false) {
 					$options['label'] = $label;
 				}
 
@@ -503,37 +431,6 @@ class ControllerActionHelper extends Helper {
 				if (method_exists($this, $function)) {
 					$this->$function('edit', $data, $_fieldAttr, $options);
 				}
-				
-				/*
-				switch ($_type) {
-					case 'file_upload';
-						$attr = array('field' => $_field);
-						echo $this->_View->element('layout/attachment_upload', $attr);
-						break;
-
-					case 'chosen_select':
-						$options['options'] = isset($attr['options']) ? $attr['options'] : array();
-						$options['class'] = 'chosen-select';
-						$options['multiple'] = true;
-						$options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
-						$fieldName = $attr['id'];
-						$this->includes['chosen']['include'] = true;
-						break;
-
-					default:
-						break;
-					
-				}
-				*/
-				/* confirm to be removed
-				if (array_key_exists('dataModel', $_fieldAttr) && array_key_exists('dataField', $_fieldAttr)) {
-					$dataModel = $_fieldAttr['dataModel'];
-					$dataField = $_fieldAttr['dataField'];
-					$options['value'] = $this->request->data->$dataField;
-				} else if (isset($_fieldAttr['value'])) {
-					$options['value'] = $_fieldAttr['value'];
-				}
-				*/
 				
 				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
 					if (array_key_exists('fieldName', $_fieldAttr)) {
@@ -567,7 +464,7 @@ class ControllerActionHelper extends Helper {
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
 		$_rowClass = array('row');
 		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-		$_valueClass = array('col-xs-6 col-md-6'); // default bootstrap class for values
+		$_valueClass = array('col-xs-6 col-md-6 form-input'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosen_select');
 
@@ -597,30 +494,58 @@ class ControllerActionHelper extends Helper {
 			'valueClass' => ''
 		);
 
+		$table = null;
+		$session = $this->request->session();
+		$language = $session->read('System.language');
+
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
 			$_type = $_fieldAttr['type'];
 			$visible = $this->isFieldVisible($_fieldAttr, 'view');
+			$value = $data->$_field;
+			$label = '';
 
 			if ($visible && $_type != 'hidden') {
 				$_fieldModel = $_fieldAttr['model'];
 				
-				$label = $this->getLabel($_fieldModel, $_field, $_fieldAttr);
-				
-				$value = $data->$_field;
-				if ($this->endsWith($_field, '_id')) {
+				if (is_null($table)) {
+					$table = TableRegistry::get($attr['className']);
+				}
+
+				// attach event to get labels for fields
+				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
+				$event = $table->eventManager()->dispatch($event);
+				// end attach event
+
+				if ($event->result) {
+					$label = $event->result;
+				}
+
+				// attach event for index columns
+				$method = 'onGet' . Inflector::camelize($_field);
+				$eventKey = 'ControllerAction.Model.' . $method;
+
+				$event = new Event($eventKey, $this, ['entity' => $data]);
+				if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
+	                $table->eventManager()->on($eventKey, [], [$table, $method]);
+	            }
+				$event = $table->eventManager()->dispatch($event);
+				// end attach event
+
+				if ($event->result) {
+					$value = $event->result;
+				} else if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
-					$label = $this->getLabel($_fieldModel, $associatedObject, $_fieldAttr);
-				}
-
-				// mapped to a current function in this class
-				$function = 'get' . Inflector::camelize($_type) . 'Element';
-				if (method_exists($this, $function)) {
-					$value = $this->$function('view', $data, $_fieldAttr);
+				} else {
+					// mapped to a current function in this class
+					$function = 'get' . Inflector::camelize($_type) . 'Element';
+					if (method_exists($this, $function)) {
+						$value = $this->$function('view', $data, $_fieldAttr);
+					}
 				}
 
 				if (is_string($value) && strlen(trim($value)) == 0) {
@@ -659,10 +584,8 @@ class ControllerActionHelper extends Helper {
 	// Elements definition starts here
 
 	public function getStringElement($action, Entity $data, $attr, &$options=[]) {
-		$value = '';
-		if ($action == 'view') {
-			$value = $data->$attr['field'];
-		} else if ($action == 'edit') {
+		$value = $data->$attr['field'];
+		if ($action == 'edit') {
 			$options['type'] = 'string';
 			if (array_key_exists('length', $attr)) {
 				$options['maxlength'] = $attr['length'];
@@ -838,7 +761,7 @@ class ControllerActionHelper extends Helper {
 
 		$element = $attr['element'];
 		$attr['id'] = $attr['model'] . '_' . $attr['field'];
-		if ($action == 'view') {
+		if ($action == 'view' || $action == 'index') {
 			$value = $this->_View->element($element, ['attr' => $attr]);
 		} else if ($action == 'edit') {
 			echo $this->_View->element($element, ['attr' => $attr]);
@@ -968,7 +891,17 @@ class ControllerActionHelper extends Helper {
 			'multiple' => true
 		];
 
-		if ($action == 'view') {
+		if ($action == 'index') {
+			$value = $data->$attr['field'];
+			$chosenSelectList = [];
+			if (!empty($value)) {
+				foreach ($value as $obj) {
+					$chosenSelectList[] = $obj->name;
+				}
+			}
+
+			$value = implode(', ', $chosenSelectList);
+		} else if ($action == 'view') {
 			$chosenSelectList = [];
 			if (!empty($data->$attr['fieldNameKey'])) {
 				foreach ($data->$attr['fieldNameKey'] as $obj) {
@@ -1007,7 +940,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getColorElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
+		if ($action == 'view' || $action == 'index') {
 			$value = '<div style="background-color:'.$data->$attr['field'].'">&nbsp;</div>';
 		} else if ($action == 'edit') {
 			$options['type'] = 'color';
