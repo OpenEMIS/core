@@ -13,7 +13,6 @@ class ValidationBehavior extends Behavior {
 
 	public function buildValidator(Event $event, Validator $validator, $name) {
 		$properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
-		$alias = $this->_table->alias();
 		$validator->provider('custom', get_class($this));
 
 		foreach ($validator as $field => $set) {
@@ -23,7 +22,7 @@ class ValidationBehavior extends Behavior {
 					$ruleAttr[$prop] = $rule->get($prop);
 				}
 				if (empty($ruleAttr['message'])) {
-					$ruleAttr['message'] = $this->getMessage(implode('.', [$alias, $field, $ruleName]));
+					$ruleAttr['message'] = $this->getMessage(implode('.', [$this->_table->registryAlias(), $field, $ruleName]));
 				}
 				if (method_exists($this, $ruleAttr['rule'])) {
 					$ruleAttr['provider'] = 'custom';
