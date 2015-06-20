@@ -49,6 +49,11 @@ trait MessagesTrait {
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
 				]
 			],
+			'InstitutionSiteStudentAbsences' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			]
 		],
 		'User' => [
 			'Users' => [
