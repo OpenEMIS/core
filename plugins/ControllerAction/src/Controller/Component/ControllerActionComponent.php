@@ -122,7 +122,12 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
+				if (array_key_exists('options', $attr)) {
+					$this->model->fields[$key]['type'] = 'select';
+				}
+				if ($attr['type'] == 'string') { // make field sortable by default if it is a string data-type
+					$this->model->fields[$key]['sort'] = true;
+				} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 					if ($this->isForeignKey($key)) {
 						// $associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
 						// $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
@@ -597,41 +602,43 @@ class ControllerActionComponent extends Component {
 
 	public function add() {
 		$model = $this->model;
-		$event = new Event('ControllerAction.Model.addEdit.beforeAction', $this);
-		$event = $model->eventManager()->dispatch($event);
+		$request = $this->request;
+		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
-		$event = new Event('ControllerAction.Model.add.beforeAction', $this);
-		$event = $model->eventManager()->dispatch($event);
+		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforeAction');
 		if ($event->isStopped()) { return $event->result; }
 		
 		$data = $model->newEntity();
 
-		if ($this->request->is(['get'])) {
-			$event = new Event('ControllerAction.Model.add.onInitialize', $this, ['entity' => $data]);
-			$event = $model->eventManager()->dispatch($event);
+		if ($request->is(['get'])) {
+			$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.onInitialize', null, ['entity' => $data]);
 			if ($event->isStopped()) { return $event->result; }
 			if (!empty($event->result)) {
 				$data = $event->result;
 			}
-		} else if ($this->request->is(['post', 'put'])) {
-			$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
+		} else if ($request->is(['post', 'put'])) {
+			$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
 			$patchOptions = [];
+			$params = ['entity' => $data, 'data' => $request->data, 'options' => $patchOptions];
 
 			if ($submit == 'save') {
-				$event = new Event('ControllerAction.Model.addEdit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				$event = $model->eventManager()->dispatch($event);
+				// Event: addEditBeforePatch
+				$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				if (!empty($event->result)) {
-					list($data, $this->request->data, $patchOptions) = array_values($event->result);
+					$params = array_merge($params, $event->result);
 				}
-				$event = new Event('ControllerAction.Model.add.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				$event = $model->eventManager()->dispatch($event);
+				// End Event
+				
+				// Event: addBeforePatch
+				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				if (!empty($event->result)) {
-					list($data, $this->request->data, $patchOptions) = array_values($event->result);
+					$params = array_merge($params, $event->result);
 				}
-				// die;
-				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
+				// End Event
+				
+				$data = $model->patchEntity($data, $request->data, $patchOptions);
 				if ($model->save($data)) {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
@@ -643,45 +650,48 @@ class ControllerActionComponent extends Component {
 			} else {
 				$patchOptions['validate'] = false;
 				$methodKey = 'on' . ucfirst($submit);
-				//addEditOnReload
+
+				// Event: addEditOnReload
 				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 				$method = 'addEdit' . ucfirst($methodKey);
-				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
-	                $model->eventManager()->on($eventKey, [], [$model, $method]);
-	            }
-	            $event = $model->eventManager()->dispatch($event);
+
+				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
 				if (!empty($event->result)) {
-					list($data, $this->request->data, $patchOptions) = array_values($event->result);
+					$params = array_merge($params, $event->result);
 				}
-				//addOnReload
+				// End Event
+
+				// Event: addOnReload
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
 				$method = 'add' . ucfirst($methodKey);
-				$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
-				if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
-	                $model->eventManager()->on($eventKey, [], [$model, $method]);
-	            }
-				$event = $model->eventManager()->dispatch($event);
+
+				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
 				if (!empty($event->result)) {
-					list($data, $this->request->data, $patchOptions) = array_values($event->result);
+					$params = array_merge($params, $event->result);
 				}
-				$data = $model->patchEntity($data, $this->request->data, $patchOptions);
+				// End Event
+
+				$data = $model->patchEntity($data, $request->data, $patchOptions);
 			}
 		}
-		$event = new Event('ControllerAction.Model.addEdit.afterAction', $this, ['entity' => $data]);
-		$event = $model->eventManager()->dispatch($event);
+
+		// Event: addEditAfterAction
+		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.afterAction', null, ['entity' => $data]);
 		if ($event->isStopped()) { return $event->result; }
 		if (is_object($event->result)) {
 			$data = $event->result;
 		}
-		$event = new Event('ControllerAction.Model.add.afterAction', $this, ['entity' => $data]);
-		$event = $model->eventManager()->dispatch($event);
+		// End Event
+
+		// Event: addAfterAction
+		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterAction', null, ['entity' => $data]);
 		if ($event->isStopped()) { return $event->result; }
 		if (is_object($event->result)) {
 			$data = $event->result;
 		}
+		// End Event
 		$this->controller->set('data', $data);
 	}
 
@@ -691,11 +701,9 @@ class ControllerActionComponent extends Component {
 		$idKey = $model->aliasField($primaryKey);
 		$contain = [];
 
-		$event = new Event('ControllerAction.Model.addEdit.beforeAction', $this);
-		$event = $model->eventManager()->dispatch($event);
+		$event = $model->eventManager()->dispatch(new Event('ControllerAction.Model.addEdit.beforeAction', $this));
 		if ($event->isStopped()) { return $event->result; }
-		$event = new Event('ControllerAction.Model.edit.beforeAction', $this);
-		$event = $model->eventManager()->dispatch($event);
+		$event = $model->eventManager()->dispatch(new Event('ControllerAction.Model.edit.beforeAction', $this));
 		if ($event->isStopped()) { return $event->result; }
 
 		if ($model->exists([$idKey => $id])) {
@@ -751,9 +759,9 @@ class ControllerActionComponent extends Component {
 					$method = 'addEdit' . ucfirst($methodKey);
 					$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 					if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
-		                $model->eventManager()->on($eventKey, [], [$model, $method]);
-		            }
-		            $event = $model->eventManager()->dispatch($event);
+						$model->eventManager()->on($eventKey, [], [$model, $method]);
+					}
+					$event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
 					if (!empty($event->result)) {
 						list($data, $this->request->data, $patchOptions) = array_values($event->result);
@@ -763,8 +771,8 @@ class ControllerActionComponent extends Component {
 					$method = 'edit' . ucfirst($methodKey);
 					$event = new Event($eventKey, $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
 					if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
-		                $model->eventManager()->on($eventKey, [], [$model, $method]);
-		            }
+						$model->eventManager()->on($eventKey, [], [$model, $method]);
+					}
 					$event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
 					if (!empty($event->result)) {
@@ -993,10 +1001,10 @@ class ControllerActionComponent extends Component {
 		}
 
 		return $this->controller->redirect($actionUrl);
-    }
+	}
 
-    public function fixOrder($conditions) {
-    	$model = $this->model;
+	public function fixOrder($conditions) {
+		$model = $this->model;
 		$count = $model->find('count', array('conditions' => $conditions));
 		if($count > 0) {
 			$list = $model->find('list', array(
@@ -1059,43 +1067,19 @@ class ControllerActionComponent extends Component {
 		];
 
 		$attr = array_merge($_attr, $attr);
-		
 		$this->model->fields[$field] = $attr;
 
 		$method = 'onAddField' . Inflector::camelize($field);
 		$eventKey = 'ControllerAction.Model.' . $method;
-		$event = new Event($eventKey, $this);
-		if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
-            $model->eventManager()->on($eventKey, [], [$model, $method]);
-        }
-		$event = $model->eventManager()->dispatch($event);
-
-		if (array_key_exists('options', $attr)) {
-			$this->model->fields[$field]['type'] = 'select';
-		}
-		if ($this->model->fields[$field]['type'] == 'string') { // make field sortable by default if it is a string data-type
-			$this->model->fields[$field]['sort'] = true;
-		}
+		$this->dispatchEvent($this->model, $eventKey, $method);
 	}
 
 	public function updateField($field, $attr=[]) {
 		$this->model->fields[$field] = array_merge($this->model->fields[$field], $attr);
 		
-		$model = $this->model;
 		$method = 'onUpdateField' . Inflector::camelize($field);
 		$eventKey = 'ControllerAction.Model.' . $method;
-		$event = new Event($eventKey, $this);
-		if (method_exists($model, $method) || $model->behaviors()->hasMethod($method)) {
-            $model->eventManager()->on($eventKey, [], [$model, $method]);
-        }
-		$event = $model->eventManager()->dispatch($event);
-
-		if (array_key_exists('options', $attr)) {
-			$this->model->fields[$field]['type'] = 'select';
-		}
-		if ($this->model->fields[$field]['type'] == 'string') { // make field sortable by default if it is a string data-type
-			$this->model->fields[$field]['sort'] = true;
-		}
+		$this->dispatchEvent($this->model, $eventKey, $method);
 	}
 	
 	public function getFields($model) {
@@ -1180,6 +1164,18 @@ class ControllerActionComponent extends Component {
 		} else {
 			return true;
 		}
+	}
+
+	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
+		$eventMap = $subject->implementedEvents();
+		$event = new Event($eventKey, $this, $params);
+
+		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
+			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
+				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
+			}
+		}
+		return $subject->eventManager()->dispatch($event);
 	}
 
 	public function endsWith($haystack, $needle) {

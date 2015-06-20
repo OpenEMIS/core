@@ -43,7 +43,6 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function onAddFieldAcademicPeriod(Event $event) {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
-		$this->fields['academic_period']['type'] = 'select';
 		$this->fields['academic_period']['options'] = $periodOptions;
 		$this->fields['academic_period']['onChangeReload'] = 'changePeriod';
 	}
@@ -62,8 +61,7 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			->find('list')
 			->order([$Sections->aliasField('section_number') => 'ASC'])
 			->toArray();
-
-		$this->fields['section']['type'] = 'select';
+		
 		$this->fields['section']['options'] = $sectionOptions;
 		$this->fields['section']['onChangeReload'] = 'changeSection';
 	}
