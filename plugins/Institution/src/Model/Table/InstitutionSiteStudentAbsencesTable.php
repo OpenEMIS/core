@@ -21,37 +21,59 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator
+			->add('end_date', 'ruleCompareDateReverse', [
+	            'rule' => ['compareDateReverse', 'start_date', true]
+    	    ]);
 		return $validator;
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->addField('academic_period');
-		$this->ControllerAction->addField('section');
-		$this->ControllerAction->addField('type', ['options' => $this->getSelectOptions('Absence.types'), 'onChangeReload' => 'changeType']);
-		$this->ControllerAction->updateField('security_user_id');
-		$this->ControllerAction->updateField('full_day', ['options' => $this->getSelectOptions('general.yesno')]);
-		$this->ControllerAction->updateField('student_absence_reason_id', ['type' => 'select']);
+	public function onGetType(Event $event, Entity $entity) {
+		$types = $this->getSelectOptions('Absence.types');
+		return $entity->student_absence_reason_id == 0 ? $types['UNEXCUSED'] : $types['EXCUSED'];
 	}
 
-	public function afterAction(Event $event) {
+	public function onGetStudentAbsenceReasonId(Event $event, Entity $entity) {
+		if ($entity->student_absence_reason_id == 0) {
+			return '-';
+		}
+	}
+
+	public function onGetSecurityUserId(Event $event, Entity $entity) {
+		return $entity->user->name_with_id;
+	}
+
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('academic_period');
+		$this->ControllerAction->field('section');
+		$this->ControllerAction->field('security_user_id');
+		$this->ControllerAction->field('start_time', ['type' => 'time', 'visible' => false]);
+		$this->ControllerAction->field('end_time', ['type' => 'time', 'visible' => false]);
+		$this->ControllerAction->field('full_day');
+		$this->ControllerAction->field('student_absence_reason_id', ['type' => 'select']);
+		$this->ControllerAction->field('type');
 		$this->ControllerAction->setFieldOrder([
-			'academic_period', 'security_user_id', 'start_date', 'end_date', 
-			'full_day', 'start_time', 'end_time', 'type', 'student_absence_reason_id'
+			'academic_period', 'security_user_id', 'full_day', 'start_date', 'end_date', 
+			'start_time', 'end_time', 'type', 'student_absence_reason_id'
 		]);
 	}
 
-	public function onAddFieldAcademicPeriod(Event $event) {
+	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
-		$this->fields['academic_period']['options'] = $periodOptions;
-		$this->fields['academic_period']['onChangeReload'] = 'changePeriod';
+		$attr['options'] = $periodOptions;
+		$attr['onChangeReload'] = 'changePeriod';
+		if ($action != 'add') {
+			$attr['visible'] = false;
+		}
+		return $attr;
 	}
 
-	public function onAddFieldSection(Event $event) {
+	public function onUpdateFieldSection(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institutions.id');
 		$periodId = key($this->fields['academic_period']['options']);
 
-		if ($this->request->is('post')) {
+		if ($request->is('post')) {
 			$periodId = $this->request->data($this->aliasField('academic_period'));
 		}
 
@@ -61,25 +83,70 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			->find('list')
 			->order([$Sections->aliasField('section_number') => 'ASC'])
 			->toArray();
-		
-		$this->fields['section']['options'] = $sectionOptions;
-		$this->fields['section']['onChangeReload'] = 'changeSection';
+
+		$attr['options'] = $sectionOptions;
+		$attr['onChangeReload'] = 'changeSection';
+		if ($action != 'add') {
+			$attr['visible'] = false;
+		}
+		return $attr;
 	}
 
-	public function onUpdateFieldSecurityUserId(Event $event) {
-		$sectionId = key($this->fields['section']['options']);
+	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
+		if ($action == 'add') {
+			$students = [];
 
-		$students = [];
-		if (!empty($sectionId)) {
-			$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$students = $Students
-				->findAllByInstitutionSiteSectionId($sectionId)
-				->contain(['Users'])
-				->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
-				->toArray();
+			$sectionId = key($this->fields['section']['options']);
+			if ($request->is('post')) {
+				if (isset($request->data[$this->alias()]['section'])) {
+					$sectionId = $request->data[$this->alias()]['section'];
+				}
+				if (!empty($sectionId)) {
+					$Students = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+					$students = $Students
+						->findAllByInstitutionSiteSectionId($sectionId)
+						->contain(['Users'])
+						->find('list', ['keyField' => 'security_user_id', 'valueField' => 'student_name'])
+						->toArray();
+				}
+			}
+			
+			$attr['options'] = $students;
 		}
-		$this->fields['security_user_id']['type'] = 'select';
-		$this->fields['security_user_id']['options'] = $students;
+		return $attr;
+	}
+
+	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request) {
+		$attr['options'] = $this->getSelectOptions('general.yesno');
+		$attr['onChangeReload'] = true;
+		if ($request->is(['post', 'put'])) {
+			if ($request->data($this->aliasField('full_day')) == 0) {
+				$this->fields['start_time']['visible'] = true;
+				$this->fields['end_time']['visible'] = true;
+			}
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldType(Event $event, array $attr, $action, $request) {
+		$attr['options'] = $this->getSelectOptions('Absence.types');
+		$attr['onChangeReload'] = true;
+		if ($request->is(['post', 'put'])) {
+			if ($request->data($this->aliasField('type')) == 'UNEXCUSED') {
+				$this->fields['student_absence_reason_id']['type'] = 'hidden';
+				$this->fields['student_absence_reason_id']['value'] = 0;
+			}
+		}
+		return $attr;
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->fields['security_user_id']['type'] = 'readonly';
+		if ($entity->student_absence_reason_id == 0) {
+			$this->fields['type']['default'] = 'UNEXCUSED';
+			$this->fields['student_absence_reason_id']['type'] = 'hidden';
+			$this->fields['student_absence_reason_id']['value'] = 0;
+		}
 	}
 
 	public function addEditOnChangePeriod(Event $event, Entity $entity, array $data, array $options) {
@@ -119,12 +186,5 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			->toArray();
 
 		$this->fields['security_user_id']['options'] = $students;
-	}
-
-	public function addEditOnChangeType(Event $event, Entity $entity, array $data, array $options) {
-		if ($data[$this->alias()]['type'] == 'UNEXCUSED') {
-			$this->fields['student_absence_reason_id']['type'] = 'hidden';
-			$this->fields['student_absence_reason_id']['value'] = 0;
-		}
 	}
 }

@@ -12,7 +12,7 @@ trait OptionsTrait {
 				'position_types' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
 			],
 			'Absence' => [
-				'types' => ['EXCUSED' => 'Excused', 'UNEXCUSED' => 'Unexcused']
+				'types' => ['EXCUSED' => __('Excused'), 'UNEXCUSED' => __('Unexcused')]
 			]
 		];
 

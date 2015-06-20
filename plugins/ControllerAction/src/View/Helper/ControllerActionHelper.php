@@ -93,7 +93,7 @@ class ControllerActionHelper extends Helper {
 		$buttons = $this->_View->get('_buttons');
 	
 		echo '<div class="form-buttons">';
-		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false));
+		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save'));
 		echo $this->Html->link(__('Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel'));
 		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo '</div>';
@@ -220,10 +220,8 @@ class ControllerActionHelper extends Helper {
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
 				}
-			} else if (array_key_exists('options', $attr)) {
-				if (isset($attr['options'][$value])) {
-					$value = $attr['options'][$value];
-				}
+			} else if (array_key_exists('options', $attr) && isset($attr['options'][$value])) {
+				$value = $attr['options'][$value];
 			} else {
 				$function = 'get' . Inflector::camelize($type) . 'Element';
 				if (method_exists($this, $function)) {
@@ -398,7 +396,6 @@ class ControllerActionHelper extends Helper {
 		$table = null;
 		$session = $this->request->session();
 		$language = $session->read('System.language');
-
 
 		foreach ($displayFields as $_field => $attr) {
 			$_fieldAttr = array_merge($_attrDefaults, $attr);
@@ -655,10 +652,8 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getTextElement($action, Entity $data, $attr, &$options=[]) {
-		$value = '';
-		if ($action == 'view') {
-			$value = nl2br($data->$attr['field']);
-		} else if ($action == 'edit') {
+		$value = nl2br($data->$attr['field']);
+		if ($action == 'edit') {
 			$options['type'] = 'textarea';
 		}
 		return $value;
@@ -808,6 +803,9 @@ class ControllerActionHelper extends Helper {
 		if (!isset($attr['date_options'])) {
 			$attr['date_options'] = [];
 		}
+		if (!isset($attr['default_date'])) {
+			$attr['default_date'] = true;
+		}
 
 		$field = $attr['field'];
 		$value = $data->$field;
@@ -826,7 +824,10 @@ class ControllerActionHelper extends Helper {
 			$attr['date_options'] = array_merge($_options, $attr['date_options']);
 			if (!is_null($value)) {
 				$attr['value'] = date('d-m-Y', strtotime($value));
+			} else if ($attr['default_date']) {
+				$attr['value'] = date('d-m-Y');
 			}
+
 			if (!is_null($this->_View->get('datepicker'))) {
 				$datepickers = $this->_View->get('datepicker');
 				$datepickers[] = $attr;
@@ -849,6 +850,9 @@ class ControllerActionHelper extends Helper {
 		if (!isset($attr['time_options'])) {
 			$attr['time_options'] = [];
 		}
+		if (!isset($attr['default_time'])) {
+			$attr['default_time'] = true;
+		}
 
 		$field = $attr['field'];
 		$value = $data->$field;
@@ -868,6 +872,8 @@ class ControllerActionHelper extends Helper {
 			if (!is_null($value)) {
 				$attr['value'] = date('h:i A', strtotime($value));
 				$attr['time_options']['defaultTime'] = $attr['value'];
+			} else if ($attr['default_time']) {
+				$attr['time_options']['defaultTime'] = date('h:i A');
 			}
 			if (!is_null($this->_View->get('timepicker'))) {
 				$timepickers = $this->_View->get('timepicker');

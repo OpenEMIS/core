@@ -125,7 +125,8 @@ class ControllerActionComponent extends Component {
 				if (array_key_exists('options', $attr)) {
 					$this->model->fields[$key]['type'] = 'select';
 				}
-				if ($attr['type'] == 'string') { // make field sortable by default if it is a string data-type
+				// make field sortable by default if it is a string data-type
+				if ($attr['type'] == 'string' && !array_key_exists('sort', $attr)) {
 					$this->model->fields[$key]['sort'] = true;
 				} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 					if ($this->isForeignKey($key)) {
@@ -1049,8 +1050,13 @@ class ControllerActionComponent extends Component {
 	}
 
 	public function addField($field, $attr=[]) {
+		$this->field($field, $attr);
+	}
+
+	public function field($field, $attr=[]) {
 		$model = $this->model;
 		$className = $model->alias();
+
 		if (!empty($this->plugin)) {
 			$className = $this->plugin . '.' . $className;
 		}
@@ -1066,20 +1072,22 @@ class ControllerActionComponent extends Component {
 			'className' => $className
 		];
 
+		if (array_key_exists($field, $model->fields)) {
+			$_attr = array_merge($_attr, $model->fields[$field]);
+		}
+
 		$attr = array_merge($_attr, $attr);
-		$this->model->fields[$field] = $attr;
+		$model->fields[$field] = $attr;
 
-		$method = 'onAddField' . Inflector::camelize($field);
-		$eventKey = 'ControllerAction.Model.' . $method;
-		$this->dispatchEvent($this->model, $eventKey, $method);
-	}
-
-	public function updateField($field, $attr=[]) {
-		$this->model->fields[$field] = array_merge($this->model->fields[$field], $attr);
-		
 		$method = 'onUpdateField' . Inflector::camelize($field);
 		$eventKey = 'ControllerAction.Model.' . $method;
-		$this->dispatchEvent($this->model, $eventKey, $method);
+		$params = ['attr' => $attr, 'action' => $this->currentAction, 'request' => $this->request];
+		$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+		if (is_array($event->result)) {
+			$model->fields[$field] = $event->result;
+		}
+
+		return $model->fields[$field];
 	}
 	
 	public function getFields($model) {
@@ -1098,9 +1106,7 @@ class ControllerActionComponent extends Component {
 			$fields[$key]['field'] = $key;
 			$fields[$key]['model'] = $model->alias();
 			$fields[$key]['className'] = $className;
-			if ($obj['type'] == 'string') { // make field sortable by default if it is a string data-type
-				$fields[$key]['sort'] = true;
-			}
+
 			if ($key == 'password') {
 				$fields[$key]['visible'] = false;
 			}
@@ -1153,8 +1159,8 @@ class ControllerActionComponent extends Component {
 				}
 			}
 			$fields[$field]['order'] = $order;
+			uasort($fields, array($this, 'sortFields'));
 		}
-		uasort($fields, array($this, 'sortFields'));
 		$this->model->fields = $fields;
 	}
 	
