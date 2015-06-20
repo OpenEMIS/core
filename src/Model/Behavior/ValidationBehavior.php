@@ -72,7 +72,7 @@ class ValidationBehavior extends Behavior {
 		try {
 			$endDate = new DateTime($field);
 		} catch (Exception $e) {
-		    return 'Please input a proper date';
+		    return __('Please input a proper date');
 		}
 		if($compareField) {
 			$options = ['equals' => $equals, 'reverse' => true];
