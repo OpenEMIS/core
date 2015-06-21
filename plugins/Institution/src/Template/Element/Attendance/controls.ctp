@@ -11,7 +11,6 @@
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $periodOptions,
-				'default' => $selectedPeriod,
 				'url' => $baseUrl,
 				'data-named-key' => 'academic_period_id'
 			));
