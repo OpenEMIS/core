@@ -239,4 +239,18 @@ class AppTable extends Table {
 	        return Inflector::humanize(Inflector::underscore($this->alias()));
 		}
 	}
+
+	public function queryString($request, $key, $options=[]) {
+		$query = $request->query;
+		$value = 0;
+		if (isset($query[$key])) {
+			$value = $query[$key];
+			if (!array_key_exists($value, $options)) {
+				$value = key($options);
+			}
+		} else {
+			$value = key($options);
+		}
+		return $value;
+	}
 }

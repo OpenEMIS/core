@@ -11,8 +11,6 @@ use App\Model\Traits\OptionsTrait;
 class StudentAttendanceTable extends AppTable {
 	use OptionsTrait;
 
-	// public $weeks = [];
-
 	public function initialize(array $config) {
 		$this->table('institution_site_student_absences');
 		parent::initialize($config);
@@ -54,17 +52,25 @@ class StudentAttendanceTable extends AppTable {
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
-		$selectedPeriod = isset($query['academic_period_id']) ? $query['academic_period_id'] : key($periodOptions);
-
+		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
+		$selectedPeriod = $this->queryString($this->request, 'academic_period_id', $periodOptions);
+
 		foreach ($periodOptions as $periodId => $period) {
 			$count = $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $periodId)->count();
 			if ($count == 0) {
 				$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period . ' - ' . __('No Sections'), 'disabled'];
+			} else {
+				if ($selectedPeriod == 0) {
+					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'disabled', 'selected'];
+					$selectedPeriod = $periodId;
+				} else if ($selectedPeriod == $periodId) {
+					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'disabled', 'selected'];
+				}
 			}
 		}
-		$this->controller->set(compact('periodOptions', 'selectedPeriod'));
+		$this->controller->set(compact('periodOptions'));
 		// End setup periods
 
 		// Setup week options
@@ -74,7 +80,6 @@ class StudentAttendanceTable extends AppTable {
 		foreach ($weeks as $index => $dates) { // jeff-TODO: need to set todays date as default
 			$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 		}
-		// $this->weeks = $weeks;
 		$selectedWeek = isset($query['week']) ? $query['week'] : key($weekOptions);
 		$this->controller->set(compact('weekOptions', 'selectedWeek'));
 		// end setup weeks
