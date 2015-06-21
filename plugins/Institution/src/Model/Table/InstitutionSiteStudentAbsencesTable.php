@@ -23,8 +23,8 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 	public function validationDefault(Validator $validator) {
 		$validator
 			->add('end_date', 'ruleCompareDateReverse', [
-	            'rule' => ['compareDateReverse', 'start_date', true]
-    	    ]);
+				'rule' => ['compareDateReverse', 'start_date', true]
+			]);
 		return $validator;
 	}
 
@@ -56,6 +56,20 @@ class InstitutionSiteStudentAbsencesTable extends AppTable {
 			'academic_period', 'security_user_id', 'full_day', 'start_date', 'end_date', 
 			'start_time', 'end_time', 'type', 'student_absence_reason_id'
 		]);
+
+		$tabElements = [
+			'Attendance' => [
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAttendance'],
+				'text' => __('Attendance')
+			],
+			'Absence' => [
+				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAbsences'],
+				'text' => __('Absence')
+			]
+		];
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Absence');
 	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {

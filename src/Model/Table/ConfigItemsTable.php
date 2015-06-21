@@ -13,7 +13,7 @@ class ConfigItemsTable extends AppTable {
 			$value = $this->configurations[$name];
 		} else {
 			$entity = $this->findByName($name)->first();
-			$value = $entity->value;
+			$value = strlen($entity->value) ? $entity->value : $entity->default_value;
 			$this->configurations[$name] = $value;
 		}
 		return $value;
