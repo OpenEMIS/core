@@ -33,6 +33,7 @@ class InstitutionsController extends AppController  {
 
 			'Students' 			=> ['className' => 'Institution.InstitutionSiteStudents'],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
+			'StudentAttendance' => ['className' => 'Institution.StudentAttendance'],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
 
 			'BankAccounts' 		=> ['className' => 'Institution.InstitutionSiteBankAccounts'],
