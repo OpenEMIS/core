@@ -6,26 +6,30 @@
 	<form action="/styleguide/users/add" novalidate="novalidate" class="form-horizontal" accept-charset="utf-8" method="post">
 		<div class="input select">
 		  <label class="form-label">Education Programme:</label>
-		  <select>
-		    <option>Pre-Primary</option>
-		    <option>Primary</option>
-		    <option>Secondary 1 - 2 Expres or Normal (Academic)</option>
-		    <option>Secondary 1 - 2 Normal (Technical) or equivalent</option>
-		    <option>Secondary 3 - 4/5 Express or Normal (Academic)</option>
-		    <option>Secondary 3 - 4 Normal (Technical) or equivalent</option>		    
-		  </select>
+		  <div class="input-select-wrapper">	 
+			  <select>
+			    <option>Pre-Primary</option>
+			    <option>Primary</option>
+			    <option>Secondary 1 - 2 Expres or Normal (Academic)</option>
+			    <option>Secondary 1 - 2 Normal (Technical) or equivalent</option>
+			    <option>Secondary 3 - 4/5 Express or Normal (Academic)</option>
+			    <option>Secondary 3 - 4 Normal (Technical) or equivalent</option>		    
+			  </select>
+		   </div>	  
 		</div>
 
 		<div class="input select">
 		  <label class="form-label">Country:</label>
-		  <select>
-		    <option>Singapore</option>
-		    <option>Malaysia</option>
-		    <option>Indonesia</option>
-		    <option>Australia</option>
-		    <option>Vietnam</option>
-		    <option>Thailand</option>		    
-		  </select>
+		  <div class="input-select-wrapper">
+			  <select>
+			    <option>Singapore</option>
+			    <option>Malaysia</option>
+			    <option>Indonesia</option>
+			    <option>Australia</option>
+			    <option>Vietnam</option>
+			    <option>Thailand</option>		    
+			  </select>
+		  </div>
 		</div>
 
 		<div class="input text">
