@@ -240,16 +240,22 @@ class AppTable extends Table {
 		}
 	}
 
-	public function queryString($request, $key, $options=[]) {
-		$query = $request->query;
+	public function queryString($key, $options=[], $request=null) {
 		$value = 0;
-		if (isset($query[$key])) {
-			$value = $query[$key];
-			if (!array_key_exists($value, $options)) {
+		if (is_null($request) && isset($this->request)) {
+			$request = $this->request;
+		}
+
+		if (!is_null($request)) {
+			$query = $request->query;
+			if (isset($query[$key])) {
+				$value = $query[$key];
+				if (!array_key_exists($value, $options)) {
+					$value = key($options);
+				}
+			} else {
 				$value = key($options);
 			}
-		} else {
-			$value = key($options);
 		}
 		return $value;
 	}
