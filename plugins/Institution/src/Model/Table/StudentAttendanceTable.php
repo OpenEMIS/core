@@ -47,15 +47,13 @@ class StudentAttendanceTable extends AppTable {
         ];
 		$this->controller->set('toolbarElements', $toolbarElements);
 
-		$query = $this->request->query;
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
-		$selectedPeriod = $this->queryString($this->request, 'academic_period_id', $periodOptions);
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
 		foreach ($periodOptions as $periodId => $period) {
 			$count = $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $periodId)->count();
@@ -63,10 +61,10 @@ class StudentAttendanceTable extends AppTable {
 				$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period . ' - ' . __('No Sections'), 'disabled'];
 			} else {
 				if ($selectedPeriod == 0) {
-					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'disabled', 'selected'];
+					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'selected'];
 					$selectedPeriod = $periodId;
 				} else if ($selectedPeriod == $periodId) {
-					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'disabled', 'selected'];
+					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'selected'];
 				}
 			}
 		}
@@ -80,7 +78,7 @@ class StudentAttendanceTable extends AppTable {
 		foreach ($weeks as $index => $dates) { // jeff-TODO: need to set todays date as default
 			$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 		}
-		$selectedWeek = isset($query['week']) ? $query['week'] : key($weekOptions);
+		$selectedWeek = $this->queryString('week', $weekOptions);
 		$this->controller->set(compact('weekOptions', 'selectedWeek'));
 		// end setup weeks
 
@@ -103,7 +101,7 @@ class StudentAttendanceTable extends AppTable {
 			}
 			$firstDay->addDay();
 		} while($firstDay->lte($week[1]));
-		$selectedDay = isset($query['day']) ? $query['day'] : key($dayOptions);
+		$selectedDay = $this->queryString('day', $dayOptions);
 		$this->controller->set(compact('dayOptions', 'selectedDay'));
 		// End setup days
 	}
