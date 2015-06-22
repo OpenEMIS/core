@@ -835,7 +835,8 @@ input[type="checkbox"] {
 
 .btn-default,
 .selected,
-.selected:active {
+.selected:active,
+.input-group-addon {
 	background-color: #999;
 	color: #FFF;
 	border: 1px solid #6B6B6B !important;
@@ -847,7 +848,8 @@ input[type="checkbox"] {
 .btn-active,
 .selected:hover,
 .selected-size,
-.selected-size:active {
+.selected-size:active,
+.input-group-addon:hover {
 	background-color: #6B6B6B;
 	color: #FFF;
 	transition: all 0.8s ease;	
@@ -928,7 +930,7 @@ input[type="checkbox"] {
 }
 
 .panel-body .row {
-	margin: 0 1px;
+	margin: 0;
 	padding: 5px 0;
 	border-top: 1px solid #FFF;
 }
@@ -1360,35 +1362,6 @@ table tr.sorting-row td {background-color: #8b8;}
 	color: #333;
 }
 
-.form-label {
-	font-weight: bold;
-	text-align: left;
-	padding: 5px 8px 5px 0;
-	font-size: 13px !important;
-	min-height: 30px;
-}
-
-.form-input {
-	border-left: 1px dashed #DDD;	
-	min-height: 30px;
-}
-
-.row:nth-of-type(even) {
-	background-color: #F9F9F9;
-	border-left: 2px solid #F5F5F5;
-}
-
-.row:nth-of-type(odd) {
-	background-color: #FFF;	
-	border-top: 2px solid #F5F5F5;
-}
-
-.form-control {
-	padding: 5px 6px 3px;
-	font-size: 13px;
-	background: #FFF;
-}
-
 .advanced-search-wrapper {
 	float: none;
 	clear: both;
@@ -1416,11 +1389,13 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .advanced-search-wrapper .form-label {
 	margin: 0;
+	padding: 0;
 	display: block;
 	float: none;
 	clear: both;
 	text-align: left;
 	width: 100%;
+	border: 0;
 }
 
 .advanced-search-wrapper .form-control {
@@ -1448,14 +1423,20 @@ table tr.sorting-row td {background-color: #8b8;}
 
 /* FORM */
 .form-horizontal {
-	padding: 45px 0;
+	padding: 15px 0;
+}
+
+.form-horizontal label,
+.button-label {
+	margin: 0 10px 15px 0;
+	padding: 5px 20px;
+	text-align: left;
+	width: 26%;
+	float: left;
 }
 
 .form-horizontal label {
-	margin: 5px 10px;
-	text-align: right;
-	width: 25.3%;
-	float: left;
+	border-bottom: 2px solid #EEE;
 }
 
 .form-horizontal input,
@@ -1473,6 +1454,45 @@ table tr.sorting-row td {background-color: #8b8;}
 .form-horizontal .chosen-container {
 	width: 30% !important;
 	margin-bottom: 15px;
+}
+
+.form-label {
+	font-weight: bold;
+	text-align: left;
+	padding: 5px 8px 5px 0;
+	font-size: 13px !important;
+	min-height: 30px;
+	width: 200px;
+}
+
+.form-label:after {
+	content: ":";
+	position: absolute;
+	right: 0;
+	color: #BBB;
+	font-weight: 300;
+}
+
+.form-input {
+	min-height: 30px;
+}
+
+.form-horizontal label,
+.row:nth-of-type(even) {
+	background-color: #F9F9F9;
+	border-left: 2px solid #F5F5F5;
+	border-bottom: 2px solid #F5F5F5;	
+}
+
+.row:nth-of-type(odd) {
+	background-color: #FFF;	
+	border-left: 2px solid #FFF;
+}
+
+.form-control {
+	padding: 5px 6px 3px;
+	font-size: 13px;
+	background: #FFF;
 }
 
 .search-choice {
@@ -1515,7 +1535,6 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .form-horizontal .file label {
 	float: left;
-	margin-top: 5px;
 }
 
 .fileinput {
@@ -1604,10 +1623,10 @@ select:-moz-focusring {
 }
 
 .form-buttons {
-	width: 30%;
+	width: 100%;
 	text-align: left;
 	margin-top: 30px;
-	margin-left: 26.5%;
+	clear: both !important;
 }
 
 .error-message {
@@ -1636,7 +1655,8 @@ select:-moz-focusring {
 	content: "*";
 	font-size: 14px;
 	color: #CC5C5C;
-	margin: 3px;
+	margin-left: -9px;
+	margin-right: 3px;
 }
 
 input[readonly] {
@@ -1839,13 +1859,13 @@ a.thumbnail:hover {
 .display-limit .select:after {
 	position: absolute;
 	font-size: 10px;
-	margin-left: -58px;
-	margin-top: 1px;
+	margin-left: -62px;
+	margin-top: -3px;
 }
 
 .chrome .display-limit .select:after {
-	margin-left: -57px;
-	margin-top: 0;
+	margin-left: -62px;
+	margin-top: -5px;
 }
 
 .safari .display-limit .select:after {
@@ -1964,6 +1984,7 @@ footer {
 	text-align: left;
 	width: 75%;
 	margin: 0 auto;
+	padding: 45px 0;	
 }
 
 .login .text,
@@ -2243,6 +2264,20 @@ footer {
 		width: 100%;
 	}
 
+	.form-horizontal label {
+		padding: 5px 8px;
+	}
+
+	.form-label,
+	.form-input {
+		width: 100%;
+		border-right: 0;
+	}
+
+	.form-horizontal .button-label {
+		width: 100%;
+	}
+
 	.error-message {
 		margin: 0 0 10px !important;
 	}
@@ -2261,6 +2296,11 @@ footer {
 		margin: 0;
 		padding: 0;
 		width: 138px;
+	}
+
+	.advanced-search-wrapper .select:after {
+		margin-top: 2px;
+		margin-left: -22px;
 	}
 
 	.advanced-search-wrapper .input {
@@ -2538,7 +2578,7 @@ footer {
 	}
 
 	.form-horizontal label {
-		text-align: right;
+		text-align: left;
 		margin: 0 10px 10px 0;
 	}
 
@@ -2672,6 +2712,13 @@ footer {
 		padding: 4px 0 0;
 	}
 
+}
+
+@media (min-width: 937px) {
+	.form-horizontal label, 
+	.button-label {
+		width: 205px;	
+	}
 }
 
 @media only screen and (min-width: 30em) { 
