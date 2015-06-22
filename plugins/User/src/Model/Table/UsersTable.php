@@ -64,13 +64,7 @@ class UsersTable extends AppTable {
 			$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($this->controller->name)]);
 		}
 
-		$this->fields['photo_content']['type'] = 'image';
-		$this->fields['super_admin']['type'] = 'hidden';
-		$this->fields['super_admin']['value'] = 0;
-		$this->fields['status']['type'] = 'select';
-		$this->fields['status']['options'] = $this->getStatus();
-		$this->fields['gender_id']['type'] = 'select';
-		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
+		
 
 		// contact 'mandatory field'
 		$contactOptions = TableRegistry::get('User.ContactTypes')
@@ -208,6 +202,12 @@ class UsersTable extends AppTable {
 
 	public function addEditBeforeAction(){
 		$this->fields['photo_content']['type'] = 'image';
+		$this->fields['super_admin']['type'] = 'hidden';
+		$this->fields['super_admin']['value'] = 0;
+		$this->fields['status']['type'] = 'select';
+		$this->fields['status']['options'] = $this->getStatus();
+		$this->fields['gender_id']['type'] = 'select';
+		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();//
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
