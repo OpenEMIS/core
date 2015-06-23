@@ -15,7 +15,7 @@ use ControllerAction\Model\Traits\UtilityTrait;
 
 class AppTable extends Table {
 	
-	use UtilityTrait;
+	
 
 	public function initialize(array $config) {
 		$_config = [
