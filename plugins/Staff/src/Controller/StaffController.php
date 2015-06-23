@@ -11,6 +11,7 @@ class StaffController extends AppController {
 
 		$this->ControllerAction->model('User.Users');
 		$this->ControllerAction->model()->addBehavior('Staff.Staff');
+		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 
 		$this->ControllerAction->models = [
 			'Contacts' => ['className' => 'User.Contacts'],
