@@ -1,10 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
-use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 class InstitutionSiteProgrammesTable extends AppTable {
@@ -305,7 +304,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	public function getConditionsByAcademicPeriodId($academicPeriodId=0, $conditions=[]) {
 		$modelConditions = [];
 		if($academicPeriodId > 0) {
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$AcademicPeriod = $this->AcademicPeriods;
 			$academicPeriodObj = $AcademicPeriod->get($academicPeriodId);
 			$startDate = $AcademicPeriod->getDate($academicPeriodObj->start_date);
 			$endDate = $AcademicPeriod->getDate($academicPeriodObj->end_date);
