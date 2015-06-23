@@ -610,8 +610,10 @@ body.large {
 	left: -5px;
 }
 
-.panel-toolbar select {
-	margin: 0;
+.panel-toolbar .input-select-wrapper {
+	width: 100%;
+	margin-bottom: 0;
+	height: 25px;
 }
 
 button[colorpicker] {
@@ -1589,10 +1591,14 @@ table tr.sorting-row td {background-color: #8b8;}
 	cursor: pointer;
 }
 
+.form-horizontal .table-in-view {
+	width: 30%;
+}
+
 .table-in-view {
 	padding: 0;
 	margin-bottom: 15px;
-	width: 30%;
+	width: 100%;
 }
 
 .table-in-view thead {
@@ -1999,7 +2005,7 @@ footer {
 	text-align: left;
 	width: 75%;
 	margin: 0 auto;
-	padding: 45px 0;	
+	padding: 40px 0;	
 }
 
 .login .text,
@@ -2290,13 +2296,18 @@ footer {
 		border-right: 0;
 	}
 
+	.form-label:after {
+		display: none;
+	}
+
 	.form-horizontal .button-label {
 		width: 100%;
 	}
 
-	.table-in-view {
+	.table-in-view,
+	.form-horizontal .table-in-view {
 		clear: both;
-		width: 100%;
+		width: 100% !important;
 	}
 
 	.input-select-wrapper {
@@ -2625,8 +2636,9 @@ footer {
 		margin: 0 28% 10px;
 	}
 
-	.table-in-view {
-		width: 100%;
+	.table-in-view,
+	.form-horizontal .table-in-view {
+		width: 60%;
 	}
 
 	/* PAGINATION */
