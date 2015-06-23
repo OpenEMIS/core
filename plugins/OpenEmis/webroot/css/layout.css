@@ -1197,6 +1197,12 @@ th > a,
 th > a:hover, 
 th > a:active { color: #444; }
 
+table input,
+table .input-select-wrapper {
+	width: 100%;
+	margin: 0 !important;
+}
+
 .table-sortable th > a {
     color: #333;
     padding: 10px 0;
@@ -1473,10 +1479,11 @@ table tr.sorting-row td {background-color: #8b8;}
 .form-label {
 	font-weight: bold;
 	text-align: left;
-	padding: 5px 8px 5px 0;
+	padding: 5px 20px;
 	font-size: 13px !important;
 	min-height: 30px;
 	width: 200px;
+	margin-right: 10px;
 }
 
 .form-label:after {
@@ -1489,6 +1496,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .form-input {
 	min-height: 30px;
+	padding: 5px 0;
 }
 
 .form-horizontal label,
@@ -1598,6 +1606,11 @@ table tr.sorting-row td {background-color: #8b8;}
 .table-in-view {
 	padding: 0;
 	margin-bottom: 15px;
+	width: 80%;
+}
+
+.table-in-view .input-select-wrapper,
+.table-in-view input {
 	width: 100%;
 }
 
@@ -1742,7 +1755,8 @@ tags-input .tags {
 }
 
 /* TABLE DROPDOWN; ACTION & REORDER */
-.btn-dropdown {
+.btn-dropdown,
+.btn-single-action {
 	position: relative;
 	padding: 4px 22px 4px 10px;
 	display: inline-block;
@@ -1760,10 +1774,15 @@ tags-input .tags {
 
 .btn-dropdown:hover,
 .btn-dropdown:focus,
-.btn-dropdown:active {
+.btn-dropdown:active,
+.btn-single-action:hover {
 	background-color: #999;
 	outline: 0;
 	transition: all 0.3s ease;		
+}
+
+.btn-single-action {
+	padding: 4px 14px 4px 10px;
 }
 
 .caret-down:after {
@@ -2259,6 +2278,11 @@ footer {
 
 	/* FORM */
 	
+	.table-in-view {
+		width: 100%;
+		clear: both;
+	}
+	
 	.form-horizontal label {
 		width: 100%;
 		text-align: left !important;
@@ -2294,6 +2318,7 @@ footer {
 	.form-input {
 		width: 100%;
 		border-right: 0;
+		padding: 0 20px;
 	}
 
 	.form-label:after {
@@ -2302,12 +2327,6 @@ footer {
 
 	.form-horizontal .button-label {
 		width: 100%;
-	}
-
-	.table-in-view,
-	.form-horizontal .table-in-view {
-		clear: both;
-		width: 100% !important;
 	}
 
 	.input-select-wrapper {
@@ -2369,6 +2388,10 @@ footer {
 	.toolbar-wrapper .select::after {
 		top: -30px;
 	}	
+
+	.table-in-view {
+		width: 100% !important;
+	}
 }
 
 @media (min-width: 486px) and (max-width: 762px){
@@ -2453,6 +2476,16 @@ footer {
 	.scroll_tabs_container div.scroll_tab_inner span {
 		line-height: 34px;
 	}
+}
+
+@media (max-width: 767px) {
+	.table-responsive .dropdown-menu {
+		position: relative !important;
+	}
+
+	.dropdown, .dropup {
+  		width: 75px;
+  	}
 }
 
 @media (max-width: 768px) {
@@ -2604,6 +2637,10 @@ footer {
 		margin-right: 5px;
 	}
 
+	.table-responsive {
+		overflow-x: visible !important;
+	}
+
 	/* FORM */
 	
 	.toolbar-wrapper .input{
@@ -2634,11 +2671,6 @@ footer {
 
 	.error-message {
 		margin: 0 28% 10px;
-	}
-
-	.table-in-view,
-	.form-horizontal .table-in-view {
-		width: 60%;
 	}
 
 	/* PAGINATION */
@@ -2673,24 +2705,6 @@ footer {
 		text-align: center;
 	}
 
-}
-
-@media (min-width: 768px) {
-	.table-responsive {
-		overflow-x: visible !important;
-	}
-}
-
-
-
-@media (max-width: 767px) {
-	.table-responsive .dropdown-menu {
-		position: relative !important;
-	}
-
-	.dropdown, .dropup {
-  		width: 75px;
-  	}
 }
 
 /* Large devices (large desktops, 1200px and up) */
@@ -2752,6 +2766,11 @@ footer {
 
 	.chrome .toolbar {
 		padding: 4px 0 0;
+	}	
+
+	.table-in-view {
+		width: 50%;
+		float: left;
 	}
 
 }
@@ -2784,4 +2803,11 @@ footer {
     	top: 42px; 
     	left: 0;  
     }
+}
+
+@media (min-width: 1110px) and (max-width: 1260px){ 
+	.table-in-view {
+		float: left;
+		width: 60%;
+	}
 }
