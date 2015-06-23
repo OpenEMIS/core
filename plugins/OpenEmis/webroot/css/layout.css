@@ -19,7 +19,8 @@ body,
 .view-image:hover:before,
 .search input,
 .advanced-search-wrapper .form-control,
-select {
+select,
+.dropdown-menu > li > a {
 	font-size: 12px;
 }
 
@@ -587,6 +588,12 @@ body.large {
 	text-shadow: 0 -1px 0px rgba(0,0,0,0.2);	
 }
 
+.panel-toolbar {
+	border-bottom: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+}
+
 .panel-toolbar a {
 	padding: 8px;
 	margin: 0 2px 0 5px;
@@ -964,6 +971,7 @@ input[type="checkbox"] {
 .scroll_tabs_container div.scroll_tab_inner span {
     background-color: transparent;
     padding: 0 2px 0 0;
+    line-height: 35px;
  }
 
 .scroll_tabs_container .scroll_tab_left_button,
@@ -1157,7 +1165,6 @@ input[type="checkbox"] {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#efefef',GradientType=0 ); /* IE6-9 */
     color: #333;
     vertical-align: middle !important;
-    border-bottom: 1px solid #CCC;
 }
 
 .table-bordered > tbody > tr > td, 
