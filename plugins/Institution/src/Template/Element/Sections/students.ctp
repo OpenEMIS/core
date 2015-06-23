@@ -2,7 +2,7 @@
 
 	<hr>
 
-	<h3><?php echo __('Students') ?></label></h3>
+	<h3><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></h3>
 
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">
@@ -36,15 +36,16 @@
 				if ($obj->status == 0) continue;
 
 				if ($action=='edit') :
+					$n = $obj->security_user_id;
 			?>
 
 				<tr>
 					<?php
 
-					echo $this->Form->hidden("institution_site_section_students.$i.id", [ 'value'=> $obj->id ]);
-					echo $this->Form->hidden("institution_site_section_students.$i.security_user_id", [ 'value'=> $obj->security_user_id ]);
-					echo $this->Form->hidden("institution_site_section_students.$i.status", [ 'value' => $obj->status ]);
-					echo $this->Form->hidden("institution_site_section_students.$i.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
+					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.id", [ 'value'=> $obj->id ]);
+					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.security_user_id", [ 'value'=> $obj->security_user_id ]);
+					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.status", [ 'value' => $obj->status ]);
+					echo $this->Form->hidden("InstitutionSiteSections.institution_site_section_students.$n.institution_site_section_id", [ 'value'=> $obj->institution_site_section_id ]);
 
 					?>
 					<td><?php echo $obj->user->openemis_no ?></td>
@@ -53,7 +54,7 @@
 					<td><?php echo $obj->user->date_of_birth ?></td>
 					<td>
 						<?php
-						echo $this->Form->input("institution_site_section_students.$i.education_grade_id", array(
+						echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.education_grade_id", array(
 							'label' => false,
 							'options' => $attr['data']['gradeOptions'],
 							'value' => $obj->education_grade_id
@@ -62,7 +63,7 @@
 					</td>
 					<td>
 						<?php
-						echo $this->Form->input("institution_site_section_students.$i.student_category_id", array(
+						echo $this->Form->input("InstitutionSiteSections.institution_site_section_students.$n.student_category_id", array(
 							'label' => false,
 							'options' => $attr['data']['categoryOptions'],
 							'value' => $obj->student_category_id
