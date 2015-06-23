@@ -25,6 +25,24 @@ class InstitutionSitePositionsTable extends AppTable {
 		return $validator;
 	}
 
+	public function beforeAction($event) {
+
+		$this->fields['staff_position_title_id']['type'] = 'select';
+		$this->fields['staff_position_grade_id']['type'] = 'select';
+
+		$order = $this->fields['staff_position_grade_id']['order'] + 1;
+		$this->fields['type']['order'] = $order;
+		$this->fields['type']['type'] = 'select';
+		$this->fields['type']['options'] = $this->getSelectOptions('Staff.position_types');
+		$this->fields['status']['order'] = $order + 1;
+		$this->fields['status']['type'] = 'select';
+		$this->fields['status']['options'] = $this->getSelectOptions('general.active');
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
+	}
+
 	public function viewBeforeQuery($event) {
 		// pr('viewBeforeQuery');
 		// pr($this->id);
@@ -84,21 +102,6 @@ class InstitutionSitePositionsTable extends AppTable {
 		// end Current Staff List field
 
 		return true;
-	}
-
-	public function beforeAction($event) {
-
-		$this->fields['staff_position_title_id']['type'] = 'select';
-		$this->fields['staff_position_grade_id']['type'] = 'select';
-
-		$order = $this->fields['staff_position_grade_id']['order'] + 1;
-		$this->fields['type']['order'] = $order;
-		$this->fields['type']['type'] = 'select';
-		$this->fields['type']['options'] = $this->getSelectOptions('Staff.position_types');
-		$this->fields['status']['order'] = $order + 1;
-		$this->fields['status']['type'] = 'select';
-		$this->fields['status']['options'] = $this->getSelectOptions('general.active');
-
 	}
 
 	public function addBeforeAction($event) {
