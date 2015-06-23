@@ -273,16 +273,15 @@ class ControllerActionHelper extends Helper {
 			$pageOptions = $this->_View->get('pageOptions');
 			
 			if (!empty($pageOptions)) {
-				$html = __('<span>Display</span>');
+				$html = '<span>' . __('Display') . '</span>';
 				$html .= $this->Form->create(NULL, ['type' => 'post', 'style' => 'display: inline-block']);
-				$html .= __('<div class="input-select-wrapper"');
 				$html .= $this->Form->input('Search.limit', [
 					'label' => false,
 					'options' => $pageOptions,
 					'onchange' => "$(this).closest('form').submit()",
+					'templates' => $this->getFormTemplate()
 				]);
-				$html .= __('<p>records</p>');
-				$html .= __('</div>');
+				$html .= '<p>' . __('records') . '</p>';
 				$html .= $this->Form->end();
 			}
 		}
