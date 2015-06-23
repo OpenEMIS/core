@@ -398,6 +398,35 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		return $query->toArray();
 	}
 
+	public function getSiteProgrammeOptions($institutionSiteId, $academicPeriodId) {
+		$list = [];
+
+		$data = $this->getSiteProgrammes($institutionSiteId, $academicPeriodId);
+		foreach ($data as $key => $value) {
+			$list[$value->education_programme_id] = $value->education_programme->education_cycle->name . ' - ' . $value->education_programme->name;
+			// $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+		}
+
+		return $list;
+	}
+
+	public function getSiteProgrammes($institutionSiteId, $academicPeriodId) {
+		$this->formatResult = true;
+		$conditions = array(
+			'InstitutionSiteProgrammes.institution_site_id' => $institutionSiteId
+		);
+		$conditions = $this->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
+
+		$data = $this
+			->find()
+			->contain(['EducationProgrammes'=>['EducationCycles' => ['EducationLevels' => ['EducationSystems']]]])
+			->where($conditions)
+			->order('EducationSystems.order', 'EducationLevels.order', 'EducationCycles.order', 'EducationProgrammes.order')
+		;
+
+		return $data;
+	}
+
 	/**
 	 * Used by $this->getAcademicPeriodOptions()
 	 * @param  Time $a Time object

@@ -77,7 +77,8 @@ class InstitutionSiteGradesTable extends AppTable {
 
 	public function getGradeOptions($institutionsId, $academicPeriodId, $programmeId=0) {
 		$conditions = array(
-			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
+			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId,
+			'InstitutionSiteProgrammes.education_programme_id' => $programmeId
 		);
 		$conditions = $this->InstitutionSiteProgrammes->getConditionsByAcademicPeriodId($academicPeriodId, $conditions);
 		$query = $this->InstitutionSiteProgrammes->find()->where($conditions)->select('id');
@@ -97,7 +98,7 @@ class InstitutionSiteGradesTable extends AppTable {
 					;
 
 		$list = array();
-		foreach ($data as $key => $obj) {
+		foreach ($query as $key => $obj) {
 			$list[$obj->education_grade->id] = $obj->education_grade->name;
 		}
 
