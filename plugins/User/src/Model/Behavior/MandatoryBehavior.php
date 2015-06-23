@@ -99,11 +99,11 @@ class MandatoryBehavior extends Behavior {
 			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
 			$defaultIdentityType = $IdentityTypes->getDefaultValue();
 		}
-
-		$this->fields['nationality']['default'] = $data['Users']['user_nationalities'][0]['country_id'];
+		
+		$this->_table->fields['nationality']['default'] = $data['Users']['user_nationalities'][0]['country_id'];
 
 		// overriding the  previous input to put in default identities
-		$this->fields['identity_type']['default'] = $defaultIdentityType;
+		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
 		$data['Users']['identities'][0]['identity_type_id'] = $defaultIdentityType;
 
 		$options['associated'] = [
@@ -114,8 +114,6 @@ class MandatoryBehavior extends Behavior {
 			'SpecialNeeds' => ['validate' => false],
 			'Contacts' => ['validate' => false]
 		];
-		pr('countryId: '.$countryId);
-		pr('defaultIdentityType: '.$defaultIdentityType);
 		
 		return compact('entity', 'data', 'options');
 	}
