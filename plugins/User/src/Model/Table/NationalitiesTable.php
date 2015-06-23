@@ -12,19 +12,6 @@ class NationalitiesTable extends AppTable {
 		$this->belongsTo('Countries', ['className' => 'FieldOption.Countries']);
 	}
 
-	public function beforeAction($event) {
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.beforeAction'] = 'beforeAction';
-		// $events['ControllerAction.afterAction'] = 'afterAction';
-		// $events['ControllerAction.beforePaginate'] = 'beforePaginate';
-		// $events['ControllerAction.beforeAdd'] = 'beforeAdd';
-		// $events['ControllerAction.beforeView'] = 'beforeView';
-		return $events;
-	}
-
 	public function validationDefault(Validator $validator) {
 		return $validator;
 	}
