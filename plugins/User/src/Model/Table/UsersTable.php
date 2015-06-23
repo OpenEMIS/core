@@ -98,7 +98,7 @@ class UsersTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		// $options['associated'] = ['InstitutionSiteStudents', 'InstitutionSiteStaff', 'Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
+		$options['associated'] = ['InstitutionSiteStudents', 'InstitutionSiteStaff', 'Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
 		// $options['validate'] = 'mandatory';
 		return compact('entity', 'data', 'options');
 	}
