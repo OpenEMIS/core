@@ -8,24 +8,23 @@
 			]);
 
 			if (!empty($academicPeriodOptions)) {
-				echo $this->Form->input('academic_period_', array(
+				echo $this->Form->input('academic_period_id_', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $academicPeriodOptions,
-					'default' => $selectedAcademicPeriod,
 					'url' => $baseUrl,
-					'data-named-key' => 'academic_period',
+					'data-named-key' => 'academic_period_id',
 				));
 			}
 
 			if (!empty($gradeOptions)) {
-				echo $this->Form->input('grade_', array(
+				echo $this->Form->input('education_grade_id_', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $gradeOptions,
 					'default' => $selectedGrade,
 					'url' => $baseUrl,
-					'data-named-key' => 'grade',
+					'data-named-key' => 'education_grade_id',
 				));
 			}
 

@@ -6,7 +6,9 @@
 			    'controller' => $this->request->params['controller'],
 			    'action' => $this->request->params['action'],
 			]);
-	
+			$template = $this->ControllerAction->getFormTemplate();
+			$this->Form->templates($template);
+
 			echo $this->Form->input('academic_period', array(
 				'class' => 'form-control',
 				'label' => false,
@@ -19,7 +21,6 @@
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $weekOptions,
-				'default' => $selectedWeek,
 				'url' => $baseUrl,
 				'data-named-key' => 'week'
 			));
@@ -31,6 +32,14 @@
 				'default' => $selectedDay,
 				'url' => $baseUrl,
 				'data-named-key' => 'day'
+			));
+
+			echo $this->Form->input('sections', array(
+				'class' => 'form-control',
+				'label' => false,
+				'options' => $sectionOptions,
+				'url' => $baseUrl,
+				'data-named-key' => 'section_id'
 			));
 		?>
 	</div>

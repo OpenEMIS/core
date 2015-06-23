@@ -273,16 +273,15 @@ class ControllerActionHelper extends Helper {
 			$pageOptions = $this->_View->get('pageOptions');
 			
 			if (!empty($pageOptions)) {
-				$html = __('<span>Display</span>');
+				$html = '<span>' . __('Display') . '</span>';
 				$html .= $this->Form->create(NULL, ['type' => 'post', 'style' => 'display: inline-block']);
-				$html .= __('<div class="input-select-wrapper"');
 				$html .= $this->Form->input('Search.limit', [
 					'label' => false,
 					'options' => $pageOptions,
 					'onchange' => "$(this).closest('form').submit()",
+					'templates' => $this->getFormTemplate()
 				]);
-				$html .= __('<p>records</p>');
-				$html .= __('</div>');
+				$html .= '<p>' . __('records') . '</p>';
 				$html .= $this->Form->end();
 			}
 		}
@@ -459,7 +458,7 @@ class ControllerActionHelper extends Helper {
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
 		$_rowClass = array('row');
 		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-		$_valueClass = array('col-xs-6 col-md-6 form-input'); // default bootstrap class for values
+		$_valueClass = array('form-input'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosen_select');
 

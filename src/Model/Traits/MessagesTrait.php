@@ -39,6 +39,10 @@ trait MessagesTrait {
 			'noEducationProgrammes' => 'There are no available Education Programme.',
 			'noEducationGrades' => 'There are no available Education Grade.',
 		],
+		'InstitutionSiteSections' => [
+			'noSections' => 'No Sections'
+		],
+		
 
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
