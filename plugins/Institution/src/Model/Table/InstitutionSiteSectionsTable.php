@@ -53,6 +53,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$categoryOptions = $this->InstitutionSiteSectionStudents->getStudentCategoryList();
 		$this->ControllerAction->field('students', [
 			'label' => '',
+			'override' => true,
 			'type' => 'element',
 			'element' => 'Institution.Sections/students',
 			'data' => [	
@@ -61,6 +62,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 				'categoryOptions'=>$categoryOptions
 			],
 			'visible' => ['view'=>true, 'edit'=>true]
+			// 'visible' => false
 		]);
 		$this->ControllerAction->field('education_grades', [
 			'type' => 'element',
@@ -76,7 +78,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			'male_students', 'female_students', 'classes',
 		]);
 
-		if (strtolower($this->action) != 'index') {
+		if (strtolower($this->action) != 'index' && strtolower($this->action) != 'add') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 	}
@@ -141,7 +143,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 		]);
 
-
 		$toolbarElements = [
             ['name' => 'Institution.Sections/controls', 
              'data' => [
@@ -179,17 +180,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 
 
-
 /******************************************************************************************************************
 **
 ** view action methods
 **
 ******************************************************************************************************************/
     public function viewBeforeAction($event) {
-		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 'institution_site_shift_id', 'education_grades', 'security_user_id', 'students'
-		]);
-
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		if (array_key_exists('academic_period_id', $query)) {
@@ -201,6 +197,10 @@ class InstitutionSiteSectionsTable extends AppTable {
     		$action = $this->ControllerAction->buttons['view']['url'];
 			$this->controller->redirect($action);
     	}
+
+		$this->ControllerAction->setFieldOrder([
+			'academic_period_id', 'name', 'institution_site_shift_id', 'education_grades', 'security_user_id', 'students'
+		]);
 
 	}
 
@@ -230,10 +230,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function addBeforeAction($event) {
-		// $this->ControllerAction->setFieldOrder([
-		// 	'academic_period_id', 'name', 'institution_site_shift_id', 'education_grades', 'security_user_id', 'students'
-		// ]);
-
 		$query = $this->request->query;
     	if (array_key_exists('academic_period_id', $query) || array_key_exists('education_grade_id', $query)) {
     		if (array_key_exists('academic_period_id', $query)) {
@@ -245,6 +241,12 @@ class InstitutionSiteSectionsTable extends AppTable {
     		$action = $this->ControllerAction->buttons['add']['url'];
 			$this->controller->redirect($action);
     	}
+
+		$this->fields['students']['visible'] = false;
+		// $this->ControllerAction->setFieldOrder([
+		// 	'academic_period_id', 'name', 'institution_site_shift_id', 'education_grades', 'security_user_id', 'students'
+		// ]);
+
     	if (array_key_exists('grade_type', $query)) {
     		$this->_selectedGradeType = $this->ControllerAction->buttons['add']['url']['grade_type'];
     	}
