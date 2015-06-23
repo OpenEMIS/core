@@ -41,11 +41,11 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function beforeAction($event) {
 
-		$this->ControllerAction->addField('section_name', ['type' => 'string', 'order' => 2]);
+		$this->ControllerAction->field('section_name', ['type' => 'string', 'order' => 2]);
 		// $this->fields['academic_period_id']['type'] = 'readonly';
 		// $this->fields['education_subject_id']['type'] = 'readonly';
 		
-		// $this->ControllerAction->addField('education_level', ['type' => 'select', 'onChangeReload' => true]);
+		// $this->ControllerAction->field('education_level', ['type' => 'select', 'onChangeReload' => true]);
 		// $this->EducationLevels = TableRegistry::get('Education.EducationLevels');
 
 		// $this->fields['academic_period_id']['order'] = 0;
@@ -103,15 +103,15 @@ class InstitutionSiteClassesTable extends AppTable {
     	$this->fields['academic_period_id']['visible'] = false;
 
     	$this->fields['education_subject_id']['order'] = 3;
-		$this->ControllerAction->addField('teachers', [
+		$this->ControllerAction->field('teachers', [
 			'type' => 'string', 
 			'order' => 4,
 		]);
-		$this->ControllerAction->addField('male_students', [
+		$this->ControllerAction->field('male_students', [
 			'type' => 'integer', 
 			'order' => 5,
 		]);
-		$this->ControllerAction->addField('female_students', [
+		$this->ControllerAction->field('female_students', [
 			'type' => 'integer', 
 			'order' => 6,
 		]);
@@ -211,7 +211,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'onChangeReload' => true
 		];
 
-		$this->ControllerAction->addField('classes', [
+		$this->ControllerAction->field('classes', [
 			'label' => '',
 			'type' => 'element',
 			'order' => 6,
@@ -254,21 +254,12 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function editBeforeAction(Event $event) {
-		$this->fields['section_name']['visible'] = false;
-
 		$this->fields['name']['order'] = 1;
 		$this->fields['no_of_seats']['order'] = 2;
 		$this->fields['academic_period_id']['order'] = 3;
 		$this->fields['education_subject_id']['order'] = 4;
 
-
-		$this->fields['academic_period_id']['type'] = 'readonly';
-		$this->fields['academic_period_id']['options'] = $this->getAcademicPeriodOptions();
-		
-		$this->fields['education_subject_id']['type'] = 'readonly';
-		
-
-		$this->ControllerAction->addField('teachers', [
+		$this->ControllerAction->field('teachers', [
 			'label' => '',
 			'type' => 'element',
 			'order' => 5,
@@ -279,7 +270,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			]
 		]);
 
-		$this->ControllerAction->addField('students', [
+		$this->ControllerAction->field('students', [
 			'label' => '',
 			'type' => 'element',
 			'order' => 6,
@@ -310,7 +301,6 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_selectedSection = $entity->institution_site_section_classes[0]->institution_site_section_id;
-		$subjects = $this->getSubjectOptions();
 		$query = $this
 			->Institutions
 			->InstitutionSiteStaff
@@ -319,7 +309,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			->where(['InstitutionSiteStaff.institution_site_id'=>$entity->institution_site_id])
 			// ->where(['InstitutionSiteStaff.status'=>1])
 			->toArray();
-		$teachers = [];
+		$teachers = [__('Add Teachers')];
 		foreach ($query as $teacher) {
 			$teachers[$teacher->user->id] = $teacher->user->name_with_id;
 		}
@@ -331,16 +321,28 @@ class InstitutionSiteClassesTable extends AppTable {
 			->where(['InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id])
 			// ->where(['InstitutionSiteStaff.status'=>1])
 			->toArray();
-		$students = [];
+		$students = [__('Add Students')];
 		foreach ($query as $student) {
 			$students[$student->user->id] = $student->user->name_with_id;
 		}
 
-		$this->fields['education_subject_id']['options'] = $subjects;
 		$this->fields['teachers']['data']['teachers'] = $entity->institution_site_class_staff;
 		$this->fields['teachers']['data']['teacherOptions'] = $teachers;
 		$this->fields['students']['data']['students'] = $entity->institution_site_class_students;
 		$this->fields['students']['data']['studentOptions'] = $students;
+	
+
+		$this->fields['section_name']['visible'] = false;
+		$this->fields['academic_period_id']['type'] = 'readonly';
+		$this->fields['academic_period_id']['attr']['value'] = $this->getAcademicPeriodOptions()[$entity->academic_period_id];
+		
+		$subjects = $this->getSubjectOptions(true);
+		$this->fields['education_subject_id']['type'] = 'readonly';
+		if (array_key_exists($entity->education_subject_id, $subjects)) {
+			$this->fields['education_subject_id']['attr']['value'] = $subjects[$entity->education_subject_id]->name;
+		} else {
+			$this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
+		}
 	
 		return $entity;
 	}
@@ -352,18 +354,6 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
     public function viewBeforeAction($event) {
-		// $query = $this->request->query;
- 		
-  //   	if (array_key_exists('academic_period', $query) || array_key_exists('grade', $query)) {
-  //   		if (array_key_exists('academic_period', $query)) {
-	 //    		unset($this->ControllerAction->buttons['view']['url']['academic_period']);
-  //   		}
-  //   		if (array_key_exists('grade', $query)) {
-	 //    		unset($this->ControllerAction->buttons['view']['url']['grade']);
-  //   		}
-  //   		$action = $this->ControllerAction->buttons['view']['url'];
-		// 	$this->controller->redirect($action);
-  //   	}
 
 		$this->fields['no_of_seats']['visible'] = false;
 		$this->fields['modified_user_id']['visible'] = false;
@@ -373,13 +363,13 @@ class InstitutionSiteClassesTable extends AppTable {
 
 		$this->fields['academic_period_id']['order'] = 1;
 
-		$this->ControllerAction->addField('section_name', ['type' => 'string', 'order' => 2]);
+		$this->ControllerAction->field('section_name', ['type' => 'string', 'order' => 2]);
 
 		$this->fields['name']['order'] = 3;
-		$this->ControllerAction->addField('education_subject_code', ['type' => 'string', 'order' => 4]);
+		$this->ControllerAction->field('education_subject_code', ['type' => 'string', 'order' => 4]);
 		$this->fields['education_subject_id']['order'] = 5;
 
-		$this->ControllerAction->addField('teachers', [
+		$this->ControllerAction->field('teachers', [
 			'label' => '',
 			'type' => 'element',
 			'order' => 6,
@@ -390,7 +380,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			]
 		]);
 
-		$this->ControllerAction->addField('students', [
+		$this->ControllerAction->field('students', [
 			'label' => '',
 			'type' => 'element',
 			'order' => 7,
@@ -465,7 +455,7 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	}
 	
-	private function getSubjectOptions() {
+	private function getSubjectOptions($listOnly=false) {
 		$Grade = $this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
@@ -478,7 +468,8 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($gradeOptions as $key => $value) {
 			$gradeData[$value->education_grade->id] = $value->education_grade->name;
 		}
-		
+		// pr($gradeData);
+		// pr(array_keys($gradeData));
 		$subjects = $this
 				->EducationSubjects
 				->EducationGradesSubjects
@@ -488,9 +479,19 @@ class InstitutionSiteClassesTable extends AppTable {
 					'EducationGradesSubjects.education_grade_id IN' => array_keys($gradeData),
 					'EducationGradesSubjects.visible' => 1
 				])
+				// ->__toString();
 				->toArray();
-
-		return $subjects;
+		// pr($subjects);die;
+		if ($listOnly) {
+			$subjectList = [];
+			foreach ($subjects as $key => $value) {
+				$subjectList[$value->id] = $value->education_subject->name;
+			}
+			$data = $subjectList;
+		} else {
+			$data = $subjects;
+		}
+		return $data;
 	}
 
 }
