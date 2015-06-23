@@ -26,23 +26,92 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
+		$this->ControllerAction->field('position_no', ['visible' => true]);
+		$this->ControllerAction->field('staff_position_title_id', [
+			'visible' => true,
+			'type' => 'select'
+		]);
+		$this->ControllerAction->field('staff_position_grade_id', [
+			'visible' => true,
+			'type' => 'select'
+		]);
+		$this->ControllerAction->field('type', [
+			'visible' => true,
+			'type' => 'select',
+			'options' => $this->getSelectOptions('Staff.position_types')
+		]);
+		$this->ControllerAction->field('status', [
+			'visible' => true,
+			'type' => 'select',
+			'options' => $this->getSelectOptions('general.active')
+		]);
+		$this->ControllerAction->field('current_staff_list', [
+			'label' => '',
+			'override' => true,
+			'type' => 'element', 
+			'element' => 'Institution.Positions/current',
+			'visible' => true
+		]);
+		$this->ControllerAction->field('past_staff_list', [
+			'label' => '',
+			'override' => true,
+			'type' => 'element',
+			'element' => 'Institution.Positions/past',
+			'visible' => true
+		]);
 
-		$this->fields['staff_position_title_id']['type'] = 'select';
-		$this->fields['staff_position_grade_id']['type'] = 'select';
-
-		$order = $this->fields['staff_position_grade_id']['order'] + 1;
-		$this->fields['type']['order'] = $order;
-		$this->fields['type']['type'] = 'select';
-		$this->fields['type']['options'] = $this->getSelectOptions('Staff.position_types');
-		$this->fields['status']['order'] = $order + 1;
-		$this->fields['status']['type'] = 'select';
-		$this->fields['status']['options'] = $this->getSelectOptions('general.active');
 
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 	}
 
+
+/******************************************************************************************************************
+**
+** index action methods
+**
+******************************************************************************************************************/
+	public function indexBeforeAction(Event $event) {
+
+		$this->fields['current_staff_list']['visible'] = false;
+		$this->fields['past_staff_list']['visible'] = false;
+
+		$this->ControllerAction->setFieldOrder([
+			'position_no', 'staff_position_title_id', 
+			'staff_position_grade_id', 'type', 'status',
+		]);
+
+	}
+
+	public function indexAfterAction(Event $event, $data) {
+		return $data;
+	}
+
+
+/******************************************************************************************************************
+**
+** addEdit action methods
+**
+******************************************************************************************************************/
+
+	public function addEditBeforeAction($event) {
+
+		$this->fields['current_staff_list']['visible'] = false;
+		$this->fields['past_staff_list']['visible'] = false;
+
+		$this->ControllerAction->setFieldOrder([
+			'position_no', 'staff_position_title_id', 
+			'staff_position_grade_id', 'type', 'status',
+		]);
+
+	}
+
+/******************************************************************************************************************
+**
+** view action methods
+**
+******************************************************************************************************************/
 	public function viewBeforeQuery($event) {
 		// pr('viewBeforeQuery');
 		// pr($this->id);
@@ -52,18 +121,20 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function viewBeforeAction($event) {
+
+		$this->ControllerAction->setFieldOrder([
+			'position_no', 'staff_position_title_id', 
+			'staff_position_grade_id', 'type', 'status',
+			'modified_user_id', 'modified', 'created_user_id', 'created',
+			'current_staff_list', 'past_staff_list'
+		]);
+
 		$viewVars = $this->ControllerAction->vars();
 		$id = $viewVars['_buttons']['view']['url'][1];
 
 		$session = $this->controller->request->session();
 
 		// start Current Staff List field
-		$this->ControllerAction->addField('current_staff_list', [
-			'type' => 'element', 
-			'order' => 10,
-			'element' => 'Institution.Positions/current'
-		]);
-
 		$Staff = $this->Institutions->InstitutionSiteStaff;
 		$currentStaff = $Staff ->find('all')
 							->where([$Staff->aliasField('end_date').' IS NULL'])
@@ -84,12 +155,6 @@ class InstitutionSitePositionsTable extends AppTable {
 		// end Current Staff List field
 
 		// start Current Staff List field
-		$this->ControllerAction->addField('past_staff_list', [
-			'type' => 'element', 
-			'order' => 11,
-			'element' => 'Institution.Positions/past'
-		]);
-
 		$pastStaff = $Staff ->find('all')
 							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
 							->order([$Staff->aliasField('start_date')])

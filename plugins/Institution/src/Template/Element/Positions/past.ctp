@@ -1,6 +1,11 @@
 <?php $_edit = (array_key_exists('edit', $_buttons) ? true : false);?>
+	<div class="clearfix"></div>
 
-	<div class="table-in-view col-md-12 table-responsive">
+	<hr>
+
+	<h3><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></h3>
+
+	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
