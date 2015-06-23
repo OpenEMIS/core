@@ -637,8 +637,9 @@ class ControllerActionComponent extends Component {
 				if (!empty($event->result)) {
 					$params = array_merge($params, $event->result);
 				}
-				// End Event
 				
+				// End Event
+				list($data, $this->request->data, $patchOptions) = array_values($params);
 				$data = $model->patchEntity($data, $request->data, $patchOptions);
 				if ($model->save($data)) {
 					$this->Alert->success('general.add.success');
@@ -673,7 +674,8 @@ class ControllerActionComponent extends Component {
 					$params = array_merge($params, $event->result);
 				}
 				// End Event
-
+				
+				list($data, $this->request->data, $patchOptions) = array_values($params);
 				$data = $model->patchEntity($data, $request->data, $patchOptions);
 			}
 		}
