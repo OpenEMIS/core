@@ -9,7 +9,7 @@ $this->end();
 $this->start('panelBody');
 	$template = $this->ControllerAction->getFormTemplate();
 	$formOptions = $this->ControllerAction->getFormOptions();
-	//$this->Form->templates($template);
+	$this->Form->templates($template);
 	
 	echo $this->Form->create($data, $formOptions);
 	echo $this->ControllerAction->getEditElements($data);

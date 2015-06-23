@@ -50,11 +50,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getFormTemplate() {
 		return [
-			'inputContainer' => '<div class="form-group row">{{content}}</div>',
-			'input' => '<div class="col-md-4"><input type="{{type}}" name="{{name}}" {{attrs}} class="form-control" /></div>',
-			'label' => '<label class="col-md-3 form-label" {{attrs}}>{{text}}</label>',
-			'select' => '<div class="col-md-4"><select class="form-control" name="{{name}}" {{attrs}}>{{content}}</select></div>',
-			//'error' => '<div class="form-group row error">{{text}}</div>'
+			'select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'
 		];
 	}
 
@@ -92,8 +88,8 @@ class ControllerActionHelper extends Helper {
 	public function getFormButtons() {
 		$buttons = $this->_View->get('_buttons');
 	
-		echo '<div class="form-buttons">';
-		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save'));
+		echo '<div class="form-buttons"><div class="button-label"></div>';
+		echo $this->Form->button(__('Save'), array('class' => 'btn btn-default btn-save', 'div' => false));
 		echo $this->Html->link(__('Cancel'), $buttons['back']['url'], array('class' => 'btn btn-outline btn-cancel'));
 		echo $this->Form->button('reload', array('id' => 'reload', 'type' => 'submit', 'name' => 'submit', 'value' => 'reload', 'class' => 'hidden'));
 		echo '</div>';
@@ -279,12 +275,14 @@ class ControllerActionHelper extends Helper {
 			if (!empty($pageOptions)) {
 				$html = __('<span>Display</span>');
 				$html .= $this->Form->create(NULL, ['type' => 'post', 'style' => 'display: inline-block']);
+				$html .= __('<div class="input-select-wrapper"');
 				$html .= $this->Form->input('Search.limit', [
 					'label' => false,
 					'options' => $pageOptions,
-					'onchange' => "$(this).closest('form').submit()"
+					'onchange' => "$(this).closest('form').submit()",
 				]);
-				$html .= __('records');
+				$html .= __('<p>records</p>');
+				$html .= __('</div>');
 				$html .= $this->Form->end();
 			}
 		}
