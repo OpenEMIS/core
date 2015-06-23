@@ -774,14 +774,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 	
 	public function getSectionOptions($academicPeriodId, $institutionsId, $gradeId=false) {
-		$singleGradeOptions = array(
-			'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
-			'conditions' => array(
-				'InstitutionSiteSections.academic_period_id' => $academicPeriodId,
-				'InstitutionSiteSections.institution_site_id' => $institutionsId
-			),
-			'order' => array('InstitutionSiteSections.name')
-		);
+	// 	$singleGradeOptions = array(
+	// 		'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
+	// 		'conditions' => array(
+	// 			'InstitutionSiteSections.academic_period_id' => $academicPeriodId,
+	// 			'InstitutionSiteSections.institution_site_id' => $institutionsId
+	// 		),
+	// 		'order' => array('InstitutionSiteSections.name')
+	// 	);
 
 		$multiGradeOptions = array(
 			'fields' => array('InstitutionSiteSections.id', 'InstitutionSiteSections.name'),
@@ -793,8 +793,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 		);
 
 		if($gradeId!==false) {
-			$singleGradeOptions['conditions']['InstitutionSiteSections.education_grade_id'] = $gradeId;
-
 			$multiGradeOptions['joins'] = array(
 				array(
 					'table' => 'institution_site_section_grades',
@@ -809,15 +807,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$multiGradeOptions['group'] = array('InstitutionSiteSections.id');
 		}
 
-		if($gradeId!==false && is_null($gradeId)) {
-			$singleGradeData = [];
-			$multiGradeData = [];
-		} else {
-			$singleGradeData = $this->find('list', $singleGradeOptions);
-			$multiGradeData = $this->find('list', $multiGradeOptions);
-		}
-
-		$data = array_replace($singleGradeData, $multiGradeData);
-		return $data;
+		$multiGradeData = $this->find('list', $multiGradeOptions);
+		return $multiGradeData->toArray();
 	}
 }
