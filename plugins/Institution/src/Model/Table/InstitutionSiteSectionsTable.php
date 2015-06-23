@@ -23,12 +23,58 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteSectionGrades', 		['className' => 'Institution.InstitutionSiteSectionGrades']);
 		$this->hasMany('InstitutionSiteSectionStudents', 	['className' => 'Institution.InstitutionSiteSectionStudents']);
+
+
+		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
+		$this->InstitutionSiteGrades = $this->Institutions->InstitutionSiteGrades;
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
+
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('section_number', ['visible' => false]);
+		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
+		$this->ControllerAction->field('modified', ['visible' => false]);
+		$this->ControllerAction->field('created_user_id', ['visible' => false]);
+		$this->ControllerAction->field('created', ['visible' => false]);
+
+		$this->ControllerAction->field('academic_period_id', ['visible' => ['view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('institution_site_shift_id', ['visible' => ['view'=>true]]);
+
+		$this->ControllerAction->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
+		$this->ControllerAction->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
+		$this->ControllerAction->field('classes', ['type' => 'integer', 'visible' => ['index'=>true]]);
+
+		$categoryOptions = $this->InstitutionSiteSectionStudents->getStudentCategoryList();
+		$this->ControllerAction->field('students', [
+			'label' => '',
+			'type' => 'element',
+			'element' => 'Institution.Sections/students',
+			'data' => [	
+				'students'=>[],
+				'studentOptions'=>[],
+				'categoryOptions'=>$categoryOptions
+			],
+			'visible' => ['view'=>true, 'edit'=>true]
+		]);
+		$this->ControllerAction->field('education_grades', [
+			'type' => 'element',
+			'element' => 'Institution.Sections/multi_grade',
+			'data' => [	
+				'grades'=>[]
+			],
+			'visible' => ['view'=>true]
+		]);
+
+		$this->ControllerAction->setFieldOrder([
+			'name', 'security_user_id', 
+			'male_students', 'female_students', 'classes',
+		]);
+	}
+
 
 /******************************************************************************************************************
 **
@@ -37,48 +83,27 @@ class InstitutionSiteSectionsTable extends AppTable {
 ******************************************************************************************************************/
     public function indexBeforeAction($event) {
 		$query = $this->request->query;
- 		
     	if (array_key_exists('grade_type', $query)) {
     		unset($this->ControllerAction->buttons['index']['url']['grade_type']);
 			$action = $this->ControllerAction->buttons['index']['url'];
 			$this->controller->redirect($action);
     	}
 
-		$this->fields['section_number']['visible'] = false;
-		$this->fields['academic_period_id']['visible'] = false;
-		$this->fields['institution_site_shift_id']['visible'] = false;
-
-		$this->ControllerAction->addField('male_students', [
-			'type' => 'integer', 
-			'order' => 5,
-		]);
-		$this->ControllerAction->addField('female_students', [
-			'type' => 'integer', 
-			'order' => 6,
-		]);
-		$this->ControllerAction->addField('classes', [
-			'type' => 'integer', 
-			'order' => 7,
-		]);
-
-
  		$institutionsId = $this->Session->read('Institutions.id');
 		$conditions = array(
 			'InstitutionSiteProgrammes.institution_site_id' => $institutionsId
 		);
-		$academicPeriodOptions = $this->Institutions->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
+		$academicPeriodOptions = $this->InstitutionSiteProgrammes->getAcademicPeriodOptions($conditions);
 		if (empty($academicPeriodOptions)) {
 			$this->Alert->warning('Institutions.noProgrammes');
 		}
-		$this->_selectedAcademicPeriodId = isset($query['academic_period']) ? $query['academic_period'] : key($academicPeriodOptions);
-		$this->_selectedAcademicPeriodId = $this->checkIdInOptions($this->_selectedAcademicPeriodId, $academicPeriodOptions);
+		$this->_selectedAcademicPeriodId = $this->queryString('academic_period', $academicPeriodOptions);
 
-		$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId);
+		$gradeOptions = $this->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId);
 		if (empty($gradeOptions)) {
 			$this->Alert->warning('Institutions.noGrades');
 		}
-		$this->_selectedEducationGradeId = isset($query['grade']) ? $query['grade'] : key($gradeOptions);
-		$this->_selectedEducationGradeId = $this->checkIdInOptions($this->_selectedEducationGradeId, $gradeOptions);
+		$this->_selectedEducationGradeId = $this->queryString('grade', $gradeOptions);
 
 		$toolbarElements = [
             ['name' => 'Institution.Sections/controls', 
@@ -97,7 +122,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 	public function indexBeforePaginate($event, $model, $paginateOptions) {
 		$paginateOptions['finder'] = ['byGrades' => []];
-		$paginateOptions['conditions'][][$model->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
+		$paginateOptions['conditions'][][$this->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
 		return $paginateOptions;
 	}
 
@@ -114,6 +139,54 @@ class InstitutionSiteSectionsTable extends AppTable {
 				]
 			]);
     }
+
+
+
+
+/******************************************************************************************************************
+**
+** view action methods
+**
+******************************************************************************************************************/
+    public function viewBeforeAction($event) {
+		$this->ControllerAction->setFieldOrder([
+			'academic_period_id', 'name', 'institution_site_shift_id', 'education_grades', 'security_user_id', 'students'
+		]);
+
+		$query = $this->request->query;
+ 		
+    	if (array_key_exists('academic_period', $query) || array_key_exists('grade', $query)) {
+    		if (array_key_exists('academic_period', $query)) {
+	    		unset($this->ControllerAction->buttons['view']['url']['academic_period']);
+    		}
+    		if (array_key_exists('grade', $query)) {
+	    		unset($this->ControllerAction->buttons['view']['url']['grade']);
+    		}
+    		$action = $this->ControllerAction->buttons['view']['url'];
+			$this->controller->redirect($action);
+    	}
+
+	}
+
+	public function viewBeforeQuery($event, $query, $contain) {
+		$contain = [
+			'AcademicPeriods',
+			'InstitutionSiteShifts',
+			'Staff',
+			'InstitutionSiteSectionGrades',
+			'InstitutionSiteSectionStudents' => ['EducationGrades', 'Users'=>['Genders']]
+		];
+		return [$query, $contain];
+	}
+
+	public function viewAfterAction($event, $entity) {
+		$this->fields['students']['data']['students'] = $entity->institution_site_section_students;
+		$this->fields['education_grades']['data']['grades'] = $entity->institution_site_section_grades;
+
+		$academicPeriodOptions = $this->getAcademicPeriodOptions();
+	}
+
+
 
 /******************************************************************************************************************
 **
@@ -461,80 +534,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 	}
 
 
-/******************************************************************************************************************
-**
-** view action methods
-**
-******************************************************************************************************************/
-    public function viewBeforeAction($event) {
-		$query = $this->request->query;
- 		
-    	if (array_key_exists('academic_period', $query) || array_key_exists('grade', $query)) {
-    		if (array_key_exists('academic_period', $query)) {
-	    		unset($this->ControllerAction->buttons['view']['url']['academic_period']);
-    		}
-    		if (array_key_exists('grade', $query)) {
-	    		unset($this->ControllerAction->buttons['view']['url']['grade']);
-    		}
-    		$action = $this->ControllerAction->buttons['view']['url'];
-			$this->controller->redirect($action);
-    	}
-
-		$this->fields['section_number']['visible'] = false;
-		$this->fields['modified_user_id']['visible'] = false;
-		$this->fields['modified']['visible'] = false;
-		$this->fields['created_user_id']['visible'] = false;
-		$this->fields['created']['visible'] = false;
-
-		$categoryOptions = $this->InstitutionSiteSectionStudents->getStudentCategoryList();
-		$studentOptions = [];
-		$this->ControllerAction->addField('students', [
-			'label' => '',
-			'type' => 'element',
-			'order' => 6,
-			'element' => 'Institution.Sections/students',
-			'data' => [	
-				'students'=>[],
-				'studentOptions'=>$studentOptions,
-				'categoryOptions'=>$categoryOptions
-			]
-		]);
-
-		$this->ControllerAction->addField('education_grades', [
-			'type' => 'element',
-			'element' => 'Institution.Sections/multi_grade',
-			'data' => [	
-				'grades'=>[]
-			]
-		]);
-
-		$this->fields['academic_period_id']['order'] = 1;
-		$this->fields['name']['order'] = 2;
-		$this->fields['institution_site_shift_id']['order'] = 3;
-		$this->fields['education_grades']['order'] = 4;
-		$this->fields['security_user_id']['order'] = 5;
-
-	}
-
-	public function viewBeforeQuery($event, $query, $contain) {
-		$contain = [
-			'AcademicPeriods',
-			'InstitutionSiteShifts',
-			'Staff',
-			'InstitutionSiteSectionGrades',
-			'InstitutionSiteSectionStudents' => ['EducationGrades', 'Users'=>['Genders']]
-		];
-		return [$query, $contain];
-	}
-
-	public function viewAfterAction($event, $entity) {
-		$this->fields['students']['data']['students'] = $entity->institution_site_section_students;
-		$this->fields['education_grades']['data']['grades'] = $entity->institution_site_section_grades;
-
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-	}
-
-
 
 /******************************************************************************************************************
 **
@@ -601,7 +600,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			]);
 
 		$list = $query->toArray();
-		$studentOptions = ['Add Students'];
+		$studentOptions = [__('Select Student')];
 		foreach ($list as $skey => $obj) {
 			$studentGradeEligible = $obj->education_programme->education_grades;
 			$studentGradeKeys = array();
