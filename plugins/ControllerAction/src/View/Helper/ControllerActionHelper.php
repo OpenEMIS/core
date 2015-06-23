@@ -459,7 +459,7 @@ class ControllerActionHelper extends Helper {
 		$row = $_labelCol = $_valueCol = '<div class="%s">%s</div>';
 		$_rowClass = array('row');
 		$_labelClass = array('col-xs-6 col-md-3 form-label'); // default bootstrap class for labels
-		$_valueClass = array('col-xs-6 col-md-6 form-input'); // default bootstrap class for values
+		$_valueClass = array('form-input'); // default bootstrap class for values
 
 		$allowTypes = array('element', 'disabled', 'chosen_select');
 
