@@ -263,40 +263,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 	
 		}
 
-		$institutionsId = $this->Session->read('Institutions.id');
-
-		/**
-		 * academic_period_id field setup
-		 */
-		$academicPeriodOptions = $this->getAcademicPeriodOptions();
-		$this->fields['academic_period_id']['type'] = 'select';
-		$this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-		$this->fields['academic_period_id']['onChangeReload'] = true;
-	
-		/**
-		 * institution_site_shift_id field setup
-		 */
-		$this->InstitutionSiteShifts->createInstitutionDefaultShift($institutionsId, $this->_selectedAcademicPeriodId);
-		$shiftOptions = $this->InstitutionSiteShifts->getShiftOptions($institutionsId, $this->_selectedAcademicPeriodId);
-		$this->fields['institution_site_shift_id']['type'] = 'select';
-		$this->fields['institution_site_shift_id']['options'] = $shiftOptions;
-
-		$academicPeriodObj = $this->AcademicPeriods->get($this->_selectedAcademicPeriodId);
-		$startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
-        $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
-
-		/**
-		 * security_user_id field setup
-		 */
-		$this->fields['security_user_id']['type'] = 'select';
-		$staffOptions = $this->getStaffOptions();
-		// pr($staffOptions);//die;
-		// pr($query->__toString());die;
 
 		/**
 		 * add/edit form setup
 		 */
-		$this->fields['section_number']['visible'] = false;
+		$institutionsId = $this->Session->read('Institutions.id');
+		$staffOptions = $this->getStaffOptions();
 		if ($this->_selectedGradeType == 'single') {
 
 			/**
@@ -310,14 +282,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 			} else {
 				$this->_selectedEducationGradeId = key($gradeOptions);
 			}
-			$this->ControllerAction->addField('education_grade', [
+			$this->ControllerAction->field('education_grade', [
 				'type' => 'select',
 				'options' => $gradeOptions,
 				'onChangeReload' => true
 			]);
 
 			$numberOfSectionsOptions = $this->numberOfSectionsOptions();
-			$this->ControllerAction->addField('number_of_sections', [
+			$this->ControllerAction->field('number_of_sections', [
 				'type' => 'select', 
 				'order' => 5,
 				'options' => $numberOfSectionsOptions,
@@ -332,7 +304,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			}
 			// $startingSectionNumber = $this->getNewSectionNumber($institutionsId, $this->_selectedEducationGradeId);	
 			$startingSectionNumber = $this->getNewSectionNumber($institutionsId);	
-			$this->ControllerAction->addField('single_grade_field', [
+			$this->ControllerAction->field('single_grade_field', [
 				'type' => 'element', 
 				'order' => 6,
 				'element' => 'Institution.Sections/single_grade',
@@ -352,7 +324,7 @@ class InstitutionSiteSectionsTable extends AppTable {
     	} else {
 
 			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId, false);
-			$this->ControllerAction->addField('multi_grade_field', [
+			$this->ControllerAction->field('multi_grade_field', [
 				'type' => 'element', 
 				'order' => 6,
 				'element' => 'Institution.Sections/multi_grade',
@@ -571,7 +543,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 		} elseif ($action == 'add') {
 
 			$attr['options'] = $academicPeriodOptions;
-
+			$attr['onChangeReload'] = true;
+	
 		}
 
 		return $attr;
@@ -582,7 +555,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 */
 	public function onUpdateFieldInstitutionSiteShiftId(Event $event, array $attr, $action, $request) {
 		$institutionsId = $this->Session->read('Institutions.id');
-		if ($action == 'edit') {
+		if ($action == 'edit' && $action == 'add') {
 
 			$this->InstitutionSiteShifts->createInstitutionDefaultShift($institutionsId, $this->_selectedAcademicPeriodId);
 			$shiftOptions = $this->InstitutionSiteShifts->getShiftOptions($institutionsId, $this->_selectedAcademicPeriodId);
@@ -590,8 +563,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$attr['options'] = $shiftOptions;
 
 		} elseif ($action == 'add') {
-
-			// $attr['options'] = $academicPeriodOptions;
 
 		}
 
@@ -609,7 +580,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 
 		} elseif ($action == 'add') {
 
-			// $attr['options'] = $academicPeriodOptions;
+			$attr['type'] = 'select';
 
 		}
 
