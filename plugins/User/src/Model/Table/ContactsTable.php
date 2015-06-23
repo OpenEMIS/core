@@ -64,11 +64,47 @@ class ContactsTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 
 		$validator
+			// ->add('value', 'ruleMoney',  [
+			// 	'rule' => 'tester',
+			// 	'provider' => 'custom'
+			// ])
+			->add('preferred', 'ruleValidatePreferred', [
+				'rule' => ['validatePreferred'],
+			])
+			;
+
+		return $validator;
+	}
+
+	public function validationMandatory(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			// ->add('value', 'ruleMoney',  [
+			// 	'rule' => ['money'],
+			// ])
+			->add('preferred', 'ruleValidatePreferred', [
+				'rule' => ['validatePreferred'],
+			])
+			;
+		pr('reached mandatory');
+		return $validator;
+	}
+
+	public function validationNonMandatory(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			// ->add('value', 'ruleMoney',  [
+			// 	'rule' => ['money']
+			// ])
 			->add('preferred', 'ruleValidatePreferred', [
 				'rule' => ['validatePreferred'],
 			])
 			;
 		return $validator;
 	}
+
+
 
 }

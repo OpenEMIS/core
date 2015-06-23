@@ -30,10 +30,10 @@ class UsersTable extends AppTable {
 		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStudents', ['className' => 'Institution.InstitutionSiteStudents', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('InstitutionSiteStaff', ['className' => 'Institution.InstitutionSiteStaff', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('Identities', ['className' => 'User.UserIdentities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('SpecialNeeds', ['className' => 'User.UserSpecialNeeds', 'foreignKey' => 'security_user_id']);
-		$this->hasMany('Contacts', ['className' => 'User.UserContacts', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('user_Nationalities', ['className' => 'User.user_Nationalities', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
+		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -56,128 +56,19 @@ class UsersTable extends AppTable {
 		// } else {
 		// 	// todo-mlee need to put correct alert saying need to select institution first
 		if (in_array($this->controller->name, ['Students','Staff'])) {
-			// $this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
-			// 	'type' => 'hidden', 
-			// 	'value' =>$institutionId
-			// ]);
+			$this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
+				'type' => 'hidden', 
+				'value' => 0
+			]);
 			$this->fields['openemis_no']['attr']['readonly'] = true;
 			$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($this->controller->name)]);
 		}
 
-		
 
-		// contact 'mandatory field'
-		$contactOptions = TableRegistry::get('User.ContactTypes')
-			->find('list', ['keyField' => 'id', 'valueField' => 'full_contact_type_name'])
-			->find('withContactOptions')
-			->toArray();
-		$this->ControllerAction->addField('contact_type', [
-			'type' => 'select', 
-			'fieldName' => 'Users.user_contacts.0.contact_type_id',
-			'options' => $contactOptions
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth',
+			// mandatory fields inserted here if behavior attached
+			'status','modified_user_id','modified','created_user_id','created'
 		]);
-		$this->ControllerAction->addField('contact_value', [
-			'type' => 'string',
-			'fieldName' => 'Users.user_contacts.0.value'
-		]);
-
-		$Countries = TableRegistry::get('FieldOption.Countries');
-		$nationalityOptions = $Countries->getList()->toArray();
-		$this->ControllerAction->addField('nationality', [
-			'type' => 'select', 
-			'options' => $nationalityOptions, 
-			'onChangeReload' => 'changeNationality',
-			'attr' => ['name' => 'Users[user_nationalities][0][country_id]']
-		]);
-
-		// identity 'mandatory field'
-		$identityTypeOptions = TableRegistry::get('FieldOption.IdentityTypes')->getList();
-		$this->ControllerAction->addField('identity_type', [
-			'type' => 'select', 
-			'fieldName' => 'Users.user_identities.0.identity_type_id',
-			'options' => $identityTypeOptions->toArray()
-		]);
-		$this->ControllerAction->addField('identity_number', [
-			'type' => 'string',
-			'fieldName' => 'Users.user_identities.0.number'
-		]);
-
-		// special need 'mandatory field'
-		$specialNeedOptions = TableRegistry::get('FieldOption.SpecialNeedTypes')->getList();
-		$this->ControllerAction->addField('special_need', [
-			'type' => 'select', 
-			'fieldName' => 'Users.user_special_needs.0.special_need_type_id',
-			'options' => $specialNeedOptions->toArray()
-		]);
-		$this->ControllerAction->addField('special_need_comment', [
-			'type' => 'string',
-			'fieldName' => 'Users.user_special_needs.0.comment'
-		]);
-
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('openemis_no', $order++);
-		$this->ControllerAction->setFieldOrder('first_name', $order++);
-		$this->ControllerAction->setFieldOrder('middle_name', $order++);
-		$this->ControllerAction->setFieldOrder('third_name', $order++);
-		$this->ControllerAction->setFieldOrder('last_name', $order++);
-		$this->ControllerAction->setFieldOrder('preferred_name', $order++);
-		$this->ControllerAction->setFieldOrder('address', $order++);
-		$this->ControllerAction->setFieldOrder('postal_code', $order++);
-		$this->ControllerAction->setFieldOrder('gender_id', $order++);
-		$this->ControllerAction->setFieldOrder('date_of_birth', $order++);
-
-		if (array_key_exists('contact_type', $this->fields)) {
-			$this->ControllerAction->setFieldOrder('contact_type', $order++);
-			$this->ControllerAction->setFieldOrder('contact_value', $order++);
-		}
-		if (array_key_exists('nationality', $this->fields)) {
-			$this->ControllerAction->setFieldOrder('nationality', $order++);
-		}
-		if (array_key_exists('identity_type', $this->fields)) {
-			$this->ControllerAction->setFieldOrder('identity_type', $order++);
-			$this->ControllerAction->setFieldOrder('identity_number', $order++);
-		}
-		if (array_key_exists('special_need', $this->fields)) {
-			$this->ControllerAction->setFieldOrder('special_need', $order++);
-			$this->ControllerAction->setFieldOrder('special_need_comment', $order++);
-		}
-
-		$this->ControllerAction->setFieldOrder('status', $order++);
-
-		$this->ControllerAction->setFieldOrder('modified_user_id', $order++);
-		$this->ControllerAction->setFieldOrder('modified', $order++);
-		$this->ControllerAction->setFieldOrder('created_user_id', $order++);
-		$this->ControllerAction->setFieldOrder('created', $order++);
-
-
-	}
-
-	public function addOnChangeNationality(Event $event, Entity $entity, array $data, array $options) {
-		$Countries = TableRegistry::get('FieldOption.Countries');
-		$countryId = $data['Users']['user_nationalities'][0]['country_id'];
-		$country = $Countries->findById($countryId)->first();
-		$defaultIdentityType = $country->identity_type_id;
-		if (is_null($defaultIdentityType)) {
-			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityType = $IdentityTypes->getDefaultValue();
-		}
-
-		$this->fields['nationality']['default'] = $data['Users']['user_nationalities'][0]['country_id'];
-
-		// overriding the  previous input to put in default identities
-		$this->fields['identity_type']['default'] = $defaultIdentityType;
-		$data['Users']['user_identities'][0]['identity_type_id'] = $defaultIdentityType;
-
-		$options['associated'] = [
-			'InstitutionSiteStudents' => ['validate' => false],
-			'InstitutionSiteStaff' => ['validate' => false],
-			'UserIdentities' => ['validate' => false],
-			'UserNationalities' => ['validate' => false],
-			'UserSpecialNeeds' => ['validate' => false],
-			'UserContacts' => ['validate' => false]
-		];
-
-		return compact('entity', 'data', 'options');
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) { 
@@ -196,10 +87,6 @@ class UsersTable extends AppTable {
 		return $entity;
 	}
 
-	public function setIdentityBasedOnCountry($countryEntity) {
-
-	}
-
 	public function addEditBeforeAction(){
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';
@@ -211,7 +98,8 @@ class UsersTable extends AppTable {
 	}
 
 	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		$options['associated'] = ['InstitutionSiteStudents', 'InstitutionSiteStaff', 'UserIdentities', 'UserNationalities', 'UserSpecialNeeds', 'UserContacts'];
+		// $options['associated'] = ['InstitutionSiteStudents', 'InstitutionSiteStaff', 'Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
+		// $options['validate'] = 'mandatory';
 		return compact('entity', 'data', 'options');
 	}
 

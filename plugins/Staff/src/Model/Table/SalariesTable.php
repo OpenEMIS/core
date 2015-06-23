@@ -114,6 +114,9 @@ class SalariesTable extends AppTable {
 		$this->fields['gross_salary']['type'] = 'string';
 		$this->fields['net_salary']['type'] = 'string';
 
+		$this->fields['gross_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
+
 		$SalaryAdditionType = TableRegistry::get('FieldOption.SalaryAdditionTypes')->getList();
 		$SalaryDeductionType = TableRegistry::get('FieldOption.SalaryDeductionTypes')->getList();
 
