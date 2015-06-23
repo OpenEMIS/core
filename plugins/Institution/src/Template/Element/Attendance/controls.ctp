@@ -29,7 +29,6 @@
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $dayOptions,
-				'default' => $selectedDay,
 				'url' => $baseUrl,
 				'data-named-key' => 'day'
 			));
