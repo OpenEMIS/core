@@ -132,16 +132,37 @@ class StudentAttendanceTable extends AppTable {
 		}
 
 		$week = $weeks[$selectedWeek];
-		$dayOptions = [-1 => __('All Days')];
-		$firstDay = $week[0]->copy();
+		$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
+		$firstDayOfWeek = $week[0]->copy();
+		$firstDay = -1;
+		$todayFound = false;
 
 		do {
-			if (in_array($firstDay->dayOfWeek, $schooldays)) {
-				$dayOptions[$firstDay->dayOfWeek] = __($firstDay->format('l')) . ' (' . $this->formatDate($firstDay) . ')';
+			if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
+				if ($firstDay == -1) {
+					$firstDay = $firstDayOfWeek->dayOfWeek;
+				}
+				$dayOptions[$firstDayOfWeek->dayOfWeek] = [
+					'value' => $firstDayOfWeek->dayOfWeek, 
+					'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
+				];
+				if ($firstDayOfWeek->isToday()) {
+					$dayOptions[$firstDayOfWeek->dayOfWeek][] = 'selected';
+					$todayFound = true;
+				}
 			}
-			$firstDay->addDay();
-		} while($firstDay->lte($week[1]));
+			$firstDayOfWeek->addDay();
+		} while($firstDayOfWeek->lte($week[1]));
+
+		// not complete
+		if (!$todayFound) {
+			$dayOptions[$week[0]->dayOfWeek][] = 'selected';
+		}
+
 		$selectedDay = $this->queryString('day', $dayOptions);
+		if ($selectedDay == -1) {
+			$selectedDay = $firstDay;
+		}
 		
 		$currentDay = $week[0]->copy();
 		if ($selectedDay != -1) {
@@ -151,7 +172,7 @@ class StudentAttendanceTable extends AppTable {
 				$this->request->query['date'] = $currentDay;
 			}
 		}
-		$this->controller->set(compact('dayOptions', 'selectedDay'));
+		$this->controller->set(compact('dayOptions'));
 		// End setup days
 
 		// Setup section options
