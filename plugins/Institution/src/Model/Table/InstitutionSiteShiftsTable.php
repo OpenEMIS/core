@@ -36,6 +36,10 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->fields['end_time']['order'] = 3;
 		$this->fields['location_institution_site_id']['order'] = 4;
 
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 	public function addEditBeforeAction($event) {
