@@ -2,13 +2,25 @@
 body {
 	font-family: 'Helvetica Neue', Arial, sans-serif;
 	background-color: #FFF;
-	font-size: 13px;
 }
 
 pre { margin-top: 80px; }
 
-.btn {
-	font-size: 13px;
+body,
+.btn,
+.navbar-right .username,
+.panel-breadcrumb li,
+.panel-breadcrumb li a,
+.alert,
+.format-item label,
+.table tbody,
+.table > thead:first-child > tr:first-child > th,
+.panel-toolbar,
+.view-image:hover:before,
+.search input,
+.advanced-search-wrapper .form-control,
+select {
+	font-size: 12px;
 }
 
 .btn.active, 
@@ -160,7 +172,6 @@ p.error { margin-top: 50px; }
 	padding: 0;
 	height: 50px;
 	color: #FFF;
-	font-size: 12px;
 	border-right: 1px solid rgba(225, 225 , 225, 0.3);
 }
 
@@ -367,10 +378,6 @@ body.large {
     margin: 0;
 }
 
-.panel-breadcrumb li {
-    font-size: 12px;
-}
-
 .panel-breadcrumb i {
     color: #6B6B6B;
 }
@@ -382,7 +389,6 @@ body.large {
 .panel-breadcrumb li a {
     color: #6B6B6B;
     font-weight: normal;
-    font-size: 12px;
 }
 
 .breadcrumb-active,
@@ -497,7 +503,6 @@ body.large {
 
 .alert { 
 	color: #FFF; 
-	font-size: 12px; 
 	padding: 4px 8px 3px;
 	margin: 0 0 5px;
 }
@@ -564,6 +569,7 @@ body.large {
 .toolbar-wrapper .form-control {
 	height: 25px;
 	padding: 2px;
+	font-size: 11px;
 }
 
 .toolbar-wrapper .select {
@@ -771,7 +777,6 @@ input[type="checkbox"] {
 }
 
 .format-item label {
-	font-size: 12px;
 	font-weight: 500;
 	padding: 0;
 }
@@ -943,7 +948,8 @@ input[type="checkbox"] {
 
 /* TABS */
 .scroll_tabs_container {
-    height: 30px;          
+    height: 30px;      
+    margin-bottom: -1px !important;    
 }
 
 .scroll_tabs_container div.scroll_tab_inner {
@@ -1124,10 +1130,6 @@ input[type="checkbox"] {
     margin: 0;
 }
 
-.table tbody { 
-    font-size: 12px; 
-}
-
 .table-icons {
     text-align: center;
 }
@@ -1153,7 +1155,6 @@ input[type="checkbox"] {
     background: -ms-linear-gradient(top, rgba(255,255,255,1) 34%,rgba(239,239,239,1) 100%); /* IE10+ */
     background: linear-gradient(to bottom, rgba(255,255,255,1) 34%,rgba(239,239,239,1) 100%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#efefef',GradientType=0 ); /* IE6-9 */
-    font-size: 13px;
     color: #333;
     vertical-align: middle !important;
     border-bottom: 1px solid #CCC;
@@ -1233,7 +1234,6 @@ table .input-select-wrapper {
     font-family: 'Helvetica Neue';
     color: #999;
     content: "View";
-    font-size: 12px;
     position: absolute;
     top: 22px;
     left: 16px; 
@@ -1316,7 +1316,6 @@ table tr.sorting-row td {background-color: #8b8;}
 .search input {
 	width: 220px !important;
 	height: 28px;	
-	font-size: 12px;
 	padding: 2px 8px 0;
 	z-index: 0;
 	margin-right: -2px;
@@ -1421,7 +1420,6 @@ table tr.sorting-row td {background-color: #8b8;}
 .advanced-search-wrapper .form-control {
 	height: 25px;
 	padding: 3px;
-	font-size: 12px;
 }
 
 .advanced-search-wrapper .form-group {
