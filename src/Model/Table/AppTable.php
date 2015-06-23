@@ -6,15 +6,16 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Validation\Validator;
-use App\Model\Validation\AppValidator;
-use Cake\Utility\Inflector;
-use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\I18n\Time;
+use Cake\Event\Event;
+use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
+use ControllerAction\Model\Traits\ControllerActionTrait;
+use ControllerAction\Model\Traits\UtilityTrait;
 
 class AppTable extends Table {
 	use ControllerActionTrait;
+	use UtilityTrait;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -61,28 +62,6 @@ class AppTable extends Table {
 
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
 	public function onPopulateSelectOptions(Event $event, $query) {
-		// $schema = $this->schema();
-		// $columns = $schema->columns();
-		
-		// if ($this->hasBehavior('FieldOption')) {
-		// 	$query->innerJoin(
-		// 		['FieldOption' => 'field_options'],
-		// 		[
-		// 			'FieldOption.id = ' . $this->aliasField('field_option_id'),
-		// 			'FieldOption.code' => $this->alias()
-		// 		]
-		// 	)->find('order')->find('visible');
-		// } else {
-		// 	if (in_array('order', $columns)) {
-		// 		$query->find('order');
-		// 	}
-
-		// 	if (in_array('visible', $columns)) {
-		// 		$query->find('visible');
-		// 	}
-		// }
-		// return $query;
-
 		return $this->getList($query);
 	}
 
@@ -176,11 +155,6 @@ class AppTable extends Table {
 		return $label;
 	}
 
-	// public function validationDefault(Validator $validator) {
-	// 	$validator->provider('default', new AppValidator());
-	// 	return $validator;
-	// }
-
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
 	}
@@ -205,11 +179,8 @@ class AppTable extends Table {
 		}
 	}
 
-	public function endsWith($haystack, $needle) {
-		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
-	}
-
 	public function checkIdInOptions($key, $options) {
+		pr('checkIdInOptions is deprecated, please use queryString instead');
 		if (!empty($options)) {
 			if ($key != 0) {
 				if (!array_key_exists($key, $options)) {
@@ -220,37 +191,5 @@ class AppTable extends Table {
 			}
 		}
 		return $key;
-	}
-	
-	/**
-	 * Converts the class alias to a label.
-	 * 
-	 * Usefull for class names or aliases that are more than a word.
-	 * Converts the camelized word to a sentence.
-	 * If null, this function will used the default alias of the current model.
-	 * 
-	 * @param  string $camelizedString the camelized string [optional]
-	 * @return string                  the converted string
-	 */
-	public function getHeader($camelizedString = null) {
-		if ($camelizedString) {
-		    return Inflector::humanize(Inflector::underscore($camelizedString));
-		} else {
-	        return Inflector::humanize(Inflector::underscore($this->alias()));
-		}
-	}
-
-	public function queryString($request, $key, $options=[]) {
-		$query = $request->query;
-		$value = 0;
-		if (isset($query[$key])) {
-			$value = $query[$key];
-			if (!array_key_exists($value, $options)) {
-				$value = key($options);
-			}
-		} else {
-			$value = key($options);
-		}
-		return $value;
 	}
 }

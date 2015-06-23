@@ -7,9 +7,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\MessagesTrait;
 
 class StudentAttendanceTable extends AppTable {
 	use OptionsTrait;
+	use MessagesTrait;
 
 	public function initialize(array $config) {
 		$this->table('institution_site_student_absences');
@@ -47,29 +49,21 @@ class StudentAttendanceTable extends AppTable {
         ];
 		$this->controller->set('toolbarElements', $toolbarElements);
 
-		$query = $this->request->query;
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptions = $AcademicPeriod->getList();
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
-		$selectedPeriod = $this->queryString($this->request, 'academic_period_id', $periodOptions);
 
-		foreach ($periodOptions as $periodId => $period) {
-			$count = $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $periodId)->count();
-			if ($count == 0) {
-				$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period . ' - ' . __('No Sections'), 'disabled'];
-			} else {
-				if ($selectedPeriod == 0) {
-					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'disabled', 'selected'];
-					$selectedPeriod = $periodId;
-				} else if ($selectedPeriod == $periodId) {
-					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'disabled', 'selected'];
-				}
+		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'callable' => function($id) use ($Sections, $institutionId) {
+				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
-		}
+		]);
 		$this->controller->set(compact('periodOptions'));
 		// End setup periods
 
@@ -80,7 +74,7 @@ class StudentAttendanceTable extends AppTable {
 		foreach ($weeks as $index => $dates) { // jeff-TODO: need to set todays date as default
 			$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 		}
-		$selectedWeek = isset($query['week']) ? $query['week'] : key($weekOptions);
+		$selectedWeek = $this->queryString('week', $weekOptions);
 		$this->controller->set(compact('weekOptions', 'selectedWeek'));
 		// end setup weeks
 
@@ -103,8 +97,20 @@ class StudentAttendanceTable extends AppTable {
 			}
 			$firstDay->addDay();
 		} while($firstDay->lte($week[1]));
-		$selectedDay = isset($query['day']) ? $query['day'] : key($dayOptions);
+		$selectedDay = $this->queryString('day', $dayOptions);
 		$this->controller->set(compact('dayOptions', 'selectedDay'));
 		// End setup days
+
+		// Setup section options
+		$sectionOptions = $Sections
+			->find('list')
+			->where([
+				$Sections->aliasField('institution_site_id') => $institutionId, 
+				$Sections->aliasField('academic_period_id') => $selectedPeriod
+			])
+			->toArray();
+
+		//pr($selectedPeriod);
+		//pr($sectionOptions);
 	}
 }
