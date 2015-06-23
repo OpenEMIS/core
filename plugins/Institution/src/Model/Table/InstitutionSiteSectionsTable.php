@@ -53,6 +53,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$categoryOptions = $this->InstitutionSiteSectionStudents->getStudentCategoryList();
 		$this->ControllerAction->field('students', [
 			'label' => '',
+			'override' => true,
 			'type' => 'element',
 			'element' => 'Institution.Sections/students',
 			'data' => [	
