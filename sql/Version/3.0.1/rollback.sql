@@ -302,3 +302,13 @@ RENAME TABLE z_1461_institution_site_custom_fields TO institution_site_custom_fi
 RENAME TABLE z_1461_institution_site_custom_field_options TO institution_site_custom_field_options;
 RENAME TABLE z_1461_institution_site_custom_values TO institution_site_custom_values;
 RENAME TABLE z_1461_institution_site_custom_value_history TO institution_site_custom_value_history;
+
+
+update config_items set name = 'StaffContacts' where name = 'StaffContact' and type = 'Add New Staff';
+update config_items set name = 'StaffIdentities' where name = 'StaffIdentity' and type = 'Add New Staff';
+update config_items set name = 'StaffNationalities' where name = 'StaffNationality' and type = 'Add New Staff';
+update config_items set name = 'StaffSpecialNeeds' where name = 'StaffSpecialNeed' and type = 'Add New Staff';
+update config_items set name = 'StudentContacts' where name = 'StudentContact' and type = 'Add New Student';
+update config_items set name = 'StudentIdentities' where name = 'StudentIdentity' and type = 'Add New Student';
+update config_items set name = 'StudentNationalities' where name = 'StudentNationality' and type = 'Add New Student';
+update config_items set name = 'StudentSpecialNeeds' where name = 'StudentSpecialNeed' and type = 'Add New Student';
