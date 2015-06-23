@@ -1122,19 +1122,11 @@ ALTER TABLE `institution_site_student_absences` CHANGE `full_day_absent` `full_d
 ALTER TABLE `institution_site_student_absences` DROP `institution_site_section_id` ;
 ALTER TABLE `institution_site_student_absences` DROP `absence_type` ;
 
-
-
-
-update config_items set name = 'StaffContact' where name = 'StaffContacts' and type = 'Add New Staff';
-update config_items set name = 'StaffIdentity' where name = 'StaffIdentities' and type = 'Add New Staff';
-update config_items set name = 'StaffNationality' where name = 'StaffNationalities' and type = 'Add New Staff';
-update config_items set name = 'StaffSpecialNeed' where name = 'StaffSpecialNeeds' and type = 'Add New Staff';
-update config_items set name = 'StudentContact' where name = 'StudentContacts' and type = 'Add New Student';
-update config_items set name = 'StudentIdentity' where name = 'StudentIdentities' and type = 'Add New Student';
-update config_items set name = 'StudentNationality' where name = 'StudentNationalities' and type = 'Add New Student';
-update config_items set name = 'StudentSpecialNeed' where name = 'StudentSpecialNeeds' and type = 'Add New Student';
-
-
-
-
-
+update config_items set name = 'StaffContacts' where name = 'StaffContact' and type = 'Add New Staff';
+update config_items set name = 'StaffIdentities' where name = 'StaffIdentity' and type = 'Add New Staff';
+update config_items set name = 'StaffNationalities' where name = 'StaffNationality' and type = 'Add New Staff';
+update config_items set name = 'StaffSpecialNeeds' where name = 'StaffSpecialNeed' and type = 'Add New Staff';
+update config_items set name = 'StudentContacts' where name = 'StudentContact' and type = 'Add New Student';
+update config_items set name = 'StudentIdentities' where name = 'StudentIdentity' and type = 'Add New Student';
+update config_items set name = 'StudentNationalities' where name = 'StudentNationality' and type = 'Add New Student';
+update config_items set name = 'StudentSpecialNeeds' where name = 'StudentSpecialNeed' and type = 'Add New Student';
