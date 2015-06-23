@@ -7,9 +7,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\MessagesTrait;
 
 class StudentAttendanceTable extends AppTable {
 	use OptionsTrait;
+	use MessagesTrait;
 
 	public function initialize(array $config) {
 		$this->table('institution_site_student_absences');
@@ -53,21 +55,15 @@ class StudentAttendanceTable extends AppTable {
 		
 		$Sections = TableRegistry::get('Institution.InstitutionSiteSections');
 		$institutionId = $this->Session->read('Institutions.id');
+
 		$selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
-		foreach ($periodOptions as $periodId => $period) {
-			$count = $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $periodId)->count();
-			if ($count == 0) {
-				$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period . ' - ' . __('No Sections'), 'disabled'];
-			} else {
-				if ($selectedPeriod == 0) {
-					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'selected'];
-					$selectedPeriod = $periodId;
-				} else if ($selectedPeriod == $periodId) {
-					$periodOptions[$periodId] = ['value' => $periodId, 'text' => $period, 'selected'];
-				}
+		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSections')),
+			'callable' => function($id) use ($Sections, $institutionId) {
+				return $Sections->findByInstitutionSiteIdAndAcademicPeriodId($institutionId, $id)->count();
 			}
-		}
+		]);
 		$this->controller->set(compact('periodOptions'));
 		// End setup periods
 
@@ -104,5 +100,17 @@ class StudentAttendanceTable extends AppTable {
 		$selectedDay = $this->queryString('day', $dayOptions);
 		$this->controller->set(compact('dayOptions', 'selectedDay'));
 		// End setup days
+
+		// Setup section options
+		$sectionOptions = $Sections
+			->find('list')
+			->where([
+				$Sections->aliasField('institution_site_id') => $institutionId, 
+				$Sections->aliasField('academic_period_id') => $selectedPeriod
+			])
+			->toArray();
+
+		//pr($selectedPeriod);
+		//pr($sectionOptions);
 	}
 }
