@@ -32,17 +32,6 @@
 				'url' => $baseUrl,
 				'data-named-key' => 'day'
 			));
-
-			// if (!empty($formOptions)) {
-			// 	echo $this->Form->input('custom_form', array(
-			// 		'class' => 'form-control',
-			// 		'label' => false,
-			// 		'options' => $formOptions,
-			// 		'default' => $selectedForm,
-			// 		'url' => $baseUrl,
-			// 		'data-named-key' => 'form'
-			// 	));
-			// }
 		?>
 	</div>
 </div>
