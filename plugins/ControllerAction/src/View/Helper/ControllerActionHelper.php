@@ -568,7 +568,7 @@ class ControllerActionHelper extends Helper {
 				if (!array_key_exists('override', $_fieldAttr)) {
 					$html .= sprintf($row, $rowClass, $rowContent);
 				} else {
-					$html .= '<div class="row">' . $value . '</div>';
+					$html .= $rowContent;
 				}
 			}
 		}
