@@ -62,14 +62,6 @@ class AcademicPeriodsTable extends AppTable {
 		$firstDayOfWeek = $ConfigItems->value('first_day_of_week');
 		$daysPerWeek = $ConfigItems->value('days_per_week');
 
-		// $firstDayIndex = 1;
-		// foreach($weekdays as $key => $day) {
-		// 	if($day == $firstDayOfWeek) {
-		// 		$firstDayIndex = $key;
-		// 		break;
-		// 	}
-		// }
-
 		$lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
 		$startDate = $period->start_date;
 
