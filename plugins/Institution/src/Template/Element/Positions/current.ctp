@@ -1,7 +1,7 @@
 <?php $_edit = (array_key_exists('edit', $_buttons) ? true : false);?>
 <?php //pr($_buttons);?>
 
-	<div class="col-md-12">
+	<div class="table-in-view col-md-12 table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
