@@ -126,7 +126,7 @@ class ControllerActionComponent extends Component {
 					$this->model->fields[$key]['type'] = 'select';
 				}
 				// make field sortable by default if it is a string data-type
-				if ($attr['type'] == 'string' && !array_key_exists('sort', $attr)) {
+				if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
 					$this->model->fields[$key]['sort'] = true;
 				} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 					if ($this->isForeignKey($key)) {
@@ -409,6 +409,28 @@ class ControllerActionComponent extends Component {
 		}
 	}
 
+	public function getModalOptions($type) {
+		$modal = array();
+
+		if ($type == 'delete' && in_array($type, $this->defaultActions)) {
+			$modal['id'] = 'delete-modal';
+			$modal['title'] = $this->model->alias();
+			$modal['content'] = __('Are you sure you want to delete this record.');
+			$action = $this->triggerFrom == 'Controller' ? $this->buttons['delete']['url']['action'] : $this->buttons['delete']['url']['action'].'/'.$this->buttons['delete']['url'][0];
+			$modal['formOptions'] = array(
+				'type' => 'delete',
+				'action' => $action
+			);
+			$modal['fields'] = array(
+				'id' => array('type' => 'hidden', 'id' => 'recordId')
+			);
+			$modal['buttons'] = array(
+				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
+			);
+		}
+		return $modal;
+	}
+
 	public function search($model, $order = array()) {
 		$alias = $model->alias();
 		$controller = $this->controller;
@@ -472,7 +494,7 @@ class ControllerActionComponent extends Component {
 			if (!empty($event->result)) {
 				$paginateOptions = $event->result;
 			}
-			$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+			$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['request' => $this->request, 'options' => $paginateOptions]);
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
 			if (!empty($event->result)) {
@@ -493,28 +515,6 @@ class ControllerActionComponent extends Component {
 			return $controller->redirect($action);
 		}
 		return $data;
-	}
-
-	public function getModalOptions($type) {
-		$modal = array();
-
-		if ($type == 'delete' && in_array($type, $this->defaultActions)) {
-			$modal['id'] = 'delete-modal';
-			$modal['title'] = $this->model->alias();
-			$modal['content'] = __('Are you sure you want to delete this record.');
-			$action = $this->triggerFrom == 'Controller' ? $this->buttons['delete']['url']['action'] : $this->buttons['delete']['url']['action'].'/'.$this->buttons['delete']['url'][0];
-			$modal['formOptions'] = array(
-				'type' => 'delete',
-				'action' => $action
-			);
-			$modal['fields'] = array(
-				'id' => array('type' => 'hidden', 'id' => 'recordId')
-			);
-			$modal['buttons'] = array(
-				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
-			);
-		}
-		return $modal;
 	}
 
 	public function index() {
@@ -1059,15 +1059,20 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$className = $model->alias();
 
+		if (!isset($model->fieldOrder)) {
+			$model->fieldOrder = 0;
+		}
+		$model->fieldOrder = $model->fieldOrder + 1;
+		
 		if (!empty($this->plugin)) {
 			$className = $this->plugin . '.' . $className;
 		}
-
+		
 		$_attr = [
 			'type' => 'string',
 			'null' => true,
 			'autoIncrement' => false,
-			'order' => 0,
+			'order' => $model->fieldOrder,
 			'visible' => true,
 			'field' => $field,
 			'model' => $model->alias(),

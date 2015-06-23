@@ -18,7 +18,13 @@ class AppTable extends Table {
 	use UtilityTrait;
 
 	public function initialize(array $config) {
+		$_config = [
+			'Modified' => true,
+			'Created' => true
+		];
+		$_config = array_merge($_config, $config);
 		parent::initialize($config);
+
 		$schema = $this->schema();
 		$columns = $schema->columns();
 
@@ -26,7 +32,7 @@ class AppTable extends Table {
 			$this->addBehavior('Timestamp');
 		}
 
-		if (in_array('modified_user_id', $columns)) {
+		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
 			$this->belongsTo('ModifiedUser', [
 				'className' => 'User.Users',
 				'fields' => array('ModifiedUser.first_name', 'ModifiedUser.last_name'),
@@ -34,7 +40,7 @@ class AppTable extends Table {
 			]);
 		}
 
-		if (in_array('created_user_id', $columns)) {
+		if (in_array('created_user_id', $columns) && $_config['Created']) {
 			$this->belongsTo('CreatedUser', [
 				'className' => 'User.Users',
 				'fields' => array('CreatedUser.first_name', 'CreatedUser.last_name'),
