@@ -91,7 +91,27 @@ class InstitutionSiteProgrammesTable extends AppTable {
 
 	}
 
+	public function addEditBeforePatch($event, $entity, $data, $options) {
+		// pr('addEditBeforePatch');
+		// pr($data);
+		$data = $this->patchDates($data);
+		foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
+			if (isset($row['education_grade_id'])) {
+				$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
+				$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
+			} else {
+				if ($row['id']!='') {
+					$data[$this->alias()]['institution_site_grades'][$key]['status'] = 0;
+				} else {
+					unset($data[$this->alias()]['institution_site_grades'][$key]);
+				}
+			}
+		}
+		// pr($data);die;
+		return compact('entity', 'data', 'options');
+	}
 
+	
 
 /******************************************************************************************************************
 **
@@ -143,24 +163,11 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		}
 	}
 
-	public function editBeforePatch($event, $entity, $data, $options) {
-		// pr('editBeforePatch');
-		// pr($data);
-		$this->InstitutionSiteGrades->updateAll(['status' => 0], ['institution_site_programme_id' => $entity->id]);
-		
-		list($entity, $data, $options) = array_values($this->addBeforePatch($event, $entity, $data, $options));
-		// $data = $this->patchDates($data);
-		// foreach ($data[$this->alias()]['institution_site_grades'] as $key => $row) {
-		// 	if (isset($row['education_grade_id'])) {
-		// 		$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
-		// 		$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
-		// 	} else {
-		// 		unset($data[$this->alias()]['institution_site_grades'][$key]);
-		// 	}
-		// }
-		// pr($data);die;
-		return compact('entity', 'data', 'options');
-	}
+	// public function editBeforePatch($event, $entity, $data, $options) {
+	// 	// $this->InstitutionSiteGrades->updateAll(['status' => 0], ['institution_site_programme_id' => $entity->id]);
+	// 	list($entity, $data, $options) = array_values($this->addBeforePatch($event, $entity, $data, $options));
+	// 	return compact('entity', 'data', 'options');
+	// }
 
 
 
@@ -170,25 +177,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 ** add action methods
 **
 ******************************************************************************************************************/
-	public function addBeforePatch($event, $entity, $data, $options) {
-		// pr('addBeforePatch');
-		// pr($data);
-		$data = $this->patchDates($data);
-		foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
-			if (isset($row['education_grade_id'])) {
-				$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
-				$data[$this->alias()]['institution_site_grades'][$key]['institution_site_id'] = $data[$this->alias()]['institution_site_id'];
-				// if ($row['id'] == '') {
-				// 	unset($data[$this->alias()]['institution_site_grades'][$key]['id']);
-				// }
-			} else {
-				unset($data[$this->alias()]['institution_site_grades'][$key]);
-			}
-		}
-		// pr($data);die;
-		return compact('entity', 'data', 'options');
-	}
-
 	public function addAfterAction($event, $entity) {
 		// $recorded = [];
 		// $selected = [];
