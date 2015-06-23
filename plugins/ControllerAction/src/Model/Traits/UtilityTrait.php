@@ -41,12 +41,13 @@ trait UtilityTrait {
 				}
 			} else {
 				$value = key($options);
+				$request->query[$key] = $value;
 			}
 		}
 		return $value;
 	}
 
-	public function advancedSelectOptions(&$options, &$selected, $params) {
+	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
 
