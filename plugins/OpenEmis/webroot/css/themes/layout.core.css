@@ -51,7 +51,8 @@
 .btn-bold:hover,
 .btn-italic:hover,
 .input-group-addon,
-.selected {
+.selected,
+.btn-single-action:hover {
 	border: 1px solid #476B8F !important;
 }
 
@@ -86,7 +87,8 @@
 .mce-menu-item:hover, 
 .mce-menu-item.mce-selected, 
 .mce-menu-item:focus,
-.selected-size {
+.selected-size,
+.btn-single-action:hover {
 	background-color: #476B8F !important;
 	color: #FFF !important;
 	background-image: none !important;	

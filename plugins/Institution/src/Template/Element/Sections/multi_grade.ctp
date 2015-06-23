@@ -6,7 +6,7 @@
 
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
-	<div class="col-md-5">
+	<div class="table-in-view col-md-5 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable">
 			<thead>
 				<tr>
