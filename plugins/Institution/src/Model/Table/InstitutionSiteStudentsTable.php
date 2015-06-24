@@ -59,13 +59,16 @@ class InstitutionSiteStudentsTable extends AppTable {
 		$this->ControllerAction->field('section');
 		$this->ControllerAction->field('student_status_id');
 		$this->ControllerAction->field('student_status_id');
-		// $this->ControllerAction->field('start_date');
-		// $this->ControllerAction->field('end_date');
+		$this->ControllerAction->field('start_date');
+		$this->ControllerAction->field('end_date');
+		$this->ControllerAction->field('security_user_id');
 		// $this->ControllerAction->field('search');
 
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
-		$this->fields['security_user_id']['visible'] = false;
+		// initializing to bypass validation - not going to save anyway
+		$this->fields['security_user_id']['type'] = 'hidden';
+		$this->fields['security_user_id']['value'] = 0;
 
 		$this->ControllerAction->setFieldOrder([
 			'institution', 'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
@@ -73,14 +76,18 @@ class InstitutionSiteStudentsTable extends AppTable {
 			]);
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
-		die('asd');
-	}
+	public function addBeforePatch(Event $event, Entity $entity, array $data, array $options) {
 
-	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		$options['validate'] = false;
-		return compact('entity', 'data', 'options');
+		$timeNow = strtotime("now");
+		$sessionVar = $this->alias().'.add.'.strtotime("now");
+		$this->Session->write($sessionVar, $this->request->data);
+
+		
+		// $options['validate'] = false;
+
+		$this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?'.$timeNow]);
+		return false;
+		// return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {
@@ -205,7 +212,13 @@ class InstitutionSiteStudentsTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		return $validator;
+		return $validator
+			->add('start_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'end_date', false]
+			])
+			->add('end_date',  [
+			])
+		;
 	}
 
 }
