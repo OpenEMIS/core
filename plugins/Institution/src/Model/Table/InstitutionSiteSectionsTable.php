@@ -158,7 +158,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
-	public function indexBeforePaginate($event, $model, $paginateOptions) {
+	public function indexBeforePaginate($event, $request, $paginateOptions) {
 		$paginateOptions['finder'] = ['byGrades' => []];
 		$paginateOptions['conditions'][][$this->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
 		return $paginateOptions;

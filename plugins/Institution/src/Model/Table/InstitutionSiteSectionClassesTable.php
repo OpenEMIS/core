@@ -15,7 +15,7 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		parent::initialize($config);
 
 		$this->belongsTo('InstitutionSiteSections', ['className' => 'Institution.InstitutionSiteSections']);
-		$this->belongsTo('InstitutionSiteClasses', ['className' => 'Institution.InstitutionSiteClasses']);
+		$this->belongsTo('InstitutionSiteClasses',  ['className' => 'Institution.InstitutionSiteClasses']);
 
 		$this->Institutions = $this->InstitutionSiteSections->Institutions;
 	}
@@ -73,11 +73,10 @@ class InstitutionSiteSectionClassesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
     }
 
-	public function indexBeforePaginate($event, $model, $paginateOptions) {
+	public function indexBeforePaginate($event, $request, $paginateOptions) {
 
 		$paginateOptions['contain']['InstitutionSiteClasses'] = ['EducationSubjects'];
 		$paginateOptions['conditions'][] = ['institution_site_section_id' => $this->_selectedSection];
-		// pr($paginateOptions);die;
 		return $paginateOptions;
 	}
 
