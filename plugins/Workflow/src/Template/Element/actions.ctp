@@ -42,7 +42,7 @@
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
 	<div class="input">
 		<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
-		<div class="col-md-5">
+		<div class="table-in-view col-md-4 table-responsive">
 			<table class="table table-striped table-hover table-bordered table-checkable table-input">
 				<thead>
 					<tr>
@@ -52,7 +52,7 @@
 						<th><?= $this->Label->get('general.name'); ?></th>
 						<th><?= $this->Label->get('WorkflowActions.next_step'); ?></th>
 						<th><?= $this->Label->get('WorkflowActions.comment_required'); ?></th>
-						<th><?= $this->Label->get('general.delete'); ?></th>
+						<th></th>
 					</tr>
 				</thead>
 				<?php if (!empty($data->workflow_actions)) : ?>
@@ -79,14 +79,14 @@
 										<?= $this->Form->checkbox("WorkflowSteps.workflow_actions.$key.comment_required", ['class' => 'icheck-input', 'checked' => $obj->comment_required]); ?>
 									</td>
 									<td>
-										<span class="fa fa-minus-circle" style="cursor: pointer;" title="<?php echo $this->Label->get('general.delete'); ?>" onclick="jsTable.doRemove(this);"></span>
+										<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="Remove" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i> Remove</button>
 									</td>
 							</tr>
 						<?php endforeach ?>
 					</tbody>
 				<?php endif ?>
 			</table>
-			<span class="fa fa-plus" style="cursor: pointer;" onclick="$('#reload').val('addAction').click();"></span>
+			<span class="btn btn-default fa fa-plus" style="cursor: pointer;" onclick="$('#reload').val('addAction').click();"></span>
 		</div>
 	</div>
 <?php endif ?>

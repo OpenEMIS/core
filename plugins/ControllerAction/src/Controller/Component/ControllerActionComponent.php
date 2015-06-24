@@ -123,7 +123,7 @@ class ControllerActionComponent extends Component {
 
 			foreach ($this->model->fields as $key => $attr) {
 				if (array_key_exists('options', $attr)) {
-					$this->model->fields[$key]['type'] = 'select';
+					//$this->model->fields[$key]['type'] = 'select';
 				}
 				// make field sortable by default if it is a string data-type
 				if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
