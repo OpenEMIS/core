@@ -124,7 +124,7 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function getTableHeaders($fields, $model, &$dataKeys) {
-		$excludedTypes = array('hidden', 'image', 'file', 'file_upload');
+		$excludedTypes = array('hidden', 'file', 'file_upload');
 		$attrDefaults = array(
 			'type' => 'string',
 			'model' => $model,
@@ -568,7 +568,7 @@ class ControllerActionHelper extends Helper {
 				if (!array_key_exists('override', $_fieldAttr)) {
 					$html .= sprintf($row, $rowClass, $rowContent);
 				} else {
-					$html .= $rowContent;
+					$html .= '<div class="row">' . $value . '</div>';
 				}
 			}
 		}
@@ -704,6 +704,14 @@ class ControllerActionHelper extends Helper {
 
 	public function getImageElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+		$defaultWidth = 90;
+		$defaultHeight = 115;
+
+		//Get image default width and height if specified in entity class
+		//else default values
+		//$defaultWidth = ($data::imageWidth > 0) ? ($data::imageWidth) : $defaultWidth;
+		//$defaultHeight = ($data::imageHeight > 0) ? ($data::imageHeight) : $defaultHeight;
+
 		if ($action == 'view') {
 			if (!is_null($data->photo_content)) {
 				$file = ''; 
@@ -732,8 +740,37 @@ class ControllerActionHelper extends Helper {
 			// 	$imageAttr['src'] = $this->Image->getBase64($data->{$_field . '_name'}, $data->$_field);
 			// }
 			// echo $this->_View->element('layout/file_upload_preview', $imageAttr);
+
+			//$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
+			$defaultImageFromHolder = '<img data-src="holder.js/100%x100%" alt="...">';
+			$showRemoveButton = false;
+
+			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
+			$tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : ""; 
+
+			$src = (!empty($tmp_file_read)) ? '<img id="existingImage" data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" src="data:image/jpeg;base64,'.base64_encode( $tmp_file_read ).'"/>' : $defaultImageFromHolder;
+			$showRemoveButton = (!empty($tmp_file)) ? true : false; 
+
+			if(!is_array($data[$attr['field']])) {
+			  $imageContent = !is_null($data[$attr['field']]) ? stream_get_contents($data[$attr['field']]) : "";
+			  $src = (!empty($imageContent)) ? '<img id="existingImage" data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" src="data:image/jpeg;base64,'.base64_encode( $imageContent ).'"/>' : $defaultImageFromHolder;
+			  $showRemoveButton = true;	
+			}
+
+			header('Content-Type: image/jpeg'); 
+
 			$this->includes['jasny']['include'] = true;
-			echo $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr]);
+			echo $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src, 
+																							'defaultImageFromHolder' => $defaultImageFromHolder, 
+																							'defaultWidth' => $defaultWidth,
+																							'defaultHeight' => $defaultHeight,
+																							'showRemoveButton' => $showRemoveButton]);
+
+		} else if($action == 'index') {
+			if(!empty($data->photo_content)){
+				$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
+            	return '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($data->photo_content) ).'" style="'.$style.'"/>';
+			}	
 		}
 		return $value;
 	}
