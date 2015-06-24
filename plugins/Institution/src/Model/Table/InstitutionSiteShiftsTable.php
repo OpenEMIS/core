@@ -23,30 +23,23 @@ class InstitutionSiteShiftsTable extends AppTable {
 	}
 
 	public function beforeAction() {
+		$this->ControllerAction->field('start_time', ['type' => 'string', 'visible' => false]);
+		$this->ControllerAction->field('end_time', ['type' => 'string', 'visible' => false]);
 
-		$this->fields['name']['type'] = 'string';
-		$this->fields['academic_period_id']['type'] = 'select';		
-		$this->fields['start_time']['type'] = 'string';
-		$this->fields['end_time']['type'] = 'string';
+		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
+		$this->ControllerAction->field('name', ['type' => 'string']);
+		$this->ControllerAction->field('period', ['type' => 'string']);
+		$this->ControllerAction->field('location_institution_site_id', ['type' => 'string']);
 
-
-		$this->fields['name']['order'] = 0;
-		$this->fields['academic_period_id']['order'] = 1;		
-		$this->fields['start_time']['order'] = 2;
-		$this->fields['end_time']['order'] = 3;
-		$this->fields['location_institution_site_id']['order'] = 4;
-
+		$this->ControllerAction->setFieldOrder([
+			'academic_period_id', 'name', 'period', 'location_institution_site_id',
+		]);
 
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 	}
 
-	public function addEditBeforeAction($event) {
-
-		$this->fields['location_institution_site_id']['visible'] = false;
-
-	}
 
 	// public function onPopulateSelectOptions(Event $event, $query) {
 		// $query = parent::onPopulateSelectOptions($event, $query);
@@ -55,7 +48,65 @@ class InstitutionSiteShiftsTable extends AppTable {
 		// return $query;
 	// }
 
+/******************************************************************************************************************
+**
+** view action methods
+**
+******************************************************************************************************************/
 
+	public function viewBeforeAction($event) {
+		$this->fields['period']['visible'] = false;
+
+		$this->fields['start_time']['visible'] = true;
+		$this->fields['end_time']['visible'] = true;
+
+		$this->ControllerAction->setFieldOrder([
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
+		]);
+
+	}
+
+
+/******************************************************************************************************************
+**
+** addEdit action methods
+**
+******************************************************************************************************************/
+
+	public function addEditBeforeAction($event) {
+
+		$this->fields['period']['visible'] = false;
+
+		$this->fields['start_time']['visible'] = true;
+		$this->fields['start_time']['type'] = 'time';
+		$this->fields['end_time']['visible'] = true;
+		$this->fields['end_time']['type'] = 'time';
+
+		$this->fields['location_institution_site_id']['type'] = 'select';
+
+		$this->ControllerAction->setFieldOrder([
+			'name', 'academic_period_id', 'start_time', 'end_time', 'location_institution_site_id',
+		]);
+
+	}
+
+
+/******************************************************************************************************************
+**
+** field specific methods
+**
+******************************************************************************************************************/
+
+	public function onGetPeriod($event, $entity) {
+		return $entity->start_time . ' - ' .$entity->end_time;
+	}
+
+
+/******************************************************************************************************************
+**
+** essential methods
+**
+******************************************************************************************************************/
 	public function createInstitutionDefaultShift($institutionsId, $academicPeriodId){
 		$data = $this->getShifts($institutionsId, $academicPeriodId);
 
