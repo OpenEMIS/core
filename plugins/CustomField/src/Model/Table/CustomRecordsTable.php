@@ -2,18 +2,19 @@
 namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\ORM\Table;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
 use Cake\Event\Event;
 
 class CustomRecordsTable extends AppTable {
-	private $_contain = [];
+	private $_contain = ['CustomFieldValues', 'CustomTableCells'];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomForms', ['className' => 'CustomField.CustomForms']);
 		$this->hasMany('CustomFieldValues', ['className' => 'CustomField.CustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomTableCells', ['className' => 'CustomField.CustomTableCells', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('CustomField.Record');
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -25,12 +26,12 @@ class CustomRecordsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Table $model, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
 		list($moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
 
         $this->controller->set(compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
 		$options['conditions'][] = [
-        	$model->aliasField('custom_form_id') => $selectedForm
+        	$this->aliasField('custom_form_id') => $selectedForm
         ];
         $options['contain'] = array_merge($options['contain'], $this->_contain);
 
@@ -41,7 +42,6 @@ class CustomRecordsTable extends AppTable {
 		//Setup fields
 		list(, , $formOptions) = array_values($this->getSelectOptions());
 
-		$this->fields['custom_form_id']['type'] = 'select';
 		$this->fields['custom_form_id']['options'] = $formOptions;
 		$this->fields['custom_form_id']['onChangeReload'] = true;
 
@@ -49,7 +49,10 @@ class CustomRecordsTable extends AppTable {
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		$customFields = $this->CustomForms->find('all')->contain(['CustomFields'])->where([$this->CustomForms->aliasField('id') => $entity->custom_form_id])->first()->toArray();
+		if ($this->behaviors()->hasMethod('addEditAfterAction')) {
+			list($entity) = array_values($this->behaviors()->call('addEditAfterAction', [$event, $entity]));
+		}
+
 		return $entity;
 	}
 
