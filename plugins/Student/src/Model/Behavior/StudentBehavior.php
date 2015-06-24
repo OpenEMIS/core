@@ -4,6 +4,7 @@ namespace Student\Model\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class StudentBehavior extends Behavior {
@@ -25,7 +26,9 @@ class StudentBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.beforeAction' => 'beforeAction',
-			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'
+			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
+			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect'
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -53,4 +56,45 @@ class StudentBehavior extends Behavior {
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
 	}
 
+	public function addBeforePatch($event, $entity, $data, $options) {
+		// this is an entry that is added to institutions
+		if (array_key_exists('new', $this->_table->request->query)) {
+			if ($this->_table->Session->check('InstitutionSiteStudents.add.'.$this->_table->request->query['new'])) {
+				$institutionStudentData = $this->_table->Session->read('InstitutionSiteStudents.add.'.$this->_table->request->query['new']);
+
+				if (array_key_exists('Users', $data)) {
+					if (!array_key_exists('institution_site_students', $data['Users'])) {
+						$data['Users']['institution_site_students'] = [];
+						$data['Users']['institution_site_students'][0] = [];
+					}
+					$data['Users']['institution_site_students'][0]['institution_site_id'] = $institutionStudentData['InstitutionSiteStudents']['institution_site_id'];
+					$data['Users']['institution_site_students'][0]['student_status_id'] = $institutionStudentData['InstitutionSiteStudents']['student_status_id'];
+				}
+			}
+		}
+	}
+
+	public function afterSave(Event $event, Entity $entity, $options) {
+		if ($entity->isNew()) {
+			// for attaching student to section
+			$institutionStudentData = $this->_table->Session->read('InstitutionSiteStudents.add.'.$this->_table->request->query['new']);
+			$sectionData = [];
+			$sectionData['security_user_id'] = $entity->id;
+			$sectionData['education_grade_id'] = $institutionStudentData['InstitutionSiteStudents']['education_grade'];
+			$sectionData['institution_site_section_id'] = $institutionStudentData['InstitutionSiteStudents']['section'];
+			$sectionData['student_category_id'] = $institutionStudentData['InstitutionSiteStudents']['student_status_id'];
+
+			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+			$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+		}
+	}
+
+	public function addAfterSaveRedirect($action) {
+		$action = [];
+		if ($this->_table->Session->check('InstitutionSiteStudents.add.'.$this->_table->request->query['new'])) {
+			$action = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
+		}
+
+		return $action;
+	}
 }

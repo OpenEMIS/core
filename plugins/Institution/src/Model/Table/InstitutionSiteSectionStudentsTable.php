@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
@@ -44,5 +45,41 @@ class InstitutionSiteSectionStudentsTable extends AppTable {
 	public function getStudentCategoryList() {
 		$query = $this->StudentCategories->getList();
 		return $query->toArray();
+	}
+
+	public function autoInsertSectionStudent($data) {
+		$securityUserId = $data['security_user_id'];
+		$selectedGradeId = $data['education_grade_id'];
+		$selectedSectionId = $data['institution_site_section_id'];
+		$selectedStudentCategoryId = $data['student_category_id'];
+
+		if($selectedSectionId != 0) {
+			$autoInsertData = $this->newEntity();
+
+			$existingData = $this
+				->find()
+				->where(
+					[
+						$this->aliasField('security_user_id') => $securityUserId,
+						$this->aliasField('education_grade_id') => $selectedGradeId,
+						$this->aliasField('institution_site_section_id') => $selectedSectionId
+					]
+				)
+				->first()
+			;
+
+			if(!empty($existingData)) {
+				$existingData = $existingData->toArray();
+				$autoInsertData->id = $existingData['id'];	
+			}
+			
+			$autoInsertData->security_user_id = $securityUserId;
+			$autoInsertData->education_grade_id = $selectedGradeId;
+			$autoInsertData->institution_site_section_id = $selectedSectionId;
+			$autoInsertData->student_category_id = $selectedStudentCategoryId;
+			$autoInsertData->status = 1;
+
+			$this->save($autoInsertData);
+		}
 	}
 }
