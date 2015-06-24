@@ -571,6 +571,11 @@ body.large {
 	height: 25px;
 	padding: 2px 25px 2px 2px;
 	font-size: 11px;
+	margin: 3px 0;
+}
+
+.toolbar-wrapper .input-select-wrapper:after {
+	top: 58%;
 }
 
 .toolbar-wrapper .select {
@@ -1613,7 +1618,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal .table-in-view {
-	width: 30%;
+	width: 50%;
 	border: 1px solid #CCC;
 	-webkit-border-radius: 5px;
 	        border-radius: 5px;
@@ -1626,7 +1631,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .table-in-view .btn-default {
-	margin: 10px 12px;
+	margin: 10px;
 }
 
 .table-in-view .input-select-wrapper,
