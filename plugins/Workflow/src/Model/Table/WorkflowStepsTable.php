@@ -2,10 +2,10 @@
 namespace Workflow\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 
 class WorkflowStepsTable extends AppTable {
@@ -52,7 +52,7 @@ class WorkflowStepsTable extends AppTable {
         $this->controller->set(compact('toolbarElements'));
 	}
 
-	public function indexBeforePaginate(Event $event, Table $model, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
 		$options['contain'] = array_merge($options['contain'], $this->_contain);
 		return $options;
 	}

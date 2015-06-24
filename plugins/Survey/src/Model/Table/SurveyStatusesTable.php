@@ -2,9 +2,9 @@
 namespace Survey\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 
 class SurveyStatusesTable extends AppTable {
@@ -42,7 +42,7 @@ class SurveyStatusesTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Table $model, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
 		$options['contain'] = array_merge($options['contain'], $this->_contain);
 		return $options;
 	}
