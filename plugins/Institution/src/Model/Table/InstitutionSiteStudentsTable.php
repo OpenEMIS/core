@@ -85,9 +85,8 @@ class InstitutionSiteStudentsTable extends AppTable {
 		
 		// $options['validate'] = false;
 
-		$this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?'.$timeNow]);
+		$this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?new='.$timeNow]);
 		return false;
-		// return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {
