@@ -569,7 +569,7 @@ body.large {
 
 .toolbar-wrapper .form-control {
 	height: 25px;
-	padding: 2px;
+	padding: 2px 25px 2px 2px;
 	font-size: 11px;
 }
 
@@ -1207,7 +1207,7 @@ th > a:active { color: #444; }
 
 table input,
 table .input-select-wrapper {
-	width: 100%;
+	width: 100% !important;
 	margin: 0 !important;
 }
 
@@ -1447,6 +1447,11 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 /* FORM */
+
+.bootstrap-timepicker-widget {
+	width: 275px;
+}
+
 .form-horizontal {
 	padding: 15px 0;
 }
@@ -1575,7 +1580,7 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .fileinput .btn-file-cancel {
 	position: absolute;
-	padding: 9px 12px 10px 14px;
+	padding: 8px 14px 9px;
 	border-radius: 0;
 	border-right: 0 !important;
 	right: 0;
@@ -1602,10 +1607,16 @@ table tr.sorting-row td {background-color: #8b8;}
 .form-horizontal .input-group-addon {
 	line-height: 0;
 	cursor: pointer;
+	font-size: 15px;
+	width: 42px;
+	height: 30px;
 }
 
 .form-horizontal .table-in-view {
 	width: 30%;
+	border: 1px solid #CCC;
+	-webkit-border-radius: 5px;
+	        border-radius: 5px;
 }
 
 .table-in-view {
@@ -1614,23 +1625,23 @@ table tr.sorting-row td {background-color: #8b8;}
 	width: 80%;
 }
 
+.table-in-view .btn-default {
+	margin: 10px 12px;
+}
+
 .table-in-view .input-select-wrapper,
 .table-in-view input {
-	width: 100%;
+	width: 150px !important;
 }
 
 .table-in-view thead {
-	border-color: #DDD;
-}
-
-.table-in-view .table > thead:first-child > tr:first-child > th {
-	/*background: #EEE;*/
+	border: 0;
 }
 
 select {
     background: none;	
     position: relative;
-	padding: 5px 35px 5px 5px;
+	padding: 5px 25px 5px 5px;
 	border: 1px solid #CCC;
 	margin-bottom: 15px;
 	width: 100% !important;
@@ -1660,7 +1671,7 @@ select {
     pointer-events: none;
     position: absolute;
     width: 0;
-    right: 0;
+    right: -5px;
     top: 48%;
 }
 
@@ -1671,6 +1682,16 @@ select {
 	height: 30px;
 	float: left;
 	margin-bottom: 15px;
+}
+
+.input-multiple-select {
+	display: block;
+	float: left;
+	width: 30%;
+}
+
+.input-multiple-select select {
+	padding: 5px;
 }
 
 label + select {
@@ -1691,13 +1712,17 @@ label + select {
 .error-message {
 	float: left;
 	font-size: 11px;
-	padding: 9px 12px;
-	color: #fff;
-	background-color: #CC5C5C;
+	padding: 7px 0;
+	color: #CC5C5C;
 	border-radius: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
 	margin-left: 10px;
+}
+
+.form-error,
+.error input {
+	border-color: #CC5C5C !important;
 }
 
 .string {
@@ -2340,6 +2365,7 @@ footer {
 
 	.error-message {
 		margin: 0 0 10px !important;
+		padding: 0 0 10px;
 	}
 
 	.modal-content {
@@ -2397,18 +2423,31 @@ footer {
 	.table-in-view {
 		width: 100% !important;
 	}
+
+	.form-horizontal .chosen-container {
+		width: 100% !important;
+	}		
+
 }
 
 @media (min-width: 486px) and (max-width: 762px){
 	.error-message {
 		margin-left: 27%;
-	}
+	}	
 }
 
 @media (min-width: 478px) and (max-width: 770px){
 	.input-select-wrapper {
 		width: 60%;
-	}
+	}	
+
+	.form-horizontal .chosen-container {
+		width: 60% !important;
+	}	
+
+	.form-horizontal .table-in-view {
+		width: 60% !important;
+	}	
 }
 
 @media (max-width: 765px){
@@ -2480,7 +2519,7 @@ footer {
 
 	.scroll_tabs_container div.scroll_tab_inner span {
 		line-height: 34px;
-	}
+	}		
 }
 
 @media (max-width: 767px) {
