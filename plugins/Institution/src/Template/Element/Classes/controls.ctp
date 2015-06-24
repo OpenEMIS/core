@@ -8,24 +8,22 @@
 			]);
 
 			if (!empty($academicPeriodOptions)) {
-				echo $this->Form->input('academic_period_', array(
+				echo $this->Form->input('academic_period_id_', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $academicPeriodOptions,
-					'default' => $selectedAcademicPeriod,
 					'url' => $baseUrl,
-					'data-named-key' => 'academic_period',
+					'data-named-key' => 'academic_period_id',
 				));
 			}
 
 			if (!empty($sectionOptions)) {
-				echo $this->Form->input('section_', array(
+				echo $this->Form->input('section_id_', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $sectionOptions,
-					'default' => $selectedSection,
 					'url' => $baseUrl,
-					'data-named-key' => 'section',
+					'data-named-key' => 'section_id',
 				));
 			}
 
