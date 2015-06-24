@@ -40,14 +40,14 @@ class StudentBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		$this->_table->ControllerAction->addField('picture', [
-			//'type' => 'image',
+		$this->_table->ControllerAction->addField('photo_content', [
+			'type' => 'image',
 			//'element' => 'Student.Students/picture'
 		]);
-		//$this->_table->fields['picture']['type'] = 'image';
 		$this->_table->fields['username']['visible']['index'] = false;
 		$this->_table->fields['birthplace_area_id']['visible']['index'] = false;
-		$this->_table->fields['photo_content']['visible']['index'] = false;
+		$this->_table->fields['photo_content']['visible']['index'] = true;
+		$this->_table->ControllerAction->setFieldOrder(['photo_content']);
 
 		$indexDashboard = 'Student.Students/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);

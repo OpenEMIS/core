@@ -18,7 +18,7 @@ class UsersTable extends AppTable {
 							'name' => 'photo_name',
 							'content' => 'photo_content',
 							'size' => '2MB',
-							'allowEmpty' => false,
+							'allowEmpty' => true,
 							'useDefaultName' => false
 						]);
 		// $this->addBehavior('User.Mandatory',['userRole'=>'Student']);
@@ -212,16 +212,17 @@ class UsersTable extends AppTable {
 				// 	'message' => 'Password must be at least 6 characters'
 				// )
 			])
-			/************************shiva added**************/
-			// ->add('photo_content', [
-			// 	'ruleCheckIfImageExceedsUploadSize' => [
-			// 			'rule' => 'checkIfImageExceedsUploadSize',
-			// 	],
-			// 	'ruleNotBlank' => [
-			// 			'rule' => 'notBlank',
-			// 	]
-			// ])
-			/*************************************************/
+			->allowEmpty('photo_content')
+				->add('photo_content', [
+					'ruleCheckSelectedFileAsImage' => [
+							'rule' => 'checkSelectedFileAsImage',
+							'message' => 'Please upload image format files. Eg. jpg, png, gif.'
+					],
+					'ruleCheckIfImageExceedsUploadSize' => [
+							'rule' => 'checkIfImageExceedsUploadSize',
+							'message' => 'Uploaded file exceeds 2MB in size.'
+					]
+				])
 // password
 // newPassword
 // retypeNewPassword
