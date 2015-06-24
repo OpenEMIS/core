@@ -223,34 +223,6 @@ class AppValidator extends Validator {
 		return !preg_match('#[0-9]#',$check);
 	}
 
-	/********************shiva added*******************************/
-
-	/**
-	* Checks whether uploaded image exceeds size
-	* @param  [type] $field [description]
-	*/
-	// public function checkIfImageExceedsUploadSize($field) {
-	// 	$fileTypesMap = array(
-	// 		'jpeg'	=> 'image/jpeg',
-	// 		'jpg'	=> 'image/jpeg',
-	// 		'gif'	=> 'image/gif',
-	// 		'png'	=> 'image/png',
-	// 	);
-	// 	$restrictedSize = 2000000; //2MB in bytes
-	// 	$errMsg = array();
-		
-	// 	 if(isset($field['type']) && in_array($field['type'], $fileTypesMap)){
-	// 	 	$errMsg[] = "Uploaded file is not of type image.";	
-	// 	 } 
-
-	// 	 if(isset($field['type']) && ($field['size'] > $restrictedSize)){
-	// 	 	$errMsg[] = "Uploaded file exceeds 2MB in size.";	
-	// 	 }
-
-	// 	return $errMsg;
-	// }
-
-	/***************************************************/
 
 	// public function testerCheckWithParms($check, $second, $third, array $array) {
 	// 	if ($check == $second) {

@@ -32,7 +32,7 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->_table->ControllerAction->addField('Picture', [
+		$this->_table->ControllerAction->field('photo_content', [
 			'type' => 'element',
 			'element' => 'Staff.Staff/picture'
 		]);
@@ -44,9 +44,13 @@ class StaffBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event) {
+		$this->_table->ControllerAction->addField('photo_content', [
+			'type' => 'image',
+		]);
 		$this->_table->fields['username']['visible']['index'] = false;
 		$this->_table->fields['birthplace_area_id']['visible']['index'] = false;
-		$this->_table->fields['photo_content']['visible']['index'] = false;
+		$this->_table->fields['photo_content']['visible']['index'] = true;
+		$this->_table->ControllerAction->setFieldOrder(['photo_content']);
 
 		$indexDashboard = 'Staff.Staff/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
