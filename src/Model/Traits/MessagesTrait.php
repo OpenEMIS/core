@@ -42,6 +42,10 @@ trait MessagesTrait {
 		'InstitutionSiteSections' => [
 			'noSections' => 'No Sections'
 		],
+		'InstitutionSiteClasses' => [
+			'noSections' => 'No Sections',
+			'noClasses' => 'No Classes'
+		],
 		
 
 		'StudentAttendance' => [
