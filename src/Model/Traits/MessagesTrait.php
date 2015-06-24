@@ -118,6 +118,9 @@ trait MessagesTrait {
 				'retypeNewPassword' => [
 					'ruleChangePassword' => 'Please confirm your new password',
 					'ruleCompare' => 'Both passwords do not match'
+				],
+				 'photo_content' => [
+				 	'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
 				]
 			],
 			'Contacts' => [
