@@ -71,7 +71,8 @@
 						?>
 					</td>
 					<td> 
-						<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this)">
+						<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
+						<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);$('#reload').val('add').click();">
 							<?= __('<i class="fa fa-close"></i> Remove') ?>
 						</button>
 					</td>

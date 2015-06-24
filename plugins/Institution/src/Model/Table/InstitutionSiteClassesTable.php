@@ -40,17 +40,20 @@ class InstitutionSiteClassesTable extends AppTable {
 
 	public function beforeAction($event) {
 
-    	$this->ControllerAction->field('modified', ['type' => 'string', 'visible' => false]);
-    	$this->ControllerAction->field('modified_user_id', ['type' => 'string', 'visible' => false]);
+    	$this->ControllerAction->field('academic_period_id', ['type' => 'string', 'visible' => ['view'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('created', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('created_user_id', ['type' => 'string', 'visible' => false]);
-		$this->ControllerAction->field('no_of_seats', ['type' => 'string', 'visible' => false]);
-		$this->ControllerAction->field('section_name', ['type' => 'string', 'visible' => false]);
-    	$this->ControllerAction->field('academic_period_id', ['type' => 'string', 'visible' => false]);
-		$this->ControllerAction->field('education_subject_code', ['type' => 'string', 'visible' => false]);
+		$this->ControllerAction->field('education_subject_code', ['type' => 'string', 'visible' => ['view'=>true]]);
+		$this->ControllerAction->field('education_subject_id', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+    	$this->ControllerAction->field('modified', ['type' => 'string', 'visible' => false]);
+    	$this->ControllerAction->field('modified_user_id', ['type' => 'string', 'visible' => false]);
+    	$this->ControllerAction->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('no_of_seats', ['type' => 'integer', 'attr'=>['min' => 1], 'visible' => false]);
+		$this->ControllerAction->field('section_name', ['type' => 'string', 'visible' => ['view'=>true]]);
 
 		$this->ControllerAction->field('students', [
 			'label' => '',
+			'override' => true,
 			'type' => 'element',
 			'element' => 'Institution.Classes/students',
 			'data' => [	
@@ -58,10 +61,11 @@ class InstitutionSiteClassesTable extends AppTable {
 				'studentOptions'=>[],
 				'categoryOptions'=>[]
 			],
-			'visible' => false
+			'visible' => ['view'=>true, 'edit'=>true]
 		]);
-			$this->ControllerAction->field('classes', [
+		$this->ControllerAction->field('classes', [
 			'label' => '',
+			'override' => true,
 			'type' => 'element',
 			'element' => 'Institution.Classes/classes',
 			'data' => [	
@@ -70,19 +74,16 @@ class InstitutionSiteClassesTable extends AppTable {
 			],
 			'visible' => false
 		]);
-
-    	$this->ControllerAction->field('name', ['type' => 'string', 'visible' => ['index'=>true]]);
-		$this->ControllerAction->field('education_subject_id', ['type' => 'string', 'visible' => ['index'=>true]]);
 		$this->ControllerAction->field('teachers', [
-			// 'type' => 'string'
 			'label' => '',
+			'override' => true,
 			'type' => 'element',
 			'element' => 'Institution.Classes/teachers',
 			'data' => [	
 				'teachers'=>[],
 				'teacherOptions'=>[]
 			],
-			'visible' => ['index'=>true]
+			'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
 		]);
 		$this->ControllerAction->field('male_students', [
 			'type' => 'integer',
@@ -92,6 +93,7 @@ class InstitutionSiteClassesTable extends AppTable {
 			'type' => 'integer',
 			'visible' => ['index'=>true]
 		]);
+
 
 		$this->ControllerAction->setFieldOrder([
 			'name', 'education_subject_id', 'teachers',
@@ -199,6 +201,51 @@ class InstitutionSiteClassesTable extends AppTable {
 
 /******************************************************************************************************************
 **
+** view action methods
+**
+******************************************************************************************************************/
+    public function viewBeforeAction($event) {
+		$this->ControllerAction->setFieldOrder([
+			'academic_period_id', 'section_name',
+			'name', 'education_subject_code', 'education_subject_id', 
+			'teachers', 'students',
+		]);
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query, $contain) {
+		$contain = array_merge([
+			'InstitutionSiteSectionClasses' => ['InstitutionSiteSections']
+		], $contain);
+		return compact('query', 'contain');
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$sections = [];
+		foreach ($entity->institution_site_section_classes as $key => $value) {
+			$sections[] = $value->institution_site_section->name;
+		}
+		$entity->section_name = implode(', ', $sections);
+		
+		$this->fields['teachers']['data']['teachers'] = $this
+			->InstitutionSiteClassStaff
+			->find()
+			->contain(['Users'])
+			->where(['InstitutionSiteClassStaff.institution_site_class_id'=>$entity->id])
+			->toArray();
+
+		$this->fields['students']['data']['students'] = $this
+			->InstitutionSiteClassStudents
+			->find()
+			->contain(['Users'=>['Genders']])
+			->where(['InstitutionSiteClassStudents.institution_site_class_id'=>$entity->id])
+			->toArray();
+
+		return $entity;
+	}
+
+
+/******************************************************************************************************************
+**
 ** add action methods
 **
 ******************************************************************************************************************/
@@ -289,17 +336,14 @@ class InstitutionSiteClassesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function editBeforeAction(Event $event) {
-		// $this->fields['name']['order'] = 1;
-		// $this->fields['no_of_seats']['order'] = 2;
-		// $this->fields['academic_period_id']['order'] = 3;
-		// $this->fields['education_subject_id']['order'] = 4;
+		$this->ControllerAction->setFieldOrder([
+			'name', 'no_of_seats', 
+			'academic_period_id', 'education_subject_id', 
+			'teachers', 'students',
+		]);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, $contain) {
-		// $this->hasMany('InstitutionSiteSectionClasses', ['className' => 'Institution.InstitutionSiteSectionClasses']);
-		// $this->hasMany('InstitutionSiteClassStudents', 	['className' => 'Institution.InstitutionSiteClassStudents']);
-		// $this->hasMany('InstitutionSiteClassStaff', 	['className' => 'Institution.InstitutionSiteClassStaff']);
-
 		$contain = array_merge([
 			'AcademicPeriods', 
 			'EducationSubjects',
@@ -307,44 +351,181 @@ class InstitutionSiteClassesTable extends AppTable {
 			'InstitutionSiteClassStudents'=>['Users'=>['Genders']],
 			'InstitutionSiteSectionClasses'
 		], $contain);
-		// pr($contain);
 		return compact('query', 'contain');
+	}
+
+	public function editBeforePatch($event, $entity, $data, $options) {
+		/**
+		 * Unable to utilise updateAll for this scenario.
+		 * Only new student records will be saved as status=1 at the later part of this scope.
+		 * Existitng records which is not removed from the UI list, will remain as status=0 instead of 1.
+		 */
+		// $this->InstitutionSiteClassStudents->updateAll(['status'=>0], ['institution_site_class_id' => $entity->id]);
+		// $this->InstitutionSiteClassStaff->updateAll(['status'=>0], ['institution_site_class_id' => $entity->id]);
+
+
+		/**
+		 * In students.ctp && teachers.ctp, we set the security_user_id as the array keys for easy search and compare.
+		 * Assign back original record's id to the new list so as to preserve id numbers.
+		 */
+		foreach($entity->institution_site_class_students as $key => $record) {
+			$k = $record->security_user_id;
+			if (array_key_exists('institution_site_class_students', $data[$this->alias()])) {
+				if (!array_key_exists($k, $data[$this->alias()]['institution_site_class_students'])) {			
+					$data[$this->alias()]['institution_site_class_students'][$k] = [
+						'id' => $record->id,
+						'status' => 0 
+					];
+				} else {
+					$data[$this->alias()]['institution_site_class_students'][$k]['id'] = $record->id;
+				}
+			} else {
+				$data[$this->alias()]['institution_site_class_students'][$k] = [
+					'id' => $record->id,
+					'status' => 0 
+				];
+			}
+		}
+		foreach($entity->institution_site_class_staff as $key => $record) {
+			$k = $record->security_user_id;
+			if (array_key_exists('institution_site_class_staff', $data[$this->alias()])) {
+				if (!array_key_exists($k, $data[$this->alias()]['institution_site_class_staff'])) {			
+					$data[$this->alias()]['institution_site_class_staff'][$k] = [
+						'id' => $record->id,
+						'status' => 0 
+					];
+				} else {
+					$data[$this->alias()]['institution_site_class_staff'][$k]['id'] = $record->id;
+				}
+			} else {
+				$data[$this->alias()]['institution_site_class_staff'][$k] = [
+					'id' => $record->id,
+					'status' => 0 
+				];
+			}
+		}		
+		return compact('entity', 'data', 'options');
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
 		$this->_selectedSectionId = $entity->institution_site_section_classes[0]->institution_site_section_id;
+
+		/**
+		 * @todo should have additional filter; by start_date, end_date, staff_type_id, staff_status_id & institution_site_position_id
+		 */
 		$query = $this
 			->Institutions
 			->InstitutionSiteStaff
 			->find()
 			->contain(['Users'])
-			->where(['InstitutionSiteStaff.institution_site_id'=>$entity->institution_site_id])
-			// ->where(['InstitutionSiteStaff.status'=>1])
+			->where([
+				'InstitutionSiteStaff.institution_site_id'=>$entity->institution_site_id,
+			])
 			->toArray();
-		$teachers = [__('Add Teachers')];
+		$teacherOptions = [__('Select Teacher')];
 		foreach ($query as $teacher) {
-			$teachers[$teacher->user->id] = $teacher->user->name_with_id;
+			$teacherOptions[$teacher->user->id] = $teacher->user->name_with_id;
 		}
+		$teachers = $entity->institution_site_class_staff;
+		/**
+		 * Check if the request is a page reload
+		 */
+		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
+			$teachers = [];
+			/**
+			 * Populate records in the UI table & unset the record from teacherOptions
+			 */
+			if (array_key_exists('institution_site_class_staff', $this->request->data[$this->alias()])) {
+				foreach ($this->request->data[$this->alias()]['institution_site_class_staff'] as $row) {
+					if ($row['status']>0 && array_key_exists($row['security_user_id'], $teacherOptions)) {
+						$id = $row['security_user_id'];
+						$teachers[] = $this->createVirtualEntity($id, $entity, 'staff');
+						unset($teacherOptions[$id]);
+					}
+				}
+			}
+			/**
+			 * Insert the newly record into the UI table & unset the record from teacherOptions
+			 */
+			if (array_key_exists('staff_id', $this->request->data) && $this->request->data['staff_id']!=0) {
+				$id = $this->request->data['staff_id'];
+				$teachers[] = $this->createVirtualEntity($id, $entity, 'staff');
+				unset($teacherOptions[$id]);
+			}
+		} else {
+			/**
+			 * Just unset the record from teacherOptions on first page load
+			 */
+			foreach ($entity->institution_site_class_staff as $row) {
+				if ($row->status>0 && array_key_exists($row->security_user_id, $teacherOptions)) {
+					unset($teacherOptions[$row->security_user_id]);
+				}
+			}
+		}
+
+
+		/**
+		 * @todo should have additional filter; by start_date, end_date & education_programme_id
+		 */
 		$query = $this
 			->Institutions
 			->InstitutionSiteStudents
 			->find()
 			->contain(['Users'])
-			->where(['InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id])
-			// ->where(['InstitutionSiteStaff.status'=>1])
+			->where([
+				'InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id
+			])
 			->toArray();
-		$students = [__('Add Students')];
+		$studentOptions = [__('Select Student')];
 		foreach ($query as $student) {
-			$students[$student->user->id] = $student->user->name_with_id;
+			$studentOptions[$student->user->id] = $student->user->name_with_id;
+		}
+		$students = $entity->institution_site_class_students;
+		/**
+		 * Check if the request is a page reload
+		 */
+		if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
+			$students = [];
+			/**
+			 * Populate records in the UI table & unset the record from studentOptions
+			 */
+			if (array_key_exists('institution_site_class_students', $this->request->data[$this->alias()])) {
+				foreach ($this->request->data[$this->alias()]['institution_site_class_students'] as $row) {
+					if ($row['status']>0 && array_key_exists($row['security_user_id'], $studentOptions)) {
+						$id = $row['security_user_id'];
+						$students[] = $this->createVirtualEntity($id, $entity, 'students');
+						unset($studentOptions[$id]);
+					}
+				}
+			}
+			/**
+			 * Insert the newly record into the UI table & unset the record from studentOptions
+			 */
+			if (array_key_exists('student_id', $this->request->data) && $this->request->data['student_id']!=0) {
+				$id = $this->request->data['student_id'];
+				$students[] = $this->createVirtualEntity($id, $entity, 'students');
+				unset($studentOptions[$id]);
+			}
+		} else {
+			/**
+			 * Just unset the record from studentOptions on first page load
+			 */
+			foreach ($entity->institution_site_class_students as $row) {
+				if ($row->status>0 && array_key_exists($row->security_user_id, $studentOptions)) {
+					unset($studentOptions[$row->security_user_id]);
+				}
+			}
 		}
 
-		$this->fields['teachers']['data']['teachers'] = $entity->institution_site_class_staff;
-		$this->fields['teachers']['data']['teacherOptions'] = $teachers;
-		$this->fields['students']['data']['students'] = $entity->institution_site_class_students;
-		$this->fields['students']['data']['studentOptions'] = $students;
+		$this->fields['teachers']['data'] = [
+			'teachers' => $teachers,
+			'teacherOptions' => $teacherOptions
+		];
+		$this->fields['students']['data'] = [
+			'students' => $students,
+			'studentOptions' => $studentOptions
+		];
 	
-
-		$this->fields['section_name']['visible'] = false;
 		$this->fields['academic_period_id']['type'] = 'readonly';
 		$this->fields['academic_period_id']['attr']['value'] = $this->getAcademicPeriodOptions()[$entity->academic_period_id];
 		
@@ -362,50 +543,37 @@ class InstitutionSiteClassesTable extends AppTable {
 
 /******************************************************************************************************************
 **
-** view action methods
-**
-******************************************************************************************************************/
-    public function viewBeforeAction($event) {
-
-	}
-
-	public function viewBeforeQuery(Event $event, Query $query, $contain) {
-		$contain = array_merge([
-			'InstitutionSiteSectionClasses' => ['InstitutionSiteSections']
-		], $contain);
-		return compact('query', 'contain');
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$sections = [];
-		foreach ($entity->institution_site_section_classes as $key => $value) {
-			$sections[] = $value->institution_site_section->name;
-		}
-		$entity->section_name = implode(', ', $sections);
-		
-		$this->fields['teachers']['data']['teachers'] = $this
-			->InstitutionSiteClassStaff
-			->find()
-			->contain(['Users'])
-			->where(['InstitutionSiteClassStaff.institution_site_class_id'=>$entity->id])
-			->toArray();
-
-		$this->fields['students']['data']['students'] = $this
-			->InstitutionSiteClassStudents
-			->find()
-			->contain(['Users'=>['Genders']])
-			->where(['InstitutionSiteClassStudents.institution_site_class_id'=>$entity->id])
-			->toArray();
-
-		return $entity;
-	}
-
-
-/******************************************************************************************************************
-**
 ** essential functions
 **
 ******************************************************************************************************************/
+	protected function createVirtualEntity($id, $entity, $persona) {
+		$model = 'InstitutionSite'.ucwords(strtolower($persona));
+		$userData = $this->Institutions->$model->find()->contain(['Users'=>['Genders']])->where(['security_user_id'=>$id])->first();
+		$data = [
+			'id'=>$this->getExistingRecordId($id, $entity, $persona),
+			'security_user_id'=>$id,
+			'institution_site_class_id'=>$entity->id,
+			'institution_site_section_id'=>$entity->toArray()['institution_site_section_classes'][0]['institution_site_section_id'],
+			'status'=>1,
+			'user'=>[]
+		];
+		$model = 'InstitutionSiteClass'.ucwords(strtolower($persona));
+		$newEntity = $this->$model->newEntity();
+		$newEntity = $this->$model->patchEntity($newEntity, $data);
+		$newEntity->user = $userData->user;
+		return $newEntity;
+	}
+
+	protected function getExistingRecordId($id, $entity, $persona) {
+		$recordId = '';
+		$relationKey = 'institution_site_class_'.strtolower($persona);
+		foreach ($entity->$relationKey as $data) {
+			if ($data->security_user_id == $id) {
+				$recordId = $data->id;
+			}
+		}
+		return $recordId;
+	}
 
 	private function getAcademicPeriodOptions() {
 		$institutionsId = $this->Session->read('Institutions.id');
