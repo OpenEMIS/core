@@ -644,6 +644,13 @@ class ControllerActionComponent extends Component {
 				if ($model->save($data)) {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
+					
+					$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterSaveRedirect', null, ['action' => $action]);
+					if ($event->isStopped()) { return $event->result; }
+					if (!empty($event->result)) {
+						$action = $event->result;
+					}
+					
 					return $this->controller->redirect($action);
 				} else {
 					$this->log($data->errors(), 'debug');

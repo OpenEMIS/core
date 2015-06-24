@@ -96,6 +96,9 @@ class ControllerActionHelper extends Helper {
 	}
 
 	public function highlight($needle, $haystack){
+		// to cater for photos returning resource
+		if (is_resource($haystack)) { return $haystack; }
+		
 		$ind = stripos($haystack, $needle);
 		$len = strlen($needle);
 		$value = $haystack;
