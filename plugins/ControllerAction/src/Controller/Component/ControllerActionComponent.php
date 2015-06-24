@@ -122,7 +122,7 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if (array_key_exists('options', $attr) && !array_key_exists('fieldNameKey', $attr)) {
+				if (array_key_exists('options', $attr) && $attr['type'] == 'integer') {
 					$this->model->fields[$key]['type'] = 'select';
 				}
 				// make field sortable by default if it is a string data-type
