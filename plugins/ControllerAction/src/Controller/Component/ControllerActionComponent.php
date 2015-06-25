@@ -122,8 +122,8 @@ class ControllerActionComponent extends Component {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
 			foreach ($this->model->fields as $key => $attr) {
-				if (array_key_exists('options', $attr)) {
-					//$this->model->fields[$key]['type'] = 'select';
+				if (array_key_exists('options', $attr) && in_array($attr['type'], ['string', 'integer'])) {
+					$this->model->fields[$key]['type'] = 'select';
 				}
 				// make field sortable by default if it is a string data-type
 				if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
@@ -657,7 +657,7 @@ class ControllerActionComponent extends Component {
 					$this->Alert->error('general.add.failed');
 				}
 			} else {
-				$patchOptions['validate'] = false;
+				$params['options']['validate'] = false;
 				$methodKey = 'on' . ucfirst($submit);
 
 				// Event: addEditOnReload

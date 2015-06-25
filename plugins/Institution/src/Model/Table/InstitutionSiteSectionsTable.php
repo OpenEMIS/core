@@ -462,13 +462,20 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		foreach($entity->institution_site_section_students as $key => $record) {
 			$k = $record->security_user_id;
-			if (!array_key_exists($k, $data[$this->alias()]['institution_site_section_students'])) {			
+			if (array_key_exists('institution_site_section_students', $data[$this->alias()])) {			
+				if (!array_key_exists($k, $data[$this->alias()]['institution_site_section_students'])) {			
+					$data[$this->alias()]['institution_site_section_students'][$k] = [
+						'id' => $record->id,
+						'status' => 0 
+					];
+				} else {
+					$data[$this->alias()]['institution_site_section_students'][$k]['id'] = $record->id;
+				}
+			} else {
 				$data[$this->alias()]['institution_site_section_students'][$k] = [
-					'id' => $k,
+					'id' => $record->id,
 					'status' => 0 
 				];
-			} else {
-				$data[$this->alias()]['institution_site_section_students'][$k]['id'] = $record->id;
 			}
 		}
 		return compact('entity', 'data', 'options');

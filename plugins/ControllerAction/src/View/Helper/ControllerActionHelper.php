@@ -48,6 +48,18 @@ class ControllerActionHelper extends Helper {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
 	}
 
+	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
+		$eventMap = $subject->implementedEvents();
+		$event = new Event($eventKey, $this, $params);
+
+		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
+			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
+				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
+			}
+		}
+		return $subject->eventManager()->dispatch($event);
+	}
+
 	public function getFormTemplate() {
 		return [
 			'select' => '<div class="input-select-wrapper"><select name="{{name}}" {{attrs}}>{{content}}</select></div>'
@@ -368,6 +380,8 @@ class ControllerActionHelper extends Helper {
 
 	public function getEditElements(Entity $data, $fields = [], $exclude = []) {
 		$_fields = $this->_View->get('_fields');
+
+		$html = '';
 		$model = $this->_View->get('model');
 		$displayFields = $_fields;
 
@@ -424,16 +438,19 @@ class ControllerActionHelper extends Helper {
 					$options['label'] = $label;
 				}
 
-				$function = 'get' . Inflector::camelize($_type) . 'Element';
-				if (method_exists($this, $function)) {
-					$this->$function('edit', $data, $_fieldAttr, $options);
-				}
+				// trigger event for custom field types
+				$method = 'onGet' . Inflector::camelize($_type) . 'Element';
+				$eventKey = 'ControllerAction.Model.' . $method;
+				$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'edit', 'entity' => $data, 'attr' => $_fieldAttr, 'form' => $this->Form, 'options' => $options]);
 				
-				if (!in_array($_type, ['image', 'date', 'time', 'binary', 'element'])) {
-					if (array_key_exists('fieldName', $_fieldAttr)) {
-						$fieldName = $_fieldAttr['fieldName'];
+				if (!empty($event->result)) {
+					$html .= $event->result;
+				} else {
+					// mapped to a current function in this class
+					$function = 'get' . Inflector::camelize($_type) . 'Element';
+					if (method_exists($this, $function)) {
+						$html .= $this->$function('edit', $data, $_fieldAttr, $options);
 					}
-					echo $this->Form->input($fieldName, $options);
 				}
 			}
 		}
@@ -450,6 +467,7 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 		}
+		return $html;
 	}
 
 	public function getViewElements(Entity $data, $fields = [], $exclude = []) {
@@ -521,22 +539,26 @@ class ControllerActionHelper extends Helper {
 				// attach event for index columns
 				$method = 'onGet' . Inflector::camelize($_field);
 				$eventKey = 'ControllerAction.Model.' . $method;
-
-				$event = new Event($eventKey, $this, ['entity' => $data]);
-				if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
-	                $table->eventManager()->on($eventKey, [], [$table, $method]);
-	            }
-				$event = $table->eventManager()->dispatch($event);
+				$event = $this->dispatchEvent($table, $eventKey, $method, ['entity' => $data]);
 				// end attach event
 
 				if ($event->result) {
-					$value = $event->result;
+					$data->$_field = $event->result;
 				} else if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
 					}
+				}
+
+				// trigger event for custom field types
+				$method = 'onGet' . Inflector::camelize($_type) . 'Element';
+				$eventKey = 'ControllerAction.Model.' . $method;
+				$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'view', 'entity' => $data, 'attr' => $_fieldAttr, 'form' => $this->Form]);
+				
+				if (!empty($event->result)) {
+					$value = $event->result;
 				} else {
 					// mapped to a current function in this class
 					$function = 'get' . Inflector::camelize($_type) . 'Element';
@@ -581,12 +603,19 @@ class ControllerActionHelper extends Helper {
 	// Elements definition starts here
 
 	public function getStringElement($action, Entity $data, $attr, &$options=[]) {
-		$value = $data->$attr['field'];
-		if ($action == 'edit') {
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = $data->$attr['field'];
+		} else if ($action == 'edit') {
 			$options['type'] = 'string';
 			if (array_key_exists('length', $attr)) {
 				$options['maxlength'] = $attr['length'];
 			}
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}
@@ -647,14 +676,27 @@ class ControllerActionHelper extends Helper {
 			// 		}
 			// 	}
 			// }
+
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}
 
 	public function getTextElement($action, Entity $data, $attr, &$options=[]) {
-		$value = nl2br($data->$attr['field']);
-		if ($action == 'edit') {
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = nl2br($data->$attr['field']);
+		} else if ($action == 'edit') {
 			$options['type'] = 'textarea';
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}
@@ -668,6 +710,11 @@ class ControllerActionHelper extends Helper {
 			if (array_key_exists('value', $attr)) {
 				$options['value'] = $attr['value'];
 			}
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}
@@ -678,11 +725,10 @@ class ControllerActionHelper extends Helper {
 			$value = $attr['value'];
 		} else if ($action == 'edit') {
 			$this->getDisabledElement($action, $data, $attr, $options);
-			echo $this->Form->input('disabled-'.$attr['field'], $options);
-
+			$value = $this->Form->input('disabled-'.$attr['field'], $options);
 			unset($options['disabled']);
 			unset($options['value']);
-			$value = $this->getHiddenElement($action, $data, $attr, $options);
+			$value .= $this->getHiddenElement($action, $data, $attr, $options);
 		}
 		return $value;
 	}
@@ -701,6 +747,11 @@ class ControllerActionHelper extends Helper {
 			} else {
 				$options['value'] = $data->$attr['field'];
 			}
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}
@@ -763,7 +814,7 @@ class ControllerActionHelper extends Helper {
 			header('Content-Type: image/jpeg'); 
 
 			$this->includes['jasny']['include'] = true;
-			echo $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src, 
+			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src, 
 																							'defaultImageFromHolder' => $defaultImageFromHolder, 
 																							'defaultWidth' => $defaultWidth,
 																							'defaultHeight' => $defaultHeight,
@@ -772,7 +823,7 @@ class ControllerActionHelper extends Helper {
 		} else if($action == 'index') {
 			if(!empty($data->photo_content)){
 				$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
-            	return '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($data->photo_content) ).'" style="'.$style.'"/>';
+            	$value = '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($data->photo_content) ).'" style="'.$style.'"/>';
 			}	
 		}
 		return $value;
@@ -796,7 +847,7 @@ class ControllerActionHelper extends Helper {
 		if ($action == 'view' || $action == 'index') {
 			$value = $this->_View->element($element, ['attr' => $attr]);
 		} else if ($action == 'edit') {
-			echo $this->_View->element($element, ['attr' => $attr]);
+			$value = $this->_View->element($element, ['attr' => $attr]);
 		}
 		return $value;
 	}
@@ -872,7 +923,7 @@ class ControllerActionHelper extends Helper {
 			} else {
 				$this->_View->set('datepicker', [$attr]);
 			}
-			echo $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+			$value = $this->_View->element('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 			$this->includes['datepicker']['include'] = true;
 		}
 		return $value;
@@ -919,7 +970,7 @@ class ControllerActionHelper extends Helper {
 			} else {
 				$this->_View->set('timepicker', [$attr]);
 			}
-			echo $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
+			$value = $this->_View->element('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
 			$this->includes['timepicker']['include'] = true;
 		}
 
@@ -958,6 +1009,12 @@ class ControllerActionHelper extends Helper {
 			$options = array_merge($_options, $options);
 
 			$this->includes['chosen']['include'] = true;
+
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}
@@ -976,7 +1033,7 @@ class ControllerActionHelper extends Helper {
 			$value = $this->Html->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
-			echo $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+			$value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
 		}
 		return $value;
 	}
@@ -988,6 +1045,11 @@ class ControllerActionHelper extends Helper {
 		} else if ($action == 'edit') {
 			$options['type'] = 'color';
 			$options['onchange'] = 'clickColor(0, -1, -1, 5);';
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
 	}

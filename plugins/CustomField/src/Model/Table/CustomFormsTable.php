@@ -3,10 +3,10 @@ namespace CustomField\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
@@ -17,6 +17,7 @@ class CustomFormsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->hasMany('CustomFormTypes', ['className' => 'CustomField.CustomFormTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('CustomFormFields', ['className' => 'CustomField.CustomFormFields', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('FieldOptionValues', [
 			'className' => 'FieldOptionValues',
 			'joinTable' => 'custom_form_types',
@@ -81,12 +82,12 @@ class CustomFormsTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 	}
 
-	public function indexBeforePaginate(Event $event, Table $model, array $options) {
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
 		list($moduleOptions, $selectedModule) = array_values($this->getSelectOptions());
 
         $this->controller->set(compact('moduleOptions', 'selectedModule'));
 		$options['conditions'][] = [
-        	$model->aliasField('custom_module_id') => $selectedModule
+        	$this->aliasField('custom_module_id') => $selectedModule
         ];
         $options['contain'] = array_merge($options['contain'], $this->_contain);
 
