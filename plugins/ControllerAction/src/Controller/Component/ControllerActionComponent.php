@@ -817,7 +817,7 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
 		
-		if ($request->is('delete') && !empty($request->data($primaryKey))) {
+		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
 			$id = $request->data[$primaryKey];
 			$data = $model->get($id);
 			if ($this->removeStraightAway) {
