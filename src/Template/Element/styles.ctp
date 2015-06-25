@@ -11,7 +11,6 @@ echo $this->Html->css('OpenEmis.layout');
 if ($htmlLangDir == 'rtl') {
 	echo $this->Html->css('OpenEmis.layout.rtl');
 }
-echo $this->Html->css('ControllerAction.controller-action');
 
 if (isset($theme)) {
 	echo $this->Html->css($theme);
