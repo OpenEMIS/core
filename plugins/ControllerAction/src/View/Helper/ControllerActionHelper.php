@@ -226,14 +226,24 @@ class ControllerActionHelper extends Helper {
 
 			if ($event->result) {
 				$value = $event->result;
+				$obj->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
+					$obj->field = $value;
 				}
-			} else if (array_key_exists('options', $attr) && isset($attr['options'][$value])) {
-				$value = $attr['options'][$value];
+			}
+
+			// trigger event for custom field types
+			$method = 'onGet' . Inflector::camelize($type) . 'Element';
+			$eventKey = 'ControllerAction.Model.' . $method;
+			$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'index', 'entity' => $obj, 'attr' => $attr, 'form' => $this->Form]);
+			
+			if (!empty($event->result)) {
+				$value = $event->result;
 			} else {
+				// mapped to a current function in this class
 				$function = 'get' . Inflector::camelize($type) . 'Element';
 				if (method_exists($this, $function)) {
 					$value = $this->$function('index', $obj, $attr);
@@ -543,12 +553,14 @@ class ControllerActionHelper extends Helper {
 				// end attach event
 
 				if ($event->result) {
+					$value = $event->result;
 					$data->$_field = $event->result;
 				} else if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
 					if (is_object($data->$associatedObject)) {
 						$value = $data->$associatedObject->name;
+						$data->$_field = $value;
 					}
 				}
 
@@ -622,7 +634,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getSelectElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
+		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
 				reset($attr['options']);
 				$firstKey = key($attr['options']);
@@ -735,7 +747,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getDisabledElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
+		if ($action == 'index' || $action == 'view') {
 			$value = $attr['value'];
 		} else if ($action == 'edit') {
 			$options['type'] = 'text';
@@ -766,7 +778,7 @@ class ControllerActionHelper extends Helper {
 		//$defaultWidth = ($data::imageWidth > 0) ? ($data::imageWidth) : $defaultWidth;
 		//$defaultHeight = ($data::imageHeight > 0) ? ($data::imageHeight) : $defaultHeight;
 
-		if ($action == 'view') {
+		if ($action == 'index' || $action == 'view') {
 			if (!is_null($data->photo_content)) {
 				$file = ''; 
 				while (!feof($data->photo_content)) {
@@ -820,7 +832,7 @@ class ControllerActionHelper extends Helper {
 																							'defaultHeight' => $defaultHeight,
 																							'showRemoveButton' => $showRemoveButton]);
 
-		} else if($action == 'index') {
+		} else if ($action == 'index') {
 			if(!empty($data->photo_content)){
 				$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
             	$value = '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($data->photo_content) ).'" style="'.$style.'"/>';
@@ -831,7 +843,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getDownloadElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
+		if ($action == 'index' || $action == 'view') {
 			$value = $this->Html->link($data->{$attr['field']}, $attr['attr']['url']);
 		} else if ($action == 'edit') {
 			
@@ -867,7 +879,7 @@ class ControllerActionHelper extends Helper {
 		$field = $attr['field'];
 		$value = $data->$field;
 
-		if ($action == 'view' || $action == 'index') {
+		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
 				$table = TableRegistry::get($attr['className']);
 				$event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
@@ -898,7 +910,7 @@ class ControllerActionHelper extends Helper {
 		$field = $attr['field'];
 		$value = $data->$field;
 
-		if ($action == 'view' || $action == 'index') {
+		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
 				$table = TableRegistry::get($attr['className']);
 				$event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
@@ -945,7 +957,7 @@ class ControllerActionHelper extends Helper {
 		$field = $attr['field'];
 		$value = $data->$field;
 
-		if ($action == 'view' || $action == 'index') {
+		if ($action == 'index' || $action == 'view') {
 			if (!is_null($value)) {
 				$table = TableRegistry::get($attr['className']);
 				$event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
@@ -1021,7 +1033,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getBinaryElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
+		if ($action == 'index' || $action == 'view') {
 			$table = TableRegistry::get($attr['className']);
 			$fileUpload = $table->behaviors()->get('FileUpload');
 			$name = '&nbsp;';
@@ -1040,7 +1052,7 @@ class ControllerActionHelper extends Helper {
 
 	public function getColorElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view' || $action == 'index') {
+		if ($action == 'index' || $action == 'view') {
 			$value = '<div style="background-color:'.$data->$attr['field'].'">&nbsp;</div>';
 		} else if ($action == 'edit') {
 			$options['type'] = 'color';
@@ -1057,7 +1069,7 @@ class ControllerActionHelper extends Helper {
 	// a template function for creating new elements
 	public function getTestElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
-		if ($action == 'view') {
+		if ($action == 'index' || $action == 'view') {
 			
 		} else if ($action == 'edit') {
 			
