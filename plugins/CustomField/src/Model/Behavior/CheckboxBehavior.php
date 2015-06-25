@@ -33,24 +33,26 @@ class CheckboxBehavior extends Behavior {
 		return compact('entity', 'data', 'options');
 	}
 
-	public function getCheckboxElement($field, $entity, $order) {		
-		$checkboxOptions = [];
-		foreach ($entity['custom_field_options'] as $key => $obj) {
-			$checkboxOptions[$obj->id] = $obj->name;
-		}
+    public function onGetCustomCheckboxElement(Event $event, $action, $entity, $attr, $options=[]) {
+        $value = '';
 
-		$this->_table->ControllerAction->field($field.".number_value", [
-            'type' => 'element',
-            'order' => $order,
-            'element' => 'CustomField.checkbox',
-            'visible' => true,
-            'field' => $field,
-            'fieldKey' => $entity->id,
-            'options' => [
-            	//'type' => 'checkbox',
-            	'label' => $entity->name,
-            	'options' => $checkboxOptions
-            ]
-        ]);
+        if ($action == 'index' || $action == 'view') {
+            //$value = $data->$attr['field'];
+        } else if ($action == 'edit') {
+            $form = $event->subject()->Form;
+            $options['type'] = 'multicheckbox';
+
+            $checkboxOptions = [];
+    		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
+				$checkboxOptions[$obj->id] = $obj->name;
+			}
+			$options['options'] = $checkboxOptions;
+
+			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+            $value = $form->input($fieldPrefix.".text_value", $options);
+            $value .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $attr['customField']->id]);
+        }
+
+        return $value;
     }
 }
