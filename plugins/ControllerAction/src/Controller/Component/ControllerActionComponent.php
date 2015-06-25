@@ -20,6 +20,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Network\Response;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -384,8 +385,10 @@ class ControllerActionComponent extends Component {
 				}
 			}
 		}
-
-		$this->render();
+		if (!$result instanceof Response) {
+			$this->render();
+		}
+		return $result;
 	}
 
 	public function render() {
