@@ -69,9 +69,19 @@ class StudentBehavior extends Behavior {
 					}
 					$data['Users']['institution_site_students'][0]['institution_site_id'] = $institutionStudentData['InstitutionSiteStudents']['institution_site_id'];
 					$data['Users']['institution_site_students'][0]['student_status_id'] = $institutionStudentData['InstitutionSiteStudents']['student_status_id'];
+					$data['Users']['institution_site_students'][0]['education_programme_id'] = $institutionStudentData['InstitutionSiteStudents']['education_programme_id'];
+
+					// start and end (date and year) handling
+					$data['Users']['institution_site_students'][0]['start_date'] = $institutionStudentData['InstitutionSiteStudents']['start_date'];
+					$data['Users']['institution_site_students'][0]['end_date'] = $institutionStudentData['InstitutionSiteStudents']['end_date'];
+					$startData = getdate(strtotime($data['Users']['institution_site_students'][0]['start_date']));
+					$data['Users']['institution_site_students'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+					$endData = getdate(strtotime($data['Users']['institution_site_students'][0]['end_date']));
+					$data['Users']['institution_site_students'][0]['end_year'] = (array_key_exists('year', $endData))? $endData['year']: null;
 				}
 			}
 		}
+		return compact('entity', 'data', 'options');
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
