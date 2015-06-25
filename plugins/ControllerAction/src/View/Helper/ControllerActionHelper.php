@@ -161,13 +161,13 @@ class ControllerActionHelper extends Helper {
 				$fieldModel = $attr['model'];
 				
 				if (!in_array($type, $excludedTypes)) {
+					if (is_null($table)) {
+						$table = TableRegistry::get($attr['className']);
+					}
+
 					if ($attr['sort']) {
 						$label = $this->Paginator->sort($field);
 					} else {
-						if (is_null($table)) {
-							$table = TableRegistry::get($attr['className']);
-						}
-
 						// attach event to get labels for fields
 						$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
 						$event = $table->eventManager()->dispatch($event);
@@ -177,7 +177,7 @@ class ControllerActionHelper extends Helper {
 							$label = $event->result;
 						}
 					}
-
+					
 					$method = 'onGet' . Inflector::camelize($field);
 					$eventKey = 'ControllerAction.Model.' . $method;
 
