@@ -3,6 +3,7 @@ namespace CustomField\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -38,6 +39,12 @@ class CustomRecordsTable extends AppTable {
 		return $options;
 	}
 
+	public function viewBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
+	}
+
 	public function addEditBeforeAction(Event $event) {
 		//Setup fields
 		list(, , $formOptions) = array_values($this->getSelectOptions());
@@ -61,6 +68,12 @@ class CustomRecordsTable extends AppTable {
 		list(, , , $selectedModule) = array_values($this->getSelectOptions());
 		$entity->custom_form_id = $selectedModule;
 		return $entity;
+	}
+
+	public function editBeforeQuery(Event $event, Query $query, array $contain) {
+		//Retrieve associated data
+		$contain = array_merge($contain, $this->_contain);
+		return compact('query', 'contain');
 	}
 
 	public function getSelectOptions() {
