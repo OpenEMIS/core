@@ -3,9 +3,10 @@ namespace User\Model\Entity;
 
 use Cake\ORM\Entity;
 use Cake\Auth\DefaultPasswordHasher;
+use Cake\ORM\TableRegistry;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id'];
+    protected $_virtual = ['name', 'name_with_id', 'existence_type', 'institution_name', 'student_status'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -89,4 +90,54 @@ class User extends Entity {
     //     return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['openemis_no'], $name)) : trim(sprintf('%s', $name));
     // }
 
+    protected function _getExistenceType(){
+        $data = "";
+        $securityUserId = $this->id;
+
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $UserIdentity = $UserIdentities
+                ->find()
+                ->contain(['Users'])
+                ->where(['security_user_id' => $this->id])
+                ->first();
+
+        if(!empty($UserIdentity))
+            $data = $UserIdentity->number;
+
+        return $data;
+    }
+
+    protected function _getInstitutionName(){
+        $data = "";
+        $securityUserId = $this->id;
+
+        $InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+        $InstitutionSite = $InstitutionSiteStudents
+                ->find()
+                ->contain(['Institutions'])
+                ->where(['security_user_id' => $this->id])
+                ->first();
+
+        if(!empty($InstitutionSite->institution))
+            $data = $InstitutionSite->institution->name;
+
+        return $data;
+    }
+
+    protected function _getStudentStatus(){
+        $data = "";
+        $securityUserId = $this->id;
+
+        $InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStudents');
+        $StudentStatus = $InstitutionSiteStudents
+                ->find()
+                ->contain(['StudentStatuses'])
+                ->where(['security_user_id' => $this->id])
+                ->first();
+     
+        if(!empty($StudentStatus->student_status))
+            $data = $StudentStatus->student_status->name;
+
+        return $data;
+    }
 }
