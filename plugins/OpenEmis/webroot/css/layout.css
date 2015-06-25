@@ -911,11 +911,6 @@ input[type="checkbox"] {
 	margin-left: 10px !important;
 }
 
-.delete-wrapper {
-	padding: 8px 0;
-	display: inline;
-}
-
 /* buttons, toolbar and page-header alignments in chrome */
 .chrome .page-header h2 {
 	padding: 8px 10px 6px 0;
