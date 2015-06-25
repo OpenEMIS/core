@@ -7,12 +7,15 @@ use Cake\Event\Event;
 
 class TableBehavior extends Behavior {
 	public function initialize(array $config) {
-		$this->_table->ControllerAction->addField('tables', [
-            'type' => 'element',
-            'order' => 5,
-            'element' => 'CustomField.table',
-            'visible' => true
-        ]);
+		parent::initialize($config);
+		if (isset($config['setup']) && $config['setup'] == true) {
+			$this->_table->ControllerAction->addField('tables', [
+	            'type' => 'element',
+	            'order' => 5,
+	            'element' => 'CustomField.CustomFields/table',
+	            'visible' => true
+	        ]);
+		}
     }
 
 	public function addEditOnAddColumn(Event $event, Entity $entity, array $data, array $options) {

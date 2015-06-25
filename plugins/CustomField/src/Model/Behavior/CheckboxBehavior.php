@@ -7,15 +7,18 @@ use Cake\Event\Event;
 
 class CheckboxBehavior extends Behavior {
 	public function initialize(array $config) {
-		$this->_table->ControllerAction->addField('options', [
-            'type' => 'element',
-            'order' => 5,
-            'element' => 'CustomField.checkbox',
-            'visible' => true
-        ]);
+		parent::initialize($config);
+		if (isset($config['setup']) && $config['setup'] == true) {
+			$this->_table->ControllerAction->addField('options', [
+	            'type' => 'element',
+	            'order' => 5,
+	            'element' => 'CustomField.CustomFields/checkbox',
+	            'visible' => true
+	        ]);
+		}
     }
 
-    public function addEditOnAddOption(Event $event, Entity $entity, array $data, array $options) {
+    public function addEditOnAddCheckboxOption(Event $event, Entity $entity, array $data, array $options) {
 		$fieldOptions = [
 			'name' => '',
 			'visible' => 1
@@ -29,4 +32,25 @@ class CheckboxBehavior extends Behavior {
 
 		return compact('entity', 'data', 'options');
 	}
+
+	public function getCheckboxElement($field, $entity, $order) {		
+		$checkboxOptions = [];
+		foreach ($entity['custom_field_options'] as $key => $obj) {
+			$checkboxOptions[$obj->id] = $obj->name;
+		}
+
+		$this->_table->ControllerAction->field($field.".number_value", [
+            'type' => 'element',
+            'order' => $order,
+            'element' => 'CustomField.checkbox',
+            'visible' => true,
+            'field' => $field,
+            'fieldKey' => $entity->id,
+            'options' => [
+            	//'type' => 'checkbox',
+            	'label' => $entity->name,
+            	'options' => $checkboxOptions
+            ]
+        ]);
+    }
 }
