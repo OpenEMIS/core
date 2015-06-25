@@ -32,6 +32,7 @@ class InstitutionSiteClassesTable extends AppTable {
 		 */
 		$this->InstitutionSiteSections = $this->Institutions->InstitutionSiteSections;
 		$this->InstitutionSiteProgrammes = $this->Institutions->InstitutionSiteProgrammes;
+		$this->InstitutionSiteSectionGrades = $this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -284,57 +285,44 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	public function addBeforePatch($event, $entity, $data, $options) {
-		pr($data);die;
-		/**
-		 * Unable to utilise updateAll for this scenario.
-		 * Only new student records will be saved as status=1 at the later part of this scope.
-		 * Existitng records which is not removed from the UI list, will remain as status=0 instead of 1.
-		 */
-		// $this->InstitutionSiteClassStudents->updateAll(['status'=>0], ['institution_site_class_id' => $entity->id]);
-		// $this->InstitutionSiteClassStaff->updateAll(['status'=>0], ['institution_site_class_id' => $entity->id]);
-
-
-		/**
-		 * In students.ctp && teachers.ctp, we set the security_user_id as the array keys for easy search and compare.
-		 * Assign back original record's id to the new list so as to preserve id numbers.
-		 */
-		foreach($entity->institution_site_class_students as $key => $record) {
-			$k = $record->security_user_id;
-			if (array_key_exists('institution_site_class_students', $data[$this->alias()])) {
-				if (!array_key_exists($k, $data[$this->alias()]['institution_site_class_students'])) {			
-					$data[$this->alias()]['institution_site_class_students'][$k] = [
-						'id' => $record->id,
-						'status' => 0 
-					];
-				} else {
-					$data[$this->alias()]['institution_site_class_students'][$k]['id'] = $record->id;
-				}
-			} else {
-				$data[$this->alias()]['institution_site_class_students'][$k] = [
-					'id' => $record->id,
-					'status' => 0 
+		$commonData = $data['InstitutionSiteClasses'];
+		$data['InstitutionSiteClasses'] = [];
+		foreach ($data['MultiClasses'] as $key=>$class) {
+			if (isset($class['education_subject_id']) && isset($class['institution_site_class_staff'])) {
+				$class['academic_period_id'] = $commonData['academic_period_id'];
+				$class['institution_site_id'] = $commonData['institution_site_id'];
+				$class['institution_site_section_classes'] = [
+					[
+						'status' => 1,
+						'institution_site_section_id' => $commonData['section_name']
+					]
 				];
+				$data['InstitutionSiteClasses'][] = $class;
 			}
 		}
-		// foreach($entity->institution_site_class_staff as $key => $record) {
-		// 	$k = $record->security_user_id;
-		// 	if (array_key_exists('institution_site_class_staff', $data[$this->alias()])) {
-		// 		if (!array_key_exists($k, $data[$this->alias()]['institution_site_class_staff'])) {			
-		// 			$data[$this->alias()]['institution_site_class_staff'][$k] = [
-		// 				'id' => $record->id,
-		// 				'status' => 0 
-		// 			];
-		// 		} else {
-		// 			$data[$this->alias()]['institution_site_class_staff'][$k]['id'] = $record->id;
-		// 		}
-		// 	} else {
-		// 		$data[$this->alias()]['institution_site_class_staff'][$k] = [
-		// 			'id' => $record->id,
-		// 			'status' => 0 
-		// 		];
-		// 	}
-		// }		
-		return compact('entity', 'data', 'options');
+		unset($data['MultiClasses']);
+		$class = null;
+
+		$classes = $this->newEntities($data['InstitutionSiteClasses']);
+		$error = false;
+		foreach ($classes as $class) {
+		    if ($class->errors()) {
+		    	$error = $class->errors();
+		    }
+		}
+		if (!$error) {
+			foreach ($classes as $class) {
+		    	$this->save($class);
+			}
+			$this->Alert->success('general.add.success');
+			$action = $this->ControllerAction->buttons['index']['url'];
+			$this->controller->redirect($action);
+		} else {
+			// pr($error);
+			$this->log($error, 'debug');
+			$this->Alert->error('general.add.failed');
+		}
+		return false;
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
@@ -352,9 +340,11 @@ class InstitutionSiteClassesTable extends AppTable {
 		}
 
 		$subjects = $this->getSubjectOptions();
+		$existedSubjects = $this->getExistedSubjects(true);
 		$this->fields['classes']['data'] = [
 			'teachers' => $teachers,
 			'subjects' => $subjects,
+			'existedSubjects' => $existedSubjects
 		];
 
 		return $entity;
@@ -629,7 +619,7 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 	
 	private function getSubjectOptions($listOnly=false) {
-		$Grade = $this->InstitutionSiteSectionClasses->InstitutionSiteSections->InstitutionSiteSectionGrades;
+		$Grade = $this->InstitutionSiteSectionGrades;
 		$gradeOptions = $Grade->find()
 							->contain('EducationGrades')
 							->where([
@@ -641,8 +631,6 @@ class InstitutionSiteClassesTable extends AppTable {
 		foreach ($gradeOptions as $key => $value) {
 			$gradeData[$value->education_grade->id] = $value->education_grade->name;
 		}
-		// pr($gradeData);
-		// pr(array_keys($gradeData));
 		$subjects = $this
 				->EducationSubjects
 				->EducationGradesSubjects
@@ -652,13 +640,40 @@ class InstitutionSiteClassesTable extends AppTable {
 					'EducationGradesSubjects.education_grade_id IN' => array_keys($gradeData),
 					'EducationGradesSubjects.visible' => 1
 				])
-				// ->__toString();
+				->order('EducationSubjects.order')
+				->group('EducationSubjects.id')
 				->toArray();
-		// pr($subjects);die;
 		if ($listOnly) {
 			$subjectList = [];
 			foreach ($subjects as $key => $value) {
 				$subjectList[$value->id] = $value->education_subject->name;
+			}
+			$data = $subjectList;
+		} else {
+			$data = $subjects;
+		}
+		return $data;
+	}
+
+	private function getExistedSubjects($listOnly=false) {
+		$subjects = $this
+			->InstitutionSiteSectionClasses
+			->find()
+			->contain([
+				'InstitutionSiteClasses'=>[
+					'EducationSubjects',
+					'InstitutionSiteClassStaff'=>['Users'=>['Genders']]
+				],
+			])
+			->where([
+				'InstitutionSiteSectionClasses.institution_site_section_id' => $this->_selectedSectionId,
+				'InstitutionSiteSectionClasses.status' => 1
+			])
+			->toArray();
+		if ($listOnly) {
+			$subjectList = [];
+			foreach ($subjects as $key => $value) {
+				$subjectList[$value->institution_site_class->education_subject->id] = $value->institution_site_class->education_subject->name;
 			}
 			$data = $subjectList;
 		} else {
