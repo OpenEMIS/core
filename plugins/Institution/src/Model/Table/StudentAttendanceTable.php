@@ -113,7 +113,7 @@ class StudentAttendanceTable extends AppTable {
 		$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
 		$weekStr = 'Week %d (%s - %s)';
 		$weekOptions = [];
-		foreach ($weeks as $index => $dates) { // jeff-TODO: need to set todays date as default
+		foreach ($weeks as $index => $dates) {
 			$weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
 		}
 		$selectedWeek = $this->queryString('week', $weekOptions);
@@ -135,34 +135,38 @@ class StudentAttendanceTable extends AppTable {
 		$dayOptions = [-1 => ['value' => -1, 'text' => __('All Days')]];
 		$firstDayOfWeek = $week[0]->copy();
 		$firstDay = -1;
-		$todayFound = false;
+		$today = null;
 
 		do {
 			if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
 				if ($firstDay == -1) {
 					$firstDay = $firstDayOfWeek->dayOfWeek;
 				}
+				if ($firstDayOfWeek->isToday()) {
+					$today = $firstDayOfWeek->dayOfWeek;
+				}
 				$dayOptions[$firstDayOfWeek->dayOfWeek] = [
 					'value' => $firstDayOfWeek->dayOfWeek, 
 					'text' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ')',
 				];
-				if ($firstDayOfWeek->isToday()) {
-					$dayOptions[$firstDayOfWeek->dayOfWeek][] = 'selected';
-					$todayFound = true;
-				}
 			}
 			$firstDayOfWeek->addDay();
 		} while($firstDayOfWeek->lte($week[1]));
 
-		// not complete
-		if (!$todayFound) {
-			$dayOptions[$week[0]->dayOfWeek][] = 'selected';
+		$selectedDay = -1;
+		if (isset($this->request->query['day'])) {
+			$selectedDay = $this->request->query('day');
+			if (!array_key_exists($selectedDay, $dayOptions)) {
+				$selectedDay = $firstDay;
+			}
+		} else {
+			if (!is_null($today)) {
+				$selectedDay = $today;
+			} else {
+				$selectedDay = $firstDay;
+			}
 		}
-
-		$selectedDay = $this->queryString('day', $dayOptions);
-		if ($selectedDay == -1) {
-			$selectedDay = $firstDay;
-		}
+		$dayOptions[$selectedDay][] = 'selected';
 		
 		$currentDay = $week[0]->copy();
 		if ($selectedDay != -1) {
@@ -171,6 +175,8 @@ class StudentAttendanceTable extends AppTable {
 			} else {
 				$this->request->query['date'] = $currentDay;
 			}
+		} else {
+			$this->request->query['date'] = $week;
 		}
 		$this->controller->set(compact('dayOptions'));
 		// End setup days
@@ -201,7 +207,8 @@ class StudentAttendanceTable extends AppTable {
 		$options['conditions'][$this->aliasField('institution_site_section_id')] = $sectionId;
 
 		if ($day == -1) {
-
+			$this->ControllerAction->field('monday');
+			
 		} else {
 			$this->ControllerAction->field('type');
 			$this->ControllerAction->field('reason');
@@ -210,12 +217,29 @@ class StudentAttendanceTable extends AppTable {
 		return $options;
 	}
 
+	public function indexAfterPaginate(Event $event, $data) {
+		foreach ($data as $row) {
+			// pr($row);
+		}
+	}
+
 	public function findWithAbsence(Query $query, array $options) {
 		$date = $options['date'];
+
+		$conditions = ['InstitutionSiteStudentAbsence.security_user_id = StudentAttendance.security_user_id'];
+		if (is_array($date)) {
+			$conditions['InstitutionSiteStudentAbsence.start_date >= '] = $date[0]->format('Y-m-d');
+			$conditions['InstitutionSiteStudentAbsence.start_date <= '] = $date[1]->format('Y-m-d');
+		} else {
+			$conditions['InstitutionSiteStudentAbsence.start_date <= '] = $date->format('Y-m-d');
+			$conditions['InstitutionSiteStudentAbsence.end_date >= '] = $date->format('Y-m-d');
+		}
     	return $query
     		->select([
     			$this->aliasField('security_user_id'), 
     			'Users.openemis_no', 'Users.first_name', 'Users.last_name',
+    			'InstitutionSiteStudentAbsence.start_date',
+    			'InstitutionSiteStudentAbsence.end_date',
     			'InstitutionSiteStudentAbsence.student_absence_reason_id'
     		])
 			->join([
@@ -223,11 +247,7 @@ class StudentAttendanceTable extends AppTable {
 					'table' => 'institution_site_student_absences',
 					'alias' => 'InstitutionSiteStudentAbsence',
 					'type' => 'LEFT',
-					'conditions' => [
-						'InstitutionSiteStudentAbsence.security_user_id = StudentAttendance.security_user_id',
-						'InstitutionSiteStudentAbsence.start_date <= ' => $date->format('Y-m-d'),
-						'InstitutionSiteStudentAbsence.end_date >= ' => $date->format('Y-m-d')
-					]
+					'conditions' => $conditions
 				]
 			])
 			->order(['Users.openemis_no'])
