@@ -3,11 +3,11 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
-
+	
 <div class="input clearfix">
 	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
-	<div class="col-md-5">
-		<table class="table table-striped table-hover table-bordered table-checkable">
+	<div class="table-in-view col-md-5 table-responsive">
+		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
 					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
@@ -18,28 +18,36 @@
 			</thead>
 
 			<?php if (isset($attr['data'])) : ?>
-			<?php //pr($attr['data']['teachers']);?>
+			<?php //pr($attr['data']['existedSubjects']);?>
 			<tbody>
 				<?php foreach ($attr['data']['subjects'] as $i=>$obj) : ?>
-					<?php $n = $obj->education_subject->id ?>
-					<?php //pr($obj);?>
-				<?php 	$selected = false;//(isset($attr['selected']) && in_array($obj->education_grade_id, $attr['selected'])) ? true : false; ?>
+					<?php $n = intval($obj->education_subject->id) ?>
+					<?php //pr($obj->toArray());?>
+					<?php 
+						$selected = (isset($attr['data']['existedSubjects']) && array_key_exists($n, $attr['data']['existedSubjects'])) ? 'checked' : ''; 
+						if ($selected) {
+							$disabled = 'disabled';
+						} else {
+							$disabled = '';
+						}
+					?>
 				<tr>
 					<td class="checkbox-column">
-						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiClasses[%d][education_subject_id]', $n) ?>" value="<?php echo $n?>" <?php echo ($selected) ? 'checked' : '';?> />
+						<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiClasses[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" <?php echo $selected;?> <?php echo $disabled;?> />
 					</td>
 					<td><?= $obj->education_subject->name ?></td>
-					<td><?php 
-					echo $this->Form->input(sprintf('MultiClasses.%d.name', $n), array(
-						'value' => $obj->education_subject->name,
-						'label' => false,
-					));
-					?></td>
-					<td><?php 
-					echo $this->Form->input(sprintf('MultiClasses.%d.security_user_id', $n), array(
-						'options' => $attr['data']['teachers'], 
-						'label' => false,
-					));
+					<td>
+						<input type="text" name="<?php echo sprintf('MultiClasses[%d][name]', $i) ?>" value="<?php echo $obj->education_subject->name ?>" <?php echo $disabled;?> />
+					</td>
+					<td>
+						<input type="hidden" name="<?php echo sprintf('MultiClasses[%d][institution_site_class_staff][0][status]', $i) ?>" value="1" />
+					<?php 
+					if (!$selected) {
+						echo $this->Form->input(sprintf('MultiClasses.%d.institution_site_class_staff.0.security_user_id', $i), array(
+							'options' => $attr['data']['teachers'], 
+							'label' => false,
+						));
+					}
 					?></td>
 				</tr>
 				<?php endforeach ?>
