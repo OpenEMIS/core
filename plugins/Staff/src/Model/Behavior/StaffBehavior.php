@@ -25,7 +25,9 @@ class StaffBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.beforeAction' => 'beforeAction',
-			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'
+			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
+			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
+			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect'
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -54,5 +56,39 @@ class StaffBehavior extends Behavior {
 
 		$indexDashboard = 'Staff.Staff/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);
+	}
+
+	public function addBeforePatch($event, $entity, $data, $options) {
+		// this is an entry that is added to institutions
+		if (array_key_exists('new', $this->_table->request->query)) {
+			if ($this->_table->Session->check('InstitutionSiteStaff.add.'.$this->_table->request->query['new'])) {
+				$institutionStudentData = $this->_table->Session->read('InstitutionSiteStaff.add.'.$this->_table->request->query['new']);
+				if (array_key_exists('Users', $data)) {
+					if (!array_key_exists('institution_site_staff', $data['Users'])) {
+						$data['Users']['institution_site_staff'] = [];
+						$data['Users']['institution_site_staff'][0] = [];
+					}
+					$data['Users']['institution_site_staff'][0]['institution_site_id'] = $institutionStudentData['InstitutionSiteStaff']['institution_site_id'];
+
+					$data['Users']['institution_site_staff'][0]['FTE'] = $institutionStudentData['InstitutionSiteStaff']['FTE']/100;
+					$data['Users']['institution_site_staff'][0]['staff_type_id'] = $institutionStudentData['InstitutionSiteStaff']['staff_type_id'];
+
+					// start (date and year) handling
+					$data['Users']['institution_site_staff'][0]['start_date'] = $institutionStudentData['InstitutionSiteStaff']['start_date'];
+					$startData = getdate(strtotime($data['Users']['institution_site_staff'][0]['start_date']));
+					$data['Users']['institution_site_staff'][0]['start_year'] = (array_key_exists('year', $startData))? $startData['year']: null;
+				}
+			}
+		}
+		return compact('entity', 'data', 'options');
+	}
+
+	public function addAfterSaveRedirect($action) {
+		$action = [];
+		if ($this->_table->Session->check('InstitutionSiteStaff.add.'.$this->_table->request->query['new'])) {
+			$action = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff'];
+		}
+
+		return $action;
 	}
 }
