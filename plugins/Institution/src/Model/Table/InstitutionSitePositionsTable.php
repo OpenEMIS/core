@@ -172,4 +172,39 @@ class InstitutionSitePositionsTable extends AppTable {
 	public function addBeforeAction($event) {
 	}
 
+	/**
+	 * Used by InstitutionSiteStaff.add
+	 * @param  boolean $institutionId [description]
+	 * @param  boolean $status        [description]
+	 * @return [type]                 [description]
+	 */
+	public function getInstitutionSitePositionList($institutionId = false, $status = false) {
+		$data = $this->find();
+
+		if ($institutionId !== false) {
+			$data->where(['institution_site_id' => $institutionId]);
+		}
+
+		if ($status !== false) {
+			$data->where(['status' => $status]);
+		}
+
+		$list = array();
+		if (is_object($data)) {
+			
+			$staffOptions = $this->StaffPositionTitles->getList();
+			$staffOptions = (is_object($staffOptions))? $staffOptions->toArray(): [];
+
+			// pr($staffOptions);
+			
+			foreach ($data as $posInfo) {
+				$list[$posInfo['id']] = sprintf('%s - %s', 
+					$posInfo->position_no, 
+					$staffOptions[$posInfo->staff_position_title_id]
+					);
+			}
+		}
+		return $list;
+	}
+
 }
