@@ -29,6 +29,16 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->AcademicPeriods = $this->Institutions->InstitutionSiteShifts->AcademicPeriods;
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator
+	        ->allowEmpty('end_date')
+ 	        ->add('end_date', 'ruleCompareDateReverse', [
+		            'rule' => ['compareDateReverse', 'start_date', false]
+	    	    ])
+	        ;
+		return $validator;
+	}
+
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->field('start_year', ['visible' => false]);
 		$this->ControllerAction->field('end_year', ['visible' => false]);
