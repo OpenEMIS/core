@@ -4,11 +4,11 @@ $this->start('toolbar');
 	if (array_key_exists('edit', $_buttons)) {
 		echo $this->Html->link('<i class="fa kd-edit"></i>', $_buttons['edit']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Edit', 'escape' => false]);
 	}
-	if (array_key_exists('remove', $_buttons)) {
+	if (array_key_exists('delete', $_buttons)) {
 		$primaryKey = $table->primaryKey();
 		echo '<div class="delete-wrapper" data-toggle="tooltip" data-placement="bottom" title="Delete">';
 		$buttonOptions = ['class' => 'btn btn-xs btn-default', 'escape' => false];
-		if (array_key_exists('removeStraightAway', $_buttons['remove']) && $_buttons['remove']['removeStraightAway']) {
+		if (array_key_exists('removeStraightAway', $_buttons['delete']) && $_buttons['delete']['removeStraightAway']) {
 			$buttonOptions['data-toggle'] = 'modal';
 			$buttonOptions['data-target'] = '#delete-modal';
 			$buttonOptions['field-target'] = '#recordId';
