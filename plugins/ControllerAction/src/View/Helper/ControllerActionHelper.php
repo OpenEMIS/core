@@ -231,7 +231,7 @@ class ControllerActionHelper extends Helper {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
-					$obj->field = $value;
+					$obj->$field = $value;
 				}
 			}
 
