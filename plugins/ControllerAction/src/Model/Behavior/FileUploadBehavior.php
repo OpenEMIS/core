@@ -192,13 +192,16 @@ class FileUploadBehavior extends Behavior {
 		$fileContentField = $this->config('content');
 
 		$file = $entity->$fileContentField;
+		$entity->$fileNameField =  null;
 		$entity->$fileContentField =  null;
 		// $errors = $validator->errors($entity);
 		// if (!empty($errors)) {
 		//     pr($errors);
 		// }
+		
+		//if (!is_null($file)) { 
 
-		if (!is_null($file)) {
+		if (!empty($file)) {
 			if ($file['error'] == 0) { // success
 				if ($this->config('useDefaultName')) {
 					$entity->$fileNameField = $file['name'];
