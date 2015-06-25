@@ -4,7 +4,7 @@ datasource.php
 tmp/cache/*
 tmp/sessions/*
 tmp/tests/*
-logs/*.log
+logs/*.log*
 /build
 /dist
 /tags
