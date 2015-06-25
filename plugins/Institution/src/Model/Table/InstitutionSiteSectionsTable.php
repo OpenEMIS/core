@@ -242,11 +242,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$this->controller->redirect($action);
     	}
 
-		$this->fields['students']['visible'] = false;
-		// $this->ControllerAction->setFieldOrder([
-		// 	'academic_period_id', 'name', 'institution_site_shift_id', 'education_grades', 'security_user_id', 'students'
-		// ]);
-
     	if (array_key_exists('grade_type', $query)) {
     		$this->_selectedGradeType = $this->ControllerAction->buttons['add']['url']['grade_type'];
     	}
@@ -291,7 +286,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$numberOfSectionsOptions = $this->numberOfSectionsOptions();
 			$this->ControllerAction->field('number_of_sections', [
 				'type' => 'select', 
-				'order' => 5,
 				'options' => $numberOfSectionsOptions,
 				'onChangeReload' => true
 			]);
@@ -306,7 +300,6 @@ class InstitutionSiteSectionsTable extends AppTable {
 			$startingSectionNumber = $this->getNewSectionNumber($institutionsId);	
 			$this->ControllerAction->field('single_grade_field', [
 				'type' => 'element', 
-				'order' => 6,
 				'element' => 'Institution.Sections/single_grade',
 				'data' => [	'numberOfSections'=>$this->_numberOfSections,
 				 			'staffOptions'=>$staffOptions,
@@ -314,31 +307,29 @@ class InstitutionSiteSectionsTable extends AppTable {
 				 			'grade'=>$grade	]
 			]);
 
-			$this->fields['name']['visible'] = false;
-			$this->fields['security_user_id']['visible'] = false;
 
-			$this->fields['academic_period_id']['order'] = 1;
-			$this->fields['education_grade']['order'] = 2;
-			$this->fields['institution_site_shift_id']['order'] = 3;
-			$this->fields['section_number']['order'] = 4;
+			$this->fields['name']['visible'] = false;
+			$this->fields['students']['visible'] = false;
+			$this->fields['security_user_id']['visible'] = false;
+			$this->ControllerAction->setFieldOrder([
+				'academic_period_id', 'education_grade', 'institution_site_shift_id', 'section_number', 'number_of_sections', 'single_grade_field'
+			]);
+
     	} else {
 
 			$gradeOptions = $this->Institutions->InstitutionSiteGrades->getInstitutionSiteGradeOptions($institutionsId, $this->_selectedAcademicPeriodId, false);
 			$this->ControllerAction->field('multi_grade_field', [
 				'type' => 'element', 
-				'order' => 6,
 				'element' => 'Institution.Sections/multi_grade',
 				'model' => $this->alias(),
 				'field' => 'multi_grade_field',
 				'data' => $gradeOptions
 			]);
-
 			$this->fields['security_user_id']['options'] = $staffOptions;
-
-			$this->fields['academic_period_id']['order'] = 1;
-			$this->fields['name']['order'] = 2;
-			$this->fields['institution_site_shift_id']['order'] = 3;
-			$this->fields['security_user_id']['order'] = 4;
+			$this->fields['students']['visible'] = false;
+			$this->ControllerAction->setFieldOrder([
+				'academic_period_id', 'name', 'institution_site_shift_id', 'security_user_id', 'multi_grade_field'
+			]);
 
     	}
 
@@ -428,10 +419,8 @@ class InstitutionSiteSectionsTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function editBeforeAction($event) {
-
 		$this->ControllerAction->setFieldOrder([
-			'academic_period_id', 'name', 
-			'institution_site_shift_id', 'security_user_id', 'students',
+			'academic_period_id', 'name', 'institution_site_shift_id', 'security_user_id', 'students',
 		]);
 
 	}
@@ -455,14 +444,14 @@ class InstitutionSiteSectionsTable extends AppTable {
 		 */
 		// $this->InstitutionSiteSectionStudents->updateAll(['status'=>0], ['institution_site_section_id' => $entity->id]);
 
-
+		// pr($data);
 		/**
 		 * In students.ctp, we set the security_user_id as the array keys for easy search and compare.
 		 * Assign back original record's id to the new list so as to preserve id numbers.
 		 */
 		foreach($entity->institution_site_section_students as $key => $record) {
 			$k = $record->security_user_id;
-			if (array_key_exists('institution_site_section_students', $data[$this->alias()])) {			
+			if (array_key_exists('institution_site_section_students', $data[$this->alias()])) {
 				if (!array_key_exists($k, $data[$this->alias()]['institution_site_section_students'])) {			
 					$data[$this->alias()]['institution_site_section_students'][$k] = [
 						'id' => $record->id,
@@ -478,6 +467,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 				];
 			}
 		}
+		// pr($data);die;
 		return compact('entity', 'data', 'options');
 	}
 
@@ -562,14 +552,12 @@ class InstitutionSiteSectionsTable extends AppTable {
 	 */
 	public function onUpdateFieldInstitutionSiteShiftId(Event $event, array $attr, $action, $request) {
 		$institutionsId = $this->Session->read('Institutions.id');
-		if ($action == 'edit' && $action == 'add') {
+		if ($action == 'edit' || $action == 'add') {
 
 			$this->InstitutionSiteShifts->createInstitutionDefaultShift($institutionsId, $this->_selectedAcademicPeriodId);
 			$shiftOptions = $this->InstitutionSiteShifts->getShiftOptions($institutionsId, $this->_selectedAcademicPeriodId);
 			$attr['type'] = 'select';
 			$attr['options'] = $shiftOptions;
-
-		} elseif ($action == 'add') {
 
 		}
 

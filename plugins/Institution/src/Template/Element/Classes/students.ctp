@@ -16,8 +16,8 @@
 	</div>
 	<?php endif;?>
 
-	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+	<div class="table-in-view col-md-5 table-responsive">
+		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
 					<th><?php echo $this->Label->get('general.openemisId'); ?></th>
