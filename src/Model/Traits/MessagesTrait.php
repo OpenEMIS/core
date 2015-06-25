@@ -127,6 +127,30 @@ trait MessagesTrait {
 				 	'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
 				]
 			],
+			'Accounts' => [
+				'username' => [
+					'ruleNotBlank' => 'Please enter a valid username',
+					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
+					'ruleUnique' => 'This username is already in use.'
+				],
+				'password' => [
+					'ruleChangePassword' => 'Incorrect password.',
+					'ruleCheckUsernameExists' => 'Please enter a valid password',
+					'ruleMinLength' => 'Password must be at least 6 characters'
+				],
+				'retype_password' => [
+					'ruleChangePassword' => 'Please confirm your new password',
+					'ruleCompare' => 'Both passwords do not match'
+				],
+				'newPassword' => [
+					'ruleChangePassword' => 'Please enter your new password',
+					'ruleMinLength' => 'Password must be at least 6 characters'
+				],
+				'retypeNewPassword' => [
+					'ruleChangePassword' => 'Please confirm your new password',
+					'ruleCompare' => 'Both passwords do not match'
+				]
+			],
 			'Contacts' => [
 				'contact_type_id' => [
 					'ruleNotBlank' => 'Please enter a Contact Type'
