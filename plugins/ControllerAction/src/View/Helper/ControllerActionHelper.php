@@ -107,6 +107,10 @@ class ControllerActionHelper extends Helper {
 		echo '</div>';
 	}
 
+	public function renderElement($element, $attr) {
+		return $this->_View->element($element, $attr);
+	}
+
 	public function highlight($needle, $haystack){
 		// to cater for photos returning resource
 		if (is_resource($haystack)) { return $haystack; }
@@ -456,7 +460,7 @@ class ControllerActionHelper extends Helper {
 				// trigger event for custom field types
 				$method = 'onGet' . Inflector::camelize($_type) . 'Element';
 				$eventKey = 'ControllerAction.Model.' . $method;
-				$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'edit', 'entity' => $data, 'attr' => $_fieldAttr, 'form' => $this->Form, 'options' => $options]);
+				$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'edit', 'entity' => $data, 'attr' => $_fieldAttr, 'options' => $options]);
 				
 				if (!empty($event->result)) {
 					$html .= $event->result;

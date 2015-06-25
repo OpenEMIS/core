@@ -5,7 +5,6 @@
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
 					<tr>
-						<th></th>
 						<?php foreach ($data->custom_table_columns as $col => $obj) : ?>
 							<th><?= $obj->name?></th>
 						<?php endforeach ?>
@@ -17,6 +16,11 @@
 							<tr>
 								<td><?= $obj->name?></td>
 								<?php foreach ($data->custom_table_columns as $col => $obj) : ?>
+									<?php
+										if($col == 0) {
+											continue;
+										}
+									?>
 									<td></td>
 								<?php endforeach ?>
 							</tr>
@@ -56,17 +60,15 @@
 <?php else : ?>
 	<div class="input">
 		<fieldset class="section_group">
+			<div>
+				<a style="cursor:pointer;" onclick="$('#reload').val('addColumn').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Column'); ?></a>
+				<br>
+				<a style="cursor:pointer;" onclick="$('#reload').val('addRow').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Row'); ?></a>
+			</div>
 			<div class="table-responsive">
 				<table class="table table-striped table-hover table-bordered">
 					<thead>
 						<tr>
-							<th>
-								<div>
-									<a style="cursor:pointer;" onclick="$('#reload').val('addColumn').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Column'); ?></a>
-									<br>
-									<a style="cursor:pointer;" onclick="$('#reload').val('addRow').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Row'); ?></a>
-								</div>
-							</th>
 							<?php if (!empty($data->custom_table_columns)) : ?>
 								<?php
 									$columnOrder = 1;
@@ -116,6 +118,9 @@
 										<?php
 											if(!empty($data->custom_table_columns)) :
 												foreach ($data->custom_table_columns as $key => $obj) {
+													if($key == 0) {
+														continue;
+													}
 													if($obj->visible == 1) :
 										?>
 													<td></td>
