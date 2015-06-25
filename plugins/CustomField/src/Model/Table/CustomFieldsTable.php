@@ -124,6 +124,9 @@ class CustomFieldsTable extends AppTable {
 	public function loadBehavior($selectedFieldType) {
 		$this->fields['is_mandatory']['visible'] = $this->getMandatoryVisibility($selectedFieldType);
 		$this->fields['is_unique']['visible'] = $this->getUniqueVisibility($selectedFieldType);
-		$this->addBehavior('CustomField.'.Inflector::camelize(strtolower($selectedFieldType)));
+		$this->addBehavior(
+			'CustomField.'.Inflector::camelize(strtolower($selectedFieldType)),
+			['setup' => true]
+		);
 	}
 }

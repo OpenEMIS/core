@@ -228,7 +228,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$levelId = $this->selectedId('education_level', $this->_levelOptions);
+			$levelId = $this->postString('education_level', $this->_levelOptions);
 			$this->_programmeOptions = $this->EducationProgrammes
 				->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
 				->find('withCycle')
@@ -245,7 +245,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 
 	public function onUpdateFieldEducationGrade(Event $event, array $attr, $action, $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$programmeId = $this->selectedId('education_programme_id', $this->_programmeOptions);
+			$programmeId = $this->postString('education_programme_id', $this->_programmeOptions);
 			$gradeData = $this->EducationGrades->find()
 				->find('visible')->find('order')
 				->where([$this->EducationGrades->aliasField('education_programme_id') => $programmeId])
@@ -269,19 +269,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	private function selectedId($key, $options=[]) {
-		$request = $this->request;
-		if ($request->data($this->aliasField($key))) {
-			$selectedId = $request->data($this->aliasField($key));
-			if (!array_key_exists($selectedId, $options)) {
-				$selectedId = key($options);
-			}
-		} else {
-			$selectedId = key($options);
-		}
-		return $selectedId;
-	}
-
 	private function patchDates($data) {
 		$modelData = $data[$this->alias()];
 		if (array_key_exists('start_date', $modelData)) {
