@@ -66,7 +66,7 @@ class InstitutionSiteStudentsTable extends AppTable {
 
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
-		// initializing to bypass validation - not going to save anyway
+		// initializing to bypass validation - will be modified later when appropriate
 		$this->fields['security_user_id']['type'] = 'hidden';
 		$this->fields['security_user_id']['value'] = 0;
 
@@ -77,12 +77,9 @@ class InstitutionSiteStudentsTable extends AppTable {
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-
 		$timeNow = strtotime("now");
 		$sessionVar = $this->alias().'.add.'.strtotime("now");
 		$this->Session->write($sessionVar, $this->request->data);
-
-		
 		// $options['validate'] = false;
 
 		$this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?new='.$timeNow]);
