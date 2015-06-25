@@ -161,13 +161,13 @@ class ControllerActionHelper extends Helper {
 				$fieldModel = $attr['model'];
 				
 				if (!in_array($type, $excludedTypes)) {
+					if (is_null($table)) {
+						$table = TableRegistry::get($attr['className']);
+					}
+
 					if ($attr['sort']) {
 						$label = $this->Paginator->sort($field);
 					} else {
-						if (is_null($table)) {
-							$table = TableRegistry::get($attr['className']);
-						}
-
 						// attach event to get labels for fields
 						$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
 						$event = $table->eventManager()->dispatch($event);
@@ -177,6 +177,14 @@ class ControllerActionHelper extends Helper {
 							$label = $event->result;
 						}
 					}
+					
+					$method = 'onGet' . Inflector::camelize($field);
+					$eventKey = 'ControllerAction.Model.' . $method;
+
+					$event = new Event($eventKey, $this);
+					if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
+						$table->eventManager()->on($eventKey, [], [$table, $method]);
+		            }
 
 					if (isset($attr['tableHeaderClass'])) {
 						$tableHeaders[] = array($label => array('class' => $attr['tableHeaderClass']));
@@ -218,9 +226,6 @@ class ControllerActionHelper extends Helper {
 			$eventKey = 'ControllerAction.Model.' . $method;
 
 			$event = new Event($eventKey, $this, ['entity' => $obj]);
-			if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
-                $table->eventManager()->on($eventKey, [], [$table, $method]);
-            }
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
@@ -231,7 +236,7 @@ class ControllerActionHelper extends Helper {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
-					$obj->field = $value;
+					$obj->$field = $value;
 				}
 			}
 
