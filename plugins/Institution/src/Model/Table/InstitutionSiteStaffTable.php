@@ -231,11 +231,8 @@ class InstitutionSiteStaffTable extends AppTable {
 			if (count($filterFTEOptions)==0) {
 				$filterFTEOptions = array(''=>__('No available FTE'));
 			}
-
-			return $filterFTEOptions;
 		}
-
-		return $this->fteOptions;
+		return $filterFTEOptions;
 	}
 
 	
