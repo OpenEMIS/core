@@ -18,7 +18,14 @@ class InstitutionSiteShiftsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
+		$validator
+ 	        ->add('start_time', 'ruleCompareDate', [
+		            'rule' => ['compareDate', 'end_time', false]
+	    	    ])
+ 	        ->add('end_time', 'ruleCompareDateReverse', [
+		            'rule' => ['compareDateReverse', 'start_time', false]
+	    	    ])
+	        ;
 		return $validator;
 	}
 
@@ -90,6 +97,28 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	}
 
+	public function addEditBeforePatch($event, $entity, $data, $options) {
+		// // pr('addEditBeforePatch');
+		// pr($data);
+
+		// try {
+		// 	$startTime = new DateTime($data['InstitutionSiteShifts']['start_time']);
+		// 	pr($startTime);
+		// } catch (Exception $e) {
+		//     die('Please input a proper start time');
+		// }
+
+		// try {
+		// 	$endTime = new DateTime($data['InstitutionSiteShifts']['end_time']);
+		// 	pr($endTime);
+		// } catch (Exception $e) {
+		//     die('Please input a proper end time');
+		// }
+
+
+		// pr($startTime == $endTime);die;
+		return compact('entity', 'data', 'options');
+	}
 
 /******************************************************************************************************************
 **
