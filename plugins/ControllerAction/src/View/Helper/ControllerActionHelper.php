@@ -178,6 +178,14 @@ class ControllerActionHelper extends Helper {
 						}
 					}
 
+					$method = 'onGet' . Inflector::camelize($field);
+					$eventKey = 'ControllerAction.Model.' . $method;
+
+					$event = new Event($eventKey, $this);
+					if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
+						$table->eventManager()->on($eventKey, [], [$table, $method]);
+		            }
+
 					if (isset($attr['tableHeaderClass'])) {
 						$tableHeaders[] = array($label => array('class' => $attr['tableHeaderClass']));
 					} else {
@@ -218,9 +226,6 @@ class ControllerActionHelper extends Helper {
 			$eventKey = 'ControllerAction.Model.' . $method;
 
 			$event = new Event($eventKey, $this, ['entity' => $obj]);
-			if (method_exists($table, $method) || $table->behaviors()->hasMethod($method)) {
-                $table->eventManager()->on($eventKey, [], [$table, $method]);
-            }
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
