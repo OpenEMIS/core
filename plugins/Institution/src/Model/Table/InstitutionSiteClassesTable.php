@@ -36,6 +36,7 @@ class InstitutionSiteClassesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator->requirePresence('name');
 		return $validator;
 	}
 

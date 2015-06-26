@@ -2,10 +2,11 @@
 namespace App\Model\Behavior;
 
 use DateTime;
+use Exception;
 use Cake\Event\Event;
 use Cake\ORM\Behavior;
-use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Traits\MessagesTrait;
 
 class ValidationBehavior extends Behavior {
@@ -31,6 +32,12 @@ class ValidationBehavior extends Behavior {
 			}
 		}
 	}
+
+    private static function _getFieldType($compareField) {
+    	$type = explode('_', $compareField);
+		$count = count($type);
+		return $type[($count - 1)];
+    }
 
 	public static function checkLongitude($check) {
 
@@ -69,13 +76,14 @@ class ValidationBehavior extends Behavior {
 	 */
 
 	public static function compareDateReverse($field, $compareField, $equals, array $globalData) {
+		$type = self::_getFieldType($compareField);
 		try {
 			$endDate = new DateTime($field);
 		} catch (Exception $e) {
-		    return __('Please input a proper date');
+		    return __('Please input a proper '.$type);
 		}
 		if($compareField) {
-			$options = ['equals' => $equals, 'reverse' => true];
+			$options = ['equals' => $equals, 'reverse' => true, 'type' => $type];
 			$result = self::doCompareDates($endDate, $compareField, $options, $globalData);
 			return $result;
 		} else {
@@ -97,18 +105,19 @@ class ValidationBehavior extends Behavior {
 	 * @return mixed                 returns true if validation passed or the error message if it fails
 	 */
 	public static function compareDate($field, $compareField, $equals, array $globalData) {
+		$type = self::_getFieldType($compareField);
 		try {
 			$startDate = new DateTime($field);
 		} catch (Exception $e) {
-		    return 'Please input a proper date';
+		    return __('Please input a proper '.$type);
 		}
 		if($compareField) {
-			$options = ['equals' => $equals, 'reverse' => false];
+			$options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
 			$result = self::doCompareDates($startDate, $compareField, $options, $globalData);
 			if (!is_bool($result)) {
 				return $result;
 			} else {
-				return (!$result) ? Inflector::humanize($compareField).' should be on a later date' : true;
+				return (!$result) ? __(Inflector::humanize($compareField).' should be on a later '.$type) : true;
 			}
 		} else {
 			return true;
@@ -123,13 +132,14 @@ class ValidationBehavior extends Behavior {
 	 * @return [type]               [description]
 	 */
 	protected static function doCompareDates($dateOne, $compareField, $options, $globalData) {
+		$type = $options['type'];
 		$equals = $options['equals'];
 		$reverse = $options['reverse'];
 		$dateTwo = $globalData['data'][$compareField];
 		try {
 			$dateTwo = new DateTime($dateTwo);
 		} catch (Exception $e) {
-			return 'Please input a proper date for '.(ucwords(str_replace('_', ' ', $compareField)));
+			return __('Please input a proper '.$type.' for '.(ucwords(str_replace('_', ' ', $compareField))));
 		}
 		if($equals) {
 			if ($reverse) {

@@ -55,10 +55,23 @@ trait MessagesTrait {
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
-				'noProgrammes' => 'There is no available Programme set for this Institution.',
-				'noSections' => 'There is no available Section under the selected Academic Period.',
+				'noProgrammes' => 'There is no available Programme set for this Institution',
+				'noSections' => 'There is no available Section under the selected Academic Period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+				]
+			],
+			'InstitutionSiteProgrammes' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'InstitutionSiteShifts' => [
+				'start_time' => [
+					'ruleCompareDate' => 'Start Time should not be later than End Time'
+				],
+				'end_time' => [
+					'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
 				]
 			],
 			'InstitutionSiteStudentAbsences' => [
