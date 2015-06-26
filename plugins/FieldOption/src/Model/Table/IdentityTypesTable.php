@@ -10,5 +10,6 @@ class IdentityTypesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->hasMany('Identities', ['className' => 'User.Identities']);
+		$this->belongsTo('FieldOptions', ['className' => 'FieldOptions']);
 	}
 }
