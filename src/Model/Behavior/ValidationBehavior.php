@@ -221,5 +221,16 @@ class ValidationBehavior extends Behavior {
 		return $isValid;
 	}
 
+	public static function comparePasswords($field, $compareField, array $globalData) {
+		$fieldOne = $globalData['data'][$globalData['field']];
+		$fieldTwo = $globalData['data'][$compareField];
+		if(strcmp($fieldOne, $fieldTwo) == 0 ) {
+			return true;
+		} else {
+			return false;
+		}
+		
+	}
+
 
 }

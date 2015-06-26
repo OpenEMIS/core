@@ -23,13 +23,14 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.add.beforeAction'			=> 'addBeforeAction', // called before any add logic is executed
 		'ControllerAction.Model.add.onInitialize'			=> 'addOnInitialize', // called on http get
 		'ControllerAction.Model.add.beforePatch'			=> 'addBeforePatch', // called on http post before patching entity
-		'ControllerAction.Model.add.afterSaveRedirect'		=> 'afterSaveRedirect', // changes redirect url after a successful save
+		'ControllerAction.Model.add.afterSaveRedirect'		=> 'addAfterSaveRedirect', // changes redirect url after a successful save
 		//'ControllerAction.Model.add.onReload'				=> 'addOnReload', // called on http post
 		'ControllerAction.Model.add.afterAction'			=> 'addAfterAction', // called after adding entity
 		'ControllerAction.Model.edit.beforeAction'			=> 'editBeforeAction',
 		'ControllerAction.Model.edit.beforeQuery'			=> 'editBeforeQuery',
 		'ControllerAction.Model.edit.onInitialize'			=> 'editOnInitialize',
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
+		'ControllerAction.Model.edit.afterSaveRedirect'		=> 'editAfterSaveRedirect', // changes redirect url after a successful save
 		//'ControllerAction.Model.edit.onReload'				=> 'editOnReload',
 		'ControllerAction.Model.edit.afterAction'			=> 'editAfterAction',
 		'ControllerAction.Model.addEdit.beforeAction'		=> 'addEditBeforeAction',

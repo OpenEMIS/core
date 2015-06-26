@@ -87,15 +87,17 @@ class StudentBehavior extends Behavior {
 	public function afterSave(Event $event, Entity $entity, $options) {
 		if ($entity->isNew()) {
 			// for attaching student to section
-			$institutionStudentData = $this->_table->Session->read('InstitutionSiteStudents.add.'.$this->_table->request->query['new']);
-			$sectionData = [];
-			$sectionData['security_user_id'] = $entity->id;
-			$sectionData['education_grade_id'] = $institutionStudentData['InstitutionSiteStudents']['education_grade'];
-			$sectionData['institution_site_section_id'] = $institutionStudentData['InstitutionSiteStudents']['section'];
-			$sectionData['student_category_id'] = $institutionStudentData['InstitutionSiteStudents']['student_status_id'];
+			if ($this->_table->Session->check('InstitutionSiteStudents.add.'.$this->_table->request->query['new'])) {
+				$institutionStudentData = $this->_table->Session->read('InstitutionSiteStudents.add.'.$this->_table->request->query['new']);
+				$sectionData = [];
+				$sectionData['security_user_id'] = $entity->id;
+				$sectionData['education_grade_id'] = $institutionStudentData['InstitutionSiteStudents']['education_grade'];
+				$sectionData['institution_site_section_id'] = $institutionStudentData['InstitutionSiteStudents']['section'];
+				$sectionData['student_category_id'] = $institutionStudentData['InstitutionSiteStudents']['student_status_id'];
 
-			$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
-			$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);
+				$InstitutionSiteSectionStudents = TableRegistry::get('Institution.InstitutionSiteSectionStudents');
+				$InstitutionSiteSectionStudents->autoInsertSectionStudent($sectionData);	
+			}
 		}
 	}
 
