@@ -297,7 +297,7 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	/**
-	 * Used by InstitutionSiteGradesTable
+	 * Used by InstitutionSiteGradesTable && InstitutionSiteFeesTable
 	 * @param  integer $academicPeriodId [description]
 	 * @param  array   $conditions       [description]
 	 * @return [type]                    [description]
