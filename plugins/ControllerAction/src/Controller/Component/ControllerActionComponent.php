@@ -641,6 +641,13 @@ class ControllerActionComponent extends Component {
 				// End Event
 				list($data, $this->request->data, $patchOptions) = array_values($params);
 				$data = $model->patchEntity($data, $request->data, $patchOptions);
+
+				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterPatch', null, $params);
+				if ($event->isStopped()) { return $event->result; }
+				if (!empty($event->result)) {
+					$params = array_merge($params, $event->result);
+				}
+
 				if ($model->save($data)) {
 					$this->Alert->success('general.add.success');
 					$action = $this->buttons['index']['url'];
