@@ -68,8 +68,11 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionSiteClassStudents', 		['className' => 'Institution.InstitutionSiteClassStudents']);
 		$this->hasMany('InstitutionSiteSectionClasses', 	['className' => 'Institution.InstitutionSiteSectionClasses']);
 
-		// pr($this->validator());
+		$this->hasMany('CustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		// pr($this->validator());
+		$this->addBehavior('CustomField.Record', ['foreignKey' => 'institution_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -306,4 +309,11 @@ class InstitutionsTable extends AppTable  {
 
 	}
 
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		if ($this->behaviors()->hasMethod('addEditAfterAction')) {
+			list($entity) = array_values($this->behaviors()->call('addEditAfterAction', [$event, $entity]));
+		}
+
+		return $entity;
+	}
 }
