@@ -46,6 +46,9 @@ trait MessagesTrait {
 			'noSections' => 'No Sections',
 			'noClasses' => 'No Classes'
 		],
+		'InstitutionSiteFees' => [
+			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+		],
 		
 
 		'StudentAttendance' => [
