@@ -818,7 +818,7 @@ class ControllerActionHelper extends Helper {
 			// echo $this->_View->element('layout/file_upload_preview', $imageAttr);
 
 			//$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
-			$defaultImageFromHolder = '<img data-src="holder.js/100%x100%" alt="...">';
+			$defaultImageFromHolder = '<img data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" alt="...">';
 			$showRemoveButton = false;
 
 			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
