@@ -1,27 +1,75 @@
 <?php
-namespace App\Model\Table;
+namespace FieldOption\Model\Table;
 
-use Cake\ORM\Table;
+use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class FieldOptionValuesTable extends AppTable {
+	use OptionsTrait;
+
 	public function initialize(array $config) {
-		// public $belongsTo = array(
-		// 	'FieldOptions',
-		// 	'ModifiedUser' => array(
-		// 		'className' => 'SecurityUser',
-		// 		'fields' => array('first_name', 'last_name'),
-		// 		'foreignKey' => 'modified_user_id'
-		// 	),
-		// 	'CreatedUser' => array(
-		// 		'className' => 'SecurityUser',
-		// 		'fields' => array('first_name', 'last_name'),
-		// 		'foreignKey' => 'created_user_id'
-		// 	)
-		// );
+		parent::initialize($config);
+		$this->belongsTo('FieldOptions', ['className' => 'FieldOption.FieldOptions']);
+	}
 
-		$this->belongsTo('FieldOptions', ['className' => 'FieldOptions']);
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('field_option_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('order', ['type' => 'hidden']);
+		$this->ControllerAction->field('visible', ['options' => $this->getSelectOptions('general.yesno')]);
+		$this->ControllerAction->field('default', ['options' => $this->getSelectOptions('general.yesno')]);
+		$this->ControllerAction->field('editable', ['options' => $this->getSelectOptions('general.yesno'), 'visible' => ['index' => true]]);
+	}
 
+	public function indexBeforeAction(Event $event) {
+		$toolbarElements = [
+			['name' => 'FieldOption.controls', 'data' => [], 'options' => []]
+		];
+		$this->controller->set('toolbarElements', $toolbarElements);
+
+		$this->ControllerAction->setFieldOrder([
+			'visible', 'default', 'editable', 'name', 'national_code'
+		]);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+		$fieldOptions = [];
+		$data = $this->FieldOptions
+			->find('all')
+			->find('visible')
+			->find('order')
+			->all();
+
+		foreach ($data as $obj) {
+			$key = $obj->id;
+			
+			$parent = __($obj->parent);
+			if (!array_key_exists($parent, $fieldOptions)) {
+				$fieldOptions[$parent] = array();
+		}
+			$fieldOptions[$parent][$key] = __($obj->name);	
+		}
+		$this->controller->set('fieldOptions', $fieldOptions);
+
+		$selectedOption = $this->queryString('field_option_id', $fieldOptions, $request);
+		$this->controller->set('selectedOption', $selectedOption);
+
+		$options['conditions'][$this->aliasField('field_option_id')] = $selectedOption;
+		return $options;
+	}
+
+	public function viewBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'name', 'national_code', 'international_code', 'visible'
+		]);
+	}
+
+	public function editBeforeAction(Event $event) {
+		$this->ControllerAction->setFieldOrder([
+			'name', 'national_code', 'international_code', 'visible'
+		]);
 	}
 
 	public function getList($customOptions=[]) {

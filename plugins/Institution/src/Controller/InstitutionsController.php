@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use App\Controller\AppController;
+use Institution\Controller\AppController;
 use Cake\Event\Event;
 
 class InstitutionsController extends AppController  {

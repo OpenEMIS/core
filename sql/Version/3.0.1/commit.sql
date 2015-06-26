@@ -1133,3 +1133,6 @@ update config_items set name = 'StudentSpecialNeeds' where name = 'StudentSpecia
 
 ALTER TABLE `institution_sites` CHANGE `alternative_name` `alternative_name` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
 
+ALTER TABLE `field_option_values` DROP `old_id` ;
+
+
