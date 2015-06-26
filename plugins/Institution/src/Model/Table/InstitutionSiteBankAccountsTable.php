@@ -45,6 +45,9 @@ class InstitutionSiteBankAccountsTable extends AppTable {
 			'active', 'account_name', 'account_number', 'bank', 'bank_branch_id',
 		]);
 
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 
