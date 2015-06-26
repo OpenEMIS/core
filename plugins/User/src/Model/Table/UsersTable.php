@@ -21,7 +21,6 @@ class UsersTable extends AppTable {
 							'allowEmpty' => true,
 							'useDefaultName' => false
 						]);
-		// $this->addBehavior('User.Mandatory',['userRole'=>'Student']);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -51,22 +50,31 @@ class UsersTable extends AppTable {
 	}
 
 	public function editBeforeAction($event) {
-		// pr();
 		$id = '';
 		if (array_key_exists('pass', $this->request->params)) {
-			$id = $this->request->params['pass'][0];
+			if ($this->controller->name == 'Securities') {
+				$id = $this->request->params['pass'][1];
+			} else {
+				$id = $this->request->params['pass'][0];
+			}	
 		}
 
 		$tabElements = [
 			'Details' => [
-				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'edit',$id],
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'edit',$id],
 				'text' => __('Details')
 			],
 			'Login' => [
-				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Accounts','edit',$id],
-				'text' => __('Account')
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Accounts','edit',$id],
+				'text' => __('Account')	
 			]
 		];
+		if ($this->controller->name == 'Securities') {
+			$tabElements['Details'] = [
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'edit',$id],
+				'text' => __('Details')
+			];
+		}
 
         $this->controller->set('tabElements', $tabElements);
     }
@@ -253,14 +261,6 @@ class UsersTable extends AppTable {
 
 			// ->requirePresence('username',false);
 
-
-
-			// ->add('openemis_no', [
-			// 		'ruleUnique' => [
-			// 			'rule' => 'validateUnique',
-			// 			'provider' => 'table',
-			// 		]
-			// 	])
 			
 
 			
