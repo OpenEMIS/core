@@ -1135,4 +1135,5 @@ UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboa
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_default';
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_size_limit';
 
-
+-- 26th June 2015
+UPDATE labels SET en = 'Photo ID' where module = 'Users' and field = 'photo_content';
