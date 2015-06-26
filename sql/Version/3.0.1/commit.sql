@@ -1122,4 +1122,4 @@ ALTER TABLE `field_option_values` DROP `old_id` ;
 -- 26th June 2015
 -- New entry for label in database from Users module and field ('photo_content');
 INSERT INTO labels (module, field, en) VALUES ('Users', 'photo_content', 'Profile Image');
-
+UPDATE labels SET en = 'Photo ID' where module = 'Users' and field = 'photo_content';
