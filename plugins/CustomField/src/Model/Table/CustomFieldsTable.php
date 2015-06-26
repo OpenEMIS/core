@@ -13,6 +13,7 @@ class CustomFieldsTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->belongsTo('CustomFieldTypes', ['className' => 'CustomField.CustomFieldTypes', 'foreignKey' => 'field_type']);
 		$this->hasMany('CustomFieldOptions', ['className' => 'CustomField.CustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomTableColumns', ['className' => 'CustomField.CustomTableColumns', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('CustomTableRows', ['className' => 'CustomField.CustomTableRows', 'dependent' => true, 'cascadeCallbacks' => true]);

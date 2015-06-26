@@ -107,6 +107,10 @@ class ControllerActionHelper extends Helper {
 		echo '</div>';
 	}
 
+	public function renderElement($element, $attr) {
+		return $this->_View->element($element, $attr);
+	}
+
 	public function highlight($needle, $haystack){
 		// to cater for photos returning resource
 		if (is_resource($haystack)) { return $haystack; }
@@ -456,7 +460,7 @@ class ControllerActionHelper extends Helper {
 				// trigger event for custom field types
 				$method = 'onGet' . Inflector::camelize($_type) . 'Element';
 				$eventKey = 'ControllerAction.Model.' . $method;
-				$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'edit', 'entity' => $data, 'attr' => $_fieldAttr, 'form' => $this->Form, 'options' => $options]);
+				$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'edit', 'entity' => $data, 'attr' => $_fieldAttr, 'options' => $options]);
 				
 				if (!empty($event->result)) {
 					$html .= $event->result;
@@ -797,27 +801,13 @@ class ControllerActionHelper extends Helper {
 		//else default values
 		//$defaultWidth = ($data::imageWidth > 0) ? ($data::imageWidth) : $defaultWidth;
 		//$defaultHeight = ($data::imageHeight > 0) ? ($data::imageHeight) : $defaultHeight;
-
+		
 		if ($action == 'index' || $action == 'view') {
-			if (!is_null($data->photo_content)) {
-				$file = ''; 
-				while (!feof($data->photo_content)) {
-					$file .= fread($data->photo_content, 8192); 
-				} 
-				fclose($data->photo_content); 	
-			}
-			$src = null;
-			if(!empty($data->photo_name) && !empty($file)) {
-				$temp = explode('.', $data->photo_name);
-				$ext = strtolower(array_pop($temp));
-				if($ext === 'jpg') {
-					$ext = 'jpeg';
-				}
-				$src = sprintf('data: image/%s; base64,%s', $ext, base64_encode($file));
-				$value = '<img src="'.$src.'" class="profile-image" alt="90x115" />';
-			} else {
-				$value = $this->Html->image('Student.default_student_profile.jpg');
-			}
+			$src = $data->photo_content;
+			$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
+			if(!empty($src)){
+				$value = (is_resource($src)) ? '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($src) ).'" style="'.$style.' class="profile-image" "/>' : $this->Html->image($src, ['plugin' => true]);
+			}	
 		} else if ($action == 'edit') {
 			// $imageAttr = $attr['attr'];
 			// $imageAttr['field'] = $_field;
@@ -852,12 +842,7 @@ class ControllerActionHelper extends Helper {
 																							'defaultHeight' => $defaultHeight,
 																							'showRemoveButton' => $showRemoveButton]);
 
-		} else if ($action == 'index') {
-			if(!empty($data->photo_content)){
-				$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
-            	$value = '<img src="data:image/jpeg;base64,'.base64_encode( stream_get_contents($data->photo_content) ).'" style="'.$style.'"/>';
-			}	
-		}
+		} 
 		return $value;
 	}
 
