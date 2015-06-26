@@ -14,6 +14,7 @@ class UsersTable extends AppTable {
 	const defaultHeight = 115;
 	const defaultStudentProfile = "Student.default_student_profile.jpg";
 	const defaultStaffProfile = "Staff.default_staff_profile.jpg";
+	private $specialFields = ['default_identity_type'];
 
 	public function initialize(array $config) {
 		$this->table('security_users');
@@ -289,6 +290,26 @@ class UsersTable extends AppTable {
 		}
 
 		return $value;
+	}
+
+	public function onGetLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+		if(in_array($field, $this->specialFields)){
+			if($field == 'default_identity_type') {
+				$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+				$defaultIdentity = $IdentityType
+								   ->find()
+								   ->contain(['FieldOptions'])
+								   ->where(['FieldOptions.code' => 'IdentityTypes']) //, 'IdentityTypes.default' => 1
+								   ->order(['IdentityTypes.default DESC'])
+								   ->first();
+				if($defaultIdentity)
+					$value = $defaultIdentity->name;
+
+				return (!empty($value)) ? $value : parent::onGetLabel($event, $module, $field, $language, $autoHumanize);
+			}	
+		} else {
+			return parent::onGetLabel($event, $module, $field, $language, $autoHumanize);
+		}
 	}
 
 }
