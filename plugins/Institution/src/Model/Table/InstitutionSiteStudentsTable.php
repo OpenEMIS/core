@@ -76,14 +76,17 @@ class InstitutionSiteStudentsTable extends AppTable {
 			]);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+	public function addAfterPatch(Event $event, Entity $entity, array $data, array $options) {
 		$timeNow = strtotime("now");
 		$sessionVar = $this->alias().'.add.'.strtotime("now");
 		$this->Session->write($sessionVar, $this->request->data);
-		// $options['validate'] = false;
 
-		$this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?new='.$timeNow]);
-		return false;
+		if (!$entity->errors()) {
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => 'add'.'?new='.$timeNow]);
+		}
+		
+		return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {

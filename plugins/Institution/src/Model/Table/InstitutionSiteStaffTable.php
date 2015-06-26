@@ -44,9 +44,7 @@ class InstitutionSiteStaffTable extends AppTable {
 			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
 	}
 
-	public function validationDefault(Validator $validator) {
-		return $validator;
-	}
+	
 
 	// public function beforeAction() {
 
@@ -83,14 +81,17 @@ class InstitutionSiteStaffTable extends AppTable {
 			]);
 	}
 
-	public function addBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+	public function addAfterPatch(Event $event, Entity $entity, array $data, array $options) {
 		$timeNow = strtotime("now");
 		$sessionVar = $this->alias().'.add.'.strtotime("now");
 		$this->Session->write($sessionVar, $this->request->data);
-		// $options['validate'] = false;
 
-		$this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
-		return false;
+		if (!$entity->errors()) {
+			$event->stopPropagation();
+			return $this->controller->redirect(['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'add'.'?new='.$timeNow]);
+		}
+
+		return compact('entity', 'data', 'options');
 	}
 
 	public function onUpdateFieldInstitution(Event $event, array $attr, $action, $request) {
@@ -109,7 +110,6 @@ class InstitutionSiteStaffTable extends AppTable {
 		}
 		return $attr;
 	}
-
 
 	public function onUpdateFieldInstitutionSitePositionId(Event $event, array $attr, $action, $request) {
 		$institutionsId = $this->Session->read('Institutions.id');
@@ -233,6 +233,13 @@ class InstitutionSiteStaffTable extends AppTable {
 			}
 		}
 		return $filterFTEOptions;
+	}
+
+	public function validationDefault(Validator $validator) {
+		return $validator
+			// this function doesnt update... only adds
+			->requirePresence('staff_status_id', 'update')
+		;
 	}
 
 	
