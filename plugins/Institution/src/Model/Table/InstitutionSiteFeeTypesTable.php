@@ -9,7 +9,7 @@ class InstitutionSiteFeeTypesTable extends AppTable {
 		parent::initialize($config);
 		
 		$this->belongsTo('InstitutionSiteFees', ['className' => 'Institution.InstitutionSiteFees']);
-		$this->belongsTo('FeeTypes', ['className' => 'FeeTypes']);
+		$this->belongsTo('FeeTypes', ['className' => 'FieldOption.FeeTypes']);
 	}
 
 	public function validationDefault(Validator $validator) {

@@ -101,6 +101,9 @@ class InstitutionSiteClassesTable extends AppTable {
 			'male_students', 'female_students',
 		]);
 
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
 	}
 
 
