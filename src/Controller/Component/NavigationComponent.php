@@ -85,10 +85,10 @@ class NavigationComponent extends Component {
 									'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
 									'selected' => ['index', 'view', 'edit']
 								],
-								'Translations' => [
-									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
-								],
+								// 'Translations' => [
+								// 	'collapse' => true,
+								// 	'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
+								// ],
 								'System Configurations' => [
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']

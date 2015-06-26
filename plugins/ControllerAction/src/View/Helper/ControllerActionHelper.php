@@ -169,17 +169,17 @@ class ControllerActionHelper extends Helper {
 						$table = TableRegistry::get($attr['className']);
 					}
 
+					// attach event to get labels for fields
+					$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
+					$event = $table->eventManager()->dispatch($event);
+					// end attach event
+
+					if ($event->result) {
+						$label = $event->result;
+					}
+
 					if ($attr['sort']) {
 						$label = $this->Paginator->sort($field);
-					} else {
-						// attach event to get labels for fields
-						$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
-						$event = $table->eventManager()->dispatch($event);
-						// end attach event
-
-						if ($event->result) {
-							$label = $event->result;
-						}
 					}
 					
 					$method = 'onGet' . Inflector::camelize($field);
@@ -446,7 +446,7 @@ class ControllerActionHelper extends Helper {
 				}
 
 				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
+				$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
 				$event = $table->eventManager()->dispatch($event);
 				// end attach event
 
@@ -547,7 +547,7 @@ class ControllerActionHelper extends Helper {
 				}
 
 				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
+				$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
 				$event = $table->eventManager()->dispatch($event);
 				// end attach event
 
