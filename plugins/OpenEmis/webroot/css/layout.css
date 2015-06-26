@@ -1249,6 +1249,11 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+.table tfoot tr {
+	background-color: #EEE !important;
+	font-weight: bold;
+}
+
 th > a,
 th > a:hover, 
 th > a:active { color: #444; }
