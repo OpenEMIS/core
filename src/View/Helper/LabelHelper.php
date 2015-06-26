@@ -175,6 +175,9 @@ class LabelHelper extends Helper {
 		'WorkflowActions' => [
 			'next_step' => 'Next Step',
 			'comment_required' => 'Comment Required'
+		],
+		'Users' => [
+			'photo_content' => 'Profile Image'
 		]
 	];
 

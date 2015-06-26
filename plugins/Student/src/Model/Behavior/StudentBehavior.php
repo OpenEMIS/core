@@ -63,7 +63,7 @@ class StudentBehavior extends Behavior {
 		$this->_table->fields['status']['visible'] = false;
 
 		$this->_table->ControllerAction->field('name', []);
-		$this->_table->ControllerAction->field('existence_type', []);
+		$this->_table->ControllerAction->field('default_identity_type', []);
 		$this->_table->ControllerAction->field('institution_name', []);
 		$this->_table->ControllerAction->field('student_status', []);
 
