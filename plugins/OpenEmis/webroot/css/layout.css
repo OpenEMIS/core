@@ -2553,7 +2553,13 @@ footer {
 
 	.form-horizontal .chosen-container {
 		width: 100% !important;
-	}		
+	}
+
+	.input-checkbox-inline,
+	.input-checkbox,
+	.table-in-view {
+		width: 100% !important;
+	}			
 }
 
 @media (max-width: 510px) {
@@ -2572,9 +2578,11 @@ footer {
 		height: auto;
 		padding-top: 10px;
 	}
-
-	.form-horizontal label {
-		width: 100%;
+	
+	.input-checkbox-inline,
+	.input-checkbox,
+	.table-in-view {
+		width: 60%;
 	}
 }
 
@@ -2605,10 +2613,6 @@ footer {
 	}	
 
 	.form-horizontal .chosen-container {
-		width: 60% !important;
-	}	
-
-	.form-horizontal .table-in-view {
 		width: 60% !important;
 	}	
 }
