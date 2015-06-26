@@ -6,7 +6,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id', 'existence_type', 'institution_name', 'student_status'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -90,7 +90,7 @@ class User extends Entity {
     //     return (isset($options['openEmisId'])&&is_bool($options['openEmisId'])&&$options['openEmisId']) ? trim(sprintf('%s - %s', $obj['openemis_no'], $name)) : trim(sprintf('%s', $name));
     // }
 
-    protected function _getExistenceType(){
+    protected function _getDefaultIdentityType(){
         $data = "";
         $securityUserId = $this->id;
 
