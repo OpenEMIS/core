@@ -14,7 +14,6 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
@@ -78,6 +77,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
     public function editBeforeAction($event) {
 	
 		$this->fields['file_name']['type'] = 'hidden';
+		$this->fields['file_content']['visible'] = false;
 		
     }
 

@@ -41,23 +41,30 @@ class DropdownBehavior extends Behavior {
 		return compact('entity', 'data', 'options');
 	}
 
-	public function getDropdownElement($field, $entity, $order) {		
-		$dropdownOptions = [];
-		foreach ($entity['custom_field_options'] as $key => $obj) {
-			$dropdownOptions[$obj->id] = $obj->name;
-		}
+    public function onGetCustomDropdownElement(Event $event, $action, $entity, $attr, $options=[]) {
+        $value = '';
 
-		$this->_table->ControllerAction->field($field.".number_value", [
-            'type' => 'element',
-            'order' => $order,
-            'element' => 'CustomField.dropdown',
-            'visible' => true,
-            'field' => $field,
-            'fieldKey' => $entity->id,
-            'options' => [
-            	'label' => $entity->name,
-            	'options' => $dropdownOptions
-            ]
-        ]);
+        if ($action == 'index' || $action == 'view') {
+            //$value = $data->$attr['field'];
+        } else if ($action == 'edit') {
+            $form = $event->subject()->Form;
+            $options['type'] = 'select';
+            $options['default'] = $attr['value'];
+
+            $dropdownOptions = [];
+    		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
+				$dropdownOptions[$obj->id] = $obj->name;
+			}
+			$options['options'] = $dropdownOptions;
+
+ 			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
+            $value = $form->input($fieldPrefix.".number_value", $options);
+            $value .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $attr['customField']->id]);
+			if (!is_null($attr['id'])) {
+                $value .= $form->hidden($fieldPrefix.".id", ['value' => $attr['id']]);
+            }
+        }
+
+        return $value;
     }
 }

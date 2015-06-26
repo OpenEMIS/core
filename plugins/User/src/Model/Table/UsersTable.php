@@ -10,6 +10,11 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class UsersTable extends AppTable {
+	const defaultWidth = 90;
+	const defaultHeight = 115;
+	const defaultStudentProfile = "Student.default_student_profile.jpg";
+	const defaultStaffProfile = "Staff.default_staff_profile.jpg";
+
 	public function initialize(array $config) {
 		$this->table('security_users');
 		parent::initialize($config);
@@ -266,6 +271,24 @@ class UsersTable extends AppTable {
 			
 
 		return $validator;
+	}
+
+	public function onGetPhotoContent(Event $event, Entity $entity) {
+		$fileContent = $entity->photo_content;
+		$value = "";
+
+		if(empty($fileContent) && is_null($fileContent)) {
+			$controllerName = $this->controller->name;	
+			if($controllerName == "Students"){
+				$value = self::defaultStudentProfile;
+			} else if($controllerName == "Staff") {
+				$value = self::defaultStaffProfile;
+			}
+		} else {
+			$value = $fileContent;
+		}
+
+		return $value;
 	}
 
 }

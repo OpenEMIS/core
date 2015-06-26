@@ -567,6 +567,7 @@ CREATE TABLE IF NOT EXISTS `custom_field_types` (
   `id` int(11) NOT NULL,
   `code` varchar(100) NOT NULL,
   `name` varchar(250) NOT NULL,
+  `value` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `format` varchar(50) NOT NULL,
   `is_mandatory` int(1) NOT NULL DEFAULT '0',
@@ -582,15 +583,15 @@ ALTER TABLE `custom_field_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 TRUNCATE TABLE `custom_field_types`;
-INSERT INTO `custom_field_types` (`id`, `code`, `name`, `description`, `format`, `is_mandatory`, `is_unique`) VALUES
-(1, 'TEXT', 'Text', '', 'OpenEMIS', 1, 1),
-(2, 'NUMBER', 'Number', '', 'OpenEMIS', 1, 1),
-(3, 'TEXTAREA', 'Textarea', '', 'OpenEMIS', 1, 0),
-(4, 'DROPDOWN', 'Dropdown', '', 'OpenEMIS', 0, 0),
-(5, 'CHECKBOX', 'Checkbox', '', 'OpenEMIS', 0, 0),
-(6, 'TABLE', 'Table', '', 'OpenEMIS', 0, 0),
-(7, 'DATE', 'Date', '', 'OpenEMIS', 1, 0),
-(8, 'TIME', 'Time', '', 'OpenEMIS', 1, 0);
+INSERT INTO `custom_field_types` (`id`, `code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`) VALUES
+(1, 'TEXT', 'Text', 'text_value', '', 'OpenEMIS', 1, 1),
+(2, 'NUMBER', 'Number', 'number_value', '', 'OpenEMIS', 1, 1),
+(3, 'TEXTAREA', 'Textarea', 'textarea_value', '', 'OpenEMIS', 1, 0),
+(4, 'DROPDOWN', 'Dropdown', 'number_value', '', 'OpenEMIS', 0, 0),
+(5, 'CHECKBOX', 'Checkbox', 'text_value', '', 'OpenEMIS', 0, 0),
+(6, 'TABLE', 'Table', 'text_value', '', 'OpenEMIS', 0, 0),
+(7, 'DATE', 'Date', 'date_value', '', 'OpenEMIS', 1, 0),
+(8, 'TIME', 'Time', 'time_value', '', 'OpenEMIS', 1, 0);
 
 -- New table - custom_fields
 DROP TABLE IF EXISTS `custom_fields`;
@@ -753,7 +754,7 @@ ALTER TABLE `custom_records`
 -- New table - custom_field_values
 DROP TABLE IF EXISTS `custom_field_values`;
 CREATE TABLE IF NOT EXISTS `custom_field_values` (
-  `id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `number_value` int(11) DEFAULT NULL,
   `textarea_value` text,
@@ -771,14 +772,10 @@ CREATE TABLE IF NOT EXISTS `custom_field_values` (
 ALTER TABLE `custom_field_values`
   ADD PRIMARY KEY (`id`);
 
-
-ALTER TABLE `custom_field_values`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 -- New table - custom_table_cells
 DROP TABLE IF EXISTS `custom_table_cells`;
 CREATE TABLE IF NOT EXISTS `custom_table_cells` (
-  `id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `custom_field_id` int(11) NOT NULL,
   `custom_table_column_id` int(11) NOT NULL,
@@ -793,10 +790,6 @@ CREATE TABLE IF NOT EXISTS `custom_table_cells` (
 
 ALTER TABLE `custom_table_cells`
   ADD PRIMARY KEY (`id`);
-
-
-ALTER TABLE `custom_table_cells`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 -- June 17 0911hrs
 -- Update for infrastructure
@@ -1067,7 +1060,7 @@ RENAME TABLE institution_site_custom_value_history TO z_1461_institution_site_cu
 -- New table - institution_custom_field_values
 DROP TABLE IF EXISTS `institution_custom_field_values`;
 CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
-  `id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `number_value` int(11) DEFAULT NULL,
   `textarea_value` text,
@@ -1085,14 +1078,10 @@ CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
 ALTER TABLE `institution_custom_field_values`
   ADD PRIMARY KEY (`id`);
 
-
-ALTER TABLE `institution_custom_field_values`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 -- New table - institution_custom_table_cells
 DROP TABLE IF EXISTS `institution_custom_table_cells`;
 CREATE TABLE IF NOT EXISTS `institution_custom_table_cells` (
-  `id` int(11) NOT NULL,
+  `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `custom_field_id` int(11) NOT NULL,
   `custom_table_column_id` int(11) NOT NULL,
@@ -1107,11 +1096,6 @@ CREATE TABLE IF NOT EXISTS `institution_custom_table_cells` (
 
 ALTER TABLE `institution_custom_table_cells`
   ADD PRIMARY KEY (`id`);
-
-
-ALTER TABLE `institution_custom_table_cells`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 
 -- Absence
 ALTER TABLE `institution_site_student_absences` CHANGE `first_date_absent` `start_date` DATE NULL NOT NULL ;
@@ -1130,3 +1114,9 @@ update config_items set name = 'StudentContacts' where name = 'StudentContact' a
 update config_items set name = 'StudentIdentities' where name = 'StudentIdentity' and type = 'Add New Student';
 update config_items set name = 'StudentNationalities' where name = 'StudentNationality' and type = 'Add New Student';
 update config_items set name = 'StudentSpecialNeeds' where name = 'StudentSpecialNeed' and type = 'Add New Student';
+
+ALTER TABLE `institution_sites` CHANGE `alternative_name` `alternative_name` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+
+ALTER TABLE `field_option_values` DROP `old_id` ;
+
+
