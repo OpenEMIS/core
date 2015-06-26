@@ -7,18 +7,93 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class RecordBehavior extends Behavior {
+	private $customRecordKey = 'custom_record_id';
+
 	public function initialize(array $config) {
 		parent::initialize($config);
+		if (isset($config['foreignKey'])) {
+			$this->customRecordKey = $config['foreignKey'];
+		}
+		$this->config('foreignKey');
     }
 
     public function addEditAfterAction(Event $event, Entity $entity) {
-    	$CustomFormFields = $this->_table->CustomForms->CustomFormFields;
-		$customFields = $CustomFormFields
+		$CustomFieldValues = $this->_table->CustomFieldValues;
+		$CustomTableCells = $this->_table->CustomTableCells;
+
+		$CustomFields = $CustomFieldValues->CustomFields;
+		$CustomFieldTypes = $CustomFields->CustomFieldTypes;
+
+		$CustomForms = $CustomFields->CustomForms;
+		$CustomModules = $CustomForms->CustomModules;
+		$CustomFormTypes = $CustomForms->CustomFormTypes;
+		$CustomFormFields = $CustomForms->CustomFormFields;
+
+		$customModuleResults = $CustomModules
 			->find('all')
-			->find('order')
-			->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-			->where([$CustomFormFields->aliasField('custom_form_id') => $entity->custom_form_id])
-			->all()
+			->select([
+				$CustomModules->aliasField('id'),
+				$CustomModules->aliasField('field_option')
+			])
+			->where([$CustomModules->aliasField('model') => $this->_table->alias()])
+			->first();
+		$customModuleId = $customModuleResults->id;
+		$fieldOption = $customModuleResults->field_option;
+
+		$customFormIds = $CustomForms
+			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+			->where([$CustomForms->aliasField('custom_module_id') => $customModuleId])
+			->toArray();
+
+		$genaralResults = $CustomFormTypes
+			->find('all')
+			->select([$CustomFormTypes->aliasField('custom_form_id')])
+			->where([
+				$CustomFormTypes->aliasField('custom_form_id IN') => $customFormIds,
+				$CustomFormTypes->aliasField('custom_type_id') => 0
+			])
+			->all();
+
+		if (!$genaralResults->isEmpty()) {
+			$genaralData = $genaralResults->first();
+			$generalId = $genaralData->custom_form_id;
+
+			$customFieldQuery = $CustomFormFields
+				->find('all')
+				->find('order')
+				->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+				->where([$CustomFormFields->aliasField('custom_form_id') => $generalId]);
+		}
+
+		if (!is_null($fieldOption)) {
+			$modelAlias = $this->_table->ControllerAction->getModel($fieldOption)['model'];
+			$fieldOptionKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+
+			$fieldOptionId = $entity->$fieldOptionKey;
+			$typedResults = $CustomFormTypes
+				->find('all')
+				->select([$CustomFormTypes->aliasField('custom_form_id')])
+				->where([
+					$CustomFormTypes->aliasField('custom_form_id IN') => $customFormIds,
+					$CustomFormTypes->aliasField('custom_type_id') => $fieldOptionId
+				])
+				->all();
+
+			if (!$typedResults->isEmpty()) {
+				$typedData = $typedResults->first();
+				$typedId = $typedData->custom_form_id;
+
+				$typedCustomFieldQuery = $CustomFormFields
+					->find('all')
+					->find('order')
+					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+					->where([$CustomFormFields->aliasField('custom_form_id') => $typedId]);
+
+				$customFieldQuery->union($typedCustomFieldQuery);
+			}
+		}
+
+		$customFields = $customFieldQuery
 			->toArray();
 
 		//get the order of the last static fields
@@ -28,9 +103,6 @@ class RecordBehavior extends Behavior {
 				$order = $field['order'] > $order ? $field['order'] : $order;
 			}
 		}
-
-		$CustomFieldTypes = $this->_table->CustomFieldValues->CustomFields->CustomFieldTypes;
-		$CustomFieldValues = $this->_table->CustomFieldValues;
 
 		foreach ($customFields as $key => $customField) {
 			$_customField = $customField->custom_field;
@@ -60,7 +132,7 @@ class RecordBehavior extends Behavior {
 					])
 					->where([
 						$CustomFieldValues->aliasField('custom_field_id') => $_customField->id,
-						$CustomFieldValues->aliasField('custom_record_id') => $entity->id
+						$CustomFieldValues->aliasField($this->customRecordKey) => $entity->id
 					])
 					->all();
 
@@ -84,6 +156,7 @@ class RecordBehavior extends Behavior {
 	            'visible' => true,
 	            'field' => $key,
 	            'attr' => $_attr,
+	            'foreignKey' => $this->customRecordKey,
 	            'customField' => $_customField,
 	            'id' => $_id,
 	            'value' => $_value
