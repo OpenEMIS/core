@@ -55,6 +55,27 @@ class UsersTable extends AppTable {
 		}
 	}
 
+	public function editBeforeAction($event) {
+		// pr();
+		$id = '';
+		if (array_key_exists('pass', $this->request->params)) {
+			$id = $this->request->params['pass'][0];
+		}
+
+		$tabElements = [
+			'Details' => [
+				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'edit',$id],
+				'text' => __('Details')
+			],
+			'Login' => [
+				'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Accounts','edit',$id],
+				'text' => __('Account')
+			]
+		];
+
+        $this->controller->set('tabElements', $tabElements);
+    }
+
 	public function addBeforeAction(Event $event) {
 		// if ($this->Session->check('Institutions.id')) {
 		// 	$institutionId = $this->Session->read('Institutions.id');

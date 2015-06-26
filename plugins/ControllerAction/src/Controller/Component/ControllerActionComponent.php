@@ -322,7 +322,7 @@ class ControllerActionComponent extends Component {
 		}
 		$backUrl = array_merge($backUrl, $named);
 		$buttons['back'] = array('url' => $backUrl);
-		if (array_key_exists('remove', $this->defaultActions)) {
+		if (in_array('remove', $this->defaultActions)) {
 			$buttons['delete']['removeStraightAway'] = $this->removeStraightAway;
 		}
 
@@ -415,21 +415,18 @@ class ControllerActionComponent extends Component {
 	public function getModalOptions($type) {
 		$modal = array();
 
-		if ($type == 'delete' && in_array($type, $this->defaultActions)) {
+		if ($type == 'remove' && in_array($type, $this->defaultActions)) {
 			$modal['id'] = 'delete-modal';
 			$modal['title'] = $this->model->alias();
 			$modal['content'] = __('Are you sure you want to delete this record.');
 			$action = $this->triggerFrom == 'Controller' ? $this->buttons['delete']['url']['action'] : $this->buttons['delete']['url']['action'].'/'.$this->buttons['delete']['url'][0];
-			$modal['formOptions'] = array(
-				'type' => 'delete',
-				'action' => $action
-			);
-			$modal['fields'] = array(
+			$modal['formOptions'] = ['type' => 'delete', 'action' => $action];
+			$modal['fields'] = [
 				'id' => array('type' => 'hidden', 'id' => 'recordId')
-			);
-			$modal['buttons'] = array(
+			];
+			$modal['buttons'] = [
 				'<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
-			);
+			];
 		}
 		return $modal;
 	}
@@ -528,7 +525,7 @@ class ControllerActionComponent extends Component {
 		if ($event->isStopped()) { return $event->result; }
 
 		$data = $this->search($model);
-		$modal = $this->getModalOptions('delete');
+		$modal = $this->getModalOptions('remove');
 
 		$indexElements = array(
 			array('name' => 'ControllerAction.index', 'data' => array(), 'options' => array())
@@ -594,7 +591,7 @@ class ControllerActionComponent extends Component {
 			}
 
 			$this->Session->write($idKey, $id);
-			$modal = $this->getModalOptions('delete');
+			$modal = $this->getModalOptions('remove');
 			$this->controller->set('modal', $modal);
 			$this->controller->set(compact('data'));
 		} else {
@@ -820,7 +817,7 @@ class ControllerActionComponent extends Component {
 		$model = $this->model;
 		$primaryKey = $model->primaryKey();
 		
-		if ($request->is('delete') && isset($request->data[$primaryKey])) {
+		if ($request->is('delete') && !empty($request->data[$primaryKey])) {
 			$id = $request->data[$primaryKey];
 			$data = $model->get($id);
 			if ($this->removeStraightAway) {

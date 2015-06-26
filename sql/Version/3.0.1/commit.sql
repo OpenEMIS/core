@@ -1130,3 +1130,6 @@ update config_items set name = 'StudentContacts' where name = 'StudentContact' a
 update config_items set name = 'StudentIdentities' where name = 'StudentIdentity' and type = 'Add New Student';
 update config_items set name = 'StudentNationalities' where name = 'StudentNationality' and type = 'Add New Student';
 update config_items set name = 'StudentSpecialNeeds' where name = 'StudentSpecialNeed' and type = 'Add New Student';
+
+ALTER TABLE `institution_sites` CHANGE `alternative_name` `alternative_name` VARCHAR( 150 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL ;
+

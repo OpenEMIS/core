@@ -55,10 +55,23 @@ trait MessagesTrait {
 		// Validation Messages
 		'Institution' => [
 			'Institutions' => [
-				'noProgrammes' => 'There is no available Programme set for this Institution.',
-				'noSections' => 'There is no available Section under the selected Academic Period.',
+				'noProgrammes' => 'There is no available Programme set for this Institution',
+				'noSections' => 'There is no available Section under the selected Academic Period',
 				'date_closed' => [
 					'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+				]
+			],
+			'InstitutionSiteProgrammes' => [
+				'end_date' => [
+					'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+				]
+			],
+			'InstitutionSiteShifts' => [
+				'start_time' => [
+					'ruleCompareDate' => 'Start Time should not be later than End Time'
+				],
+				'end_time' => [
+					'ruleCompareDateReverse' => 'End Time should not be earlier than Start Time'
 				]
 			],
 			'InstitutionSiteStudentAbsences' => [
@@ -125,6 +138,30 @@ trait MessagesTrait {
 				],
 				 'photo_content' => [
 				 	'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
+				]
+			],
+			'Accounts' => [
+				'username' => [
+					'ruleNotBlank' => 'Please enter a valid username',
+					'ruleNoSpaces' => 'Only alphabets and numbers are allowed',
+					'ruleUnique' => 'This username is already in use.'
+				],
+				'password' => [
+					'ruleChangePassword' => 'Incorrect password.',
+					'ruleCheckUsernameExists' => 'Please enter a valid password',
+					'ruleMinLength' => 'Password must be at least 6 characters'
+				],
+				'retype_password' => [
+					'ruleChangePassword' => 'Please confirm your new password',
+					'ruleCompare' => 'Both passwords do not match'
+				],
+				'newPassword' => [
+					'ruleChangePassword' => 'Please enter your new password',
+					'ruleMinLength' => 'Password must be at least 6 characters'
+				],
+				'retypeNewPassword' => [
+					'ruleChangePassword' => 'Please confirm your new password',
+					'ruleCompare' => 'Both passwords do not match'
 				]
 			],
 			'Contacts' => [
