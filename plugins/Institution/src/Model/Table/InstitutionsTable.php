@@ -72,7 +72,9 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('CustomTableCells', ['className' => 'Institution.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		// pr($this->validator());
-		$this->addBehavior('CustomField.Record', ['foreignKey' => 'institution_id']);
+		$this->addBehavior('CustomField.Record', [
+			'recordKey' => 'institution_id'
+		]);
 	}
 
 	public function validationDefault(Validator $validator) {

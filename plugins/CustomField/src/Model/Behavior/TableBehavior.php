@@ -93,7 +93,7 @@ class TableBehavior extends Behavior {
 								$CustomTableCells->aliasField('custom_field_id') => $fieldId,
 								$CustomTableCells->aliasField('custom_table_column_id') => $tableColumnId,
 								$CustomTableCells->aliasField('custom_table_row_id') => $tableRowId,
-								$CustomTableCells->aliasField($attr['foreignKey']) => $entity->id
+								$CustomTableCells->aliasField($attr['recordKey']) => $entity->id
 							])
 							->all();
 

@@ -7,14 +7,12 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
 class RecordBehavior extends Behavior {
-	private $customRecordKey = 'custom_record_id';
+	protected $_defaultConfig = [
+		'recordKey' => 'custom_record_id'
+	];
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-		if (isset($config['foreignKey'])) {
-			$this->customRecordKey = $config['foreignKey'];
-		}
-		$this->config('foreignKey');
     }
 
     public function addEditAfterAction(Event $event, Entity $entity) {
@@ -132,7 +130,7 @@ class RecordBehavior extends Behavior {
 					])
 					->where([
 						$CustomFieldValues->aliasField('custom_field_id') => $_customField->id,
-						$CustomFieldValues->aliasField($this->customRecordKey) => $entity->id
+						$CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id
 					])
 					->all();
 
@@ -156,7 +154,7 @@ class RecordBehavior extends Behavior {
 	            'visible' => true,
 	            'field' => $key,
 	            'attr' => $_attr,
-	            'foreignKey' => $this->customRecordKey,
+	            'recordKey' => $this->config('recordKey'),
 	            'customField' => $_customField,
 	            'id' => $_id,
 	            'value' => $_value
