@@ -166,6 +166,7 @@ class CustomFormsTable extends AppTable {
 				'order' => 3,
 				'visible' => true,
 				'attr' => [
+					'label' => __(Inflector::humanize($labelText)),
 					'onchange' => 'if($(this).val()){$("#customforms-apply-to-all").val(0);};'
 				]
 			]);
