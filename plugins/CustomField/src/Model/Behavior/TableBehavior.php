@@ -49,4 +49,16 @@ class TableBehavior extends Behavior {
 
 		return compact('entity', 'data', 'options');
 	}
+
+	public function onGetCustomTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+        $value = '';
+
+        if ($action == 'index' || $action == 'view') {
+        	$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
+        } else if ($action == 'edit') {
+        	$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
+        }
+
+        return $value;
+    }
 }
