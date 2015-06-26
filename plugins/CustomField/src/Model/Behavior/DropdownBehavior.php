@@ -49,6 +49,7 @@ class DropdownBehavior extends Behavior {
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $options['type'] = 'select';
+            $options['default'] = $attr['value'];
 
             $dropdownOptions = [];
     		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
@@ -59,6 +60,9 @@ class DropdownBehavior extends Behavior {
  			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];
             $value = $form->input($fieldPrefix.".number_value", $options);
             $value .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $attr['customField']->id]);
+			if (!is_null($attr['id'])) {
+                $value .= $form->hidden($fieldPrefix.".id", ['value' => $attr['id']]);
+            }
         }
 
         return $value;
