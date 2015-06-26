@@ -10,6 +10,7 @@ class SecuritiesController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
+			'Accounts' => ['className' => 'User.Accounts'],
 			'Users' => ['className' => 'User.Users'],
 			'Groups' => ['className' => 'Security.SecurityGroups'],
 			'Roles' => ['className' => 'Security.SecurityRoles']

@@ -14,6 +14,7 @@ class StudentsController extends AppController {
 		$this->ControllerAction->model()->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 
 		$this->ControllerAction->models = [
+			'Accounts' => ['className' => 'User.Accounts'],
 			'Contacts' => ['className' => 'User.Contacts'],
 			'Identities' => ['className' => 'User.Identities'],
 			'Languages' => ['className' => 'User.UserLanguages'],

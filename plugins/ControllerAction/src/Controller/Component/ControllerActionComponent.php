@@ -758,6 +758,13 @@ class ControllerActionComponent extends Component {
 						// event: onSaveSuccess
 						$this->Alert->success('general.edit.success');
 						$action = $this->buttons['view']['url'];
+
+						$event = $this->dispatchEvent($model, 'ControllerAction.Model.edit.afterSaveRedirect', null, ['action' => $action]);
+						if ($event->isStopped()) { return $event->result; }
+						if (!empty($event->result)) {
+							$action = $event->result;
+						}
+						
 						return $this->controller->redirect($action);
 					} else {
 						// event: onSaveFailed
