@@ -1,5 +1,5 @@
 <?php
-namespace App\Model\Table;
+namespace FieldOption\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
