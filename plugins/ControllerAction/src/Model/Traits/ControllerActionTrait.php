@@ -23,6 +23,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.add.beforeAction'			=> 'addBeforeAction', // called before any add logic is executed
 		'ControllerAction.Model.add.onInitialize'			=> 'addOnInitialize', // called on http get
 		'ControllerAction.Model.add.beforePatch'			=> 'addBeforePatch', // called on http post before patching entity
+		'ControllerAction.Model.add.afterPatch'				=> 'addAfterPatch', // after patching entity - afterValidate
 		'ControllerAction.Model.add.afterSaveRedirect'		=> 'addAfterSaveRedirect', // changes redirect url after a successful save
 		//'ControllerAction.Model.add.onReload'				=> 'addOnReload', // called on http post
 		'ControllerAction.Model.add.afterAction'			=> 'addAfterAction', // called after adding entity
