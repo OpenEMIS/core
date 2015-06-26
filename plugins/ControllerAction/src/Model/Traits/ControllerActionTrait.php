@@ -6,7 +6,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Controller.onInitialize'			=> 'onInitialize',
 		'ControllerAction.Controller.beforePaginate'		=> 'beforePaginate',
 		'ControllerAction.Model.onPopulateSelectOptions'	=> 'onPopulateSelectOptions', // called when select options auto populated
-		'ControllerAction.Model.onGetLabel'					=> 'onGetLabel', // called to get label from model
+		'ControllerAction.Model.onGetFieldLabel'			=> 'onGetFieldLabel', // called to get label from model
 		'ControllerAction.Model.beforeAction'				=> 'beforeAction', // called before start of any actions
 		'ControllerAction.Model.afterAction'				=> 'afterAction', // called after any actions
 		'ControllerAction.Model.onFormatDate'				=> 'onFormatDate', // called before displaying date fields
