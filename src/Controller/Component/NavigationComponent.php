@@ -5,7 +5,6 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 
 class NavigationComponent extends Component {
-	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public $controller;
 	public $action;
 	public $breadcrumbs = [];
