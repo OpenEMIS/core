@@ -1137,3 +1137,14 @@ UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboa
 
 -- 26th June 2015
 UPDATE labels SET en = 'Photo ID' where module = 'Users' and field = 'photo_content';
+
+-- 27th June 2015
+UPDATE `security_functions` SET 
+	`_edit` = REPLACE(`_edit`, '_view:', ''), 
+	`_add` = REPLACE(`_add`, '_view:', ''), 
+	`_delete` = REPLACE(`_delete`, '_view:', ''),
+	`_execute` = REPLACE(`_execute`, '_view:', '');
+
+UPDATE `security_functions` SET `controller` = 'Institutions' WHERE `controller` = 'InstitutionSites';
+
+

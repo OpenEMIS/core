@@ -32,7 +32,8 @@ trait MessagesTrait {
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.'
-			]
+			],
+			'noAccess' => 'You do not have access to this location.'
 		],
 		'InstitutionSiteProgrammes' => [
 			'noEducationLevels' => 'There are no available Education Level.',

@@ -75,6 +75,7 @@ class ControllerActionComponent extends Component {
 		$action = $this->request->params['action'];
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
+				$this->currentAction = $action;
 				$this->request->params['action'] = 'ComponentAction';
 				$this->initComponentsForModel();
 			} else { // check if it's a model action
