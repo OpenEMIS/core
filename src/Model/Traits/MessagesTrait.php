@@ -60,6 +60,12 @@ trait MessagesTrait {
 		'SystemGroups' => [
 			'tabTitle' => 'System Groups'
 		],
+		'UserRoles' => [
+			'tabTitle' => 'User Roles'
+		],
+		'SystemRoles' => [
+			'tabTitle' => 'System Roles'
+		],
 		
 		// Validation Messages
 		'Institution' => [

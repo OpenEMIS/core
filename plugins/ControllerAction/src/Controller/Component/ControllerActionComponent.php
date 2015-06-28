@@ -536,7 +536,7 @@ class ControllerActionComponent extends Component {
 			array('name' => 'ControllerAction.index', 'data' => array(), 'options' => array())
 		);
 
-		if (empty($data)) {
+		if ($data->count() == 0) {
 			$this->Alert->info('general.noData');
 		} else {
 			$indexElements[] = array('name' => 'ControllerAction.pagination', 'data' => array(), 'options' => array());

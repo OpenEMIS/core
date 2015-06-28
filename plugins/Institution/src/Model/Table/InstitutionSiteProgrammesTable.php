@@ -27,6 +27,8 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		$this->EducationLevels = $this->EducationProgrammes->EducationCycles->EducationLevels;
 		$this->EducationGrades = $this->EducationProgrammes->EducationGrades;
 		$this->AcademicPeriods = $this->Institutions->InstitutionSiteShifts->AcademicPeriods;
+
+		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -107,7 +109,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	public function addEditBeforePatch($event, $entity, $data, $options) {
 		// pr('addEditBeforePatch');
 		// pr($data);
-		$data = $this->patchDates($data);
 		foreach($data[$this->alias()]['institution_site_grades'] as $key => $row) {
 			if (isset($row['education_grade_id'])) {
 				$data[$this->alias()]['institution_site_grades'][$key]['status'] = 1;
@@ -279,22 +280,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	private function patchDates($data) {
-		$modelData = $data[$this->alias()];
-		if (array_key_exists('start_date', $modelData)) {
-			$date = $modelData['start_date'];
-			if ($date!='') {
-				$data[$this->alias()]['start_year'] = date('Y', strtotime($date));
-			}
-		}
-		if (array_key_exists('end_date', $modelData)) {
-			$date = $modelData['end_date'];
-			if ($date!='') {
-				$data[$this->alias()]['end_year'] = date('Y', strtotime($date));
-			}
-		}
-		return $data;
-	}
 
 	/**
 	 * Used by InstitutionSiteGradesTable && InstitutionSiteFeesTable
