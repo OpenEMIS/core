@@ -12,8 +12,12 @@ class SecurityAuthorize extends BaseAuthorize {
 		$authorized = false;
 
 		if ($action == 'ComponentAction') {
+			$model = $controller->ControllerAction->model();
+			$action = $model->action;
+			
 			if ($user['super_admin'] == 0) {
-				$authorized = $controller->AccessControl->check();
+				// TODO-jeff: need to check for roles belonging to institutions
+				$authorized = $controller->AccessControl->check($controller->name, [$model->alias, $action]);
 			} else { // super admin have access to every functions
 				$authorized = true;
 			}

@@ -60,6 +60,29 @@ class UserGroupsTable extends AppTable {
 		return $query;
 	}
 
+	public function findByUser(Query $query, array $options) {
+		$userId = $options['userId'];
+		$alias = $this->alias();
+
+		$query
+		->join([
+			[
+				'table' => 'security_group_users',
+				'alias' => 'SecurityGroupUsers',
+				'type' => 'LEFT',
+				'conditions' => ["SecurityGroupUsers.security_group_id = $alias.id"]
+			]
+		])
+		->where([
+			'OR' => [
+				"$alias.created_user_id" => $userId,
+				'SecurityGroupUsers.security_user_id' => $userId
+			]
+		])
+		->group([$this->aliasField('id')]);
+		return $query;
+	}
+
 	public function onGetNoOfUsers(Event $event, Entity $entity) {
 		$id = $entity->id;
 

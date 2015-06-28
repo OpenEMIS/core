@@ -233,6 +233,7 @@ class ControllerActionHelper extends Helper {
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
+			$associatedFound = false;
 			if (strlen($event->result) > 0) {
 				$value = $event->result;
 				$obj->$field = $value;
@@ -240,7 +241,7 @@ class ControllerActionHelper extends Helper {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
-					$obj->$field = $value;
+					$associatedFound = true;
 				}
 			}
 
@@ -252,10 +253,12 @@ class ControllerActionHelper extends Helper {
 			if (!empty($event->result)) {
 				$value = $event->result;
 			} else {
-				// mapped to a current function in this class
-				$function = 'get' . Inflector::camelize($type) . 'Element';
-				if (method_exists($this, $function)) {
-					$value = $this->$function('index', $obj, $attr);
+				if (!$associatedFound) {
+					// mapped to a current function in this class
+					$function = 'get' . Inflector::camelize($type) . 'Element';
+					if (method_exists($this, $function)) {
+						$value = $this->$function('index', $obj, $attr);
+					}
 				}
 			}
 
@@ -567,9 +570,9 @@ class ControllerActionHelper extends Helper {
 				} else if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
-					if (is_object($data->$associatedObject)) {
+					
+					if ($data->has($associatedObject)) {
 						$value = $data->$associatedObject->name;
-						$data->$_field = $value;
 					}
 				}
 
@@ -658,24 +661,17 @@ class ControllerActionHelper extends Helper {
 
 	public function getSelectElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+		$field = $attr['field'];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
-				reset($attr['options']);
-				$firstKey = key($attr['options']);
-				if (is_array($attr['options'][$firstKey])) {
-					foreach ($attr['options'] as $fkey => $fvalue) {
-						if ($fvalue['value'] == $value) {
-							$value = $fvalue['name'];
-						}
-					}
-				} else {
-					$value = $data->$attr['field'];
-					if (array_key_exists($value, $attr['options'])) {
-						$value = $attr['options'][$value];
+				if (array_key_exists($data->$field, $attr['options'])) {
+					$value = $attr['options'][$data->$field];
+					if (is_array($value)) {
+						$value = $value['text'];
 					}
 				}
 			} else {
-				$value = $data->$attr['field'];
+				$value = $data->$field;
 			}
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {

@@ -19,13 +19,14 @@ class AccessControlComponent extends Component {
 		$this->action = $this->request->params['action'];
 		$this->Session = $this->request->session();
 
+		$this->Session->delete('Permissions');
 		if (!is_null($this->Auth->user()) && !$this->Session->check('Permissions')) {
 			$this->buildPermissions();
 		} else {
+			// TODO-jeff
 			// check last updated and rebuild permissions;
 		}
 		// pr($this->Session->read('Permissions'));
-		// $this->Session->delete('Permissions');
 	}
 
 	public function buildPermissions() {
@@ -43,7 +44,7 @@ class AccessControlComponent extends Component {
 					$function = $entity->security_function;
 
 					foreach ($this->operations as $op) { // for each operation in function
-						if (!empty($function->$op)) {
+						if (!empty($function->$op) && $entity->$op == 1) {
 							$actions = explode($this->separator, $function->$op);
 
 							if (is_array($actions)) {
@@ -77,16 +78,22 @@ class AccessControlComponent extends Component {
 		}
 	}
 	
-	public function check($roleId=0, $controller=null, $action=null) {
+	public function check($controller=null, $action=null, $roleId=0) {
 		if (is_null($controller)) {
 			$controller = $this->controller->name;
 		}
 		if (is_null($action)) {
 			$action = $this->action;
 		}
-		$permissionKey = implode('.', ['Permissions', $controller, $action]);
 
-		if ($this->Session->check($permissionKey)) {
+		$permissionKey = ['Permissions', $controller];
+		if (is_array($action)) {
+			$permissionKey = array_merge($permissionKey, $action);
+		} else {
+			$permissionKey[] = $action;
+		}
+
+		if ($this->Session->check(implode('.', $permissionKey))) {
 			if ($roleId != 0) {
 				$roles = $this->Session->read($permissionKey);
 				return in_array($roleId, $roles);
