@@ -1,10 +1,11 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
-use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Validation\Validator;
+use App\Model\Table\AppTable;
 
 class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
@@ -144,6 +145,14 @@ class InstitutionsTable extends AppTable  {
 
 		$indexDashboard = 'Institution.Institutions/dashboard';
 		$this->controller->set('indexDashboard', $indexDashboard);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+		$query = $request->query;
+		if (!array_key_exists('sort', $query) && !array_key_exists('direction', $query)) {
+			$options['order'][$this->aliasField('name')] = 'asc';
+		}
+		return $options;
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {

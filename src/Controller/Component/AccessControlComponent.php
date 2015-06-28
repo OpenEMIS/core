@@ -33,7 +33,7 @@ class AccessControlComponent extends Component {
 		$Users = TableRegistry::get('User.Users');
 		$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
 		$userObj = $Users->findById($userId)->contain(['SecurityRoles'])->first();
-
+		
 		foreach ($userObj->security_roles as $role) { // for each role in user
 			$roleId = $role->id;
 			$functions = $SecurityRoleFunctions->findAllBySecurityRoleId($roleId)->contain(['SecurityFunctions'])->all();
@@ -76,18 +76,20 @@ class AccessControlComponent extends Component {
 			$this->Session->write($permissionKey, $roles);
 		}
 	}
-
-	public function check($roleId=0) {
-		$permissionKey = implode('.', ['Permissions', $this->controller->name, $this->action]);
+	
+	public function check($roleId=0, $controller=null, $action=null) {
+		if (is_null($controller)) {
+			$controller = $this->controller->name;
+		}
+		if (is_null($action)) {
+			$action = $this->action;
+		}
+		$permissionKey = implode('.', ['Permissions', $controller, $action]);
 
 		if ($this->Session->check($permissionKey)) {
 			if ($roleId != 0) {
 				$roles = $this->Session->read($permissionKey);
-				if (in_array($roleId, $roles)) {
-					return true;
-				} else {
-					return false;
-				}
+				return in_array($roleId, $roles);
 			} else {
 				return true;
 			}

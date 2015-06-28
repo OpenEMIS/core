@@ -3,39 +3,37 @@ namespace Security\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
-class SecuritiesController extends AppController
-{
+class SecuritiesController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Accounts' => ['className' => 'User.Accounts'],
-			'Users' => ['className' => 'User.Users'],
-			'Groups' => ['className' => 'Security.SecurityGroups'],
-			'Roles' => ['className' => 'Security.SecurityRoles']
+			'Accounts'		=> ['className' => 'User.Accounts'],
+			'Users'			=> ['className' => 'User.Users'],
+			'UserGroups'	=> ['className' => 'Security.UserGroups'],
+			'SystemGroups'	=> ['className' => 'Security.SystemGroups'],
+			'Roles'			=> ['className' => 'Security.SecurityRoles']
 		];
-		$this->loadComponent('Paginator');
-    }
+	}
 
-    public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
-    	$this->Navigation->addCrumb('Security', ['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->request->action]);
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$header = 'Security';
+		$this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
 		$this->Navigation->addCrumb($this->request->action);
+		
+		$this->set('contentHeader', __($header));
+	}
 
-    	$header = __('Security');
-    	$controller = $this;
-    	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-			$header .= ' - ' . $model->alias;
-
-			$controller->set('contentHeader', $header);
-		};
-
-		$this->ControllerAction->beforePaginate = function($model, $options) {
-			// logic here
-			return $options;
-		};
-
+	public function onInitialize(Event $event, Table $model) {
+		$header = __('Security');
+		$header .= ' - ' . __($model->getHeader($model->alias));
 		$this->set('contentHeader', $header);
+	}
+
+	public function index() {
+		return $this->redirect(['action' => 'Users']);
 	}
 }
