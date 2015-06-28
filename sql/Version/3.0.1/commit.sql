@@ -1146,5 +1146,5 @@ UPDATE `security_functions` SET
 	`_execute` = REPLACE(`_execute`, '_view:', '');
 
 UPDATE `security_functions` SET `controller` = 'Institutions' WHERE `controller` = 'InstitutionSites';
-
+UPDATE `security_functions` SET `_view` = 'Attachments.index|Attachments.view', `_add` = 'Attachments.add', `_edit` = 'Attachments.edit', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download' WHERE `controller` = 'Institutions' AND `name` = 'Attachments';
 

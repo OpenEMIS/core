@@ -34,6 +34,7 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.afterSaveRedirect'		=> 'editAfterSaveRedirect', // changes redirect url after a successful save
 		//'ControllerAction.Model.edit.onReload'				=> 'editOnReload',
 		'ControllerAction.Model.edit.afterAction'			=> 'editAfterAction',
+		'ControllerAction.Model.viewEdit.beforeQuery'		=> 'viewEditBeforeQuery',
 		'ControllerAction.Model.addEdit.beforeAction'		=> 'addEditBeforeAction',
 		'ControllerAction.Model.addEdit.beforePatch'		=> 'addEditBeforePatch',
 		'ControllerAction.Model.addEdit.afterAction'		=> 'addEditAfterAction'

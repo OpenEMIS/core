@@ -233,7 +233,7 @@ class ControllerActionHelper extends Helper {
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
-			if ($event->result) {
+			if (strlen($event->result) > 0) {
 				$value = $event->result;
 				$obj->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
