@@ -50,10 +50,15 @@ trait MessagesTrait {
 		'InstitutionSiteFees' => [
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
-		
 
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
+		],
+		'UserGroups' => [
+			'tabTitle' => 'User Groups'
+		],
+		'SystemGroups' => [
+			'tabTitle' => 'System Groups'
 		],
 		
 		// Validation Messages
