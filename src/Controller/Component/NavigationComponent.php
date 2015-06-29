@@ -241,7 +241,7 @@ class NavigationComponent extends Component {
 						'Special Needs' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'SpecialNeeds']],
 						'Awards' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Awards']],
 						'Attachments' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Attachments']],
-						'More' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'additional']]
+						// 'More' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'additional']]
 					]
 				],
 				'Details' => [
@@ -274,12 +274,12 @@ class NavigationComponent extends Component {
 // <a href="/core/Students/StudentFee" >Fees
 					]
 				],
-				'Health' => [
-					'collapse' => true,
-					'items' => [
-						'<placeholder>' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts']]
-					]
-				]
+				// 'Health' => [
+				// 	'collapse' => true,
+				// 	'items' => [
+				// 		'<placeholder>' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'BankAccounts']]
+				// 	]
+				// ]
 			];
 			// $navigations['items']['Institutions']['items'] = [
 			// 	'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view', $id]],
@@ -305,14 +305,14 @@ class NavigationComponent extends Component {
 									'Special Needs' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'SpecialNeeds']],
 									'Awards' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Awards']],
 									'Attachments' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Attachments']],
-									'More' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'additional']]
+									// 'More' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'additional']]
 								]
 							],
 			'Details' => [
 					'collapse' => true,
 					'items' => [
 						'Qualifications' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications']],
-						'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Training']],
+						// 'Training' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Training']],
 						'Positions' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Positions']],
 						'Sections' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Sections']],
 						'Classes' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Classes']],
@@ -332,18 +332,18 @@ class NavigationComponent extends Component {
 						'Bank Accounts' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']],
 					]
 				],
-				'Health' => [
-					'collapse' => true,
-					'items' => [
-						'<placeholder>' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']]
-					]
-				],
-				'Training' => [
-					'collapse' => true,
-					'items' => [
-						'<placeholder>' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']]
-					]
-				]
+				// 'Health' => [
+				// 	'collapse' => true,
+				// 	'items' => [
+				// 		'<placeholder>' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']]
+				// 	]
+				// ],
+				// 'Training' => [
+				// 	'collapse' => true,
+				// 	'items' => [
+				// 		'<placeholder>' => ['url' => ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'BankAccounts']]
+				// 	]
+				// ]
 
 
 // 							'Details' => [
