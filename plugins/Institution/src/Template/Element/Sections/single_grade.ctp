@@ -1,13 +1,13 @@
 <?php ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
+<!-- 	<label class="pull-left" for="<?= $attr['id'] ?>">&nbsp;</label> -->
 	<div class="table-in-view col-md-5 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?php echo $this->Label->get('general.section'); ?></th>
-					<th><?php echo $this->Label->get('InstitutionSiteSections.security_user_id'); ?></th>
+					<th><?= $this->Label->get('InstitutionSiteSections.section'); ?></th>
+					<th><?= $this->Label->get('InstitutionSiteSections.security_user_id'); ?></th>
 				</tr>
 			</thead>
 			

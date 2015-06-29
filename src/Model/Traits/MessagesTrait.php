@@ -41,7 +41,13 @@ trait MessagesTrait {
 			'noEducationGrades' => 'There are no available Education Grade.',
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Sections'
+			'noSections' => 'No Sections',
+			'students' => 'Students',
+			'education_programme' => 'Education Programme',
+			'education_grade' => 'Education Grade',
+			'security_user_id' => 'Home Room Teacher',
+			'section' => 'Section',
+			'single_grade_field' => 'Cingle Grade'
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Sections',
@@ -50,7 +56,6 @@ trait MessagesTrait {
 		'InstitutionSiteFees' => [
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
-
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
 		],
@@ -65,6 +70,17 @@ trait MessagesTrait {
 		],
 		'SystemRoles' => [
 			'tabTitle' => 'System Roles'
+		],
+		'Users' => [
+			'openemis_no' => 'OpenEMIS ID',
+			'name' => 'Name',
+			'gender' => 'Gender',
+			'date_of_birth' => 'Date Of Birth',
+			'student_category' => 'Category',
+			'select_student' => 'Select Students',
+			'add_student' => 'Add Students',
+			'select_staff' => 'Select Staff',
+			'add_staff' => 'Add Staff'
 		],
 		
 		// Validation Messages
