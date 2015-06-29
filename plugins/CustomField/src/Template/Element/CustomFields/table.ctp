@@ -59,86 +59,93 @@
 	</div>
 <?php else : ?>
 	<div class="input">
-		<fieldset class="section_group">
-			<div>
-				<a style="cursor:pointer;" onclick="$('#reload').val('addColumn').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Column'); ?></a>
-				<br>
-				<a style="cursor:pointer;" onclick="$('#reload').val('addRow').click()"><i class="fa fa-plus"></i>&nbsp;<?= __('Row'); ?></a>
-			</div>
-			<div class="table-responsive">
-				<table class="table table-striped table-hover table-bordered">
-					<thead>
-						<tr>
-							<?php if (!empty($data->custom_table_columns)) : ?>
-								<?php
-									$columnOrder = 1;
-									foreach ($data->custom_table_columns as $key => $obj) {
-										if($obj->visible == 1) :
-								?>
-									<th>
-										<div>
-											<?php
-												if(isset($obj->id)) {
-													echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.id");
-												}
-												echo $this->Form->input("$CustomFields.custom_table_columns.$key.name", ['label' => false]);
-												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.order", ['value' => $columnOrder]);
-												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.visible");
-											?>
-											<span style="cursor: pointer;"><a onclick="jsTable.doRemoveColumn(this)"><i class="fa fa-minus-circle"></i></a></span>
-										</div>
-									</th>
-								<?php
-										$columnOrder++;
-										endif;
-									}
-								?>
-							<?php endif; ?>
-						</tr>
-					</thead>
-					<tbody>
-						<?php if (!empty($data->custom_table_rows)) : ?>
+		<div class="table-toolbar">
+			<button onclick="$('#reload').val('addRow').click();" class="btn btn-default btn-xs">
+				<i class="fa fa-plus"></i> 
+				<span>Add Rows</span>
+			</button>
+			<button onclick="$('#reload').val('addColumn').click();" class="btn btn-default btn-xs">
+				<i class="fa fa-plus"></i> 
+				<span>Add Columns</span>
+			</button>
+		</div>
+		<div class="table-in-view col-md-4 table-responsive">
+			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+				<thead>
+					<tr>
+						<?php if (!empty($data->custom_table_columns)) : ?>
 							<?php
-									$rowOrder = 1;
-									foreach ($data->custom_table_rows as $key => $obj) {
-										if($obj->visible == 1) :
-								?>
-									<tr>
-										<td>
-											<?php
-												if(isset($obj->id)) {
-													echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.id");
-												}
-												echo $this->Form->input("$CustomFields.custom_table_rows.$key.name", ['label' => false]);
-												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.order", ['value' => $rowOrder]);
-												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.visible");
-											?>
-											<span style="cursor: pointer;"><a onclick="jsTable.doRemove(this)"><i class="fa fa-minus-circle"></i></a></span>
-										</td>
+								$columnOrder = 1;
+								foreach ($data->custom_table_columns as $key => $obj) {
+									if($obj->visible == 1) :
+							?>
+								<th>
+									<div>
 										<?php
-											if(!empty($data->custom_table_columns)) :
-												foreach ($data->custom_table_columns as $key => $obj) {
-													if($key == 0) {
-														continue;
-													}
-													if($obj->visible == 1) :
+											if(isset($obj->id)) {
+												echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.id");
+											}
+											echo $this->Form->input("$CustomFields.custom_table_columns.$key.name", ['label' => false]);
+											echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.order", ['value' => $columnOrder]);
+											echo $this->Form->hidden("$CustomFields.custom_table_columns.$key.visible");
 										?>
-													<td></td>
-										<?php
-													endif;
-												}
-											endif;
-										?>
-									</tr>
-								<?php
-										$rowOrder++;
-										endif;
-									}
-								?>
+										<button onclick="jsTable.doRemoveColumn(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
+											<i class="fa fa-trash"></i> <span>Delete</span>
+										</button>
+									</div>
+								</th>
+							<?php
+									$columnOrder++;
+									endif;
+								}
+							?>
 						<?php endif; ?>
-					</tbody>
-				</table>
-			</div>
-		</fieldset>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if (!empty($data->custom_table_rows)) : ?>
+						<?php
+								$rowOrder = 1;
+								foreach ($data->custom_table_rows as $key => $obj) {
+									if($obj->visible == 1) :
+							?>
+								<tr>
+									<td>
+										<?php
+											if(isset($obj->id)) {
+												echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.id");
+											}
+											echo $this->Form->input("$CustomFields.custom_table_rows.$key.name", ['label' => false]);
+											echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.order", ['value' => $rowOrder]);
+											echo $this->Form->hidden("$CustomFields.custom_table_rows.$key.visible");
+										?>
+										<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action">
+											<i class="fa fa-trash"></i> <span>Delete</span>
+										</button>
+									</td>
+									<?php
+										if(!empty($data->custom_table_columns)) :
+											foreach ($data->custom_table_columns as $key => $obj) {
+												if($key == 0) {
+													continue;
+												}
+												if($obj->visible == 1) :
+									?>
+												<td></td>
+									<?php
+												endif;
+											}
+										endif;
+									?>
+								</tr>
+							<?php
+									$rowOrder++;
+									endif;
+								}
+							?>
+					<?php endif; ?>
+				</tbody>
+			</table>
+		</div>
 	</div>
 <?php endif ?>

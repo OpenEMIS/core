@@ -7,6 +7,8 @@
 				    'controller' => $this->request->params['controller'],
 				    'action' => $this->request->params['action']
 				]);
+				$template = $this->ControllerAction->getFormTemplate();
+				$this->Form->templates($template);
 
 				if (!empty($workflowOptions)) {
 					echo $this->Form->input('workflow', array(

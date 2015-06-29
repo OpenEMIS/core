@@ -7,6 +7,8 @@
 				    'controller' => $this->request->params['controller'],
 				    'action' => 'index'
 				]);
+				$template = $this->ControllerAction->getFormTemplate();
+				$this->Form->templates($template);
 
 				if (!empty($statusOptions)) {
 					echo $this->Form->input('survey_status', array(
