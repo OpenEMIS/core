@@ -538,6 +538,7 @@ DROP TABLE IF EXISTS `custom_modules`;
 CREATE TABLE IF NOT EXISTS `custom_modules` (
   `id` int(11) NOT NULL,
   `name` varchar(250) NOT NULL,
+  `description` text DEFAULT NULL,
   `model` varchar(200),
   `field_option` varchar(200),
   `parent_id` int(11) DEFAULT '0',
@@ -556,10 +557,10 @@ ALTER TABLE `custom_modules`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 TRUNCATE TABLE `custom_modules`;
-INSERT INTO `custom_modules` (`id`, `name`, `model`, `field_option`, `parent_id`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 'Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
-(2, 'Student', '', NULL, 0, 1, '0000-00-00 00:00:00'),
-(3, 'Staff', '', NULL, 0, 1, '0000-00-00 00:00:00');
+INSERT INTO `custom_modules` (`id`, `name`, `description`, `model`, `field_option`, `parent_id`, `created_user_id`, `created`) VALUES
+(1, 'Institution', 'Institution - Overview', 'Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
+(2, 'Student', 'Student - Overview', '', NULL, 0, 1, '0000-00-00 00:00:00'),
+(3, 'Staff', 'Staff - Overview', '', NULL, 0, 1, '0000-00-00 00:00:00');
 
 -- New table - custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
@@ -1057,9 +1058,9 @@ RENAME TABLE institution_site_custom_field_options TO z_1461_institution_site_cu
 RENAME TABLE institution_site_custom_values TO z_1461_institution_site_custom_values;
 RENAME TABLE institution_site_custom_value_history TO z_1461_institution_site_custom_value_history;
 
--- New table - institution_custom_field_values
-DROP TABLE IF EXISTS `institution_custom_field_values`;
-CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
+-- New table - institution_site_custom_field_values
+DROP TABLE IF EXISTS `institution_site_custom_field_values`;
+CREATE TABLE IF NOT EXISTS `institution_site_custom_field_values` (
   `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `number_value` int(11) DEFAULT NULL,
@@ -1067,7 +1068,7 @@ CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
   `date_value` date DEFAULT NULL,
   `time_value` time DEFAULT NULL,
   `custom_field_id` int(11) NOT NULL,
-  `institution_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -1075,18 +1076,18 @@ CREATE TABLE IF NOT EXISTS `institution_custom_field_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `institution_custom_field_values`
+ALTER TABLE `institution_site_custom_field_values`
   ADD PRIMARY KEY (`id`);
 
--- New table - institution_custom_table_cells
-DROP TABLE IF EXISTS `institution_custom_table_cells`;
-CREATE TABLE IF NOT EXISTS `institution_custom_table_cells` (
+-- New table - institution_site_custom_table_cells
+DROP TABLE IF EXISTS `institution_site_custom_table_cells`;
+CREATE TABLE IF NOT EXISTS `institution_site_custom_table_cells` (
   `id` char(36) NOT NULL,
   `text_value` varchar(250) DEFAULT NULL,
   `custom_field_id` int(11) NOT NULL,
   `custom_table_column_id` int(11) NOT NULL,
   `custom_table_row_id` int(11) NOT NULL,
-  `institution_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -1094,7 +1095,7 @@ CREATE TABLE IF NOT EXISTS `institution_custom_table_cells` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `institution_custom_table_cells`
+ALTER TABLE `institution_site_custom_table_cells`
   ADD PRIMARY KEY (`id`);
 
 -- Absence
