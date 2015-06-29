@@ -33,6 +33,13 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteProgrammes', 'created_user_id', NULL, 'Created By'),
 ('InstitutionSiteProgrammes', 'education_programme_id', NULL, 'Programme'),
 ('InstitutionSiteProgrammes', 'education_grade', NULL, 'Grade(s)'),
+-- InstitutionSiteShifts
+('InstitutionSiteShifts', 'name', NULL, 'Shift Name'),
+('InstitutionSiteShifts', 'location_institution_site_id', NULL, 'Location'),
+('InstitutionSiteShifts', 'modified', NULL, 'Modified On'),
+('InstitutionSiteShifts', 'created', NULL, 'Created On'),
+('InstitutionSiteShifts', 'modified_user_id', NULL, 'Modified By'),
+('InstitutionSiteShifts', 'created_user_id', NULL, 'Created By'),
 -- Users
 ('Users', 'photo_content', NULL, 'Profile Image');
 

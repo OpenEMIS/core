@@ -129,9 +129,6 @@ class LabelHelper extends Helper {
 			'single_grade_field' => 'Sections',
 			'multi_grade_field' => 'Education Grades',
 		],
-		'InstitutionSiteShifts' => [
-			'location_institution_site_id' => 'Location'
-		],
 		'InfrastructureTypes' => [
 			'infrastructure_level_id' => 'Level Name'
 		],
