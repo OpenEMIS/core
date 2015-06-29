@@ -67,10 +67,6 @@ class NavigationComponent extends Component {
 									'collapse' => true,
 									'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Systems']
 								],
-								'Custom Field' => [
-									'collapse' => true,
-									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Modules']
-								],
 								'Infrastructure' => [
 									'collapse' => true,
 									'url' => ['plugin' => 'Infrastructure', 'controller' => 'Infrastructures', 'action' => 'Levels']
@@ -88,6 +84,10 @@ class NavigationComponent extends Component {
 								// 	'collapse' => true,
 								// 	'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
 								// ],
+								'Custom Field' => [
+									'collapse' => true,
+									'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields']
+								],
 								'System Configurations' => [
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
