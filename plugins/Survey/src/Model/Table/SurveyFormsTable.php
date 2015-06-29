@@ -4,14 +4,14 @@ namespace Survey\Model\Table;
 use CustomField\Model\Table\CustomFormsTable;
 use Cake\Validation\Validator;
 
-class SurveyTemplatesTable extends CustomFormsTable {
+class SurveyFormsTable extends CustomFormsTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
 		$this->belongsToMany('CustomFields', [
 			'className' => 'Survey.SurveyQuestions',
-			'joinTable' => 'survey_template_questions',
-			'foreignKey' => 'survey_template_id',
+			'joinTable' => 'survey_form_questions',
+			'foreignKey' => 'survey_form_id',
 			'targetForeignKey' => 'survey_question_id'
 		]);
 	}
