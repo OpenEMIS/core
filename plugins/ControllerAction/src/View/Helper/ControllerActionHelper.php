@@ -647,7 +647,9 @@ class ControllerActionHelper extends Helper {
 	public function getPasswordElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
-			$value = $data->$attr['field'];
+			if (!empty($data->$attr['field'])) {
+				$value = '***************';
+			}
 		} else if ($action == 'edit') {
 			$options['type'] = 'password';
 			$fieldName = $attr['model'] . '.' . $attr['field'];

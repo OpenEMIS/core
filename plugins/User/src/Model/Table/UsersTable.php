@@ -52,10 +52,15 @@ class UsersTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('username', ['visible' => false]);
+
 		$this->ControllerAction->field('super_admin', ['visible' => false]);
 		$this->ControllerAction->field('photo_name', ['visible' => false]);
 		$this->ControllerAction->field('date_of_death', ['visible' => false]);
 		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active')]);
+		if (in_array($this->action, ['view', 'edit'])) {
+			$this->setTabElements();
+		}
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -95,10 +100,10 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function editBeforeAction($event) {
+	public function setTabElements() {
 		$plugin = $this->controller->plugin;
 		$name = $this->controller->name;
-		$id = '';
+
 		if (array_key_exists('pass', $this->request->params)) {
 			if ($this->controller->name == 'Securities') {
 				$id = $this->request->params['pass'][1];
@@ -108,24 +113,19 @@ class UsersTable extends AppTable {
 		}
 
 		$tabElements = [
-			'Details' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'edit', $id],
+			$this->alias => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
 				'text' => __('Details')
 			],
-			'Login' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'edit', $id],
+			'Accounts' => [
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
 				'text' => __('Account')	
 			]
 		];
-		if ($name == 'Securities') {
-			$tabElements['Details'] = [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'edit', $id],
-				'text' => __('Details')
-			];
-		}
 
+		$this->controller->set('selectedAction', $this->alias);
         $this->controller->set('tabElements', $tabElements);
-    }
+	}
 
 	public function addBeforeAction(Event $event) {
 		// if ($this->Session->check('Institutions.id')) {
@@ -258,6 +258,7 @@ class UsersTable extends AppTable {
 				    'rule' => 'alphanumeric',
 				]
 			])
+			->allowEmpty('username')
 			->add('password', [
 				// 'ruleUnique' => [
 				// 	'rule' => 'validateUnique',
