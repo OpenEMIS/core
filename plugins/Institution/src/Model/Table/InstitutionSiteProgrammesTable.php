@@ -43,9 +43,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('start_year', ['visible' => false]);
-		$this->ControllerAction->field('end_year', ['visible' => false]);
-
 		/**
 		 * Set default_date to false to show a blank date input on page load
 		 */
