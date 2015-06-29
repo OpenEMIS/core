@@ -1143,3 +1143,70 @@ UPDATE `security_functions` SET `controller` = 'Institutions' WHERE `controller`
 UPDATE `security_functions` SET `_view` = 'Attachments.index|Attachments.view', `_add` = 'Attachments.add', `_edit` = 'Attachments.edit', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download' WHERE `controller` = 'Institutions' AND `name` = 'Attachments';
 UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'Students.index|Students.view', `_add` = 'Students.add', `_edit` = 'Students.edit', `_delete` = 'Students.remove', `_execute` = 'Students.excel' WHERE `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Details' AND `name` = 'Student';
 
+-- 29th June 1600hrs
+-- Update for Institution - Surveys
+RENAME TABLE institution_site_surveys TO z_1461_institution_site_surveys;
+RENAME TABLE institution_site_survey_answers TO z_1461_institution_site_survey_answers;
+RENAME TABLE institution_site_survey_table_cells TO z_1461_institution_site_survey_table_cells;
+
+-- New table - institution_site_surveys
+DROP TABLE IF EXISTS `institution_site_surveys`;
+CREATE TABLE IF NOT EXISTS `institution_site_surveys` (
+  `id` int(11) NOT NULL,
+  `status` int(1) NOT NULL DEFAULT '0' COMMENT '0 -> New, 1 -> Draft, 2 -> Completed',
+  `academic_period_id` int(11) NOT NULL,
+  `survey_form_id` int(11) NOT NULL,
+  `institution_site_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_surveys`
+  ADD PRIMARY KEY (`id`), ADD KEY `institution_site_id` (`institution_site_id`);
+
+
+ALTER TABLE `institution_site_surveys`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- New table - institution_site_survey_answers
+DROP TABLE IF EXISTS `institution_site_survey_answers`;
+CREATE TABLE IF NOT EXISTS `institution_site_survey_answers` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `textarea_value` text,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `survey_question_id` int(11) NOT NULL,
+  `institution_site_survey_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_survey_answers`
+  ADD PRIMARY KEY (`id`);
+
+-- New table - institution_site_survey_table_cells
+DROP TABLE IF EXISTS `institution_site_survey_table_cells`;
+CREATE TABLE IF NOT EXISTS `institution_site_survey_table_cells` (
+  `id` char(36) NOT NULL,
+  `text_value` varchar(250) DEFAULT NULL,
+  `survey_question_id` int(11) NOT NULL,
+  `survey_table_column_id` int(11) NOT NULL,
+  `survey_table_row_id` int(11) NOT NULL,
+  `institution_site_survey_id` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `institution_site_survey_table_cells`
+  ADD PRIMARY KEY (`id`);

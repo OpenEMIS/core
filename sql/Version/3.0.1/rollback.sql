@@ -313,4 +313,13 @@ update config_items set name = 'StudentContact' where name = 'StudentContacts' a
 update config_items set name = 'StudentIdentity' where name = 'StudentIdentities' and type = 'Add New Student';
 update config_items set name = 'StudentNationality' where name = 'StudentNationalities' and type = 'Add New Student';
 update config_items set name = 'StudentSpecialNeed' where name = 'StudentSpecialNeeds' and type = 'Add New Student';
-	
+
+-- 29th June 1600hrs
+-- Revert Institution - Surveys
+DROP TABLE IF EXISTS `institution_site_surveys`;
+DROP TABLE IF EXISTS `institution_site_survey_answers`;
+DROP TABLE IF EXISTS `institution_site_survey_table_cells`;
+
+RENAME TABLE z_1461_institution_site_surveys TO institution_site_surveys;
+RENAME TABLE z_1461_institution_site_survey_answers TO institution_site_survey_answers;
+RENAME TABLE z_1461_institution_site_survey_table_cells TO institution_site_survey_table_cells;

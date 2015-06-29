@@ -41,9 +41,7 @@ class InstitutionsController extends AppController  {
 			'StudentFees' 		=> ['className' => 'Institution.StudentFees'],
 
 			// Surveys
-			'NewSurveys' 		=> ['className' => 'Institution.SurveyNew'],
-			'DraftedSurveys' 	=> ['className' => 'Institution.SurveyDrafts'],
-			'CompletedSurveys' 	=> ['className' => 'Institution.SurveyCompleted'],
+			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys'],
 
 			// Quality
 			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
