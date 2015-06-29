@@ -2,7 +2,9 @@
 $this->start('toolbar');
 	echo $this->Html->link('<i class="fa kd-back"></i>', $_buttons['back']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Back' ,'escape' => false]);
 	if ($action == 'edit') {
-		echo $this->Html->link('<i class="fa kd-lists"></i>', $_buttons['index']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Lists' ,'escape' => false]);
+		if (!empty($_buttons['index'])) {
+			echo $this->Html->link('<i class="fa kd-lists"></i>', $_buttons['index']['url'], ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'title' => 'Lists' ,'escape' => false]);
+		}
 	}
 $this->end();
 

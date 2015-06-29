@@ -28,8 +28,7 @@ class AccountsTable extends AppTable {
 		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
 	}
 
-	public function editBeforeAction($event)  {
-		$id = '';
+	private function setTabElements() {
 		if (array_key_exists('pass', $this->request->params)) {
 			if ($this->controller->name == 'Securities') {
 				$id = $this->request->params['pass'][1];
@@ -40,23 +39,27 @@ class AccountsTable extends AppTable {
 
 		$tabElements = [
 			'Details' => [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'edit',$id],
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'view',$id],
 				'text' => __('Details')
 			],
-			'Login' => [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Accounts','edit',$id],
+			'Accounts' => [
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Accounts','view',$id],
 				'text' => __('Account')
 			]
 		];
+
 		if ($this->controller->name == 'Securities') {
 			$tabElements['Details'] = [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users', 'edit',$id],
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users', 'view',$id],
 				'text' => __('Details')
 			];
 		}
 
+		$this->controller->set('selectedAction', $this->alias);
         $this->controller->set('tabElements', $tabElements);
+	}
 
+	public function beforeAction() {
 		$fieldsNeeded = ['username','password'];
 		foreach ($this->fields as $key => $value) {
 			if (!in_array($key, $fieldsNeeded)) {
@@ -66,9 +69,14 @@ class AccountsTable extends AppTable {
 			}
 		}
 
-		$this->ControllerAction->addField('retype_password', []);
+		$this->setTabElements();
 
 		$this->fields['password']['type'] = 'password';
+		$this->ControllerAction->setFieldOrder(['username', 'password']);
+	}
+
+	public function editBeforeAction($event)  {
+		$this->ControllerAction->addField('retype_password', []);
 		$this->fields['retype_password']['type'] = 'password';
 
 		$this->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
@@ -84,19 +92,19 @@ class AccountsTable extends AppTable {
 		return compact('entity', 'data', 'options');
 	}
 
-	public function editAfterSaveRedirect($action) {
-		$id = '';
-		if (array_key_exists('pass', $this->request->params)) {
-			$id = $this->request->params['pass'][1];
-		}	
+	// public function editAfterSaveRedirect($action) {
+	// 	$id = '';
+	// 	if (array_key_exists('pass', $this->request->params)) {
+	// 		$id = $this->request->params['pass'][1];
+	// 	}	
 
-		if ($this->controller->name == 'Securities') {
-			$action = ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users','view',$id];
-		} else {
-			$action = ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'view',$id];
-		}
-		return $action;
-	}
+	// 	if ($this->controller->name == 'Securities') {
+	// 		$action = ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Users','view',$id];
+	// 	} else {
+	// 		$action = ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'view',$id];
+	// 	}
+	// 	return $action;
+	// }
 
 	public function validationDefault(Validator $validator) {
 		return $validator
