@@ -166,7 +166,7 @@ class NavigationComponent extends Component {
 					'items' => [
 						'Overview' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'view'], 'selected' => ['edit']],
 						'Attachments' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Attachments']],
-						'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']],
+						// 'More' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Additional']],
 						'History' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'History']]
 					]
 				],
@@ -212,11 +212,7 @@ class NavigationComponent extends Component {
 
 				'Survey' => [
 					'collapse' => true,
-					'items' => [
-						'New' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'NewSurveys']],
-						'Draft' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'DraftedSurveys']],
-						'Completed' => ['url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'CompletedSurveys']]
-					]
+					'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys']
 				],
 
 				'Quality' => [
