@@ -323,3 +323,12 @@ DROP TABLE IF EXISTS `institution_site_survey_table_cells`;
 RENAME TABLE z_1461_institution_site_surveys TO institution_site_surveys;
 RENAME TABLE z_1461_institution_site_survey_answers TO institution_site_survey_answers;
 RENAME TABLE z_1461_institution_site_survey_table_cells TO institution_site_survey_table_cells;
+
+
+-- 29th June 2000hrs
+-- Revert Institution - Classes
+UPDATE `institution_site_classes` LEFT JOIN `z_1458_institution_site_classes` ON `institution_site_classes`.`id` = `z_1458_institution_site_classes`.`id` 
+	SET `institution_site_classes`.`education_subject_id`=`z_1458_institution_site_classes`.`education_subject_id`
+	WHERE `institution_site_classes`.`id` = `z_1458_institution_site_classes`.`id`;
+DROP TABLE `z_1458_institution_site_classes`;
+
