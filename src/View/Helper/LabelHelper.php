@@ -122,14 +122,6 @@ class LabelHelper extends Helper {
 			'total_fte' => 'Total FTE',
 			'fte' => 'FTE'
 		],
-		'InstitutionSitePositions' => [
-			'title' => 'Positions',
-			'position_no' => 'Position No',
-			'status' => 'Status',
-			'type' => 'Type',
-			'staff_position_title_id' => 'Title',
-			'staff_position_grade_id' => 'Grade'
-		],
 		'InstitutionSiteSections' => [
 			'name' => 'Section Name',
 			'institution_site_shift_id' => 'Shift',
