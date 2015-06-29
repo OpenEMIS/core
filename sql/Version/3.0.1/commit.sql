@@ -525,7 +525,6 @@ ALTER TABLE `institution_site_sections` DROP `education_grade_id`;
 ALTER TABLE `institution_site_section_staff` RENAME  `z_1458_institution_site_section_staff`;
 
 -- June 16 1020hrs
-ALTER TABLE `survey_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
 ALTER TABLE `rubric_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
 ALTER TABLE `rubric_template_options` CHANGE `color` `color` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '#ffffff';
 UPDATE `workflow_models` SET `submodel` = 'FieldOption.StaffLeaveTypes' WHERE `workflow_models`.`model` = 'StaffLeave';
@@ -891,6 +890,7 @@ ALTER TABLE `infrastructure_custom_table_rows`
 
 -- June 17 1118hrs
 -- Update for survey
+ALTER TABLE `survey_statuses` CHANGE `survey_template_id` `survey_form_id` INT(11) NOT NULL;
 
 -- Backup old tables
 RENAME TABLE survey_modules TO z_1461_survey_modules;
@@ -989,9 +989,9 @@ ALTER TABLE `survey_table_rows`
 ALTER TABLE `survey_table_rows`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
--- New table - survey_templates
-DROP TABLE IF EXISTS `survey_templates`;
-CREATE TABLE IF NOT EXISTS `survey_templates` (
+-- New table - survey_forms
+DROP TABLE IF EXISTS `survey_forms`;
+CREATE TABLE IF NOT EXISTS `survey_forms` (
   `id` int(11) NOT NULL,
   `name` varchar(250) NOT NULL,
   `description` text DEFAULT NULL,
@@ -1003,18 +1003,18 @@ CREATE TABLE IF NOT EXISTS `survey_templates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `survey_templates`
+ALTER TABLE `survey_forms`
   ADD PRIMARY KEY (`id`);
 
 
-ALTER TABLE `survey_templates`
+ALTER TABLE `survey_forms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
--- New table - survey_template_questions
-DROP TABLE IF EXISTS `survey_template_questions`;
-CREATE TABLE IF NOT EXISTS `survey_template_questions` (
+-- New table - survey_form_questions
+DROP TABLE IF EXISTS `survey_form_questions`;
+CREATE TABLE IF NOT EXISTS `survey_form_questions` (
   `id` char(36) NOT NULL,
-  `survey_template_id` int(11) NOT NULL,
+  `survey_form_id` int(11) NOT NULL,
   `survey_question_id` int(11) NOT NULL,
   `name` varchar(250) NOT NULL,
   `is_mandatory` int(1) NOT NULL DEFAULT '0',
@@ -1023,7 +1023,7 @@ CREATE TABLE IF NOT EXISTS `survey_template_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-ALTER TABLE `survey_template_questions`
+ALTER TABLE `survey_form_questions`
   ADD PRIMARY KEY (`id`);
 
 -- added Labels table

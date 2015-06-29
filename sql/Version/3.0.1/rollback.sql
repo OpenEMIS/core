@@ -242,7 +242,6 @@ ALTER TABLE `z_1458_institution_site_sections` RENAME  `institution_site_section
 ALTER TABLE `z_1458_institution_site_section_staff` RENAME  `institution_site_section_staff`;
 
 -- June 16 1020hrs
-ALTER TABLE `survey_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 ALTER TABLE `rubric_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 ALTER TABLE `rubric_template_options` CHANGE `color` `color` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'ffffff';
 UPDATE `workflow_models` SET `submodel` = 'Staff.StaffLeaveType' WHERE `workflow_models`.`model` = 'StaffLeave';
@@ -278,8 +277,10 @@ DROP TABLE IF EXISTS `survey_questions`;
 DROP TABLE IF EXISTS `survey_question_choices`;
 DROP TABLE IF EXISTS `survey_table_columns`;
 DROP TABLE IF EXISTS `survey_table_rows`;
-DROP TABLE IF EXISTS `survey_templates`;
-DROP TABLE IF EXISTS `survey_template_questions`;
+DROP TABLE IF EXISTS `survey_forms`;
+DROP TABLE IF EXISTS `survey_form_questions`;
+
+ALTER TABLE `survey_statuses` CHANGE `survey_form_id` `survey_template_id` INT(11) NOT NULL;
 
 RENAME TABLE z_1461_survey_modules TO survey_modules;
 RENAME TABLE z_1461_survey_questions TO survey_questions;

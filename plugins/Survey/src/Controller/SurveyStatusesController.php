@@ -7,7 +7,7 @@ use Cake\Event\Event;
 
 class SurveyStatusesController extends AppController {
     private $selectedModule = null;
-    private $selectedTemplate = null;
+    private $selectedForm = null;
 
 	public function initialize() {
 		parent::initialize();
@@ -24,14 +24,14 @@ class SurveyStatusesController extends AppController {
     }
 
     public function beforePaginate(Event $event, Table $model, array $options) {
-        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $templateOptions, $selectedTemplate) = array_values($this->getSelectOptions());
-        $this->set(compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'templateOptions', 'selectedTemplate'));
+        list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
+        $this->set(compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
 
         $todayDate = date('Y-m-d');
         $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
 
         $options['conditions'][] = [
-            $model->aliasField('survey_template_id') => $selectedTemplate
+            $model->aliasField('survey_form_id') => $selectedForm
         ];
         $options['conditions'][] = ($selectedStatus == 1) ? [$model->aliasField('date_disabled >=') => $todayTimestamp] : [$model->aliasField('date_disabled <') => $todayTimestamp];
 
@@ -45,13 +45,13 @@ class SurveyStatusesController extends AppController {
         $statusOptions = ['1' => 'Current', '0' => 'Past'];
         $selectedStatus = isset($query['status']) ? $query['status'] : key($statusOptions);
 
-        $CustomModules = $this->SurveyStatuses->SurveyTemplates->CustomModules;
+        $CustomModules = $this->SurveyStatuses->SurveyForms->CustomModules;
         $moduleOptions = $CustomModules->find('list')->where([$CustomModules->aliasField('parent_id') => 0])->toArray();
         $selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
 
-        $templateOptions = $this->SurveyStatuses->SurveyTemplates->find('list')->where([$this->SurveyStatuses->SurveyTemplates->aliasField('custom_module_id') => $selectedModule])->toArray();
-        $selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
+        $formOptions = $this->SurveyStatuses->SurveyForms->find('list')->where([$this->SurveyStatuses->SurveyForms->aliasField('custom_module_id') => $selectedModule])->toArray();
+        $selectedForm = isset($query['form']) ? $query['form'] : key($formOptions);
 
-        return compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'templateOptions', 'selectedTemplate');
+        return compact('statusOptions', 'selectedStatus', 'moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
     }
 }
