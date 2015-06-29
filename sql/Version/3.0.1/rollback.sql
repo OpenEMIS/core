@@ -290,8 +290,8 @@ RENAME TABLE z_1461_survey_templates TO survey_templates;
 
 -- June 18 1730hrs
 -- Revert Institution - Custom Fields
-DROP TABLE IF EXISTS `institution_custom_field_values`;
-DROP TABLE IF EXISTS `institution_custom_table_cells`;
+DROP TABLE IF EXISTS `institution_site_custom_field_values`;
+DROP TABLE IF EXISTS `institution_site_custom_table_cells`;
 
 RENAME TABLE z_1461_institution_custom_fields TO institution_custom_fields;
 RENAME TABLE z_1461_institution_custom_field_options TO institution_custom_field_options;
