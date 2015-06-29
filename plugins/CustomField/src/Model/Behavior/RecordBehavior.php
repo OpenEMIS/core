@@ -15,7 +15,17 @@ class RecordBehavior extends Behavior {
 		parent::initialize($config);
     }
 
+    public function viewAfterAction(Event $event, Entity $entity) {
+    	$this->buildCustomFields($entity);
+    	return compact('entity');
+    }
+
     public function addEditAfterAction(Event $event, Entity $entity) {
+    	$this->buildCustomFields($entity);
+    	return compact('entity');
+	}
+
+	public function buildCustomFields($entity) {
 		$CustomFieldValues = $this->_table->CustomFieldValues;
 		$CustomTableCells = $this->_table->CustomTableCells;
 
@@ -166,8 +176,12 @@ class RecordBehavior extends Behavior {
 		            'value' => $_value
 		        ]);
 			}
-		}
 
-		return compact('entity');
+			$this->_table->fields['security_group_id']['order'] = $order++;
+			$this->_table->fields['modified_user_id']['order'] = $order++;
+			$this->_table->fields['modified']['order'] = $order++;
+			$this->_table->fields['created_user_id']['order'] = $order++;
+			$this->_table->fields['created']['order'] = $order++;
+		}		
 	}
 }
