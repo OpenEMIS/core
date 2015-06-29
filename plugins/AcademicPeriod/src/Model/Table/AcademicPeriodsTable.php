@@ -80,4 +80,24 @@ class AcademicPeriodsTable extends AppTable {
 		
 		return $weeks;
 	}
+
+	public function getAvailableAcademicPeriods($list = true, $order='DESC') {
+		if($list) {
+			$query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+		} else {
+			$query = $this->find();
+		}
+		$result = $query->where([
+						$this->aliasField('available') => 1,
+						$this->aliasField('visible') . ' >' => 0,
+						$this->aliasField('parent_id') . ' >' => 0
+					])
+					->order($this->aliasField('name') . ' ' . $order);
+		if ($result) {
+			return $result->toArray();
+		} else {
+			return false;
+		}
+	}
+
 }

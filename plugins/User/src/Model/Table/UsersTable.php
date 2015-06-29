@@ -1,15 +1,20 @@
 <?php
 namespace User\Model\Table;
 
-use App\Model\Table\AppTable;
+use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use App\Model\Table\AppTable;
+use App\Model\Traits\OptionsTrait;
 
 class UsersTable extends AppTable {
+	use OptionsTrait;
+
 	const defaultWidth = 90;
 	const defaultHeight = 115;
 	const defaultStudentProfile = "Student.default_student_profile.jpg";
@@ -21,12 +26,12 @@ class UsersTable extends AppTable {
 		parent::initialize($config);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
-							'name' => 'photo_name',
-							'content' => 'photo_content',
-							'size' => '2MB',
-							'allowEmpty' => true,
-							'useDefaultName' => false
-						]);
+			'name' => 'photo_name',
+			'content' => 'photo_content',
+			'size' => '2MB',
+			'allowEmpty' => true,
+			'useDefaultName' => false
+		]);
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -39,45 +44,82 @@ class UsersTable extends AppTable {
 		$this->hasMany('user_Nationalities', ['className' => 'User.user_Nationalities', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
 		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id']);
+
+		$this->belongsToMany('SecurityRoles', [
+			'className' => 'Security.SecurityRoles',
+			'through' => 'Security.SecurityGroupUsers'
+		]);
+	}
+
+	public function beforeAction(Event $event) {
+		$this->ControllerAction->field('super_admin', ['visible' => false]);
+		$this->ControllerAction->field('photo_name', ['visible' => false]);
+		$this->ControllerAction->field('date_of_death', ['visible' => false]);
+		$this->ControllerAction->field('status', ['options' => $this->getSelectOptions('general.active')]);
+	}
+
+	public function indexBeforeAction(Event $event) {
+		$this->ControllerAction->field('photo_content', ['visible' => false]);
+		$this->ControllerAction->field('address', ['visible' => false]);
+		$this->ControllerAction->field('postal_code', ['visible' => false]);
+		$this->ControllerAction->field('address_area_id', ['visible' => false]);
+		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
+	}
+
+	public function indexBeforePaginate(Event $event, Request $request, array $options) {
+		$options['finder'] = ['notSuperAdmin' => []];
+		return $options;
+	}
+
+	public function findNotSuperAdmin(Query $query, array $options) {
+		return $query->where([$this->aliasField('super_admin') => 0]);
+	}
+
+	public function viewEditBeforeQuery(Event $event, Query $query, array $contain) {
+		$query->find('notSuperAdmin');
+		return [$query, $contain];
 	}
 
 	public function viewBeforeAction(Event $event) {
-		if (array_key_exists('pass', $this->controller->request->params)) {
-			$id = reset($this->controller->request->params['pass']);
+		if (array_key_exists('pass', $this->request->params)) {
+			$id = reset($this->request->params['pass']);
 		}
 
 		// would be 'Student' or 'Staff'
-		$roleName = Inflector::singularize($this->controller->request->params['controller']);
+		$name = $this->controller->name;
+		$roleName = Inflector::singularize($name);
 		if (isset($id)) {
-			$this->ControllerAction->Session->write($roleName.'.security_user_id', $id);
+			$this->Session->write($roleName.'.security_user_id', $id);
 		} else {
-			$id = $this->ControllerAction->Session->read($roleName.'.security_user_id');
+			$id = $this->Session->read($roleName.'.security_user_id');
 		}
 	}
 
 	public function editBeforeAction($event) {
+		$plugin = $this->controller->plugin;
+		$name = $this->controller->name;
 		$id = '';
 		if (array_key_exists('pass', $this->request->params)) {
 			if ($this->controller->name == 'Securities') {
 				$id = $this->request->params['pass'][1];
 			} else {
 				$id = $this->request->params['pass'][0];
-			}	
+			}
 		}
 
 		$tabElements = [
 			'Details' => [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'edit',$id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'edit', $id],
 				'text' => __('Details')
 			],
 			'Login' => [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => 'Accounts','edit',$id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'edit', $id],
 				'text' => __('Account')	
 			]
 		];
-		if ($this->controller->name == 'Securities') {
+		if ($name == 'Securities') {
 			$tabElements['Details'] = [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'edit',$id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'edit', $id],
 				'text' => __('Details')
 			];
 		}
@@ -90,13 +132,14 @@ class UsersTable extends AppTable {
 		// 	$institutionId = $this->Session->read('Institutions.id');
 		// } else {
 		// 	// todo-mlee need to put correct alert saying need to select institution first
-		if (in_array($this->controller->name, ['Students','Staff'])) {
-			$this->ControllerAction->addField('institution_site_'.strtolower($this->controller->name).'.0.institution_site_id', [
+		$name = $this->controller->name;
+		if (in_array($name, ['Students', 'Staff'])) {
+			$this->ControllerAction->addField('institution_site_'.strtolower($name).'.0.institution_site_id', [
 				'type' => 'hidden', 
 				'value' => 0
 			]);
 			$this->fields['openemis_no']['attr']['readonly'] = true;
-			$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($this->controller->name)]);
+			$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($name)]);
 		}
 
 
@@ -126,8 +169,6 @@ class UsersTable extends AppTable {
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
-		$this->fields['status']['type'] = 'select';
-		$this->fields['status']['options'] = $this->getStatus();
 		$this->fields['gender_id']['type'] = 'select';
 		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();//
 	}
@@ -170,10 +211,6 @@ class UsersTable extends AppTable {
 		}
 
 		return $prefix.$newStamp;
-	}
-
-	public function getStatus() {
-		return array(0 => __('Inactive', true), 1 => __('Active', true));
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -292,7 +329,7 @@ class UsersTable extends AppTable {
 		return $value;
 	}
 
-	public function onGetLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if(in_array($field, $this->specialFields)){
 			if($field == 'default_identity_type') {
 				$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
@@ -305,11 +342,10 @@ class UsersTable extends AppTable {
 				if($defaultIdentity)
 					$value = $defaultIdentity->name;
 
-				return (!empty($value)) ? $value : parent::onGetLabel($event, $module, $field, $language, $autoHumanize);
+				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 			}	
 		} else {
-			return parent::onGetLabel($event, $module, $field, $language, $autoHumanize);
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
-
 }

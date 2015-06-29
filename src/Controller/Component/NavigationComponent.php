@@ -5,7 +5,6 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 
 class NavigationComponent extends Component {
-	// Is called after the controller executes the requested action’s logic, but before the controller’s renders views and layout.
 	public $controller;
 	public $action;
 	public $breadcrumbs = [];
@@ -85,10 +84,10 @@ class NavigationComponent extends Component {
 									'url' => ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'index'],
 									'selected' => ['index', 'view', 'edit']
 								],
-								'Translations' => [
-									'collapse' => true,
-									'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
-								],
+								// 'Translations' => [
+								// 	'collapse' => true,
+								// 	'url' => ['plugin' => false, 'controller' => 'Translations', 'action' => 'index']
+								// ],
 								'System Configurations' => [
 									'collapse' => true,
 									'url' => ['plugin' => false, 'controller' => 'Configurations', 'action' => 'index']
@@ -108,11 +107,11 @@ class NavigationComponent extends Component {
 								],
 								'Groups' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Groups']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserGroups']
 								],
 								'Roles' => [
 									'collapse' => true,
-									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'Roles']
+									'url' => ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'UserRoles']
 								]
 							]
 						],

@@ -39,18 +39,31 @@
 </script>
 <div class="input string" >
   <label for="<?= $attr['field'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr)  ?></label>
-  <div class="fileinput fileinput-new" data-provides="fileinput">
+  <div class="fileinput fileinput-new fileinput-preview" data-provides="fileinput">
     <div class="fileinput-new thumbnail" style="width: <?= $defaultWidth; ?>px; height: <?= $defaultHeight; ?>px;" id="toggleImage">
       <?= $src ?>
     </div>
     <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: <?= $defaultWidth; ?>px; max-height: <?= $defaultHeight; ?>px;"></div>
-    <div style="width:200px;">
-      <span class="btn btn-default btn-file"><span class="fileinput-new">Select image</span><span class="fileinput-exists">Change</span>
+      <div class="file-input-buttons">
+        <span class="btn btn-default btn-file">
+          <span class="fileinput-new">
+            <i class="fa fa-folder"></i> 
+            <span>Select File</span>
+          </span>
+          <span class="fileinput-exists">
+            <i class="fa fa-folder"></i> 
+            <span>Change</span>
+          </span>
       <input type="file" name="<?= $attr['model'] ?>[<?= $attr['field'] ?>]" id="file-input"></span>
-      <a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput" id="removeBtn">Remove</a>
+          <span class="fileinput-exists"  id="removeBtn">
+            <a href="#" class="btn btn-default" data-dismiss="fileinput">
+              <i class="fa fa-close"></i> 
+              <span>Remove</span>
+            </a>
+          </span>
     </div>
   </div>
-  <div style="float:right">
+  <div>
     <?= $this->Form->error($attr['field']) ?>
   </div>
 </div>

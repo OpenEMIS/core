@@ -147,8 +147,8 @@ class AppTable extends Table {
 		return $dateObject->format($format);
 	}
 
-	// Event: 'ControllerAction.Model.onGetLabel'
-	public function onGetLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+	// Event: 'ControllerAction.Model.onGetFieldLabel'
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		$Labels = TableRegistry::get('Labels');
 		$label = $Labels->getLabel($module, $field, $language);
 

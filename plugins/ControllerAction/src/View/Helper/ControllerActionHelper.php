@@ -169,17 +169,17 @@ class ControllerActionHelper extends Helper {
 						$table = TableRegistry::get($attr['className']);
 					}
 
+					// attach event to get labels for fields
+					$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
+					$event = $table->eventManager()->dispatch($event);
+					// end attach event
+
+					if ($event->result) {
+						$label = $event->result;
+					}
+
 					if ($attr['sort']) {
 						$label = $this->Paginator->sort($field);
-					} else {
-						// attach event to get labels for fields
-						$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
-						$event = $table->eventManager()->dispatch($event);
-						// end attach event
-
-						if ($event->result) {
-							$label = $event->result;
-						}
 					}
 					
 					$method = 'onGet' . Inflector::camelize($field);
@@ -233,14 +233,15 @@ class ControllerActionHelper extends Helper {
 			$event = $table->eventManager()->dispatch($event);
 			// end attach event
 
-			if ($event->result) {
+			$associatedFound = false;
+			if (strlen($event->result) > 0) {
 				$value = $event->result;
 				$obj->$field = $value;
 			} else if ($this->endsWith($field, '_id')) {
 				$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				if ($obj->has($associatedObject) && $obj->$associatedObject->has('name')) {
 					$value = $obj->$associatedObject->name;
-					$obj->$field = $value;
+					$associatedFound = true;
 				}
 			}
 
@@ -252,10 +253,12 @@ class ControllerActionHelper extends Helper {
 			if (!empty($event->result)) {
 				$value = $event->result;
 			} else {
-				// mapped to a current function in this class
-				$function = 'get' . Inflector::camelize($type) . 'Element';
-				if (method_exists($this, $function)) {
-					$value = $this->$function('index', $obj, $attr);
+				if (!$associatedFound) {
+					// mapped to a current function in this class
+					$function = 'get' . Inflector::camelize($type) . 'Element';
+					if (method_exists($this, $function)) {
+						$value = $this->$function('index', $obj, $attr);
+					}
 				}
 			}
 
@@ -446,7 +449,7 @@ class ControllerActionHelper extends Helper {
 				}
 
 				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
+				$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => false]);
 				$event = $table->eventManager()->dispatch($event);
 				// end attach event
 
@@ -547,7 +550,7 @@ class ControllerActionHelper extends Helper {
 				}
 
 				// attach event to get labels for fields
-				$event = new Event('ControllerAction.Model.onGetLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
+				$event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
 				$event = $table->eventManager()->dispatch($event);
 				// end attach event
 
@@ -567,9 +570,9 @@ class ControllerActionHelper extends Helper {
 				} else if ($this->endsWith($_field, '_id')) {
 					$table = TableRegistry::get($attr['className']);
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
-					if (is_object($data->$associatedObject)) {
+					
+					if ($data->has($associatedObject)) {
 						$value = $data->$associatedObject->name;
-						$data->$_field = $value;
 					}
 				}
 
@@ -658,24 +661,17 @@ class ControllerActionHelper extends Helper {
 
 	public function getSelectElement($action, Entity $data, $attr, &$options=[]) {
 		$value = '';
+		$field = $attr['field'];
 		if ($action == 'index' || $action == 'view') {
 			if (!empty($attr['options'])) {
-				reset($attr['options']);
-				$firstKey = key($attr['options']);
-				if (is_array($attr['options'][$firstKey])) {
-					foreach ($attr['options'] as $fkey => $fvalue) {
-						if ($fvalue['value'] == $value) {
-							$value = $fvalue['name'];
-						}
-					}
-				} else {
-					$value = $data->$attr['field'];
-					if (array_key_exists($value, $attr['options'])) {
-						$value = $attr['options'][$value];
+				if (array_key_exists($data->$field, $attr['options'])) {
+					$value = $attr['options'][$data->$field];
+					if (is_array($value)) {
+						$value = $value['text'];
 					}
 				}
 			} else {
-				$value = $data->$attr['field'];
+				$value = $data->$field;
 			}
 		} else if ($action == 'edit') {
 			if (isset($attr['options'])) {
@@ -818,7 +814,7 @@ class ControllerActionHelper extends Helper {
 			// echo $this->_View->element('layout/file_upload_preview', $imageAttr);
 
 			//$style = 'width: ' . $defaultWidth . 'px; height: ' . $defaultHeight . 'px';
-			$defaultImageFromHolder = '<img data-src="holder.js/100%x100%" alt="...">';
+			$defaultImageFromHolder = '<img data-src="holder.js/'.$defaultWidth.'x'.$defaultHeight.'" alt="...">';
 			$showRemoveButton = false;
 
 			$tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";

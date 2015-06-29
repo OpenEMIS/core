@@ -72,10 +72,13 @@ class AppController extends Controller {
 			]
 		]);
 
+		$this->Auth->config('authorize', ['ControllerAction.Security']);
+
 		// Custom Components
 		$this->loadComponent('Navigation');
 		$this->loadComponent('Localization.Localization');
 		$this->loadComponent('ControllerAction.Alert');
+		$this->loadComponent('AccessControl');
 	}
 
 	public function beforeFilter(Event $event) {

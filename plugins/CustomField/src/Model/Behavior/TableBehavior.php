@@ -51,34 +51,13 @@ class TableBehavior extends Behavior {
 	}
 
 	public function onGetCustomTableElement(Event $event, $action, $entity, $attr, $options=[]) {
-		$CustomTableCells = $this->_table->CustomTableCells;
-		$tableCells = $CustomTableCells
-			->find('all')
-			->select([
-				$CustomTableCells->aliasField('id'),
-				$CustomTableCells->aliasField('text_value'),
-				$CustomTableCells->aliasField('custom_table_column_id'),
-				$CustomTableCells->aliasField('custom_table_row_id'),
-			])
-			->where([
-				$CustomTableCells->aliasField('custom_field_id') => $attr['customField']->id,
-				$CustomTableCells->aliasField('custom_record_id') => $entity->id
-			])
-			->all()
-			->toArray();
-
-		//$data = $query->toArray();
-
-		// pr($data);
-		// pr($entity->id);
-		// pr($attr['customField']->id);
-		// pr($attr);
-
         $value = '';
 
         if ($action == 'index' || $action == 'view') {
         	$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
         } else if ($action == 'edit') {
+        	$CustomTableCells = $this->_table->CustomTableCells;
+
 			$customField = $attr['customField'];
 			$form = $event->subject()->Form;
 
@@ -114,7 +93,7 @@ class TableBehavior extends Behavior {
 								$CustomTableCells->aliasField('custom_field_id') => $fieldId,
 								$CustomTableCells->aliasField('custom_table_column_id') => $tableColumnId,
 								$CustomTableCells->aliasField('custom_table_row_id') => $tableRowId,
-								$CustomTableCells->aliasField('custom_record_id') => $entity->id
+								$CustomTableCells->aliasField($attr['recordKey']) => $entity->id
 							])
 							->all();
 
