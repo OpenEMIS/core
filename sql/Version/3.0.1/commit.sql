@@ -542,8 +542,8 @@ CREATE TABLE IF NOT EXISTS `custom_modules` (
   `field_option` varchar(200),
   `parent_id` int(11) DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -602,8 +602,8 @@ CREATE TABLE IF NOT EXISTS `custom_fields` (
   `is_mandatory` int(1) NOT NULL DEFAULT '0',
   `is_unique` int(1) NOT NULL DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -625,8 +625,8 @@ CREATE TABLE IF NOT EXISTS `custom_field_options` (
   `order` int(3) NOT NULL DEFAULT '0',
   `custom_field_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -647,8 +647,8 @@ CREATE TABLE IF NOT EXISTS `custom_table_columns` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `custom_field_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -669,8 +669,8 @@ CREATE TABLE IF NOT EXISTS `custom_table_rows` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `custom_field_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -690,8 +690,8 @@ CREATE TABLE IF NOT EXISTS `custom_forms` (
   `description` text DEFAULT NULL,
   `custom_module_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -808,8 +808,8 @@ CREATE TABLE IF NOT EXISTS `infrastructure_custom_fields` (
   `is_unique` int(1) NOT NULL DEFAULT '0',
   `infrastructure_level_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -831,8 +831,8 @@ CREATE TABLE IF NOT EXISTS `infrastructure_custom_field_options` (
   `order` int(3) NOT NULL DEFAULT '0',
   `infrastructure_custom_field_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -853,8 +853,8 @@ CREATE TABLE IF NOT EXISTS `infrastructure_custom_table_columns` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `infrastructure_custom_field_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -875,8 +875,8 @@ CREATE TABLE IF NOT EXISTS `infrastructure_custom_table_rows` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `infrastructure_custom_field_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -909,8 +909,8 @@ CREATE TABLE IF NOT EXISTS `survey_questions` (
   `is_mandatory` int(1) NOT NULL DEFAULT '0',
   `is_unique` int(1) NOT NULL DEFAULT '0',
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -932,8 +932,8 @@ CREATE TABLE IF NOT EXISTS `survey_question_choices` (
   `order` int(3) NOT NULL DEFAULT '0',
   `survey_question_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -954,8 +954,8 @@ CREATE TABLE IF NOT EXISTS `survey_table_columns` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `survey_question_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -976,8 +976,8 @@ CREATE TABLE IF NOT EXISTS `survey_table_rows` (
   `visible` int(1) NOT NULL DEFAULT '1',
   `survey_question_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -997,8 +997,8 @@ CREATE TABLE IF NOT EXISTS `survey_forms` (
   `description` text DEFAULT NULL,
   `custom_module_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime NOT NULL,
-  `created_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
