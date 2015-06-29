@@ -43,18 +43,20 @@ class DropdownBehavior extends Behavior {
 
     public function onGetCustomDropdownElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
+        $dropdownOptions = [];
+		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
+			$dropdownOptions[$obj->id] = $obj->name;
+		}
 
-        if ($action == 'index' || $action == 'view') {
-            //$value = $data->$attr['field'];
+        if ($action == 'view') {
+        	if (!empty($dropdownOptions)) {
+        		$valueKey = !is_null($attr['value']) ? $attr['value'] : key($dropdownOptions);	
+        		$value = $dropdownOptions[$valueKey];
+        	}
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $options['type'] = 'select';
             $options['default'] = $attr['value'];
-
-            $dropdownOptions = [];
-    		foreach ($attr['customField']['custom_field_options'] as $key => $obj) {
-				$dropdownOptions[$obj->id] = $obj->name;
-			}
 			$options['options'] = $dropdownOptions;
 
  			$fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['field'];

@@ -11,8 +11,8 @@ class TextareaBehavior extends Behavior {
     public function onGetCustomTextareaElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
-        if ($action == 'index' || $action == 'view') {
-            //$value = $data->$attr['field'];
+        if ($action == 'view') {
+            $value = !is_null($attr['value']) ? nl2br($attr['value']) : '';
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $options['type'] = 'textarea';

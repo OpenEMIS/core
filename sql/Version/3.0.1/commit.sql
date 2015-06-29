@@ -557,7 +557,7 @@ ALTER TABLE `custom_modules`
 
 TRUNCATE TABLE `custom_modules`;
 INSERT INTO `custom_modules` (`id`, `name`, `model`, `field_option`, `parent_id`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 'Institution.Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
+(1, 'Institution', 'Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
 (2, 'Student', '', NULL, 0, 1, '0000-00-00 00:00:00'),
 (3, 'Staff', '', NULL, 0, 1, '0000-00-00 00:00:00');
 
@@ -1119,10 +1119,6 @@ ALTER TABLE `institution_sites` CHANGE `alternative_name` `alternative_name` VAR
 
 ALTER TABLE `field_option_values` DROP `old_id` ;
 
--- 26th June 2015
--- New entry for label in database from Users module and field ('photo_content');
-INSERT INTO labels (module, field, en) VALUES ('Users', 'photo_content', 'Profile Image');
-
 -- 26th June 2015 16:10hrs - clean up config_items
 ALTER TABLE `config_items` ADD `code` VARCHAR( 50 ) NOT NULL AFTER `name` ;
 UPDATE `config_items` SET code = name;
@@ -1134,9 +1130,6 @@ UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboa
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_height';
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_default';
 UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_size_limit';
-
--- 26th June 2015
-UPDATE labels SET en = 'Photo ID' where module = 'Users' and field = 'photo_content';
 
 -- 27th June 2015
 UPDATE `security_functions` SET 

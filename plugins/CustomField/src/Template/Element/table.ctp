@@ -3,12 +3,21 @@
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 ?>
 
-<div class="input table">
-	<label><?= $attr['attr']['label']; ?></label>
-	<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
+<?php if ($action == 'view') : ?>
+	<div class="table-in-view col-md-4 table-responsive">
+		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
 	</div>
-</div>
+<?php else : ?>
+	<div class="input table">
+		<label><?= $attr['attr']['label']; ?></label>
+		<div class="table-in-view col-md-4 table-responsive">
+			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+				<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+				<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+			</table>
+		</div>
+	</div>
+<?php endif ?>

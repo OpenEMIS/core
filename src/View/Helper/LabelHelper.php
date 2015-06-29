@@ -124,7 +124,7 @@ class LabelHelper extends Helper {
 		],
 		'InstitutionSitePositions' => [
 			'title' => 'Positions',
-			'position_no' => 'Position Name',
+			'position_no' => 'Position No',
 			'status' => 'Status',
 			'type' => 'Type',
 			'staff_position_title_id' => 'Title',
