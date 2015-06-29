@@ -557,7 +557,7 @@ ALTER TABLE `custom_modules`
 
 TRUNCATE TABLE `custom_modules`;
 INSERT INTO `custom_modules` (`id`, `name`, `model`, `field_option`, `parent_id`, `created_user_id`, `created`) VALUES
-(1, 'Institution', 'Institution.Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
+(1, 'Institution', 'Institutions', 'FieldOption.InstitutionSiteTypes' , 0, 1, '0000-00-00 00:00:00'),
 (2, 'Student', '', NULL, 0, 1, '0000-00-00 00:00:00'),
 (3, 'Staff', '', NULL, 0, 1, '0000-00-00 00:00:00');
 
