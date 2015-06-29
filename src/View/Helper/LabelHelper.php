@@ -28,6 +28,7 @@ class LabelHelper extends Helper {
 			'add' => 'Add',
 			'edit' => 'Edit',
 			'delete' => 'Delete',
+			'view' => 'View',
 			'order' => 'Order',
 			'visible' => 'Visible',
 			'reorder' => 'Reorder',
@@ -198,6 +199,8 @@ class LabelHelper extends Helper {
 			if ($this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
+		} elseif ($label == '[Message Not Found]' || is_array($label)) {
+			$label = $this->get($code.'.label');
 		}
 		return $label;
 	}

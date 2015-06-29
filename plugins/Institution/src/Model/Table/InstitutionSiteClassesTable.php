@@ -46,7 +46,7 @@ class InstitutionSiteClassesTable extends AppTable {
     	$this->ControllerAction->field('created', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('created_user_id', ['type' => 'string', 'visible' => false]);
 		$this->ControllerAction->field('education_subject_code', ['type' => 'string', 'visible' => ['view'=>true]]);
-		$this->ControllerAction->field('education_subject_id', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('education_subject_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
     	$this->ControllerAction->field('modified', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('modified_user_id', ['type' => 'string', 'visible' => false]);
     	$this->ControllerAction->field('name', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
@@ -447,7 +447,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				'InstitutionSiteStaff.institution_site_id'=>$entity->institution_site_id,
 			])
 			->toArray();
-		$teacherOptions = [__('Select Teacher')];
+		$teacherOptions = [$this->getMessage('Users.select_teacher')];
 		foreach ($query as $teacher) {
 			$teacherOptions[$teacher->user->id] = $teacher->user->name_with_id;
 		}
@@ -501,7 +501,7 @@ class InstitutionSiteClassesTable extends AppTable {
 				'InstitutionSiteStudents.institution_site_id'=>$entity->institution_site_id
 			])
 			->toArray();
-		$studentOptions = [__('Select Student')];
+		$studentOptions = [$this->getMessage('Users.select_student')];
 		foreach ($query as $student) {
 			$studentOptions[$student->user->id] = $student->user->name_with_id;
 		}
