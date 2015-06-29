@@ -1210,3 +1210,11 @@ CREATE TABLE IF NOT EXISTS `institution_site_survey_table_cells` (
 
 ALTER TABLE `institution_site_survey_table_cells`
   ADD PRIMARY KEY (`id`);
+
+
+-- 29th June 2000hrs
+-- Patch Institution - Classes that are having education_subject_id as NULL
+CREATE TABLE `z_1458_institution_site_classes` LIKE `institution_site_classes`;
+INSERT INTO `z_1458_institution_site_classes` SELECT * FROM `institution_site_classes` WHERE `institution_site_classes`.`education_subject_id` IS NULL;
+UPDATE `institution_site_classes` SET `education_subject_id`=1 WHERE `institution_site_classes`.`education_subject_id` IS NULL;
+
