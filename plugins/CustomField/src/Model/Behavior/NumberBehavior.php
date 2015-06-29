@@ -12,8 +12,8 @@ class NumberBehavior extends Behavior {
     public function onGetCustomNumberElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
-        if ($action == 'index' || $action == 'view') {
-            //$value = $data->$attr['field'];
+        if ($action == 'view') {
+            $value = !is_null($attr['value']) ? $attr['value'] : '';
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
             $options['type'] = 'integer';

@@ -53,76 +53,85 @@ class TableBehavior extends Behavior {
 	public function onGetCustomTableElement(Event $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
-        if ($action == 'index' || $action == 'view') {
-        	$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
-        } else if ($action == 'edit') {
-        	$CustomTableCells = $this->_table->CustomTableCells;
+        $CustomTableCells = $this->_table->CustomTableCells;
 
-			$customField = $attr['customField'];
-			$form = $event->subject()->Form;
+		$customField = $attr['customField'];
+		$form = $event->subject()->Form;
 
-			$tableHeaders = [];
-			$tableCells = [];
-			$cellCount = 0;
-			foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
-				$rowData = [];
-				$rowData[] = $rowObj->name;
+		$tableHeaders = [];
+		$tableCells = [];
+		$cellCount = 0;
+		foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
+			$rowData = [];
+			$rowData[] = $rowObj->name;
 
-				$colCount = 0;
-				foreach ($customField->custom_table_columns as $colKey => $colObj) {
-					if (!array_key_exists($colObj->id, $tableHeaders)) {
-						$tableHeaders[$colObj->id] = $colObj->name;
+			$colCount = 0;
+			foreach ($customField->custom_table_columns as $colKey => $colObj) {
+				if (!array_key_exists($colObj->id, $tableHeaders)) {
+					$tableHeaders[$colObj->id] = $colObj->name;
+				}
+				if ($colCount++ == 0) {continue;}
+
+				$fieldId = $attr['customField']->id;
+				$tableColumnId = $colObj->id;
+				$tableRowId = $rowObj->id;
+
+				$fieldPrefix = $attr['model'] . '.custom_table_cells.' . $cellCount++;
+				$cellInput = "";
+				$cellValue = "";
+
+				$cellOptions = ['label' => false, 'value' => ''];
+				if (isset($entity->id)) {
+					$results = $CustomTableCells
+						->find('all')
+						->select([
+							$CustomTableCells->aliasField('id'),
+							$CustomTableCells->aliasField('text_value'),
+						])
+						->where([
+							$CustomTableCells->aliasField('custom_field_id') => $fieldId,
+							$CustomTableCells->aliasField('custom_table_column_id') => $tableColumnId,
+							$CustomTableCells->aliasField('custom_table_row_id') => $tableRowId,
+							$CustomTableCells->aliasField($attr['recordKey']) => $entity->id
+						])
+						->all();
+
+					if (!$results->isEmpty()) {
+						$data = $results
+							->first()
+							->toArray();
+
+						$cellValue = $data['text_value'];
+						$cellOptions['value'] = $cellValue;
+						$cellInput .= $form->hidden($fieldPrefix.".id", ['value' => $data['id']]);
 					}
-					if ($colCount++ == 0) {continue;}
-
-					$fieldId = $attr['customField']->id;
-					$tableColumnId = $colObj->id;
-					$tableRowId = $rowObj->id;
-
-					$fieldPrefix = $attr['model'] . '.custom_table_cells.' . $cellCount++;
-					$cellData = "";
-					$cellOptions = ['label' => false, 'value' => ''];
-					if (isset($entity->id)) {
-						$results = $CustomTableCells
-							->find('all')
-							->select([
-								$CustomTableCells->aliasField('id'),
-								$CustomTableCells->aliasField('text_value'),
-							])
-							->where([
-								$CustomTableCells->aliasField('custom_field_id') => $fieldId,
-								$CustomTableCells->aliasField('custom_table_column_id') => $tableColumnId,
-								$CustomTableCells->aliasField('custom_table_row_id') => $tableRowId,
-								$CustomTableCells->aliasField($attr['recordKey']) => $entity->id
-							])
-							->all();
-
-						if (!$results->isEmpty()) {
-							$data = $results
-								->first()
-								->toArray();
-
-							$cellOptions['value'] = $data['text_value'];
-							$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $data['id']]);
-						}
-					}
-
-					$cellData .= $form->input($fieldPrefix.".text_value", $cellOptions);
-					$cellData .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $fieldId]);
-					$cellData .= $form->hidden($fieldPrefix.".custom_table_column_id", ['value' => $tableColumnId]);
-					$cellData .= $form->hidden($fieldPrefix.".custom_table_row_id", ['value' => $tableRowId]);
-
-					$rowData[$colKey] = $cellData;
 				}
 
-				$tableCells[$rowKey] = $rowData;
+				$cellInput .= $form->input($fieldPrefix.".text_value", $cellOptions);
+				$cellInput .= $form->hidden($fieldPrefix.".custom_field_id", ['value' => $fieldId]);
+				$cellInput .= $form->hidden($fieldPrefix.".custom_table_column_id", ['value' => $tableColumnId]);
+				$cellInput .= $form->hidden($fieldPrefix.".custom_table_row_id", ['value' => $tableRowId]);
+				
+
+				if ($action == 'view') {
+					$rowData[$colKey] = $cellValue;
+				} else if ($action == 'edit') {
+					$rowData[$colKey] = $cellInput;
+				}
 			}
 
-        	$attr['tableHeaders'] = $tableHeaders;
-        	$attr['tableCells'] = $tableCells;
+			$tableCells[$rowKey] = $rowData;
+		}
 
-        	$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
-        }
+    	$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
+
+
+		if ($action == 'view') {
+			$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);
+		} else if ($action == 'edit') {
+			$value = $event->subject()->renderElement('CustomField.table', ['attr' => $attr]);	
+		}
 
         return $value;
     }

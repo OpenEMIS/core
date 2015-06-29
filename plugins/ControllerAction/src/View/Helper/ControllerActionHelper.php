@@ -544,6 +544,7 @@ class ControllerActionHelper extends Helper {
 
 			if ($visible && $_type != 'hidden') {
 				$_fieldModel = $_fieldAttr['model'];
+				$options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 				
 				if (is_null($table)) {
 					$table = TableRegistry::get($attr['className']);
@@ -556,6 +557,9 @@ class ControllerActionHelper extends Helper {
 
 				if ($event->result) {
 					$label = $event->result;
+				}
+				if (isset($options['label'])) {
+					$label = $options['label'];
 				}
 
 				// attach event for index columns
