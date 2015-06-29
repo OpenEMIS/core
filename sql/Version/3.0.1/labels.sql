@@ -20,8 +20,19 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteAttachments', 'created_user_id', NULL, 'Uploaded By'),
 -- InstitutionSitePositions
 ('InstitutionSitePositions', 'modified', NULL, 'Modified On'),
+('InstitutionSitePositions', 'created', NULL, 'Created On'),
+('InstitutionSitePositions', 'modified_user_id', NULL, 'Modified By'),
+('InstitutionSitePositions', 'created_user_id', NULL, 'Created By'),
 ('InstitutionSitePositions', 'staff_position_grade_id', NULL, 'Grade'),
 ('InstitutionSitePositions', 'staff_position_title_id', NULL, 'Title'),
+('InstitutionSitePositions', 'position_no', NULL, 'Number'),
+-- InstitutionSiteProgrammes
+('InstitutionSiteProgrammes', 'modified', NULL, 'Modified On'),
+('InstitutionSiteProgrammes', 'created', NULL, 'Created On'),
+('InstitutionSiteProgrammes', 'modified_user_id', NULL, 'Modified By'),
+('InstitutionSiteProgrammes', 'created_user_id', NULL, 'Created By'),
+('InstitutionSiteProgrammes', 'education_programme_id', NULL, 'Programme'),
+('InstitutionSiteProgrammes', 'education_grade', NULL, 'Grade(s)'),
 -- Users
 ('Users', 'photo_content', NULL, 'Profile Image');
 

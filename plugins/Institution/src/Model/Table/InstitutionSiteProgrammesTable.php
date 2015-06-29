@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -88,7 +89,19 @@ class InstitutionSiteProgrammesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function viewBeforeAction(Event $event) {
+		$this->fields['education_level']['type'] = 'text';
+		$this->ControllerAction->setFieldOrder([
+			'education_level', 'education_programme_id', 'start_date', 'end_date', 'education_grade',
+		]);
 
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query, $contain) {
+		$contain = array_merge([
+			'EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems']]],
+			'InstitutionSiteGrades' => ['EducationGrades']
+		], $contain);
+		return compact('query', 'contain');
 	}
 
 
