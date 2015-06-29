@@ -22,15 +22,15 @@ class StudentsController extends AppController {
 			'SpecialNeeds' => ['className' => 'User.SpecialNeeds'],
 			'Awards' => ['className' => 'User.Awards'],
 			'Attachments' => ['className' => 'User.Attachments'],
-			'Programmes' => ['className' => 'Student.Programmes'],
-			'Sections' => ['className' => 'Student.StudentSections'],
-			'Classes' => ['className' => 'Student.StudentClasses'],
-			'Absences' => ['className' => 'Student.Absences'],
-			'Behaviours' => ['className' => 'Student.StudentBehaviours'],
-			'Results' => ['className' => 'Student.StudentAssessments'],
+			'Programmes' => ['className' => 'Student.Programmes', 'actions' => ['index']],
+			'Sections' => ['className' => 'Student.StudentSections', 'actions' => ['index']],
+			'Classes' => ['className' => 'Student.StudentClasses', 'actions' => ['index']],
+			'Absences' => ['className' => 'Student.Absences', 'actions' => ['index']],
+			'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index']],
+			'Results' => ['className' => 'Student.StudentAssessments', 'actions' => ['index']],
 			'Extracurriculars' => ['className' => 'Student.Extracurriculars'],
 			'BankAccounts' => ['className' => 'User.BankAccounts'],
-			'StudentFees' => ['className' => 'Student.StudentFees']
+			'StudentFees' => ['className' => 'Student.StudentFees', 'actions' => ['index']]
 		];
 
 		$this->loadComponent('Paginator');

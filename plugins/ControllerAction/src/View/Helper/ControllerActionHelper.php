@@ -757,7 +757,7 @@ class ControllerActionHelper extends Helper {
 			$value = $attr['value'];
 		} else if ($action == 'edit') {
 			$this->getDisabledElement($action, $data, $attr, $options);
-			$value = $this->Form->input('disabled-'.$attr['field'], $options);
+			$value = $this->Form->input($attr['field'], $options);
 			unset($options['disabled']);
 			unset($options['value']);
 			$value .= $this->getHiddenElement($action, $data, $attr, $options);

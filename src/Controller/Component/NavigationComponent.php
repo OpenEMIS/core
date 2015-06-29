@@ -246,7 +246,7 @@ class NavigationComponent extends Component {
 				'Details' => [
 					'collapse' => true,
 					'items' => [
-						'Guardians' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']],
+						// 'Guardians' => ['url' => ['plugin' => 'Guardian', 'controller' => 'Guardians', 'action' => 'index']],
 						'Programmes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Programmes']],
 						'Sections' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Sections']],
 						'Classes' => ['url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'Classes']],

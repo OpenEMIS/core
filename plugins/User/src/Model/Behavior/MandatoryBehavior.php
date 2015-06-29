@@ -49,7 +49,7 @@ class MandatoryBehavior extends Behavior {
 		$ConfigItems = TableRegistry::get('ConfigItems');
 		$data = $ConfigItems
 			->find()
-			->where([$ConfigItems->aliasField('name') => $name])
+			->where([$ConfigItems->aliasField('code') => $name])
 			->first()
 		;
 
