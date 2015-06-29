@@ -1,6 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
@@ -17,6 +20,40 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 		return $validator;
 	}
 
+	public function beforeAction($event) {
+		$this->ControllerAction->field('file_content', ['visible' => false]);
+		$this->ControllerAction->field('institution_site_id', ['visible' => false]);
+
+		$this->ControllerAction->field('modified_user_id', ['visible' => ['view' => true]]);
+		$this->ControllerAction->field('modified', ['visible' => ['view' => true]]);
+		$this->ControllerAction->field('created_user_id', ['visible' => ['view' => true]]);
+
+		$this->ControllerAction->field('file_name', ['visible' => ['edit' => true], 'type' => 'binary']);
+
+		$this->ControllerAction->field('created', [
+			'visible' => ['index'=>true, 'view'=>true],
+			'type' => 'datetime',
+		]);
+
+		$this->ControllerAction->field('name', [
+			'visible' => true,
+			'type' => 'select'
+		]);
+		$this->ControllerAction->field('description', [
+			'visible' => true,
+			'type' => 'select'
+		]);
+
+		$this->ControllerAction->field('file_type', [
+			'visible' => ['index'=>true],
+			'type' => 'string'
+		]);
+
+		if (strtolower($this->action) != 'index') {
+			$this->Navigation->addCrumb($this->getHeader($this->action));
+		}
+	}
+
 
 /******************************************************************************************************************
 **
@@ -25,8 +62,9 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ******************************************************************************************************************/
     public function indexBeforeAction($event) {
 	
-		$this->fields['file_content']['visible']['index'] = false;
-		$this->fields['created']['visible']['index'] = true;
+		$this->ControllerAction->setFieldOrder([
+			'name', 'description', 'file_type', 'created'
+		]);
 		
     }
 
@@ -76,8 +114,7 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ******************************************************************************************************************/
     public function editBeforeAction($event) {
 	
-		$this->fields['file_name']['type'] = 'hidden';
-		$this->fields['file_content']['visible'] = false;
+		$this->fields['file_name']['visible'] = false;
 		
     }
 
@@ -87,17 +124,6 @@ class InstitutionSiteAttachmentsTable extends AppTable {
 ** add action logics
 **
 ******************************************************************************************************************/
-    public function addBeforeAction($event) {
-	
-		$this->fields['file_name']['type'] = 'hidden';
-						
-	 //    $validator = $this->validator();
-	 //    if ($validator->hasField('file_name')) {
-		// 	$fileNameValidation = $validator->field('file_name');
-		// 	$fileNameValidation->remove('notBlank');
-		// }
-    }
-
 	public function addBeforePatch($event, $entity, $data, $options) {
 		/**
 		 * thed's method to call method in behavior
@@ -122,5 +148,15 @@ class InstitutionSiteAttachmentsTable extends AppTable {
  		return compact('entity', 'data', 'options');
 
     }
+
+
+/******************************************************************************************************************
+**
+** field specific methods
+**
+******************************************************************************************************************/
+	public function onGetFileType(Event $event, Entity $entity) {
+		return $this->getFileTypeForView($entity->file_name);
+	}
 
 }
