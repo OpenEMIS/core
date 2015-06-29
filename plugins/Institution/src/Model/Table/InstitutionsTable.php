@@ -345,4 +345,11 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+	public function viewAfterAction(Event $event, Entity $entity) {
+		if ($this->behaviors()->hasMethod('viewAfterAction')) {
+			list($entity) = array_values($this->behaviors()->call('viewAfterAction', [$event, $entity]));
+		}
+
+		return $entity;
+	}
 }
