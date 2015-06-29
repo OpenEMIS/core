@@ -87,78 +87,85 @@ class RecordBehavior extends Behavior {
 					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
 					->where([$CustomFormFields->aliasField('custom_form_id') => $typedId]);
 
-				$customFieldQuery->union($typedCustomFieldQuery);
+				if (isset($customFieldQuery)) {
+					$customFieldQuery
+						->union($typedCustomFieldQuery);
+				} else {
+					$customFieldQuery = $typedCustomFieldQuery;
+				}
 			}
 		}
 
-		$customFields = $customFieldQuery
-			->toArray();
+		if (isset($customFieldQuery)) {
+			$customFields = $customFieldQuery
+				->toArray();
 
-		//get the order of the last static fields
-		$order = 0;
-		foreach ($this->_table->fields as $fieldName => $field) {
-			if (!in_array($fieldName, ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'])) {
-				$order = $field['order'] > $order ? $field['order'] : $order;
-			}
-		}
-
-		foreach ($customFields as $key => $customField) {
-			$_customField = $customField->custom_field;
-
-			$_field_type = $_customField->field_type;
-			$_name = $_customField->name;
-			$_attr = ['label' => $_name];
-			if ($_customField->is_mandatory == 1) {
-				$_attr['required'] = 'required';
-			}
-
-			$_id = null;
-			$_value = null;
-			if (isset($entity->id)) {
-				$fieldValueData = $CustomFieldTypes
-					->find('all')
-					->select([$CustomFieldTypes->aliasField('value')])
-					->where([$CustomFieldTypes->aliasField('code') => $_field_type])
-					->first();
-				$fieldValue = $fieldValueData->value;
-
-				$results = $CustomFieldValues
-					->find('all')
-					->select([
-						$CustomFieldValues->aliasField('id'),
-						$CustomFieldValues->aliasField($fieldValue),
-					])
-					->where([
-						$CustomFieldValues->aliasField('custom_field_id') => $_customField->id,
-						$CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id
-					])
-					->all();
-
-				if (!$results->isEmpty()) {
-					$data = $results
-						->first();
-
-					$_id = $data->id;
-					$_value = $data->$fieldValue;
-					$_attr['value'] = $_value;
+			//get the order of the last static fields
+			$order = 0;
+			foreach ($this->_table->fields as $fieldName => $field) {
+				if (!in_array($fieldName, ['id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created'])) {
+					$order = $field['order'] > $order ? $field['order'] : $order;
 				}
 			}
 
-			$this->_table->addBehavior(
-				'CustomField.'.Inflector::camelize(strtolower($_field_type))
-			);
+			foreach ($customFields as $key => $customField) {
+				$_customField = $customField->custom_field;
 
-			$this->_table->ControllerAction->field($key.".value", [
-	            'type' => 'custom_'. strtolower($_field_type),
-	            'order' => ++$order,
-	            'visible' => true,
-	            'field' => $key,
-	            'attr' => $_attr,
-	            'recordKey' => $this->config('recordKey'),
-	            'customField' => $_customField,
-	            'id' => $_id,
-	            'value' => $_value
-	        ]);
+				$_field_type = $_customField->field_type;
+				$_name = $_customField->name;
+				$_attr = ['label' => $_name];
+				if ($_customField->is_mandatory == 1) {
+					$_attr['required'] = 'required';
+				}
+
+				$_id = null;
+				$_value = null;
+				if (isset($entity->id)) {
+					$fieldValueData = $CustomFieldTypes
+						->find('all')
+						->select([$CustomFieldTypes->aliasField('value')])
+						->where([$CustomFieldTypes->aliasField('code') => $_field_type])
+						->first();
+					$fieldValue = $fieldValueData->value;
+
+					$results = $CustomFieldValues
+						->find('all')
+						->select([
+							$CustomFieldValues->aliasField('id'),
+							$CustomFieldValues->aliasField($fieldValue),
+						])
+						->where([
+							$CustomFieldValues->aliasField('custom_field_id') => $_customField->id,
+							$CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id
+						])
+						->all();
+
+					if (!$results->isEmpty()) {
+						$data = $results
+							->first();
+
+						$_id = $data->id;
+						$_value = $data->$fieldValue;
+						$_attr['value'] = $_value;
+					}
+				}
+
+				$this->_table->addBehavior(
+					'CustomField.'.Inflector::camelize(strtolower($_field_type))
+				);
+
+				$this->_table->ControllerAction->field($key.".value", [
+		            'type' => 'custom_'. strtolower($_field_type),
+		            'order' => ++$order,
+		            'visible' => true,
+		            'field' => $key,
+		            'attr' => $_attr,
+		            'recordKey' => $this->config('recordKey'),
+		            'customField' => $_customField,
+		            'id' => $_id,
+		            'value' => $_value
+		        ]);
+			}
 		}
 
 		return compact('entity');

@@ -13,10 +13,10 @@ class CustomFieldsController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Modules' => ['className' => 'CustomField.CustomModules'],
+			//'Modules' => ['className' => 'CustomField.CustomModules'],
 			'Fields' => ['className' => 'CustomField.CustomFields'],
 			'Forms' => ['className' => 'CustomField.CustomForms'],
-			'Records' => ['className' => 'CustomField.CustomRecords']
+			//'Records' => ['className' => 'CustomField.CustomRecords']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -25,10 +25,10 @@ class CustomFieldsController extends AppController
     	parent::beforeFilter($event);
 
 		$tabElements = [
-			'Modules' => [
-				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Modules'],
-				'text' => __('Modules')
-			],
+			// 'Modules' => [
+			// 	'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Modules'],
+			// 	'text' => __('Modules')
+			// ],
 			'Fields' => [
 				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Fields'],
 				'text' => __('Fields')
@@ -37,10 +37,10 @@ class CustomFieldsController extends AppController
 				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Forms'],
 				'text' => __('Forms')
 			],
-			'Records' => [
-				'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Records'],
-				'text' => __('Records')
-			]
+			// 'Records' => [
+			// 	'url' => ['plugin' => 'CustomField', 'controller' => 'CustomFields', 'action' => 'Records'],
+			// 	'text' => __('Records')
+			// ]
 		];
 
         $this->set('tabElements', $tabElements);
