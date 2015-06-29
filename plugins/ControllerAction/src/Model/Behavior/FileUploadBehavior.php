@@ -158,6 +158,18 @@ class FileUploadBehavior extends Behavior {
 	// }
 
 
+	public function getFileTypeForView($filename) {
+		$exp = explode('.', $filename);
+		$ext = $exp[count($exp) - 1];
+		if (array_key_exists($ext, $this->fileImagesMap)) {
+			return 'Image';
+		} elseif (array_key_exists($ext, $this->fileDocumentsMap)) {
+			return 'Document';
+		} else {
+			return 'Unknown';
+		}
+	}
+
 	public function getFileType($ext) {
 		if (array_key_exists($ext, $this->fileTypesMap)) {
 			return $this->fileTypesMap[$ext];
