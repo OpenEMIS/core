@@ -32,7 +32,8 @@ trait MessagesTrait {
 		'security' => [
 			'login' => [
 				'fail' => 'You have entered an invalid username or password.'
-			]
+			],
+			'noAccess' => 'You do not have access to this location.'
 		],
 		'InstitutionSiteProgrammes' => [
 			'noEducationLevels' => 'There are no available Education Level.',
@@ -46,10 +47,24 @@ trait MessagesTrait {
 			'noSections' => 'No Sections',
 			'noClasses' => 'No Classes'
 		],
-		
+		'InstitutionSiteFees' => [
+			'noProgrammeGradeFees' => 'No Programme Grade Fees',
+		],
 
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
+		],
+		'UserGroups' => [
+			'tabTitle' => 'User Groups'
+		],
+		'SystemGroups' => [
+			'tabTitle' => 'System Groups'
+		],
+		'UserRoles' => [
+			'tabTitle' => 'User Roles'
+		],
+		'SystemRoles' => [
+			'tabTitle' => 'System Roles'
 		],
 		
 		// Validation Messages

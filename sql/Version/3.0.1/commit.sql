@@ -1123,3 +1123,29 @@ ALTER TABLE `field_option_values` DROP `old_id` ;
 -- New entry for label in database from Users module and field ('photo_content');
 INSERT INTO labels (module, field, en) VALUES ('Users', 'photo_content', 'Profile Image');
 
+-- 26th June 2015 16:10hrs - clean up config_items
+ALTER TABLE `config_items` ADD `code` VARCHAR( 50 ) NOT NULL AFTER `name` ;
+UPDATE `config_items` SET code = name;
+ALTER TABLE `config_items` ADD UNIQUE (`code`);
+ALTER TABLE `config_items` DROP INDEX name;
+ALTER TABLE `config_items` DROP INDEX name_2;
+UPDATE `config_items` SET name = label;
+UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_width';
+UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_height';
+UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_default';
+UPDATE `config_items` SET `visible` = '0' WHERE `config_items`.`code` = 'dashboard_img_size_limit';
+
+-- 26th June 2015
+UPDATE labels SET en = 'Photo ID' where module = 'Users' and field = 'photo_content';
+
+-- 27th June 2015
+UPDATE `security_functions` SET 
+	`_edit` = REPLACE(`_edit`, '_view:', ''), 
+	`_add` = REPLACE(`_add`, '_view:', ''), 
+	`_delete` = REPLACE(`_delete`, '_view:', ''),
+	`_execute` = REPLACE(`_execute`, '_view:', '');
+
+UPDATE `security_functions` SET `controller` = 'Institutions' WHERE `controller` = 'InstitutionSites';
+UPDATE `security_functions` SET `_view` = 'Attachments.index|Attachments.view', `_add` = 'Attachments.add', `_edit` = 'Attachments.edit', `_delete` = 'Attachments.remove', `_execute` = 'Attachments.download' WHERE `controller` = 'Institutions' AND `name` = 'Attachments';
+UPDATE `security_functions` SET `controller` = 'Institutions', `_view` = 'Students.index|Students.view', `_add` = 'Students.add', `_edit` = 'Students.edit', `_delete` = 'Students.remove', `_execute` = 'Students.excel' WHERE `controller` = 'Students' AND `module` = 'Institutions' AND `category` = 'Details' AND `name` = 'Student';
+

@@ -34,13 +34,14 @@ trait UtilityTrait {
 
 		if (!is_null($request)) {
 			$query = $request->query;
-			if (is_string(key($options))) {
+
+			if (is_array(current($options))) {
 				$current = current($options);
 				$value = key($current);
 				if (isset($query[$key])) {
 					$value = $query[$key];
 				}
-			} else {					
+			} else {
 				if (isset($query[$key])) {
 					$value = $query[$key];
 					if (!array_key_exists($value, $options)) {
@@ -60,6 +61,7 @@ trait UtilityTrait {
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
 
 		foreach ($options as $id => $label) {
+			$label = __($label);
 			$options[$id] = ['value' => $id, 'text' => $label];
 
 			if (is_callable($callable)) {

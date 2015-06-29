@@ -43,7 +43,9 @@ class AlertComponent extends Component {
 			$_options['class'] = $class;
 			$_options['message'] = $message;
 			$session = $this->request->session();
-			$session->write('_alert', $_options);
+			if (!$session->check('_alert')) {
+				$session->write('_alert', $_options);
+			}
 		}
 	}
 }

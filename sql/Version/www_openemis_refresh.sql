@@ -16559,8 +16559,8 @@ CREATE TABLE IF NOT EXISTS `security_users` (
 --
 
 INSERT INTO `security_users` (`id`, `username`, `password`, `openemis_no`, `first_name`, `middle_name`, `third_name`, `last_name`, `preferred_name`, `address`, `postal_code`, `address_area_id`, `birthplace_area_id`, `gender_id`, `date_of_birth`, `date_of_death`, `super_admin`, `status`, `last_login`, `photo_name`, `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(1, 'admin', '78e78892ffd553ae7204b348e7e0206dd54aa846', '', 'System', NULL, NULL, 'Administrator', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 1, 1, '2015-05-22 18:12:45', '', NULL, NULL, '2015-05-22 18:12:45', 1, '2018-03-13 15:44:00'),
-(2, 'administrator', 'c0ddf77200f1b8a9d5b57b7094f201cf2c2f01b8', '1001', 'Administrator', NULL, NULL, 'User', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 1, 1, '2015-04-22 17:44:10', '', NULL, NULL, '2015-04-22 17:44:10', 2, '2019-09-13 00:00:00'),
+(1, 'admin', '$2y$10$zIvIZ60i/tBOjolWTdVhFefTc3ZjAo67fxwz52DVEHNyuiORtvgii', '', 'System', NULL, NULL, 'Administrator', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 1, 1, '2015-05-22 18:12:45', '', NULL, NULL, '2015-05-22 18:12:45', 1, '2018-03-13 15:44:00'),
+(2, 'administrator', '$2y$10$zIvIZ60i/tBOjolWTdVhFefTc3ZjAo67fxwz52DVEHNyuiORtvgii', '1001', 'Administrator', NULL, NULL, 'User', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 1, 1, '2015-04-22 17:44:10', '', NULL, NULL, '2015-04-22 17:44:10', 2, '2019-09-13 00:00:00'),
 (3, 'principal', 'c0ddf77200f1b8a9d5b57b7094f201cf2c2f01b8', '1002', 'Principal', NULL, NULL, 'User', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 0, 1, NULL, '', NULL, NULL, NULL, 2, '2016-04-13 00:27:00'),
 (4, 'staff', 'c0ddf77200f1b8a9d5b57b7094f201cf2c2f01b8', '1003', 'Staff', NULL, NULL, 'User', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 0, 1, NULL, '', NULL, NULL, NULL, 2, '2020-06-14 20:14:00'),
 (5, 'teacher', 'c0ddf77200f1b8a9d5b57b7094f201cf2c2f01b8', '1004', 'Teacher', NULL, NULL, 'User', NULL, NULL, NULL, 0, 0, 0, '0000-00-00', NULL, 0, 1, NULL, '', NULL, NULL, NULL, 2, '0005-05-13 20:31:00'),

@@ -21,6 +21,7 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Network\Response;
+use Cake\Network\Exception\NotFoundException;
 
 class ControllerActionComponent extends Component {
 	private $plugin;
@@ -75,6 +76,7 @@ class ControllerActionComponent extends Component {
 		$action = $this->request->params['action'];
 		if (!method_exists($controller, $action)) { // method cannot be found in controller
 			if (in_array($action, $this->defaultActions)) { // default actions
+				$this->currentAction = $action;
 				$this->request->params['action'] = 'ComponentAction';
 				$this->initComponentsForModel();
 			} else { // check if it's a model action
@@ -431,18 +433,13 @@ class ControllerActionComponent extends Component {
 		return $modal;
 	}
 
-	public function search($model, $order = array()) {
+	public function search($model, $order = []) {
 		$alias = $model->alias();
 		$controller = $this->controller;
 		$request = $this->request;
 		$limit = $this->Session->check($alias.'.search.limit') ? $this->Session->read($alias.'.search.limit') : key($this->pageOptions);
 		$search = $this->Session->check($alias.'.search.key') ? $this->Session->read($alias.'.search.key') : '';
-		
 		$schema = $this->getSchema($model);
-
-		if (empty($order) && array_key_exists($this->orderField, $this->model->schema())) {
-			$order = $this->orderField;
-		}
 
 		if ($request->is(array('post', 'put'))) {
 			if (isset($request->data['Search'])) {
@@ -476,6 +473,10 @@ class ControllerActionComponent extends Component {
 			$conditions['OR'] = $OR;
 		}
 
+		if (empty($order) && array_key_exists($this->orderField, $schema)) {
+			$order = [$this->model->aliasField($this->orderField) => 'asc'];
+		}
+
 		$paginateOptions = ['limit' => $this->pageOptions[$limit], 'order' => $order, 'conditions' => $conditions];
 		if (!empty($contain)) {
 			$paginateOptions['contain'] = $contain;
@@ -487,33 +488,28 @@ class ControllerActionComponent extends Component {
 		$controller->set('search', $search);
 		$controller->set('pageOptions', $this->pageOptions);
 
-		try {
-			$event = new Event('ControllerAction.Controller.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
-			$event = $this->controller->eventManager()->dispatch($event);
-			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				$paginateOptions = $event->result;
-			}
-			$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['request' => $this->request, 'options' => $paginateOptions]);
-			$event = $this->model->eventManager()->dispatch($event);
-			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				$paginateOptions = $event->result;
-			}
-
-			$data = $this->Paginator->paginate($model, $paginateOptions);
-
-			$event = new Event('ControllerAction.Model.index.afterPaginate', $this, ['data' => $data]);
-			$event = $this->model->eventManager()->dispatch($event);
-			if ($event->isStopped()) { return $event->result; }
-			if (!empty($event->result)) {
-				$data = $event->result;
-			}
-		} catch (NotFoundException $e) {
-			$this->log($e->getMessage(), 'debug');
-			$action = $this->buttons['index']['url'];
-			return $controller->redirect($action);
+		$event = new Event('ControllerAction.Controller.beforePaginate', $this, ['model' => $model, 'options' => $paginateOptions]);
+		$event = $this->controller->eventManager()->dispatch($event);
+		if ($event->isStopped()) { return $event->result; }
+		if (!empty($event->result)) {
+			$paginateOptions = $event->result;
 		}
+		$event = new Event('ControllerAction.Model.index.beforePaginate', $this, ['request' => $this->request, 'options' => $paginateOptions]);
+		$event = $this->model->eventManager()->dispatch($event);
+		if ($event->isStopped()) { return $event->result; }
+		if (!empty($event->result)) {
+			$paginateOptions = $event->result;
+		}
+
+		$data = $this->Paginator->paginate($model, $paginateOptions);
+
+		$event = new Event('ControllerAction.Model.index.afterPaginate', $this, ['data' => $data]);
+		$event = $this->model->eventManager()->dispatch($event);
+		if ($event->isStopped()) { return $event->result; }
+		if (!empty($event->result)) {
+			$data = $event->result;
+		}
+		
 		return $data;
 	}
 
@@ -524,14 +520,23 @@ class ControllerActionComponent extends Component {
 		$event = $model->eventManager()->dispatch($event);
 		if ($event->isStopped()) { return $event->result; }
 
-		$data = $this->search($model);
+		try {
+			$data = $this->search($model);
+		} catch (NotFoundException $e) {
+			$this->log($e->getMessage(), 'debug');
+			$action = $this->buttons['index']['url'];
+			if (array_key_exists('page', $action)) {
+				unset($action['page']);
+			}
+			return $this->controller->redirect($action);
+		}
 		$modal = $this->getModalOptions('remove');
 
 		$indexElements = array(
 			array('name' => 'ControllerAction.index', 'data' => array(), 'options' => array())
 		);
 
-		if (empty($data)) {
+		if ($data->count() == 0) {
 			$this->Alert->info('general.noData');
 		} else {
 			$indexElements[] = array('name' => 'ControllerAction.pagination', 'data' => array(), 'options' => array());
@@ -574,6 +579,12 @@ class ControllerActionComponent extends Component {
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->findById($id);
 
+			$event = new Event('ControllerAction.Model.viewEdit.beforeQuery', $this, compact('query', 'contain'));
+			$event = $model->eventManager()->dispatch($event);
+			if ($event->isStopped()) { return $event->result; }
+			if (!empty($event->result)) {
+				list($query, $contain) = array_values($event->result);
+			}
 			$event = new Event('ControllerAction.Model.view.beforeQuery', $this, compact('query', 'contain'));
 			$event = $this->model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
@@ -582,6 +593,12 @@ class ControllerActionComponent extends Component {
 			}
 
 			$data = $query->contain($contain)->first();
+
+			if (empty($data)) {
+				$this->Alert->warning('general.notExists');
+				$action = $this->buttons['index']['url'];
+				return $this->controller->redirect($action);
+			}
 
 			$event = new Event('ControllerAction.Model.view.afterAction', $this, ['entity' => $data]);
 			$event = $model->eventManager()->dispatch($event);
@@ -725,6 +742,12 @@ class ControllerActionComponent extends Component {
 
 		if ($model->exists([$idKey => $id])) {
 			$query = $model->findById($id);
+			$event = new Event('ControllerAction.Model.viewEdit.beforeQuery', $this, compact('query', 'contain'));
+			$event = $model->eventManager()->dispatch($event);
+			if ($event->isStopped()) { return $event->result; }
+			if (!empty($event->result)) {
+				list($query, $contain) = array_values($event->result);
+			}
 			$event = new Event('ControllerAction.Model.edit.beforeQuery', $this, compact('query', 'contain'));
 			$event = $model->eventManager()->dispatch($event);
 			if ($event->isStopped()) { return $event->result; }
@@ -732,6 +755,12 @@ class ControllerActionComponent extends Component {
 				list($query, $contain) = array_values($event->result);
 			}
 			$data = $query->contain($contain)->first();
+
+			if (empty($data)) {
+				$this->Alert->warning('general.notExists');
+				$action = $this->buttons['index']['url'];
+				return $this->controller->redirect($action);
+			}
 			
 			if ($this->request->is(['get'])) {
 				$event = new Event('ControllerAction.Model.edit.onInitialize', $this, ['entity' => $data]);
