@@ -19,6 +19,16 @@
 				));
 			}
 
+			if (!empty($gradeOptions)) {
+				echo $this->Form->input('grade_id_', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $gradeOptions,
+					'url' => $baseUrl,
+					'data-named-key' => 'grade_id',
+				));
+			}
+
 		?>
 		</div>
 	</div>
