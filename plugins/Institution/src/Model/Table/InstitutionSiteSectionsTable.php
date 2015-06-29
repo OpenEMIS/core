@@ -6,8 +6,11 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use App\Model\Traits\MessagesTrait;
 
 class InstitutionSiteSectionsTable extends AppTable {
+	use MessagesTrait;
+
 	private $_selectedGradeType = 'single';
 	private $_selectedAcademicPeriodId = 0;
 	private $_selectedEducationGradeId = 0;
@@ -44,7 +47,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['visible' => ['view'=>true, 'edit'=>true]]);
 		$this->ControllerAction->field('institution_site_shift_id', ['visible' => ['view'=>true, 'edit'=>true]]);
 
-		$this->ControllerAction->field('security_user_id', ['type' => 'string', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+		$this->ControllerAction->field('security_user_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
 
 		$this->ControllerAction->field('male_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
 		$this->ControllerAction->field('female_students', ['type' => 'integer', 'visible' => ['index'=>true]]);
@@ -570,12 +573,16 @@ class InstitutionSiteSectionsTable extends AppTable {
 	public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
 
-			$attr['type'] = 'select';
 			$attr['options'] = $this->getStaffOptions();
 
 		} elseif ($action == 'add') {
 
-			$attr['type'] = 'select';
+			// $attr['type'] = 'select';
+
+		} elseif ($action == 'view') {
+
+			// $attr['type'] = 'select';
+			$attr['options'] = $this->getStaffOptions();
 
 		}
 
@@ -650,7 +657,7 @@ class InstitutionSiteSectionsTable extends AppTable {
 			]);
 
 		$list = $query->toArray();
-		$studentOptions = [__('Select Student')];
+		$studentOptions = [$this->getMessage('Users.select_student')];
 		foreach ($list as $skey => $obj) {
 			$studentGradeEligible = $obj->education_programme->education_grades;
 			$studentGradeKeys = array();
