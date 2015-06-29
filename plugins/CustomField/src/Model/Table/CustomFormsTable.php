@@ -166,6 +166,7 @@ class CustomFormsTable extends AppTable {
 				'order' => 3,
 				'visible' => true,
 				'attr' => [
+					'label' => __(Inflector::humanize($labelText)),
 					'onchange' => 'if($(this).val()){$("#customforms-apply-to-all").val(0);};'
 				]
 			]);
@@ -180,8 +181,29 @@ class CustomFormsTable extends AppTable {
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		//Initialize field values
-		list(, $selectedModule) = array_values($this->getSelectOptions());
+		list(, $selectedModule, , $selectedApplyToAll) = array_values($this->getSelectOptions());
 		$entity->custom_module_id = $selectedModule;
+		$entity->apply_to_all = $selectedApplyToAll;
+
+		return $entity;
+	}
+
+	public function editOnInitialize(Event $event, Entity $entity) {
+		//Initialize field values
+		list(, , , $selectedApplyToAll) = array_values($this->getSelectOptions());
+
+		$results = $this->CustomFormTypes
+			->find('all')
+			->where([
+				$this->CustomFormTypes->aliasField('custom_form_id') => $entity->id,
+				$this->CustomFormTypes->aliasField('custom_type_id') => 0		
+			]);
+
+		if (!$results->isEmpty()) {
+			$selectedApplyToAll = 1;
+		}
+		$entity->apply_to_all = $selectedApplyToAll;
+
 		return $entity;
 	}
 
@@ -198,12 +220,14 @@ class CustomFormsTable extends AppTable {
 				$list[] = $obj->name;
 			}
 		} else {
-			$where = [
-				$this->CustomFormTypes->aliasField('custom_form_id') => $entity->id,
-				$this->CustomFormTypes->aliasField('custom_type_id') => 0
-			];
-			$result = $this->CustomFormTypes->find('all')->where($where)->toArray();
-			if (!empty($result)) {
+			$results = $this->CustomFormTypes
+				->find('all')
+				->where([
+					$this->CustomFormTypes->aliasField('custom_form_id') => $entity->id,
+					$this->CustomFormTypes->aliasField('custom_type_id') => 0
+				]);
+
+			if (!$results->isEmpty()) {
 				$list[] = __('Apply To All');
 			}
 		}

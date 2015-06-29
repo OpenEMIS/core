@@ -49,10 +49,28 @@ class StaffBehavior extends Behavior {
 		$this->_table->ControllerAction->addField('photo_content', [
 			'type' => 'image',
 		]);
-		$this->_table->fields['username']['visible']['index'] = false;
-		$this->_table->fields['birthplace_area_id']['visible']['index'] = false;
-		$this->_table->fields['photo_content']['visible']['index'] = true;
-		$this->_table->ControllerAction->setFieldOrder(['photo_content']);
+		$this->_table->fields['first_name']['visible'] = false;
+		$this->_table->fields['middle_name']['visible'] = false;
+		$this->_table->fields['third_name']['visible'] = false;
+		$this->_table->fields['last_name']['visible'] = false;
+		$this->_table->fields['preferred_name']['visible'] = false;
+		$this->_table->fields['address']['visible'] = false;
+		$this->_table->fields['postal_code']['visible'] = false;
+		$this->_table->fields['address_area_id']['visible'] = false;
+		$this->_table->fields['gender_id']['visible'] = false;
+		$this->_table->fields['date_of_birth']['visible'] = false;
+		$this->_table->fields['username']['visible'] = false;
+		$this->_table->fields['birthplace_area_id']['visible'] = false;
+		$this->_table->fields['status']['visible'] = false;
+		$this->_table->fields['photo_content']['visible'] = true;
+
+		$this->_table->ControllerAction->field('name', []);
+		$this->_table->ControllerAction->field('default_identity_type', []);
+		$this->_table->ControllerAction->field('staff_institution_name', []);
+		$this->_table->ControllerAction->field('staff_status', []);
+
+		$this->_table->ControllerAction->setFieldOrder(['photo_content', 'openemis_no', 
+			'name', 'default_identity_type', 'staff_institution_name', 'staff_status']);
 
 		$indexDashboard = 'Staff.Staff/dashboard';
 		$this->_table->controller->set('indexDashboard', $indexDashboard);

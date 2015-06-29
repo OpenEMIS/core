@@ -177,7 +177,7 @@ class LabelHelper extends Helper {
 			'comment_required' => 'Comment Required'
 		],
 		'Users' => [
-			'photo_content' => 'Profile Image'
+			'photo_content' => 'Photo ID'
 		]
 	];
 

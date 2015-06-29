@@ -3,13 +3,10 @@ namespace Security\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class SecurityRolesTable extends AppTable {
+class SecurityGroupUsersTable extends AppTable {
 	public function initialize(array $config) {
+		$this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.SecurityGroups']);
-
-		$this->belongsToMany('SecurityFunctions', [
-			'className' => 'Security.SecurityFunctions',
-			'through' => 'Security.SecurityRoleFunctions'
-		]);
+		$this->belongsTo('Users', ['className' => 'User.Users']);
 	}
 }
