@@ -6,6 +6,8 @@
 			    'controller' => $this->request->params['controller'],
 			    'action' => $this->request->params['action']
 			]);
+			$template = $this->ControllerAction->getFormTemplate();
+			$this->Form->templates($template);
 
 			if (!empty($academicPeriodOptions)) {
 				echo $this->Form->input('academic_period_id_', array(
