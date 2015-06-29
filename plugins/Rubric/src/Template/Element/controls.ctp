@@ -7,6 +7,8 @@
 				    'controller' => $this->request->params['controller'],
 				    'action' => $this->request->params['action'],
 				]);
+				$template = $this->ControllerAction->getFormTemplate();
+				$this->Form->templates($template);
 
 				if (!empty($templateOptions)) {
 					echo $this->Form->input('rubric_template', array(
