@@ -34,11 +34,11 @@ $totalAmount = 0;
 							<tr>
 								<td>
 									<?php 
-									if ($obj->has('amount')) {
-										$totalAmount += $obj->amount;
+									if (array_key_exists('amount', $obj)) {
+										$totalAmount += $obj['amount'];
 									}
-									if ($obj->has('id')) {
-										echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.id', array('type' => 'hidden', 'class' => $fieldName.'-control-id', 'label' => false, 'value' => $obj->id)); 
+									if (array_key_exists('id', $obj)) {
+										echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.id', array('type' => 'hidden', 'class' => $fieldName.'-control-id', 'label' => false, 'value' => $obj['id'])); 
 									}
 									?>
 									<?php
