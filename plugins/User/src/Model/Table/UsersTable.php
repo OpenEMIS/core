@@ -312,24 +312,24 @@ class UsersTable extends AppTable {
 	}
 
 	public function onGetPhotoContent(Event $event, Entity $entity) {
-		// $fileContent = $entity->photo_content;
-		// $value = "";
+		$fileContent = $entity->photo_content;
+		$value = "";
 
-		// if(empty($fileContent) && is_null($fileContent)) {
-		// 	$controllerName = $this->controller->name;	
-		// 	if($controllerName == "Students"){
-		// 		$value = self::defaultStudentProfile;
-		// 	} else if($controllerName == "Staff") {
-		// 		$value = self::defaultStaffProfile;
-		// 	}
-		// } else {
-		// 	$value = $fileContent;
-		// }
+		if(empty($fileContent) && is_null($fileContent)) {
+			$controllerName = $this->controller->name;	
+			if($controllerName == "Students"){
+				$value = self::defaultStudentProfile;
+			} else if($controllerName == "Staff") {
+				$value = self::defaultStaffProfile;
+			}
+		} else {
+			$value = $fileContent;
+		}
 
-		// return $value;
+		return $value;
 	}
 
-	public function onGetLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if(in_array($field, $this->specialFields)){
 			if($field == 'default_identity_type') {
 				$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
@@ -342,10 +342,10 @@ class UsersTable extends AppTable {
 				if($defaultIdentity)
 					$value = $defaultIdentity->name;
 
-				return (!empty($value)) ? $value : parent::onGetLabel($event, $module, $field, $language, $autoHumanize);
+				return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 			}	
 		} else {
-			return parent::onGetLabel($event, $module, $field, $language, $autoHumanize);
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
 }

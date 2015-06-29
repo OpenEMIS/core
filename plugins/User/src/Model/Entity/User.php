@@ -6,7 +6,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\ORM\TableRegistry;
 
 class User extends Entity {
-    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status'];
+    protected $_virtual = ['name', 'name_with_id', 'default_identity_type', 'institution_name', 'student_status', 'staff_status', 'staff_institution_name'];
 
     protected function _setPassword($password) {
         return (new DefaultPasswordHasher)->hash($password);
@@ -137,6 +137,40 @@ class User extends Entity {
      
         if(!empty($StudentStatus->student_status))
             $data = $StudentStatus->student_status->name;
+
+        return $data;
+    }
+
+    protected function _getStaffStatus(){
+        $data = "";
+        $securityUserId = $this->id;
+
+        $InstitutionSiteStudents = TableRegistry::get('Institution.InstitutionSiteStaff');
+        $StaffStatus = $InstitutionSiteStudents
+                ->find()
+                ->contain(['StaffStatuses'])
+                ->where(['security_user_id' => $this->id])
+                ->first();
+     
+        if(!empty($StaffStatus->staff_status))
+            $data = $StaffStatus->staff_status->name;
+
+        return $data;
+    }
+
+    protected function _getStaffInstitutionName(){
+        $data = "";
+        $securityUserId = $this->id;
+
+        $InstitutionSiteStaff = TableRegistry::get('Institution.InstitutionSiteStaff');
+        $InstitutionSite = $InstitutionSiteStaff
+                ->find()
+                ->contain(['Institutions'])
+                ->where(['security_user_id' => $this->id])
+                ->first();
+
+        if(!empty($InstitutionSite->institution))
+            $data = $InstitutionSite->institution->name;
 
         return $data;
     }
