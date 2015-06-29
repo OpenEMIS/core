@@ -13,6 +13,11 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('Institutions', 'institution_site_status_id', NULL, 'Status'),
 ('Institutions', 'institution_site_locality_id', NULL, 'Locality'),
 ('Institutions', 'area_id', NULL, 'Area (Education)'),
+-- InstitutionSiteAttachments
+('InstitutionSiteAttachments', 'modified', NULL, 'Modified On'),
+('InstitutionSiteAttachments', 'created', NULL, 'Uploaded On'),
+('InstitutionSiteAttachments', 'modified_user_id', NULL, 'Modified By'),
+('InstitutionSiteAttachments', 'created_user_id', NULL, 'Uploaded By'),
 -- InstitutionSitePositions
 ('InstitutionSitePositions', 'modified', NULL, 'Modified On'),
 ('InstitutionSitePositions', 'staff_position_grade_id', NULL, 'Grade'),
