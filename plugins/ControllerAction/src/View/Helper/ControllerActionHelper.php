@@ -179,7 +179,8 @@ class ControllerActionHelper extends Helper {
 					}
 
 					if ($attr['sort']) {
-						$label = $this->Paginator->sort($field);
+						$title = ($label!='') ? $label : $field;
+						$label = $this->Paginator->sort($field, $title);
 					}
 					
 					$method = 'onGet' . Inflector::camelize($field);
