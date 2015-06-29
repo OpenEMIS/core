@@ -11,15 +11,21 @@ trait MessagesTrait {
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
 				'success' => 'The record has been added successfully.',
-				'failed' => 'The record is not added due to errors encountered.'
+				'failed' => 'The record is not added due to errors encountered.',
+				'label' => 'Add',
 			],
 			'edit' => [
 				'success' => 'The record has been updated successfully.',
-				'failed' => 'The record is not updated due to errors encountered.'
+				'failed' => 'The record is not updated due to errors encountered.',
+				'label' => 'Edit',
 			],
 			'delete' => [
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
+				'label' => 'Delete',
+			],
+			'view' => [
+				'label' => 'View',
 			],
 			'duplicate' => [
 				'success' => 'The record has been duplicated successfully.',
@@ -47,11 +53,18 @@ trait MessagesTrait {
 			'education_grade' => 'Education Grade',
 			'security_user_id' => 'Home Room Teacher',
 			'section' => 'Section',
-			'single_grade_field' => 'Cingle Grade'
+			'single_grade_field' => 'Single Grade Sections',
+			'multi_grade_field' => 'Multi-Grades Section'
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes'
+			'noClasses' => 'No Classes',
+			'classes' => 'Classes',
+			'education_subject' => 'Subject',
+			'class' => 'Class',
+			'teacher' => 'Teacher',
+			'students' => 'Students',
+			'teachers' => 'Teachers',
 		],
 		'InstitutionSiteFees' => [
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
@@ -77,10 +90,12 @@ trait MessagesTrait {
 			'gender' => 'Gender',
 			'date_of_birth' => 'Date Of Birth',
 			'student_category' => 'Category',
-			'select_student' => 'Select Students',
-			'add_student' => 'Add Students',
+			'select_student' => 'Select Student',
+			'add_student' => 'Add Student',
 			'select_staff' => 'Select Staff',
-			'add_staff' => 'Add Staff'
+			'add_staff' => 'Add Staff',
+			'select_teacher' => 'Select Teacher',
+			'add_teacher' => 'Add Teacher'
 		],
 		
 		// Validation Messages

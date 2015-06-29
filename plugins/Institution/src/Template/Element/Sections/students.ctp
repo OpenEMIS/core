@@ -2,7 +2,7 @@
 
 	<hr>
 
-	<h3><?= $this->Label->get($attr['model'] . '.' . $attr['field']) ?></h3>
+	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
 
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">

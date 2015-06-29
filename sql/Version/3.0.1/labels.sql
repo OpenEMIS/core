@@ -47,6 +47,10 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('InstitutionSiteSections', 'security_user_id', NULL, 'Home Room Teacher'),
 ('InstitutionSiteSections', 'institution_site_shift_id', NULL, 'Shift'),
 ('InstitutionSiteSections', 'education_grades', NULL, 'Education Grade(s)'),
+-- InstitutionSiteClasses
+('InstitutionSiteClasses', 'name', NULL, 'Class Name'),
+('InstitutionSiteClasses', 'education_subject_id', NULL, 'Subject Name'),
+('InstitutionSiteClasses', 'education_subject_code', NULL, 'Subject Code'),
 -- Users
 ('Users', 'photo_content', NULL, 'Profile Image');
 
