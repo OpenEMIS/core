@@ -12,7 +12,7 @@ class SurveysController extends AppController
 
 		$this->ControllerAction->models = [
 			'Questions' => ['className' => 'Survey.SurveyQuestions'],
-			'Templates' => ['className' => 'Survey.SurveyTemplates']
+			'Forms' => ['className' => 'Survey.SurveyForms']
 		];
 		$this->loadComponent('Paginator');
     }
@@ -25,9 +25,9 @@ class SurveysController extends AppController
 				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Questions'],
 				'text' => __('Questions')
 			],
-			'Templates' => [
-				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Templates'],
-				'text' => __('Templates')
+			'Forms' => [
+				'url' => ['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Forms'],
+				'text' => __('Forms')
 			]
 		];
 
