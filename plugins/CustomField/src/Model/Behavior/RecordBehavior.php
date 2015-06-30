@@ -8,7 +8,12 @@ use Cake\Utility\Inflector;
 
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
-		'recordKey' => 'custom_record_id'
+		'recordKey' => 'custom_record_id',
+		'moduleKey' => 'custom_module_id',
+		'fieldKey' => 'custom_field_id',
+		'formKey' => 'custom_form_id',
+		'tableColumnKey' => 'custom_table_column_id',
+		'tableRowKey' => 'custom_table_row_id'
 	];
 
 	public function initialize(array $config) {
@@ -25,7 +30,7 @@ class RecordBehavior extends Behavior {
     	return compact('entity');
 	}
 
-	public function buildCustomFields($entity) {
+	public function getCustomFieldQuery($entity) {
 		$CustomFieldValues = $this->_table->CustomFieldValues;
 		$CustomTableCells = $this->_table->CustomTableCells;
 
@@ -37,74 +42,104 @@ class RecordBehavior extends Behavior {
 		$CustomFormTypes = $CustomForms->CustomFormTypes;
 		$CustomFormFields = $CustomForms->CustomFormFields;
 
-		$customModuleResults = $CustomModules
-			->find('all')
-			->select([
-				$CustomModules->aliasField('id'),
-				$CustomModules->aliasField('field_option')
-			])
-			->where([$CustomModules->aliasField('model') => $this->_table->alias()])
-			->first();
-		$customModuleId = $customModuleResults->id;
-		$fieldOption = $customModuleResults->field_option;
+		$customFieldQuery = null;
+		if (is_null($this->config('moduleKey'))) {
+			$customFormId = $entity->{$this->config('formKey')};
 
-		$customFormIds = $CustomForms
-			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-			->where([$CustomForms->aliasField('custom_module_id') => $customModuleId])
-			->toArray();
-
-		$genaralResults = $CustomFormTypes
-			->find('all')
-			->select([$CustomFormTypes->aliasField('custom_form_id')])
-			->where([
-				$CustomFormTypes->aliasField('custom_form_id IN') => $customFormIds,
-				$CustomFormTypes->aliasField('custom_type_id') => 0
-			])
-			->all();
-
-		if (!$genaralResults->isEmpty()) {
-			$genaralData = $genaralResults->first();
-			$generalId = $genaralData->custom_form_id;
-
-			$customFieldQuery = $CustomFormFields
-				->find('all')
-				->find('order')
-				->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-				->where([$CustomFormFields->aliasField('custom_form_id') => $generalId]);
-		}
-
-		if (!is_null($fieldOption)) {
-			$modelAlias = $this->_table->ControllerAction->getModel($fieldOption)['model'];
-			$fieldOptionKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
-
-			$fieldOptionId = $entity->$fieldOptionKey;
-			$typedResults = $CustomFormTypes
-				->find('all')
-				->select([$CustomFormTypes->aliasField('custom_form_id')])
-				->where([
-					$CustomFormTypes->aliasField('custom_form_id IN') => $customFormIds,
-					$CustomFormTypes->aliasField('custom_type_id') => $fieldOptionId
-				])
-				->all();
-
-			if (!$typedResults->isEmpty()) {
-				$typedData = $typedResults->first();
-				$typedId = $typedData->custom_form_id;
-
-				$typedCustomFieldQuery = $CustomFormFields
+			if (isset($customFormId)) {
+				$customFieldQuery = $CustomFormFields
 					->find('all')
 					->find('order')
 					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-					->where([$CustomFormFields->aliasField('custom_form_id') => $typedId]);
+					->where([$CustomFormFields->aliasField($this->config('formKey')) => $customFormId]);
+			}
+		} else {
+			$customModuleResults = $CustomModules
+				->find('all')
+				->select([
+					$CustomModules->aliasField('id'),
+					$CustomModules->aliasField('field_option')
+				])
+				->where([$CustomModules->aliasField('model') => $this->_table->alias()])
+				->first();
+			$customModuleId = $customModuleResults->id;
+			$fieldOption = $customModuleResults->field_option;
 
-				if (isset($customFieldQuery)) {
-					$customFieldQuery
-						->union($typedCustomFieldQuery);
-				} else {
-					$customFieldQuery = $typedCustomFieldQuery;
+			$customFormIds = $CustomForms
+				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+				->where([$CustomForms->aliasField($this->config('moduleKey')) => $customModuleId])
+				->toArray();
+
+			$genaralResults = $CustomFormTypes
+				->find('all')
+				->select([$CustomFormTypes->aliasField($this->config('formKey'))])
+				->where([
+					$CustomFormTypes->aliasField($this->config('formKey').' IN') => $customFormIds,
+					$CustomFormTypes->aliasField('custom_type_id') => 0
+				])
+				->all();
+
+			if (!$genaralResults->isEmpty()) {
+				$genaralData = $genaralResults->first();
+				$generalId = $genaralData->{$this->config('formKey')};
+
+				$customFieldQuery = $CustomFormFields
+					->find('all')
+					->find('order')
+					->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+					->where([$CustomFormFields->aliasField($this->config('formKey')) => $generalId]);
+			}
+
+			if (!is_null($fieldOption)) {
+				$modelAlias = $this->_table->ControllerAction->getModel($fieldOption)['model'];
+				$fieldOptionKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+
+				$fieldOptionId = $entity->$fieldOptionKey;
+				$typedResults = $CustomFormTypes
+					->find('all')
+					->select([$CustomFormTypes->aliasField($this->config('formKey'))])
+					->where([
+						$CustomFormTypes->aliasField($this->config('formKey').' IN') => $customFormIds,
+						$CustomFormTypes->aliasField('custom_type_id') => $fieldOptionId
+					])
+					->all();
+
+				if (!$typedResults->isEmpty()) {
+					$typedData = $typedResults->first();
+					$typedId = $typedData->{$this->config('formKey')};
+
+					$typedCustomFieldQuery = $CustomFormFields
+						->find('all')
+						->find('order')
+						->contain(['CustomFields.CustomFieldOptions', 'CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
+						->where([$CustomFormFields->aliasField($this->config('formKey')) => $typedId]);
+
+					if (isset($customFieldQuery)) {
+						$customFieldQuery
+							->union($typedCustomFieldQuery);
+					} else {
+						$customFieldQuery = $typedCustomFieldQuery;
+					}
 				}
 			}
 		}
+
+		return $customFieldQuery;
+	}
+
+	public function buildCustomFields($entity) {
+		$customFieldQuery = $this->getCustomFieldQuery($entity);
+
+		$CustomFieldValues = $this->_table->CustomFieldValues;
+		$CustomTableCells = $this->_table->CustomTableCells;
+
+		$CustomFields = $CustomFieldValues->CustomFields;
+		$CustomFieldTypes = $CustomFields->CustomFieldTypes;
+
+		$CustomForms = $CustomFields->CustomForms;
+		$CustomModules = $CustomForms->CustomModules;
+		$CustomFormTypes = $CustomForms->CustomFormTypes;
+		$CustomFormFields = $CustomForms->CustomFormFields;
 
 		if (isset($customFieldQuery)) {
 			$customFields = $customFieldQuery
@@ -145,7 +180,7 @@ class RecordBehavior extends Behavior {
 							$CustomFieldValues->aliasField($fieldValue),
 						])
 						->where([
-							$CustomFieldValues->aliasField('custom_field_id') => $_customField->id,
+							$CustomFieldValues->aliasField($this->config('fieldKey')) => $_customField->id,
 							$CustomFieldValues->aliasField($this->config('recordKey')) => $entity->id
 						])
 						->all();
@@ -171,17 +206,14 @@ class RecordBehavior extends Behavior {
 		            'field' => $key,
 		            'attr' => $_attr,
 		            'recordKey' => $this->config('recordKey'),
+		            'fieldKey' => $this->config('fieldKey'),
+		            'tableColumnKey' => $this->config('tableColumnKey'),
+		            'tableRowKey' => $this->config('tableRowKey'),
 		            'customField' => $_customField,
 		            'id' => $_id,
 		            'value' => $_value
 		        ]);
 			}
-
-			$this->_table->fields['security_group_id']['order'] = $order++;
-			$this->_table->fields['modified_user_id']['order'] = $order++;
-			$this->_table->fields['modified']['order'] = $order++;
-			$this->_table->fields['created_user_id']['order'] = $order++;
-			$this->_table->fields['created']['order'] = $order++;
-		}		
+		}
 	}
 }

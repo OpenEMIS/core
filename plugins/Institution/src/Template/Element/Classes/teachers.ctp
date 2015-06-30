@@ -2,14 +2,14 @@
 
 	<hr>
 
-	<h3><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></h3>
+	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
 
 	<?php if ($action=='edit') :?>
 	<div class="clearfix">
 	<?php
 		echo $this->Form->input('staff_id', array(
 			'options' => $attr['data']['teacherOptions'],
-			'label' => 'Add Teacher',
+			'label' => $this->Label->get('Users.add_teacher'),
 			'onchange' => "$('#reload').val('add').click();"
 		));
 		?>
@@ -20,8 +20,8 @@
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
-					<th><?php echo $this->Label->get('general.openemisId'); ?></th>
-					<th><?php echo $this->Label->get('general.name'); ?></th>
+					<th><?= $this->Label->get('Users.openemis_no'); ?></th>
+					<th><?= $this->Label->get('Users.name'); ?></th>
 					<th class="cell-delete"></th>
 				</tr>
 			</thead>

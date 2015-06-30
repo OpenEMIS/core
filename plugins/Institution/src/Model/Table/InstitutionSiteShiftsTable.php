@@ -37,7 +37,7 @@ class InstitutionSiteShiftsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
 		$this->ControllerAction->field('name', ['type' => 'string']);
 		$this->ControllerAction->field('period', ['type' => 'string']);
-		$this->ControllerAction->field('location_institution_site_id', ['type' => 'string']);
+		$this->ControllerAction->field('location_institution_site_id', ['type' => 'select']);
 
 		$this->ControllerAction->setFieldOrder([
 			'academic_period_id', 'name', 'period', 'location_institution_site_id',
