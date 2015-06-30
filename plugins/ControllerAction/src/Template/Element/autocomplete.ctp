@@ -12,6 +12,8 @@ var Autocomplete = {
 	uiItems: {},
 
 	init: function() {
+		var submitBtn = $('button[name=submit]');
+		submitBtn.text('Create New');
 		this.attachAutoComplete('.autocomplete', Autocomplete.select);
 		loadingImg = $('.loading_img');
 		loadingImg.hide();
@@ -21,7 +23,7 @@ var Autocomplete = {
 		if($('#searchInput').val() == ""){
 			var submitBtn = $('button[name=submit]');
 			submitBtn.text('Save');
-			submitBtn.val('Save');
+			submitBtn.val('save');
 		}
 
 		var val = Autocomplete.uiItems;
@@ -54,7 +56,7 @@ var Autocomplete = {
 		Autocomplete.uiItems = val;
 		var submitBtn = $('button[name=submit]');
 		submitBtn.text('Save');
-		submitBtn.val('Save');
+		submitBtn.val('save');
 		return false;
 	},
 	
@@ -72,10 +74,10 @@ var Autocomplete = {
 			var submitBtn = $('button[name=submit]');
 			if(recordsCount === 0){
 				submitBtn.text('Create New');
-				submitBtn.val('create');
+				submitBtn.val('save');
 			} else {
 				submitBtn.text('Save');
-				submitBtn.val('Save');
+				submitBtn.val('save');
 			}
 		}
 	},
