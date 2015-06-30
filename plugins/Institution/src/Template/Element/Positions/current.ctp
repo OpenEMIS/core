@@ -4,14 +4,14 @@
 
 	<hr>
 
-	<h3><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></h3>
+	<h3><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></h3>
 
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<th><?php echo $this->Label->get('general.openemisId'); ?></th>
-					<th><?php echo $this->Label->get('general.name'); ?></th>
+					<th><?php echo $this->Label->get('Users.openemis_no'); ?></th>
+					<th><?php echo $this->Label->get('Users.name'); ?></th>
 					<th><?php echo $this->Label->get('date.start'); ?></th>
 					<th><?php echo $this->Label->get('InstitutionSiteStaff.fte'); ?></th>
 				</tr>
