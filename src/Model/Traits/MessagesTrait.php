@@ -69,14 +69,14 @@ trait MessagesTrait {
 			'date_opened' => 'Date Opened',
 			'date_closed' => 'Date Closed',
 		],
-		'InstitutionSitePositions' => [
-			'current_staff_list' => 'Current Staff List',
-			'past_staff_list' => 'Past Staff List',
-		],
 		'InstitutionSiteStaff' => [
 			'start_date' => 'Start Date',
 			'fte' => 'FTE',
-			'total_fte' => 'Total FTE'
+			'total_fte' => 'Total FTE',
+		],
+		'InstitutionSitePositions' => [
+			'current_staff_list' => 'Current Staff List',
+			'past_staff_list' => 'Past Staff List',
 		],
 		'InstitutionSiteProgrammes' => [
 			'noEducationLevels' => 'There are no available Education Level.',
@@ -111,10 +111,19 @@ trait MessagesTrait {
 			'teachers' => 'Teachers',
 		],
 		'InstitutionSiteFees' => [
+			'fee_types' => 'Fee Types',
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
+		],
+		'StaffBehaviours' => [
+			'date_of_behaviour' => 'Date',
+			'time_of_behaviour' => 'Time',
+		],
+		'InstitutionSiteStaffAbsences' => [
+			'first_date_absent' => 'First Day Of Absence',
+			'last_date_absent' => 'Last Day Of Absence'
 		],
 		'Assessments' => [
 			'noGrades' => 'No Available Grades',
@@ -133,7 +142,8 @@ trait MessagesTrait {
 			'tabTitle' => 'System Roles'
 		],
 		'Users' => [
-			'photo_content' => 'Photo ID',
+			'photo_content' => 'Photo Image',
+			'start_date' => 'Start Date',
 			'openemis_no' => 'OpenEMIS ID',
 			'name' => 'Name',
 			'gender' => 'Gender',
@@ -396,6 +406,8 @@ trait MessagesTrait {
 			],
 		],
 		'Staff' => [
+			'date_of_birth' => 'Date Of Birth',
+			'photo_content' => 'Profile Image',
 			'Qualifications' => [
 				'qualification_title' => [
 					'required' => 'Please enter a valid Qualification Title'
