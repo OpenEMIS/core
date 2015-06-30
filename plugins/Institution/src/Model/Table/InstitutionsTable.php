@@ -11,7 +11,7 @@ class InstitutionsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_sites');
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionSiteActivities', 'key' => 'institution_site_id', 'session' => 'Institutions.id']);
-        parent::initialize($config);
+        parent::initialize($config); 
 
 		/**
 		 * fieldOption tables
@@ -76,6 +76,7 @@ class InstitutionsTable extends AppTable  {
 		$this->addBehavior('CustomField.Record', [
 			'recordKey' => 'institution_site_id'
 		]);
+		$this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -128,8 +129,6 @@ class InstitutionsTable extends AppTable  {
 	}
 
 	public function beforeAction($event) {
-		$this->ControllerAction->field('year_opened', ['visible' => false]);
-		$this->ControllerAction->field('year_closed', ['visible' => false]);
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		$this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
 		$this->ControllerAction->field('modified', ['visible' => false]);
@@ -137,110 +136,19 @@ class InstitutionsTable extends AppTable  {
 		$this->ControllerAction->field('created', ['visible' => false]);
 		$this->ControllerAction->field('created_user_id', ['visible' => false]);
 
-		$this->ControllerAction->field('institution_site_locality_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('institution_site_type_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('institution_site_ownership_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('institution_site_status_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('institution_site_sector_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('institution_site_provider_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('institution_site_gender_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('area_administrative_id', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'select'
-		]);
-
-		$this->ControllerAction->field('alternative_name', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('address', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('postal_code', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('telephone', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('fax', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('email', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('website', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('date_opened', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('date_closed', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('longitude', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('latitude', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('contact_person', [
-			'visible' => ['view'=>true, 'edit'=>true],
-			'type' => 'string'
-		]);
-
-		$this->ControllerAction->field('area_id', [
-			'visible' => true,
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('code', [
-			'visible' => true,
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('name', [
-			'visible' => true,
-			'type' => 'string'
-		]);
-		$this->ControllerAction->field('institution_site_type_id', [
-			'visible' => true,
-			'type' => 'string'
-		]);
-
+		$this->ControllerAction->field('institution_site_type_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_site_locality_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_site_ownership_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_site_status_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_site_sector_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_site_provider_id', ['type' => 'select']);
+		$this->ControllerAction->field('institution_site_gender_id', ['type' => 'select']);
+		$this->ControllerAction->field('area_administrative_id', ['type' => 'select']);
+		$this->ControllerAction->field('area_id', ['type' => 'select']);
 
 		if (strtolower($this->action) != 'index') {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
-
 	}
 
 	public function afterSave(Event $event, Entity $entity, $options) {
@@ -302,6 +210,10 @@ class InstitutionsTable extends AppTable  {
 		$this->controller->set('indexDashboard', $indexDashboard);
 
 		$this->ControllerAction->setFieldOrder([
+			'code', 'name', 'area_id', 'institution_site_type_id'
+		]);
+
+		$this->ControllerAction->setFieldVisible(['index'], [
 			'code', 'name', 'area_id', 'institution_site_type_id'
 		]);
 	}
