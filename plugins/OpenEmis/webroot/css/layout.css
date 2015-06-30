@@ -1776,7 +1776,7 @@ table tr.sorting-row td {background-color: #8b8;}
 }
 
 .form-horizontal .table-in-view {
-	width: 50%;
+	width: 85%;
 	border: 1px solid #CCC;
 	-webkit-border-radius: 5px;
 	        border-radius: 5px;
@@ -2305,6 +2305,10 @@ footer {
 	font-size: 14px;
 }
 
+.chrome .login-box select {
+	padding: 10px 0 10px 41px;
+}
+
 .login-box select {
 	color: #555;
 	height: 40px;
@@ -2496,7 +2500,7 @@ footer {
 	/* FORM */
 	
 	.table-in-view {
-		width: 100%;
+		width: 30%;
 		clear: both;
 	}
 	
