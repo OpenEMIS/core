@@ -75,7 +75,7 @@ class SalariesTable extends AppTable {
 		$entity = $this->patchEntity($entity, $data);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, $data, $options) {
 		if (array_key_exists($this->alias(), $data)) {
 			if (!array_key_exists('salary_additions', $data[$this->alias()])) {
 				$data[$this->alias()]['salary_additions'] = [];

@@ -1,6 +1,7 @@
 <?php
 namespace User\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -30,6 +31,7 @@ class MandatoryBehavior extends Behavior {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
+			'ControllerAction.Model.add.onInitialize' => 'addOnInitialize',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.onChangeNationality' => 'addOnChangeNationality',
@@ -65,6 +67,22 @@ class MandatoryBehavior extends Behavior {
 		return $result->option;
 	}
 
+	public function addOnInitialize(Event $event, Entity $entity) { 
+		$Countries = TableRegistry::get('FieldOption.Countries');
+		$defaultCountry = $Countries->getDefaultEntity();
+		
+		$this->fields['nationality']['default'] = $defaultCountry->id;
+
+		$defaultIdentityType = $defaultCountry->identity_type_id;
+		if (is_null($defaultIdentityType)) {
+			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+			$defaultIdentityType = $IdentityTypes->getDefaultValue();
+		}
+		$this->fields['identity_type']['default'] = $defaultIdentityType;
+
+		return $entity;
+	}
+
 	public function addBeforeAction(Event $event) {
 		// mandatory associated fields
 		$this->_table->ControllerAction->field('contact_type');
@@ -82,17 +100,20 @@ class MandatoryBehavior extends Behavior {
 		]);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		// pr('behavi addEditBeforePatch');
-		// $options['associated'] = ['Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$newOptions = [];
+		$newOptions['associated'] = ['Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
 
-		// $options['validate'] = 'mandatory';
-		// return compact('entity', 'data', 'options');
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
+
+		return compact('entity', 'data', 'options');
 	}
 
 	public function addOnChangeNationality(Event $event, Entity $entity, array $data, array $options) {
 		$Countries = TableRegistry::get('FieldOption.Countries');
-		$countryId = $data['Users']['user_nationalities'][0]['country_id'];
+		$countryId = $data[$this->_table->alias()]['user_nationalities'][0]['country_id'];
 		$country = $Countries->findById($countryId)->first();
 		$defaultIdentityType = $country->identity_type_id;
 		if (is_null($defaultIdentityType)) {
@@ -100,11 +121,11 @@ class MandatoryBehavior extends Behavior {
 			$defaultIdentityType = $IdentityTypes->getDefaultValue();
 		}
 		
-		$this->_table->fields['nationality']['default'] = $data['Users']['user_nationalities'][0]['country_id'];
+		$this->_table->fields['nationality']['default'] = $data[$this->_table->alias()]['user_nationalities'][0]['country_id'];
 
 		// overriding the  previous input to put in default identities
 		$this->_table->fields['identity_type']['default'] = $defaultIdentityType;
-		$data['Users']['identities'][0]['identity_type_id'] = $defaultIdentityType;
+		$data[$this->_table->alias()]['identities'][0]['identity_type_id'] = $defaultIdentityType;
 
 		$options['associated'] = [
 			'InstitutionSiteStudents' => ['validate' => false],
@@ -125,7 +146,7 @@ class MandatoryBehavior extends Behavior {
 			->toArray();
 
 		$attr['type'] = 'select';
-		$attr['fieldName'] = 'Users.contacts.0.contact_type_id';
+		$attr['fieldName'] = $this->_table->alias().'.contacts.0.contact_type_id';
 		$attr['options'] = $contactOptions;
 		
 		return $attr;
@@ -133,7 +154,7 @@ class MandatoryBehavior extends Behavior {
 
 	public function onUpdateFieldContactValue(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'string';
-		$attr['fieldName'] = 'Users.contacts.0.value';
+		$attr['fieldName'] = $this->_table->alias().'.contacts.0.value';
 
 		return $attr;
 	}
@@ -145,7 +166,7 @@ class MandatoryBehavior extends Behavior {
 		$attr['type'] = 'select';
 		$attr['options'] = $nationalityOptions;
 		$attr['onChangeReload'] = 'changeNationality';
-		$attr['fieldName'] = 'Users.user_nationalities.0.country_id';
+		$attr['fieldName'] = $this->_table->alias().'.user_nationalities.0.country_id';
 
 		return $attr;
 	}
@@ -153,14 +174,14 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldIdentityType(Event $event, array $attr, $action, $request) {
 		$identityTypeOptions = TableRegistry::get('FieldOption.IdentityTypes')->getList();
 		$attr['type'] = 'select';
-		$attr['fieldName'] = 'Users.identities.0.identity_type_id';
+		$attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';
 		$attr['options'] = $identityTypeOptions->toArray();
 		return $attr;
 	}
 
 	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'string';
-		$attr['fieldName'] = 'Users.identities.0.number';
+		$attr['fieldName'] = $this->_table->alias().'.identities.0.number';
 
 		return $attr;
 	}
@@ -168,7 +189,7 @@ class MandatoryBehavior extends Behavior {
 	public function onUpdateFieldSpecialNeed(Event $event, array $attr, $action, $request) {
 		$specialNeedOptions = TableRegistry::get('FieldOption.SpecialNeedTypes')->getList();
 		$attr['type'] = 'select';
-		$attr['fieldName'] = 'Users.special_needs.0.special_need_type_id';
+		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.special_need_type_id';
 		$attr['options'] = $specialNeedOptions->toArray();
 
 		return $attr;
@@ -176,7 +197,7 @@ class MandatoryBehavior extends Behavior {
 
 	public function onUpdateFieldSpecialNeedComment(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'string';
-		$attr['fieldName'] = 'Users.special_needs.0.comment';
+		$attr['fieldName'] = $this->_table->alias().'.special_needs.0.comment';
 
 		return $attr;
 	}

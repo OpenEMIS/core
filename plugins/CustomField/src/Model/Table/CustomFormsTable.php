@@ -136,10 +136,14 @@ class CustomFormsTable extends AppTable {
 		$this->setFieldOrder();
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		//Required by patchEntity for associated data
-		$options['associated'] = $this->_contain;
-		return compact('entity', 'data', 'options');
+		$newOptions = [];
+		$newOptions['associated'] = $this->_contain;
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {

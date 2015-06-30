@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -340,7 +341,9 @@ class InstitutionSiteClassesTable extends AppTable {
 				->toArray();
 		$teachers = [];
 		foreach ($query as $key => $value) {
-			$teachers[$value->user->id] = $value->user->name;
+			if ($value->has('user')) {
+				$teachers[$value->user->id] = $value->user->name;
+			}
 		}
 
 		$subjects = $this->getSubjectOptions();

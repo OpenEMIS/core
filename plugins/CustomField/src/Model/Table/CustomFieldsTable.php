@@ -1,6 +1,7 @@
 <?php
 namespace CustomField\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -69,13 +70,18 @@ class CustomFieldsTable extends AppTable {
 		}
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if ($this->behaviors()->hasMethod('addEditBeforePatch')) {
 			list($entity, $data, $options) = array_values($this->behaviors()->call('addEditBeforePatch', [$event, $entity, $data, $options]));
 		}
+
 		//Required by patchEntity for associated data
-		$options['associated'] = $this->_contain;
-		return compact('entity', 'data', 'options');
+		$newOptions = [];
+		$newOptions['associated'] = $this->_contain;
+
+		$arrayOptions = $options->getArrayCopy();
+		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+		$options->exchangeArray($arrayOptions);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {

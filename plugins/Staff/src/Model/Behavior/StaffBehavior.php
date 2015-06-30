@@ -1,10 +1,12 @@
 <?php 
 namespace Staff\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class StaffBehavior extends Behavior {
 	public function initialize(array $config) {
@@ -25,12 +27,23 @@ class StaffBehavior extends Behavior {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.beforeAction' => 'beforeAction',
+			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect'
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
+	}
+
+	public function addBeforeAction(Event $event) {
+		$name = $this->_table->alias();
+		$this->_table->ControllerAction->addField('institution_site_staff.0.institution_site_id', [
+			'type' => 'hidden', 
+			'value' => 0
+		]);
+		$this->_table->fields['openemis_no']['attr']['readonly'] = true;
+		$this->_table->fields['openemis_no']['attr']['value'] = $this->_table->getUniqueOpenemisId(['model'=>'Student']);
 	}
 
 	public function beforeAction(Event $event) {

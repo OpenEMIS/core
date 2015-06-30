@@ -1,6 +1,7 @@
 <?php
 namespace CustomField\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -18,7 +19,7 @@ class DropdownBehavior extends Behavior {
         }
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (isset($data[$this->_table->alias()]['is_default']) && !empty($data[$this->_table->alias()]['custom_field_options'])) {
 			$defaultKey = $data[$this->_table->alias()]['is_default'];
 			$data[$this->_table->alias()]['custom_field_options'][$defaultKey]['is_default'] = 1;
