@@ -1,6 +1,8 @@
 <?php
 echo $this->Html->meta(array('name' => 'viewport', 'content' => 'width=320, initial-scale=1'));
 
+echo $this->Html->css('OpenEmis.../plugins/icheck/skins/minimal/grey');
+
 echo $this->Html->css('OpenEmis.../plugins/bootstrap/css/bootstrap.min');
 echo $this->Html->css('OpenEmis.../plugins/font-awesome/css/font-awesome.min');
 echo $this->Html->css('OpenEmis.../plugins/menusidebar/css/simple-sidebar');
