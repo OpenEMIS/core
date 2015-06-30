@@ -25,7 +25,7 @@ class SurveyStatusesTable extends AppTable {
 
 	public function beforeAction(Event $event) {
 		$this->ControllerAction->addField('academic_periods', [
-			'type' => 'chosen_select',
+			'type' => 'chosenSelect',
 			'fieldNameKey' => 'academic_periods',
 			'fieldName' => $this->alias() . '.academic_periods._ids',
 			'placeholder' => __('Select Academic Periods'),
