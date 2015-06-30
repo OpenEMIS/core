@@ -33,13 +33,11 @@ class StudentsTable extends BaseTable {
 				)
 			);
 
-			//$options = array('id', 'Users.first_name', 'Users.last_name', 'Users.middle_name', 'Users.third_name', 'Users.openemis_no', 'Users.date_of_birth');
-			//$Students = TableRegistry::get('Institution.InstitutionSiteStudents');
 			$list = $this->InstitutionSiteStudents
 					->find('all')
-					//->select($options)
 					->contain(['Users'])
 					->where($conditions)
+					->group('Users.id')
 					->order(['Users.first_name asc']);
 
 			$data = array();
