@@ -5,15 +5,15 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
+	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-in-view col-md-5 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable table-input">
 			<thead>
 				<tr>
 					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
-					<th><?= __('Education Subject') ?></th>
-					<th><?= __('Class') ?></th>
-					<th><?= __('Teacher') ?></th>
+					<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
+					<th><?= $this->Label->get($attr['model'] .'.class') ?></th>
+					<th><?= $this->Label->get($attr['model'] .'.teacher') ?></th>
 				</tr>
 			</thead>
 

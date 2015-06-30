@@ -243,7 +243,7 @@ class CustomFormsTable extends AppTable {
 		//Return all required options and their key
 		$query = $this->request->query;
 
-		$moduleOptions = $this->CustomModules->find('list')->toArray();
+		$moduleOptions = $this->CustomModules->find('list', ['keyField' => 'id', 'valueField' => 'description'])->toArray();
 		$selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
 
 		$applyToAllOptions = [0 => __('No'), 1 => __('Yes')];

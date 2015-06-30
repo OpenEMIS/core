@@ -242,7 +242,6 @@ ALTER TABLE `z_1458_institution_site_sections` RENAME  `institution_site_section
 ALTER TABLE `z_1458_institution_site_section_staff` RENAME  `institution_site_section_staff`;
 
 -- June 16 1020hrs
-ALTER TABLE `survey_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 ALTER TABLE `rubric_templates` CHANGE `description` `description` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 ALTER TABLE `rubric_template_options` CHANGE `color` `color` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'ffffff';
 UPDATE `workflow_models` SET `submodel` = 'Staff.StaffLeaveType' WHERE `workflow_models`.`model` = 'StaffLeave';
@@ -278,8 +277,10 @@ DROP TABLE IF EXISTS `survey_questions`;
 DROP TABLE IF EXISTS `survey_question_choices`;
 DROP TABLE IF EXISTS `survey_table_columns`;
 DROP TABLE IF EXISTS `survey_table_rows`;
-DROP TABLE IF EXISTS `survey_templates`;
-DROP TABLE IF EXISTS `survey_template_questions`;
+DROP TABLE IF EXISTS `survey_forms`;
+DROP TABLE IF EXISTS `survey_form_questions`;
+
+ALTER TABLE `survey_statuses` CHANGE `survey_form_id` `survey_template_id` INT(11) NOT NULL;
 
 RENAME TABLE z_1461_survey_modules TO survey_modules;
 RENAME TABLE z_1461_survey_questions TO survey_questions;
@@ -290,8 +291,8 @@ RENAME TABLE z_1461_survey_templates TO survey_templates;
 
 -- June 18 1730hrs
 -- Revert Institution - Custom Fields
-DROP TABLE IF EXISTS `institution_custom_field_values`;
-DROP TABLE IF EXISTS `institution_custom_table_cells`;
+DROP TABLE IF EXISTS `institution_site_custom_field_values`;
+DROP TABLE IF EXISTS `institution_site_custom_table_cells`;
 
 RENAME TABLE z_1461_institution_custom_fields TO institution_custom_fields;
 RENAME TABLE z_1461_institution_custom_field_options TO institution_custom_field_options;
@@ -312,4 +313,22 @@ update config_items set name = 'StudentContact' where name = 'StudentContacts' a
 update config_items set name = 'StudentIdentity' where name = 'StudentIdentities' and type = 'Add New Student';
 update config_items set name = 'StudentNationality' where name = 'StudentNationalities' and type = 'Add New Student';
 update config_items set name = 'StudentSpecialNeed' where name = 'StudentSpecialNeeds' and type = 'Add New Student';
-	
+
+-- 29th June 1600hrs
+-- Revert Institution - Surveys
+DROP TABLE IF EXISTS `institution_site_surveys`;
+DROP TABLE IF EXISTS `institution_site_survey_answers`;
+DROP TABLE IF EXISTS `institution_site_survey_table_cells`;
+
+RENAME TABLE z_1461_institution_site_surveys TO institution_site_surveys;
+RENAME TABLE z_1461_institution_site_survey_answers TO institution_site_survey_answers;
+RENAME TABLE z_1461_institution_site_survey_table_cells TO institution_site_survey_table_cells;
+
+
+-- 29th June 2000hrs
+-- Revert Institution - Classes
+UPDATE `institution_site_classes` LEFT JOIN `z_1458_institution_site_classes` ON `institution_site_classes`.`id` = `z_1458_institution_site_classes`.`id` 
+	SET `institution_site_classes`.`education_subject_id`=`z_1458_institution_site_classes`.`education_subject_id`
+	WHERE `institution_site_classes`.`id` = `z_1458_institution_site_classes`.`id`;
+DROP TABLE `z_1458_institution_site_classes`;
+

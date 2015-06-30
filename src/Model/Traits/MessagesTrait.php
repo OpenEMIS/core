@@ -11,15 +11,21 @@ trait MessagesTrait {
 			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
 			'add' => [
 				'success' => 'The record has been added successfully.',
-				'failed' => 'The record is not added due to errors encountered.'
+				'failed' => 'The record is not added due to errors encountered.',
+				'label' => 'Add',
 			],
 			'edit' => [
 				'success' => 'The record has been updated successfully.',
-				'failed' => 'The record is not updated due to errors encountered.'
+				'failed' => 'The record is not updated due to errors encountered.',
+				'label' => 'Edit',
 			],
 			'delete' => [
 				'success' => 'The record has been deleted successfully.',
 				'failed' => 'The record is not deleted due to errors encountered.',
+				'label' => 'Delete',
+			],
+			'view' => [
+				'label' => 'View',
 			],
 			'duplicate' => [
 				'success' => 'The record has been duplicated successfully.',
@@ -41,18 +47,34 @@ trait MessagesTrait {
 			'noEducationGrades' => 'There are no available Education Grade.',
 		],
 		'InstitutionSiteSections' => [
-			'noSections' => 'No Sections'
+			'noSections' => 'No Sections',
+			'students' => 'Students',
+			'education_programme' => 'Education Programme',
+			'education_grade' => 'Education Grade',
+			'security_user_id' => 'Home Room Teacher',
+			'section' => 'Section',
+			'single_grade_field' => 'Single Grade Sections',
+			'multi_grade_field' => 'Multi-Grades Section'
 		],
 		'InstitutionSiteClasses' => [
 			'noSections' => 'No Sections',
-			'noClasses' => 'No Classes'
+			'noClasses' => 'No Classes',
+			'classes' => 'Classes',
+			'education_subject' => 'Subject',
+			'class' => 'Class',
+			'teacher' => 'Teacher',
+			'students' => 'Students',
+			'teachers' => 'Teachers',
 		],
 		'InstitutionSiteFees' => [
 			'noProgrammeGradeFees' => 'No Programme Grade Fees',
 		],
-
 		'StudentAttendance' => [
 			'noSections' => 'No Sections'
+		],
+		'Assessments' => [
+			'noGrades' => 'No Available Grades',
+			'noGradingTypes' => 'You need to configure Grading Types first.'
 		],
 		'UserGroups' => [
 			'tabTitle' => 'User Groups'
@@ -65,6 +87,19 @@ trait MessagesTrait {
 		],
 		'SystemRoles' => [
 			'tabTitle' => 'System Roles'
+		],
+		'Users' => [
+			'openemis_no' => 'OpenEMIS ID',
+			'name' => 'Name',
+			'gender' => 'Gender',
+			'date_of_birth' => 'Date Of Birth',
+			'student_category' => 'Category',
+			'select_student' => 'Select Student',
+			'add_student' => 'Add Student',
+			'select_staff' => 'Select Staff',
+			'add_staff' => 'Add Staff',
+			'select_teacher' => 'Select Teacher',
+			'add_teacher' => 'Add Teacher'
 		],
 		
 		// Validation Messages

@@ -1,4 +1,4 @@
-<?php if (!empty($statusOptions) || !empty($moduleOptions) || !empty($templateOptions)) : ?>
+<?php if (!empty($statusOptions) || !empty($moduleOptions) || !empty($formOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -32,14 +32,14 @@
 					));
 				}
 
-				if (!empty($templateOptions)) {
-					echo $this->Form->input('survey_template', array(
+				if (!empty($formOptions)) {
+					echo $this->Form->input('survey_form', array(
 						'class' => 'form-control',
 						'label' => false,
-						'options' => $templateOptions,
-						'default' => $selectedTemplate,
+						'options' => $formOptions,
+						'default' => $selectedForm,
 						'url' => $baseUrl,
-						'data-named-key' => 'template'
+						'data-named-key' => 'form'
 					));
 				}
 			?>
