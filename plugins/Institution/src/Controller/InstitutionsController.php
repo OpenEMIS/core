@@ -41,7 +41,7 @@ class InstitutionsController extends AppController  {
 			'StudentFees' 		=> ['className' => 'Institution.StudentFees'],
 
 			// Surveys
-			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys'],
+			'Surveys' 			=> ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
 
 			// Quality
 			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
