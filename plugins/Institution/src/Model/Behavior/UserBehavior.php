@@ -33,6 +33,7 @@ class UserBehavior extends Behavior {
 			'ControllerAction.Model.add.beforeAction' => 'addBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.add.afterPatch' => 'addAfterPatch',
+			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect',
 		];
 
 		$roleEvents = [];
@@ -127,15 +128,36 @@ class UserBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$session->write($sessionVar, $this->_table->request->data);
 
+			
+
 			if (!$entity->errors()) {
+
+
+				// if this submit == create
 				$event->stopPropagation();
 				return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
+
+				// if submit == save // format it for saving// put security user id in student or staff
+				// $data[$this->_table->alias()][$this->_table->primaryKey()] = 321;
+
+				// $data[$this->_table->alias()][$this->_table->primaryKey()] = 321;
+				// $data[$this->_table->alias()][$this->associatedModel->table()][]
+
 			}
 		}
 		
 		return compact('entity', 'data', 'options');
 	}
 
+	public function addAfterSaveRedirect($event, $action) {
+		if (array_key_exists('new', $action)) {
+			// clear out the session 
+			// $sessionVar = $this->_table->alias().'.add';
+
+			unset($action['new']);
+		}
+		return $action;
+	}
 
 	public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, $request) {
 		$session = $this->_table->request->session();
