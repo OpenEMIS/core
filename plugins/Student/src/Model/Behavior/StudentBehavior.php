@@ -32,7 +32,6 @@ class StudentBehavior extends Behavior {
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',
 			'ControllerAction.Model.add.beforePatch' => 'addBeforePatch',
 			'ControllerAction.Model.addEdit.beforePatch' => 'addEditBeforePatch',
-			'ControllerAction.Model.add.afterSaveRedirect' => 'addAfterSaveRedirect'
 		];
 		$events = array_merge($events,$newEvent);
 		return $events;
@@ -142,16 +141,5 @@ class StudentBehavior extends Behavior {
 				}
 			}
 		}
-	}
-
-	public function addAfterSaveRedirect($action) {
-		$action = [];
-		if (array_key_exists('new', $this->_table->request->query)) {
-			if ($this->_table->Session->check('InstitutionSiteStudents.add.'.$this->_table->request->query['new'])) {
-				$action = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
-			}
-		}
-
-		return $action;
 	}
 }
