@@ -19,14 +19,14 @@ class AccessControlComponent extends Component {
 		$this->action = $this->request->params['action'];
 		$this->Session = $this->request->session();
 
-		$this->Session->delete('Permissions');
+		// $this->Session->delete('Permissions');
 		if (!is_null($this->Auth->user()) && !$this->Session->check('Permissions')) {
 			$this->buildPermissions();
 		} else {
 			// TODO-jeff
 			// check last updated and rebuild permissions;
 		}
-		// pr($this->Session->read('Permissions'));
+		// pr($this->Session->read('Permissions'));die;
 	}
 
 	public function buildPermissions() {

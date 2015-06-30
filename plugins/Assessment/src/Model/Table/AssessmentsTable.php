@@ -84,8 +84,6 @@ class AssessmentsTable extends AppTable {
 
 		$attr['options'] = $gradeOptions;
 
-		// pr($gradeOptions);
-
 		return $attr;
 	}
 
@@ -96,21 +94,18 @@ class AssessmentsTable extends AppTable {
 
 			if ($action == 'add') {
 				if ($request->is('get')) {
-					// pr($this->fields['education_grade_id']);
 					$educationGradeId = key($this->fields['education_grade_id']['options']);
-					// $EducationSubjects = TableRegistry::get('Education')
-					$result = $this->EducationGrades->find()->contain(['EducationSubjects'])->all();
-					foreach ($result as $obj) {
-						// pr($obj);
-					}
+					
+					$result = $this->EducationGrades
+						->findById($educationGradeId)
+						->contain(['EducationSubjects'])
+						->first();
+
+					$attr['data'] = $result->education_subjects;
 				} else {
 
 				}
 			}
-
-			// if () {
-
-			// }
 		} else {
 			$attr['visible'] = false;
 		}

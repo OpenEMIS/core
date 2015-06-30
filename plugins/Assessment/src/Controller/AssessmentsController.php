@@ -28,11 +28,6 @@ class AssessmentsController extends AppController
 
     	$header = __('Assessment');
     	$controller = $this;
-  //   	$this->ControllerAction->onInitialize = function($model) use ($controller, $header) {
-  //   		$header .= ' - ' . Inflector::humanize(Inflector::underscore($model->alias));
-
-		// 	$controller->set('contentHeader', $header);
-		// };
 
 		$this->set('contentHeader', $header);
 

@@ -16,16 +16,18 @@
 				</tr>
 			</thead>
 
-			<?php if (isset($attr['data'])) : ?>
-
 			<tbody>
-				
+			<?php foreach ($attr['data'] as $i => $obj) : ?>
+				<tr>
+					<td class="checkbox-column">
+						<input type="checkbox" class="icheck-input" name="<?= sprintf('InstitutionSiteProgrammes[institution_site_grades][%d][education_subject_id]', $i) ?>" value="<?= $obj->id ?>" />
+						<!-- <input type="hidden" name="<?php echo sprintf('InstitutionSiteProgrammes[institution_site_grades][%d][id]', $i) ?>" value="<?php echo $institutionSiteGradeId?>" /> -->
+					</td>
+					<td><?= $obj->code ?></td>
+					<td><?= $obj->name ?></td>
+				</tr>
+			<?php endforeach ?>
 			</tbody>
-			
-			<?php else : ?>
-				<tr>&nbsp;</tr>
-			<?php endif; ?>
-
 		</table>
 	</div>
 </div>
