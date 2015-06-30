@@ -712,18 +712,10 @@ class ControllerActionComponent extends Component {
 		// Event: addEditAfterAction
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.afterAction', null, ['entity' => $data]);
 		if ($event->isStopped()) { return $event->result; }
-		if (is_object($event->result)) {
-			$data = $event->result;
-		}
-		// End Event
 		// Event: addAfterAction
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterAction', null, ['entity' => $data]);
 		if ($event->isStopped()) { return $event->result; }
-		if (is_object($event->result)) {
-			$data = $event->result;
-		}
 
-		// End Event
 		$this->controller->set('data', $data);
 	}
 
