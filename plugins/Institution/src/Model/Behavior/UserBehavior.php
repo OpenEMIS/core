@@ -151,9 +151,9 @@ class UserBehavior extends Behavior {
 
 	public function addAfterSaveRedirect($event, $action) {
 		if (array_key_exists('new', $action)) {
-			// clear out the session 
-			// $sessionVar = $this->_table->alias().'.add';
-
+			$session = $this->_table->request->session();
+			$sessionVar = $this->_table->alias().'.add';
+			$session->delete($sessionVar);
 			unset($action['new']);
 		}
 		return $action;
