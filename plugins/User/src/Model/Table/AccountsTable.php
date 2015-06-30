@@ -88,10 +88,6 @@ class AccountsTable extends AppTable {
 		return compact('query', 'contain');
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		return compact('entity', 'data', 'options');
-	}
-
 	// public function editAfterSaveRedirect($action) {
 	// 	$id = '';
 	// 	if (array_key_exists('pass', $this->request->params)) {

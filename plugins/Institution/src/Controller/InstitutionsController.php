@@ -31,7 +31,7 @@ class InstitutionsController extends AppController  {
 
 			'AssessmentResults' => ['className' => 'Institution.AssessmentResults'],
 
-			'Students' 			=> ['className' => 'Institution.InstitutionSiteStudents'],
+			'Students' 			=> ['className' => 'Institution.Students'],
 			'StudentAbsences' 	=> ['className' => 'Institution.InstitutionSiteStudentAbsences'],
 			'StudentAttendance' => ['className' => 'Institution.StudentAttendance', 'actions' => ['index']],
 			'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
@@ -50,12 +50,14 @@ class InstitutionsController extends AppController  {
 			// 'Fees' => ['className' => 'Institution.InstitutionSiteFees'],
 
 		];
+
 		$this->loadComponent('Paginator');
 		
 	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
+
 		$this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
 		$session = $this->request->session();
 		$action = $this->request->params['action'];

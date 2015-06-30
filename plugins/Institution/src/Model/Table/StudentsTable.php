@@ -1,22 +1,26 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\AppTable;
+use User\Model\Table\UsersTable as BaseTable;
 use Cake\Validation\Validator;
 
-class StudentsTable extends AppTable {
+class StudentsTable extends BaseTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->entityClass('User.User');
+		$this->addBehavior('Student.Student');
+		$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-		$this->belongsTo('StudentStatuses', ['className' => 'FieldOption.StudentStatuses']);
-		// $this->belongsTo('InstitutionSiteProgramme', ['className' => 'Institution.InstitutionSiteProgrammes', 'foreignKey' => false, 'conditions' => [
-		// 			'InstitutionSiteProgramme.institution_site_id = InstitutionSiteStudent.institution_site_id',
-		// 			'InstitutionSiteProgramme.education_programme_id = InstitutionSiteStudent.education_programme_id'
-		// 				]
-		// 		]
-		// 	);
-		// $this->belongsTo('EducationProgrammes', ['className' => 'Institution.EducationProgrammes']);
-		// $this->belongsTo('InstitutionSites', ['className' => 'Institution.InstitutionSites']);
+		// $session = $this->request->session();
+		// if ($session->check('Institutions.id')) {
+		// 	pr('yay');
+		// }
+		// $currentInstitution 
+
+		$this->addBehavior('Institution.User', ['associatedModel' => $this->InstitutionSiteStudents]);
+
+		// needs a new behavior called userInstitution or something...
+		// join to 
 	}
+
 }

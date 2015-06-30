@@ -132,15 +132,16 @@ class UsersTable extends AppTable {
 		// 	$institutionId = $this->Session->read('Institutions.id');
 		// } else {
 		// 	// todo-mlee need to put correct alert saying need to select institution first
-		$name = $this->controller->name;
-		if (in_array($name, ['Students', 'Staff'])) {
-			$this->ControllerAction->addField('institution_site_'.strtolower($name).'.0.institution_site_id', [
-				'type' => 'hidden', 
-				'value' => 0
-			]);
-			$this->fields['openemis_no']['attr']['readonly'] = true;
-			$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($name)]);
-		}
+
+		// $name = $this->controller->name;
+		// if (in_array($name, ['Students', 'Staff'])) {
+		// 	$this->ControllerAction->addField('institution_site_'.strtolower($name).'.0.institution_site_id', [
+		// 		'type' => 'hidden', 
+		// 		'value' => 0
+		// 	]);
+		// 	$this->fields['openemis_no']['attr']['readonly'] = true;
+		// 	$this->fields['openemis_no']['attr']['value'] = $this->getUniqueOpenemisId(['model'=>Inflector::singularize($name)]);
+		// }
 
 
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'address', 'postal_code', 'gender_id', 'date_of_birth',
@@ -149,34 +150,12 @@ class UsersTable extends AppTable {
 		]);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) { 
-		$Countries = TableRegistry::get('FieldOption.Countries');
-		$defaultCountry = $Countries->getDefaultEntity();
-		
-		$this->fields['nationality']['default'] = $defaultCountry->id;
-
-		$defaultIdentityType = $defaultCountry->identity_type_id;
-		if (is_null($defaultIdentityType)) {
-			$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentityType = $IdentityTypes->getDefaultValue();
-		}
-		$this->fields['identity_type']['default'] = $defaultIdentityType;
-
-		return $entity;
-	}
-
 	public function addEditBeforeAction(){
 		$this->fields['photo_content']['type'] = 'image';
 		$this->fields['super_admin']['type'] = 'hidden';
 		$this->fields['super_admin']['value'] = 0;
 		$this->fields['gender_id']['type'] = 'select';
 		$this->fields['gender_id']['options'] = $this->Genders->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();//
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, array $data, array $options) {
-		$options['associated'] = ['InstitutionSiteStudents', 'InstitutionSiteStaff', 'Identities', 'user_Nationalities', 'SpecialNeeds', 'Contacts'];
-		// $options['validate'] = 'mandatory';
-		return compact('entity', 'data', 'options');
 	}
 
 	public function getUniqueOpenemisId($options = []) {
@@ -191,9 +170,9 @@ class UsersTable extends AppTable {
 					break;
 			}
 		}
-		
+
 		$latest = $this->find()
-			->order('Users.id DESC')
+			->order($this->aliasField('id').' DESC')
 			->first();
 
 		$latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
