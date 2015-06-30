@@ -75,7 +75,7 @@ INSERT INTO `labels` (`module`, `field`, `code`, `en`) VALUES
 ('Users', 'date_of_birth', NULL, 'Date'),
 ('Users', 'date_of_death', NULL, 'Date'),
 ('Users', 'status', NULL, 'Status'),
-('Users', 'photo_content', NULL, 'Profile Image'),
+('Users', 'photo_content', NULL, 'Photo ID'),
 -- Contacts
 ('Contacts', 'contact_type_id', NULL, 'Description'),
 ('Contacts', 'contact_option_id', NULL, 'Type'),
