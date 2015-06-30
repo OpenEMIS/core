@@ -64,7 +64,7 @@ class CustomFormsTable extends AppTable {
 		]);
 
 		$this->ControllerAction->addField('custom_fields', [
-			'type' => 'chosen_select',
+			'type' => 'chosenSelect',
 			'fieldNameKey' => 'custom_fields',
 			'fieldName' => $this->alias() . '.custom_fields._ids',
 			'placeholder' => __('Select Fields'),
@@ -162,7 +162,7 @@ class CustomFormsTable extends AppTable {
 			$fieldOptions = $fieldOptionTable->getList()->toArray();
 
 			$this->ControllerAction->addField($labelText, [
-				'type' => 'chosen_select',
+				'type' => 'chosenSelect',
 				'fieldNameKey' => 'field_option_values',
 				'fieldName' => $this->alias() . '.field_option_values._ids',
 				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),
