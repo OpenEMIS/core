@@ -37,6 +37,10 @@ class HtmlFieldHelper extends Helper {
 		]
 	];
 
+	public function renderElement($element, $attr) {
+		return $this->_View->element($element, $attr);
+	}
+
 	public function dispatchEvent($subject, $eventKey, $method=null, $params=[]) {
 		$eventMap = $subject->implementedEvents();
 		$event = new Event($eventKey, $this, $params);

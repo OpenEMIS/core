@@ -82,10 +82,6 @@ class ControllerActionHelper extends Helper {
 		echo '</div>';
 	}
 
-	public function renderElement($element, $attr) {
-		return $this->_View->element($element, $attr);
-	}
-
 	public function highlight($needle, $haystack){
 		// to cater for photos returning resource
 		if (is_resource($haystack)) { return $haystack; }
