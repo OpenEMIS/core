@@ -9,6 +9,6 @@ class InstitutionSurveyTableCellsTable extends AppTable {
 
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
-		$this->belongsTo('CustomRecords', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'institution_survey_id']);
+		$this->belongsTo('CustomRecords', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'institution_site_survey_id']);
 	}
 }
