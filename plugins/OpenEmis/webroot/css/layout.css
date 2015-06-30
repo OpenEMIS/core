@@ -1579,9 +1579,9 @@ table tr.sorting-row td {background-color: #8b8;}
 	display: inline-block;
 	background: none !important;
 	border: 0 !important;
-	margin: 0 10px;
+	margin: 0 !important;
 	padding: 2px 10px !important;
-	min-width: 85px;
+	max-width: 65%;
 	margin-bottom: 0 !important;
 }
 
@@ -1604,10 +1604,6 @@ table tr.sorting-row td {background-color: #8b8;}
 
 .input-checkbox-inline .input {
 	display: inline;
-}
-
-.input-checkbox .input {
-	margin-bottom: 30px;
 }
 
 .form-horizontal .checkbox, 
@@ -2656,7 +2652,7 @@ footer {
 	.input-checkbox-inline,
 	.input-checkbox,
 	.table-in-view {
-		width: 60%;
+		width: 100%;
 	}
 }
 

@@ -33,8 +33,8 @@ var Checkable = {
 	initICheck: function() {
 		if ($.fn.iCheck) {
 			$('.icheck-input').iCheck({
-				checkboxClass: 'icheckbox_minimal-blue',
-				radioClass: 'iradio_minimal-blue',
+				checkboxClass: 'icheckbox_minimal-grey',
+				radioClass: 'iradio_minimal-grey',
 				inheritClass: true
 			}).on ('ifChanged', function (e) {
 				$(e.currentTarget).trigger ('change');
