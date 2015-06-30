@@ -49,7 +49,7 @@ class HtmlFieldHelper extends Helper {
 		return $subject->eventManager()->dispatch($event);
 	}
 	
-	public function render($type, $action, Entity $data, array $attr, array $options) {
+	public function render($type, $action, Entity $data, array $attr, array $options = []) {
 		$html = '';
 
 		if (is_null($this->table)) {
