@@ -221,21 +221,8 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 
-			// trigger event for custom field types
-			$method = 'onGet' . Inflector::camelize($type) . 'Element';
-			$eventKey = 'ControllerAction.Model.' . $method;
-			$event = $this->dispatchEvent($table, $eventKey, $method, ['action' => 'index', 'entity' => $obj, 'attr' => $attr, 'form' => $this->Form]);
-			
-			if (!empty($event->result)) {
-				$value = $event->result;
-			} else {
-				if (!$associatedFound) {
-					// mapped to a current function in this class
-					$function = 'get' . Inflector::camelize($type) . 'Element';
-					if (method_exists($this, $function)) {
-						$value = $this->$function('index', $obj, $attr);
-					}
-				}
+			if (!$associatedFound) {
+				$value = $this->HtmlField->render($type, 'index', $obj, $attr);
 			}
 
 			if (isset($attr['tableRowClass'])) {
