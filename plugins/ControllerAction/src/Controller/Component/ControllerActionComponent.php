@@ -124,47 +124,7 @@ class ControllerActionComponent extends Component {
 		if (!is_null($this->model) && !empty($this->model->fields)) {
 			$action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
-			foreach ($this->model->fields as $key => $attr) {
-				if (array_key_exists('options', $attr) && in_array($attr['type'], ['string', 'integer'])) {
-					$this->model->fields[$key]['type'] = 'select';
-				}
-				// make field sortable by default if it is a string data-type
-				if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
-					$this->model->fields[$key]['sort'] = true;
-				} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
-					if ($this->isForeignKey($key)) {
-						// $associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
-						// $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
-						$associatedObject = $this->getAssociatedBelongsToModel($key);
-						
-						$query = $associatedObject->find('list');
-						$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
-						$event = $associatedObject->eventManager()->dispatch($event);
-						if ($event->isStopped()) { return $event->result; }
-						if (!empty($event->result)) {
-							$query = $event->result;
-						}
-
-						if (is_object($query)) {
-							$this->model->fields[$key]['options'] = $query->toArray();
-						} else {
-							$this->model->fields[$key]['options'] = $query;
-						}
-					}
-				}
-				if (array_key_exists('onChangeReload', $attr)) {
-					if (!array_key_exists('attr', $attr)) {
-						$this->model->fields[$key]['attr'] = [];
-					}
-					$onChange = '';
-					if (is_bool($attr['onChangeReload']) && $attr['onChangeReload'] == true) {
-						$onChange = "$('#reload').click()";
-					} else {
-						$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click()";
-					}
-					$this->model->fields[$key]['attr']['onchange'] = $onChange;
-				}
-			}
+			$this->renderFields();
 
 			$event = new Event('ControllerAction.Model.afterAction', $this);
 			$event = $this->model->eventManager()->dispatch($event);
@@ -179,6 +139,53 @@ class ControllerActionComponent extends Component {
 			$controller->set('_triggerFrom', $this->triggerFrom);
 			if ($this->triggerFrom == 'Model') {
 				$controller->set('_alias', $this->model->alias);
+			}
+		}
+	}
+
+	public function renderFields() {
+		foreach ($this->model->fields as $key => $attr) {
+			if ($key == $this->orderField) {
+				$this->model->fields[$this->orderField]['visible']['view'] = false;
+			}
+			if (array_key_exists('options', $attr) && in_array($attr['type'], ['string', 'integer'])) {
+				$this->model->fields[$key]['type'] = 'select';
+			}
+			// make field sortable by default if it is a string data-type
+			if ($attr['type'] == 'string' && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
+				$this->model->fields[$key]['sort'] = true;
+			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
+				if ($this->isForeignKey($key)) {
+					// $associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
+					// $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
+					$associatedObject = $this->getAssociatedBelongsToModel($key);
+					
+					$query = $associatedObject->find('list');
+					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, compact('query'));
+					$event = $associatedObject->eventManager()->dispatch($event);
+					if ($event->isStopped()) { return $event->result; }
+					if (!empty($event->result)) {
+						$query = $event->result;
+					}
+
+					if (is_object($query)) {
+						$this->model->fields[$key]['options'] = $query->toArray();
+					} else {
+						$this->model->fields[$key]['options'] = $query;
+					}
+				}
+			}
+			if (array_key_exists('onChangeReload', $attr)) {
+				if (!array_key_exists('attr', $attr)) {
+					$this->model->fields[$key]['attr'] = [];
+				}
+				$onChange = '';
+				if (is_bool($attr['onChangeReload']) && $attr['onChangeReload'] == true) {
+					$onChange = "$('#reload').click()";
+				} else {
+					$onChange = "$('#reload').val('" . $attr['onChangeReload'] . "').click()";
+				}
+				$this->model->fields[$key]['attr']['onchange'] = $onChange;
 			}
 		}
 	}

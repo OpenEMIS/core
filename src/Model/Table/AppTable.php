@@ -48,6 +48,10 @@ class AppTable extends Table {
 			]);
 		}
 
+		if (in_array('visible', $columns)) {
+			$this->addBehavior('Visible');
+		}
+
 		$dateFields = [];
 		$timeFields = [];
 		foreach ($columns as $column) {

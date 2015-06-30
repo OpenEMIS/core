@@ -1218,3 +1218,7 @@ CREATE TABLE `z_1458_institution_site_classes` LIKE `institution_site_classes`;
 INSERT INTO `z_1458_institution_site_classes` SELECT * FROM `institution_site_classes` WHERE `institution_site_classes`.`education_subject_id` IS NULL;
 UPDATE `institution_site_classes` SET `education_subject_id`=1 WHERE `institution_site_classes`.`education_subject_id` IS NULL;
 
+-- 29th June 2015
+ALTER TABLE `assessments` DROP `institution_site_id` ;
+ALTER TABLE `assessments` DROP `academic_period_id` ;
+
