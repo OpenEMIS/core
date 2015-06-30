@@ -2,6 +2,8 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
@@ -74,6 +76,14 @@ class InstitutionSiteShiftsTable extends AppTable {
 
 	}
 
+    public function viewAfterAction(Event $event, Entity $entity) {
+    	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
+    	if (!empty($entity->modified_user_id)) {
+	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
+	    }
+		return $entity;
+    }
+
 
 /******************************************************************************************************************
 **
@@ -99,25 +109,6 @@ class InstitutionSiteShiftsTable extends AppTable {
 	}
 
 	public function addEditBeforePatch($event, $entity, $data, $options) {
-		// // pr('addEditBeforePatch');
-		// pr($data);
-
-		// try {
-		// 	$startTime = new DateTime($data['InstitutionSiteShifts']['start_time']);
-		// 	pr($startTime);
-		// } catch (Exception $e) {
-		//     die('Please input a proper start time');
-		// }
-
-		// try {
-		// 	$endTime = new DateTime($data['InstitutionSiteShifts']['end_time']);
-		// 	pr($endTime);
-		// } catch (Exception $e) {
-		//     die('Please input a proper end time');
-		// }
-
-
-		// pr($startTime == $endTime);die;
 		return compact('entity', 'data', 'options');
 	}
 
