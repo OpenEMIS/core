@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 

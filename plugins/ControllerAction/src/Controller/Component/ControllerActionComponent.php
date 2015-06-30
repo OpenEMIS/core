@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 namespace ControllerAction\Controller\Component;
 
+use ArrayObject;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
@@ -636,32 +637,30 @@ class ControllerActionComponent extends Component {
 			}
 		} else if ($request->is(['post', 'put'])) {
 			$submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
-			$patchOptions = [];
-			$params = ['entity' => $data, 'data' => $request->data, 'options' => $patchOptions];
+			$patchOptions = new ArrayObject([]);
+			$requestData = new ArrayObject($request->data);
+
+			$params = ['entity' => $data, 'data' => $requestData, 'options' => $patchOptions];
 
 			if ($submit == 'save') {
 				// Event: addEditBeforePatch
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
-				if (!empty($event->result)) {
-					$params = array_merge($params, $event->result);
-				}
 				// End Event
 				
 				// Event: addBeforePatch
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.beforePatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
-				if (!empty($event->result)) {
-					$params = array_merge($params, $event->result);
-				}
-				
 				// End Event
-				list($data, $this->request->data, $patchOptions) = array_values($params);
-				$data = $model->patchEntity($data, $request->data, $patchOptions);
+
+				$patchOptionsArray = $patchOptions->getArrayCopy();
+				$request->data = $requestData->getArrayCopy();
+				$data = $model->patchEntity($data, $request->data, $patchOptionsArray);
 
 				$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterPatch', null, $params);
 				if ($event->isStopped()) { return $event->result; }
 				if (!empty($event->result)) {
+					// mlee: might not be used.. because now array objects
 					$params = array_merge($params, $event->result);
 				}
 
@@ -707,7 +706,12 @@ class ControllerActionComponent extends Component {
 				// End Event
 				
 				list($data, $this->request->data, $patchOptions) = array_values($params);
-				$data = $model->patchEntity($data, $request->data, $patchOptions);
+
+
+				$patchOptionsArray = $patchOptions->getArrayCopy();
+				$request->data = $requestData->getArrayCopy();
+				$data = $model->patchEntity($data, $request->data, $patchOptionsArray);
+				
 			}
 		}
 
@@ -718,19 +722,20 @@ class ControllerActionComponent extends Component {
 			$data = $event->result;
 		}
 		// End Event
-
 		// Event: addAfterAction
 		$event = $this->dispatchEvent($model, 'ControllerAction.Model.add.afterAction', null, ['entity' => $data]);
 		if ($event->isStopped()) { return $event->result; }
 		if (is_object($event->result)) {
 			$data = $event->result;
 		}
+
 		// End Event
 		$this->controller->set('data', $data);
 	}
 
 	public function edit($id=0) {
 		$model = $this->model;
+		$request = $this->request;
 		$primaryKey = $model->primaryKey();
 		$idKey = $model->aliasField($primaryKey);
 		$contain = [];
@@ -771,22 +776,20 @@ class ControllerActionComponent extends Component {
 				}
 			} else if ($this->request->is(['post', 'put'])) {
 				$submit = isset($this->request->data['submit']) ? $this->request->data['submit'] : 'save';
-				$patchOptions = [];
+				$patchOptions = new ArrayObject([]);
+				$requestData = new ArrayObject($request->data);
 
 				if ($submit == 'save') {
-					$event = new Event('ControllerAction.Model.addEdit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					$event = new Event('ControllerAction.Model.addEdit.beforePatch', $this, ['entity' => $data, 'data' => $requestData, 'options' => $patchOptions]);
 					$event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
-					if (!empty($event->result)) {
-						list($data, $this->request->data, $patchOptions) = array_values($event->result);
-					}
-					$event = new Event('ControllerAction.Model.edit.beforePatch', $this, ['entity' => $data, 'data' => $this->request->data, 'options' => $patchOptions]);
+					$event = new Event('ControllerAction.Model.edit.beforePatch', $this, ['entity' => $data, 'data' => $requestData, 'options' => $patchOptions]);
 					$event = $model->eventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
-					if (!empty($event->result)) {
-						list($data, $this->request->data, $patchOptions) = array_values($event->result);
-					}
-					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
+
+					$patchOptionsArray = $patchOptions->getArrayCopy();
+					$request->data = $requestData->getArrayCopy();
+					$data = $model->patchEntity($data, $request->data, $patchOptionsArray);
 					if ($model->save($data)) {
 						// event: onSaveSuccess
 						$this->Alert->success('general.edit.success');
@@ -831,7 +834,10 @@ class ControllerActionComponent extends Component {
 					if (!empty($event->result)) {
 						list($data, $this->request->data, $patchOptions) = array_values($event->result);
 					}
-					$data = $model->patchEntity($data, $this->request->data, $patchOptions);
+
+					$patchOptionsArray = $patchOptions->getArrayCopy();
+					$request->data = $requestData->getArrayCopy();
+					$data = $model->patchEntity($data, $request->data, $patchOptionsArray);
 				}
 			}
 			$event = new Event('ControllerAction.Model.addEdit.afterAction', $this, ['entity' => $data]);

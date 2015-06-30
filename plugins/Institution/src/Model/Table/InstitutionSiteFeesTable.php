@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
