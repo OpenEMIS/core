@@ -20,7 +20,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 
 		$this->hasMany('InstitutionSiteGrades',	['className' => 'Institution.InstitutionSiteGrades']);
 
-
 		/**
 		 * Short cuts to initialised models set in relations.
 		 * By using initialised models set in relations, the relation's className is set at a single place.
@@ -102,6 +101,14 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		return compact('query', 'contain');
 	}
 
+    public function viewAfterAction(Event $event, Entity $entity) {
+    	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
+    	if (!empty($entity->modified_user_id)) {
+	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
+	    }
+		return $entity;
+    }
+
 
 /******************************************************************************************************************
 **
@@ -136,7 +143,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		return compact('entity', 'data', 'options');
 	}
 
-	
 
 /******************************************************************************************************************
 **
@@ -188,14 +194,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		}
 	}
 
-	// public function editBeforePatch($event, $entity, $data, $options) {
-	// 	// $this->InstitutionSiteGrades->updateAll(['status' => 0], ['institution_site_programme_id' => $entity->id]);
-	// 	list($entity, $data, $options) = array_values($this->addBeforePatch($event, $entity, $data, $options));
-	// 	return compact('entity', 'data', 'options');
-	// }
-
-
-
 
 /******************************************************************************************************************
 **
@@ -203,31 +201,11 @@ class InstitutionSiteProgrammesTable extends AppTable {
 **
 ******************************************************************************************************************/
 	public function addAfterAction($event, $entity) {
-		// $recorded = [];
-		// $selected = [];
-		// if (count($entity->institution_site_grades)>0) {
-		// 	foreach ($entity->institution_site_grades as $key=>$value) {
-		// 		$recorded[$value->education_grade_id] = $value->id;
-		// 		if ($value->status==1) {
-		// 			$selected[$value->education_grade_id] = true;
-		// 		}
-		// 	}
-		// }
-		// $this->fields['education_grade']['recorded'] = $recorded;
-		// $this->fields['education_grade']['selected'] = $selected;
-
-		// if (count($this->request->data)>0 && $this->request->data['submit']=='reload') {
-
-		// } else {
-
-		// }
-
 		/**
 		 * @todo - To be done in a dynamic way so that the format is consistent throughout the whole system.
 		 */
 		$this->fields['start_date']['value'] = date('d-m-Y');
 	}
-
 
 
 /******************************************************************************************************************
@@ -280,10 +258,6 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		}
 		return $attr;
 	}
-
-	// public function onGetSecurityUserId(Event $event, Entity $entity) {
-	// 	return $entity->user->name_with_id;
-	// }
 
 
 /******************************************************************************************************************
@@ -358,6 +332,8 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		}
 		if (is_object($startDateObject)) {
 			$startDate = $startDateObject->toDateString();
+		} else {
+			$startDate = $startDateObject;
 		}
 
 		$endDateObject = null;
@@ -366,6 +342,8 @@ class InstitutionSiteProgrammesTable extends AppTable {
 		}
 		if (is_object($endDateObject)) {
 			$endDate = $endDateObject->toDateString();
+		} else {
+			$endDate = $endDateObject;
 		}
 
 		$conditions = array_merge(array('end_date IS NULL'), $conditions);
