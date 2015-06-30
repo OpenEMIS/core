@@ -1,6 +1,7 @@
 <?php
 namespace ControllerAction\View\Helper;
 
+use Cake\View\UrlHelper;
 use Cake\Event\Event;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
@@ -10,7 +11,7 @@ use Cake\Utility\Inflector;
 class HtmlFieldHelper extends Helper {
 	public $table = null;
 
-	public $helpers = ['Html', 'Form'];
+	public $helpers = ['Html', 'Form', 'Url'];
 
 	public $includes = [
 		'datepicker' => [
@@ -549,6 +550,32 @@ class HtmlFieldHelper extends Helper {
 				$fieldName = $attr['fieldName'];
 			}
 			$value = $this->Form->input($fieldName, $options);
+		}
+		return $value;
+	}
+
+	public function autocomplete($action, Entity $data, $attr, &$options=[]){
+		$value = '';
+		if ($action == 'index' || $action == 'view') {
+			$value = $data->$attr['field'];
+		} else if ($action == 'edit') {
+			$options['type'] = 'string';
+			$options['class'] = "form-control autocomplete form-error ui-autocomplete-input";
+			if (array_key_exists('length', $attr)) {
+				$options['maxlength'] = $attr['length'];
+			}
+			if (array_key_exists('placeholder', $attr)) {
+				$options['placeholder'] = $attr['placeholder'];
+			}
+			if (array_key_exists('url', $attr)) {
+				$options['url'] = $this->Url->build($attr['url'], true);
+			}
+			$fieldName = $attr['model'] . '.' . $attr['field'];
+			if (array_key_exists('fieldName', $attr)) {
+				$fieldName = $attr['fieldName'];
+			}
+
+			$value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
 		}
 		return $value;
 	}
