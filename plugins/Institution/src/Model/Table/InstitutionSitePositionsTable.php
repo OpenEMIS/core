@@ -3,6 +3,8 @@ namespace Institution\Model\Table;
 
 use DateTime;
 use DateInterval;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -25,6 +27,8 @@ class InstitutionSitePositionsTable extends AppTable {
 	}
 
 	public function beforeAction($event) {
+		$this->ControllerAction->field('position_no', ['visible' => true]);
+		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('position_no', ['visible' => true]);
 		$this->ControllerAction->field('staff_position_title_id', [
 			'visible' => true,
@@ -106,18 +110,17 @@ class InstitutionSitePositionsTable extends AppTable {
 
 	}
 
+
 /******************************************************************************************************************
 **
 ** view action methods
 **
 ******************************************************************************************************************/
-	public function viewBeforeQuery($event) {
-		// pr('viewBeforeQuery');
-		// pr($this->id);
-		// pr($event->action);
-		// pr($this->controller->request->params);
-		// return true;
-	}
+	// public function viewBeforeQuery(Event $event, Query $query, array $contain) {
+		// pr($contain);
+		// $contain = array_merge($contain, ['BankBranches'=>['Banks']]);
+	// 	return compact('query', 'contain');
+	// }
 
 	public function viewBeforeAction($event) {
 
@@ -168,6 +171,20 @@ class InstitutionSitePositionsTable extends AppTable {
 		return true;
 	}
 
+    public function viewAfterAction(Event $event, Entity $entity) {
+    	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
+    	if (!empty($entity->modified_user_id)) {
+	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
+	    }
+		return $entity;
+    }
+
+
+/******************************************************************************************************************
+**
+** view action methods
+**
+******************************************************************************************************************/
 	public function addBeforeAction($event) {
 	}
 

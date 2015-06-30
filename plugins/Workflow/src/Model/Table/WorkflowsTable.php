@@ -103,7 +103,7 @@ class WorkflowsTable extends AppTable {
 			$submodelOptions = $submodelTable->getList()->toArray();
 
 			$this->ControllerAction->addField($labelText, [
-				'type' => 'chosen_select',
+				'type' => 'chosenSelect',
 				'fieldNameKey' => 'field_option_values',
 				'fieldName' => $this->alias() . '.field_option_values._ids',
 				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),
@@ -168,7 +168,7 @@ class WorkflowsTable extends AppTable {
 			$submodelOptions = $submodelTable->getList()->toArray();
 
 			$this->ControllerAction->addField($labelText, [
-				'type' => 'chosen_select',
+				'type' => 'chosenSelect',
 				'fieldNameKey' => 'field_option_values',
 				'fieldName' => $this->alias() . '.field_option_values._ids',
 				'placeholder' => __('Select ') . __(Inflector::humanize($labelText)),

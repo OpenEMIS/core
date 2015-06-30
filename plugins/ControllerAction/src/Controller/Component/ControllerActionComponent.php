@@ -693,32 +693,20 @@ class ControllerActionComponent extends Component {
 				// Event: addEditOnReload
 				$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 				$method = 'addEdit' . ucfirst($methodKey);
-
 				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
-				if (!empty($event->result)) {
-					$params = array_merge($params, $event->result);
-				}
 				// End Event
 
 				// Event: addOnReload
 				$eventKey = 'ControllerAction.Model.add.' . $methodKey;
 				$method = 'add' . ucfirst($methodKey);
-
 				$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 				if ($event->isStopped()) { return $event->result; }
-				if (!empty($event->result)) {
-					$params = array_merge($params, $event->result);
-				}
 				// End Event
 				
-				list($data, $this->request->data, $patchOptions) = array_values($params);
-
-
 				$patchOptionsArray = $patchOptions->getArrayCopy();
 				$request->data = $requestData->getArrayCopy();
 				$data = $model->patchEntity($data, $request->data, $patchOptionsArray);
-				
 			}
 		}
 
