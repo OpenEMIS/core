@@ -89,7 +89,7 @@ class UserBehavior extends Behavior {
 
 				$this->_table->ControllerAction->setFieldOrder([
 						'academic_period', 'education_programme_id', 'education_grade', 'section', 'student_status_id', 'start_date', 'end_date'
-					// , 'search'
+					, 'search'
 					]);	
 			}
 
@@ -99,15 +99,16 @@ class UserBehavior extends Behavior {
 				$this->_table->ControllerAction->field('FTE', ['fieldName' => $associationString.'FTE']);
 				$this->_table->ControllerAction->field('staff_type_id', ['fieldName' => $associationString.'staff_type_id']);
 				$this->_table->ControllerAction->field('start_date', ['type' => 'Date', 'fieldName' => $associationString.'start_date']);
+				$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
+															     'placeholder' => 'openEMIS ID or Name',
+															     'url' => '/Institutions/Staff/autoCompleteUserList',
+															     'length' => 3 ]);
 				$this->_table->ControllerAction->setFieldOrder([
 					'institution_site_position_id', 'start_date', 'FTE', 'staff_type_id'
-					// , 'search'
+					, 'search'
 					]);
 
 			}
-
-
-			
 		}
 	}
 
@@ -131,20 +132,26 @@ class UserBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$session->write($sessionVar, $this->_table->request->data);
 
-			
+			$currSearch = null;
+			if (array_key_exists('search', $data[$this->_table->alias()])) {
+				$currSearch = $data[$this->_table->alias()]['search'];
+				unset($data[$this->_table->alias()]['search']);
+			}
 
 			if (!$entity->errors()) {
-
-
-				// if this submit == create
-				$event->stopPropagation();
-				return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
-
-				// if submit == save // format it for saving// put security user id in student or staff
-				// $data[$this->_table->alias()][$this->_table->primaryKey()] = 321;
-
-				// $data[$this->_table->alias()][$this->_table->primaryKey()] = 321;
-				// $data[$this->_table->alias()][$this->associatedModel->table()][]
+				if (!$currSearch) {
+					$event->stopPropagation();
+					return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'add', 'new' => $timeNow]);
+				} else {
+					$data[$this->_table->alias()][$this->associatedModel->table()][0]['security_user_id'] = $currSearch;
+					if ($this->associatedModel->save($this->associatedModel->newEntity($data[$this->_table->alias()][$this->associatedModel->table()][0]))) {
+						$this->_table->ControllerAction->Alert->success('general.add.success');
+					} else {
+						$this->_table->ControllerAction->Alert->error('general.add.failed');
+					}
+					$event->stopPropagation();
+					return $this->_table->controller->redirect(['plugin' => 'Institution', 'controller' => $this->_table->controller->name, 'action' => $this->_table->alias(), 'index']);
+				}
 
 			}
 		}
