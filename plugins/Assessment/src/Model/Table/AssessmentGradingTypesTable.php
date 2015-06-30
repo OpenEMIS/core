@@ -14,7 +14,7 @@ class AssessmentGradingTypesTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
-		// $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems']);
+		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true]);
 
 		$this->addBehavior('Reorder');
 	}

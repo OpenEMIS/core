@@ -5,7 +5,7 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 
 <div class="input clearfix">
-	<label class="pull-left" for="<?= $attr['id'] ?>"><?= $this->ControllerAction->getLabel($attr['model'], $attr['field'], $attr) ?></label>
+	<label class="pull-left" for="<?= $attr['id'] ?>"><?= __($attr['label']); ?></label>
 	<div class="table-in-view col-md-4 table-responsive">
 		<table class="table table-striped table-hover table-bordered table-checkable">
 			<thead>
@@ -16,16 +16,17 @@
 				</tr>
 			</thead>
 
-			<?php if (isset($attr['data'])) : ?>
-
 			<tbody>
-				
+			<?php foreach ($attr['data'] as $i => $obj) : ?>
+				<tr>
+					<td class="checkbox-column">
+						<input type="checkbox" class="icheck-input" name="" value="<?= $obj->id ?>" />
+					</td>
+					<td><?= $obj->code ?></td>
+					<td><?= $obj->name ?></td>
+				</tr>
+			<?php endforeach ?>
 			</tbody>
-			
-			<?php else : ?>
-				<tr>&nbsp;</tr>
-			<?php endif; ?>
-
 		</table>
 	</div>
 </div>
